@@ -15,7 +15,7 @@
 <hbox style="padding-left: 10px;">
   <spacer width="5"/>
   <richlistbox id="list" context="themenu" oncontextmenu="checkContextMenu(event)">
-    <richlistitem id="item1"><button label="One"/></richlistitem>
+    <richlistitem id="item1" style="padding-top: 3px;"><button label="One"/></richlistitem>
     <richlistitem id="item2" height="22"><checkbox label="Checkbox"/></richlistitem>
     <richlistitem id="item3"><button label="Three"/></richlistitem>
     <richlistitem id="item4"><checkbox label="Four"/></richlistitem>
@@ -54,10 +54,20 @@
        </treeitem>
     </treechildren>
   </tree>
+
+  <menu id="menu" label="Menu">
+    <menupopup id="menupopup" onpopupshown="menuTests()" onpopuphidden="nextTest()"
+               oncontextmenu="checkContextMenuForMenu(event)">
+      <menuitem id="menu1" label="Menu 1"/>
+      <menuitem id="menu2" label="Menu 2"/>
+      <menuitem id="menu3" label="Menu 3"/>
+    </menupopup>
+  </menu>
+
 </hbox>
 
 <menupopup id="themenu" onpopupshowing="if (gTestId == -1) event.preventDefault()"
-                        onpopupshown="checkPopup()" onpopuphidden="nextTest()">
+                        onpopupshown="checkPopup()" onpopuphidden="setTimeout(nextTest, 0);">
   <menuitem label="Item"/>
 </menupopup>
 
@@ -69,23 +79,43 @@ SimpleTest.waitForExplicitFinish();
 var gTestId = -1;
 var gTestElement = "list";
 var gSelectionStep = 0;
+var gContextMenuFired = false;
 
 function startTest()
 {
   // first, check if the richlistbox selection changes on a contextmenu mouse event
   var element = $("list");
   synthesizeMouse(element.getItemAtIndex(3), 7, 1, { type : "mousedown", button: 2, ctrlKey: true });
-  synthesizeMouse(element, 7, 1, { type : "contextmenu", button: 2 });
+  synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
 
   gSelectionStep++;
   synthesizeMouse(element.getItemAtIndex(1), 7, 1, { type : "mousedown", button: 2, ctrlKey: true, shiftKey: true });
-  synthesizeMouse(element, 7, 1, { type : "contextmenu", button: 2 });
+  synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
 
   gSelectionStep++;
   synthesizeMouse(element.getItemAtIndex(1), 7, 1, { type : "mousedown", button: 2 });
-  synthesizeMouse(element, 7, 1, { type : "contextmenu", button: 2 });
+  synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
 
-  nextTest();
+  $("menu").open = true;
+}
+
+function menuTests()
+{
+  // context menus shouldn't open when a menu is open on Mac
+  var ismac = (navigator.platform.indexOf("Mac") >= 0);
+
+  gSelectionStep = 0;
+  var element = $("menu");
+  synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  is(gContextMenuFired, !ismac, "context menu fired when menu open");
+
+  if (!ismac) {
+    gSelectionStep = 1;
+    $("menu").boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).activeChild = $("menu2");
+    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  }
+
+  $("menu").open = false;
 }
 
 function nextTest()
@@ -101,7 +131,6 @@ function nextTest()
       return;
     }
   }
-
   var element = $(gTestElement);
   element.focus();
   if (gTestId == 0) {
@@ -111,7 +140,7 @@ function nextTest()
     synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
   }
   else if (gTestId == 1) {
-    synthesizeMouse(element, 7, 1, { type : "contextmenu", button: 2 });
+    synthesizeMouse(element, 7, 2, { type : "contextmenu", button: 2 });
   }
   else {
     element.currentIndex = -1;
@@ -122,11 +151,52 @@ function nextTest()
 
 function checkContextMenu(event)
 {
+  var rect = $(gTestElement).getBoundingClientRect();
+
+  var frombase = (gTestId == -1 || gTestId == 1);
+  if (!frombase)
+    rect = event.originalTarget.getBoundingClientRect();
+  left = frombase ? rect.left + 7 : rect.left;
+  top = frombase ? rect.top + 2 : rect.bottom;
+
+  is(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
+  is(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
+  ok(event.screenX > left, gTestElement + " screenX " + gSelectionStep + " " + gTestId);
+  ok(event.screenY > top, gTestElement + " screenY " + gSelectionStep + " " + gTestId);
+
   // context menu from mouse click
-  if (gTestId == -1) {
-    var expected = gSelectionStep == 2 ? 1 : (navigator.platform.indexOf("Mac") >= 0 ? 3 : 0);
-    is($(gTestElement).selectedIndex, expected, "index after click " + gSelectionStep);
+  switch (gTestId) {
+    case -1:
+      var expected = gSelectionStep == 2 ? 1 : (navigator.platform.indexOf("Mac") >= 0 ? 3 : 0);
+      is($(gTestElement).selectedIndex, expected, "index after click " + gSelectionStep);
+      break;
+    case 0:
+      if (gTestElement == "list")
+        is(event.originalTarget, $("item3"), "list selection target");
+      else
+        is(event.originalTarget, $("treechildren"), "tree selection target");
+      break;
+    case 1:
+      // XXXndeakin disable test on Windows for now
+      if (navigator.platform.indexOf("Win") == -1)
+        is(event.originalTarget.id, $("item1").id, "list mouse selection target");
+      break;
+    case 2:
+      is(event.originalTarget, $("list"), "list no selection target");
+      break;
   }
+}
+
+function checkContextMenuForMenu(event)
+{
+  gContextMenuFired = true;
+
+  var popuprect = (gSelectionStep ? $("menu2") : $("menupopup")).getBoundingClientRect();
+  is(event.clientX, Math.floor(popuprect.left), "menu left " + gSelectionStep);
+  // the clientY is off by one sometimes on Windows (when loaded in the testing iframe
+  // but not when loaded separately) so just check for both cases for now
+  ok(event.clientY == Math.floor(popuprect.bottom) ||
+     event.clientY - 1 == Math.floor(popuprect.bottom), "menu top " + gSelectionStep);
 }
 
 function checkPopup()
@@ -159,7 +229,7 @@ function checkPopup()
     var elementrect = $(gTestElement).getBoundingClientRect();
     is(Math.round(menurect.left), Math.round(elementrect.left) + 9,
        gTestElement + " mouse left");
-    is(Math.round(menurect.top), Math.round(elementrect.top) + 3,
+    is(Math.round(menurect.top), Math.round(elementrect.top) + 4,
        gTestElement + " mouse top");
   }
   else {

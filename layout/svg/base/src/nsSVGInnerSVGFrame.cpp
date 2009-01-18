@@ -48,7 +48,6 @@
 typedef nsSVGDisplayContainerFrame nsSVGInnerSVGFrameBase;
 
 class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
-                           public nsISVGValueObserver,
                            public nsISVGSVGFrame
 {
   friend nsIFrame*
@@ -58,7 +57,6 @@ protected:
     nsSVGInnerSVGFrameBase(aContext) {}
   
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_QUERYFRAME
 
   // We don't define an AttributeChanged method since changes to the
@@ -87,12 +85,6 @@ public:
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
 
@@ -119,25 +111,6 @@ NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
   }
 
   return new (aPresShell) nsSVGInnerSVGFrame(aContext);
-}
-
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_INTERFACE_MAP_BEGIN(nsSVGInnerSVGFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP_(nsrefcnt)
-nsSVGInnerSVGFrame::AddRef()
-{
-  return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsSVGInnerSVGFrame::Release()
-{
-  return 1;
 }
 
 //----------------------------------------------------------------------
@@ -362,20 +335,3 @@ nsSVGInnerSVGFrame::GetCanvasTM()
   return retval;
 }
 
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                            nsISVGValue::modificationType aModType)
-{
-  return NS_OK;
-}
-	
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable,
-                                            nsISVGValue::modificationType aModType)
-{
-  NotifyViewportChange();
-  return NS_OK;
-}

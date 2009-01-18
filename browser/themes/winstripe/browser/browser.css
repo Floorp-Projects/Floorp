@@ -1229,7 +1229,7 @@ statusbarpanel#statusbar-display {
 
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
 #editBMPanel_folderTree {
-  min-width: 300px;
+  min-width: 27em;
 }
 
 /* ::::: content area ::::: */

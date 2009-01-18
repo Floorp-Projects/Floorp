@@ -144,8 +144,9 @@ nsStyleSet::BeginReconstruct()
   mOldRuleTree = mRuleTree;
   // Delete mRuleWalker because it holds a reference to the rule tree root
   delete mRuleWalker;
-  // Clear out the old style contexts; we don't need them anymore
-  mRoots.Clear();
+  // We don't need to clear out mRoots; NotifyStyleContextDestroyed
+  // will, and they're useful in EndReconstruct if they don't get
+  // completely cleared out.
 
   mRuleTree = newTree;
   mRuleWalker = ruleWalker;
@@ -156,6 +157,22 @@ nsStyleSet::BeginReconstruct()
 void
 nsStyleSet::EndReconstruct()
 {
+#ifdef DEBUG
+  for (PRInt32 i = mRoots.Length() - 1; i >= 0; --i) {
+    nsRuleNode *n = mRoots[i]->GetRuleNode();
+    while (n->GetParent()) {
+      n = n->GetParent();
+    }
+    // Since nsStyleContext's mParent and mRuleNode are immutable, and
+    // style contexts own their parents, and nsStyleContext asserts in
+    // its constructor that the style context and its parent are in the
+    // same rule tree, we don't need to check any of the children of
+    // mRoots; we only need to check the rule nodes of mRoots
+    // themselves.
+
+    NS_ABORT_IF_FALSE(n == mRuleTree, "style context has old rule node");
+  }
+#endif
   NS_ASSERTION(mOldRuleTree, "Unmatched begin/end?");
   // Reset the destroyed count; it's no longer valid
   mDestroyedCount = 0;

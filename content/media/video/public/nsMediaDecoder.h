@@ -69,7 +69,7 @@ class nsMediaDecoder : public nsIObserver
   // Perform any initialization required for the decoder.
   // Return PR_TRUE on successful initialisation, PR_FALSE
   // on failure.
-  virtual PRBool Init();
+  virtual PRBool Init(nsHTMLMediaElement* aElement);
 
   // Return the current URI being played or downloaded.
   virtual void GetCurrentURI(nsIURI** aURI) = 0;
@@ -154,12 +154,6 @@ class nsMediaDecoder : public nsIObserver
 
   // Return PR_TRUE if seeking is supported.
   virtual PRBool GetSeekable() = 0;
-
-  // Called when the HTML DOM element is bound.
-  virtual void ElementAvailable(nsHTMLMediaElement* anElement);
-
-  // Called when the HTML DOM element is unbound.
-  virtual void ElementUnavailable();
 
   // Invalidate the frame.
   virtual void Invalidate();

@@ -37,6 +37,7 @@ classic.jar:
         skin/classic/global/printPreview.css
         skin/classic/global/progressmeter.css
         skin/classic/global/radio.css
+        skin/classic/global/resizer.css
         skin/classic/global/richlistbox.css
 *       skin/classic/global/scale.css
         skin/classic/global/scrollbars.css                       (xulscrollbars.css)
@@ -207,6 +208,7 @@ classic.jar:
         skin/classic/aero/global/printPreview.css
         skin/classic/aero/global/progressmeter.css
         skin/classic/aero/global/radio.css
+        skin/classic/aero/global/resizer.css
         skin/classic/aero/global/richlistbox.css
 *       skin/classic/aero/global/scale.css
         skin/classic/aero/global/scrollbars.css                          (xulscrollbars.css)

@@ -1209,10 +1209,10 @@ nsOggDecoder::nsOggDecoder() :
   MOZ_COUNT_CTOR(nsOggDecoder);
 }
 
-PRBool nsOggDecoder::Init() 
+PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mMonitor = nsAutoMonitor::NewMonitor("media.decoder");
-  return mMonitor && nsMediaDecoder::Init();
+  return mMonitor && nsMediaDecoder::Init(aElement);
 }
 
 void nsOggDecoder::Shutdown() 

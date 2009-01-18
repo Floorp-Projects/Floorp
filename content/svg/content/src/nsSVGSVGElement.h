@@ -105,7 +105,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
 
   // helper methods for implementing SVGZoomEvent:
-  NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult);
+  nsresult GetCurrentScaleNumber(nsIDOMSVGNumber **aResult);
 
   /**
    * For use by zoom controls to allow currentScale, currentTranslate.x and
@@ -125,15 +125,15 @@ public:
    * Record the current values of currentScale, currentTranslate.x and
    * currentTranslate.y prior to changing the value of one of them.
    */
-  NS_IMETHOD_(void) RecordCurrentScaleTranslate();
+  void RecordCurrentScaleTranslate();
 
   /**
    * Retrieve the value of currentScale, currentTranslate.x or
    * currentTranslate.y prior to the last change made to any one of them.
    */
-  NS_IMETHOD_(float) GetPreviousTranslate_x();
-  NS_IMETHOD_(float) GetPreviousTranslate_y();
-  NS_IMETHOD_(float) GetPreviousScale();
+  float GetPreviousTranslate_x() { return mPreviousTranslate_x; }
+  float GetPreviousTranslate_y() { return mPreviousTranslate_y; }
+  float GetPreviousScale() { return mPreviousScale; }
 
 #ifdef MOZ_SMIL
   nsSMILTimeContainer* GetTimedDocumentRoot();

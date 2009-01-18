@@ -347,14 +347,6 @@ public:
   static nsIFrame *
   HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint);
 
-  /* Add observation of an nsISVGValue to an nsISVGValueObserver */
-  static void
-  AddObserver(nsISupports *aObserver, nsISupports *aTarget);
-
-  /* Remove observation of an nsISVGValue from an nsISVGValueObserver */
-  static void
-  RemoveObserver(nsISupports *aObserver, nsISupports *aTarget);
-
   /*
    * Returns the CanvasTM of the indicated frame, whether it's a
    * child SVG frame, container SVG frame, or a regular frame.

@@ -69,9 +69,8 @@ endif
 endif
 else
 define message
-Please don't package debug builds.
-Your build was configured without --enable-static or --enable-libxul.
-This is probably because it's a debug build
+You need to build with --enable-libxul (the default, unless you specify
+--disable-libxul or --enable-shared or --enable-debug) to package a build.
 endef
 default libs installer::
 	$(error $(message))

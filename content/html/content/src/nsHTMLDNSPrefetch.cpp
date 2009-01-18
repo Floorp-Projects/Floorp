@@ -282,18 +282,22 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
   if (!sDNSService) return;
 
   while (mHead != mTail) {
-    nsCOMPtr<nsIURI> hrefURI;
-    mEntries[mTail].mElement->GetHrefURIForAnchors(getter_AddRefs(hrefURI));
-    if (hrefURI)
-      hrefURI->GetAsciiHost(hostName);
-    
-    if (!hostName.IsEmpty()) {
-      nsCOMPtr<nsICancelable> tmpOutstanding;
 
-      sDNSService->AsyncResolve(hostName, 
-                                mEntries[mTail].mFlags,
-                                sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
+    if (mEntries[mTail].mElement->GetOwnerDoc()) {
+      nsCOMPtr<nsIURI> hrefURI;
+      mEntries[mTail].mElement->GetHrefURIForAnchors(getter_AddRefs(hrefURI));
+      if (hrefURI)
+        hrefURI->GetAsciiHost(hostName);
+      
+      if (!hostName.IsEmpty()) {
+        nsCOMPtr<nsICancelable> tmpOutstanding;
+
+        sDNSService->AsyncResolve(hostName, 
+                                  mEntries[mTail].mFlags,
+                                  sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
+      }
     }
+    
     mEntries[mTail].mElement = nsnull;
     mTail = (mTail + 1) & sMaxDeferredMask;
   }

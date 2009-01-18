@@ -4079,13 +4079,17 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // XXX this seems truly bogus, we wipe out mGfxScrollFrame below
   if (mGfxScrollFrame) {
     nsIFrame* gfxScrollbarFrame1 = mGfxScrollFrame->GetFirstChild(nsnull);
-    if (gfxScrollbarFrame1) {
+    // Check the frame type because when there aren't scrollbars, we'll
+    // get the canvas.
+    if (gfxScrollbarFrame1 &&
+        gfxScrollbarFrame1->GetType() == nsGkAtoms::scrollbarFrame) {
       // XXX This works, but why?
       aState.mFrameManager->
         SetPrimaryFrameFor(gfxScrollbarFrame1->GetContent(), gfxScrollbarFrame1);
 
       nsIFrame* gfxScrollbarFrame2 = gfxScrollbarFrame1->GetNextSibling();
-      if (gfxScrollbarFrame2) {
+      if (gfxScrollbarFrame2 &&
+          gfxScrollbarFrame2->GetType() == nsGkAtoms::scrollbarFrame) {
         // XXX This works, but why?
         aState.mFrameManager->
           SetPrimaryFrameFor(gfxScrollbarFrame2->GetContent(), gfxScrollbarFrame2);
@@ -7460,6 +7464,8 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
         // Destroy out-of-flow frames that might not be in the frame subtree
         // rooted at docElementFrame
         ::DeletingFrameSubtree(state.mFrameManager, docElementFrame);
+      } else {
+        state.mFrameManager->ClearUndisplayedContentIn(rootContent, nsnull);
       }
 
       // Remove any existing fixed items: they are always on the
@@ -8708,6 +8714,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   else {
     // No previous or next sibling, so treat this like an appended frame.
     isAppend = PR_TRUE;
+    // Get continuation that parents the last child
+    parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
     // Deal with fieldsets
     parentFrame = ::GetAdjustedParentFrame(parentFrame, parentFrame->GetType(),
                                            aContainer, aIndexInContainer);

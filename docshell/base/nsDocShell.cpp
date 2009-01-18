@@ -7797,12 +7797,7 @@ nsDocShell::CheckClassifier(nsIChannel *aChannel)
     nsRefPtr<nsClassifierCallback> classifier = new nsClassifierCallback();
     if (!classifier) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = classifier->Start(aChannel);
-    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
-        rv == NS_ERROR_NOT_AVAILABLE) {
-        // no URI classifier => ignored cases
-        return NS_OK;
-    }
+    nsresult rv = classifier->Start(aChannel, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mClassifier = classifier;
@@ -9683,10 +9678,12 @@ nsDocShell::IsOKToLoadURI(nsIURI* aURI)
 // nsClassifierCallback
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS3(nsClassifierCallback,
+NS_IMPL_ISUPPORTS5(nsClassifierCallback,
                    nsIChannelClassifier,
                    nsIURIClassifierCallback,
-                   nsIRunnable)
+                   nsIRunnable,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsClassifierCallback::Run()
@@ -9711,7 +9708,7 @@ nsClassifierCallback::Run()
 
     // Don't bother to run the classifier on a cached load that was
     // previously classified.
-    if (HasBeenClassified()) {
+    if (HasBeenClassified(channel)) {
         return NS_OK;
     }
 
@@ -9747,7 +9744,12 @@ nsClassifierCallback::Run()
 
     nsCOMPtr<nsIURIClassifier> uriClassifier =
         do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
+        rv == NS_ERROR_NOT_AVAILABLE) {
+        // no URI classifier, ignore this failure.
+        return NS_OK;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool expectCallback;
     rv = uriClassifier->Classify(uri, this, &expectCallback);
@@ -9803,10 +9805,10 @@ nsClassifierCallback::MarkEntryClassified(nsresult status)
 }
 
 PRBool
-nsClassifierCallback::HasBeenClassified()
+nsClassifierCallback::HasBeenClassified(nsIChannel *aChannel)
 {
     nsCOMPtr<nsICachingChannel> cachingChannel =
-        do_QueryInterface(mSuspendedChannel);
+        do_QueryInterface(aChannel);
     if (!cachingChannel) {
         return PR_FALSE;
     }
@@ -9862,15 +9864,26 @@ nsClassifierCallback::OnClassifyComplete(nsresult aErrorCode)
 }
 
 NS_IMETHODIMP
-nsClassifierCallback::Start(nsIChannel *aChannel)
+nsClassifierCallback::Start(nsIChannel *aChannel, PRBool aInstallListener)
 {
     mChannel = aChannel;
+
+    if (aInstallListener) {
+        nsresult rv = aChannel->GetNotificationCallbacks
+            (getter_AddRefs(mNotificationCallbacks));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = aChannel->SetNotificationCallbacks
+            (static_cast<nsIInterfaceRequestor*>(this));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     return Run();
 }
 
 NS_IMETHODIMP
 nsClassifierCallback::OnRedirect(nsIChannel *aOldChannel,
-                                nsIChannel *aNewChannel)
+                                 nsIChannel *aNewChannel)
 {
     mChannel = aNewChannel;
 
@@ -9899,4 +9912,37 @@ nsClassifierCallback::Cancel()
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClassifierCallback::OnChannelRedirect(nsIChannel *aOldChannel,
+                                        nsIChannel *aNewChannel,
+                                        PRUint32 aFlags)
+{
+    nsresult rv = OnRedirect(aOldChannel, aNewChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mNotificationCallbacks) {
+        nsCOMPtr<nsIChannelEventSink> sink =
+            do_GetInterface(mNotificationCallbacks);
+        if (sink) {
+            return sink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClassifierCallback::GetInterface(const nsIID &aIID, void **aResult)
+{
+    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+        NS_ADDREF_THIS();
+        *aResult = static_cast<nsIChannelEventSink *>(this);
+        return NS_OK;
+    } else if (mNotificationCallbacks) {
+        return mNotificationCallbacks->GetInterface(aIID, aResult);
+    } else {
+        return NS_ERROR_NO_INTERFACE;
+    }
 }

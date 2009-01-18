@@ -1021,7 +1021,7 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
       } else {
         // We're throwing this away so call its destructor now. The memory
         // is owned by aBuilder which destroys all items at once.
-        i->nsDisplayItem::~nsDisplayItem();
+        i->~nsDisplayItem();
       }
     }
   }

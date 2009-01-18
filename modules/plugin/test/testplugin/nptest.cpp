@@ -235,6 +235,20 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   scriptableObject->npp = instance;
   instanceData->scriptableObject = scriptableObject;
 
+  scriptableObject->drawMode = DM_DEFAULT;
+  scriptableObject->drawColor = 0;
+
+  // handle extra params
+  for (int i = 0; i < argc; i++) {
+    if (strcmp(argn[i], "drawmode") == 0) {
+      if (strcmp(argv[i], "solid") == 0)
+        scriptableObject->drawMode = DM_SOLID_COLOR;    
+    }
+    else if (strcmp(argn[i], "color") == 0) {
+      scriptableObject->drawColor = parseHexColor(argv[i]);
+    }
+  }
+
   // do platform-specific initialization
   NPError err = pluginInstanceInit(instanceData);
   if (err != NPERR_NO_ERROR)
