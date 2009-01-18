@@ -96,8 +96,8 @@
         <hbox>
           <radio id="open" label="&openWith.label;" accesskey="&openWith.accesskey;"/>
           <deck id="modeDeck" flex="1">
-            <hbox id="openHandlerBox" flex="1"/>
-            <hbox flex="1">
+            <hbox id="openHandlerBox" flex="1" align="center"/>
+            <hbox flex="1" align="center">
               <button id="chooseButton" oncommand="dialog.chooseApp();"
 #ifdef XP_MACOSX
                       label="&chooseHandlerMac.label;" accesskey="&chooseHandlerMac.accesskey;"/>
