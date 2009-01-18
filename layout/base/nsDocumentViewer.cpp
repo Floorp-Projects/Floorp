@@ -1658,7 +1658,10 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
       mPresContext->SetLinkHandler(linkHandler);
     }
 
-    rv = InitPresentationStuff(PR_FALSE, PR_TRUE);
+    rv = InitPresentationStuff(PR_FALSE, PR_FALSE);
+    if (NS_SUCCEEDED(rv) && mEnableRendering && mViewManager) {
+      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
+    }
   }
 
   return rv;
