@@ -2286,7 +2286,7 @@ function BrowserOnCommand(event) {
     // Exception…" or "Get me out of here!" button
     if (/^about:certerror/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
-        var params = { exceptionAdded : false };
+        var params = { exceptionAdded : false, handlePrivateBrowsing : true };
         
         try {
           switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
