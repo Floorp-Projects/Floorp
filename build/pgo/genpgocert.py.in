@@ -44,7 +44,7 @@ import sys
 
 #expand DIST_BIN = __XPC_BIN_PATH__
 #expand BIN_SUFFIX = __BIN_SUFFIX__
-#expand PROFILE_DIR = __PROFILE_DIR__
+#expand CERTS_DIR = __CERTS_DIR__
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
 
 dbFiles = [
@@ -68,6 +68,13 @@ def dbFilesExist(path):
           return True
   return False
 
+def installDbFiles(path, dest):
+  for root, dirs, files in os.walk(path):
+    for name in files:
+      for dbFile in dbFiles:
+        if dbFile.match(name):
+          shutil.copy(os.path.join(root, name), os.path.join(dest, name))
+
 
 def runUtil(util, args, inputdata = None):
   proc = automation.Process(util, args, automation.environment(), inputdata)
@@ -82,11 +89,11 @@ def createRandomFile(randomFile):
   file.close()
 
 
-def createCertificateAuthority(profileDir, srcDir):
+def createCertificateAuthority(dbDir, srcDir):
   certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
   pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
 
-  tempDbDir = os.path.join(profileDir, ".temp")
+  tempDbDir = os.path.join(dbDir, ".temp")
   if not os.path.exists(tempDbDir):
     os.mkdir(tempDbDir)
   
@@ -94,6 +101,8 @@ def createCertificateAuthority(profileDir, srcDir):
   rndfilePath = os.path.join(tempDbDir, ".rndfile")
   pgoCAModulePathSrc = os.path.join(srcDir, "pgoca.p12")
   pgoCAPathSrc = os.path.join(srcDir, "pgoca.ca")
+  pgoCAModulePath = os.path.join(srcDir, "pgoca.p12")
+  pgoCAPath = os.path.join(srcDir, "pgoca.ca")
   
   pwfile = open(pwfilePath, "w")
   pwfile.write("\n")
@@ -126,20 +135,21 @@ def createCertificateAuthority(profileDir, srcDir):
   return 0
 
 
-def createSSLServerCertificate(profileDir, srcDir):
+def createSSLServerCertificate(dbDir, srcDir):
   certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
   pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
 
-  pwfilePath = os.path.join(profileDir, ".crtdbpw")
-  rndfilePath = os.path.join(profileDir, ".rndfile")
-  pgoCAPath = os.path.join(srcDir, "pgoca.p12")
+  pwfilePath = os.path.join(dbDir, ".crtdbpw")
+  rndfilePath = os.path.join(dbDir, ".rndfile")
+  pgoCAPath = os.path.join(dbDir, "pgoca.p12")
   
   pwfile = open(pwfilePath, "w")
   pwfile.write("\n")
   pwfile.close()
 
+  unlinkDbFiles(dbDir)
+
   if not dbFilesExist(srcDir):
-    # Make sure all DB files from src are really deleted
     unlinkDbFiles(srcDir)
     
     # Create certification database for ssltunnel
@@ -152,7 +162,7 @@ def createSSLServerCertificate(profileDir, srcDir):
       return status
 
   # Generate automatic certificate
-  locations = automation.readLocations(os.path.join(profileDir, "server-locations.txt"))
+  locations = automation.readLocations(os.path.join(dbDir, "../server-locations.txt"))
   locations.pop(0)
   locationsParam = ""
   firstLocation = ""
@@ -186,6 +196,7 @@ def createSSLServerCertificate(profileDir, srcDir):
     if status != 0:
       return status
     
+  installDbFiles(srcDir, dbDir)
   os.unlink(pwfilePath)
   os.unlink(rndfilePath)
   return 0
@@ -196,14 +207,14 @@ if len(sys.argv) == 1:
   sys.exit(1)
 
 if sys.argv[1] == "--gen-server":
-  certificateStatus = createSSLServerCertificate(PROFILE_DIR, CERTS_SRC_DIR)
+  certificateStatus = createSSLServerCertificate(CERTS_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
     print "ERROR FAIL: SSL Server Certificate generation"
   
   sys.exit(certificateStatus)
   
 if sys.argv[1] == "--gen-ca":
-  certificateStatus = createCertificateAuthority(PROFILE_DIR, CERTS_SRC_DIR)
+  certificateStatus = createCertificateAuthority(CERTS_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
     print "ERROR FAIL: Certificate Authority generation"
   else:
