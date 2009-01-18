@@ -548,7 +548,7 @@ nsDOMStorage::CacheStoragePermissions()
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (!ssm)
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));

@@ -4392,6 +4392,8 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
     if (!posStr.IsEmpty()) {
         nsCOMPtr<nsIDOMDocument> domDocument(
                do_QueryInterface(aParent->GetDocument()));
+        if (!domDocument) return NS_ERROR_FAILURE;
+
         nsCOMPtr<nsIDOMElement> domElement;
 
         char* str = ToNewCString(posStr);

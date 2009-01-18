@@ -1061,7 +1061,7 @@ nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
 //----------------------------------------------------------------------
 // helper methods for implementing SVGZoomEvent:
 
-NS_IMETHODIMP
+nsresult
 nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
 {
   *aResult = mCurrentScale;
@@ -1118,7 +1118,7 @@ nsSVGSVGElement::SetCurrentTranslate(float x, float y)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsSVGSVGElement::RecordCurrentScaleTranslate()
 {
   // IMPORTANT: If either mCurrentTranslate *or* mCurrentScale is changed then
@@ -1132,24 +1132,6 @@ nsSVGSVGElement::RecordCurrentScaleTranslate()
   mCurrentScale->GetValue(&mPreviousScale);
   mCurrentTranslate->GetX(&mPreviousTranslate_x);
   mCurrentTranslate->GetY(&mPreviousTranslate_y);
-}
-
-NS_IMETHODIMP_(float)
-nsSVGSVGElement::GetPreviousTranslate_x()
-{
-  return mPreviousTranslate_x;
-}
-
-NS_IMETHODIMP_(float)
-nsSVGSVGElement::GetPreviousTranslate_y()
-{
-  return mPreviousTranslate_y;
-}
-
-NS_IMETHODIMP_(float)
-nsSVGSVGElement::GetPreviousScale()
-{
-  return mPreviousScale;
 }
 
 #ifdef MOZ_SMIL

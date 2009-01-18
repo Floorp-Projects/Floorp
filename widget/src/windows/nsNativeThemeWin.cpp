@@ -1121,7 +1121,9 @@ RENDER_AGAIN:
     nsUXThemeData::drawThemeBG(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0, &sepRect, &clipRect);
   }
   // The following widgets need to be RTL-aware
-  else if (aWidgetType == NS_THEME_MENUARROW) {
+  else if (aWidgetType == NS_THEME_MENUARROW ||
+           aWidgetType == NS_THEME_RESIZER)
+  {
     DrawThemeBGRTLAware(theme, hdc, part, state,
                         &widgetRect, &clipRect, IsFrameRTL(aFrame));
   }
@@ -2202,7 +2204,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_RESIZER:    
       aPart = DFC_SCROLL;
 #ifndef WINCE
-      aState = DFCS_SCROLLSIZEGRIP;
+      aState = (IsFrameRTL(aFrame)) ?
+               DFCS_SCROLLSIZEGRIPRIGHT : DFCS_SCROLLSIZEGRIP;
 #else
       aState = 0;
 #endif

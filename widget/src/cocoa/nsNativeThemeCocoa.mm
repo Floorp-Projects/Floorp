@@ -662,7 +662,7 @@ static const CellRenderSettings pushButtonSettings = {
 #define DO_SQUARE_BUTTON_HEIGHT 26
 
 void
-nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
+nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                    PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -670,9 +670,8 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   BOOL isActive = FrameIsInActiveWindow(aFrame);
 
   [mPushButtonCell setEnabled:!inDisabled];
-  [mPushButtonCell setHighlighted:(((inState & NS_EVENT_STATE_ACTIVE) &&
-                                    (inState & NS_EVENT_STATE_HOVER) ||
-                                    (inIsDefault && !inDisabled)) && 
+  [mPushButtonCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) &&
+                                   (inState & NS_EVENT_STATE_HOVER) && 
                                    isActive)];
   [mPushButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS) && !inDisabled && isActive];
 
@@ -732,14 +731,29 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   if (inState & NS_EVENT_STATE_FOCUS && isActive)
     bdi.adornment |= kThemeAdornmentFocus;
 
-  if (inIsDefault && !inDisabled)
+  if (inIsDefault && !inDisabled && isActive && !(inState & NS_EVENT_STATE_ACTIVE)) {
     bdi.adornment |= kThemeAdornmentDefault;
+    bdi.animation.time.start = 0;
+    bdi.animation.time.current = CFAbsoluteTimeGetCurrent();
+  }
 
   HIRect drawFrame = inBoxRect;
   PRBool needsScaling = PR_FALSE;
   int drawWidth = 0, drawHeight = 0;
 
-  if (inKind == kThemePopupButton) {
+  if (inKind == kThemePushButton) {
+    drawFrame.size.height -= 2;
+    if (inBoxRect.size.height < pushButtonSettings.naturalSizes[smallControlSize].height) {
+      bdi.kind = kThemePushButtonMini;
+    }
+    else if (inBoxRect.size.height < pushButtonSettings.naturalSizes[regularControlSize].height) {
+      bdi.kind = kThemePushButtonSmall;
+      drawFrame.origin.y -= 1;
+      drawFrame.origin.x += 1;
+      drawFrame.size.width -= 2;
+    }
+  }
+  else if (inKind == kThemePopupButton) {
     /* popup buttons draw outside their frame by 1 pixel on each side and
      * two on the bottom but of the bottom two pixels one is a 'shadow'
      * and not the frame itself.  That extra pixel should be handled
@@ -1554,7 +1568,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_BUTTON:
-      DrawPushButton(cgContext, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), eventState, aFrame);
+      if (IsDefaultButton(aFrame)) {
+        DrawButton(cgContext, kThemePushButton, macRect, true, IsDisabled(aFrame), 
+                   kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
+      } else {
+        DrawPushButton(cgContext, macRect, IsDisabled(aFrame), eventState, aFrame);
+      }
       break;
 
     case NS_THEME_BUTTON_BEVEL:
@@ -2247,7 +2266,8 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::mozmenuactive ||
         aAttribute == nsWidgetAtoms::sortdirection ||
         aAttribute == nsWidgetAtoms::focused ||
-        aAttribute == nsWidgetAtoms::_default)
+        aAttribute == nsWidgetAtoms::_default ||
+        aAttribute == nsWidgetAtoms::step)
       *aShouldRepaint = PR_TRUE;
   }
 

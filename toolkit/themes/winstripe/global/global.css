@@ -157,11 +157,6 @@ statusbarpanel {
   padding: 0 1px;
 }
 
-resizer[dir="bottomright"] {
-  -moz-appearance: resizer;
-  cursor: se-resize;
-}
-
 %ifdef XP_WIN
 window:not([active="true"]) menubar > menu {
   color: ThreeDShadow;

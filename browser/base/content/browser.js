@@ -2286,7 +2286,7 @@ function BrowserOnCommand(event) {
     // Exception…" or "Get me out of here!" button
     if (/^about:certerror/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
-        var params = { exceptionAdded : false };
+        var params = { exceptionAdded : false, handlePrivateBrowsing : true };
         
         try {
           switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
@@ -3205,6 +3205,8 @@ function OpenBrowserWindow()
   return win;
 }
 
+// Returns a reference to the window in which the toolbar
+// customization document is loaded.
 function BrowserCustomizeToolbar()
 {
   // Disable the toolbar context menu items
@@ -3237,11 +3239,13 @@ function BrowserCustomizeToolbar()
   var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
   document.getElementById("customizeToolbarSheetPopup")
           .openPopup(gNavToolbox, "after_start", (window.innerWidth - sheetWidth) / 2, 0);
+
+  return sheetFrame.contentWindow;
 #else
-  window.openDialog(customizeURL,
-                    "CustomizeToolbar",
-                    "chrome,titlebar,toolbar,resizable,dependent",
-                    gNavToolbox);
+  return window.openDialog(customizeURL,
+                           "CustomizeToolbar",
+                           "chrome,titlebar,toolbar,resizable,dependent",
+                           gNavToolbox);
 #endif
 }
 
@@ -3298,25 +3302,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     menubar.childNodes[i].setAttribute("disabled", false);
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
-
-  // XXXmano bug 287105: wallpaper to bug 309953,
-  // the reload button isn't in sync with the reload command.
-  var reloadButton = document.getElementById("reload-button");
-  if (reloadButton) {
-    reloadButton.disabled =
-      document.getElementById("Browser:Reload").getAttribute("disabled") == "true";
-  }
-  //bug 440702: the back and forward buttons also suffer from bug 309953.
-  var backButton = document.getElementById("back-button");
-  if (backButton) {
-    backButton.disabled =
-      document.getElementById("Browser:Back").getAttribute("disabled") == "true";
-  }
-  var forwardButton = document.getElementById("forward-button");
-  if (forwardButton) {
-    forwardButton.disabled =
-      document.getElementById("Browser:Forward").getAttribute("disabled") == "true";
-  }
 
 #ifdef XP_MACOSX
   // make sure to re-enable click-and-hold

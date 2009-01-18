@@ -87,6 +87,11 @@ typedef unsigned __int64 uint64_t;
 /* Microsoft Visual C/C++ defines intptr_t and uintptr_t in <stddef.h>.  */
 #if defined(JS_STDDEF_H_HAS_INTPTR_T)
 #include <stddef.h>
+
+/* Windows Mobile defines intptr_t and uintptr_t in <crtdefs.h>.  Why not?  */
+#elif defined(JS_CRTDEFS_H_HAS_INTPTR_T)
+#include <crtdefs.h>
+
 #else
 #error "couldn't find definitions for intptr_t, uintptr_t"
 #endif

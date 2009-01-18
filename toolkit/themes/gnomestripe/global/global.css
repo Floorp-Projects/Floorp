@@ -166,11 +166,6 @@ statusbarpanel {
   padding: 0 1px;
 }
 
-resizer[dir="bottomright"] {
-  -moz-appearance: resizer;
-  cursor: se-resize;
-}
-
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {

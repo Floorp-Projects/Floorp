@@ -1,0 +1,23 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+resizer[dir="top"],
+resizer[dir="bottom"] {
+  cursor: ns-resize;
+}
+
+resizer[dir="left"],
+resizer[dir="right"] {
+  cursor: ew-resize;
+}
+
+resizer[dir="topleft"],
+resizer[dir="bottomright"],
+resizer[dir="bottomend"][chromedir="ltr"] {
+  cursor: nwse-resize;
+}
+
+resizer[dir="topright"],
+resizer[dir="bottomleft"],
+resizer[dir="bottomend"][chromedir="rtl"] {
+  cursor: nesw-resize;
+}

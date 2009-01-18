@@ -47,17 +47,19 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = 	findbar_window.xul \
 		test_findbar.xul \
 		test_bug253481.xul \
+		bug263683_window.xul \
+		test_bug263683.xul \
 		bug304188_window.xul \
 		test_bug304188.xul \
+		bug331215_window.xul \
+		test_bug331215.xul \
 		bug360437_window.xul \
 		test_bug360437.xul \
 		bug366992_window.xul \
 		test_bug366992.xul \
-		bug331215_window.xul \
-		test_bug331215.xul \
-		bug263683_window.xul \
-		test_bug263683.xul \
 		test_bug418874.xul \
+		bug429723_window.xul \
+		test_bug429723.xul \
 		bug451286_window.xul \
 		test_bug451286.xul \
 		test_popup_preventdefault_chrome.xul \

@@ -1937,37 +1937,28 @@ nsUrlClassifierStore::DeleteEntry(nsUrlClassifierEntry& entry)
 nsresult
 nsUrlClassifierStore::WriteEntry(nsUrlClassifierEntry& entry)
 {
-  PRBool newEntry = (entry.mId == -1);
-
-  if (newEntry) {
-    // The insert statement chooses a random ID for the entry, which
-    // might collide.  This should be exceedingly rare, but we'll try
-    // a few times, otherwise assume a real error.
-    nsresult rv;
-    for (PRUint32 i = 0; i < 10; i++) {
-      mozStorageStatementScoper scoper(mInsertStatement);
-
-      rv = BindStatement(entry, mInsertStatement);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = mInsertStatement->Execute();
-      if (NS_SUCCEEDED(rv)) {
-        break;
-      }
-    }
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt64 rowId;
-    rv = mConnection->GetLastInsertRowID(&rowId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (rowId > PR_UINT32_MAX) {
-      return NS_ERROR_FAILURE;
-    }
-
-    entry.mId = rowId;
+  if (entry.mId != -1) {
+    // existing entry, just ignore it
+    return NS_OK;
   }
+
+  mozStorageStatementScoper scoper(mInsertStatement);
+
+  nsresult rv = BindStatement(entry, mInsertStatement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mInsertStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt64 rowId;
+  rv = mConnection->GetLastInsertRowID(&rowId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (rowId > PR_UINT32_MAX) {
+    return NS_ERROR_FAILURE;
+  }
+
+  entry.mId = rowId;
 
   return NS_OK;
 }

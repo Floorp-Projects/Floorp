@@ -278,9 +278,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_eventreerow:
     case eColor__moz_oddtreerow:
     case eColor__moz_field:
+    case eColor__moz_combobox:
       idx = COLOR_WINDOW;
       break;
     case eColor__moz_fieldtext:
+    case eColor__moz_comboboxtext:
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dialog:
@@ -510,7 +512,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           // users a handful of clock cycles by skipping checks for the
           // 5.x themes (or vice-versa), we can use a single loop for all
           // the different Windows versions.
-          if (hresult == S_OK && GetWindowsVersion() <= VISTA_VERSION) {
+          if (hresult == S_OK && GetWindowsVersion() <= WIN7_VERSION) {
             LPCWSTR defThemes[] = {
               L"luna.msstyles",
               L"royale.msstyles",

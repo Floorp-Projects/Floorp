@@ -223,12 +223,14 @@ nsResizerFrame::GetDirection()
     {&nsGkAtoms::topleft,    &nsGkAtoms::top,    &nsGkAtoms::topright,
      &nsGkAtoms::left,                           &nsGkAtoms::right,
      &nsGkAtoms::bottomleft, &nsGkAtoms::bottom, &nsGkAtoms::bottomright,
+                                                 &nsGkAtoms::bottomend,
      nsnull};
 
   static const Direction directions[] =
     {{-1, -1}, {0, -1}, {1, -1},
      {-1,  0},          {1,  0},
-     {-1,  1}, {0,  1}, {1,  1}
+     {-1,  1}, {0,  1}, {1,  1},
+                        {1,  1}
     };
 
   if (!GetContent())
@@ -239,8 +241,14 @@ nsResizerFrame::GetDirection()
                                                 strings, eCaseMatters);
   if(index < 0)
     return directions[0]; // default: topleft
-  else
-    return directions[index];
+  else if (index >= 8 && GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    // Directions 8 and higher are RTL-aware directions and should reverse the
+    // horizontal component if RTL.
+    Direction direction = directions[index];
+    direction.mHorizontal *= -1;
+    return direction;
+  }
+  return directions[index];
 }
 
 void

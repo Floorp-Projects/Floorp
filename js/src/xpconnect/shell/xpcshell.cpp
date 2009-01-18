@@ -55,6 +55,8 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsILocalFile.h"
+#include "nsStringAPI.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsprf.h"
@@ -68,6 +70,9 @@
 #ifdef XP_MACOSX
 #include "xpcshellMacUtils.h"
 #endif
+#ifdef XP_WIN
+#include <windows.h>
+#endif
 
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -77,9 +82,10 @@
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef HAVE_IO_H
 #include <io.h>     /* for isatty() */
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* for isatty() */
 #endif
 
@@ -97,6 +103,8 @@
 
 /***************************************************************************/
 
+static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
+
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
@@ -110,6 +118,85 @@ static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
 
 JSPrincipals *gJSPrincipals = nsnull;
+nsAutoString *gWorkingDirectory = nsnull;
+
+static JSBool
+GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+#if !defined(XP_WIN) && !defined(XP_UNIX)
+    //XXX: your platform should really implement this
+    return JS_FALSE
+#endif
+    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+    JSScript *script = JS_GetFrameScript(cx, fp);
+    const char *filename = JS_GetScriptFilename(cx, script);
+
+    if (filename) {
+        nsresult rv;
+        nsCOMPtr<nsIXPConnect> xpc =
+            do_GetService(kXPConnectServiceContractID, &rv);
+
+#if defined(XP_WIN)
+        // convert from the system codepage to UTF-16
+        int bufferSize = MultiByteToWideChar(CP_ACP, 0, filename,
+                                             -1, NULL, 0);
+        nsAutoString filenameString;
+        filenameString.SetLength(bufferSize);
+        MultiByteToWideChar(CP_ACP, 0, filename,
+                            -1, (LPWSTR)filenameString.BeginWriting(),
+                            filenameString.Length());
+        // remove the null terminator
+        filenameString.SetLength(bufferSize - 1);
+
+        // replace forward slashes with backslashes,
+        // since nsLocalFileWin chokes on them
+        PRUnichar *start, *end;
+
+        filenameString.BeginWriting(&start, &end);
+        
+        while (start != end) {
+            if (*start == L'/')
+                *start = L'\\';
+            start++;
+        }
+#elif defined(XP_UNIX)
+        NS_ConvertUTF8toUTF16 filenameString(filename);
+#endif
+
+        nsCOMPtr<nsILocalFile> location;
+        if (NS_SUCCEEDED(rv)) {
+            rv = NS_NewLocalFile(filenameString,
+                                 PR_FALSE, getter_AddRefs(location));
+        }
+
+        if (!location && gWorkingDirectory) {
+            // could be a relative path, try appending it to the cwd
+            // and then normalize
+            nsAutoString absolutePath(*gWorkingDirectory);
+            absolutePath.Append(filenameString);
+
+            rv = NS_NewLocalFile(absolutePath,
+                                 PR_FALSE, getter_AddRefs(location));
+        }
+
+        if (location) {
+            nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
+            JSObject *locationObj = NULL;
+
+            location->Normalize();
+            rv = xpc->WrapNative(cx, obj, location,
+                                 NS_GET_IID(nsILocalFile),
+                                 getter_AddRefs(locationHolder));
+
+            if (NS_SUCCEEDED(rv) &&
+                NS_SUCCEEDED(locationHolder->GetJSObject(&locationObj))) {
+                *vp = OBJECT_TO_JSVAL(locationObj);
+            }
+        }
+    }
+
+    return JS_TRUE;
+}
 
 static JSBool
 GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
@@ -701,7 +788,6 @@ extern void     add_history(char *line);
 }
 #endif
 
-
 static void
 ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
             JSBool forceTTY)
@@ -715,7 +801,9 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
 
     if (forceTTY) {
         file = stdin;
-    } else if (!isatty(fileno(file))) {
+    }
+#ifdef HAVE_ISATTY
+    else if (!isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
          *
@@ -746,6 +834,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
 
         return;
     }
+#endif
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
@@ -1395,6 +1484,45 @@ ContextCallback(JSContext *cx, uintN contextOp)
     return JS_TRUE;
 }
 
+static bool
+GetCurrentWorkingDirectory(nsAString& workingDirectory)
+{
+#if !defined(XP_WIN) && !defined(XP_UNIX)
+    //XXX: your platform should really implement this
+    return false;
+#endif
+#ifdef XP_WIN
+    DWORD requiredLength = GetCurrentDirectoryW(0, NULL);
+    workingDirectory.SetLength(requiredLength);
+    GetCurrentDirectoryW(workingDirectory.Length(),
+                         (LPWSTR)workingDirectory.BeginWriting());
+    // we got a trailing null there
+    workingDirectory.SetLength(requiredLength);
+    workingDirectory.Replace(workingDirectory.Length() - 1, 1, L'\\');
+#elif defined(XP_UNIX)
+    nsCAutoString cwd;
+    // 1024 is just a guess at a sane starting value
+    size_t bufsize = 1024;
+    char* result = nsnull;
+    while (result == nsnull) {
+        if (!cwd.SetLength(bufsize))
+            return false;
+        result = getcwd(cwd.BeginWriting(), cwd.Length());
+        if (!result) {
+            if (errno != ERANGE)
+                return false;
+            // need to make the buffer bigger
+            bufsize *= 2;
+        }
+    }
+    // size back down to the actual string length
+    cwd.SetLength(strlen(result) + 1);
+    cwd.Replace(cwd.Length() - 1, 1, '/');
+    workingDirectory = NS_ConvertUTF8toUTF16(cwd);
+#endif
+    return true;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1407,9 +1535,11 @@ main(int argc, char **argv, char **envp)
     int result;
     nsresult rv;
 
+#ifdef HAVE_SETBUF
     // unbuffer stdout so that output is in the correct order; note that stderr
     // is unbuffered by default
     setbuf(stdout, 0);
+#endif
 
     gErrFile = stderr;
     gOutFile = stdout;
@@ -1538,6 +1668,13 @@ main(int argc, char **argv, char **envp)
             JS_EndRequest(cx);
             return 1;
         }
+
+        nsAutoString workingDirectory;
+        if (GetCurrentWorkingDirectory(workingDirectory))
+            gWorkingDirectory = &workingDirectory;
+
+        JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
+                          GetLocationProperty, NULL, 0);
 
         argc--;
         argv++;

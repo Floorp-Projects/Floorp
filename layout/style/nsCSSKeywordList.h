@@ -86,6 +86,8 @@ CSS_KEY(-moz-cellhighlighttext, _moz_cellhighlighttext)
 CSS_KEY(-moz-center, _moz_center)
 CSS_KEY(-moz-cjk-earthly-branch, _moz_cjk_earthly_branch)
 CSS_KEY(-moz-cjk-heavenly-stem, _moz_cjk_heavenly_stem)
+CSS_KEY(-moz-combobox, _moz_combobox)
+CSS_KEY(-moz-comboboxtext, _moz_comboboxtext)
 CSS_KEY(-moz-compact, _moz_compact)  // Disabled because not supported.
 CSS_KEY(-moz-context-menu, _moz_context_menu)
 CSS_KEY(-moz-copy, _moz_copy)

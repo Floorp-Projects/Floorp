@@ -36,7 +36,6 @@
 
 #include "nsSVGFilterFrame.h"
 #include "nsIDocument.h"
-#include "nsISVGValueUtils.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsGkAtoms.h"

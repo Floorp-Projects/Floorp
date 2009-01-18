@@ -155,8 +155,8 @@ textarea:-moz-read-write {
 select {
   margin: 0;
   border-color: ThreeDFace;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: -moz-Combobox;
+  color: -moz-ComboboxText;
   font: -moz-list;
   line-height: normal !important;
   white-space: nowrap !important;
@@ -180,6 +180,8 @@ select[size],
 select[multiple],
 select[size][multiple] {
   /* Different alignment and padding for listbox vs combobox */
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   vertical-align: text-bottom;
   padding: 1px 0 1px 0;
   -moz-appearance: listbox;
@@ -188,6 +190,8 @@ select[size][multiple] {
 select[size="0"],
 select[size="1"] {
   /* Except this is not a listbox */
+  background-color: -moz-Combobox;
+  color: -moz-ComboboxText;
   vertical-align: baseline;
   padding: 0;
   -moz-appearance: menulist;

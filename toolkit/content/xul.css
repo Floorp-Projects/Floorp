@@ -112,6 +112,12 @@ button {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button");
 }
 
+%ifdef XP_MACOSX
+button[default="true"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#button-periodic-redraw");
+}
+%endif
+
 button[type="repeat"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button-repeat");
 }
@@ -844,6 +850,12 @@ menulist > menupopup > menuitem {
 
 dropmarker {
   -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
+}
+
+/********** resizer **********/
+
+resizer {
+  -moz-binding: url("chrome://global/content/bindings/resizer.xml#resizer");
 }
 
 /********** splitter **********/

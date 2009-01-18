@@ -132,6 +132,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 201293-1d.html 201293-1-ref.html
 == 203727.html 203727-ref.html
 == 206516-1.html 206516-1-ref.html
+== 206631-1.html 206631-1-ref.html
 == 210094-1a.html 210094-1-ref.html
 == 210094-1b.html 210094-1-ref.html
 != 210094-1c.html 210094-1-ref.html
@@ -176,6 +177,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 236539-1.html 236539-1-ref.html
 == 240029-1.html 240029-1-ref.html
 == 240470-1.html 240470-1-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rtl.xul
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 == 243519-1.html 243519-1-ref.html
@@ -1024,4 +1026,5 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 467460-1.html 467460-1-ref.html
 == 468473-1.xul 468473-1-ref.xul
 == 471356-1.html 471356-1-ref.html
+== 471594-1.xhtml 471594-1-ref.html
 == 472500-1.xul 472500-1-ref.xul

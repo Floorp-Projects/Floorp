@@ -110,10 +110,12 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_initial_computation.html \
 		test_initial_storage.html \
 		test_media_queries.html \
+		test_media_queries_dynamic.html \
 		test_media_queries_dynamic_xbl.html \
 		test_namespace_rule.html \
 		test_of_type_selectors.xhtml \
 		test_parse_rule.html \
+		test_parse_url.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
 		test_selectors.html \
