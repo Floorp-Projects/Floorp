@@ -47,6 +47,7 @@
 #include "nsIDOMStorageItem.h"
 #include "nsInterfaceHashtable.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsPIDOMStorage.h"
 #include "nsIDOMToString.h"
 #include "nsDOMEvent.h"
@@ -263,7 +264,7 @@ protected:
    */
   static PRBool
   ConvertDomainToArray(const nsAString& aDomain,
-                       nsStringArray* aArray);
+                       nsTArray<nsString>* aArray);
 
   nsInterfaceHashtable<nsStringHashKey, nsIDOMStorage> mStorages;
 };

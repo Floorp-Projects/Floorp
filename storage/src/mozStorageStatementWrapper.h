@@ -44,6 +44,7 @@
 #include "nsIXPCScriptable.h"
 
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 
 #include "sqlite3.h"
 
@@ -74,7 +75,7 @@ protected:
     nsRefPtr<mozStorageStatement> mStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
-    nsStringArray mColumnNames;
+    nsTArray<nsString> mColumnNames;
 
     nsCOMPtr<mozIStorageStatementRow> mStatementRow;
     nsCOMPtr<mozIStorageStatementParams> mStatementParams;
