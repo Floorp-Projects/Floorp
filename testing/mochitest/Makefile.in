@@ -74,8 +74,7 @@ _SERV_FILES = 	\
 
 
 _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
-_PROFILE_DIR = $(DEPTH)/_profile/pgo
-_CERTS_SRC_DIR = $(topsrcdir)/build/pgo/certs
+_CERTS_DIR = $(DEPTH)/_profile/pgo/certs
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
@@ -102,8 +101,7 @@ TEST_DRIVER_PPARGS = 	\
 			-DBROWSER_PATH=$(browser_path) \
 			-DXPC_BIN_PATH=\"$(LIBXUL_DIST)/bin\" \
 			-DBIN_SUFFIX=\"$(BIN_SUFFIX)\" \
-			-DPROFILE_DIR=\"../$(_PROFILE_DIR)\" \
-			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \
+			-DCERTS_DIR=\"../$(_CERTS_DIR)\" \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
