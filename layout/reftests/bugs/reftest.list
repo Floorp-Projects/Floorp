@@ -177,7 +177,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 236539-1.html 236539-1-ref.html
 == 240029-1.html 240029-1-ref.html
 == 240470-1.html 240470-1-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="cocoa")!= 240536-resizer-ltr.xul 240536-resizer-rtl.xul
+skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rtl.xul
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 == 243519-1.html 243519-1-ref.html
