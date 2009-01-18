@@ -115,7 +115,7 @@ protected:
                            const HIRect& inBoxRect, PRBool inSelected,
                            PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
   void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect, nsIFrame* aFrame);
-  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
+  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                       PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
   void DrawButton(CGContextRef context, ThemeButtonKind inKind,
                   const HIRect& inBoxRect, PRBool inIsDefault, 
