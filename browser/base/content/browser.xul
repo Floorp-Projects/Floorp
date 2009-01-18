@@ -420,8 +420,7 @@
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100" persist="width">
-        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"
-                   newlines="replacewithspaces"/>
+        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
