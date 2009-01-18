@@ -1196,6 +1196,9 @@
         <parameter name="aLoadInBackground"/>
         <parameter name="aReplace"/>
         <body><![CDATA[
+          if (!aURIs.length)
+            return;
+
           // The tab selected after this new tab is closed (i.e. the new tab's
           // "owner") is the next adjacent tab (i.e. not the previously viewed tab)
           // when several urls are opened here (i.e. closing the first should select
