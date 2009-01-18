@@ -428,10 +428,10 @@
                           key="key_viewSource"
                           command="View:PageSource"/>
 #ifndef XP_MACOSX
-                <menuitem id="menu_fullScreen"
+                <menuitem id="fullScreenItem"
                           accesskey="&fullScreenCmd.accesskey;"
-                          label="&fullScreenCmd.label;" key="key_fullScreen"
-                          id="fullScreenItem"
+                          label="&fullScreenCmd.label;"
+                          key="key_fullScreen"
                           type="checkbox"
                           command="View:FullScreen"/>
 #endif
