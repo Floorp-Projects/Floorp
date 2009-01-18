@@ -208,13 +208,44 @@
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
-                align="center" pack="center" flex="1">
+                align="center" pack="center" flex="1" anonid="button-box">
         <children>
           <xul:image class="button-icon" xbl:inherits="src=image"/>
           <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop"/>
         </children>
       </xul:hbox>
     </content>
+  </binding>
+
+  <binding id="button-periodic-redraw"
+           extends="chrome://global/content/bindings/button.xml#button">
+    <implementation>
+      <field name="_alive">true</field>
+      <method name="_init">
+        <body><![CDATA[
+          var step = 0;
+          var self = this;
+          var hbox = document.getAnonymousElementByAttribute(this, "anonid", "button-box");
+          var interval = setInterval(function nextStep() {
+            try {
+              // Only bother redrawing when we're visible
+              if (!hbox.getBoundingClientRect().width) {
+                // Maybe we've been removed from the document.
+                if (!self._alive)
+                  clearInterval(interval);
+                return;
+              }
+              // Trigger redraw by changing the step attribute
+              step = 1 - step;
+              self.setAttribute('step', step);
+            } catch (e) {
+              clearInterval(interval);
+            }
+          }, 100);
+        ]]></body>
+      </method>
+      <constructor>this._init();</constructor>
+    </implementation>
   </binding>
 
   <binding id="menu" display="xul:menu"

@@ -66,6 +66,10 @@
    intptr_t and uintptr_t.  */
 #undef JS_STDDEF_H_HAS_INTPTR_T
 
+/* Define to 1 if #including <crtdefs.h> provides definitions for
+   intptr_t and uintptr_t.  */
+#undef JS_CRTDEFS_H_HAS_INTPTR_T
+
 /* The configure script defines these if it doesn't #define
    JS_HAVE_STDINT_H.  */
 #undef JS_INT8_TYPE

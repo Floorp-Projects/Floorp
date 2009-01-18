@@ -113,25 +113,3 @@ nsIntSize nsHTMLVideoElement::GetVideoSize(nsIntSize aDefaultSize)
 {
   return mMediaSize.width == -1 && mMediaSize.height == -1 ? aDefaultSize : mMediaSize;
 }
-
-nsresult nsHTMLVideoElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                        nsIContent* aBindingParent,
-                                        PRBool aCompileEventHandlers)
-{
-  if (mDecoder)
-    mDecoder->ElementAvailable(this);
-
-  return nsHTMLMediaElement::BindToTree(aDocument, 
-                                        aParent, 
-                                        aBindingParent, 
-                                        aCompileEventHandlers);
-}
-
-void nsHTMLVideoElement::UnbindFromTree(PRBool aDeep,
-                                        PRBool aNullParent)
-{
-  nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
-
-  if (mDecoder) 
-    mDecoder->ElementUnavailable();
-}

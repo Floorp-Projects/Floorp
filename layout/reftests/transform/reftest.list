@@ -87,4 +87,18 @@ random == rotate-1e.html rotate-1-ref.html
 == matrix-5a.html matrix-5-ref.html
 == matrix-6a.html matrix-6-ref.html
 == matrix-7a.html matrix-7-ref.html
+# ensure matrix 3d does not break us - should do nothing
+== matrix3d-1.html matrix3d-1-ref.html
+# Test that complex transform can be reversed
+== stresstest-1.html stresstest-1-ref.html
+# Test scale transforms
+== scalex-1.html scalex-1-ref.html
+== scaley-1.html scaley-1-ref.html
+== scale-1a.html scale-1-ref.html
+== scale-1b.html scale-1-ref.html
+== scale-percent-1.html scale-percent-1-ref.html
+# Some simple checks that it obeys selector operations
+== descendant-1.html descendant-1-ref.html
 == propagate-inherit-boolean.html propagate-inherit-boolean-ref.html
+# Ensure you can't move outside an iframe
+== iframe-1.html iframe-1-ref.html

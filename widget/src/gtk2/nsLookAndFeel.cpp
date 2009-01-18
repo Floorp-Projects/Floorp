@@ -58,6 +58,8 @@ nscolor   nsLookAndFeel::sButtonOuterLightBorder = 0;
 nscolor   nsLookAndFeel::sButtonInnerDarkBorder = 0;
 nscolor   nsLookAndFeel::sOddCellBackground = 0;
 nscolor   nsLookAndFeel::sNativeHyperLinkText = 0;
+nscolor   nsLookAndFeel::sComboBoxText = 0;
+nscolor   nsLookAndFeel::sComboBoxBackground = 0;
 PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 float     nsLookAndFeel::sCaretRatio = 0;
 
@@ -308,6 +310,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         break;
     case eColor__moz_nativehyperlinktext:
         aColor = sNativeHyperLinkText;
+        break;
+    case eColor__moz_comboboxtext:
+        aColor = sComboBoxText;
+        break;
+    case eColor__moz_combobox:
+        aColor = sComboBoxBackground;
         break;
     default:
         /* default color is BLACK */
@@ -682,29 +690,46 @@ nsLookAndFeel::InitLookAndFeel()
     GtkWidget *parent = gtk_fixed_new();
     GtkWidget *button = gtk_button_new();
     GtkWidget *label = gtk_label_new("M");
+    GtkWidget *combobox = gtk_combo_box_new();
+    GtkWidget *comboboxLabel = gtk_label_new("M");
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
 
     gtk_container_add(GTK_CONTAINER(button), label);
+    gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
     gtk_container_add(GTK_CONTAINER(parent), button);
     gtk_container_add(GTK_CONTAINER(parent), treeView);
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
+    gtk_container_add(GTK_CONTAINER(parent), combobox);
     gtk_container_add(GTK_CONTAINER(window), parent);
 
     gtk_widget_set_rc_style(button);
     gtk_widget_set_rc_style(label);
     gtk_widget_set_rc_style(treeView);
     gtk_widget_set_rc_style(linkButton);
+    gtk_widget_set_rc_style(combobox);
+    gtk_widget_set_rc_style(comboboxLabel);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
     gtk_widget_realize(treeView);
     gtk_widget_realize(linkButton);
+    gtk_widget_realize(combobox);
+    gtk_widget_realize(comboboxLabel);
 
     style = gtk_widget_get_style(label);
     if (style) {
         sButtonText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+    }
+
+    style = gtk_widget_get_style(comboboxLabel);
+    if (style) {
+        sComboBoxText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+    }
+    style = gtk_widget_get_style(combobox);
+    if (style) {
+        sComboBoxBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
     }
 
     // GTK's guide to fancy odd row background colors:

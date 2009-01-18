@@ -1753,11 +1753,7 @@ nsObjectLoadingContent::CheckClassifier(nsIChannel *aChannel)
     do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = classifier->Start(aChannel);
-  if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
-    // no URI classifier, ignore this
-    return NS_OK;
-  }
+  rv = classifier->Start(aChannel, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mClassifier = classifier;

@@ -95,6 +95,9 @@ include percent-overflow-sizing/reftest.list
 # pixel-rounding/
 include pixel-rounding/reftest.list
 
+# plugin/
+include ../../modules/plugin/test/reftest/reftest.list
+
 # printing
 include printing/reftest.list
 include pagination/reftest.list

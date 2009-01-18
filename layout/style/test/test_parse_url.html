@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=473914
+-->
+<head>
+  <title>Test for Bug 473914</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=473914">Mozilla Bug 473914</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 473914 **/
+
+var div = document.getElementById("content");
+
+// This test relies on normalization (removal of quote marks) that we're not
+// really guaranteed to continue doing in the future (and we should probably
+// actually change to add the quote marks).
+div.style.listStyleImage = 'url(http://example.org/**/)';
+is(div.style.listStyleImage, 'url(http://example.org/**/)',
+   "not treated as comment");
+div.style.listStyleImage = 'url("http://example.org/**/")';
+is(div.style.listStyleImage, 'url(http://example.org/**/)',
+   "not treated as comment");
+div.style.listStyleImage = 'url(/**/foo)';
+is(div.style.listStyleImage, 'url(/**/foo)',
+   "not treated as comment");
+div.style.listStyleImage = 'url("/**/foo")';
+is(div.style.listStyleImage, 'url(/**/foo)',
+   "not treated as comment");
+div.style.listStyleImage = 'url(/**/)';
+is(div.style.listStyleImage, 'url(/**/)',
+   "not treated as comment");
+div.style.listStyleImage = 'url("/**/")';
+is(div.style.listStyleImage, 'url(/**/)',
+   "not treated as comment");
+
+</script>
+</pre>
+</body>
+</html>

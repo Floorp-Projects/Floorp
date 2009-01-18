@@ -1223,77 +1223,76 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
 {
   nsresult result = NS_OK;
 
-  if (aNode) {
-    nsCOMPtr<nsIFormProcessor> theFormProcessor =
-             do_GetService(kFormProcessorCID, &result);
-
-    if (NS_SUCCEEDED(result)) {
-      PRInt32      theAttrCount = aNode->GetAttributeCount();
-      nsStringArray  theContent;
-      nsAutoString theAttribute;
-      nsAutoString theFormType;
-      CToken*      theToken = nsnull;
-
-      theFormType.AssignLiteral("select");
-
-      result = theFormProcessor->ProvideContent(theFormType, theContent,
-                                                theAttribute);
-      if (NS_SUCCEEDED(result)) {
-        nsString* theTextValue = nsnull;
-        PRInt32   theIndex = nsnull;
-
-        if (mTokenizer && mTokenAllocator) {
-          // Populate the tokenizer with the fabricated elements in the reverse
-          // order such that <SELECT> is on the top fo the tokenizer followed by
-          // <OPTION>s and </SELECT>.
-          theToken = mTokenAllocator->CreateTokenOfType(eToken_end,
-                                                        eHTMLTag_select);
-          NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
-          mTokenizer->PushTokenFront(theToken);
-
-          for (theIndex = theContent.Count()-1; theIndex > -1; --theIndex) {
-            theTextValue = theContent[theIndex];
-            theToken = mTokenAllocator->CreateTokenOfType(eToken_text,
-                                                          eHTMLTag_text,
-                                                          *theTextValue);
-            NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
-            mTokenizer->PushTokenFront(theToken);
-
-            theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
-                                                          eHTMLTag_option);
-            NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
-            mTokenizer->PushTokenFront(theToken);
-          }
-
-          // The attribute ( provided by the form processor ) should be a part
-          // of the SELECT.  Placing the attribute token on the tokenizer to get
-          // picked up by the SELECT.
-          theToken = mTokenAllocator->CreateTokenOfType(eToken_attribute,
-                                                        eHTMLTag_unknown,
-                                                        theAttribute);
-          NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
-
-          ((CAttributeToken*)theToken)->SetKey(NS_LITERAL_STRING("_moz-type"));
-          mTokenizer->PushTokenFront(theToken);
-
-          // Pop out NAME and CHALLENGE attributes ( from the keygen NODE ) and
-          // place it in the tokenizer such that the attribtues get sucked into
-          // SELECT node.
-          for (theIndex = theAttrCount; theIndex > 0; --theIndex) {
-            mTokenizer->PushTokenFront(((nsCParserNode*)aNode)->PopAttributeToken());
-          }
-
-          theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
-                                                        eHTMLTag_select);
-          NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
-
-          // Increment the count because of the additional attribute from the form processor.
-          theToken->SetAttributeCount(theAttrCount + 1);
-          mTokenizer->PushTokenFront(theToken);
-        }
-      }
-    }
+  nsCOMPtr<nsIFormProcessor> theFormProcessor =
+           do_GetService(kFormProcessorCID, &result);
+  if (NS_FAILED(result)) {
+    return result;
   }
+
+  PRInt32      theAttrCount = aNode->GetAttributeCount();
+  nsStringArray  theContent;
+  nsAutoString theAttribute;
+  nsAutoString theFormType;
+  CToken*      theToken = nsnull;
+
+  theFormType.AssignLiteral("select");
+
+  result = theFormProcessor->ProvideContent(theFormType, theContent,
+                                            theAttribute);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  nsString* theTextValue = nsnull;
+  PRInt32   theIndex = nsnull;
+
+  // Populate the tokenizer with the fabricated elements in the reverse
+  // order such that <SELECT> is on the top fo the tokenizer followed by
+  // <OPTION>s and </SELECT>.
+  theToken = mTokenAllocator->CreateTokenOfType(eToken_end,
+                                                eHTMLTag_select);
+  NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
+  mTokenizer->PushTokenFront(theToken);
+
+  for (theIndex = theContent.Count()-1; theIndex > -1; --theIndex) {
+    theTextValue = theContent[theIndex];
+    theToken = mTokenAllocator->CreateTokenOfType(eToken_text,
+                                                  eHTMLTag_text,
+                                                  *theTextValue);
+    NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
+    mTokenizer->PushTokenFront(theToken);
+
+    theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
+                                                  eHTMLTag_option);
+    NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
+    mTokenizer->PushTokenFront(theToken);
+  }
+
+  // The attribute ( provided by the form processor ) should be a part
+  // of the SELECT.  Placing the attribute token on the tokenizer to get
+  // picked up by the SELECT.
+  theToken = mTokenAllocator->CreateTokenOfType(eToken_attribute,
+                                                eHTMLTag_unknown,
+                                                theAttribute);
+  NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
+
+  ((CAttributeToken*)theToken)->SetKey(NS_LITERAL_STRING("_moz-type"));
+  mTokenizer->PushTokenFront(theToken);
+
+  // Pop out NAME and CHALLENGE attributes ( from the keygen NODE ) and
+  // place it in the tokenizer such that the attribtues get sucked into
+  // SELECT node.
+  for (theIndex = theAttrCount; theIndex > 0; --theIndex) {
+    mTokenizer->PushTokenFront(((nsCParserNode*)aNode)->PopAttributeToken());
+  }
+
+  theToken = mTokenAllocator->CreateTokenOfType(eToken_start,
+                                                eHTMLTag_select);
+  NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
+
+  // Increment the count because of the additional attribute from the form processor.
+  theToken->SetAttributeCount(theAttrCount + 1);
+  mTokenizer->PushTokenFront(theToken);
+
   return result;
 }
 

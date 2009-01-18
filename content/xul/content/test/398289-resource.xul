@@ -37,4 +37,6 @@
 
   </tabbox>
 
+  <box height="1000"/> <!-- Push dialog buttons out of sight so that the animated default button isn't part of the snapshot -->
+
 </dialog>

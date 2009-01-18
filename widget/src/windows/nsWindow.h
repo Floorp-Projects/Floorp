@@ -84,6 +84,7 @@ struct nsFakeCharMessage;
 #define WINXP_VERSION   0x501
 #define WIN2K3_VERSION  0x502
 #define VISTA_VERSION   0x600
+#define WIN7_VERSION    0x601
 
 PRInt32 GetWindowsVersion();
 

@@ -107,8 +107,6 @@ public:
 
   nsStyleContext* GetParent() const { return mParent; }
 
-  nsStyleContext* GetFirstChild() const { return mChild; }
-
   nsIAtom* GetPseudoType() const { return mPseudoTag; }
 
   NS_HIDDEN_(already_AddRefed<nsStyleContext>)
@@ -178,7 +176,7 @@ protected:
 
   NS_HIDDEN_(void) ApplyStyleFixups(nsPresContext* aPresContext);
 
-  nsStyleContext* mParent;
+  nsStyleContext* const mParent;
 
   // Children are kept in two circularly-linked lists.  The list anchor
   // is not part of the list (null for empty), and we point to the first

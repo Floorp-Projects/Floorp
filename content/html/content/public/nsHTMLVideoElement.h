@@ -64,11 +64,6 @@ public:
   NS_DECL_NSIDOMHTMLVIDEOELEMENT
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
 
   // Returns the current video frame width and height.
   // If there is no video frame, returns the given default size.
