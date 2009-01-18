@@ -270,7 +270,7 @@
     <content>
       <children/>
       <xul:statusbarpanel class="statusbar-resizerpanel">
-        <xul:resizer dir="bottomright"/>
+        <xul:resizer dir="bottomend"/>
       </xul:statusbarpanel>
     </content>
 
