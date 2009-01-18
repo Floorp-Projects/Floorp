@@ -82,7 +82,8 @@ IS_CYGWIN = False
 UNIXISH = not IS_WIN32 and not IS_MAC
 
 #expand DEFAULT_APP = "./" + __BROWSER_PATH__
-#expand CERTS_DIR = __CERTS_DIR__
+#expand PROFILE_DIR = __PROFILE_DIR__
+#expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
 #expand IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
 
@@ -398,11 +399,11 @@ def fillCertificateDB(profileDir):
   pwfile.close()
 
   # Create head of the ssltunnel configuration file
-  sslTunnelConfigPath = os.path.join(CERTS_DIR, "ssltunnel.cfg")
+  sslTunnelConfigPath = os.path.join(PROFILE_DIR, "ssltunnel.cfg")
   sslTunnelConfig = open(sslTunnelConfigPath, "w")
   
   sslTunnelConfig.write("httpproxy:1\n")
-  sslTunnelConfig.write("certdbdir:%s\n" % CERTS_DIR)
+  sslTunnelConfig.write("certdbdir:%s\n" % CERTS_SRC_DIR)
   sslTunnelConfig.write("forward:127.0.0.1:8888\n")
   sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
 
@@ -437,16 +438,17 @@ def fillCertificateDB(profileDir):
     return status
 
   # Walk the cert directory and add custom CAs and client certs
-  files = os.listdir(CERTS_DIR)
+  files = os.listdir(CERTS_SRC_DIR)
   for item in files:
     root, ext = os.path.splitext(item)
     if ext == ".ca":
-      Process(certutil, ["-A", "-i", os.path.join(CERTS_DIR, item),
+      Process(certutil, ["-A", "-i", os.path.join(CERTS_SRC_DIR, item),
         "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", "CT,,"],
         environment()).wait()
     if ext == ".client":
-      Process(pk12util, ["-i", os.path.join(CERTS_DIR, item), "-w", pwfilePath,
-        "-d", profileDir], environment()).wait()
+      Process(pk12util, ["-i", os.path.join(CERTS_SRC_DIR, item), "-w",
+        pwfilePath, "-d", profileDir], 
+        environment()).wait()
 
   os.unlink(pwfilePath)
   return 0
@@ -478,7 +480,7 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   
     # start ssltunnel to provide https:// URLs capability
     ssltunnel = DIST_BIN + "/ssltunnel" + BIN_SUFFIX
-    ssltunnelProcess = Process(ssltunnel, [os.path.join(CERTS_DIR, "ssltunnel.cfg")], environment())
+    ssltunnelProcess = Process(ssltunnel, [os.path.join(PROFILE_DIR, "ssltunnel.cfg")], environment())
     log.info("SSL tunnel pid: %d", ssltunnelProcess.pid)
   
   "Run the app, returning the time at which it was started."
