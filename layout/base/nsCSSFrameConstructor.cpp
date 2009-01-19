@@ -5453,9 +5453,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   // newFrame will still point to the child that we created like a "div" for example.
   nsIFrame* topFrame = nsnull;
 
-  // Store aParentFrame away, since we plan to stomp on it later
-  nsIFrame* origParentFrame = aParentFrame;
-
   NS_ASSERTION(aTag != nsnull, "null XUL tag");
   if (aTag == nsnull)
     return NS_OK;
@@ -5747,11 +5744,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       BuildScrollFrame(aState, aContent, aStyleContext, newFrame,
                        aParentFrame, topFrame, aStyleContext);
 
-      // we have a scrollframe so the parent becomes the scroll frame.
-      // XXXldb Do we really want to do this?  The one case where it
-      // matters when |frameHasBeenInitialized| is true is one where
-      // I think we'd be better off the other way around.
-      aParentFrame = newFrame->GetParent();
+      // No need to change aParentFrame here, since its only use when
+      // !frameHasBeenInitialized is for the AddChild call (and in that case we
+      // definitely want the original aParentFrame passed to this method).
       primaryFrameSet = PR_TRUE;
       frameHasBeenInitialized = PR_TRUE;
     }
@@ -5770,25 +5765,21 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     if (topFrame == nsnull)
         topFrame = newFrame;
 
-    // xul does not support absolute positioning
-    nsIFrame* geometricParent;
-#ifdef MOZ_XUL
-    if (isPopup) {
-      NS_ASSERTION(aState.mPopupItems.containingBlock, "How did we get here?");
-      geometricParent = aState.mPopupItems.containingBlock;
-    }
-    else
-#endif
-    {
-      geometricParent = aParentFrame;
-    }
-    
-    /*
-      nsIFrame* geometricParent = aState.GetGeometricParent(display, aParentFrame);
-    */
     // if the new frame was already initialized to initialize it again.
     if (!frameHasBeenInitialized) {
-
+      // xul does not support absolute positioning
+      nsIFrame* geometricParent;
+#ifdef MOZ_XUL
+      if (isPopup) {
+        NS_ASSERTION(aState.mPopupItems.containingBlock, "How did we get here?");
+        geometricParent = aState.mPopupItems.containingBlock;
+      }
+      else
+#endif
+      { 
+        geometricParent = aParentFrame;
+      }
+    
       rv = InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, newFrame);
 
       if (NS_FAILED(rv)) {
@@ -5796,32 +5787,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         return rv;
       }
       
-      /*
-      // if our parent is a block frame then do things the way html likes it
-      // if not then we are in a box so do what boxes like. On example is boxes
-      // do not support the absolute positioning of their children. While html blocks
-      // that's why we call different things here.
-      nsIAtom* frameType = geometricParent->GetType();
-      if ((frameType == nsGkAtoms::blockFrame) ||
-          (frameType == nsGkAtoms::XULLabelFrame)) {
-      */
-        // See if we need to create a view, e.g. the frame is absolutely positioned
-        nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
-
-      /*
-      } else {
-          // we are in a box so do the box thing.
-        nsBoxFrame::CreateViewForFrame(aState.mPresContext, newFrame,
-                                                 aStyleContext, PR_FALSE);
-      }
-      */
-      
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
     }
 
     // Add the new frame to our list of frame items.  Note that we
     // don't support floating or positioning of XUL frames.
     rv = aState.AddChild(topFrame, aFrameItems, aContent, aStyleContext,
-                         origParentFrame, PR_FALSE, PR_FALSE, isPopup);
+                         aParentFrame, PR_FALSE, PR_FALSE, isPopup);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -5860,15 +5832,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   }
 #endif
 
-// addToHashTable:
 
   if (topFrame) {
-    // the top frame is always what we map the content to. This is the frame that contains a pointer
-    // to the content node.
-
-    // Add a mapping from content object to primary frame. Note that for
-    // floated and positioned frames this is the out-of-flow frame and not
-    // the placeholder frame
     if (!primaryFrameSet)
         aState.mFrameManager->SetPrimaryFrameFor(aContent, topFrame);
   }
