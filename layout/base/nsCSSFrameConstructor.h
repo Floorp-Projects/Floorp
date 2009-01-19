@@ -584,6 +584,12 @@ private:
      frame.  If this is not set, the frame will be pushed as the
      absolute containing block as needed, based on its style */
 #define FCDATA_FORCE_NULL_ABSPOS_CONTAINER 0x10
+#ifdef MOZ_MATHML
+  /* If FCDATA_WRAP_KIDS_IN_BLOCKS is set, the inline kids of the frame
+     will be wrapped in blocks.  This is only usable for MathML at the
+     moment. */
+#define FCDATA_WRAP_KIDS_IN_BLOCKS 0x20
+#endif
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -826,14 +832,12 @@ private:
                                  nsFrameItems* aBlockItems,
                                  nsFrameItems* aNewItems);
 
-  nsresult ConstructMathMLFrame(nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aParentFrame,
-                                nsIAtom*                 aTag,
-                                PRInt32                  aNameSpaceID,
-                                nsStyleContext*          aStyleContext,
-                                nsFrameItems&            aFrameItems,
-                                PRBool                   aHasPseudoParent);
+  // Function to find FrameConstructionData for aContent.  Will return
+  // null if aContent is not MathML.
+  static const FrameConstructionData* FindMathMLData(nsIContent* aContent,
+                                                     nsIAtom* aTag,
+                                                     PRInt32 aNameSpaceID,
+                                                     nsStyleContext* aStyleContext);
 #endif
 
   nsresult ConstructXULFrame(nsFrameConstructorState& aState,
