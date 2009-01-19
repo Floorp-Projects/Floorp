@@ -56,7 +56,6 @@ XPIDLSRCS = \
 	mozIStorageProgressHandler.idl \
 	mozIStorageStatement.idl \
 	mozIStorageStatementWrapper.idl \
-	mozIStorageDataSet.idl \
 	mozIStorageValueArray.idl \
 	mozIStorageResultSet.idl \
 	mozIStorageRow.idl \
