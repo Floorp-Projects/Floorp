@@ -116,6 +116,9 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD SetInitialChildList(nsIAtom*  aListName,
+                                 nsIFrame* aChildList);
+
   static PRBool  gDragInProgress;
 
   void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
