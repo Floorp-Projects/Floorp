@@ -60,15 +60,8 @@
 
 nsIFrame*
 NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
-                            nsIContent     *aContent,
                             nsStyleContext *aContext)
 {
-  nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(aContent);
-  if (!foreignObject) {
-    NS_ERROR("Can't create frame! Content is not an SVG foreignObject!");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGForeignObjectFrame(aContext);
 }
 
@@ -92,6 +85,11 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
                               nsIFrame*   aParent,
                               nsIFrame*   aPrevInFlow)
 {
+#ifdef DEBUG
+  nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(aContent);
+  NS_ASSERTION(foreignObject, "Content is not an SVG foreignObject!");
+#endif
+
   nsresult rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM | 
                (aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD));

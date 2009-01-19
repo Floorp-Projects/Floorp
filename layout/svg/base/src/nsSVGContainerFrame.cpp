@@ -44,7 +44,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGContainerFrame)
 
 nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
-                        nsIContent* aContent,
                         nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGContainerFrame(aContext);

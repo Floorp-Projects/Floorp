@@ -45,12 +45,18 @@ typedef nsSVGGFrame nsSVGSwitchFrameBase;
 class nsSVGSwitchFrame : public nsSVGSwitchFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGSwitchFrame(nsStyleContext* aContext) :
     nsSVGSwitchFrameBase(aContext) {}
 
 public:
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
+
   /**
    * Get the "type" of the frame
    *
@@ -82,16 +88,23 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {  
-  nsCOMPtr<nsIDOMSVGSwitchElement> svgSwitch = do_QueryInterface(aContent);
-  if (!svgSwitch) {
-    NS_ERROR("Can't create frame. Content is not an SVG switch\n");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGSwitchFrame(aContext);
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGSwitchFrame::Init(nsIContent* aContent,
+                       nsIFrame* aParent,
+                       nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGSwitchElement> svgSwitch = do_QueryInterface(aContent);
+  NS_ASSERTION(svgSwitch, "Content is not an SVG switch\n");
+
+  return nsSVGSwitchFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 nsIAtom *
 nsSVGSwitchFrame::GetType() const
