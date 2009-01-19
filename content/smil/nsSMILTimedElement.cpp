@@ -153,6 +153,37 @@ nsSMILTimedElement::EndElementAt(double aOffsetSeconds,
 }
 
 //----------------------------------------------------------------------
+// nsSVGAnimationElement methods
+
+nsSMILTimeValue
+nsSMILTimedElement::GetStartTime() const
+{
+  nsSMILTimeValue startTime;
+
+  switch (mElementState)
+  {
+  case STATE_STARTUP:
+  case STATE_ACTIVE:
+    startTime = mCurrentInterval.mBegin;
+    break;
+
+  case STATE_WAITING:
+  case STATE_POSTACTIVE:
+    if (!mOldIntervals.IsEmpty()) {
+      startTime = mOldIntervals[mOldIntervals.Length() - 1].mBegin;
+    } else {
+      startTime = mCurrentInterval.mBegin;
+    }
+  }
+
+  if (!startTime.IsResolved()) {
+    startTime.SetIndefinite();
+  }
+  
+  return startTime;
+}
+
+//----------------------------------------------------------------------
 // nsSMILTimedElement
 
 void
@@ -408,11 +439,15 @@ nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
   rv = nsSMILParserUtils::ParseClockValue(aDurSpec, &duration,
           nsSMILParserUtils::kClockValueAllowIndefinite, &isMedia);
 
-  if (NS_FAILED(rv) || (!duration.IsResolved() && !duration.IsIndefinite()))
+  if (NS_FAILED(rv) || (!duration.IsResolved() && !duration.IsIndefinite())) {
+    mSimpleDur.SetIndefinite();
     return NS_ERROR_FAILURE;
+  }
   
-  if (duration.IsResolved() && duration.GetMillis() == 0L)
+  if (duration.IsResolved() && duration.GetMillis() == 0L) {
+    mSimpleDur.SetIndefinite();
     return NS_ERROR_FAILURE;
+  }
 
   //
   // SVG-specific: "For SVG's animation elements, if "media" is specified, the
@@ -420,6 +455,11 @@ nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
   //
   if (isMedia)
     duration.SetIndefinite();
+
+  // mSimpleDur should never be unresolved. ParseClockValue will either set
+  // duration to resolved/indefinite/media or will return a failure code.
+  NS_ASSERTION(duration.IsResolved() || duration.IsIndefinite(),
+    "Setting unresolved simple duration");
 
   mSimpleDur = duration;
 
@@ -553,14 +593,16 @@ nsSMILTimedElement::UnsetRepeatCount()
 nsresult
 nsSMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec)
 {
-  nsresult        rv;
+  nsresult rv;
   nsSMILTimeValue duration;
 
   rv = nsSMILParserUtils::ParseClockValue(aRepeatDurSpec, &duration,
           nsSMILParserUtils::kClockValueAllowIndefinite);
 
-  if (NS_FAILED(rv) || (!duration.IsResolved() && !duration.IsIndefinite()))
+  if (NS_FAILED(rv) || (!duration.IsResolved() && !duration.IsIndefinite())) {
+    mRepeatDur.SetUnresolved();
     return NS_ERROR_FAILURE;
+  }
   
   UpdateCurrentInterval();
   
@@ -780,11 +822,8 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
 {
   nsSMILTimeValue result;
 
-  if (!mSimpleDur.IsIndefinite() && !mSimpleDur.IsResolved()) {
-    NS_ERROR("Unresolved simple duration in CalcActiveEnd.");
-    result.SetIndefinite();
-    return result;
-  }
+  NS_ASSERTION(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
+    "Unresolved simple duration in CalcActiveEnd.");
 
   if (!aBegin.IsResolved() && !aBegin.IsIndefinite()) {
     NS_ERROR("Unresolved begin time passed to CalcActiveEnd.");
@@ -876,7 +915,7 @@ nsSMILTimedElement::ActiveTimeToSimpleTime(nsSMILTime aActiveTime,
   nsSMILTime result;
 
   NS_ASSERTION(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
-      "Trying to calculate active time with unresolved duration");
+      "Unresolved simple duration in ActiveTimeToSimpleTime");
 
   if (mSimpleDur.IsIndefinite() || mSimpleDur.GetMillis() == 0L) {
     aRepeatIteration = 0;
@@ -925,9 +964,6 @@ nsSMILTimedElement::CheckForEarlyEnd(const nsSMILTimeValue& aDocumentTime)
 void
 nsSMILTimedElement::UpdateCurrentInterval()
 {
-  if (mElementState == STATE_STARTUP)
-    return;
-
   nsSMILInterval updatedInterval;
   PRBool isFirstInterval = mOldIntervals.IsEmpty();
 

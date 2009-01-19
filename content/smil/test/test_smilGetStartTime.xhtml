@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for getStartTime Behavior </title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="20" cy="20" r="15" fill="blue">
+    <animate attributeName="cx" attributeType="XML" 
+      from="20" to="100" begin="indefinite" dur="1s" id="anim"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for getStartTime Behavior  **/
+
+/* Global Variables */
+var svg = document.getElementById("svg");
+var anim = document.getElementById("anim");
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  // Basic setting and getting
+
+  // indefinite 
+  is(anim.getStartTime(), 0, "Unexpected start time with indefinite begin");
+
+  // 1s
+  anim.setAttribute("begin", "1s");
+  is(anim.getStartTime(), 1, "Unexpected start time with begin=1s");
+
+  // We have to be careful here when choosing a negative time that we choose
+  // a time that will create an interval that reaches past t=0 as SMIL has
+  // special rules for throwing away intervals that end before t=0
+  anim.setAttribute("begin", "-0.5s");
+  is(anim.getStartTime(), -0.5, "Unexpected start time with begin=-0.5s");
+
+  // Now test over the lifetime of the animation when there are multiple
+  // intervals
+  //
+  // We do this via a series of setTimeouts because currently we sample (and
+  // update the model) asynchronously after a call to setCurrentTime
+  anim.setAttribute("begin", "1s; 3s");
+  is(anim.getStartTime(), 1, "Unexpected start time with begin=1s; 3s");
+  svg.setCurrentTime(1);
+  setTimeout('checkStartOfFirstInterval()', 0);
+}
+
+function checkStartOfFirstInterval() {
+  is(anim.getStartTime(), 1, "Unexpected start time during first interval");
+  svg.setCurrentTime(1.5);
+  setTimeout('checkMidFirstInterval()', 0);
+}
+
+function checkMidFirstInterval() {
+  is(anim.getStartTime(), 1, "Unexpected start time at end of first interval");
+  svg.setCurrentTime(2);
+  setTimeout('checkEndOfFirstInterval()', 0);
+}
+
+function checkEndOfFirstInterval() {
+  is(anim.getStartTime(), 1, "Unexpected start time in active interval");
+  svg.setCurrentTime(2.5);
+  setTimeout('checkAfterFirstInterval()', 0);
+}
+
+function checkAfterFirstInterval() {
+  is(anim.getStartTime(), 1, "Unexpected start time while waiting");
+  svg.setCurrentTime(3);
+  setTimeout('checkStartOfSecondInterval()', 0);
+}
+
+function checkStartOfSecondInterval() {
+  is(anim.getStartTime(), 3, "Unexpected start time in second active interval");
+  svg.setCurrentTime(4);
+  setTimeout('checkEndOfSecondInterval()', 0);
+}
+
+function checkEndOfSecondInterval() {
+  is(anim.getStartTime(), 3, "Unexpected start time while postactive");
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>
