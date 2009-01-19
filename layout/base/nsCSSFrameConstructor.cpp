@@ -284,13 +284,13 @@ nsIFrame*
 NS_NewThumbFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
-NS_NewDeckFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayoutManager = nsnull);
+NS_NewDeckFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
 NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
-NS_NewStackFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayoutManager = nsnull);
+NS_NewStackFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
 NS_NewProgressMeterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -328,17 +328,10 @@ NS_NewTreeBodyFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 // grid
 nsresult
 NS_NewGridLayout2 ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
-nsresult
-NS_NewGridRowLeafLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
 nsIFrame*
-NS_NewGridRowLeafFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot, nsIBoxLayout* aLayout);
-nsresult
-NS_NewGridRowGroupLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
+NS_NewGridRowLeafFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewGridRowGroupFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot, nsIBoxLayout* aLayout);
-
-nsresult
-NS_NewListBoxLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+NS_NewGridRowGroupFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // end grid
 
@@ -5440,7 +5433,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
                                          PRInt32                  aNameSpaceID,
                                          nsStyleContext*          aStyleContext,
                                          nsFrameItems&            aFrameItems,
-                                         PRBool                   aXBLBaseTag,
                                          PRBool                   aHasPseudoParent,
                                          PRBool*                  aHaltProcessing)
 {
@@ -5541,9 +5533,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
           // XXX we should probably be calling ConstructBlock here to handle
           // things like columns etc
           if (aTag == nsGkAtoms::label) {
-            newFrame = NS_NewXULLabelFrame(mPresShell, aStyleContext,
-                                           NS_BLOCK_FLOAT_MGR |
-                                           NS_BLOCK_MARGIN_ROOT);
+            newFrame = NS_NewXULLabelFrame(mPresShell, aStyleContext);
           } else {
             newFrame = NS_NewBlockFrame(mPresShell, aStyleContext,
                                         NS_BLOCK_FLOAT_MGR |
@@ -5558,13 +5548,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
        // Menu Construction    
       else if (aTag == nsGkAtoms::menu ||
-               aTag == nsGkAtoms::menuitem || 
                aTag == nsGkAtoms::menubutton) {
         // A derived class box frame
         // that has custom reflow to prevent menu children
         // from becoming part of the flow.
-        newFrame = NS_NewMenuFrame(mPresShell, aStyleContext,
-          (aTag != nsGkAtoms::menuitem));
+        newFrame = NS_NewMenuFrame(mPresShell, aStyleContext);
+      }
+      else if (aTag == nsGkAtoms::menuitem) {
+        newFrame = NS_NewMenuItemFrame(mPresShell, aStyleContext);
       }
       else if (aTag == nsGkAtoms::menubar) {
   #ifdef XP_MACOSX
@@ -5648,7 +5639,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   
       if (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX ||
                display->mDisplay == NS_STYLE_DISPLAY_BOX) {
-        newFrame = NS_NewBoxFrame(mPresShell, aStyleContext, PR_FALSE, nsnull);
+        newFrame = NS_NewBoxFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
         mayBeScrollable = PR_TRUE;
@@ -5667,44 +5658,24 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
       // ------- Begin Rows/Columns ---------
       else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) {
-        nsCOMPtr<nsIBoxLayout> layout;
-      
         if (isXULNS && aTag == nsGkAtoms::listboxbody) {
-          NS_NewListBoxLayout(mPresShell, layout);
-          newFrame = NS_NewListBoxBodyFrame(mPresShell, aStyleContext, PR_FALSE, layout);
+          newFrame = NS_NewListBoxBodyFrame(mPresShell, aStyleContext);
         }
         else
         {
-          NS_NewGridRowGroupLayout(mPresShell, getter_AddRefs(layout));
-          newFrame = NS_NewGridRowGroupFrame(mPresShell, aStyleContext, PR_FALSE, layout);
+          newFrame = NS_NewGridRowGroupFrame(mPresShell, aStyleContext);
         }
 
         // Boxes can scroll.
-        if (display->IsScrollableOverflow()) {
-          // set the top to be the newly created scrollframe
-          BuildScrollFrame(aState, aContent, aStyleContext, newFrame,
-                           aParentFrame, topFrame, aStyleContext);
-
-          // we have a scrollframe so the parent becomes the scroll frame.
-          aParentFrame = newFrame->GetParent();
-
-          primaryFrameSet = PR_TRUE;
-
-          frameHasBeenInitialized = PR_TRUE;
-        }
+        mayBeScrollable = PR_TRUE;
       } //------- End Grid ------
 
       // ------- Begin Row/Column ---------
       else if (display->mDisplay == NS_STYLE_DISPLAY_GRID_LINE) {
-        nsCOMPtr<nsIBoxLayout> layout;
-
-
-        NS_NewGridRowLeafLayout(mPresShell, getter_AddRefs(layout));
-
         if (isXULNS && aTag == nsGkAtoms::listitem)
-          newFrame = NS_NewListItemFrame(mPresShell, aStyleContext, PR_FALSE, layout);
+          newFrame = NS_NewListItemFrame(mPresShell, aStyleContext);
         else
-          newFrame = NS_NewGridRowLeafFrame(mPresShell, aStyleContext, PR_FALSE, layout);
+          newFrame = NS_NewGridRowLeafFrame(mPresShell, aStyleContext);
 
         // Boxes can scroll.
         mayBeScrollable = PR_TRUE;
@@ -7042,7 +7013,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
 
     rv = ConstructXULFrame(aState, aContent, adjParentFrame, aTag,
                            aNameSpaceID, styleContext,
-                           *frameItems, aXBLBaseTag, pseudoParent,
+                           *frameItems, pseudoParent,
                            &haltProcessing);
 
     if (haltProcessing) {
@@ -9881,7 +9852,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   
 #ifdef MOZ_XUL
   } else if (nsGkAtoms::XULLabelFrame == frameType) {
-    newFrame = NS_NewXULLabelFrame(shell, styleContext, 0);
+    newFrame = NS_NewXULLabelFrame(shell, styleContext);
 
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
