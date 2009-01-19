@@ -232,10 +232,6 @@ NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 // Global object maintenance
 nsIXBLService * nsCSSFrameConstructor::gXBLService = nsnull;
 
-// Global prefs
-static PRBool gGotXBLFormPrefs = PR_FALSE;
-static PRBool gUseXBLForms = PR_FALSE;
-
 #ifdef DEBUG
 // Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
 // more of the following flags (comma separated) for handy debug
@@ -1830,13 +1826,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
 {
-  if (!gGotXBLFormPrefs) {
-    gGotXBLFormPrefs = PR_TRUE;
-
-    gUseXBLForms =
-      nsContentUtils::GetBoolPref("nglayout.debug.enable_xbl_forms");
-  }
-
   // XXXbz this should be in Init() or something!
   if (!mPendingRestyles.Init()) {
     // now what?
@@ -2223,9 +2212,6 @@ nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
     case NS_FORM_INPUT_RESET:
     case NS_FORM_INPUT_BUTTON:
     {
-      if (gUseXBLForms)
-        return NS_OK; // update IsSpecialContent if this becomes functional
-
       nsresult rv = ConstructButtonFrame(aState, aContent, aParentFrame,
                                          aTag, aStyleContext, aFrame,
                                          aStyleDisplay, aFrameItems,
@@ -2236,13 +2222,9 @@ nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
     }
 
     case NS_FORM_INPUT_CHECKBOX:
-      if (gUseXBLForms)
-        return NS_OK; // see comment above
       return ConstructCheckboxControlFrame(aFrame, aContent, aStyleContext);
 
     case NS_FORM_INPUT_RADIO:
-      if (gUseXBLForms)
-        return NS_OK; // see comment above
       return ConstructRadioControlFrame(aFrame, aContent, aStyleContext);
 
     case NS_FORM_INPUT_FILE:
@@ -5315,20 +5297,18 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     triedFrame = PR_TRUE;
   }
   else if (nsGkAtoms::select == aTag) {
-    if (!gUseXBLForms) {
-      if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-        ProcessPseudoFrames(aState, aFrameItems); 
-      }
-      rv = ConstructSelectFrame(aState, aContent, aParentFrame,
-                                aTag, aStyleContext, newFrame,
-                                display, frameHasBeenInitialized,
-                                aFrameItems);
-      if (newFrame) {
-        NS_ASSERTION(nsPlaceholderFrame::GetRealFrameFor(aFrameItems.lastChild) ==
-                     newFrame,
-                     "Frame didn't get added to aFrameItems?");
-        addedToFrameList = PR_TRUE;
-      }
+    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+      ProcessPseudoFrames(aState, aFrameItems); 
+    }
+    rv = ConstructSelectFrame(aState, aContent, aParentFrame,
+                              aTag, aStyleContext, newFrame,
+                              display, frameHasBeenInitialized,
+                              aFrameItems);
+    if (newFrame) {
+      NS_ASSERTION(nsPlaceholderFrame::GetRealFrameFor(aFrameItems.lastChild) ==
+                   newFrame,
+                   "Frame didn't get added to aFrameItems?");
+      addedToFrameList = PR_TRUE;
     }
   }
   else if (nsGkAtoms::object == aTag ||
@@ -8128,38 +8108,6 @@ nsCSSFrameConstructor::FindNextSibling(nsIContent* aContainer,
   return nsnull;
 }
 
-inline PRBool
-ShouldIgnoreSelectChild(nsIContent* aContainer)
-{
-  // Ignore options and optgroups inside a select (size > 1)
-  nsIAtom *containerTag = aContainer->Tag();
-
-  if (containerTag == nsGkAtoms::optgroup ||
-      containerTag == nsGkAtoms::select) {
-    nsIContent* selectContent = aContainer;
-
-    while (containerTag != nsGkAtoms::select) {
-      selectContent = selectContent->GetParent();
-      if (!selectContent) {
-        break;
-      }
-      containerTag = selectContent->Tag();
-    }
-
-    nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(selectContent);
-    if (selectElement) {
-      nsAutoString selSize;
-      aContainer->GetAttr(kNameSpaceID_None, nsGkAtoms::size, selSize);
-      if (!selSize.IsEmpty()) {
-        PRInt32 err;
-        return (selSize.ToInteger(&err) > 1);
-      }
-    }
-  }
-
-  return PR_FALSE;
-}
-
 // For fieldsets, returns the area frame, if the child is not a legend. 
 static nsIFrame*
 GetAdjustedParentFrame(nsIFrame*       aParentFrame,
@@ -8223,9 +8171,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     // Just ignore tree tags, anyway we don't create any frames for them.
     if (tag == nsGkAtoms::treechildren ||
         tag == nsGkAtoms::treeitem ||
-        tag == nsGkAtoms::treerow ||
-        (namespaceID == kNameSpaceID_XUL && gUseXBLForms &&
-         ShouldIgnoreSelectChild(aContainer)))
+        tag == nsGkAtoms::treerow)
       return NS_OK;
 
   }
@@ -8511,7 +8457,6 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
                          PRInt32            aIndexInContainer,
                          nsIDocument*       aDocument,                         
                          nsIFrame*          aChildFrame,
-                         PRBool             aUseXBLForms,
                          content_operation  aOperation)
 {
   if (!aContainer)
@@ -8543,15 +8488,6 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
       }
     }
   }
-
-  PRInt32 namespaceID;
-  aDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
-
-  // XBL form control cruft... should that really be testing that the
-  // namespace is XUL?  Seems odd...
-  if (aUseXBLForms && aContainer->GetParent() &&
-      namespaceID == kNameSpaceID_XUL && ShouldIgnoreSelectChild(aContainer))
-    return PR_TRUE;
 
   return PR_FALSE;
 }
@@ -8586,7 +8522,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 #ifdef MOZ_XUL
   if (NotifyListBoxBody(mPresShell->GetPresContext(), aContainer, aChild,
                         aIndexInContainer, 
-                        mDocument, nsnull, gUseXBLForms, CONTENT_INSERTED))
+                        mDocument, nsnull, CONTENT_INSERTED))
     return NS_OK;
 #endif // MOZ_XUL
   
@@ -9200,7 +9136,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 
 #ifdef MOZ_XUL
   if (NotifyListBoxBody(presContext, aContainer, aChild, aIndexInContainer, 
-                        mDocument, childFrame, gUseXBLForms, CONTENT_REMOVED))
+                        mDocument, childFrame, CONTENT_REMOVED))
     return NS_OK;
 
 #endif // MOZ_XUL
