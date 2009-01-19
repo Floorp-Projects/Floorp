@@ -3439,7 +3439,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
   if (styleDisplay->IsScrollableOverflow()) {
     // Create an area container for the frame
     BuildScrollFrame(aState, aContent, aStyleContext, aNewFrame, parentFrame,
-                     scrollFrame, aStyleContext);
+                     scrollFrame);
 
   } 
   else {
@@ -4771,9 +4771,8 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
     }
   }
 
-  nsStyleContext* scrolledPseudoStyle;
   BuildScrollFrame(aState, aContent, aStyleContext, scrolledFrame,
-                   geometricParent, scrollFrame, scrolledPseudoStyle);
+                   geometricParent, scrollFrame);
 
   if (aState.mFrameState && aState.mFrameManager) {
     // Restore frame state for the scroll frame
@@ -5742,7 +5741,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     if (mayBeScrollable && display->IsScrollableOverflow()) {
       // set the top to be the newly created scrollframe
       BuildScrollFrame(aState, aContent, aStyleContext, newFrame,
-                       aParentFrame, topFrame, aStyleContext);
+                       aParentFrame, topFrame);
 
       // No need to change aParentFrame here, since its only use when
       // !frameHasBeenInitialized is for the AddChild call (and in that case we
@@ -5958,8 +5957,7 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
                                         nsStyleContext*          aContentStyle,
                                         nsIFrame*                aScrolledFrame,
                                         nsIFrame*                aParentFrame,
-                                        nsIFrame*&               aNewFrame, 
-                                        nsStyleContext*&         aScrolledContentStyle)
+                                        nsIFrame*&               aNewFrame)
 {
     nsRefPtr<nsStyleContext> scrolledContentStyle =
       BeginBuildingScrollFrame(aState, aContent, aContentStyle, aParentFrame,
@@ -5970,8 +5968,6 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, aNewFrame, nsnull, aScrolledFrame);
 
     FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
-
-    aScrolledContentStyle = scrolledContentStyle;
 
     // now set the primary frame to the ScrollFrame
     aState.mFrameManager->SetPrimaryFrameFor( aContent, aNewFrame );

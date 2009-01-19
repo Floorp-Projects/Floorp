@@ -938,8 +938,7 @@ private:
                    nsStyleContext*          aContentStyle,
                    nsIFrame*                aScrolledFrame,
                    nsIFrame*                aParentFrame,
-                   nsIFrame*&               aNewFrame,
-                   nsStyleContext*&         aScrolledChildStyle);
+                   nsIFrame*&               aNewFrame);
 
   // Builds the initial ScrollFrame
   already_AddRefed<nsStyleContext>
