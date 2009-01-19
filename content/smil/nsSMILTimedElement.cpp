@@ -93,63 +93,39 @@ nsSMILTimedElement::nsSMILTimedElement()
 // Animation and SVG 1.1. In SMIL Animation all methods have a void return
 // type and the new instance time is simply added to the list and restart
 // semantics are applied as with any other instance time. In the SVG definition
-// the methods return a bool depending on the restart mode. There are some
-// cases where this is problematic.
+// the methods return a bool depending on the restart mode.
 //
-// For example, if a call is made to beginElementAt and the resolved time
-// after including the offset falls outside the current interval then using
-// the SMIL Animation definition an element with restart == whenNotActive
-// would restart with this new instance time. The SVG definition however seems
-// to imply that in this case the implementation should ignore the new
-// instance time if the restart mode == whenNotActive and the element is
-// currently active and return false.
+// This inconsistency has now been addressed by an erratum in SVG 1.1:
 //
-// It is tempting to try and determine when a new instance time will actually
-// cause a restart but this is not possible as in the meantime a new event may
-// trump the new instance time. We take a compromise of returning true and
-// false according to the SVG definition but adding the instance time to the
-// list regardless. This may produce different results to an implementation that
-// follows strictly the behaviour implied by the SVG spec.
+// http://www.w3.org/2003/01/REC-SVG11-20030114-errata#elementtimecontrol-interface
 //
+// which favours the definition in SMIL, i.e. instance times are just added
+// without first checking the restart mode.
 
-/* boolean beginElementAt (in float offset); */
-PRBool
+nsresult
 nsSMILTimedElement::BeginElementAt(double aOffsetSeconds,
                                    const nsSMILTimeContainer* aContainer)
 {
-  // If restart == never or restart == whenNotActive, check whether we're
-  // in a state that allows us to restart.
-  if ((mRestartMode == RESTART_NEVER &&
-       (mElementState == STATE_ACTIVE || mElementState == STATE_POSTACTIVE)) ||
-      (mRestartMode == RESTART_WHENNOTACTIVE &&
-       mElementState == STATE_ACTIVE)) {
-    return PR_FALSE;
-  }
-
   if (!AddInstanceTimeFromCurrentTime(aOffsetSeconds, PR_TRUE, aContainer)) {
     // Probably we don't have a time container
     NS_ERROR("Failed to begin element");
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
-/* boolean endElementAt (in float offset); */
-PRBool
+nsresult
 nsSMILTimedElement::EndElementAt(double aOffsetSeconds,
                                  const nsSMILTimeContainer* aContainer)
 {
-  if (mElementState != STATE_ACTIVE)
-    return PR_FALSE;
-
   if (!AddInstanceTimeFromCurrentTime(aOffsetSeconds, PR_FALSE, aContainer)) {
     // Probably we don't have a time container
     NS_ERROR("Failed to end element");
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -190,10 +166,11 @@ void
 nsSMILTimedElement::AddInstanceTime(const nsSMILInstanceTime& aInstanceTime,
                                     PRBool aIsBegin)
 {
-  if (aIsBegin)
+  if (aIsBegin) {
     mBeginInstances.AppendElement(aInstanceTime);
-  else
+  } else {
     mEndInstances.AppendElement(aInstanceTime);
+  }
 
   UpdateCurrentInterval();
 }
