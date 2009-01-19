@@ -9,6 +9,7 @@
   <binding id="videoControls">
 
     <resources>
+        <stylesheet src="chrome://global/content/bindings/videocontrols.css"/>
         <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
     </resources>
 
@@ -84,9 +85,11 @@
                 FADE_TIME_STEP : 30,  // ms
 
                 fadeTime : 0,         // duration of active fade animation
-                fadingIn: true,       // are we fading in, or fading out?
+                fadingIn: false,      // are we fading in, or fading out?
                 fadeTimer : null,
                 controlsVisible : false,
+
+                firstFrameShown : false,
 
                 get dynamicControls() {
                     // Don't fade controls for <audio> elements.
@@ -112,16 +115,18 @@
                         case "volumechange":
                             this.muteButton.setAttribute("muted", this.video.muted);
                             break;
+                        case "loadeddata":
+                            this.firstFrameShown = true;
+                            break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
                     }
                 },
 
                 onMouseInOut : function (event) {
+                    // If the controls are static, don't change anything.
                     if (!this.dynamicControls)
                         return;
-
-                    var isMouseOver = (event.type == "mouseover");
 
                     // Ignore events caused by transitions between child nodes.
                     // Note that the videocontrols element is the same
@@ -132,18 +137,31 @@
                         this.isControlsOrDescendant(event.relatedTarget))
                         return;
 
-                    // Don't show controls when they're disabled, but do allow a
-                    // mouseout to hide controls that were disabled after being shown.
-                    if (!this.video.controls && (isMouseOver || !this.controlsVisible))
+                    var isMouseOver = (event.type == "mouseover");
+
+                    // Suppress fading out the controls until the video has rendered
+                    // its first frame. But since autoplay videos start off with no
+                    // controls, let them fade-out so the controls don't get stuck on.
+                    if (!this.firstFrameShown && !isMouseOver && !this.video.autoplay)
                         return;
 
-                    this.log("Fading controls " + (isMouseOver ? "in" : "out"));
+                    // If we're already fading towards the desired state (or are
+                    // already there), then we don't need to do anything more.
+                    var directionChange = (this.fadingIn != isMouseOver);
+                    if (!directionChange)
+                        return;
 
-                    var directionChange = (isMouseOver != this.fadingIn);
                     this.fadingIn = isMouseOver;
+                    this.log("Fading controls " + (this.fadingIn ? "in" : "out"));
 
-                    // When switching direction mid-fade, adjust fade time for current fade state.
-                    if (directionChange && this.fadeTime)
+                    // When switching direction mid-fade, we want the reversed fade
+                    // to complete in the same amount of time as the current fade has
+                    // been running. So we invert fadeTime.
+                    //
+                    // For example, if we're 20ms into a 100ms fade-in, then we want to
+                    // fade-out over 20ms. This is done by setting fadeTime to 80ms
+                    // (100-20), so that fadeControls will only animate for 20ms more.
+                    if (this.fadeTime)
                         this.fadeTime = this.FADE_TIME_MAX - this.fadeTime;
 
                     if (!this.fadeTimer)
@@ -236,10 +254,22 @@
 
             // Set initial state of play/pause button.
             this.Utils.playButton.setAttribute("paused", video.paused);
-            // Controls are initially faded out and hidden (to ignore mouse clicks)
-            if (this.Utils.dynamicControls) {
-                this.Utils.controlBar.style.opacity = 0;
-                this.Utils.controlBar.style.visibility = "hidden";
+
+            // videocontrols.css hides the control bar by default, because if script
+            // is disabled our binding's script is disabled too (bug 449358). Thus,
+            // the controls are broken and we don't want them shown. But if script is
+            // enabled, the code here will run and can explicitly unhide the controls.
+            //
+            // For videos with |autoplay| set, we'll leave the controls initially hidden,
+            // so that they don't get in the way of the playing video. Otherwise we'll
+            // go ahead and reveal the controls now, so they're an obvious user cue.
+            //
+            // (Note: the |controls| attribute is already handled via layout/style/html.css)
+            if (!video.autoplay || !this.Utils.dynamicControls) {
+                this.Utils.controlBar.style.visibility = "visible";
+                this.Utils.controlBar.style.opacity = 1.0;
+                this.Utils.controlsVisible = true;
+                this.Utils.fadingIn = true;
             }
 
             // Use Utils.handleEvent() callback for all media events.
@@ -247,6 +277,7 @@
             video.addEventListener("pause",        this.Utils, false);
             video.addEventListener("ended",        this.Utils, false);
             video.addEventListener("volumechange", this.Utils, false);
+            video.addEventListener("loadeddata",   this.Utils, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>

@@ -1,0 +1,7 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Bug 449358: hide controlbar by default, so we don't show broken controls when script is disabled */
+.controlBar {
+     visibility: hidden;
+     opacity: 0.0;
+}
