@@ -88,7 +88,7 @@ nsSMILValue::Add(const nsSMILValue& aValueToAdd, PRUint32 aCount)
   if (aValueToAdd.IsNull()) return NS_OK;
 
   if (aValueToAdd.mType != mType) {
-    NS_WARNING("Trying to add incompatible types.");
+    NS_ERROR("Trying to add incompatible types.");
     return NS_ERROR_FAILURE;
   }
 
@@ -96,10 +96,24 @@ nsSMILValue::Add(const nsSMILValue& aValueToAdd, PRUint32 aCount)
 }
 
 nsresult
+nsSMILValue::SandwichAdd(const nsSMILValue& aValueToAdd)
+{
+  if (aValueToAdd.IsNull())
+    return NS_OK;
+
+  if (aValueToAdd.mType != mType) {
+    NS_ERROR("Trying to add incompatible types.");
+    return NS_ERROR_FAILURE;
+  }
+
+  return mType->SandwichAdd(*this, aValueToAdd);
+}
+
+nsresult
 nsSMILValue::ComputeDistance(const nsSMILValue& aTo, double& aDistance) const
 {
   if (aTo.mType != mType) {
-    NS_WARNING("Trying to calculate distance between incompatible types.");
+    NS_ERROR("Trying to calculate distance between incompatible types.");
     return NS_ERROR_FAILURE;
   }
 
@@ -112,7 +126,7 @@ nsSMILValue::Interpolate(const nsSMILValue& aEndVal,
                          nsSMILValue& aResult) const
 {
   if (aEndVal.mType != mType) {
-    NS_WARNING("Trying to interpolate between incompatible types.");
+    NS_ERROR("Trying to interpolate between incompatible types.");
     return NS_ERROR_FAILURE;
   }
 
