@@ -534,13 +534,9 @@ nsresult imgLoader::InitCache()
   os->AddObserver(gCacheObserver, "chrome-flush-skin-caches", PR_FALSE);
   os->AddObserver(gCacheObserver, "chrome-flush-caches", PR_FALSE);
 
-#if 0
   gCacheTracker = new imgCacheExpirationTracker();
   if (!gCacheTracker)
     return NS_ERROR_OUT_OF_MEMORY;
-#else
-  gCacheTracker = nsnull;
-#endif
 
   if (!sCache.Init())
       return NS_ERROR_OUT_OF_MEMORY;
