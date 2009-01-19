@@ -253,9 +253,8 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
                       nsIContent::ATTR_VALUE_NO_MATCH) {
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     // Get absolute URI
-    nsAutoString str;
-    mStringAttributes[HREF].GetAnimValue(str, this);
-    nsContentUtils::NewURIWithDocumentCharset(aURI, str,
+    nsContentUtils::NewURIWithDocumentCharset(aURI,
+                                              mStringAttributes[HREF].GetAnimValue(),
                                               GetOwnerDoc(), baseURI);
     // must promise out param is non-null if we return true
     return !!*aURI;
@@ -268,7 +267,7 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
 void
 nsSVGAElement::GetLinkTarget(nsAString& aTarget)
 {
-  mStringAttributes[TARGET].GetAnimValue(aTarget, this);
+  aTarget = mStringAttributes[TARGET].GetAnimValue();
   if (aTarget.IsEmpty()) {
 
     static nsIContent::AttrValuesArray sShowVals[] =

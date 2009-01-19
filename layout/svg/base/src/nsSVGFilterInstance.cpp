@@ -204,8 +204,7 @@ nsSVGFilterInstance::BuildPrimitives()
     filter->GetSourceImageNames(&sources);
  
     for (PRUint32 j=0; j<sources.Length(); ++j) {
-      nsAutoString str;
-      sources[j]->GetAnimValue(str, filter);
+      const nsString& str = sources[j]->GetAnimValue();
       PrimitiveInfo* sourceInfo;
 
       if (str.EqualsLiteral("SourceGraphic")) {
@@ -232,10 +231,8 @@ nsSVGFilterInstance::BuildPrimitives()
 
     ComputeFilterPrimitiveSubregion(info);
 
-    nsAutoString str;
-    filter->GetResultImageName()->GetAnimValue(str, filter);
-
-    ImageAnalysisEntry* entry = imageTable.PutEntry(str);
+    ImageAnalysisEntry* entry =
+      imageTable.PutEntry(filter->GetResultImageName()->GetAnimValue());
     if (entry) {
       entry->mInfo = info;
     }

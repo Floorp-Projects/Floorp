@@ -54,24 +54,8 @@ nsSVGString::SetBaseValue(const nsAString& aValue,
                           nsSVGElement *aSVGElement,
                           PRBool aDoSetAttr)
 {
-  NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
-
-  mAnimVal = nsnull;
-
-  if (aDoSetAttr) {
-    aSVGElement->SetStringBaseValue(mAttrEnum, aValue);
-  }
-
-  aSVGElement->DidChangeString(mAttrEnum);
-}
-
-void
-nsSVGString::GetAnimValue(nsAString& aResult, const nsSVGElement* aSVGElement) const
-{
-  if (mAnimVal)
-    aResult = *mAnimVal;
-
-  aSVGElement->GetStringBaseValue(mAttrEnum, aResult);
+  mAnimVal = mBaseVal = aValue;
+  aSVGElement->DidChangeString(mAttrEnum, aDoSetAttr);
 }
 
 nsresult

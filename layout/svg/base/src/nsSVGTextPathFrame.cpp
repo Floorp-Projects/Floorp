@@ -107,8 +107,7 @@ nsSVGTextPathFrame::GetPathFrame()
 
   if (!property) {
     nsSVGTextPathElement *tp = static_cast<nsSVGTextPathElement*>(mContent);
-    nsAutoString href;
-    tp->mStringAttributes[nsSVGTextPathElement::HREF].GetAnimValue(href, tp);
+    const nsString &href = tp->mStringAttributes[nsSVGTextPathElement::HREF].GetAnimValue();
     if (href.IsEmpty()) {
       return nsnull; // no URL
     }
