@@ -43,11 +43,19 @@ function jitstatHandler(f)
     f("noCompatInnerTrees");
 }
 
+var jitProps = {};
+jitstatHandler(function(prop) {
+                 jitProps[prop] = true;
+               });
+var hadJITstats = false;
+for (var p in jitProps)
+  hadJITstats = true;
+
 function test(f)
 {
   if (!testName || testName == f.name) {
     var expectedJITstats = f.jitstats;
-    if (expectedJITstats)
+    if (hadJITstats && expectedJITstats)
     {
       var expectedProps = {};
       jitstatHandler(function(prop) {
@@ -57,7 +65,7 @@ function test(f)
       for (var p in expectedJITstats)
       {
         if (!(p in expectedProps))
-          throw "Bad property in " + f.name + ".expected: " + p;
+          throw "Bad property in " + f.name + ".jitstats: " + p;
       }
     }
 

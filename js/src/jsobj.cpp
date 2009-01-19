@@ -363,6 +363,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     JS_CHECK_RECURSION(cx, return NULL);
 
     map = &cx->sharpObjectMap;
+    JS_ASSERT(map->depth >= 1);
     table = map->table;
     hash = js_hash_object(obj);
     hep = JS_HashTableRawLookup(table, hash, obj);
@@ -376,15 +377,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             return NULL;
         }
 
-        /*
-         * Increment map->depth to protect js_EnterSharpObject from reentering
-         * itself badly.  Without this fix, if we reenter the basis case where
-         * map->depth == 0, when unwinding the inner call we will destroy the
-         * newly-created hash table and crash.
-         */
-        ++map->depth;
         ida = JS_Enumerate(cx, obj);
-        --map->depth;
         if (!ida)
             return NULL;
 
@@ -480,7 +473,21 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     /* From this point the control must flow either through out: or bad:. */
     ida = NULL;
     if (map->depth == 0) {
+        /*
+         * Although MarkSharpObjects tries to avoid invoking getters,
+         * it ends up doing so anyway under some circumstances; for
+         * example, if a wrapped object has getters, the wrapper will
+         * prevent MarkSharpObjects from recognizing them as such.
+         * This could lead to js_LeaveSharpObject being called while
+         * MarkSharpObjects is still working.
+         *
+         * Increment map->depth while we call MarkSharpObjects, to
+         * ensure that such a call doesn't free the hash table we're
+         * still using.
+         */
+        ++map->depth;
         he = MarkSharpObjects(cx, obj, &ida);
+        --map->depth;
         if (!he)
             goto bad;
         JS_ASSERT((JS_PTR_TO_UINT32(he->value) & SHARP_BIT) == 0);

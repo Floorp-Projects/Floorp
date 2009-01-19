@@ -4897,15 +4897,14 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     JSString *str;
     JSObject *obj;
     JSRegExp *re;
-    JSTempValueRooter tvr;
 
     str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
+    JSAutoTempValueRooter tvr(cx, str);
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
-    JS_PUSH_TEMP_ROOT_STRING(cx, str, &tvr);
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL, 0);
     if (!obj || !JS_SetPrivate(cx, obj, re)) {
         js_DestroyRegExp(cx, re);
@@ -4913,7 +4912,6 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     }
     if (obj && !js_SetLastIndex(cx, obj, 0))
         obj = NULL;
-    JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
 }
 
