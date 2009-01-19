@@ -16,21 +16,46 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
 
   <script type="application/javascript">
+    function testRole(aID, aRole)
+    {
+      var acc = getAccessible(aID);
+      if (!acc)
+        return;
+
+      try {
+        is(acc.role, aRole, "Wrong role for " + aID + "!");
+      } catch(e) {
+        ok(false, "Error getting role for " + aID + "!");
+      }
+    }
+
     function doTests()
     {
+      // Test html:form.
+      testRole("frm", ROLE_FORM);
+
+      // test html:div
+      testRole("sec", ROLE_SECTION);
+
+      // Test html:blockquote
+      testRole("quote", ROLE_SECTION);
+
+      // Test html:h, all levels
+      testRole("head1", ROLE_HEADING);
+      testRole("head2", ROLE_HEADING);
+      testRole("head3", ROLE_HEADING);
+      testRole("head4", ROLE_HEADING);
+      testRole("head5", ROLE_HEADING);
+      testRole("head6", ROLE_HEADING);
+
       // Test that an html:input @type="file" is exposed as ROLE_TEXT_CONTAINER.
       // After fix for bug 471356, it was temporarily exposed as a paragraph,
       // breaking JAWS compatibility.
-      fileUploadAcc = getAccessible("data");
-      if (fileUploadAcc)
-        is(fileUploadAcc.role, ROLE_TEXT_CONTAINER,
-           "Wrong role for file upload textbox!");
+      testRole("data", ROLE_TEXT_CONTAINER);
 
       // Test regular paragraph by comparison to make sure exposure does not
       // get broken.
-      var paraAcc = getAccessible("p");
-      if (paraAcc)
-        is(paraAcc.role, ROLE_PARAGRAPH, "Wrong role for paragraph!");
+      testRole("p", ROLE_PARAGRAPH);
 
       SimpleTest.finish();
     }
@@ -43,16 +68,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
 
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472326"
      title="html:input of type "file" no longer rendered to screen readers">
-     Mozilla Bug 472326
+     Mozilla Bug 472326</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=474261"
+      title="Test remaining implementations in nsHypertextAccessible::GetRole">
+      bug 474261</a>
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
-  <form action="submit.php" method="post">
+  <form id="frm" action="submit.php" method="post">
     <label for="data">File</label>:
     <input type="file" id="data" name="data" size="50"/>
   </form>
   <p id="p">A paragraph for comparison.</p>
+  <div id="sec">A normal div</div>
+  <blockquote id="quote">A citation</blockquote>
+  <h1 id="head1">A heading level 1</h1>
+  <h2 id="head2">A heading level 2</h2>
+  <h3 id="head3">A heading level 3</h3>
+  <h4 id="head4">A heading level 4</h4>
+  <h5 id="head5">A heading level 5</h5>
+  <h6 id="head6">A heading level 6</h6>
 </body>
 </html>
