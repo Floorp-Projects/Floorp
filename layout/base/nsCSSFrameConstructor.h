@@ -686,9 +686,11 @@ private:
    * @param aChildContent the content node we want to construct a frame for
    * @param aParentFrame the frame we think should be the parent.  This will be
    *        adjusted to point to a pseudo-frame if needed.
-   * @param aTag tag that would be used for frame construction
+   * @param aFCData the FrameConstructionData that would be used for frame
+   *        construction.  If this is null, then frame construction will be
+   *        done based on the CSS display value.   
    * @param aNameSpaceID namespace that will be used for frame construction
-   * @param aChildStyle the style context for aChildContent
+   * @param aDisplay the display style struct for aChildContent
    * @param aFrameItems the framelist we think we need to put the child frame
    *        into.  If we have to construct pseudo-frames, we'll modify the
    *        pointer to point to the list the child frame should go into.
@@ -706,9 +708,9 @@ private:
   nsresult AdjustParentFrame(nsFrameConstructorState&     aState,
                              nsIContent*                  aChildContent,
                              nsIFrame* &                  aParentFrame,
-                             nsIAtom*                     aTag,
+                             const FrameConstructionData* aFCData,
                              PRInt32                      aNameSpaceID,
-                             nsStyleContext*              aChildStyle,
+                             const nsStyleDisplay*        aDisplay,
                              nsFrameItems* &              aFrameItems,
                              nsFrameConstructorSaveState& aSaveState,
                              PRBool&                      aSuppressFrame,
@@ -759,7 +761,10 @@ private:
                                   nsFrameItems&            aFrameItems,
                                   nsIFrame**               aNewFrame);
 
-  nsresult ConstructTextFrame(nsFrameConstructorState& aState,
+  static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame);
+
+  nsresult ConstructTextFrame(const FrameConstructionData* aData,
+                              nsFrameConstructorState& aState,
                               nsIContent*              aContent,
                               nsIFrame*                aParentFrame,
                               nsStyleContext*          aStyleContext,
@@ -780,11 +785,6 @@ private:
                          nsIFrame*                aParentFrame,
                          nsStyleContext*          aStyleContext,
                          nsFrameItems&            aFrameItems);
-
-  static PRBool IsSpecialContent(nsIContent*     aContent,
-                                 nsIAtom*        aTag,
-                                 PRInt32         aNameSpaceID,
-                                 nsStyleContext* aStyleContext);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not HTML.
@@ -896,15 +896,15 @@ private:
     FindXULListItemData(nsIContent* aContent, nsStyleContext* aStyleContext);
 #endif /* MOZ_XUL */
 
-  // Function to find FrameConstructionData for aContent either using
-  // FindXULTagData or using one of the XUL display types.  Will
-  // return null if aContent is not XUL and doesn't have a XUL display
-  // type (or even if it has a XUL display type but is HTML/MathML/SVG
-  // that would get a frame by tag).
-  static const FrameConstructionData* FindXULData(nsIContent* aContent,
-                                                  nsIAtom* aTag,
-                                                  PRInt32 aNameSpaceID,
-                                                  nsStyleContext* aStyleContext);
+  // Function to find FrameConstructionData for aContent using one of the XUL
+  // display types.  Will return null if aDisplay doesn't have a XUL display
+  // type.  This function performs no other checks, so should only be called if
+  // we know for sure that the content is not something that should get a frame
+  // constructed by tag.
+  static const FrameConstructionData*
+    FindXULDisplayData(const nsStyleDisplay* aDisplay,
+                       nsIContent* aContent,
+                       nsStyleContext* aStyleContext);
 
 // SVG - rods
 #ifdef MOZ_SVG
