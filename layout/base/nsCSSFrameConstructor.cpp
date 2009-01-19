@@ -165,53 +165,53 @@ NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 PRBool
 NS_SVGEnabled();
 nsIFrame*
-NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGAFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
+NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
+NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 PRBool 
 NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent);
 extern nsIFrame*
-NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsStyleContext* aContext);
+NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 extern nsIFrame*
-NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsStyleContext* aContext);
+NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 extern nsIFrame*
-NS_NewSVGStopFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame *aParentFrame, nsStyleContext* aContext);
+NS_NewSVGStopFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 extern nsIFrame*
-NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsStyleContext* aContext);
+NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
+NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsStyleContext* aContext);
+NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 #endif
@@ -372,21 +372,6 @@ static PRInt32 FFWC_slowSearchForText=0;
 static nsresult
 DeletingFrameSubtree(nsFrameManager* aFrameManager,
                      nsIFrame*       aFrame);
-
-#ifdef  MOZ_SVG
-
-static nsIFrame *
-SVG_GetFirstNonAAncestorFrame(nsIFrame *aParentFrame)
-{
-  for (nsIFrame *ancestorFrame = aParentFrame; ancestorFrame != nsnull;
-       ancestorFrame = ancestorFrame->GetParent()) {
-    if (ancestorFrame->GetType() != nsGkAtoms::svgAFrame) {
-      return ancestorFrame;
-    }
-  }
-  return nsnull;
-}
-#endif
 
 static inline nsIFrame*
 GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
@@ -3956,7 +3941,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 #ifdef MOZ_SVG
   if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
     if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
-      contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
+      contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, styleContext);
       if (NS_UNLIKELY(!contentFrame)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4892,14 +4877,14 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
 
 #ifdef MOZ_SVG
   if (aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    nsIFrame *ancestorFrame =
+      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
       nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
       if (!metrics) {
         return NS_OK;
       }
-      newFrame = NS_NewSVGGlyphFrame(mPresShell, aContent,
-                                     ancestorFrame, aStyleContext);
+      newFrame = NS_NewSVGGlyphFrame(mPresShell, aStyleContext);
     }
   }
   else
@@ -6434,18 +6419,18 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       geometricParent = aState.GetGeometricParent(disp, aParentFrame);
       
       forceView = PR_TRUE;
-      newFrame = NS_NewSVGOuterSVGFrame(mPresShell, aContent, aStyleContext);
+      newFrame = NS_NewSVGOuterSVGFrame(mPresShell, aStyleContext);
     }
     else {
       // This is an inner <svg> element
-      newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aContent, aStyleContext);
+      newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aStyleContext);
     }
   }
   else if (aTag == nsGkAtoms::g) {
-    newFrame = NS_NewSVGGFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGGFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::svgSwitch) {
-    newFrame = NS_NewSVGSwitchFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGSwitchFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::polygon ||
            aTag == nsGkAtoms::polyline ||
@@ -6454,71 +6439,72 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
            aTag == nsGkAtoms::line ||
            aTag == nsGkAtoms::rect ||
            aTag == nsGkAtoms::path)
-    newFrame = NS_NewSVGPathGeometryFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGPathGeometryFrame(mPresShell, aStyleContext);
   else if (aTag == nsGkAtoms::defs) {
-    newFrame = NS_NewSVGContainerFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGContainerFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::foreignObject) {
-    newFrame = NS_NewSVGForeignObjectFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGForeignObjectFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::a) {
-    newFrame = NS_NewSVGAFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGAFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::text) {
-    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    nsIFrame *ancestorFrame =
+      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
       nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
       // Text cannot be nested
       if (!metrics)
-        newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
+        newFrame = NS_NewSVGTextFrame(mPresShell, aStyleContext);
     }
   }
   else if (aTag == nsGkAtoms::tspan) {
-    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    nsIFrame *ancestorFrame =
+      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
       nsISVGTextContentMetrics* metrics = do_QueryFrame(ancestorFrame);
       if (metrics)
-        newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent,
-                                       ancestorFrame, aStyleContext);
+        newFrame = NS_NewSVGTSpanFrame(mPresShell, aStyleContext);
     }
   }
   else if (aTag == nsGkAtoms::linearGradient) {
-    newFrame = NS_NewSVGLinearGradientFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGLinearGradientFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::radialGradient) {
-    newFrame = NS_NewSVGRadialGradientFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGRadialGradientFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::stop) {
-    newFrame = NS_NewSVGStopFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    newFrame = NS_NewSVGStopFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::use) {
-    newFrame = NS_NewSVGUseFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGUseFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::marker) {
-    newFrame = NS_NewSVGMarkerFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGMarkerFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::image) {
-    newFrame = NS_NewSVGImageFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGImageFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::clipPath) {
-    newFrame = NS_NewSVGClipPathFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGClipPathFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::textPath) {
-    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    nsIFrame *ancestorFrame =
+      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame &&
         ancestorFrame->GetType() == nsGkAtoms::svgTextFrame) {
-      newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent,
-                                        ancestorFrame, aStyleContext);
+      newFrame = NS_NewSVGTextPathFrame(mPresShell, aStyleContext);
     }
   }
   else if (aTag == nsGkAtoms::filter) {
-    newFrame = NS_NewSVGFilterFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGFilterFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::pattern) {
-    newFrame = NS_NewSVGPatternFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGPatternFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::mask) {
-    newFrame = NS_NewSVGMaskFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGMaskFrame(mPresShell, aStyleContext);
   }
   else if (aTag == nsGkAtoms::feDistantLight ||
            aTag == nsGkAtoms::fePointLight ||
@@ -6562,7 +6548,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // aTag->ToString(str);
     // printf("%s>\n", NS_ConvertUTF16toUTF8(str).get());
 #endif
-    newFrame = NS_NewSVGGenericContainerFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGGenericContainerFrame(mPresShell, aStyleContext);
   }  
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list

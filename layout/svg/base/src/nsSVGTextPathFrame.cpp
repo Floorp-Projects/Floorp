@@ -47,23 +47,33 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                       nsIFrame* parentFrame, nsStyleContext* aContext)
+NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  NS_ASSERTION(parentFrame, "null parent");
-  if (parentFrame->GetType() != nsGkAtoms::svgTextFrame) {
-    NS_ERROR("trying to construct an SVGTextPathFrame for an invalid container");
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsIDOMSVGTextPathElement> textPath = do_QueryInterface(aContent);
-  if (!textPath) {
-    NS_ERROR("Can't create frame! Content is not an SVG textPath");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGTextPathFrame(aContext);
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGTextPathFrame::Init(nsIContent* aContent,
+                         nsIFrame* aParent,
+                         nsIFrame* aPrevInFlow)
+{
+  NS_ASSERTION(aParent, "null parent");
+
+  nsIFrame* ancestorFrame = nsSVGUtils::GetFirstNonAAncestorFrame(aParent);
+  NS_ASSERTION(ancestorFrame, "Must have ancestor");
+
+  NS_ASSERTION(ancestorFrame->GetType() == nsGkAtoms::svgTextFrame,
+               "trying to construct an SVGTextPathFrame for an invalid "
+               "container");
+  
+  nsCOMPtr<nsIDOMSVGTextPathElement> textPath = do_QueryInterface(aContent);
+  NS_ASSERTION(textPath, "Content is not an SVG textPath");
+
+
+  return nsSVGTextPathFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 nsIAtom *
 nsSVGTextPathFrame::GetType() const
