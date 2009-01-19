@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_smilRestart.xhtml \
+	  test_smilGetStartTime.xhtml \
+	  test_smilGetSimpleDuration.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
