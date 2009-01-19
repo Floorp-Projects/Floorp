@@ -91,6 +91,8 @@
 #include "prdtoa.h"
 #include <stdarg.h>
 #ifdef MOZ_SMIL
+#include "nsSVGTransformSMILAttr.h"
+#include "nsSVGAnimatedTransformList.h"
 #include "nsIDOMSVGTransformable.h"
 #endif // MOZ_SMIL
 
@@ -1650,6 +1652,22 @@ nsSVGElement::RecompileScriptEventListeners()
 nsISMILAttr*
 nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
 {
+  // Transforms:
+  if (aName == nsGkAtoms::transform) {
+    nsCOMPtr<nsIDOMSVGTransformable> transformable(
+            do_QueryInterface(static_cast<nsIContent*>(this)));
+    if (!transformable)
+      return nsnull;
+    nsCOMPtr<nsIDOMSVGAnimatedTransformList> transformList;
+    nsresult rv = transformable->GetTransform(getter_AddRefs(transformList));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    nsSVGAnimatedTransformList* list
+      = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
+    NS_ENSURE_TRUE(list, nsnull);
+
+    return new nsSVGTransformSMILAttr(list, this);
+  }
+
   // Lengths:
   LengthAttributesInfo info = GetLengthInfo();
   for (PRUint32 i = 0; i < info.mLengthCount; i++) {

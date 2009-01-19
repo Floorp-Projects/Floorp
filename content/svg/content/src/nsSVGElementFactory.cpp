@@ -165,6 +165,8 @@ NS_NewSVGFEDisplacementMapElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGAnimateElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
+NS_NewSVGAnimateTransformElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
 NS_NewSVGSetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 #endif // MOZ_SMIL
 
@@ -299,6 +301,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
 #ifdef MOZ_SMIL
   if (name == nsGkAtoms::animate)
     return NS_NewSVGAnimateElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::animateTransform)
+    return NS_NewSVGAnimateTransformElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::set)
     return NS_NewSVGSetElement(aResult, aNodeInfo);
 #endif // MOZ_SMIL

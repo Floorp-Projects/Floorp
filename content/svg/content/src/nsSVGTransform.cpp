@@ -39,53 +39,12 @@
 #include "nsSVGTransform.h"
 #include "prdtoa.h"
 #include "nsSVGMatrix.h"
-#include "nsSVGValue.h"
 #include "nsISVGValueUtils.h"
-#include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsSVGMatrix.h"
 #include "nsTextFormatter.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
-
-
-////////////////////////////////////////////////////////////////////////
-// nsSVGTransform
-
-class nsSVGTransform : public nsIDOMSVGTransform,
-                       public nsSVGValue,
-                       public nsISVGValueObserver
-{
-public:
-  static nsresult Create(nsIDOMSVGTransform** aResult);
-  
-protected:
-  nsSVGTransform();
-  ~nsSVGTransform();
-  nsresult Init();
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMSVGTransform interface:
-  NS_DECL_NSIDOMSVGTRANSFORM
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     modificationType aModType);
-
-protected:
-  nsCOMPtr<nsIDOMSVGMatrix> mMatrix;
-  float mAngle, mOriginX, mOriginY;
-  PRUint16 mType;
-};
-
 
 //----------------------------------------------------------------------
 // Implementation
