@@ -1085,8 +1085,6 @@ public:
   nsFrameManager           *mFrameManager;
 
 #ifdef MOZ_XUL
-  // The root box, if any.
-  nsIRootBox*               mRootBox;
   // Frames destined for the nsGkAtoms::popupList.
   nsAbsoluteItems           mPopupItems;
 #endif
@@ -1215,8 +1213,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mPresShell(aPresShell),
     mFrameManager(aPresShell->FrameManager()),
 #ifdef MOZ_XUL    
-    mRootBox(nsIRootBox::GetRootBox(aPresShell)),
-    mPopupItems(mRootBox ? mRootBox->GetPopupSetFrame() : nsnull),
+    mPopupItems(nsnull),
 #endif
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
@@ -1229,6 +1226,12 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mPseudoFrames(),
     mAdditionalStateBits(0)
 {
+#ifdef MOZ_XUL
+  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
+  if (rootBox) {
+    mPopupItems.containingBlock = rootBox->GetPopupSetFrame();
+  }
+#endif
   MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
 
@@ -1240,8 +1243,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mPresShell(aPresShell),
     mFrameManager(aPresShell->FrameManager()),
 #ifdef MOZ_XUL    
-    mRootBox(nsIRootBox::GetRootBox(aPresShell)),
-    mPopupItems(mRootBox ? mRootBox->GetPopupSetFrame() : nsnull),
+    mPopupItems(nsnull),
 #endif
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
@@ -1253,6 +1255,12 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mPseudoFrames(),
     mAdditionalStateBits(0)
 {
+#ifdef MOZ_XUL
+  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
+  if (rootBox) {
+    mPopupItems.containingBlock = rootBox->GetPopupSetFrame();
+  }
+#endif
   MOZ_COUNT_CTOR(nsFrameConstructorState);
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
@@ -5707,7 +5715,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
             // Just don't create a frame for this popup; we can't do
             // anything with it, since there is no root popup set.
             *aHaltProcessing = PR_TRUE;
-            NS_ASSERTION(!aState.mRootBox, "Popup containing block is missing");
             return NS_OK;
           }
 
@@ -5721,15 +5728,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         // This is its own frame that derives from box.
         newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
-
-        if (aTag == nsGkAtoms::tooltip) {
-          if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_default,
-                                    nsGkAtoms::_true, eIgnoreCase)) {
-            // Tell the root box about the tooltip.
-            if (aState.mRootBox)
-              aState.mRootBox->SetDefaultTooltip(aContent);
-          }
-        }
       }
       
       else {
