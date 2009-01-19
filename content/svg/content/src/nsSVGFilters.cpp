@@ -5256,7 +5256,8 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
   // resolve href attribute
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
-  nsAutoString href(mStringAttributes[HREF].GetAnimValue());
+  nsAutoString href;
+  mStringAttributes[HREF].GetAnimValue(href, this);
   href.Trim(" \t\n\r");
 
   if (baseURI && !href.IsEmpty())
