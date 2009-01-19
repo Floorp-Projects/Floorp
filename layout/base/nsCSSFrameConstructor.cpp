@@ -3157,35 +3157,11 @@ nsCSSFrameConstructor::IsSpecialContent(nsIContent*     aContent,
 #endif
 
 #ifdef MOZ_MATHML
-  if (aNameSpaceID == kNameSpaceID_MathML)
-    return
-      aTag == nsGkAtoms::mi_ ||
-      aTag == nsGkAtoms::mn_ ||
-      aTag == nsGkAtoms::ms_ ||
-      aTag == nsGkAtoms::mtext_ ||
-      aTag == nsGkAtoms::mo_ ||
-      aTag == nsGkAtoms::mfrac_ ||
-      aTag == nsGkAtoms::msup_ ||
-      aTag == nsGkAtoms::msub_ ||
-      aTag == nsGkAtoms::msubsup_ ||
-      aTag == nsGkAtoms::munder_ ||
-      aTag == nsGkAtoms::mover_ ||
-      aTag == nsGkAtoms::munderover_ ||
-      aTag == nsGkAtoms::mphantom_ ||
-      aTag == nsGkAtoms::mpadded_ ||
-      aTag == nsGkAtoms::mspace_ ||
-      aTag == nsGkAtoms::mfenced_ ||
-      aTag == nsGkAtoms::mmultiscripts_ ||
-      aTag == nsGkAtoms::mstyle_ ||
-      aTag == nsGkAtoms::msqrt_ ||
-      aTag == nsGkAtoms::mroot_ ||
-      aTag == nsGkAtoms::maction_ ||
-      aTag == nsGkAtoms::mrow_   ||
-      aTag == nsGkAtoms::merror_ ||
-      aTag == nsGkAtoms::none   ||
-      aTag == nsGkAtoms::mprescripts_ ||
-      aTag == nsGkAtoms::math;
+  if (FindMathMLData(aContent, aTag, aNameSpaceID, aStyleContext)) {
+    return PR_TRUE;
+  }
 #endif
+
   return PR_FALSE;
 }
                                       
@@ -5283,11 +5259,46 @@ nsCSSFrameConstructor::ConstructFrameFromData(const FrameConstructionData* aData
     }
 
     // Process the child frames.  Don't allow block styles; anything that's a
-    // special HTML frame but wants those should do its own ProcessChildren.
+    // special HTML or MathML frame but wants those should do its own
+    // ProcessChildren.
     rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_TRUE,
                          childItems, PR_FALSE);
 
+#ifdef MOZ_MATHML
+    if (NS_SUCCEEDED(rv) && (bits & FCDATA_WRAP_KIDS_IN_BLOCKS)) {
+      nsFrameItems newItems;
+      nsFrameItems currentBlock;
+      nsIFrame* f;
+      while ((f = childItems.childList) != nsnull) {
+        PRBool wrapFrame = IsInlineFrame(f) || IsFrameSpecial(f);
+        if (!wrapFrame) {
+          rv = FlushAccumulatedBlock(aState, aContent, newFrame, &currentBlock, &newItems);
+          if (NS_FAILED(rv))
+            break;
+        }
+
+        childItems.RemoveChild(f, nsnull);
+        if (wrapFrame) {
+          currentBlock.AddChild(f);
+        } else {
+          newItems.AddChild(f);
+        }
+      }
+      rv = FlushAccumulatedBlock(aState, aContent, newFrame, &currentBlock, &newItems);
+
+      if (childItems.childList) {
+        // an error must have occurred, delete unprocessed frames
+        CleanupFrameReferences(aState.mFrameManager, childItems.childList);
+        nsFrameList(childItems.childList).DestroyFrames();
+      }
+
+      childItems = newItems;
+    }
+#endif
+
     // Set the frame's initial child list
+    // Note that MathML depends on this being called even if
+    // childItems.childList is null!
     newFrame->SetInitialChildList(nsnull, childItems.childList);
   }
 
@@ -6465,166 +6476,61 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
   return NS_OK;
 }
 
-nsresult
-nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
-                                            nsIContent*              aContent,
-                                            nsIFrame*                aParentFrame,
-                                            nsIAtom*                 aTag,
-                                            PRInt32                  aNameSpaceID,
-                                            nsStyleContext*          aStyleContext,
-                                            nsFrameItems&            aFrameItems,
-                                            PRBool                   aHasPseudoParent)
+// Only <math> elements can be floated or positioned.  All other MathML
+// should be in-flow.
+#define SIMPLE_MATHML_CREATE(_tag, _func)                               \
+  { &nsGkAtoms::_tag,                                                   \
+      FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                         \
+                  FCDATA_FORCE_NULL_ABSPOS_CONTAINER |                  \
+                  FCDATA_WRAP_KIDS_IN_BLOCKS |                          \
+                  FCDATA_SKIP_FRAMEMAP, _func) }
+
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
+                                      nsIAtom* aTag,
+                                      PRInt32 aNameSpaceID,
+                                      nsStyleContext* aStyleContext)
 {
   // Make sure that we remain confined in the MathML world
   if (aNameSpaceID != kNameSpaceID_MathML) 
-    return NS_OK;
+    return nsnull;
 
-  nsresult  rv = NS_OK;
+  static const FrameConstructionDataByTag sMathMLData[] = {
+    SIMPLE_MATHML_CREATE(mi_, NS_NewMathMLTokenFrame),
+    SIMPLE_MATHML_CREATE(mn_, NS_NewMathMLTokenFrame),
+    SIMPLE_MATHML_CREATE(ms_, NS_NewMathMLTokenFrame),
+    SIMPLE_MATHML_CREATE(mtext_, NS_NewMathMLTokenFrame),
+    SIMPLE_MATHML_CREATE(mo_, NS_NewMathMLmoFrame),
+    SIMPLE_MATHML_CREATE(mfrac_, NS_NewMathMLmfracFrame),
+    SIMPLE_MATHML_CREATE(msup_, NS_NewMathMLmsupFrame),
+    SIMPLE_MATHML_CREATE(msub_, NS_NewMathMLmsubFrame),
+    SIMPLE_MATHML_CREATE(msubsup_, NS_NewMathMLmsubsupFrame),
+    SIMPLE_MATHML_CREATE(munder_, NS_NewMathMLmunderFrame),
+    SIMPLE_MATHML_CREATE(mover_, NS_NewMathMLmoverFrame),
+    SIMPLE_MATHML_CREATE(munderover_, NS_NewMathMLmunderoverFrame),
+    SIMPLE_MATHML_CREATE(mphantom_, NS_NewMathMLmphantomFrame),
+    SIMPLE_MATHML_CREATE(mpadded_, NS_NewMathMLmpaddedFrame),
+    SIMPLE_MATHML_CREATE(mspace_, NS_NewMathMLmspaceFrame),
+    SIMPLE_MATHML_CREATE(none, NS_NewMathMLmspaceFrame),
+    SIMPLE_MATHML_CREATE(mprescripts_, NS_NewMathMLmspaceFrame),
+    SIMPLE_MATHML_CREATE(mfenced_, NS_NewMathMLmfencedFrame),
+    SIMPLE_MATHML_CREATE(mmultiscripts_, NS_NewMathMLmmultiscriptsFrame),
+    SIMPLE_MATHML_CREATE(mstyle_, NS_NewMathMLmstyleFrame),
+    SIMPLE_MATHML_CREATE(msqrt_, NS_NewMathMLmsqrtFrame),
+    SIMPLE_MATHML_CREATE(mroot_, NS_NewMathMLmrootFrame),
+    SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
+    SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
+    SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
+    { &nsGkAtoms::math,
+      FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
+                  FCDATA_WRAP_KIDS_IN_BLOCKS |
+                  FCDATA_SKIP_FRAMEMAP,
+                  NS_NewMathMLmathFrame) }
+  };
 
-  NS_ASSERTION(aTag != nsnull, "null MathML tag");
-  if (aTag == nsnull)
-    return NS_OK;
-
-  // Initialize the new frame
-  nsIFrame* newFrame = nsnull;
-
-  // Make sure to keep IsSpecialContent in synch with this code
-  const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
-
-  // Leverage IsSpecialContent to check if one of the |if aTag| below will
-  // surely match (knowing that aNameSpaceID == kNameSpaceID_MathML here)
-  if (IsSpecialContent(aContent, aTag, aNameSpaceID, aStyleContext)) {
-    // process pending pseudo frames
-    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aFrameItems); 
-    }
-  }
-
-  if (aTag == nsGkAtoms::mi_ ||
-      aTag == nsGkAtoms::mn_ ||
-      aTag == nsGkAtoms::ms_ ||
-      aTag == nsGkAtoms::mtext_)
-    newFrame = NS_NewMathMLTokenFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mo_)
-    newFrame = NS_NewMathMLmoFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mfrac_)
-    newFrame = NS_NewMathMLmfracFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::msup_)
-    newFrame = NS_NewMathMLmsupFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::msub_)
-    newFrame = NS_NewMathMLmsubFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::msubsup_)
-    newFrame = NS_NewMathMLmsubsupFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::munder_)
-    newFrame = NS_NewMathMLmunderFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mover_)
-    newFrame = NS_NewMathMLmoverFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::munderover_)
-    newFrame = NS_NewMathMLmunderoverFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mphantom_)
-    newFrame = NS_NewMathMLmphantomFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mpadded_)
-    newFrame = NS_NewMathMLmpaddedFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mspace_ ||
-           aTag == nsGkAtoms::none    ||
-           aTag == nsGkAtoms::mprescripts_)
-    newFrame = NS_NewMathMLmspaceFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mfenced_)
-    newFrame = NS_NewMathMLmfencedFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mmultiscripts_)
-    newFrame = NS_NewMathMLmmultiscriptsFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mstyle_)
-    newFrame = NS_NewMathMLmstyleFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::msqrt_)
-    newFrame = NS_NewMathMLmsqrtFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mroot_)
-    newFrame = NS_NewMathMLmrootFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::maction_)
-    newFrame = NS_NewMathMLmactionFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::mrow_ ||
-           aTag == nsGkAtoms::merror_)
-    newFrame = NS_NewMathMLmrowFrame(mPresShell, aStyleContext);
-  else if (aTag == nsGkAtoms::math) { 
-    // root <math> element
-    newFrame = NS_NewMathMLmathFrame(mPresShell, aStyleContext);
-  }
-  else {
-    return NS_OK;
-  }
-
-  // If we succeeded in creating a frame then initialize it, process its
-  // children (if requested), and set the initial child list
-  if (newFrame) {
-    NS_ASSERTION(newFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace),
-                 "Ignorable whitespace should be excluded");
-
-    // Only <math> elements can be floated or positioned.  All other MathML
-    // should be in-flow.
-    PRBool isMath = aTag == nsGkAtoms::math;
-
-    nsIFrame* geometricParent =
-      isMath ? aState.GetGeometricParent(disp, aParentFrame) : aParentFrame;
-    
-    InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, newFrame);
-
-    // See if we need to create a view, e.g. the frame is absolutely positioned
-    nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
-
-    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
-                         aParentFrame, isMath, isMath);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Push a null absolute containing block to disable absolute
-    // positioning within mathml.
-    nsFrameConstructorSaveState absoluteSaveState;
-    aState.PushAbsoluteContainingBlock(nsnull, absoluteSaveState);
-
-    // MathML frames are inline frames, so just process their kids
-    nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aStyleContext, newFrame, PR_TRUE,
-                         childItems, PR_FALSE);
-
-    // Wrap runs of inline children in a block
-    if (NS_SUCCEEDED(rv)) {
-      nsFrameItems newItems;
-      nsFrameItems currentBlock;
-      nsIFrame* f;
-      while ((f = childItems.childList) != nsnull) {
-        PRBool wrapFrame = IsInlineFrame(f) || IsFrameSpecial(f);
-        if (!wrapFrame) {
-          rv = FlushAccumulatedBlock(aState, aContent, newFrame, &currentBlock, &newItems);
-          if (NS_FAILED(rv))
-            break;
-        }
-          
-        childItems.RemoveChild(f, nsnull);
-        if (wrapFrame) {
-          currentBlock.AddChild(f);
-        } else {
-          newItems.AddChild(f);
-        }
-      }
-      rv = FlushAccumulatedBlock(aState, aContent, newFrame, &currentBlock, &newItems);
-
-      if (childItems.childList) {
-        // an error must have occurred, delete unprocessed frames
-        CleanupFrameReferences(aState.mFrameManager, childItems.childList);
-        nsFrameList(childItems.childList).DestroyFrames();
-      }
-      
-      childItems = newItems;
-    }
-    
-    // Set the frame's initial child list
-    newFrame->SetInitialChildList(nsnull, childItems.childList);
- 
-    return rv;
-  }
-  else {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  return FindDataByTag(aTag, aContent, aStyleContext, sMathMLData,
+                       NS_ARRAY_LENGTH(sMathMLData));
 }
 #endif // MOZ_MATHML
 
@@ -7148,9 +7054,10 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
 #ifdef MOZ_MATHML
   if (NS_SUCCEEDED(rv) &&
       (!frameItems->childList || lastChild == frameItems->lastChild)) {
-    rv = ConstructMathMLFrame(aState, aContent, adjParentFrame, aTag,
-                              aNameSpaceID, styleContext, *frameItems,
-                              pseudoParent);
+    rv = ConstructFrameFromData(FindMathMLData(aContent, aTag, aNameSpaceID,
+                                               styleContext),
+                                aState, aContent, adjParentFrame, aTag,
+                                styleContext, *frameItems, pseudoParent);
   }
 #endif
 
