@@ -1496,14 +1496,12 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewListBoxLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+already_AddRefed<nsIBoxLayout> NS_NewListBoxLayout();
 
 nsIFrame*
 NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIBoxLayout> layout;
-  NS_NewListBoxLayout(aPresShell, layout);
+  nsCOMPtr<nsIBoxLayout> layout = NS_NewListBoxLayout();
   if (!layout) {
     return nsnull;
   }

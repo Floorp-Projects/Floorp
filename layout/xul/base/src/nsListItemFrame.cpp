@@ -85,14 +85,12 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewGridRowLeafLayout(nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout);
+already_AddRefed<nsIBoxLayout> NS_NewGridRowLeafLayout();
 
 nsIFrame*
 NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIBoxLayout> layout;
-  NS_NewGridRowLeafLayout(aPresShell, getter_AddRefs(layout));
+  nsCOMPtr<nsIBoxLayout> layout = NS_NewGridRowLeafLayout();
   if (!layout) {
     return nsnull;
   }
