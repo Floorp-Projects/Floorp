@@ -48,13 +48,21 @@
 #include "nsBoxLayoutState.h"
 #include "nsGridLayout2.h"
 
+nsresult
+NS_NewGridRowLeafLayout(nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout);
+
 nsIFrame*
 NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
-                       nsStyleContext* aContext,
-                       PRBool aIsRoot,
-                       nsIBoxLayout* aLayoutManager)
+                       nsStyleContext* aContext)
 {
-    return new (aPresShell) nsGridRowLeafFrame (aPresShell, aContext, aIsRoot, aLayoutManager);
+  nsCOMPtr<nsIBoxLayout> layout;
+  NS_NewGridRowLeafLayout(aPresShell, getter_AddRefs(layout));
+  if (!layout) {
+    return nsnull;
+  }
+  
+  return new (aPresShell) nsGridRowLeafFrame(aPresShell, aContext, PR_FALSE,
+                                             layout);
 } 
 
 /*
