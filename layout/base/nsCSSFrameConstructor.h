@@ -847,7 +847,6 @@ private:
                              PRInt32                  aNameSpaceID,
                              nsStyleContext*          aStyleContext,
                              nsFrameItems&            aFrameItems,
-                             PRBool                   aXBLBaseTag,
                              PRBool                   aHasPseudoParent,
                              PRBool*                  aHaltProcessing);
 

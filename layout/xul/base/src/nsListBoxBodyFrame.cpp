@@ -172,9 +172,8 @@ NS_IMPL_ISUPPORTS1(nsListScrollSmoother, nsITimerCallback)
 
 nsListBoxBodyFrame::nsListBoxBodyFrame(nsIPresShell* aPresShell,
                                        nsStyleContext* aContext,
-                                       PRBool aIsRoot,
                                        nsIBoxLayout* aLayoutManager)
-  : nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager),
+  : nsBoxFrame(aPresShell, aContext, PR_FALSE, aLayoutManager),
     mRowCount(-1),
     mRowHeight(0),
     mRowHeightWasSet(PR_FALSE),
@@ -1497,10 +1496,17 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////
 
+nsresult
+NS_NewListBoxLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
 nsIFrame*
-NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
-                       PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return 
-    new (aPresShell) nsListBoxBodyFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
+  nsCOMPtr<nsIBoxLayout> layout;
+  NS_NewListBoxLayout(aPresShell, layout);
+  if (!layout) {
+    return nsnull;
+  }
+
+  return new (aPresShell) nsListBoxBodyFrame(aPresShell, aContext, layout);
 }
