@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 
 #include "mozIStorageValueArray.h"
-#include "mozIStorageDataSet.h"
 
 #include "nsIArray.h"
 
@@ -78,20 +77,6 @@ public:
 private:
     PRUint32 mArgc;
     sqlite3_value **mArgv;
-};
-
-class mozStorageDataSet : public mozIStorageDataSet
-{
-public:
-    mozStorageDataSet (nsIArray *aRows);
-    ~mozStorageDataSet();
-
-    // interfaces
-    NS_DECL_ISUPPORTS
-    NS_DECL_MOZISTORAGEDATASET
-
-protected:
-    nsCOMPtr<nsIArray> mRows;
 };
 
 #endif /* _MOZSTORAGEVALUEARRAY_H_ */
