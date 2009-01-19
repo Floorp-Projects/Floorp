@@ -48,14 +48,8 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGClipPathElement> clipPath = do_QueryInterface(aContent);
-  if (!clipPath) {
-    NS_ERROR("Can't create frame! Content is not an SVG clipPath!");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGClipPathFrame(aContext);
 }
 
@@ -152,6 +146,19 @@ nsSVGClipPathFrame::IsTrivial()
   }
   return PR_TRUE;
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGClipPathFrame::Init(nsIContent* aContent,
+                         nsIFrame* aParent,
+                         nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGClipPathElement> clipPath = do_QueryInterface(aContent);
+  NS_ASSERTION(clipPath, "Content is not an SVG clipPath!");
+
+  return nsSVGClipPathFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 nsIAtom *
 nsSVGClipPathFrame::GetType() const

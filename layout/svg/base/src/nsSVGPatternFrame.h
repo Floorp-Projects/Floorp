@@ -60,7 +60,6 @@ class nsSVGPatternFrame : public nsSVGPatternFrameBase
 {
 public:
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
-                                         nsIContent*   aContent,
                                          nsStyleContext* aContext);
 
   nsSVGPatternFrame(nsStyleContext* aContext);
@@ -85,6 +84,12 @@ public:
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
+
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
 
   /**
    * Get the "type" of the frame
