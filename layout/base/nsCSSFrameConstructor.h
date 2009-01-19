@@ -565,7 +565,9 @@ private:
   /* Bits that modify the way a FrameConstructionData is handled */
 
   /* If the FCDATA_SKIP_FRAMEMAP bit is set, then the frame created should not
-     be added to the primary frame map */
+     be added to the primary frame map.  This flag should not be used with
+     FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add to
+     the frame map. */
 #define FCDATA_SKIP_FRAMEMAP 0x1
   /* If the FCDATA_FUNC_IS_DATA_GETTER bit is set, then the mFunc of the
      FrameConstructionData is a getter function that can be used to get the
@@ -589,7 +591,24 @@ private:
      will be wrapped in blocks.  This is only usable for MathML at the
      moment. */
 #define FCDATA_WRAP_KIDS_IN_BLOCKS 0x20
-#endif
+#endif /* MOZ_MATHML */
+  /* If FCDATA_SUPPRESS_FRAME is set, no frame should be created for the
+     content.  If this bit is set, nothing else in the struct needs to be
+     set. */
+#define FCDATA_SUPPRESS_FRAME 0x40
+  /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
+     a scrollframe if its overflow type so requires.  This flag should not be
+     used with FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to
+     the frame map. */
+#define FCDATA_MAY_NEED_SCROLLFRAME 0x80
+#ifdef MOZ_XUL
+  /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
+     some really weird special handling.  */
+#define FCDATA_IS_POPUP 0x100
+#endif /* MOZ_XUL */
+  /* If FCDATA_SKIP_ABSPOS_PUSH is set, don't push this frame as an
+     absolute containing block, no matter what its style says. */
+#define FCDATA_SKIP_ABSPOS_PUSH 0x200
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -784,6 +803,7 @@ private:
      @param aParentFrame the frame to set as the parent of the
                          newly-constructed frame.
      @param aTag the content's XBL-resolved tag.
+     @param aNameSpaceID the content's XBL-resolved namespace ID.
      @param aStyleContext the style context to use for the new frame.
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
@@ -794,6 +814,7 @@ private:
                                   nsIContent* aContent,
                                   nsIFrame* aParentFrame,
                                   nsIAtom* aTag,
+                                  PRInt32 aNameSpaceID,
                                   nsStyleContext* aStyleContext,
                                   nsFrameItems& aFrameItems,
                                   PRBool aHasPseudoParent);
@@ -840,15 +861,41 @@ private:
                                                      nsStyleContext* aStyleContext);
 #endif
 
-  nsresult ConstructXULFrame(nsFrameConstructorState& aState,
-                             nsIContent*              aContent,
-                             nsIFrame*                aParentFrame,
-                             nsIAtom*                 aTag,
-                             PRInt32                  aNameSpaceID,
-                             nsStyleContext*          aStyleContext,
-                             nsFrameItems&            aFrameItems,
-                             PRBool                   aHasPseudoParent,
-                             PRBool*                  aHaltProcessing);
+  // Function to find FrameConstructionData for aContent.  Will return
+  // null if aContent is not XUL.
+  static const FrameConstructionData* FindXULTagData(nsIContent* aContent,
+                                                     nsIAtom* aTag,
+                                                     PRInt32 aNameSpaceID,
+                                                     nsStyleContext* aStyleContext);
+  // XUL data-finding helper functions and structures
+#ifdef MOZ_XUL
+  static const FrameConstructionData*
+    FindPopupGroupData(nsIContent* aContent, nsStyleContext* aStyleContext);
+  // sXULTextBoxData used for both labels and descriptions
+  static const FrameConstructionData sXULTextBoxData;
+  static const FrameConstructionData*
+    FindXULLabelData(nsIContent* aContent, nsStyleContext* aStyleContext);
+  static const FrameConstructionData*
+    FindXULDescriptionData(nsIContent* aContent, nsStyleContext* aStyleContext);
+#ifdef XP_MACOSX
+  static const FrameConstructionData*
+    FindXULMenubarData(nsIContent* aContent, nsStyleContext* aStyleContext);
+#endif /* XP_MACOSX */
+  static const FrameConstructionData*
+    FindXULListBoxBodyData(nsIContent* aContent, nsStyleContext* aStyleContext);
+  static const FrameConstructionData*
+    FindXULListItemData(nsIContent* aContent, nsStyleContext* aStyleContext);
+#endif /* MOZ_XUL */
+
+  // Function to find FrameConstructionData for aContent either using
+  // FindXULTagData or using one of the XUL display types.  Will
+  // return null if aContent is not XUL and doesn't have a XUL display
+  // type (or even if it has a XUL display type but is HTML/MathML/SVG
+  // that would get a frame by tag).
+  static const FrameConstructionData* FindXULData(nsIContent* aContent,
+                                                  nsIAtom* aTag,
+                                                  PRInt32 aNameSpaceID,
+                                                  nsStyleContext* aStyleContext);
 
 // SVG - rods
 #ifdef MOZ_SVG
