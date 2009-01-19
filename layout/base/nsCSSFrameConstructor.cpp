@@ -6546,9 +6546,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewMathMLmrowFrame(mPresShell, aStyleContext);
   else if (aTag == nsGkAtoms::math) { 
     // root <math> element
-    const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
-    PRBool isBlock = (NS_STYLE_DISPLAY_BLOCK == display->mDisplay);
-    newFrame = NS_NewMathMLmathFrame(mPresShell, isBlock, aStyleContext);
+    newFrame = NS_NewMathMLmathFrame(mPresShell, aStyleContext);
   }
   else {
     return NS_OK;
