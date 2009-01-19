@@ -386,12 +386,7 @@ nsSVGAnimationElement::BeginElementAt(float offset)
 
   ownerSVG->RequestSample();
 
-  // We ignore the return code. The SMIL version of this interface has a void
-  // return type and no exception specification so there's no way to indicate
-  // that begin failed (e.g. because the element has restart="none").
-  mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
-
-  return NS_OK;
+  return mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
 }
 
 /* void endElement (); */
@@ -411,8 +406,5 @@ nsSVGAnimationElement::EndElementAt(float offset)
 
   ownerSVG->RequestSample();
 
-  // As with BeginElementAt, ignore the return code.
-  mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
-
-  return NS_OK;
+  return mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
 }

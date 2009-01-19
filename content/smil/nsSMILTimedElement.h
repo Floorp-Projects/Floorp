@@ -75,8 +75,8 @@ public:
    *                   current time.
    * @return NS_OK if the operation succeeeded, or an error code otherwise.
    */
-  PRBool BeginElementAt(double aOffsetSeconds,
-                        const nsSMILTimeContainer* aContainer);
+  nsresult BeginElementAt(double aOffsetSeconds,
+                          const nsSMILTimeContainer* aContainer);
 
   /*
    * Adds a new end instance time at the current document time (as defined by
@@ -89,8 +89,8 @@ public:
    *                   current time.
    * @return NS_OK if the operation succeeeded, or an error code otherwise.
    */
-  PRBool EndElementAt(double aOffsetSeconds,
-                      const nsSMILTimeContainer* aContainer);
+  nsresult EndElementAt(double aOffsetSeconds,
+                        const nsSMILTimeContainer* aContainer);
 
   /** 
    * Methods for supporting the nsSVGAnimationElement interface.
