@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SMIL module.
+ * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is Brian Birtles.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Brian Birtles <birtles@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,44 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SMILVALUE_H_
-#define NS_SMILVALUE_H_
+#include "nsIDOMSVGAnimationElement.idl"
 
-#include "nsISMILType.h"
-#include "nsSMILNullType.h"
-
-class nsSMILValue
-{
-public:
-  nsSMILValue() : mU(), mType(&nsSMILNullType::sSingleton) { }
-  nsSMILValue(const nsISMILType* aType);
-  nsSMILValue(const nsSMILValue& aVal);
-
-  ~nsSMILValue()
-  {
-    mType->Destroy(*this);
-  }
-
-  const nsSMILValue& operator=(const nsSMILValue& aVal);
-
-  PRBool IsNull() const
-  {
-    return (mType == &nsSMILNullType::sSingleton);
-  }
-
-  nsresult Add(const nsSMILValue& aValueToAdd, PRUint32 aCount = 1);
-  nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
-  nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
-  nsresult Interpolate(const nsSMILValue& aEndVal,
-                       double aUnitDistance,
-                       nsSMILValue& aResult) const;
-
-  union {
-    PRInt64 mInt;
-    double mDouble;
-    void* mPtr;
-  } mU;
-  const nsISMILType* mType;
-};
-
-#endif  // NS_SMILVALUE_H_
+[scriptable, uuid(735e0f75-c6aa-4aee-bcd2-46426d6ac90c)]
+interface nsIDOMSVGAnimateTransformElement : nsIDOMSVGAnimationElement {};
