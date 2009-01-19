@@ -1386,8 +1386,9 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         // try to find another place to break
         goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
         if (mLineBreaker) {
-          goodSpace = mLineBreaker->Next(mCurrentLine.get(), 
-                                      mCurrentLine.Length(), goodSpace);
+          if (goodSpace < mCurrentLine.Length())
+            goodSpace = mLineBreaker->Next(mCurrentLine.get(), 
+                                           mCurrentLine.Length(), goodSpace);
           if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
             goodSpace = mCurrentLine.Length();
         }
