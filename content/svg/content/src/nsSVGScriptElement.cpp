@@ -85,7 +85,7 @@ public:
   virtual PRBool HasScriptContent();
 
   // nsSVGElement specializations:
-  virtual void DidChangeString(PRUint8 aAttrEnum);
+  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   // nsIContent specializations:
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -204,8 +204,7 @@ already_AddRefed<nsIURI>
 nsSVGScriptElement::GetScriptURI()
 {
   nsIURI *uri = nsnull;
-  nsAutoString src;
-  mStringAttributes[HREF].GetAnimValue(src, this);
+  const nsString &src = mStringAttributes[HREF].GetAnimValue();
   if (!src.IsEmpty()) {
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     NS_NewURI(&uri, src, nsnull, baseURI);
@@ -237,9 +236,7 @@ nsSVGScriptElement::GetScriptDeferred()
 PRBool
 nsSVGScriptElement::HasScriptContent()
 {
-  nsAutoString str;
-  mStringAttributes[HREF].GetAnimValue(str, this);
-  return !str.IsEmpty() ||
+  return !mStringAttributes[HREF].GetAnimValue().IsEmpty() ||
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 
@@ -247,9 +244,9 @@ nsSVGScriptElement::HasScriptContent()
 // nsSVGElement methods
 
 void
-nsSVGScriptElement::DidChangeString(PRUint8 aAttrEnum)
+nsSVGScriptElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
-  nsSVGScriptElementBase::DidChangeString(aAttrEnum);
+  nsSVGScriptElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
 
   if (aAttrEnum == HREF) {
     MaybeProcessScript();
@@ -289,4 +286,3 @@ nsSVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   return NS_OK;
 }
-
