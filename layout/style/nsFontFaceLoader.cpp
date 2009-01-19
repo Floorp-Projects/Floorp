@@ -78,15 +78,17 @@ static PRLogModuleInfo *gFontDownloaderLog = PR_NewLogModule("fontdownloader");
 
 
 nsFontFaceLoader::nsFontFaceLoader(gfxFontEntry *aFontToLoad, nsIURI *aFontURI,
-                                   nsIPresShell *aShell)
-  : mFontEntry(aFontToLoad), mFontURI(aFontURI), mShell(aShell)
+                                   nsUserFontSet *aFontSet, nsIChannel *aChannel)
+  : mFontEntry(aFontToLoad), mFontURI(aFontURI), mFontSet(aFontSet),
+    mChannel(aChannel)
 {
-
 }
 
 nsFontFaceLoader::~nsFontFaceLoader()
 {
-
+  if (mFontSet) {
+    mFontSet->RemoveLoader(this);
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsFontFaceLoader, nsIStreamLoaderObserver)
@@ -98,6 +100,12 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                    PRUint32 aStringLen,
                                    const PRUint8* aString)
 {
+  if (!mFontSet) {
+    // We've been canceled
+    return aStatus;
+  }
+
+  mFontSet->RemoveLoader(this);
 
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
@@ -113,17 +121,9 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 #endif
 
-  PRBool fontUpdate;
-
-  // first, check to make sure we're not torn down
-  if (mShell->IsDestroying()) {
-    return aStatus;
-  }
-
-  nsPresContext *ctx = mShell->GetPresContext();
-  if (!ctx) {
-    return aStatus;
-  }
+  nsPresContext *ctx = mFontSet->GetPresContext();
+  NS_ASSERTION(ctx && !ctx->PresShell()->IsDestroying(),
+               "We should have been canceled already");
 
   // whether an error occurred or not, notify the user font set of the completion
   gfxUserFontSet *userFontSet = ctx->GetUserFontSet();
@@ -131,9 +131,9 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     return aStatus;
   }
   
-  fontUpdate = userFontSet->OnLoadComplete(mFontEntry, aLoader,
-                                           aString, aStringLen,
-                                           aStatus);
+  PRBool fontUpdate = userFontSet->OnLoadComplete(mFontEntry, aLoader,
+                                                  aString, aStringLen,
+                                                  aStatus);
 
   // when new font loaded, need to reflow
   if (fontUpdate) {
@@ -144,6 +144,13 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   return aStatus;
+}
+
+void
+nsFontFaceLoader::Cancel()
+{
+  mFontSet = nsnull;
+  mChannel->Cancel(NS_BINDING_ABORTED);
 }
 
 nsresult
@@ -179,11 +186,32 @@ nsUserFontSet::nsUserFontSet(nsPresContext *aContext)
   : mPresContext(aContext)
 {
   NS_ASSERTION(mPresContext, "null context passed to nsUserFontSet");
+  mLoaders.Init();
 }
 
 nsUserFontSet::~nsUserFontSet()
 {
+  NS_ASSERTION(mLoaders.Count() == 0, "mLoaders should have been emptied");
+}
 
+static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
+                                       void* aUserArg)
+{
+  aKey->GetKey()->Cancel();
+  return PL_DHASH_REMOVE;
+}
+
+void
+nsUserFontSet::Destroy()
+{
+  mPresContext = nsnull;
+  mLoaders.EnumerateEntries(DestroyIterator, nsnull);
+}
+
+void
+nsUserFontSet::RemoveLoader(nsFontFaceLoader *aLoader)
+{
+  mLoaders.RemoveEntry(aLoader);
 }
 
 nsresult 
@@ -230,10 +258,23 @@ nsUserFontSet::StartLoad(gfxFontEntry *aFontToLoad,
 #endif    
     return rv;
   }
-    
-  nsRefPtr<nsFontFaceLoader> fontLoader = new nsFontFaceLoader(aFontToLoad, 
-                                                               aFontFaceSrc->mURI, 
-                                                               ps);
+
+  nsCOMPtr<nsIStreamLoader> streamLoader;
+  nsCOMPtr<nsILoadGroup> loadGroup(ps->GetDocument()->GetDocumentLoadGroup());
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     aFontFaceSrc->mURI,
+                     nsnull,
+                     loadGroup,
+                     nsnull,
+                     nsIRequest::LOAD_NORMAL);
+                     
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsFontFaceLoader> fontLoader =
+    new nsFontFaceLoader(aFontToLoad, aFontFaceSrc->mURI, this, channel);
+
   if (!fontLoader)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -248,19 +289,6 @@ nsUserFontSet::StartLoad(gfxFontEntry *aFontToLoad,
          fontLoader.get(), fontURI.get(), referrerURI.get()));
   }
 #endif  
-
-  nsCOMPtr<nsIStreamLoader> streamLoader;
-  nsCOMPtr<nsILoadGroup> loadGroup(ps->GetDocument()->GetDocumentLoadGroup());
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     aFontFaceSrc->mURI,
-                     nsnull,
-                     loadGroup,
-                     nsnull,
-                     nsIRequest::LOAD_NORMAL);
-                     
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel)
@@ -283,6 +311,10 @@ nsUserFontSet::StartLoad(gfxFontEntry *aFontToLoad,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = channel->AsyncOpen(listener, nsnull);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    mLoaders.PutEntry(fontLoader);
   }
 
   return rv;
