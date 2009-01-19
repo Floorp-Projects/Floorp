@@ -59,6 +59,7 @@ class nsIFontMetrics;
 #include "nsIView.h"
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
+#include "nsIPresShell.h"
 
 class nsBlockFrame;
 
@@ -980,6 +981,20 @@ public:
 
   nsCOMPtr<nsIContent> mContent;
   nsCOMPtr<nsIAtom> mAttrName;
+};
+
+class nsReflowFrameRunnable : public nsRunnable
+{
+public:
+  nsReflowFrameRunnable(nsIFrame* aFrame,
+                        nsIPresShell::IntrinsicDirty aIntrinsicDirty,
+                        nsFrameState aBitToAdd);
+
+  NS_DECL_NSIRUNNABLE
+
+  nsWeakFrame mWeakFrame;
+  nsIPresShell::IntrinsicDirty mIntrinsicDirty;
+  nsFrameState mBitToAdd;
 };
 
 #endif // nsLayoutUtils_h__
