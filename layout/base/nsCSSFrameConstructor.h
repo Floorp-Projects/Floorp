@@ -561,15 +561,6 @@ protected:
                                             nsIFrame**       aPlaceholderFrame);
 
 private:
-  // @param OUT aNewFrame the new radio control frame
-  nsresult ConstructRadioControlFrame(nsIFrame**         aNewFrame,
-                                      nsIContent*        aContent,
-                                      nsStyleContext*    aStyleContext);
-
-  // @param OUT aNewFrame the new checkbox control frame
-  nsresult ConstructCheckboxControlFrame(nsIFrame**       aNewFrame,
-                                         nsIContent*      aContent,
-                                         nsStyleContext*  aStyleContext);
   // ConstructButtonFrame puts the new frame in aFrameItems and
   // handles the kids of the button.
   nsresult ConstructButtonFrame(nsFrameConstructorState& aState,
