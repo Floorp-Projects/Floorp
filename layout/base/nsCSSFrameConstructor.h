@@ -609,6 +609,15 @@ private:
   /* If FCDATA_SKIP_ABSPOS_PUSH is set, don't push this frame as an
      absolute containing block, no matter what its style says. */
 #define FCDATA_SKIP_ABSPOS_PUSH 0x200
+  /* If FCDATA_FORCE_VIEW is set, then force creation of a view for the frame.
+     this is only used if a scrollframe is not created and a full constructor
+     isn't used, so this flag shouldn't be used with
+     FCDATA_MAY_NEED_SCROLLFRAME or FCDATA_FUNC_IS_FULL_CTOR.  */
+#define FCDATA_FORCE_VIEW 0x400
+  /* If FCDATA_DISALLOW_GENERATED_CONTENT is set, then don't allow generated
+     content when processing kids of this frame.  This should not be used with
+     FCDATA_FUNC_IS_FULL_CTOR */
+#define FCDATA_DISALLOW_GENERATED_CONTENT 0x800
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -797,7 +806,7 @@ private:
      will handle adding the frame to frame lists, processing children, adding
      it to the primary frame map, and so forth.
 
-     @param aData the FrameConstructionData to use.
+     @param aData the FrameConstructionData to use.  Must not be null.
      @param aState the frame construction state to use.
      @param aContent the content node to construct the frame for.
      @param aParentFrame the frame to set as the parent of the
@@ -899,15 +908,20 @@ private:
 
 // SVG - rods
 #ifdef MOZ_SVG
-  nsresult ConstructSVGFrame(nsFrameConstructorState& aState,
-                             nsIContent*              aContent,
-                             nsIFrame*                aParentFrame,
-                             nsIAtom*                 aTag,
-                             PRInt32                  aNameSpaceID,
-                             nsStyleContext*          aStyleContext,
-                             nsFrameItems&            aFrameItems,
-                             PRBool                   aHasPseudoParent,
-                             PRBool*                  aHaltProcessing);
+  static const FrameConstructionData* FindSVGData(nsIContent* aContent,
+                                                  nsIAtom* aTag,
+                                                  PRInt32 aNameSpaceID,
+                                                  nsIFrame* aParentFrame,
+                                                  nsStyleContext* aStyleContext);
+
+  nsresult ConstructSVGForeignObjectFrame(nsFrameConstructorState& aState,
+                                          nsIContent* aContent,
+                                          nsIFrame* aParentFrame,
+                                          nsIAtom* aTag,
+                                          nsStyleContext* aStyleContext,
+                                          const nsStyleDisplay* aStyleDisplay,
+                                          nsFrameItems& aFrameItems,
+                                          nsIFrame** aNewFrame);
 #endif
 
   nsresult ConstructFrameByDisplayType(nsFrameConstructorState& aState,
