@@ -51,17 +51,14 @@
 #include "nsBoxFrame.h"
 #include "nsGridLayout2.h"
 
-nsresult
-NS_NewGridRowLeafLayout( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout)
+already_AddRefed<nsIBoxLayout> NS_NewGridRowLeafLayout()
 {
-  *aNewLayout = new nsGridRowLeafLayout(aPresShell);
-  NS_IF_ADDREF(*aNewLayout);
-
-  return NS_OK;
-  
+  nsIBoxLayout* layout = new nsGridRowLeafLayout();
+  NS_IF_ADDREF(layout);
+  return layout;
 } 
 
-nsGridRowLeafLayout::nsGridRowLeafLayout(nsIPresShell* aPresShell):nsGridRowLayout(aPresShell)
+nsGridRowLeafLayout::nsGridRowLeafLayout():nsGridRowLayout()
 {
 }
 

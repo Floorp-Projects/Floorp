@@ -49,7 +49,7 @@
 #include "nsStackLayout.h"
 #include "nsGrid.h"
 
-nsGridRowLayout::nsGridRowLayout(nsIPresShell* aPresShell):nsSprocketLayout()
+nsGridRowLayout::nsGridRowLayout():nsSprocketLayout()
 {
 }
 

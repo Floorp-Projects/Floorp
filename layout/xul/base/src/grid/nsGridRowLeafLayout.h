@@ -57,7 +57,7 @@ class nsGridRowLeafLayout : public nsGridRowLayout
 {
 public:
 
-  friend nsresult NS_NewGridRowLeafLayout(nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout);
+  friend already_AddRefed<nsIBoxLayout> NS_NewGridRowLeafLayout();
 
   virtual nsSize GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
@@ -79,7 +79,7 @@ protected:
                          nsComputedBoxSize*& aComputedBoxSizes);
 
 
-  nsGridRowLeafLayout(nsIPresShell* aShell);
+  nsGridRowLeafLayout();
   virtual ~nsGridRowLeafLayout();
   //virtual void AddBorderAndPadding(nsIBox* aBox, nsSize& aSize);
 
