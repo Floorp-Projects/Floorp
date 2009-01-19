@@ -4165,11 +4165,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // by the style system, so we can assume that display->mDisplay is
   // either NONE, BLOCK, or TABLE.
 
-  PRBool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE) &&
-                          !IsSpecialContent(aDocElement, aDocElement->Tag(),
-                                            aDocElement->GetNameSpaceID(),
-                                            styleContext);
-
   // contentFrame is the primary frame for the root element. *aNewFrame
   // is the frame that will be the child of the initial containing block.
   // These are usually the same frame but they can be different, in
@@ -4178,66 +4173,68 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // placeholder.
   nsIFrame* contentFrame;
   PRBool processChildren = PR_FALSE;
-  if (docElemIsTable) {
-    nsIFrame* innerTableFrame;
-    nsFrameItems frameItems;
-    // if the document is a table then just populate it.
-    rv = ConstructTableFrame(aState, aDocElement,
-                             aParentFrame, styleContext,
-                             kNameSpaceID_None, PR_FALSE, frameItems, contentFrame,
-                             innerTableFrame);
-    if (NS_FAILED(rv))
-      return rv;
-    if (!contentFrame || !frameItems.childList)
-      return NS_ERROR_FAILURE;
-    *aNewFrame = frameItems.childList;
-    NS_ASSERTION(!frameItems.childList->GetNextSibling(),
-                 "multiple root element frames");
-  } else {
-    // otherwise build a box or a block
+
+  // Check whether we need to build a XUL box or SVG root frame
 #ifdef MOZ_XUL
-    if (aDocElement->IsNodeOfType(nsINode::eXUL)) {
-      contentFrame = NS_NewDocElementBoxFrame(mPresShell, styleContext);
+  if (aDocElement->IsNodeOfType(nsINode::eXUL)) {
+    contentFrame = NS_NewDocElementBoxFrame(mPresShell, styleContext);
+    if (NS_UNLIKELY(!contentFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    InitAndRestoreFrame(aState, aDocElement, aParentFrame, nsnull, contentFrame);
+    *aNewFrame = contentFrame;
+    processChildren = PR_TRUE;
+  }
+  else
+#endif
+#ifdef MOZ_SVG
+  if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
+    if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
+      contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
       if (NS_UNLIKELY(!contentFrame)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      InitAndRestoreFrame(aState, aDocElement, aParentFrame, nsnull, contentFrame);
-      *aNewFrame = contentFrame;
-      processChildren = PR_TRUE;
-    }
-    else
-#endif 
-#ifdef MOZ_SVG
-    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
-      if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
-        contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
-        if (NS_UNLIKELY(!contentFrame)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        InitAndRestoreFrame(aState, aDocElement,
-                            aState.GetGeometricParent(display, aParentFrame),
-                            nsnull, contentFrame);
+      InitAndRestoreFrame(aState, aDocElement,
+                          aState.GetGeometricParent(display, aParentFrame),
+                          nsnull, contentFrame);
 
-        // AddChild takes care of transforming the frame tree for fixed-pos
-        // or abs-pos situations
-        nsFrameItems frameItems;
-        rv = aState.AddChild(contentFrame, frameItems, aDocElement,
-                             styleContext, aParentFrame);
-        if (NS_FAILED(rv) || !frameItems.childList) {
-          return rv;
-        }
-        *aNewFrame = frameItems.childList;
-        processChildren = PR_TRUE;
-
-        // See if we need to create a view
-        nsHTMLContainerFrame::CreateViewForFrame(contentFrame, PR_FALSE);
-      } else {
-        return NS_ERROR_FAILURE;
+      // AddChild takes care of transforming the frame tree for fixed-pos
+      // or abs-pos situations
+      nsFrameItems frameItems;
+      rv = aState.AddChild(contentFrame, frameItems, aDocElement,
+                           styleContext, aParentFrame);
+      if (NS_FAILED(rv) || !frameItems.childList) {
+        return rv;
       }
+      *aNewFrame = frameItems.childList;
+      processChildren = PR_TRUE;
+
+      // See if we need to create a view
+      nsHTMLContainerFrame::CreateViewForFrame(contentFrame, PR_FALSE);
+    } else {
+      return NS_ERROR_FAILURE;
     }
-    else 
+  }
+  else
 #endif
-    {
+  {
+    PRBool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE);
+    if (docElemIsTable) {
+      nsIFrame* innerTableFrame;
+      nsFrameItems frameItems;
+      // if the document is a table then just populate it.
+      rv = ConstructTableFrame(aState, aDocElement,
+                               aParentFrame, styleContext,
+                               kNameSpaceID_None, PR_FALSE, frameItems,
+                               contentFrame, innerTableFrame);
+      if (NS_FAILED(rv))
+        return rv;
+      if (!contentFrame || !frameItems.childList)
+        return NS_ERROR_FAILURE;
+      *aNewFrame = frameItems.childList;
+      NS_ASSERTION(!frameItems.childList->GetNextSibling(),
+                   "multiple root element frames");
+    } else {
       contentFrame = NS_NewBlockFrame(mPresShell, styleContext,
         NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
       if (!contentFrame)
