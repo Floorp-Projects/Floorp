@@ -5386,9 +5386,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     addedToFrameList = PR_TRUE;
   }
   else if (nsGkAtoms::legend == aTag) {
-    NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
-                 "Legends should not be positioned and should not float");
-    
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5396,9 +5393,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     triedFrame = PR_TRUE;
   }
   else if (nsGkAtoms::frameset == aTag) {
-    NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
-                 "Framesets should not be positioned and should not float");
-    
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
@@ -5415,8 +5409,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     triedFrame = PR_TRUE;
   }
   else if (nsGkAtoms::spacer == aTag) {
-    NS_ASSERTION(!display->IsAbsolutelyPositioned() && !display->IsFloating(),
-                 "Spacers should not be positioned and should not float");
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
