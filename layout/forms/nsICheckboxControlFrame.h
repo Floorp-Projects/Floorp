@@ -50,12 +50,6 @@ class nsICheckboxControlFrame
 {
 public:
   NS_DECLARE_FRAME_ACCESSOR(nsICheckboxControlFrame)
-
-  /**
-   * Sets the Pseudo Style Contexts for the Check button
-   */
-  NS_IMETHOD SetCheckboxFaceStyleContext(
-                 nsStyleContext* aCheckboxFaceStyleContext) = 0;
   
   /**
    * Called by content when checkbox "checked" changes

@@ -2222,10 +2222,12 @@ nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
     }
 
     case NS_FORM_INPUT_CHECKBOX:
-      return ConstructCheckboxControlFrame(aFrame, aContent, aStyleContext);
+      *aFrame = NS_NewGfxCheckboxControlFrame(mPresShell, aStyleContext);
+      return *aFrame ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
     case NS_FORM_INPUT_RADIO:
-      return ConstructRadioControlFrame(aFrame, aContent, aStyleContext);
+      *aFrame = NS_NewGfxRadioControlFrame(mPresShell, aStyleContext);
+      return *aFrame ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
     case NS_FORM_INPUT_FILE:
     {
@@ -4640,48 +4642,6 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
   else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructRadioControlFrame(nsIFrame**      aNewFrame,
-                                                  nsIContent*     aContent,
-                                                  nsStyleContext* aStyleContext)
-{
-  *aNewFrame = NS_NewGfxRadioControlFrame(mPresShell, aStyleContext);
-  if (NS_UNLIKELY(!*aNewFrame)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsRefPtr<nsStyleContext> radioStyle;
-  radioStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(aContent,
-                                                             nsCSSAnonBoxes::radio,
-                                                             aStyleContext);
-  nsIRadioControlFrame* radio = do_QueryFrame(*aNewFrame);
-  if (radio) {
-    radio->SetRadioButtonFaceStyleContext(radioStyle);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIFrame**      aNewFrame,
-                                                     nsIContent*     aContent,
-                                                     nsStyleContext* aStyleContext)
-{
-  *aNewFrame = NS_NewGfxCheckboxControlFrame(mPresShell, aStyleContext);
-  if (NS_UNLIKELY(!*aNewFrame)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsRefPtr<nsStyleContext> checkboxStyle;
-  checkboxStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(aContent,
-                                                                nsCSSAnonBoxes::check, 
-                                                                aStyleContext);
-  nsICheckboxControlFrame* checkbox = do_QueryFrame(*aNewFrame);
-  if (checkbox) {
-    checkbox->SetCheckboxFaceStyleContext(checkboxStyle);
-  }
-  return NS_OK;
 }
 
 nsresult
