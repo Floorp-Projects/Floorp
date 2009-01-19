@@ -5269,13 +5269,7 @@ JS_SetOperationLimit(JSContext *cx, uint32 operationLimit)
 {
     /* Mixed operation and branch callbacks are not supported. */
     JS_ASSERT(!cx->branchCallbackWasSet);
-
-    // FIXME: bug 473721 wallpaper
-    // JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
-    if (!(operationLimit <= JS_MAX_OPERATION_LIMIT)) {
-        operationLimit = JS_MAX_OPERATION_LIMIT;
-    }
-
+    JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
     JS_ASSERT(operationLimit > 0);
 
     cx->operationCount = (int32) operationLimit;
@@ -5286,7 +5280,13 @@ JS_PUBLIC_API(uint32)
 JS_GetOperationLimit(JSContext *cx)
 {
     JS_ASSERT(!cx->branchCallbackWasSet);
-    return cx->operationLimit;
+
+    /*
+     * cx->operationLimit is initialized to JS_MAX_OPERATION_LIMIT + 1 to
+     * detect for optimizations if the embedding has ever set it.
+     */
+    JS_ASSERT(cx->operationLimit <= JS_MAX_OPERATION_LIMIT + 1);
+    return JS_MIN(cx->operationLimit, JS_MAX_OPERATION_LIMIT);
 }
 
 JS_PUBLIC_API(JSBranchCallback)
