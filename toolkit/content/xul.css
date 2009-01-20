@@ -122,7 +122,7 @@ button[type="repeat"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button-repeat");
 }
 
-button[type="menu"] {
+button[type="menu"], button[type="panel"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
 }
 
@@ -136,7 +136,7 @@ toolbarbutton {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
 }
 
-toolbarbutton[type="menu"] {
+toolbarbutton[type="menu"], toolbarbutton[type="panel"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
 }
 
