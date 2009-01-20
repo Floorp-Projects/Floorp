@@ -3,5 +3,6 @@
 == unit-rem-div-width-outer.html unit-rem-ref.html
 == unit-rem-iframe.html unit-rem-ref-iframe.html
 == unit-rem-root-fontsize.html unit-rem-ref-root-fontsize.html
+== unit-rem-root-fontsize.html unit-rem-ref2-root-fontsize.html
 == unit-rem-root-width.html unit-rem-ref-root-width.html
 == unit-rem.svg unit-rem-ref.svg
