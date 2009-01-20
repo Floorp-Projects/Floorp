@@ -142,6 +142,7 @@ enum nsCSSUnit {
   eCSSUnit_EM           = 800,    // (float) == current font size
   eCSSUnit_XHeight      = 801,    // (float) distance from top of lower case x to baseline
   eCSSUnit_Char         = 802,    // (float) number of characters, used for width with monospace font
+  eCSSUnit_RootEM       = 803,    // (float) == root element font size
 
   // Screen relative measure
   eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit

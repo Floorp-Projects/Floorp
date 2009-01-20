@@ -474,6 +474,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
     case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;
     case eCSSUnit_Char:         aResult.AppendLiteral("ch");   break;
+    case eCSSUnit_RootEM:       aResult.AppendLiteral("rem");  break;
 
     case eCSSUnit_Pixel:        aResult.AppendLiteral("px");   break;
 
