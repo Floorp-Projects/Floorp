@@ -7254,6 +7254,8 @@ if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
 	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
 fi
 
+AC_SUBST(LIBXUL_LIBS)
+
 if test -n "$MOZ_ENABLE_LIBXUL"; then
     XPCOM_LIBS="$LIBXUL_LIBS"
     AC_DEFINE(MOZ_ENABLE_LIBXUL)
