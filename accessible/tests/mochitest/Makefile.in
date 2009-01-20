@@ -50,6 +50,7 @@ _TEST_FILES =\
 		longdesc_src.html \
 		attributes.js \
 		common.js \
+		namerules.xml \
 		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
 		nsIAccessible_name.js \
