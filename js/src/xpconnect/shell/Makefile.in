@@ -50,7 +50,6 @@ REQUIRES	= xpconnect \
 		  xpcom \
 		  js \
 		  caps \
-		  xulapp \
 		  $(NULL)
 
 CPPSRCS		= xpcshell.cpp
@@ -61,8 +60,8 @@ endif
 
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(LIBXUL_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
