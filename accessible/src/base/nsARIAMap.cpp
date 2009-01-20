@@ -170,7 +170,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   },
   {
     "gridcell",
-    nsIAccessibleRole::ROLE_CELL,
+    nsIAccessibleRole::ROLE_GRID_CELL,
     eNoValue,
     eNoAction,
     kNoReqStates,

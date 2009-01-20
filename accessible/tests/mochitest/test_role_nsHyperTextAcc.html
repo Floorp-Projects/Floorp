@@ -14,21 +14,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
 
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
-    function testRole(aID, aRole)
-    {
-      var acc = getAccessible(aID);
-      if (!acc)
-        return;
-
-      try {
-        is(acc.role, aRole, "Wrong role for " + aID + "!");
-      } catch(e) {
-        ok(false, "Error getting role for " + aID + "!");
-      }
-    }
-
     function doTests()
     {
       // Test html:form.

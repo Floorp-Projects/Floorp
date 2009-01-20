@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=474281
+-->
+<head>
+  <title>Name calculation for table and grid cells</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTests()
+    {
+      // XXX For the below tests, remove the name tests once bug 468034 is
+      // fixed, and do the name tests in the new infrastructure.
+
+      // Test table cell name and role
+      testName("tc", null);
+      testRole("tc", ROLE_CELL);
+
+      // Test grid cell.
+      testName("gc", "This is a paragraph This is a link    This is a list");
+      testRole("gc", ROLE_GRID_CELL);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTests);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=474281"
+      title="accessible name of html table cells is incorrectly including descendants">
+      Mozilla bug 474281</a>
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <table>
+    <tr>
+      <td id="tc">
+        <p>This is a paragraph</p>
+        <a href="#">This is a link</a>
+        <ul>
+          <li>This is a list</li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+  <table>
+    <tr>
+      <td id="gc" role="gridcell">
+        <p>This is a paragraph</p>
+        <a href="#">This is a link</a>
+        <ul>
+          <li>This is a list</li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
