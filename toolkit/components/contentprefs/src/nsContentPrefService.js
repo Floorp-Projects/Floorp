@@ -225,6 +225,19 @@ ContentPrefService.prototype = {
     }
   },
 
+  removeGroupedPrefs: function ContentPrefService_removeGroupedPrefs() {
+    this._dbConnection.beginTransaction();
+    try {
+      this._dbConnection.executeSimpleSQL("DELETE FROM prefs WHERE groupID IS NOT NULL");
+      this._dbConnection.executeSimpleSQL("DELETE FROM groups");
+      this._dbConnection.commitTransaction();
+    }
+    catch(ex) {
+      this._dbConnection.rollbackTransaction();
+      throw ex;
+    }
+  },
+
   getPrefs: function ContentPrefService_getPrefs(aURI) {
     if (aURI) {
       var group = this.grouper.group(aURI);
