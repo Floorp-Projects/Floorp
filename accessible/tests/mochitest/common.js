@@ -148,17 +148,19 @@ function getNode(aNodeOrID)
 }
 
 /**
- * Return accessible for the given ID attribute or DOM element or accessible.
+ * Return accessible for the given identifier (may be ID attribute or DOM
+ * element or accessible object).
  *
- * @param aAccOrElmOrID  [in] DOM element or ID attribute to get an accessible
- *                        for or an accessible to query additional interfaces.
- * @param aInterfaces    [in, optional] the accessible interface or the array of
- *                        accessible interfaces to query it/them from obtained
- *                        accessible
- * @param aElmObj        [out, optional] object to store DOM element which
- *                        accessible is obtained for
+ * @param aAccOrElmOrID      [in] identifier to get an accessible implementing
+ *                           the given interfaces
+ * @param aInterfaces        [in, optional] the interface or an array interfaces
+ *                           to query it/them from obtained accessible
+ * @param aElmObj            [out, optional] object to store DOM element which
+ *                           accessible is obtained for
+ * @param aDoNotFailIfNoAcc  [in, optional] no error if the given identifier is
+ *                           not accessible
  */
-function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
+function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
 {
   var elm = null;
 
@@ -188,7 +190,9 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
     }
 
     if (!acc) {
-      ok(false, "Can't get accessible for " + aAccOrElmOrID);
+      if (!aDoNotFailIfNoAcc)
+        ok(false, "Can't get accessible for " + aAccOrElmOrID);
+
       return null;
     }
   }
@@ -216,6 +220,14 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
   }
   
   return acc;
+}
+
+/**
+ * Return true if the given identifier has an accessible.
+ */
+function isAccessible(aAccOrElmOrID)
+{
+  return getAccessible(aAccOrElmOrID, null, null, true) ? true : false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

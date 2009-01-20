@@ -69,6 +69,7 @@ _TEST_FILES =\
 		test_events_mutation.html \
 		test_groupattrs.xul \
 		test_groupattrs.html \
+		test_name_markup.html \
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
 		$(warning test_nsIAccessible_actions.xul temporarily disabled) \
