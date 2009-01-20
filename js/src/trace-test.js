@@ -3847,7 +3847,7 @@ function testBitOrInconvertibleObjectAny()
   {
     threw = true;
     if (i !== 94)
-      return "expected i === 4, got " + i;
+      return "expected i === 94, got " + i;
     if (q !== 95)
       return "expected q === 95, got " + q;
     if (count !== 95)
