@@ -7229,6 +7229,8 @@ if test -n "$MOZ_ENABLE_LIBXUL" -a -z "$MOZ_XUL_APP"; then
 	AC_MSG_ERROR([--enable-libxul is only compatible with toolkit XUL applications.])
 fi
 
+AC_SUBST(LIBXUL_LIBS)
+
 if test -n "$MOZ_ENABLE_LIBXUL"; then
     XPCOM_LIBS="$LIBXUL_LIBS"
     AC_DEFINE(MOZ_ENABLE_LIBXUL)
