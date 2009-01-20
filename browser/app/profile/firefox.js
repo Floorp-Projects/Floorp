@@ -405,9 +405,9 @@ pref("privacy.item.passwords",   false);
 pref("privacy.item.downloads",   true);
 pref("privacy.item.cookies",     false);
 pref("privacy.item.cache",       true);
-pref("privacy.item.siteprefs",   false);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
+pref("privacy.item.siteSettings", false);
 
 // What default should we use for the time span in the sanitizer:
 // 0 - Clear everything
