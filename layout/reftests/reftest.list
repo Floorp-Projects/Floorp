@@ -80,6 +80,9 @@ include line-breaking/reftest.list
 # mathml/
 include mathml/reftest.list
 
+# marquee/
+include marquee/reftest.list
+
 # native-theme/
 include native-theme/reftest.list
 
