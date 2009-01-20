@@ -57,6 +57,7 @@ _TEST_FILES =\
  		nsIAccessible_selects.js \
 		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
+		role.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
@@ -69,7 +70,6 @@ _TEST_FILES =\
 		test_groupattrs.xul \
 		test_groupattrs.html \
 	$(warning test_table_indexes.html temporarily disabled) \
-		test_nsHyperTextAcc_roles.html \
 		test_nsIAccessible_actions.html \
 		$(warning test_nsIAccessible_actions.xul temporarily disabled) \
 		test_nsIAccessible_applicationAccessible.html \
@@ -96,6 +96,8 @@ _TEST_FILES =\
 		$(warning test_nsIAccessibleTable_listboxes.xul temporarily disabled) \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
+		test_role_nsHyperTextAcc.html \
+		test_role_table_cells.html \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \
