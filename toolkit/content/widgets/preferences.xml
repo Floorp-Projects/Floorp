@@ -1118,7 +1118,7 @@
 #endif
                phase="capturing">
       <![CDATA[
-        var helpButton = document.documentElement.getButton("help");
+        var helpButton = this.getButton("help");
         if (helpButton.disabled || helpButton.hidden)
           return;
         this._fireEvent("dialoghelp", this);
