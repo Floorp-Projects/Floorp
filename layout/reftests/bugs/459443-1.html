@@ -13,7 +13,11 @@
             f.document.designMode='on';
             f.location = 'data:text/html;charset=utf-8,<body>FAIL<script>document.body.innerHTML="PASS"<\/script>';
             n.addEventListener("load",
-                               function() { document.documentElement.className = ''; },
+                               function() {
+                                 setTimeout(
+                                   "document.documentElement.className = ''", 0
+                                 );
+                               },
                                false);
           }, 0);
         };
