@@ -491,7 +491,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             lineno++;
         } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
 
-        if (hitEOF)
+        if (hitEOF && !buffer)
             break;
 
         /* Clear any pending exception from previous failed compiles.  */
@@ -513,7 +513,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         }
         *buffer = '\0';
         len = 0;
-    } while (!gQuitting);
+    } while (!hitEOF && !gQuitting);
 
     free(buffer);
     fprintf(gOutFile, "\n");
