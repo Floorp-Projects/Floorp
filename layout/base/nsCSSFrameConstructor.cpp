@@ -12609,13 +12609,6 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   if (!mPresShell || !mPresShell->GetRootFrame())
     return;
 
-  if (mPresShell->GetPresContext()->IsPaginated()) {
-    // We don't support doing this because of bug 470929 and probably
-    // other issues.
-    NS_NOTREACHED("not allowed to rebuild all style data when paginated");
-    return;
-  }
-
   nsAutoScriptBlocker scriptBlocker;
 
   // Make sure that the viewmanager will outlive the presshell
