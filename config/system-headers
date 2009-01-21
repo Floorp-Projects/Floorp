@@ -1019,9 +1019,6 @@ zlib.h
 #define WRAP_LCMS_HEADERS
 #endif
 #endif
-#if MOZ_NATIVE_LCMS==1
-#define WRAP_LCMS_HEADERS
-#endif
 #ifdef WRAP_LCMS_HEADERS
 icc34.h
 lcms.h
