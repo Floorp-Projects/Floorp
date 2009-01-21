@@ -269,122 +269,6 @@ cleanup:
 }
 
 /*
- * FUNCTION: pkix_RevCheckCert
- * DESCRIPTION:
- *
- *  Checks whether the Cert pointed to by "cert" successfully validates
- *  using the List of RevocationCheckers pointed to by "checkers". If the
- *  certificate has been revoked, a nonzero Reason Code is returned.
- *
- * PARAMETERS:
- *  "cert"
- *      Address of Cert to validate. Must be non-NULL.
- *  "checkers"
- *      List of RevocationCheckers which must each validate the certificate.
- *      Must be non-NULL.
- *  "procParams"
- *      Address of ProcessingParams used to initialize the ExpirationChecker
- *      and TargetCertChecker. Must be non-NULL.
- *  "pCheckerIndex"
- *      Address at which is stored the the index, within the List "checkers",
- *      of a checker whose processing was interrupted by non-blocking I/O.
- *      Must be non-NULL.
- *  "pNBIOContext"
- *      Address at which is stored platform-specific non-blocking I/O context.
- *      Must be non-NULL.
- *  "pResultCode"
- *      Address at which is stored the revocation code of a revoked Cert.
- *      Must be non-NULL.
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a Validate Error if the function fails in a non-fatal way.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-static PKIX_Error *
-pkix_RevCheckCert(
-        PKIX_PL_Cert *cert,
-        PKIX_List *checkers,
-        PKIX_ProcessingParams *procParams,
-        PKIX_UInt32 *pCheckerIndex,
-        void **pNBIOContext,
-        PKIX_UInt32 *pResultCode,
-        void *plContext)
-{
-        PKIX_RevocationChecker_RevCallback revCheckerCheck = NULL;
-        PKIX_RevocationChecker *checker = NULL;
-        PKIX_UInt32 numCheckers;
-        PKIX_UInt32 resultCode = 0;
-        PKIX_UInt32 checkerIndex = 0;
-        PKIX_PL_Object *checkerContext = NULL;
-        void *nbioContext = NULL;
-
-        PKIX_ENTER(VALIDATE, "pkix_RevCheckCert");
-        PKIX_NULLCHECK_THREE(cert, checkers, pCheckerIndex);
-        PKIX_NULLCHECK_TWO(pNBIOContext, pResultCode);
-
-        nbioContext = *pNBIOContext;
-        *pNBIOContext = NULL; /* prepare for case of error exit */
-
-        PKIX_CHECK(PKIX_List_GetLength(checkers, &numCheckers, plContext),
-                    PKIX_LISTGETLENGTHFAILED);
-
-        for (checkerIndex = *pCheckerIndex;
-                checkerIndex < numCheckers;
-                checkerIndex++) {
-
-                PKIX_CHECK(PKIX_List_GetItem
-                        (checkers,
-                        checkerIndex,
-                        (PKIX_PL_Object **)&checker,
-                        plContext),
-                        PKIX_LISTGETITEMFAILED);
-
-                PKIX_CHECK(PKIX_RevocationChecker_GetRevCallback
-                        (checker, &revCheckerCheck, plContext),
-                        PKIX_REVOCATIONCHECKERGETREVCALLBACKFAILED);
-
-                PKIX_CHECK(PKIX_RevocationChecker_GetRevCheckerContext
-                        (checker, &checkerContext, plContext),
-                        PKIX_REVOCATIONCHECKERGETREVCHECKERCONTEXTFAILED);
-
-                PKIX_CHECK(revCheckerCheck
-                        (checkerContext,
-                        cert,
-                        procParams,
-                        &nbioContext,
-                        &resultCode,
-                        plContext),
-                        PKIX_REVCHECKERCHECKFAILED);
-
-                if (nbioContext != NULL) {
-                        *pCheckerIndex = checkerIndex;
-                        *pNBIOContext = nbioContext;
-                        goto cleanup;
-                }
-
-                if (resultCode != 0) {
-                        *pResultCode = resultCode;
-                        goto cleanup;
-                }
-
-                PKIX_DECREF(checker);
-                PKIX_DECREF(checkerContext);
-        }
-
-cleanup:
-
-        PKIX_DECREF(checker);
-        PKIX_DECREF(checkerContext);
-
-        PKIX_RETURN(VALIDATE);
-
-}
-
-/*
  * FUNCTION: pkix_InitializeCheckers
  * DESCRIPTION:
  *
@@ -444,9 +328,7 @@ pkix_InitializeCheckers(
         PKIX_Boolean initialExplicitPolicy = PKIX_FALSE;
         PKIX_List *userCheckersList = NULL;
         PKIX_List *certStores = NULL;
-        PKIX_UInt32 numCertStores = 0;
         PKIX_UInt32 numCertCheckers = 0;
-        PKIX_Boolean isCrlEnabled = PKIX_TRUE;
         PKIX_UInt32 i;
 
         PKIX_ENTER(VALIDATE, "pkix_InitializeCheckers");
@@ -526,10 +408,6 @@ pkix_InitializeCheckers(
                 (procParams, &userCheckersList, plContext),
                 PKIX_PROCESSINGPARAMSGETCERTCHAINCHECKERSFAILED);
 
-        PKIX_CHECK(pkix_ProcessingParams_GetRevocationEnabled
-                (procParams, &isCrlEnabled, plContext),
-                PKIX_PROCESSINGPARAMSGETREVOCATIONENABLEDFAILED);
-
         /* now, initialize all the checkers */
         PKIX_CHECK(pkix_TargetCertChecker_Initialize
                 (certSelector, numCerts, &targetCertChecker, plContext),
@@ -565,40 +443,6 @@ pkix_InitializeCheckers(
         PKIX_CHECK(pkix_SignatureChecker_Initialize
                     (trustedPubKey, numCerts, &sigChecker, plContext),
                     PKIX_SIGNATURECHECKERINITIALIZEFAILED);
-
-        if (isCrlEnabled) {
-
-                PKIX_CHECK(PKIX_List_GetLength
-                    (certStores, &numCertStores, plContext),
-                    PKIX_LISTGETLENGTHFAILED);
-
-                if (numCertStores > 0) {
-                        PKIX_Boolean nistCRLPolicyEnabled = PR_TRUE;
-
-                        PKIX_CHECK(
-                        pkix_ProcessingParams_GetNISTRevocationPolicyEnabled
-                        (procParams, &nistCRLPolicyEnabled, plContext),
-                        PKIX_PROCESSINGPARAMSGETNISTREVPOLICYENABLEDFAILED);
-
-                        PKIX_CHECK(pkix_DefaultCRLChecker_Initialize
-                            (certStores,
-                            testDate,
-                            trustedPubKey,
-                            numCerts,
-                            nistCRLPolicyEnabled,
-                            &defaultCrlChecker,
-                            plContext),
-                            PKIX_DEFAULTCRLCHECKERINITIALIZEFAILED);
-
-                        PKIX_CHECK(PKIX_List_AppendItem
-                            (checkers,
-                            (PKIX_PL_Object *)defaultCrlChecker,
-                            plContext),
-                            PKIX_LISTAPPENDITEMFAILED);
-                } else {
-                        PKIX_ERROR(PKIX_ENABLEREVOCATIONWITHOUTCERTSTORE);
-                }
-        }
 
         if (userCheckersList != NULL) {
 
@@ -791,7 +635,7 @@ cleanup:
  *  Checks whether the List of Certs pointed to by "certs", containing
  *  "numCerts" entries, successfully validates using each CertChainChecker in
  *  the List pointed to by "checkers" and has not been revoked, according to any
- *  of the Revocation Checkers in the List pointed to by "revCheckers". Checkers
+ *  of the Revocation Checkers in the List pointed to by "revChecker". Checkers
  *  are expected to remove from "removeCheckedExtOIDs" and extensions that they
  *  process. Indices to the certChain and the checkerChain are obtained and
  *  returned in "pCertCheckedIndex" and "pCheckerIndex", respectively. These
@@ -822,7 +666,7 @@ cleanup:
  *  "checkers"
  *      List of CertChainCheckers which must each validate the List of
  *      certificates. Must be non-NULL.
- *  "revCheckers"
+ *  "revChecker"
  *      List of RevocationCheckers which must each not reject the List of
  *      certificates. May be empty, but must be non-NULL.
  *  "removeCheckedExtOIDs"
@@ -841,7 +685,7 @@ cleanup:
  *      returned. Must be non-NULL.
  *  "pRevChecking"
  *      Address where Boolean is obtained and returned, indicating, if FALSE,
- *      that CertChainCheckers are being called; or, if TRUE, that RevCheckers
+ *      that CertChainCheckers are being called; or, if TRUE, that RevChecker
  *      are being called. Must be non-NULL.
  *  "pReasonCode"
  *      Address where UInt32 results of revocation checking are stored. Must be
@@ -868,8 +712,9 @@ PKIX_Error *
 pkix_CheckChain(
         PKIX_List *certs,
         PKIX_UInt32 numCerts,
+        PKIX_TrustAnchor *anchor,
         PKIX_List *checkers,
-        PKIX_List *revCheckers,
+        PKIX_RevocationChecker *revChecker,
         PKIX_List *removeCheckedExtOIDs,
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 *pCertCheckedIndex,
@@ -888,22 +733,32 @@ pkix_CheckChain(
         PKIX_Error *checkCertError = NULL;
         void *nbioContext = NULL;
         PKIX_PL_Cert *cert = NULL;
+        PKIX_PL_Cert *issuer = NULL;
 
         PKIX_ENTER(VALIDATE, "pkix_CheckChain");
-        PKIX_NULLCHECK_FOUR(certs, checkers, revCheckers, pCertCheckedIndex);
-        PKIX_NULLCHECK_THREE(pCheckerIndex, pRevChecking, pReasonCode);
+        PKIX_NULLCHECK_FOUR(certs, checkers, revChecker, pCertCheckedIndex);
+        PKIX_NULLCHECK_FOUR(pCheckerIndex, pRevChecking, pReasonCode, anchor);
         PKIX_NULLCHECK_THREE(pNBIOContext, pFinalSubjPubKey, pPolicyTree);
 
         nbioContext = *pNBIOContext;
         *pNBIOContext = NULL;
         revChecking = *pRevChecking;
 
+        PKIX_CHECK(PKIX_TrustAnchor_GetTrustedCert
+                (anchor, &cert, plContext),
+                   PKIX_TRUSTANCHORGETTRUSTEDCERTFAILED);
+        
         for (j = *pCertCheckedIndex; j < numCerts; j++) {
 
-                PKIX_CHECK(PKIX_List_GetItem
-                        (certs, j, (PKIX_PL_Object **)&cert, plContext),
-                        PKIX_LISTGETITEMFAILED);
+                PORT_Assert(cert);
+                PKIX_DECREF(issuer);
+                issuer = cert;
+                cert = NULL;
 
+                PKIX_CHECK(PKIX_List_GetItem(
+                               certs, j, (PKIX_PL_Object **)&cert, plContext),
+                           PKIX_LISTGETITEMFAILED);
+                
                 /* check if cert pointer is valid */
                 PORT_Assert(cert);
                 if (cert == NULL) {
@@ -937,52 +792,26 @@ pkix_CheckChain(
                 }
 
                 if (revChecking == PKIX_TRUE) {
-
-                        PKIX_CHECK(pkix_RevCheckCert
-                                (cert,
-                                revCheckers,
-                                procParams,
-                                pCheckerIndex,
-                                &nbioContext,
-                                (PKIX_UInt32 *)&reasonCode,
-                                plContext),
-                                PKIX_REVCHECKCERTFAILED);
-
+                        PKIX_RevocationStatus revStatus;
+                        PKIX_CHECK(
+                            PKIX_RevocationChecker_Check(
+                                      cert, issuer, revChecker,
+                                      procParams, PKIX_TRUE,
+                                      (j == 0) ? PKIX_TRUE : PKIX_FALSE,
+                                      &revStatus, &reasonCode,
+                                      &nbioContext, plContext),
+                        PKIX_REVCHECKCERTFAILED);
                         if (nbioContext != NULL) {
                                 *pCertCheckedIndex = j;
                                 *pRevChecking = revChecking;
                                 *pNBIOContext = nbioContext;
                                 goto cleanup;
                         }
-
-                        if (reasonCode != 0) {
-                            *pReasonCode = (PKIX_UInt32)reasonCode;
-                            pkixErrorReceived = PKIX_TRUE;
-                            if (reasonCode ==
-                                SEC_ERROR_OCSP_INVALID_SIGNING_CERT) {
-                                    pkixErrorCode =
-                                        PKIX_INVALIDSIGNINGCERTINOCSPRESPONSE;
-                            } else if (reasonCode ==
-                                SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS) {
-                                    pkixErrorCode =
-                                        PKIX_UNABLETOFINDSTATUSINOCSPRESPONSE;
-                            } else if (reasonCode ==
-                                SEC_ERROR_OCSP_MALFORMED_RESPONSE) {
-                                    pkixErrorCode =
-                                        PKIX_UNABLETOPARSEOCSPRESPONSE;
-                            } else if (reasonCode ==
-                                SEC_ERROR_REVOKED_CERTIFICATE_OCSP) {
-                                    pkixErrorCode =
-                                        PKIX_OCSPRESPONSESAYSCERTREVOKED;
-                            } else {
-                                    pkixErrorCode =
-                                        PKIX_CERTREJECTEDBYREVOCATIONCHECKER;
-                            }
-                            PKIX_ERROR_CREATE
-                                (VALIDATE, pkixErrorCode, pkixErrorResult);
+                        if (revStatus == PKIX_RevStatus_Revoked) {
+                            PKIX_ERROR_CREATE(VALIDATE, PKIX_CERTIFICATEREVOKED,
+                                              pkixErrorResult);
                             goto cleanup;
                         }
-
                         revChecking = PKIX_FALSE;
                         *pCheckerIndex = 0;
                 }
@@ -990,7 +819,6 @@ pkix_CheckChain(
                 PKIX_CHECK(pkix_AddToVerifyLog
                         (cert, j, NULL, pVerifyTree, plContext),
                         PKIX_ADDTOVERIFYLOGFAILED);
-                PKIX_DECREF(cert);
         }
 
         PKIX_CHECK(pkix_RetrieveOutputs
@@ -1002,8 +830,6 @@ pkix_CheckChain(
 
 cleanup:
         if (PKIX_ERROR_RECEIVED && cert) {
-            pkixErrorReceived = PKIX_TRUE;
-            pkixErrorCode = pkixErrorResult->errCode;
             checkCertError = pkixErrorResult;
             
             PKIX_CHECK_FATAL(
@@ -1011,12 +837,14 @@ cleanup:
                                     plContext),
                 PKIX_ADDTOVERIFYLOGFAILED);
             pkixErrorResult = checkCertError;
+            pkixErrorCode = pkixErrorResult->errCode;
             checkCertError = NULL;
         }
 
 fatal:
         PKIX_DECREF(checkCertError);
         PKIX_DECREF(cert);
+        PKIX_DECREF(issuer);
 
         PKIX_RETURN(VALIDATE);
 }
@@ -1112,9 +940,9 @@ PKIX_ValidateChain(
 
         PKIX_ProcessingParams *procParams = NULL;
         PKIX_CertChainChecker *userChecker = NULL;
+        PKIX_RevocationChecker *revChecker = NULL;
         PKIX_List *certs = NULL;
         PKIX_List *checkers = NULL;
-        PKIX_List *revCheckers = NULL;
         PKIX_List *anchors = NULL;
         PKIX_List *userCheckers = NULL;
         PKIX_List *userCheckerExtOIDs = NULL;
@@ -1203,9 +1031,9 @@ PKIX_ValidateChain(
                 }
         }
 
-        PKIX_CHECK(PKIX_ProcessingParams_GetRevocationCheckers
-                (procParams, &revCheckers, plContext),
-                PKIX_PROCESSINGPARAMSGETREVOCATIONCHECKERSFAILED);
+        PKIX_CHECK(PKIX_ProcessingParams_GetRevocationChecker
+                (procParams, &revChecker, plContext),
+                PKIX_PROCESSINGPARAMSGETREVOCATIONCHECKERFAILED);
 
         /* try to validate the chain with each anchor */
         for (i = 0; i < numAnchors; i++){
@@ -1231,8 +1059,9 @@ PKIX_ValidateChain(
                 chainFailed = pkix_CheckChain
                         (certs,
                         numCerts,
+                        anchor,
                         checkers,
-                        revCheckers,
+                        revChecker,
                         validateCheckedCritExtOIDsList,
                         procParams,
                         &certCheckedIndex,
@@ -1284,7 +1113,7 @@ cleanup:
         PKIX_DECREF(anchors);
         PKIX_DECREF(anchor);
         PKIX_DECREF(checkers);
-        PKIX_DECREF(revCheckers);
+        PKIX_DECREF(revChecker);
         PKIX_DECREF(validPolicyTree);
         PKIX_DECREF(chainFailed);
         PKIX_DECREF(procParams);
@@ -1414,13 +1243,13 @@ PKIX_ValidateChain_NB(
         PKIX_List *anchors = NULL;
         PKIX_List *checkers = NULL;
         PKIX_List *userCheckers = NULL;
-        PKIX_List *revCheckers = NULL;
         PKIX_List *validateCheckedCritExtOIDsList = NULL;
         PKIX_TrustAnchor *anchor = NULL;
         PKIX_ValidateResult *valResult = NULL;
         PKIX_PL_PublicKey *finalPubKey = NULL;
         PKIX_PolicyNode *validPolicyTree = NULL;
         PKIX_ProcessingParams *procParams = NULL;
+        PKIX_RevocationChecker *revChecker = NULL;
         PKIX_Error *chainFailed = NULL;
         void *nbioContext = NULL;
 
@@ -1458,9 +1287,9 @@ PKIX_ValidateChain_NB(
                 (userCheckers, &validateCheckedCritExtOIDsList, plContext),
                 PKIX_VALIDATEBUILDUSEROIDSFAILED);
 
-        PKIX_CHECK(PKIX_ProcessingParams_GetRevocationCheckers
-                (procParams, &revCheckers, plContext),
-                PKIX_PROCESSINGPARAMSGETREVOCATIONCHECKERSFAILED);
+        PKIX_CHECK(PKIX_ProcessingParams_GetRevocationChecker
+                (procParams, &revChecker, plContext),
+                PKIX_PROCESSINGPARAMSGETREVOCATIONCHECKERFAILED);
 
         /* Are we resuming after a WOULDBLOCK return, or starting anew ? */
         if (nbioContext != NULL) {
@@ -1499,8 +1328,9 @@ PKIX_ValidateChain_NB(
                 chainFailed = pkix_CheckChain
                         (certs,
                         numCerts,
+                        anchor,
                         checkers,
-                        revCheckers,
+                        revChecker,
                         validateCheckedCritExtOIDsList,
                         procParams,
                         &certIndex,
@@ -1563,7 +1393,7 @@ cleanup:
         PKIX_DECREF(anchors);
         PKIX_DECREF(anchor);
         PKIX_DECREF(checkers);
-        PKIX_DECREF(revCheckers);
+        PKIX_DECREF(revChecker);
         PKIX_DECREF(validPolicyTree);
         PKIX_DECREF(chainFailed);
         PKIX_DECREF(procParams);

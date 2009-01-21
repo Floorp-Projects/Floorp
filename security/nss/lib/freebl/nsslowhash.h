@@ -11,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the PKIX-C library.
+ * The Original Code is Red Hat, Inc.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are
- * Copyright 2004-2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Sun Microsystems, Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,34 +33,27 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /*
- * pkix_pl_ekuchecker.h
- *
- * User Defined Object Type Extended Key Usage Definition
- *
+ * Provide FIPS validated hashing for applications that only need hashing.
+ * NOTE: mac'ing requires keys and will not work in this interface.
+ * Also NOTE: this only works with Hashing. Only the FIPS interface is enabled.
  */
 
-#ifndef _PKIX_PL_EKUCHECKER_H
-#define _PKIX_PL_EKUCHECKER_H
+typedef struct NSSLOWInitContextStr NSSLOWInitContext;
+typedef struct NSSLOWHASHContextStr NSSLOWHASHContext;
 
-#include "pkix_pl_common.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct pkix_pl_EkuChecker pkix_pl_EkuChecker;
-
-struct pkix_pl_EkuChecker {
-        PKIX_UInt32 requiredExtKeyUsage;
-        PKIX_PL_OID *ekuOID;
-};
-
-/* see source file for function documentation */
-PKIX_Error *pkix_pl_EkuChecker_RegisterSelf(void *plContext);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _PKIX_PL_EKUCHECKER_H */
+NSSLOWInitContext *NSSLOW_Init(void);
+void NSSLOW_Shutdown(NSSLOWInitContext *context);
+NSSLOWHASHContext *NSSLOWHASH_NewContext(
+			NSSLOWInitContext *initContext, 
+			HASH_HashType hashType);
+void NSSLOWHASH_Begin(NSSLOWHASHContext *context);
+void NSSLOWHASH_Update(NSSLOWHASHContext *context, 
+			const unsigned char *buf, 
+			unsigned int len);
+void NSSLOWHASH_End(NSSLOWHASHContext *context, 
+			unsigned char *buf, 
+			unsigned int *ret, unsigned int len);
+void NSSLOWHASH_Destroy(NSSLOWHASHContext *context);
+unsigned int NSSLOWHASH_Length(NSSLOWHASHContext *context); 
