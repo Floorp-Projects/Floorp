@@ -77,7 +77,7 @@ public:
 
 private:
   nsresult UpdateChannel(nsIChannel* aChannel);
-  nsresult CheckRequestApproved(nsIRequest* aRequest);
+  nsresult CheckRequestApproved(nsIRequest* aRequest, PRBool aIsRedirect);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsIPrincipal> mRequestingPrincipal;

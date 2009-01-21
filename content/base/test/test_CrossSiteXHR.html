@@ -20,18 +20,35 @@
 SimpleTest.waitForExplicitFinish();
 
 var origins =
-  [['http://example.org'],
-   ['http://example.org:80', 'http://example.org'],
-   ['http://sub1.test1.example.org'],
-   ['http://test2.example.org:8000'],
+  [{ server: 'http://example.org' },
+   { server: 'http://example.org:80',
+     origin: 'http://example.org'
+   },
+   { server: 'http://sub1.test1.example.org' },
+   { server: 'http://test2.example.org:8000' },
+   { server: 'http://sub1.\xe4lt.example.org:8000',
+     origin: 'http://sub1.xn--lt-uia.example.org:8000'
+   },
+   { server: 'http://sub2.\xe4lt.example.org',
+     origin: 'http://sub2.xn--lt-uia.example.org'
+   },
+   { server: 'http://ex\xe4mple.test',
+     origin: 'http://xn--exmple-cua.test'
+   },
+   { server: 'http://xn--exmple-cua.test' },
+   { server: 'http://\u03c0\u03b1\u03c1\u03ac\u03b4\u03b5\u03b9\u03b3\u03bc\u03b1.\u03b4\u03bf\u03ba\u03b9\u03bc\u03ae',
+     origin: 'http://xn--hxajbheg2az3al.xn--jxalpdlp'
+   },
+   { origin: 'http://example.org',
+     file: 'jar:http://example.org/tests/content/base/test/file_CrossSiteXHR_inner.zip!/file_CrossSiteXHR_inner.html'
+   },
+   { origin: 'null',
+     file: 'http://example.org/tests/content/base/test/file_CrossSiteXHR_inner_data.sjs'
+   },
+   ];
+
    //['https://example.com:443'],
    //['https://sub1.test1.example.com:443'],
-   ['http://sub1.\xe4lt.example.org:8000', 'http://sub1.xn--lt-uia.example.org:8000'],
-   ['http://sub2.\xe4lt.example.org', 'http://sub2.xn--lt-uia.example.org'],
-   ['http://ex\xe4mple.test', 'http://xn--exmple-cua.test'],
-   ['http://\u03c0\u03b1\u03c1\u03ac\u03b4\u03b5\u03b9\u03b3\u03bc\u03b1.\u03b4\u03bf\u03ba\u03b9\u03bc\u03ae',
-    'http://xn--hxajbheg2az3al.xn--jxalpdlp'],
-   ];
 
 window.addEventListener("message", function(e) {
   gen.send(e.data);
@@ -45,13 +62,16 @@ function runTest() {
   loader.onload = function () { gen.next() };
 
   // Test preflight-less requests
-  baseURL = "http://localhost:8888/tests/content/base/test/" +
-             "file_CrossSiteXHR_server.sjs?";
-  for each(originPair in origins) {
-    origin = originPair[1] || originPair[0];
+  basePath = "/tests/content/base/test/file_CrossSiteXHR_server.sjs?"
+  baseURL = "http://localhost:8888" + basePath;
+  for each(originEntry in origins) {
+    origin = originEntry.origin || originEntry.server;
 
-    loader.src = originPair[0] + "/tests/content/base/test/file_CrossSiteXHR_inner.html";
+    loader.src = originEntry.file ||
+                 (originEntry.server + "/tests/content/base/test/file_CrossSiteXHR_inner.html");
     yield;
+
+    var isNullOrigin = origin == "null";
 
     port = /:\d+/;
     passTests = [
@@ -67,6 +87,7 @@ function runTest() {
                         : origin + ":1234",
       port.test(origin) ? origin.replace(port, ":")
                         : origin + ":",
+      origin + ".",
       origin + "/",
       origin + "#",
       origin + "?",
@@ -87,53 +108,51 @@ function runTest() {
       origin.replace(/\/[^.]+\./, "/"),
     ];
 
-    for each(method in ["GET", "POST"]) {
-      var headers = method == "POST" ?
-        { "Content-Type": "text/plain" } :
-        null;
+    if (isNullOrigin) {
+      passTests = ["*", "\t \t* \t "];
+      failTests = failTests.filter(function(v) { return v != origin });
+      failTests.push("null");
+    }
+    
+    for each(allowOrigin in passTests) {
+      req = {
+        url: baseURL +
+             "allowOrigin=" + escape(allowOrigin) +
+             "&origin=" + escape(origin),
+        method: "GET",
+      };
+      loaderWindow.postMessage(req.toSource(), isNullOrigin ? "*" : origin);
 
-      for each(allowOrigin in passTests) {
-        req = {
-          url: baseURL +
-               "allowOrigin=" + escape(allowOrigin) +
-               "&origin=" + escape(origin),
-          method: method,
-          headers: headers,
-        };
-        loaderWindow.postMessage(req.toSource(), origin);
+      res = eval(yield);
+      is(res.didFail, false, "shouldn't have failed");
+      is(res.status, 200, "wrong status");
+      is(res.responseXML,
+         "<res>hello pass</res>",
+         "wrong responseXML in test for " + allowOrigin);
+      is(res.responseText, "<res>hello pass</res>\n",
+         "wrong responseText in test for " + allowOrigin);
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "wrong responseText in test for " + allowOrigin);
+    }
 
-        res = eval(yield);
-        is(res.didFail, false, "shouldn't have failed");
-        is(res.status, 200, "wrong status");
-        is(res.responseXML,
-           "<res>hello pass</res>",
-           "wrong responseXML in test for " + allowOrigin);
-        is(res.responseText, "<res>hello pass</res>\n",
-           "wrong responseText in test for " + allowOrigin);
-        is(res.events.join(","),
-           "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
-           "wrong responseText in test for " + allowOrigin);
-      }
+    for each(allowOrigin in failTests) {
+      req = {
+        url: baseURL + "allowOrigin=" + escape(allowOrigin),
+        method: "GET",
+      };
+      loaderWindow.postMessage(req.toSource(), isNullOrigin ? "*" : origin);
 
-      for each(allowOrigin in failTests) {
-        req = {
-          url: baseURL + "allowOrigin=" + escape(allowOrigin),
-          method: method,
-          headers: headers,
-        };
-        loaderWindow.postMessage(req.toSource(), origin);
-
-        res = eval(yield);
-        is(res.didFail, true, "should have failed for " + allowOrigin);
-        is(res.responseText, "", "should have no text for " + allowOrigin);
-        is(res.status, 0, "should have no status for " + allowOrigin);
-        is(res.responseXML, null, "should have no XML for " + allowOrigin);
-        is(res.events.join(","),
-           "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
-           "wrong events in test for " + allowOrigin);
-        is(res.progressEvents, 0,
-           "wrong events in test for " + allowOrigin);
-      }
+      res = eval(yield);
+      is(res.didFail, true, "should have failed for " + allowOrigin);
+      is(res.responseText, "", "should have no text for " + allowOrigin);
+      is(res.status, 0, "should have no status for " + allowOrigin);
+      is(res.responseXML, null, "should have no XML for " + allowOrigin);
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+         "wrong events in test for " + allowOrigin);
+      is(res.progressEvents, 0,
+         "wrong events in test for " + allowOrigin);
     }
   }
 
@@ -143,6 +162,15 @@ function runTest() {
   yield;
 
   passTests = [{ method: "GET",
+                 noAllowPreflight: 1,
+               },
+               { method: "GET",
+                 headers: { "Content-Type": "baz/bin",
+                            "Accept": "foo/bar",
+                            "Accept-Language": "sv-SE" },
+                 noAllowPreflight: 1,
+               },
+               { method: "GET",
                  headers: { "x-my-header": "myValue" },
                  allowHeaders: "x-my-header",
                },
@@ -193,10 +221,14 @@ function runTest() {
                  headers: { "x-my%-header": "myValue" },
                  allowHeaders: "x-my%-header",
                },
-               { method: "GET",
+               { method: "HEAD",
+                 noAllowPreflight: 1,
+               },
+               { method: "HEAD",
                  headers: { "Content-Type": "baz/bin",
                             "Accept": "foo/bar",
                             "Accept-Language": "sv-SE" },
+                 noAllowPreflight: 1,
                },
                { method: "POST",
                  body: "hi there",
@@ -318,6 +350,28 @@ function runTest() {
                             "y-my-header": "" },
                  allowHeaders: "x-my-header",
                },
+               { method: "GET",
+                 headers: { "myheader": "" },
+                 allowMethods: "myheader",
+               },
+               { method: "HEAD",
+                 headers: { "x-my-header": "myValue" },
+               },
+               { method: "HEAD",
+                 headers: { "x-my-header": "myValue" },
+                 allowHeaders: "",
+               },
+               { method: "HEAD",
+                 headers: { "x-my-header": "myValue" },
+                 allowHeaders: "y-my-header",
+               },
+               { method: "HEAD",
+                 headers: { "x-my-header": "myValue" },
+                 allowHeaders: "x-my-header y-my-header",
+               },
+               { method: "XXDELETE",
+                 allowHeaders: "XXDELETE",
+               },
                { method: "POST",
                  noAllowPreflight: 1,
                },
@@ -409,13 +463,24 @@ function runTest() {
     is(res.didFail, false,
       "shouldn't have failed in test for " + test.toSource());
     is(res.status, 200, "wrong status in test for " + test.toSource());
-    is(res.responseXML, "<res>hello pass</res>",
-       "wrong responseXML in test for " + test.toSource());
-    is(res.responseText, "<res>hello pass</res>\n",
-       "wrong responseText in test for " + test.toSource());
-    is(res.events.join(","),
-       "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
-       "wrong responseText in test for " + test.toSource());
+    if (test.method !== "HEAD") {
+      is(res.responseXML, "<res>hello pass</res>",
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "<res>hello pass</res>\n",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "wrong responseText in test for " + test.toSource());
+    }
+    else {
+      is(res.responseXML, null,
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,load",
+         "wrong responseText in test for " + test.toSource());
+    }
   }
 
   for each(test in failTests) {
@@ -583,6 +648,164 @@ function runTest() {
          "wrong events in test for " + test.toSource());
     }
   }
+
+  // Test redirects
+  is(loader.src, "http://example.org/tests/content/base/test/file_CrossSiteXHR_inner.html");
+  is(origin, "http://example.org");
+
+  tests = [{ pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://example.org",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://example.org",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.org",
+                    },
+                    { server: "http://example.org",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.org",
+                    },
+                    { server: "http://example.org",
+                    },
+                    { server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://example.org",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.example.org:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.example.org",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub1.test1.example.org",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.example.org:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.example.org",
+                      allowOrigin: "x"
+                    },
+                    { server: "http://sub1.test1.example.org",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.example.org:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.example.org",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.example.org",
+                      allowOrigin: origin
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                      allowOrigin: origin
+                    },
+                    { server: "http://test2.example.org:8000",
+                      allowOrigin: origin
+                    },
+                    { server: "http://sub2.xn--lt-uia.example.org",
+                      allowOrigin: "*"
+                    },
+                    { server: "http://sub1.test1.example.org",
+                    },
+                    ],
+           },
+           ];
+
+  for each(test in tests) {
+    req = {
+      url: test.hops[0].server + basePath + "hop=1&hops=" +
+           escape(test.hops.toSource()),
+      method: test.method,
+    };
+
+    loaderWindow.postMessage(req.toSource(), origin);
+
+    res = eval(yield);
+    if (test.pass) {
+      is(res.didFail, false,
+        "shouldn't have failed in test for " + test.toSource());
+      is(res.status, 200, "wrong status in test for " + test.toSource());
+      is(res.responseXML, "<res>hello pass</res>",
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "<res>hello pass</res>\n",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "wrong responseText in test for " + test.toSource());
+    }
+    else {
+      is(res.didFail, true,
+        "should have failed in test for " + test.toSource());
+      is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.responseXML, null,
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+         "wrong events in test for " + test.toSource());
+      is(res.progressEvents, 0,
+         "wrong events in test for " + test.toSource());
+    }
+  }
+
 
   SimpleTest.finish();
 
