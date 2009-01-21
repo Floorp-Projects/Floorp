@@ -62,7 +62,8 @@ const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-const ORGANIZER_LEFTPANE_VERSION = 4;
+const ORGANIZER_LEFTPANE_VERSION = 5;
+const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -1128,14 +1129,21 @@ var PlacesUIUtils = {
     var allBookmarksId;
     var items = PlacesUtils.annotations
                            .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
-    if (items.length != 0 && items[0] != -1) {
+    if (items.length > 1) {
+      // Something went wrong, we cannot have more than one left pane folder,
+      // remove all left pane folders and generate a correct new one.
+      items.forEach(function(aItem) {
+        PlacesUtils.bookmarks.removeItem(aItem);
+      });
+    }
+    else if (items.length == 1 && items[0] != -1) {
       leftPaneRoot = items[0];
       // check organizer left pane version
       var version = PlacesUtils.annotations
                                .getItemAnnotation(leftPaneRoot, ORGANIZER_FOLDER_ANNO);
       if (version != ORGANIZER_LEFTPANE_VERSION) {
         // If version is not valid we must rebuild the left pane.
-        PlacesUtils.bookmarks.removeFolder(leftPaneRoot);
+        PlacesUtils.bookmarks.removeItem(leftPaneRoot);
         leftPaneRoot = -1;
       }
     }
@@ -1173,6 +1181,9 @@ var PlacesUIUtils = {
         let itemId = PlacesUtils.bookmarks.insertBookmark(leftPaneRoot, uri, -1, title);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "History", 0, EXPIRE_NEVER);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  EXCLUDE_FROM_BACKUP_ANNO,
+                                                  1, 0, EXPIRE_NEVER);
         self.leftPaneQueries["History"] = itemId;
 
         // XXX: Downloads
@@ -1186,6 +1197,9 @@ var PlacesUIUtils = {
         itemId = PlacesUtils.bookmarks.insertBookmark(leftPaneRoot, uri, -1, title);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "Tags", 0, EXPIRE_NEVER);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  EXCLUDE_FROM_BACKUP_ANNO,
+                                                  1, 0, EXPIRE_NEVER);
         self.leftPaneQueries["Tags"] = itemId;
 
         // All Bookmarks Folder
@@ -1194,6 +1208,9 @@ var PlacesUIUtils = {
         allBookmarksId = itemId;
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "AllBookmarks", 0, EXPIRE_NEVER);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  EXCLUDE_FROM_BACKUP_ANNO,
+                                                  1, 0, EXPIRE_NEVER);
         self.leftPaneQueries["AllBookmarks"] = itemId;
 
         // disallow manipulating this folder within the organizer UI
@@ -1204,6 +1221,9 @@ var PlacesUIUtils = {
         itemId = PlacesUtils.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "BookmarksToolbar", 0, EXPIRE_NEVER);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  EXCLUDE_FROM_BACKUP_ANNO,
+                                                  1, 0, EXPIRE_NEVER);
         self.leftPaneQueries["BookmarksToolbar"] = itemId;
 
         // All Bookmarks->Bookmarks Menu Query
@@ -1211,6 +1231,9 @@ var PlacesUIUtils = {
         itemId = PlacesUtils.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "BookmarksMenu", 0, EXPIRE_NEVER);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  EXCLUDE_FROM_BACKUP_ANNO,
+                                                  1, 0, EXPIRE_NEVER);
         self.leftPaneQueries["BookmarksMenu"] = itemId;
 
         // All Bookmarks->Unfiled bookmarks
@@ -1219,6 +1242,9 @@ var PlacesUIUtils = {
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                                   "UnfiledBookmarks", 0,
                                                   EXPIRE_NEVER);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  EXCLUDE_FROM_BACKUP_ANNO,
+                                                  1, 0, EXPIRE_NEVER);
         self.leftPaneQueries["UnfiledBookmarks"] = itemId;
 
         // disallow manipulating this folder within the organizer UI
@@ -1230,6 +1256,9 @@ var PlacesUIUtils = {
                                               ORGANIZER_FOLDER_ANNO,
                                               ORGANIZER_LEFTPANE_VERSION,
                                               0, EXPIRE_NEVER);
+    PlacesUtils.annotations.setItemAnnotation(leftPaneRoot,
+                                              EXCLUDE_FROM_BACKUP_ANNO,
+                                              1, 0, EXPIRE_NEVER);
     delete this.leftPaneFolderId;
     return this.leftPaneFolderId = leftPaneRoot;
   },
