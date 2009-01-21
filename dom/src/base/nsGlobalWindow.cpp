@@ -5266,26 +5266,25 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
   nsIPrincipal* callerPrin = callerInnerWin->GetPrincipal();
   if (!callerPrin)
     return NS_OK;
+  
   nsCOMPtr<nsIURI> callerOuterURI;
   if (NS_FAILED(callerPrin->GetURI(getter_AddRefs(callerOuterURI))))
     return NS_OK;
-  if (!callerOuterURI) {
+
+  nsAutoString origin;
+  if (callerOuterURI) {
+    // if the principal has a URI, use that to generate the origin
+    nsContentUtils::GetUTFOrigin(callerPrin, origin);
+  }
+  else {
+    // otherwise use the URI of the document to generate origin
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(callerInnerWin->mDocument);
     if (!doc)
       return NS_OK;
     callerOuterURI = doc->GetDocumentURI();
-    if (!callerOuterURI)
-      return NS_OK;
+    // if the principal has a URI, use that to generate the origin
+    nsContentUtils::GetUTFOrigin(callerOuterURI, origin);
   }
-  nsCOMPtr<nsIURI> callerURI = NS_GetInnermostURI(callerOuterURI);
-  if (!callerURI)
-    return NS_OK;
-  const nsCString& empty = EmptyCString();
-  nsCOMPtr<nsIURI> callerOrigin;
-  if (NS_FAILED(callerURI->Clone(getter_AddRefs(callerOrigin))) ||
-      NS_FAILED(callerOrigin->SetUserPass(empty)))
-    return NS_OK;
-
 
   // Convert the provided origin string into a URI for comparison purposes.
   // "*" indicates no specific origin is required.
@@ -5293,14 +5292,10 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
   if (!aOrigin.EqualsASCII("*")) {
     if (NS_FAILED(NS_NewURI(getter_AddRefs(providedOrigin), aOrigin)))
       return NS_ERROR_DOM_SYNTAX_ERR;
-    if (NS_FAILED(providedOrigin->SetUserPass(empty)) ||
-        NS_FAILED(providedOrigin->SetPath(empty)))
+    if (NS_FAILED(providedOrigin->SetUserPass(EmptyCString())) ||
+        NS_FAILED(providedOrigin->SetPath(EmptyCString())))
       return NS_OK;
   }
-
-  nsCAutoString origin;
-  if (NS_FAILED(callerOrigin->GetPrePath(origin)))
-    return NS_OK;
 
   // Create and asynchronously dispatch a runnable which will handle actual DOM
   // event creation and dispatch.
@@ -5308,7 +5303,7 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
     new PostMessageEvent(nsContentUtils::IsCallerChrome()
                          ? nsnull
                          : callerInnerWin->GetOuterWindowInternal(),
-                         NS_ConvertUTF8toUTF16(origin),
+                         origin,
                          aMessage,
                          this,
                          providedOrigin,
