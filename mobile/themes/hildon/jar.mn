@@ -1,0 +1,43 @@
+#filter substitution
+
+firstrun.jar:
+% content firstrun %content/ contentaccessible=yes
+  content/firstrun_splash.png           (firstrun/firstrun_splash.png)
+  content/firstrun_arrow_r.png          (firstrun/firstrun_arrow_r.png)
+  content/firstrun_arrow_l.png          (firstrun/firstrun_arrow_l.png)
+  content/firstrun_background.jpg       (firstrun/firstrun_background.jpg)
+  content/firstrun.css                  (firstrun/firstrun.css)
+  content/firstrun.xhtml                (firstrun/firstrun.xhtml)
+
+classic.jar:
+% skin browser classic/1.0 %
+  platform.css                         (platform.css)
+  browser.css                          (browser.css)
+  extensions.css                       (extensions.css)
+  notification.css                     (notification.css)
+  images/close-small.png               (images/close-small.png)
+  images/tab_close.png                 (images/tab_close.png)
+  images/default-favicon.png           (images/default-favicon.png)
+  images/identity.png                  (images/identity.png)
+  images/starred48.png                 (images/starred48.png)
+  images/page-starred.png              (images/page-starred.png)
+  images/tag.png                       (images/tag.png)
+  images/throbber.png                  (images/throbber.png)
+  images/toolbar.png                   (images/toolbar.png)
+  images/toolbar_background.png        (images/toolbar_background.png)
+  images/addressbar_endcap_r_off.png   (images/addressbar_endcap_r_off.png)
+  images/addressbar_endcap_l_off.png   (images/addressbar_endcap_l_off.png)
+  images/addressbar_endcap_r_on.png    (images/addressbar_endcap_r_on.png)
+  images/addressbar_endcap_l_on.png    (images/addressbar_endcap_l_on.png)
+  images/addressbar_middle.png         (images/addressbar_middle.png)
+  images/left_sidebar_middle.png       (images/left_sidebar_middle.png)
+  images/left_buttons.png              (images/left_buttons.png)
+  images/right_sidebar_middle.png      (images/right_sidebar_middle.png)
+  images/right_buttons.png             (images/right_buttons.png)
+  images/panel_buttons.png             (images/panel_buttons.png)
+  images/panel_background.png          (images/panel_background.png)
+  images/navigation_url_caps.png       (images/navigation_url_caps.png)
+  images/navigation_background.png     (images/navigation_background.png)
+  images/navigation_search_caps.png    (images/navigation_search_caps.png)
+  images/navigation_magnifier.gif      (images/navigation_magnifier.gif)
+  images/page_buttons.png              (images/page_buttons.png)
