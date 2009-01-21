@@ -223,6 +223,7 @@ private:
   void Unlink();
 
   JSContext *mContext;
+  PRUint32 mNumEvaluations;
 
 protected:
   struct TerminationFuncHolder;
@@ -275,7 +276,7 @@ protected:
     nsJSContext* mContext;
     TerminationFuncClosure* mTerminations;
   };
-
+  
   TerminationFuncClosure* mTerminations;
 
 private:
@@ -321,7 +322,7 @@ public:
 
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);
-
+  
   static void Startup();
   static void Shutdown();
   // Setup all the statics etc - safe to call multiple times after Startup()
