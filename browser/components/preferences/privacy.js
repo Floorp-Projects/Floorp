@@ -53,6 +53,43 @@ var gPrivacyPane = {
 
   // HISTORY
 
+  /**
+   * Read the location bar enabled and suggestion prefs
+   * @return Int value for suggestion menulist
+   */
+  readSuggestionPref: function PPP_readSuggestionPref()
+  {
+    let getVal = function(aPref)
+      document.getElementById("browser.urlbar." + aPref).value;
+
+    // Suggest nothing if autocomplete is not enabled
+    if (!getVal("autocomplete.enabled"))
+      return -1;
+
+    // Bottom 2 bits of default.behavior specify history/bookmark
+    return getVal("default.behavior") & 3;
+  },
+
+  /**
+   * Write the location bar enabled and suggestion prefs when necessary
+   * @return Bool value for enabled pref
+   */
+  writeSuggestionPref: function PPP_writeSuggestionPref()
+  {
+    let menuVal = document.getElementById("locationBarSuggestion").value;
+    let enabled = menuVal != -1;
+
+    // Only update default.behavior if we're giving suggestions
+    if (enabled) {
+      // Put the selected menu item's value directly into the bottom 2 bits
+      let behavior = document.getElementById("browser.urlbar.default.behavior");
+      behavior.value = behavior.value >> 2 << 2 | menuVal;
+    }
+
+    // Always update the enabled pref
+    return enabled;
+  },
+
   /*
    * Preferences:
    *

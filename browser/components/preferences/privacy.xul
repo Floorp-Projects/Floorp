@@ -65,9 +65,13 @@
                   type="bool"/>
 
       <!-- Location Bar -->
-      <preference id="browser.urlbar.search.sources"
-                  name="browser.urlbar.search.sources"
-                  type="int"/>
+      <preference id="browser.urlbar.autocomplete.enabled"
+                  name="browser.urlbar.autocomplete.enabled"
+                  type="bool"/>
+      <preference id="browser.urlbar.default.behavior"
+                  name="browser.urlbar.default.behavior"
+                  type="int"
+                  onchange="document.getElementById('browser.urlbar.autocomplete.enabled').updateElements();"/>
 
       <!-- History -->
       <preference id="browser.history_expire_days"
@@ -111,12 +115,14 @@
                control="locationBarSuggestion"
                accesskey="&locbar.pre.accessKey;">&locbar.pre.label;</label>
         <menulist id="locationBarSuggestion"
-                  preference="browser.urlbar.search.sources">
+                  preference="browser.urlbar.autocomplete.enabled"
+                  onsyncfrompreference="return gPrivacyPane.readSuggestionPref();"
+                  onsynctopreference="return gPrivacyPane.writeSuggestionPref();">
           <menupopup>
-            <menuitem label="&locbar.both.label;" value="3"/>
+            <menuitem label="&locbar.both.label;" value="0"/>
             <menuitem label="&locbar.history.label;" value="1"/>
             <menuitem label="&locbar.bookmarks.label;" value="2"/>
-            <menuitem label="&locbar.nothing.label;" value="0"/>
+            <menuitem label="&locbar.nothing.label;" value="-1"/>
           </menupopup>
         </menulist>
         <label>&locbar.post.label;</label>

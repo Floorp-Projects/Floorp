@@ -119,8 +119,8 @@
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
+#define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MATCH_BEHAVIOR        "urlbar.matchBehavior"
-#define PREF_AUTOCOMPLETE_SEARCH_SOURCES        "urlbar.search.sources"
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
@@ -370,8 +370,8 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
+                               mAutoCompleteEnabled(PR_TRUE),
                                mAutoCompleteMatchBehavior(MATCH_BOUNDARY_ANYWHERE),
-                               mAutoCompleteSearchSources(SEARCH_BOTH),
                                mAutoCompleteMaxResults(25),
                                mAutoCompleteRestrictHistory(NS_LITERAL_STRING("^")),
                                mAutoCompleteRestrictBookmark(NS_LITERAL_STRING("*")),
@@ -502,8 +502,8 @@ nsNavHistory::Init()
 
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
+    pbi->AddObserver(PREF_AUTOCOMPLETE_ENABLED, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_SOURCES, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR, this, PR_FALSE);
@@ -2011,6 +2011,8 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
     mExpireSites = EXPIRATION_CAP_SITES;
   
 #ifdef MOZ_XUL
+  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &mAutoCompleteEnabled);
+
   PRInt32 matchBehavior = 1;
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR,
                           &matchBehavior);
@@ -2027,25 +2029,6 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
     case 1:
     default:
       mAutoCompleteMatchBehavior = MATCH_BOUNDARY_ANYWHERE;
-      break;
-  }
-
-  PRInt32 searchSources = 3;
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_SOURCES,
-                          &searchSources);
-  switch (searchSources) {
-    case 0:
-      mAutoCompleteSearchSources = SEARCH_NONE;
-      break;
-    case 1:
-      mAutoCompleteSearchSources = SEARCH_HISTORY;
-      break;
-    case 2:
-      mAutoCompleteSearchSources = SEARCH_BOOKMARK;
-      break;
-    case 3:
-    default:
-      mAutoCompleteSearchSources = SEARCH_BOTH;
       break;
   }
 

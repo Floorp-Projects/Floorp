@@ -35,41 +35,31 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Test for bug 463661 to allow configuring the autocomplete to search history,
- * bookmarks, both, or neither. Also test bug 463535 for pref changing search.
+ * Test for bug 471903 to make sure searching in autocomplete can be turned on
+ * and off. Also test bug 463535 for pref changing search.
  */
 
 // Define some shared uris and titles (each page needs its own uri)
 let kURIs = [
   "http://url/0",
-  "http://url/1",
-  "http://url/2",
 ];
 let kTitles = [
   "title",
 ];
 
 addPageBook(0, 0); // visited page
-addPageBook(1, 0, 0); // visited bookmark
-addPageBook(2, 0, 0); // unvisited bookmark
-
-// Remove the visit for this bookmark
-histsvc.removePage(toURI(kURIs[2]));
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
 let gTests = [
-  // We get more results as we become less restrictive with the same search
-  ["1: search none",
+  ["1: plain search",
+   "url", [0]],
+  ["2: search disabled",
    "url", [], function() setSearch(0)],
-  ["2: search history",
-   "url", [0,1], function() setSearch(1)],
-  ["3: search bookmark",
-   "url", [1,2], function() setSearch(2)],
-  ["4: search both",
-   "url", [0,1,2], function() setSearch(3)],
+  ["3: resume normal search",
+   "url", [0], function() setSearch(1)],
 ];
 
 function setSearch(aSearch) {
-  prefs.setIntPref("browser.urlbar.search.sources", aSearch);
+  prefs.setBoolPref("browser.urlbar.autocomplete.enabled", !!aSearch);
 }
