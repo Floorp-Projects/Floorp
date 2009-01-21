@@ -699,21 +699,10 @@ protected:
     MATCH_BEGINNING
   };
 
-  /**
-   * Determine which sources (if any) of data to search for the autocomplete
-   */
-  enum SearchSource {
-    SEARCH_NONE,
-    SEARCH_HISTORY,
-    SEARCH_BOOKMARK,
-    SEARCH_BOTH
-  };
-
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQueries();
-  PRBool mAutoCompleteOnlyTyped;
+  PRBool mAutoCompleteEnabled;
   MatchType mAutoCompleteMatchBehavior;
-  SearchSource mAutoCompleteSearchSources;
   PRBool mAutoCompleteFilterJavascript;
   PRInt32 mAutoCompleteMaxResults;
   nsString mAutoCompleteRestrictHistory;
