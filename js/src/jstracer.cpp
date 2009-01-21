@@ -2276,12 +2276,14 @@ TraceRecorder::compile(Fragmento* fragmento)
         return;
     }
     ::compile(fragmento->assm(), fragment);
-    if (anchor) 
-        fragmento->assm()->patch(anchor);
+    if (fragmento->assm()->error() == nanojit::OutOMem)
+        return;
     if (fragmento->assm()->error() != nanojit::None) {
         js_BlacklistPC(fragmento, fragment);
         return;
     }
+    if (anchor) 
+        fragmento->assm()->patch(anchor);
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
     if (fragment == fragment->root)
