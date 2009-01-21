@@ -1721,23 +1721,16 @@ function loadOneOrMoreURIs(aURIString)
   }
 }
 
-function focusAndSelectUrlBar()
-{
-  if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
-    gURLBar.focus();
-    gURLBar.select();
-    return true;
-  }
-  return false;
-}
-
-function openLocation()
-{
+function openLocation() {
   if (window.fullScreen)
     FullScreen.mouseoverToggle(true);
 
-  if (focusAndSelectUrlBar())
+  if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
+    gURLBar.focus();
+    gURLBar.select();
     return;
+  }
+
 #ifdef XP_MACOSX
   if (window.location.href != getBrowserURL()) {
     var win = getTopWin();
