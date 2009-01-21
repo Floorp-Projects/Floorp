@@ -41,6 +41,13 @@
 #include <stdio.h>
 #include "readstrings.h"
 #include "errors.h"
+#include "prtypes.h"
+
+#if defined(XP_WIN) || defined(XP_OS2)
+#define BINARY_MODE "b"
+#else
+#define BINARY_MODE
+#endif
 
 // stack based FILE wrapper to ensure that fclose is called.
 class AutoFILE {
@@ -52,33 +59,141 @@ private:
   FILE *fp_;
 };
 
-// very basic parser for updater.ini
+static const char kNL[] = "\r\n";
+static const char kEquals[] = "=";
+static const char kWhitespace[] = " \t";
+static const char kRBracket[] = "]";
+
+static const char*
+NS_strspnp(const char *delims, const char *str)
+{
+  const char *d;
+  do {
+    for (d = delims; *d != '\0'; ++d) {
+      if (*str == *d) {
+        ++str;
+        break;
+      }
+    }
+  } while (*d);
+
+  return str;
+}
+
+static char*
+NS_strtok(const char *delims, char **str)
+{
+  if (!*str)
+    return NULL;
+
+  char *ret = (char*) NS_strspnp(delims, *str);
+
+  if (!*ret) {
+    *str = ret;
+    return NULL;
+  }
+
+  char *i = ret;
+  do {
+    for (const char *d = delims; *d != '\0'; ++d) {
+      if (*i == *d) {
+        *i = '\0';
+        *str = ++i;
+        return ret;
+      }
+    }
+    ++i;
+  } while (*i);
+
+  *str = NULL;
+  return ret;
+}
+
+// very basic parser for updater.ini taken mostly from nsINIParser.cpp
 int
 ReadStrings(const char *path, StringTable *results)
 {
-  AutoFILE fp = fopen(path, "r");
+  AutoFILE fp = fopen(path, "r" BINARY_MODE);
+
   if (!fp)
     return READ_ERROR;
 
-  // Trim trailing newline character and leading 'key=', and skip comment lines
-  unsigned read = 0;
-  char *strings[] = {
-    results->title, results->info, NULL
-  };
-  for (char **p = strings; *p; ++p) {
-    while (fgets(*p, MAX_TEXT_LEN, fp)) {
-      int len = strlen(*p);
-      if (len)
-        (*p)[len - 1] = '\0';
+  /* get file size */
+  if (fseek(fp, 0, SEEK_END) != 0)
+    return READ_ERROR;
 
-      char *eq = strchr(*p, '=');
-      if (!eq) // It's a junk line
-        continue;
-      memmove(*p, eq + 1, len - (eq - *p + 1));
-      ++read;
-      break;
+  long flen = ftell(fp);
+  if (flen == 0)
+    return READ_ERROR;
+
+  char *fileContents = new char[flen + 1];
+  if (!fileContents)
+    return MEM_ERROR;
+
+  /* read the file in one swoop */
+  if (fseek(fp, 0, SEEK_SET) != 0)
+    return READ_ERROR;
+
+  int rd = fread(fileContents, sizeof(char), flen, fp);
+  if (rd != flen)
+    return READ_ERROR;
+
+  fileContents[flen] = '\0';
+
+  char *buffer = fileContents;
+  PRBool inStringsSection = PR_FALSE;
+  const unsigned None = 0, Title = 1, Info = 2, All = 3;
+  unsigned read = None;
+
+  while (char *token = NS_strtok(kNL, &buffer)) {
+    if (token[0] == '#' || token[0] == ';') // it's a comment
+      continue;
+
+    token = (char*) NS_strspnp(kWhitespace, token);
+    if (!*token) // empty line
+      continue;
+
+    if (token[0] == '[') { // section header!
+      ++token;
+      char const * currSection = token;
+
+      char *rb = NS_strtok(kRBracket, &token);
+      if (!rb || NS_strtok(kWhitespace, &token)) {
+        // there's either an unclosed [Section or a [Section]Moretext!
+        // we could frankly decide that this INI file is malformed right
+        // here and stop, but we won't... keep going, looking for
+        // a well-formed [section] to continue working with
+        inStringsSection = PR_FALSE;
+      }
+      else
+        inStringsSection = strcmp(currSection, "Strings") == 0;
+
+      continue;
+    }
+
+    if (!inStringsSection) {
+      // If we haven't found a section header (or we found a malformed
+      // section header), or this isn't the [Strings] section don't bother
+      // parsing this line.
+      continue;
+    }
+
+    char *key = token;
+    char *e = NS_strtok(kEquals, &token);
+    if (!e)
+      continue;
+
+    if (strcmp(key, "Title") == 0) {
+      strncpy(results->title, token, MAX_TEXT_LEN - 1);
+      results->title[MAX_TEXT_LEN - 1] = 0;
+      read |= Title;
+    }
+    else if (strcmp(key, "Info") == 0 || strcmp(key, "InfoText") == 0) {
+      strncpy(results->info, token, MAX_TEXT_LEN - 1);
+      results->info[MAX_TEXT_LEN - 1] = 0;
+      read |= Info;
     }
   }
 
-  return (read == (sizeof(strings) / sizeof(*strings)) - 1) ? OK : READ_ERROR;
+  return (read == All) ? OK : PARSE_ERROR;
 }
