@@ -1785,6 +1785,20 @@ PRBool nsOggDecoder::GetSeekable()
   return mSeekable;
 }
 
+void nsOggDecoder::Suspend()
+{
+  if (mReader) {
+    mReader->Suspend();
+  }
+}
+
+void nsOggDecoder::Resume()
+{
+  if (mReader) {
+    mReader->Resume();
+  }
+}
+
 void nsOggDecoder::StopProgressUpdates()
 {
   mIgnoreProgressData = PR_TRUE;
