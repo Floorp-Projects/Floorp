@@ -183,7 +183,6 @@ case "$target" in
     if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
-    if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 esac
 fi
@@ -407,7 +406,6 @@ case "$target" in
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
-        AC_CHECK_PROGS(MIDL, midl)
 
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
@@ -507,29 +505,8 @@ case "$target" in
         fi
         INCREMENTAL_LINKER=1
 
-        # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
-        _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-        _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
-        _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-         # Add flags if necessary
-         AC_MSG_CHECKING([for midl flags])
-         if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
-             # Starting with MIDL version 6.0.359, the MIDL compiler
-             # generates /Oicf /robust stubs by default, which is not
-             # compatible with versions of Windows older than Win2k.
-             # This switches us back to the old behaviour. When we drop
-             # support for Windows older than Win2k, we should remove
-             # this.
-             MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
-             AC_MSG_RESULT([need -no_robust])
-         else
-             MIDL_FLAGS="${MIDL_FLAGS}"
-             AC_MSG_RESULT([none needed])
-        fi
-        
         unset _MSVC_VER_FILTER
-        
+
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -625,7 +602,6 @@ else
     CROSS_COMPILE=
 fi
 
-AC_SUBST(MIDL_FLAGS)
 AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_AS)
@@ -5209,7 +5185,6 @@ cygwin*|msvc*|mks*)
     LD="\$(CYGWIN_WRAPPER) $LD"
     AS="\$(CYGWIN_WRAPPER) $AS"
     RC="\$(CYGWIN_WRAPPER) $RC"
-    MIDL="\$(CYGWIN_WRAPPER) $MIDL"
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
     WIN_TOP_SRC=`cygpath -a -w $srcdir | sed -e 's|\\\\|/|g'`
     ;;
