@@ -71,6 +71,9 @@ class nsDOMWorkerScope : public nsIWorkerScope,
                          public nsIXPCScriptable,
                          public nsIClassInfo
 {
+  typedef nsresult (NS_STDCALL nsDOMWorkerScope::*SetListenerFunc)
+    (nsIDOMEventListener*);
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWORKERGLOBALSCOPE
