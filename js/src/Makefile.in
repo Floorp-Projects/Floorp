@@ -130,6 +130,7 @@ CPPSRCS		= \
 		jsiter.cpp \
 		jslock.cpp \
 		jslog2.cpp \
+		jslong.cpp \
 		jsmath.cpp \
 		jsnum.cpp \
 		jsobj.cpp \
