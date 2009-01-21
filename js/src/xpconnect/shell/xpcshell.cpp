@@ -45,10 +45,8 @@
 /* XPConnect JavaScript interactive shell. */
 
 #include <stdio.h>
-#include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsStringAPI.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsIInterfaceInfo.h"
@@ -59,16 +57,12 @@
 #include "nsIComponentRegistrar.h"
 #include "nsILocalFile.h"
 #include "nsStringAPI.h"
-#include "nsIDirectoryService.h"
-#include "nsILocalFile.h"
-#include "nsDirectoryServiceDefs.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsprf.h"
 #include "nscore.h"
 #include "nsMemory.h"
 #include "nsIGenericFactory.h"
-#include "nsISupportsImpl.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -96,22 +90,6 @@
 #endif
 
 #include "nsIJSContextStack.h"
-
-class XPCShellDirProvider : public nsIDirectoryServiceProvider
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-
-    XPCShellDirProvider() { }
-    ~XPCShellDirProvider() { }
-
-    PRBool SetGREDir(const char *dir);
-    void ClearGREDir() { mGREDir = nsnull; }
-
-private:
-    nsCOMPtr<nsILocalFile> mGREDir;
-};
 
 /***************************************************************************/
 
@@ -936,7 +914,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -1566,32 +1544,9 @@ main(int argc, char **argv, char **envp)
     gErrFile = stderr;
     gOutFile = stdout;
     gInFile = stdin;
-
-    NS_LogInit();
-
-    nsCOMPtr<nsILocalFile> appDir;
-    rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(appDir));
-    if (NS_FAILED(rv)) {
-        printf("Couldn't get application directory.\n");
-        return 1;
-    }
-    XPCShellDirProvider dirprovider;
-
-    if (argc > 1 && !strcmp(argv[1], "-g")) {
-        if (argc < 3)
-            return usage();
-
-        if (!dirprovider.SetGREDir(argv[2])) {
-            printf("SetGREDir failed.\n");
-            return 1;
-        }
-        argc -= 2;
-        argv += 2;
-    }
-
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        rv = NS_InitXPCOM2(getter_AddRefs(servMan), appDir, &dirprovider);
+        rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
         if (NS_FAILED(rv)) {
             printf("NS_InitXPCOM failed!\n");
             return 1;
@@ -1757,48 +1712,9 @@ main(int argc, char **argv, char **envp)
     bogus = nsnull;
 #endif
 
-    appDir = nsnull;
-    dirprovider.ClearGREDir();
-
-    NS_LogTerm();
-
 #ifdef XP_MACOSX
     FinishAutoreleasePool();
 #endif
 
     return result;
-}
-
-PRBool
-XPCShellDirProvider::SetGREDir(const char *dir)
-{
-    nsresult rv = XRE_GetFileFromPath(dir, getter_AddRefs(mGREDir));
-    return NS_SUCCEEDED(rv);
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-XPCShellDirProvider::AddRef()
-{
-    return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-XPCShellDirProvider::Release()
-{
-    return 1;
-}
-
-NS_IMPL_QUERY_INTERFACE1(XPCShellDirProvider, nsIDirectoryServiceProvider)
-
-NS_IMETHODIMP
-XPCShellDirProvider::GetFile(const char *prop, PRBool *persistent,
-                             nsIFile* *result)
-{
-    if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {
-        *persistent = PR_TRUE;
-        NS_ADDREF(*result = mGREDir);
-        return NS_OK;
-    }
-
-    return NS_ERROR_FAILURE;
 }
