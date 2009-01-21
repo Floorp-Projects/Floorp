@@ -1,14 +1,5 @@
 #filter substitution
 
-firstrun.jar:
-% content firstrun %content/ contentaccessible=yes
-  content/firstrun_splash.png           (skin/firstrun/firstrun_splash.png)
-  content/firstrun_arrow_r.png          (skin/firstrun/firstrun_arrow_r.png)
-  content/firstrun_arrow_l.png          (skin/firstrun/firstrun_arrow_l.png)
-  content/firstrun_background.jpg       (skin/firstrun/firstrun_background.jpg)
-  content/firstrun.css                  (skin/firstrun/firstrun.css)
-  content/firstrun.xhtml                (content/firstrun/firstrun.xhtml)
-
 browser.jar:
 % content browser %content/
 * content/browser.xul                  (content/browser.xul)
@@ -30,35 +21,3 @@ browser.jar:
   content/WidgetStack.js               (content/WidgetStack.js)
   content/CanvasBrowser.js             (content/CanvasBrowser.js)
   content/InputHandler.js              (content/InputHandler.js)
-
-classic.jar:
-% skin browser classic/1.0 %
-  browser.css                          (skin/browser.css)
-  extensions.css                       (skin/extensions.css)
-  notification.css                     (skin/notification.css)
-  images/close-small.png               (skin/images/close-small.png)
-  images/tab_close.png                 (skin/images/tab_close.png)
-  images/default-favicon.png           (skin/images/default-favicon.png)
-  images/identity.png                  (skin/images/identity.png)
-  images/starred48.png                 (skin/images/starred48.png)
-  images/page-starred.png              (skin/images/page-starred.png)
-  images/tag.png                       (skin/images/tag.png)
-  images/throbber.png                  (skin/images/throbber.png)
-  images/toolbar.png                   (skin/images/toolbar.png)
-  images/toolbar_background.png        (skin/images/toolbar_background.png)
-  images/addressbar_endcap_r_off.png   (skin/images/addressbar_endcap_r_off.png)
-  images/addressbar_endcap_l_off.png   (skin/images/addressbar_endcap_l_off.png)
-  images/addressbar_endcap_r_on.png    (skin/images/addressbar_endcap_r_on.png)
-  images/addressbar_endcap_l_on.png    (skin/images/addressbar_endcap_l_on.png)
-  images/addressbar_middle.png         (skin/images/addressbar_middle.png)
-  images/left_sidebar_middle.png       (skin/images/left_sidebar_middle.png)
-  images/left_buttons.png              (skin/images/left_buttons.png)
-  images/right_sidebar_middle.png      (skin/images/right_sidebar_middle.png)
-  images/right_buttons.png             (skin/images/right_buttons.png)
-  images/panel_buttons.png             (skin/images/panel_buttons.png)
-  images/panel_background.png          (skin/images/panel_background.png)
-  images/navigation_url_caps.png       (skin/images/navigation_url_caps.png)
-  images/navigation_background.png     (skin/images/navigation_background.png)
-  images/navigation_search_caps.png    (skin/images/navigation_search_caps.png)
-  images/navigation_magnifier.gif      (skin/images/navigation_magnifier.gif)
-  images/page_buttons.png              (skin/images/page_buttons.png)

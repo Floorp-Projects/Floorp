@@ -1,4 +1,5 @@
 # ***** BEGIN LICENSE BLOCK *****
+# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -11,7 +12,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is Mozilla Mobile Browser.
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
@@ -35,13 +36,25 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH      = ..
-topsrcdir  = @top_srcdir@
-srcdir     = @srcdir@
-VPATH      = @srcdir@
+DEPTH	    = ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS       = chrome locales components themes app
+#
+# Theme Selection
+#
+# Maemo                 hildon
+# Windows Mobile        wince
+#
+
+# default to hildon for desktop builds too
+DIRS = hildon
+
+ifdef WINCE
+DIRS = wince
+endif
 
 include $(topsrcdir)/config/rules.mk
