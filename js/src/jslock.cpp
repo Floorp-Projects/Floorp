@@ -69,12 +69,10 @@ _InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
 JS_END_EXTERN_C
 #pragma intrinsic(_InterlockedCompareExchange)
 
-JS_STATIC_ASSERT(sizeof(jsword) == sizeof(long));
-
 static JS_ALWAYS_INLINE int
 NativeCompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
 {
-    _InterlockedCompareExchange((long*) w, nv, ov);
+    _InterlockedCompareExchange(w, nv, ov);
     __asm {
         sete al
     }
@@ -94,7 +92,11 @@ static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     /* Details on these functions available in the manpage for atomic */
-    return OSAtomicCompareAndSwapPtrBarrier(ov, nv, w);
+#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
+    return OSAtomicCompareAndSwap64Barrier(ov, nv, (int64_t*) w);
+#else
+    return OSAtomicCompareAndSwap32Barrier(ov, nv, (int32_t*) w);
+#endif
 }
 
 #elif defined(__GNUC__) && defined(__i386__)
