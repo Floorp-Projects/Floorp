@@ -37,8 +37,11 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.37 2006/05/22 22:10:40 wtchang%redhat.com Exp $
+ * $Id: rsa.c,v 1.38 2008/11/18 19:48:24 rrelyea%redhat.com Exp $
  */
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
 
 #include "secerr.h"
 

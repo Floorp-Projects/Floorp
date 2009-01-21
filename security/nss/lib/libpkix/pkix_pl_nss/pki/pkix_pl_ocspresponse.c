@@ -176,14 +176,14 @@ pkix_pl_OcspResponse_Destroy(
 
                 hcv1 = &(httpClient->fcnTable.ftable1);
 
-                if (ocspRsp->requestSession != NULL) {
-                        hcv1->freeFcn(ocspRsp->requestSession);
-                        ocspRsp->requestSession = NULL;
+                if (ocspRsp->sessionRequest != NULL) {
+                    (*hcv1->freeFcn)(ocspRsp->sessionRequest);
+                    ocspRsp->sessionRequest = NULL;
                 }
 
                 if (ocspRsp->serverSession != NULL) {
-                        hcv1->freeSessionFcn(ocspRsp->serverSession);
-                        ocspRsp->serverSession = NULL;
+                    (*hcv1->freeSessionFcn)(ocspRsp->serverSession);
+                    ocspRsp->serverSession = NULL;
                 }
         }
 
@@ -331,21 +331,16 @@ PKIX_Error *
 pkix_pl_OcspResponse_RegisterSelf(void *plContext)
 {
         extern pkix_ClassTable_Entry systemClasses[PKIX_NUMTYPES];
-        pkix_ClassTable_Entry entry;
+        pkix_ClassTable_Entry *entry = &systemClasses[PKIX_OCSPRESPONSE_TYPE];
 
         PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_RegisterSelf");
 
-        entry.description = "OcspResponse";
-        entry.objCounter = 0;
-        entry.typeObjectSize = sizeof(PKIX_PL_OcspResponse);
-        entry.destructor = pkix_pl_OcspResponse_Destroy;
-        entry.equalsFunction = pkix_pl_OcspResponse_Equals;
-        entry.hashcodeFunction = pkix_pl_OcspResponse_Hashcode;
-        entry.toStringFunction = NULL;
-        entry.comparator = NULL;
-        entry.duplicateFunction = pkix_duplicateImmutable;
-
-        systemClasses[PKIX_OCSPRESPONSE_TYPE] = entry;
+        entry->description = "OcspResponse";
+        entry->typeObjectSize = sizeof(PKIX_PL_OcspResponse);
+        entry->destructor = pkix_pl_OcspResponse_Destroy;
+        entry->equalsFunction = pkix_pl_OcspResponse_Equals;
+        entry->hashcodeFunction = pkix_pl_OcspResponse_Hashcode;
+        entry->duplicateFunction = pkix_duplicateImmutable;
 
         PKIX_RETURN(OCSPRESPONSE);
 }
@@ -403,7 +398,7 @@ PKIX_Error *
 pkix_pl_OcspResponse_Create(
         PKIX_PL_OcspRequest *request,
         void *responder,
-        PKIX_PL_OcspResponse_VerifyCallback verifyFcn,
+        PKIX_PL_VerifyCallback verifyFcn,
         void **pNBIOContext,
         PKIX_PL_OcspResponse **pResponse,
         void *plContext)
@@ -416,14 +411,14 @@ pkix_pl_OcspResponse_Create(
         char *location = NULL;
         char *hostname = NULL;
         char *path = NULL;
+        char *responseContentType = NULL;
         PRUint16 port = 0;
         SEC_HTTP_SERVER_SESSION serverSession = NULL;
-        SEC_HTTP_REQUEST_SESSION requestSession = NULL;
+        SEC_HTTP_REQUEST_SESSION sessionRequest = NULL;
         SECItem *encodedRequest = NULL;
         PRUint16 responseCode = 0;
         char *responseData = NULL;
-        PRUint32 responseDataLen = 0;
-
+ 
         PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_Create");
         PKIX_NULLCHECK_TWO(pNBIOContext, pResponse);
 
@@ -437,10 +432,12 @@ pkix_pl_OcspResponse_Create(
 
                 httpClient = ocspResponse->httpClient;
                 serverSession = ocspResponse->serverSession;
-                requestSession = ocspResponse->requestSession;
-                PKIX_NULLCHECK_THREE(httpClient, serverSession, requestSession);
+                sessionRequest = ocspResponse->sessionRequest;
+                PKIX_NULLCHECK_THREE(httpClient, serverSession, sessionRequest);
 
         } else {
+                PKIX_UInt32 timeout =
+                    ((PKIX_PL_NssContext*)plContext)->timeoutSeconds;
 
                 PKIX_NULLCHECK_ONE(request);
 
@@ -452,11 +449,7 @@ pkix_pl_OcspResponse_Create(
 
                 /* Is there a default responder and is it enabled? */
                 if (!responder) {
-                        PKIX_PL_NSSCALLRV
-                                (OCSPRESPONSE,
-                                responder,
-                                (void *)SEC_GetRegisteredHttpClient,
-                                ());
+                    responder = SEC_GetRegisteredHttpClient();
                 }
 
                 httpClient = (const SEC_HttpClientFcn *)responder;
@@ -470,43 +463,29 @@ pkix_pl_OcspResponse_Create(
                                 PKIX_OCSPREQUESTGETLOCATIONFAILED);
 
                         /* parse location -> hostname, port, path */    
-                        PKIX_PL_NSSCALLRV(OCSPRESPONSE, rv, CERT_ParseURL,
-                                (location, &hostname, &port, &path));
-
-                        if ((hostname == NULL) || (path == NULL)) {
+                        rv = CERT_ParseURL(location, &hostname, &port, &path);
+                        if (rv == SECFailure || hostname == NULL || path == NULL) {
                                 PKIX_ERROR(PKIX_URLPARSINGFAILED);
                         }
 
-                        PKIX_PL_NSSCALLRV
-                                (OCSPRESPONSE,
-                                rv,
-                                hcv1->createSessionFcn,
-                                (hostname, port, &serverSession));
-
+                        rv = (*hcv1->createSessionFcn)(hostname, port,
+                                                       &serverSession);
                         if (rv != SECSuccess) {
                                 PKIX_ERROR(PKIX_OCSPSERVERERROR);
                         }       
 
-                        PKIX_PL_NSSCALLRV
-                                (OCSPRESPONSE, rv, hcv1->createFcn,
-                                (serverSession,
-                                "http",
-                                path,
-                                "POST",
-                                PR_TicksPerSecond() * 60,
-                                &requestSession));
-
+                        rv = (*hcv1->createFcn)(serverSession, "http", path,
+                                                "POST",
+                                                PR_SecondsToInterval(timeout),
+                                                &sessionRequest);
                         if (rv != SECSuccess) {
                                 PKIX_ERROR(PKIX_OCSPSERVERERROR);
                         }       
 
-                        PKIX_PL_NSSCALLRV
-                                (OCSPRESPONSE, rv, hcv1->setPostDataFcn,
-                                (requestSession,
-                                (char *)encodedRequest->data,
-                                encodedRequest->len,
-                                "application/ocsp-request"));
-
+                        rv = (*hcv1->setPostDataFcn)(sessionRequest,
+                                                  (char *)encodedRequest->data,
+                                                  encodedRequest->len,
+                                                  "application/ocsp-request");
                         if (rv != SECSuccess) {
                                 PKIX_ERROR(PKIX_OCSPSERVERERROR);
                         }       
@@ -523,7 +502,7 @@ pkix_pl_OcspResponse_Create(
                         ocspResponse->request = request;
                         ocspResponse->httpClient = httpClient;
                         ocspResponse->serverSession = serverSession;
-                        ocspResponse->requestSession = requestSession;
+                        ocspResponse->sessionRequest = sessionRequest;
                         ocspResponse->verifyFcn = verifyFcn;
                         ocspResponse->handle = CERT_GetDefaultCertDB();
                         ocspResponse->encodedResponse = NULL;
@@ -538,73 +517,69 @@ pkix_pl_OcspResponse_Create(
 
         /* begin or resume IO to HTTPClient */
         if (httpClient && (httpClient->version == 1)) {
+                PRUint32 responseDataLen = 
+                   ((PKIX_PL_NssContext*)plContext)->maxResponseLength;
 
                 hcv1 = &(httpClient->fcnTable.ftable1);
 
-                responseDataLen = MAX_OCSP_RESPONSE_LEN;
-
-                PKIX_PL_NSSCALLRV(OCSPRESPONSE, rv, hcv1->trySendAndReceiveFcn,
-                        (requestSession,
+                rv = (*hcv1->trySendAndReceiveFcn)(sessionRequest,
                         (PRPollDesc **)&nbioContext,
                         &responseCode,
-                        NULL,   /* responseContentType */
+                        &responseContentType,
                         NULL,   /* responseHeaders */
                         (const char **)&responseData,
-                        &responseDataLen));
+                        &responseDataLen);
 
                 if (rv != SECSuccess) {
                         PKIX_ERROR(PKIX_OCSPSERVERERROR);
-                }       
-
+                }
+                /* responseContentType is a pointer to the null-terminated
+                 * string returned by httpclient. Memory allocated for context
+                 * type will be freed with freeing of the HttpClient struct. */
+                if (PORT_Strcasecmp(responseContentType, 
+                                   "application/ocsp-response")) {
+                       PKIX_ERROR(PKIX_OCSPSERVERERROR);
+                }
                 if (nbioContext != NULL) {
                         *pNBIOContext = nbioContext;
                         goto cleanup;
                 }
-
                 if (responseCode != 200) {
                         PKIX_ERROR(PKIX_OCSPBADHTTPRESPONSE);
                 }
-
-
-                PKIX_PL_NSSCALLRV
-                        (OCSPRESPONSE, ocspResponse->arena, PORT_NewArena,
-                        (DER_DEFAULT_CHUNKSIZE));
-
+                ocspResponse->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
                 if (ocspResponse->arena == NULL) {
                         PKIX_ERROR(PKIX_OUTOFMEMORY);
                 }
-
-                PKIX_PL_NSSCALLRV
-                        (OCSPRESPONSE,
-                        ocspResponse->encodedResponse,
-                        SECITEM_AllocItem,
-                        (ocspResponse->arena, NULL, responseDataLen));
-
+                ocspResponse->encodedResponse = SECITEM_AllocItem
+                        (ocspResponse->arena, NULL, responseDataLen);
                 if (ocspResponse->encodedResponse == NULL) {
                         PKIX_ERROR(PKIX_OUTOFMEMORY);
                 }
-
-                PKIX_PL_NSSCALL(OCSPRESPONSE, PORT_Memcpy,
-                        (ocspResponse->encodedResponse->data,
-                        responseData,
-                        responseDataLen));
-
+                PORT_Memcpy(ocspResponse->encodedResponse->data,
+                            responseData, responseDataLen);
         }
-
         *pResponse = ocspResponse;
 
 cleanup:
 
         if (path != NULL) {
-                PKIX_PL_NSSCALL(OCSPRESPONSE, PORT_Free, (path));
+            PORT_Free(path);
         }
 
         if (hostname != NULL) {
-                PKIX_PL_NSSCALL(OCSPRESPONSE, PORT_Free, (hostname));
+            PORT_Free(hostname);
         }
 
         if (PKIX_ERROR_RECEIVED){
+            if (ocspResponse) {
                 PKIX_DECREF(ocspResponse);
+            } else {
+                if (serverSession) 
+                    hcv1->freeSessionFcn(serverSession);
+                if (sessionRequest)
+                    hcv1->freeFcn(sessionRequest);
+            }
         }
 
         PKIX_RETURN(OCSPRESPONSE);
@@ -711,8 +686,8 @@ pkix_pl_OcspResponse_GetStatus(
 }
 
 
-PKIX_Error*
-pkix_pl_OcspResponse_CallCertVerify(
+static PKIX_Error*
+pkix_pl_OcspResponse_VerifyResponse(
         PKIX_PL_OcspResponse *response,
         PKIX_ProcessingParams *procParams,
         SECCertUsage certUsage,
@@ -723,7 +698,7 @@ pkix_pl_OcspResponse_CallCertVerify(
 {
     SECStatus rv = SECFailure;
 
-    PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_CallCertVerify");
+    PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_VerifyResponse");
 
     if (response->verifyFcn != NULL) {
         void *lplContext = NULL;
@@ -734,8 +709,8 @@ pkix_pl_OcspResponse_CallCertVerify(
             PKIX_NSSCONTEXTCREATEFAILED);
 
         PKIX_CHECK(
-            (response->verifyFcn)(response->pkixSignerCert,
-                                  response->producedAtDate,
+            (response->verifyFcn)((PKIX_PL_Object*)response->pkixSignerCert,
+                                  NULL, response->producedAtDate,
                                   procParams, pNBIOContext,
                                   state, buildResult,
                                   NULL, lplContext),
@@ -918,7 +893,7 @@ pkix_pl_OcspResponse_VerifySignature(
                 certUsage = certUsageStatusResponder;
             }
             PKIX_CHECK_ONLY_FATAL(
-                pkix_pl_OcspResponse_CallCertVerify(response, procParams,
+                pkix_pl_OcspResponse_VerifyResponse(response, procParams,
                                                     certUsage, &state,
                                                     &buildResult, &nbio,
                                                     plContext),

@@ -62,8 +62,8 @@ struct PKIX_PL_OcspResponseStruct{
         const PKIX_PL_OcspRequest *request;
         const SEC_HttpClientFcn *httpClient;
         SEC_HTTP_SERVER_SESSION serverSession;
-        SEC_HTTP_REQUEST_SESSION requestSession;
-        PKIX_PL_OcspResponse_VerifyCallback verifyFcn;
+        SEC_HTTP_REQUEST_SESSION sessionRequest;
+        PKIX_PL_VerifyCallback verifyFcn;
         SECItem *encodedResponse;
         CERTCertDBHandle *handle;
         int64 producedAt;
@@ -76,6 +76,46 @@ struct PKIX_PL_OcspResponseStruct{
 /* see source file for function documentation */
 
 PKIX_Error *pkix_pl_OcspResponse_RegisterSelf(void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_Create(
+        PKIX_PL_OcspRequest *request,
+        void *responder,
+        PKIX_PL_VerifyCallback verifyFcn,
+        void **pNBIOContext,
+        PKIX_PL_OcspResponse **pResponse,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_Decode(
+        PKIX_PL_OcspResponse *response,
+        PKIX_Boolean *passed,
+        SECErrorCodes *pReturnCode,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_GetStatus(
+        PKIX_PL_OcspResponse *response,
+        PKIX_Boolean *passed,
+        SECErrorCodes *pReturnCode,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_VerifySignature(
+        PKIX_PL_OcspResponse *response,
+        PKIX_PL_Cert *cert,
+        PKIX_ProcessingParams *procParams,
+        PKIX_Boolean *pPassed,
+        void **pNBIOContext,
+        void *plContext);
+
+PKIX_Error *
+pkix_pl_OcspResponse_GetStatusForCert(
+        PKIX_PL_OcspCertID *cid,
+        PKIX_PL_OcspResponse *response,
+        PKIX_Boolean *pPassed,
+        SECErrorCodes *pReturnCode,
+        void *plContext);
 
 PKIX_Error *
 PKIX_PL_OcspResponse_UseBuildChain(

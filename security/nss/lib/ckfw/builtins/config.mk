@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.11 $ $Date: 2005/01/20 02:25:46 $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.12 $ $Date: 2008/11/19 20:09:37 $"
 
 #
 #  Override TARGETS variable so that only shared libraries
@@ -69,3 +69,11 @@ ifeq ($(OS_TARGET),SunOS)
 MKSHLIB += -R '$$ORIGIN'
 endif
 
+ifeq ($(OS_ARCH), HP-UX) 
+ifneq ($(OS_TEST), ia64)
+# pa-risc
+ifeq ($(USE_64), 1)
+MKSHLIB += +b '$$ORIGIN'
+endif
+endif
+endif
