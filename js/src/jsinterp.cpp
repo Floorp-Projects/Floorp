@@ -6880,6 +6880,17 @@ js_Interpret(JSContext *cx)
     }
 
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
+
+#ifdef JS_TRACER
+    /* 
+     * This abort could be weakened to permit tracing through exceptions that
+     * are thrown and caught within a loop, with the co-operation of the tracer. 
+     * For now just bail on any sign of trouble.
+     */
+    if (TRACE_RECORDER(cx))
+        js_AbortRecording(cx, "error or exception while recording");
+#endif
+
     if (!cx->throwing) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
         ok = JS_FALSE;
