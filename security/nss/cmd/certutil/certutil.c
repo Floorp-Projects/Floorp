@@ -803,7 +803,7 @@ ListKeysInSlot(PK11SlotInfo *slot, const char *nickName, KeyType keyType,
 	    keyName = NULL;
 	    cert = PK11_GetCertFromPrivateKey(node->key);
 	    if (cert) {
-		if (cert->nickname && !cert->nickname[0]) {
+		if (cert->nickname && cert->nickname[0]) {
 		    keyName = PORT_Strdup(cert->nickname);
 		} else if (cert->emailAddr && cert->emailAddr[0]) {
 		    keyName = PORT_Strdup(cert->emailAddr);

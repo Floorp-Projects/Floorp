@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the PKIX-C library.
+ * The Original Code is the Netscape security libraries.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are
- * Copyright 2004-2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Sun Microsystems, Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,45 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /*
- * pkix_defaultrevchecker.h
- *
- * Header file for default revocation checker
- *
+ * A dummy header file that is a dependency for all the object files.
+ * Used to force a full recompilation of NSS in Mozilla's Tinderbox
+ * depend builds.  See comments in rules.mk.
  */
 
-#ifndef _PKIX_DEFAULTREVCHECKER_H
-#define _PKIX_DEFAULTREVCHECKER_H
-
-#include "pkix_tools.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct PKIX_DefaultRevocationCheckerStruct {
-        PKIX_CertChainChecker *certChainChecker;
-        PKIX_CertChainChecker_CheckCallback check;
-        PKIX_List *certStores;
-        PKIX_PL_Date *testDate;
-        PKIX_PL_PublicKey *trustedPubKey;
-        PKIX_UInt32 certsRemaining;
-};
-
-PKIX_Error *
-pkix_DefaultRevChecker_Initialize(
-        PKIX_List *certStores,
-        PKIX_PL_Date *testDate,
-        PKIX_PL_PublicKey *trustedPubKey,
-        PKIX_UInt32 certsRemaining,
-        PKIX_RevocationChecker **pRevChecker,
-        void *plContext);
-
-PKIX_Error *
-pkix_DefaultRevocationChecker_RegisterSelf(void *plContext);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _PKIX_DEFAULTREVCHECKER_H */
+#error "Do not include this header file."

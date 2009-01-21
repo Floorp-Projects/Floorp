@@ -66,7 +66,7 @@
 
 #if defined(__GNUC__)
 
-static void cpuid(unsigned long op, unsigned long *eax, 
+void freebl_cpuid(unsigned long op, unsigned long *eax, 
 	                 unsigned long *ebx, unsigned long *ecx, 
                          unsigned long *edx)
 {
@@ -82,7 +82,7 @@ static void cpuid(unsigned long op, unsigned long *eax,
 
 #include <intrin.h>
 
-static void cpuid(unsigned long op, unsigned long *eax, 
+void freebl_cpuid(unsigned long op, unsigned long *eax, 
            unsigned long *ebx, unsigned long *ecx, 
            unsigned long *edx)
 {
@@ -102,7 +102,7 @@ static void cpuid(unsigned long op, unsigned long *eax,
 /* x86 */
 
 #if defined(__GNUC__)
-static void cpuid(unsigned long op, unsigned long *eax, 
+void freebl_cpuid(unsigned long op, unsigned long *eax, 
 	                 unsigned long *ebx, unsigned long *ecx, 
                          unsigned long *edx)
 {
@@ -148,7 +148,7 @@ static unsigned long changeFlag(unsigned long flag)
  * windows versions of the above assembler
  */
 #define wcpuid __asm __emit 0fh __asm __emit 0a2h
-static void cpuid(unsigned long op,    unsigned long *Reax, 
+void freebl_cpuid(unsigned long op,    unsigned long *Reax, 
     unsigned long *Rebx, unsigned long *Recx, unsigned long *Redx)
 {
         unsigned long  Leax, Lebx, Lecx, Ledx;
@@ -572,7 +572,7 @@ getIntelCacheLineSize(int cpuidLevel)
      * to the getIntelRegisterCacheLineSize code, which breaks the registers
      * down into their component descriptors. In the end the lineSize of the
      * lowest level cache data cache is returned. */
-    cpuid(2, &eax, &ebx, &ecx, &edx);
+    freebl_cpuid(2, &eax, &ebx, &ecx, &edx);
     repeat = eax & 0xf;
     for (count = 0; count < repeat; count++) {
 	if ((eax & 0x80000000) == 0) {
@@ -588,7 +588,7 @@ getIntelCacheLineSize(int cpuidLevel)
 	    getIntelRegisterCacheLineSize(edx, &level, &lineSize);
 	}
 	if (count+1 != repeat) {
-	    cpuid(2, &eax, &ebx, &ecx, &edx);
+	    freebl_cpuid(2, &eax, &ebx, &ecx, &edx);
 	}
     }
     return lineSize;
@@ -608,11 +608,11 @@ getOtherCacheLineSize(unsigned long cpuidLevel)
     unsigned long eax, ebx, ecx, edx;
 
     /* get the Extended CPUID level */
-    cpuid(0x80000000, &eax, &ebx, &ecx, &edx);
+    freebl_cpuid(0x80000000, &eax, &ebx, &ecx, &edx);
     cpuidLevel = eax;
 
     if (cpuidLevel >= 0x80000005) {
-	cpuid(0x80000005, &eax, &ebx, &ecx, &edx);
+	freebl_cpuid(0x80000005, &eax, &ebx, &ecx, &edx);
 	lineSize = ecx & 0xff; /* line Size, L1 Data Cache */
     }
     return lineSize;
@@ -659,7 +659,7 @@ s_mpi_is_sse2()
     if (is386() || is486()) {
 	return 0;
     }
-    cpuid(0, &eax, &ebx, &ecx, &edx);
+    freebl_cpuid(0, &eax, &ebx, &ecx, &edx);
     *(int *)string = ebx;
     *(int *)&string[4] = edx;
     *(int *)&string[8] = ecx;
@@ -682,7 +682,7 @@ s_mpi_is_sse2()
 	return 0;
     }
 
-    cpuid(1,&eax,&ebx,&ecx,&edx);
+    freebl_cpuid(1,&eax,&ebx,&ecx,&edx);
     return (edx & SSE2_FLAG) == SSE2_FLAG;
 }
 #endif
@@ -706,7 +706,7 @@ s_mpi_getProcessorLineSize()
 #endif
 
     /* Pentium, cpuid command is available */
-    cpuid(0, &eax, &ebx, &ecx, &edx);
+    freebl_cpuid(0, &eax, &ebx, &ecx, &edx);
     cpuidLevel = eax;
     *(int *)string = ebx;
     *(int *)&string[4] = edx;

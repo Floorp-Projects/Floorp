@@ -950,6 +950,29 @@ else
 depend::
 endif
 
+#
+# HACK ALERT
+#
+# The only purpose of this rule is to pass Mozilla's Tinderbox depend
+# builds (http://tinderbox.mozilla.org/showbuilds.cgi).  Mozilla's
+# Tinderbox builds NSS continuously as part of the Mozilla client.
+# Because NSS's make depend is not implemented, whenever we change
+# an NSS header file, the depend build does not recompile the NSS
+# files that depend on the header.
+#
+# This rule makes all the objects depend on a dummy header file.
+# Check in a change to this dummy header file to force the depend
+# build to recompile everything.
+#
+# This rule should be removed when make depend is implemented.
+#
+
+DUMMY_DEPEND = $(CORE_DEPTH)/coreconf/coreconf.dep
+
+$(filter $(OBJDIR)/%$(OBJ_SUFFIX),$(OBJS)): $(OBJDIR)/%$(OBJ_SUFFIX): $(DUMMY_DEPEND)
+
+# END OF HACK
+
 ################################################################################
 # Special gmake rules.
 ################################################################################
@@ -959,7 +982,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .obj .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .asm
+.SUFFIXES: .out .a .ln .o .obj .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .asm .dep
 
 #
 # Don't delete these files if we get killed.
