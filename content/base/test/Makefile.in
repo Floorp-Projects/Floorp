@@ -246,6 +246,8 @@ _TEST_FILES = 	test_bug5141.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
 		file_CrossSiteXHR_inner.html \
+		file_CrossSiteXHR_inner_data.sjs \
+		file_CrossSiteXHR_inner.jar \
 		file_CrossSiteXHR_server.sjs \
 		test_CrossSiteXHR_cache.html \
 		file_CrossSiteXHR_cache_server.sjs \
