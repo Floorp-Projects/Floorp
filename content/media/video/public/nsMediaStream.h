@@ -91,6 +91,8 @@ public:
   virtual float    DownloadRate() = 0;
   virtual void     Cancel() { }
   virtual nsIPrincipal* GetCurrentPrincipal() = 0;
+  virtual void     Suspend() = 0;
+  virtual void     Resume() = 0;
 
 protected:
   // This is not an nsCOMPointer to prevent a circular reference
@@ -187,6 +189,14 @@ class nsMediaStream
 
   // Call on main thread only.
   nsIPrincipal* GetCurrentPrincipal();
+
+  // Suspend any downloads that are in progress. Call on the main thread
+  // only.
+  void Suspend();
+
+  // Resume any downloads that have been suspended. Call on the main thread
+  // only.
+  void Resume();
 
  private:
   // Strategy object that is used for the handling seeking, etc

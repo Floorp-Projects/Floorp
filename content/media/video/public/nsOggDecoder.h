@@ -355,6 +355,16 @@ class nsOggDecoder : public nsMediaDecoder
   // Returns the channel reader.
   nsChannelReader* GetReader() { return mReader; }
 
+  // Suspend any media downloads that are in progress. Called by the
+  // media element when it is sent to the bfcache. Call on the main
+  // thread only.
+  virtual void Suspend();
+
+  // Resume any media downloads that have been suspended. Called by the
+  // media element when it is restored from the bfcache. Call on the
+  // main thread only.
+  virtual void Resume();
+
 protected:
 
   // Returns the monitor for other threads to synchronise access to
