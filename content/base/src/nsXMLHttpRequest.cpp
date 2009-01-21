@@ -489,8 +489,9 @@ nsACProxyListener::OnChannelRedirect(nsIChannel *aOldChannel,
                                      nsIChannel *aNewChannel,
                                      PRUint32 aFlags)
 {
-  // No redirects allowed for now.
-  return NS_ERROR_DOM_BAD_URI;
+  // Only internal redirects allowed for now.
+  return NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags) ?
+         NS_OK : NS_ERROR_DOM_BAD_URI;
 }
 
 NS_IMETHODIMP
@@ -2634,7 +2635,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
       }
     }
-    else if (!method.LowerCaseEqualsLiteral("get")) {
+    else if (!method.LowerCaseEqualsLiteral("get") &&
+             !method.LowerCaseEqualsLiteral("head")) {
       mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
     }
 
@@ -3111,14 +3113,16 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 
   nsresult rv;
 
-  rv = CheckChannelForCrossSiteRequest(aNewChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
+    rv = CheckChannelForCrossSiteRequest(aNewChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // Disable redirects for preflighted cross-site requests entirely for now
-  // Note, do this after the call to CheckChannelForCrossSiteRequest
-  // to make sure that XML_HTTP_REQUEST_USE_XSITE_AC is up-to-date
-  if ((mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT)) {
-     return NS_ERROR_DOM_BAD_URI;
+    // Disable redirects for preflighted cross-site requests entirely for now
+    // Note, do this after the call to CheckChannelForCrossSiteRequest
+    // to make sure that XML_HTTP_REQUEST_USE_XSITE_AC is up-to-date
+    if ((mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT)) {
+       return NS_ERROR_DOM_BAD_URI;
+    }
   }
 
   if (mChannelEventSink) {
