@@ -207,14 +207,15 @@ public:
   }
 
   /**
-   * Returns true if and only if there is NOT a path through child lists
-   * from the top of this node's parent chain back to this node.
+   * Returns true if there is NOT a path through child lists
+   * from the top of this node's parent chain back to this node or
+   * if the node is in native anonymous subtree without a parent.
    */
   PRBool IsInAnonymousSubtree() const
   {
-    NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent(),
-                 "must have binding parent when in native anonymous subtree");
-    return GetBindingParent() != nsnull;
+    NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent() || !GetParent(),
+                 "must have binding parent when in native anonymous subtree with a parent node");
+    return IsInNativeAnonymousSubtree() || GetBindingParent() != nsnull;
   }
 
   /**
