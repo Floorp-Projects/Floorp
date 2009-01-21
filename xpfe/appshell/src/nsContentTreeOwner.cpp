@@ -799,8 +799,8 @@ public:
 
   ~NullJSContextPusher() {
     if (mService) {
-#ifdef DEBUG
       JSContext *cx;
+#ifdef DEBUG
       nsresult rv =
 #endif
         mService->Pop(&cx);
