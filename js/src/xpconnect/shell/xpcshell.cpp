@@ -1572,10 +1572,6 @@ main(int argc, char **argv, char **envp)
 
         gOldJSContextCallback = JS_SetContextCallback(rt, ContextCallback);
 
-        //Set the GC trigger factor back to the initial value. 
-        //See the bug 474312.
-        JS_SetGCParameter(rt, JSGC_TRIGGER_FACTOR, (uint32) -1);
-
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
             printf("JS_NewContext failed!\n");
