@@ -625,7 +625,7 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
 
-#ifdef HAVE_LOCALTIME_R
+#if defined(HAVE_LOCALTIME_R) && defined(HAVE_TM_ZONE_TM_GMTOFF)
     {
         struct tm td;
         time_t bogus = 0;
