@@ -48,10 +48,8 @@ FORCE_STATIC_LIB= 1
 DEFINES += -DTHEORA_DISABLE_ENCODE
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
-ifneq ($(OS_ARCH),WINNT)
 ifneq ($(OS_ARCH),SunOS)
 DEFINES += -DOC_X86ASM -DUSE_ASM
-endif
 endif
 endif
 
@@ -62,7 +60,7 @@ CSRCS		= \
 		huffdec.c \
 		quant.c \
 		dequant.c \
-		bitwise.c \
+		bitpack.c \
 		internal.c \
 		decinfo.c \
 		decapiwrapper.c \
@@ -75,6 +73,17 @@ CSRCS		= \
 		$(NULL)
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
+ifeq ($(OS_ARCH),WINNT)
+VPATH		+= $(srcdir)/dec/x86_vc
+
+CSRCS		+= \
+		mmxfrag.c \
+		mmxloopfilter.c \
+		x86state.c \
+		mmxstate.c \
+		mmxidct.c \
+		$(NULL)
+else
 VPATH		+= $(srcdir)/dec/x86
 
 CSRCS		+= \
@@ -83,6 +92,7 @@ CSRCS		+= \
 		mmxstate.c \
 		mmxidct.c \
 		$(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
