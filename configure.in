@@ -4384,7 +4384,6 @@ MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
-MOZ_XUL_APP=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
 NECKO_COOKIES=1
@@ -4583,13 +4582,6 @@ xulrunner)
     AC_MSG_ERROR([Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK.])
   fi
   ;;
-*)
-  # Fix this case for folks who forget. Warn them.
-  if test -n "$LIBXUL_SDK" -a -z "$MOZ_XUL_APP"; then
-    AC_MSG_WARN([Setting MOZ_XUL_APP since LIBXUL_SDK was set. Add to confvars.sh!])
-    MOZ_XUL_APP=1
-  fi
-  ;;
 esac
 
 # Special cases where we need to AC_DEFINE something. Also a holdover for apps
@@ -4616,20 +4608,11 @@ standalone)
 
 esac
 
-if test -z "$MOZ_XUL_APP"; then
-	AC_MSG_ERROR([builds with unsetting MOZ_XUL_APP in confvars.sh are not supported.])
-fi
-
 AC_SUBST(MOZ_BUILD_APP)
-AC_SUBST(MOZ_XUL_APP)
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
-
-if test "$MOZ_XUL_APP"; then
-  AC_DEFINE(MOZ_XUL_APP)
-fi
 
 dnl ========================================================
 dnl = 
@@ -5793,7 +5776,7 @@ MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
     MOZ_INSTALLER=,
     MOZ_INSTALLER=1 )
-if test -n "$MOZ_INSTALLER" -a -n "$MOZ_XUL_APP" -a "$OS_ARCH" = "WINNT"; then
+if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     # Disable installer for Windows builds that use the new toolkit if NSIS
     # isn't in the path.
     AC_PATH_PROGS(MAKENSIS, makensis)
@@ -7220,10 +7203,6 @@ fi
 
 if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
 	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
-fi
-
-if test -n "$MOZ_ENABLE_LIBXUL" -a -z "$MOZ_XUL_APP"; then
-	AC_MSG_ERROR([--enable-libxul is only compatible with toolkit XUL applications.])
 fi
 
 if test -n "$MOZ_ENABLE_LIBXUL"; then
