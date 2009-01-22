@@ -6,7 +6,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 -->
 
-<window title="Mozilla Bug 288254"
+<window title="Mozilla Bug 436084"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();">
@@ -36,13 +36,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 
 </body>
 
-
 <script class="testbody" type="application/javascript">
 <![CDATA[
 Components.utils.import("resource://gre/modules/SpatialNavigation.js");
 
 var moveTable = [
-["DOWN", "textinput"],
 ["DOWN", "textinput"],
 ["DOWN", "textarea"],
 ["DOWN", "textarea"],
@@ -50,11 +48,9 @@ var moveTable = [
 ["UP", "textarea"],
 ["UP", "textarea"],
 ["UP", "textinput"],
-["UP", "textinput"],
 ["UP", "start"],
 ["DOWN", "textinput"],
-["LEFT", "textinput"],
-
+["HOME", "textinput"],
 
 ["RIGHT", "textinput"],
 ["RIGHT", "textinput"],
@@ -83,7 +79,7 @@ var moveTable = [
 ["RIGHT", "textinput"],
 ["RIGHT", "textinput"],
 ["RIGHT", "textarea"],
-["LEFT", "textarea"],
+["HOME", "textarea"],
 ["RIGHT", "textarea"],
 ["RIGHT", "textarea"],
 ["RIGHT", "textarea"],
