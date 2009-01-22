@@ -110,13 +110,14 @@ _TEST_FILES += \
 		test_wav_seek_past_end.html \
 		test_wav_seek_then_play.html \
 		test_wav_trailing.html \
-		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
 		r11025_s16_c1.wav \
 		r11025_s16_c1_trailing.wav \
 		r11025_u8_c1.wav \
 		r11025_u8_c1_trunc.wav \
 		$(NULL)
+#XXX: disabled for now, see bug 474754
+# 		test_wav_trunc.html \
 else
 _TEST_FILES += \
 		test_can_play_type_no_wave.html \
