@@ -349,8 +349,6 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 336096-1.xul 336096-1-ref.xul
 == 336147-1.html 336147-1-ref.html
 == 336153-1.html 336153-1-ref.html
-== 336736-1a.html 336736-1-ref.html
-== 336736-1b.html 336736-1-ref.html
 != 338251-p.html about:blank
 == 338251-p-oh.html 338251-p-oh-ref.html
 != 338251-pre.html about:blank
@@ -776,12 +774,10 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 405577-1.html 405577-1-ref.html
 == 405584-1.html 405584-1-ref.html
 # == 405952-1.html 405952-1-ref.html
-== 406073-1.html 406073-1-ref.html
 == 406484-1.html 406484-1-ref.html
 == 406568-1.html 406568-1-ref.html
 == 407016-1-a.html 407016-1-ref.html
 == 407016-1-b.html 407016-1-ref.html
-== 407016-2.html 407016-2-ref.html
 == 407078-1.html 407078-1-ref.html
 == 407095-1.html 407095-1-ref.html
 == 407111-1.html 407111-1-ref.html
@@ -819,7 +815,6 @@ fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 413027-1.html 413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
-== 413027-4.html 413027-4-ref.html
 == 413286-1a.html 413286-1-ref.html
 == 413286-1b.html 413286-1-ref.html
 == 413286-1c.html 413286-1-ref.html
@@ -897,8 +892,6 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 424434-1.html 424434-1-ref.html
 == 424631-1.html 424631-1-ref.html
 == 424710-1.html 424710-1-ref.html
-== 425247-1.html 425247-1-ref.html
-== 425247-2.html 425247-2-ref.html
 == 425972-1.html 425972-1-ref.html
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
@@ -916,7 +909,6 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 428521-1a.html 428521-1-ref.html
 == 428521-1b.html 428521-1-ref.html
 == 428521-1c.html 428521-1-ref.html
-random == 429849-1.html 429849-1-ref.html # bug 432288
 == 430412-1.html 430412-1-ref.html
 == 430813-1.html 430813-1-ref.html
 == 430813-2.html 430813-2-ref.html
