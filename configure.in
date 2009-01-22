@@ -1908,7 +1908,7 @@ case "$target" in
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
 
-    if test -z "$AS_BIN"; then
+    if test "$AS_BIN"; then
         AS="$AS_BIN"
     fi
     DSO_CFLAGS=
