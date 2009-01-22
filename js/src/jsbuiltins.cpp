@@ -243,23 +243,6 @@ js_Any_setelem(JSContext* cx, JSObject* obj, int32 index, jsval v)
     return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
-JSObject* FASTCALL
-js_FastValueToIterator(JSContext* cx, jsuint flags, jsval v)
-{
-    if (!js_ValueToIterator(cx, flags, &v))
-        return NULL;
-    return JSVAL_TO_OBJECT(v);
-}
-
-jsval FASTCALL
-js_FastCallIteratorNext(JSContext* cx, JSObject* iterobj)
-{
-    jsval v;
-    if (!js_CallIteratorNext(cx, iterobj, &v))
-        return JSVAL_ERROR_COOKIE;
-    return v;
-}
-
 SideExit* FASTCALL
 js_CallTree(InterpState* state, Fragment* f)
 {
