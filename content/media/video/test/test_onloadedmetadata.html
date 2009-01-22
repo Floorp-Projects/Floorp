@@ -53,8 +53,6 @@ function loadedData() {
 function loadedMetaData() {
   gLoadedMetaDataCount++;
   ok(gLoadedMetaDataCount <= 1, "No more than 1 onloadedmetadata events");
-  is(video().videoWidth, 320, "width is available");
-  is(video().videoHeight, 240, "height is available");
   video().play();
   return false;
 }
