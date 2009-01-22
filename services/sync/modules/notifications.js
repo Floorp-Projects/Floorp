@@ -42,7 +42,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/Observers.js");
+Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 

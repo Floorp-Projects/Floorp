@@ -42,8 +42,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/Observers.js");
-Cu.import("resource://weave/Preferences.js");
+Cu.import("resource://weave/ext/Observers.js");
+Cu.import("resource://weave/ext/Preferences.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -190,14 +190,14 @@ Resource.prototype = {
     let self = yield;
     let iter = 0;
     let channel = this._createRequest();
-    
+
     if ("undefined" != typeof(data))
       this._data = data;
 
     if ("PUT" == action || "POST" == action) {
       yield this.filterUpload(self.cb);
       this._log.trace(action + " Body:\n" + this._data);
-      
+
       let upload = channel.QueryInterface(Ci.nsIUploadChannel);
       let iStream = Cc["@mozilla.org/io/string-input-stream;1"].
         createInstance(Ci.nsIStringInputStream);
@@ -216,7 +216,7 @@ Resource.prototype = {
         this._log.debug("Error response: \n" + this._data);
       throw new RequestException(this, action, channel);
     } else {
-      this._log.debug(channel.requestMethod + " request successful (" + 
+      this._log.debug(channel.requestMethod + " request successful (" +
       channel.responseStatus  + ")");
 
       switch (action) {
@@ -233,7 +233,7 @@ Resource.prototype = {
         break;
       }
     }
-    
+
     self.done(this._data);
   },
 
@@ -293,7 +293,7 @@ RecordParser.prototype = {
     let start;
     let bCount = 0;
     let done = false;
-    
+
     for (let i = 1; i < this._data.length; i++) {
       if (this._data[i] == '{') {
         if (bCount == 0)
@@ -304,17 +304,17 @@ RecordParser.prototype = {
         if (bCount == 0)
           done = true;
       }
-      
+
       if (done) {
         let ret = this._data.substring(start, i + 1);
         this._data = this._data.substring(i + 1);
         return ret;
       }
     }
-    
+
     return false;
   },
-  
+
   append: function RecordParser_append(data) {
     this._data += data;
   }
