@@ -620,7 +620,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       if (aNamespaceID == stringInfo.mStringInfo[i].mNamespaceID &&
           aName == *stringInfo.mStringInfo[i].mName) {
         stringInfo.Reset(i);
-        DidChangeString(i, PR_FALSE);
+        DidChangeString(i);
         foundMatch = PR_TRUE;
         break;
       }
@@ -1502,22 +1502,30 @@ void nsSVGElement::StringAttributesInfo::Reset(PRUint8 aAttrEnum)
   mStrings[aAttrEnum].Init(aAttrEnum);
 }
 
-void
-nsSVGElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+void nsSVGElement::GetStringBaseValue(PRUint8 aAttrEnum, nsAString& aResult) const
 {
-  if (!aDoSetAttr)
-    return;
-
-  StringAttributesInfo info = GetStringInfo();
+  nsSVGElement::StringAttributesInfo info = const_cast<nsSVGElement*>(this)->GetStringInfo();
 
   NS_ASSERTION(info.mStringCount > 0,
-               "DidChangeString on element with no string attribs");
+               "GetBaseValue on element with no string attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mStringCount, "aAttrEnum out of range");
+
+  GetAttr(info.mStringInfo[aAttrEnum].mNamespaceID,
+          *info.mStringInfo[aAttrEnum].mName, aResult);
+}
+
+void nsSVGElement::SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue)
+{
+  nsSVGElement::StringAttributesInfo info = GetStringInfo();
+
+  NS_ASSERTION(info.mStringCount > 0,
+               "SetBaseValue on element with no string attribs");
 
   NS_ASSERTION(aAttrEnum < info.mStringCount, "aAttrEnum out of range");
 
   SetAttr(info.mStringInfo[aAttrEnum].mNamespaceID,
-          *info.mStringInfo[aAttrEnum].mName,
-          info.mStrings[aAttrEnum].GetBaseValue(), PR_TRUE);
+          *info.mStringInfo[aAttrEnum].mName, aValue, PR_TRUE);
 }
 
 nsresult

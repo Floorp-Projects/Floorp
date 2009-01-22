@@ -282,7 +282,8 @@ nsSVGGradientFrame::GetReferencedGradient()
   if (!property) {
     // Fetch our gradient element's xlink:href attribute
     nsSVGGradientElement *grad = static_cast<nsSVGGradientElement *>(mContent);
-    const nsString &href = grad->mStringAttributes[nsSVGGradientElement::HREF].GetAnimValue();
+    nsAutoString href;
+    grad->mStringAttributes[nsSVGGradientElement::HREF].GetAnimValue(href, grad);
     if (href.IsEmpty()) {
       mNoHRefURI = PR_TRUE;
       return nsnull; // no URL
