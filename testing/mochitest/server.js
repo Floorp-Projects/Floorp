@@ -193,7 +193,6 @@ function createMochitestServer(serverBasePath)
   server.registerDirectory("/", serverBasePath);
   server.registerPathHandler("/server/shutdown", serverShutdown);
   server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
-  server.registerContentType("jar", "application/x-jar");
   server.setIndexHandler(defaultDirHandler);
 
   processLocations(server);
