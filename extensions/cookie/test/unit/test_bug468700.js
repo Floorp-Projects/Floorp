@@ -8,7 +8,10 @@ function run_test() {
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  var pb = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
+  var pb = null;
+  try {
+    pb = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
+  } catch (e) {}
 
   var spec = "http://foo.bar/baz";
   var uri = ios.newURI(spec, null, null);
