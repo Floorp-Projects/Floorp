@@ -270,13 +270,6 @@ public:
 
   nsCStringArray& operator=(const nsCStringArray& other);
 
-  // Parses a given string using the delimiter passed in. If the array
-  // already has some elements, items parsed from string will be appended 
-  // to array. For example, array.ParseString("a,b,c", ","); will add strings
-  // "a", "b" and "c" to the array. Parsing process has the same tokenizing 
-  // behavior as strtok().  
-  PRBool ParseString(const char* string, const char* delimiter);
-
   PRInt32 Count(void) const {
     return nsVoidArray::Count();
   }

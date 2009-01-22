@@ -70,7 +70,7 @@ public:
     NS_IMETHOD CreateExpression(const nsAString &aExpression, 
                                 nsIDOMXPathNSResolver *aResolver,
                                 nsTArray<nsString> *aNamespaceURIs,
-                                nsCStringArray *aContractIDs,
+                                nsTArray<nsCString> *aContractIDs,
                                 nsCOMArray<nsISupports> *aState,
                                 nsIDOMXPathExpression **aResult);
 
@@ -78,7 +78,7 @@ private:
     nsresult CreateExpression(const nsAString & aExpression,
                               nsIDOMXPathNSResolver *aResolver,
                               nsTArray<PRInt32> *aNamespaceIDs,
-                              nsCStringArray *aContractIDs,
+                              nsTArray<nsCString> *aContractIDs,
                               nsCOMArray<nsISupports> *aState,
                               nsIDOMXPathExpression **aResult);
 

@@ -42,6 +42,7 @@
 
 #include "nsIInputStream.h"
 #include "nsJAR.h"
+#include "nsTArray.h"
 
 /*-------------------------------------------------------------------------
  * Class nsJARInputStream declaration. This class defines the type of the
@@ -86,7 +87,7 @@ class nsJARInputStream : public nsIInputStream
     PRUint32                mNameLen; // length of dirname
     nsCAutoString           mBuffer;  // storage for generated text of stream
     PRUint32                mArrPos;  // current position within mArray
-    nsCStringArray          mArray;   // array of names in (zip) directory
+    nsTArray<nsCString>     mArray;   // array of names in (zip) directory
 
     PRPackedBool    mDirectory;
     PRPackedBool    mClosed;          // Whether the stream is closed
