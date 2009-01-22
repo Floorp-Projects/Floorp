@@ -96,7 +96,6 @@
 #include "nsIMutable.h"
 #include "nsIPropertyBag2.h"
 #include "nsIIDNService.h"
-#include "nsIChannelEventSink.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByContractIDWithError
@@ -1580,27 +1579,6 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
     }
 
     return NS_GetRealPort(targetBaseURI) == NS_GetRealPort(sourceBaseURI);
-}
-
-inline PRBool
-NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
-                             nsIChannel *aNewChannel,
-                             PRUint32 aFlags)
-{
-  if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIURI> oldURI, newURI;
-  aOldChannel->GetURI(getter_AddRefs(oldURI));
-  aNewChannel->GetURI(getter_AddRefs(newURI));
-
-  if (!oldURI || !newURI) {
-    return PR_FALSE;
-  }
-
-  PRBool res;
-  return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
 
 #endif // !nsNetUtil_h__
