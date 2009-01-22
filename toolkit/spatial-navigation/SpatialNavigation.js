@@ -126,52 +126,26 @@ function _onInputKeyPress (event, callback) {
       return;
   }
 
-  // if it is a single-line input fields ...
-  if (target instanceof Ci.nsIDOMHTMLInputElement &&
-     (target.type == "text" || target.type == "password")) {
-
-    // up/down should not care and just move.
-    if (key != PrefObserver['keyCodeUp'] &&
-        key != PrefObserver['keyCodeDown']) {
-
-      // if there is any selection at all, just ignore
-      if (target.selectionEnd - target.selectionStart > 0)
-        return;
-
-      // if there is no text, there is nothing special to do.
-      if (target.textLength > 0)
-        if (key == PrefObserver['keyCodeLeft']) {
-          // if there is text, there it isn't okay to move
-          if (target.selectionStart != 0)
-            return;
-        }
-        else if (key == PrefObserver['keyCodeRight']) {
-          // we are moving forward into the document
-          if (target.textLength != target.selectionEnd)
-            return;
-        }
-    }
-  }
-  // if it is a multi-line input field ...
-  else if (target instanceof Ci.nsIDOMHTMLTextAreaElement) {
-
-    // if there is any selection at all, again just ignore
+  if ((target instanceof Ci.nsIDOMHTMLInputElement && (target.type == "text" || target.type == "password")) ||
+      target instanceof Ci.nsIDOMHTMLTextAreaElement ) {
+    
+    // if there is any selection at all, just ignore
     if (target.selectionEnd - target.selectionStart > 0)
       return;
     
     // if there is no text, there is nothing special to do.
     if (target.textLength > 0) {
-      if (key == PrefObserver['keyCodeUp'] ||
-          key == PrefObserver['keyCodeLeft']) {
-        // if there is text, there it isn't okay to move
-        if (target.selectionStart != 0)
+      if (key == PrefObserver['keyCodeRight'] ||
+          key == PrefObserver['keyCodeDown'] ) {
+        // we are moving forward into the document
+        if (target.textLength != target.selectionEnd)
           return;
       }
-      else {
-        if (key == PrefObserver['keyCodeDown'] ||
-            key == PrefObserver['keyCodeRight'])
-          if (target.selectionEnd != target.textLength)
-            return;
+      else
+      {
+        // we are at the start of the text, okay to move 
+        if (target.selectionStart != 0)
+          return;
       }
     }
   }
