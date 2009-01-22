@@ -203,10 +203,15 @@ void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerat
   }
   mFramerate = aFramerate;
 
-  if (!mRGB) 
-    mRGB = new unsigned char[aWidth * aHeight * 4];
-  if (mRGB && aRGBBuffer) {
-    memcpy(mRGB.get(), aRGBBuffer, aWidth*aHeight*4);
+  if (aRGBBuffer) {
+    if (!mRGB) {
+      mRGB = new unsigned char[aWidth * aHeight * 4];
+    }
+    if (mRGB) {
+      memcpy(mRGB.get(), aRGBBuffer, aWidth*aHeight*4);
+    }
+  } else {
+    mRGB = nsnull;
   }
 }
 
