@@ -43,7 +43,7 @@
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsIURI.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include <qfiledialog.h>
 
 class nsIWidget;
@@ -88,8 +88,8 @@ protected:
     nsString  mDefault;
     nsString  mDefaultExtension;
 
-    nsCStringArray mFilters;
-    nsCStringArray mFilterNames;
+    nsTArray<nsCString> mFilters;
+    nsTArray<nsCString> mFilterNames;
 };
 
 #endif

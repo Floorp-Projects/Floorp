@@ -1069,18 +1069,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPri
   return NS_OK;
 }
 
-
-//----------------------------------------------------------------------
-//String array enumeration callback to append a printer to the global
-//printer list.
-static PRBool
-GlobalPrinterEnumFunc(nsCString& aName, void *aData)
-{
-  nsTArray<nsString> *a = (nsTArray<nsString> *)aData;
-  a->AppendElement(NS_ConvertUTF8toUTF16(aName));
-  return PR_TRUE;
-}
-
 //----------------------------------------------------------------------
 nsresult GlobalPrinters::InitializeGlobalPrinters ()
 {
@@ -1101,9 +1089,15 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   nsPSPrinterList psMgr;
   if (NS_SUCCEEDED(psMgr.Init()) && psMgr.Enabled()) {
     /* Get the list of PostScript-module printers */
-    nsCStringArray printerList;
+    // XXX: this function is the only user of GetPrinterList
+    // So it may be interesting to convert the nsCStrings
+    // in this function, we would save one loop here
+    nsTArray<nsCString> printerList;
     psMgr.GetPrinterList(printerList);
-    printerList.EnumerateForwards(GlobalPrinterEnumFunc, mGlobalPrinterList);
+    for (PRUint32 i = 0; i < printerList.Length(); i++)
+    {
+      mGlobalPrinterList->AppendElement(NS_ConvertUTF8toUTF16(printerList[i]));
+    }
   }
 #endif /* USE_POSTSCRIPT */  
       

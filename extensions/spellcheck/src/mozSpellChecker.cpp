@@ -473,7 +473,7 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
   nsresult rv;
   PRBool hasMoreEngines;
   PRInt32 i;
-  nsCStringArray contractIds;
+  nsTArray<nsCString> contractIds;
 
   nsCOMPtr<nsICategoryManager> catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   if (!catMgr)
@@ -500,28 +500,28 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
     if (NS_FAILED(rv))
       return rv;
 
-    contractIds.AppendCString(contractId);
+    contractIds.AppendElement(contractId);
   }
 
-  contractIds.AppendCString(NS_LITERAL_CSTRING(DEFAULT_SPELL_CHECKER));
+  contractIds.AppendElement(NS_LITERAL_CSTRING(DEFAULT_SPELL_CHECKER));
 
   // Retrieve dictionaries from all available spellcheckers and
   // fill mDictionariesMap hash (only the first dictionary with the
   // each name is used).
-  for (i=0;i<contractIds.Count();i++){
+  for (i=0;i < PRInt32(contractIds.Length());i++){
     PRUint32 count,k;
     PRUnichar **words;
 
-    nsCString *contractId = contractIds[i];
+    const nsCString& contractId = contractIds[i];
 
     // Try to load spellchecker engine. Ignore errors silently
     // except for the last one (HunSpell).
     nsCOMPtr<mozISpellCheckingEngine> engine =
-      do_GetService(contractId->get(), &rv);
+      do_GetService(contractId.get(), &rv);
     if (NS_FAILED(rv)){
       // Fail if not succeeded to load HunSpell. Ignore errors
       // for external spellcheck engines.
-      if (i==contractIds.Count()-1){
+      if (i==contractIds.Length()-1){
         return rv;
       }
 
@@ -541,7 +541,7 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
       if (mDictionariesMap.Get(dictName, NULL))
         continue;
 
-      mDictionariesMap.Put(dictName, new nsCString(*contractId));
+      mDictionariesMap.Put(dictName, new nsCString(contractId));
     }
 
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
