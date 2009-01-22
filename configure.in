@@ -118,7 +118,6 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
-LIBART_VERSION=2.3.4
 CAIRO_VERSION=1.6.0
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
@@ -4334,8 +4333,6 @@ MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
-MOZ_LIBART_CFLAGS=
-MOZ_LIBART_LIBS=
 MOZ_MATHML=1
 MOZ_MORK=1
 MOZ_MORKREADER=
@@ -7363,38 +7360,6 @@ AC_SUBST(GLIB_GMODULE_LIBS)
 AC_SUBST(HOST_LIBIDL_CONFIG)
 AC_SUBST(HOST_LIBIDL_CFLAGS)
 AC_SUBST(HOST_LIBIDL_LIBS)
-
-dnl ========================================================
-dnl Check for libart
-dnl ========================================================
-if test "$MOZ_SVG_RENDERER_LIBART"; then
-  if test ! -f $topsrcdir/other-licenses/libart_lgpl/Makefile.in; then
-    AC_MSG_ERROR([You must check out the mozilla version of libart. Use
-mk_add_options MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl])
-  fi
-
-  dnl libart's configure hasn't been run yet, but we know what the
-  dnl answer should be anyway
-  MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
-  case "$target_os" in
-  msvc*|mks*|cygwin*|mingw*|wince*)
-      MOZ_LIBART_LIBS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
-      ;;
-  os2*)
-      MOZ_LIBART_LIBS='-lmoz_art -lm'
-      ;;
-  beos*)
-      MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
-      ;;
-  *)
-      MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
-      ;;
-  esac
-  AC_FUNC_ALLOCA
-fi
-
-AC_SUBST(MOZ_LIBART_CFLAGS)
-AC_SUBST(MOZ_LIBART_LIBS)
 
 dnl ========================================================
 dnl Check for cairo
