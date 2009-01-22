@@ -269,8 +269,8 @@ protected:
   void              UpdateCurrentInterval();
   void              SampleSimpleTime(nsSMILTime aActiveTime);
   void              SampleFillValue();
-  PRBool            AddInstanceTimeFromCurrentTime(double aOffsetSeconds,
-                        PRBool aIsBegin, const nsSMILTimeContainer* aContainer);
+  void              AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
+                        double aOffsetSeconds, PRBool aIsBegin);
 
   // Typedefs
   typedef nsTArray<nsRefPtr<nsSMILTimeValueSpec> >  SMILTimeValueSpecList;

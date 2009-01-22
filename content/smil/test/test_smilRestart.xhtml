@@ -37,67 +37,49 @@ var never = document.getElementById("never");
 
 SimpleTest.waitForExplicitFinish();
 
-// main: just triggers the first link in the chain of function-calls
+function tryRestart(elem, state, expected) {
+  var restartTime = svg.getCurrentTime();
+  elem.beginElement();
+  var restart = (elem.getStartTime() === restartTime);
+  if (expected) {
+    var msg = elem.id + " can't restart in " + state + " state";
+    ok(restart, msg);
+  } else {
+    var msg = elem.id + " can restart in " + state + " state";
+    ok(!restart, msg);
+  }
+}
+
 function main() {
-  checkInitialState();
-}
-
-function restartAll() {
-  always.beginElement();
-  whenNotActive.beginElement();
-  never.beginElement();
-}
-
-function checkInitialState() {
   // At first everything should be starting at 1s
   is(always.getStartTime(), 1);
   is(whenNotActive.getStartTime(), 1);
   is(never.getStartTime(), 1);
 
   // Now try to restart everything early, should be allowed by all
-  var restartTime = svg.getCurrentTime();
-  restartAll();
-  setTimeout('doCheckInitialState(' + restartTime + ')',0);
-}
-function doCheckInitialState(restartTime) {
-  is(always.getStartTime(), restartTime);
-  is(whenNotActive.getStartTime(), restartTime);
-  is(never.getStartTime(), restartTime);
+  tryRestart(always, "waiting", true);
+  tryRestart(whenNotActive, "waiting", true);
+  tryRestart(never, "waiting", true);
 
   // Now skip to half-way
-  var newTime = restartTime + 0.5 * always.getSimpleDuration();
+  var newTime = always.getStartTime() + 0.5 * always.getSimpleDuration();
   svg.setCurrentTime(newTime);
-  setTimeout('checkHalfwayState()', 0);
-}
 
-function checkHalfwayState() {
-  // Try to restart half-way through--only 'always' should succeed
-  var restartTime = svg.getCurrentTime();
-  restartAll();
-  setTimeout('doCheckHalfwayState(' + restartTime + ')',0);
-}
-function doCheckHalfwayState(restartTime) {
-  is(always.getStartTime(), restartTime);
-  isnot(whenNotActive.getStartTime(), restartTime);
-  isnot(never.getStartTime(), restartTime);
+  // Only 'always' should be able to be restarted
+  tryRestart(always, "active", true);
+  tryRestart(whenNotActive, "active", false);
+  tryRestart(never, "active", false);
 
   // Now skip to the end 
-  var newTime = always.getStartTime() + always.getSimpleDuration() + 1;
+  newTime = always.getStartTime() + always.getSimpleDuration() + 1;
   svg.setCurrentTime(newTime);
-  setTimeout('checkEndingState()', 0);
-}
 
-function checkEndingState() {
-  // Try to restart after all animations have finished--'always' and
-  // 'whenNotActive' should succeed
-  var restartTime = svg.getCurrentTime();
-  restartAll();
-  setTimeout('doCheckEndingState(' + restartTime + ')',0);
-}
-function doCheckEndingState(restartTime) {
-  is(always.getStartTime(), restartTime);
-  is(whenNotActive.getStartTime(), restartTime);
-  isnot(never.getStartTime(), restartTime);
+  // All animations have finished, so 'always' and 'whenNotActive' should be
+  // able to be restarted
+  tryRestart(always, "postactive", true);
+  tryRestart(whenNotActive, "postactive", true);
+  tryRestart(never, "postactive", false);
+
   SimpleTest.finish();
 }
 
