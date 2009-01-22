@@ -45,7 +45,6 @@
 #include "nsITimer.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsThreadUtils.h" // for nsRunnable
 #include "nsSMILTimeContainer.h"
 #include "nsSMILCompositorTable.h"
 
@@ -80,17 +79,26 @@ public:
   void RegisterAnimationElement(nsISMILAnimationElement* aAnimationElement);
   void UnregisterAnimationElement(nsISMILAnimationElement* aAnimationElement);
 
-  // Methods for forcing synchronous samples
-  nsresult OnForceSample();
-  void     FireForceSampleEvent();
+  // Methods for resampling all animations
+  // (A resample performs the same operations as a sample but doesn't advance
+  // the current time and doesn't check if the container is paused)
+  void Resample();
+  void SetResampleNeeded() { mResampleNeeded = PR_TRUE; }
+  void FlushResampleRequests()
+  {
+    if (!mResampleNeeded)
+      return;
+
+    DoSample(PR_FALSE); // Don't skip unchanged time containers--sample them all
+  }
 
   // Methods for handling page transitions
-  void     OnPageShow();
-  void     OnPageHide();
+  void OnPageShow();
+  void OnPageHide();
 
   // Methods for supporting cycle-collection
-  void     Traverse(nsCycleCollectionTraversalCallback* aCallback);
-  void     Unlink();
+  void Traverse(nsCycleCollectionTraversalCallback* aCallback);
+  void Unlink();
 
 protected:
   // Typedefs
@@ -99,22 +107,10 @@ protected:
   typedef nsPtrHashKey<nsISMILAnimationElement> AnimationElementPtrKey;
   typedef nsTHashtable<AnimationElementPtrKey> AnimationElementHashtable;
 
-  // Types
-  class ForceSampleEvent : public nsRunnable {
-  public:
-    ForceSampleEvent(nsSMILAnimationController &aAnimationController)
-      : mAnimationController(&aAnimationController) { }
-
-    NS_IMETHOD Run() {
-      if (!mAnimationController)
-        return NS_OK;
-
-      return mAnimationController->OnForceSample();
-    }
-    void Expire() { mAnimationController = nsnull; }
-
-  private:
-    nsSMILAnimationController* mAnimationController;
+  struct SampleTimeContainerParams
+  {
+    TimeContainerHashtable* mActiveContainers;
+    PRBool                  mSkipUnchangedContainers;
   };
 
   struct SampleAnimationParams
@@ -139,7 +135,8 @@ protected:
 
   // Sample-related callbacks and implementation helpers
   virtual void DoSample();
-  PR_STATIC_CALLBACK(PLDHashOperator) SampleTimeContainers(
+  void DoSample(PRBool aSkipUnchangedContainers);
+  PR_STATIC_CALLBACK(PLDHashOperator) SampleTimeContainer(
       TimeContainerPtrKey* aKey, void* aData);
   PR_STATIC_CALLBACK(PLDHashOperator) SampleAnimation(
       AnimationElementPtrKey* aKey, void* aData);
@@ -161,7 +158,7 @@ protected:
   nsCOMPtr<nsITimer>         mTimer;
   AnimationElementHashtable  mAnimationElementTable;
   TimeContainerHashtable     mChildContainerTable;
-  nsRefPtr<ForceSampleEvent> mForceSampleEvent;
+  PRPackedBool               mResampleNeeded;
   
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it

@@ -6,6 +6,5 @@ function setTimeAndSnapshot(timeInSeconds, pauseFlag) {
     svg.pauseAnimations();
   }
   svg.setCurrentTime(timeInSeconds);
-  // Use setTimeout to allow SMIL to update the animation before snapshot
-  setTimeout('document.documentElement.removeAttribute("class")', 0);
+  svg.removeAttribute("class");
 }
