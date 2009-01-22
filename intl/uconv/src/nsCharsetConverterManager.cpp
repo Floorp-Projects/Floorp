@@ -50,7 +50,7 @@
 #include "nsUConvDll.h"
 #include "prmem.h"
 #include "nsCRT.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsStringEnumerator.h"
 #include "nsThreadUtils.h"
 #include "nsIProxyObjectManager.h"
@@ -303,7 +303,7 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCStringArray* array = new nsCStringArray;
+  nsTArray<nsCString>* array = new nsTArray<nsCString>;
   if (!array)
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -332,7 +332,7 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
     if (NS_FAILED(rv)) 
       continue;
 
-    rv = array->AppendCString(alias);
+    rv = array->AppendElement(alias) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
     
   return NS_NewAdoptingUTF8StringEnumerator(aResult, array);
