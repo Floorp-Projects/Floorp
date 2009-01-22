@@ -156,6 +156,8 @@ nsSVGAnimationElement::TimedElement()
 NS_IMETHODIMP
 nsSVGAnimationElement::GetTargetElement(nsIDOMSVGElement** aTarget)
 {
+  FlushAnimations();
+
   // We'll just call the other GetTargetElement method, and QI to the right type
   nsIContent* targetContent = GetTargetElementContent();
 
@@ -169,6 +171,8 @@ nsSVGAnimationElement::GetTargetElement(nsIDOMSVGElement** aTarget)
 NS_IMETHODIMP
 nsSVGAnimationElement::GetStartTime(float* retval)
 {
+  FlushAnimations();
+
   nsSMILTimeValue startTime = mTimedElement.GetStartTime();
   if (startTime.IsResolved()) {
     *retval = double(startTime.GetMillis()) / PR_MSEC_PER_SEC;
@@ -183,6 +187,8 @@ nsSVGAnimationElement::GetStartTime(float* retval)
 NS_IMETHODIMP
 nsSVGAnimationElement::GetCurrentTime(float* retval)
 {
+  // Not necessary to call FlushAnimations() for this
+
   nsSMILTimeContainer* root = GetTimeContainer();
   if (root) {
     *retval = double(root->GetCurrentTime()) / PR_MSEC_PER_SEC;
@@ -196,6 +202,8 @@ nsSVGAnimationElement::GetCurrentTime(float* retval)
 NS_IMETHODIMP
 nsSVGAnimationElement::GetSimpleDuration(float* retval)
 {
+  // Not necessary to call FlushAnimations() for this
+
   nsSMILTimeValue simpleDur = mTimedElement.GetSimpleDuration();
   if (!simpleDur.IsResolved()) {
     *retval = 0.f;
@@ -246,6 +254,8 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
     }
   }
 
+  AnimationNeedsResample();
+
   return NS_OK;
 }
 
@@ -264,6 +274,8 @@ nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     mTimedDocumentRoot = nsnull;
   }
 
+  AnimationNeedsResample();
+
   nsSVGAnimationElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -281,6 +293,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     if (aAttribute == nsGkAtoms::attributeName ||
         aAttribute == nsGkAtoms::attributeType) {
       aResult.ParseAtom(aValue);
+      AnimationNeedsResample();
       return PR_TRUE;
     }
 
@@ -297,6 +310,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     }
     
     if (foundMatch) {
+      AnimationNeedsResample();
       if (NS_FAILED(rv)) {
         ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
         return PR_FALSE;
@@ -318,8 +332,9 @@ nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (!AnimationFunction().UnsetAttr(aAttribute)) {
-      mTimedElement.UnsetAttr(aAttribute);
+    if (AnimationFunction().UnsetAttr(aAttribute) ||
+        mTimedElement.UnsetAttr(aAttribute)) {
+      AnimationNeedsResample();
     }
   }
 
@@ -380,13 +395,10 @@ nsSVGAnimationElement::BeginElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::BeginElementAt(float offset)
 {
-  nsSVGSVGElement *ownerSVG = GetCtx();
-  if (!ownerSVG)
-    return NS_ERROR_FAILURE;
+  nsresult rv = mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
+  AnimationNeedsResample();
 
-  ownerSVG->RequestSample();
-
-  return mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
+  return rv;
 }
 
 /* void endElement (); */
@@ -400,11 +412,8 @@ nsSVGAnimationElement::EndElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::EndElementAt(float offset)
 {
-  nsSVGSVGElement *ownerSVG = GetCtx();
-  if (!ownerSVG)
-    return NS_ERROR_FAILURE;
+  nsresult rv = mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
+  AnimationNeedsResample();
 
-  ownerSVG->RequestSample();
-
-  return mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
+  return rv;
 }

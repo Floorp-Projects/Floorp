@@ -155,6 +155,8 @@ public:
 
 #ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName);
+  void AnimationNeedsResample();
+  void FlushAnimations();
 #endif
 
   virtual void RecompileScriptEventListeners();

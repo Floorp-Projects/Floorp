@@ -27,8 +27,6 @@ var anim = document.getElementById("anim");
 SimpleTest.waitForExplicitFinish();
 
 function main() {
-  // Basic setting and getting
-
   // indefinite 
   is(anim.getStartTime(), 0, "Unexpected start time with indefinite begin");
 
@@ -44,47 +42,25 @@ function main() {
 
   // Now test over the lifetime of the animation when there are multiple
   // intervals
-  //
-  // We do this via a series of setTimeouts because currently we sample (and
-  // update the model) asynchronously after a call to setCurrentTime
   anim.setAttribute("begin", "1s; 3s");
-  is(anim.getStartTime(), 1, "Unexpected start time with begin=1s; 3s");
+  is(anim.getStartTime(), 1, "Unexpected start time before first interval");
+  
   svg.setCurrentTime(1);
-  setTimeout('checkStartOfFirstInterval()', 0);
-}
+  is(anim.getStartTime(), 1,
+     "Unexpected start time at start of first interval");
 
-function checkStartOfFirstInterval() {
-  is(anim.getStartTime(), 1, "Unexpected start time during first interval");
   svg.setCurrentTime(1.5);
-  setTimeout('checkMidFirstInterval()', 0);
-}
+  is(anim.getStartTime(), 1, "Unexpected start time during first interval");
 
-function checkMidFirstInterval() {
-  is(anim.getStartTime(), 1, "Unexpected start time at end of first interval");
   svg.setCurrentTime(2);
-  setTimeout('checkEndOfFirstInterval()', 0);
-}
+  is(anim.getStartTime(), 1, "Unexpected start time after first interval");
 
-function checkEndOfFirstInterval() {
-  is(anim.getStartTime(), 1, "Unexpected start time in active interval");
-  svg.setCurrentTime(2.5);
-  setTimeout('checkAfterFirstInterval()', 0);
-}
-
-function checkAfterFirstInterval() {
-  is(anim.getStartTime(), 1, "Unexpected start time while waiting");
   svg.setCurrentTime(3);
-  setTimeout('checkStartOfSecondInterval()', 0);
-}
+  is(anim.getStartTime(), 3, "Unexpected start time during second interval");
 
-function checkStartOfSecondInterval() {
-  is(anim.getStartTime(), 3, "Unexpected start time in second active interval");
   svg.setCurrentTime(4);
-  setTimeout('checkEndOfSecondInterval()', 0);
-}
+  is(anim.getStartTime(), 3, "Unexpected start time after second interval");
 
-function checkEndOfSecondInterval() {
-  is(anim.getStartTime(), 3, "Unexpected start time while postactive");
   SimpleTest.finish();
 }
 
