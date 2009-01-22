@@ -4314,7 +4314,7 @@ nsBrowserAccess.prototype =
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
-        var win = needToFocusWin = null;
+        let win, needToFocusWin;
 
         // try the current window.  if we're in a popup, fall back on the most recent browser window
         if (!window.document.documentElement.getAttribute("chromehidden"))
