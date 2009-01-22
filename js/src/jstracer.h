@@ -504,7 +504,6 @@ public:
     JS_REQUIRES_STACK bool record_SetPropMiss(JSPropCacheEntry* entry);
     JS_REQUIRES_STACK bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK bool record_FastNativeCallComplete();
-    JS_REQUIRES_STACK bool record_IteratorNextComplete();
 
     nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
@@ -560,6 +559,9 @@ js_FlushJITCache(JSContext* cx);
 
 extern void
 js_FlushJITOracle(JSContext* cx);
+
+extern JSObject *
+js_GetBuiltinFunction(JSContext *cx, uintN index);
 
 #else  /* !JS_TRACER */
 
