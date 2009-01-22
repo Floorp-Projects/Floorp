@@ -65,7 +65,7 @@ TIERS += testharness
 
 # test harnesses
 ifdef ENABLE_TESTS
-tier_testharness_dirs += tools/test-harness
+tier_testharness_dirs += testing/xpcshell
 endif
 
 include $(topsrcdir)/config/config.mk
