@@ -168,6 +168,7 @@ mozStorageService::Init()
 
     // We cache XPConnect for our language helpers.
     (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
