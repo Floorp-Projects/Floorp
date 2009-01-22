@@ -76,7 +76,11 @@ WBORecord.prototype = {
     this.data.parentid = value;
   },
 
-  get modified() this.data.modified,
+  get modified() {
+    if (typeof(this.data.modified) == "string")
+      this.data.modified = parseInt(this.data.modified);
+    return this.data.modified;
+  },
   set modified(value) {
     this.data.modified = value;
   },
