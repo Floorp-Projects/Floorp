@@ -25,6 +25,7 @@
 #  Darin Fisher <darin@meer.net>
 #  Dave Liebreich <davel@mozilla.com>
 #  Jeff Walden <jwalden+code@mit.edu>
+#  Alexander J. Vincent <ajvincent@gmail.com> (single-test mode)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +49,12 @@ XPCOM_DEBUG_BREAK=stack-and-abort; export XPCOM_DEBUG_BREAK
 
 exit_status=0
 
+# Launch a single test by calling:
+# make SOLO_FILE=(filename) -C (test directory) check-one
+# or
+# make SOLO_FILE=(filename) -C (test directory) check-interactive
+# js>_execute_test();
+# js>quit();
 
 ##########################
 # COMMAND-LINE ARGUMENTS #
@@ -69,7 +76,7 @@ topsrcdir="$2"
 # clean manner.
 native_topsrcdir="$3"
 
-# The sample Makefile for the xpcshell-simple harness adds the directory where
+# The sample Makefile for the xpcshell harness adds the directory where
 # the test_*.js files reside as an arg.  If no arg is specified, assume the
 # current directory is where the *.js files live.
 testdir="$4"
@@ -77,54 +84,76 @@ if [ "x$testdir" = "x" ]; then
     testdir=.
 fi
 
+# Get the actual JS test to run.  Also get the directory it lives in, to load
+# head and tail scripts.
+target_js="$5"
+target_dir=${target_js%/*}
+if [ "$target_dir" == "$target_js" ] ; then
+  target_dir="unit";
+else
+  target_dir_length=${#target_dir};
+  target_js=${target_js:$target_dir_length + 1};
+fi
+
+# Says if the test should be launch in interactive mode or not
+interactive_mode="$6"
 
 ###############################
 # SETUP FOR RUNNING THE TESTS #
 ###############################
 
+testxpcdir=$topsrcdir/testing/xpcshell
+
 # files matching the pattern head_*.js are treated like test setup files
 # - they are run after head.js but before the test file
-headfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/head.js"
-for h in $testdir/head_*.js
+headfiles="-f $testxpcdir/head.js"
+for h in $testdir/$target_dir/head_*.js
 do
     if [ -f $h ]; then
-	headfiles="$headfiles -f $h"
+        headfiles="$headfiles -f $h"
     fi
 done
 
 # files matching the pattern tail_*.js are treated like teardown files
 # - they are run after tail.js
-tailfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/tail.js"
-tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
-for t in $testdir/tail_*.js
+tailfiles="-f $testxpcdir/tail.js"
+
+if [ ! "$interactive_mode" = "1" ]; then
+    tailfiles="$tailfiles -f $testxpcdir/execute_test.js"
+fi
+
+for t in $testdir/$target_dir/tail_*.js
 do
     if [ -f $t ]; then
-	tailfiles="$tailfiles -f $t"
+        tailfiles="$tailfiles -f $t"
     fi
 done
 
 
-#################
-# RUN EACH TEST #
-#################
+############
+# RUN TEST #
+############
 
-for t in $testdir/test_*.js
-do
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -j -s $headfiles -f $t $tailfiles 2> $t.log 1>&2
-    rv="$?"
-    if [ ! "$rv" = "0"  -o \
-         `grep -c '\*\*\* PASS' $t.log` = 0 ]
-    then
-        echo "TEST-UNEXPECTED-FAIL | $t | test failed, see log"
-        echo "$t.log:"
-        echo ">>>>>>>"
-        cat $t.log
-        echo ""
-        echo "<<<<<<<"
-        exit_status=1
-    else
-        echo "TEST-PASS | $t | all tests passed"
-    fi
-done
+echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -j -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles 2>&1"
+echo -n "$target_js: "
+if [ ! "$interactive_mode" = "1" ]; then
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -j -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles  2> $testdir/$target_dir/$target_js.log 1>&2
+else
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -j -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles -i 2>&1
+fi
+rv="$?"
+if [ ! "$rv" = "0"  -o \
+     `grep -c '\*\*\* PASS' $testdir/$target_dir/$target_js.log` = 0 ]
+then
+    echo "FAIL"
+    echo "$target_js.log:"
+    echo ">>>>>>>"
+    cat $testdir/$target_dir/$target_js.log
+    echo ""
+    echo "<<<<<<<"
+    exit_status=1
+else
+    echo "PASS"
+fi
 
 exit $exit_status
