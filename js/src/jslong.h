@@ -51,7 +51,7 @@
 
 JS_BEGIN_EXTERN_C
 
-#define JSLL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
+#define JSLL_INIT(hi, lo)  (((JSInt64)(hi)) << 32 + (JSInt64)(lo))
 
 /***********************************************************************
 ** MACROS:      JSLL_*
