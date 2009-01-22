@@ -93,13 +93,7 @@ function handleRequest(request, response)
   }
 
   // Send response
-
-  if (query.hop) {
-     query.hop = parseInt(query.hop, 10);
-     hops = eval(query.hops);
-     query.allowOrigin = hops[query.hop-1].allowOrigin;
-  }
-  
+       
   if (query.allowOrigin && (!isPreflight || !query.noAllowPreflight))
     response.setHeader("Access-Control-Allow-Origin", query.allowOrigin);
 
@@ -115,23 +109,12 @@ function handleRequest(request, response)
 
     if (query.allowMethods)
       response.setHeader("Access-Control-Allow-Methods", query.allowMethods);
-  }
-
-  if (query.hop && query.hop < hops.length) {
-    newURL = hops[query.hop].server +
-             "/tests/content/base/test/file_CrossSiteXHR_server.sjs?" +
-             "hop=" + (query.hop + 1) + "&hops=" + query.hops;
-    response.setStatusLine(null, 302, "redirect");
-    response.setHeader("Location", newURL);
 
     return;
   }
 
-  // Send response body
-  if (!isPreflight) {
-    response.setHeader("Content-Type", "application/xml", false);
-    response.write("<res>hello pass</res>\n");
-  }
+  response.setHeader("Content-Type", "application/xml", false);
+  response.write("<res>hello pass</res>\n");
 }
 
 function sendHttp500(response, text) {
