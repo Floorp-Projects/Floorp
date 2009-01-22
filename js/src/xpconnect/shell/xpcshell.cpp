@@ -1487,11 +1487,10 @@ ContextCallback(JSContext *cx, uintN contextOp)
 static bool
 GetCurrentWorkingDirectory(nsAString& workingDirectory)
 {
-#if !defined(XP_WIN) && !defined(XP_UNIX)
+#if (!defined(XP_WIN) && !defined(XP_UNIX)) || defined(WINCE)
     //XXX: your platform should really implement this
     return false;
-#endif
-#ifdef XP_WIN
+#elif XP_WIN
     DWORD requiredLength = GetCurrentDirectoryW(0, NULL);
     workingDirectory.SetLength(requiredLength);
     GetCurrentDirectoryW(workingDirectory.Length(),
