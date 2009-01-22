@@ -349,17 +349,70 @@ var BookmarkPropertiesPanel = {
     // sizeToContent is not usable due to bug 90276, so we'll use resizeTo
     // instead and cache the element size. See WSucks in the legacy
     // UI code (addBookmark2.js).
-    this._resizeListener = {
-      _elementsHeight: [],
-      handleEvent: function(event) {
+    if (!this._element("tagsRow").collapsed) {
+      this._element("tagsSelectorRow")
+          .addEventListener("DOMAttrModified", this, false);
+      // Set on document to get the event before an autocomplete popup could
+      // be hidden on Enter.
+      document.addEventListener("keypress", this, true);
+    }
+    if (!this._element("folderRow").collapsed) {
+      this._element("folderTreeRow")
+          .addEventListener("DOMAttrModified", this, false);
+    }
+
+    // Listen on uri fields to enable accept button if input is valid
+    if (this._itemType == BOOKMARK_ITEM) {
+      this._element("locationField")
+          .addEventListener("input", this, false);
+    }
+    else if (this._itemType == LIVEMARK_CONTAINER) {
+      this._element("feedLocationField")
+          .addEventListener("input", this, false);
+      this._element("siteLocationField")
+          .addEventListener("input", this, false);
+    }
+
+    window.sizeToContent();
+  },
+
+  // nsIDOMEventListener
+  _elementsHeight: [],
+  handleEvent: function BPP_handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "keypress":
+        if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN &&
+            aEvent.target.localName != "tree" &&
+            aEvent.target.className != "expander-up" &&
+            aEvent.target.className != "expander-down" &&
+            !aEvent.target.popupOpen) {
+          // Accept the dialog unless the folder tree or an expander are focused
+          // or an autocomplete popup is open.
+          document.documentElement.acceptDialog();
+        }
+        break;
+
+      case "input":
+        if (aEvent.target.id == "editBMPanel_locationField" ||
+            aEvent.target.id == "editBMPanel_feedLocationField" ||
+            aEvent.target.id == "editBMPanel_siteLocationField") {
+          // Check uri fields to enable accept button if input is valid
+          document.documentElement
+                  .getButton("accept").disabled = !this._inputIsValid();
+        }
+        break;
+
+      case "DOMAttrModified":
         // this is called when collapsing a node, but also its direct children,
         // we only need to resize when the original node changes.
-        if (event.attrName == "collapsed" &&
-            event.target == event.originalTarget) {
-          var element = event.target;
+        if ((aEvent.target.id == "editBMPanel_tagsSelectorRow" ||
+             aEvent.target.id == "editBMPanel_folderTreeRow") &&
+            aEvent.attrName == "collapsed" &&
+            aEvent.target == aEvent.originalTarget) {
+          var element = aEvent.target;
           var id = element.id;
           var newHeight = window.outerHeight;
-          if (event.newValue) // is collapsed
+          if (aEvent.newValue) // is collapsed
             newHeight -= this._elementsHeight[id];
           else {
             this._elementsHeight[id] = element.boxObject.height;
@@ -368,38 +421,8 @@ var BookmarkPropertiesPanel = {
 
           window.resizeTo(window.outerWidth, newHeight);
         }
-      }
-    };
-
-    if (!this._element("tagsRow").collapsed) {
-      this._element("tagsSelectorRow")
-          .addEventListener("DOMAttrModified", this._resizeListener, false);
+        break;
     }
-    if (!this._element("folderRow").collapsed) {
-      this._element("folderTreeRow")
-          .addEventListener("DOMAttrModified", this._resizeListener, false);
-    }
-
-    // Listen on uri fields to enable accept button if input is valid
-    this._inputListener = {
-      _self: this,
-      handleEvent: function(event) {
-        document.documentElement.getButton("accept").disabled =
-          !this._self._inputIsValid();
-      }
-    };
-    if (this._itemType == BOOKMARK_ITEM) {
-      this._element("locationField")
-          .addEventListener("input", this._inputListener, false);
-    }
-    else if (this._itemType == LIVEMARK_CONTAINER) {
-      this._element("feedLocationField")
-          .addEventListener("input", this._inputListener, false);
-      this._element("siteLocationField")
-          .addEventListener("input", this._inputListener, false);
-    }
-
-    window.sizeToContent();
   },
 
   _beginBatch: function BPP__beginBatch() {
@@ -447,11 +470,13 @@ var BookmarkPropertiesPanel = {
       locationField.value = "";
   },
 
+  // nsISupports
   QueryInterface: function BPP_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsISupports))
+    if (aIID.equals(Ci.nsIDOMEventListener) ||
+        aIID.equals(Ci.nsISupports))
       return this;
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 
   _element: function BPP__element(aID) {
@@ -463,15 +488,16 @@ var BookmarkPropertiesPanel = {
     // Calling removeEventListener with arguments which do not identify any
     // currently registered EventListener on the EventTarget has no effect.
     this._element("tagsSelectorRow")
-        .removeEventListener("DOMAttrModified", this._resizeListener, false);
+        .removeEventListener("DOMAttrModified", this, false);
+    document.removeEventListener("keypress", this, true);
     this._element("folderTreeRow")
-        .removeEventListener("DOMAttrModified", this._resizeListener, false);
+        .removeEventListener("DOMAttrModified", this, false);
     this._element("locationField")
-        .removeEventListener("input", this._inputListener, false);
+        .removeEventListener("input", this, false);
     this._element("feedLocationField")
-        .removeEventListener("input", this._inputListener, false);
+        .removeEventListener("input", this, false);
     this._element("siteLocationField")
-        .removeEventListener("input", this._inputListener, false);
+        .removeEventListener("input", this, false);
   },
 
   onDialogAccept: function BPP_onDialogAccept() {
