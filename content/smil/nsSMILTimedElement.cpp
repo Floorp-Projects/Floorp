@@ -446,7 +446,7 @@ nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
   rv = nsSMILParserUtils::ParseClockValue(aDurSpec, &duration,
           nsSMILParserUtils::kClockValueAllowIndefinite, &isMedia);
 
-  if (NS_FAILED(rv) || (!duration.IsResolved() && !duration.IsIndefinite())) {
+  if (NS_FAILED(rv)) {
     mSimpleDur.SetIndefinite();
     return NS_ERROR_FAILURE;
   }
