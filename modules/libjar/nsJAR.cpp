@@ -168,6 +168,7 @@ nsrefcnt nsJAR::Release(void)
 NS_IMETHODIMP
 nsJAR::Open(nsIFile* zipFile)
 {
+  NS_ENSURE_ARG_POINTER(zipFile);
   if (mLock) return NS_ERROR_FAILURE; // Already open!
 
   mZipFile = zipFile;
