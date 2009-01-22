@@ -813,7 +813,9 @@ public:
 };
 
 /* In debug mode vpname contains a textual description of the type of the
-   slot during the forall iteration over al slots. */
+   slot during the forall iteration over all slots. If JS_JIT_SPEW is not
+   defined, vpnum is set to a very large integer to catch invalid uses of
+   it. Non-debug code should never use vpnum. */
 #ifdef JS_JIT_SPEW
 #define DEF_VPNAME          const char* vpname; unsigned vpnum
 #define SET_VPNAME(name)    do { vpname = name; vpnum = 0; } while(0)
@@ -821,7 +823,7 @@ public:
 #else
 #define DEF_VPNAME          do {} while (0)
 #define vpname ""
-#define vpnum 0
+#define vpnum 0x40000000
 #define SET_VPNAME(name)    ((void)0)
 #define INC_VPNUM()         ((void)0)
 #endif
