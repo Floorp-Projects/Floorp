@@ -207,7 +207,7 @@ void XXXNeverCalled()
     nsTArray<nsString> array;
     NS_NewStringEnumerator(nsnull, &array);
     NS_NewAdoptingStringEnumerator(nsnull, &array);
-    nsCStringArray carray;
+    nsTArray<nsCString> carray;
     NS_NewUTF8StringEnumerator(nsnull, &carray);
     NS_NewAdoptingUTF8StringEnumerator(nsnull, &carray);
     nsVoidableString str3;
