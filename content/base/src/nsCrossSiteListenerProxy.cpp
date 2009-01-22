@@ -105,7 +105,7 @@ NS_IMETHODIMP
 nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
                                          nsISupports* aContext)
 {
-  mRequestApproved = NS_SUCCEEDED(CheckRequestApproved(aRequest, PR_FALSE));
+  mRequestApproved = NS_SUCCEEDED(CheckRequestApproved(aRequest));
   if (!mRequestApproved) {
     aRequest->Cancel(NS_ERROR_DOM_BAD_URI);
     mOuterListener->OnStartRequest(aRequest, aContext);
@@ -157,8 +157,45 @@ IsValidHTTPToken(const nsCSubstring& aToken)
 }
 
 nsresult
-nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
-                                               PRBool aIsRedirect)
+GetOrigin(nsIPrincipal* aPrincipal, nsCString& aOrigin)
+{
+  aOrigin.AssignLiteral("null");
+
+  nsCString host;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = uri->GetAsciiHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!host.IsEmpty()) {
+    nsCString scheme;
+    rv = uri->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aOrigin = scheme + NS_LITERAL_CSTRING("://") + host;
+
+    // If needed, append the port
+    PRInt32 port;
+    uri->GetPort(&port);
+    if (port != -1) {
+      PRInt32 defaultPort = NS_GetDefaultPort(scheme.get());
+      if (port != defaultPort) {
+        aOrigin.Append(":");
+        aOrigin.AppendInt(port);
+      }
+    }
+  }
+  else {
+    aOrigin.AssignLiteral("null");
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
 {
   // Check if this was actually a cross domain request
   if (!mHasBeenCrossSite) {
@@ -175,14 +212,10 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest);
   NS_ENSURE_TRUE(http, NS_ERROR_DOM_BAD_URI);
 
-  // Redirects aren't success-codes. But necko already checked that it was a
-  // valid redirect.
-  if (!aIsRedirect) {
-    PRBool succeeded;
-    rv = http->GetRequestSucceeded(&succeeded);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(succeeded, NS_ERROR_DOM_BAD_URI);
-  }
+  PRBool succeeded;
+  rv = http->GetRequestSucceeded(&succeeded);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(succeeded, NS_ERROR_DOM_BAD_URI);
 
   // Check the Access-Control-Allow-Origin header
   nsCAutoString allowedOriginHeader;
@@ -192,11 +225,10 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
 
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
     nsCAutoString origin;
-    rv = nsContentUtils::GetASCIIOrigin(mRequestingPrincipal, origin);
+    rv = GetOrigin(mRequestingPrincipal, origin);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!allowedOriginHeader.Equals(origin) ||
-        origin.EqualsLiteral("null")) {
+    if (!allowedOriginHeader.Equals(origin)) {
       return NS_ERROR_DOM_BAD_URI;
     }
   }
@@ -236,7 +268,6 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
 
     // The "Access-Control-Allow-Headers" header contains a comma separated
     // list of header names.
-    headerVal.Truncate();
     http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Allow-Headers"),
                             headerVal);
     nsTArray<nsCString> headers;
@@ -304,11 +335,8 @@ nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
                                             nsIChannel *aNewChannel,
                                             PRUint32    aFlags)
 {
-  nsresult rv;
-  if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
-    rv = CheckRequestApproved(aOldChannel, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv = CheckRequestApproved(aOldChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannelEventSink> outer =
     do_GetInterface(mOuterNotificationCallbacks);
@@ -359,7 +387,7 @@ nsCrossSiteListenerProxy::UpdateChannel(nsIChannel* aChannel)
 
   // Add the Origin header
   nsCAutoString origin;
-  rv = nsContentUtils::GetASCIIOrigin(mRequestingPrincipal, origin);
+  rv = GetOrigin(mRequestingPrincipal, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
