@@ -15,12 +15,13 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla.org.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#     David Liebreich <davel@mozilla.com>  (Original author)
+#     Boris Zbarsky <bzbarsky@mit.edu>  (Original author)
+#     Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,15 +37,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+#
+# Makefile for installing and running xpcshell-based tests. You can use 
+# this file as template when creating tests for a new module. Don't 
+# forget to change the lines marked below. See 
+# http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
+# for detailed instructions.
+#
+
+# Note: DEPTH should be set to the relative path to mozilla/
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= test_harness
-DIRS		= xpcshell-simple
+# Note: set the test module's name to test_<yourmodule>
+MODULE		= test_testing_xpcshell_example
+
+# This is a list of directories containing tests to run, separated by spaces.
+# Most likely, tho, you won't use more than one directory here.
+XPCSHELL_TESTS = \
+                 unit \
+                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+# Note: Invoke any additional (non-xpcshell) test programs here.
+check::
