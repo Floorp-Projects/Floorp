@@ -66,6 +66,9 @@ class Queue : public avmplus::GCObject {
         while (_max < size)
             _max <<= 1;
         _data = (T*)realloc(_data, _max * sizeof(T));
+#if defined(DEBUG)
+        memset(&_data[_len], 0xcd, _max - _len);
+#endif
     }
 public:
     Queue(unsigned max = 16) {
@@ -181,8 +184,10 @@ typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<uint8> {
 public:
-    JS_REQUIRES_STACK void captureGlobalTypes(JSContext* cx, SlotList& slots);
-    JS_REQUIRES_STACK void captureStackTypes(JSContext* cx, unsigned callDepth);
+    JS_REQUIRES_STACK void captureTypes(JSContext* cx, SlotList& slots, unsigned callDepth);
+    JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx,
+                                                     SlotList& slots,
+                                                     unsigned stackSlots);
     bool matches(TypeMap& other) const;
 };
 
@@ -210,9 +215,19 @@ struct VMSideExit : public nanojit::SideExit
     ExitType exitType;
 };
 
-static inline uint8* getTypeMap(nanojit::SideExit* exit) 
+static inline uint8* getStackTypeMap(nanojit::SideExit* exit) 
 { 
     return (uint8*)(((VMSideExit*)exit) + 1); 
+}
+
+static inline uint8* getGlobalTypeMap(nanojit::SideExit* exit)
+{
+    return getStackTypeMap(exit) + ((VMSideExit*)exit)->numStackSlots;
+}
+
+static inline uint8* getFullTypeMap(nanojit::SideExit* exit)
+{
+    return getStackTypeMap(exit);
 }
 
 struct InterpState
@@ -243,7 +258,8 @@ public:
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
-    TypeMap                 stackTypeMap;
+    TypeMap                 typeMap;
+    unsigned                stackSlots;
     Queue<nanojit::Fragment*> dependentTrees;
     unsigned                branchCount;
     Queue<VMSideExit*>      sideExits;
@@ -253,6 +269,16 @@ public:
         fragment = _fragment;
     }
     ~TreeInfo();
+
+    inline unsigned globalSlots() {
+        return typeMap.length() - stackSlots;
+    }
+    inline uint8* globalTypeMap() {
+        return typeMap.data() + stackSlots;
+    }
+    inline uint8* stackTypeMap() {
+        return typeMap.data();
+    }
 };
 
 struct FrameInfo {
@@ -311,7 +337,6 @@ class TraceRecorder : public avmplus::GCObject {
     bool                    terminate;
     intptr_t                terminate_ip_adj;
     nanojit::Fragment*      outerToBlacklist;
-    nanojit::Fragment*      promotedPeer;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
 
@@ -320,8 +345,8 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
     JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
                                   const char *prefix, uintN index, JSStackFrame *fp);
-    JS_REQUIRES_STACK void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned ngslots,
-                                  unsigned callDepth, uint8* globalTypeMap, uint8* stackTypeMap);
+    JS_REQUIRES_STACK void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned stackSlots,
+                                  unsigned callDepth, unsigned ngslots, uint8* typeMap);
     void trackNativeStackUse(unsigned slots);
 
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
@@ -339,7 +364,8 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool checkType(jsval& v, uint8 t, jsval*& stage_val,
                                      nanojit::LIns*& stage_ins, unsigned& stage_count);
     JS_REQUIRES_STACK bool deduceTypeStability(nanojit::Fragment* root_peer,
-                                               nanojit::Fragment** stable_peer, unsigned* demotes);
+                                               nanojit::Fragment** stable_peer,
+                                               bool& demote);
 
     JS_REQUIRES_STACK jsval& argval(unsigned n) const;
     JS_REQUIRES_STACK jsval& varval(unsigned n) const;
@@ -444,7 +470,7 @@ class TraceRecorder : public avmplus::GCObject {
 public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
-                  unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
+                  unsigned stackSlots, unsigned ngslots, uint8* typeMap, 
                   VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
     ~TraceRecorder();
 
@@ -455,14 +481,12 @@ public:
     nanojit::Fragment* getFragment() const { return fragment; }
     JS_REQUIRES_STACK bool isLoopHeader(JSContext* cx) const;
     JS_REQUIRES_STACK void compile(nanojit::Fragmento* fragmento);
-    JS_REQUIRES_STACK bool closeLoop(nanojit::Fragmento* fragmento, bool& demote,
-                                     unsigned *demotes);
+    JS_REQUIRES_STACK bool closeLoop(nanojit::Fragmento* fragmento, bool& demote);
     JS_REQUIRES_STACK void endLoop(nanojit::Fragmento* fragmento);
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
                                             nanojit::Fragment* peer_root);
     void blacklist() { fragment->blacklist(); }
-    JS_REQUIRES_STACK bool adjustCallerTypes(nanojit::Fragment* f, unsigned* demote_slots,
-                                             bool& trash);
+    JS_REQUIRES_STACK bool adjustCallerTypes(nanojit::Fragment* f);
     JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f,
                                                                   nanojit::Fragment** empty);
     JS_REQUIRES_STACK void prepareTreeCall(nanojit::Fragment* inner);
@@ -484,7 +508,6 @@ public:
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
     bool walkedOutOfLoop() { return terminate; }
-    void setPromotedPeer(nanojit::Fragment* peer) { promotedPeer = peer; }
     TreeInfo* getTreeInfo() { return treeInfo; }
 
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
