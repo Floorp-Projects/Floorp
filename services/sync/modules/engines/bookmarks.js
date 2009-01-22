@@ -375,14 +375,18 @@ BookmarksStore.prototype = {
                                     this._ans.EXPIRE_NEVER);
         break;
       case "generatorURI": {
-        let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
-        let genURI = Utils.makeURI(record.cleartext.generatorURI);
-	if (this._ms == SERVICE_NOT_SUPPORTED) {
-	  this._log.warn("Can't create microsummary -- not supported.");
-	} else {
-          let micsum = this._ms.createMicrosummary(micsumURI, genURI);
-          this._ms.setMicrosummary(itemId, micsum);
-	}
+        try {
+          let micsumURI = Utils.makeURI(this._bms.getBookmarkURI(itemId));
+          let genURI = Utils.makeURI(record.cleartext.generatorURI);
+	  if (this._ms == SERVICE_NOT_SUPPORTED) {
+	    this._log.warn("Can't create microsummary -- not supported.");
+	  } else {
+            let micsum = this._ms.createMicrosummary(micsumURI, genURI);
+            this._ms.setMicrosummary(itemId, micsum);
+	  }
+        } catch (e) {
+          this._log.debug("Could not set microsummary generator URI: " + e);
+        }
       } break;
       case "siteURI":
         this._ls.setSiteURI(itemId, Utils.makeURI(record.cleartext.siteURI));
@@ -713,6 +717,8 @@ BookmarksTracker.prototype = {
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
     this._log.trace("onItemMoved: " + itemId);
+    if (!this._all[itemId])
+      this._all[itemId] = this._bms.itemGUID(itemId);
     if (this.addChangedID(this._all[itemId]))
       this._upScore();
   },
