@@ -1359,26 +1359,6 @@ public:
   {
     return sThreadJSContextStack;
   }
-  
-
-  /**
-   * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
-   * nsIURI or the URI of the passed in nsIPrincipal does not have a host, the
-   * origin is set to 'null'.
-   *
-   * The ASCII versions return a ASCII strings that are puny-code encoded,
-   * suitable for for example header values. The UTF versions return strings
-   * containing international characters.
-   *
-   * aPrincipal/aOrigin must not be null.
-   */
-  static nsresult GetASCIIOrigin(nsIPrincipal* aPrincipal,
-                                 nsCString& aOrigin);
-  static nsresult GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin);
-  static nsresult GetUTFOrigin(nsIPrincipal* aPrincipal,
-                               nsString& aOrigin);
-  static nsresult GetUTFOrigin(nsIURI* aURI, nsString& aOrigin);
-
 private:
 
   static PRBool InitializeEventTable();
