@@ -66,6 +66,13 @@ const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
 const Register Assembler::retRegs[] = { R0, R1 };
 const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
 
+const char *ccName(ConditionCode cc)
+{
+    const char *ccNames[] = { "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
+                              "hi", "ls", "ge", "lt", "gt", "le", "al", "nv" };
+    return ccNames[(int)cc];
+}
+
 void
 Assembler::nInit(AvmCore*)
 {
@@ -1039,63 +1046,6 @@ Assembler::asm_fcmp(LInsp ins)
     Register ra = findRegFor(lhs, FpRegs);
     Register rb = findRegFor(rhs, FpRegs);
 
-    // We can't uniquely identify fge/fle via a single bit
-    // pattern (since equality and lt/gt are separate bits);
-    // so convert to the single-bit variant.
-    if (op == LIR_fge) {
-        Register temp = ra;
-        ra = rb;
-        rb = temp;
-        op = LIR_flt;
-    } else if (op == LIR_fle) {
-        Register temp = ra;
-        ra = rb;
-        rb = temp;
-        op = LIR_fgt;
-    }
-
-    // There is no way to test for an unordered result using
-    // the conditional form of an instruction; the encoding (C=1 V=1)
-    // ends up having overlaps with a few other tests.  So, test for
-    // the explicit mask.
-    uint8_t mask = 0x0;
-
-    // NZCV
-    // for a valid ordered result, V is always 0 from VFP
-    if (op == LIR_feq)
-        // ZC // cond EQ (both equal and "not less than"
-        mask = 0x6;
-    else if (op == LIR_flt)
-        // N  // cond MI
-        mask = 0x8;
-    else if (op == LIR_fgt)
-        // C  // cond CS
-        mask = 0x2;
-    else
-        NanoAssert(0);
-/*
-    // these were converted into gt and lt above.
-    if (op == LIR_fle)
-        // NZ // cond LE
-        mask = 0xC;
-    else if (op == LIR_fge)
-        // ZC // cond fail?
-        mask = 0x6;
-*/
-
-    // TODO XXX could do this as fcmpd; fmstat; tstvs rX, #0 the tstvs
-    // would reset the status bits if V (NaN flag) is set, but that
-    // doesn't work for NE.  For NE could teqvs rX, #1.  rX needs to
-    // be any register that has lsb == 0, such as sp/fp/pc.
-
-    // Test explicily with the full mask; if V is set, test will fail.
-    // Assumption is that this will be followed up by a BEQ/BNE
-    CMPi(Scratch, mask);
-    // grab just the condition fields
-    SHRi(Scratch, 28);
-    MRS(Scratch);
-
-    // do the comparison and get results loaded in ARM status register
     FMSTAT();
     FCMPD(ra, rb);
 }
@@ -1120,10 +1070,28 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
 
     if (condop >= LIR_feq && condop <= LIR_fge)
     {
-        if (branchOnFalse)
-            JNE(targ);
-        else
-            JE(targ);
+        ConditionCode cc = NV;
+
+        if (branchOnFalse) {
+            switch (condop) {
+                case LIR_feq: cc = NE; break;
+                case LIR_flt: cc = PL; break;
+                case LIR_fgt: cc = LE; break;
+                case LIR_fle: cc = HI; break;
+                case LIR_fge: cc = LT; break;
+            }
+        } else {
+            switch (condop) {
+                case LIR_feq: cc = EQ; break;
+                case LIR_flt: cc = MI; break;
+                case LIR_fgt: cc = GT; break;
+                case LIR_fle: cc = LS; break;
+                case LIR_fge: cc = GE; break;
+            }
+        }
+
+        B_cond(cc, targ);
+        asm_output("b(%d) 0x%08x", cc, (unsigned int) targ);
 
         NIns *at = _nIns;
         asm_fcmp(cond);
@@ -1240,7 +1208,14 @@ Assembler::asm_fcond(LInsp ins)
     // only want certain regs
     Register r = prepResultReg(ins, AllowableFlagRegs);
 
-    SETE(r);
+    switch (ins->opcode()) {
+        case LIR_feq: SET(r,EQ,NE); break;
+        case LIR_flt: SET(r,MI,PL); break;
+        case LIR_fgt: SET(r,GT,LE); break;
+        case LIR_fle: SET(r,LS,HI); break;
+        case LIR_fge: SET(r,GE,LT); break;
+    }
+
     asm_fcmp(ins);
 }
 
