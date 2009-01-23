@@ -62,7 +62,10 @@ enum nsCSSProperty {
   #include "nsCSSPropList.h"
   #undef CSS_PROP_SHORTHAND
 
-  eCSSProperty_COUNT
+  eCSSProperty_COUNT,
+
+  // Extra dummy values for nsCSSParser internal use.
+  eCSSPropertyExtra_x_none_value
 };
 
 // The types of values that can be in the nsCSS*/nsRuleData* structs.
