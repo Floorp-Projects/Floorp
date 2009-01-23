@@ -1,4 +1,4 @@
-var gTestPage = "http://example.org/browser/browser/base/content/test/bug386835.html";
+var gTestPage = "http://example.org/browser/browser/base/content/test/dummy_page.html";
 var gTab1, gTab2, gTab3;
 var gLevel;
 
