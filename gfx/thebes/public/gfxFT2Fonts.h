@@ -92,7 +92,7 @@ public:
 
     static FontEntry* 
     CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, nsISupports *aLoader,
-                 const PRUint8 *aFontData, PRUint32 aLength);
+                    const PRUint8 *aFontData, PRUint32 aLength);
     
     static FontEntry* 
     CreateFontEntryFromFace(FT_Face aFace);

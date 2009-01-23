@@ -38,6 +38,8 @@ wince-fixes.patch: stubs out win32 functions we use but are not supported on win
 
 ft-done-face.patch: bug 467874; only destroy FT_Faces created by cairo
 
+wince-fontconfig.patch: bug 462908; fixes required to compile for windows ce.  Also allows for building without fontconfig
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
