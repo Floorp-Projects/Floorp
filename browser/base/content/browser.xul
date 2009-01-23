@@ -462,6 +462,14 @@
                        ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
 
+        <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&tabCmd.label;"
+                       command="cmd_newNavigatorTab"
+                       tooltiptext="&newTabButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, newTabButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, newTabButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, newTabButtonObserver);"/>
+
         <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&newNavigatorCmd.label;"
                        command="key_newNavigator"
