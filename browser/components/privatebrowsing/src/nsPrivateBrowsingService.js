@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #  Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
+#  Simon Bünzli <zeniko@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -400,7 +401,7 @@ PrivateBrowsingService.prototype = {
       }
       // XXXehsan: is there a better way to do this rather than this
       // hacky comparison?
-      catch (ex if ex == "User canceled Master Password entry") {}
+      catch (ex if ex.message.indexOf("User canceled Master Password entry") != -1) { }
 
       // Clear any "do not save for this site" for this domain
       let disabledHosts = lm.getAllDisabledHosts({});
@@ -455,6 +456,9 @@ PrivateBrowsingService.prototype = {
         }
       }
     }
+
+    // Everybody else (including extensions)
+    this._obs.notifyObservers(null, "browser:purge-domain-data", aDomain);
   }
 };
 
