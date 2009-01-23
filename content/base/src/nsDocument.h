@@ -981,7 +981,6 @@ public:
                             ExternalResourceLoad** aPendingLoad);
   virtual NS_HIDDEN_(void)
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
-  virtual void DispatchContentLoadedEvents();
 
 #ifdef MOZ_SMIL
   nsSMILAnimationController* GetAnimationController();
@@ -1025,6 +1024,8 @@ protected:
    */
   static PRBool CheckGetElementByIdArg(const nsIAtom* aId);
   nsIdentifierMapEntry* GetElementByIdInternal(nsIAtom* aID);
+
+  void DispatchContentLoadedEvents();
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
@@ -1180,6 +1181,8 @@ protected:
   PRPackedBool mHasWarnedAboutBoxObjects:1;
 
   PRPackedBool mDelayFrameLoaderInitialization:1;
+
+  PRPackedBool mSynchronousDOMContentLoaded:1;
 
   // If true, we have an input encoding.  If this is false, then the
   // document was created entirely in memory
