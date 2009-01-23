@@ -854,6 +854,9 @@ PrintWinCodebase(nsGlobalWindow *win)
 }
 #endif
 
+// The accumulated operation weight before we call MaybeGC
+const PRUint32 MAYBE_GC_OPERATION_WEIGHT = 5000 * JS_OPERATION_WEIGHT_BASE;
+
 static void
 MaybeGC(JSContext *cx)
 {
@@ -865,12 +868,10 @@ MaybeGC(JSContext *cx)
       || cx->runtime->gcZeal > 0
 #endif
       ) {
+    ++sGCCount;
     JS_GC(cx);
   }
 }
-
-// The accumulated operation weight for DOM callback.
-const PRUint32 DOM_CALLBACK_OPERATION_WEIGHT = 5000 * JS_OPERATION_WEIGHT_BASE;
 
 static already_AddRefed<nsIPrompt>
 GetPromptFromContext(nsJSContext* ctx)
@@ -1250,7 +1251,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
                                          this);
 
     ::JS_SetOperationCallback(mContext, DOMOperationCallback,
-                              DOM_CALLBACK_OPERATION_WEIGHT);
+                              MAYBE_GC_OPERATION_WEIGHT);
 
     static JSLocaleCallbacks localeCallbacks =
       {
@@ -3408,7 +3409,7 @@ nsJSContext::CC()
 #endif
   sPreviousCCTime = PR_Now();
   sDelayedCCollectCount = 0;
-  sGCCount = JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER);
+  sGCCount = 0;
   sCCSuspectChanges = 0;
   // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
   // we do not explicitly call ::JS_GC() here.
@@ -3421,23 +3422,6 @@ nsJSContext::CC()
 #endif
 }
 
-static inline uint32
-GetGCRunsCount()
-{
-    /*
-     * The result value may overflow if sGCCount is close to the uint32
-     * maximum. It ﻿may cause additional invocations of the CC, which may
-     * reduce performance but cannot breach security.
-     */
-
-    // To avoid crash if nsJSRuntime is not properly initialized.
-    // See the bug 474586
-    if (!nsJSRuntime::sRuntime)
-        return 0;
-
-    return JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER) - sGCCount;
-}
-
 //static
 PRBool
 nsJSContext::MaybeCC(PRBool aHigherProbability)
@@ -3446,7 +3430,7 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
 
   // Don't check suspected count if CC will be called anyway.
   if (sCCSuspectChanges <= NS_MIN_SUSPECT_CHANGES ||
-      GetGCRunsCount() <= NS_MAX_GC_COUNT) {
+      sGCCount <= NS_MAX_GC_COUNT) {
 #ifdef DEBUG_smaug
     PRTime now = PR_Now();
 #endif
@@ -3464,7 +3448,7 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
   }
 #ifdef DEBUG_smaug
   printf("sCCSuspectChanges %u, sGCCount %u\n",
-         sCCSuspectChanges, GetGCRunsCount());
+         sCCSuspectChanges, sGCCount);
 #endif
 
   // Increase the probability also if the previous call to cycle collector
@@ -3477,7 +3461,7 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
   if (!sGCTimer &&
       (sDelayedCCollectCount > NS_MAX_DELAYED_CCOLLECT) &&
       ((sCCSuspectChanges > NS_MIN_SUSPECT_CHANGES &&
-        GetGCRunsCount() > NS_MAX_GC_COUNT) ||
+        sGCCount > NS_MAX_GC_COUNT) ||
        (sCCSuspectChanges > NS_MAX_SUSPECT_CHANGES))) {
     if ((PR_Now() - sPreviousCCTime) >=
         PRTime(NS_MIN_CC_INTERVAL * PR_USEC_PER_MSEC)) {
