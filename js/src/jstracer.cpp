@@ -389,8 +389,7 @@ globalSlotHash(JSContext* cx, unsigned slot)
         fp = fp->down;        
 
     hash_accum(h, uintptr_t(fp->script)); 
-    hash_accum(h, uintptr_t(cx->globalObject)); 
-    hash_accum(h, uintptr_t(OBJ_SHAPE(cx->globalObject)));
+    hash_accum(h, uintptr_t(OBJ_SHAPE(JS_GetGlobalForObject(cx, fp->scopeChain))));
     hash_accum(h, uintptr_t(slot));
     return int(h);
 }
@@ -1077,6 +1076,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     gp_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, gp)), "gp");
     eos_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eos)), "eos");
     eor_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eor)), "eor");
+    globalObj_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, globalObj)), "globalObj");
 
     /* If we came from exit, we might not have enough global types. */
     if (JS_TRACE_MONITOR(cx).globalSlots->length() > ti->globalSlots()) {
@@ -3645,6 +3645,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     state.eor = callstack + MAX_CALL_STACK_ENTRIES;
     state.gp = global;
     state.cx = cx;
+    state.globalObj = globalObj;
     state.lastTreeExitGuard = NULL;
     state.lastTreeCallGuard = NULL;
     state.rpAtLastTreeCall = NULL;
@@ -6705,7 +6706,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         if (!activeCallOrGlobalSlot(obj, vp))
             return false;
         stack(0, get(vp));
-        stack(1, INS_CONSTPTR(globalObj));
+        stack(1, globalObj_ins);
         return true;
     }
 
@@ -7002,7 +7003,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
      */
     if (obj == globalObj)
         ABORT_TRACE("prop op aliases global");
-    guard(false, lir->ins2(LIR_eq, obj_ins, INS_CONSTPTR(globalObj)), MISMATCH_EXIT);
+    guard(false, lir->ins2(LIR_eq, obj_ins, globalObj_ins), MISMATCH_EXIT);
 
     /*
      * Property cache ensures that we are dealing with an existing property,
