@@ -51,6 +51,7 @@
 #include "nsReadableUtils.h"
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
+#include "nsIScriptError.h"
 
 // XXX This is here because nsCachedStyleData is accessed outside of
 // the content module; e.g., by nsCSSFrameConstructor.
@@ -606,3 +607,12 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant,
           !aChild->TextIsOnlyWhitespace());
 }
 
+/* static */ void
+nsStyleUtil::ReportUseOfDeprecatedMethod(nsIURI* aURI, const char* aWarning)
+{
+  nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
+                                  aWarning, nsnull, 0, aURI,
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "CSS Object Model");
+}
