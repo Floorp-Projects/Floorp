@@ -226,14 +226,10 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex)
   nsIContent* menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 &&
       !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    PRUint32 insertAfter = 0;
-    nsresult rv = nsMenuUtilsX::CountVisibleBefore(this, aMenu, &insertAfter);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMenuUtilsX::CountVisibleBefore failed!\n");
-    if (NS_FAILED(rv))
-      return rv;
+    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, aMenu);
     if (MenuContainsAppMenu())
-      insertAfter++;
-    [mNativeMenu insertItem:aMenu->NativeMenuItem() atIndex:insertAfter];
+      insertionIndex++;
+    [mNativeMenu insertItem:aMenu->NativeMenuItem() atIndex:insertionIndex];
   }
 
   return NS_OK;

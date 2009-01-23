@@ -806,21 +806,19 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       }
     }
     else {
-      PRUint32 insertAfter = 0;
-      if (NS_SUCCEEDED(nsMenuUtilsX::CountVisibleBefore(mParent, this, &insertAfter))) {
-        if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType) {
-          if (parentType == eMenuBarObjectType) {
-            // Before inserting we need to figure out if we should take the native
-            // application menu into account.
-            nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
-            if (mb->MenuContainsAppMenu())
-              insertAfter++;
-          }
-          NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
-          [parentMenu insertItem:mNativeMenuItem atIndex:insertAfter];
-          [mNativeMenuItem setSubmenu:mNativeMenu];
-          mVisible = PR_TRUE;
+      if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType) {
+        int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(mParent, this);
+        if (parentType == eMenuBarObjectType) {
+          // Before inserting we need to figure out if we should take the native
+          // application menu into account.
+          nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
+          if (mb->MenuContainsAppMenu())
+            insertionIndex++;
         }
+        NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
+        [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
+        [mNativeMenuItem setSubmenu:mNativeMenu];
+        mVisible = PR_TRUE;
       }
     }
   }
