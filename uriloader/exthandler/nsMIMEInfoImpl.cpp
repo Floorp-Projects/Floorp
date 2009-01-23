@@ -112,12 +112,12 @@ nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, PRBool *_retval)
 {
     NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
     PRBool found = PR_FALSE;
-    PRUint32 extCount = mExtensions.Count();
+    PRUint32 extCount = mExtensions.Length();
     if (extCount < 1) return NS_OK;
 
     for (PRUint8 i=0; i < extCount; i++) {
-        nsCString* ext = (nsCString*)mExtensions.CStringAt(i);
-        if (ext->Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
+        const nsCString& ext = mExtensions[i];
+        if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
             found = PR_TRUE;
             break;
         }
@@ -130,10 +130,10 @@ nsMIMEInfoBase::ExtensionExists(const nsACString& aExtension, PRBool *_retval)
 NS_IMETHODIMP
 nsMIMEInfoBase::GetPrimaryExtension(nsACString& _retval)
 {
-    PRUint32 extCount = mExtensions.Count();
-    if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
+    if (!mExtensions.Length())
+      return NS_ERROR_NOT_INITIALIZED;
 
-    _retval = *(mExtensions.CStringAt(0));
+    _retval = mExtensions[0];
     return NS_OK;    
 }
 
@@ -141,21 +141,21 @@ NS_IMETHODIMP
 nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension)
 {
   NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
-  PRUint32 extCount = mExtensions.Count();
+  PRUint32 extCount = mExtensions.Length();
   PRUint8 i;
   PRBool found = PR_FALSE;
   for (i=0; i < extCount; i++) {
-    nsCString* ext = (nsCString*)mExtensions.CStringAt(i);
-    if (ext->Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
+    const nsCString& ext = mExtensions[i];
+    if (ext.Equals(aExtension, nsCaseInsensitiveCStringComparator())) {
       found = PR_TRUE;
       break;
     }
   }
   if (found) {
-    mExtensions.RemoveCStringAt(i);
+    mExtensions.RemoveElementAt(i);
   }
 
-  mExtensions.InsertCStringAt(aExtension, 0);
+  mExtensions.InsertElementAt(0, aExtension);
   
   return NS_OK;
 }
@@ -163,7 +163,7 @@ nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension)
 NS_IMETHODIMP
 nsMIMEInfoBase::AppendExtension(const nsACString& aExtension)
 {
-  mExtensions.AppendCString(aExtension);
+  mExtensions.AppendElement(aExtension);
   return NS_OK;
 }
 
@@ -260,11 +260,11 @@ nsMIMEInfoBase::SetFileExtensions(const nsACString& aExtensions)
     PRInt32 breakLocation = -1;
     while ( (breakLocation= extList.FindChar(',') )!= -1)
     {
-        mExtensions.AppendCString(Substring(extList.get(), extList.get() + breakLocation));
+        mExtensions.AppendElement(Substring(extList.get(), extList.get() + breakLocation));
         extList.Cut(0, breakLocation+1 );
     }
     if ( !extList.IsEmpty() )
-        mExtensions.AppendCString( extList );
+        mExtensions.AppendElement( extList );
     return NS_OK;
 }
 

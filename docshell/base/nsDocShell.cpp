@@ -5103,8 +5103,9 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 SetCurrentURI(uri, aRequest, PR_TRUE);
                 // Save history state of the previous page
                 rv = PersistLayoutHistoryState();
-                if (mOSHE)
-                    SetHistoryEntry(&mOSHE, mLSHE);
+                // We'll never get an Embed() for this load, so just go ahead
+                // and SetHistoryEntry now.
+                SetHistoryEntry(&mOSHE, mLSHE);
             }
         
         }

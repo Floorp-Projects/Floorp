@@ -5,3 +5,5 @@
 == input-text-size-2.html input-text-size-2-ref.html
 == radio-label-dynamic.html radio-label-dynamic-ref.html
 == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # bug 471741
+!= indeterminate-checked.html indeterminate-checked-notref.html
+!= indeterminate-unchecked.html indeterminate-unchecked-notref.html

@@ -143,7 +143,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsTPtrArray.h"
-#include "nsVoidArray.h" // for nsCStringArray
+#include "nsTArray.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -471,7 +471,7 @@ struct PtrInfo
     PtrInfo* mShortestPathToExpectedGarbage;
     nsCString* mShortestPathToExpectedGarbageEdgeName;
 
-    nsCStringArray mEdgeNames;
+    nsTArray<nsCString> mEdgeNames;
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
@@ -499,7 +499,7 @@ struct PtrInfo
 #ifdef DEBUG_CC
     void Destroy() {
         PL_strfree(mName);
-        mEdgeNames.~nsCStringArray();
+        mEdgeNames.~nsTArray<nsCString>();
     }
 #endif
 
@@ -1407,7 +1407,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
             return;
         mEdgeBuilder.Add(childPi);
 #ifdef DEBUG_CC
-        mCurrPi->mEdgeNames.AppendCString(edgeName);
+        mCurrPi->mEdgeNames.AppendElement(edgeName);
 #endif
         ++childPi->mInternalRefs;
     }
@@ -1431,7 +1431,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
         return;
     mEdgeBuilder.Add(childPi);
 #ifdef DEBUG_CC
-    mCurrPi->mEdgeNames.AppendCString(edgeName);
+    mCurrPi->mEdgeNames.AppendElement(edgeName);
 #endif
     ++childPi->mInternalRefs;
 }
@@ -1466,7 +1466,7 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
         return;
     mEdgeBuilder.Add(childPi);
 #ifdef DEBUG_CC
-    mCurrPi->mEdgeNames.AppendCString(edgeName);
+    mCurrPi->mEdgeNames.AppendElement(edgeName);
 #endif
     ++childPi->mInternalRefs;
 }
@@ -2822,7 +2822,7 @@ nsCycleCollector::CreateReversedEdges()
         for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
              e != e_end; ++e) {
             current->mTarget = pi;
-            current->mEdgeName = pi->mEdgeNames.CStringAt(i);
+            current->mEdgeName = pi->mEdgeNames[i];
             current->mNext = (*e)->mReversedEdges;
             (*e)->mReversedEdges = current;
             ++current;

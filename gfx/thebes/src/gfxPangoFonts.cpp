@@ -49,6 +49,7 @@
 #include "gfxTypes.h"
 
 #include "nsMathUtils.h"
+#include "nsTArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsILanguageAtomService.h"
 

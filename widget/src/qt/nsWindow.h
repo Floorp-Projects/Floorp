@@ -64,6 +64,7 @@
 #define FORCE_PR_LOG
 
 #include "prlog.h"
+#include "nsTArray.h"
 
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
@@ -349,7 +350,7 @@ private:
     void               GetToplevelWidget(QWidget **aWidget);
     void               SetUrgencyHint(QWidget *top_window, PRBool state);
     void              *SetupPluginPort(void);
-    nsresult           SetWindowIconList(const nsCStringArray &aIconList);
+    nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &event, QMouseEvent *aEvent, int aClickCount = 1);
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);

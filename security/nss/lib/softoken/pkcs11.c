@@ -61,13 +61,30 @@
 #include "secder.h"
 #include "secport.h"
 #include "secrng.h"
-#include "nss.h"
 #include "prtypes.h"
 #include "nspr.h"
 #include "softkver.h"
 #include "secoid.h"
 #include "sftkdb.h"
 #include "sftkpars.h"
+
+#ifndef NO_FORK_CHECK
+
+#if defined(CHECK_FORK_PTHREAD) || defined(CHECK_FORK_MIXED)
+PRBool forked = PR_FALSE;
+#endif
+
+#if defined(CHECK_FORK_GETPID) || defined(CHECK_FORK_MIXED)
+#include <unistd.h>
+pid_t myPid;
+#endif
+
+#ifdef CHECK_FORK_MIXED
+#include <sys/systeminfo.h>
+PRBool usePthread_atfork;
+#endif
+
+#endif
 
 /*
  * ******************** Static data *******************************
@@ -357,6 +374,13 @@ static const struct mechanismList mechanisms[] = {
      {CKM_CAMELLIA_MAC, 	{16, 32, CKF_SN_VR},            PR_TRUE},
      {CKM_CAMELLIA_MAC_GENERAL,	{16, 32, CKF_SN_VR},            PR_TRUE},
      {CKM_CAMELLIA_CBC_PAD,	{16, 32, CKF_EN_DE_WR_UN},      PR_TRUE},
+     /* ------------------------- SEED Operations --------------------------- */
+     {CKM_SEED_KEY_GEN,		{16, 16, CKF_GENERATE},		PR_TRUE},
+     {CKM_SEED_ECB,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_SEED_CBC,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_SEED_MAC,		{16, 16, CKF_SN_VR},		PR_TRUE},
+     {CKM_SEED_MAC_GENERAL,	{16, 16, CKF_SN_VR},		PR_TRUE},
+     {CKM_SEED_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
@@ -462,13 +486,11 @@ static const CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 
 static PRBool nsc_init = PR_FALSE;
 
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
+#if defined(CHECK_FORK_PTHREAD) || defined(CHECK_FORK_MIXED)
 
 #include <pthread.h>
 
-PRBool forked = PR_FALSE;
-
-void ForkedChild(void)
+static void ForkedChild(void)
 {
     if (nsc_init || nsf_init) {
         forked = PR_TRUE;
@@ -2357,6 +2379,16 @@ SFTK_DestroySlotData(SFTKSlot *slot)
     return CKR_OK;
 }
 
+#ifndef NO_FORK_CHECK
+
+static CK_RV ForkCheck(void)
+{
+    CHECK_FORK();
+    return CKR_OK;
+}
+
+#endif
+
 /*
  * handle the SECMOD.db
  */
@@ -2366,13 +2398,17 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, void *args)
     char *secmod = NULL;
     char *appName = NULL;
     char *filename = NULL;
+#ifdef NSS_DISABLE_DBM
+    SDBType dbType = SDB_SQL;
+#else
     SDBType dbType = SDB_LEGACY;
+#endif
     PRBool rw;
     static char *success="Success";
     char **rvstr = NULL;
 
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
-    if (forked) return NULL;
+#ifndef NO_FORK_CHECK
+    if (CKR_OK != ForkCheck()) return NULL;
 #endif
 
     secmod = sftk_getSecmodName(parameters, &dbType, &appName,&filename, &rw);
@@ -2549,9 +2585,39 @@ loser:
         sftk_InitFreeLists();
     }
 
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
+#ifndef NO_FORK_CHECK
     if (CKR_OK == crv) {
+#if defined(CHECK_FORK_MIXED)
+        /* Before Solaris 10, fork handlers are not unregistered at dlclose()
+         * time. So, we only use pthread_atfork on Solaris 10 and later. For
+         * earlier versions, we use PID checks.
+         */
+        char buf[200];
+        int major = 0, minor = 0;
+
+        long rv = sysinfo(SI_RELEASE, buf, sizeof(buf));
+        if (rv > 0 && rv < sizeof(buf)) {
+            if (2 == sscanf(buf, "%d.%d", &major, &minor)) {
+                /* Are we on Solaris 10 or greater ? */
+                if (major >5 || (5 == major && minor >= 10)) {
+                    /* we are safe to use pthread_atfork */
+                    usePthread_atfork = PR_TRUE;
+                }
+            }
+        }
+        if (usePthread_atfork) {
+            pthread_atfork(NULL, NULL, ForkedChild);
+        } else {
+            myPid = getpid();
+        }
+
+#elif defined(CHECK_FORK_PTHREAD)
         pthread_atfork(NULL, NULL, ForkedChild);
+#elif defined(CHECK_FORK_GETPID)
+        myPid = getpid();
+#else
+#error Incorrect fork check method.
+#endif
     }
 #endif
     return crv;
@@ -2600,6 +2666,14 @@ CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
     SECOID_Shutdown();
     nsc_init = PR_FALSE;
 
+#ifdef SOLARIS
+    if (!usePthread_atfork) {
+        myPid = 0; /* allow CHECK_FORK in the next softoken initialization to
+                    * succeed */
+    }
+#elif defined(XP_UNIX) && !defined(LINUX)
+    myPid = 0; /* allow reinitialization */
+#endif
     return CKR_OK;
 }
 

@@ -12,7 +12,7 @@
     </resources>
     
     <content>
-      <children includes="observes|template|menupopup|tooltip"/>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
@@ -30,7 +30,7 @@
   <binding id="menu" display="xul:menu" 
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
-      <children includes="observes|template|menupopup|tooltip"/>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
@@ -41,7 +41,7 @@
   <binding id="menu-vertical" display="xul:menu"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
-      <children includes="observes|template|menupopup|tooltip"/>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:hbox flex="1" align="center">
         <xul:vbox flex="1" align="center">
           <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
@@ -60,7 +60,7 @@
     </resources>
 
     <content>
-      <children includes="observes|template|menupopup|tooltip"/>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
                          anonid="button" flex="1" allowevents="true"
                          xbl:inherits="disabled,crop,image,label,accesskey,command,

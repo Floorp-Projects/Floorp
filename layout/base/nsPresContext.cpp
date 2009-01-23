@@ -295,7 +295,6 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
   NS_IF_RELEASE(mLangGroup);
-  NS_IF_RELEASE(mUserFontSet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -737,13 +736,6 @@ nsPresContext::GetUserPreferences()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
-  if (IsPaginated()) {
-    // Until we fix things so that we can do multiple reflows and style
-    // rebuilds (see, e.g., bug 470929) in paginated mode, we should
-    // ignore preference changes when paginated.
-    return;
-  }
-
   nsDependentCString prefName(aPrefName);
   if (prefName.EqualsLiteral("layout.css.dpi")) {
     PRInt32 oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
@@ -913,6 +905,12 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 void
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
+  if (mUserFontSet) {
+    // Clear out user font set if we have one
+    mUserFontSet->Destroy();
+    NS_RELEASE(mUserFontSet);
+  }
+
   if (mShell) {
     // Remove ourselves as the charset observer from the shell's doc, because
     // this shell may be going away for good.
@@ -1841,10 +1839,13 @@ nsPresContext::FlushUserFontSet()
 
       // Only rebuild things if the set of @font-face rules is different.
       if (differ) {
-        NS_IF_RELEASE(mUserFontSet);
+        if (mUserFontSet) {
+          mUserFontSet->Destroy();
+          NS_RELEASE(mUserFontSet);
+        }
 
         if (rules.Length() > 0) {
-          gfxUserFontSet *fs = new nsUserFontSet(this);
+          nsUserFontSet *fs = new nsUserFontSet(this);
           if (!fs)
             return;
           mUserFontSet = fs;

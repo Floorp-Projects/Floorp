@@ -25,5 +25,6 @@ js1_5/Regress/regress-314401.js
 js1_5/Regress/regress-329530.js
 js1_6/extensions/regress-455464-04.js
 js1_6/extensions/regress-456826.js
+js1_7/extensions/regress-458679.js
 js1_7/iterable/regress-341815.js
 js1_7/iterable/regress-341821.js

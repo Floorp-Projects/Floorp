@@ -1721,23 +1721,16 @@ function loadOneOrMoreURIs(aURIString)
   }
 }
 
-function focusAndSelectUrlBar()
-{
-  if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
-    gURLBar.focus();
-    gURLBar.select();
-    return true;
-  }
-  return false;
-}
-
-function openLocation()
-{
+function openLocation() {
   if (window.fullScreen)
     FullScreen.mouseoverToggle(true);
 
-  if (focusAndSelectUrlBar())
+  if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
+    gURLBar.focus();
+    gURLBar.select();
     return;
+  }
+
 #ifdef XP_MACOSX
   if (window.location.href != getBrowserURL()) {
     var win = getTopWin();
@@ -4321,7 +4314,17 @@ nsBrowserAccess.prototype =
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
-        var win = this._getMostRecentBrowserWindow();
+        let win, needToFocusWin;
+
+        // try the current window.  if we're in a popup, fall back on the most recent browser window
+        if (!window.document.documentElement.getAttribute("chromehidden"))
+          win = window;
+        else {
+          var browserGlue = Cc[GLUE_CID].getService(Ci.nsIBrowserGlue);
+          win = browserGlue.getMostRecentBrowserWindow();
+          needToFocusWin = true;
+        }
+
         if (!win) {
           // we couldn't find a suitable window, a new one needs to be opened.
           return null;
@@ -4344,7 +4347,7 @@ nsBrowserAccess.prototype =
                      .getInterface(Ci.nsIWebNavigation)
                      .loadURI(aURI.spec, loadflags, referrer, null, null);
           }
-          if (!loadInBackground && isExternal)
+          if (needToFocusWin || (!loadInBackground && isExternal))
             newWindow.focus();
         } catch(e) {
         }
@@ -4379,16 +4382,6 @@ nsBrowserAccess.prototype =
         }
     }
     return newWindow;
-  },
-
-  // this returns the most recent non-popup browser window
-  _getMostRecentBrowserWindow : function ()
-  {
-    if (!window.document.documentElement.getAttribute("chromehidden"))
-      return window;
- 
-    var browserGlue = Cc[GLUE_CID].getService(Ci.nsIBrowserGlue);
-    return browserGlue.getMostRecentBrowserWindow();
   },
 
   isTabContentWindow : function(aWindow)
@@ -5561,7 +5554,14 @@ function WindowIsClosing()
 {
   var cn = gBrowser.tabContainer.childNodes;
   var numtabs = cn.length;
-  var reallyClose = true;
+  var reallyClose = 
+    closeWindow(false,
+                function () {
+                  return gBrowser.warnAboutClosingTabs(true);
+                });
+
+  if (!reallyClose)
+    return false;
 
   for (var i = 0; reallyClose && i < numtabs; ++i) {
     var ds = gBrowser.getBrowserForTab(cn[i]).docShell;
@@ -5570,16 +5570,7 @@ function WindowIsClosing()
       reallyClose = false;
   }
 
-  if (!reallyClose)
-    return false;
-
-  // closeWindow takes a second optional function argument to open up a
-  // window closing warning dialog if we're not quitting. (Quitting opens
-  // up another dialog so we don't need to.)
-  return closeWindow(false,
-    function () {
-      return gBrowser.warnAboutClosingTabs(true);
-    });
+  return reallyClose;
 }
 
 var MailIntegration = {

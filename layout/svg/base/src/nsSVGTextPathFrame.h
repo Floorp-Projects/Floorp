@@ -45,13 +45,18 @@ typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 class nsSVGTextPathFrame : public nsSVGTextPathFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                         nsIFrame* parentFrame, nsStyleContext* aContext);
+  NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGTextPathFrame(nsStyleContext* aContext) : nsSVGTextPathFrameBase(aContext) {}
 
 public:
   // nsIFrame:
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
+
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);

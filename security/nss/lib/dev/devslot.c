@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.24 $ $Date: 2008/08/09 01:25:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.25 $ $Date: 2008/11/20 04:53:44 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -219,6 +219,7 @@ nssSlot_IsTokenPresent (
      */
     session = nssToken_GetDefaultSession(slot->token);
     if (session) {
+	PRBool isPresent = PR_FALSE;
 	nssSession_EnterMonitor(session);
 	if (session->handle != CK_INVALID_SESSION) {
 	    CK_SESSION_INFO sessionInfo;
@@ -229,9 +230,10 @@ nssSlot_IsTokenPresent (
 		session->handle = CK_INVALID_SESSION;
 	    }
 	}
+	isPresent = session->handle != CK_INVALID_SESSION;
 	nssSession_ExitMonitor(session);
 	/* token not removed, finished */
-	if (session->handle != CK_INVALID_SESSION)
+	if (isPresent)
 	    return PR_TRUE;
     } 
     /* the token has been removed, and reinserted, or the slot contains

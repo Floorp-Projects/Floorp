@@ -76,7 +76,7 @@ private:
 class nsSVGImageFrame : public nsSVGPathGeometryFrame
 {
   friend nsIFrame*
-  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
   nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
@@ -126,14 +126,8 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(aContent);
-  if (!Rect) {
-    NS_ERROR("Can't create frame! Content is not an SVG image!");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGImageFrame(aContext);
 }
 
@@ -155,6 +149,11 @@ nsSVGImageFrame::Init(nsIContent* aContent,
                       nsIFrame* aParent,
                       nsIFrame* aPrevInFlow)
 {
+#ifdef DEBUG
+  nsCOMPtr<nsIDOMSVGImageElement> image = do_QueryInterface(aContent);
+  NS_ASSERTION(image, "Content is not an SVG image!");
+#endif
+
   nsresult rv = nsSVGPathGeometryFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv)) return rv;
   

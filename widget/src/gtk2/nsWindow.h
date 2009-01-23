@@ -80,6 +80,7 @@
 #define FORCE_PR_LOG
 
 #include "prlog.h"
+#include "nsTArray.h"
 
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
@@ -477,7 +478,7 @@ private:
     void               GetContainerWindow(nsWindow  **aWindow);
     void               SetUrgencyHint(GtkWidget *top_window, PRBool state);
     void              *SetupPluginPort(void);
-    nsresult           SetWindowIconList(const nsCStringArray &aIconList);
+    nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);

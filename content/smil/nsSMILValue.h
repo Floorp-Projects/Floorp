@@ -62,6 +62,7 @@ public:
   }
 
   nsresult Add(const nsSMILValue& aValueToAdd, PRUint32 aCount = 1);
+  nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
   nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
   nsresult Interpolate(const nsSMILValue& aEndVal,
                        double aUnitDistance,

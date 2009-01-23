@@ -43,6 +43,7 @@
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "prlong.h"
+#include "nsIPrivateBrowsingService.h"
 
 class nsIPrefBranch;
 
@@ -68,7 +69,10 @@ public:
   void     PrefChanged(nsIPrefBranch *, const char *);
 
 private:
+  PRBool InPrivateBrowsing();
+
   nsCOMPtr<nsIPermissionManager> mPermMgr;
+  nsCOMPtr<nsIPrivateBrowsingService> mPBService;
 
   PRInt64      mCookiesLifetimeSec;            // lifetime limit specified in seconds
   PRUint8      mCookiesLifetimePolicy;         // pref for how long cookies are stored

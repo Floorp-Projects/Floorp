@@ -238,7 +238,8 @@ nsIContent*
 nsSVGUseElement::CreateAnonymousContent()
 {
 #ifdef DEBUG_tor
-  const nsString &href = mStringAttributes[HREF].GetAnimValue();
+  nsAutoString href;
+  mStringAttributes[HREF].GetAnimValue(href, this);
   fprintf(stderr, "<svg:use> reclone of \"%s\"\n", ToNewCString(href));
 #endif
 
@@ -421,7 +422,8 @@ nsSVGUseElement::SyncWidthHeight(PRUint8 aAttrEnum)
 void
 nsSVGUseElement::LookupHref()
 {
-  const nsString &href = mStringAttributes[HREF].GetAnimValue();
+  nsAutoString href;
+  mStringAttributes[HREF].GetAnimValue(href, this);
   if (href.IsEmpty())
     return;
 
@@ -471,9 +473,9 @@ nsSVGUseElement::GetLengthInfo()
 }
 
 void
-nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum)
 {
-  nsSVGUseElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
+  nsSVGUseElementBase::DidChangeString(aAttrEnum);
 
   if (aAttrEnum == HREF) {
     // we're changing our nature, clear out the clone information
@@ -510,3 +512,4 @@ nsSVGUseElement::IsAttributeMapped(const nsIAtom* name) const
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGUseElementBase::IsAttributeMapped(name);
 }
+

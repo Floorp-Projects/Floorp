@@ -899,6 +899,50 @@ static PRBool test_comparisons()
   return PR_TRUE;
 }
 
+static PRBool test_parse_string_helper(const char* str, char separator, int len,
+                                       const char* s1, const char* s2)
+{
+  nsCString data(str);
+  nsTArray<nsCString> results;
+  if (!ParseString(data, separator, results))
+    return PR_FALSE;
+  if (int(results.Length()) != len)
+    return PR_FALSE;
+  const char* strings[] = { s1, s2 };
+  for (int i = 0; i < len; ++i) {
+    if (!results[i].Equals(strings[i]))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+static PRBool test_parse_string_helper0(const char* str, char separator)
+{
+  return test_parse_string_helper(str, separator, 0, nsnull, nsnull);
+}
+
+static PRBool test_parse_string_helper1(const char* str, char separator, const char* s1)
+{
+  return test_parse_string_helper(str, separator, 1, s1, nsnull);
+}
+
+static PRBool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
+{
+  return test_parse_string_helper(str, separator, 2, s1, s2);
+}
+
+static PRBool test_parse_string()
+{
+  return test_parse_string_helper1("foo, bar", '_', "foo, bar") &&
+         test_parse_string_helper2("foo, bar", ',', "foo", " bar") &&
+         test_parse_string_helper2("foo, bar ", ' ', "foo,", "bar") &&
+         test_parse_string_helper2("foo,bar", 'o', "f", ",bar") &&
+         test_parse_string_helper0("", '_') &&
+         test_parse_string_helper0("  ", ' ') &&
+         test_parse_string_helper1(" foo", ' ', "foo") &&
+         test_parse_string_helper1("  foo", ' ', "foo");
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -926,6 +970,7 @@ tests[] =
     { "test_find", test_find },
     { "test_compressws", test_compressws },
     { "test_comparisons", test_comparisons },
+    { "test_parse_string", test_parse_string },
     { nsnull, nsnull }
   };
 

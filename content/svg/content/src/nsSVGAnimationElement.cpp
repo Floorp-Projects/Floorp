@@ -156,6 +156,8 @@ nsSVGAnimationElement::TimedElement()
 NS_IMETHODIMP
 nsSVGAnimationElement::GetTargetElement(nsIDOMSVGElement** aTarget)
 {
+  FlushAnimations();
+
   // We'll just call the other GetTargetElement method, and QI to the right type
   nsIContent* targetContent = GetTargetElementContent();
 
@@ -165,31 +167,51 @@ nsSVGAnimationElement::GetTargetElement(nsIDOMSVGElement** aTarget)
   return NS_OK;
 }
 
+/* float getStartTime(); */
 NS_IMETHODIMP
 nsSVGAnimationElement::GetStartTime(float* retval)
 {
-  // XXX
-  *retval = 0.f;
-  NS_NOTYETIMPLEMENTED("nsSVGAnimationElement::GetStartTime");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  FlushAnimations();
+
+  nsSMILTimeValue startTime = mTimedElement.GetStartTime();
+  if (startTime.IsResolved()) {
+    *retval = double(startTime.GetMillis()) / PR_MSEC_PER_SEC;
+  } else {
+    *retval = 0.f;
+  }
+
+  return NS_OK;
 }
 
+/* float getCurrentTime(); */
 NS_IMETHODIMP
 nsSVGAnimationElement::GetCurrentTime(float* retval)
 {
-  // XXX
-  *retval = 0.f;
-  NS_NOTYETIMPLEMENTED("nsSVGAnimationElement::GetCurrentTime");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Not necessary to call FlushAnimations() for this
+
+  nsSMILTimeContainer* root = GetTimeContainer();
+  if (root) {
+    *retval = double(root->GetCurrentTime()) / PR_MSEC_PER_SEC;
+  } else {
+    *retval = 0.f;
+  }
+  return NS_OK;
 }
 
+/* float getSimpleDuration() raises( DOMException ); */
 NS_IMETHODIMP
 nsSVGAnimationElement::GetSimpleDuration(float* retval)
 {
-  // XXX
-  *retval = 0.f;
-  NS_NOTYETIMPLEMENTED("nsSVGAnimationElement::GetSimpleDuration");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Not necessary to call FlushAnimations() for this
+
+  nsSMILTimeValue simpleDur = mTimedElement.GetSimpleDuration();
+  if (!simpleDur.IsResolved()) {
+    *retval = 0.f;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  *retval = double(simpleDur.GetMillis()) / PR_MSEC_PER_SEC;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -232,6 +254,8 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
     }
   }
 
+  AnimationNeedsResample();
+
   return NS_OK;
 }
 
@@ -250,6 +274,8 @@ nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     mTimedDocumentRoot = nsnull;
   }
 
+  AnimationNeedsResample();
+
   nsSVGAnimationElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -267,6 +293,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     if (aAttribute == nsGkAtoms::attributeName ||
         aAttribute == nsGkAtoms::attributeType) {
       aResult.ParseAtom(aValue);
+      AnimationNeedsResample();
       return PR_TRUE;
     }
 
@@ -283,6 +310,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     }
     
     if (foundMatch) {
+      AnimationNeedsResample();
       if (NS_FAILED(rv)) {
         ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
         return PR_FALSE;
@@ -304,8 +332,9 @@ nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (!AnimationFunction().UnsetAttr(aAttribute)) {
-      mTimedElement.UnsetAttr(aAttribute);
+    if (AnimationFunction().UnsetAttr(aAttribute) ||
+        mTimedElement.UnsetAttr(aAttribute)) {
+      AnimationNeedsResample();
     }
   }
 
@@ -366,18 +395,10 @@ nsSVGAnimationElement::BeginElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::BeginElementAt(float offset)
 {
-  nsSVGSVGElement *ownerSVG = GetCtx();
-  if (!ownerSVG)
-    return NS_ERROR_FAILURE;
+  nsresult rv = mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
+  AnimationNeedsResample();
 
-  ownerSVG->RequestSample();
-
-  // We ignore the return code. The SMIL version of this interface has a void
-  // return type and no exception specification so there's no way to indicate
-  // that begin failed (e.g. because the element has restart="none").
-  mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
-
-  return NS_OK;
+  return rv;
 }
 
 /* void endElement (); */
@@ -391,14 +412,8 @@ nsSVGAnimationElement::EndElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::EndElementAt(float offset)
 {
-  nsSVGSVGElement *ownerSVG = GetCtx();
-  if (!ownerSVG)
-    return NS_ERROR_FAILURE;
+  nsresult rv = mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
+  AnimationNeedsResample();
 
-  ownerSVG->RequestSample();
-
-  // As with BeginElementAt, ignore the return code.
-  mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
-
-  return NS_OK;
+  return rv;
 }

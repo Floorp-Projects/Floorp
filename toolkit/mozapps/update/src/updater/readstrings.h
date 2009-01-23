@@ -41,6 +41,13 @@
 
 #define MAX_TEXT_LEN 200
 
+#if defined(XP_WIN) || defined(XP_OS2)
+# include <windows.h>
+  typedef WCHAR NS_tchar;
+#else
+  typedef char NS_tchar;
+#endif
+
 struct StringTable {
   char title[MAX_TEXT_LEN];
   char info[MAX_TEXT_LEN];
@@ -49,6 +56,6 @@ struct StringTable {
 /**
  * This function reads in localized strings from updater.ini
  */
-int ReadStrings(const char *path, StringTable *results);
+int ReadStrings(const NS_tchar *path, StringTable *results);
 
 #endif  // READSTRINGS_H__

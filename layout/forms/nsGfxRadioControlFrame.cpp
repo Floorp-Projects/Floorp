@@ -45,6 +45,7 @@
 #include "nsIServiceManager.h"
 #include "nsITheme.h"
 #include "nsDisplayList.h"
+#include "nsCSSAnonBoxes.h"
 
 nsIFrame*
 NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -64,6 +65,22 @@ nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 NS_QUERYFRAME_HEAD(nsGfxRadioControlFrame)
   NS_QUERYFRAME_ENTRY(nsIRadioControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
+
+NS_IMETHODIMP
+nsGfxRadioControlFrame::Init(nsIContent* aContent,
+                             nsIFrame* aParent,
+                             nsIFrame* aPrevInFlow)
+{
+  nsresult rv = nsFormControlFrame::Init(aContent, aParent, aPrevInFlow);
+  if (NS_SUCCEEDED(rv)) {
+    mRadioButtonFaceStyle =
+      PresContext()->PresShell()->StyleSet()->
+        ResolvePseudoStyleFor(aContent, nsCSSAnonBoxes::radio,
+                              GetStyleContext());
+  }
+
+  return rv;
+}
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -101,14 +118,6 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
     mRadioButtonFaceStyle = aStyleContext;
     break;
   }
-}
-
-//--------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsStyleContext *aRadioButtonFaceStyleContext)
-{
-  mRadioButtonFaceStyle = aRadioButtonFaceStyleContext;
-  return NS_OK;
 }
 
 //--------------------------------------------------------------

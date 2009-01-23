@@ -37,7 +37,6 @@
 #include "prtime.h"
 
 #include "cert.h"
-#include "mcom_db.h"
 #include "certdb.h"
 #include "secitem.h"
 #include "secder.h"
