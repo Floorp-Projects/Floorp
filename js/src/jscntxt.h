@@ -265,7 +265,6 @@ struct JSRuntime {
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
-    uint32              gcTriggerFactor;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
