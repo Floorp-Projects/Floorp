@@ -51,6 +51,7 @@ GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LI
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
 APP_BUILDID = $(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid)
 APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
+APP_ICON = mobile
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DAPP_BUILDID=$(APP_BUILDID) -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
 
@@ -99,5 +100,12 @@ libs::
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
+
+	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
+
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
+	$(LIBXUL_DIST)/sdk/bin/redit $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
+endif
 
 endif
