@@ -218,29 +218,7 @@
 }
 %endif
 
-/**** expanders ****/
-
-.expander-up,
-.expander-down {
-  min-width: 0;
-}
-
-.expander-up > hbox,
-.expander-down > hbox {
-  padding: 0;
-}
-
-.expander-up {
-  list-style-image: url("chrome://global/skin/icons/collapse.png");
-}
-
-.expander-down {
-  list-style-image: url("chrome://global/skin/icons/expand.png");
-}
-
 #infoBoxExpanderLabel {
-  margin: 0;
-  padding: 5px 0;
   -moz-padding-start: 2px;
 }
 
