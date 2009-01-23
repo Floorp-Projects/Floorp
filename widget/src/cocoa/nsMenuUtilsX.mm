@@ -130,15 +130,17 @@ nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar()
 
 
 // It would be nice if we could localize these edit menu names.
-static NSMenuItem* standardEditMenuItem = nil;
 NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (standardEditMenuItem)
-    return standardEditMenuItem;
-
-  standardEditMenuItem = [[NSMenuItem alloc] initWithTitle:@"Edit" action:nil keyEquivalent:@""];
+  // In principle we should be able to allocate this once and then always
+  // return the same object.  But wierd interactions happen between native
+  // app-modal dialogs and Gecko-modal dialogs that open above them.  So what
+  // we return here isn't always released before it needs to be added to
+  // another menu.  See bmo bug 468393.
+  NSMenuItem* standardEditMenuItem =
+    [[[NSMenuItem alloc] initWithTitle:@"Edit" action:nil keyEquivalent:@""] autorelease];
   NSMenu* standardEditMenu = [[NSMenu alloc] initWithTitle:@"Edit"];
   [standardEditMenuItem setSubmenu:standardEditMenu];
   [standardEditMenu release];
