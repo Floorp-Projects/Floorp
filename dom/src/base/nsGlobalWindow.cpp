@@ -7754,7 +7754,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
         // The timeout still has an OS timer, and it's not an
         // interval, that means that the OS timer could still fire (if
         // it didn't already, i.e. aTimeout == timeout), cancel the OS
-        // timer and release it's reference to the timeout.
+        // timer and release its reference to the timeout.
         timeout->mTimer->Cancel();
         timeout->mTimer = nsnull;
 
