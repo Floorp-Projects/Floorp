@@ -58,6 +58,7 @@ import sys
 import os
 import re
 import shutil
+from subprocess import call, STDOUT
 from optparse import OptionParser
 
 # Utility classes
@@ -590,11 +591,19 @@ class Dumper_Win32(Dumper):
         rel_path = os.path.join(debug_file,
                                 guid,
                                 debug_file).replace("\\", "/")
-        print rel_path
         full_path = os.path.normpath(os.path.join(self.symbol_path,
                                                   rel_path))
         shutil.copyfile(file, full_path)
-        pass
+        # try compressing it
+        compressed_file = os.path.splitext(full_path)[0] + ".pd_"
+        # ignore makecab's output
+        success = call(["makecab.exe", full_path, compressed_file],
+                       stdout=open("NUL:","w"), stderr=STDOUT)
+        if success == 0 and os.path.exists(compressed_file):
+            os.unlink(full_path)
+            print os.path.splitext(rel_path)[0] + ".pd_"
+        else:
+            print rel_path
         
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
