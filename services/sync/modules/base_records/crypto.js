@@ -122,6 +122,14 @@ CryptoWrapper.prototype = {
   },
   decrypt: function CryptoWrap_decrypt(onComplete, passphrase) {
     this._decrypt.async(this, onComplete, passphrase);
+  },
+
+  toString: function WBORec_toString() {
+    return "{ id: " + this.id + "\n" +
+      "  parent: " + this.parentid + "\n" +
+      "  depth: " + this.depth + ", index: " + this.sortindex + "\n" +
+      "  modified: " + this.modified + "\n" +
+      "  payload: " + json.encode(this.cleartext) + " }";
   }
 };
 
