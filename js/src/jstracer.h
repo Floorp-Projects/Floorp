@@ -162,22 +162,36 @@ extern bool js_verboseDebug;
 #endif
 
 /*
- * The oracle keeps track of slots that should not be demoted to int because we know them
- * to overflow or they result in type-unstable traces. We are using a simple hash table.
- * Collisions lead to loss of optimization (demotable slots are not demoted) but have no
- * correctness implications.
+ * The oracle keeps track of hit counts for program counter locations, as
+ * well as slots that should not be demoted to int because we know them to
+ * overflow or they result in type-unstable traces. We are using simple
+ * hash tables.  Collisions lead to loss of optimization (demotable slots
+ * are not demoted, etc.) but have no correctness implications.
  */
 #define ORACLE_SIZE 4096
 
 class Oracle {
+    uint32_t hits[ORACLE_SIZE];
+    uint32_t blacklistLevels[ORACLE_SIZE];
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
 public:
+    Oracle();
+    int32_t hit(const void* ip);
+    int32_t getHits(const void* ip);
+    void resetHits(const void* ip);
+    void blacklist(const void* ip);
+
     JS_REQUIRES_STACK void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
     JS_REQUIRES_STACK void markStackSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
-    void clear();
+    void clearHitCounts();
+    void clearDemotability();
+    void clear() { 
+        clearDemotability(); 
+        clearHitCounts();
+    }
 };
 
 typedef Queue<uint16> SlotList;
