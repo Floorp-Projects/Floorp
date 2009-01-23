@@ -2915,7 +2915,15 @@
                               clicktoscroll="true"
 #endif
                               class="tabbrowser-arrowscrollbox">
+            <!-- This is a hack to circumvent bug 472020, otherwise the tabs show
+                 up on the right of the newtab button. -->
+            <children includes="tab"/>
+            <!-- This is to ensure anything extensions put here will go before
+                 the newtab button, necessary due to the previous hack -->
             <children/>
+            <xul:toolbarbutton class="tabs-newtab-button"
+                               command="cmd_newNavigatorTab" chromedir="&locale.dir;"
+                               tooltiptext="&newTabButton.tooltip;"/>
           </xul:arrowscrollbox>
           <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
                              command="cmd_newNavigatorTab" chromedir="&locale.dir;"

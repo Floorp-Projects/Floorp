@@ -1486,7 +1486,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
-.tabs-newtab-button,
+.tabs-container > .tabs-newtab-button,
 .tabs-alltabs-button {
   border-right-style: none;
   -moz-border-radius-topleft: 2px;
@@ -1497,7 +1497,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"],
-.tabs-newtab-button[chromedir="rtl"],
+.tabs-container > .tabs-newtab-button[chromedir="rtl"],
 .tabs-container > stack[chromedir="rtl"] > .tabs-alltabs-button {
   border-left-style: none;
   border-right-style: solid;
@@ -1515,13 +1515,21 @@ tabpanels {
   -moz-margin-end: 2px;
 }
 
+.tabs-newtab-button {
+  opacity: .8;
+}
+
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  width: 32px;
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-topleft: 2px;
+}
+
 .tabs-newtab-button > .toolbarbutton-icon {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
   margin: 3px 0 0;
-  -moz-margin-end: 2px;
 }
 
-.tabs-newtab-button > .toolbarbutton-text,
 .tabs-alltabs-button > .toolbarbutton-text {
   display: none;
 }

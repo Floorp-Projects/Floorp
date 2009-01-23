@@ -1260,6 +1260,10 @@ tabpanels {
   border: none;
 }
 
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  width: 32px;
+}
+
 .tabs-newtab-button > .toolbarbutton-icon {
   margin: -1px 0 0;
 }
