@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=346659
+-->
+<head>
+  <title>Test for Bug 346659</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=346659">Mozilla Bug 346659</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 346659 **/
+// do the tests in two batches, because otherwise the popup blocker kills off
+// our test because it opens too many windows.
+var numTestsSet1 = 6;
+var numTestsSet2 = 4;
+var numTestsSet3 = 2;
+var complete = 0;
+SimpleTest.waitForExplicitFinish();
+
+var wins = [];
+
+function r(base, tail) {
+  return base.replace(/\/[^\/]*$/, "/" + tail);
+}
+
+function handleCmd(evt) {
+  var cmd;
+  try {
+    cmd = JSON.parse(evt.data);
+  } catch (e) {
+    // Not json
+    return false;
+  }  
+
+  // Grab privileges so we can access cross-domain windows
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite");
+
+  if ("load" in cmd) {
+    var testNum = cmd.load;
+    var win = wins[testNum];
+    win.childWin.x = testNum;
+    if (win.childWin.opener == win) {
+      if ("xsite" in cmd) {
+        var loc = r(window.location.href, "bug346659-opener-echoer.html");
+      } else {
+        var loc = r(win.location.href, "bug346659-opener-echoer.html");
+      }
+    } else {
+      if ("xsite" in cmd) {
+        var loc = r(window.location.href, "bug346659-parent-echoer.html");
+      } else {
+        var loc = r(win.location.href, "bug346659-parent-echoer.html");
+      }
+    }
+    win.childWin.location.href = loc;
+    wins[testNum] = null;
+  } else if ("write" in cmd) {
+    var testNum = cmd.write;
+    var win = wins[testNum];
+    win.childWin.x = testNum;
+    try {
+      if (win.childWin.opener == win) {
+        win.childWin.document.write('<script>window.opener.opener.postMessage(window.opener.testNum + " - " + window.x, "http://localhost:8888/"); window.opener.close(); window.close();<' + '/script>');
+      } else {
+        win.childWin.document.write('<script>window.parent.opener.postMessage(window.parent.testNum + " - " + window.x, "http://localhost:8888/"); window.parent.close();<' + '/script>');
+      }
+    } catch (e if (e.name == "NS_ERROR_DOM_SECURITY_ERR" && e.code == 1000)) {
+      // Security error on cross-site write() is fine
+      if (win.childWin.opener == win) {
+        win.childWin.close();
+      }
+      win.close()
+      handleTestEnd();
+    }
+    wins[testNum] = null;
+  }
+  return true;
+}
+
+function messageReceiver(evt) {
+  // First try to detect a load/write command
+  if (handleCmd(evt)) {
+    return;
+  }
+
+  var testNumber = parseInt(evt.data);
+  var testResult = evt.data.substring(3 + Math.floor(Math.log(testNumber) * Math.LOG10E + 1));
+
+  switch (testNumber) {
+    case 1:
+      is(testResult, 1, "Props on new window should be preserved when loading");
+      break;
+    case 2:
+      is(testResult, 2, "Props on new window should be preserved when writing");
+      break;
+    case 3:
+      is(testResult, 3, "Props on window opened from new window should be preserved when loading");
+      break;
+    case 4:
+      is(testResult, 4, "Props on window opened from new window should be preserved when writing");
+      break;
+    case 5:
+      is(testResult, "undefined", "Props on new window's child should go away when loading");
+      break;
+    case 6:
+      is(testResult, "undefined", "Props on new window's child should go away when writing");
+      break;
+    case 7:
+      is(testResult, 7, "Props on different-domain window opened from different-domain new window can stay");
+      break;
+    case 9:
+      is(testResult, "undefined", "Props on different-domain new window's child should go away when loading");
+      break;
+    case 11:
+      is(testResult, "undefined", "Props on same-domain window opened from different-domain new window should go away when loading");
+      break;
+    case 12:
+      is(testResult, "undefined", "Props on different-domain new window's same-domain child should go away when loading");
+      break;
+    default:
+      ok(0, "unexpected test number (" + testNumber + ") when data is " + evt.data);
+  }
+
+  handleTestEnd();
+}
+
+function handleTestEnd() {
+  function gc() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+          .getInterface(Components.interfaces.nsIDOMWindowUtils)
+          .garbageCollect();
+  }
+  if (numTestsSet1) {
+    if (!--numTestsSet1) {
+      // gc to get rid of all the old windows
+      gc(); gc(); gc();
+      setTimeout(startSecondBatch, 0);
+    }
+  } else if (numTestsSet2) {
+    if (!--numTestsSet2) {
+      // gc to get rid of all the old windows
+      gc(); gc(); gc();
+      setTimeout(startThirdBatch, 0);
+    }
+  } else if (!--numTestsSet3) {
+    SimpleTest.finish();
+  }
+}
+window.addEventListener("message", messageReceiver, false);
+
+var win = window.open("");
+win.x = 1;
+win.location.href = "bug346659-echoer.html";
+
+win = window.open("");
+win.x = 2;
+win.document.write('<script> window.opener.postMessage("2 - " + window.x, window.location.href); window.close(); </' + 'script>');
+
+wins[3] = window.open('bug346659-opener.html?{"load":3}');
+wins[4] = window.open('bug346659-opener.html?{"write":4}');
+wins[5] = window.open('bug346659-parent.html?{"load":5}');
+wins[6] = window.open('bug346659-parent.html?{"write":6}');
+
+is(location.host, "localhost:8888", "Unexpected host");
+
+function startSecondBatch() {
+  var baseurl = window.location.href.replace(/localhost:8888/, "example.com");
+  wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
+  wins[8] = window.open(r(baseurl, 'bug346659-opener.html?{"write":8}'));
+  wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
+  wins[10] = window.open(r(baseurl, 'bug346659-parent.html?{"write":10}'));
+}
+
+function startThirdBatch() {
+  var baseurl = window.location.href.replace(/localhost:8888/, "example.com");
+  wins[11] = window.open(r(baseurl, 'bug346659-opener.html?{"load":11,"xsite":true}'));
+  wins[12] = window.open(r(baseurl, 'bug346659-parent.html?{"load":12,"xsite":true}'));
+}
+</script>
+</pre>
+</body>
+</html>

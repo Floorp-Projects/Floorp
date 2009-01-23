@@ -1,0 +1,17 @@
+<body onload="postBack();">
+  <script>
+    var childWin;
+    function postBack() {
+      childWin = window.frames[0];
+      var s = decodeURIComponent(window.location.search.substring(1));
+      var cmd = JSON.parse(s);
+      if ("load" in cmd) {
+        window.testNum = cmd.load;
+      } else if ("write" in cmd) {
+        window.testNum = cmd.write;
+      }
+      window.opener.postMessage(s, "http://localhost:8888/");
+    }
+  </script>
+  <iframe></iframe>
+</body>
