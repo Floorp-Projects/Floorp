@@ -1629,7 +1629,7 @@ private:
   
   // sMutationCount is a global mutation counter which is decreased by one at
   // every mutation. It is capped at 0 to avoid wrapping.
-  // It's value is always between 0 and 300, inclusive.
+  // Its value is always between 0 and 300, inclusive.
   static PRUint32 sMutationCount;
 };
 

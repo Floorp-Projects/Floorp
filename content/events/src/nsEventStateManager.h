@@ -257,7 +257,7 @@ protected:
    * @param aStatus the event status
    * @param aBubbledFrom is used by an ancestor to avoid calling HandleAccessKey()
    *        on the child the call originally came from, i.e. this is the child
-   *        that recursively called us in it's Up phase. The initial caller
+   *        that recursively called us in its Up phase. The initial caller
    *        passes |nsnull| here. This is to avoid an infinite loop.
    * @param aAccessKeyState Normal, Down or Up processing phase (see enums
    *        above). The initial event receiver uses 'normal', then 'down' when

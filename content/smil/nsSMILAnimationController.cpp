@@ -289,7 +289,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   // 
   // (i) Here we sample the timed elements (fetched from the
   // nsISMILAnimationElements) which determine from the active time if the
-  // element is active and what it's simple time etc. is. This information is
+  // element is active and what its simple time etc. is. This information is
   // then passed to its time client (nsSMILAnimationFunction).
   //
   // (ii) During the same loop we also build up a table that contains one

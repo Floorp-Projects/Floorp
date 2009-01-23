@@ -675,7 +675,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // for the LI.
   if (mIsCopying && name == nsGkAtoms::ol){
     // We are copying and current node is an OL;
-    // Store it's start attribute value in olState->startVal.
+    // Store its start attribute value in olState->startVal.
     nsAutoString start;
     PRInt32 startAttrVal = 0;
     aElement->GetAttribute(NS_LITERAL_STRING("start"), start);
