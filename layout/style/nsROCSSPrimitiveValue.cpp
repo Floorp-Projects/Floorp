@@ -130,9 +130,8 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
       }
     case CSS_IDENT :
       {
-        const char *atomValue;
-        mValue.mAtom->GetUTF8String(&atomValue);
-        AppendUTF8toUTF16(atomValue, tmpStr);
+        AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(mValue.mKeyword),
+                          tmpStr);
         break;
       }
     case CSS_STRING :
@@ -417,7 +416,7 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
 {
   switch (mType) {
     case CSS_IDENT:
-      mValue.mAtom->ToString(aReturn);
+      CopyUTF8toUTF16(nsCSSKeywords::GetStringValue(mValue.mKeyword), aReturn);
       break;
     case CSS_STRING:
     case CSS_ATTR:
