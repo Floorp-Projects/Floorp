@@ -609,6 +609,17 @@ init.d/README
 redo-prebinding.sh
 res/viewer.properties
 res/bloatcycle.html
+components/browsersearch.xpt
+components/nsResetPref.js
+plugins/Default Plugin.plugin/Contents/Info.plist
+plugins/Default Plugin.plugin/Contents/MacOS/Default Plugin
+plugins/Default Plugin.plugin/Contents/PkgInfo
+plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
+plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+res/cursors/CVS/Entries
+res/cursors/CVS/Repository
+res/cursors/CVS/Root
+res/cursors/CVS/Tag
 #endif
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
@@ -616,6 +627,7 @@ readme.txt
 chrome/icons/default/default.xpm
 dictionaries/PL.dic
 dictionaries/PL.aff
+libjemalloc.so
 #endif
 #endif
 #ifdef XP_WIN
