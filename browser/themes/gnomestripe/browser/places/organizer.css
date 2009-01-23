@@ -182,12 +182,11 @@
   margin: 0 !important;
 }
 
-/**** expanders ****/
-.expander-up,
-.expander-down {
-  min-width: 0;
-}
 %endif
+
+#infoBoxExpanderLabel {
+  -moz-padding-start: 2px;
+}
 
 #searchModifiers {
   padding-right: 3px;
