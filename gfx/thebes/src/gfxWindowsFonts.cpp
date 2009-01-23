@@ -347,6 +347,243 @@ FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontS
     return matchesSomething;
 }
 
+// from t2embapi.h, included in Platform SDK 6.1 but not 6.0
+
+#ifndef __t2embapi__
+
+#define TTLOAD_PRIVATE                  0x00000001
+#define LICENSE_PREVIEWPRINT            0x0004
+#define E_NONE                          0x0000L
+
+typedef unsigned long( WINAPIV *READEMBEDPROC ) ( void*, void*, const unsigned long );
+
+typedef struct
+{
+    unsigned short usStructSize;    // size in bytes of structure client should set to sizeof(TTLOADINFO)
+    unsigned short usRefStrSize;    // size in wide characters of pusRefStr including NULL terminator
+    unsigned short *pusRefStr;      // reference or actual string.
+}TTLOADINFO;
+
+LONG WINAPI TTLoadEmbeddedFont
+(
+    HANDLE*  phFontReference,           // on completion, contains handle to identify embedded font installed
+                                        // on system
+    ULONG    ulFlags,                   // flags specifying the request 
+    ULONG*   pulPrivStatus,             // on completion, contains the embedding status
+    ULONG    ulPrivs,                   // allows for the reduction of licensing privileges
+    ULONG*   pulStatus,                 // on completion, may contain status flags for request 
+    READEMBEDPROC lpfnReadFromStream,   // callback function for doc/disk reads
+    LPVOID   lpvReadStream,             // the input stream tokin
+    LPWSTR   szWinFamilyName,           // the new 16 bit windows family name can be NULL
+    LPSTR    szMacFamilyName,           // the new 8 bit mac family name can be NULL
+    TTLOADINFO* pTTLoadInfo             // optional security
+);
+
+#endif // __t2embapi__
+
+typedef LONG( WINAPI *TTLoadEmbeddedFontProc ) (HANDLE* phFontReference, ULONG ulFlags, ULONG* pulPrivStatus, ULONG ulPrivs, ULONG* pulStatus, 
+                                             READEMBEDPROC lpfnReadFromStream, LPVOID lpvReadStream, LPWSTR szWinFamilyName, 
+                                             LPSTR szMacFamilyName, TTLOADINFO* pTTLoadInfo);
+
+typedef LONG( WINAPI *TTDeleteEmbeddedFontProc ) (HANDLE hFontReference, ULONG ulFlags, ULONG* pulStatus);
+
+
+static TTLoadEmbeddedFontProc TTLoadEmbeddedFontPtr = nsnull;
+static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nsnull;
+
+void FontEntry::InitializeFontEmbeddingProcs()
+{
+    HMODULE fontlib = LoadLibraryW(L"t2embed.dll");
+    if (!fontlib)
+        return;
+    TTLoadEmbeddedFontPtr = (TTLoadEmbeddedFontProc) GetProcAddress(fontlib, "TTLoadEmbeddedFont");
+    TTDeleteEmbeddedFontPtr = (TTDeleteEmbeddedFontProc) GetProcAddress(fontlib, "TTDeleteEmbeddedFont");
+}
+
+class WinUserFontData : public gfxUserFontData {
+public:
+    WinUserFontData(HANDLE aFontRef, PRBool aIsCFF)
+        : mFontRef(aFontRef), mIsCFF(aIsCFF)
+    { }
+
+    virtual ~WinUserFontData()
+    {
+        if (mIsCFF) {
+            RemoveFontMemResourceEx(mFontRef);
+        } else {
+            ULONG pulStatus;
+            TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+        }
+    }
+    
+    HANDLE mFontRef;
+    PRPackedBool mIsCFF;
+};
+
+// used to control stream read by Windows TTLoadEmbeddedFont API
+
+class EOTFontStreamReader {
+public:
+    EOTFontStreamReader(const PRUint8 *aFontData, PRUint32 aLength, PRUint8 *aEOTHeader, 
+                        PRUint32 aEOTHeaderLen)
+        : mInHeader(PR_TRUE), mHeaderOffset(0), mEOTHeader(aEOTHeader), 
+          mEOTHeaderLen(aEOTHeaderLen), mFontData(aFontData), mFontDataLen(aLength),
+          mFontDataOffset(0)
+    {
+    
+    }
+
+    ~EOTFontStreamReader() 
+    { 
+
+    }
+
+    PRPackedBool            mInHeader;
+    PRUint32                mHeaderOffset;
+    PRUint8                 *mEOTHeader;
+    PRUint32                mEOTHeaderLen;
+    const PRUint8           *mFontData;
+    PRUint32                mFontDataLen;
+    PRUint32                mFontDataOffset;
+
+    unsigned long Read(void *outBuffer, const unsigned long aBytesToRead)
+    {
+        PRUint32 bytesLeft = aBytesToRead;
+        PRUint8 *out = static_cast<PRUint8*> (outBuffer);
+
+        // read from EOT header
+        if (mInHeader) {
+            PRUint32 toCopy = PR_MIN(aBytesToRead, mEOTHeaderLen - mHeaderOffset);
+            memcpy(out, mEOTHeader + mHeaderOffset, toCopy);
+            bytesLeft -= toCopy;
+            mHeaderOffset += toCopy;
+            out += toCopy;
+            if (mHeaderOffset == mEOTHeaderLen)
+                mInHeader = PR_FALSE;
+        }
+
+        if (bytesLeft) {
+            PRInt32 bytesRead = PR_MIN(bytesLeft, mFontDataLen - mFontDataOffset);
+            memcpy(out, mFontData, bytesRead);
+            mFontData += bytesRead;
+            mFontDataOffset += bytesRead;
+            if (bytesRead > 0)
+                bytesLeft -= bytesRead;
+        }
+
+        return aBytesToRead - bytesLeft;
+    }
+
+    static unsigned long ReadEOTStream(void *aReadStream, void *outBuffer, 
+                                       const unsigned long aBytesToRead) 
+    {
+        EOTFontStreamReader *eotReader = 
+                               static_cast<EOTFontStreamReader*> (aReadStream);
+        return eotReader->Read(outBuffer, aBytesToRead);
+    }        
+        
+};
+
+static void MakeUniqueFontName(nsAString& aName)
+{
+    char buf[50];
+
+    static PRUint32 fontCount = 0;
+    ++fontCount;
+
+    sprintf(buf, "mozfont%8.8x%8.8x", ::GetTickCount(), fontCount);  // slightly retarded, figure something better later...
+    aName.AssignASCII(buf);
+}
+
+/* static */
+FontEntry* 
+FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, nsISupports *aLoader,
+             const PRUint8 *aFontData, PRUint32 aLength) {
+    // if calls aren't available, bail
+    if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
+        return nsnull;
+
+    PRBool isCFF;
+    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength, &isCFF))
+        return nsnull;
+        
+    nsresult rv;
+    HANDLE fontRef;
+
+    nsAutoString uniqueName;
+    MakeUniqueFontName(uniqueName);
+
+    if (isCFF) {
+        // Postscript-style glyphs, swizzle name table, load directly
+        nsTArray<PRUint8> newFontData;
+
+        rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
+
+        if (NS_FAILED(rv))
+            return nsnull;
+        
+        DWORD numFonts = 0;
+
+        PRUint8 *fontData = reinterpret_cast<PRUint8*> (newFontData.Elements());
+        PRUint32 fontLength = newFontData.Length();
+        NS_ASSERTION(fontData, "null font data after renaming");
+
+        // http://msdn.microsoft.com/en-us/library/ms533942(VS.85).aspx
+        // "A font that is added by AddFontMemResourceEx is always private 
+        //  to the process that made the call and is not enumerable."
+        fontRef = AddFontMemResourceEx(fontData, fontLength, 
+                                       0 /* reserved */, &numFonts);
+        if (!fontRef)
+            return nsnull;
+
+        // only load fonts with a single face contained in the data
+        if (fontRef && numFonts != 1) {
+            RemoveFontMemResourceEx(fontRef);
+            return nsnull;
+        }
+    } else {
+        // TrueType-style glyphs, use EOT library
+        nsAutoTArray<PRUint8,2048> eotHeader;
+        PRUint8 *buffer;
+        PRUint32 eotlen;
+
+        PRUint32 nameLen = PR_MIN(uniqueName.Length(), LF_FACESIZE - 1);
+        nsPromiseFlatString fontName(Substring(uniqueName, 0, nameLen));
+
+        rv = gfxFontUtils::MakeEOTHeader(aFontData, aLength, &eotHeader);
+        if (NS_FAILED(rv))
+            return nsnull;
+
+        // load in embedded font data
+        eotlen = eotHeader.Length();
+        buffer = reinterpret_cast<PRUint8*> (eotHeader.Elements());
+        
+        PRInt32 ret;
+        ULONG privStatus, pulStatus;
+        EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen);
+
+        ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus, 
+                                   LICENSE_PREVIEWPRINT, &pulStatus, 
+                                   EOTFontStreamReader::ReadEOTStream, 
+                                   &eotReader, (PRUnichar*)(fontName.get()), 0, 0);
+        if (ret != E_NONE)
+            return nsnull;
+    }
+
+    // make a new font entry using the unique name
+    WinUserFontData *winUserFontData = new WinUserFontData(fontRef, isCFF);
+    PRUint16 w = (aProxyEntry.mWeight == 0 ? 400 : aProxyEntry.mWeight);
+
+    FontEntry *fe = FontEntry::CreateFontEntry(uniqueName, 
+        gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
+        PRUint32(aProxyEntry.mItalic ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL), 
+        w, winUserFontData);
+
+    if (fe && isCFF)
+        fe->mForceGDI = PR_TRUE;
+    return fe;
+}
+
 FontEntry* 
 FontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType, PRBool aItalic, PRUint16 aWeight, gfxUserFontData* aUserFontData, HDC hdc, LOGFONTW *aLogFont)
 {
@@ -2157,7 +2394,7 @@ gfxWindowsFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
 already_AddRefed<gfxFont> 
 gfxWindowsFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
 {
-    nsRefPtr<gfxWindowsFont> selectedFont;
+    nsRefPtr<gfxFont> selectedFont;
 
     // system font lookup
     PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Looking for best match"));
@@ -2167,8 +2404,7 @@ gfxWindowsFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
     selectedFont = platform->FindFontForChar(aCh, refFont);
 
     if (selectedFont) {
-        nsRefPtr<gfxFont> f = static_cast<gfxFont*>(selectedFont.get());
-        return f.forget();
+        return selectedFont.forget();
     }
 
     return nsnull;
