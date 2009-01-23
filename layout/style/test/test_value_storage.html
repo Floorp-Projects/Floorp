@@ -46,10 +46,6 @@
  * cserialize.
  */
 
-var gNotAccepted = {
-  "list-style": [ "none disc outside" ],
-};
-
 var gSystemFont = {
   "caption": true,
   "icon": true,
@@ -64,60 +60,12 @@ var gBadCompute = {
   "-moz-box-ordinal-group": [ "-1", "-1000" ],
 };
 
-function xfail_accepted(property, value)
-{
-  if (property in gNotAccepted &&
-      gNotAccepted[property].indexOf(value) != -1)
-    return true;
-
-  return false;
-}
-
-function xfail_accepted_split(property, subprop, value)
-{
-  if (property in gNotAccepted &&
-      gNotAccepted[property].indexOf(value) != -1)
-    return true;
-
-  return false;
-}
-
-function xfail_idparseser(property, value)
-{
-  if (property != "font" && xfail_accepted(property, value))
-    // We already failed the first test, which will make us always pass this
-    // one.
-    return false;
-
-  return false;
-}
-
-function xfail_idserparse_compute(property, value)
-{
-  return false;
-}
-
-function xfail_idsersplitparse_compute(property, subprop, value, step1subcomp)
-{
-  return false;
-}
-
-function xfail_idparsesplitser(property, value)
-{
-  return false;
-}
-
 function xfail_compute(property, value)
 {
   if (property in gBadCompute &&
       gBadCompute[property].indexOf(value) != -1)
     return true;
 
-  return false;
-}
-
-function xfail_split_compute(property, value)
-{
   return false;
 }
 
@@ -134,7 +82,7 @@ function test_property(property)
   function test_value(value) {
     gDeclaration.setProperty(property, value, "");
 
-    var idx, func;
+    var idx;
 
     var step1val = gDeclaration.getPropertyValue(property);
     var step1vals = [];
@@ -150,15 +98,12 @@ function test_property(property)
       for (idx in info.subproperties)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
-    func = xfail_accepted(property, value) ? todo_isnot : isnot;
-    func(step1val, "", "setting '" + value + "' on '" + property + "'");
+    isnot(step1val, "", "setting '" + value + "' on '" + property + "'");
     if ("subproperties" in info)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
-        func = xfail_accepted_split(property, subprop, value)
-                 ? todo_isnot : isnot;
-        func(gDeclaration.getPropertyValue(subprop), "",
-             "setting '" + value + "' on '" + property + "'");
+        isnot(gDeclaration.getPropertyValue(subprop), "",
+              "setting '" + value + "' on '" + property + "'");
       }
 
     // We don't care particularly about the whitespace or the placement of
@@ -172,15 +117,13 @@ function test_property(property)
     gDeclaration.removeProperty(property);
     gDeclaration.setProperty(property, step1val, "");
 
-    func = xfail_idparseser(property, value) ? todo_is : is;
-    func(gDeclaration.getPropertyValue(property), step1val,
-         "parse+serialize should be idempotent for '" +
+    is(gDeclaration.getPropertyValue(property), step1val,
+       "parse+serialize should be idempotent for '" +
          property + ": " + value + "'");
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
-      func = xfail_idserparse_compute(property, value) ? todo_is : is;
-      func(gComputedStyle.getPropertyValue(property), step1comp,
-           "serialize+parse should be identity transform for '" +
-           property + ": " + value + "'");
+      is(gComputedStyle.getPropertyValue(property), step1comp,
+         "serialize+parse should be identity transform for '" +
+         property + ": " + value + "'");
     }
 
     if ("subproperties" in info &&
@@ -199,24 +142,20 @@ function test_property(property)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         if (test_computed && !("backend_only" in gCSSProperties[subprop])) {
-          func =
-            xfail_idsersplitparse_compute(property, subprop, value, step1comps[idx])
-              ? todo_is : is;
-          func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
-               "serialize(" + subprop + ")+parse should be the identity " +
-               "transform for '" + property + ": " + value + "'");
+          is(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
+             "serialize(" + subprop + ")+parse should be the identity " +
+             "transform for '" + property + ": " + value + "'");
         }
       }
-      func = xfail_idparsesplitser(property, value) ? todo_is : is;
-      func(gDeclaration.getPropertyValue(property), step1val,
-           "parse+split+serialize should be idempotent for '" +
-           property + ": " + value + "'");
+      is(gDeclaration.getPropertyValue(property), step1val,
+         "parse+split+serialize should be idempotent for '" +
+         property + ": " + value + "'");
     }
 
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
       gDeclaration.removeProperty(property);
       gDeclaration.setProperty(property, step1comp, "");
-      func = xfail_compute(property, value) ? todo_is : is;
+      var func = xfail_compute(property, value) ? todo_is : is;
       func(gComputedStyle.getPropertyValue(property), step1comp,
            "parse+compute+serialize should be idempotent for '" +
            property + ": " + value + "'");
@@ -233,14 +172,13 @@ function test_property(property)
       // Now that all the subprops are set, check their values.  Note that we
       // need this in a separate loop, in case parts of the shorthand affect
       // the computed values of other parts.
-      func = xfail_split_compute(property, value) ? todo_is : is;
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         if ("backend_only" in gCSSProperties[subprop])
           continue;
-        func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
-             "parse+compute+serialize(" + subprop + ") should be idempotent for '" +
-             property + ": " + value + "'");
+        is(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
+           "parse+compute+serialize(" + subprop + ") should be idempotent for '" +
+           property + ": " + value + "'");
       }
     }
 
