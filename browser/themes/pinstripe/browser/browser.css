@@ -1741,6 +1741,9 @@ tabbrowser > tabbox > tabpanels {
 .tabs-newtab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
 }
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  padding: 0 11px;
+}
 .tabs-alltabs-button {
   padding-top: 2px;
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
@@ -1754,7 +1757,6 @@ tabbrowser > tabbox > tabpanels {
   background-color: rgba(0,0,0,0.20);
 }
 
-.tabs-newtab-button > .toolbarbutton-text ,
 .tabs-alltabs-button > .toolbarbutton-text {
   display: none;
 }

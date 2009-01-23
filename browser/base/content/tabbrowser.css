@@ -27,3 +27,12 @@
 .tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab:not(:only-child) > .tab-close-button {
   display: -moz-box;
 }
+
+.tabs-container:not([overflow="true"]) > .tabs-newtab-button,
+.tabs-container[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  visibility: collapse;
+}
+
+.tabs-newtab-button > .toolbarbutton-text {
+  display: none;
+}
