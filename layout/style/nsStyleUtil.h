@@ -109,6 +109,8 @@ public:
   static PRBool IsSignificantChild(nsIContent* aChild,
                                    PRBool aTextIsSignificant,
                                    PRBool aWhitespaceIsSignificant);
+
+  static void ReportUseOfDeprecatedMethod(nsIURI* aURI, const char* aWarning);
 };
 
 
