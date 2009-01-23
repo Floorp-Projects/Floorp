@@ -15,3 +15,5 @@ http://trac.annodex.net/ticket/431
 
 The oggz_off_t.patch fixes a compile error on Solaris see bug 449754
 for details
+
+The wince.patch addresses the lack of posix file IO suppor on windows ce see bug 461844 for details.
