@@ -42,14 +42,42 @@ VPATH     = @srcdir@
 relativesrcdir = mobile/locales
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
-vpath %.xml $(srcdir)/$(MOZ_UI_LOCALE)/searchplugins
+vpath %.xml @srcdir@/en-US/searchplugins
+vpath %.xml $(LOCALE_SRCDIR)/searchplugins
 
-DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=browser
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox-mobile.mozilla.org
+PREF_JS_EXPORTS = $(or $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js), \
+                       @srcdir@/en-US/mobile-l10n.js )
 
-SEARCH_PLUGINS = $(shell cat $(srcdir)/$(MOZ_UI_LOCALE)/searchplugins/list.txt)
+SEARCH_PLUGINS = $(shell cat \
+  $(or $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt), \
+       @srcdir@/en-US/searchplugins/list.txt ) )
 
-libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
+libs:: $(addsuffix .xml, $(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/searchplugins
 
 include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/toolkit/locales/l10n.mk
+
+clobber-zip:
+	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
+	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
+	  $(STAGEDIST)/defaults/preferences/mobile-l10n.js
+	$(RM) -r $(STAGEDIST)/searchplugins \
+	  $(STAGEDIST)/dictionaries \
+	  $(STAGEDIST)/defaults/profile \
+	  $(STAGEDIST)/chrome/$(AB_CD)
+
+libs-%:
+	$(NSINSTALL) -D $(DIST)/install
+	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1
+
+# This is a generic target that will make a langpack and repack tarball
+# builds. It is called from the tinderbox scripts. Alter it with caution.
+
+installers-%: clobber-% langpack-% repackage-zip-%
+	@echo "repackaging done"
