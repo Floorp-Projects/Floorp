@@ -105,6 +105,9 @@ static const char tagChar[]  = "OIDISIBI";
 /* Max blacklist level of inner tree immediate recompiling  */
 #define MAX_INNER_RECORD_BLACKLIST  -16
 
+/* Blacklist level to obtain on first blacklisting. */
+#define INITIAL_BLACKLIST_LEVEL 5
+
 /* Max native stack size. */
 #define MAX_NATIVE_STACK_SLOTS 1024
 
@@ -394,6 +397,68 @@ globalSlotHash(JSContext* cx, unsigned slot)
     return int(h);
 }
 
+static inline size_t
+hitHash(const void* ip)
+{    
+    uintptr_t h = 5381;
+    hash_accum(h, uintptr_t(ip));
+    return size_t(h);
+}
+
+Oracle::Oracle()
+{
+    clear();
+}
+
+/* Fetch the jump-target hit count for the current pc. */
+int32_t
+Oracle::getHits(const void* ip)
+{
+    size_t h = hitHash(ip);
+    uint32_t hc = hits[h];
+    uint32_t bl = blacklistLevels[h];
+
+    /* Clamp ranges for subtraction. */
+    if (bl > 30) 
+        bl = 30;
+    hc &= 0x7fffffff;
+    
+    return hc - (bl ? (1<<bl) : 0);
+}
+
+/* Fetch and increment the jump-target hit count for the current pc. */
+int32_t 
+Oracle::hit(const void* ip)
+{
+    size_t h = hitHash(ip);
+    if (hits[h] < 0xffffffff)
+        hits[h]++;
+    
+    return getHits(ip);
+}
+
+/* Reset the hit count for an jump-target and relax the blacklist count. */
+void 
+Oracle::resetHits(const void* ip)
+{
+    size_t h = hitHash(ip);
+    if (hits[h] > 0)
+        hits[h]--;
+    if (blacklistLevels[h] > 0)
+        blacklistLevels[h]--;
+}
+
+/* Blacklist with saturation. */
+void 
+Oracle::blacklist(const void* ip)
+{
+    size_t h = hitHash(ip);
+    if (blacklistLevels[h] == 0)
+        blacklistLevels[h] = INITIAL_BLACKLIST_LEVEL;
+    else if (blacklistLevels[h] < 0xffffffff)
+        blacklistLevels[h]++;
+}
+
 
 /* Tell the oracle that a certain global variable should not be demoted. */
 JS_REQUIRES_STACK void
@@ -425,7 +490,14 @@ Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
 
 /* Clear the oracle. */
 void
-Oracle::clear()
+Oracle::clearHitCounts()
+{
+    memset(hits, 0, sizeof(hits));
+    memset(blacklistLevels, 0, sizeof(blacklistLevels));    
+}
+
+void
+Oracle::clearDemotability()
 {
     _stackDontDemote.reset();
     _globalDontDemote.reset();
@@ -3216,9 +3288,9 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
         c->root = f;
     }
 
-    debug_only_v(printf("trying to attach another branch to the tree (hits = %d)\n", c->hits());)
+    debug_only_v(printf("trying to attach another branch to the tree (hits = %d)\n", oracle.getHits(c->ip));)
 
-    if (++c->hits() >= HOTEXIT) {
+    if (oracle.hit(c->ip) >= HOTEXIT) {
         /* start tracing secondary trace from this point */
         c->lirbuf = f->lirbuf;
         unsigned stackSlots;
@@ -3350,10 +3422,10 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
             if (old == NULL)
                 old = tm->recorder->getFragment();
             js_AbortRecording(cx, "No compatible inner tree");
-            if (!f && ++peer_root->hits() < MAX_INNER_RECORD_BLACKLIST)
+            if (!f && oracle.hit(peer_root->ip) < MAX_INNER_RECORD_BLACKLIST)
                 return false;
             if (old->recordAttempts < MAX_MISMATCH)
-                old->resetHits();
+                oracle.resetHits(old->ip);
             f = empty ? empty : tm->fragmento->getAnchor(cx->fp->regs->pc);
             return js_RecordTree(cx, tm, f, old);
         }
@@ -3380,13 +3452,13 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
             /* abort recording so the inner loop can become type stable. */
             old = fragmento->getLoop(tm->recorder->getFragment()->root->ip);
             js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
-            old->resetHits();
+            oracle.resetHits(old->ip);
             return js_AttemptToStabilizeTree(cx, lr, old);
         case BRANCH_EXIT:
             /* abort recording the outer tree, extend the inner tree */
             old = fragmento->getLoop(tm->recorder->getFragment()->root->ip);
             js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
-            old->resetHits();
+            oracle.resetHits(old->ip);
             return js_AttemptToExtendTree(cx, lr, NULL, old);
         default:
             debug_only_v(printf("exit_type=%d\n", lr->exitType);)
@@ -3866,6 +3938,13 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         js_FlushJITCache(cx);
     
     jsbytecode* pc = cx->fp->regs->pc;
+
+    if (oracle.getHits(pc) >= 0 && 
+        oracle.getHits(pc)+1 < HOTLOOP) {
+        oracle.hit(pc);
+        return false;
+    }
+
     Fragmento* fragmento = tm->fragmento;
     Fragment* f;
     f = fragmento->getLoop(pc);
@@ -3873,10 +3952,10 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         f = fragmento->getAnchor(pc);
 
     /* If we have no code in the anchor and no peers, we definitively won't be able to 
-       activate any trees so increment the hit counter and start compiling if appropriate. */
+       activate any trees so, start compiling. */
     if (!f->code() && !f->peer) {
 monitor_loop:
-        if (++f->hits() >= HOTLOOP) {
+        if (oracle.hit(pc) >= HOTLOOP) {
             /* We can give RecordTree the root peer. If that peer is already taken, it will
                walk the peer list and find us a free slot or allocate a new tree if needed. */
             return js_RecordTree(cx, tm, f->first, NULL);
@@ -3888,7 +3967,7 @@ monitor_loop:
     debug_only_v(printf("Looking for compat peer %d@%d, from %p (ip: %p, hits=%d)\n",
                         js_FramePCToLineNumber(cx, cx->fp), 
                         FramePCOffset(cx->fp),
-                        f, f->ip, f->hits());)
+                        f, f->ip, oracle.getHits(f->ip));)
     Fragment* match = js_FindVMCompatiblePeer(cx, f);
     /* If we didn't find a tree that actually matched, keep monitoring the loop. */
     if (!match) 
@@ -4027,7 +4106,7 @@ js_BlacklistPC(Fragmento* frago, Fragment* frag)
 {
     if (frag->kind == LoopTrace)
         frag = frago->getLoop(frag->ip);
-    frag->blacklist();
+    oracle.blacklist(frag->ip);
 }
 
 JS_REQUIRES_STACK void
@@ -4235,6 +4314,7 @@ js_FlushJITCache(JSContext* cx)
         tm->globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
         tm->globalSlots->clear();
     }
+    oracle.clearHitCounts();
 }
 
 JS_FORCES_STACK JSStackFrame *
