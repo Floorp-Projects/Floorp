@@ -88,11 +88,16 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     /**
      * removePagesFromHost
      *
-     * Remove all pages from the given host.
-     * If aEntireDomain is true, will assume aHost is a domain,
-     * and remove all pages from the entire domain.
-     * Notice that this does not call observers for single deleted uris,
-     * instead it will send Begin/EndUpdateBatch
+     * Removes all history information about pages from a given host. If
+     * aEntireDomain is set, we will also delete pages from sub hosts (so if
+     * we are passed in "microsoft.com" we delete "www.microsoft.com",
+     * "msdn.microsoft.com", etc.). An empty host name means local files and
+     * anything else with no host name. You can also pass in the localized
+     * "(local files)" title given to you from a history query to remove all
+     * history information from local files.
+     *
+     * Note that this does not call observers for single deleted uris,
+     * but will send Begin/EndUpdateBatch.
      */
     void removePagesFromHost(in AUTF8String aHost, in boolean aEntireDomain);
 
