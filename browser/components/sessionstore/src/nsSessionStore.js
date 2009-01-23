@@ -73,7 +73,7 @@ const OBSERVING = [
   "domwindowopened", "domwindowclosed",
   "quit-application-requested", "quit-application-granted",
   "quit-application", "browser:purge-session-history",
-  "private-browsing"
+  "private-browsing", "browser:purge-domain-data"
 ];
 
 /*
@@ -347,6 +347,27 @@ SessionStoreService.prototype = {
       // Delete the private browsing backed up state, if any
       if ("_stateBackup" in this)
         delete this._stateBackup;
+      break;
+    case "browser:purge-domain-data":
+      // does a session history entry contain a url for the given domain?
+      function containsDomain(aEntry) {
+        try {
+          if (this._getURIFromString(aEntry.url).host.hasRootDomain(aData))
+            return true;
+        }
+        catch (ex) { /* url had no host at all */ }
+        return aEntry.children && aEntry.children.some(containsDomain, this);
+      }
+      // remove all closed tabs containing a reference to the given domain
+      for (let ix in this._windows) {
+        let closedTabs = this._windows[ix]._closedTabs;
+        for (let i = closedTabs.length - 1; i >= 0; i--) {
+          if (closedTabs[i].state.entries.some(containsDomain, this))
+            closedTabs.splice(i, 1);
+        }
+      }
+      if (this._loadState == STATE_RUNNING)
+        this.saveState(true);
       break;
     case "nsPref:changed": // catch pref changes
       switch (aData) {
@@ -2639,6 +2660,21 @@ let XPathHelper = {
     return (this.restorableFormNodes = formNodesXPath);
   }
 };
+
+// see nsPrivateBrowsingService.js
+String.prototype.hasRootDomain = function hasRootDomain(aDomain)
+{
+  let index = this.indexOf(aDomain);
+  if (index == -1)
+    return false;
+
+  if (this == aDomain)
+    return true;
+
+  let prevChar = this[index - 1];
+  return (index == (this.length - aDomain.length)) &&
+         (prevChar == "." || prevChar == "/");
+}
 
 function NSGetModule(aComMgr, aFileSpec)
   XPCOMUtils.generateModule([SessionStoreService]);
