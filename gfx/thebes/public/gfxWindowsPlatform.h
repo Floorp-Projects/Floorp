@@ -114,7 +114,7 @@ public:
      * family, style, weight, etc.
      */
     already_AddRefed<gfxFont>
-    gfxWindowsPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont);
+    FindFontForChar(PRUint32 aCh, gfxFont *aFont);
 
     /* Find a FontFamily/FontEntry object that represents a font on your system given a name */
     FontFamily *FindFontFamily(const nsAString& aName);

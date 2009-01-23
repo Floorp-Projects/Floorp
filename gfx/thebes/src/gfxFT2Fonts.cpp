@@ -78,7 +78,6 @@ FontEntry::~FontEntry()
 }
 
 /* static */
-
 FontEntry*  
 FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, 
                            nsISupports *aLoader, const PRUint8 *aFontData, 
@@ -106,8 +105,8 @@ FTFontDestroyFunc(void *data)
     FT_Done_Face(face);
 }
 
-/* static */
-FontEntry*  FontEntry::CreateFontEntryFromFace(FT_Face aFace) {
+/* static */ FontEntry*  
+FontEntry::CreateFontEntryFromFace(FT_Face aFace) {
     static cairo_user_data_key_t key;
 
     if (!aFace->family_name) {
@@ -240,7 +239,7 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
         if (match)
             FcPatternGetString(match, FC_FAMILY, 0, &family);
         if (family)
-            familyArray.AppendString(NS_ConvertUTF8toUTF16((char*)family));
+            familyArray.AppendElement(NS_ConvertUTF8toUTF16((char*)family));
 #elif defined(XP_WIN)
         HGDIOBJ hGDI = ::GetStockObject(SYSTEM_FONT);
         LOGFONTW logFont;
