@@ -113,7 +113,7 @@ WBORecord.prototype = {
       "  parent: " + this.parentid + "\n" +
       "  depth: " + this.depth + ", index: " + this.sortindex + "\n" +
       "  modified: " + this.modified + "\n" +
-      "  payload: " + json.encode(this.cleartext) + " }";
+      "  payload: " + json.encode(this.payload) + " }";
   }
 };
 
