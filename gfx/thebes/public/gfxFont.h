@@ -1538,6 +1538,8 @@ public:
         NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
                      "Whoever was caching this font group should have "
                      "called UpdateFontList on it");
+        NS_ASSERTION(mFonts.Length() > PRUint32(i), 
+                     "Requesting a font index that doesn't exist");
 
         return static_cast<gfxFont*>(mFonts[i]);
     }

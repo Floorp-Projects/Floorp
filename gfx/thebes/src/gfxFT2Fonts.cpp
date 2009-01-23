@@ -41,6 +41,12 @@
 #include "gfxQtPlatform.h"
 #include <qfontinfo.h>
 #define gfxToolkitPlatform gfxQtPlatform
+#elif defined(XP_WIN)
+#ifdef WINCE
+#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+#endif
+#include "gfxWindowsPlatform.h"
+#define gfxToolkitPlatform gfxWindowsPlatform
 #endif
 #include "gfxTypes.h"
 #include "gfxFT2Fonts.h"
@@ -71,11 +77,63 @@ FontEntry::~FontEntry()
     }
 }
 
+/* static */
+
+FontEntry*  
+FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, 
+                           nsISupports *aLoader, const PRUint8 *aFontData, 
+                           PRUint32 aLength) {
+    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength))
+        return nsnull;
+    FT_Face face;
+    FT_Error error =
+        FT_New_Memory_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), 
+                           aFontData, aLength, 0, &face);
+    if (error != FT_Err_Ok)
+        return nsnull;
+    FontEntry* fe = FontEntry::CreateFontEntryFromFace(face);
+    fe->mItalic = aProxyEntry.mItalic;
+    fe->mWeight = aProxyEntry.mWeight;
+    fe->mStretch = aProxyEntry.mStretch;
+    return fe;
+
+}
+
 static void
 FTFontDestroyFunc(void *data)
 {
     FT_Face face = (FT_Face)data;
     FT_Done_Face(face);
+}
+
+/* static */
+FontEntry*  FontEntry::CreateFontEntryFromFace(FT_Face aFace) {
+    static cairo_user_data_key_t key;
+
+    if (!aFace->family_name) {
+        FT_Done_Face(aFace);
+        return nsnull;
+    }
+    // Construct font name from family name and style name, regular fonts
+    // do not have the modifier by convention.
+    NS_ConvertUTF8toUTF16 fontName(aFace->family_name);
+    if (aFace->style_name && strcmp("Regular", aFace->style_name)) {
+        fontName.AppendLiteral(" ");
+        AppendUTF8toUTF16(aFace->style_name, fontName);
+    }
+    FontEntry *fe = new FontEntry(fontName);
+    fe->mItalic = aFace->style_flags & FT_STYLE_FLAG_ITALIC;
+    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, 0);
+    cairo_font_face_set_user_data(fe->mFontFace, &key,
+                                  aFace, FTFontDestroyFunc);
+    TT_OS2 *os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(aFace, ft_sfnt_os2));
+    if (os2 && os2->version != 0xffff)
+        fe->mWeight  = os2->usWeightClass;
+    else if (aFace->style_flags & FT_STYLE_FLAG_BOLD)
+        fe->mWeight = 700;
+    else
+        fe->mWeight = 400;
+    return fe;
 }
 
 FontEntry*
@@ -101,17 +159,23 @@ FontEntry::CairoFontFace()
 FontEntry *
 FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
 {
-    PRBool italic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    PRBool needsBold = PR_FALSE;
+    return static_cast<FontEntry*>(FindFontForStyle(aFontStyle, needsBold));
+}
 
-    FontEntry *weightList[10] = { 0 };
+PRBool
+FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle)
+{
+    PRBool italic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    PRBool matchesSomething = PR_FALSE;
+
     for (PRUint32 j = 0; j < 2; j++) {
-        PRBool matchesSomething = PR_FALSE;
         // build up an array of weights that match the italicness we're looking for
         for (PRUint32 i = 0; i < mFaces.Length(); i++) {
             FontEntry *fe = mFaces[i];
             const PRUint8 weight = (fe->mWeight / 100);
             if (fe->mItalic == italic) {
-                weightList[weight] = fe;
+                aFontsForWeights[weight] = fe;
                 matchesSomething = PR_TRUE;
             }
         }
@@ -120,54 +184,8 @@ FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
         italic = !italic;
     }
 
-    PRInt8 baseWeight, weightDistance;
-    aFontStyle.ComputeWeightAndOffset(&baseWeight, &weightDistance);
-
-    // 500 isn't quite bold so we want to treat it as 400 if we don't
-    // have a 500 weight
-    if (baseWeight == 5 && weightDistance == 0) {
-        // If we have a 500 weight then use it
-        if (weightList[5])
-            return weightList[5];
-
-        // Otherwise treat as 400
-        baseWeight = 4;
-    }
-
-    PRInt8 matchBaseWeight = 0;
-    PRInt8 direction = (baseWeight > 5) ? 1 : -1;
-    for (PRInt8 i = baseWeight; ; i += direction) {
-        if (weightList[i]) {
-            matchBaseWeight = i;
-            break;
-        }
-
-        // if we've reached one side without finding a font,
-        // go the other direction until we find a match
-        if (i == 1 || i == 9)
-            direction = -direction;
-    }
-
-    FontEntry *matchFE;
-    const PRInt8 absDistance = abs(weightDistance);
-    direction = (weightDistance >= 0) ? 1 : -1;
-    for (PRInt8 i = matchBaseWeight, k = 0; i < 10 && i > 0; i += direction) {
-        if (weightList[i]) {
-            matchFE = weightList[i];
-            k++;
-        }
-        if (k > absDistance)
-            break;
-    }
-
-    if (!matchFE)
-        matchFE = weightList[matchBaseWeight];
-
-    NS_ASSERTION(matchFE, "we should always be able to return something here");
-    return matchFE;
+    return matchesSomething;
 }
-
-
 
 /**
  * gfxFT2FontGroup
@@ -190,33 +208,6 @@ gfxFT2FontGroup::FontCallback(const nsAString& fontName,
     return PR_TRUE;
 }
 
-/**
- * Look up the font in the gfxFont cache. If we don't find it, create one.
- * In either case, add a ref, append it to the aFonts array, and return it ---
- * except for OOM in which case we do nothing and return null.
- */
-static already_AddRefed<gfxFT2Font>
-GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
-{
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
-    if (!font) {
-        FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
-        if (!fe) {
-            printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
-            return nsnull;
-        }
-
-        font = new gfxFT2Font(fe, aStyle);
-        if (!font)
-            return nsnull;
-        gfxFontCache::GetCache()->AddNew(font);
-    }
-    gfxFont *f = nsnull;
-    font.swap(f);
-    return static_cast<gfxFT2Font *>(f);
-}
-
-
 gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
                                const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
@@ -234,22 +225,39 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
             ForEachFont(prefFamilies, aStyle->langGroup, FontCallback, &familyArray);
         }
     }
-#if defined(MOZ_WIDGET_QT) /* FIXME DFB */
     if (familyArray.Length() == 0) {
+#if defined(MOZ_WIDGET_QT) /* FIXME DFB */
         printf("failde to find a font. sadface\n");
         // We want to get rid of this entirely at some point, but first we need real lists of fonts.
         QFont defaultFont;
         QFontInfo fi (defaultFont);
         familyArray.AppendElement(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
-    }
+#elif defined(MOZ_WIDGET_GTK2)
+        FcResult result;
+        FcChar8 *family = nsnull;
+        FcPattern* pat = FcPatternCreate();
+        FcPattern *match = FcFontMatch(nsnull, pat, &result);
+        if (match)
+            FcPatternGetString(match, FC_FAMILY, 0, &family);
+        if (family)
+            familyArray.AppendString(NS_ConvertUTF8toUTF16((char*)family));
+#elif defined(XP_WIN)
+        HGDIOBJ hGDI = ::GetStockObject(SYSTEM_FONT);
+        LOGFONTW logFont;
+        if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) 
+            familyArray.AppendElement(nsDependentString(logFont.lfFaceName));
+#else
+#error "Platform not supported"
 #endif
+    }
 
     for (PRUint32 i = 0; i < familyArray.Length(); i++) {
-        nsRefPtr<gfxFT2Font> font = GetOrMakeFont(familyArray[i], &mStyle);
+        nsRefPtr<gfxFT2Font> font = gfxFT2Font::GetOrMakeFont(familyArray[i], &mStyle);
         if (font) {
             mFonts.AppendElement(font);
         }
     }
+    NS_ASSERTION(mFonts.Length() > 0, "We need at least one font in a fontgroup");
 }
 
 gfxFT2FontGroup::~gfxFT2FontGroup()
@@ -870,3 +878,30 @@ gfxFT2Font::SetupCairoFont(gfxContext *aContext)
     cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
     return PR_TRUE;
 }
+
+/**
+ * Look up the font in the gfxFont cache. If we don't find it, create one.
+ * In either case, add a ref, append it to the aFonts array, and return it ---
+ * except for OOM in which case we do nothing and return null.
+ */
+already_AddRefed<gfxFT2Font>
+gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
+{
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
+    if (!font) {
+        FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
+        if (!fe) {
+            printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
+            return nsnull;
+        }
+
+        font = new gfxFT2Font(fe, aStyle);
+        if (!font)
+            return nsnull;
+        gfxFontCache::GetCache()->AddNew(font);
+    }
+    gfxFont *f = nsnull;
+    font.swap(f);
+    return static_cast<gfxFT2Font *>(f);
+}
+

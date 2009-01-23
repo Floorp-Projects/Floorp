@@ -46,12 +46,12 @@
 #include "gfxFont.h"
 #include "gfxMatrix.h"
 #include "gfxFontUtils.h"
+#include "gfxUserFontSet.h"
 
 #include "nsDataHashtable.h"
 
 #include <usp10.h>
 #include <cairo-win32.h>
-
 
 /**
  * List of different types of fonts we support on Windows.
@@ -131,7 +131,13 @@ public:
     {
 
     }
+    static void InitializeFontEmbeddingProcs();
 
+    static FontEntry* CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
+                                      nsISupports *aLoader,
+                                      const PRUint8 *aFontData,
+                                      PRUint32 aLength);
+    
     static FontEntry* CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType, PRBool aItalic, PRUint16 aWeight, gfxUserFontData* aUserFontData, HDC hdc = 0, LOGFONTW *aLogFont = nsnull);
 
     static void FillLogFont(LOGFONTW *aLogFont, FontEntry *aFontEntry, gfxFloat aSize, PRBool aItalic);

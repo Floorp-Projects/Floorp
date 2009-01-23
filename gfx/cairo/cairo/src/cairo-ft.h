@@ -43,18 +43,22 @@
 
 /* Fontconfig/Freetype platform-specific font interface */
 
+#ifndef CAIRO_DISABLE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
+#endif
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 CAIRO_BEGIN_DECLS
 
+#ifndef CAIRO_DISABLE_FONTCONFIG
 cairo_public cairo_font_face_t *
 cairo_ft_font_face_create_for_pattern (FcPattern *pattern);
 
 cairo_public void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 				  FcPattern                  *pattern);
+#endif
 
 cairo_public cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
