@@ -273,12 +273,10 @@
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
-#if (defined(XP_WIN) && !defined(CROSS_COMPILE)) || defined (WINCE)
-# include "jscpucfg.h"      /* Use standard Mac or Windows configuration */
-#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) || defined(CROSS_COMPILE)
-# include "jsautocfg.h"     /* Use auto-detected configuration */
+#ifdef _MSC_VER
+# include "jscpucfg.h"  /* We can't auto-detect MSVC configuration */
 #else
-# error "Must define one of XP_BEOS, XP_OS2, XP_WIN or XP_UNIX"
+# include "jsautocfg.h" /* Use auto-detected configuration */
 #endif
 
 JS_BEGIN_EXTERN_C
