@@ -2645,9 +2645,7 @@ js_Interpret(JSContext *cx)
             }                                                                 \
             fp = cx->fp;                                                      \
             script = fp->script;                                              \
-            atoms = fp->imacpc                                                \
-                    ? COMMON_ATOMS_START(&rt->atomState)                      \
-                    : script->atomMap.vector;                                 \
+            atoms = FrameAtomBase(cx, fp);                                    \
             currentVersion = (JSVersion) script->version;                     \
             JS_ASSERT(fp->regs == &regs);                                     \
             if (cx->throwing)                                                 \
@@ -3054,9 +3052,7 @@ js_Interpret(JSContext *cx)
 
                 /* Restore the calling script's interpreter registers. */
                 script = fp->script;
-                atoms = fp->imacpc
-                        ? COMMON_ATOMS_START(&rt->atomState)
-                        : script->atomMap.vector;
+                atoms = FrameAtomBase(cx, fp);
 
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
