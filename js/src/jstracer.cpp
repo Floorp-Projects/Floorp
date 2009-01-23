@@ -1113,9 +1113,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->lirbuf = _fragment->lirbuf;
     this->treeInfo = ti;
     this->callDepth = _anchor ? _anchor->calldepth : 0;
-    this->atoms = cx->fp->imacpc
-                  ? COMMON_ATOMS_START(&cx->runtime->atomState)
-                  : cx->fp->script->atomMap.vector;
+    this->atoms = FrameAtomBase(cx, cx->fp);
     this->deepAborted = false;
     this->trashSelf = false;
     this->global_dslots = this->globalObj->dslots;
@@ -5729,7 +5727,7 @@ TraceRecorder::record_LeaveFrame()
 
     // LeaveFrame gets called after the interpreter popped the frame and
     // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
-    atoms = cx->fp->script->atomMap.vector;
+    atoms = FrameAtomBase(cx, cx->fp);
     set(&stackval(-1), rval_ins, true);
     return true;
 }
