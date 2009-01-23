@@ -35,10 +35,6 @@
 
 /** Test for computation of values in property database **/
 
-var gNotAccepted = {
-  "list-style": [ "none disc outside" ],
-};
-
 var gBadComputed = {
   // The 'medium' keyword should be computing to '3px', not 'medium'.
   "outline-width": [ "3px" ],
@@ -75,10 +71,6 @@ var gBadComputedNoFrame = {
 };
 
 function xfail_value(property, value, is_initial, has_frame) {
-  if ((property in gNotAccepted) &&
-      gNotAccepted[property].indexOf(value) != -1)
-    return true;
-
   if ((property in gBadComputed) &&
       gBadComputed[property].indexOf(value) != -1)
     return true;
