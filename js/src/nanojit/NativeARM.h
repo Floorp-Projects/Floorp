@@ -156,6 +156,7 @@ typedef enum {
     NV = 0xF  // NeVer
 } ConditionCode;
 
+const char *ccName(ConditionCode cc);
 
 typedef int RegisterMask;
 typedef struct _FragInfo {
@@ -692,23 +693,26 @@ typedef enum {
 
 // MOV(EQ) _r, #1 
 // EOR(NE) _r, _r
-#define SET(_r,_cond,_opp)                                              \
+#define SET(_r,_cond,_opp) do {                                         \
     underrunProtect(8);                                                 \
     *(--_nIns) = (NIns)( (_opp<<28) | (1<<21) | ((_r)<<16) | ((_r)<<12) | (_r) ); \
-    *(--_nIns) = (NIns)( (_cond<<28) | (0x3A<<20) | ((_r)<<12) | (1) );
+    *(--_nIns) = (NIns)( (_cond<<28) | (0x3A<<20) | ((_r)<<12) | (1) ); \
+    asm_output("mov%s %s, #1", ccName(_cond), gpn(r), gpn(r));          \
+    asm_output("eor%s %s, %s", ccName(_opp), gpn(r), gpn(r));           \
+    } while (0)
 
 
-#define SETE(r)     do {SET(r,EQ,NE); asm_output("sete %s",gpn(r)); } while(0)
-#define SETL(r)     do {SET(r,LT,GE); asm_output("setl %s",gpn(r)); } while(0)
-#define SETLE(r)    do {SET(r,LE,GT); asm_output("setle %s",gpn(r)); } while(0)
-#define SETG(r)     do {SET(r,GT,LE); asm_output("setg %s",gpn(r)); } while(0)
-#define SETGE(r)    do {SET(r,GE,LT); asm_output("setge %s",gpn(r)); } while(0)
-#define SETB(r)     do {SET(r,CC,CS); asm_output("setb %s",gpn(r)); } while(0)
-#define SETBE(r)    do {SET(r,LS,HI); asm_output("setb %s",gpn(r)); } while(0)
-#define SETAE(r)    do {SET(r,CS,CC); asm_output("setae %s",gpn(r)); } while(0)
-#define SETA(r)     do {SET(r,HI,LS); asm_output("seta %s",gpn(r)); } while(0)
-#define SETO(r)     do {SET(r,VS,LS); asm_output("seto %s",gpn(r)); } while(0)
-#define SETC(r)     do {SET(r,CS,LS); asm_output("setc %s",gpn(r)); } while(0)
+#define SETE(r)     SET(r,EQ,NE)
+#define SETL(r)     SET(r,LT,GE)
+#define SETLE(r)    SET(r,LE,GT)
+#define SETG(r)     SET(r,GT,LE)
+#define SETGE(r)    SET(r,GE,LT)
+#define SETB(r)     SET(r,CC,CS)
+#define SETBE(r)    SET(r,LS,HI)
+#define SETAE(r)    SET(r,CS,CC)
+#define SETA(r)     SET(r,HI,LS)
+#define SETO(r)     SET(r,VS,LS)
+#define SETC(r)     SET(r,CS,LS)
 
 // This zero-extends a reg that has been set using one of the SET macros,
 // but is a NOOP on ARM/Thumb
