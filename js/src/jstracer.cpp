@@ -7079,15 +7079,12 @@ JS_REQUIRES_STACK bool
 TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 {
     /*
-     * If the shape of the object matches the global object's shape, we
-     * have to guard against aliasing to avoid aliasing stale homes of stacked
-     * global variables.
+     * Can't specialize to assert obj != global, must guard to avoid aliasing
+     * stale homes of stacked global variables.
      */
-    if (OBJ_SHAPE(obj) == OBJ_SHAPE(globalObj)) {
-        if (obj == globalObj)
-            ABORT_TRACE("prop op aliases global");
-        guard(false, lir->ins2(LIR_eq, obj_ins, globalObj_ins), MISMATCH_EXIT);
-    }
+    if (obj == globalObj)
+        ABORT_TRACE("prop op aliases global");
+    guard(false, lir->ins2(LIR_eq, obj_ins, globalObj_ins), MISMATCH_EXIT);
 
     /*
      * Property cache ensures that we are dealing with an existing property,
