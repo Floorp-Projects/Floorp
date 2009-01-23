@@ -181,10 +181,6 @@ class nsMediaDecoder : public nsIObserver
   // main thread only.
   virtual void Resume() = 0;
 
-  // Returns a weak reference to the media element we're decoding for,
-  // if it's available.
-  nsHTMLMediaElement* GetMediaElement();
-
 protected:
 
   // Start timer to update download progress information.
