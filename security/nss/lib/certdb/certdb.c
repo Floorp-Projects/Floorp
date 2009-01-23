@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.92 2008/05/16 03:38:39 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.95 2008/12/02 23:24:48 nelson%bolyard.com Exp $
  */
 
 #include "nssilock.h"
@@ -52,7 +52,6 @@
 #include "genname.h"
 #include "keyhi.h"
 #include "secitem.h"
-#include "mcom_db.h"
 #include "certdb.h"
 #include "prprf.h"
 #include "sechash.h"
@@ -2107,7 +2106,56 @@ CERT_DestroyCrl (CERTSignedCrl *crl)
     SEC_DestroyCrl (crl);
 }
 
+static int
+cert_Version(CERTCertificate *cert)
+{
+    int version = 0;
+    if (cert && cert->version.data && cert->version.len) {
+	version = DER_GetInteger(&cert->version);
+	if (version < 0)
+	    version = 0;
+    }
+    return version;
+}
 
+static unsigned int
+cert_ComputeTrustOverrides(CERTCertificate *cert, unsigned int cType)
+{
+    CERTCertTrust *trust = cert->trust;
+
+    if (trust && (trust->sslFlags |
+		  trust->emailFlags |
+		  trust->objectSigningFlags)) {
+
+	if (trust->sslFlags & (CERTDB_VALID_PEER|CERTDB_TRUSTED)) 
+	    cType |= NS_CERT_TYPE_SSL_SERVER|NS_CERT_TYPE_SSL_CLIENT;
+	if (trust->sslFlags & (CERTDB_VALID_CA|CERTDB_TRUSTED_CA)) 
+	    cType |= NS_CERT_TYPE_SSL_CA;
+#if defined(CERTDB_NOT_TRUSTED)
+	if (trust->sslFlags & CERTDB_NOT_TRUSTED) 
+	    cType &= ~(NS_CERT_TYPE_SSL_SERVER|NS_CERT_TYPE_SSL_CLIENT|
+	               NS_CERT_TYPE_SSL_CA);
+#endif
+	if (trust->emailFlags & (CERTDB_VALID_PEER|CERTDB_TRUSTED)) 
+	    cType |= NS_CERT_TYPE_EMAIL;
+	if (trust->emailFlags & (CERTDB_VALID_CA|CERTDB_TRUSTED_CA)) 
+	    cType |= NS_CERT_TYPE_EMAIL_CA;
+#if defined(CERTDB_NOT_TRUSTED)
+	if (trust->emailFlags & CERTDB_NOT_TRUSTED) 
+	    cType &= ~(NS_CERT_TYPE_EMAIL|NS_CERT_TYPE_EMAIL_CA);
+#endif
+	if (trust->objectSigningFlags & (CERTDB_VALID_PEER|CERTDB_TRUSTED)) 
+	    cType |= NS_CERT_TYPE_OBJECT_SIGNING;
+	if (trust->objectSigningFlags & (CERTDB_VALID_CA|CERTDB_TRUSTED_CA)) 
+	    cType |= NS_CERT_TYPE_OBJECT_SIGNING_CA;
+#if defined(CERTDB_NOT_TRUSTED)
+	if (trust->objectSigningFlags & CERTDB_NOT_TRUSTED) 
+	    cType &= ~(NS_CERT_TYPE_OBJECT_SIGNING|
+	               NS_CERT_TYPE_OBJECT_SIGNING_CA);
+#endif
+    }
+    return cType;
+}
 
 /*
  * Does a cert belong to a CA?  We decide based on perm database trust
@@ -2116,74 +2164,39 @@ CERT_DestroyCrl (CERTSignedCrl *crl)
 PRBool
 CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
 {
-    CERTCertTrust *trust;
-    SECStatus rv;
-    unsigned int type;
-    PRBool ret;
+    unsigned int cType = cert->nsCertType;
+    PRBool ret = PR_FALSE;
 
-    ret = PR_FALSE;
-    type = 0;
-
-    if ( cert->trust && (cert->trust->sslFlags|cert->trust->emailFlags|
-				cert->trust->objectSigningFlags)) {
-	trust = cert->trust;
-	if ( ( ( trust->sslFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
-	   ( ( trust->sslFlags & CERTDB_TRUSTED_CA ) == CERTDB_TRUSTED_CA ) ) {
-	    ret = PR_TRUE;
-	    type |= NS_CERT_TYPE_SSL_CA;
-	}
-	
-	if ( ( ( trust->emailFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
-	  ( ( trust->emailFlags & CERTDB_TRUSTED_CA ) == CERTDB_TRUSTED_CA ) ) {
-	    ret = PR_TRUE;
-	    type |= NS_CERT_TYPE_EMAIL_CA;
-	}
-	
-	if ( ( ( trust->objectSigningFlags & CERTDB_VALID_CA ) 
-						== CERTDB_VALID_CA ) ||
-          ( ( trust->objectSigningFlags & CERTDB_TRUSTED_CA ) 
-						== CERTDB_TRUSTED_CA ) ) {
-	    ret = PR_TRUE;
-	    type |= NS_CERT_TYPE_OBJECT_SIGNING_CA;
-	}
+    if (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA | 
+                NS_CERT_TYPE_OBJECT_SIGNING_CA)) {
+        ret = PR_TRUE;
     } else {
-	if ( cert->nsCertType &
-	    ( NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
-	     NS_CERT_TYPE_OBJECT_SIGNING_CA ) ) {
+	SECStatus rv;
+	CERTBasicConstraints constraints;
+
+	rv = CERT_FindBasicConstraintExten(cert, &constraints);
+	if (rv == SECSuccess && constraints.isCA) {
 	    ret = PR_TRUE;
-	    type = (cert->nsCertType & NS_CERT_TYPE_CA);
-	} else {
-	    CERTBasicConstraints constraints;
-	    rv = CERT_FindBasicConstraintExten(cert, &constraints);
-	    if ( rv == SECSuccess ) {
-		if ( constraints.isCA ) {
-		    ret = PR_TRUE;
-		    type = (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
-		}
-	    } 
+	    cType |= (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
 	} 
-
-	/* finally check if it's a FORTEZZA V1 CA */
-	if (ret == PR_FALSE) {
-	    if (fortezzaIsCA(cert)) {
-		ret = PR_TRUE;
-		type = (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
-	    }
-	}
     }
 
-    /* the isRoot flag trumps all */
-    if (cert->isRoot) {
+    /* finally check if it's an X.509 v1 root or FORTEZZA V1 CA */
+    if (!ret && 
+        ((cert->isRoot && cert_Version(cert) < SEC_CERTIFICATE_VERSION_3) ||
+    	 fortezzaIsCA(cert) )) {
 	ret = PR_TRUE;
-	/* set only these by default, same as above */
-	type = (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
+	cType |= (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
     }
+    /* Now apply trust overrides, if any */
+    cType = cert_ComputeTrustOverrides(cert, cType);
+    ret = (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
+                    NS_CERT_TYPE_OBJECT_SIGNING_CA)) ? PR_TRUE : PR_FALSE;
 
-    if ( rettype != NULL ) {
-	*rettype = type;
+    if (rettype != NULL) {
+	*rettype = cType;
     }
-    
-    return(ret);
+    return ret;
 }
 
 PRBool
@@ -2360,7 +2373,7 @@ CERT_FixupEmailAddr(const char *emailAddr)
  * NOTE - don't allow encode of govt-approved or invisible bits
  */
 SECStatus
-CERT_DecodeTrustString(CERTCertTrust *trust, char *trusts)
+CERT_DecodeTrustString(CERTCertTrust *trust, const char *trusts)
 {
     unsigned int i;
     unsigned int *pflags;

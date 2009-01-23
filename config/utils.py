@@ -73,7 +73,7 @@ def lockFile(lockfile, max_wait = 600):
   
     try:
       # the lock file exists, try to stat it to get its age
-      # and read it's contents to report the owner PID
+      # and read its contents to report the owner PID
       f = open(lockfile, "r")
       s = os.stat(lockfile)
     except OSError, e:

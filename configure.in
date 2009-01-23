@@ -118,7 +118,6 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
-LIBART_VERSION=2.3.4
 CAIRO_VERSION=1.6.0
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
@@ -571,27 +570,24 @@ case "$target" in
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
         # Add flags if necessary
         AC_MSG_CHECKING([for midl flags])
-        if test -n "$_MIDL_MAJOR_VERSION"; then
-            if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
-                # Starting with MIDL version 6.0.359, the MIDL compiler
-                # generates /Oicf /robust stubs by default, which is not
-                # compatible with versions of Windows older than Win2k.
-                # This switches us back to the old behaviour. When we drop
-                # support for Windows older than Win2k, we should remove
-                # this.
-                MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
-                AC_MSG_RESULT([need -no_robust])
+        case "$target" in
+        i*86-*)
+            if test \( "$_MIDL_MAJOR_VERSION" = "7" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" = "0499" \); then
+                # MIDL version 7.00.0499 defaults /env win64 on x64 platforms.
+                # MIDL version 7.00.0500 or later has no problem.
+                MIDL_FLAGS="${MIDL_FLAGS} -env win32"
+                AC_MSG_RESULT([need -env win32])
             else
-                MIDL_FLAGS="${MIDL_FLAGS}"
                 AC_MSG_RESULT([none needed])
             fi
-        else
-            MIDL_FLAGS="${MIDL_FLAGS}"
+            ;;
+        *)
             AC_MSG_RESULT([none needed])
-        fi
-        
+            ;;
+        esac
+
         unset _MSVC_VER_FILTER
-        
+
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -1911,7 +1907,7 @@ case "$target" in
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
 
-    if test -z "$AS_BIN"; then
+    if test "$AS_BIN"; then
         AS="$AS_BIN"
     fi
     DSO_CFLAGS=
@@ -4337,8 +4333,6 @@ MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
-MOZ_LIBART_CFLAGS=
-MOZ_LIBART_LIBS=
 MOZ_MATHML=1
 MOZ_MORK=1
 MOZ_MORKREADER=
@@ -4387,7 +4381,6 @@ MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
-MOZ_XUL_APP=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
 NECKO_COOKIES=1
@@ -4586,13 +4579,6 @@ xulrunner)
     AC_MSG_ERROR([Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK.])
   fi
   ;;
-*)
-  # Fix this case for folks who forget. Warn them.
-  if test -n "$LIBXUL_SDK" -a -z "$MOZ_XUL_APP"; then
-    AC_MSG_WARN([Setting MOZ_XUL_APP since LIBXUL_SDK was set. Add to confvars.sh!])
-    MOZ_XUL_APP=1
-  fi
-  ;;
 esac
 
 # Special cases where we need to AC_DEFINE something. Also a holdover for apps
@@ -4619,20 +4605,11 @@ standalone)
 
 esac
 
-if test -z "$MOZ_XUL_APP"; then
-	AC_MSG_ERROR([builds with unsetting MOZ_XUL_APP in confvars.sh are not supported.])
-fi
-
 AC_SUBST(MOZ_BUILD_APP)
-AC_SUBST(MOZ_XUL_APP)
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
-
-if test "$MOZ_XUL_APP"; then
-  AC_DEFINE(MOZ_XUL_APP)
-fi
 
 dnl ========================================================
 dnl = 
@@ -5796,7 +5773,7 @@ MOZ_ARG_DISABLE_BOOL(installer,
 [  --disable-installer     Disable building of installer],
     MOZ_INSTALLER=,
     MOZ_INSTALLER=1 )
-if test -n "$MOZ_INSTALLER" -a -n "$MOZ_XUL_APP" -a "$OS_ARCH" = "WINNT"; then
+if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     # Disable installer for Windows builds that use the new toolkit if NSIS
     # isn't in the path.
     AC_PATH_PROGS(MAKENSIS, makensis)
@@ -7225,10 +7202,6 @@ if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
 	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
 fi
 
-if test -n "$MOZ_ENABLE_LIBXUL" -a -z "$MOZ_XUL_APP"; then
-	AC_MSG_ERROR([--enable-libxul is only compatible with toolkit XUL applications.])
-fi
-
 if test -n "$MOZ_ENABLE_LIBXUL"; then
     XPCOM_LIBS="$LIBXUL_LIBS"
     AC_DEFINE(MOZ_ENABLE_LIBXUL)
@@ -7389,38 +7362,6 @@ AC_SUBST(HOST_LIBIDL_CFLAGS)
 AC_SUBST(HOST_LIBIDL_LIBS)
 
 dnl ========================================================
-dnl Check for libart
-dnl ========================================================
-if test "$MOZ_SVG_RENDERER_LIBART"; then
-  if test ! -f $topsrcdir/other-licenses/libart_lgpl/Makefile.in; then
-    AC_MSG_ERROR([You must check out the mozilla version of libart. Use
-mk_add_options MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl])
-  fi
-
-  dnl libart's configure hasn't been run yet, but we know what the
-  dnl answer should be anyway
-  MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
-  case "$target_os" in
-  msvc*|mks*|cygwin*|mingw*|wince*)
-      MOZ_LIBART_LIBS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
-      ;;
-  os2*)
-      MOZ_LIBART_LIBS='-lmoz_art -lm'
-      ;;
-  beos*)
-      MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
-      ;;
-  *)
-      MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
-      ;;
-  esac
-  AC_FUNC_ALLOCA
-fi
-
-AC_SUBST(MOZ_LIBART_CFLAGS)
-AC_SUBST(MOZ_LIBART_LIBS)
-
-dnl ========================================================
 dnl Check for cairo
 dnl ========================================================
 MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
@@ -7539,28 +7480,16 @@ dnl ========================================================
 dnl Check for lcms
 dnl ========================================================
 
-MOZ_NATIVE_LCMS=
-MOZ_ARG_ENABLE_BOOL(system-lcms,
-[ --enable-system-lcms Use system lcms (located with pkgconfig)],
-MOZ_NATIVE_LCMS=1,
-MOZ_NATIVE_LCMS= )
-
-if test -z "$MOZ_NATIVE_LCMS"
-then
-    LCMS_CFLAGS=
-    if test "$_WIN32_MSVC"; then
-        if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
-            LCMS_CFLAGS=-DLCMS_DLL
-        fi
-        LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
-    else
-        LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
+LCMS_CFLAGS=
+if test "$_WIN32_MSVC"; then
+    if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
+        LCMS_CFLAGS=-DLCMS_DLL
     fi
+    LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
 else
-    PKG_CHECK_MODULES(LCMS, lcms >= $LCMS_VERSION)
+    LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
 fi
 
-AC_SUBST(MOZ_NATIVE_LCMS)
 AC_SUBST(LCMS_CFLAGS)
 AC_SUBST(LCMS_LIBS)
 

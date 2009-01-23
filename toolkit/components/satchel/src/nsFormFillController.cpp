@@ -39,13 +39,8 @@
 
 #include "nsFormFillController.h"
 
-#ifdef MOZ_STORAGE_SATCHEL
 #include "nsStorageFormHistory.h"
 #include "nsIAutoCompleteSimpleResult.h"
-#else
-#include "nsFormHistory.h"
-#include "nsIAutoCompleteResultTypes.h"
-#endif
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
@@ -513,11 +508,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                          mFocusedInput,
                                          getter_AddRefs(result));
   } else {
-#ifdef MOZ_STORAGE_SATCHEL
     nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
-#else
-    nsCOMPtr<nsIAutoCompleteMdbResult2> historyResult;
-#endif
     historyResult = do_QueryInterface(aPreviousResult);
 
     nsFormHistory *history = nsFormHistory::GetInstance();
@@ -1124,7 +1115,7 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFormHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
-#if defined(MOZ_STORAGE_SATCHEL) && defined(MOZ_MORKREADER)
+#ifdef MOZ_MORKREADER
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormHistoryImporter)
 #endif
 
@@ -1145,7 +1136,7 @@ static const nsModuleComponentInfo components[] =
     NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
     nsFormFillControllerConstructor },
 
-#if defined(MOZ_STORAGE_SATCHEL) && defined(MOZ_MORKREADER)
+#ifdef MOZ_MORKREADER
   { "Form History Importer",
     NS_FORMHISTORYIMPORTER_CID,
     NS_FORMHISTORYIMPORTER_CONTRACTID,

@@ -53,7 +53,7 @@ memText=""
 ########################################################################
 libpkix_init()
 {
-  SCRIPTNAME="libpkixs.sh"
+  SCRIPTNAME="libpkix.sh"
   if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for
       CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
   fi
@@ -65,25 +65,7 @@ libpkix_init()
   fi
   cd ${LIBPKIX_CURDIR}
 
-  # test at libpkix is written in ksh and hence cannot be sourced "."
-  # by this sh script. While we want to provide each libpkix test script the
-  # ability to be executed alone, we will need to use common/init.sh
-  # to set up bin etc. Since variable values can not be passed to sub-directory
-  # script for checking ($INIT_SOURCED), log is recreated and old data lost.
-  # The cludge way provided here is not ideal, but works (for now) :
-  # We save the log up to this point then concatenate it with libpkix log
-  # as the final one.
-  LOGFILE_ALL=${LOGFILE}
-  if [ ! -z ${LOGFILE_ALL} ] ; then
-       mv ${LOGFILE_ALL} ${LOGFILE_ALL}.tmp
-       touch ${LOGFILE_ALL}
-  fi
-
-  SCRIPTNAME="libpkixs.sh"
-  LIBPKIX_LOG=${HOSTDIR}/libpkix.log    #we don't want all the errormessages 
-         # in the output.log, otherwise we can't tell what's a real error
-
-
+  SCRIPTNAME="libpkix.sh"
 }
 
 ############################## libpkix_cleanup ############################
@@ -92,12 +74,6 @@ libpkix_init()
 ########################################################################
 libpkix_cleanup()
 {
-  if [ ! -z ${LOGFILE_ALL} ] ; then
-       rm ${LOGFILE_ALL}
-       cat ${LOGFILE_ALL}.tmp ${LIBPKIX_LOG} > ${LOGFILE_ALL}
-       rm ${LOGFILE_ALL}.tmp
-  fi
-
   html "</TABLE><BR>" 
   cd ${QADIR}
   . common/cleanup.sh
@@ -182,110 +158,15 @@ return 1
 fi
 }
 
-############################## libpkix_setup_db ############################
-# Sets up directory and db for pkix functional test.
-########################################################################
-libpkix_setup_db()
+libpkix_run_tests()
 {
-  fnCaller=$1
-
-  DB_DIR="${HOSTDIR}/libpkix_functional"
-  CERT_DIR="${QADIR}/libpkix/certs"
-  
-  mkdir -p $DB_DIR
-  if [ ! -f ${R_PWFILE} ]; then
-      echo nss > ${R_PWFILE}
-  fi
-  echo "Initializing Cert DB in $FN_DB_DIR"
-  certutil -N -d "${DB_DIR}" -f "${R_PWFILE}" 2>&1
-  RET=$?
-  if [ "$RET" -ne 0 ]; then
-      return $RET
-  fi
-
-  echo "Loading certs into DB at $DB_DIR"
-  output=$TMP/libpkix_setup.tmp
-  while read certName trusts; do
-      certutil -d $DB_DIR -A -n $certName -t $trusts -i $CERT_DIR/$certName.cert -f "${R_PWFILE}" > $output 2>&1
-      if [ $? -ne 0 ]; then
-          echo "WARNING: unable to add a certificate($certName) into database"
-          echo "certutil output:"
-          cat $output
-      fi
-      rm -f $output
-  done < $QADIR/libpkix/cert_trust.map
-  
-}
-
-############################## libpkix_leak_test ############################
-# Runs pkix object and memory leak test
-########################################################################
-libpkix_leak_test()
-{
-
-    if [ -n "${MEMLEAK_DBG}" ]; then
-        LOGNAME="libpkix_memleak"
-        LOGFILE=${LOGDIR}/${LOGNAME}.log
-        tmpLogFile=$LOGFILE.tmp
-
-        html_head "Memory leak checking - libpkix"
-    else
-        tmpLogFile=$DB_DIR/libpkix_memoryleak.log
-
-        html_head "LIBPKIX Object Leak Tests"
-    fi 
-    while read status leafCert explPolicy others; do
-        # continue with empty and commented lines. 
-        [ -z "$status" -o "`echo $status | cut -c 1`" = "#" ] && continue
-
-        # can only run positive tests. Positive validation
-        # status is the exit condition for the code in the library.
-        [ $status -ne 0 ] && continue;
-        extraOpt=""
-        if [ "$explPolicy" -a "$explPolicy" != "undef" ]; then
-            extraOpt="-pp -o $explPolicy"
-        fi
-        cmd="vfychain -d $DB_DIR $extraOpt $CERT_DIR/$leafCert.cert"
-        if [ -n "$MEMLEAK_DBG" ]; then
-            cmd="$RUN_COMMAND_DBG $cmd"
-        fi
-        echo $cmd
-        $cmd > $tmpLogFile 2>&1
-        if [ -z "$MEMLEAK_DBG" ]; then
-            cat $tmpLogFile
-            grep "Memory Leak:" $tmpLogFile
-            html_msg $? 1 "Object leak tests with $leafCert certificate"
-        else
-            cat $tmpLogFile >> $LOGFILE
-        fi
-    done < $QADIR/libpkix/vfychain_test.lst
-
-    if [ -n "${MEMLEAK_DBG}" ]; then
-        log_parse
-        ret=$?
-        html_msg ${ret} 0 "${LOGNAME}" \
-            "produced a returncode of $ret, expected is 0"
-        html "</TABLE><BR>"
+    if [ -n "${BUILD_LIBPKIX_TESTS}" ]; then
+         libpkix_UT_main 
     fi
 }
-
 
 ################## main #################################################
 
 libpkix_init 
-libpkix_setup_db
-if [ "$PKIX_OBJECT_LEAK_TEST" ]; then
-    libpkix_leak_test
-    if [ -n "${MEMLEAK_DBG}" ]; then
-        libpkix_cleanup
-        return 1
-    fi
-fi
-
-# place other tests here
-
-# Run libpkix unit tests at the end
-if [ "$BUILD_LIBPKIX_TEST" ]; then
-    libpkix_UT_main  | tee ${LIBPKIX_LOG}
-fi
+libpkix_run_tests
 libpkix_cleanup

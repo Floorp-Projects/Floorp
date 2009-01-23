@@ -89,8 +89,8 @@ NS_IMETHODIMP nsEditorParserObserver::Notify(
 NS_IMETHODIMP nsEditorParserObserver::Notify(nsISupports* aWebShell, 
                                              nsISupports* aChannel, 
                                              const PRUnichar* aTag, 
-                                             const nsStringArray* aKeys, 
-                                             const nsStringArray* aValues,
+                                             const nsTArray<nsString>* aKeys, 
+                                             const nsTArray<nsString>* aValues,
                                              const PRUint32 aFlags)
 {
   Notify();

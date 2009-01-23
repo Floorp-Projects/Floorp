@@ -184,15 +184,8 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame, nsStyleContext* aContext)
+NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  NS_ASSERTION(parentFrame, "null parent");
-  nsISVGTextContentMetrics *metrics = do_QueryFrame(parentFrame);
-  NS_ASSERTION(metrics, "trying to construct an SVGGlyphFrame for an invalid container");
-  
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
-               "trying to construct an SVGGlyphFrame for wrong content element");
-
   return new (aPresShell) nsSVGGlyphFrame(aContext);
 }
 
@@ -286,6 +279,28 @@ nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
 #endif
   return rv;
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGGlyphFrame::Init(nsIContent* aContent,
+                      nsIFrame* aParent,
+                      nsIFrame* aPrevInFlow)
+{
+  NS_ASSERTION(aParent, "null parent");
+
+  nsIFrame* ancestorFrame = nsSVGUtils::GetFirstNonAAncestorFrame(aParent);
+  NS_ASSERTION(ancestorFrame, "Must have ancestor");
+
+  nsISVGTextContentMetrics *metrics = do_QueryFrame(ancestorFrame);
+  NS_ASSERTION(metrics,
+               "trying to construct an SVGGlyphFrame for an invalid container");
+
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
+               "trying to construct an SVGGlyphFrame for wrong content element");
+
+  return nsSVGGlyphFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 nsIAtom *
 nsSVGGlyphFrame::GetType() const

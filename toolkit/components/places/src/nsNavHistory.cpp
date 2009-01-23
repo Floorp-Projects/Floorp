@@ -49,6 +49,7 @@
 #include "nsPlacesTables.h"
 
 #include "nsIArray.h"
+#include "nsTArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsCollationCID.h"
 #include "nsCOMPtr.h"
@@ -118,8 +119,8 @@
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
+#define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MATCH_BEHAVIOR        "urlbar.matchBehavior"
-#define PREF_AUTOCOMPLETE_SEARCH_SOURCES        "urlbar.search.sources"
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
@@ -248,7 +249,7 @@ static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions);
 static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
-                                        nsTArray<nsStringArray*>* aTerms);
+                                        nsTArray<nsTArray<nsString>*>* aTerms);
 
 inline void ReverseString(const nsString& aInput, nsAString& aReversed)
 {
@@ -369,8 +370,8 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
+                               mAutoCompleteEnabled(PR_TRUE),
                                mAutoCompleteMatchBehavior(MATCH_BOUNDARY_ANYWHERE),
-                               mAutoCompleteSearchSources(SEARCH_BOTH),
                                mAutoCompleteMaxResults(25),
                                mAutoCompleteRestrictHistory(NS_LITERAL_STRING("^")),
                                mAutoCompleteRestrictBookmark(NS_LITERAL_STRING("*")),
@@ -501,8 +502,8 @@ nsNavHistory::Init()
 
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
+    pbi->AddObserver(PREF_AUTOCOMPLETE_ENABLED, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_SOURCES, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR, this, PR_FALSE);
@@ -2010,6 +2011,8 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
     mExpireSites = EXPIRATION_CAP_SITES;
   
 #ifdef MOZ_XUL
+  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &mAutoCompleteEnabled);
+
   PRInt32 matchBehavior = 1;
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR,
                           &matchBehavior);
@@ -2026,25 +2029,6 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
     case 1:
     default:
       mAutoCompleteMatchBehavior = MATCH_BOUNDARY_ANYWHERE;
-      break;
-  }
-
-  PRInt32 searchSources = 3;
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_SOURCES,
-                          &searchSources);
-  switch (searchSources) {
-    case 0:
-      mAutoCompleteSearchSources = SEARCH_NONE;
-      break;
-    case 1:
-      mAutoCompleteSearchSources = SEARCH_HISTORY;
-      break;
-    case 2:
-      mAutoCompleteSearchSources = SEARCH_BOOKMARK;
-      break;
-    case 3:
-    default:
-      mAutoCompleteSearchSources = SEARCH_BOTH;
       break;
   }
 
@@ -5923,7 +5907,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
   // parse the search terms
-  nsTArray<nsStringArray*> terms;
+  nsTArray<nsTArray<nsString>*> terms;
   ParseSearchTermsFromQueries(aQueries, &terms);
 
   PRInt32 queryIndex;
@@ -5989,7 +5973,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
 
     // if we are excluding items by parent annotation, 
     // exclude items who's parent is a folder with that annotation
-    if (!parentAnnotationToExclude.IsEmpty() && (parentFoldersToExclude.IndexOf(parentId) != -1))
+    if (!parentAnnotationToExclude.IsEmpty() && parentFoldersToExclude.Contains(parentId))
       continue;
 
     // Append the node if it matches one of the queries
@@ -6007,10 +5991,10 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
 
         // filter out the node of which their parent is in the exclude-folders
         // cache
-        if (excludeFolders[queryIndex]->IndexOf(parentId) != -1)
+        if (excludeFolders[queryIndex]->Contains(parentId))
           continue;
 
-        if (includeFolders[queryIndex]->IndexOf(parentId) == -1) {
+        if (!includeFolders[queryIndex]->Contains(parentId)) {
           // check ancestors
           PRInt64 ancestor = parentId, lastAncestor;
           PRBool belongs = PR_FALSE;
@@ -6024,9 +6008,9 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
             // GetFolderIdForItems throws when called for the places-root
             if (NS_FAILED(bookmarks->GetFolderIdForItem(ancestor,&ancestor))) {
               break;
-            } else if (excludeFolders[queryIndex]->IndexOf(ancestor) != -1) {
+            } else if (excludeFolders[queryIndex]->Contains(ancestor)) {
               break;
-            } else if (includeFolders[queryIndex]->IndexOf(ancestor) != -1) {
+            } else if (includeFolders[queryIndex]->Contains(ancestor)) {
               belongs = PR_TRUE;
             }
           }
@@ -6065,14 +6049,14 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
 
       // Determine if every search term matches anywhere in the title, url, tag
       PRBool matchAll = PR_TRUE;
-      for (PRInt32 termIndex = terms[queryIndex]->Count(); --termIndex >= 0 &&
+      for (PRInt32 termIndex = terms[queryIndex]->Length(); --termIndex >= 0 &&
            matchAll; ) {
-        const nsString *term = terms[queryIndex]->StringAt(termIndex);
+        const nsString& term = terms[queryIndex]->ElementAt(termIndex);
 
         // True if any of them match; false makes us quit the loop
-        matchAll = CaseInsensitiveFindInReadable(*term, nodeTitle) ||
-                   CaseInsensitiveFindInReadable(*term, nodeURL) ||
-                   CaseInsensitiveFindInReadable(*term, nodeTags);
+        matchAll = CaseInsensitiveFindInReadable(term, nodeTitle) ||
+                   CaseInsensitiveFindInReadable(term, nodeURL) ||
+                   CaseInsensitiveFindInReadable(term, nodeTags);
       }
 
       // Skip if we don't match all terms in the title, url or tag
@@ -6892,11 +6876,11 @@ inline PRBool isQueryWhitespace(PRUnichar ch)
 }
 
 void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
-                                 nsTArray<nsStringArray*>* aTerms)
+                                 nsTArray<nsTArray<nsString>*>* aTerms)
 {
   PRInt32 lastBegin = -1;
   for (PRUint32 i=0; i < aQueries.Count(); i++) {
-    nsStringArray *queryTerms = new nsStringArray();
+    nsTArray<nsString> *queryTerms = new nsTArray<nsString>();
     PRBool hasSearchTerms;
     if (NS_SUCCEEDED(aQueries[i]->GetHasSearchTerms(&hasSearchTerms)) &&
         hasSearchTerms) {
@@ -6906,7 +6890,7 @@ void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
             searchTerms[j] == '"') {
           if (lastBegin >= 0) {
             // found the end of a word
-            queryTerms->AppendString(Substring(searchTerms, lastBegin,
+            queryTerms->AppendElement(Substring(searchTerms, lastBegin,
                                                j - lastBegin));
             lastBegin = -1;
           }
@@ -6919,7 +6903,7 @@ void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
       }
       // last word
       if (lastBegin >= 0)
-        queryTerms->AppendString(Substring(searchTerms, lastBegin));
+        queryTerms->AppendElement(Substring(searchTerms, lastBegin));
     }
     aTerms->AppendElement(queryTerms);
   }

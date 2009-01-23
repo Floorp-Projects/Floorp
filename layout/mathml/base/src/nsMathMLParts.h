@@ -72,9 +72,9 @@ nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aCo
 
 nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-inline nsIFrame* NS_NewMathMLmathFrame(nsIPresShell* aPresShell, PRBool aIsBlock, nsStyleContext* aContext)
+inline nsIFrame* NS_NewMathMLmathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return (aIsBlock)
+  return (NS_STYLE_DISPLAY_BLOCK == aContext->GetStyleDisplay()->mDisplay)
     ? NS_NewMathMLmathBlockFrame(aPresShell, aContext, 0)
     : NS_NewMathMLmathInlineFrame(aPresShell, aContext);
 }

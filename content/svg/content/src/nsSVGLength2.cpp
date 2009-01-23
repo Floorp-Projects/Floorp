@@ -191,8 +191,8 @@ nsSVGLength2::GetMMPerPixel(nsSVGSVGElement *aCtx) const
   return mmPerPx;
 }
 
-float
-nsSVGLength2::GetMMPerPixel(nsIFrame *aNonSVGFrame) const
+/*static*/ float
+nsSVGLength2::GetMMPerPixel(nsIFrame *aNonSVGFrame)
 {
   nsPresContext* presContext = aNonSVGFrame->PresContext();
   float pixelsPerInch =
@@ -239,9 +239,10 @@ nsSVGLength2::GetAxisLength(nsIFrame *aNonSVGFrame) const
 }
 
 float
-nsSVGLength2::GetUnitScaleFactor(nsSVGElement *aSVGElement) const
+nsSVGLength2::GetUnitScaleFactor(nsSVGElement *aSVGElement,
+                                 PRUint8 aUnitType) const
 {
-  switch (mSpecifiedUnitType) {
+  switch (aUnitType) {
   case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
     return 1;
@@ -251,13 +252,13 @@ nsSVGLength2::GetUnitScaleFactor(nsSVGElement *aSVGElement) const
     return 1 / GetExLength(aSVGElement);
   }
 
-  return GetUnitScaleFactor(aSVGElement->GetCtx());
+  return GetUnitScaleFactor(aSVGElement->GetCtx(), aUnitType);
 }
 
 float
-nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx) const
+nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx, PRUint8 aUnitType) const
 {
-  switch (mSpecifiedUnitType) {
+  switch (aUnitType) {
   case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
     return 1;
@@ -284,13 +285,13 @@ nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx) const
 }
 
 float
-nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame) const
+nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, PRUint8 aUnitType) const
 {
   nsIContent* content = aFrame->GetContent();
   if (content->IsNodeOfType(nsINode::eSVG))
-    return GetUnitScaleFactor(static_cast<nsSVGElement*>(content));
+    return GetUnitScaleFactor(static_cast<nsSVGElement*>(content), aUnitType);
 
-  switch (mSpecifiedUnitType) {
+  switch (aUnitType) {
   case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
     return 1;
@@ -322,6 +323,12 @@ nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
 {
   mBaseVal = aValue;
   aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
 }
 
 void
@@ -331,7 +338,8 @@ nsSVGLength2::ConvertToSpecifiedUnits(PRUint16 unitType,
   if (!IsValidUnitType(unitType))
     return;
 
-  float valueInUserUnits = mBaseVal / GetUnitScaleFactor(aSVGElement);
+  float valueInUserUnits = 
+    mBaseVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
   mSpecifiedUnitType = PRUint8(unitType);
   SetBaseValue(valueInUserUnits, aSVGElement);
 }
@@ -347,6 +355,12 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
   mBaseVal = mAnimVal = valueInSpecifiedUnits;
   mSpecifiedUnitType = PRUint8(unitType);
   aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
 }
 
 nsresult
@@ -390,6 +404,12 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
   mSpecifiedUnitType = PRUint8(unitType);
   aSVGElement->DidChangeLength(mAttrEnum, aDoSetAttr);
 
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -408,14 +428,21 @@ nsSVGLength2::GetAnimValueString(nsAString & aValueAsString)
 void
 nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
 {
-  mAnimVal = mBaseVal = aValue * GetUnitScaleFactor(aSVGElement);
+  mAnimVal = mBaseVal = 
+    aValue * GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
   aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
 }
 
 void
 nsSVGLength2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
 {
-  mAnimVal = aValue * GetUnitScaleFactor(aSVGElement);
+  mAnimVal = aValue * GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
+  mIsAnimated = PR_TRUE;
   aSVGElement->DidAnimateLength(mAttrEnum);
 }
 
@@ -443,12 +470,18 @@ nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
                                  const nsISMILAnimationElement* /*aSrcElement*/,
                                  nsSMILValue& aValue) const
 {
-  nsSVGLength2 tmp;
-  tmp.SetBaseValueString(aStr, mSVGElement, PR_FALSE);
+  float value;
+  PRUint16 unitType;
+  
+  nsresult rv = GetValueFromString(aStr, &value, &unitType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsSMILValue val(&nsSMILFloatType::sSingleton);
-  val.mU.mDouble = tmp.GetBaseValue(mSVGElement);
+  val.mU.mDouble = value / mVal->GetUnitScaleFactor(mSVGElement, unitType);
   aValue = val;
+  
   return NS_OK;
 }
 
@@ -466,7 +499,7 @@ nsSVGLength2::SMILLength::SetAnimValue(const nsSMILValue& aValue)
   NS_ASSERTION(aValue.mType == &nsSMILFloatType::sSingleton,
     "Unexpected type to assign animated value");
   if (aValue.mType == &nsSMILFloatType::sSingleton) {
-    mVal->SetAnimValue((float)aValue.mU.mDouble, mSVGElement);
+    mVal->SetAnimValue(float(aValue.mU.mDouble), mSVGElement);
   }
   return NS_OK;
 }

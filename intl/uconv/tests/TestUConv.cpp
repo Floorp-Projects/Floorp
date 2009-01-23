@@ -40,7 +40,7 @@
 #include "nsUCSupport.h"
 #include "nsString.h"
 #include "nsIStringEnumerator.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -346,7 +346,7 @@ nsresult nsTestUConv::DisplayCharsets()
   PRUint32 encCount = 0, decCount = 0;
   PRUint32 basicEncCount = 0, basicDecCount = 0;
 
-  nsCStringArray allCharsets;
+  nsTArray<nsCString> allCharsets;
   
   nsCAutoString charset;
   PRBool hasMore;
@@ -354,22 +354,22 @@ nsresult nsTestUConv::DisplayCharsets()
   while (hasMore) {
     res = encoders->GetNext(charset);
     if (NS_SUCCEEDED(res))
-      allCharsets.AppendCString(charset);
+      allCharsets.AppendElement(charset);
 
     encoders->HasMore(&hasMore);
   }
 
   nsAutoString prop, str;
-  PRUint32 count = allCharsets.Count();
+  PRUint32 count = allCharsets.Length();
   for (PRUint32 i = 0; i < count; i++) {
 
-    const nsCString* charset = allCharsets[i];
-    printf("%s", charset->get());
-    PrintSpaces(24 - charset->Length());  // align to hard coded column number
+    const nsCString& charset = allCharsets[i];
+    printf("%s", charset.get());
+    PrintSpaces(24 - charset.Length());  // align to hard coded column number
 
 
     nsCOMPtr<nsIUnicodeDecoder> dec = NULL;
-    res = ccMan->GetUnicodeDecoder(charset->get(), getter_AddRefs(dec));
+    res = ccMan->GetUnicodeDecoder(charset.get(), getter_AddRefs(dec));
     if (NS_FAILED(res)) printf (" "); 
     else {
       printf("D");
@@ -389,7 +389,7 @@ nsresult nsTestUConv::DisplayCharsets()
 #endif
 
     nsCOMPtr<nsIUnicodeEncoder> enc = NULL;
-    res = ccMan->GetUnicodeEncoder(charset->get(), getter_AddRefs(enc));
+    res = ccMan->GetUnicodeEncoder(charset.get(), getter_AddRefs(enc));
     if (NS_FAILED(res)) printf (" "); 
     else {
       printf("E");
@@ -411,27 +411,27 @@ nsresult nsTestUConv::DisplayCharsets()
     printf(" ");
 
     prop.AssignLiteral(".notForBrowser");
-    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
+    res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("B"); 
     else printf("X");
 
     prop.AssignLiteral(".notForComposer");
-    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
+    res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("C"); 
     else printf("X");
 
     prop.AssignLiteral(".notForMailView");
-    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
+    res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("V"); 
     else printf("X");
 
     prop.AssignLiteral(".notForMailEdit");
-    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
+    res = ccMan->GetCharsetData(charset.get(), prop.get(), str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
     else printf("X");
 
     printf("(%3d, %3d) ", encCount, decCount);
-    res = ccMan->GetCharsetTitle(charset->get(), str);
+    res = ccMan->GetCharsetTitle(charset.get(), str);
     if (NS_FAILED(res)) str.SetLength(0);
     NS_LossyConvertUTF16toASCII buff2(str);
     printf(" \"%s\"\n", buff2.get());

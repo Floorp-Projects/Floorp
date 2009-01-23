@@ -79,6 +79,12 @@ public:
   // playback of the media resource is achieving.
   float PlaybackRate();
 
+  // Suspend any downloads that are in progress.
+  void Suspend();
+
+  // Resume any downloads that have been suspended.
+  void Resume();
+
   nsIPrincipal* GetCurrentPrincipal();
   
   // Implementation of OggPlay Reader API.

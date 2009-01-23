@@ -347,4 +347,59 @@ function run_test() {
   do_check_eq(genericObserver.numTimesSetCalled, 2);
   do_check_eq(specificObserver.numTimesRemovedCalled, 1);
   do_check_eq(genericObserver.numTimesRemovedCalled, 2);
+
+
+  //**************************************************************************//
+  // Clear Private Data Pref Removal
+
+  {
+    let uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
+    let uri2 = ContentPrefTest.getURI("http://www.domain2.com/");
+    let uri3 = ContentPrefTest.getURI("http://www.domain3.com/");
+
+    let dbConnection = cps.DBConnection;
+
+    let prefCount = Cc["@mozilla.org/storage/statement-wrapper;1"].
+                    createInstance(Ci.mozIStorageStatementWrapper);
+    prefCount.initialize(dbConnection.createStatement("SELECT COUNT(*) AS count FROM prefs"));
+
+    let groupCount = Cc["@mozilla.org/storage/statement-wrapper;1"].
+                     createInstance(Ci.mozIStorageStatementWrapper);
+    groupCount.initialize(dbConnection.createStatement("SELECT COUNT(*) AS count FROM groups"));
+
+    // Add some prefs for multiple domains.
+    cps.setPref(uri1, "test.removeAllGroups", 1);
+    cps.setPref(uri2, "test.removeAllGroups", 2);
+    cps.setPref(uri3, "test.removeAllGroups", 3);
+
+    // Add a global pref.
+    cps.setPref(null, "test.removeAllGroups", 1);
+
+    // Make sure there are some prefs and groups in the database.
+    prefCount.step();
+    do_check_true(prefCount.row.count > 0);
+    prefCount.reset();
+    groupCount.step();
+    do_check_true(groupCount.row.count > 0);
+    groupCount.reset();
+
+    // Remove all prefs and groups from the database using the same routine
+    // the Clear Private Data dialog uses.
+    cps.removeGroupedPrefs();
+
+    // Make sure there are no longer any groups in the database and the only pref
+    // is the global one.
+    prefCount.step();
+    do_check_true(prefCount.row.count == 1);
+    prefCount.reset();
+    groupCount.step();
+    do_check_true(groupCount.row.count == 0);
+    groupCount.reset();
+    let globalPref = Cc["@mozilla.org/storage/statement-wrapper;1"].
+                     createInstance(Ci.mozIStorageStatementWrapper);
+    globalPref.initialize(dbConnection.createStatement("SELECT groupID FROM prefs"));
+    globalPref.step();
+    do_check_true(globalPref.row.groupID == null);
+    globalPref.reset();
+  }
 }

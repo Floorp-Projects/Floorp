@@ -65,8 +65,8 @@
 #include "nsUrlClassifierUtils.h"
 #include "nsURILoader.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsTArray.h"
-#include "nsVoidArray.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
@@ -1464,8 +1464,8 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    *    successivly removing the leading component.  The top-level component
    *    can be skipped.
    */
-  nsCStringArray hosts;
-  hosts.AppendCString(host);
+  nsTArray<nsCString> hosts;
+  hosts.AppendElement(host);
 
   host.BeginReading(begin);
   host.EndReading(end);
@@ -1475,7 +1475,7 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
     // don't bother checking toplevel domains
     if (++numComponents >= 2) {
       host.EndReading(iter);
-      hosts.AppendCString(Substring(end, iter));
+      hosts.AppendElement(Substring(end, iter));
     }
     end = begin;
     host.BeginReading(begin);
@@ -1493,19 +1493,19 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    *    path component, that is, a trailing slash should never be
    *    appended that was not present in the original url.
    */
-  nsCStringArray paths;
-  paths.AppendCString(path);
+  nsTArray<nsCString> paths;
+  paths.AppendElement(path);
 
   path.BeginReading(iter);
   path.EndReading(end);
   if (FindCharInReadable('?', iter, end)) {
     path.BeginReading(begin);
     path = Substring(begin, iter);
-    paths.AppendCString(path);
+    paths.AppendElement(path);
   }
 
   // Check an empty path (for whole-domain blacklist entries)
-  paths.AppendCString(EmptyCString());
+  paths.AppendElement(EmptyCString());
 
   numComponents = 1;
   path.BeginReading(begin);
@@ -1514,16 +1514,16 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
   while (FindCharInReadable('/', iter, end) &&
          numComponents < MAX_PATH_COMPONENTS) {
     iter++;
-    paths.AppendCString(Substring(begin, iter));
+    paths.AppendElement(Substring(begin, iter));
     numComponents++;
   }
 
-  for (int hostIndex = 0; hostIndex < hosts.Count(); hostIndex++) {
-    for (int pathIndex = 0; pathIndex < paths.Count(); pathIndex++) {
+  for (PRUint32 hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {
+    for (PRUint32 pathIndex = 0; pathIndex < paths.Length(); pathIndex++) {
       nsCString key;
-      key.Assign(*hosts[hostIndex]);
+      key.Assign(hosts[hostIndex]);
       key.Append('/');
-      key.Append(*paths[pathIndex]);
+      key.Append(paths[pathIndex]);
       LOG(("Chking %s", key.get()));
 
       fragments.AppendElement(key);
@@ -2016,23 +2016,23 @@ nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
     return hash.FromPlaintext(key, mCryptoHash);
   }
 
-  nsCStringArray hostComponents;
-  hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
+  nsTArray<nsCString> hostComponents;
+  ParseString(PromiseFlatCString(host), '.', hostComponents);
 
-  if (hostComponents.Count() < 2)
+  if (hostComponents.Length() < 2)
     return NS_ERROR_FAILURE;
 
-  PRInt32 last = hostComponents.Count() - 1;
+  PRInt32 last = PRInt32(hostComponents.Length()) - 1;
   nsCAutoString lookupHost;
 
-  if (hostComponents.Count() > 2) {
-    lookupHost.Append(*hostComponents[last - 2]);
+  if (hostComponents.Length() > 2) {
+    lookupHost.Append(hostComponents[last - 2]);
     lookupHost.Append(".");
   }
 
-  lookupHost.Append(*hostComponents[last - 1]);
+  lookupHost.Append(hostComponents[last - 1]);
   lookupHost.Append(".");
-  lookupHost.Append(*hostComponents[last]);
+  lookupHost.Append(hostComponents[last]);
   lookupHost.Append("/");
 
   return hash.FromPlaintext(lookupHost, mCryptoHash);
@@ -2063,31 +2063,31 @@ nsUrlClassifierDBServiceWorker::GetHostKeys(const nsACString &spec,
     return NS_OK;
   }
 
-  nsCStringArray hostComponents;
-  hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
+  nsTArray<nsCString> hostComponents;
+  ParseString(PromiseFlatCString(host), '.', hostComponents);
 
-  if (hostComponents.Count() < 2) {
+  if (hostComponents.Length() < 2) {
     // no host or toplevel host, this won't match anything in the db
     return NS_OK;
   }
 
   // First check with two domain components
-  PRInt32 last = hostComponents.Count() - 1;
+  PRInt32 last = PRInt32(hostComponents.Length()) - 1;
   nsCString *lookupHost = hostKeys.AppendElement();
   if (!lookupHost)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  lookupHost->Assign(*hostComponents[last - 1]);
+  lookupHost->Assign(hostComponents[last - 1]);
   lookupHost->Append(".");
-  lookupHost->Append(*hostComponents[last]);
+  lookupHost->Append(hostComponents[last]);
   lookupHost->Append("/");
 
   // Now check with three domain components
-  if (hostComponents.Count() > 2) {
+  if (hostComponents.Length() > 2) {
     nsCString *lookupHost2 = hostKeys.AppendElement();
     if (!lookupHost2)
       return NS_ERROR_OUT_OF_MEMORY;
-    lookupHost2->Assign(*hostComponents[last - 2]);
+    lookupHost2->Assign(hostComponents[last - 2]);
     lookupHost2->Append(".");
     lookupHost2->Append(*lookupHost);
   }
@@ -2217,11 +2217,11 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
                        chunk, entries);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    nsCStringArray lines;
-    lines.ParseString(PromiseFlatCString(chunk).get(), "\n");
+    nsTArray<nsCString> lines;
+    ParseString(PromiseFlatCString(chunk), '\n', lines);
 
     // non-hashed tables need to be hashed
-    for (PRInt32 i = 0; i < lines.Count(); i++) {
+    for (PRInt32 i = 0; i < PRInt32(lines.Length()); i++) {
       nsUrlClassifierEntry *entry = entries.AppendElement();
       if (!entry)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2229,18 +2229,18 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
       nsCAutoString entryStr;
       if (chunkType == CHUNK_SUB) {
         nsCString::const_iterator begin, iter, end;
-        lines[i]->BeginReading(begin);
-        lines[i]->EndReading(end);
+        lines[i].BeginReading(begin);
+        lines[i].EndReading(end);
         iter = begin;
         if (!FindCharInReadable(':', iter, end) ||
-            PR_sscanf(lines[i]->get(), "%d:", &entry->mAddChunkId) != 1) {
+            PR_sscanf(lines[i].get(), "%d:", &entry->mAddChunkId) != 1) {
           NS_WARNING("Received sub chunk without associated add chunk.");
           return NS_ERROR_FAILURE;
         }
         iter++;
         entryStr = Substring(iter, end);
       } else {
-        entryStr = *lines[i];
+        entryStr = lines[i];
       }
 
       rv = GetKey(entryStr, entry->mKey);

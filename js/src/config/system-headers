@@ -274,14 +274,9 @@ fstream.h
 ft2build.h
 gconf/gconf-client.h
 Gdiplus.h
-gdk/gdkevents.h
 gdk/gdk.h
 gdk/gdkkeysyms.h
-gdk/gdkpango.h
 gdk/gdkprivate.h
-gdk/gdkscreen.h
-gdk/gdkregion.h
-gdk/gdkwindow.h
 gdk/gdkx.h
 gdk/gdkdirectfb.h
 gdk-pixbuf/gdk-pixbuf.h
@@ -298,38 +293,10 @@ gssapi_generic.h
 gssapi/gssapi_generic.h
 gssapi/gssapi.h
 gssapi.h
-gtk/gtkbindings.h
-gtk/gtkbutton.h
-gtk/gtkclipboard.h
-gtk/gtkcontainer.h
-gtk/gtkdialog.h
-gtk/gtkentry.h
-gtk/gtkfilechooser.h
-gtk/gtkfilechooserdialog.h
-gtk/gtkfixed.h
 gtk/gtk.h
-gtk/gtkiconfactory.h
-gtk/gtkimage.h
-gtk/gtkimmulticontext.h
-gtk/gtkinvisible.h
-gtk/gtkmain.h
-gtk/gtkmessagedialog.h
-gtk/gtkmisc.h
-gtk/gtkobject.h
 gtk/gtkprinter.h
 gtk/gtkprintjob.h
 gtk/gtkprintunixdialog.h
-gtk/gtkprivate.h
-gtk/gtkselection.h
-gtk/gtksignal.h
-gtk/gtksocket.h
-gtk/gtkstock.h
-gtk/gtkstyle.h
-gtk/gtktextview.h
-gtk/gtkvscrollbar.h
-gtk/gtkwidget.h
-gtk/gtkwindow.h
-gtk/gtkversion.h
 HIToolbox/HIToolbox.h
 hlink.h
 htiface.h
@@ -1018,9 +985,6 @@ zlib.h
 #if BUILD_STATIC_LIBS!=1
 #define WRAP_LCMS_HEADERS
 #endif
-#endif
-#if MOZ_NATIVE_LCMS==1
-#define WRAP_LCMS_HEADERS
 #endif
 #ifdef WRAP_LCMS_HEADERS
 icc34.h

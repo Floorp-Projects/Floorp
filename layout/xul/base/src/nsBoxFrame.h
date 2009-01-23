@@ -66,8 +66,10 @@ class nsBoxLayoutState;
 
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext,
-                         PRBool aIsRoot = PR_FALSE,
-                         nsIBoxLayout* aLayoutManager = nsnull);
+                         PRBool aIsRoot,
+                         nsIBoxLayout* aLayoutManager);
+nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+                         nsStyleContext* aContext);
 
 class nsBoxFrame : public nsContainerFrame
 {
@@ -77,6 +79,8 @@ public:
                                   nsStyleContext* aContext,
                                   PRBool aIsRoot,
                                   nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+                                  nsStyleContext* aContext);
 
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
@@ -172,7 +176,7 @@ public:
 
   virtual ~nsBoxFrame();
   
-  nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
+  nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = PR_FALSE, nsIBoxLayout* aLayoutManager = nsnull);
 
   // if aIsPopup is true, then the view is for a popup. In this case,
   // the view is added a child of the root view, and is initially hidden

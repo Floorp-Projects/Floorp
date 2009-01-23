@@ -40,7 +40,7 @@
  */
 
 /*
- * Use this functionto create the CRMFSinglePubInfo* variables that will 
+ * Use this function to create the CRMFSinglePubInfo* variables that will 
  * populate the inPubInfoArray paramter for the funciton
  * CRMF_CreatePKIPublicationInfo.
  *

@@ -36,6 +36,8 @@ that require it.  -->
 <!ENTITY itemDownloadList.accesskey   "D">
 <!ENTITY itemActiveLogins.label       "Active Logins">
 <!ENTITY itemActiveLogins.accesskey   "L">
+<!ENTITY itemSiteSettings.label       "Site-specific Settings">
+<!ENTITY itemSiteSettings.accesskey   "S">
 
 <!ENTITY window.width                 "30em">
 <!ENTITY column.width                 "14em">

@@ -123,11 +123,12 @@ var StarUI = {
           }
         }
         else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
-          // hide the panel unless the folder tree is focused
-          // or the tag autocomplete popup is open
+          // hide the panel unless the folder tree or an expander are focused
+          // or an autocomplete popup is open.
           if (aEvent.target.localName != "tree" &&
-              (aEvent.target.id != "editBMPanel_tagsField" ||
-               !aEvent.target.popupOpen))
+              aEvent.target.className != "expander-up" &&
+              aEvent.target.className != "expander-down" &&
+              !aEvent.target.popupOpen)
             this.panel.hidePopup();
         }
         break;
