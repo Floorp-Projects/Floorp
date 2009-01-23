@@ -104,7 +104,7 @@ morkPortTableCursor::morkPortTableCursor(morkEnv* ev,
     if ( ioStore && ioSlotHeap )
     {
       mCursor_Pos = -1;
-      mCursor_Seed = 0; // let the iterator do it's own seed handling
+      mCursor_Seed = 0; // let the iterator do its own seed handling
       morkStore::SlotWeakStore(ioStore, ev, &mPortTableCursor_Store);
 
       if ( this->SetRowScope(ev, inRowScope) )
