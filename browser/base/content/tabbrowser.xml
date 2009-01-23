@@ -1212,8 +1212,15 @@
           //    > 1               false/true                NO
           var owner = (aURIs.length > 1) || aLoadInBackground ? null : this.selectedTab;
           var firstTabAdded = null;
-          if (aReplace)
-            this.loadURI(aURIs[0], null, null);
+
+          if (aReplace) {
+            try {
+              this.loadURI(aURIs[0], null, null);
+            } catch (e) {
+              // Ignore failure in case a URI is wrong, so we can continue
+              // opening the next ones.
+            }
+          }
           else
             firstTabAdded = this.addTab(aURIs[0], null, null, null, owner, false);
 
