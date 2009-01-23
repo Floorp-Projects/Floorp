@@ -227,12 +227,6 @@ typedef enum JSRuntimeState {
     JSRTS_LANDING
 } JSRuntimeState;
 
-typedef enum JSBuiltinFunctionId {
-    JSBUILTIN_ObjectToIterator,
-    JSBUILTIN_CallIteratorNext,
-    JSBUILTIN_LIMIT
-} JSBuiltinFunctionId;
-
 typedef struct JSPropertyTreeEntry {
     JSDHashEntryHdr     hdr;
     JSScopeProperty     *child;
@@ -340,14 +334,6 @@ struct JSRuntime {
      */
     JSString            *emptyString;
     JSString            **unitStrings;
-
-    /*
-     * Builtin functions, lazily created and held for use by the trace recorder.
-     *
-     * This field would be #ifdef JS_TRACER, but XPConnect is compiled without
-     * -DJS_TRACER and includes this header.
-     */
-    JSObject            *builtinFunctions[JSBUILTIN_LIMIT];
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
