@@ -80,10 +80,6 @@
 #   that name.  With quick stubs, it's the same except that non-quick-stubbed
 #   features are shadowed.
 #
-# - Quick stub getters and setters are JSPropertyOps-- that is, they do not use
-#   JSPROP_GETTER or JSPROP_SETTER.  This means __lookupGetter__ does not work
-#   on them.  This change is visible to scripts.
-#
 # - Quick stub methods are JSFastNative, which means that when a quick stub
 #   method is called, no JS stack frame is created.  This doesn't affect
 #   Mozilla security checks because they look for scripted JSStackFrames, not
@@ -127,6 +123,9 @@
 #
 # - There are many features of IDL that XPConnect supports but qsgen does not,
 #   including dependent types, arrays, and out parameters.
+#
+# - Since quick stubs are JSPropertyOps, we have to do additional work to make
+#   __lookup[GS]etter__ work on them.
 
 
 import xpidl

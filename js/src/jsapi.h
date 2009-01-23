@@ -1603,6 +1603,13 @@ JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                    JSPropertyOp *getterp,
                                    JSPropertyOp *setterp);
 
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
+                                       jsid id,
+                                       uintN *attrsp, JSBool *foundp,
+                                       JSPropertyOp *getterp,
+                                       JSPropertyOp *setterp);
+
 /*
  * Set the attributes of a property on a given object.
  *

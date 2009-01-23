@@ -100,6 +100,271 @@ LookupInterfaceOrAncestor(PRUint32 tableSize, const xpc_qsHashEntry *table,
     return p;
 }
 
+static JSBool
+PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
+{
+    // Layout:
+    //   this = our this
+    //   property op to call = callee reserved slot 0
+    //   name of the property = callee reserved slot 1
+
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    jsval v;
+
+    if(!JS_GetReservedSlot(cx, callee, 0, &v))
+        return JS_FALSE;
+    JSObject *ptrobj = JSVAL_TO_OBJECT(v);
+    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(cx, ptrobj));
+
+    if(!JS_GetReservedSlot(cx, callee, 1, &v))
+        return JS_FALSE;
+
+    JS_SET_RVAL(cx, vp, JS_ARGV(cx, vp)[0]);
+    return (*popp)(cx, obj, v, vp);
+}
+
+static void
+PointerFinalize(JSContext *cx, JSObject *obj)
+{
+    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(cx, obj));
+    delete popp;
+}
+
+static JSClass
+PointerHolderClass = {
+    "Pointer", JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PointerFinalize,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static JSObject *
+GeneratePropertyOp(JSContext *cx, JSObject *obj, jsval idval, uintN argc,
+                   const char *name, JSPropertyOp pop)
+{
+    // The JS engine provides two reserved slots on function objects for
+    // XPConnect to use. Use them to stick the necessary info here.
+    JSFunction *fun =
+        JS_NewFunction(cx, reinterpret_cast<JSNative>(PropertyOpForwarder),
+                       argc, JSFUN_FAST_NATIVE, obj, name);
+    if(!fun)
+        return JS_FALSE;
+
+    JSObject *funobj = JS_GetFunctionObject(fun);
+
+    JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(funobj));
+
+    // Unfortunately, we cannot guarantee that JSPropertyOp is aligned. Use a
+    // second object to work around this.
+    JSObject *ptrobj = JS_NewObject(cx, &PointerHolderClass, nsnull, funobj);
+    if(!ptrobj)
+        return JS_FALSE;
+    JSPropertyOp *popp = new JSPropertyOp;
+    if(!popp)
+        return JS_FALSE;
+    *popp = pop;
+    JS_SetPrivate(cx, ptrobj, popp);
+
+    JS_SetReservedSlot(cx, funobj, 0, OBJECT_TO_JSVAL(ptrobj));
+    JS_SetReservedSlot(cx, funobj, 1, idval);
+    return funobj;
+}
+
+static JSBool
+ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
+                 const char *name, JSPropertyOp getter, JSPropertyOp setter,
+                 JSObject **getterobjp, JSObject **setterobjp)
+{
+    // Generate both getter and setter and stash them in the prototype.
+    jsval roots[2] = { JSVAL_NULL, JSVAL_NULL };
+    JSAutoTempValueRooter tvr(cx, 2, roots);
+
+    uintN attrs = JSPROP_SHARED;
+    JSObject *getterobj;
+    if(getter)
+    {
+        getterobj = GeneratePropertyOp(cx, obj, idval, 0, name, getter);
+        if(!getterobj)
+            return JS_FALSE;
+        roots[0] = OBJECT_TO_JSVAL(getterobj);
+        attrs |= JSPROP_GETTER;
+    }
+    else
+        getterobj = nsnull;
+
+    JSObject *setterobj;
+    if (setter)
+    {
+        setterobj = GeneratePropertyOp(cx, obj, idval, 1, name, setter);
+        if(!setterobj)
+            return JS_FALSE;
+        roots[1] = OBJECT_TO_JSVAL(setterobj);
+        attrs |= JSPROP_SETTER;
+    }
+    else
+        setterobj = nsnull;
+
+    if(getterobjp)
+        *getterobjp = getterobj;
+    if(setterobjp)
+        *setterobjp = setterobj;
+    return JS_DefinePropertyById(cx, obj, interned_id, JSVAL_VOID,
+                                 (JSPropertyOp)getterobj,
+                                 (JSPropertyOp)setterobj,
+                                 attrs);
+}
+
+static JSBool
+LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, jsval *vp)
+{
+    uintN attrs;
+    JSBool found;
+    JSPropertyOp getter, setter;
+    JSObject *obj2;
+    jsid interned_id;
+    jsval v;
+
+    XPC_QS_ASSERT_CONTEXT_OK(cx);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+    jsval idval = JS_ARGV(cx, vp)[0];
+
+    const char *name = JSVAL_IS_STRING(idval)
+                       ? JS_GetStringBytes(JSVAL_TO_STRING(idval))
+                       : nsnull;
+    if(!JS_ValueToId(cx, idval, &interned_id) ||
+       !JS_LookupPropertyWithFlagsById(cx, obj, interned_id,
+                                       JSRESOLVE_QUALIFIED, &obj2, &v) ||
+       (obj2 &&
+        !JS_GetPropertyAttrsGetterAndSetterById(cx, obj2, interned_id, &attrs,
+                                                &found, &getter, &setter)))
+        return JS_FALSE;
+
+    // No property at all means no getters or setters possible.
+    if(!obj2 || !found)
+    {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return JS_TRUE;
+    }
+
+    // Inline obj_lookup[GS]etter here.
+    if(wantGetter)
+    {
+        if(attrs & JSPROP_GETTER)
+        {
+            JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(getter));
+            return JS_TRUE;
+        }
+    }
+    else
+    {
+        if(attrs & JSPROP_SETTER)
+        {
+            JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(setter));
+            return JS_TRUE;
+        }
+    }
+
+    // Since XPConnect doesn't use JSPropertyOps in any other contexts,
+    // ensuring that we have an XPConnect prototype object ensures that
+    // we are only going to expose quickstubbed properties to script.
+    // Also be careful not to overwrite existing properties!
+    if(!name ||
+       !IS_PROTO_CLASS(STOBJ_GET_CLASS(obj2)) ||
+       (attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
+       !(getter || setter))
+    {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return JS_TRUE;
+    }
+
+    JSObject *getterobj, *setterobj;
+    if(!ReifyPropertyOps(cx, obj, idval, interned_id, name, getter, setter,
+                         &getterobj, &setterobj))
+        return JS_FALSE;
+
+    JSObject *wantedobj = wantGetter ? getterobj : setterobj;
+    v = wantedobj ? OBJECT_TO_JSVAL(wantedobj) : JSVAL_VOID;
+    JS_SET_RVAL(cx, vp, v);
+    return JS_TRUE;
+}
+
+static JSBool
+SharedLookupGetter(JSContext *cx, uintN argc, jsval *vp)
+{
+    return LookupGetterOrSetter(cx, PR_TRUE, vp);
+}
+
+static JSBool
+SharedLookupSetter(JSContext *cx, uintN argc, jsval *vp)
+{
+    return LookupGetterOrSetter(cx, PR_FALSE, vp);
+}
+
+// XXX Hack! :-/
+JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp);
+JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp);
+
+static JSBool
+DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
+{
+    uintN attrs;
+    JSBool found;
+    JSPropertyOp getter, setter;
+    JSObject *obj2;
+    jsval v;
+    jsid interned_id;
+
+    XPC_QS_ASSERT_CONTEXT_OK(cx);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+    JSFastNative forward = wantGetter ? js_obj_defineGetter : js_obj_defineSetter;
+    jsval id = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    if(!JSVAL_IS_STRING(id))
+        return forward(cx, argc, vp);
+    JSString *str = JSVAL_TO_STRING(id);
+
+    const char *name = JS_GetStringBytes(str);
+    if(!JS_ValueToId(cx, id, &interned_id) ||
+       !JS_LookupPropertyWithFlagsById(cx, obj, interned_id,
+                                       JSRESOLVE_QUALIFIED, &obj2, &v) ||
+       (obj2 &&
+        !JS_GetPropertyAttrsGetterAndSetterById(cx, obj2, interned_id, &attrs,
+                                                &found, &getter, &setter)))
+        return JS_FALSE;
+
+    // The property didn't exist, already has a getter or setter, or is not
+    // our property, then just forward now.
+    if(!obj2 ||
+       (attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
+       !(getter || setter) ||
+       !IS_PROTO_CLASS(STOBJ_GET_CLASS(obj2)))
+        return forward(cx, argc, vp);
+
+    // Reify the getter and setter...
+    if(!ReifyPropertyOps(cx, obj, id, interned_id, name, getter, setter,
+                         nsnull, nsnull))
+        return JS_FALSE;
+
+    return forward(cx, argc, vp);
+}
+
+static JSBool
+SharedDefineGetter(JSContext *cx, uintN argc, jsval *vp)
+{
+    return DefineGetterOrSetter(cx, argc, PR_TRUE, vp);
+}
+
+static JSBool
+SharedDefineSetter(JSContext *cx, uintN argc, jsval *vp)
+{
+    return DefineGetterOrSetter(cx, argc, PR_FALSE, vp);
+}
+
+
 JSBool
 xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                        PRUint32 ifacec, const nsIID **interfaces,
@@ -113,6 +378,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
      * searching the interfaces forward.  Here, definitions toward the
      * front of 'interfaces' overwrite those toward the back.
      */
+    PRBool definedProperty = PR_FALSE;
     for(uint32 i = ifacec; i-- != 0;)
     {
         const nsID &iid = *interfaces[i];
@@ -129,6 +395,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                 {
                     for(; ps->name; ps++)
                     {
+                        definedProperty = PR_TRUE;
                         if(!JS_DefineProperty(cx, proto, ps->name, JSVAL_VOID,
                                               ps->getter, ps->setter,
                                               flags | JSPROP_SHARED))
@@ -158,6 +425,18 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
             }
         }
     }
+
+    static JSFunctionSpec getterfns[] = {
+        JS_FN("__lookupGetter__", SharedLookupGetter, 1, 0),
+        JS_FN("__lookupSetter__", SharedLookupSetter, 1, 0),
+        JS_FN("__defineGetter__", SharedDefineGetter, 2, 0),
+        JS_FN("__defineSetter__", SharedDefineSetter, 2, 0),
+        JS_FS_END
+    };
+
+    if(definedProperty && !JS_DefineFunctions(cx, proto, getterfns))
+        return JS_FALSE;
+
     return JS_TRUE;
 }
 
