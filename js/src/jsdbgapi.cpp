@@ -735,10 +735,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         return JS_FALSE;
     }
 
-    if (JSVAL_IS_INT(idval))
+    if (JSVAL_IS_INT(idval)) {
         propid = INT_JSVAL_TO_JSID(idval);
-    else if (!js_ValueToStringId(cx, idval, &propid))
-        return JS_FALSE;
+    } else {
+        if (!js_ValueToStringId(cx, idval, &propid))
+            return JS_FALSE;
+        CHECK_FOR_STRING_INDEX(propid);
+    }
 
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
