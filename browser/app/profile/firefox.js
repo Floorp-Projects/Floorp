@@ -219,11 +219,6 @@ pref("browser.urlbar.autoFill", false);
 // 2: Match only on word boundaries (e.g., after / or .)
 // 3: Match at the beginning of the url or title
 pref("browser.urlbar.matchBehavior", 1);
-// 0: Search nothing
-// 1: Search history (visited pages)
-// 2: Search bookmarks
-// 3: Search both history and bookmarks
-pref("browser.urlbar.search.sources", 3);
 pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
@@ -405,9 +400,9 @@ pref("privacy.item.passwords",   false);
 pref("privacy.item.downloads",   true);
 pref("privacy.item.cookies",     false);
 pref("privacy.item.cache",       true);
-pref("privacy.item.siteprefs",   false);
 pref("privacy.item.sessions",    true);
 pref("privacy.item.offlineApps", false);
+pref("privacy.item.siteSettings", false);
 
 // What default should we use for the time span in the sanitizer:
 // 0 - Clear everything

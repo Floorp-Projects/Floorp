@@ -41,6 +41,9 @@ include css-charset/reftest.list
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
 
+# css values and units
+include css-valuesandunits/reftest.list
+
 # columns/
 include columns/reftest.list
 
@@ -79,6 +82,9 @@ include line-breaking/reftest.list
 
 # mathml/
 include mathml/reftest.list
+
+# marquee/
+include marquee/reftest.list
 
 # native-theme/
 include native-theme/reftest.list

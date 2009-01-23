@@ -106,8 +106,6 @@ js1_7/extensions/regress-353214-01.js
 js1_7/lexical/regress-346642-03.js
 js1_5/extensions/regress-432075.js
 js1_5/extensions/regress-421621.js
-# bug 450275
-js1_5/extensions/regress-434837-01.js
 # bug 408002
 js1_5/Regress/regress-320119.js
 # bug 380469

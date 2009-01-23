@@ -51,6 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
 #include "nsIReflowCallback.h"
+#include "nsContentUtils.h"
 //
 // NS_NewToolbarFrame
 //
@@ -121,7 +122,7 @@ nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
 
   // did the progress change?
-  if (nsGkAtoms::value == aAttribute) {
+  if (nsGkAtoms::value == aAttribute || nsGkAtoms::max == aAttribute) {
     nsIFrame* barChild = GetFirstChild(nsnull);
     if (!barChild) return NS_OK;
     nsIFrame* remainderChild = barChild->GetNextSibling();
@@ -154,14 +155,13 @@ nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
     nsAutoString leftFlex, rightFlex;
     leftFlex.AppendInt(flex);
     rightFlex.AppendInt(remainder);
-    nsWeakFrame weakFrame(this);
-    barChild->GetContent()->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, leftFlex, PR_TRUE);
-    remainderContent->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, rightFlex, PR_TRUE);
 
-    if (weakFrame.IsAlive()) {
-      PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
-    }
+    nsContentUtils::AddScriptRunner(new nsSetAttrRunnable(
+      barChild->GetContent(), nsGkAtoms::flex, leftFlex));
+    nsContentUtils::AddScriptRunner(new nsSetAttrRunnable(
+      remainderContent, nsGkAtoms::flex, rightFlex));
+    nsContentUtils::AddScriptRunner(new nsReflowFrameRunnable(
+      this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY));
   }
   return NS_OK;
 }

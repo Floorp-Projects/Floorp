@@ -49,6 +49,15 @@
 #include <string.h>
 #include <stdarg.h>
 
+#if defined(XP_UNIX) && !defined(NO_FORK_CHECK)
+#include <unistd.h>
+#include <sys/wait.h>
+#else
+#ifndef NO_FORK_CHECK
+#define NO_FORK_CHECK
+#endif
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #define LIB_NAME "softokn3.dll"
@@ -544,6 +553,9 @@ CK_RV PKM_RecoverFunctions(CK_FUNCTION_LIST_PTR pFunctionList,
                     CK_OBJECT_HANDLE hPubKey, CK_OBJECT_HANDLE hPrivKey,
                     CK_MECHANISM *signMech, const CK_BYTE * pData, 
                     CK_ULONG pDataLen);
+CK_RV PKM_ForkCheck(int expected, CK_FUNCTION_LIST_PTR fList,
+		    PRBool forkAssert, CK_C_INITIALIZE_ARGS_NSS *initArgs);
+
 void  PKM_Help(); 
 void  PKM_CheckPath(char *string);
 char  *PKM_FilePasswd(char *pwFile);
@@ -565,14 +577,18 @@ int main(int argc, char **argv)
     char *configDir = NULL;
     char *dbPrefix = NULL;
     char *disableUnload = NULL;
+    PRBool doForkTests = PR_TRUE;
 
     PLOptStatus os;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "nvhf:d:p:");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "nvhf:Fd:p:");
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+       if (PL_OPT_BAD == os) continue;
        switch (opt->option)
         {
+        case 'F':  /* disable fork tests */
+            doForkTests = PR_FALSE;
+            break;
         case 'n':  /* non fips mode */
             MODE = NONFIPSMODE;
             slotID = 1;
@@ -611,6 +627,16 @@ int main(int argc, char **argv)
     if (!dbPrefix) {
         dbPrefix = strdup("");
     }
+
+    if (doForkTests)
+    {
+        /* first, try to fork without softoken loaded to make sure
+         * everything is OK */
+        crv = PKM_ForkCheck(123, NULL, PR_FALSE, NULL);
+        if (crv != CKR_OK)
+            goto cleanup;
+    }
+
 
 #ifdef _WIN32
     hModule = LoadLibrary(LIB_NAME);
@@ -665,6 +691,16 @@ int main(int argc, char **argv)
     crv = (*pC_GetFunctionList)(&pFunctionList);
     assert(crv == CKR_OK);
 
+
+    if (doForkTests)
+    {
+        /* now, try to fork with softoken loaded, but not initialized */
+        crv = PKM_ForkCheck(CKR_CRYPTOKI_NOT_INITIALIZED, pFunctionList,
+			    PR_TRUE, NULL);
+        if (crv != CKR_OK)
+            goto cleanup;
+    }
+    
     initArgs.CreateMutex = NULL;
     initArgs.DestroyMutex = NULL;
     initArgs.LockMutex = NULL;
@@ -690,6 +726,21 @@ int main(int argc, char **argv)
                    PKM_CK_RVtoStr(crv));
         goto cleanup;
     }
+
+    if (doForkTests)
+    {
+        /* Disable core on fork for this test, since we are testing the
+         * pathological case, and if enabled, the child process would dump
+         * core in C_GetTokenInfo .
+         * We can still differentiate the correct from incorrect behavior
+         * by the PKCS#11 return code.
+         */
+        /* try to fork with softoken both loaded and initialized */
+        crv = PKM_ForkCheck(CKR_DEVICE_ERROR, pFunctionList, PR_FALSE, NULL);
+        if (crv != CKR_OK)
+            goto cleanup;
+    }
+
     crv = PKM_ShowInfo(pFunctionList, slotID);
     if (crv == CKR_OK) {
         PKM_LogIt("PKM_ShowInfo succeeded\n");
@@ -868,9 +919,18 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
+    if (doForkTests)
+    {
+        /* try to fork with softoken still loaded, but de-initialized */
+        crv = PKM_ForkCheck(CKR_CRYPTOKI_NOT_INITIALIZED, pFunctionList,
+	                    PR_TRUE, NULL);
+        if (crv != CKR_OK)
+            goto cleanup;
+    }
+
     if (pSlotList) free(pSlotList);
 
-    /* demostrate how an application can be in Hybrid mode */
+    /* demonstrate how an application can be in Hybrid mode */
     /* PKM_HybridMode shows how to switch between NONFIPS */
     /* mode to FIPS mode */
 
@@ -884,9 +944,29 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    printf("**** Total number of TESTS ran in %s is %d. ****\n", 
-          ((MODE == FIPSMODE) ? "FIPS MODE" : "NON FIPS MODE"), (int) NUMTESTS);    
-    printf("**** ALL TESTS PASSED ****\n");
+    if (doForkTests) {
+        /* testing one more C_Initialize / C_Finalize to exercise getpid()
+         * fork check code */
+        crv = pFunctionList->C_Initialize(&initArgs);
+        if (crv == CKR_OK) {
+            PKM_LogIt("C_Initialize succeeded\n");
+        } else {
+            PKM_Error( "C_Initialize failed with 0x%08X, %-26s\n", crv, 
+                       PKM_CK_RVtoStr(crv));
+            goto cleanup;
+        }
+        crv = pFunctionList->C_Finalize(NULL);
+        if (crv == CKR_OK) {
+            PKM_LogIt("C_Finalize succeeded\n");
+        } else {
+            PKM_Error( "C_Finalize failed with 0x%08X, %-26s\n", crv, 
+                       PKM_CK_RVtoStr(crv));
+            goto cleanup;
+        }
+        /* try to C_Initialize / C_Finalize in child. This should succeed */
+        crv = PKM_ForkCheck(CKR_OK, pFunctionList, PR_TRUE, &initArgs);
+    }
+
     PKM_LogIt("unloading NSS PKCS # 11 softoken and exiting\n");
 
 cleanup:
@@ -912,6 +992,16 @@ cleanup:
         PR_UnloadLibrary(lib);
     }
 #endif
+    if (CKR_OK == crv && doForkTests && !disableUnload) {
+        /* try to fork with softoken both de-initialized and unloaded */
+        crv = PKM_ForkCheck(123, NULL, PR_TRUE, NULL);
+    }
+
+    printf("**** Total number of TESTS ran in %s is %d. ****\n", 
+          ((MODE == FIPSMODE) ? "FIPS MODE" : "NON FIPS MODE"), (int) NUMTESTS);    
+    if (CKR_OK == crv) {
+        printf("**** ALL TESTS PASSED ****\n");
+    }
 
     return crv;
 }
@@ -5315,9 +5405,11 @@ void PKM_Help()
     PRFileDesc *debug_out = PR_GetSpecialFD(PR_StandardError);
     PR_fprintf(debug_out, "pk11mode test program usage:\n");
     PR_fprintf(debug_out, "\t-f <file>   Password File : echo pw > file \n");
+    PR_fprintf(debug_out, "\t-F          Disable Unix fork tests\n");
     PR_fprintf(debug_out, "\t-n          Non Fips Mode \n");
     PR_fprintf(debug_out, "\t-d <path>   Database path location\n");
     PR_fprintf(debug_out, "\t-p <prefix> DataBase prefix\n");
+    PR_fprintf(debug_out, "\t-v          verbose\n");
     PR_fprintf(debug_out, "\t-h          this help message\n");
     exit(1);
 }
@@ -5342,3 +5434,69 @@ void PKM_CheckPath(char *string)
        *dest = 0;
 
 }
+
+CK_RV PKM_ForkCheck(int expected, CK_FUNCTION_LIST_PTR fList,
+		    PRBool forkAssert, CK_C_INITIALIZE_ARGS_NSS *initArgs)
+{
+    CK_RV crv = CKR_OK;
+#ifndef NO_FORK_CHECK
+    int rc = -1;
+    int retStatus = 0;
+    NUMTESTS++; /* increment NUMTESTS */
+    if (forkAssert) {
+	putenv("NSS_STRICT_NOFORK=1");
+    } else {
+	putenv("NSS_STRICT_NOFORK=0");
+    }
+    pid_t child = fork();
+    switch (child) {
+    case -1:
+        PKM_Error("Fork failed.\n");
+        crv = CKR_DEVICE_ERROR;
+        break;
+    case 0:
+        if (fList) {
+            if (!initArgs) {
+                /* If softoken is loaded, make a PKCS#11 call to C_GetTokenInfo
+                 * in the child. This call should always fail.
+                 * If softoken is uninitialized,
+                 * it fails with CKR_CRYPTOKI_NOT_INITIALIZED.
+                 * If it was initialized in the parent, the fork check should
+                 * kick in, and make it return CKR_DEVICE_ERROR.
+                 */
+                CK_RV child_crv = fList->C_GetTokenInfo(NULL, NULL);
+                exit(child_crv & 255);
+            } else {
+                /* If softoken is loaded, make a PKCS#11 call to C_Initialize
+                 * in the child. This call should always fail.
+                 * If softoken is uninitialized, this should succeed.
+                 * If it was initialized in the parent, the fork check should
+                 * kick in, and make it return CKR_DEVICE_ERROR.
+                 */
+                CK_RV child_crv = fList->C_Initialize(initArgs);
+                if (CKR_OK == child_crv) {
+                    child_crv = fList->C_Finalize(NULL);
+                }
+                exit(child_crv & 255);
+            }
+        }
+        exit(expected & 255);
+    default:
+        PKM_LogIt("Fork succeeded.\n");
+        pid_t ret = wait(&rc);
+        if (ret != child || (!WIFEXITED(rc)) ||
+            ( (expected & 255) != (WEXITSTATUS(rc) & 255)) ) {
+            int retstatus = -1;
+            if (WIFEXITED(rc)) {
+                retStatus = WEXITSTATUS(rc);
+            }
+            PKM_Error("Child misbehaved.\n");
+            printf("Child return status : %d.\n", retStatus & 255);
+            crv = CKR_DEVICE_ERROR;
+        }
+        break;
+    }
+#endif
+    return crv;
+}
+

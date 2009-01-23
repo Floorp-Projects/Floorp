@@ -57,6 +57,7 @@
 #include "nsLinebreakConverter.h"
 #include "nsIFormProcessor.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "prmem.h"
@@ -1230,7 +1231,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
   }
 
   PRInt32      theAttrCount = aNode->GetAttributeCount();
-  nsStringArray  theContent;
+  nsTArray<nsString> theContent;
   nsAutoString theAttribute;
   nsAutoString theFormType;
   CToken*      theToken = nsnull;
@@ -1242,7 +1243,6 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
   if (NS_FAILED(result)) {
     return result;
   }
-  nsString* theTextValue = nsnull;
   PRInt32   theIndex = nsnull;
 
   // Populate the tokenizer with the fabricated elements in the reverse
@@ -1253,11 +1253,10 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
   NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
   mTokenizer->PushTokenFront(theToken);
 
-  for (theIndex = theContent.Count()-1; theIndex > -1; --theIndex) {
-    theTextValue = theContent[theIndex];
+  for (theIndex = theContent.Length()-1; theIndex > -1; --theIndex) {
     theToken = mTokenAllocator->CreateTokenOfType(eToken_text,
                                                   eHTMLTag_text,
-                                                  *theTextValue);
+                                                  theContent[theIndex]);
     NS_ENSURE_TRUE(theToken, NS_ERROR_OUT_OF_MEMORY);
     mTokenizer->PushTokenFront(theToken);
 

@@ -42,7 +42,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 #include "mozIStorageStatement.h"
 
@@ -88,7 +88,7 @@ protected:
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
-    nsCStringArray mColumnNames;
+    nsTArray<nsCString> mColumnNames;
     PRBool mExecuting;
 
     /**

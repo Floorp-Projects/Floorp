@@ -40,6 +40,7 @@
 #define nsIXPathEvaluatorInternal_h__
 
 #include "nsCOMArray.h"
+#include "nsTArray.h"
 
 class nsIDOMDocument;
 class nsIDOMXPathExpression;
@@ -62,8 +63,8 @@ public:
 
   NS_IMETHOD CreateExpression(const nsAString &aExpression,
                               nsIDOMXPathNSResolver *aResolver,
-                              nsStringArray *aNamespaceURIs,
-                              nsCStringArray *aContractIDs,
+                              nsTArray<nsString> *aNamespaceURIs,
+                              nsTArray<nsCString> *aContractIDs,
                               nsCOMArray<nsISupports> *aState,
                               nsIDOMXPathExpression **aResult) = 0;
 };

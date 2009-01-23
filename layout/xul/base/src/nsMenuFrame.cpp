@@ -153,17 +153,28 @@ private:
 };
 
 //
-// NS_NewMenuFrame
+// NS_NewMenuFrame and NS_NewMenuItemFrame
 //
-// Wrapper for creating a new menu popup container
+// Wrappers for creating a new menu popup container
 //
 nsIFrame*
-NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
+NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell, aContext);
   
-  if ((it != nsnull) && aFlags)
+  if (it)
     it->SetIsMenu(PR_TRUE);
+
+  return it;
+}
+
+nsIFrame*
+NS_NewMenuItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+{
+  nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell, aContext);
+
+  if (it)
+    it->SetIsMenu(PR_FALSE);
 
   return it;
 }

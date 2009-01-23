@@ -53,15 +53,14 @@
 
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
-                                 nsStyleContext* aContext,
-                                 PRBool aIsRoot = PR_FALSE,
-                                 nsIBoxLayout* aLayoutManager = nsnull);
+                                 nsStyleContext* aContext);
 
 class nsListBoxBodyFrame : public nsBoxFrame,
                            public nsIScrollbarMediator,
                            public nsIReflowCallback
 {
-  nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
+  nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                     nsIBoxLayout* aLayoutManager);
   virtual ~nsListBoxBodyFrame();
 
 public:
@@ -80,9 +79,7 @@ public:
   nsresult GetIndexOfItem(nsIDOMElement *aItem, PRInt32 *aResult);
 
   friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
-                                          nsStyleContext* aContext,
-                                          PRBool aIsRoot,
-                                          nsIBoxLayout* aLayoutManager);
+                                          nsStyleContext* aContext);
   
   // nsIFrame
   NS_IMETHOD Init(nsIContent*     aContent,

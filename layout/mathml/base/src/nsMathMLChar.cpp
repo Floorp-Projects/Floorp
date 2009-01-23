@@ -220,7 +220,7 @@ public:
       mCharCache(0)
   {
     MOZ_COUNT_CTOR(nsGlyphTable);
-    mFontName.AppendString(aPrimaryFontName);
+    mFontName.AppendElement(aPrimaryFontName);
   }
 
   ~nsGlyphTable() // not a virtual destructor: this class is not intended to be subclassed
@@ -230,12 +230,12 @@ public:
 
   const nsAString& PrimaryFontName() const
   {
-    return *mFontName.StringAt(0);
+    return mFontName[0];
   }
 
   const nsAString& FontNameFor(const nsGlyphCode& aGlyphCode) const
   {
-    return *mFontName.StringAt(aGlyphCode.font);
+    return mFontName[aGlyphCode.font];
   }
 
   // True if this table contains some glyphs (variants and/or parts)
@@ -286,7 +286,7 @@ private:
   // mFontName[0] is the primary font associated to this table. The others 
   // are possible "external" fonts for glyphs not in the primary font
   // but which are needed to stretch certain characters in the table
-  nsStringArray mFontName; 
+  nsTArray<nsString> mFontName; 
                                
   // Tri-state variable for error/empty/ready
   PRInt32 mState;
@@ -320,11 +320,11 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
   if (mState == NS_TABLE_STATE_ERROR) return kNullGlyph;
   // Load glyph properties if this is the first time we have been here
   if (mState == NS_TABLE_STATE_EMPTY) {
-    nsresult rv = LoadProperties(*mFontName[0], mGlyphProperties);
+    nsresult rv = LoadProperties(mFontName[0], mGlyphProperties);
 #ifdef NS_DEBUG
     nsCAutoString uriStr;
     uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
-    LossyAppendUTF16toASCII(*mFontName[0], uriStr);
+    LossyAppendUTF16toASCII(mFontName[0], uriStr);
     uriStr.StripWhitespace(); // that may come from mFontName
     uriStr.AppendLiteral(".properties");
     printf("Loading %s ... %s\n",
@@ -346,7 +346,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
       rv = mGlyphProperties->GetStringProperty(key, value);
       if (NS_FAILED(rv)) break;
       Clean(value);
-      mFontName.AppendString(value); // i.e., mFontName[i] holds this font name
+      mFontName.AppendElement(value); // i.e., mFontName[i] holds this font name
     }
   }
 
@@ -410,14 +410,12 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
         ++i;
         font = value[i] - '0';
         ++i;
-        if (font >= mFontName.Count()) {
+        if (font >= mFontName.Length()) {
           NS_ERROR("Non-existant font referenced in glyph table");
           return kNullGlyph;
         }
         // The char cannot be handled if this font is not installed
-        nsAutoString fontName;
-        mFontName.StringAt(font, fontName);
-        if (!fontName.Length() || !CheckFontExistence(aPresContext, fontName)) {
+        if (!mFontName[font].Length() || !CheckFontExistence(aPresContext, mFontName[font])) {
           return kNullGlyph;
         }
       }
@@ -1568,7 +1566,6 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   // Set default font and get the default bounding metrics
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
-  nsAutoString fontName;
   nsFont font = mStyleContext->GetParent()->GetStyleFont()->mFont;
 
   // Override with specific fonts if applicable for this character
@@ -2092,7 +2089,6 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   }
   aRenderingContext.SetColor(fgColor);
 
-  nsAutoString fontName;
   nsFont theFont(styleContext->GetStyleFont()->mFont);
   if (! mFamily.IsEmpty()) {
     theFont.name = mFamily;

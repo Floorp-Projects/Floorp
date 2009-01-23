@@ -47,6 +47,7 @@
 
 #include "txDOM.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "txURIUtils.h"
 #include "txAtoms.h"
 #include <string.h>
@@ -225,7 +226,7 @@ Node* NodeDefinition::getXPathParent()
 nsresult NodeDefinition::getBaseURI(nsAString& aURI)
 {
   Node* node = this;
-  nsStringArray baseUrls;
+  nsTArray<nsString> baseUrls;
   nsAutoString url;
 
   while (node) {
@@ -233,12 +234,12 @@ nsresult NodeDefinition::getBaseURI(nsAString& aURI)
       case Node::ELEMENT_NODE :
         if (((Element*)node)->getAttr(txXMLAtoms::base, kNameSpaceID_XML,
                                       url))
-          baseUrls.AppendString(url);
+          baseUrls.AppendElement(url);
         break;
 
       case Node::DOCUMENT_NODE :
         node->getBaseURI(url);
-        baseUrls.AppendString(url);
+        baseUrls.AppendElement(url);
         break;
     
       default:
@@ -247,9 +248,9 @@ nsresult NodeDefinition::getBaseURI(nsAString& aURI)
     node = node->getXPathParent();
   }
 
-  PRInt32 count = baseUrls.Count();
+  PRUint32 count = baseUrls.Length();
   if (count) {
-    baseUrls.StringAt(--count, aURI);
+    aURI = baseUrls[--count];
 
     while (count > 0) {
       nsAutoString dest;

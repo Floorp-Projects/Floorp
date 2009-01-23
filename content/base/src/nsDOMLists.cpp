@@ -69,10 +69,10 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 {
-  if (aIndex >= (PRUint32)mNames.Count()) {
+  if (aIndex >= mNames.Length()) {
     SetDOMStringToNull(aResult);
   } else {
-    mNames.StringAt(aIndex, aResult);
+    aResult = mNames[aIndex];
   }
 
   return NS_OK;
@@ -81,7 +81,7 @@ nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 NS_IMETHODIMP
 nsDOMStringList::GetLength(PRUint32 *aLength)
 {
-  *aLength = (PRUint32)mNames.Count();
+  *aLength = mNames.Length();
 
   return NS_OK;
 }
@@ -89,7 +89,7 @@ nsDOMStringList::GetLength(PRUint32 *aLength)
 NS_IMETHODIMP
 nsDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
 {
-  *aResult = mNames.IndexOf(aString) > -1;
+  *aResult = mNames.Contains(aString);
 
   return NS_OK;
 }
@@ -116,10 +116,10 @@ NS_INTERFACE_TABLE_HEAD(nsNameList)
 NS_IMETHODIMP
 nsNameList::GetName(PRUint32 aIndex, nsAString& aResult)
 {
-  if (aIndex >= (PRUint32)mNames.Count()) {
+  if (aIndex >= mNames.Length()) {
     SetDOMStringToNull(aResult);
   } else {
-    mNames.StringAt(aIndex, aResult);
+    aResult = mNames[aIndex];
   }
 
   return NS_OK;
@@ -128,10 +128,10 @@ nsNameList::GetName(PRUint32 aIndex, nsAString& aResult)
 NS_IMETHODIMP
 nsNameList::GetNamespaceURI(PRUint32 aIndex, nsAString& aResult)
 {
-  if (aIndex >= (PRUint32)mNames.Count()) {
+  if (aIndex >= mNames.Length()) {
     SetDOMStringToNull(aResult);
   } else {
-    mNamespaceURIs.StringAt(aIndex, aResult);
+    aResult = mNamespaceURIs[aIndex];
   }
 
   return NS_OK;
@@ -140,7 +140,7 @@ nsNameList::GetNamespaceURI(PRUint32 aIndex, nsAString& aResult)
 NS_IMETHODIMP
 nsNameList::GetLength(PRUint32 *aLength)
 {
-  *aLength = (PRUint32)mNames.Count();
+  *aLength = mNames.Length();
 
   return NS_OK;
 }
@@ -148,12 +148,12 @@ nsNameList::GetLength(PRUint32 *aLength)
 PRBool
 nsNameList::Add(const nsAString& aNamespaceURI, const nsAString& aName)
 {
-  PRInt32 count = mNamespaceURIs.Count();
-  if (mNamespaceURIs.InsertStringAt(aNamespaceURI, count)) {
-    if (mNames.InsertStringAt(aName, count)) {
+  PRUint32 count = mNamespaceURIs.Length();
+  if (mNamespaceURIs.InsertElementAt(count, aNamespaceURI)) {
+    if (mNames.InsertElementAt(count, aName)) {
       return PR_TRUE;
     }
-    mNamespaceURIs.RemoveStringAt(count);
+    mNamespaceURIs.RemoveElementAt(count);
   }
 
   return PR_FALSE;
@@ -162,7 +162,7 @@ nsNameList::Add(const nsAString& aNamespaceURI, const nsAString& aName)
 NS_IMETHODIMP
 nsNameList::Contains(const nsAString& aName, PRBool *aResult)
 {
-  *aResult = mNames.IndexOf(aName) > -1;
+  *aResult = mNames.Contains(aName);
 
   return NS_OK;
 }
@@ -171,12 +171,9 @@ NS_IMETHODIMP
 nsNameList::ContainsNS(const nsAString& aNamespaceURI, const nsAString& aName,
                        PRBool *aResult)
 {
-  PRInt32 index = mNames.IndexOf(aName);
-  if (index > -1) {
-    nsAutoString ns;
-    mNamespaceURIs.StringAt(index, ns);
-
-    *aResult = ns.Equals(aNamespaceURI);
+  PRUint32 index = mNames.IndexOf(aName);
+  if (index != PRUint32(-1)) {
+    *aResult = mNamespaceURIs[index].Equals(aNamespaceURI);
   }
   else {
     *aResult = PR_FALSE;

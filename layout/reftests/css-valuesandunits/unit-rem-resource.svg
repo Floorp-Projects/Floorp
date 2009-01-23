@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     style="font-size: 30px">
+  <!-- We don't support 'rem' in the width attribute because that's nsSVGLength
+       code, so we use indirection through 'em' and 'font-size'. -->
+  <rect id="rect" fill="green" style="font-size: 2rem" width="5em" height="50px" />
+</svg>

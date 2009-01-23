@@ -75,8 +75,8 @@ public:
    *                   current time.
    * @return NS_OK if the operation succeeeded, or an error code otherwise.
    */
-  PRBool BeginElementAt(double aOffsetSeconds,
-                        const nsSMILTimeContainer* aContainer);
+  nsresult BeginElementAt(double aOffsetSeconds,
+                          const nsSMILTimeContainer* aContainer);
 
   /*
    * Adds a new end instance time at the current document time (as defined by
@@ -89,8 +89,50 @@ public:
    *                   current time.
    * @return NS_OK if the operation succeeeded, or an error code otherwise.
    */
-  PRBool EndElementAt(double aOffsetSeconds,
-                      const nsSMILTimeContainer* aContainer);
+  nsresult EndElementAt(double aOffsetSeconds,
+                        const nsSMILTimeContainer* aContainer);
+
+  /** 
+   * Methods for supporting the nsSVGAnimationElement interface.
+   */
+
+  /**
+   * According to SVG 1.1 this is supposed to return the start time for the
+   * animation but at this stage no one seems to know what that means.
+   *
+   * For now we have adopted Opera's behaviour which seems to be:
+   *
+   *   (i) If the animation is in the active state, return the start of the
+   *       current interval
+   *  (ii) Otherwise, if there is a previous interval, return the start of the
+   *       previous interval
+   * (iii) Otherwise, if there is a future resolved interval, the the start of
+   *       the next interval
+   *  (iv) Otherwise, return 0.
+   *
+   * As this method represents a SMIL interface which is called by the SVG
+   * interface, instead of returning 0 in case (iv) we return 'indefinite' and
+   * then allow the SVG interface to decide what to do with it. That is, we
+   * don't throw away information until the last moment.
+   *
+   * @return the start time as defined above in milliseconds or 'indefinite' if
+   * there is no resolved start time for this element (case iv).
+   */
+  nsSMILTimeValue GetStartTime() const;
+
+  /**
+   * Returns the simple duration of this element.
+   *
+   * @return the simple duration in milliseconds or INDEFINITE.
+   */
+  nsSMILTimeValue GetSimpleDuration() const
+  {
+    return mSimpleDur;
+  }
+
+  /** 
+   * Internal SMIL methods
+   */
 
   /**
    * Adds an instance time object this element's list of instance times.
@@ -227,8 +269,8 @@ protected:
   void              UpdateCurrentInterval();
   void              SampleSimpleTime(nsSMILTime aActiveTime);
   void              SampleFillValue();
-  PRBool            AddInstanceTimeFromCurrentTime(double aOffsetSeconds,
-                        PRBool aIsBegin, const nsSMILTimeContainer* aContainer);
+  void              AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
+                        double aOffsetSeconds, PRBool aIsBegin);
 
   // Typedefs
   typedef nsTArray<nsRefPtr<nsSMILTimeValueSpec> >  SMILTimeValueSpecList;

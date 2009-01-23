@@ -92,6 +92,7 @@ nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
   mTextFrame(nsnull), 
   mCachedState(nsnull)
 {
+  AddStateBits(NS_BLOCK_FLOAT_MGR);
 }
 
 nsFileControlFrame::~nsFileControlFrame()
@@ -411,19 +412,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
                              aStatus);
 }
-
-/*
-NS_IMETHODIMP
-nsFileControlFrame::SetInitialChildList(nsIAtom*        aListName,
-                                        nsIFrame*       aChildList)
-{
-  nsBlockFrame::SetInitialChildList(aListName, aChildList);
-
-  // given that the CSS frame constructor created all our frames. We need to find the text field
-  // so we can get info from it.
-  mTextFrame = GetTextControlFrame(this);
-}
-*/
 
 nsNewFrame*
 nsFileControlFrame::GetTextControlFrame(nsPresContext* aPresContext, nsIFrame* aStart)

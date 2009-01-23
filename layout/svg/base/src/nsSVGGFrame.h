@@ -46,12 +46,18 @@ typedef nsSVGDisplayContainerFrame nsSVGGFrameBase;
 class nsSVGGFrame : public nsSVGGFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGGFrame(nsStyleContext* aContext) :
     nsSVGGFrameBase(aContext) {}
 
 public:
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
+
   /**
    * Get the "type" of the frame
    *

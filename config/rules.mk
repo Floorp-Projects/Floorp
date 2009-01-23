@@ -153,12 +153,14 @@ NATIVE_TOPSRCDIR   := $(topsrcdir)
 endif
 endif # CYGWIN_WRAPPER
 
+testxpcdir = $(topsrcdir)/testing/xpcshell
+
 # Test execution
 check::
 	@$(EXIT_ON_ERROR) \
 	for testdir in $(XPCSHELL_TESTS); do \
 	  $(RUN_TEST_PROGRAM) \
-	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
+	    $(testxpcdir)/test_all.sh \
 	      $(DIST)/bin/xpcshell \
 	      $(FWDSLASH_TOPSRCDIR) \
 	      $(NATIVE_TOPSRCDIR) \
@@ -169,7 +171,7 @@ check::
 check-interactive::
 	@$(EXIT_ON_ERROR) \
 	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	  $(testxpcdir)/test_one.sh \
 	    $(DIST)/bin/xpcshell \
 	    $(FWDSLASH_TOPSRCDIR) \
 	    $(NATIVE_TOPSRCDIR) \
@@ -180,7 +182,7 @@ check-interactive::
 check-one::
 	@$(EXIT_ON_ERROR) \
 	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	  $(testxpcdir)/test_one.sh \
 	    $(DIST)/bin/xpcshell \
 	    $(FWDSLASH_TOPSRCDIR) \
 	    $(NATIVE_TOPSRCDIR) \

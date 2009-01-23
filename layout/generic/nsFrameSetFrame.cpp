@@ -477,6 +477,21 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
+NS_IMETHODIMP
+nsHTMLFramesetFrame::SetInitialChildList(nsIAtom*  aListName,
+                                         nsIFrame* aChildList)
+{
+  // We do this weirdness where we create our child frames in Init().  On the
+  // other hand, we're going to get a SetInitialChildList() with a null list
+  // and list name after the frame constructor is done creating us.  So just
+  // ignore that call.
+  if (!aListName && !aChildList) {
+    return NS_OK;
+  }
+
+  return nsHTMLContainerFrame::SetInitialChildList(aListName, aChildList);
+}
+
 // XXX should this try to allocate twips based on an even pixel boundary?
 void nsHTMLFramesetFrame::Scale(nscoord  aDesired, 
                                 PRInt32  aNumIndicies, 
@@ -1589,6 +1604,12 @@ nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext)
 nsIFrame*
 NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
+#ifdef DEBUG
+  const nsStyleDisplay* disp = aContext->GetStyleDisplay();
+  NS_ASSERTION(!disp->IsAbsolutelyPositioned() && !disp->IsFloating(),
+               "Framesets should not be positioned and should not float");
+#endif
+
   return new (aPresShell) nsHTMLFramesetFrame(aContext);
 }
 

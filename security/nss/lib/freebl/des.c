@@ -400,10 +400,15 @@ static const HALF PC2[8][64] = {
     temp  = (word ^ (word >> 9)) & 0x00550055; \
     word ^=  temp | (temp << 9);
 
+#if defined(__GNUC__) && defined(_X86_)
+#define BYTESWAP(word, temp) \
+    __asm("bswap	%0" : "+r" (word));
+#else
 #define BYTESWAP(word, temp) \
     word = (word >> 16) | (word << 16); \
     temp = 0x00ff00ff; \
     word = ((word & temp) << 8) | ((word >> 8) & temp); 
+#endif
 
 #define PC1(left, right, c0, d0, temp) \
     right ^= temp = ((left >> 4) ^ right) & 0x0f0f0f0f; \

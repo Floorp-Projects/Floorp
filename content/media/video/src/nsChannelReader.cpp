@@ -74,6 +74,16 @@ OggPlayErrorCode nsChannelReader::destroy()
   return E_OGGPLAY_OK;
 }
 
+void nsChannelReader::Suspend()
+{
+  mStream.Suspend();
+}
+
+void nsChannelReader::Resume()
+{
+  mStream.Resume();
+}
+
 size_t nsChannelReader::io_read(char* aBuffer, size_t aCount)
 {
   PRUint32 bytes = 0;

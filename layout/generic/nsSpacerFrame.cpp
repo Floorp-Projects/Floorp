@@ -73,6 +73,12 @@ protected:
 nsIFrame*
 NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
+#ifdef DEBUG
+  const nsStyleDisplay* disp = aContext->GetStyleDisplay();
+  NS_ASSERTION(!disp->IsAbsolutelyPositioned() && !disp->IsFloating(),
+               "Spacers should not be positioned and should not float");
+#endif
+
   return new (aPresShell) SpacerFrame(aContext);
 }
 

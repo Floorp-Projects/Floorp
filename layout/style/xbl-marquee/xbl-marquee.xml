@@ -207,9 +207,6 @@
         onset="this.setAttribute('width', val);"
       />
 
-      <!-- For sniffing purposes -->
-      <field name="nsMarqueeVersion">"0.9.7"</field>
-
       <method name="_set_scrollDelay">
         <parameter name="aValue"/>
         <body>
@@ -563,7 +560,10 @@
 
           // init needs to be run after the page has loaded in order to calculate
           // the correct height/width
-          window.addEventListener("load", lambda, false);
+          if (document.readyState == "complete")
+            lambda();
+          else
+            window.addEventListener("load", lambda, false);
         ]]>
       </constructor>
     </implementation>

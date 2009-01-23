@@ -67,6 +67,7 @@ class nsSMILValue;
 // |                     |               |             |                  |
 // | -- Assign?          |     X         |    X        |    X             |
 // | -- Add?             |     -         |    X?       |    X             |
+// | -- SandwichAdd?     |     -         |    -?       |    X             |
 // | -- ComputeDistance? |     -         |    -        |    X?            |
 // | -- Interpolate?     |     -         |    X        |    X             |
 // +---------------------+---------------+-------------+------------------+
@@ -143,6 +144,30 @@ public:
   virtual nsresult Add(nsSMILValue& aDest,
                        const nsSMILValue& aValueToAdd,
                        PRUint32 aCount) const = 0;
+
+  /**
+   * Adds aValueToAdd to the underlying value in the animation sandwich, aDest.
+   *
+   * For most types this operation is identical to a regular Add() but for some
+   * types (notably <animateTransform>) the operation differs. For
+   * <animateTransform> Add() corresponds to simply adding together the
+   * transform parameters and is used when calculating cumulative values or
+   * by-animation values. On the other hand SandwichAdd() is used when adding to
+   * the underlying value and requires matrix post-multiplication. (This
+   * distinction is most clearly indicated by the SVGT1.2 test suite. It is not
+   * obvious within the SMIL specifications.)
+   *
+   * @param   aDest       The value to add to.
+   * @param   aValueToAdd The value to add.
+   * @return  NS_OK on success, an error code on failure.
+   *
+   * @pre aValueToAdd.mType == aDest.mType == this
+   */
+  virtual nsresult SandwichAdd(nsSMILValue& aDest,
+                               const nsSMILValue& aValueToAdd) const
+  {
+    return Add(aDest, aValueToAdd, 1);
+  }
 
   /**
    * Calculates the 'distance' between two values. This is the distance used in

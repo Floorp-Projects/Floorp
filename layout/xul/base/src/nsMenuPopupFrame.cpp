@@ -179,6 +179,16 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     CreateWidgetForView(ourView);
   }
 
+  if (aContent->NodeInfo()->Equals(nsGkAtoms::tooltip, kNameSpaceID_XUL) &&
+      aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_default,
+                            nsGkAtoms::_true, eIgnoreCase)) {
+    nsIRootBox* rootBox =
+      nsIRootBox::GetRootBox(PresContext()->GetPresShell());
+    if (rootBox) {
+      rootBox->SetDefaultTooltip(aContent);
+    }
+  }
+
   return rv;
 }
 

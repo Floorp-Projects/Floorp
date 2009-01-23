@@ -45,6 +45,8 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsDisplayList.h"
+#include "nsCSSAnonBoxes.h"
+#include "nsIDOMNSHTMLInputElement.h"
 
 static void
 PaintCheckMark(nsIRenderingContext& aRenderingContext,
@@ -73,6 +75,18 @@ PaintCheckMark(nsIRenderingContext& aRenderingContext,
   aRenderingContext.FillPolygon(paintPolygon, checkNumPoints);
 }
 
+static void
+PaintIndeterminateMark(nsIRenderingContext& aRenderingContext,
+                       const nsRect& aRect)
+{
+  // Drawing a thin horizontal line in the middle of the rect.
+  nsRect fillRect = aRect;
+  fillRect.height /= 4;
+  fillRect.y += (aRect.height - fillRect.height) / 2;
+
+  aRenderingContext.FillRect(fillRect);
+}
+
 //------------------------------------------------------------
 nsIFrame*
 NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -97,6 +111,22 @@ NS_QUERYFRAME_HEAD(nsGfxCheckboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsICheckboxControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
 
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::Init(nsIContent* aContent,
+                                nsIFrame* aParent,
+                                nsIFrame* aPrevInFlow)
+{
+  nsresult rv = nsFormControlFrame::Init(aContent, aParent, aPrevInFlow);
+  if (NS_SUCCEEDED(rv)) {
+    mCheckButtonFaceStyle =
+      PresContext()->PresShell()->StyleSet()->
+        ResolvePseudoStyleFor(aContent, nsCSSAnonBoxes::check,
+                              GetStyleContext());
+  }
+
+  return rv;
+}
+
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
@@ -109,15 +139,6 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessib
   return NS_ERROR_FAILURE;
 }
 #endif
-
-//--------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::SetCheckboxFaceStyleContext(nsStyleContext *aCheckboxFaceStyleContext)
-{
-  mCheckButtonFaceStyle = aCheckboxFaceStyleContext;
-  return NS_OK;
-}
-
 
 //--------------------------------------------------------------
 nsStyleContext*
@@ -201,7 +222,10 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIRenderingContext& aRenderingContext,
   const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
 
-  PaintCheckMark(aRenderingContext, checkRect);
+  if (IsIndeterminate())
+    PaintIndeterminateMark(aRenderingContext, checkRect);
+  else
+    PaintCheckMark(aRenderingContext, checkRect);
 }
 
 //------------------------------------------------------------
@@ -214,7 +238,7 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
   
   // Get current checked state through content model.
-  if (!GetCheckboxState() || !IsVisibleForPainting(aBuilder))
+  if ((!IsChecked() && !IsIndeterminate()) || !IsVisibleForPainting(aBuilder))
     return NS_OK;   // we're not checked or not visible, nothing to paint.
     
   if (IsThemed())
@@ -223,8 +247,10 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Paint the checkmark
   if (mCheckButtonFaceStyle) {
     // This code actually works now; not sure how useful it'll be
-    // (The putpose is to allow the UA stylesheet can substitute its own
+    // (The purpose is to allow the UA stylesheet to substitute its own
     //  checkmark for the default one)
+    // XXXbz maybe we should just remove this, together with the
+    // attendant complexity
     const nsStyleBackground* myBackground = mCheckButtonFaceStyle->GetStyleBackground();
     if (!myBackground->IsTransparent())
       return aLists.Content()->AppendNewToTop(new (aBuilder)
@@ -261,10 +287,19 @@ nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
 
 //------------------------------------------------------------
 PRBool
-nsGfxCheckboxControlFrame::GetCheckboxState ( )
+nsGfxCheckboxControlFrame::IsChecked()
 {
   nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
   PRBool retval = PR_FALSE;
   elem->GetChecked(&retval);
+  return retval;
+}
+
+PRBool
+nsGfxCheckboxControlFrame::IsIndeterminate()
+{
+  nsCOMPtr<nsIDOMNSHTMLInputElement> elem(do_QueryInterface(mContent));
+  PRBool retval = PR_FALSE;
+  elem->GetIndeterminate(&retval);
   return retval;
 }

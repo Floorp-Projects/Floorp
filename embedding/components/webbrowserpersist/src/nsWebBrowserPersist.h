@@ -58,6 +58,7 @@
 
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsInt64.h"
 
 #include "nsCWebBrowserPersist.h"
@@ -226,7 +227,7 @@ private:
     nsHashtable               mURIMap;
     nsVoidArray               mDocList;
     nsVoidArray               mCleanupList;
-    nsCStringArray            mFilenameList;
+    nsTArray<nsCString>       mFilenameList;
     PRPackedBool              mFirstAndOnlyUse;
     PRPackedBool              mCancel;
     PRPackedBool              mJustStartedLoading;

@@ -196,7 +196,8 @@ nsresult nsChannelToPipeListener::OnDataAvailable(nsIRequest* aRequest,
     
     aCount -= bytes;
     mTotalBytes += bytes;
-    mDecoder->UpdateBytesDownloaded(mOffset + aOffset + bytes);
+    aOffset += bytes;
+    mDecoder->UpdateBytesDownloaded(mOffset + aOffset);
   } while (aCount) ;
   
   nsresult rv = mOutput->Flush();

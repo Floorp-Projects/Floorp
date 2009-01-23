@@ -485,7 +485,7 @@ nsSubDocumentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
+nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)

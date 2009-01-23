@@ -86,6 +86,7 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_bug386835.js \
                  bug386835.html \
                  browser_bug422590.js \
+                 browser_sanitize-sitepermissions.js \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
