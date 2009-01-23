@@ -77,8 +77,7 @@ function initContextMenu() {
 function GroupBy(groupingType)
 {
   gHistoryGrouping = groupingType;
-  gSearchBox.value = "";
-  searchHistory("");
+  searchHistory(gSearchBox.value);
 }
 
 function historyAddBookmarks()
