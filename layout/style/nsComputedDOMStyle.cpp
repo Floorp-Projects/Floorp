@@ -1631,14 +1631,19 @@ nsComputedDOMStyle::GetOutlineWidth(nsIDOMCSSValue** aValue)
 
   const nsStyleOutline* outline = GetStyleOutline();
 
-  nsStyleCoord coord;
-  PRUint8 outlineStyle = outline->GetOutlineStyle();
-  if (outlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
-    coord.SetCoordValue(0);
+  nscoord width;
+  if (outline->GetOutlineStyle() == NS_STYLE_BORDER_STYLE_NONE) {
+    NS_ASSERTION(outline->GetOutlineWidth(width) && width == 0,
+                 "unexpected width");
+    width = 0;
   } else {
-    coord = outline->mOutlineWidth;
+#ifdef DEBUG
+    PRBool res =
+#endif
+      outline->GetOutlineWidth(width);
+    NS_ASSERTION(res, "percent outline doesn't exist");
   }
-  SetValueToCoord(val, coord, nsnull, nsCSSProps::kBorderWidthKTable);
+  val->SetAppUnits(width);
 
   return CallQueryInterface(val, aValue);
 }
