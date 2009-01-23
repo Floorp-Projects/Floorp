@@ -197,31 +197,6 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   return result;
 }
 
-
-PRBool nsStyleContext::Equals(const nsStyleContext* aOther) const
-{
-  PRBool  result = PR_TRUE;
-  const nsStyleContext* other = (nsStyleContext*)aOther;
-
-  if (other != this) {
-    if (mParent != other->mParent) {
-      result = PR_FALSE;
-    }
-    else if (mBits != other->mBits) {
-      result = PR_FALSE;
-    }
-    else if (mPseudoTag != other->mPseudoTag) {
-      result = PR_FALSE;
-    }
-    else if (mRuleNode != other->mRuleNode) {
-      result = PR_FALSE;
-    }
-  }
-  return result;
-}
-
-//=========================================================================================================
-
 const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 {
   const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
