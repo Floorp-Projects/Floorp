@@ -622,6 +622,7 @@ protected:
                                       nscoord aParentSize,
                                       nscoord aScriptLevelAdjustedParentSize,
                                       PRBool aUsedStartStruct,
+                                      PRBool aAtRoot,
                                       PRBool& aInherited);
 
   static NS_HIDDEN_(void) SetFont(nsPresContext* aPresContext,

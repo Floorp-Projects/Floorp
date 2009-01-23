@@ -39,6 +39,7 @@
 #define nsISpellChecker_h__
 
 #include "nsISupports.h"
+#include "nsTArray.h"
 
 #define NS_SPELLCHECKER_CONTRACTID "@mozilla.org/spellchecker;1"
 
@@ -49,7 +50,6 @@
 
 class nsITextServicesDocument;
 class nsString;
-class nsStringArray;
 
 /**
  * A generic interface for a spelling checker.
@@ -73,7 +73,7 @@ public:
    * @param aSuggestions is an array of nsStrings, that represent the
    * suggested replacements for the misspelled word.
    */
-  NS_IMETHOD NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestions) = 0;
+  NS_IMETHOD NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSuggestions) = 0;
 
   /**
    * Checks if a word is misspelled. No document is required to use this method.
@@ -83,7 +83,7 @@ public:
    * suggested replacements for the misspelled word. The array will be empty
    * if there aren't any suggestions.
    */
-  NS_IMETHOD CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions) = 0;
+  NS_IMETHOD CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArray<nsString> *aSuggestions) = 0;
 
   /**
    * Replaces the old word with the specified new word.
@@ -118,7 +118,7 @@ public:
    * @param aWordList is an array of nsStrings that represent the
    * list of words in the user's personal dictionary.
    */
-  NS_IMETHOD GetPersonalDictionary(nsStringArray *aWordList) = 0;
+  NS_IMETHOD GetPersonalDictionary(nsTArray<nsString> *aWordList) = 0;
 
   /**
    * Returns the list of strings representing the dictionaries
@@ -129,7 +129,7 @@ public:
    * @param aDictionaryList is an array of nsStrings that represent the
    * dictionaries supported by the spellchecker.
    */
-  NS_IMETHOD GetDictionaryList(nsStringArray *aDictionaryList) = 0;
+  NS_IMETHOD GetDictionaryList(nsTArray<nsString> *aDictionaryList) = 0;
 
   /**
    * Returns a string representing the current dictionary.

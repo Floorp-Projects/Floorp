@@ -56,19 +56,19 @@
 #define PACKAGE_NAME "libtheora"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libtheora 1.0beta3"
+#define PACKAGE_STRING "libtheora 1.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libtheora"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0beta3"
+#define PACKAGE_VERSION "1.0"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Define to exclude encode support from the build */
- 
+/* #undef THEORA_DISABLE_ENCODE */
 
 /* Define to exclude floating point code from the build */
 /* #undef THEORA_DISABLE_FLOAT */
@@ -77,4 +77,4 @@
  
 
 /* Version number of package */
-#define VERSION "1.0beta3"
+#define VERSION "1.0"

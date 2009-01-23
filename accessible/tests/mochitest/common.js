@@ -40,17 +40,22 @@ const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 // Roles
 
 const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
+const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
 const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
 const ROLE_COMBOBOX_OPTION = nsIAccessibleRole.ROLE_COMBOBOX_OPTION;
 const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
 const ROLE_ENTRY = nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
+const ROLE_FORM = nsIAccessibleRole.ROLE_FORM;
+const ROLE_GRID_CELL = nsIAccessibleRole.ROLE_GRID_CELL;
+const ROLE_HEADING = nsIAccessibleRole.ROLE_HEADING;
 const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
 const ROLE_PARAGRAPH = nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
+const ROLE_SECTION = nsIAccessibleRole.ROLE_SECTION;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
@@ -143,17 +148,19 @@ function getNode(aNodeOrID)
 }
 
 /**
- * Return accessible for the given ID attribute or DOM element or accessible.
+ * Return accessible for the given identifier (may be ID attribute or DOM
+ * element or accessible object).
  *
- * @param aAccOrElmOrID  [in] DOM element or ID attribute to get an accessible
- *                        for or an accessible to query additional interfaces.
- * @param aInterfaces    [in, optional] the accessible interface or the array of
- *                        accessible interfaces to query it/them from obtained
- *                        accessible
- * @param aElmObj        [out, optional] object to store DOM element which
- *                        accessible is obtained for
+ * @param aAccOrElmOrID      [in] identifier to get an accessible implementing
+ *                           the given interfaces
+ * @param aInterfaces        [in, optional] the interface or an array interfaces
+ *                           to query it/them from obtained accessible
+ * @param aElmObj            [out, optional] object to store DOM element which
+ *                           accessible is obtained for
+ * @param aDoNotFailIfNoAcc  [in, optional] no error if the given identifier is
+ *                           not accessible
  */
-function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
+function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
 {
   var elm = null;
 
@@ -183,7 +190,9 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
     }
 
     if (!acc) {
-      ok(false, "Can't get accessible for " + aAccOrElmOrID);
+      if (!aDoNotFailIfNoAcc)
+        ok(false, "Can't get accessible for " + aAccOrElmOrID);
+
       return null;
     }
   }
@@ -211,6 +220,14 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
   }
   
   return acc;
+}
+
+/**
+ * Return true if the given identifier has an accessible.
+ */
+function isAccessible(aAccOrElmOrID)
+{
+  return getAccessible(aAccOrElmOrID, null, null, true) ? true : false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

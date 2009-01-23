@@ -37,7 +37,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.14 2006/05/22 22:24:34 wtchang%redhat.com Exp $
+ * $Id: secitem.c,v 1.15 2008/11/19 16:04:38 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"
@@ -155,6 +155,8 @@ SECITEM_CompareItem(const SECItem *a, const SECItem *b)
     unsigned m;
     SECComparison rv;
 
+    if (a == b)
+    	return SECEqual;
     if (!a || !a->len || !a->data) 
         return (!b || !b->len || !b->data) ? SECEqual : SECLessThan;
     if (!b || !b->len || !b->data) 

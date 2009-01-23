@@ -337,6 +337,24 @@ Sanitizer.prototype = {
       {
         return true;
       }
+    },
+    
+    siteSettings: {
+      clear: function ()
+      {
+        var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                          .getService(Components.interfaces.nsIPermissionManager);
+        pm.removeAll();
+        
+        var cps = Components.classes["@mozilla.org/content-pref/service;1"]
+                           .getService(Components.interfaces.nsIContentPrefService);
+        cps.removeGroupedPrefs();
+      },
+      
+      get canClear()
+      {
+        return true;
+      }
     }
   }
 };

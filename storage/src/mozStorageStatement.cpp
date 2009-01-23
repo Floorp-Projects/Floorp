@@ -222,7 +222,7 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
 
     for (PRUint32 i = 0; i < mResultColumnCount; i++) {
         const char *name = sqlite3_column_name(mDBStatement, i);
-        mColumnNames.AppendCString(nsDependentCString(name));
+        mColumnNames.AppendElement(nsDependentCString(name));
     }
 
 #ifdef DEBUG
@@ -428,7 +428,7 @@ mozStorageStatement::GetColumnIndex(const nsACString &aName, PRUint32 *_retval)
     // Surprisingly enough, SQLite doesn't provide an API for this.  We have to
     // determine it ourselves sadly.
     for (PRUint32 i = 0; i < mResultColumnCount; i++) {
-        if (mColumnNames[i]->Equals(aName)) {
+        if (mColumnNames[i].Equals(aName)) {
             *_retval = i;
             return NS_OK;
         }

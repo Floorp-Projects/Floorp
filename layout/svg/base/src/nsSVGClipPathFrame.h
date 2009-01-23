@@ -44,7 +44,7 @@ typedef nsSVGContainerFrame nsSVGClipPathFrameBase;
 class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGClipPathFrame(nsStyleContext* aContext) :
     nsSVGClipPathFrameBase(aContext),
@@ -65,6 +65,12 @@ public:
   // If so, the clipping API in cairo isn't enough and we need to use
   // mask based clipping.
   PRBool IsTrivial();
+
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
 
   /**
    * Get the "type" of the frame

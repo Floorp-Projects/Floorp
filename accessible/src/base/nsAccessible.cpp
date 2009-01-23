@@ -112,10 +112,10 @@ NS_IMPL_ISUPPORTS1(nsAccessibleDOMStringList, nsIDOMDOMStringList)
 NS_IMETHODIMP
 nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 {
-  if (aIndex >= (PRUint32)mNames.Count()) {
+  if (aIndex >= mNames.Length()) {
     SetDOMStringToNull(aResult);
   } else {
-    mNames.StringAt(aIndex, aResult);
+    aResult = mNames.ElementAt(aIndex);
   }
 
   return NS_OK;
@@ -124,7 +124,7 @@ nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 NS_IMETHODIMP
 nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
 {
-  *aLength = (PRUint32)mNames.Count();
+  *aLength = mNames.Length();
 
   return NS_OK;
 }
@@ -132,7 +132,7 @@ nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
 NS_IMETHODIMP
 nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
 {
-  *aResult = mNames.IndexOf(aString) > -1;
+  *aResult = mNames.Contains(aString);
 
   return NS_OK;
 }

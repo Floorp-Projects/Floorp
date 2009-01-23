@@ -183,7 +183,6 @@ case "$target" in
     if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
-    if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 esac
 fi
@@ -407,7 +406,6 @@ case "$target" in
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
-        AC_CHECK_PROGS(MIDL, midl)
 
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
@@ -507,29 +505,8 @@ case "$target" in
         fi
         INCREMENTAL_LINKER=1
 
-        # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
-        _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-        _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
-        _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-         # Add flags if necessary
-         AC_MSG_CHECKING([for midl flags])
-         if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
-             # Starting with MIDL version 6.0.359, the MIDL compiler
-             # generates /Oicf /robust stubs by default, which is not
-             # compatible with versions of Windows older than Win2k.
-             # This switches us back to the old behaviour. When we drop
-             # support for Windows older than Win2k, we should remove
-             # this.
-             MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
-             AC_MSG_RESULT([need -no_robust])
-         else
-             MIDL_FLAGS="${MIDL_FLAGS}"
-             AC_MSG_RESULT([none needed])
-        fi
-        
         unset _MSVC_VER_FILTER
-        
+
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -625,7 +602,6 @@ else
     CROSS_COMPILE=
 fi
 
-AC_SUBST(MIDL_FLAGS)
 AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_AS)
@@ -2576,6 +2552,18 @@ else
     MOZ_N_BYTE_TYPE(JS_INTPTR_TYPE, sizeof (void *),
                                       [int long 'long long' short])
 fi
+
+MOZ_SIZE_OF_TYPE(JS_BYTES_PER_WORD, void*, 4 8)
+if test "$moz_cv_size_of_JS_BYTES_PER_WORD" -eq "4"; then
+  AC_DEFINE(JS_BITS_PER_WORD_LOG2, 5)
+elif test "$moz_cv_size_of_JS_BYTES_PER_WORD" -eq "8"; then
+  AC_DEFINE(JS_BITS_PER_WORD_LOG2, 6)
+else
+  AC_MSG_ERROR([Unexpected JS_BYTES_PER_WORD])
+fi
+
+MOZ_ALIGN_OF_TYPE(JS_ALIGN_OF_POINTER, void*, 2 4 8 16)
+MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
@@ -4741,6 +4729,20 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
+
+dnl ========================================================
+dnl Check for tm_zone, tm_gmtoff in struct tm
+dnl ========================================================
+AC_CACHE_CHECK(for tm_zone tm_gmtoff in struct tm,
+    ac_cv_struct_tm_zone_tm_gmtoff,
+    [AC_TRY_COMPILE([#include <time.h>],
+                    [struct tm tm; tm.tm_zone = 0; tm.tm_gmtoff = 1;],
+                    [ac_cv_struct_tm_zone_tm_gmtoff="yes"],
+                    [ac_cv_struct_tm_zone_tm_gmtoff="no"])])
+if test "$ac_cv_struct_tm_zone_tm_gmtoff" = "yes" ; then
+    AC_DEFINE(HAVE_TM_ZONE_TM_GMTOFF)
+fi
+
 fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
@@ -5195,7 +5197,6 @@ cygwin*|msvc*|mks*)
     LD="\$(CYGWIN_WRAPPER) $LD"
     AS="\$(CYGWIN_WRAPPER) $AS"
     RC="\$(CYGWIN_WRAPPER) $RC"
-    MIDL="\$(CYGWIN_WRAPPER) $MIDL"
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
     WIN_TOP_SRC=`cygpath -a -w $srcdir | sed -e 's|\\\\|/|g'`
     ;;

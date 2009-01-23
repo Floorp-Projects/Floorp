@@ -338,15 +338,12 @@ nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
   rv = TokenizeQueryString(aQueryString, &tokens);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (tokens.Length() > 0) {
-    rv = TokensToQueries(tokens, aQueries, options);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Unable to parse the query string: ");
-      NS_WARNING(PromiseFlatCString(aQueryString).get());
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = TokensToQueries(tokens, aQueries, options);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Unable to parse the query string: ");
+    NS_WARNING(PromiseFlatCString(aQueryString).get());
+    return rv;
   }
-  // when there are no tokens, leave the query array empty
 
   NS_ADDREF(*aOptions = options);
   return NS_OK;
@@ -605,7 +602,7 @@ TokenizeQueryString(const nsACString& aQuery,
   // Strip off the "place:" prefix
   const PRUint32 prefixlen = 6; // = strlen("place:");
   nsCString query;
-  if (aQuery.Length() > prefixlen &&
+  if (aQuery.Length() >= prefixlen &&
       Substring(aQuery, 0, prefixlen).EqualsLiteral("place:"))
     query = Substring(aQuery, prefixlen);
   else
@@ -644,16 +641,17 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                               nsNavHistoryQueryOptions* aOptions)
 {
   nsresult rv;
-  if (aTokens.Length() == 0)
-    return NS_OK; // nothing to do
-
-  nsTArray<PRInt64> folders;
 
   nsCOMPtr<nsNavHistoryQuery> query(new nsNavHistoryQuery());
   if (! query)
     return NS_ERROR_OUT_OF_MEMORY;
   if (! aQueries->AppendObject(query))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  if (aTokens.Length() == 0)
+    return NS_OK; // nothing to do
+
+  nsTArray<PRInt64> folders;
   for (PRUint32 i = 0; i < aTokens.Length(); i ++) {
     const QueryKeyValuePair& kvp = aTokens[i];
 

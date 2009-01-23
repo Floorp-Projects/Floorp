@@ -187,6 +187,7 @@
       <preference id="privacy.cpd.cache"                 name="privacy.cpd.cache"                 type="bool"/>
       <preference id="privacy.cpd.offlineApps"           name="privacy.cpd.offlineApps"           type="bool"/>
       <preference id="privacy.cpd.sessions"              name="privacy.cpd.sessions"              type="bool"/>
+      <preference id="privacy.cpd.siteSettings"          name="privacy.cpd.siteSettings"          type="bool"/>
     </preferences>
     
     <preferences id="nonItemPreferences">
@@ -253,6 +254,10 @@
         <checkbox label="&itemPasswords.label;"
                   accesskey="&itemPasswords.accesskey;"
                   preference="privacy.cpd.passwords"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+        <checkbox label="&itemSiteSettings.label;"
+                  accesskey="&itemSiteSettings.accesskey;"
+                  preference="privacy.cpd.siteSettings"
                   onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       </vbox>
       <vbox style="width: &column.width;">

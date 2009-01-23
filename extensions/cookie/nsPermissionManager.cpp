@@ -43,6 +43,8 @@
 #include "nsNetUtil.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
+#include "nsTArray.h"
+#include "nsReadableUtils.h"
 #include "nsILineInputStream.h"
 #include "nsIIDNService.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -743,27 +745,27 @@ nsPermissionManager::Import()
       continue;
     }
 
-    nsCStringArray lineArray;
+    nsTArray<nsCString> lineArray;
 
     // Split the line at tabs
-    lineArray.ParseString(buffer.get(), "\t");
+    ParseString(buffer, '\t', lineArray);
     
-    if (lineArray[0]->EqualsLiteral(kMatchTypeHost) &&
-        lineArray.Count() == 4) {
+    if (lineArray[0].EqualsLiteral(kMatchTypeHost) &&
+        lineArray.Length() == 4) {
       
       PRInt32 error;
-      PRUint32 permission = lineArray[2]->ToInteger(&error);
+      PRUint32 permission = lineArray[2].ToInteger(&error);
       if (error)
         continue;
 
       // hosts might be encoded in UTF8; switch them to ACE to be consistent
-      if (!IsASCII(*lineArray[3])) {
-        rv = NormalizeToACE(*lineArray[3]);
+      if (!IsASCII(lineArray[3])) {
+        rv = NormalizeToACE(lineArray[3]);
         if (NS_FAILED(rv))
           continue;
       }
 
-      rv = AddInternal(*lineArray[3], *lineArray[1], permission, 0, eDontNotify, eWriteToDB);
+      rv = AddInternal(lineArray[3], lineArray[1], permission, 0, eDontNotify, eWriteToDB);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

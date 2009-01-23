@@ -2,7 +2,7 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/licenses/publicdomain/
 -->
-<svg class="reftest-wait" xmlns="http://www.w3.org/2000/svg" onload="setTimeout(doTest,500)">
+<svg class="reftest-wait" xmlns="http://www.w3.org/2000/svg" onload="startTest()">
   <style>
   .foo feComposite { color-interpolation-filters:sRGB; }
   </style>
@@ -18,9 +18,15 @@
   <rect width="100" height="100" fill="lime" filter="url(#f)"/>
 
   <script>
+  function startTest() {
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+  }
+
   function doTest() {
     document.getElementById("d").setAttribute("class", "foo");
-    document.documentElement.removeAttribute("class");
+    document.documentElement.removeAttribute('class');
   }
   </script>
 </svg>

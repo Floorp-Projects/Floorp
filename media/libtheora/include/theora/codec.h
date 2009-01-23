@@ -112,13 +112,18 @@ typedef enum{
  *  specification</a>, Section 4.4, for details on the precise sample
  *  locations.*/
 typedef enum{
-  /**Chroma decimation by 2 in both the X and Y directions (4:2:0).*/
+  /**Chroma decimation by 2 in both the X and Y directions (4:2:0).
+     The Cb and Cr chroma planes are half the width and half the height of the
+      luma plane.*/
   TH_PF_420,
   /**Currently reserved.*/
   TH_PF_RSVD,
-  /**Chroma decimation by 2 in the X direction (4:2:2).*/
+  /**Chroma decimation by 2 in the X direction (4:2:2).
+     The Cb and Cr chroma planes are half the width of the luma plane, but full
+      height.*/
   TH_PF_422,
-  /**No chroma decimation (4:4:4).*/
+  /**No chroma decimation (4:4:4).
+     The Cb and Cr chroma planes are full width and full height.*/
   TH_PF_444,
   /**The total number of currently defined pixel formats.*/
   TH_PF_NFORMATS

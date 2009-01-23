@@ -47,7 +47,7 @@ typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 class nsSVGMaskFrame : public nsSVGMaskFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGMaskFrame(nsStyleContext* aContext) :
     nsSVGMaskFrameBase(aContext),
@@ -60,6 +60,12 @@ public:
                                                 nsIFrame* aParent,
                                                 nsIDOMSVGMatrix* aMatrix,
                                                 float aOpacity = 1.0f);
+
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
 
   /**
    * Get the "type" of the frame

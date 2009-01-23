@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: x86state.c 13884 2007-09-22 08:38:10Z giles $
+    last mod: $Id: x86state.c 15427 2008-10-21 02:36:19Z xiphmont $
 
  ********************************************************************/
 
@@ -19,7 +19,7 @@
 
 #if defined(USE_ASM)
 
-#include "../../cpu.h"
+#include "../../cpu.c"
 
 void oc_state_vtable_init_x86(oc_theora_state *_state){
   _state->cpu_flags=oc_cpu_flags_get();

@@ -494,9 +494,11 @@ while ($file = shift @ARGV)
                !/real.*user.*sys.*$/ && 
                !/user.*system.*elapsed/)
         {
-            if ('runningtest, reportingtest' =~ /$state/)
+            if ('runningtest, reportingtest' =~ /$state/ && $#messages < 1000)
             {
-
+                # limit the number of processed and collected messages since firefox can
+                # go berserk and dump a couple of million output lines for a single test
+                # if things go horribly wrong.
                 if (/error: can.t allocate region/ || /set a breakpoint in malloc_error_break/ || 
                     /set a breakpoint in szone_error to debug/ || /malloc:.*mmap/ || /vm_allocate/ ||
                     /terminate called after throwing an instance of .*bad_alloc/)

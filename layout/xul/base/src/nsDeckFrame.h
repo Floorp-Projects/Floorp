@@ -53,8 +53,7 @@ class nsDeckFrame : public nsBoxFrame
 public:
 
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
-                                   nsStyleContext* aContext,
-                                   nsIBoxLayout* aLayoutManager);
+                                   nsStyleContext* aContext);
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -87,9 +86,7 @@ public:
   }
 #endif
 
-  nsDeckFrame(nsIPresShell* aPresShell,
-              nsStyleContext* aContext,
-              nsIBoxLayout* aLayout = nsnull);
+  nsDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
 
