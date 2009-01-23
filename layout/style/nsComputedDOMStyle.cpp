@@ -296,7 +296,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 
   aReturn.Truncate();
 
-  nsresult rv = GetPropertyCSSValue(aPropertyName, getter_AddRefs(val));
+  nsresult rv = GetPropertyCSSValueInternal(aPropertyName, getter_AddRefs(val));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (val) {
@@ -310,6 +310,18 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
                                         nsIDOMCSSValue** aReturn)
+{
+  nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
+  nsStyleUtil::
+    ReportUseOfDeprecatedMethod(document ? document->GetDocumentURI() : nsnull,
+                                "UseOfGetPropertyCSSValueWarning");
+
+  return GetPropertyCSSValueInternal(aPropertyName, aReturn);
+}
+
+nsresult
+nsComputedDOMStyle::GetPropertyCSSValueInternal(const nsAString& aPropertyName,
+                                                nsIDOMCSSValue** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
