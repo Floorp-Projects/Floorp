@@ -349,7 +349,9 @@ MOZCE_SHUNT_API unsigned short *_wfullpath( unsigned short *absPath, const unsig
   }
   if(len+wcslen(relPath) < maxLength){
 #if (_WIN32_WCE > 300)
-    if ( 0 < CeGetCanonicalPathName(wcscat(cwd,relPath), absPath, maxLength, 0) )
+    if ( 0 < CeGetCanonicalPathName(relPath[0] == L'\\'? relPath : 
+                                                         wcscat(cwd,relPath), 
+                                    absPath, maxLength, 0))
       return absPath;
 #else
     #error Need CeGetCanonicalPathName to build.
