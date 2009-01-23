@@ -2523,7 +2523,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   }
       
   //
-  // Submit file if it's input type=file and this encoding method accepts files
+  // Submit file if its input type=file and this encoding method accepts files
   //
   if (mType == NS_FORM_INPUT_FILE) {
     //
