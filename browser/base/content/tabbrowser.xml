@@ -101,7 +101,7 @@
             <xul:menuitem id="context_openTabInWindow" label="&cmd.open_window.label;"
                           tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser._replaceTabWithWindow(tabbrowser.mContextTab);"/>
+                                     tabbrowser.replaceTabWithWindow(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
             <xul:menuitem id="context_bookmarkTab"
                           label="&bookmarkThisTab.label;"
@@ -1706,8 +1706,8 @@
 
             this.setTabTitle(aOurTab);
 
-            // If the tab was already selected (this happpens in the scenraio of
-            // _replaceTabWithWindow), notify onLoactionChange, etc.
+            // If the tab was already selected (this happpens in the scenario
+            // of replaceTabWithWindow), notify onLocationChange, etc.
             if (aOurTab == this.selectedTab)
               this.updateCurrentBrowser(true);
           ]]>
@@ -1900,17 +1900,15 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          // don't interfere with toolbar customization
-          if (gNavToolbox.customizing)
-            return;
-
           var target = aEvent.target;
           if (target.localName == "tab" &&
               aEvent.originalTarget.localName != "toolbarbutton") {
             var dt = aEvent.dataTransfer;
-            // We're internetionally not setting any other data-type, otherwise
-            // applications may override our drop-as-window behavior
             dt.mozSetDataAt("application/x-moz-tabbrowser-tab", target, 0);
+            var uri = this.getBrowserForTab(aEvent.target).currentURI;
+            var spec = uri ? uri.spec : "about:blank";
+            dt.mozSetDataAt("text/x-moz-url", spec + "\n" + aEvent.target.label, 0);
+            dt.mozSetDataAt("text/plain", spec, 0);
 
             var canvas = tabPreviews.capture(target, false);
             dt.setDragImage(canvas, 0, 0);
@@ -1927,32 +1925,14 @@
         ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
       ]]></field>
 
-      <field name="_cachedTargetInToolbox">null</field>
-      <field name="_draggingOnItself">false</field>
       <method name="_setEffectAllowedForDataTransfer">
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            this._draggingOnItself = false;
-
-            // Find out if the we're dragged over the toolbox
-            var target = aEvent.target;
-            var isInToolbox = target == this._cachedTargetInToolbox;
-            while (target && !isInToolbox) {
-              if (target == gNavToolbox) {
-                isInToolbox = true;
-                this._cachedTargetInToolbox = target;
-              }
-              else
-                target = target.parentNode;
-            }
-
-            // NOTE: within the toolbox, we don't touch effectAllowed for
-            // anything but tabs
             var dt = aEvent.dataTransfer;
             // Disallow dropping multiple items
             if (dt.mozItemCount > 1)
-              return isInToolbox ? "" : dt.effectAllowed = "none";
+              return dt.effectAllowed = "none";
 
             var types = dt.mozTypesAt(0);
             var sourceNode = null;
@@ -1968,23 +1948,12 @@
                     (aEvent.screenX >= sourceNode.boxObject.screenX &&
                       aEvent.screenX <= (sourceNode.boxObject.screenX +
                                          sourceNode.boxObject.width))) {
-                  this._draggingOnItself = true;
                   return dt.effectAllowed = "none";
                 }
 
-                // Within the toolbox, allow dropping by the height of a tab off
-                // the tabbar
-                if (isInToolbox &&
-                    aEvent.screenY < sourceNode.boxObject.screenY -
-                                     sourceNode.boxObject.height)
-                  return dt.effectAllowed = "none";
                 return dt.effectAllowed = "copyMove";
               }
             }
-
-            // only tab-drags are taken care of within the toolbox
-            if (isInToolbox)
-              return ""; // see note above the tab-drags block
 
             for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
               if (types.contains(this._supportedLinkDropTypes[i])) {
@@ -2001,10 +1970,6 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            // don't interfere with toolbar customization
-            if (gNavToolbox.customizing)
-              return;
-
             var effects = this._setEffectAllowedForDataTransfer(aEvent);
 
             var ib = this.mTabDropIndicatorBar;
@@ -2107,10 +2072,6 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            // don't interfere with toolbar customization
-            if (gNavToolbox.customizing)
-              return;
-
             var dt = aEvent.dataTransfer;
             var dropEffect = dt.dropEffect;
             var draggedTab;
@@ -2227,20 +2188,48 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if (this.mTabs.length == 1)
+            // Within our browser window, the detach-target is the content area.
+            // That case is handled by contentAreaDNDObserver.
+            if (!this._dragLeftWindow || this.mTabs.length == 1)
               return;
 
             var dt = aEvent.dataTransfer;
-            if (dt.dropEffect == "none" && !this._draggingOnItself) {
+            // The dropEffect == "none" scenarios:
+            // 1. Drop-within-the-tabbae
+            // 2. Drop on some other tabbar
+            // 3. Drop on text fields (even outside our window)
+            if (dt.dropEffect == "none") {
               var draggedTab = dt.mozGetDataAt("application/x-moz-tabbrowser-tab", 0);
-              this._replaceTabWithWindow(draggedTab);
+              this.replaceTabWithWindow(draggedTab);
             }
             aEvent.stopPropagation();
           ]]>
         </body>
       </method>
 
-      <method name="_replaceTabWithWindow">
+      <method name="browserWindowOnDragEnter">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            this._dragLeftWindow = false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="browserWindowOnDragLeave">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            // If the clientX or clientY values are positive, the mouse is
+            // still dragged within our window. How would that happen? Either
+            // by the dragleave event that is dispatched right before the drop,
+            // or by a bubbled dragleave event
+            this._dragLeftWindow = aEvent.clientX < 0 || aEvent.clientY < 0;
+          ]]>
+        </body>
+      </method>
+
+      <method name="replaceTabWithWindow">
         <parameter name="aTab"/>
         <body>
           <![CDATA[
@@ -2264,13 +2253,12 @@
 
             // This does not work at all (see bug 458613)
             var target = aEvent.relatedTarget;
-            while (target && (target != this && target != gNavToolbox))
+            while (target && target != this)
               target = target.parentNode;
             if (target)
               return;
 
             this.mTabDropIndicatorBar.collapsed = true;
-            this._draggingOnItself = false;
             aEvent.stopPropagation();
           ]]>
         </body>

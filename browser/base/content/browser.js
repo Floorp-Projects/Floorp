@@ -4898,7 +4898,27 @@ var contentAreaDNDObserver = {
       if (aEvent.getPreventDefault())
         return;
 
-      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+      var dragType = aXferData.flavour.contentType;
+      var dragData = aXferData.data;
+      if (dragType == "application/x-moz-tabbrowser-tab") {
+        // If the tab was dragged from some other tab bar, its own dragend
+        // handler will take care of detaching the tab
+        if (dragData instanceof XULElement && dragData.localName == "tab" &&
+            dragData.ownerDocument.defaultView == window) {
+          // Detach only if the mouse pointer was released a little
+          // bit down in the content area (to be precise, by tab-height)
+          if (aEvent.screenY > gBrowser.mPanelContainer.boxObject.screenY +
+                               dragData.boxObject.height) {
+            gBrowser.replaceTabWithWindow(dragData);
+            aEvent.dataTransfer.dropEffect = "move";
+            return;
+          }
+        }
+        aEvent.dataTransfer.dropEffect = "none";
+        return;
+      }
+
+      var url = transferUtils.retrieveURLFromData(dragData, dragType);
 
       // valid urls don't contain spaces ' '; if we have a space it
       // isn't a valid url, or if it's a javascript: or data: url,
@@ -4928,8 +4948,9 @@ var contentAreaDNDObserver = {
   getSupportedFlavours: function ()
     {
       var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-tabbrowser-tab");
       flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/plain");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }
