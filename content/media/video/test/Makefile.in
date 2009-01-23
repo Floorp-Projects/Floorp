@@ -60,6 +60,8 @@ _TEST_FILES = \
 
 ifdef MOZ_OGG
 _TEST_FILES += \
+		test_access_control.html \
+		file_access_controls.html \
 		test_bug448534.html \
 		test_bug461281.html \
 		test_can_play_type_ogg.html \
