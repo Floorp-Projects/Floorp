@@ -592,6 +592,13 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-print?size=toolbar&state=disabled");
 }
 
+#new-tab-button {
+  -moz-image-region: rect(0px 96px 24px 72px);
+}
+#new-tab-button[disabled="true"] {
+  -moz-image-region: rect(24px 96px 48px 72px);
+}
+
 #new-window-button {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
@@ -720,6 +727,13 @@ toolbar[iconsize="small"] #print-button {
 }
 toolbar[iconsize="small"] #print-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu&state=disabled");
+}
+
+toolbar[iconsize="small"] #new-tab-button {
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
+  -moz-image-region: rect(16px 64px 32px 48px);
 }
 
 toolbar[iconsize="small"] #new-window-button {
@@ -1254,7 +1268,7 @@ tabpanels {
   outline: none !important;
 }
 
-/* New tab button */
+/* Tabstrip new tab button */
 .tabs-newtab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
   border: none;

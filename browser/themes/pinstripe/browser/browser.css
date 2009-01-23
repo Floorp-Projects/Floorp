@@ -708,6 +708,18 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   -moz-image-region: rect(46px, 324px, 69px, 288px);
 }
 
+/* ----- TOOLBAR NEW-TAB BUTTON ----- */	
+
+#new-tab-button {
+  -moz-image-region: rect(0px, 360px, 23px, 324px);
+}
+#new-tab-button[disabled="true"] {
+  -moz-image-region: rect(23px, 360px, 46px, 324px);
+}
+#new-tab-button:hover:active {
+  -moz-image-region: rect(46px, 360px, 69px, 324px);
+}
+
 /* ----- DEFAULT NEW-WINDOW BUTTON ----- */	
 
 #new-window-button {
@@ -1726,7 +1738,7 @@ tabbrowser > tabbox > tabpanels {
 
 
 /**
- * New Tab & All Tabs Buttons
+ * Tabstrip New Tab & All Tabs Buttons
  */
 
 .tabs-newtab-button ,
