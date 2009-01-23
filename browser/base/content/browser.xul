@@ -66,6 +66,8 @@
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
+        ondragleave="gBrowser.browserWindowOnDragLeave(event);"
+        ondragenter="gBrowser.browserWindowOnDragEnter(event);"
         title="&mainWindow.title;"
         title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
@@ -279,9 +281,6 @@
   </tooltip>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
-           ondragover="gBrowser._onDragOver(event);"
-           ondrop="gBrowser._onDrop(event);"
-           ondragleave="gBrowser._onDragLeave(event);"
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
