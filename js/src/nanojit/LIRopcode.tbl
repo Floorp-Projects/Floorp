@@ -176,7 +176,7 @@ OPDEF(uge,      63, 2) // 0x3F 0011 1111
 OPDEF64(2,          0, 2) // wraps a pair of refs
 OPDEF64(file,       1, 2)
 OPDEF64(line,       2, 2)
-OPDEF64(unused3_64, 3, 2)
+OPDEF64(xbarrier,   3, 1) // memory barrier (dummy guard)
 
 OPDEF64(unused4_64,   4, 2)
 OPDEF64(unused5_64,   5, 2)
