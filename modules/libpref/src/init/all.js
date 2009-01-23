@@ -131,10 +131,6 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
-// When loading <video> or <audio>, check for Access-Control-Allow-Origin
-// header, and disallow the connection if not present or permitted.
-pref("media.enforce_same_site_origin", false);
-
 #ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
 #endif
