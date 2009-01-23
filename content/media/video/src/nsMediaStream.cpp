@@ -399,7 +399,7 @@ public:
 
   // This must be called on the main thread only, and at a
   // time when the strategy is not reading from the current
-  // channel/stream. It's primary purpose is to be called from
+  // channel/stream. Its primary purpose is to be called from
   // a Seek to reset to the new byte range request http channel.
   void Reset(nsIChannel* aChannel, 
              nsChannelToPipeListener* aListener, 

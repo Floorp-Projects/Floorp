@@ -147,7 +147,7 @@ private:
                      nsINode** _retval);
 
     /*
-     * Gets the child index of a node within it's parent. Gets a possible index
+     * Gets the child index of a node within its parent. Gets a possible index
      * from mPossibleIndexes to gain speed. If the value in mPossibleIndexes
      * isn't correct it'll get the index the usual way.
      * @param aParent   in which to get the index
