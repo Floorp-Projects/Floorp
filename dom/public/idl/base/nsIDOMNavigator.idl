@@ -73,7 +73,7 @@ interface nsIDOMNavigator : nsISupports
 [scriptable, uuid(4b4f8316-1dd2-11b2-b265-9a857376d159)]
 interface nsIDOMJSNavigator : nsISupports
 {
-  // Nothing about this method (except it's name :-) is describeable
+  // Nothing about this method (except its name :-) is describeable
   // in XPIDL, argument handling and the return value needs to be
   // dealt with in the implementation of this method.
   void                      preference();

@@ -9795,7 +9795,7 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
 
   // Check if the plugin can be safely scriptable, the plugin wrapper
   // must not have a shared prototype for this to work since we'll end
-  // up setting it's prototype here, and we want this change to affect
+  // up setting its prototype here, and we want this change to affect
   // this plugin object only.
 
   if (ci) {
@@ -9839,7 +9839,7 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   // QI holder to nsIXPConnectWrappedNative so that we can reliably
-  // access it's prototype
+  // access its prototype
   nsCOMPtr<nsIXPConnectWrappedNative> pi_wrapper(do_QueryInterface(holder));
   NS_ENSURE_TRUE(pi_wrapper, NS_ERROR_UNEXPECTED);
 

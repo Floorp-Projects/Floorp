@@ -61,7 +61,7 @@
  * needs a weak reference to the timeout so that it can be canceled if the
  * worker is canceled (in the event that the page falls out of the fastback
  * cache or the application is exiting, for instance). The only thing that holds
- * the timeout alive is it's mTimer via the nsITimerCallback interface. If the
+ * the timeout alive is its mTimer via the nsITimerCallback interface. If the
  * timer is single-shot and has run already or if the timer is canceled then
  * this object should die.
  */
