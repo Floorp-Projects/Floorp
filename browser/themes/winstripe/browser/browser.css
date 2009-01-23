@@ -632,6 +632,24 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"
   -moz-image-region: rect(96px 216px 120px 192px);
 }
 
+/* toolbar new tab button */
+
+toolbar:not([iconsize="small"]) #new-tab-button > .toolbarbutton-icon {
+  padding-left: 1px;
+}
+#new-tab-button {
+  -moz-image-region: rect(0px 240px 24px 216px);
+}
+#new-tab-button:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 240px 48px 216px);
+}
+#new-tab-button[disabled="true"] {
+  -moz-image-region: rect(48px 240px 72px 216px);
+}
+#new-tab-button:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(96px 240px 120px 216px);
+}
+
 /* new window button */
 
 toolbar:not([iconsize="small"]) #new-window-button > .toolbarbutton-icon {
@@ -918,6 +936,24 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 144px 80px 128px);
+}
+
+/* toolbar new tab button */
+
+toolbar[iconsize="small"] #new-tab-button > .toolbarbutton-icon {
+  padding-left: 1px;
+}
+toolbar[iconsize="small"] #new-tab-button {
+  -moz-image-region: rect(0px 160px 16px 144px);
+}
+toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover {
+  -moz-image-region: rect(16px 160px 32px 144px);
+}
+toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
+  -moz-image-region: rect(32px 160px 48px 144px);
+}
+toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(64px 160px 80px 144px);
 }
 
 /* new window button */
@@ -1421,7 +1457,7 @@ tabpanels {
   outline: none !important;
 }
 
-/* Tab scrollbox arrow, new tab and all-tabs buttons */
+/* Tab scrollbox arrow, tabstrip new tab and all-tabs buttons */
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
 .tabs-newtab-button,
