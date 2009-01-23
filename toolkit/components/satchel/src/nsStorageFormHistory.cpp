@@ -81,7 +81,7 @@
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
 #define DB_CORRUPT_FILENAME NS_LITERAL_STRING("formhistory.sqlite.corrupt")
 
-#define PR_HOURS (60 * 60 * 1000000)
+#define PR_HOURS ((PRInt64)60 * 60 * 1000000)
 
 // nsFormHistoryResult is a specialized autocomplete result class that knows
 // how to remove entries from the form history table.
@@ -187,9 +187,16 @@ nsFormHistory::~nsFormHistory()
 nsresult
 nsFormHistory::Init()
 {
-  PRBool doImport = PR_FALSE;
+  PRBool doImport;
 
   nsresult rv = OpenDatabase(&doImport);
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    /* If the DB is corrupt, nuke it and try again with a new DB. */
+    rv = dbCleanup();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = OpenDatabase(&doImport);
+    doImport = PR_FALSE;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_MORKREADER
@@ -516,11 +523,12 @@ nsresult
 nsFormHistory::CreateTable()
 {
   nsresult rv;
+  // When adding new columns, also update dbAreExpectedColumnsPresent()!
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
          "CREATE TABLE moz_formhistory ("
            "id INTEGER PRIMARY KEY, fieldname TEXT NOT NULL, "
-           "value TEXT NOT NULL, timesUsed INTEGER NOT NULL, "
-           "firstUsed INTEGER NOT NULL, lastUsed INTEGER NOT NULL)"));
+           "value TEXT NOT NULL, timesUsed INTEGER, "
+           "firstUsed INTEGER, lastUsed INTEGER)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_index ON moz_formhistory (fieldname)"));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -582,13 +590,8 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
   nsCOMPtr<nsIFile> formHistoryFile;
   rv = GetDatabaseFile(getter_AddRefs(formHistoryFile));
   NS_ENSURE_SUCCESS(rv, rv);
+
   rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // delete the db and try opening again
-    rv = formHistoryFile->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We execute many statements before the database cache is started to create
@@ -596,6 +599,7 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
   // the dummy statement--see StartCache). This transaction will keep the cache
   // between these statements, which should improve startup performance because
   // we won't have to keep requesting pages from the OS.
+  // We also want the transaction to rollback any failed schema upgrade.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRBool exists;
@@ -604,97 +608,13 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
     *aDoImport = PR_TRUE;
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    *aDoImport = PR_FALSE;
   }
 
-  PRInt32 schemaVersion;
-  rv = mDBConn->GetSchemaVersion(&schemaVersion);
+  // Ensure DB is at the current schema.
+  rv = dbMigrate();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Changing the database?  Be sure to do these two things!
-  // 1) Increment DB_SCHEMA_VERSION
-  // 2) Implement the proper downgrade/upgrade code for the current version
-
-  switch (schemaVersion) {
-  case 0:
-    {
-      mozStorageTransaction stepTransaction(mDBConn, PR_FALSE);
-
-      // The formhistory.sqlite in Firefox 3 didn't have a schema version set
-      NS_WARNING("Could not get formhistory database's schema version!");
-
-      // Add columns for timestamps and use counts (bug 463154)
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_formhistory ADD COLUMN timesUsed INTEGER"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_formhistory ADD COLUMN firstUsed INTEGER"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_formhistory ADD COLUMN lastUsed INTEGER"));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Set the default values for the new columns.
-      //
-      // Note that we set the timestamps to 24 hours in the past. We want a
-      // timestamp that's recent (so that "keep form history for 90 days"
-      // doesn't expire things surprisingly soon), but not so recent that
-      // "forget the last hour of stuff" deletes all freshly migrated data.
-      nsCOMPtr<mozIStorageStatement> addDefaultValues;
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "UPDATE moz_formhistory "
-        "SET timesUsed=1, firstUsed=?1, lastUsed=?1"),
-        getter_AddRefs(addDefaultValues));
-      rv = addDefaultValues->BindInt64Parameter(0, PR_Now() - 24 * PR_HOURS);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = addDefaultValues->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = mDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = stepTransaction.Commit();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    // Fallthrough to the next upgrade
-
-  // Extra sanity checking for developers
-#ifndef DEBUG
-  case DB_SCHEMA_VERSION:
-#endif
-    break;
-
-  // Downgrades (and DEBUG build sanity checking)... Ensure that all the
-  // columns we're expecting are present, backup and reinit if not.
-  default:
-    {
-      // If the statement succeeds, all the columns are there.
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT fieldname, value, timesUsed, firstUsed, lastUsed "
-        "FROM moz_formhistory"), getter_AddRefs(stmt));
-      if (NS_SUCCEEDED(rv))
-        break;
-
-      // Columns are screwy. Backup the DB, nuke it, start anew.
-      nsCOMPtr<mozIStorageService> storage =
-        do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-      NS_ENSURE_TRUE(storage, NS_ERROR_NOT_AVAILABLE);
-
-      nsCOMPtr<nsIFile> backupFile;
-      rv = storage->BackupDatabaseFile(formHistoryFile, DB_CORRUPT_FILENAME,
-                                       nsnull, getter_AddRefs(backupFile));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP TABLE moz_formhistory"));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = CreateTable();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    break;
-  }
   
   // should commit before starting cache
   transaction.Commit();
@@ -707,6 +627,102 @@ nsFormHistory::OpenDatabase(PRBool *aDoImport)
 
   return NS_OK;
 }
+  
+/*
+ * dbMigrate
+ */
+nsresult
+nsFormHistory::dbMigrate()
+{
+  PRInt32 schemaVersion;
+  nsresult rv = mDBConn->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Upgrade from the version in the DB to the version we expect, step by
+  // step. Note that the formhistory.sqlite in Firefox 3 didn't have a
+  // schema version set, so we start at 0.
+  switch (schemaVersion) {
+    case 0:
+      rv = MigrateToVersion1();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // (fallthrough to the next upgrade)
+
+    case DB_SCHEMA_VERSION:
+      // (current version, nothing more to do)
+      break;
+
+    // Unknown schema version, it's probably a DB modified by some future
+    // version of this code. Try to use the DB anyway.
+    default:
+      // Sanity check: make sure the columns we expect are present. If not,
+      // treat it as corrupt (back it up, nuke it, start from scratch).
+      if(!dbAreExpectedColumnsPresent())
+        return NS_ERROR_FILE_CORRUPTED;
+
+      // If it's ok, downgrade the schema version so the future version will
+      // know to re-upgrade the DB.
+      rv = mDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
+      NS_ENSURE_SUCCESS(rv, rv);
+      break;
+  }
+
+  return NS_OK;
+}
+
+
+/*
+ * MigrateToVersion1
+ *
+ * Updates the DB schema to v1 (bug 463154).
+ * Adds firstUsed, lastUsed, timesUsed columns.
+ */
+nsresult
+nsFormHistory::MigrateToVersion1()
+{
+  // Check to see if the new columns already exist (could be a v1 DB that
+  // was downgraded to v0). If they exist, we don't need to add them.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+                  "SELECT timesUsed, firstUsed, lastUsed FROM moz_formhistory"),
+                  getter_AddRefs(stmt));
+
+  PRBool columnsExist = !!NS_SUCCEEDED(rv);
+
+  if (!columnsExist) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_formhistory ADD COLUMN timesUsed INTEGER"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_formhistory ADD COLUMN firstUsed INTEGER"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_formhistory ADD COLUMN lastUsed INTEGER"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Set the default values for the new columns.
+  //
+  // Note that we set the timestamps to 24 hours in the past. We want a
+  // timestamp that's recent (so that "keep form history for 90 days"
+  // doesn't expire things surprisingly soon), but not so recent that
+  // "forget the last hour of stuff" deletes all freshly migrated data.
+  nsCOMPtr<mozIStorageStatement> addDefaultValues;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "UPDATE moz_formhistory "
+         "SET timesUsed=1, firstUsed=?1, lastUsed=?1 "
+         "WHERE timesUsed isnull OR firstUsed isnull OR lastUsed isnull"),
+         getter_AddRefs(addDefaultValues));
+  rv = addDefaultValues->BindInt64Parameter(0, PR_Now() - 24 * PR_HOURS);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = addDefaultValues->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->SetSchemaVersion(1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 
 nsresult
@@ -715,6 +731,49 @@ nsFormHistory::GetDatabaseFile(nsIFile** aFile)
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aFile);
   NS_ENSURE_SUCCESS(rv, rv);
   return (*aFile)->Append(DB_FILENAME);
+}
+
+
+/*
+ * dbCleanup 
+ *
+ * Called when a DB is corrupt. We back it up to a .corrupt file, and then
+ * nuke it to start from scratch.
+ */
+nsresult
+nsFormHistory::dbCleanup()
+{
+  nsCOMPtr<nsIFile> dbFile;
+  nsresult rv = GetDatabaseFile(getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> backupFile;
+  NS_ENSURE_TRUE(mStorageService, NS_ERROR_NOT_AVAILABLE);
+  rv = mStorageService->BackupDatabaseFile(dbFile, DB_CORRUPT_FILENAME,
+                                           nsnull, getter_AddRefs(backupFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mDBConn)
+    mDBConn->Close();
+
+  rv = dbFile->Remove(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * dbAreExpectedColumnsPresent
+ */
+PRBool
+nsFormHistory::dbAreExpectedColumnsPresent()
+{
+  // If the statement succeeds, all the columns are there.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+                  "SELECT fieldname, value, timesUsed, firstUsed, lastUsed "
+                  "FROM moz_formhistory"), getter_AddRefs(stmt));
+  return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
 }
 
 
