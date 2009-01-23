@@ -52,6 +52,8 @@
            'SJOWs equality hook returns true correctly');
     }
 
+    ok(new XPCSafeJSObjectWrapper(window) == new XPCNativeWrapper(window),
+       'SJOWs equality hook returns true correctly against XPCNW');
     ok(new XPCSafeJSObjectWrapper(window) == window,
        'SJOWs equality hook returns true correctly against XOW');
 

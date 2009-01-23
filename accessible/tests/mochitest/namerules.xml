@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+
+<!--
+ This XML file is used to create sequence of accessible name tests. It consist of
+ two sections. The first section 'ruledfn' declares name computation rules.
+ The second section 'rulesample' defines markup samples we need to check name
+ computation rules for.
+
+  Section 'ruledfn' consist of 'ruleset' elements. Every 'ruleset' element is
+  presented by 'rule' elements so that sequence of 'rule' elements gives the
+  sequence of name computations rules. Every 'rule' element can be one of four
+  types.
+   * name is equal to the value of attribute presented on the element. Example,
+     'aria-label' attribute. In this case 'rule' element has 'attr' attribute
+     pointing to attribute name and 'type' attribute with 'string' value. For
+     example, <rule attr="aria-label" type="string"/>.
+   * name is calculated from elements that are pointed to by attribute value on
+     the element. Example is 'aria-labelledby'. In this case 'rule' element
+     has 'attr' attribute holding the sequence of IDs of elements used to
+     compute the name, in addition the 'rule' element has 'type' attribute with
+     'ref' value. For example, <rule attr="aria-labelledby" type="ref"/>.
+   * name is calculated from another element. Example, html:label@for element.
+     In this case 'rule' element has 'elm' and 'elmattr' attributes. These
+     attributes are used to find an element by tagname and attribute with value
+     equaled to ID of the element. For example, <rule elm="label" elmattr="for"/>.
+   * name is computed from subtree. Example, html:button. In this case 'rule'
+     element has 'fromsubtree' attribute with 'true' value. For example,
+     <rule fromsubtree="true"/>
+
+  Section 'rulesample' provides set of markup samples ('markup' elements). Every
+  'markup' element contains an element that accessible name will be computed for
+  (let's call it test element). In addition the 'markup' element contains some
+  other elements from native markup used in name calculation process for test
+  element. Test element is pointed to by 'ref' attribute on 'markup' element.
+  Also 'markup' element has 'ruleset' attribute to indicate ruleset for the test
+  element.
+
+  How does it work? Let's consider simple example:
+  <ruledfn>
+    <ruleset id="aria">
+      <rule attr="aria-label" type="string"/>
+      <rule attr="aria-labelledby" type="ref"/>
+    </ruleset>
+  </ruledfn>
+  <rulesample>
+    <markup ref="html:div" ruleset="aria">
+      <html:span id="label" a11yname="test2">test2</html:span>
+      <html:div aria-label="test1"
+                aria-labelledby="label">it's a div</html:div>
+    </markup>
+  </rulesample>
+
+  Initially 'markup' element holds markup for all rules specified by 'ruleset'
+  attribute. This allows us to check if the sequence of name computation rules
+  is correct. Here 'ruleset' element defines two rules. We get the first rule
+  which means accesible name is computed from value of 'aria-label' attribute.
+  Then we check accessible name for the test element and remove 'aria-label'
+  attribute. After we get the second rule which means we should get IDs from
+  'aria-labelledby' attribute and compose accessible name from values of
+  'a11yname' attributes (that are supposed to give the desired name for each
+  element that is being pointed to by aria-labelledby). Check accessible name
+  and finish test.
+-->
+
+<rules xmlns:html="http://www.w3.org/1999/xhtml"
+       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <ruledfn>
+
+    <!-- bricks -->
+    <ruleset id="aria">
+      <rule attr="aria-label" type="string"/>
+      <rule attr="aria-labelledby" type="ref"/>
+    </ruleset>
+
+    <ruleset id="htmlctrl_start">
+      <ruleset ref="aria"/>
+      <rule elm="label" elmattr="for"/>
+      <rule fromsubtree="true"/>
+    </ruleset>
+
+    <ruleset id="htmlctrl_end">
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <ruleset id="htmlelm_start">
+      <ruleset ref="aria"/>
+      <rule elm="label" elmattr="for"/>
+    </ruleset>
+
+    <ruleset id="htmlelm_end">
+      <rule attr="title" type="string"/>
+    </ruleset>
+
+    <!-- general -->
+    <ruleset id="htmlctrl">
+      <ruleset ref="htmlctrl_start"/>
+      <ruleset ref="htmlctrl_end"/>
+    </ruleset>
+
+    <ruleset id="htmlelm">
+      <ruleset ref="htmlelm_start"/>
+      <ruleset ref="htmlelm_end"/>
+    </ruleset>
+
+    <!-- specific -->
+    <ruleset id="htmlinputbutton">
+      <ruleset ref="htmlelm_start"/>
+      <rule attr="value" type="string"/>
+      <rule attr="alt" type="string"/>
+      <rule attr="src" type="string"/>
+      <rule attr="data" type="string"/>
+      <ruleset ref="htmlelm_end"/>
+    </ruleset>
+
+    <ruleset id="htmloption">
+      <ruleset ref="aria"/>
+      <rule attr="label" type="string"/>
+      <rule fromsubtree="true"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+  </ruledfn>
+
+  <rulesample>
+
+    <markup ref="html:button" ruleset="htmlctrl">
+      <html:span id="l1" a11yname="test2">test2</html:span>
+      <html:span id="l2" a11yname="test3">test3</html:span>
+      <html:label for="btn" a11yname="test4">test4</html:label>
+      <html:button id="btn"
+                   aria-label="test1"
+                   aria-labelledby="l1 l2"
+                   title="test5"
+                   a11yname="press me">press me</html:button>
+    </markup>
+
+    <markup ref="html:input" ruleset="htmlinputbutton">
+      <html:span id="l1" a11yname="test2">test2</html:span>
+      <html:span id="l2" a11yname="test3">test3</html:span>
+      <html:label for="btn" a11yname="test4">test4</html:label>
+      <html:input id="btn"
+                  type="button"
+                  aria-label="test1"
+                  aria-labelledby="l1 l2"
+                  value="test5"
+                  alt="test6"
+                  src="test7"
+                  data="test8"
+                  title="test9"/>
+    </markup>
+
+    <markup ref="html:select/html:option[1]" ruleset="htmloption">
+      <html:span id="l1" a11yname="test2">test2</html:span>
+      <html:span id="l2" a11yname="test3">test3</html:span>
+      <html:select>
+        <html:option id="opt"
+                     aria-label="test1"
+                     aria-labelledby="l1 l2"
+                     label="test4"
+                     title="test5"
+                     a11yname="option1">option1</html:option>
+        <html:option>option2</html:option>
+      </html:select>
+    </markup>
+
+  </rulesample>
+
+</rules>

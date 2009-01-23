@@ -5352,38 +5352,25 @@ PresShell::Paint(nsIView*             aView,
 
   // Compute the backstop color for the view.  This color must be
   // totally transparent if the view is within a glass or transparent
-  // widget; otherwise, we compose all the view managers' default
-  // background colors in order to get something completely opaque.
-  // Nested view managers might not have an opaque default, but the
-  // root view manager must.  See bug 467459.
+  // widget; otherwise, use the default in the prescontext, which will
+  // be opaque.
 
   PRBool needTransparency = PR_FALSE;
-  nsIViewManager *lastMgr = mViewManager;
-  nscolor backgroundColor;
-  lastMgr->GetDefaultBackgroundColor(&backgroundColor);
 
   for (nsIView *view = aView; view; view = view->GetParent()) {
     if (view->HasWidget() &&
         view->GetWidget()->GetTransparencyMode() != eTransparencyOpaque) {
-      backgroundColor = NS_RGBA(0,0,0,0);
       needTransparency = PR_TRUE;
       break;
     }
-    if (NS_GET_A(backgroundColor) < 255) {
-      nsIViewManager *thisMgr = view->GetViewManager();
-      NS_ASSERTION(thisMgr, "view without view manager");
-      if (lastMgr != thisMgr) {
-        nscolor underColor;
-        thisMgr->GetDefaultBackgroundColor(&underColor);
-        backgroundColor = NS_ComposeColors(underColor, backgroundColor);
-        lastMgr = thisMgr;
-      }
-    }
   }
 
-  NS_ASSERTION(needTransparency || NS_GET_A(backgroundColor) == 255,
-               "root view manager's default background isn't opaque");
-  
+  nscolor backgroundColor;
+  if (needTransparency)
+    backgroundColor = NS_RGBA(0,0,0,0);
+  else
+    backgroundColor = mPresContext->DefaultBackgroundColor();
+
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
   if (frame) {
     nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion,

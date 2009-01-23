@@ -206,6 +206,16 @@ class nsWaveDecoder : public nsMediaDecoder
   // Must be called by the owning object before disposing the decoder.
   virtual void Shutdown();
 
+  // Suspend any media downloads that are in progress. Called by the
+  // media element when it is sent to the bfcache. Call on the main
+  // thread only.
+  virtual void Suspend();
+
+  // Resume any media downloads that have been suspended. Called by the
+  // media element when it is restored from the bfcache. Call on the
+  // main thread only.
+  virtual void Resume();
+
 private:
   // Notifies the nsHTMLMediaElement that buffering has started.
   void BufferingStarted();

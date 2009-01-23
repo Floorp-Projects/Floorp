@@ -248,7 +248,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
 nsresult
 gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsStringArray& aListOfFonts)
+                            nsTArray<nsString>& aListOfFonts)
 {
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);
@@ -335,7 +335,7 @@ gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 nsresult
 gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsStringArray& aListOfFonts)
+                            nsTArray<nsString>& aListOfFonts)
 {
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);

@@ -205,7 +205,7 @@
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
-           onpopuphidden="focusAndSelectUrlBar();" norestorefocus="true" level="top"
+           level="top"
            chromedir="&locale.dir;">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>

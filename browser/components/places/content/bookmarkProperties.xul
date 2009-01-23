@@ -54,6 +54,7 @@
 
 <dialog id="bookmarkproperties"
         buttons="accept, cancel"
+        defaultButton=""
         ondialogaccept="BookmarkPropertiesPanel.onDialogAccept();"
         ondialogcancel="BookmarkPropertiesPanel.onDialogCancel();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

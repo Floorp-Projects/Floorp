@@ -937,46 +937,6 @@ nsCStringArray::nsCStringArray(void)
 {
 }
 
-// Parses a given string using the delimiter passed in and appends items
-// parsed to the array.
-PRBool
-nsCStringArray::ParseString(const char* string, const char* delimiter)
-{
-  if (string && *string && delimiter && *delimiter) {
-    char *rest = strdup(string);
-    if (!rest)
-      return PR_FALSE;
-    char *newStr = rest;
-    char *token = NS_strtok(delimiter, &newStr);
-
-    PRInt32 count = Count();
-    while (token) {
-      if (*token) {
-        /* calling AppendElement(void*) to avoid extra nsCString copy */
-        nsCString *cstring = new nsCString(token);
-        if (cstring && !AppendElement(cstring)) {
-          // AppendElement failed, release and null cstring so we fall
-          // through to the case below.
-          delete cstring;
-          cstring = nsnull;
-        }
-        if (!cstring) {
-          // We've run out of memory. Remove all newly appended elements from
-          // our array so we don't leave ourselves in a partially added state.
-          // When we return, the array will be precisely as it was when this
-          // function was called.
-          RemoveElementsAt(count, Count() - count);
-          free(rest);
-          return PR_FALSE;
-        }
-      }
-      token = NS_strtok(delimiter, &newStr);
-    }
-    free(rest);
-  }
-  return PR_TRUE;
-}
-
 nsCStringArray::nsCStringArray(PRInt32 aCount)
   : nsVoidArray(aCount)
 {

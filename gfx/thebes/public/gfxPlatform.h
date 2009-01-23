@@ -41,6 +41,7 @@
 
 #include "prtypes.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 
 #include "nsIObserver.h"
 
@@ -158,7 +159,7 @@ public:
      */
     virtual nsresult GetFontList(const nsACString& aLangGroup,
                                  const nsACString& aGenericFamily,
-                                 nsStringArray& aListOfFonts);
+                                 nsTArray<nsString>& aListOfFonts);
 
     /**
      * Rebuilds the any cached system font lists

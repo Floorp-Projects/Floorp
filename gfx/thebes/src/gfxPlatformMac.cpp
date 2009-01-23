@@ -51,6 +51,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
+#include "nsTArray.h"
 
 #include "lcms.h"
 
@@ -163,7 +164,7 @@ gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 nsresult
 gfxPlatformMac::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsStringArray& aListOfFonts)
+                            nsTArray<nsString>& aListOfFonts)
 {
     gfxQuartzFontCache::SharedFontCache()->
         GetFontList(aLangGroup, aGenericFamily, aListOfFonts);

@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.21 2008/06/14 14:20:07 wtc%google.com Exp $ */
+/* $Id: blapit.h,v 1.22 2008/12/17 06:09:12 nelson%bolyard.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -72,6 +72,10 @@
 /* Camellia operation modes */
 #define NSS_CAMELLIA                 0
 #define NSS_CAMELLIA_CBC             1
+
+/* SEED operation modes */
+#define NSS_SEED		0
+#define NSS_SEED_CBC		1
 
 #define DSA_SIGNATURE_LEN 	40	/* Bytes */
 #define DSA_SUBPRIME_LEN	20	/* Bytes */
@@ -112,6 +116,9 @@
 #define AES_BLOCK_SIZE          16  /* bytes */
 
 #define CAMELLIA_BLOCK_SIZE          16  /* bytes */
+
+#define SEED_BLOCK_SIZE 16              /* bytes */
+#define SEED_KEY_LENGTH 16              /* bytes */
 
 #define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
 
@@ -183,6 +190,7 @@ struct SHA1ContextStr       ;
 struct SHA256ContextStr     ;
 struct SHA512ContextStr     ;
 struct AESKeyWrapContextStr ;
+struct SEEDContextStr       ;	
 
 typedef struct DESContextStr        DESContext;
 typedef struct RC2ContextStr        RC2Context;
@@ -198,6 +206,7 @@ typedef struct SHA512ContextStr     SHA512Context;
 /* SHA384Context is really a SHA512ContextStr.  This is not a mistake. */
 typedef struct SHA512ContextStr     SHA384Context;
 typedef struct AESKeyWrapContextStr AESKeyWrapContext;
+typedef struct SEEDContextStr	    SEEDContext;	
 
 /***************************************************************************
 ** RSA Public and Private Key structures

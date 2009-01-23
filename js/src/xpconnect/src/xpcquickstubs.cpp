@@ -535,8 +535,8 @@ xpc_qsUnwrapThisImpl(JSContext *cx,
         }
         else if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
-            wrapper = XPCNativeWrapper::GetWrappedNative(cur);
-            if(!wrapper)
+            if(!XPCNativeWrapper::GetWrappedNative(cx, cur, &wrapper) ||
+               !wrapper)
                 goto next;
         }
         else if(IsXPCSafeJSObjectWrapperClass(clazz))

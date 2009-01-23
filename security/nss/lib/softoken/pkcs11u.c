@@ -546,8 +546,7 @@ sftk_forceTokenAttribute(SFTKObject *object,CK_ATTRIBUTE_TYPE type,
     attribute.pValue = value;
     attribute.ulValueLen = len;
 
-    crv = sftkdb_SetAttributeValue(dbHandle, object->handle,
-		&attribute, 1);
+    crv = sftkdb_SetAttributeValue(dbHandle, object, &attribute, 1);
     sftk_freeDB(dbHandle);
     return crv;
 }

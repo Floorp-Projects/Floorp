@@ -44,6 +44,7 @@
 #define _PKIX_REVCHECKER_H
 
 #include "pkixt.h"
+#include "pkix_pl_pki.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,82 +77,41 @@ extern "C" {
 
 /* PKIX_RevocationChecker
  *
- * PKIX_RevocationCheckers provide a standard way for the caller to insert
+ * PKIX_RevocationChecker provides a standard way of revocation checking.
+ * Caller should configure two set of tests(represented at lists of
+ * RevocationMethod objects) to be performed on the leaf and on the rest of
+ * the chain certificates.
+ *
+ * PKIX_RevocationMethods provide a standard way for the caller to insert
  * their own custom revocation checks to verify the revocation status of
  * certificates. This may be useful in many scenarios, including when the
  * caller wishes to use their own revocation checking mechanism instead of (or
  * in addition to) the default revocation checking mechanism provided by
- * libpkix, which uses CRLs. The RevCallback allows custom revocation checking
- * to take place. Additionally, the RevocationChecker can be initialized with
- * a revCheckerContext, which is where the caller can specify configuration
- * data such as the IP address of a revocation server. Note that this
- * revCheckerContext must be a PKIX_PL_Object, allowing it to be
- * reference-counted and allowing it to provide the standard PKIX_PL_Object
- * functions (Equals, Hashcode, ToString, Compare, Duplicate).
+ * libpkix, which uses CRLs and OCSP. 
  *
- * Once the caller has created the RevocationChecker object(s), the caller
- * then specifies the RevocationChecker object(s) in a ProcessingParams object
- * and passes that object to PKIX_ValidateChain or PKIX_BuildChain, which uses
- * the objects to call the user's callback functions as needed during the
- * validation or building process.
- *
- * Note that if multiple revocation checkers are added, the order is
- * important, in that each revocation checker will be called sequentially
- * until the revocation status can be determined or all the revocation checkers
- * have been called. Also note that the default CRL revocation checker will
- * always be called last after all the custom revocation checkers have been
- * called. This default CRL revocation checking can be disabled by calling
- * PKIX_ProcessingParams_SetRevocationEnabled with a Boolean parameter of
- * PKIX_FALSE. This will ONLY disable the CRL revocation checker, not the
- * custom RevocationCheckers specified by the caller.
- *
- * For example, assume the caller specifies an OCSP RevocationChecker in the
- * ProcessingParams object. Let's look at two scenarios:
- *
- * 1) SetRevocationEnabled(PKIX_FALSE)
- *
- *      The OCSP RevocationChecker will be used. If it is unable to determine
- *      whether the certificate has been revoked (perhaps the network is down),
- *      the revocation check fails safe and the certificate is rejected
- *      (assumed to be revoked).
- *
- * 2) SetRevocationEnabled(PKIX_TRUE)
- *      [This doesn't need to be called, since this is the default behavior]
- *
- *      The OCSP RevocationChecker will be used first. If it is unable to
- *      determine whether the certificate has been revoked (perhaps the network
- *      is down), the default CRL revocation checker is used next. If it is
- *      also unable to determine whether the certificate has been revoked, the
- *      revocation check fails safe. Note that this is a useful scenario where
- *      the CRL check is only done if the OCSP check is unable to take place.
+ * Once the caller has created the RevocationMethod object(s), the caller
+ * then specifies the RevocationMethod object(s) in a RevocationCheck object
+ * and sets it into a ProcessingParams.
  */
 
 /*
- * FUNCTION: PKIX_RevocationChecker_RevCallback
+ * FUNCTION: PKIX_RevocationChecker_Create
  * DESCRIPTION:
  *
- *  This callback function determines the revocation status of the specified
- *  Cert pointed to by "cert" and stores it at "pResultCode". If a checker
- *  initiates non-blocking I/O, it stores a platform-dependent non-blocking
- *  I/O context at "pNBIOContext". A subsequent call with that same value on
- *  input allows the operation to continue. On completion, with no non-blocking
- *  I/O pending, NULL is stored at "pNBIOContext".
+ * Creates revocation checker object with a given flags.
  *
  * PARAMETERS:
- *  "revCheckerContext"
- *      Address of RevocationCheckerContext for the RevocationChecker whose
- *      RevCallback logic is to be used. Must be non-NULL.
- *  "cert"
- *      Address of Cert whose revocation status is to be determined.
- *      Must be non-NULL.
- *  "procParams"
- *      Address of ProcessingParams used to initialize the checker.
- *      Must be non-NULL.
- *  "pNBIOContext"
- *      Address at which platform-dependent non-blocking I/O context is stored.
- *      Must be non-NULL.
- *  "pResultCode"
- *      Address where revocation status will be stored. Must be non-NULL.
+ *  "revDate"
+ *      Revocation will be checked at this date. Current date is taken if the
+ *      parameter is not specified.
+ *  "leafMethodListFlags"
+ *      Defines a set of method independent flags that will be used to check
+ *      revocation of the leaf cert in the chain.
+ *  "chainMethodListFlags"
+ *      Defines a set of method independent flags that will be used to check
+ *      revocation of the remaining certs in the chain.
+ *  "pChecker"
+ *      The return address of created checker.
  *  "plContext"
  *      Platform-specific context pointer.
  * THREAD SAFETY:
@@ -164,103 +124,126 @@ extern "C" {
  *  Returns a RevocationChecker Error if the function fails in a non-fatal way.
  *  Returns a Fatal Error if the function fails in an unrecoverable way.
  */
-typedef PKIX_Error *
-(*PKIX_RevocationChecker_RevCallback)(
-        PKIX_PL_Object *revCheckerContext,
-        PKIX_PL_Cert *cert,
-        PKIX_ProcessingParams *procParams,
-        void **pNBIOContext,
-        PKIX_UInt32 *pResultCode,
-        void *plContext);
-
-/*
- * FUNCTION: PKIX_RevocationChecker_Create
- * DESCRIPTION:
- *
- *  Creates a new RevocationChecker using the Object pointed to by
- *  "revCheckerContext" (if any) and stores it at "pRevChecker". The new
- *  RevocationChecker uses the RevCallback pointed to by "callback". Once
- *  created, a RevocationChecker is immutable.
- * PARAMETERS:
- *  "callback"
- *      The RevCallback function to be used. Must be non-NULL.
- *  "revCheckerContext"
- *      Address of Object representing the RevocationChecker's context.
- *  "pRevChecker"
- *      Address where object pointer will be stored. Must be non-NULL.
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe (see THREAD SAFETY DEFINITIONS at top of file)
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a RevocationChecker Error if the function fails in a non-fatal way.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
 PKIX_Error *
 PKIX_RevocationChecker_Create(
-        PKIX_RevocationChecker_RevCallback callback,
-        PKIX_PL_Object *revCheckerContext,
-        PKIX_RevocationChecker **pRevChecker,
-        void *plContext);
+    PKIX_PL_Date *revDate,
+    PKIX_UInt32 leafMethodListFlags,
+    PKIX_UInt32 chainMethodListFlags,
+    PKIX_RevocationChecker **pChecker,
+    void *plContext);
 
 /*
- * FUNCTION: PKIX_RevocationChecker_GetRevCallback
+ * FUNCTION: PKIX_RevocationChecker_CreateAndAddMethod
  * DESCRIPTION:
  *
- *  Retrieves a pointer to "revChecker's" Rev callback function and puts it in
- *  "pCallback".
+ * Creates revocation method object with given parameters and adds it
+ * to revocation checker method list.
  *
  * PARAMETERS:
  *  "revChecker"
- *      The RevocationChecker whose Rev callback is desired. Must be non-NULL.
- *  "pCallback"
- *      Address where Rev callback function pointer will be stored.
+ *      Address of revocation checker structure.
+ *  "procParams"
+ *      Address of ProcessingParams used to initialize the checker.
  *      Must be non-NULL.
+ *  "methodType"
+ *      Type of the method. Currently only two types are
+ *      supported: crl and ocsp. (See PKIX_RevocationMethodType enum).
+ *  "methodFlags"
+ *      Set of flags for the method.
+ *  "methodPriority"
+ *      Method priority. (0 corresponds to a highest priority)
+ *  "verificationFn"
+ *      User call back function that will perform validation of fetched
+ *      revocation information(new crl or ocsp response)
+ *  "isLeafMethod"
+ *      Boolean flag that if set to true indicates that the method should
+ *      should be used for leaf cert revocation test(false for chain set
+ *      methods).
  *  "plContext"
  *      Platform-specific context pointer.
  * THREAD SAFETY:
- *  Thread Safe (see THREAD SAFETY DEFINITIONS at top of file)
+ *  Thread Safe
+ *
+ *  Multiple threads must be able to safely call this function without
+ *  worrying about conflicts, even if they're operating on the same objects.
  * RETURNS:
  *  Returns NULL if the function succeeds.
  *  Returns a RevocationChecker Error if the function fails in a non-fatal way.
  *  Returns a Fatal Error if the function fails in an unrecoverable way.
  */
 PKIX_Error *
-PKIX_RevocationChecker_GetRevCallback(
-        PKIX_RevocationChecker *revChecker,
-        PKIX_RevocationChecker_RevCallback *pCallback,
-        void *plContext);
+PKIX_RevocationChecker_CreateAndAddMethod(
+    PKIX_RevocationChecker *revChecker,
+    PKIX_ProcessingParams *params,
+    PKIX_RevocationMethodType methodType,
+    PKIX_UInt32 methodFlags,
+    PKIX_UInt32 mathodPriority,
+    PKIX_PL_VerifyCallback verificationFn,
+    PKIX_Boolean isLeafMethod,
+    void *plContext);
 
 /*
- * FUNCTION: PKIX_RevocationChecker_GetRevCheckerContext
+ * FUNCTION: PKIX_RevocationChecker_Check
  * DESCRIPTION:
  *
- *  Retrieves a pointer to a PKIX_PL_Object representing the context (if any)
- *  of the RevocationChecker pointed to by "revChecker" and stores it at
- *  "pRevCheckerContext".
- *
+ * Verifies revocation status of the certificate. Issuer cert is given to
+ * be used in verification of revocation information. Performed verification
+ * check depends on configured revocation methods(ocsp, crl. See
+ * PKIX_RevocationChecker_CreateAndAddMethod function) and a point of chain
+ * building process at which PKIX_RevocationChecker_Check was invoked.
+ * For security reasons, the cert status is checked only against cached
+ * revocation information during chain building stage(no trust anchor yes has
+ * been found). The fresh revocation information fetching is done only at chain
+ * verification stage after trust anchor was identified.
+ * 
  * PARAMETERS:
- *  "revChecker"
- *      Address of RevocationChecker whose context is to be stored.
+ *  "cert"
+ *      Address of Cert whose revocation status is to be determined.
  *      Must be non-NULL.
- *  "pRevCheckerContext"
- *      Address where object pointer will be stored. Must be non-NULL.
+ *  "issuer"
+ *      Issuer cert that potentially holds public key that will be used
+ *      to verify revocation info.
+ *  "revChecker"
+ *      Address of revocation checker structure.
+ *  "procParams"
+ *      Address of ProcessingParams used to initialize the checker.
+ *      Must be non-NULL.
+ *  "chainVerificationState"
+ *     Need to be set to true, if the check was called during chain verification
+ *     as an opposite to chain building.
+ *  "testingLeafCert"
+ *     Set to true if verifying revocation status of a leaf cert.
+ *  "revStatus"
+ *     Address of the returned revocation status of the cert.
+ *  "pResultCode"
+ *      Address where revocation status will be stored. Must be non-NULL.
+ *  "pNBIOContext"
+ *      Address at which platform-dependent non-blocking I/O context is stored.
+ *      Must be non-NULL.
  *  "plContext"
  *      Platform-specific context pointer.
  * THREAD SAFETY:
- *  Thread Safe (see THREAD SAFETY DEFINITIONS at top of file)
+ *  Thread Safe
+ *
+ *  Multiple threads must be able to safely call this function without
+ *  worrying about conflicts, even if they're operating on the same objects.
  * RETURNS:
  *  Returns NULL if the function succeeds.
  *  Returns a RevocationChecker Error if the function fails in a non-fatal way.
  *  Returns a Fatal Error if the function fails in an unrecoverable way.
  */
 PKIX_Error *
-PKIX_RevocationChecker_GetRevCheckerContext(
-        PKIX_RevocationChecker *revChecker,
-        PKIX_PL_Object **pRevCheckerContext,
-        void *plContext);
-
+PKIX_RevocationChecker_Check(PKIX_PL_Cert *cert,
+                             PKIX_PL_Cert *issuer,
+                             PKIX_RevocationChecker *revChecker,
+                             PKIX_ProcessingParams *procParams,
+                             PKIX_Boolean chainVerificationState,
+                             PKIX_Boolean testingLeafCert,
+                             PKIX_RevocationStatus *revStatus,
+                             PKIX_UInt32 *pReasonCode,
+                             void **pNbioContext,
+                             void *plContext);
+    
 #ifdef __cplusplus
 }
 #endif

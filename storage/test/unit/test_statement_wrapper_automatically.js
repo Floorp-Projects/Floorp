@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+   vim:set ts=2 sw=2 sts=2 et:
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -20,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,64 +42,163 @@
 
 function setup()
 {
-  getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, name TEXT," +
-                                          "alt_name TEXT");
+  getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, val NONE," +
+                                          "alt_val NONE");
 }
 
-function test_binding_params()
+/**
+ * A convenience wrapper for do_check_eq.  Calls do_check_eq on aActualVal
+ * and aReturnedVal, with one caveat.
+ *
+ * Date objects are converted before parameter binding to PRTime's (microsecs
+ * since epoch).  They are not reconverted when retrieved from the database.
+ * This function abstracts away this reconversion so that you can pass in,
+ * for example:
+ *
+ *   checkVal(new Date(), aReturnedVal)                    // this
+ *   checkVal(new Date().valueOf() * 1000.0, aReturnedVal) // instead of this
+ *
+ * Should any other types require conversion in the future, their conversions
+ * may also be abstracted away here.
+ *
+ * @param aActualVal
+ *        the value inserted into the database
+ * @param aReturnedVal
+ *        the value retrieved from the database
+ */
+function checkVal(aActualVal, aReturnedVal)
 {
-  var stmt = createStatement("INSERT INTO test (name) VALUES (:name)");
+  if (aActualVal instanceof Date) aActualVal = aActualVal.valueOf() * 1000.0;
+  do_check_eq(aActualVal, aReturnedVal);
+}
 
-  const name = "foo";
-  stmt.params.name = name;
+/**
+ * Removes all rows from our test table.
+ */
+function clearTable()
+{
+  var stmt = createStatement("DELETE FROM test");
+  stmt.execute();
+  stmt.finalize();
+  ensureNumRows(0);
+}
+
+/**
+ * Ensures that the number of rows in our test table is equal to aNumRows.
+ * Calls do_check_eq on aNumRows and the value retrieved by SELECT'ing COUNT(*).
+ *
+ * @param aNumRows
+ *        the number of rows our test table should contain
+ */
+function ensureNumRows(aNumRows)
+{
+  var stmt = createStatement("SELECT COUNT(*) AS number FROM test");
+  do_check_true(stmt.step());
+  do_check_eq(aNumRows, stmt.row.number);
+  stmt.reset();
+  stmt.finalize();
+}
+
+/**
+ * Inserts aVal into our test table and checks that insertion was successful by
+ * retrieving the newly inserted value from the database and comparing it
+ * against aVal.  aVal is bound to a single parameter.
+ *
+ * @param aVal
+ *        value to insert into our test table and check
+ */
+function insertAndCheckSingleParam(aVal)
+{
+  clearTable();
+
+  var stmt = createStatement("INSERT INTO test (val) VALUES (:val)");
+  stmt.params.val = aVal;
   stmt.execute();
   stmt.finalize();
 
-  stmt = createStatement("SELECT COUNT(*) AS number FROM test");
-  do_check_true(stmt.step());
-  do_check_eq(1, stmt.row.number);
-  stmt.reset();
-  stmt.finalize();
+  ensureNumRows(1);
 
-  stmt = createStatement("SELECT name FROM test WHERE id = 1");
+  stmt = createStatement("SELECT val FROM test WHERE id = 1");
   do_check_true(stmt.step());
-  do_check_eq(name, stmt.row.name);
+  checkVal(aVal, stmt.row.val);
   stmt.reset();
   stmt.finalize();
 }
 
-function test_binding_multiple_params()
+/**
+ * Inserts aVal into our test table and checks that insertion was successful by
+ * retrieving the newly inserted value from the database and comparing it
+ * against aVal.  aVal is bound to two separate parameters, both of which are
+ * checked against aVal.
+ *
+ * @param aVal
+ *        value to insert into our test table and check
+ */
+function insertAndCheckMultipleParams(aVal)
 {
-  var stmt = createStatement("INSERT INTO test (name, alt_name)" +
-                             "VALUES (:name, :name)");
-  const name = "me";
-  stmt.params.name = name;
+  clearTable();
+
+  var stmt = createStatement("INSERT INTO test (val, alt_val) " +
+                             "VALUES (:val, :val)");
+  stmt.params.val = aVal;
   stmt.execute();
   stmt.finalize();
 
-  stmt = createStatement("SELECT COUNT(*) AS number FROM test");
-  do_check_true(stmt.step());
-  do_check_eq(2, stmt.row.number);
-  stmt.reset();
-  stmt.finalize();
+  ensureNumRows(1);
 
-  stmt = createStatement("SELECT name, alt_name FROM test WHERE id = 2");
+  stmt = createStatement("SELECT val, alt_val FROM test WHERE id = 1");
   do_check_true(stmt.step());
-  do_check_eq(name, stmt.row.name);
-  do_check_eq(name, stmt.row.alt_name);
+  checkVal(aVal, stmt.row.val);
+  checkVal(aVal, stmt.row.alt_val);
   stmt.reset();
   stmt.finalize();
 }
 
-var tests = [test_binding_params, test_binding_multiple_params];
+/**
+ * A convenience function that prints out a description of aVal using
+ * aVal.toString and aVal.toSource.  Output is useful when the test fails.
+ *
+ * @param aVal
+ *        a value inserted or to be inserted into our test table
+ */
+function printValDesc(aVal)
+{
+  try
+  {
+    var toSource = aVal.toSource();
+  }
+  catch (exc)
+  {
+    toSource = "";
+  }
+  print("Testing value: toString=" + aVal +
+        (toSource ? " toSource=" + toSource : ""));
+}
 
 function run_test()
 {
   setup();
 
-  for (var i = 0; i < tests.length; i++)
-    tests[i]();
+  // Static function JSValStorageStatementBinder in
+  // storage/src/mozStorageStatementParams.h tells us that the following types
+  // and only the following types are valid as statement parameters:
+  var vals = [
+    1337,       // int
+    3.1337,     // double
+    "foo",      // string
+    true,       // boolean
+    null,       // null
+    new Date(), // Date object
+  ];
+
+  vals.forEach(function (val)
+  {
+    printValDesc(val);
+    print("Single parameter");
+    insertAndCheckSingleParam(val);
+    print("Multiple parameters");
+    insertAndCheckMultipleParams(val)
+  });
 
   cleanup();
 }
-

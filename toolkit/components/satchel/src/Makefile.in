@@ -59,20 +59,20 @@ REQUIRES =	\
 		docshell \
 		gfx \
 		thebes \
+		morkreader \
 		necko \
 		widget \
 		content \
 		locale \
 		unicharutil \
 		pref \
+		storage \
 		loginmgr \
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
+          nsStorageFormHistory.cpp \
           $(NULL)
-
-REQUIRES += storage morkreader
-CPPSRCS += nsStorageFormHistory.cpp
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../build \
@@ -81,8 +81,6 @@ LOCAL_INCLUDES = \
 EXTRA_DSO_LIBS	= gkgfx
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DMOZ_STORAGE_SATCHEL
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \

@@ -96,7 +96,6 @@ ifeq ($(TARGET_DEVICE),device)
 ifeq ($(TARGET_CPU),arm)
 CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp 
 ASFILES		= xptc_arm_ceppc.asm
-AS			= $(CYGWIN_WRAPPER) arm-wince-as
 ASFLAGS		+= -I ../../../public
 AS_DASH_C_FLAG = 
 endif
@@ -105,7 +104,6 @@ endif
 ifeq ($(TARGET_DEVICE),emulator)
 CPPSRCS 	= xptcinvoke.cpp xptcstubs.cpp 
 ASFILES		= 
-AS		= $(CYGWIN_WRAPPER) arm-wince-as
 ASFLAGS		+= -I ../../../public
 AS_DASH_C_FLAG	= 
 endif

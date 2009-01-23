@@ -44,7 +44,7 @@
  * @note - When adding a new role, be sure to also add it to nsRoleMap.h for
  *         each platform.
  */
-[scriptable, uuid(8c0f68f8-164a-4078-a9ee-36a7d180f0e4)]
+[scriptable, uuid(6793ca5c-c7cb-41db-9fb9-c16c0525f962)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -230,8 +230,8 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_ROW = 28;
 
   /**
-   * Represents a cell within a table. Is is used for html:td,
-   * role="gridcell". Also, see ROLE_TABLE.
+   * Represents a cell within a table. It is used for html:td,
+   * xul:tree cell and xul:listcell. Also, see ROLE_TABLE.
    */
   const unsigned long ROLE_CELL = 29;
 
@@ -770,9 +770,16 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_FLAT_EQUATION = 120;
   
   /**
-   * It's not role actually. This contanst is important to help ensure
+   * Represents a cell within a grid. It is used for role="gridcell". Unlike
+   * ROLE_CELL, it allows the calculation of the accessible name from subtree.
+   * Also, see ROLE_TABLE.
+   */
+  const unsigned long ROLE_GRID_CELL = 121;
+
+  /**
+   * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 121;
+  const unsigned long ROLE_LAST_ENTRY = 122;
 };
 

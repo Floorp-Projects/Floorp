@@ -59,19 +59,25 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGTextElement> text = do_QueryInterface(aContent);
-  if (!text) {
-    NS_ERROR("Can't create frame! Content is not an SVG text");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGTextFrame(aContext);
 }
 
 //----------------------------------------------------------------------
 // nsIFrame methods
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGTextFrame::Init(nsIContent* aContent,
+                     nsIFrame* aParent,
+                     nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGTextElement> text = do_QueryInterface(aContent);
+  NS_ASSERTION(text, "Content is not an SVG text");
+
+  return nsSVGTextFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 NS_IMETHODIMP
 nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,

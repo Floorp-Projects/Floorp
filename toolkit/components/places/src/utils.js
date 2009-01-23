@@ -49,6 +49,7 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 
+const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const READ_ONLY_ANNO = "placesInternal/READ_ONLY";
 const LMANNO_FEEDURI = "livemark/feedURI";
@@ -1006,12 +1007,9 @@ var PlacesUtils = {
    *
    * @param aFile
    *        nsIFile of bookmarks in JSON format to be restored.
-   * @param aExcludeItems
-   *        Array of root item ids (ie: children of the places root)
-   *        to not delete when restoring.
    */
   restoreBookmarksFromJSONFile:
-  function PU_restoreBookmarksFromJSONFile(aFile, aExcludeItems) {
+  function PU_restoreBookmarksFromJSONFile(aFile) {
     // open file stream
     var stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
@@ -1031,22 +1029,21 @@ var PlacesUtils = {
     if (jsonStr.length == 0)
       return; // empty file
 
-    this.restoreBookmarksFromJSONString(jsonStr, true, aExcludeItems);
+    this.restoreBookmarksFromJSONString(jsonStr, true);
   },
 
   /**
    * Import bookmarks from a JSON string.
+   * Note: any item annotated with "places/excludeFromBackup" won't be removed
+   *       before executing the restore.
    * 
    * @param aString
    *        JSON string of serialized bookmark data.
    * @param aReplace
    *        Boolean if true, replace existing bookmarks, else merge.
-   * @param aExcludeItems
-   *        Array of root item ids (ie: children of the places root)
-   *        to not delete when restoring.
    */
   restoreBookmarksFromJSONString:
-  function PU_restoreBookmarksFromJSONString(aString, aReplace, aExcludeItems) {
+  function PU_restoreBookmarksFromJSONString(aString, aReplace) {
     // convert string to JSON
     var nodes = this.unwrapNodes(aString, this.TYPE_X_MOZ_PLACE_CONTAINER);
 
@@ -1065,9 +1062,12 @@ var PlacesUtils = {
       nodes: nodes[0].children,
       runBatched: function restore_runBatched() {
         if (aReplace) {
-          var excludeItems = aExcludeItems || [];
+          // Get roots excluded from the backup, we will not remove them
+          // before restoring.
+          var excludeItems = this._utils.annotations
+                                 .getItemsWithAnnotation(EXCLUDE_FROM_BACKUP_ANNO, {});
           // delete existing children of the root node, excepting:
-          // 1. special folders: delete the child nodes 
+          // 1. special folders: delete the child nodes
           // 2. tags folder: untag via the tagging api
           var query = this._utils.history.getNewQuery();
           query.setFolders([this._utils.placesRootId], 1);
@@ -1530,9 +1530,16 @@ var PlacesUtils = {
   },
 
   /**
+   * backupBookmarksToFile()
+   *
    * Serializes bookmarks using JSON, and writes to the supplied file.
+   * Note: any item that should not be backed up must be annotated with
+   *       "places/excludeFromBackup".
+   *
+   * @param aFile
+   *        nsIFile where to save JSON backup.
    */
-  backupBookmarksToFile: function PU_backupBookmarksToFile(aFile, aExcludeItems) {
+  backupBookmarksToFile: function PU_backupBookmarksToFile(aFile) {
     if (aFile.exists() && !aFile.isWritable())
       return; // XXX
 
@@ -1554,6 +1561,10 @@ var PlacesUtils = {
       }
     };
 
+    // Get itemIds to be exluded from the backup
+    var excludeItems = this.annotations
+                           .getItemsWithAnnotation(EXCLUDE_FROM_BACKUP_ANNO, {});
+
     // query places root
     var options = this.history.getNewQueryOptions();
     options.expandQueries = false;
@@ -1563,7 +1574,7 @@ var PlacesUtils = {
     result.root.containerOpen = true;
     // serialize as JSON, write to stream
     this.serializeNodeAsJSONToOutputStream(result.root, streamProxy,
-                                           false, false, aExcludeItems);
+                                           false, false, excludeItems);
     result.root.containerOpen = false;
 
     // close converter and stream
@@ -1576,6 +1587,8 @@ var PlacesUtils = {
    *
    * Creates a dated backup once a day in <profile>/bookmarkbackups.
    * Stores the bookmarks using JSON.
+   * Note: any item that should not be backed up must be annotated with
+   *       "places/excludeFromBackup".
    *
    * @param int aNumberOfBackups - the maximum number of backups to keep
    *

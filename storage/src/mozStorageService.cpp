@@ -49,12 +49,13 @@
 #include "nsEmbedCID.h"
 #include "mozStoragePrivateHelpers.h"
 #include "nsIXPConnect.h"
+#include "nsIObserverService.h"
 
 #include "sqlite3.h"
 
 #include "nsIPromptService.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageService, mozIStorageService)
+NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver)
 
 mozStorageService *mozStorageService::gStorageService = nsnull;
 
@@ -93,19 +94,19 @@ mozStorageService::GetSingleton()
     return gStorageService;
 }
 
-nsIXPConnect *mozStorageService::sXPConnect = nsnull;
-
-nsIXPConnect *
+already_AddRefed<nsIXPConnect>
 mozStorageService::XPConnect()
 {
-  NS_ASSERTION(gStorageService,
-               "Can not get XPConnect without an instance of our service!");
+    NS_ASSERTION(gStorageService,
+                 "Can not get XPConnect without an instance of our service!");
 
-  if (!sXPConnect) {
-    (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
-    NS_ASSERTION(sXPConnect, "Could not get XPConnect!");
-  }
-  return sXPConnect;
+    // If we've been shutdown, sXPConnect will be null.  To prevent leaks, we do
+    // not cache the service after this point.
+    nsCOMPtr<nsIXPConnect> xpc(sXPConnect);
+    if (!xpc)
+        xpc = do_GetService(nsIXPConnect::GetCID());
+    NS_ASSERTION(xpc, "Could not get XPConnect!");
+    return xpc.forget();
 }
 
 mozStorageService::~mozStorageService()
@@ -115,13 +116,18 @@ mozStorageService::~mozStorageService()
     int rc = sqlite3_shutdown();
     if (rc != SQLITE_OK)
         NS_WARNING("sqlite3 did not shutdown cleanly.");
-    
+
     gStorageService = nsnull;
     PR_DestroyLock(mLock);
-
-    NS_IF_RELEASE(sXPConnect);
-    sXPConnect = nsnull;
 }
+
+void
+mozStorageService::Shutdown()
+{
+    NS_IF_RELEASE(sXPConnect);
+}
+
+nsIXPConnect *mozStorageService::sXPConnect = nsnull;
 
 nsresult
 mozStorageService::Init()
@@ -129,14 +135,14 @@ mozStorageService::Init()
     mLock = PR_NewLock();
     if (!mLock)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     // Disable memory allocation statistic collection, improving performance.
     // This must be done prior to a call to sqlite3_initialize to have any
     // effect.
     int rc = sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
     if (rc != SQLITE_OK)
         return ConvertResultCode(rc);
-    
+
     // Explicitly initialize sqlite3.  Although this is implicitly called by
     // various sqlite3 functions (and the sqlite3_open calls in our case),
     // the documentation suggests calling this directly.  So we do.
@@ -153,8 +159,20 @@ mozStorageService::Init()
     if (rc != SQLITE_OK)
         return ConvertResultCode(rc);
 
+    nsCOMPtr<nsIObserverService> os =
+        do_GetService("@mozilla.org/observer-service;1");
+    NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
+
+    nsresult rv = os->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // We cache XPConnect for our language helpers.
+    (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
     return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageService
 
 #ifndef NS_APP_STORAGE_50_FILE
 #define NS_APP_STORAGE_50_FILE "UStor"
@@ -289,3 +307,13 @@ mozStorageService::BackupDatabaseFile(nsIFile *aDBFile,
     return aDBFile->CopyTo(parentDir, fileName);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//// nsIObserver
+
+NS_IMETHODIMP
+mozStorageService::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
+{
+    if (strcmp(aTopic, "xpcom-shutdown") == 0)
+        Shutdown();
+    return NS_OK;
+}

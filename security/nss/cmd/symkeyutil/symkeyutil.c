@@ -1035,18 +1035,23 @@ main(int argc, char **argv)
 	    /* loop over all the slots */
 	    PK11SlotList *slotList = PK11_GetAllTokens(CKM_INVALID_MECHANISM,
 					PR_FALSE, PR_FALSE, &pwdata);
-	    PK11SlotListElement *se;
-
 	    if (slotList == NULL) {
 	        PR_fprintf(PR_STDERR, "%s: No tokens found\n",progName);
-	    }
-	    for (se = PK11_GetFirstSafe(slotList); se; 
-				se=PK11_GetNextSafe(slotList,se, PR_FALSE)) {
-	        rv = ListKeys(se->slot,&printLabel,&pwdata);
-	        if (rv !=SECSuccess) {
-		    break;
-		}
-	    }
+	    } else {
+                PK11SlotListElement *se;
+                for (se = PK11_GetFirstSafe(slotList); se; 
+                                    se=PK11_GetNextSafe(slotList,se, PR_FALSE)) {
+                    rv = ListKeys(se->slot,&printLabel,&pwdata);
+                    if (rv !=SECSuccess) {
+                        break;
+                    }
+                }
+                if (se) {
+                    SECStatus rv2 = PK11_FreeSlotListElement(slotList, se);
+                    PORT_Assert(SECSuccess == rv2);
+                }
+                PK11_FreeSlotList(slotList);
+            }
 	}
     }
 

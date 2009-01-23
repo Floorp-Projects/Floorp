@@ -51,6 +51,8 @@ _TEST_FILES = \
   test_errorPropagation.html \
   errorPropagation_worker1.js \
   errorPropagation_worker2.js \
+  test_functionHandlers.html \
+  functionHandlers_worker.js \
   test_importScripts.html \
   importScripts_worker.js \
   importScripts_worker_imported1.js \
@@ -84,6 +86,8 @@ _TEST_FILES = \
   threadErrors_worker4.js \
   test_threadTimeouts.html \
   threadTimeouts_worker.js \
+  test_throwingOnerror.html \
+  throwingOnerror_worker.js \
   test_xhr.html \
   xhr_worker.js \
   test_xhrAbort.html \

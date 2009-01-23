@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for getSimpleDuration Behavior </title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="20" cy="20" r="15" fill="blue">
+    <animate attributeName="cx" attributeType="XML" 
+      from="20" to="100" begin="1s" id="anim"/>
+  </circle>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for getSimpleDuration Behavior  **/
+
+/* Global Variables */
+var svg = document.getElementById("svg");
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  var anim = document.getElementById("anim");
+
+  /* Check initial state */
+  checkForException(anim, "dur not set");
+
+  /* Check basic operation */
+  anim.setAttribute("dur", "1s");
+  is(anim.getSimpleDuration(), 1);
+  anim.setAttribute("dur", "1.5s");
+  is(anim.getSimpleDuration(), 1.5);
+
+  /* Check exceptional states */
+  anim.setAttribute("dur", "0s");
+  checkForException(anim, "dur=0s");
+  anim.setAttribute("dur", "-1s");
+  checkForException(anim, "dur=-1s");
+  anim.setAttribute("dur", "indefinite");
+  checkForException(anim, "dur=indefinite");
+  anim.setAttribute("dur", "media");
+  checkForException(anim, "dur=media");
+  anim.setAttribute("dur", "abc");
+  checkForException(anim, "dur=abc");
+  anim.removeAttribute("dur");
+  checkForException(anim, "dur not set");
+
+  /* Check range/syntax */
+  anim.setAttribute("dur", "100ms");
+  millisecondCompare(anim.getSimpleDuration(), 0.1);
+  anim.setAttribute("dur", "24h");
+  is(anim.getSimpleDuration(), 60 * 60 * 24);
+
+  SimpleTest.finish();
+}
+
+function millisecondCompare(a, b) {
+  is(Math.round(a * 1000), Math.round(b * 1000));
+}
+
+function checkForException(anim, descr) {
+  var gotException = false;
+  try {
+    var dur = anim.getSimpleDuration();
+  } catch(e) {
+    is (e.code, DOMException.NOT_SUPPORTED_ERR,
+        "Wrong exception from getSimpleDuration");
+    gotException = true;
+  }
+  ok(gotException,
+     "Exception not thrown for indefinite simple duration when " + descr);
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.47 $ $Date: 2007/11/16 05:29:27 $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.48 $ $Date: 2008/11/19 16:08:05 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -833,6 +833,9 @@ add_cert_to_cache (
 	    goto loser;
 	}
 #endif
+    } else {
+    	/* A new subject entry was not created.  arena is unused. */
+	nssArena_Destroy(arena);
     }
     rvCert = cert;
     PZ_Unlock(td->cache->lock);

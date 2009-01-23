@@ -1,3 +1,32 @@
+libtheora 1.0 (2008 November 3)
+
+ - Merge x86 assembly for forward DCT from Thusnelda branch.
+ - Update 32 bit MMX with loop filter fix.
+ - Check for an uninitialized state before dereferencing in propagating
+   decode calls.
+ - Remove all TH_DEBUG statements.
+ - Rename the bitpacker source files copied from libogg to avoid
+   confusing simple build systems using both libraries.
+ - Declare bitfield entries to be explicitly signed for Solaris cc.
+ - Set quantization parameters to default values when an empty buffer is
+   passed with TH_ENCCTL_SET_QUANT_PARAMS.
+ - Split encoder and decoder tests depending on configure settings.
+ - Return lstylex.sty to the distribution.
+ - Disable inline assembly on gcc versions prior to 3.1.
+ - Remove extern references for OC_*_QUANT_MIN.
+ - Make various data tables static const so they can be read-only.
+ - Remove ENCCTL codes from the old encoder API.
+ - Implement TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE ctl.
+ - Fix segfault when exactly one of the width or height is not a multiple
+   of 16, but the other is.
+ - Compute the correct vertical offset for chroma.
+ - cpuid assembly fix for MSVC.
+ - Add VS2008 project files.
+ - Build updates for 64-bit platforms, Mingw32, VS and XCode.
+ - Do not clobber the cropping rectangle.
+ - Declare ourselves 1.0final to pkg-config to sort after beta releases.
+ - Fix the scons build to include asm in libtheoradec/enc.
+
 libtheora 1.0beta3 (2008 April 16)
 
  - Build new libtheoradec and libtheoraenc libraries
@@ -5,12 +34,12 @@ libtheora 1.0beta3 (2008 April 16)
    not be considered stable yet.
  - Change granule_frame() to return an index as documented.
    This is a change of behaviour from 1.0beta1.
- - Document that granule_time() returns the end of the 
-   presentation interval. 
+ - Document that granule_time() returns the end of the
+   presentation interval.
  - Use a custom copy of the libogg bitpacker in the decoder
    to avoid function call overhead.
  - MMX code improved and ported to MSVC.
- - Fix a problem with the MMX code on SELinux 
+ - Fix a problem with the MMX code on SELinux.
  - Fix a problem with decoder quantizer initialization.
  - Fix a page queue problem with png2theora.
  - Improved robustness.

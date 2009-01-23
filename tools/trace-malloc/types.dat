@@ -582,7 +582,7 @@ PR_Malloc
 nsVoidArray::SizeTo(int)
 nsVoidArray::GrowArrayBy(int)
 nsVoidArray::InsertElementAt(void *, int)
-nsCStringArray::InsertCStringAt(nsCString const &, int)
+nsTArray<nsCString>::InsertElementAt(int, nsCString const &)
 nsFontMetricsGTK::QueryInterface(nsID const &, void **)
 
 <nsFontMetricsGTK>
@@ -2466,7 +2466,7 @@ PR_Malloc
 nsVoidArray::SizeTo(int)
 nsVoidArray::GrowArrayBy(int)
 nsVoidArray::InsertElementAt(void *, int)
-nsCStringArray::InsertCStringAt(nsCString const &, int)
+nsTArray<nsCString>::InsertElementAt(int, nsCString const &)
 nsMIMEInfoImpl::SetFileExtensions(char const *)
 nsExternalHelperAppService::AddDefaultMimeTypesToCache(void)
  
@@ -3631,7 +3631,7 @@ nsStr::GrowCapacity(nsStr &, unsigned int)
 nsStr::StrAppend(nsStr &, nsStr const &, unsigned int, int)
 nsStr::StrAssign(nsStr &, nsStr const &, unsigned int, int)
 nsCString::nsCString(nsCString const &)
-nsCStringArray::InsertCStringAt(nsCString const &, int)
+nsTArray<nsCString>::InsertElementAt(int, nsCString const &)
 nsPrefBranch::AddObserver(char const *, nsIObserver *)
 
 #----------------------------------------------------------------------
@@ -5822,7 +5822,7 @@ PR_Malloc
 nsVoidArray::SizeTo(int)
 nsVoidArray::GrowArrayBy(int)
 nsVoidArray::InsertElementAt(void *, int)
-nsCStringArray::InsertCStringAt(nsCString const &, int)
+nsTArray<nsCString>::InsertElementAt(int, nsCString const &)
 nsXMLMIMEDataSource::AddMapping(char const *, char const *, char const *, nsIURI *, unsigned int, unsigned int)
 
 <nsXMLMIMEDataSource>

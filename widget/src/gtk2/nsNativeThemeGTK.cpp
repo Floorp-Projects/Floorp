@@ -59,6 +59,7 @@
 #include "nsIMenuFrame.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
 #include "nsWidgetAtoms.h"
 
 #include <gdk/gdkprivate.h>
@@ -212,10 +213,20 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         } else {
           if (aWidgetFlags) {
             nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
+            *aWidgetFlags = 0;
             if (inputElt) {
               PRBool isHTMLChecked;
               inputElt->GetChecked(&isHTMLChecked);
-              *aWidgetFlags = isHTMLChecked;
+              if (isHTMLChecked)
+                *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
+            }
+
+            nsCOMPtr<nsIDOMNSHTMLInputElement> inputEltNS(do_QueryInterface(content));
+            if (inputEltNS) {
+              PRBool isIndeterminate;
+              inputEltNS->GetIndeterminate(&isIndeterminate);
+              if (isIndeterminate)
+                *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
             }
           }
         }
@@ -234,7 +245,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->canDefault = FALSE; // XXX fix me
       aState->depressed = FALSE;
 
-      if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
+      if (aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
         // For these widget types, some element (either a child or parent)
         // actually has element focus, so we check the focused attribute
         // to see whether to draw in the focused state.

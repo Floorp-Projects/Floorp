@@ -278,8 +278,8 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
   CopyUTF16toUTF8(aFilter, filter);
   CopyUTF16toUTF8(aTitle, name);
 
-  mFilters.AppendCString(filter);
-  mFilterNames.AppendCString(name);
+  mFilters.AppendElement(filter);
+  mFilterNames.AppendElement(name);
 
   return NS_OK;
 }
@@ -484,12 +484,12 @@ nsFilePicker::Show(PRInt16 *aReturn)
 
   gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
 
-  PRInt32 count = mFilters.Count();
+  PRInt32 count = mFilters.Length();
   for (PRInt32 i = 0; i < count; ++i) {
     // This is fun... the GTK file picker does not accept a list of filters
     // so we need to split out each string, and add it manually.
 
-    char **patterns = g_strsplit(mFilters[i]->get(), ";", -1);
+    char **patterns = g_strsplit(mFilters[i].get(), ";", -1);
     if (!patterns) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -502,13 +502,13 @@ nsFilePicker::Show(PRInt16 *aReturn)
 
     g_strfreev(patterns);
 
-    if (!mFilterNames[i]->IsEmpty()) {
+    if (!mFilterNames[i].IsEmpty()) {
       // If we have a name for our filter, let's use that.
-      const char *filter_name = mFilterNames[i]->get();
+      const char *filter_name = mFilterNames[i].get();
       gtk_file_filter_set_name(filter, filter_name);
     } else {
       // If we don't have a name, let's just use the filter pattern.
-      const char *filter_pattern = mFilters[i]->get();
+      const char *filter_pattern = mFilters[i].get();
       gtk_file_filter_set_name(filter, filter_pattern);
     }
 
