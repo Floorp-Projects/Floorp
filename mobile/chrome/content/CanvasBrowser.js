@@ -145,25 +145,19 @@ CanvasBrowser.prototype = {
       }
     }
 
-    if (!oldBounds) {
-      // no old bounds means we resized the viewport, so redraw everything
-      this._screenX = bounds.x;
-      this._screenY = bounds.y;
-      this._pageX = pageBounds.x;
-      this._pageY = pageBounds.y;
-
-      this._redrawRect(pageBounds.x, pageBounds.y,
-                       pageBounds.width, pageBounds.height);
-      return;
-    }
-
     let dx = this._screenX - bounds.x;
     let dy = this._screenY - bounds.y;
-
     this._screenX = bounds.x;
     this._screenY = bounds.y;
     this._pageX = pageBounds.x;
     this._pageY = pageBounds.y;
+    
+    if (!oldBounds) {
+      // no old bounds means we resized the viewport, so redraw everything
+      this._redrawRect(pageBounds.x, pageBounds.y,
+                       pageBounds.width, pageBounds.height);
+      return;
+    }
 
     //dump("viewportHandler: " + bounds.toSource() + " " + oldBounds.toSource() + "\n");
 
@@ -281,8 +275,8 @@ CanvasBrowser.prototype = {
 
     // check to see if the input coordinates are inside the visible destination
     let [canvasW, canvasH] = this._effectiveCanvasDimensions;
-    let r2 = { x : this._pageX,
-               y : this._pageY,
+    let r2 = { x : Math.max(this._pageX,0),
+               y : Math.max(this._pageY,0),
                width : canvasW,
                height: canvasH };
 
