@@ -1967,6 +1967,7 @@ case "$target" in
     LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
     LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6_s.lib $MOZ_TOOLS_DIR/lib/glib-1.2_s.lib"
     STATIC_LIBIDL=1
+    MOZ_TREE_FREETYPE=1
 
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -5761,6 +5762,30 @@ if test -n "$MOZ_SMIL"; then
 fi
 
 dnl ========================================================
+dnl Build Freetype in the tree
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(tree-freetype,
+[  --enable-tree-freetype         Enable Tree FreeType],
+    MOZ_TREE_FREETYPE=1,
+    MOZ_TREE_FREETYPE= )
+if test -n "$MOZ_TREE_FREETYPE"; then
+   AC_DEFINE(MOZ_TREE_FREETYPE)
+   AC_SUBST(MOZ_TREE_FREETYPE)
+   MOZ_ENABLE_CAIRO_FT=1       
+   FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+   FC_FONT_FEATURE="#define CAIRO_DISABLE_FONTCONFIG 1"
+   FT2_CFLAGS="-I${topsrcdir}/modules/freetype2/include"
+   CAIRO_FT_CFLAGS="-I${topsrcdir}/modules/freetype2/include"
+   FT2_LIBS="${LIBXUL_DIST}/lib/freetype2.lib"
+   CAIRO_FT_LIBS = "${LIBXUL_DIST}/lib/freetype2.lib"
+   AC_DEFINE(HAVE_FT_BITMAP_SIZE_Y_PPEM)
+   AC_DEFINE(HAVE_FT_GLYPHSLOT_EMBOLDEN)
+   AC_DEFINE(HAVE_FT_LOAD_SFNT_TABLE)
+   AC_SUBST(CAIRO_FT_CFLAGS)
+fi
+
+
+dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
@@ -7402,7 +7427,11 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
-        WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+        if test -z "$WINCE"; then
+           WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+        else
+           WIN32_FONT_FEATURE=
+        fi  
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
@@ -7443,6 +7472,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(BEOS_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
     AC_SUBST(FT_FONT_FEATURE)
+    AC_SUBST(FC_FONT_FEATURE)
     AC_SUBST(WIN32_FONT_FEATURE)
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
