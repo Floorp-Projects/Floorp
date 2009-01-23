@@ -84,7 +84,7 @@ mozSpellChecker::SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofD
 
 
 NS_IMETHODIMP 
-mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestions)
+mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSuggestions)
 {
   if(!aSuggestions||!mConverter)
     return NS_ERROR_NULL_POINTER;
@@ -128,7 +128,7 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestion
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions)
+mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArray<nsString> *aSuggestions)
 {
   nsresult result;
   PRBool correct;
@@ -152,7 +152,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStri
       result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
       NS_ENSURE_SUCCESS(result, result); 
       for(i=0;i<count;i++){
-        aSuggestions->AppendString(nsDependentString(words[i]));
+        aSuggestions->AppendElement(nsDependentString(words[i]));
       }
       
       if (count)
@@ -287,7 +287,7 @@ mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::GetPersonalDictionary(nsStringArray *aWordList)
+mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
 {
   if(!aWordList || !mPersonalDictionary)
     return NS_ERROR_NULL_POINTER;
@@ -299,14 +299,14 @@ mozSpellChecker::GetPersonalDictionary(nsStringArray *aWordList)
   nsAutoString word;
   while (NS_SUCCEEDED(words->HasMore(&hasMore)) && hasMore) {
     words->GetNext(word);
-    aWordList->AppendString(word);
+    aWordList->AppendElement(word);
   }
   return NS_OK;
 }
 
 struct AppendNewStruct
 {
-  nsStringArray *dictionaryList;
+  nsTArray<nsString> *dictionaryList;
   PRBool failed;
 };
 
@@ -315,7 +315,7 @@ AppendNewString(const nsAString& aString, nsCString*, void* aClosure)
 {
   AppendNewStruct *ans = (AppendNewStruct*) aClosure;
 
-  if (!ans->dictionaryList->AppendString(aString))
+  if (!ans->dictionaryList->AppendElement(aString))
   {
     ans->failed = PR_TRUE;
     return PL_DHASH_STOP;
@@ -325,7 +325,7 @@ AppendNewString(const nsAString& aString, nsCString*, void* aClosure)
 }
 
 NS_IMETHODIMP 
-mozSpellChecker::GetDictionaryList(nsStringArray *aDictionaryList)
+mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
 {
   AppendNewStruct ans = {aDictionaryList, PR_FALSE};
 
@@ -473,7 +473,7 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
   nsresult rv;
   PRBool hasMoreEngines;
   PRInt32 i;
-  nsCStringArray contractIds;
+  nsTArray<nsCString> contractIds;
 
   nsCOMPtr<nsICategoryManager> catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   if (!catMgr)
@@ -500,28 +500,28 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
     if (NS_FAILED(rv))
       return rv;
 
-    contractIds.AppendCString(contractId);
+    contractIds.AppendElement(contractId);
   }
 
-  contractIds.AppendCString(NS_LITERAL_CSTRING(DEFAULT_SPELL_CHECKER));
+  contractIds.AppendElement(NS_LITERAL_CSTRING(DEFAULT_SPELL_CHECKER));
 
   // Retrieve dictionaries from all available spellcheckers and
   // fill mDictionariesMap hash (only the first dictionary with the
   // each name is used).
-  for (i=0;i<contractIds.Count();i++){
+  for (i=0;i < PRInt32(contractIds.Length());i++){
     PRUint32 count,k;
     PRUnichar **words;
 
-    nsCString *contractId = contractIds[i];
+    const nsCString& contractId = contractIds[i];
 
     // Try to load spellchecker engine. Ignore errors silently
     // except for the last one (HunSpell).
     nsCOMPtr<mozISpellCheckingEngine> engine =
-      do_GetService(contractId->get(), &rv);
+      do_GetService(contractId.get(), &rv);
     if (NS_FAILED(rv)){
       // Fail if not succeeded to load HunSpell. Ignore errors
       // for external spellcheck engines.
-      if (i==contractIds.Count()-1){
+      if (i==contractIds.Length()-1){
         return rv;
       }
 
@@ -541,7 +541,7 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
       if (mDictionariesMap.Get(dictName, NULL))
         continue;
 
-      mDictionariesMap.Put(dictName, new nsCString(*contractId));
+      mDictionariesMap.Put(dictName, new nsCString(contractId));
     }
 
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);

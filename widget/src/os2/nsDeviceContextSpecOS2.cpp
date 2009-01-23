@@ -43,6 +43,7 @@
 
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
+#include "nsTArray.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -82,21 +83,21 @@ public:
 
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
   PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
-  nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
+  nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName);
 
 protected:
   GlobalPrinters() {}
 
   static GlobalPrinters mGlobalPrinters;
-  static nsStringArray* mGlobalPrinterList;
+  static nsTArray<nsString>* mGlobalPrinterList;
   static ULONG          mGlobalNumPrinters;
 
 };
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
+nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nsnull;
 ULONG          GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
@@ -575,7 +576,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **a
   }
 
   ULONG numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsStringArray *printers = new nsStringArray(numPrinters);
+  nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
   if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -584,7 +585,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **a
   ULONG count = 0;
   while( count < numPrinters )
   {
-    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
+    printers->AppendElement(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
@@ -654,7 +655,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (!mGlobalNumPrinters) 
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
 
-  mGlobalPrinterList = new nsStringArray();
+  mGlobalPrinterList = new nsTArray<nsString>();
   if (!mGlobalPrinterList) 
      return NS_ERROR_OUT_OF_MEMORY;
 
@@ -670,7 +671,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     PRInt32 printerNameLength;
     rv = MultiByteToWideChar(0, printer, strlen(printer),
                              printerName, printerNameLength);
-    mGlobalPrinterList->AppendString(nsDependentString(printerName.Elements()));
+    mGlobalPrinterList->AppendElement(nsDependentString(printerName.Elements()));
 
     // store printer description in prefs for the print dialog
     if (!prefFailed) {

@@ -55,6 +55,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsARIAMap.h"
 
@@ -88,11 +89,11 @@ public:
   NS_DECL_NSIDOMDOMSTRINGLIST
 
   PRBool Add(const nsAString& aName) {
-    return mNames.AppendString(aName);
+    return mNames.AppendElement(aName) != nsnull;
   }
 
 private:
-  nsStringArray mNames;
+  nsTArray<nsString> mNames;
 };
 
 

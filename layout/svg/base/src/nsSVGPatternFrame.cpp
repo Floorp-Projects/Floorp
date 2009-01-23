@@ -113,6 +113,19 @@ nsSVGPatternFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                                  aAttribute, aModType);
 }
 
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGPatternFrame::Init(nsIContent* aContent,
+                        nsIFrame* aParent,
+                        nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGPatternElement> patternElement = do_QueryInterface(aContent);
+  NS_ASSERTION(patternElement, "Content is not an SVG pattern");
+
+  return nsSVGPatternFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
+
 nsIAtom*
 nsSVGPatternFrame::GetType() const
 {
@@ -431,7 +444,8 @@ nsSVGPatternFrame::GetReferencedPattern()
   if (!property) {
     // Fetch our pattern element's xlink:href attribute
     nsSVGPatternElement *pattern = static_cast<nsSVGPatternElement *>(mContent);
-    const nsString &href = pattern->mStringAttributes[nsSVGPatternElement::HREF].GetAnimValue();
+    nsAutoString href;
+    pattern->mStringAttributes[nsSVGPatternElement::HREF].GetAnimValue(href, pattern);
     if (href.IsEmpty()) {
       mNoHRefURI = PR_TRUE;
       return nsnull; // no URL
@@ -742,15 +756,8 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
 // -------------------------------------------------------------------------
 
 nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
-                                nsIContent*     aContent,
                                 nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGPatternElement> patternElement = do_QueryInterface(aContent);
-  if (!patternElement) {
-    NS_ERROR("Can't create frame! Content is not an SVG pattern");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGPatternFrame(aContext);
 }
 

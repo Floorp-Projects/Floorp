@@ -37,7 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* $Id: alg2268.c,v 1.7 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
+/* $Id: alg2268.c,v 1.8 2008/11/18 19:48:21 rrelyea%redhat.com Exp $ */
+
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
 
 #include "blapi.h"
 #include "secerr.h"

@@ -129,7 +129,7 @@ pkix_pl_lifecycle_ObjectLeakCheck(int *initObjCountTable)
                 className = entry->description;
                 if (!className) {
                     className = classNameBuff;
-                    sprintf(className, "Unknown(ref %d)", 
+                    PR_snprintf(className, 128, "Unknown(ref %d)", 
                             entry->objCounter);
                 }
 
@@ -233,11 +233,10 @@ PKIX_PL_Initialize(
         pkix_PolicyCheckerState_RegisterSelf(plContext);
 
         pkix_pl_CollectionCertStoreContext_RegisterSelf(plContext); /* 41-50 */
-        pkix_DefaultCRLCheckerState_RegisterSelf(plContext);
+        pkix_CrlChecker_RegisterSelf(plContext);
         pkix_ForwardBuilderState_RegisterSelf(plContext);
         pkix_SignatureCheckerState_RegisterSelf(plContext);
         pkix_NameConstraintsCheckerState_RegisterSelf(plContext);
-        pkix_DefaultRevocationChecker_RegisterSelf(plContext);
         pkix_pl_LdapRequest_RegisterSelf(plContext);
         pkix_pl_LdapResponse_RegisterSelf(plContext);
         pkix_pl_LdapDefaultClient_RegisterSelf(plContext);
@@ -253,7 +252,7 @@ PKIX_PL_Initialize(
         pkix_pl_OcspResponse_RegisterSelf(plContext);
         pkix_pl_HttpDefaultClient_RegisterSelf(plContext);
         pkix_VerifyNode_RegisterSelf(plContext);
-        pkix_pl_EkuChecker_RegisterSelf(plContext);
+        pkix_EkuChecker_RegisterSelf(plContext);
 
         if (pPlContext) {
             PKIX_CHECK(PKIX_PL_NssContext_Create

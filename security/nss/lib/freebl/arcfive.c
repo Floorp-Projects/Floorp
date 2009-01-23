@@ -36,7 +36,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: arcfive.c,v 1.5 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: arcfive.c,v 1.6 2008/11/18 19:48:21 rrelyea%redhat.com Exp $ */
+
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
 
 #include "blapi.h"
 #include "prerror.h"

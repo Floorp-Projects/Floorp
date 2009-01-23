@@ -226,7 +226,10 @@ endif
 	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
 	$(RM) -r l10n-stage/localized
 	$(RM) l10n-stage/setup.exe
+# copy xpi-stage over, but not install.rdf and chrome.manifest,
+# those are just for language packs
 	cp -r $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
+	$(RM) l10n-stage/localized/install.rdf l10n-stage/localized/chrome.manifest
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	cp ../installer/windows/l10ngen/setup.exe l10n-stage
 	$(NSINSTALL) -D l10n-stage/localized/uninstall
@@ -291,8 +294,10 @@ ifeq (WINNT,$(OS_ARCH))
 	$(NSINSTALL) -D $(STAGEDIST)/uninstall
 	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
 endif
+# copy xpi-stage over, but not install.rdf and chrome.manifest,
+# those are just for language packs
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
+	  tar --exclude=install.rdf --exclude=chrome.manifest $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
 ifneq (en,$(AB))
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj

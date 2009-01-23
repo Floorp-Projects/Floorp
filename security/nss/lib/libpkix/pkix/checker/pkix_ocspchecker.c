@@ -47,6 +47,14 @@
 #include "pkix_error.h"
 
 
+/* --Private-Data-and-Types--------------------------------------- */
+
+typedef struct pkix_OcspCheckerStruct {
+    /* RevocationMethod is the super class of OcspChecker. */
+    pkix_RevocationMethod method;
+    PKIX_PL_VerifyCallback certVerifyFcn;
+} pkix_OcspChecker;
+
 /* --Private-Functions-------------------------------------------- */
 
 /*
@@ -58,30 +66,7 @@ pkix_OcspChecker_Destroy(
         PKIX_PL_Object *object,
         void *plContext)
 {
-        PKIX_OcspChecker *checker = NULL;
-
-        PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_Destroy");
-        PKIX_NULLCHECK_ONE(object);
-
-        /* Check that this object is a ocsp checker */
-        PKIX_CHECK(pkix_CheckType
-                    (object, PKIX_OCSPCHECKER_TYPE, plContext),
-                    PKIX_OBJECTNOTOCSPCHECKER);
-
-        checker = (PKIX_OcspChecker *)object;
-
-	PKIX_DECREF(checker->response);
-        PKIX_DECREF(checker->validityTime);
-        PKIX_DECREF(checker->cert);
-
-        /* These are not yet ref-counted objects */
-        /* PKIX_DECREF(checker->passwordInfo); */
-        /* PKIX_DECREF(checker->responder); */
-        /* PKIX_DECREF(checker->nbioContext); */
-
-cleanup:
-
-        PKIX_RETURN(OCSPCHECKER);
+    return NULL;
 }
 
 /*
@@ -100,21 +85,56 @@ PKIX_Error *
 pkix_OcspChecker_RegisterSelf(void *plContext)
 {
         extern pkix_ClassTable_Entry systemClasses[PKIX_NUMTYPES];
-        pkix_ClassTable_Entry entry;
+        pkix_ClassTable_Entry* entry = &systemClasses[PKIX_OCSPCHECKER_TYPE];
 
         PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_RegisterSelf");
 
-        entry.description = "OcspChecker";
-        entry.objCounter = 0;
-        entry.typeObjectSize = sizeof(PKIX_OcspChecker);
-        entry.destructor = pkix_OcspChecker_Destroy;
-        entry.equalsFunction = NULL;
-        entry.hashcodeFunction = NULL;
-        entry.toStringFunction = NULL;
-        entry.comparator = NULL;
-        entry.duplicateFunction = NULL;
+        entry->description = "OcspChecker";
+        entry->typeObjectSize = sizeof(pkix_OcspChecker);
+        entry->destructor = pkix_OcspChecker_Destroy;
 
-        systemClasses[PKIX_OCSPCHECKER_TYPE] = entry;
+        PKIX_RETURN(OCSPCHECKER);
+}
+
+
+/*
+ * FUNCTION: pkix_OcspChecker_Create
+ */
+PKIX_Error *
+pkix_OcspChecker_Create(PKIX_RevocationMethodType methodType,
+                        PKIX_UInt32 flags,
+                        PKIX_UInt32 priority,
+                        pkix_LocalRevocationCheckFn localRevChecker,
+                        pkix_ExternalRevocationCheckFn externalRevChecker,
+                        PKIX_PL_VerifyCallback verifyFn,
+                        pkix_RevocationMethod **pChecker,
+                        void *plContext)
+{
+        pkix_OcspChecker *method = NULL;
+
+        PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_Create");
+        PKIX_NULLCHECK_ONE(pChecker);
+
+        PKIX_CHECK(PKIX_PL_Object_Alloc
+                    (PKIX_OCSPCHECKER_TYPE,
+                    sizeof (pkix_OcspChecker),
+                    (PKIX_PL_Object **)&method,
+                    plContext),
+                    PKIX_COULDNOTCREATECERTCHAINCHECKEROBJECT);
+
+        pkixErrorResult = pkix_RevocationMethod_Init(
+            (pkix_RevocationMethod*)method, methodType, flags,  priority,
+            localRevChecker, externalRevChecker, plContext);
+        if (pkixErrorResult) {
+            goto cleanup;
+        }
+        method->certVerifyFcn = (PKIX_PL_VerifyCallback)verifyFn;
+
+        *pChecker = (pkix_RevocationMethod*)method;
+        method = NULL;
+
+cleanup:
+        PKIX_DECREF(method);
 
         PKIX_RETURN(OCSPCHECKER);
 }
@@ -137,156 +157,185 @@ pkix_OcspChecker_RegisterSelf(void *plContext)
  * caller.
  *
  */
-static PKIX_Error *
-pkix_OcspChecker_Check(
-        PKIX_PL_Object *checkerObject,
+PKIX_Error *
+pkix_OcspChecker_CheckLocal(
         PKIX_PL_Cert *cert,
+        PKIX_PL_Cert *issuer,
+        PKIX_PL_Date *date,
+        pkix_RevocationMethod *checkerObject,
         PKIX_ProcessingParams *procParams,
+        PKIX_UInt32 methodFlags,
+        PKIX_RevocationStatus *pRevStatus,
+        PKIX_UInt32 *pReasonCode,
+        void *plContext)
+{
+        PKIX_PL_OcspCertID    *cid = NULL;
+        PKIX_Boolean           hasFreshStatus = PKIX_FALSE;
+        PKIX_Boolean           statusIsGood = PKIX_FALSE;
+        SECErrorCodes          resultCode = SEC_ERROR_REVOKED_CERTIFICATE_OCSP;
+        PKIX_RevocationStatus  revStatus = PKIX_RevStatus_NoInfo;
+
+        PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_CheckLocal");
+
+        PKIX_CHECK(
+            PKIX_PL_OcspCertID_Create(cert, NULL, &cid,
+                                      plContext),
+            PKIX_OCSPCERTIDCREATEFAILED);
+        if (!cid) {
+            goto cleanup;
+        }
+
+        PKIX_CHECK(
+            PKIX_PL_OcspCertID_GetFreshCacheStatus(cid, NULL,
+                                                   &hasFreshStatus,
+                                                   &statusIsGood,
+                                                   &resultCode,
+                                                   plContext),
+            PKIX_OCSPCERTIDGETFRESHCACHESTATUSFAILED);
+        if (hasFreshStatus) {
+            if (statusIsGood) {
+                revStatus = PKIX_RevStatus_Success;
+                resultCode = 0;
+            } else {
+                revStatus = PKIX_RevStatus_Revoked;
+            }
+        }
+
+cleanup:
+        *pRevStatus = revStatus;
+        PKIX_DECREF(cid);
+
+        PKIX_RETURN(OCSPCHECKER);
+}
+
+
+/*
+ * The OCSPChecker is created in an idle state, and remains in this state until
+ * either (a) the default Responder has been set and enabled, and a Check
+ * request is received with no responder specified, or (b) a Check request is
+ * received with a specified responder. A request message is constructed and
+ * given to the HttpClient. If non-blocking I/O is used the client may return
+ * with WOULDBLOCK, in which case the OCSPChecker returns the WOULDBLOCK
+ * condition to its caller in turn. On a subsequent call the I/O is resumed.
+ * When a response is received it is decoded and the results provided to the
+ * caller.
+ *
+ */
+PKIX_Error *
+pkix_OcspChecker_CheckExternal(
+        PKIX_PL_Cert *cert,
+        PKIX_PL_Cert *issuer,
+        PKIX_PL_Date *date,
+        pkix_RevocationMethod *checkerObject,
+        PKIX_ProcessingParams *procParams,
+        PKIX_UInt32 methodFlags,
+        PKIX_RevocationStatus *pRevStatus,
+        PKIX_UInt32 *pReasonCode,
         void **pNBIOContext,
-        PKIX_UInt32 *pResultCode,
         void *plContext)
 {
         SECErrorCodes resultCode = SEC_ERROR_REVOKED_CERTIFICATE_OCSP;
         PKIX_Boolean uriFound = PKIX_FALSE;
-        PKIX_Boolean passed = PKIX_FALSE;
-        PKIX_OcspChecker *checker = NULL;
+        PKIX_Boolean passed = PKIX_TRUE;
+        pkix_OcspChecker *checker = NULL;
         PKIX_PL_OcspCertID *cid = NULL;
         PKIX_PL_OcspRequest *request = NULL;
+        PKIX_PL_OcspResponse *response = NULL;
         PKIX_PL_Date *validity = NULL;
+        PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
         void *nbioContext = NULL;
 
         PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_Check");
-        PKIX_NULLCHECK_FOUR(checkerObject, cert, pNBIOContext, pResultCode);
 
-        PKIX_CHECK(pkix_CheckType
-                (checkerObject, PKIX_OCSPCHECKER_TYPE, plContext),
+        PKIX_CHECK(
+            pkix_CheckType((PKIX_PL_Object*)checkerObject,
+                           PKIX_OCSPCHECKER_TYPE, plContext),
                 PKIX_OBJECTNOTOCSPCHECKER);
 
-        checker = (PKIX_OcspChecker *)checkerObject;
+        checker = (pkix_OcspChecker *)checkerObject;
 
-        nbioContext = *pNBIOContext;
-        *pNBIOContext = 0;
-
-        /* assert(checker->nbioContext == nbioContext) */
-
-        if (nbioContext == 0) {
-                /* We are initiating a check, not resuming previous I/O. */
-
-                PKIX_Boolean hasFreshStatus = PKIX_FALSE;
-                PKIX_Boolean statusIsGood = PKIX_FALSE;
-
-                PKIX_CHECK(PKIX_PL_OcspCertID_Create
-                        (cert,
-                        validity,
-                        &cid,
-                        plContext),
-                        PKIX_OCSPCERTIDCREATEFAILED);
-
-                if (!cid) {
-                        goto cleanup;
-                }
-
-                PKIX_CHECK(PKIX_PL_OcspCertID_GetFreshCacheStatus
-                        (cid, 
-                        validity, 
-                        &hasFreshStatus, 
-                        &statusIsGood,
-                        &resultCode,
-                        plContext),
-                        PKIX_OCSPCERTIDGETFRESHCACHESTATUSFAILED);
-
-                if (hasFreshStatus) {
-                        /* avoid updating the cache with a cached result... */
-                        passed = PKIX_TRUE; 
-
-                        if (statusIsGood) {
-                                resultCode = 0;
-                        }
-                        goto cleanup;
-                }
-                PKIX_INCREF(cert);
-                PKIX_DECREF(checker->cert);
-                checker->cert = cert;
-
-                /* create request */
-                PKIX_CHECK(pkix_pl_OcspRequest_Create
-                        (cert,
-                        cid,
-                        validity,
-                        NULL,           /* PKIX_PL_Cert *signerCert */
-                        &uriFound,
-                        &request,
-                        plContext),
-                        PKIX_OCSPREQUESTCREATEFAILED);
-                
-                /* No uri to check is considered passing! */
-                if (uriFound == PKIX_FALSE) {
-                        /* no caching for certs lacking URI */
-                        passed = PKIX_TRUE;
-                        resultCode = 0;
-                        goto cleanup;
-                }
-
+        PKIX_CHECK(
+            PKIX_PL_OcspCertID_Create(cert, NULL, &cid,
+                                      plContext),
+            PKIX_OCSPCERTIDCREATEFAILED);
+        
+        /* create request */
+        PKIX_CHECK(
+            pkix_pl_OcspRequest_Create(cert, cid, validity, NULL, 
+                                       methodFlags, &uriFound, &request,
+                                       plContext),
+            PKIX_OCSPREQUESTCREATEFAILED);
+        
+        if (uriFound == PKIX_FALSE) {
+            /* no caching for certs lacking URI */
+            resultCode = 0;
+            if (methodFlags & PKIX_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE) {
+                revStatus = PKIX_RevStatus_Revoked;
+            }
+            goto cleanup;
         }
 
-        /* Do we already have a response object? */
-        if ((checker->response) == NULL) {
-        	/* send request and create a response object */
-	        PKIX_CHECK(pkix_pl_OcspResponse_Create
-	                (request,
-	                checker->responder,
-	                checker->verifyFcn,
-	                &nbioContext,
-	                &(checker->response),
-	                plContext),
-	                PKIX_OCSPRESPONSECREATEFAILED);
+        /* send request and create a response object */
+        PKIX_CHECK(
+            pkix_pl_OcspResponse_Create(request, NULL,
+                                        checker->certVerifyFcn,
+                                        &nbioContext,
+                                        &response,
+                                        plContext),
+            PKIX_OCSPRESPONSECREATEFAILED);
+        if (nbioContext != 0) {
+            *pNBIOContext = nbioContext;
+            goto cleanup;
+        }
+        
+        PKIX_CHECK(
+            pkix_pl_OcspResponse_Decode(response, &passed,
+                                        &resultCode, plContext),
+            PKIX_OCSPRESPONSEDECODEFAILED);
+        if (passed == PKIX_FALSE) {
+            goto cleanup;
+        }
+        
+        PKIX_CHECK(
+            pkix_pl_OcspResponse_GetStatus(response, &passed,
+                                           &resultCode, plContext),
+            PKIX_OCSPRESPONSEGETSTATUSRETURNEDANERROR);
+        if (passed == PKIX_FALSE) {
+            goto cleanup;
+        }
 
-        	if (nbioContext != 0) {
-                	*pNBIOContext = nbioContext;
-	                goto cleanup;
-	        }
-
-	        PKIX_CHECK(pkix_pl_OcspResponse_Decode
-        	        ((checker->response), &passed, &resultCode, plContext),
-                	PKIX_OCSPRESPONSEDECODEFAILED);
-                
-	        if (passed == PKIX_FALSE) {
-        	        goto cleanup;
-	        }
-
-        	PKIX_CHECK(pkix_pl_OcspResponse_GetStatus
-                	((checker->response), &passed, &resultCode, plContext),
-	                PKIX_OCSPRESPONSEGETSTATUSRETURNEDANERROR);
-                
-        	if (passed == PKIX_FALSE) {
-                	goto cleanup;
-	        }
-	}
-
-        PKIX_CHECK(pkix_pl_OcspResponse_VerifySignature
-                ((checker->response),
-                cert,
-                procParams,
-                &passed,
-		&nbioContext,
-                plContext),
-                PKIX_OCSPRESPONSEVERIFYSIGNATUREFAILED);
-
+        PKIX_CHECK(
+            pkix_pl_OcspResponse_VerifySignature(response, cert,
+                                                 procParams, &passed, 
+                                                 &nbioContext, plContext),
+            PKIX_OCSPRESPONSEVERIFYSIGNATUREFAILED);
        	if (nbioContext != 0) {
                	*pNBIOContext = nbioContext;
                 goto cleanup;
         }
-
         if (passed == PKIX_FALSE) {
                 resultCode = PORT_GetError();
                 goto cleanup;
         }
 
-        PKIX_CHECK(pkix_pl_OcspResponse_GetStatusForCert
-                (cid, (checker->response), &passed, &resultCode, plContext),
-                PKIX_OCSPRESPONSEGETSTATUSFORCERTFAILED);
+        PKIX_CHECK(
+            pkix_pl_OcspResponse_GetStatusForCert(cid, response,
+                                                  &passed, &resultCode,
+                                                  plContext),
+            PKIX_OCSPRESPONSEGETSTATUSFORCERTFAILED);
+        if (passed == PKIX_FALSE) {
+            revStatus = PKIX_RevStatus_Revoked;
+        } else {
+            revStatus = PKIX_RevStatus_Success;
+        }
 
 cleanup:
+        if (revStatus == PKIX_RevStatus_NoInfo && uriFound &&
+            methodFlags & PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO) {
+            revStatus = PKIX_RevStatus_Revoked;
+        }
+        *pRevStatus = revStatus;
+
         if (!passed && cid && cid->certID) {
                 /* We still own the certID object, which means that 
                  * it did not get consumed to create a cache entry.
@@ -299,147 +348,9 @@ cleanup:
                         PKIX_PL_Object_DecRef((PKIX_PL_Object*)err, plContext);
                 }
         }
-
-        *pResultCode = (PKIX_UInt32)resultCode;
-
         PKIX_DECREF(cid);
         PKIX_DECREF(request);
-        if (checker) {
-            PKIX_DECREF(checker->response);
-        }
-
-        PKIX_RETURN(OCSPCHECKER);
-
-}
-
-/*
- * FUNCTION: pkix_OcspChecker_Create
- */
-PKIX_Error *
-pkix_OcspChecker_Create(
-        PKIX_PL_Date *validityTime,
-        void *passwordInfo,
-        void *responder,
-        PKIX_OcspChecker **pChecker,
-        void *plContext)
-{
-        PKIX_OcspChecker *checkerObject = NULL;
-
-        PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_Create");
-        PKIX_NULLCHECK_ONE(pChecker);
-
-        PKIX_CHECK(PKIX_PL_Object_Alloc
-                    (PKIX_OCSPCHECKER_TYPE,
-                    sizeof (PKIX_OcspChecker),
-                    (PKIX_PL_Object **)&checkerObject,
-                    plContext),
-                    PKIX_COULDNOTCREATECERTCHAINCHECKEROBJECT);
-
-        /* initialize fields */
-        checkerObject->response = NULL;
-        PKIX_INCREF(validityTime);
-        checkerObject->validityTime = validityTime;
-        checkerObject->clientIsDefault = PKIX_FALSE;
-        checkerObject->verifyFcn = NULL;
-        checkerObject->cert = NULL;
-
-        /* These void*'s will need INCREFs if they become PKIX_PL_Objects */
-        checkerObject->passwordInfo = passwordInfo;
-        checkerObject->responder = responder;
-        checkerObject->nbioContext = NULL;
-
-        *pChecker = checkerObject;
-        checkerObject = NULL;
-
-cleanup:
-
-        PKIX_DECREF(checkerObject);
-
-        PKIX_RETURN(OCSPCHECKER);
-
-}
-
-/*
- * FUNCTION: PKIX_OcspChecker_SetPasswordInfo
- *      (see comments in pkix_checker.h)
- */
-PKIX_Error *
-PKIX_OcspChecker_SetPasswordInfo(
-        PKIX_OcspChecker *checker,
-        void *passwordInfo,
-        void *plContext)
-{
-        PKIX_ENTER(OCSPCHECKER, "PKIX_OcspChecker_SetPasswordInfo");
-        PKIX_NULLCHECK_ONE(checker);
-
-        checker->passwordInfo = passwordInfo;
-
-        PKIX_RETURN(OCSPCHECKER);
-}
-
-/*
- * FUNCTION: PKIX_OcspChecker_SetOCSPResponder
- *      (see comments in pkix_checker.h)
- */
-PKIX_Error *
-PKIX_OcspChecker_SetOCSPResponder(
-        PKIX_OcspChecker *checker,
-        void *ocspResponder,
-        void *plContext)
-{
-        PKIX_ENTER(OCSPCHECKER, "PKIX_OcspChecker_SetOCSPResponder");
-        PKIX_NULLCHECK_ONE(checker);
-
-        checker->responder = ocspResponder;
-
-        PKIX_RETURN(OCSPCHECKER);
-}
-
-/*
- * FUNCTION: PKIX_OcspChecker_SetVerifyFcn
- *      (see comments in pkix_checker.h)
- */
-PKIX_Error *
-PKIX_OcspChecker_SetVerifyFcn(
-        PKIX_OcspChecker *checker,
-        PKIX_PL_OcspResponse_VerifyCallback verifyFcn,
-        void *plContext)
-{
-        PKIX_ENTER(OCSPCHECKER, "PKIX_OcspChecker_SetVerifyFcn");
-        PKIX_NULLCHECK_ONE(checker);
-
-        checker->verifyFcn = verifyFcn;
-
-        PKIX_RETURN(OCSPCHECKER);
-}
-
-PKIX_Error *
-PKIX_OcspChecker_Initialize(
-        PKIX_PL_Date *validityTime,
-        void *passwordInfo,
-        void *responder,
-        PKIX_RevocationChecker **pChecker,
-        void *plContext)
-{
-        PKIX_OcspChecker *oChecker = NULL;
-
-        PKIX_ENTER(OCSPCHECKER, "PKIX_OcspChecker_Initialize");
-        PKIX_NULLCHECK_ONE(pChecker);
-
-        PKIX_CHECK(pkix_OcspChecker_Create
-                (validityTime, passwordInfo, responder, &oChecker, plContext),
-                PKIX_OCSPCHECKERCREATEFAILED);
-
-        PKIX_CHECK(PKIX_RevocationChecker_Create
-                (pkix_OcspChecker_Check,
-                (PKIX_PL_Object *)oChecker,
-                pChecker,
-                plContext),
-                PKIX_REVOCATIONCHECKERCREATEFAILED);
-
-cleanup:
-
-        PKIX_DECREF(oChecker);
+        PKIX_DECREF(response);
 
         PKIX_RETURN(OCSPCHECKER);
 }

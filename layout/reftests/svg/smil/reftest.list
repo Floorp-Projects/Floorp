@@ -19,6 +19,9 @@ include sort/reftest.list
 # style tests
 include style/reftest.list
 
+# animateTransform tests
+include transform/reftest.list
+
 # time-dependent tests
 # XXXdholbert Disabling this class of tests for now, because most of them
 # can & should be converted so they don't depend on specific timeout values.

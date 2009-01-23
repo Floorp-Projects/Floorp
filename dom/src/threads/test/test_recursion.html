@@ -17,14 +17,22 @@ Tests of DOM Worker Threads
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+  const testCount = 2;
+
   var worker = new Worker("recursion_worker.js");
 
-  worker.onerror = function(event) {
-    is(event.message, "too much recursion");
+  worker.onmessage = function(event) {
+    is(event.data, "Done");
     SimpleTest.finish();
   }
 
-  worker.postMessage("start");
+  worker.onerror = function(event) {
+    is(event.message, "too much recursion");
+  }
+
+  for (var i = 0; i < testCount; i++) {
+    worker.postMessage("start");
+  }
 
   SimpleTest.waitForExplicitFinish();
 

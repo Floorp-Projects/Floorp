@@ -53,7 +53,6 @@
 
 nsIFrame*
 NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell,
-                           nsIContent* aContent,
                            nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGPathGeometryFrame(aContext);

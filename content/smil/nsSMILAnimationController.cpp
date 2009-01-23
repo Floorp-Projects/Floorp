@@ -64,7 +64,8 @@ const PRUint32 nsSMILAnimationController::kTimerInterval = 22;
 // ctors, dtors, factory methods
 
 nsSMILAnimationController::nsSMILAnimationController()
-  : mDocument(nsnull)
+  : mResampleNeeded(PR_FALSE),
+    mDocument(nsnull)
 {
   mAnimationElementTable.Init();
   mChildContainerTable.Init();
@@ -75,11 +76,6 @@ nsSMILAnimationController::~nsSMILAnimationController()
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
-  }
-
-  if (mForceSampleEvent) {
-    mForceSampleEvent->Expire();
-    mForceSampleEvent = nsnull;
   }
 
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
@@ -138,7 +134,7 @@ nsSMILAnimationController::Resume(PRUint32 aType)
 
   nsSMILTimeContainer::Resume(aType);
 
-  if (wasPaused && !mPauseState) {
+  if (wasPaused && !mPauseState && mChildContainerTable.Count()) {
     StartTimer();
   }
 }
@@ -168,38 +164,12 @@ nsSMILAnimationController::UnregisterAnimationElement(
 }
 
 //----------------------------------------------------------------------
-// nsSMILAnimationController methods:
-
-nsresult
-nsSMILAnimationController::OnForceSample()
-{
-  // Make sure this was a queued call
-  NS_ENSURE_TRUE(mForceSampleEvent, NS_ERROR_FAILURE);
-
-  nsresult rv = NS_OK;
-  if (!mPauseState) {
-    // Stop timer-controlled samples first, to avoid race conditions.
-    rv = StopTimer();
-    if (NS_SUCCEEDED(rv)) {
-      // StartTimer does a synchronous sample before it starts the timer.
-      // This is the sample that we're "forcing" here.
-      rv = StartTimer();
-    }
-  }
-  mForceSampleEvent = nsnull;
-  return rv;
-}
+// Resampling methods
 
 void
-nsSMILAnimationController::FireForceSampleEvent()
+nsSMILAnimationController::Resample()
 {
-  if (!mForceSampleEvent) {
-    mForceSampleEvent = new ForceSampleEvent(*this);
-    if (NS_FAILED(NS_DispatchToCurrentThread(mForceSampleEvent))) {
-      NS_WARNING("Failed to dispatch force sample event");
-      mForceSampleEvent = nsnull;
-    }
-  }
+  DoSample(PR_FALSE);
 }
 
 //----------------------------------------------------------------------
@@ -241,7 +211,6 @@ nsSMILAnimationController::CompositorTableEntryTraverse(
   aCompositor->Traverse(cb);
   return PL_DHASH_NEXT;
 }
-
 
 void
 nsSMILAnimationController::Unlink()
@@ -296,14 +265,24 @@ nsSMILAnimationController::StopTimer()
 void
 nsSMILAnimationController::DoSample()
 {
+  DoSample(PR_TRUE); // Skip unchanged time containers
+}
+
+void
+nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
+{
+  // Reset resample flag
+  mResampleNeeded = PR_FALSE;
+
   // STEP 1: Sample the child time containers
   //
   // When we sample the child time containers they will simply record the sample
   // time in document time.
   TimeContainerHashtable activeContainers;
   activeContainers.Init(mChildContainerTable.Count());
-  mChildContainerTable.EnumerateEntries(SampleTimeContainers,
-                                        &activeContainers);
+  SampleTimeContainerParams tcParams = { &activeContainers,
+                                         aSkipUnchangedContainers };
+  mChildContainerTable.EnumerateEntries(SampleTimeContainer, &tcParams);
 
   // STEP 2: (i)  Sample the timed elements AND
   //         (ii) Create a table of compositors
@@ -332,9 +311,10 @@ nsSMILAnimationController::DoSample()
     return;
   currentCompositorTable->Init(0);
 
-  SampleAnimationParams params = { &activeContainers, currentCompositorTable };
+  SampleAnimationParams saParams = { &activeContainers,
+                                     currentCompositorTable };
   nsresult rv = mAnimationElementTable.EnumerateEntries(SampleAnimation,
-                                                        &params);
+                                                        &saParams);
   if (NS_FAILED(rv)) {
     NS_WARNING("SampleAnimationParams failed");
   }
@@ -356,23 +336,25 @@ nsSMILAnimationController::DoSample()
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();
+
+  NS_ASSERTION(!mResampleNeeded, "Resample dirty flag set during sample!");
 }
 
 /*static*/ PR_CALLBACK PLDHashOperator
-nsSMILAnimationController::SampleTimeContainers(TimeContainerPtrKey* aKey,
-                                                void* aData)
+nsSMILAnimationController::SampleTimeContainer(TimeContainerPtrKey* aKey,
+                                               void* aData)
 { 
   NS_ENSURE_TRUE(aKey, PL_DHASH_NEXT);
   NS_ENSURE_TRUE(aKey->GetKey(), PL_DHASH_NEXT);
   NS_ENSURE_TRUE(aData, PL_DHASH_NEXT);
 
-  TimeContainerHashtable* activeContainers
-    = static_cast<TimeContainerHashtable*>(aData);
+  SampleTimeContainerParams* params = 
+    static_cast<SampleTimeContainerParams*>(aData);
 
   nsSMILTimeContainer* container = aKey->GetKey();
-  if (container->NeedsSample()) {
+  if (container->NeedsSample() || !params->mSkipUnchangedContainers) {
     container->Sample();
-    activeContainers->PutEntry(container);
+    params->mActiveContainers->PutEntry(container);
   }
 
   return PL_DHASH_NEXT;
@@ -410,7 +392,7 @@ nsSMILAnimationController::SampleTimedElement(
   // return false.
   //
   // Instead we build up a hashmap of active time containers during the previous
-  // step (SampleTimeContainers) and then test here if the container for this
+  // step (SampleTimeContainer) and then test here if the container for this
   // timed element is in the list.
   if (!aActiveContainers->GetEntry(timeContainer))
     return;

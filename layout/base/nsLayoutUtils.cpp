@@ -3086,3 +3086,22 @@ nsUnsetAttrRunnable::Run()
 {
   return mContent->UnsetAttr(kNameSpaceID_None, mAttrName, PR_TRUE);
 }
+
+nsReflowFrameRunnable::nsReflowFrameRunnable(nsIFrame* aFrame,
+                          nsIPresShell::IntrinsicDirty aIntrinsicDirty,
+                          nsFrameState aBitToAdd)
+  : mWeakFrame(aFrame),
+    mIntrinsicDirty(aIntrinsicDirty),
+    mBitToAdd(aBitToAdd)
+{
+}
+
+NS_IMETHODIMP
+nsReflowFrameRunnable::Run()
+{
+  if (mWeakFrame.IsAlive()) {
+    mWeakFrame->PresContext()->PresShell()->
+      FrameNeedsReflow(mWeakFrame, mIntrinsicDirty, mBitToAdd);
+  }
+  return NS_OK;
+}

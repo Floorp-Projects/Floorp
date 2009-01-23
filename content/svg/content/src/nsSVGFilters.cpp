@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
-#include "nsSVGLength.h"
 #include "nsGkAtoms.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGInteger.h"
@@ -255,7 +254,7 @@ nsSVGFE::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
 }
 
 void
-nsSVGFE::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFE::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
 }
 
@@ -289,7 +288,7 @@ NS_IMETHODIMP nsSVGFE::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 /* readonly attribute nsIDOMSVGAnimatedString result; */
 NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
 {
-  return GetResultImageName()->ToDOMAnimatedString(aResult, this);
+  return GetResultImageName().ToDOMAnimatedString(aResult, this);
 }
 
 //----------------------------------------------------------------------
@@ -326,8 +325,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo >& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -704,9 +703,9 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance* aInstance,
 }
 
 void
-nsSVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
@@ -784,8 +783,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
   // Blend
   NS_DECL_NSIDOMSVGFEBLENDELEMENT
@@ -936,10 +935,10 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance* aInstance,
 }
 
 void
-nsSVGFEBlendElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEBlendElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
-  aSources->AppendElement(&mStringAttributes[IN2]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 //----------------------------------------------------------------------
@@ -984,8 +983,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
   // Color Matrix
   NS_DECL_NSIDOMSVGFECOLORMATRIXELEMENT
@@ -1109,9 +1108,9 @@ NS_IMETHODIMP nsSVGFEColorMatrixElement::GetValues(nsIDOMSVGAnimatedNumberList *
 }
 
 void
-nsSVGFEColorMatrixElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEColorMatrixElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsresult
@@ -1308,8 +1307,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -1522,10 +1521,10 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
 }
 
 void
-nsSVGFECompositeElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFECompositeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
-  aSources->AppendElement(&mStringAttributes[IN2]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 nsIntRect
@@ -1604,8 +1603,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
   // Component Transfer
   NS_DECL_NSIDOMSVGFECOMPONENTTRANSFERELEMENT
@@ -1765,9 +1764,9 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
 }
 
 void
-nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
@@ -2185,8 +2184,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
   // Merge
   NS_DECL_NSIDOMSVGFEMERGEELEMENT
@@ -2237,7 +2236,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsSVGString* In1() { return &mStringAttributes[IN1]; }
+  const nsSVGString* In1() { return &mStringAttributes[IN1]; }
   
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
 
@@ -2292,7 +2291,7 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance,
 }
 
 void
-nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -2300,7 +2299,7 @@ nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
     nsRefPtr<nsSVGFEMergeNodeElement> node;
     CallQueryInterface(child, (nsSVGFEMergeNodeElement**)getter_AddRefs(node));
     if (node) {
-      aSources->AppendElement(node->In1());
+      aSources.AppendElement(nsSVGStringInfo(node->In1(), node));
     }
   }
 }
@@ -2391,8 +2390,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -2523,9 +2522,9 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance,
 }
 
 void
-nsSVGFEOffsetElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEOffsetElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
@@ -2592,7 +2591,7 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -2731,8 +2730,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -2797,9 +2796,9 @@ NS_IMETHODIMP nsSVGFETileElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 }
 
 void
-nsSVGFETileElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFETileElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
@@ -2915,7 +2914,7 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -3429,8 +3428,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -3556,9 +3555,9 @@ nsSVGFEMorphologyElement::SetRadius(float rx, float ry)
 }
 
 void
-nsSVGFEMorphologyElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEMorphologyElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
@@ -3750,8 +3749,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -3964,9 +3963,9 @@ nsSVGFEConvolveMatrixElement::GetKernelUnitLengthY(nsIDOMSVGAnimatedNumber **aKe
 }
 
 void
-nsSVGFEConvolveMatrixElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEConvolveMatrixElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
@@ -4525,8 +4524,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   // XXX shouldn't we have ComputeTargetBBox here, since the output can
   // extend beyond the bounds of the inputs thanks to the convolution kernel?
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -4598,9 +4597,9 @@ nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 void
-nsSVGFELightingElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFELightingElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 void
@@ -5160,7 +5159,7 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -5256,7 +5255,8 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
   // resolve href attribute
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
-  nsAutoString href(mStringAttributes[HREF].GetAnimValue());
+  nsAutoString href;
+  mStringAttributes[HREF].GetAnimValue(href, this);
   href.Trim(" \t\n\r");
 
   if (baseURI && !href.IsEmpty())
@@ -5481,8 +5481,8 @@ public:
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
                           const nsIntRect& aDataRect);
-  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
@@ -5678,10 +5678,10 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
 }
 
 void
-nsSVGFEDisplacementMapElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
+nsSVGFEDisplacementMapElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  aSources->AppendElement(&mStringAttributes[IN1]);
-  aSources->AppendElement(&mStringAttributes[IN2]);
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 nsIntRect

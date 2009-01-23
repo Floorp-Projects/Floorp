@@ -71,6 +71,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsIPermissionManager.h"
+#include "nsTArray.h"
 
 #if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
@@ -748,14 +749,14 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
     // Get a pref string and chop it up into a list of ports.
     prefBranch->GetCharPref(pref, getter_Copies(portList));
     if (portList) {
-        nsCStringArray portListArray;
-        portListArray.ParseString(portList.get(), ",");
-        PRInt32 index;
-        for (index=0; index < portListArray.Count(); index++) {
-            portListArray[index]->StripWhitespace();
+        nsTArray<nsCString> portListArray;
+        ParseString(portList, ',', portListArray);
+        PRUint32 index;
+        for (index=0; index < portListArray.Length(); index++) {
+            portListArray[index].StripWhitespace();
             PRInt32 aErrorCode, portBegin, portEnd;
 
-            if (PR_sscanf(portListArray[index]->get(), "%d-%d", &portBegin, &portEnd) == 2) {
+            if (PR_sscanf(portListArray[index].get(), "%d-%d", &portBegin, &portEnd) == 2) {
                if ((portBegin < 65536) && (portEnd < 65536)) {
                    PRInt32 curPort;
                    if (remove) {
@@ -767,7 +768,7 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
                    }
                }
             } else {
-               PRInt32 port = portListArray[index]->ToInteger(&aErrorCode);
+               PRInt32 port = portListArray[index].ToInteger(&aErrorCode);
                if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
                    if (remove)
                        mRestrictedPortList.RemoveElement((void*)port);

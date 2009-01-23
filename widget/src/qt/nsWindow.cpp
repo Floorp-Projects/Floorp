@@ -876,7 +876,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 
     nsCOMPtr<nsILocalFile> iconFile;
     nsCAutoString path;
-    nsCStringArray iconList;
+    nsTArray<nsCString> iconList;
 
     // Look for icons with the following suffixes appended to the base name.
     // The last two entries (for the old XPM format) will be ignored unless
@@ -887,7 +887,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(extensions); i++) {
         // Don't bother looking for XPM versions if we found a PNG.
-        if (i == NS_ARRAY_LENGTH(extensions) - 2 && iconList.Count())
+        if (i == NS_ARRAY_LENGTH(extensions) - 2 && iconList.Length())
             break;
 
         nsAutoString extension;
@@ -896,12 +896,12 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
         ResolveIconName(aIconSpec, extension, getter_AddRefs(iconFile));
         if (iconFile) {
             iconFile->GetNativePath(path);
-            iconList.AppendCString(path);
+            iconList.AppendElement(path);
         }
     }
 
     // leave the default icon intact if no matching icons were found
-    if (iconList.Count() == 0)
+    if (iconList.Length() == 0)
         return NS_OK;
 
     return SetWindowIconList(iconList);
@@ -2002,7 +2002,7 @@ nsWindow::SetupPluginPort(void)
 }
 
 nsresult
-nsWindow::SetWindowIconList(const nsCStringArray &aIconList)
+nsWindow::SetWindowIconList(const nsTArray<nsCString> &aIconList)
 {
     qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
     return NS_OK;

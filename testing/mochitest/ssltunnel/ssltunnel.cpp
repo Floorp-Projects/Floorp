@@ -243,7 +243,7 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
   AutoCert cert(PK11_FindCertFromNickname(
       certnick, NULL));
   if (!cert) {
-    fprintf(stderr, "Failed to find cert %s\n", si->cert_nickname.c_str());
+    fprintf(stderr, "Failed to find cert %s\n", certnick);
     return false;
   }
 

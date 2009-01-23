@@ -1138,11 +1138,18 @@ void nsHTMLMediaElement::Freeze()
   if (!mPaused) {
     Pause();
   }
+  if (mDecoder) {
+    mDecoder->Suspend();
+  }
 }
 
 void nsHTMLMediaElement::Thaw()
 {
   if (!mPausedBeforeFreeze) {
     Play();
+  }
+
+  if (mDecoder) {
+    mDecoder->Resume();
   }
 }

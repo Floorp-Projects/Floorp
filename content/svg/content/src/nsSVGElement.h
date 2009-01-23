@@ -145,7 +145,7 @@ public:
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
-  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeString(PRUint8 aAttrEnum) {}
 
   void DidAnimateLength(PRUint8 aAttrEnum);
 
@@ -155,9 +155,14 @@ public:
 
 #ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName);
+  void AnimationNeedsResample();
+  void FlushAnimations();
 #endif
 
   virtual void RecompileScriptEventListeners();
+
+  void GetStringBaseValue(PRUint8 aAttrEnum, nsAString& aResult) const;
+  void SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue);
 
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,

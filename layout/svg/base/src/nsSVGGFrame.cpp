@@ -48,16 +48,24 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {  
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
-  if (!transformable) {
-    NS_ERROR("Can't create frame. The element doesn't support the right interface\n");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGGFrame(aContext);
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGGFrame::Init(nsIContent* aContent,
+                  nsIFrame* aParent,
+                  nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
+  NS_ASSERTION(transformable,
+               "The element doesn't support nsIDOMSVGTransformable\n");
+
+  return nsSVGGFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 nsIAtom *
 nsSVGGFrame::GetType() const

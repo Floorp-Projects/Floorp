@@ -209,7 +209,11 @@ typedef    pthread_rwlock_t      LCMS_RWLOCK_T;
 
 typedef unsigned char BYTE, *LPBYTE; 
 typedef unsigned short WORD, *LPWORD;
+#if defined(__x86_64__)
+typedef unsigned int DWORD, *LPDWORD;
+#else
 typedef unsigned long DWORD, *LPDWORD;
+#endif
 typedef char *LPSTR;
 typedef void *LPVOID;
 

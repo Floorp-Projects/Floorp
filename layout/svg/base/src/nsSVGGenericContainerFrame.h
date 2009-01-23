@@ -49,7 +49,7 @@ typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
 class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
   

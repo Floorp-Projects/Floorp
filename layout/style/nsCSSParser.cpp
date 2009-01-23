@@ -4206,6 +4206,7 @@ const UnitInfo UnitData[] = {
   { STR_WITH_LEN("in"), eCSSUnit_Inch, VARIANT_LENGTH },
   { STR_WITH_LEN("cm"), eCSSUnit_Centimeter, VARIANT_LENGTH },
   { STR_WITH_LEN("ch"), eCSSUnit_Char, VARIANT_LENGTH },
+  { STR_WITH_LEN("rem"), eCSSUnit_RootEM, VARIANT_LENGTH },
   { STR_WITH_LEN("mm"), eCSSUnit_Millimeter, VARIANT_LENGTH },
   { STR_WITH_LEN("pc"), eCSSUnit_Pica, VARIANT_LENGTH },
   { STR_WITH_LEN("deg"), eCSSUnit_Degree, VARIANT_ANGLE },
