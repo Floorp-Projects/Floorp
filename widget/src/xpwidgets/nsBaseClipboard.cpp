@@ -86,8 +86,6 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
 
   if ( mTransferable ) {
     NS_ADDREF(mTransferable);
-    rv = mPrivacyHandler.PrepareDataForClipboard(mTransferable);
-    NS_ENSURE_SUCCESS(rv, rv);
     rv = SetNativeClipboardData(aWhichClipboard);
   }
   
