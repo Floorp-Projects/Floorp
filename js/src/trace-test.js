@@ -4034,6 +4034,19 @@ function testBug474769() {
 testBug474769.expected = 1;
 test(testBug474769);
 
+undeclaredGlobal = -1;
+function testGlobalAliasCheck() {
+    var q;
+    for (var i = 0; i < 10; ++i) {
+        undeclaredGlobal = i;
+        q = this.undeclaredGlobal;
+    }
+    return q;
+}
+testGlobalAliasCheck.expected = 9;
+test(testGlobalAliasCheck);
+delete undeclaredGlobal;
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
