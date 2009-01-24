@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo"><content><span xmlns="http://www.w3.org/1999/xhtml"/></content></binding>
+  <binding id="bar"><content></content></binding>
+</bindings>
+
+<script type="text/javascript">
+// <![CDATA[
+
+function boom()
+{
+  var bo = document.getElementById("bo");
+  var anon = document.getAnonymousNodes(bo)[0];
+
+  bo.style.MozBinding = "url(#bar)";
+
+  var fr = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  fr.setAttribute("src", "javascript:void 0;"); 
+  anon.appendChild(fr);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+</head>
+
+<body onload="setTimeout(boom, 100);">
+
+<span style="-moz-binding: url(#foo)" id="bo"></span>
+
+</body>
+</html>
