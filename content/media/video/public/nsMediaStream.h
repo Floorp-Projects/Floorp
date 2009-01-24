@@ -42,6 +42,7 @@
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
+#include "nsIStreamListener.h"
 #include "prlock.h"
 
 // For HTTP seeking, if number of bytes needing to be
