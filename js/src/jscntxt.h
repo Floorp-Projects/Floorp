@@ -148,10 +148,8 @@ typedef struct JSTraceMonitor {
 
 #ifdef JS_TRACER
 # define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).onTrace)
-# define JS_EXECUTING_TRACE(cx)     (JS_ON_TRACE(cx) && !JS_TRACE_MONITOR(cx).recorder)
 #else
 # define JS_ON_TRACE(cx)            JS_FALSE
-# define JS_EXECUTING_TRACE(cx)     JS_FALSE
 #endif
 
 #ifdef JS_THREADSAFE
