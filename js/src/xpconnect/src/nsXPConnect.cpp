@@ -741,8 +741,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         JSClass *clazz = OBJ_GET_CLASS(cx, obj);
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
-            XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(obj);
-            if(wn)
+            XPCWrappedNative* wn;
+            if(XPCNativeWrapper::GetWrappedNative(cx, obj, &wn) && wn)
             {
                 XPCNativeScriptableInfo* si = wn->GetScriptableInfo();
                 if(si)
