@@ -1948,10 +1948,21 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     if (NS_FAILED(res)) return res;
     if (*aCancel) return NS_OK;
 
-    // We should delete nothing.
-    if (aAction == nsIEditor::eNone)
-      return NS_OK;
+    nsIEditor::EDirection localAction = aAction;
+    res = mHTMLEditor->ExtendSelectionForDelete(aSelection, &localAction);
+    NS_ENSURE_SUCCESS(res, res);
 
+    // ExtendSelectionForDelete() may have changed the selection, update it
+    res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+    if (NS_FAILED(res)) return res;
+    if (!startNode) return NS_ERROR_FAILURE;
+    
+    res = aSelection->GetIsCollapsed(&bCollapsed);
+    if (NS_FAILED(res)) return res;
+  }
+
+  if (bCollapsed)
+  {
     // what's in the direction we are deleting?
     nsWSRunObject wsObj(mHTMLEditor, startNode, startOffset);
     nsCOMPtr<nsIDOMNode> visNode;
@@ -1996,9 +2007,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       }
       else
       {
-        res = mHTMLEditor->ExtendSelectionForDelete(aSelection, &aAction);
-        NS_ENSURE_SUCCESS(res, res);
-
         nsCOMPtr<nsIDOMRange> range;
         res = aSelection->GetRangeAt(0, getter_AddRefs(range));
         NS_ENSURE_SUCCESS(res, res);
@@ -2015,6 +2023,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         NS_ASSERTION(container == visNode, "selection end not in visNode");
 #endif
 
+        res = range->GetStartOffset(&so);
+        NS_ENSURE_SUCCESS(res, res);
         res = range->GetEndOffset(&eo);
         NS_ENSURE_SUCCESS(res, res);
       }
