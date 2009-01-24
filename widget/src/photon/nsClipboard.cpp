@@ -130,9 +130,6 @@ NS_IMETHODIMP nsClipboard::SetData(nsITransferable * aTransferable,
 		return NS_OK;
 	}
 
-  nsresult rv = mPrivacyHandler.PrepareDataForClipboard(aTransferable);
-  NS_ENSURE_SUCCESS(rv, rv);
-
 	EmptyClipboard(aWhichClipboard);
 
 	switch (aWhichClipboard) 
