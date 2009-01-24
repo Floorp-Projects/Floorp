@@ -1,0 +1,21 @@
+<html>
+<head>
+  <title>Subtest for bug 472396</title>
+  <script>
+  function submitForm() {
+    if (location.search.indexOf("field") == -1) {
+      var form  = document.getElementById("form");
+      var field = document.getElementById("field");
+      field.value = "value";
+      form.submit();
+    }
+  }
+  </script>
+</head>
+<body onload="submitForm();">
+  <h2>Subtest for bug 472396</h2>
+  <form id="form">
+    <input name="field" id="field">
+  </form>
+</body>
+</html>
