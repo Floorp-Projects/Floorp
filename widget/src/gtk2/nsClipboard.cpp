@@ -164,6 +164,9 @@ nsClipboard::SetData(nsITransferable *aTransferable,
         return NS_OK;
     }
 
+    nsresult rv = mPrivacyHandler.PrepareDataForClipboard(aTransferable);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Clear out the clipboard in order to set the new data
     EmptyClipboard(aWhichClipboard);
 
@@ -187,7 +190,6 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     gtk_selection_clear_targets(mWidget, selectionAtom);
 
     // Get the types of supported flavors
-    nsresult rv;
     nsCOMPtr<nsISupportsArray> flavors;
 
     rv = aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavors));

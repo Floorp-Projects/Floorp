@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,46 +36,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsBaseClipboard_h__
-#define nsBaseClipboard_h__
+#ifndef nsClipboardPrivacyHandler_h__
+#define nsClipboardPrivacyHandler_h__
 
-#include "nsIClipboard.h"
-#include "nsITransferable.h"
-#include "nsClipboardPrivacyHandler.h"
+#include "nsIObserver.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsWeakReference.h"
+#include "nsCOMPtr.h"
 
 class nsITransferable;
-class nsDataObj;
-class nsIClipboardOwner;
-class nsIWidget;
 
-/**
- * Native Win32 BaseClipboard wrapper
- */
+// nsClipboardPrivacyHandler makes sure that clipboard data copied during
+// the private browsing mode does not leak after exiting this mode.
+// In order to ensure this, callers should store an object of this class
+// for their lifetime, and call PrepareDataForClipboard in their
+// nsIClipboard::SetData implementation before starting to use the
+// nsITransferable object in any way.
 
-class nsBaseClipboard : public nsIClipboard
+class nsClipboardPrivacyHandler : public nsIObserver,
+                                  public nsSupportsWeakReference
 {
 
 public:
-  nsBaseClipboard();
-  virtual ~nsBaseClipboard();
+  nsClipboardPrivacyHandler();
 
-  //nsISupports
+  // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIClipboard  
-  NS_DECL_NSICLIPBOARD
-  
-protected:
+  // nsIObserver  
+  NS_DECL_NSIOBSERVER
 
-  NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard ) = 0;
-  NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard ) = 0;
+  nsresult PrepareDataForClipboard(nsITransferable * aTransferable);
 
-  PRBool              mIgnoreEmptyNotification;
-  nsIClipboardOwner * mClipboardOwner;
-  nsITransferable   * mTransferable;
-  nsClipboardPrivacyHandler mPrivacyHandler;
+private:
+
+  PRBool InPrivateBrowsing();
+
+  nsCOMPtr<nsIPrivateBrowsingService> mPBService;
 
 };
 
-#endif // nsBaseClipboard_h__
+#endif // nsClipboardPrivacyHandler_h__
 
