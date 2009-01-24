@@ -1,0 +1,226 @@
+﻿<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Test BackSpace/Delete Keys">
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function execTests() {
+  var e = document.getElementById("edit");
+  var doc = e.contentDocument;
+  var win = e.contentWindow;
+  var root = doc.documentElement;
+  var editor = doc.body;
+  var sel = win.getSelection();
+  // Work around bug 474255 --- we need to have nonempty content before we turn on
+  // editing, or the tests below break because the editor doesn't notice when we
+  // insert non-empty content using innerHTML.
+  editor.innerHTML = "Bogus!";
+  doc.designMode='on';
+  win.focus();
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var eatSpace;
+
+  function getPrefs() {
+    const prefSvcContractID = "@mozilla.org/preferences-service;1";
+    const prefSvcIID = Components.interfaces.nsIPrefService;
+    return Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                                 .getBranch("layout.word_select.");
+  }
+
+  function setEatSpace(newValue) {
+    getPrefs().setBoolPref("eat_space_to_next_word", newValue);
+    eatSpace = newValue;
+  }
+
+  function restoreEatSpace() {
+    try {
+      getPrefs().clearUserPref("eat_space_to_next_word");
+    } catch(ex) {}
+  }
+
+  function doCommand(cmd) {
+    var controller = document.commandDispatcher.getControllerForCommand(cmd);
+    if (controller) {
+      controller.doCommand(cmd);
+    }
+  }
+
+  function testRight(node, offset) {
+    doCommand("cmd_charNext");
+    var msg = "Right movement broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+  }
+
+  function selErrString(dir) {
+    return dir + " selection broken with eatSpace=" + eatSpace + " in \"" + editor.innerHTML + "\"";
+  }
+
+  function testWordSelRight(startNode, startOffset, endNode, endOffset) {
+    doCommand("cmd_selectWordNext");
+    var selRange = sel.getRangeAt(0);
+    is(selRange.startContainer, startNode, selErrString("Word right"));
+    is(selRange.startOffset, startOffset, selErrString("Word right"));
+    is(selRange.endContainer, endNode, selErrString("Word right"));
+    is(selRange.endOffset, endOffset, selErrString("Word right"));
+  }
+
+  function testDelete(node, offset, text) {
+    doCommand("cmd_deleteCharForward");
+    var msg = "Delete broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
+  }
+
+  function testBackspace(node, offset, text) {
+    doCommand("cmd_deleteCharBackward");
+    var msg = "Backspace broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
+  }
+
+  function testDeletePrevWord(node, offset, text) {
+    doCommand("cmd_deleteWordBackward");
+    var msg = "Delete previous word broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
+  }
+
+  function testDeleteNextWord(node, offset, text) {
+    doCommand("cmd_deleteWordForward");
+    var msg = "Delete next word broken in \"" + editor.innerHTML + "\", offset " + offset;
+    is(sel.anchorNode, node, msg);
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
+  }
+
+  // Test cell-wise deletion of Delete
+  editor.innerHTML = "สวัสดีพ่อแม่พี่น้อง";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 1);
+  testDelete(editor.firstChild, 1, "สสดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 2);
+  testDelete(editor.firstChild, 2, "สสพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testDelete(editor.firstChild, 4, "สสพ่แม่พี่น้อง");
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "สสพ่แพี่น้อง");
+  testRight(editor.firstChild, 8);
+  testDelete(editor.firstChild, 8, "สสพ่แพี่อง");
+  testRight(editor.firstChild, 9);
+  testDelete(editor.firstChild, 9, "สสพ่แพี่อ");
+
+  // Test character-wise deletion of Backspace
+  editor.innerHTML = "สวัสดีพ่อแม่พี่น้อง";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 1);
+  testBackspace(editor.firstChild, 0, "วัสดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 2);
+  testBackspace(editor.firstChild, 1, "วสดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 2);
+  testBackspace(editor.firstChild, 1, "วดีพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 3);
+  testBackspace(editor.firstChild, 2, "วดพ่อแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพอแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพแม่พี่น้อง");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพม่พี่น้อง");
+  testRight(editor.firstChild, 5);
+  testBackspace(editor.firstChild, 4, "วดพมพี่น้อง");
+  testRight(editor.firstChild, 7);
+  testBackspace(editor.firstChild, 6, "วดพมพีน้อง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีนอง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีนง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีน");
+
+  // Tests for Bug 417745
+
+  setEatSpace(true);
+
+  editor.innerHTML = "Quick yellow fox";
+  sel.collapse(editor.firstChild, 0);
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 6);
+  testDelete(editor.firstChild, 0, "yellow fox");
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 7);
+  testDelete(editor.firstChild, 0, "fox");
+
+  setEatSpace(false);
+
+  editor.innerHTML = "Quick yellow fox";
+  sel.collapse(editor.firstChild, 0);
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 5);
+  // editor converts the leading space to an &nbsp;, otherwise it
+  // wouldn't show up which would confuse users
+  testDelete(editor.firstChild, 0, "\u00A0yellow fox");
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 7);
+  testDelete(editor.firstChild, 0, "\u00A0fox");
+  testWordSelRight(editor.firstChild, 0, editor.firstChild, 4);
+  testDelete(editor, 0, "");
+
+  restoreEatSpace();
+
+  // Tests for Bug 419217
+
+  editor.innerHTML = "foo<div>bar</div>";
+  sel.collapse(editor.firstChild, 3);
+  testDelete(editor.firstChild.nextSibling.firstChild, 3, "foobar");
+
+  // Tests for Bug 419406
+
+  editor.innerHTML = "helloשלום";
+  sel.collapse(editor.firstChild, 4);
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "helloשלום");
+
+  // Tests for Bug 462188
+  editor.innerHTML = "You should not see this text.";
+  sel.collapse(editor.firstChild, 0);
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0should not see this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0not see this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0see this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0this text.");
+  testDeleteNextWord(editor.firstChild, 0, "\u00A0text.");
+  testDeleteNextWord(editor, 0, "");
+
+  editor.innerHTML = "You should not see this text.";
+  sel.collapse(editor.firstChild, 29);
+  testDeletePrevWord(editor.firstChild, 24, "You should not see this ");
+  testDeletePrevWord(editor.firstChild, 19, "You should not see ");
+  testDeletePrevWord(editor.firstChild, 15, "You should not ");
+  testDeletePrevWord(editor.firstChild, 11, "You should ");
+  testDeletePrevWord(editor.firstChild,  4, "You ");
+  testDeletePrevWord(editor,  0, "");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(execTests);
+]]>
+</script>
+
+<body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462188">Mozilla Bug 462188</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+<iframe id="edit" width="200" height="100" src="about:blank"/>
+</body>
+</window>
