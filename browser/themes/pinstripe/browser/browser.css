@@ -81,7 +81,8 @@
   background-color: #e2e2e2;
 }
 
-#main-window:not([active="true"]) .tabbrowser-tab {
+#main-window:not([active="true"]) .tabbrowser-tab,
+#main-window:not([active="true"]) .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   color: #575757;
 }
 
@@ -1524,7 +1525,6 @@ tabbrowser > tabbox {
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://global/skin/tree/item-grayscale.png");
-  opacity: 0.6;
   margin-top: 2px;
 }
 
@@ -1536,9 +1536,9 @@ tabbrowser > tabbox {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
 }
 
-.tabbrowser-tab:hover > .tab-icon-image,
-.tabbrowser-tab[selected="true"] > .tab-icon-image {
-  opacity: 1;
+.tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image,
+.tabbrowser-arrowscrollbox > .tabs-newtab-button:not(:hover) > .toolbarbutton-icon {
+  opacity: .6;
 }
 
 .tab-text {
@@ -1549,11 +1549,12 @@ tabbrowser > tabbox {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.tabbrowser-tab {
+.tabbrowser-tab,
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
   -moz-appearance: none;
   -moz-border-radius: 0 0 6px 6px;
   color: #222;
-  margin-bottom: 1px;
+  margin: 0 0 1px;
   -moz-margin-end: 1px;
   padding: 0 5px;
   border-style: none solid solid;
@@ -1565,9 +1566,6 @@ tabbrowser > tabbox {
   min-width: 1px !important;
   text-align: center;
   height: 24px;
-}
-
-.tabbrowser-tab:not([selected="true"]) {
   background-image: url(chrome://browser/skin/tabbrowser/tab-bkgnd.png);
 }
 
@@ -1578,6 +1576,7 @@ tabbrowser > tabbox {
   -moz-border-left-colors: rgba(0, 0, 0, .1) rgba(0, 0, 0, .2);
   -moz-border-bottom-colors: rgba(0, 0, 0, .1) rgba(0, 0, 0, .2);
   -moz-border-right-colors: rgba(0, 0, 0, .1) rgba(0, 0, 0, .2);
+  background-image: none;
   background-color: -moz-mac-chrome-active;
 }
 
@@ -1741,7 +1740,7 @@ tabbrowser > tabbox > tabpanels {
  * Tabstrip New Tab & All Tabs Buttons
  */
 
-.tabs-newtab-button ,
+.tabs-container > .tabs-newtab-button,
 .tabs-alltabs-button {
   -moz-border-start: 2px solid;
   -moz-border-end: none;
@@ -1753,18 +1752,15 @@ tabbrowser > tabbox > tabpanels {
 .tabs-newtab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
 }
-.tabbrowser-arrowscrollbox > .tabs-newtab-button {
-  padding: 0 11px;
-}
 .tabs-alltabs-button {
   padding-top: 2px;
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
 }
-.tabs-newtab-button:hover ,
+.tabs-container > .tabs-newtab-button:hover,
 .tabs-alltabs-button:hover {
   background-color: rgba(0,0,0,0.10);
 }
-.tabs-newtab-button:hover:active,
+.tabs-container > .tabs-newtab-button:hover:active,
 .tabs-alltabs-button:hover:active {
   background-color: rgba(0,0,0,0.20);
 }
