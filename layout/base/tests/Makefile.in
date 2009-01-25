@@ -67,13 +67,14 @@ _TEST_FILES =	\
 		test_bug465448.xul \
 		test_bug469170.html \
 		test_bug471126.html \
-		test_bug435293-scale.html \
-		test_bug435293-skew.html \
-		test_bug435293-interaction.html \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with
 # the "You can't print-preview while the page is loading" dialog.
 # (See bug 407080)
+
+# test_bug435293-scale.html, test_bug435293-skew.html,
+# and test_bug435293-interaction.html are currently disabled due to an
+# excessive number of leaks that they expose see bug 474016 for details.
 
 # Tests for bug 441782 don't pass reliably on Windows, because of bug 469208
 ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
