@@ -81,8 +81,7 @@
   background-color: #e2e2e2;
 }
 
-#main-window:not([active="true"]) .tabbrowser-tab,
-#main-window:not([active="true"]) .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+#main-window:not([active="true"]) .tabbrowser-tab {
   color: #575757;
 }
 
