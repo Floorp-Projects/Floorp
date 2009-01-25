@@ -1,7 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .controlBar {
-    height: 24px;
+    height: 28px;
     background-color: rgba(35,31,32,0.74);
 }
 
@@ -11,8 +11,8 @@
     -moz-appearance: none;
     margin: 0px;
     padding: 0px;
-    min-height: 24px;
-    min-width: 24px;
+    min-height: 28px;
+    min-width: 28px;
     border: none;
 }
 .playButton[paused="true"] {
@@ -25,11 +25,64 @@
     -moz-appearance: none;
     margin: 0px;
     padding: 0px;
-    min-height: 24px;
-    min-width: 24px;
+    min-height: 28px;
+    min-width: 33px;
     border: none;
 }
 .muteButton[muted="true"] {
     background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
 }
 
+.backgroundBar {
+    /* make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background-color: rgba(255,255,255,0.5);
+    -moz-border-radius: 4px 4px;
+}
+
+.bufferBar, .progressBar {
+    /* make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+    margin: 10px 0px 10px 0px;
+    -moz-appearance: none;
+    border: none;
+    background-color: transparent;
+    min-width: 0px;
+    min-height: 0px;
+}
+
+/* .progress-bar is an element inside the <progressmeter> implementation. */
+.bufferBar .progress-bar {
+    /*
+     * Note that this is drawn on top of the .backgroundBar. So although this
+     * has the same background-color specified, the semitransparent
+     * compositing gives it a different visual appearance.
+     */
+    background-color: rgba(255,255,255,0.5);
+    -moz-border-radius: 4px 4px;
+    -moz-appearance: none;
+}
+
+.progressBar .progress-bar {
+    background-color: white;
+    -moz-border-radius: 4px 4px;
+    -moz-appearance: none;
+}
+
+/* .scale-slider is an element inside the <scale> implementation. */
+.scale-slider {
+    /* Hide the default horizontal bar. */
+    -moz-appearance: none;
+    background: none;
+    margin: 0;
+}
+
+/* .scale-thumb is an element inside the <scale> implementation. */
+.scale-thumb {
+    /* Override the default thumb appearance with a custom image. */
+    -moz-appearance: none;
+    background: url(chrome://global/skin/media/scrubberThumb.png) no-repeat center;
+    border: none;
+    min-width: 11px;
+    min-height: 20px;
+}
