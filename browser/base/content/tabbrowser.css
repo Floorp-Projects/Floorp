@@ -6,11 +6,9 @@
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
 }
 
-%ifdef XP_MACOSX
 .tabbrowser-arrowscrollbox {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-arrowscrollbox");
 }
-%endif
 
 .tab-close-button, .tabs-closebutton {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
