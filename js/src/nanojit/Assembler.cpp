@@ -1030,7 +1030,7 @@ namespace nanojit
 				default:
 					NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)", op, op&~LIR64);
 					break;
-
+					
                 case LIR_live: {
                     countlir_live();
                     pending_lives.add(ins->oprnd1());
@@ -1329,9 +1329,7 @@ namespace nanojit
 					verbose_only( if (_verbose) { outputAddr=true; asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); } )
 					break;
 				}
-				case LIR_xbarrier: {
-					break;
-				}
+
                 case LIR_xt:
 				case LIR_xf:
 				{
