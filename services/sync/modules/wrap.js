@@ -102,8 +102,7 @@ let Wrap = {
         this._log.debug("Event: " + this._osPrefix + savedName + ":error");
         this._os.notifyObservers(null, this._osPrefix + savedName + ":error", savedPayload);
         this._os.notifyObservers(null, this._osPrefix + "global:error", savedPayload);
-        if (e != "Could not acquire lock") // FIXME HACK
-          throw e;
+	ret = undefined;
       }
 
       self.done(ret);
