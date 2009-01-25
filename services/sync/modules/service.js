@@ -268,7 +268,7 @@ WeaveSvc.prototype = {
       } else {
         this._log.info("Running scheduled sync");
         this._notify("sync", "",
-                     this._catchAll(this._localLock(this._sync))).async(this);
+                     this._localLock(this._sync)).async(this);
       }
     }
   },
@@ -308,8 +308,8 @@ WeaveSvc.prototype = {
     if (Utils.prefs.getBoolPref("autoconnect") &&
         this.username && this.username != 'nobody')
       try {
-        yield this.login(self.cb);
-        yield this.sync(self.cb);
+	if (yield this.login(self.cb))
+	  yield this.sync(self.cb);
       } catch (e) {}
     self.done();
   },
@@ -423,6 +423,7 @@ WeaveSvc.prototype = {
       yield res.get(self.cb);
       if (res.data != "\"1\"")
         throw "Login failed";
+      self.done(true);
     };
     this._notify("verify-login", "", fn).async(this, onComplete);
   },
@@ -473,18 +474,12 @@ WeaveSvc.prototype = {
 
       this._log.debug("Logging in user " + this.username);
 
-      try {
-        yield this.verifyLogin(self.cb, this.username, this.password);
-        this._loggedIn = true;
-        self.done(true);
-      } catch (e) {
-        this._loggedIn = false;
-        self.done(false);
-      }
+      if (!(yield this.verifyLogin(self.cb, this.username, this.password)))
+	throw "Login failed";
+      this._loggedIn = true;
+      self.done(true);
     };
-    this._localLock(
-      this._catchAll(
-        this._notify("login", "", fn))).async(this, onComplete);
+    this._localLock(this._notify("login", "", fn)).async(this, onComplete);
   },
 
   logout: function WeaveSvc_logout() {
@@ -598,8 +593,7 @@ WeaveSvc.prototype = {
     }
   },
   sync: function WeaveSvc_sync(onComplete) {
-    this._notify("sync", "",
-                 this._catchAll(this._localLock(this._sync))).async(this, onComplete);
+    this._notify("sync", "", this._localLock(this._sync)).async(this, onComplete);
   },
 
   // The values that engine scores must meet or exceed before we sync them
