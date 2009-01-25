@@ -841,6 +841,8 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
   }
 
   if (!mStarted) {
+    // Break our cycle with the peer that owns us.
+    mPeer = nsnull;
     return NS_OK;
   }
 
@@ -859,6 +861,8 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
   OnPluginDestroy(&fNPP);
 
   if (fCallbacks->destroy == NULL) {
+    // Break our cycle with the peer that owns us.
+    mPeer = nsnull;
     return NS_ERROR_FAILURE;
   }
 
@@ -885,6 +889,9 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
   ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
 
   nsJSNPRuntime::OnPluginDestroy(&fNPP);
+
+  // Break our cycle with the peer that owns us.
+  mPeer = nsnull;
 
   if (error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
