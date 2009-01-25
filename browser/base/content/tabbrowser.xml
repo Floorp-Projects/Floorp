@@ -2813,8 +2813,27 @@
     </handlers>
   </binding>
 
-#ifdef XP_MACOSX
   <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll">
+    <implementation>
+      <!-- Override scrollbox.xml method, since our scrollbox's children are
+           inherited from the binding parent -->
+      <method name="_getScrollableElements">
+        <body><![CDATA[
+          return document.getBindingParent(this).childNodes;
+        ]]></body>
+      </method>
+
+#ifndef XP_MACOSX
+    </implementation>
+#else
+      <field name="_scrollButtonDownBox">
+        document.getAnonymousElementByAttribute(this, "anonid", "down-box");
+      </field>
+      <field name="_scrollButtonDownBoxAnimate">
+        document.getAnonymousElementByAttribute(this, "anonid", "down-box-animate");
+      </field>
+    </implementation>
+
     <content>
       <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
                          xbl:inherits="orient"
@@ -2844,14 +2863,7 @@
                            chromedir="&locale.dir;"/>
       </xul:stack>
     </content>
-    <implementation>
-      <field name="_scrollButtonDownBox">
-        document.getAnonymousElementByAttribute(this, "anonid", "down-box");
-      </field>
-      <field name="_scrollButtonDownBoxAnimate">
-        document.getAnonymousElementByAttribute(this, "anonid", "down-box-animate");
-      </field>
-    </implementation>
+
     <handlers>
       <handler event="underflow"><![CDATA[
         // filter underflow events which were dispatched on nested scrollboxes
@@ -2899,8 +2911,8 @@
       ]]></handler>
 
     </handlers>
-  </binding>
 #endif
+  </binding>
 
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
