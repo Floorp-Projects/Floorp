@@ -162,36 +162,22 @@ extern bool js_verboseDebug;
 #endif
 
 /*
- * The oracle keeps track of hit counts for program counter locations, as
- * well as slots that should not be demoted to int because we know them to
- * overflow or they result in type-unstable traces. We are using simple
- * hash tables.  Collisions lead to loss of optimization (demotable slots
- * are not demoted, etc.) but have no correctness implications.
+ * The oracle keeps track of slots that should not be demoted to int because we know them
+ * to overflow or they result in type-unstable traces. We are using a simple hash table.
+ * Collisions lead to loss of optimization (demotable slots are not demoted) but have no
+ * correctness implications.
  */
 #define ORACLE_SIZE 4096
 
 class Oracle {
-    uint32_t hits[ORACLE_SIZE];
-    uint32_t blacklistLevels[ORACLE_SIZE];
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
 public:
-    Oracle();
-    int32_t hit(const void* ip);
-    int32_t getHits(const void* ip);
-    void resetHits(const void* ip);
-    void blacklist(const void* ip);
-
     JS_REQUIRES_STACK void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
     JS_REQUIRES_STACK void markStackSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
-    void clearHitCounts();
-    void clearDemotability();
-    void clear() { 
-        clearDemotability(); 
-        clearHitCounts();
-    }
+    void clear();
 };
 
 typedef Queue<uint16> SlotList;
@@ -256,7 +242,6 @@ struct InterpState
     VMSideExit* lastTreeCallGuard; /* guard we want to grow from if the tree
                                       call exit guard mismatched */
     void* rpAtLastTreeCall; /* value of rp at innermost tree call guard */
-    JSObject* globalObj; /* pointer to the global object */
 }; 
 
 struct UnstableExit
@@ -341,7 +326,6 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          gp_ins;
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
-    nanojit::LIns*          globalObj_ins;
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
     bool                    deepAborted;

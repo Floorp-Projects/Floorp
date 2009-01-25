@@ -163,7 +163,7 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
         // See if there are any scripts on the stack.
         // If not, we need to add a dummy frame with a principal.
         JSStackFrame* tempFP = JS_GetScriptedCaller(cx, NULL);
-        JS_ASSERT_NOT_ON_TRACE(cx);
+        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
 
         if (!tempFP)
         {

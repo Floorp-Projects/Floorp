@@ -241,7 +241,9 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
         }
 
         /* If getting a value via a stub getter, we can cache the slot. */
-        if (!(cs->format & (JOF_SET | JOF_INCDEC | JOF_FOR)) &&
+        if (!(cs->format & JOF_SET) &&
+            !((cs->format & (JOF_INCDEC | JOF_FOR)) &&
+              (sprop->attrs & JSPROP_READONLY)) &&
             SPROP_HAS_STUB_GETTER(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
@@ -2574,16 +2576,21 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     /* We had better not be entering the interpreter from JIT-compiled code. */
-    TraceRecorder *tr = TRACE_RECORDER(cx);
-
-    /* If a recorder is pending and we try to re-enter the interpreter, flag 
-       the recorder to be destroyed when we return. */
-    if (tr) {
+    TraceRecorder *tr = NULL;
+    if (JS_ON_TRACE(cx)) {
+        tr = TRACE_RECORDER(cx);
         SET_TRACE_RECORDER(cx, NULL);
-        if (tr->wasDeepAborted())
-            tr->removeFragmentoReferences();
-        else
-            tr->pushAbortStack();
+        JS_TRACE_MONITOR(cx).onTrace = JS_FALSE;
+        /*
+         * ON_TRACE means either recording or coming from traced code.
+         * If there's no recorder (the latter case), don't care.
+         */
+        if (tr) {
+            if (tr->wasDeepAborted())
+                tr->removeFragmentoReferences();
+            else
+                tr->pushAbortStack();
+        }
     }
 #endif
 
@@ -2640,7 +2647,9 @@ js_Interpret(JSContext *cx)
             }                                                                 \
             fp = cx->fp;                                                      \
             script = fp->script;                                              \
-            atoms = FrameAtomBase(cx, fp);                                    \
+            atoms = fp->imacpc                                                \
+                    ? COMMON_ATOMS_START(&rt->atomState)                      \
+                    : script->atomMap.vector;                                 \
             currentVersion = (JSVersion) script->version;                     \
             JS_ASSERT(fp->regs == &regs);                                     \
             if (cx->throwing)                                                 \
@@ -3047,7 +3056,9 @@ js_Interpret(JSContext *cx)
 
                 /* Restore the calling script's interpreter registers. */
                 script = fp->script;
-                atoms = FrameAtomBase(cx, fp);
+                atoms = fp->imacpc
+                        ? COMMON_ATOMS_START(&rt->atomState)
+                        : script->atomMap.vector;
 
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
@@ -7084,6 +7095,7 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     if (tr) {
+        JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
         if (!tr->wasDeepAborted()) {
             tr->popAbortStack();

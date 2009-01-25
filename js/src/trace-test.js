@@ -4025,58 +4025,6 @@ test(testLetWithUnstableGlobal);
 delete b;
 delete q;
 
-for each (testBug474769_b in [1, 1, 1, 1.5, 1, 1]) {
-    (function() { for each (let testBug474769_h in [0, 0, 1.4, ""]) {} })()
-}
-function testBug474769() {
-    return testBug474769_b;
-}
-testBug474769.expected = 1;
-test(testBug474769);
-
-undeclaredGlobal = -1;
-function testGlobalAliasCheck() {
-    var q;
-    for (var i = 0; i < 10; ++i) {
-        undeclaredGlobal = i;
-        q = this.undeclaredGlobal;
-    }
-    return q;
-}
-testGlobalAliasCheck.expected = 9;
-test(testGlobalAliasCheck);
-delete undeclaredGlobal;
-
-function testInterpreterReentry() {
-    this.__defineSetter__('x', function(){})
-    for (var j = 0; j < 5; ++j) { x = 3; }
-    return 1;
-}
-testInterpreterReentry.expected = 1;
-test(testInterpreterReentry);
-
-function testInterpreterReentry2() {
-    var a = false;
-    var b = {};
-    var c = false;
-    var d = {};
-    this.__defineGetter__('e', function(){});
-    for (let f in this) print(f);
-    [1 for each (g in this) for each (h in [])]
-    return 1;
-}
-testInterpreterReentry2.expected = 1;
-test(testInterpreterReentry2);
-
-function testInterpreterReentry3() {
-    for (let i=0;i<5;++i) this["y" + i] = function(){};
-    this.__defineGetter__('e', function (x2) { yield; });
-    [1 for each (a in this) for (b in {})];
-    return 1;
-}
-testInterpreterReentry3.expected = 1;
-test(testInterpreterReentry3);
-
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
