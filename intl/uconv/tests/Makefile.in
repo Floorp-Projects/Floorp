@@ -73,6 +73,10 @@ relativesrcdir	= intl/uconv/tests
 
 _TEST_FILES =	\
 		test_bug335816.html \
+		test_unicode_noncharacterescapes.html \
+		test_unicode_noncharacters_gb18030.html \
+		test_unicode_noncharacters_utf8.html \
+		test_utf8_overconsumption.html \
 		$(NULL)
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
