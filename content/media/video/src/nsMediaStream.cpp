@@ -518,8 +518,14 @@ nsresult nsHttpStreamStrategy::OpenInternal(nsIStreamListener **aStreamListener,
                                               &rv);
       NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
       NS_ENSURE_SUCCESS(rv, rv);
-    }
+    } else {
+      rv = nsContentUtils::GetSecurityManager()->
+             CheckLoadURIWithPrincipal(element->NodePrincipal(),
+                                       mURI,
+                                       nsIScriptSecurityManager::STANDARD);
+      NS_ENSURE_SUCCESS(rv, rv);
 
+    }
     // Use a byte range request from the start of the resource.
     // This enables us to detect if the stream supports byte range
     // requests, and therefore seeking, early.
