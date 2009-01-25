@@ -3614,7 +3614,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
     JSProperty *prop;
     JSScopeProperty *sprop;
 
-    JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
+    JS_ASSERT_IF(entryp, !JS_EXECUTING_TRACE(cx));
     obj = js_GetTopStackFrame(cx)->scopeChain;
     shape = OBJ_SHAPE(obj);
     for (scopeIndex = 0; ; scopeIndex++) {
@@ -3891,7 +3891,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         return JS_FALSE;
 
     if (entryp) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
+        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
         js_FillPropertyCache(cx, obj, shape, 0, protoIndex, obj2, sprop, entryp);
     }
     JS_UNLOCK_OBJ(cx, obj2);
@@ -4097,7 +4097,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         return JS_FALSE;
 
     if (entryp) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
+        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
         if (!(attrs & JSPROP_SHARED))
             js_FillPropertyCache(cx, obj, shape, 0, 0, obj, sprop, entryp);
         else
@@ -5432,7 +5432,7 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-#ifdef DEBUG
+#if DEBUG
 
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
@@ -5602,12 +5602,8 @@ js_DumpObject(JSObject *obj)
 
         sharesScope = (scope->object != obj);
         if (sharesScope) {
-            if (proto) {
-                fprintf(stderr, "no own properties - see proto (%s at %p)\n",
-                        STOBJ_GET_CLASS(proto)->name, proto);
-            } else {
-                fprintf(stderr, "no own properties - null proto\n");
-            }
+            fprintf(stderr, "no own properties - see proto (%s at %p)\n",
+                    STOBJ_GET_CLASS(proto)->name, proto);
         } else {
             fprintf(stderr, "properties:\n");
             for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope); sprop;
