@@ -6,6 +6,43 @@
    xmlns:xbl="http://www.mozilla.org/xbl"
    xmlns:svg="http://www.w3.org/2000/svg">
 
+  <binding id="suppressChangeEvent"
+            extends="chrome://global/content/bindings/scale.xml#scale">
+      <implementation>
+      <method name="valueChanged">
+          <parameter name="which"/>
+          <parameter name="newValue"/>
+          <parameter name="userChanged"/>
+          <body>
+          <![CDATA[
+            // This method is a copy of the base binding's valueChanged(), except that it does
+            // not dispatch a |change| event (to avoid exposing the event to web content), and
+            // just calls the videocontrol's seekToPosition() method directly.
+            switch (which) {
+              case "curpos":
+                // The value of userChanged is true when changing the position with the mouse,
+                // but not when pressing an arrow key. However, the base binding sets
+                // ._userChanged in its keypress handlers, so we just need to check both.
+                if (!userChanged && !this._userChanged)
+                  return;
+                this.setAttribute("value", newValue);
+                this.parentNode.parentNode.parentNode.Utils.seekToPosition();
+                break;
+  
+              case "minpos":
+                this.setAttribute("min", newValue);
+                break;
+  
+              case "maxpos":
+                this.setAttribute("max", newValue);
+                break;
+            }
+          ]]>
+          </body>
+      </method>
+      </implementation>
+  </binding>
+
   <binding id="videoControls">
 
     <resources>
@@ -17,7 +54,12 @@
         <spacer flex="1"/>
         <hbox class="controlBar">
             <button class="playButton" oncommand="this.parentNode.parentNode.Utils.togglePause();"/>
-            <box class="controlsMiddle" flex="1"/>
+            <stack class="scrubberStack" flex="1">
+                <box class="backgroundBar" flex="1"/>
+                <progressmeter class="bufferBar"     flex="1"/>
+                <progressmeter class="progressBar"   flex="1" max="10000"/>
+                <scale class="scrubber" flex="1"/>
+            </stack>
             <button class="muteButton" oncommand="this.parentNode.parentNode.Utils.toggleMute();"/>
         </hbox>
     </xbl:content>
@@ -81,6 +123,11 @@
                 playButton : null,
                 muteButton : null,
 
+                scrubber       : null,
+                progressBar    : null,
+                bufferBar      : null,
+                thumbWidth : 0,
+
                 FADE_TIME_MAX  : 200, // ms
                 FADE_TIME_STEP : 30,  // ms
 
@@ -90,6 +137,8 @@
                 controlsVisible : false,
 
                 firstFrameShown : false,
+                lastTimeUpdate : 0,
+                maxCurrentTimeSeen : 0,
 
                 get dynamicControls() {
                     // Don't fade controls for <audio> elements.
@@ -118,9 +167,90 @@
                         case "loadeddata":
                             this.firstFrameShown = true;
                             break;
+                        case "loadstart":
+                            this.maxCurrentTimeSeen = 0;
+                            break;
+                        case "durationchange":
+                            var duration = Math.round(this.video.duration * 1000); // in ms
+                            this.durationChange(duration);
+                            break;
+                        case "progress":
+                            var loaded = aEvent.loaded;
+                            var total = aEvent.total;
+                            this.log("+++ load, " + loaded + " of " + total);
+                            // When the source is streaming, the value of .total is -1. Set the
+                            // progress bar to the maximum, since it's not useful.
+                            if (total == -1)
+                                total = loaded;
+                            this.bufferBar.max = total;
+                            this.bufferBar.value = loaded;
+                            break;
+                        case "timeupdate":
+                            var currentTime = Math.round(this.video.currentTime * 1000); // in ms
+                            var duration = Math.round(this.video.duration * 1000); // in ms
+
+                            // Timeupdate events are dispatched *every frame*. Reduce workload by
+                            // ignoring position changes that are within 333ms of the current position.
+                            if (Math.abs(currentTime - this.lastTimeUpdate) < 333)
+                                return;
+                            this.lastTimeUpdate = currentTime;
+
+                            this.showPosition(currentTime, duration);
+                            break;
+                        case "emptied":
+                            this.bufferBar.value = 0;
+                            break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
                     }
+                },
+
+                durationChange : function (duration) {
+                    if (isNaN(duration))
+                        duration = this.maxCurrentTimeSeen;
+                    this.log("Duration is " + duration + "ms");
+
+                    this.scrubber.max = duration;
+                    // XXX Can't set increment here, due to bug 473103. Also, doing so causes
+                    // snapping when dragging with the mouse, so we can't just set a value for
+                    // the arrow-keys.
+                    //this.scrubber.increment = duration / 50;
+                    this.scrubber.pageincrement = Math.round(duration / 10);
+                },
+
+                seekToPosition : function() {
+                    var newPosition = this.scrubber.getAttribute("value");
+                    newPosition /= 1000; // convert from ms
+                    this.log("+++ seeking to " + newPosition);
+                    this.video.currentTime = newPosition;
+                },
+
+                showPosition : function(currentTime, duration) {
+                    // If the duration is unknown (because the server didn't provide
+                    // it, or the video is a stream), then we want to fudge the duration
+                    // by using the maximum playback position that's been seen.
+                    if (currentTime > this.maxCurrentTimeSeen)
+                        this.maxCurrentTimeSeen = currentTime;
+                    if (isNaN(duration)) {
+                        duration = this.maxCurrentTimeSeen;
+                        this.durationChange(duration);
+                    }
+
+                    this.log("time update @ " + currentTime + "ms of " + duration + "ms");
+                    this.scrubber.value = currentTime;
+
+                    // Extend the progressBar so it goes to the right-edge of the
+                    // scrubber thumb. This is a bit tricky, due to how the thumb is
+                    // positioned... It's flush-left at the minimum position, but
+                    // flush-right at the maximum position (so that the full thumb is
+                    // always visible in the <scale>'s box).
+                    var percent = currentTime / duration;
+                    var leftEdge = Math.floor(percent * (this.scrubber.clientWidth - this.thumbWidth));
+                    var rightEdge = leftEdge + this.thumbWidth;
+                    var adjPercent = rightEdge / this.scrubber.clientWidth;
+
+                    // The progressBar has max=10000
+                    this.progressBar.value = Math.round(adjPercent * 10000);
                 },
 
                 onMouseInOut : function (event) {
@@ -251,7 +381,15 @@
             this.Utils.controlBar = document.getAnonymousElementByAttribute(this, "class", "controlBar");
             this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
             this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");
+            this.Utils.progressBar    = document.getAnonymousElementByAttribute(this, "class", "progressBar");
+            this.Utils.bufferBar      = document.getAnonymousElementByAttribute(this, "class", "bufferBar");
+            this.Utils.scrubber       = document.getAnonymousElementByAttribute(this, "class", "scrubber");
 
+            // Get the width of the scrubber thumb.
+            var thumb = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
+            if (thumb)
+                this.Utils.thumbWidth = thumb.clientWidth;
+             
             // Set initial state of play/pause button.
             this.Utils.playButton.setAttribute("paused", video.paused);
 
@@ -278,6 +416,11 @@
             video.addEventListener("ended",        this.Utils, false);
             video.addEventListener("volumechange", this.Utils, false);
             video.addEventListener("loadeddata",   this.Utils, false);
+            video.addEventListener("loadstart",    this.Utils, false);
+            video.addEventListener("durationchange", this.Utils, false);
+            video.addEventListener("timeupdate",     this.Utils, false);
+            video.addEventListener("progress",       this.Utils, false);
+            video.addEventListener("emptied",        this.Utils, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>
