@@ -79,10 +79,9 @@ const char* const kCopyName = nsnull;
 const char* const kCopyValue = nsnull;
 
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] = {
-  // CSS name            CSS value        Attribute name              Attribute name
+  // CSS name            CSS value        Attribute name              Attribute value
   { "color",             kAnyValue,       kCopyName,                  kCopyValue },
   { "font-family",       kAnyValue,       kCopyName,                  kCopyValue },
-  { "font-size",         kAnyValue,       kCopyName,                  kCopyValue },
   { "font-style",        kAnyValue,       kCopyName,                  kCopyValue },
   { "font-weight",       kAnyValue,       kCopyName,                  kCopyValue },
   { "text-decoration",   "line-through",  "text-line-through-style",  "solid" },
@@ -237,4 +236,63 @@ nsBackgroundTextAttr::GetColor(nsIFrame *aFrame)
     return GetColor(mRootFrame);
 
   return GetColor(parentFrame);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsFontSizeTextAttr
+
+nsFontSizeTextAttr::nsFontSizeTextAttr(nsIFrame *aFrame,
+                                           nsIFrame *aRootFrame) :
+  mFrame(aFrame), mRootFrame(aRootFrame)
+{
+}
+
+PRBool
+nsFontSizeTextAttr::Equal(nsIDOMElement *aElm)
+{
+  nsIFrame *frame = nsCoreUtils::GetFrameFor(aElm);
+  if (!frame)
+    return PR_FALSE;
+
+  return GetFontSize(mFrame) == GetFontSize(frame);    
+}
+
+
+PRBool
+nsFontSizeTextAttr::Get(nsAString& aValue)
+{
+  // Do not expose "font-size" text attribute if its value is the same
+  // as the default value.
+  nscoord fontsize = GetFontSize(mFrame);
+  if (mRootFrame && fontsize == GetFontSize(mRootFrame))
+    return PR_FALSE;
+
+  // Convert from nscoord to pt.
+  //
+  // Note: according to IA2, "The conversion doesn't have to be exact.
+  // The intent is to give the user a feel for the size of the text."
+  // 
+  // ATK does not specify a unit and will likely follow IA2 here.
+  //
+  // XXX todo: consider sharing this code with layout module? (bug 474621)
+  nsIDeviceContext *dc = mFrame->PresContext()->DeviceContext();
+  float inches = static_cast<float>(GetFontSize(mFrame)) /
+                        static_cast<float>(dc->AppUnitsPerInch());
+  int pts = inches * 72 + .5; // 72 pts per inch
+  
+  nsAutoString value;
+  value.AppendInt(pts);
+  value.Append(NS_LITERAL_STRING("pt"));
+  aValue = value;
+
+  return PR_TRUE;
+}
+
+nscoord
+nsFontSizeTextAttr::GetFontSize(nsIFrame *aFrame)
+{
+  nsStyleFont* styleFont =
+    (nsStyleFont*)(aFrame->GetStyleDataExternal(eStyleStruct_Font));
+
+  return styleFont->mSize;
 }

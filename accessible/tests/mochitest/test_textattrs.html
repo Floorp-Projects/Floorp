@@ -52,7 +52,7 @@
           gComputedStyle = document.defaultView.getComputedStyle(node, "");
           var defAttrs = {
             "font-style": gComputedStyle.fontStyle,
-            "font-size": gComputedStyle.fontSize,
+            "font-size": (MAC) ? "8pt" : "10pt",
             "background-color": gComputedStyle.backgroundColor,
             "font-weight": gComputedStyle.fontWeight,
             "color": gComputedStyle.color,
@@ -90,7 +90,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       var defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "10pt",
         "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -118,7 +118,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "14pt",
         "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -157,7 +157,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "12pt",
         "background-color": gComputedStyle.backgroundColor,
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -195,7 +195,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -227,7 +227,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -260,7 +260,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -276,7 +276,7 @@
       tempElem = tempElem.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"text-position": gComputedStyle.verticalAlign,
-               "font-size": gComputedStyle.fontSize};
+               "font-size": "10pt"};
       testTextAttrs(ID, 5, attrs, 5, 13);
 
       attrs = {};
@@ -293,7 +293,7 @@
       tempElem = tempElem.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"text-position": gComputedStyle.verticalAlign,
-               "font-size": gComputedStyle.fontSize};
+               "font-size": "10pt"};
       testTextAttrs(ID, 39, attrs, 39, 50);
 
       attrs = {};
@@ -311,7 +311,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
         "font-style": gComputedStyle.fontStyle,
-        "font-size": gComputedStyle.fontSize,
+        "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
         "font-weight": gComputedStyle.fontWeight,
         "color": gComputedStyle.color,
@@ -370,7 +370,7 @@
     addA11yLoadEvent(doTest);
   </script>
 </head>
-<body>
+<body style="font-size: 12pt">
 
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=345759"
@@ -382,8 +382,8 @@
   <pre id="test">
   </pre>
 
-  <p id="area1">Normal <b>Bold</b> Normal</p>
-  <p id="area2">Normal <b>Bold <i>Italic </i>Bold</b> Normal</p>
+  <p id="area1" style="font-size: smaller">Normal <b>Bold</b> Normal</p>
+  <p id="area2" style="font-size: 120%">Normal <b>Bold <i>Italic </i>Bold</b> Normal</p>
   <p id="area3" style="background-color: blue;">
     <span style="color: green; background-color: rgb(0, 0, 255)">
       Green
