@@ -7313,8 +7313,10 @@ TraceRecorder::record_JSOP_NEWINIT()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENDINIT()
 {
+#ifdef DEBUG
     jsval& v = stackval(-1);
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+#endif
     return true;
 }
 
