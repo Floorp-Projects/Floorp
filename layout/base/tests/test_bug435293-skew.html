@@ -110,32 +110,13 @@ function runtests() {
   e = document.getElementById("test11");
   e.setAttribute("style", "-moz-transform: skew(300grad, " + Math.PI/2 + "rad");
 
-  // For test 1 we need to handle the contingency that different systems may
-  // round differently.  We will parse out the values and compare them
-  // individually.  The matrix should be: matrix(1, 0, 0.57735, 1, 0px, 0px)
   var style = window.getComputedStyle(document.getElementById("test1"), "");
-  var tformStyle = style.getPropertyValue("-moz-transform");
-  var tformValues = tformStyle.substring(tformStyle.indexOf('(') + 1,
-                                         tformStyle.indexOf(')')).split(',');
-  is((+tformValues[0]), 1, "Test1: skewx: param 0 is 1");
-  is((+tformValues[1]), 0, "Test1: skewx: param 1 is 0");
-  ok(verifyRounded(tformValues[2], 0.57735), "Test1: skewx: Rounded param 2 is in bounds");
-  is((+tformValues[3]), 1, "Test1: skewx: param 3 is 1");
-  is(tformValues[4].trim(), "0px", "Test1: skewx: param 4 is 0px");
-  is(tformValues[5].trim(), "0px", "Test1: skewx: param 5 is 0px");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, 0.57735, 1, 0px, 0px)",
+     "Test1: Skewx proper matrix is applied");
 
-  // Again, handle rounding for test 2, proper matrix should be:
-  // matrix(1, 1.73205, 0, 1, 0px, 0px)
   style = window.getComputedStyle(document.getElementById("test2"), "");
-  tformStyle = style.getPropertyValue("-moz-transform");
-  tformValues = tformStyle.substring(tformStyle.indexOf('(') + 1,
-                                     tformStyle.indexOf(')')).split(',');
-  is((+tformValues[0]), 1, "Test2: skewy: param 0 is 1");
-  ok(verifyRounded(tformValues[1], 1.73205), "Test2: skewy: Rounded param 1 is in bounds");
-  is((+tformValues[2]), 0, "Test2: skewy: param 2 is 0");
-  is((+tformValues[3]), 1, "Test2: skewy: param 3 is 1");
-  is(tformValues[4].trim(), "0px", "Test2: skewy: param 4 is 0px");
-  is(tformValues[5].trim(), "0px", "Test2: skewy: param 5 is 0px");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 1.73205, 0, 1, 0px, 0px)",
+     "Test2: Skewy proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test3"), "");
   is(style.getPropertyValue("-moz-transform"), "matrix(1, 1, 1, 1, 0px, 0px)",
@@ -157,18 +138,9 @@ function runtests() {
   is(style.getPropertyValue("-moz-transform"), "none",
      "Test7: Skew with more invalid units");
 
-  // Test 8: skew with negative degrees, here again we must handle rounding.
-  // The matrix should be: matrix(1, 3.73206, -1, 1, 0px, 0px)
   style = window.getComputedStyle(document.getElementById("test8"), "");
-  tformStyle = style.getPropertyValue("-moz-transform");
-  tformValues = tformStyle.substring(tformStyle.indexOf('(') + 1,
-                                     tformStyle.indexOf(')')).split(',');
-  is(tformValues[0], 1, "Test8: param 0 is 1");
-  ok(verifyRounded(tformValues[1], 3.73206), "Test8: Rounded param 1 is in bounds");
-  is((+tformValues[2]), -1, "Test8: param 2 is -1");
-  is((+tformValues[3]), 1, "Test8: param 3 is 1");
-  is(tformValues[4].trim(), "0px", "Test8: param 4 is 0px");
-  is(tformValues[5].trim(), "0px", "Test8: param 5 is 0px");
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 3.73206, -1, 1, 0px, 0px)",
+     "Test8: Skew with negative degrees");
 
   style = window.getComputedStyle(document.getElementById("test9"), "");
   is(style.getPropertyValue("-moz-transform"), "none",
@@ -181,16 +153,6 @@ function runtests() {
   style = window.getComputedStyle(document.getElementById("test11"), "");
   is(style.getPropertyValue("-moz-transform"), "matrix(1, -10000, 10000, 1, 0px, 0px)",
      "Test11: Skew with more infinite numbers");
-}
-
-// Verifies that aVal is +/- 0.00001 of aTrueVal
-// Returns true if so, false if not
-function verifyRounded(aVal, aTrueVal) {
-  if (Math.abs(aVal - aTrueVal) <= 0.00001) {
-    return true;
-  } else {
-    return false;
-  }
 }
 </script>
 </pre>
