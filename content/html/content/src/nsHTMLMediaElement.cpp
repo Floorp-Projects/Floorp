@@ -297,6 +297,12 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
+    rv = nsContentUtils::GetSecurityManager()->
+           CheckLoadURIWithPrincipal(NodePrincipal(),
+                                     uri,
+                                     nsIScriptSecurityManager::STANDARD);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     listener = loadListener;
   }
 
