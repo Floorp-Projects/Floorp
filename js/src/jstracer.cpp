@@ -3180,12 +3180,15 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, Fragment* outer)
             for (UnstableExit* uexit = ti->unstableExits; uexit != NULL; uexit = uexit->next) {
                 if (uexit->exit == exit) {
                     *tail = uexit->next;
+                    delete uexit;
                     bound = true;
                     break;
                 }
                 tail = &uexit->next;
             }
             JS_ASSERT(bound);
+            debug_only_v(js_DumpPeerStability(tm->fragmento, f->ip);)
+            break;
         }
     }
     if (bound)
