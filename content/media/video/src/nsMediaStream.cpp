@@ -286,6 +286,17 @@ nsresult nsFileStreamStrategy::Open(nsIStreamListener** aStreamListener)
 
     rv = NS_NewLocalFileInputStream(getter_AddRefs(mInput), file);
   } else {
+    // Ensure that we never load a local file from some page on a 
+    // web server.
+    nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+
+    rv = nsContentUtils::GetSecurityManager()->
+           CheckLoadURIWithPrincipal(element->NodePrincipal(),
+                                     mURI,
+                                     nsIScriptSecurityManager::STANDARD);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = mChannel->Open(getter_AddRefs(mInput));
   }
   NS_ENSURE_SUCCESS(rv, rv);
