@@ -348,8 +348,8 @@ void imgRequest::Cancel(nsresult aStatus)
     RemoveFromCache();
   }
 
-  if (mChannel && mLoading)
-    mChannel->Cancel(aStatus);
+  if (mRequest && mLoading)
+    mRequest->Cancel(aStatus);
 }
 
 void imgRequest::CancelAndAbort(nsresult aStatus)
