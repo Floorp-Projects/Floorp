@@ -303,7 +303,7 @@ nsCSSProps::ReleaseTable(void)
     delete gFontDescTable;
     gFontDescTable = nsnull;
 
-    delete gShorthandsContainingPool;
+    delete [] gShorthandsContainingPool;
     gShorthandsContainingPool = nsnull;
   }
 }

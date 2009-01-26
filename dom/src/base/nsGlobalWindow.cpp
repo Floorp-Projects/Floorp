@@ -589,6 +589,17 @@ nsTimeout::~nsTimeout()
   MOZ_COUNT_DTOR(nsTimeout);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsTimeout)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsTimeout)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsTimeout)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWindow,
+                                                       nsIScriptGlobalObject)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptHandler)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTimeout, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTimeout, Release)
+
   
 //*****************************************************************************
 //***    nsGlobalWindow: Object Management
@@ -1011,6 +1022,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
+
+  for (nsTimeout* timeout = tmp->FirstTimeout();
+       tmp->IsTimeout(timeout);
+       timeout = timeout->Next()) {
+    cb.NoteNativeChild(timeout, &NS_CYCLE_COLLECTION_NAME(nsTimeout));
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSessionStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocumentPrincipal)
@@ -5266,26 +5284,25 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
   nsIPrincipal* callerPrin = callerInnerWin->GetPrincipal();
   if (!callerPrin)
     return NS_OK;
+  
   nsCOMPtr<nsIURI> callerOuterURI;
   if (NS_FAILED(callerPrin->GetURI(getter_AddRefs(callerOuterURI))))
     return NS_OK;
-  if (!callerOuterURI) {
+
+  nsAutoString origin;
+  if (callerOuterURI) {
+    // if the principal has a URI, use that to generate the origin
+    nsContentUtils::GetUTFOrigin(callerPrin, origin);
+  }
+  else {
+    // otherwise use the URI of the document to generate origin
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(callerInnerWin->mDocument);
     if (!doc)
       return NS_OK;
     callerOuterURI = doc->GetDocumentURI();
-    if (!callerOuterURI)
-      return NS_OK;
+    // if the principal has a URI, use that to generate the origin
+    nsContentUtils::GetUTFOrigin(callerOuterURI, origin);
   }
-  nsCOMPtr<nsIURI> callerURI = NS_GetInnermostURI(callerOuterURI);
-  if (!callerURI)
-    return NS_OK;
-  const nsCString& empty = EmptyCString();
-  nsCOMPtr<nsIURI> callerOrigin;
-  if (NS_FAILED(callerURI->Clone(getter_AddRefs(callerOrigin))) ||
-      NS_FAILED(callerOrigin->SetUserPass(empty)))
-    return NS_OK;
-
 
   // Convert the provided origin string into a URI for comparison purposes.
   // "*" indicates no specific origin is required.
@@ -5293,14 +5310,10 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
   if (!aOrigin.EqualsASCII("*")) {
     if (NS_FAILED(NS_NewURI(getter_AddRefs(providedOrigin), aOrigin)))
       return NS_ERROR_DOM_SYNTAX_ERR;
-    if (NS_FAILED(providedOrigin->SetUserPass(empty)) ||
-        NS_FAILED(providedOrigin->SetPath(empty)))
+    if (NS_FAILED(providedOrigin->SetUserPass(EmptyCString())) ||
+        NS_FAILED(providedOrigin->SetPath(EmptyCString())))
       return NS_OK;
   }
-
-  nsCAutoString origin;
-  if (NS_FAILED(callerOrigin->GetPrePath(origin)))
-    return NS_OK;
 
   // Create and asynchronously dispatch a runnable which will handle actual DOM
   // event creation and dispatch.
@@ -5308,7 +5321,7 @@ nsGlobalWindow::PostMessageMoz(const nsAString& aMessage, const nsAString& aOrig
     new PostMessageEvent(nsContentUtils::IsCallerChrome()
                          ? nsnull
                          : callerInnerWin->GetOuterWindowInternal(),
-                         NS_ConvertUTF8toUTF16(origin),
+                         origin,
                          aMessage,
                          this,
                          providedOrigin,
@@ -7759,7 +7772,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
         // The timeout still has an OS timer, and it's not an
         // interval, that means that the OS timer could still fire (if
         // it didn't already, i.e. aTimeout == timeout), cancel the OS
-        // timer and release it's reference to the timeout.
+        // timer and release its reference to the timeout.
         timeout->mTimer->Cancel();
         timeout->mTimer = nsnull;
 

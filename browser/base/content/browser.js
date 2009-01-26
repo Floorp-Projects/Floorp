@@ -2704,6 +2704,38 @@ var bookmarksButtonObserver = {
   }
 }
 
+var newTabButtonObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession) {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = gNavigatorBundle.getString("droponnewtabbutton");
+    aEvent.target.setAttribute("dragover", "true");
+    return true;
+  },
+  onDragExit: function (aEvent, aDragSession) {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = "";
+    aEvent.target.removeAttribute("dragover");
+  },
+  onDrop: function (aEvent, aXferData, aDragSession) {
+    var xferData = aXferData.data.split("\n");
+    var draggedText = xferData[0] || xferData[1];
+    var postData = {};
+    var url = getShortcutOrURI(draggedText, postData);
+    if (url) {
+      nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
+      // allow third-party services to fixup this URL
+      openNewTabWith(url, null, postData.value, aEvent, true);
+    }
+  },
+  getSupportedFlavours: function () {
+    var flavourSet = new FlavourSet();
+    flavourSet.appendFlavour("text/unicode");
+    flavourSet.appendFlavour("text/x-moz-url");
+    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+    return flavourSet;
+  }
+}
+
 var newWindowButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
     {
@@ -4898,7 +4930,27 @@ var contentAreaDNDObserver = {
       if (aEvent.getPreventDefault())
         return;
 
-      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+      var dragType = aXferData.flavour.contentType;
+      var dragData = aXferData.data;
+      if (dragType == "application/x-moz-tabbrowser-tab") {
+        // If the tab was dragged from some other tab bar, its own dragend
+        // handler will take care of detaching the tab
+        if (dragData instanceof XULElement && dragData.localName == "tab" &&
+            dragData.ownerDocument.defaultView == window) {
+          // Detach only if the mouse pointer was released a little
+          // bit down in the content area (to be precise, by tab-height)
+          if (aEvent.screenY > gBrowser.mPanelContainer.boxObject.screenY +
+                               dragData.boxObject.height) {
+            gBrowser.replaceTabWithWindow(dragData);
+            aEvent.dataTransfer.dropEffect = "move";
+            return;
+          }
+        }
+        aEvent.dataTransfer.dropEffect = "none";
+        return;
+      }
+
+      var url = transferUtils.retrieveURLFromData(dragData, dragType);
 
       // valid urls don't contain spaces ' '; if we have a space it
       // isn't a valid url, or if it's a javascript: or data: url,
@@ -4928,8 +4980,9 @@ var contentAreaDNDObserver = {
   getSupportedFlavours: function ()
     {
       var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("application/x-moz-tabbrowser-tab");
       flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("text/plain");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }

@@ -45,8 +45,10 @@
 
 #include <float.h>
 
+#ifndef CAIRO_DISABLE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>
+#endif
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -121,9 +123,11 @@ _cairo_ft_unscaled_font_keys_equal (const void *key_a,
 static void
 _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled);
 
+#ifndef CAIRO_DISABLE_FONTCONFIG
 static cairo_status_t
 _cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 				   FcPattern                  *pattern);
+#endif
 
 typedef enum _cairo_ft_extra_flags {
     CAIRO_FT_OPTIONS_HINT_METRICS = (1 << 0),
@@ -464,7 +468,7 @@ UNWIND:
     return NULL;
 }
 
-
+#ifndef CAIRO_DISABLE_FONTCONFIG
 static cairo_ft_unscaled_font_t *
 _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
 {
@@ -488,6 +492,7 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
 UNWIND:
     return NULL;
 }
+#endif
 
 static cairo_ft_unscaled_font_t *
 _cairo_ft_unscaled_font_create_from_face (FT_Face face)
@@ -1290,6 +1295,7 @@ typedef struct _cairo_ft_scaled_font {
 
 const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend;
 
+#ifndef CAIRO_DISABLE_FONTCONFIG
 /* The load flags passed to FT_Load_Glyph control aspects like hinting and
  * antialiasing. Here we compute them from the fields of a FcPattern.
  */
@@ -1425,6 +1431,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 
     *ret = ft_options;
 }
+#endif /* CAIRO_DISABLE_FONTCONFIG */
 
 static void
 _cairo_ft_options_merge (cairo_ft_options_t *options,
@@ -1621,6 +1628,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 				  const cairo_font_options_t  *font_options,
 				  cairo_scaled_font_t	     **font)
 {
+#ifndef CAIRO_DISABLE_FONTCONFIG
     FcPattern *pattern, *resolved;
     cairo_ft_unscaled_font_t *unscaled;
     FcResult result;
@@ -1727,6 +1735,9 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     FcPatternDestroy (pattern);
 
     return status;
+#else
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+#endif  /* CAIRO_DISABLE_FONTCONFIG */
 }
 
 static void
@@ -2148,10 +2159,11 @@ _cairo_ft_ucs4_to_index (void	    *abstract_font,
     if (!face)
 	return 0;
 
-    /* If making this compile without fontconfig, use:
-     * index = FT_Get_Char_Index (face, ucs4); */
+#ifdef CAIRO_DISABLE_FONTCONFIG
+    index = FT_Get_Char_Index (face, ucs4); 
+#else
     index = FcFreeTypeCharIndex (face, ucs4);
-
+#endif
     _cairo_ft_unscaled_font_unlock_face (unscaled);
     return index;
 }
@@ -2373,6 +2385,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
     return &font_face->base;
 }
 
+#ifndef CAIRO_DISABLE_FONTCONFIG
 /* implement the platform-specific interface */
 
 static cairo_status_t
@@ -2548,6 +2561,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 
     return font_face;
 }
+#endif /* CAIRO_DISABLE_FONTCONFIG */
 
 /**
  * cairo_ft_font_face_create_for_ft_face:

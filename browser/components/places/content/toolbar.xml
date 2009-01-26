@@ -1005,20 +1005,26 @@
 
         if (draggedDOMNode.localName == "toolbarbutton" &&
             draggedDOMNode.getAttribute("type") == "menu") {
-#ifdef XP_WIN
-          // Support folder dragging on the personal toolbar when the user
-          // holds the "alt" or "shift" key while dragging.
-          // Ctrl+drag is Copy
-          if (!event.shiftKey && !event.altKey && !event.ctrlKey)
+          // If the drag gesture on a container is toward down we open instead
+          // of dragging.
+          if (this._mouseDownTimer) {
+            this._mouseDownTimer.cancel();
+            this._mouseDownTimer = null;
+          }
+          var translateY = this._cachedMouseMoveEvent.clientY - event.clientY;
+          var translateX = this._cachedMouseMoveEvent.clientX - event.clientX;
+          if ((translateY) >= Math.abs(translateX/2)) {
+            // Don't start the drag
+            event.preventDefault();
+            // Open the menu
+            draggedDOMNode.open = true;
             return;
-#else
-          // Support folder dragging on the personal toolbar when the user
-          // holds the "shift" key while dragging
-          // Ctrl+drag is Copy
-          if (!event.shiftKey && !event.ctrlKey)
-            return;
-#endif
-          draggedDOMNode.firstChild.hidePopup();
+          }
+          // if the menu is open, close it
+          if (draggedDOMNode.open) {
+            draggedDOMNode.firstChild.hidePopup();
+            draggedDOMNode.open = false;
+          }
         }
 
         // activate the view and cache the dragged node
@@ -1145,16 +1151,11 @@
         this._draggedNode = null;
       ]]></handler>
 
-      <handler event="popupshowing" phase="capturing"><![CDATA[
-      // Don't show the popup if we are dragging a container.
-      if (this._draggingContainer) {
-          this._draggingContainer = false;
-#ifdef MOZ_WIDGET_GTK2
-          // Allow drag and drop of folders in Linux.
-          // We must prevent popupshowing event from firing when shift is pressed.
+      <handler event="popupshowing" phase="capturing"><![CDATA[      
+        if (!this._allowPopupShowing) {
+          this._allowPopupShowing = true;
           event.preventDefault();
-          return false;
-#endif
+          return;
         }
 
         var popup = event.originalTarget;
@@ -1193,15 +1194,49 @@
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[
-        // Allow drag and drop of folders in Linux.
-        // We must prevent popupshowing event from firing when shift is pressed.
-        var target = event.originalTarget;
-        if (event.button == 0 && event.shiftKey &&
-            target.localName == "toolbarbutton" && target.type == "menu")
-          this._draggingContainer = true;
+        var target = event.target;
+        if (event.button == 0 &&
+            target.localName == "toolbarbutton" &&
+            target.getAttribute("type") == "menu") {
+          this._allowPopupShowing = false;
+          // This is a container, we will open the menu if the user clicks
+          // or drag toward down or after a delay
+          this._mouseDownTimer = Cc["@mozilla.org/timer;1"]
+                                   .createInstance(Ci.nsITimer);
+          var callback = {
+            _self: this,
+		        _target: target,
+		        notify: function(timer) {
+              this._target.open = true;
+              this._self._mouseDownTimer = null;
+            }
+          };
+
+          this._mouseDownTimer.initWithCallback(callback, 500,
+                                                Ci.nsITimer.TYPE_ONE_SHOT);
+        }
+        else {
+          // allow opening popups, like the chevron and context menus
+          this._allowPopupShowing = true;
+        }
+      ]]></handler>
+
+      <handler event="mouseup"><![CDATA[
+        if (event.button != 0)
+          return;
+
+        if (this._mouseDownTimer) {
+          // On a click (down/up) we should open the menu popup
+          this._mouseDownTimer.cancel();
+          this._mouseDownTimer = null;
+          event.target.open = true;
+        }
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
+        // Used in dragStart to prevent dragging folders when dragging down
+        this._cachedMouseMoveEvent = event;
+
         if (this._openedMenuButton == null ||
             PlacesControllerDragHelper.getSession())
           return;

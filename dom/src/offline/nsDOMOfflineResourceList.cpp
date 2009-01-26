@@ -260,7 +260,7 @@ nsDOMOfflineResourceList::Disconnect()
 //
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::GetItems(nsIDOMDOMStringList **aItems)
+nsDOMOfflineResourceList::GetMozItems(nsIDOMDOMStringList **aItems)
 {
   *aItems = nsnull;
 
@@ -295,7 +295,7 @@ nsDOMOfflineResourceList::GetItems(nsIDOMDOMStringList **aItems)
 }
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::HasItem(const nsAString& aURI, PRBool* aExists)
+nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, PRBool* aExists)
 {
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -322,7 +322,7 @@ nsDOMOfflineResourceList::HasItem(const nsAString& aURI, PRBool* aExists)
 }
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::GetLength(PRUint32 *aLength)
+nsDOMOfflineResourceList::GetMozLength(PRUint32 *aLength)
 {
   if (!mManifestURI) {
     *aLength = 0;
@@ -340,7 +340,7 @@ nsDOMOfflineResourceList::GetLength(PRUint32 *aLength)
 }
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::Item(PRUint32 aIndex, nsAString& aURI)
+nsDOMOfflineResourceList::MozItem(PRUint32 aIndex, nsAString& aURI)
 {
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -359,7 +359,7 @@ nsDOMOfflineResourceList::Item(PRUint32 aIndex, nsAString& aURI)
 }
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::Add(const nsAString& aURI)
+nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
 {
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -393,7 +393,7 @@ nsDOMOfflineResourceList::Add(const nsAString& aURI)
   }
 
   PRUint32 length;
-  rv = GetLength(&length);
+  rv = GetMozLength(&length);
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 maxEntries = nsContentUtils::GetIntPref(kMaxEntriesPref,
                                                    DEFAULT_MAX_ENTRIES);
@@ -423,7 +423,7 @@ nsDOMOfflineResourceList::Add(const nsAString& aURI)
 }
 
 NS_IMETHODIMP
-nsDOMOfflineResourceList::Remove(const nsAString& aURI)
+nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
 {
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);

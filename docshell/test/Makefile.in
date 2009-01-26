@@ -60,7 +60,7 @@ _TEST_FILES = \
 		bug123696-subframe.html \
 		test_bug344861.html \
 		test_bug369814.html \
-		bug369814.zip       \
+		bug369814.zip \
 		test_bug384014.html \
 		test_bug387979.html \
 		test_bug404548.html \

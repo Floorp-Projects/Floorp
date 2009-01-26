@@ -12,8 +12,8 @@
 var gGotChecking = false;
 var gGotDownloading = false;
 
-ok(applicationCache.items.length == 0,
-   "applicationCache.items should be available and empty before associating with a cache.");
+ok(applicationCache.mozItems.length == 0,
+   "applicationCache.mozItems should be available and empty before associating with a cache.");
 
 function addFinished()
 {
@@ -21,28 +21,28 @@ function addFinished()
   OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          true);
 
-  OfflineTest.ok(applicationCache.length == 1, "applicationCache should have one dynamic entry (deprecated API)");
-  OfflineTest.ok(applicationCache.item(0) == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.ok(applicationCache.mozLength == 1, "applicationCache should have one dynamic entry (deprecated API)");
+  OfflineTest.ok(applicationCache.mozItem(0) == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
     "applicationCache's dynamic entry should be the one we expect (deprecated API)");
 
-  OfflineTest.ok(applicationCache.items.length == 1, "applicationCache should have one dynamic entry");
-  OfflineTest.ok(applicationCache.items[0] == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
+  OfflineTest.ok(applicationCache.mozItems.length == 1, "applicationCache should have one dynamic entry");
+  OfflineTest.ok(applicationCache.mozItems[0] == "http://localhost:8888/tests/SimpleTest/EventUtils.js",
     "applicationCache's dynamic entry should be the one we expect");
 
-  OfflineTest.ok(applicationCache.hasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
-                 "applicationCache.hasItem() should see the dynamic entry");
+  OfflineTest.ok(applicationCache.mozHasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
+                 "applicationCache.mozHasItem() should see the dynamic entry");
 
   // Now test that removes work
-  applicationCache.remove("http://localhost:8888/tests/SimpleTest/EventUtils.js");
+  applicationCache.mozRemove("http://localhost:8888/tests/SimpleTest/EventUtils.js");
 
   OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
                          false);
-  OfflineTest.ok(applicationCache.length == 0,
+  OfflineTest.ok(applicationCache.mozLength == 0,
                  "applicationCache should have no dynamic entries (deprecated API)");
-  OfflineTest.ok(applicationCache.items.length == 0,
+  OfflineTest.ok(applicationCache.mozItems.length == 0,
                  "applicationCache should have no dynamic entries");
-  OfflineTest.ok(!applicationCache.hasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
-                 "applicationCache.hasItem() should not see the removed dynamic entry");
+  OfflineTest.ok(!applicationCache.mozHasItem("http://localhost:8888/tests/SimpleTest/EventUtils.js"),
+                 "applicationCache.mozHasItem() should not see the removed dynamic entry");
 
   // We're done
 
@@ -83,7 +83,7 @@ function manifestUpdated()
   // XXX: make sure that the previous version went away after the swapCache().
 
   // Now add a file using the applicationCache API
-  applicationCache.add("http://localhost:8888/tests/SimpleTest/EventUtils.js");
+  applicationCache.mozAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js");
 
   // Wait for the add() to be downloaded
   OfflineTest.waitForAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js",

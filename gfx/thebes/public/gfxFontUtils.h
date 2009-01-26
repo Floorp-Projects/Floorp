@@ -88,6 +88,7 @@ public:
         }
     }
     PRBool test(PRUint32 aIndex) {
+        NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length())
             return PR_FALSE;

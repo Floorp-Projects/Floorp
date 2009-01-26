@@ -52,12 +52,19 @@ EXTRA_DSO_LDOPTS += \
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS	+= 	gfxWindowsFonts.cpp \
-		gfxWindowsPlatform.cpp \
+CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
 		gfxWindowsNativeDrawing.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
+
+ifdef WINCE
+DEFINES += -DMOZ_FT2_FONTS
+CPPSRCS	+= gfxFT2Fonts.cpp
+else
+CPPSRCS	+= gfxWindowsFonts.cpp 
+endif
+
 CPPSRCS +=	gfxPDFSurface.cpp
 
 _OS_LIBS	= usp10 msimg32
@@ -158,9 +165,14 @@ DEFINES += -DIMPL_THEBES
 
 include $(topsrcdir)/config/rules.mk
 
-
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifdef WINCE
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
+endif
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)

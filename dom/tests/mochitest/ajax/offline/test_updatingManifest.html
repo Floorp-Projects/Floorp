@@ -159,7 +159,7 @@ function manifestCached()
 
 function fallbackLoaded()
 {
-  applicationCache.add("http://localhost:8888/tests/SimpleTest/EventUtils.js");
+  applicationCache.mozAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js");
   OfflineTest.waitForAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js",
       dynamicLoaded);
 }

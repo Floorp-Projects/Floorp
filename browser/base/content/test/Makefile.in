@@ -84,9 +84,10 @@ _BROWSER_FILES = browser_bug321000.js \
                  zoom_test.html \
                  browser_bug416661.js \
                  browser_bug386835.js \
-                 bug386835.html \
+                 dummy_page.html \
                  browser_bug422590.js \
                  browser_sanitize-sitepermissions.js \
+                 browser_bug356571.js \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
