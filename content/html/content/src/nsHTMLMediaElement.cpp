@@ -259,20 +259,6 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
     mChannel = nsnull;
   }
 
-  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_MEDIA,
-                                 uri,
-                                 NodePrincipal(),
-                                 this,
-                                 EmptyCString(), // mime type
-                                 nsnull, // extra
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
-  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      uri,
                      nsnull,
