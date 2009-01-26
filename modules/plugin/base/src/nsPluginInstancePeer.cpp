@@ -819,6 +819,14 @@ nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
   return rv;
 }
 
+NS_IMETHODIMP
+nsPluginInstancePeerImpl::InvalidateOwner()
+{
+  mOwner = nsnull;
+
+  return NS_OK;
+}
+
 nsresult
 nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
                                      const nsMIMEType aMIMEType)
