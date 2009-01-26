@@ -51,6 +51,7 @@
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"
 #include "nsMediaDecoder.h"
+#include "nsDOMError.h"
 
 // Number of milliseconds between progress events as defined by spec
 #define PROGRESS_MS 350
@@ -101,6 +102,10 @@ void nsMediaDecoder::Shutdown()
   mElement = nsnull;
 }
 
+nsHTMLMediaElement* nsMediaDecoder::GetMediaElement()
+{
+  return mElement;
+}
 nsresult nsMediaDecoder::InitLogger() 
 {
 #ifdef PR_LOGGING

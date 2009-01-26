@@ -53,6 +53,7 @@ _TEST_FILES =	inner.html \
 		test_bug448587.html \
 		test_wrappers.html \
 		test_bug446584.html \
+		test_bug462428.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

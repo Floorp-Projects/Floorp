@@ -594,14 +594,10 @@ var PlacesOrganizer = {
      */
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
-#ifdef XP_WIN
-    var infoBoxExpanderLabel = document.getElementById("infoBoxExpanderLabel");
-#endif
+    var infoBoxExpanderWrapper = document.getElementById("infoBoxExpanderWrapper");
+
     if (!aNode) {
-      infoBoxExpander.hidden = true;
-#ifdef XP_WIN
-      infoBoxExpanderLabel.hidden = true;
-#endif
+      infoBoxExpanderWrapper.hidden = true;
       return;
     }
     if (aNode.itemId != -1 &&
@@ -611,19 +607,13 @@ var PlacesOrganizer = {
       if (infoBox.getAttribute("minimal") == "true")
         infoBox.setAttribute("wasminimal", "true");
       infoBox.removeAttribute("minimal");
-      infoBoxExpander.hidden = true;
-#ifdef XP_WIN
-      infoBoxExpanderLabel.hidden = true;
-#endif
+      infoBoxExpanderWrapper.hidden = true;
     }
     else {
       if (infoBox.getAttribute("wasminimal") == "true")
         infoBox.setAttribute("minimal", "true");
       infoBox.removeAttribute("wasminimal");
-      infoBoxExpander.hidden = false;
-#ifdef XP_WIN
-      infoBoxExpanderLabel.hidden = false;
-#endif
+      infoBoxExpanderWrapper.hidden = false;
     }
   },
 
@@ -766,30 +756,19 @@ var PlacesOrganizer = {
   toggleAdditionalInfoFields: function PO_toggleAdditionalInfoFields() {
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
-#ifdef XP_WIN
     var infoBoxExpanderLabel = document.getElementById("infoBoxExpanderLabel");
-#endif
+
     if (infoBox.getAttribute("minimal") == "true") {
       infoBox.removeAttribute("minimal");
-#ifdef XP_WIN
       infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("lesslabel");
       infoBoxExpanderLabel.setAttribute("accesskey", infoBoxExpanderLabel.getAttribute("lessaccesskey"));
       infoBoxExpander.className = "expander-up";
-#else
-      infoBoxExpander.label = infoBoxExpander.getAttribute("lesslabel");
-      infoBoxExpander.accessKey = infoBoxExpander.getAttribute("lessaccesskey");
-#endif
     }
     else {
       infoBox.setAttribute("minimal", "true");
-#ifdef XP_WIN
       infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("morelabel");
       infoBoxExpanderLabel.setAttribute("accesskey", infoBoxExpanderLabel.getAttribute("moreaccesskey"));
       infoBoxExpander.className = "expander-down";
-#else
-      infoBoxExpander.label = infoBoxExpander.getAttribute("morelabel");
-      infoBoxExpander.accessKey = infoBoxExpander.getAttribute("moreaccesskey");
-#endif
     }
   },
 

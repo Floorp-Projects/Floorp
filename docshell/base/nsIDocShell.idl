@@ -464,7 +464,8 @@ interface nsIDocShell : nsISupports
 
   /**
    * Disconnects this docshell's editor from its window, and stores the
-   * editor data in the open document's session history entry.
+   * editor data in the open document's session history entry.  This
+   * should be called only during page transitions.
    */
   [noscript, notxpcom] void DetachEditorFromWindow();
 

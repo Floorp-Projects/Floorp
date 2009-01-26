@@ -50,6 +50,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_theming.js \
 		browser_privatebrowsing_searchbar.js \
 		browser_privatebrowsing_findbar.js \
+		browser_privatebrowsing_zoom.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

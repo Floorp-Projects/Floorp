@@ -1213,17 +1213,24 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
     if (textAttr.Get(name, value))
       attributes->SetStringProperty(name, value, oldValue);
   }
-
+  
   nsIFrame *sourceFrame = nsCoreUtils::GetFrameFor(element);
-  if (sourceFrame) {
-    nsBackgroundTextAttr backgroundTextAttr(sourceFrame, nsnull);
+  NS_ENSURE_STATE(sourceFrame);
 
-    nsAutoString value;
-    if (backgroundTextAttr.Get(value)) {
-      nsAccUtils::SetAccAttr(attributes,
-                             nsAccessibilityAtoms::backgroundColor, value);
-    }
-  }
+  // set font size
+  nsAutoString value;
+  nsFontSizeTextAttr fontSizeTextAttr(sourceFrame, nsnull);
+  fontSizeTextAttr.Get(value);
+  nsAccUtils::SetAccAttr(attributes,
+                         nsAccessibilityAtoms::fontSize, value);
+  
+  value.Truncate();
+  
+  // set font background color
+  nsBackgroundTextAttr backgroundTextAttr(sourceFrame, nsnull);
+  backgroundTextAttr.Get(value);
+  nsAccUtils::SetAccAttr(attributes,
+                         nsAccessibilityAtoms::backgroundColor, value);
 
   return NS_OK;
 }
@@ -2379,8 +2386,15 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
     if (!aIncludeDefAttrs)
       rootFrame = nsCoreUtils::GetFrameFor(rootElm);
 
-    nsBackgroundTextAttr backgroundTextAttr(sourceFrame, rootFrame);
+    nsFontSizeTextAttr fontSizeTextAttr(sourceFrame, rootFrame);
     nsAutoString value;
+    if (fontSizeTextAttr.Get(value)) {
+      nsAccUtils::SetAccAttr(aAttributes,
+                             nsAccessibilityAtoms::fontSize, value);
+    }
+
+    nsBackgroundTextAttr backgroundTextAttr(sourceFrame, rootFrame);
+    value.Truncate();
     if (backgroundTextAttr.Get(value)) {
       nsAccUtils::SetAccAttr(aAttributes,
                              nsAccessibilityAtoms::backgroundColor, value);

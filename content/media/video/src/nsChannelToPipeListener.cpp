@@ -41,6 +41,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsChannelToPipeListener.h"
 #include "nsICachingChannel.h"
+#include "nsDOMError.h"
+#include "nsHTMLMediaElement.h"
 
 #define HTTP_OK_CODE 200
 #define HTTP_PARTIAL_RESPONSE_CODE 206
@@ -98,6 +100,19 @@ nsresult nsChannelToPipeListener::GetInputStream(nsIInputStream** aStream)
 
 nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
+  nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+  if (element->ShouldCheckAllowOrigin()) {
+    // If the request was cancelled by nsCrossSiteListenerProxy due to failing
+    // the Access Control check, send an error through to the media element.
+    nsresult status;
+    nsresult rv = aRequest->GetStatus(&status);
+    if (NS_FAILED(rv) || status == NS_ERROR_DOM_BAD_URI) {
+      mDecoder->NetworkError();
+      return NS_ERROR_DOM_BAD_URI;
+    }
+  }
+
   mIntervalStart = PR_IntervalNow();
   mIntervalEnd = mIntervalStart;
   mTotalBytes = 0;

@@ -39,7 +39,7 @@
 
 /**
  * Represents a BooleanExpr, a binary expression that
- * performs a boolean operation between it's lvalue and rvalue.
+ * performs a boolean operation between its lvalue and rvalue.
 **/
 
 #include "txExpr.h"

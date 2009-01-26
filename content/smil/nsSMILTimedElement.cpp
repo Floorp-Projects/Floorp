@@ -129,7 +129,7 @@ nsSMILTimedElement::BeginElementAt(double aOffsetSeconds,
   //
   // Intuitively this change should take effect before the subsequent call to
   // BeginElementAt however to get this to take effect we need to drive the
-  // state engine through it's sequence active-waiting-active by calling Sample.
+  // state engine through its sequence active-waiting-active by calling Sample.
   //
   // When we get the second call to BeginElementAt the element should be in the
   // active state and hence the new begin instance time will be ignored because

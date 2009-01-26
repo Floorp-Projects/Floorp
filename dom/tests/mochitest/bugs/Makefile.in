@@ -58,6 +58,12 @@ _TEST_FILES	= \
 		test_bug335976.xhtml \
 		test_bug342448.html \
 		test_bug345521.html \
+		test_bug346659.html \
+		bug346659-echoer.html \
+		bug346659-parent.html \
+		bug346659-parent-echoer.html \
+		bug346659-opener.html \
+		bug346659-opener-echoer.html \
 		test_bug351601.html \
 		test_bug370098.html \
 		test_bug375457.html \

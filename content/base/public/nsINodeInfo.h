@@ -163,7 +163,7 @@ public:
    *
    * For the HTML element "<body>" in a HTML document this will return a null
    * string and for the XML element "<html:body>" (assuming that this element,
-   * or one of it's ancestors has an
+   * or one of its ancestors has an
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the string "http://www.w3.org/1999/xhtml".
    */
@@ -175,7 +175,7 @@ public:
    *
    * For the HTML element "<body>" in a HTML document this will return
    * kNameSpaceID_None and for the XML element "<html:body>" (assuming that
-   * this element, or one of it's ancestors has an
+   * this element, or one of its ancestors has an
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the namespace ID for "http://www.w3.org/1999/xhtml".
    */

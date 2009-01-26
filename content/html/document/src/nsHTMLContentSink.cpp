@@ -1602,7 +1602,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = aDoc->GetScriptGlobalObject();
 
-  // Getting context is tricky if the document hasn't had it's
+  // Getting context is tricky if the document hasn't had its
   // GlobalObject set yet
   if (!globalObject) {
     nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(aContainer);

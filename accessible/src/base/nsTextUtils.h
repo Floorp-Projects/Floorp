@@ -122,9 +122,14 @@ public:
   // nsTextAttr
   virtual PRBool Equal(nsIDOMElement *aElm);
 
+  // nsBackgroundTextAttr
+
   /**
-   * Returns true and background color value if "background-color" text
-   * attribute should be exposed.
+   * Retrieve the "background-color" in out param, return true if differs from
+   * the default background-color.
+   * 
+   * @param aValue      [out] the background color in pts
+   * @return            true if background color differs from default
    */
   virtual PRBool Get(nsAString& aValue);
 
@@ -141,6 +146,42 @@ private:
    * @return            background color
    */
   nscolor GetColor(nsIFrame *aFrame);
+
+  nsIFrame *mFrame;
+  nsIFrame *mRootFrame;
+};
+
+/**
+ * Class is used for the work with "font-size" text attribute. It is
+ * used in nsHyperTextAccessible.
+ */
+class nsFontSizeTextAttr : public nsTextAttr
+{
+public:
+  nsFontSizeTextAttr(nsIFrame *aFrame, nsIFrame *aRootFrame);
+  
+  // nsTextAttr
+  virtual PRBool Equal(nsIDOMElement *aElm);
+
+  // nsFontSizeTextAttr
+
+  /**
+   * Retrieve the "font-size" in out param, return true if differs from
+   * the default font-size.
+   * 
+   * @param aValue      [out] the font size in pts
+   * @return            true if font size differs from default
+   */
+  virtual PRBool Get(nsAString& aValue);
+
+private:
+  /**
+   * Return font size for the given frame.
+   *
+   * @param aFrame      [in] the given frame to query font-size
+   * @return            font size
+   */
+   nscoord GetFontSize(nsIFrame *aFrame);
 
   nsIFrame *mFrame;
   nsIFrame *mRootFrame;

@@ -83,7 +83,7 @@
 **| to efficiently accumulate many bytes between such function calls.
 **|
 **|| FlushSink: this flush method should move any buffered content to 
-**| it's final destination.  For example, for buffered writes to a
+**| its final destination.  For example, for buffered writes to a
 **| string medium, where string methods are function calls and not just
 **| inline macros, it is faster to accumulate many bytes in a small
 **| local buffer and then move these en masse later in a single call.

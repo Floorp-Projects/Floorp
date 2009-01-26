@@ -37,12 +37,17 @@ EXPORTS		= 	gfxASurface.h \
 EXPORTS += gfxFontTest.h
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-EXPORTS	+=	gfxWindowsFonts.h \
-		gfxWindowsPlatform.h \
+EXPORTS	+=	gfxWindowsPlatform.h \
 		gfxWindowsSurface.h \
 		gfxWindowsNativeDrawing.h \
 		$(NULL)
 EXPORTS +=	gfxPDFSurface.h
+
+ifdef WINCE
+EXPORTS +=	gfxFT2Fonts.h 
+else
+EXPORTS +=	gfxWindowsFonts.h 
+endif
 
 endif
 

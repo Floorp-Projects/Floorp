@@ -78,7 +78,7 @@ public:
   NS_IMETHOD SetCheckedChangedInternal(PRBool aCheckedChanged) = 0;
 
   /**
-   * Let an entire radio group know that it's "checked" property has been
+   * Let an entire radio group know that its "checked" property has been
    * changed by JS or by the user (calls SetCheckedChangedInternal multiple
    * times via a visitor)
    *

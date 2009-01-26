@@ -891,7 +891,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   SetBinding(aContent, nsnull);
   binding->MarkForDeath();
   
-  // ...and recreate it's frames. We need to do this since the frames may have
+  // ...and recreate its frames. We need to do this since the frames may have
   // been removed and style may have changed due to the removal of the
   // anonymous children.
   // XXXbz this should be using the current doc (if any), not the owner doc.
