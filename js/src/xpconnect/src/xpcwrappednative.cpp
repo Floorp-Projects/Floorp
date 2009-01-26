@@ -653,19 +653,15 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
 XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
                                    XPCWrappedNativeProto* aProto)
     : mMaybeProto(aProto),
+      mSet(aProto->GetSet()),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
       mWrapper(nsnull)
 {
     NS_ADDREF(mIdentity = aIdentity);
 
-    nsCycleCollectionParticipant* cp;
-    PRBool noCC = !aProto->ClassIsMainThreadOnly() &&
-                  NS_FAILED(CallQueryInterface(aIdentity, &cp));
-    SetSet(aProto->GetSet(), noCC);
-
     NS_ASSERTION(mMaybeProto, "bad ctor param");
-    NS_ASSERTION(GetSetNoLock(), "bad ctor param");
+    NS_ASSERTION(mSet, "bad ctor param");
 
     DEBUG_TrackNewWrapper(this);
 }
@@ -676,15 +672,12 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
                                    XPCNativeSet* aSet)
 
     : mMaybeScope(TagScope(aScope)),
+      mSet(aSet),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
       mWrapper(nsnull)
 {
     NS_ADDREF(mIdentity = aIdentity);
-
-    nsCycleCollectionParticipant* cp;
-    PRBool noCC = NS_FAILED(CallQueryInterface(aIdentity, &cp));
-    SetSet(aSet, noCC);
 
     NS_ASSERTION(aScope, "bad ctor param");
     NS_ASSERTION(aSet, "bad ctor param");
@@ -1140,12 +1133,11 @@ XPCWrappedNative::SystemIsBeingShutDown(JSContext* cx)
     {
         printf("Removing root for still-live XPCWrappedNative %p wrapping:\n",
                static_cast<void*>(this));
-        XPCNativeSet* set = GetSetNoLock();
-        for(PRUint16 i = 0, i_end = set->GetInterfaceCount(); i < i_end; ++i)
+        for(PRUint16 i = 0, i_end = mSet->GetInterfaceCount(); i < i_end; ++i)
         {
             nsXPIDLCString name;
-            set->GetInterfaceAt(i)->GetInterfaceInfo()
-               ->GetName(getter_Copies(name));
+            mSet->GetInterfaceAt(i)->GetInterfaceInfo()
+                ->GetName(getter_Copies(name));
             printf("  %s\n", name.get());
         }
     }
@@ -1495,16 +1487,16 @@ JSBool
 XPCWrappedNative::ExtendSet(XPCCallContext& ccx, XPCNativeInterface* aInterface)
 {
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
-    XPCNativeSet* set = GetSetNoLock();
-    if(!set->HasInterface(aInterface))
+
+    if(!mSet->HasInterface(aInterface))
     {
         AutoMarkingNativeSetPtr newSet(ccx);
-        newSet = XPCNativeSet::GetNewOrUsed(ccx, set, aInterface,
-                                            set->GetInterfaceCount());
+        newSet = XPCNativeSet::GetNewOrUsed(ccx, mSet, aInterface,
+                                            mSet->GetInterfaceCount());
         if(!newSet)
             return JS_FALSE;
 
-        SetSet(newSet);
+        mSet = newSet;
 
         DEBUG_ReportShadowedMembers(newSet, this, GetProto());
     }
@@ -1636,11 +1628,10 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
     // If the scriptable helper forbids us from reflecting additional
     // interfaces, then don't even try the QI, just fail.
-    XPCNativeSet* set = GetSetNoLock();
     if(mScriptableInfo &&
        mScriptableInfo->GetFlags().ClassInfoInterfacesOnly() &&
-       !set->HasInterface(aInterface) &&
-       !set->HasInterfaceWithAncestor(aInterface))
+       !mSet->HasInterface(aInterface) &&
+       !mSet->HasInterfaceWithAncestor(aInterface))
     {
         return NS_ERROR_NO_INTERFACE;
     }
@@ -1794,7 +1785,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
     // because we unlocked and called out in the interim and the result of the
     // previous call might not be correct anymore.
 
-    if(!set->HasInterface(aInterface) && !ExtendSet(ccx, aInterface))
+    if(!mSet->HasInterface(aInterface) && !ExtendSet(ccx, aInterface))
     {
         NS_RELEASE(obj);
         aTearOff->SetInterface(nsnull);
@@ -2791,11 +2782,10 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
         else
             XPC_LOG_ALWAYS(("Scope @ %x", GetScope()));
 
-        XPCNativeSet* set = GetSetNoLock();
-        if(depth && set)
-            set->DebugDump(depth);
+        if(depth && mSet)
+            mSet->DebugDump(depth);
         else
-            XPC_LOG_ALWAYS(("mSet @ %x", set));
+            XPC_LOG_ALWAYS(("mSet @ %x", mSet));
 
         XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject));
         XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity));
