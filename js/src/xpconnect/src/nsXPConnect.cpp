@@ -706,35 +706,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     uint32 traceKind = js_GetGCThingTraceKind(p);
-    JSObject *obj;
-    JSClass *clazz;
-
-    // We do not want to add wrappers to the cycle collector if their native
-    // can't participate because they might be used off of the main thread, the
-    // cycle collector isn't able to deal with such objects. We do want to
-    // explicitly mark them for cycle collection if the wrapper has an
-    // external reference, because the wrapper would mark the JS object if
-    // we did add the wrapper to the cycle collector.
-    JSBool dontTraverse = PR_FALSE;
-    JSBool markJSObject = PR_FALSE;
-    if(traceKind == JSTRACE_OBJECT)
-    {
-        obj = static_cast<JSObject*>(p);
-        clazz = OBJ_GET_CLASS(cx, obj);
-
-        if(clazz == &XPC_WN_Tearoff_JSClass)
-        {
-            XPCWrappedNative *wrapper =
-                (XPCWrappedNative*)xpc_GetJSPrivate(STOBJ_GET_PARENT(obj));
-            dontTraverse = wrapper->DontCycleCollect();
-        }
-        else if(IS_WRAPPER_CLASS(clazz))
-        {
-            XPCWrappedNative *wrapper = (XPCWrappedNative*)xpc_GetJSPrivate(obj);
-            dontTraverse = wrapper->DontCycleCollect();
-            markJSObject = dontTraverse && wrapper->HasExternalReference();
-        }
-    }
 
     CCNodeType type;
 
@@ -755,14 +726,12 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         // ExplainLiveExpectedGarbage codepath
         PLDHashEntryHdr* entry =
             PL_DHashTableOperate(&mJSRoots, p, PL_DHASH_LOOKUP);
-        type = markJSObject || PL_DHASH_ENTRY_IS_BUSY(entry) ? GCMarked :
-                                                               GCUnmarked;
+        type = PL_DHASH_ENTRY_IS_BUSY(entry) ? GCMarked : GCUnmarked;
     }
     else
     {
         // Normal codepath (matches non-DEBUG_CC codepath).
-        type = !markJSObject && JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked :
-                                                                 GCMarked;
+        type = JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked : GCMarked;
     }
 
     char name[72];
@@ -886,8 +855,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     }
 #else
-    type = !markJSObject && JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked :
-                                                             GCMarked;
+    type = JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked : GCMarked;
     cb.DescribeNode(type, 0);
 #endif
 
@@ -908,9 +876,12 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JS_TRACER_INIT(&trc, cx, NoteJSChild);
     JS_TraceChildren(&trc, p, traceKind);
 
-    if(traceKind != JSTRACE_OBJECT || dontTraverse)
+    if(traceKind != JSTRACE_OBJECT)
         return NS_OK;
     
+    JSObject *obj = static_cast<JSObject*>(p);
+    JSClass* clazz = OBJ_GET_CLASS(cx, obj);
+
     if(clazz == &XPC_WN_Tearoff_JSClass)
     {
         // A tearoff holds a strong reference to its native object

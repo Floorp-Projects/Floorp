@@ -2193,29 +2193,11 @@ public:
                                 GetProto()->GetLock() : nsnull;}
 
     XPCNativeSet*
-    GetSet() const {XPCAutoLock al(GetLock()); return GetSetNoLock();}
-
-#define XPC_SET_WORD(s)        ((jsword)(s))
-#define XPC_SET_MASK           ((jsword)0x1)
-#define XPC_NOT_CC_PARTICIPANT ((jsword)0x1)
-
-    inline JSBool
-    DontCycleCollect() const
-        {return XPC_SET_WORD(mSet) & XPC_NOT_CC_PARTICIPANT;}
+    GetSet() const {XPCAutoLock al(GetLock()); return mSet;}
 
 private:
-    inline void
-    SetSet(XPCNativeSet* set, PRBool aDontCycleCollect)
-        {mSet = aDontCycleCollect ?
-                (XPCNativeSet*)(XPC_SET_WORD(set) | XPC_NOT_CC_PARTICIPANT) :
-                set;}
-
-    inline void
-    SetSet(XPCNativeSet* set) {SetSet(set, DontCycleCollect());}
-
-    inline XPCNativeSet*
-    GetSetNoLock() const
-        {return (XPCNativeSet*)(XPC_SET_WORD(mSet) & ~XPC_SET_MASK);}
+    void
+    SetSet(XPCNativeSet* set) {XPCAutoLock al(GetLock()); mSet = set;}
 
     inline void
     ExpireWrapper()
@@ -2329,7 +2311,7 @@ public:
                                          nsresult* pError = nsnull);
     void Mark() const
     {
-        GetSetNoLock()->Mark();
+        mSet->Mark();
         if(mScriptableInfo) mScriptableInfo->Mark();
         if(HasProto()) GetProto()->Mark();
     }
