@@ -159,11 +159,11 @@ endif
 repackage-zip-%: $(ZIP_IN) $(STAGEDIST) libs-%
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
 
-APP_DEFINES = $(or $(wildcard $(LOCALE_SRCDIR)/defines.inc), \
-                   $(srcdir)/en-US/defines.inc)
-TK_DEFINES = \
-  $(or $(wildcard $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc), \
-       $(topsrcdir)/toolkit/locales/en-US/defines.inc)
+APP_DEFINES = $(firstword $(wildcard $(LOCALE_SRCDIR)/defines.inc) \
+                          $(srcdir)/en-US/defines.inc)
+TK_DEFINES = $(firstword \
+   $(wildcard $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc) \
+   $(topsrcdir)/toolkit/locales/en-US/defines.inc)
 
 langpack-%: LANGPACK_FILE=$(_ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-%: AB_CD=$*
