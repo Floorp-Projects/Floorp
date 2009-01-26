@@ -10,17 +10,6 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-function runTest() {
-  var tests = execTests();
-  function execNext() {
-    try {
-      tests.next();
-      setTimeout(execNext, 0);
-    } catch (e) {}
-  }
-  execNext();
-}
-
 function execTests() {
   var e = document.getElementById("edit");
   var doc = e.contentDocument;
@@ -200,7 +189,7 @@ function execTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(runTest);
+addLoadEvent(execTests);
 ]]>
 </script>
 
