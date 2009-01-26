@@ -2574,21 +2574,16 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     /* We had better not be entering the interpreter from JIT-compiled code. */
-    TraceRecorder *tr = NULL;
-    if (JS_ON_TRACE(cx)) {
-        tr = TRACE_RECORDER(cx);
+    TraceRecorder *tr = TRACE_RECORDER(cx);
+
+    /* If a recorder is pending and we try to re-enter the interpreter, flag 
+       the recorder to be destroyed when we return. */
+    if (tr) {
         SET_TRACE_RECORDER(cx, NULL);
-        JS_TRACE_MONITOR(cx).onTrace = JS_FALSE;
-        /*
-         * ON_TRACE means either recording or coming from traced code.
-         * If there's no recorder (the latter case), don't care.
-         */
-        if (tr) {
-            if (tr->wasDeepAborted())
-                tr->removeFragmentoReferences();
-            else
-                tr->pushAbortStack();
-        }
+        if (tr->wasDeepAborted())
+            tr->removeFragmentoReferences();
+        else
+            tr->pushAbortStack();
     }
 #endif
 
@@ -7089,7 +7084,6 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     if (tr) {
-        JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
         if (!tr->wasDeepAborted()) {
             tr->popAbortStack();
