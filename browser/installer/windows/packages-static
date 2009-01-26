@@ -155,7 +155,7 @@ bin\components\necko_http.xpt
 bin\components\necko_res.xpt
 bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
-#ifdef MOZ_OJI
+#ifdef OJI
 bin\components\oji.xpt
 #endif
 bin\components\loginmgr.xpt
