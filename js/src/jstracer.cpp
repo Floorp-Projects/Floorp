@@ -2805,7 +2805,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
     return found;
 }
 
-bool
+JS_REQUIRES_STACK bool
 TraceRecorder::hasIteratorMethod(JSObject* obj)
 {
     JS_ASSERT(cx->fp->regs->sp + 2 <= cx->fp->slots + cx->fp->script->nslots);
@@ -3201,7 +3201,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer)
     return true;
 }
 
-static inline bool isSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
+JS_REQUIRES_STACK static inline bool isSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
 {
     if (slot < ti->stackSlots)
         return oracle.isStackSlotUndemotable(cx, slot);

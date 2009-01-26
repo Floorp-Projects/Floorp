@@ -481,7 +481,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
 
     bool hasMethod(JSObject* obj, jsid id);
-    bool hasIteratorMethod(JSObject* obj);
+    JS_REQUIRES_STACK bool hasIteratorMethod(JSObject* obj);
 
 public:
     JS_REQUIRES_STACK
