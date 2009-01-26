@@ -2854,9 +2854,6 @@ js_DeleteRecorder(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Aborting and completing a trace end up here. */
-    JS_ASSERT(tm->onTrace);
-    tm->onTrace = false;
-
     delete tm->recorder;
     tm->recorder = NULL;
 }
@@ -2883,15 +2880,6 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
                  VMSideExit* expectedInnerExit, Fragment* outer)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    /*
-     * Emulate on-trace semantics and avoid rooting headaches while recording,
-     * by suppressing last-ditch GC attempts while recording a trace. This does
-     * means that trace recording must not nest or the following assertion will
-     * botch.
-     */
-    JS_ASSERT(!tm->onTrace);
-    tm->onTrace = true;
 
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
@@ -3775,15 +3763,12 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #endif
 #endif
 
-    /*
-     * We may be called from js_MonitorLoopEdge while not recording, or while
-     * recording. Rather than over-generalize by using a counter instead of a
-     * flag, we simply sample and update tm->onTrace if necessary.
-     */
-    bool onTrace = tm->onTrace;
-    if (!onTrace)
-        tm->onTrace = true;
-    VMSideExit* lr;
+    /* Set a flag that indicates to the runtime system that we are running in native code
+       now and we don't want automatic GC to happen. Instead we will get a silent failure,
+       which will cause a trace exit at which point the interpreter re-tries the operation
+       and eventually triggers the GC. */
+    JS_ASSERT(!tm->onTrace);
+    tm->onTrace = true;
     
     debug_only(fflush(NULL);)
     GuardRecord* rec;
@@ -3792,13 +3777,13 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #else
     rec = u.func(&state, NULL);
 #endif
-    lr = (VMSideExit*)rec->exit;
+    VMSideExit* lr = (VMSideExit*)rec->exit;
 
     AUDIT(traceTriggered);
 
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
 
-    tm->onTrace = onTrace;
+    tm->onTrace = false;
 
     /* Except if we find that this is a nested bailout, the guard the call returned is the
        one we have to use to adjust pc and sp. */
@@ -4363,7 +4348,7 @@ js_FlushJITCache(JSContext* cx)
 JS_FORCES_STACK JSStackFrame *
 js_GetTopStackFrame(JSContext *cx)
 {
-    if (JS_EXECUTING_TRACE(cx)) {
+    if (JS_ON_TRACE(cx)) {
         /*
          * TODO: If executing a tree, synthesize stack frames and bail off
          * trace. See bug 462027.
