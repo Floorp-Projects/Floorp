@@ -68,7 +68,7 @@ _TEST_FILES = 	test_bug288789.html \
 		test_bug469613.xul \
 		test_character_movement.html \
 		test_word_movement.html \
-		test_backspace_delete.xul \
+		test_backspace_delete.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
