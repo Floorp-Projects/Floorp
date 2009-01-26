@@ -73,6 +73,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
+#include "nsIPluginInstancePeer2.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #ifdef OJI
@@ -2277,6 +2278,18 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     pph->DeletePluginNativeWindow(mPluginWindow);
     mPluginWindow = nsnull;
   }
+
+  if (mInstance) {
+    nsCOMPtr<nsIPluginInstancePeer> peer;
+    mInstance->GetPeer(getter_AddRefs(peer));
+
+    nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+
+    if (peer2) {
+      // Tell the peer that its owner is going away.
+      peer2->InvalidateOwner();
+    }
+  }
 }
 
 /*
@@ -2306,6 +2319,20 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
 {
+  // XXX: We should probably never already have an instance when we
+  // get here, but in case we do... At some point we should remove
+  // this code and ensure elsewhere that it's not needed.
+  if (mInstance && mInstance != aInstance) {
+    nsCOMPtr<nsIPluginInstancePeer> peer;
+    mInstance->GetPeer(getter_AddRefs(peer));
+
+    nsCOMPtr<nsIPluginInstancePeer2> peer2(do_QueryInterface(peer));
+
+    if (peer2) {
+      peer2->InvalidateOwner();
+    }
+  }
+
   mInstance = aInstance;
 
   return NS_OK;
