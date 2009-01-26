@@ -1255,7 +1255,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
           // ----- look at our min and max limits make sure we aren't too small or too big -----
           if (!computedBoxSizes->valid) {
-            PRInt32 newSize = pref + sizeRemaining*flex/spacerConstantsRemaining; //NSToCoordRound(float((sizeRemaining*flex)/spacerConstantsRemaining));
+            PRInt32 newSize = pref + PRInt32(PRInt64(sizeRemaining) * flex / spacerConstantsRemaining);
 
             if (newSize<=min) {
               computedBoxSizes->size = min;
@@ -1297,7 +1297,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
       flex = boxSizes->flex;
 
       if (!computedBoxSizes->valid) {
-        computedBoxSizes->size = pref + flex*sizeRemaining/spacerConstantsRemaining; //NSToCoordFloor(float((flex*sizeRemaining)/spacerConstantsRemaining));
+        computedBoxSizes->size = pref + PRInt32(PRInt64(sizeRemaining) * flex / spacerConstantsRemaining);
         computedBoxSizes->valid = PR_TRUE;
       }
 

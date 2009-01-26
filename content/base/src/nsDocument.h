@@ -665,7 +665,7 @@ public:
 
   /**
    * Create a new presentation shell that will use aContext for
-   * it's presentation context (presentation context's <b>must not</b> be
+   * its presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
    */
   virtual nsresult CreateShell(nsPresContext* aContext,

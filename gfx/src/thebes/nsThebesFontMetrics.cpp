@@ -92,6 +92,8 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mFontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle, 
                                                     aUserFontSet);
+    if (mFontGroup->FontListLength() < 1) 
+        return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
 }

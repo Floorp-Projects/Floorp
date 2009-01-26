@@ -73,6 +73,7 @@ public:
   void TearDownEditor();
   nsresult DetachFromWindow();
   nsresult ReattachToWindow(nsIDocShell *aDocShell);
+  PRBool WaitingForLoad() const { return mMakeEditable; }
 
 protected:
 

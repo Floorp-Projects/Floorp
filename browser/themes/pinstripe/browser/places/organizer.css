@@ -614,6 +614,10 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
   max-width: 0;
 }
 
+#infoBoxExpanderLabel {
+  display: none;
+}
+
 #infoBox[minimal="true"] #infoBoxExpander {
   list-style-image: url("chrome://browser/skin/places/twisty-closed.gif");
 }

@@ -80,9 +80,9 @@ endif
 
 ifdef ENABLE_TESTS
 ifneq (,$(filter WINNT Darwin Linux,$(OS_ARCH)))
+DIRS += test
 TOOL_DIRS += sdk
 endif
-DIRS += test
 endif
 
 endif # MOZ_PLUGINS

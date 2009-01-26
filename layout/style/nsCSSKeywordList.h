@@ -465,6 +465,7 @@ CSS_KEY(top-outside, top_outside)
 CSS_KEY(translate, translate)
 CSS_KEY(translatex, translatex)
 CSS_KEY(translatey, translatey)
+CSS_KEY(transparent, transparent) // for nsComputedDOMStyle only
 CSS_KEY(tri-state, tri_state)
 CSS_KEY(ultra-condensed, ultra_condensed)
 CSS_KEY(ultra-expanded, ultra_expanded)

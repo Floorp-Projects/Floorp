@@ -149,6 +149,8 @@ struct nsTimeout : PRCList
   nsTimeout();
   ~nsTimeout();
 
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
+
   nsrefcnt Release();
   nsrefcnt AddRef();
 
@@ -199,7 +201,7 @@ struct nsTimeout : PRCList
 
 private:
   // reference count for shared usage
-  PRInt32 mRefCnt;
+  nsAutoRefCnt mRefCnt;
 };
 
 //*****************************************************************************

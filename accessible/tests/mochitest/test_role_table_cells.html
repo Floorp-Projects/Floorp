@@ -22,15 +22,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=474281
   <script type="application/javascript">
     function doTests()
     {
-      // XXX For the below tests, remove the name tests once bug 468034 is
-      // fixed, and do the name tests in the new infrastructure.
-
       // Test table cell name and role
-      testName("tc", null);
       testRole("tc", ROLE_CELL);
 
       // Test grid cell.
-      testName("gc", "This is a paragraph This is a link    This is a list");
       testRole("gc", ROLE_GRID_CELL);
 
       SimpleTest.finish();
