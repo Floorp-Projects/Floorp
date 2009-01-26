@@ -40,13 +40,13 @@
 
 interface nsIDOMDOMStringList;
 
-[scriptable, uuid(dfcf7ad8-da0d-4e71-b36c-1780733a18e9)]
+[scriptable, uuid(f394a721-66e9-46fc-bb24-b980bb732dd0)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**
    * Get the list of dynamically-managed entries.
    */
-  readonly attribute nsIDOMDOMStringList items;
+  readonly attribute nsIDOMDOMStringList mozItems;
 
   /**
    * Check that an entry exists in the list of dynamically-managed entries.
@@ -54,21 +54,21 @@ interface nsIDOMOfflineResourceList : nsISupports
    * @param uri
    *        The resource to check.
    */
-  boolean hasItem(in DOMString uri);
+  boolean mozHasItem(in DOMString uri);
 
   /**
    * Get the number of dynamically-managed entries.
    * @status DEPRECATED
    *         Clients should use the "items" attribute.
    */
-  readonly attribute unsigned long length;
+  readonly attribute unsigned long mozLength;
 
   /**
    * Get the URI of a dynamically-managed entry.
    * @status DEPRECATED
    *         Clients should use the "items" attribute.
    */
-  DOMString item(in unsigned long index);
+  DOMString mozItem(in unsigned long index);
 
   /**
    * Add an item to the list of dynamically-managed entries.  The resource
@@ -77,7 +77,7 @@ interface nsIDOMOfflineResourceList : nsISupports
    * @param uri
    *        The resource to add.
    */
-  void add(in DOMString uri);
+  void mozAdd(in DOMString uri);
 
   /**
    * Remove an item from the list of dynamically-managed entries.  If this
@@ -87,7 +87,7 @@ interface nsIDOMOfflineResourceList : nsISupports
    * @param uri
    *        The resource to remove.
    */
-  void remove(in DOMString uri);
+  void mozRemove(in DOMString uri);
 
   /**
    * State of the application cache this object is associated with.
