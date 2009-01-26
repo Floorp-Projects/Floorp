@@ -22,13 +22,13 @@ function expectInvalidState(fn, desc) {
 }
 
 is(typeof(applicationCache), "object");
-is(applicationCache.length, 0, "applicationCache.length should be 0");
+is(applicationCache.mozLength, 0, "applicationCache.mozLength should be 0");
 is(applicationCache.status, 0, "applicationCache.status should be 0 (UNCACHED)");
 
-expectInvalidState(function() { applicationCache.add("http://localhost:8888/MochiKit/packed.js"); },
-                   "applicationCache.add should throw INVALID_STATE_ERR");
-expectInvalidState(function() { applicationCache.remove("http://localhost:8888/MochiKit/packed.js"); },
-                   "applicationCache.remove should throw INVALID_STATE_ERR");
+expectInvalidState(function() { applicationCache.mozAdd("http://localhost:8888/MochiKit/packed.js"); },
+                   "applicationCache.mozAdd should throw INVALID_STATE_ERR");
+expectInvalidState(function() { applicationCache.mozRemove("http://localhost:8888/MochiKit/packed.js"); },
+                   "applicationCache.mozRemove should throw INVALID_STATE_ERR");
 expectInvalidState(function() { applicationCache.update(); },
                    "applicationCache.update should throw INVALID_STATE_ERR");
 expectInvalidState(function() { applicationCache.swapCache(); },
