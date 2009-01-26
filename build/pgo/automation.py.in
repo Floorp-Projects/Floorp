@@ -361,8 +361,11 @@ def fillCertificateDB(profileDir):
   for item in files:
     root, ext = os.path.splitext(item)
     if ext == ".ca":
+      trustBits = "CT,,"
+      if root.endswith("-object"):
+        trustBits = "CT,,CT"
       Process([certutil, "-A", "-i", os.path.join(CERTS_SRC_DIR, item),
-        "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", "CT,,"],
+        "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
         env = environment()).wait()
     if ext == ".client":
       Process([pk12util, "-i", os.path.join(CERTS_SRC_DIR, item), "-w",
