@@ -2056,9 +2056,9 @@ RefillDoubleFreeList(JSContext *cx)
         return NULL;
     }
 
-    if (rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke
+    if ((rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke)
 #ifdef JS_GC_ZEAL
-        && (rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke))
+        || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke)
 #endif
         ) {
         goto do_gc;
