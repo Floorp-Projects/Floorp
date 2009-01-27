@@ -4038,6 +4038,16 @@ else
 fi
 AC_SUBST(LIBXUL_DIST)
 
+SYSTEM_LIBXUL=
+
+MOZ_ARG_WITH_BOOL(system-libxul,
+[  --with-system-libxul   Use system installed libxul SDK],
+    SYSTEM_LIBXUL=1)
+
+if test -n "$SYSTEM_LIBXUL" && test -z "$MOZ_ENABLE_LIBXUL"; then
+    AC_MSG_ERROR([--with-system-libxul needs --with-libxul-sdk])
+fi
+
 dnl ========================================================
 dnl = If NSPR was not detected in the system, 
 dnl = use the one in the source tree (mozilla/nsprpub)
@@ -7933,6 +7943,7 @@ COMPILE_CXXFLAGS=`echo \
     $COMPILE_CXXFLAGS`
 
 AC_SUBST(SYSTEM_MAKEDEPEND)
+AC_SUBST(SYSTEM_LIBXUL)
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
 AC_SUBST(SYSTEM_ZLIB)
