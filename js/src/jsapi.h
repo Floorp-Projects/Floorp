@@ -596,10 +596,8 @@ JS_StringToVersion(const char *string);
                                                    will be passed to each call
                                                    to JS_ExecuteScript. */
 #define JSOPTION_UNROOTED_GLOBAL JS_BIT(13)     /* The GC will not root the
-                                                   contexts' global objects
-                                                   (see JS_GetGlobalObject),
-                                                   leaving that up to the
-                                                   embedding. */
+                                                   global objects leaving
+                                                   that up to the embedding. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);

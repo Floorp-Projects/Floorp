@@ -456,8 +456,7 @@ extern JSScript *
 js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                  JSPrincipals *principals, uint32 tcflags,
                  const jschar *chars, size_t length,
-                 FILE *file, const char *filename, uintN lineno,
-                 JSString *source = NULL);
+                 FILE *file, const char *filename, uintN lineno);
 
 extern JSBool
 js_CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
