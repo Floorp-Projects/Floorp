@@ -580,7 +580,9 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
-        if (ARRAY_DENSE_LENGTH(obj) && !ResizeSlots(cx, obj, oldlen, newlen))
+        /* Don't reallocate if we're not actually shrinking our slots. */
+        jsuint oldsize = ARRAY_DENSE_LENGTH(obj);
+        if (oldsize >= newlen && !ResizeSlots(cx, obj, oldsize, newlen))
             return JS_FALSE;
     } else if (oldlen - newlen < (1 << 24)) {
         do {
