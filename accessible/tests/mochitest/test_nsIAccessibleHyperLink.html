@@ -44,15 +44,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var state = {}, extraState = {};
       aAcc.getState(state, extraState);
 
-      if (aShowStateDebugFlag) {
-        var list = gAccRetrieval.getStringStates(state.value, 0);
-
-        var str = "";
-        for (var i = 0; i < list.length; i++)
-          str += list.item(i) + "\n";
-
-        alert(str);
-      }
+      if (aShowStateDebugFlag)
+        alert(statesToString(state.value, 0));
 
       is(state.value & aState, aState, "Wrong state bits for ID " + aID + "!");
       is(extraState.value & aExtraState, aExtraState, 
