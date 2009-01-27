@@ -223,7 +223,7 @@ static avmplus::AvmCore* core = &s_core;
 
 #ifdef JS_JIT_SPEW
 void
-js_DumpPeerStability(Fragmento* frago, const void* ip);
+js_DumpPeerStability(JSTraceMonitor* tm, const void* ip);
 #endif
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
@@ -243,7 +243,7 @@ static Oracle oracle;
 /* Blacklists the root peer fragment at a fragment's PC.  This is so blacklisting stays at the 
    top of the peer list and not scattered around. */
 void
-js_BlacklistPC(Fragmento* frago, Fragment* frag);
+js_BlacklistPC(JSTraceMonitor* tm, Fragment* frag);
 
 Tracker::Tracker()
 {
@@ -365,43 +365,46 @@ static inline uint8 getCoercedType(jsval v)
  */
 
 #define ORACLE_MASK (ORACLE_SIZE - 1)
+#define FRAGMENT_TABLE_MASK (FRAGMENT_TABLE_SIZE - 1)
+#define HASH_SEED 5381
 
 static inline void
-hash_accum(uintptr_t& h, uintptr_t i)
+hash_accum(uintptr_t& h, uintptr_t i, uintptr_t mask)
 {
-    h = ((h << 5) + h + (ORACLE_MASK & i)) & ORACLE_MASK;
+    h = ((h << 5) + h + (mask & i)) & mask;
 }
 
 JS_REQUIRES_STACK static inline int
 stackSlotHash(JSContext* cx, unsigned slot)
 {
-    uintptr_t h = 5381;
-    hash_accum(h, uintptr_t(cx->fp->script));
-    hash_accum(h, uintptr_t(cx->fp->regs->pc));
-    hash_accum(h, uintptr_t(slot));
+    uintptr_t h = HASH_SEED;
+    hash_accum(h, uintptr_t(cx->fp->script), ORACLE_MASK);
+    hash_accum(h, uintptr_t(cx->fp->regs->pc), ORACLE_MASK);
+    hash_accum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
 }
 
 JS_REQUIRES_STACK static inline int
 globalSlotHash(JSContext* cx, unsigned slot)
 {    
-    uintptr_t h = 5381;
+    uintptr_t h = HASH_SEED;
     JSStackFrame* fp = cx->fp;
 
     while (fp->down)
         fp = fp->down;        
 
-    hash_accum(h, uintptr_t(fp->script)); 
-    hash_accum(h, uintptr_t(OBJ_SHAPE(JS_GetGlobalForObject(cx, fp->scopeChain))));
-    hash_accum(h, uintptr_t(slot));
+    hash_accum(h, uintptr_t(fp->script), ORACLE_MASK); 
+    hash_accum(h, uintptr_t(OBJ_SHAPE(JS_GetGlobalForObject(cx, fp->scopeChain))), 
+               ORACLE_MASK);
+    hash_accum(h, uintptr_t(slot), ORACLE_MASK);
     return int(h);
 }
 
 static inline size_t
 hitHash(const void* ip)
 {    
-    uintptr_t h = 5381;
-    hash_accum(h, uintptr_t(ip));
+    uintptr_t h = HASH_SEED;
+    hash_accum(h, uintptr_t(ip), ORACLE_MASK);
     return size_t(h);
 }
 
@@ -501,6 +504,81 @@ Oracle::clearDemotability()
 {
     _stackDontDemote.reset();
     _globalDontDemote.reset();
+}
+
+static inline size_t 
+fragmentHash(const void *ip, uint32 globalShape)
+{
+    uintptr_t h = HASH_SEED;
+    hash_accum(h, uintptr_t(ip), FRAGMENT_TABLE_MASK);
+    hash_accum(h, uintptr_t(globalShape), FRAGMENT_TABLE_MASK);
+    return size_t(h);
+}
+
+struct VMFragment : public Fragment
+{
+    VMFragment(const void* _ip, uint32 _globalShape) : 
+        Fragment(_ip), 
+        next(NULL),
+        globalShape(_globalShape)        
+    {}
+    VMFragment* next;
+    uint32 globalShape;
+};
+
+
+static VMFragment*
+getVMFragment(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
+{
+    size_t h = fragmentHash(ip, globalShape);
+    VMFragment* vf = tm->vmfragments[h];
+    while (vf && 
+           ! (vf->globalShape == globalShape &&
+              vf->ip == ip)) {
+        vf = vf->next;
+    }
+    return vf;
+}
+
+// FIXME: remove the default parameters for globalShape when we're
+// actually keying by it.
+
+static Fragment*
+getLoop(JSTraceMonitor* tm, const void *ip, uint32 globalShape = 0)
+{
+    return getVMFragment(tm, ip, globalShape);
+}
+
+static Fragment*
+getAnchor(JSTraceMonitor* tm, const void *ip, uint32 globalShape = 0)
+{
+    LirBufWriter writer(tm->lirbuf);
+    char *fragmem = (char*) writer.skip(sizeof(VMFragment))->payload();
+    if (!fragmem)
+        return NULL;
+    VMFragment *f = new (fragmem) VMFragment(ip, globalShape);
+    JS_ASSERT(f);
+
+    Fragment *p = getVMFragment(tm, ip, globalShape);
+
+    if (p) {
+        f->first = p;
+        /* append at the end of the peer list */
+        Fragment* next;
+        while ((next = p->peer) != NULL)
+            p = next;
+        p->peer = f;
+    } else {
+        /* this is the first fragment */
+        f->first = f;
+        size_t h = fragmentHash(ip, globalShape);
+        f->next = tm->vmfragments[h];
+        tm->vmfragments[h] = f;
+    }
+    f->anchor = f;
+    f->root = f;
+    f->kind = LoopTrace;
+    return f;
 }
 
 
@@ -2380,11 +2458,12 @@ TraceRecorder::isLoopHeader(JSContext* cx) const
 
 /* Compile the current fragment. */
 JS_REQUIRES_STACK void
-TraceRecorder::compile(Fragmento* fragmento)
+TraceRecorder::compile(JSTraceMonitor* tm)
 {
+    Fragmento* fragmento = tm->fragmento;
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_v(printf("Trace rejected: excessive stack use.\n"));
-        js_BlacklistPC(fragmento, fragment);
+        js_BlacklistPC(tm, fragment);
         return;
     }
     ++treeInfo->branchCount;
@@ -2396,7 +2475,7 @@ TraceRecorder::compile(Fragmento* fragmento)
     if (fragmento->assm()->error() == nanojit::OutOMem)
         return;
     if (fragmento->assm()->error() != nanojit::None) {
-        js_BlacklistPC(fragmento, fragment);
+        js_BlacklistPC(tm, fragment);
         return;
     }
     if (anchor) 
@@ -2439,27 +2518,28 @@ js_JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stabl
 
 /* Complete and compile a trace and link it to the existing tree if appropriate. */
 JS_REQUIRES_STACK bool
-TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote)
+TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
 {
     bool stable;
     LIns* exitIns;
     Fragment* peer;
     VMSideExit* exit;
     Fragment* peer_root;
+    Fragmento* fragmento = tm->fragmento;
 
     exitIns = snapshot(UNSTABLE_LOOP_EXIT);
     exit = (VMSideExit*)((GuardRecord*)exitIns->payload())->exit;
 
     if (callDepth != 0) {
         debug_only_v(printf("Stack depth mismatch, possible recursion\n");)
-        js_BlacklistPC(fragmento, fragment);
+        js_BlacklistPC(tm, fragment);
         trashSelf = true;
         return false;
     }
 
     JS_ASSERT(exit->numStackSlots == treeInfo->stackSlots);
 
-    peer_root = fragmento->getLoop(fragment->root->ip);
+    peer_root = getLoop(traceMonitor, fragment->root->ip);
     JS_ASSERT(peer_root != NULL);
     stable = deduceTypeStability(peer_root, &peer, demote);
 
@@ -2513,11 +2593,11 @@ TraceRecorder::closeLoop(Fragmento* fragmento, bool& demote)
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
         }
 
-        compile(fragmento);
+        compile(tm);
     } else {
         exit->target = fragment->root;
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exitIns);
-        compile(fragmento);
+        compile(tm);
     }
 
     if (fragmento->assm()->error() != nanojit::None)
@@ -2609,29 +2689,29 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
         } 
     }
 
-    debug_only_v(js_DumpPeerStability(fragmento, peer_root->ip);)
+    debug_only_v(js_DumpPeerStability(traceMonitor, peer_root->ip);)
 }
 
 /* Emit an always-exit guard and compile the tree (used for break statements. */
 JS_REQUIRES_STACK void
-TraceRecorder::endLoop(Fragmento* fragmento)
+TraceRecorder::endLoop(JSTraceMonitor* tm)
 {
     LIns* exitIns = snapshot(LOOP_EXIT);
 
     if (callDepth != 0) {
         debug_only_v(printf("Stack depth mismatch, possible recursion\n");)
-        js_BlacklistPC(fragmento, fragment);
+        js_BlacklistPC(tm, fragment);
         trashSelf = true;
         return;
     }
 
     fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exitIns);
-    compile(fragmento);
+    compile(tm);
 
-    if (fragmento->assm()->error() != nanojit::None)
+    if (tm->fragmento->assm()->error() != nanojit::None)
         return;
 
-    joinEdgesToEntry(fragmento, fragmento->getLoop(fragment->root->ip));
+    joinEdgesToEntry(tm->fragmento, getLoop(tm, fragment->root->ip));
 
     debug_only_v(printf("recording completed at %s:%u@%u via endLoop\n",
                         cx->fp->script->filename,
@@ -3147,7 +3227,12 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer)
     while (f->code() && f->peer)
         f = f->peer;
     if (f->code())
-        f = JS_TRACE_MONITOR(cx).fragmento->getAnchor(f->root->ip);
+        f = getAnchor(&JS_TRACE_MONITOR(cx), f->root->ip);
+
+    if (!f) {
+        js_FlushJITCache(cx);
+        return false;
+    }
 
     f->recordAttempts++;
     f->root = f;
@@ -3173,7 +3258,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer)
        since we are trying to stabilize something without properly connecting peer edges. */
     #ifdef DEBUG
     TreeInfo* ti_other;
-    for (Fragment* peer = tm->fragmento->getLoop(f->root->ip); peer != NULL; peer = peer->peer) {
+    for (Fragment* peer = getLoop(tm, f->root->ip); peer != NULL; peer = peer->peer) {
         if (!peer->code() || peer == f)
             continue;
         ti_other = (TreeInfo*)peer->vmprivate;
@@ -3297,7 +3382,7 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, Fragment* outer)
                 tail = &uexit->next;
             }
             JS_ASSERT(bound);
-            debug_only_v(js_DumpPeerStability(tm->fragmento, f->ip);)
+            debug_only_v(js_DumpPeerStability(tm, f->ip);)
             break;
         } else if (undemote) {
             /* The original tree is unconnectable, so trash it. */
@@ -3394,7 +3479,7 @@ js_CloseLoop(JSContext* cx)
 
     bool demote;
     Fragment* f = r->getFragment();
-    r->closeLoop(fragmento, demote);
+    r->closeLoop(tm, demote);
     js_DeleteRecorder(cx);
     
     /*
@@ -3415,7 +3500,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         return false; /* we stay away from shared global objects */
     }
 #endif
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     /* Process deep abort requests. */
     if (r->wasDeepAborted()) {
         js_AbortRecording(cx, "deep abort requested");
@@ -3425,10 +3510,9 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     if (r->isLoopHeader(cx))
         return js_CloseLoop(cx);
     /* does this branch go to an inner loop? */
-    Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
+    Fragment* f = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc);
     Fragment* peer_root = f;
     if (nesting_enabled && f) {
-        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         
         /* Make sure inner tree call will not run into an out-of-memory condition. */
         if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
@@ -3462,7 +3546,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
             AUDIT(noCompatInnerTrees);
             debug_only_v(printf("No compatible inner tree (%p).\n", f);)
 
-            Fragment* old = fragmento->getLoop(tm->recorder->getFragment()->root->ip);
+            Fragment* old = getLoop(tm, tm->recorder->getFragment()->root->ip);
             if (old == NULL)
                 old = tm->recorder->getFragment();
             js_AbortRecording(cx, "No compatible inner tree");
@@ -3470,7 +3554,14 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
                 return false;
             if (old->recordAttempts < MAX_MISMATCH)
                 oracle.resetHits(old->ip);
-            f = empty ? empty : tm->fragmento->getAnchor(cx->fp->regs->pc);
+            f = empty;
+            if (!f) {
+                f = getAnchor(tm, cx->fp->regs->pc);
+                if (!f) {
+                    js_FlushJITCache(cx);
+                    return false;
+                }
+            }
             return js_RecordTree(cx, tm, f, old);
         }
 
@@ -3494,13 +3585,13 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
             return true;
         case UNSTABLE_LOOP_EXIT:
             /* abort recording so the inner loop can become type stable. */
-            old = fragmento->getLoop(tm->recorder->getFragment()->root->ip);
+            old = getLoop(tm, tm->recorder->getFragment()->root->ip);
             js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
             oracle.resetHits(old->ip);
             return js_AttemptToStabilizeTree(cx, lr, old);
         case BRANCH_EXIT:
             /* abort recording the outer tree, extend the inner tree */
-            old = fragmento->getLoop(tm->recorder->getFragment()->root->ip);
+            old = getLoop(tm, tm->recorder->getFragment()->root->ip);
             js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
             oracle.resetHits(old->ip);
             return js_AttemptToExtendTree(cx, lr, NULL, old);
@@ -3989,11 +4080,14 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         return false;
     }
 
-    Fragmento* fragmento = tm->fragmento;
-    Fragment* f;
-    f = fragmento->getLoop(pc);
+    Fragment* f = getLoop(tm, pc);
     if (!f)
-        f = fragmento->getAnchor(pc);
+        f = getAnchor(tm, pc);
+
+    if (!f) {
+        js_FlushJITCache(cx);
+        return false;
+    }
 
     /* If we have no code in the anchor and no peers, we definitively won't be able to 
        activate any trees so, start compiling. */
@@ -4079,7 +4173,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
             jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
             if (sn && SN_TYPE(sn) == SRC_BREAK) {
                 AUDIT(breakLoopExits);
-                tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
+                tr->endLoop(&JS_TRACE_MONITOR(cx));
                 js_DeleteRecorder(cx);
                 return JSMRS_STOP; /* done recording */
             }
@@ -4088,7 +4182,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         /* An explicit return from callDepth 0 should end the loop, not abort it. */
         if (*pc == JSOP_RETURN && tr->callDepth == 0) {
             AUDIT(returnLoopExits);
-            tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
+            tr->endLoop(&JS_TRACE_MONITOR(cx));
             js_DeleteRecorder(cx);
             return JSMRS_STOP; /* done recording */
         }
@@ -4146,10 +4240,10 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 
 /* If used on a loop trace, blacklists the root peer instead of the given fragment. */
 void
-js_BlacklistPC(Fragmento* frago, Fragment* frag)
+js_BlacklistPC(JSTraceMonitor* tm, Fragment* frag)
 {
     if (frag->kind == LoopTrace)
-        frag = frago->getLoop(frag->ip);
+        frag = getLoop(tm, frag->ip);
     oracle.blacklist(frag->ip);
 }
 
@@ -4174,11 +4268,11 @@ js_AbortRecording(JSContext* cx, const char* reason)
         return;
     }
     JS_ASSERT(!f->vmprivate);
-    js_BlacklistPC(tm->fragmento, f);
+    js_BlacklistPC(tm, f);
     Fragment* outer = tm->recorder->getOuterToBlacklist();
     /* Give outer two chances to stabilize before we start blacklisting. */
     if (outer != NULL && outer->recordAttempts >= 2)
-        js_BlacklistPC(tm->fragmento, outer);
+        js_BlacklistPC(tm, outer);
     js_DeleteRecorder(cx);
     /* If this is the primary trace and we didn't succeed compiling, trash the TreeInfo object. */
     if (!f->code() && (f->root == f)) 
@@ -4246,6 +4340,7 @@ js_InitJIT(JSTraceMonitor *tm)
 #endif
         tm->globalSlots = new (&gc) SlotList();
         tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
+        memset(tm->vmfragments, 0, sizeof(tm->vmfragments));
     }
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 20);
@@ -4353,6 +4448,7 @@ js_FlushJITCache(JSContext* cx)
         fragmento->labels = new (&gc) LabelMap(core, NULL);
 #endif
         tm->lirbuf->rewind();
+        memset(tm->vmfragments, 0, sizeof(tm->vmfragments));
     }
     if (cx->fp) {
         tm->globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
@@ -8822,14 +8918,14 @@ TraceRecorder::record_JSOP_HOLE()
 #ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */
 void
-js_DumpPeerStability(Fragmento* frago, const void* ip)
+js_DumpPeerStability(JSTraceMonitor* tm, const void* ip)
 {
     Fragment* f;
     TreeInfo* ti;
     bool looped = false;
     unsigned length = 0;
 
-    for (f = frago->getLoop(ip); f != NULL; f = f->peer) {
+    for (f = getLoop(tm, ip); f != NULL; f = f->peer) {
         if (!f->vmprivate)
             continue;
         printf("fragment %p:\nENTRY: ", f);

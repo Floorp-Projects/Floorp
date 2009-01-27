@@ -496,9 +496,9 @@ public:
     JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     JS_REQUIRES_STACK bool isLoopHeader(JSContext* cx) const;
-    JS_REQUIRES_STACK void compile(nanojit::Fragmento* fragmento);
-    JS_REQUIRES_STACK bool closeLoop(nanojit::Fragmento* fragmento, bool& demote);
-    JS_REQUIRES_STACK void endLoop(nanojit::Fragmento* fragmento);
+    JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
+    JS_REQUIRES_STACK bool closeLoop(JSTraceMonitor* tm, bool& demote);
+    JS_REQUIRES_STACK void endLoop(JSTraceMonitor* tm);
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
                                             nanojit::Fragment* peer_root);
     void blacklist() { fragment->blacklist(); }
