@@ -55,10 +55,11 @@ WBORecord.prototype = {
   _logName: "Record.WBO",
 
   _WBORec_init: function WBORec_init(uri) {
-    this.baseUri = (typeof(uri) == "string")? Utils.makeURI(uri) : uri;
     this.data = {
       payload: {}
     };
+    if (uri)
+      this.uri = uri;
   },
 
   get id() { return decodeURI(this.data.id); },
