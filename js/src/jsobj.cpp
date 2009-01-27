@@ -5432,7 +5432,7 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-#if DEBUG
+#ifdef DEBUG
 
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
@@ -5602,8 +5602,12 @@ js_DumpObject(JSObject *obj)
 
         sharesScope = (scope->object != obj);
         if (sharesScope) {
-            fprintf(stderr, "no own properties - see proto (%s at %p)\n",
-                    STOBJ_GET_CLASS(proto)->name, proto);
+            if (proto) {
+                fprintf(stderr, "no own properties - see proto (%s at %p)\n",
+                        STOBJ_GET_CLASS(proto)->name, proto);
+            } else {
+                fprintf(stderr, "no own properties - null proto\n");
+            }
         } else {
             fprintf(stderr, "properties:\n");
             for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope); sprop;

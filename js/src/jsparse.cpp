@@ -1447,8 +1447,11 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         tt = js_PeekToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
         if (tt <= TOK_EOF || tt == TOK_RC) {
-            if (tt == TOK_ERROR)
+            if (tt == TOK_ERROR) {
+                if (ts->flags & TSF_EOF)
+                    ts->flags |= TSF_UNEXPECTED_EOF;
                 return NULL;
+            }
             break;
         }
         pn2 = Statement(cx, ts, tc);

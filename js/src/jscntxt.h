@@ -102,12 +102,14 @@ namespace nanojit {
 class TraceRecorder;
 extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
-class TypeMap;
 
 # define CLS(T)  T*
 #else
 # define CLS(T)  void*
 #endif
+
+#define FRAGMENT_TABLE_SIZE 512
+struct VMFragment;
 
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
@@ -127,9 +129,10 @@ typedef struct JSTraceMonitor {
     CLS(TraceRecorder)      recorder;
     uint32                  globalShape;
     CLS(SlotList)           globalSlots;
-    CLS(TypeMap)            globalTypeMap;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
+
+    struct VMFragment* vmfragments[FRAGMENT_TABLE_SIZE];
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
@@ -267,6 +270,7 @@ struct JSRuntime {
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
+    uint32              gcTriggerFactor;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
@@ -924,6 +928,15 @@ struct JSContext {
 #endif
 
 #ifdef __cplusplus
+
+static inline JSAtom **
+FrameAtomBase(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->imacpc
+           ? COMMON_ATOMS_START(&cx->runtime->atomState)
+           : fp->script->atomMap.vector;
+}
+
 /* FIXME(bug 332648): Move this into a public header. */
 class JSAutoTempValueRooter
 {
@@ -971,7 +984,8 @@ class JSAutoResolveFlags
     JSContext *mContext;
     uintN mSaved;
 };
-#endif
+
+#endif /* __cpluscplus */
 
 /*
  * Slightly more readable macros for testing per-context option settings (also

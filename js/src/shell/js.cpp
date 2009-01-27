@@ -229,9 +229,6 @@ struct JSShellContextData {
     PRIntervalTime          timeout;
     volatile PRIntervalTime startTime;      /* startTime + timeout is time when
                                                script must be stopped */
-    PRIntervalTime          maybeGCPeriod;
-    volatile PRIntervalTime lastMaybeGCTime;/* lastMaybeGCTime + maybeGCPeriod
-                                               is the time to call MaybeGC */
     PRIntervalTime          yieldPeriod;
     volatile PRIntervalTime lastYieldTime;  /* lastYieldTime + yieldPeriod is
                                                the time to call
@@ -239,7 +236,6 @@ struct JSShellContextData {
 #else
     int64                   stopTime;       /* time when script must be
                                                stopped */
-    int64                   nextMaybeGCTime;/* time to call JS_MaybeGC */
 #endif
 };
 
@@ -249,7 +245,6 @@ SetTimeoutValue(JSContext *cx, jsdouble t);
 #ifdef JS_THREADSAFE
 
 # define DEFAULT_YIELD_PERIOD()     (PR_TicksPerSecond() / 50)
-# define DEFAULT_MAYBEGC_PERIOD()   (PR_TicksPerSecond() / 10)
 
 /*
  * The function assumes that the GC lock is already held on entry. On a
@@ -260,8 +255,6 @@ static JSBool
 RescheduleWatchdog(JSContext *cx, JSShellContextData *data, PRIntervalTime now);
 
 #else
-
-# define DEFAULT_MAYBEGC_PERIOD()   (MICROSECONDS_PER_SECOND / 10)
 
 const int64 MICROSECONDS_PER_SECOND = 1000000LL;
 const int64 MAX_TIME_VALUE = 0x7FFFFFFFFFFFFFFFLL;
@@ -277,16 +270,13 @@ NewContextData()
         return NULL;
 #ifdef JS_THREADSAFE
     data->timeout = PR_INTERVAL_NO_TIMEOUT;
-    data->maybeGCPeriod = PR_INTERVAL_NO_TIMEOUT;
     data->yieldPeriod = PR_INTERVAL_NO_TIMEOUT;
 # ifdef DEBUG
     data->startTime = 0;
-    data->lastMaybeGCTime = 0;
     data->lastYieldTime = 0;
 # endif
 #else /* !JS_THREADSAFE */
     data->stopTime = MAX_TIME_VALUE;
-    data->nextMaybeGCTime = MAX_TIME_VALUE;
 #endif
 
     return data;
@@ -306,18 +296,12 @@ ShellOperationCallback(JSContext *cx)
 {
     JSShellContextData *data = GetContextData(cx);
     JSBool doStop;
-    JSBool doMaybeGC;
 #ifdef JS_THREADSAFE
     JSBool doYield;
     PRIntervalTime now = PR_IntervalNow();
 
     doStop = (data->timeout != PR_INTERVAL_NO_TIMEOUT &&
               now - data->startTime >= data->timeout);
-
-    doMaybeGC = (data->maybeGCPeriod != PR_INTERVAL_NO_TIMEOUT &&
-                 now - data->lastMaybeGCTime >= data->maybeGCPeriod);
-    if (doMaybeGC)
-        data->lastMaybeGCTime = now;
 
     doYield = (data->yieldPeriod != PR_INTERVAL_NO_TIMEOUT &&
                now - data->lastYieldTime >= data->yieldPeriod);
@@ -328,18 +312,12 @@ ShellOperationCallback(JSContext *cx)
     int64 now = JS_Now();
 
     doStop = (now >= data->stopTime);
-    doMaybeGC = (now >= data->nextMaybeGCTime);
-    if (doMaybeGC)
-        data->nextMaybeGCTime = now + DEFAULT_MAYBEGC_PERIOD();
 #endif
 
     if (doStop) {
         fputs("Error: script is running for too long\n", stderr);
         return JS_FALSE;
     }
-
-    if (doMaybeGC)
-        JS_MaybeGC(cx);
 
 #ifdef JS_THREADSAFE
     if (doYield)
@@ -493,7 +471,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             lineno++;
         } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
 
-        if (hitEOF)
+        if (hitEOF && !buffer)
             break;
 
         /* Clear any pending exception from previous failed compiles. */
@@ -522,7 +500,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             JS_DestroyScript(cx, script);
         }
         *buffer = '\0';
-    } while (!gQuitting);
+    } while (!hitEOF && !gQuitting);
 
     free(buffer);
     fprintf(gOutFile, "\n");
@@ -1099,19 +1077,43 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         param = JSGC_MAX_BYTES;
     } else if (strcmp(paramName, "maxMallocBytes") == 0) {
         param = JSGC_MAX_MALLOC_BYTES;
+    } else if (strcmp(paramName, "gcStackpoolLifespan") == 0) {
+        param = JSGC_STACKPOOL_LIFESPAN;
+    } else if (strcmp(paramName, "gcBytes") == 0) {
+        param = JSGC_BYTES;
+    } else if (strcmp(paramName, "gcNumber") == 0) {
+        param = JSGC_NUMBER;
+    } else if (strcmp(paramName, "gcTriggerFactor") == 0) {
+        param = JSGC_TRIGGER_FACTOR;
     } else {
         JS_ReportError(cx,
-                       "the first argument argument must be either maxBytes "
-                       "or maxMallocBytes");
+                       "the first argument argument must be maxBytes, "
+                       "maxMallocBytes, gcStackpoolLifespan, gcBytes, "
+                       "gcNumber or gcTriggerFactor");
         return JS_FALSE;
     }
 
-    if (!JS_ValueToECMAUint32(cx, argc < 2 ? JSVAL_VOID : vp[3], &value))
+    if (argc == 1) {
+        value = JS_GetGCParameter(cx->runtime, param);
+        return JS_NewNumberValue(cx, value, &vp[0]);
+    }
+
+    if (param == JSGC_NUMBER ||
+        param == JSGC_BYTES) {
+        JS_ReportError(cx, "Attempt to change read-only parameter %s",
+                       paramName);
         return JS_FALSE;
-    if (value == 0) {
+    }
+
+    if (!JS_ValueToECMAUint32(cx, vp[3], &value)) {
         JS_ReportError(cx,
-                       "the second argument must be convertable to uint32 with "
-                       "non-zero value");
+                       "the second argument must be convertable to uint32 "
+                       "with non-zero value");
+        return JS_FALSE;
+    }
+    if (param == JSGC_TRIGGER_FACTOR && value < 100) {
+        JS_ReportError(cx,
+                       "the gcTriggerFactor value must be >= 100");
         return JS_FALSE;
     }
     JS_SetGCParameter(cx->runtime, param, value);
@@ -2226,8 +2228,10 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
 
     if (!JS_ValueToObject(cx, argc == 0 ? JSVAL_VOID : vp[2], &vobj))
         return JS_FALSE;
-    if (!vobj)
+    if (!vobj) {
+        *vp = JSVAL_VOID;
         return JS_TRUE;
+    }
 
     aobj = JS_NewArrayObject(cx, 0, NULL);
     if (!aobj)
@@ -2238,7 +2242,7 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     if (!ok)
         return JS_FALSE;
     pd = pda.array;
-    for (i = 0; i < pda.length; i++) {
+    for (i = 0; i < pda.length; i++, pd++) {
         pdobj = JS_NewObject(cx, NULL, NULL, NULL);
         if (!pdobj) {
             ok = JS_FALSE;
@@ -3151,8 +3155,6 @@ CheckCallbackTime(JSContext *cx, JSShellContextData *data, PRIntervalTime now,
 
     UpdateSleepDuration(now, data->startTime, data->timeout,
                         sleepDuration, expired);
-    UpdateSleepDuration(now, data->lastMaybeGCTime, data->maybeGCPeriod,
-                        sleepDuration, expired);
     UpdateSleepDuration(now, data->lastYieldTime, data->yieldPeriod,
                         sleepDuration, expired);
     if (expired) {
@@ -3256,24 +3258,15 @@ SetTimeoutValue(JSContext *cx, jsdouble t)
         return JS_FALSE;
     }
 
-    /*
-     * For compatibility periodic MaybeGC calls are enabled only when the
-     * execution time is bounded.
-     */
     JSShellContextData *data = GetContextData(cx);
 #ifdef JS_THREADSAFE
     JS_LOCK_GC(cx->runtime);
     if (t < 0) {
         data->timeout = PR_INTERVAL_NO_TIMEOUT;
-        data->maybeGCPeriod = PR_INTERVAL_NO_TIMEOUT;
     } else {
         PRIntervalTime now = PR_IntervalNow();
         data->timeout = PRIntervalTime(t * PR_TicksPerSecond());
         data->startTime = now;
-        if (data->maybeGCPeriod == PR_INTERVAL_NO_TIMEOUT) {
-            data->maybeGCPeriod = DEFAULT_MAYBEGC_PERIOD();
-            data->lastMaybeGCTime = now;
-        }
         if (!RescheduleWatchdog(cx, data, now)) {
             /* The GC lock is already released here. */
             return JS_FALSE;
@@ -3284,13 +3277,10 @@ SetTimeoutValue(JSContext *cx, jsdouble t)
 #else /* !JS_THREADSAFE */
     if (t < 0) {
         data->stopTime = MAX_TIME_VALUE;
-        data->nextMaybeGCTime = MAX_TIME_VALUE;
         JS_SetOperationLimit(cx, JS_MAX_OPERATION_LIMIT);
     } else {
         int64 now = JS_Now();
         data->stopTime = now + int64(t * MICROSECONDS_PER_SECOND);
-        if (data->nextMaybeGCTime == MAX_TIME_VALUE)
-            data->nextMaybeGCTime = now + DEFAULT_MAYBEGC_PERIOD();
 
         /*
          * Call the callback infrequently enough to avoid the overhead of
