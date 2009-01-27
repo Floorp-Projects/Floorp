@@ -90,9 +90,14 @@ public:
 
   /**
    * Thie method gets caller right before DidBuildModel is called.
-   * If false
+   * If false, the parser won't call DidBuildModel yet.
+   *
+   * If aTerminated is true, the parser has been terminated.
    */
-  virtual PRBool ReadyToCallDidBuildModel() { return PR_TRUE; };
+  virtual PRBool ReadyToCallDidBuildModel(PRBool aTerminated)
+  {
+    return PR_TRUE;
+  };
 
   /**
    * This method gets called when the parser gets i/o blocked,

@@ -1525,12 +1525,11 @@ nsParser::DidBuildModel(nsresult anErrorCode)
 
   if (IsComplete()) {
     if (mParserContext && !mParserContext->mPrevContext) {
-      // If mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING then we got in
-      // here through Terminate() and so we always want to Call DidBuildModel
-      // on the DTD, even if the sink says 'no'.
+      // Let sink know if we're about to end load because we've been terminated.
+      // In that case we don't want it to run deferred scripts.
+      PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mParserContext->mDTD && mSink &&
-          (mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING ||
-           mSink->ReadyToCallDidBuildModel())) {
+          mSink->ReadyToCallDidBuildModel(terminated)) {
         result = mParserContext->mDTD->DidBuildModel(anErrorCode,PR_TRUE,this,mSink);
       }
 
