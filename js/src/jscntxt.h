@@ -108,6 +108,9 @@ typedef Queue<uint16> SlotList;
 # define CLS(T)  void*
 #endif
 
+#define FRAGMENT_TABLE_SIZE 512
+struct VMFragment;
+
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -128,6 +131,8 @@ typedef struct JSTraceMonitor {
     CLS(SlotList)           globalSlots;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
+
+    struct VMFragment* vmfragments[FRAGMENT_TABLE_SIZE];
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
