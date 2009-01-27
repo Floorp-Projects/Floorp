@@ -211,7 +211,7 @@ SyncEngine.prototype = {
   // Create a new record by querying the store, and add the engine metadata
   _createRecord: function SyncEngine__createRecord(id) {
     let record = this._store.createRecord(id);
-    record.uri = this.engineURL + id;
+    record.id = id; // XXX not needed
     record.encryption = this.cryptoMetaURL;
     return record;
   },
@@ -252,14 +252,13 @@ SyncEngine.prototype = {
 
     let meta = yield CryptoMetas.get(self.cb, this.cryptoMetaURL);
     if (!meta) {
-      let cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-        getService(Ci.IWeaveCrypto);
-      let symkey = cryptoSvc.generateRandomKey();
+      let symkey = Svc.Crypto.generateRandomKey();
       let pubkey = yield PubKeys.getDefaultKey(self.cb);
       meta = new CryptoMeta(this.cryptoMetaURL);
       meta.generateIV();
       yield meta.addUnwrappedKey(self.cb, pubkey, symkey);
-      yield meta.put(self.cb);
+      let res = new Resource(meta.uri);
+      yield res.put(self.cb, meta.serialize());
     }
 
     // first sync special case: upload all items
@@ -300,7 +299,12 @@ SyncEngine.prototype = {
     this._lastSyncTmp = 0;
     while ((item = yield newitems.iter.next(self.cb))) {
       this._lowMemCheck();
+      try {
       yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+      } catch (e) {
+	this._log.error("Could not decrypt incoming record: " +
+			Utils.exceptionStr(e));
+      }
       if (yield this._reconcile.async(this, self.cb, item)) {
         count.applied++;
         yield this._applyIncoming.async(this, self.cb, item);
@@ -425,7 +429,7 @@ SyncEngine.prototype = {
         if (out.cleartext) // skip deleted records
           this._store.createMetaRecords(out.id, meta);
         yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
-        yield up.pushRecord(self.cb, out);
+        up.pushData(Svc.Json.decode(out.serialize())); // FIXME: inefficient
       }
 
       this._store.cache.enabled = true;
@@ -435,7 +439,7 @@ SyncEngine.prototype = {
       let count = 0;
       for each (let obj in meta) {
           if (!(obj.id in this._tracker.changedIDs)) {
-            up.pushLiteral(obj);
+            up.pushData(obj);
             count++;
           }
       }

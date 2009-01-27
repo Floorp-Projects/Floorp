@@ -115,24 +115,8 @@ Collection.prototype = {
     return this._iter;
   },
 
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return this._json;
-  },
-
-  pushRecord: function Coll_pushRecord(onComplete, record) {
-    let fn = function(record) {
-      let self = yield;
-      yield record.filterUpload(self.cb); // XXX EEK
-      this._data.push(this._json.decode(record.data)); // HACK HACK HACK
-      self.done();
-    };
-    fn.async(this, onComplete, record);
-  },
-
-  pushLiteral: function Coll_pushLiteral(object) {
-    this._data.push(this._json.encode(object));
+  pushData: function Coll_pushData(data) {
+    this._data.push(data);
   },
 
   clearRecords: function Coll_clearRecords() {
@@ -160,11 +144,11 @@ CollectionIterator.prototype = {
       if (this._idx >= this.count)
         return;
       let item = this._coll.data[this._idx++];
-      let wrap = new this._coll._recordObj(this._coll.uri.resolve(item.id));
-      wrap.data = this._coll._json.encode(item); // HACK HACK HACK
-      yield wrap.filterDownload(self.cb); // XXX EEK
+      let record = new this._coll._recordObj();
+      record.deserialize(Svc.Json.encode(item)); // FIXME: inefficient
+      record.baseUri = this._coll.uri;
 
-      self.done(wrap);
+      self.done(record);
     };
     fn.async(this, onComplete);
   },

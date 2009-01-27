@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['WBORecord'];
+const EXPORTED_SYMBOLS = ['WBORecord', 'RecordManager'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -43,6 +43,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/resource.js");
+Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
@@ -51,27 +52,32 @@ function WBORecord(uri) {
   this._WBORec_init(uri);
 }
 WBORecord.prototype = {
-  __proto__: Resource.prototype,
   _logName: "Record.WBO",
 
   _WBORec_init: function WBORec_init(uri) {
-    this._init(uri);
-    this.pushFilter(new WBOFilter());
-    this.pushFilter(new JsonFilter());
+    this.baseUri = (typeof(uri) == "string")? Utils.makeURI(uri) : uri;
     this.data = {
       payload: {}
     };
   },
 
-  // id is special because it's based on the uri
-  get id() {
-    if (this.data.id)
-      return decodeURI(this.data.id);
-    let foo = this.uri.spec.split('/');
-    return decodeURI(foo[foo.length-1]);
+  get id() { return decodeURI(this.data.id); },
+  set id(value) {
+    this.data.id = encodeURI(value);
   },
 
-  get parentid() this.data.parentid,
+  // NOTE: baseUri must have a trailing slash, or baseUri.resolve() will omit
+  //       the collection name
+  get uri() { return Utils.makeURI(this.baseUri.resolve(this.id)); },
+  set uri(value) {
+    if (typeof(value) != "string")
+      value = value.spec;
+    let foo = value.split('/');
+    this.data.id = foo.pop();
+    this.baseUri = Utils.makeURI(foo.join('/') + '/');
+  },
+
+  get parentid() { return this.data.parentid; },
   set parentid(value) {
     this.data.parentid = value;
   },
@@ -103,9 +109,23 @@ WBORecord.prototype = {
     this.data.sortindex = value;
   },
 
-  get payload() this.data.payload,
+  get payload() { return this.data.payload; },
   set payload(value) {
     this.data.payload = value;
+  },
+
+  // payload is encoded twice in serialized form, because the
+  // server expects a string
+  serialize: function WBORec_serialize() {
+    this.payload = Svc.Json.encode(this.payload);
+    let ret = Svc.Json.encode(this.data);
+    this.payload = Svc.Json.decode(this.payload);
+    return ret;
+  },
+
+  deserialize: function WBORec_deserialize(json) {
+    this.data = Svc.Json.decode(json);
+    this.payload = Svc.Json.decode(this.payload);
   },
 
   toString: function WBORec_toString() {
@@ -113,27 +133,89 @@ WBORecord.prototype = {
       "  parent: " + this.parentid + "\n" +
       "  depth: " + this.depth + ", index: " + this.sortindex + "\n" +
       "  modified: " + this.modified + "\n" +
-      "  payload: " + json.encode(this.payload) + " }";
+      "  payload: " + Svc.Json.encode(this.payload) + " }";
   }
 };
 
-// fixme: global, ugh
-let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+function RecordManager() {
+  this._init();
+}
+RecordManager.prototype = {
+  _recordType: WBORecord,
+  _logName: "RecordMgr",
 
-function WBOFilter() {}
-WBOFilter.prototype = {
-  beforePUT: function(data, wbo) {
-    let self = yield;
-    let foo = wbo.uri.spec.split('/');
-    data.id = decodeURI(foo[foo.length-1]);
-    data.payload = json.encode(data.payload);
-    self.done(data);
+  _init: function RegordMgr__init() {
+    this._log = Log4Moz.repository.getLogger(this._logName);
+    this._records = {};
+    this._aliases = {};
   },
-  afterGET: function(data, wbo) {
-    let self = yield;
-    let foo = wbo.uri.spec.split('/');
-    data.id = decodeURI(foo[foo.length-1]);
-    data.payload = json.decode(data.payload);
-    self.done(data);
+
+  import: function RegordMgr_import(onComplete, url) {
+    let fn = function RegordMgr__import(url) {
+      let self = yield;
+      let record;
+
+      this._log.trace("Importing record: " + (url.spec? url.spec : url));
+
+      try {
+        let rsrc = new Resource(url);
+        yield rsrc.get(self.cb);
+
+        record = new this._recordType();
+	record.deserialize(rsrc.data);
+	record.uri = url; // NOTE: may override id in rsrc.data
+
+        this.set(url, record);
+      } catch (e) {
+        this._log.debug("Failed to import record: " + e);
+        record = null;
+      }
+      self.done(record);
+    };
+    fn.async(this, onComplete, url);
+  },
+
+  get: function RegordMgr_get(onComplete, url) {
+    let fn = function RegordMgr__get(url) {
+      let self = yield;
+
+      let record = null;
+      if (url in this._aliases)
+	url = this._aliases[url];
+      if (url in this._records)
+	record = this._records[url];
+
+      if (!record)
+	record = yield this.import(self.cb, url);
+
+      self.done(record);
+    };
+    fn.async(this, onComplete, url);
+  },
+
+  set: function RegordMgr_set(url, record) {
+    this._records[url] = record;
+  },
+
+  contains: function RegordMgr_contains(url) {
+    let record = null;
+    if (url in this._aliases)
+      url = this._aliases[url];
+    if (url in this._records)
+      return true;
+    return false;
+  },
+
+  del: function RegordMgr_del(url) {
+    delete this._records[url];
+  },
+  getAlias: function RegordMgr_getAlias(alias) {
+    return this._aliases[alias];
+  },
+  setAlias: function RegordMgr_setAlias(url, alias) {
+    this._aliases[alias] = url;
+  },
+  delAlias: function RegordMgr_delAlias(alias) {
+    delete this._aliases[alias];
   }
 };
