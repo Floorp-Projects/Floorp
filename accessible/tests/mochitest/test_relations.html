@@ -1,0 +1,146 @@
+<html>
+
+<head>
+  <title>nsIAccessible::getAccessibleRelated() tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/relations.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // html:label@for
+      testRelation("label1", RELATION_LABEL_FOR, "checkbox1");
+      testRelation("checkbox1", RELATION_LABELLED_BY, "label1");
+
+      // aria-labelledby
+      testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
+      testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
+
+      // aria-describedby
+      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox3");
+      testRelation("checkbox3", RELATION_DESCRIBED_BY, "descr1");
+
+      // aria_owns
+      testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
+
+      // 'node child of' relation for outlineitem role
+      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "treeitem3");
+
+      // 'node child of' relation for the document having window, returns
+      // direct accessible parent (fixed in bug 419770).
+      var iframeElmObj = {};
+      var iframeAcc = getAccessible("iframe", null, iframeElmObj);
+      var iframeDoc = iframeElmObj.value.contentDocument;
+      var iframeDocAcc = getAccessible(iframeDoc);
+      testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
+
+      // aria-controls
+      testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
+      testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
+
+      // aria-flowto
+      testRelation("flowto", RELATION_FLOWS_TO, "flowfrom");
+      testRelation("flowfrom", RELATION_FLOWS_FROM, "flowto");
+
+      // 'default button' relation
+      testRelation("input", RELATION_DEFAULT_BUTTON, "submit");
+
+      // 'described by'/'description for' relation for html:table and
+      // html:caption
+      testRelation("caption", RELATION_DESCRIPTION_FOR, "table");
+      testRelation("table", RELATION_DESCRIBED_BY, "caption");
+
+      // 'labelled by'/'label for' relation for html:fieldset and
+      // html:legend
+      testRelation("legend", RELATION_LABEL_FOR, "fieldset");
+      testRelation("fieldset", RELATION_LABELLED_BY, "legend");
+
+      // 'embeds' relation for root accessible
+      var docAcc = null;
+      var parentOfDocAcc = null;
+      var parentDocAcc = getAccessible(document);
+      do {
+        docAcc = parentDocAcc;
+        parentOfDocAcc = getAccessible(docAcc.parent, [nsIAccessNode]);
+        parentDocAcc = getAccessible(parentOfDocAcc.accessibleDocument,
+                                     [nsIAccessible]);
+      } while (parentDocAcc.finalRole != ROLE_CHROME_WINDOW)
+
+      testRelation(parentDocAcc, RELATION_EMBEDS, docAcc);
+
+      // finish test
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=475298"
+     title="mochitests for accessible relations">
+    Mozilla Bug 475298
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <label id="label1" for="checkbox1">label</label>
+  <input id="checkbox1" />
+
+  <span id="label2">label</span>
+  <span role="checkbox" id="checkbox2" aria-labelledby="label2" />
+
+  <span id="descr1">description</span>
+  <span role="checkbox" id="checkbox3" aria-describedby="descr1" />
+
+  <div role="treeitem" id="treeitem1">Yellow</div>
+  <div id="tree" role="tree" aria-owns="treeitem1">
+    <div role="treeitem" id="treeitem2">Blue</div>
+    <div role="treeitem" id="treeitem3" aria-level="1">Green</div>
+    <div role="treeitem" id="treeitem4" aria-level="2">Light green</div>
+  </div>
+
+  <iframe id="iframe"></iframe>
+
+  <div id="tablist" role="tablist">
+    <div id="tab" role="tab" aria-controls="tabpanel">tab</div>
+  </div>
+  <div id="tabpanel" role="tabpanel">tabpanel</div>
+
+  <span id="flowto" aria-flowto="flowfrom">flow to</span>
+  <span id="flowfrom">flow from</span>
+
+  <form>
+    <input id="input" />
+    <input type="submit" id="submit" />
+  </form>
+
+  <table id="table">
+    <caption id="caption">tabple caption</caption>
+    <tr>
+      <td>cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <fieldset id="fieldset">
+    <legend id="legend">legend</legend>
+    <input />
+  </fieldset>
+</body>
+</html>
