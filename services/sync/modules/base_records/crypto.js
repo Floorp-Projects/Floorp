@@ -84,6 +84,13 @@ CryptoWrapper.prototype = {
   _encrypt: function CryptoWrap__encrypt(passphrase) {
     let self = yield;
 
+    // Don't encrypt empty payloads
+    if (!this.cleartext) {
+      this.ciphertext = this.cleartext;
+      self.done();
+      return;
+    }
+
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
 
@@ -102,6 +109,13 @@ CryptoWrapper.prototype = {
 
   _decrypt: function CryptoWrap__decrypt(passphrase) {
     let self = yield;
+
+    // Empty payloads aren't encrypted
+    if (!this.ciphertext) {
+      this.cleartext = this.ciphertext;
+      self.done();
+      return;
+    }
 
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     let privkey = yield PrivKeys.get(self.cb, pubkey.privateKeyUri);
