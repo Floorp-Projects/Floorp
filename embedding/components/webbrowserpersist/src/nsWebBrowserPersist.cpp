@@ -1995,7 +1995,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
     // Create a filename if it's empty, or if the filename / datapath is
     // already taken by another URI and create an alternate name.
 
-    if (base.IsEmpty() || mFilenameList.Length() > 0)
+    if (base.IsEmpty() || !mFilenameList.IsEmpty())
     {
         nsCAutoString tmpPath;
         nsCAutoString tmpBase;
@@ -2031,7 +2031,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
             tmpPath.Append(ext);
 
             // Test if the name is a duplicate
-            if (mFilenameList.IndexOf(tmpPath) < 0)
+            if (!mFilenameList.Contains(tmpPath))
             {
                 if (!base.Equals(tmpBase))
                 {
