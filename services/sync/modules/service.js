@@ -527,8 +527,7 @@ WeaveSvc.prototype = {
         let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
                                          PrivKeys.defaultKeyUri);
         try {
-          yield keys.pubkey.put(self.cb);
-          yield keys.privkey.put(self.cb);
+	  yield PubKeys.uploadKeypair(self.cb, keys);
           ret = true;
         } catch (e) {
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));

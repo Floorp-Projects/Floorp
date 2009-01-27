@@ -117,10 +117,10 @@ Resource.prototype = {
     this._data = value;
   },
 
-  _lastRequest: null,
+  _lastChannel: null,
   _downloaded: false,
   _dirty: false,
-  get lastRequest() this._lastRequest,
+  get lastChannel() this._lastChannel,
   get downloaded() this._downloaded,
   get dirty() this._dirty,
 
@@ -147,7 +147,7 @@ Resource.prototype = {
   _createRequest: function Res__createRequest() {
     let ios = Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService);
-    let channel = ios.newChannel(this.spec, null, null).
+    this._lastChannel = ios.newChannel(this.spec, null, null).
       QueryInterface(Ci.nsIHttpChannel);
 
     let headers = this.headers; // avoid calling the authorizer more than once
@@ -156,9 +156,9 @@ Resource.prototype = {
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
-      channel.setRequestHeader(key, headers[key], true);
+      this._lastChannel.setRequestHeader(key, headers[key], true);
     }
-    return channel;
+    return this._lastChannel;
   },
 
   _onProgress: function Res__onProgress(event) {
@@ -198,26 +198,26 @@ Resource.prototype = {
       yield this.filterUpload(self.cb);
       this._log.trace(action + " Body:\n" + this._data);
 
-      let upload = channel.QueryInterface(Ci.nsIUploadChannel);
-      let iStream = Cc["@mozilla.org/io/string-input-stream;1"].
+      let stream = Cc["@mozilla.org/io/string-input-stream;1"].
         createInstance(Ci.nsIStringInputStream);
-      iStream.setData(this._data, this._data.length);
+      stream.setData(this._data, this._data.length);
 
-      upload.setUploadStream(iStream, 'text/plain', this._data.length);
+      channel.QueryInterface(Ci.nsIUploadChannel);
+      channel.setUploadStream(stream, 'text/plain', this._data.length);
     }
 
     let listener = new ChannelListener(self.cb, this._onProgress, this._log);
     channel.requestMethod = action;
     this._data = yield channel.asyncOpen(listener, null);
 
-    if (Utils.checkStatus(channel.responseStatus, null, [[400,499],501,505])) {
+    if (!channel.requestSucceeded) {
       this._log.debug(action + " request failed (" + channel.responseStatus + ")");
       if (this._data)
         this._log.debug("Error response: \n" + this._data);
       throw new RequestException(this, action, channel);
+
     } else {
-      this._log.debug(channel.requestMethod + " request successful (" +
-      channel.responseStatus  + ")");
+      this._log.debug(action + " request successful (" + channel.responseStatus  + ")");
 
       switch (action) {
       case "DELETE":

@@ -46,12 +46,10 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/base_records/wbo.js");
 
 Function.prototype.async = Async.sugar;
-
-Utils.lazy(this, 'PubKeys', PubKeyManager);
-Utils.lazy(this, 'PrivKeys', PrivKeyManager);
 
 function PubKey(uri) {
   this._PubKey_init(uri);
@@ -168,47 +166,35 @@ SymKey.prototype = {
   }
 };
 
-function PubKeyManager() {
-  this._init();
-}
+Utils.lazy(this, 'PubKeys', PubKeyManager);
+
+function PubKeyManager() { this._init(); }
 PubKeyManager.prototype = {
-  _keyType: PubKey,
+  __proto__: RecordManager.prototype,
+  _recordType: PubKey,
   _logName: "PubKeyManager",
-
-  _init: function KeyMgr__init() {
-    this._log = Log4Moz.repository.getLogger(this._logName);
-    this._keys = {};
-    this._aliases = {};
-  },
-
-  get _crypto() {
-    let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-      getService(Ci.IWeaveCrypto);
-    this.__defineGetter__("_crypto", function() crypto);
-    return crypto;
-  },
 
   get defaultKeyUri() this._defaultKeyUri,
   set defaultKeyUri(value) { this._defaultKeyUri = value; },
 
-  _getDefaultKey: function KeyMgr__getDefaultKey() {
-    let self = yield;
-    let ret = yield this.get(self.cb, this.defaultKeyUri);
-    self.done(ret);
-  },
   getDefaultKey: function KeyMgr_getDefaultKey(onComplete) {
-    return this._getDefaultKey.async(this, onComplete);
+    let fn = function KeyMgr__getDefaultKey() {
+      let self = yield;
+      let ret = yield this.get(self.cb, this.defaultKeyUri);
+      self.done(ret);
+    };
+    fn.async(this, onComplete);
   },
 
   createKeypair: function KeyMgr_createKeypair(passphrase, pubkeyUri, privkeyUri) {
     this._log.debug("Generating RSA keypair");
     let pubkey = new PubKey();
     let privkey = new PrivKey();
-    privkey.salt = this._crypto.generateRandomBytes(16);
-    privkey.iv = this._crypto.generateRandomIV();
+    privkey.salt = Svc.Crypto.generateRandomBytes(16);
+    privkey.iv = Svc.Crypto.generateRandomIV();
 
     let pub = {}, priv = {};
-    this._crypto.generateKeypair(passphrase, privkey.salt, privkey.iv, pub, priv);
+    Svc.Crypto.generateKeypair(passphrase, privkey.salt, privkey.iv, pub, priv);
     [pubkey.keyData, privkey.keyData] = [pub.value, priv.value];
 
     if (pubkeyUri) {
@@ -224,74 +210,23 @@ PubKeyManager.prototype = {
     return {pubkey: pubkey, privkey: privkey};
   },
 
-  _import: function KeyMgr__import(url) {
-    let self = yield;
-
-    this._log.trace("Importing key: " + (url.spec? url.spec : url));
-
-    try {
-      let key = new this._keyType(url);
-      yield key.get(self.cb);
-      this.set(url, key);
-      self.done(key);
-    } catch (e) {
-      this._log.debug("Failed to import key: " + e);
-      self.done(null);
-    }
-  },
-  import: function KeyMgr_import(onComplete, url) {
-    this._import.async(this, onComplete, url);
-  },
-
-  _get: function KeyMgr__get(url) {
-    let self = yield;
-
-    let key = null;
-    if (url in this._aliases)
-      url = this._aliases[url];
-    if (url in this._keys)
-      key = this._keys[url];
-
-    if (!key)
-      key = yield this.import(self.cb, url);
-
-    self.done(key);
-  },
-  get: function KeyMgr_get(onComplete, url) {
-    this._get.async(this, onComplete, url);
-  },
-
-  set: function KeyMgr_set(url, key) {
-    this._keys[url] = key;
-    return key;
-  },
-
-  contains: function KeyMgr_contains(url) {
-    let key = null;
-    if (url in this._aliases)
-      url = this._aliases[url];
-    if (url in this._keys)
-      return true;
-    return false;
-  },
-
-  del: function KeyMgr_del(url) {
-    delete this._keys[url];
-  },
-  getAlias: function KeyMgr_getAlias(alias) {
-    return this._aliases[alias];
-  },
-  setAlias: function KeyMgr_setAlias(url, alias) {
-    this._aliases[alias] = url;
-  },
-  delAlias: function KeyMgr_delAlias(alias) {
-    delete this._aliases[alias];
+  uploadKeypair: function KeyMgr_uploadKeypair(onComplete, keys) {
+    let fn = function KeyMgr__uploadKeypair(keys) {
+      let self = yield;
+      for each (let key in keys) {
+	let res = new Resource(key.uri);
+	yield res.put(self.cb, key.serialize());
+      }
+    };
+    fn.async(this, onComplete, keys);
   }
 };
+
+Utils.lazy(this, 'PrivKeys', PrivKeyManager);
 
 function PrivKeyManager() { this._init(); }
 PrivKeyManager.prototype = {
   __proto__: PubKeyManager.prototype,
-  _keyType: PrivKey,
+  _recordType: PrivKey,
   _logName: "PrivKeyManager"
 };

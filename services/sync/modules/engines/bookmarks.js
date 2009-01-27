@@ -475,8 +475,7 @@ BookmarksStore.prototype = {
   },
 
   // Create a record starting from the weave id (places guid)
-  // NOTE: the record id will not be set, because WBOs generate it from
-  //       the URL, which we don't have here.  The engine sets it.
+  // FIXME: set id here
   createRecord: function BStore_createRecord(guid) {
     let record = this.cache.get(guid);
     if (record)

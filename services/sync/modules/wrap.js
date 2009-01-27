@@ -44,6 +44,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/faultTolerance.js");
 
 Function.prototype.async = Async.sugar;
@@ -100,6 +101,7 @@ let Wrap = {
 
       } catch (e) {
         this._log.debug("Event: " + this._osPrefix + savedName + ":error");
+	this._log.debug("Caught exception: " + Utils.exceptionStr(e));
         this._os.notifyObservers(null, this._osPrefix + savedName + ":error", savedPayload);
         this._os.notifyObservers(null, this._osPrefix + "global:error", savedPayload);
 	ret = undefined;
