@@ -2435,11 +2435,11 @@ function testThinLoopDemote() {
 }
 testThinLoopDemote.expected = 100;
 testThinLoopDemote.jitstats = {
-    recorderStarted: 3,
+    recorderStarted: 2,
     recorderAborted: 0,
-    traceCompleted: 1,
-    traceTriggered: 0,
-    unstableLoopVariable: 2
+    traceCompleted: 2,
+    traceTriggered: 1,
+    unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
 
@@ -2482,11 +2482,11 @@ function testWeirdDateParse() {
 }
 testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
 testWeirdDateParse.jitstats = {
-    recorderStarted: 10,
+    recorderStarted: 7,
     recorderAborted: 1,
-    traceCompleted: 5,
-    traceTriggered: 13,
-    unstableLoopVariable: 6,
+    traceCompleted: 6,
+    traceTriggered: 14,
+    unstableLoopVariable: 3,
     noCompatInnerTrees: 1
 };
 test(testWeirdDateParse);
@@ -3847,7 +3847,7 @@ function testBitOrInconvertibleObjectAny()
   {
     threw = true;
     if (i !== 94)
-      return "expected i === 4, got " + i;
+      return "expected i === 94, got " + i;
     if (q !== 95)
       return "expected q === 95, got " + q;
     if (count !== 95)
@@ -3996,6 +3996,50 @@ function testStringResolve() {
 }
 testStringResolve.expected = 3;
 test(testStringResolve);
+
+//test no multitrees assert
+function testGlobalMultitrees1() {
+    (function() { 
+      for (var j = 0; j < 4; ++j) {
+        for each (e in ['A', 1, 'A']) {
+        }
+      }
+    })();
+    return true;
+}
+testGlobalMultitrees1.expected = true;
+test(testGlobalMultitrees1);
+
+var q = [];
+for each (b in [0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF]) {
+  for each (let e in [{}, {}, {}, "", {}]) { 
+    b = (b | 0x40000000) + 1;
+    q.push(b);
+  }
+}
+function testLetWithUnstableGlobal() {
+    return q.join(",");
+}
+testLetWithUnstableGlobal.expected = "2147483648,-1073741823,-1073741822,-1073741821,-1073741820,2147483648,-1073741823,-1073741822,-1073741821,-1073741820,2147483648,-1073741823,-1073741822,-1073741821,-1073741820";
+test(testLetWithUnstableGlobal);
+delete b;
+delete q;
+
+for each (testBug474769_b in [1, 1, 1, 1.5, 1, 1]) {
+    (function() { for each (let testBug474769_h in [0, 0, 1.4, ""]) {} })()
+}
+function testBug474769() {
+    return testBug474769_b;
+}
+testBug474769.expected = 1;
+test(testBug474769);
+
+function testReverseArgTypes() {
+    for (var j = 0; j < 4; ++j) ''.replace('', /x/);
+    return 1;
+}
+testReverseArgTypes.expected = 1;
+test(testReverseArgTypes);
 
 /*****************************************************************************
  *                                                                           *
