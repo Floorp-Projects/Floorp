@@ -1239,8 +1239,9 @@ void TraceRecorder::removeFragmentoReferences()
 inline LIns*
 TraceRecorder::addName(LIns* ins, const char* name)
 {
-#ifdef DEBUG
-    lirbuf->names->addName(ins, name);
+#ifdef JS_JIT_SPEW
+    if (js_verboseDebug)
+        lirbuf->names->addName(ins, name);
 #endif
     return ins;
 }
