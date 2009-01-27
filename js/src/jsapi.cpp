@@ -3364,17 +3364,15 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
 }
 
 static JSBool
-GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
-                      uintN *attrsp, JSBool *foundp,
-                      JSPropertyOp *getterp, JSPropertyOp *setterp)
+GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id,
+                          uintN *attrsp, JSBool *foundp,
+                          JSPropertyOp *getterp, JSPropertyOp *setterp)
 {
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    if (!atom)
-        return JS_FALSE;
-    if (!LookupPropertyById(cx, obj, ATOM_TO_JSID(atom), JSRESOLVE_QUALIFIED,
+    if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED,
                             &obj2, &prop)) {
         return JS_FALSE;
     }
@@ -3392,7 +3390,7 @@ GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
     }
 
     *foundp = JS_TRUE;
-    ok = OBJ_GET_ATTRIBUTES(cx, obj, ATOM_TO_JSID(atom), prop, attrsp);
+    ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, attrsp);
     if (ok && OBJ_IS_NATIVE(obj)) {
         JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
@@ -3403,6 +3401,17 @@ GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
     }
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
+}
+
+static JSBool
+GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
+                      uintN *attrsp, JSBool *foundp,
+                      JSPropertyOp *getterp, JSPropertyOp *setterp)
+{
+    if (!atom)
+        return JS_FALSE;
+    return GetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom),
+                                     attrsp, foundp, getterp, setterp);
 }
 
 static JSBool
@@ -3463,8 +3472,8 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
                                        JSPropertyOp *setterp)
 {
     CHECK_REQUEST(cx);
-    return GetPropertyAttributes(cx, obj, JSID_TO_ATOM(id),
-                                 attrsp, foundp, getterp, setterp);
+    return GetPropertyAttributesById(cx, obj, id, attrsp, foundp,
+                                     getterp, setterp);
 }
 
 JS_PUBLIC_API(JSBool)
