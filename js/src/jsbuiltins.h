@@ -255,27 +255,27 @@ struct JSTraceableNative {
 #define _JS_TN_INIT_HELPER_2(linkage, rt, op, at0, at1, cse, fold)                                \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                                        \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1),                                                        \
+    _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                                        \
     _JS_CTYPE_FLAGS(rt)
 
 #define _JS_TN_INIT_HELPER_3(linkage, rt, op, at0, at1, at2, cse, fold)                           \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                     \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at2),                                     \
+    _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                     \
     _JS_CTYPE_FLAGS(rt)
 
 #define _JS_TN_INIT_HELPER_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)                      \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                  \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at3),                  \
+    _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                  \
     _JS_CTYPE_FLAGS(rt)
 
 #define _JS_TN_INIT_HELPER_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)                 \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1)                   \
         _JS_CTYPE_PCH(at0),                                                                       \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at3)                   \
-        _JS_CTYPE_ACH(at4),                                                                       \
+    _JS_CTYPE_ACH(at4) _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1)                   \
+        _JS_CTYPE_ACH(at0),                                                                       \
     _JS_CTYPE_FLAGS(rt)
 
 #define JS_DEFINE_TRCINFO_1(name, tn0)                                                            \
