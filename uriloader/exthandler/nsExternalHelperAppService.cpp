@@ -410,7 +410,7 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
     case NS_FOLDER_VALUE_CUSTOM:
       {
         (void) prefs->GetComplexValue(NS_PREF_DOWNLOAD_DIR,
-                                      NS_GET_IID(nsIFile),
+                                      NS_GET_IID(nsILocalFile),
                                       getter_AddRefs(dir));
         if (!dir) break;
 
