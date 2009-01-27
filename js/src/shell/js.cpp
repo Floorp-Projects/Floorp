@@ -2226,8 +2226,10 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
 
     if (!JS_ValueToObject(cx, argc == 0 ? JSVAL_VOID : vp[2], &vobj))
         return JS_FALSE;
-    if (!vobj)
+    if (!vobj) {
+        *vp = JSVAL_VOID;
         return JS_TRUE;
+    }
 
     aobj = JS_NewArrayObject(cx, 0, NULL);
     if (!aobj)
@@ -2238,7 +2240,7 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     if (!ok)
         return JS_FALSE;
     pd = pda.array;
-    for (i = 0; i < pda.length; i++) {
+    for (i = 0; i < pda.length; i++, pd++) {
         pdobj = JS_NewObject(cx, NULL, NULL, NULL);
         if (!pdobj) {
             ok = JS_FALSE;
