@@ -522,7 +522,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             JS_DestroyScript(cx, script);
         }
         *buffer = '\0';
-    } while (!gQuitting);
+    } while (!hitEOF && !gQuitting);
 
     free(buffer);
     fprintf(gOutFile, "\n");
