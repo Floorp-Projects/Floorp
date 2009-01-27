@@ -205,8 +205,11 @@ public:
    *
    * WARNING: This function will syncronously execute content scripts, so be
    * prepared that the world might change around you.
+   *
+   * If aKillDeferred is PR_TRUE, deferred scripts won't be run, but instead
+   * removed.
    */
-  void EndDeferringScripts();
+  void EndDeferringScripts(PRBool aKillDeferred);
 
   /**
    * Returns the number of pending scripts, deferred or not.

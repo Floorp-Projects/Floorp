@@ -384,9 +384,9 @@ nsXMLContentSink::DidBuildModel()
 }
 
 PRBool
-nsXMLContentSink::ReadyToCallDidBuildModel()
+nsXMLContentSink::ReadyToCallDidBuildModel(PRBool aTerminated)
 {
-  return ReadyToCallDidBuildModelImpl();
+  return ReadyToCallDidBuildModelImpl(aTerminated);
 }
 
 NS_IMETHODIMP
