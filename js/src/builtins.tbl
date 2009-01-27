@@ -81,8 +81,6 @@ BUILTIN3(extern, JSVAL,     js_Any_getprop, CONTEXT, OBJECT, STRING,            
 BUILTIN4(extern, BOOL,      js_Any_setprop, CONTEXT, OBJECT, STRING, JSVAL,     0, 0)
 BUILTIN3(extern, JSVAL,     js_Any_getelem, CONTEXT, OBJECT, INT32,             0, 0)
 BUILTIN4(extern, BOOL,      js_Any_setelem, CONTEXT, OBJECT, INT32, JSVAL,      0, 0)
-BUILTIN3(extern, OBJECT,    js_FastValueToIterator, CONTEXT, UINT32, JSVAL,     0, 0)
-BUILTIN2(extern, JSVAL,     js_FastCallIteratorNext, CONTEXT, OBJECT,           0, 0)
 BUILTIN2(FRIEND, BOOL,      js_CloseIterator, CONTEXT, JSVAL,                   0, 0)
 BUILTIN2(extern, SIDEEXIT,  js_CallTree, INTERPSTATE, FRAGMENT,                 0, 0)
 BUILTIN2(extern, OBJECT,    js_FastNewObject, CONTEXT, OBJECT,                  0, 0)

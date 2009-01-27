@@ -3105,6 +3105,11 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
 
 #ifdef JS_TRACER
+    for (int i = 0; i < JSBUILTIN_LIMIT; i++) {
+        if (rt->builtinFunctions[i])
+            JS_CALL_OBJECT_TRACER(trc, rt->builtinFunctions[i], "builtin function");
+    }
+
 #ifdef JS_THREADSAFE
     /* Trace the loop table(s) which can contain pointers to code objects. */
    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
