@@ -120,7 +120,8 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
     if(!JS_GetReservedSlot(cx, callee, 1, &v))
         return JS_FALSE;
 
-    JS_SET_RVAL(cx, vp, JS_ARGV(cx, vp)[0]);
+    jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    JS_SET_RVAL(cx, vp, argval);
     return (*popp)(cx, obj, v, vp);
 }
 
