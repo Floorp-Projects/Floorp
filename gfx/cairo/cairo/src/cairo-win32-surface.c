@@ -1747,7 +1747,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
             next_logical_y = _cairo_lround (next_user_y);
 
             dxy_buf[j] = _cairo_lround (next_logical_x - logical_x);
-            dxy_buf[j+1] = _cairo_lround (next_logical_y - logical_y);
+            dxy_buf[j+1] = _cairo_lround (logical_y - next_logical_y);
+                /* note that GDI coordinate system is inverted */
 
             logical_x = next_logical_x;
             logical_y = next_logical_y;
