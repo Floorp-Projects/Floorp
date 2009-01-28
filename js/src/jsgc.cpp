@@ -3470,7 +3470,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #endif
 
     /* Destroy eval'ed scripts. */
-    DestroyScriptsToGC(cx, &JS_SCRIPTS_TO_GC(cx));
+    for (i = 0; i < JS_ARRAY_LENGTH(JS_SCRIPTS_TO_GC(cx)); i++)
+        DestroyScriptsToGC(cx, &JS_SCRIPTS_TO_GC(cx)[i]);
 
 #ifdef JS_THREADSAFE
     /*
@@ -3492,7 +3493,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #ifdef JS_TRACER
         js_FlushJITOracle(acx);
 #endif
-        DestroyScriptsToGC(cx, &acx->thread->scriptsToGC);
+        for (i = 0; i < JS_ARRAY_LENGTH(acx->thread->scriptsToGC); i++)
+            DestroyScriptsToGC(cx, &acx->thread->scriptsToGC[i]);
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
