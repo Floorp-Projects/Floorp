@@ -59,6 +59,7 @@ _TEST_FILES =\
  		nsIAccessible_selects.js \
 		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
+		relations.js \
 		role.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
@@ -99,6 +100,8 @@ _TEST_FILES =\
 		$(warning test_nsIAccessibleTable_listboxes.xul temporarily disabled) \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
+		test_relations.html \
+		test_relations.xul \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
 		test_textattrs.html \

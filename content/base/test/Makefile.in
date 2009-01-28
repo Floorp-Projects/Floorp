@@ -282,6 +282,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_XHRSendData_doc.xml \
 		file_XHRSendData_doc.xml^headers^ \
 		test_bug466751.xhtml \
+		test_bug461555.html \
 		$(NULL)
 
 # Disabled for now. Mochitest isn't reliable enough for these.
