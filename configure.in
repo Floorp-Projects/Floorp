@@ -1989,6 +1989,8 @@ case "$target" in
     USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
+
+    MOZ_GFX_OPTIMIZE_MOBILE=1
 ;;
 
 
@@ -6155,8 +6157,7 @@ if test $NS_OSSO; then
         AC_MSG_ERROR([DBus is required when building for OSSO])
     fi
     AC_DEFINE(NS_OSSO)
-    dnl XXX this should go somewhere else; it's not just for OSSO
-    AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
+    MOZ_GFX_OPTIMIZE_MOBILE=1
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
@@ -6256,6 +6257,19 @@ if test -n "$MOZ_DEBUG"; then
         AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
     fi
     CFLAGS=$_SAVE_CFLAGS
+fi
+
+dnl ========================================================
+dnl enable mobile optimizations
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(mobile-optimize,
+[  --enable-mobile-optimize   Enable mobile optimizations],
+    MOZ_GFX_OPTIMIZE_MOBILE=1)
+
+AC_SUBST(MOZ_GFX_OPTIMIZE_MOBILE)
+
+if test "$MOZ_GFX_OPTIMIZE_MOBILE"; then
+    AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
 fi
 
 dnl ========================================================
