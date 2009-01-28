@@ -503,7 +503,8 @@ extern JSScript *
 js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                  JSPrincipals *principals, uint32 tcflags,
                  const jschar *chars, size_t length,
-                 FILE *file, const char *filename, uintN lineno)
+                 FILE *file, const char *filename, uintN lineno,
+                 JSString *source)
 {
     JSParseContext pc;
     JSArenaPool codePool, notePool;
@@ -543,16 +544,36 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     cg.treeContext.u.scopeChain = scopeChain;
     cg.staticDepth = TCF_GET_STATIC_DEPTH(tcflags);
 
-    if ((tcflags & TCF_COMPILE_N_GO) && callerFrame && callerFrame->fun) {
-        /*
-         * An eval script in a caller frame needs to have its enclosing function
-         * captured in case it uses an upvar reference, and someone wishes to
-         * decompile it while running.
-         */
-        JSParsedObjectBox *pob = js_NewParsedObjectBox(cx, &pc, FUN_OBJECT(callerFrame->fun));
-        pob->emitLink = cg.objectList.lastPob;
-        cg.objectList.lastPob = pob;
-        cg.objectList.length++;
+    /*
+     * If funpob is non-null after we create the new script, callerFrame->fun
+     * was saved in the 0th object table entry.
+     */
+    JSParsedObjectBox *funpob = NULL;
+
+    if (tcflags & TCF_COMPILE_N_GO) {
+        if (source) {
+            /*
+             * Save eval program source in script->atomMap.vector[0] for the
+             * eval cache (see obj_eval in jsobj.cpp).
+             */
+            JSAtom *atom = js_AtomizeString(cx, source, 0);
+            if (!atom || !js_IndexAtom(cx, atom, &cg.atomList))
+                return NULL;
+        }
+
+        if (callerFrame && callerFrame->fun) {
+            /*
+             * An eval script in a caller frame needs to have its enclosing
+             * function captured in case it uses an upvar reference, and
+             * someone wishes to decompile it while it's running.
+             */
+            funpob = js_NewParsedObjectBox(cx, &pc, FUN_OBJECT(callerFrame->fun));
+            if (!funpob)
+                return NULL;
+            funpob->emitLink = cg.objectList.lastPob;
+            cg.objectList.lastPob = funpob;
+            cg.objectList.length++;
+        }
     }
 
     /* Inline Statements() to emit as we go to save space. */
@@ -647,6 +668,8 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     JS_DumpArenaStats(stdout);
 #endif
     script = js_NewScriptFromCG(cx, &cg);
+    if (script && funpob)
+        script->flags |= JSSF_SAVED_CALLER_FUN;
 
 #ifdef JS_SCOPE_DEPTH_METER
     if (script) {
