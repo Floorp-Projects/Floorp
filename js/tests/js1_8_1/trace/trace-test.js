@@ -187,7 +187,7 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
         }
       });
     if (pass) {
-      reportCompare(expected + '', actual + '', desc);
+      reportCompare(expected, actual, desc);
       passes.push(desc);
       return print(desc, ": passed");
     }
