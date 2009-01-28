@@ -46,17 +46,17 @@ main(int argc, char **argv)
       }
       j++;
   }
-  
+
   if (k==0)
     args[i++] = "/ENTRY:main";
-  
+
   if (s==0){
     args[i++] = "/subsystem:\"WINDOWSCE,5.02\"";
   }
 
   argpath_conv(&argv[1], &args[i]);
 
-  dumpargs(args);
+  //  dumpargs(args);
 
   return run(args);
 }

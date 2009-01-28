@@ -2,20 +2,21 @@
 #include <stdio.h>
 #include <process.h>
 
-#ifndef TOPSRCDIR
-#include "../topsrcdir.h"
+#define WCE_BIN    VC_PATH "ce\\bin\\x86_arm\\"
+#define WCE_RC_BIN WIN_SDK_PATH  "bin\\"
+#define WCE_CRT    VC_PATH "ce\\lib\\armv4i"
+#define WM_SDK_INC    WM_SDK_PATH "Include/Armv4i"
+#define WCE_LIB    WM_SDK_PATH "Lib/Armv4i"
+#define WCE_RC_INC  VC_PATH "ce\\atlmfc\\include"
+#define WCE_INC  VC_PATH "ce\\include"
+
+#ifndef SHUNT_LIB
+#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/" MOZCE_DEVENV
 #endif
 
-#define WCE_BIN   "c:\\Program Files\\Microsoft Visual Studio 8\\VC\\ce\\bin\\x86_arm\\"
-#define WCE_CRT   "c:\\Program Files\\Microsoft Visual Studio 8\\VC\\ce\\lib\\armv4i"
-#define WCE_INC   "c:\\Program Files\\Windows Mobile 6 SDK\\PocketPC\\Include\\Armv4i"
-#define WCE_LIB   "c:\\Program Files\\Windows Mobile 6 SDK\\PocketPC\\Lib\\Armv4i"
-
-//#define WCE_RC_BIN "c:\\Program Files\\Microsoft Visual Studio 8\\VC\\bin\\"
-#define WCE_RC_BIN "c:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\bin\\"
-
-#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/vs8/"
+#ifndef SHUNT_INC
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
+#endif
 
 #define ASM_PATH  WCE_BIN "armasm.exe"
 #define CL_PATH   WCE_BIN "cl.exe"
@@ -109,7 +110,7 @@ int argpath_conv(char **args_in, char **args_out)
       {
         // Deal with -OUT:/c/....
         //
-        // NOTE: THERE IS A BUG IN THIS IMPLEMENTATION IF
+        // NOTE: THERE IS A BUG IN THIS IMPLEMENTATION IF 
         //       THERE IS A SPACE IN THE TOPSRCDIR PATH.
         //
         // Should really check for spaces, then double-quote
@@ -231,8 +232,8 @@ DWORD run(char** args)
  _putenv("LIBPATH=");
  _putenv("CC=");
 
- _putenv("INCLUDE=" WCE_INC);
- _putenv("LIB=" WCE_LIB);
+ _putenv("INCLUDE=" SHUNT_INC ";" WM_SDK_INC ";" WCE_INC);
+ _putenv("LIB=" WCE_LIB ";" WCE_CRT);
 
  for (j=1; args[j]; j++)
  {

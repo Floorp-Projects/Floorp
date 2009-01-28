@@ -1,3 +1,4 @@
+
 #include "toolspath.h"
 
 int
@@ -12,7 +13,6 @@ main(int argc, char **argv)
   char  outputFileArg[1000];
 
   args[i++] = CL_PATH;
-  args[i++] = "/I\"" WCE_INC "\"";
   args[i++] = "/I\"" SHUNT_INC "\"";
   args[i++] = "/FI\"mozce_shunt.h\"";
 
@@ -24,8 +24,8 @@ main(int argc, char **argv)
   args[i++] = "/DWINCE";
   args[i++] = "/D_WIN32_WCE=0x502";
   args[i++] = "/DUNDER_CE";
-  args[i++] = "/DWIN32_PLATFORM_WFSP";
-//  args[i++] = "/DWIN32_PLATFORM_PSPC";
+//  args[i++] = "/DWIN32_PLATFORM_WFSP";
+  args[i++] = "/DWIN32_PLATFORM_PSPC";
 //  args[i++] = "/DPOCKETPC2003_UI_MODEL";
   args[i++] = "/D_WINDOWS";
   args[i++] = "/DNO_ERRNO";
@@ -81,13 +81,13 @@ main(int argc, char **argv)
       args[i++] = "coredll.lib";
 
 
-      args[i++] = "/NODEFAULTLIB:LIBC";
+      //args[i++] = "/NODEFAULTLIB:LIBC";
       args[i++] = "/NODEFAULTLIB:OLDNAMES";
 
     }
 
   args[i] = NULL;
 
-  dumpargs(args);
+  //  dumpargs(args);
   return run(args);
 }
