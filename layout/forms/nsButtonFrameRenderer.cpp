@@ -109,6 +109,7 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("ButtonBorderBackground")
 private:
   nsButtonFrameRenderer* mBFR;
@@ -132,6 +133,11 @@ public:
 private:
   nsButtonFrameRenderer* mBFR;
 };
+
+nsRect nsDisplayButtonBorderBackground::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+}
 
 void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                             nsIRenderingContext* aCtx,
@@ -223,6 +229,9 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsPresContext* aPresContext,
   nsStyleContext* context = mFrame->GetStyleContext();
 
   const nsStyleBorder* border = context->GetStyleBorder();
+
+  nsCSSRendering::PaintBoxShadow(aPresContext, aRenderingContext, mFrame,
+                                 aRect.TopLeft(), aDirtyRect);
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
                                   aDirtyRect, buttonRect, PR_FALSE);
