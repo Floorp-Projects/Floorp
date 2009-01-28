@@ -4526,25 +4526,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       //SetFocus(); // this is bad
       //RelayMouseEvent(msg,wParam, lParam);
     {
-#ifdef WINCE
-      if (!gRollupListener && !gRollupWidget) 
-      {
-        SHRGINFO  shrg;
-        shrg.cbSize = sizeof(shrg);
-        shrg.hwndClient = mWnd;
-        shrg.ptDown.x = LOWORD(lParam);
-        shrg.ptDown.y = HIWORD(lParam);
-        shrg.dwFlags = SHRG_RETURNCMD;
-        if (SHRecognizeGesture(&shrg)  == GN_CONTEXTMENU)
-        {
-          result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam,
-                                       PR_FALSE, nsMouseEvent::eRightButton);
-          result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam,
-                                      PR_FALSE, nsMouseEvent::eRightButton);
-          break;
-        }
-      }
-#endif
       // check whether IME window do mouse operation
       if (IMEMouseHandling(IMEMOUSE_LDOWN, lParam))
         break;
