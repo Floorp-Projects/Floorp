@@ -3706,7 +3706,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
     JSProperty *prop;
     JSScopeProperty *sprop;
 
-    JS_ASSERT_IF(entryp, !JS_EXECUTING_TRACE(cx));
+    JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
     obj = js_GetTopStackFrame(cx)->scopeChain;
     shape = OBJ_SHAPE(obj);
     for (scopeIndex = 0; ; scopeIndex++) {

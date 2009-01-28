@@ -575,3 +575,63 @@
     .end                                    #
 
 .end
+
+.igroup iter JSOP_ITER
+
+    .imacro for_in                                  # obj
+        callprop iterator                           # fun obj
+        int8 (JSITER_ENUMERATE)                     # fun obj flags
+        call 1                                      # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+    .imacro for_each                                # obj
+        callprop iterator                           # fun obj
+        int8 (JSITER_ENUMERATE|JSITER_FOREACH)      # fun obj flags
+        call 1                                      # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+    .imacro for_in_native                           # obj
+        callbuiltin (JSBUILTIN_ObjectToIterator)    # fun obj
+        int8 (JSITER_ENUMERATE)                     # fun obj flags
+        call 1                                      # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+    .imacro for_each_native                         # obj
+        callbuiltin (JSBUILTIN_ObjectToIterator)    # fun obj
+        int8 (JSITER_ENUMERATE|JSITER_FOREACH)      # fun obj flags
+        call 1                                      # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+.end
+
+.igroup nextiter JSOP_NEXTITER
+
+    .imacro custom_iter_next                        # iterobj prevval
+        pop                                         # iterobj
+        dup                                         # iterobj iterobj
+        callprop next                               # iterobj fun iterobj
+        call 0                                      # iterobj nextval
+        true                                        # iterobj nextval true
+        stop
+    .end
+
+    .imacro native_iter_next                        # iterobj prevval
+        pop                                         # iterobj
+        dup                                         # iterobj iterobj
+        callbuiltin (JSBUILTIN_CallIteratorNext)    # iterobj fun iterobj
+        call 0                                      # iterobj nextval?
+        dup                                         # iterobj nextval? nextval?
+        hole                                        # iterobj nextval? nextval? hole
+        strictne                                    # iterobj nextval? boolean
+        stop
+    .end
+
+.end
