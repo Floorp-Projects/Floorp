@@ -494,7 +494,7 @@ nsresult nsHttpStreamStrategy::OpenInternal(nsIStreamListener **aStreamListener,
     *aStreamListener = nsnull;
   }
 
-  mListener = new nsChannelToPipeListener(mDecoder);
+  mListener = new nsChannelToPipeListener(mDecoder, aOffset != 0, aOffset);
   NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = mListener->Init();
