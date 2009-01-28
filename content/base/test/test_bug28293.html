@@ -37,7 +37,7 @@ onload = function () {
 }
 
 function done() {
-  is(res, "ABCDEFGHIJ1abcdefM2g34hi", "scripts executed in the wrong order");
+  is(res, "ABCDEFGHIJabcdef1M2g34hi", "scripts executed in the wrong order");
   ok(!fHadExecuted, "Dynamic script executed too late");
   SimpleTest.finish();
 }

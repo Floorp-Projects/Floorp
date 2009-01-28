@@ -92,7 +92,7 @@ const CACHE_INVALIDATION_DELAY = 1000;
 
 // Current cache version. This should be incremented if the format of the cache
 // file is modified.
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
@@ -1973,7 +1973,7 @@ Engine.prototype = {
     if (this._installLocation != SEARCH_APP_DIR || !aFilter)
       json._installLocation = this._installLocation;
     if (this._updateInterval || !aFilter)
-      json.updateInterval = this._updateInterval;
+      json._updateInterval = this._updateInterval;
     if (this._updateURL || !aFilter)
       json._updateURL = this._updateURL;
     if (this._iconUpdateURL || !aFilter)
