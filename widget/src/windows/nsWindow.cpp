@@ -348,6 +348,9 @@ RECT*      nsWindow::sIMECompCharPos           = nsnull;
 
 PRBool     nsWindow::gSwitchKeyboardLayout     = PR_FALSE;
 
+// imported in nsWidgetFactory.cpp
+PRBool gDisableNativeTheme = PR_FALSE;
+
 #ifndef WINCE
 static KeyboardLayout gKbdLayout;
 #endif
@@ -1367,16 +1370,20 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
       nsCOMPtr<nsIPrefBranch> prefBranch;
       prefs->GetBranch(0, getter_AddRefs(prefBranch));
       if (prefBranch) {
-        PRBool trimOnMinimize;
+
+        PRBool temp;
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("config.trim_on_minimize",
-                                                 &trimOnMinimize))
-            && trimOnMinimize)
+                                                 &temp))
+            && temp)
           gTrimOnMinimize = 1;
 
-        PRBool switchKeyboardLayout;
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("intl.keyboard.per_window_layout",
-                                                 &switchKeyboardLayout)))
-          gSwitchKeyboardLayout = switchKeyboardLayout;
+                                                 &temp)))
+          gSwitchKeyboardLayout = temp;
+
+        if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
+                                                 &temp)))
+          gDisableNativeTheme = temp;
       }
     }
   }

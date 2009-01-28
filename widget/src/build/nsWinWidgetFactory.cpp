@@ -75,12 +75,42 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 
-#ifndef WINCE
+// from nsWindow.cpp
+extern PRBool gDisableNativeTheme;
 
+static NS_IMETHODIMP
+nsNativeThemeWinConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
+{
+    nsresult rv;
+    nsNativeThemeWin * inst;
+
+    if (gDisableNativeTheme)
+        return NS_ERROR_NO_INTERFACE;
+
+    *aResult = NULL;
+    if (NULL != aOuter) {
+        rv = NS_ERROR_NO_AGGREGATION;
+        return rv;
+    }
+
+    NS_NEWXPCOM(inst, nsNativeThemeWin);
+    if (NULL == inst) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        return rv;
+    }
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+
+    return rv;
+}
+
+
+#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
