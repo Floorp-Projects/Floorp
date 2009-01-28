@@ -109,7 +109,7 @@ Store.prototype = {
     throw "override itemExists in a subclass";
   },
 
-  createRecord: function Store_createRecord() {
+  createRecord: function Store_createRecord(id) {
     throw "override createRecord in a subclass";
   },
 
@@ -186,7 +186,7 @@ Cache.prototype = {
       this._tail.next = wrapper;
       this._tail = wrapper;
     }
-    
+
     this._items[wrapper.id] = wrapper;
     this.count++;
 
