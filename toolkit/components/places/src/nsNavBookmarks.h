@@ -96,6 +96,15 @@ public:
                                  PRInt32* aIndex,
                                  PRInt64* aNewFolder);
 
+  /**
+   * Determines if we have a real bookmark or not (not a livemark).
+   *
+   * @param aPlaceId
+   *        The place_id of the location to check against.
+   * @returns true if it's a real bookmark, false otherwise.
+   */
+  PRBool IsRealBookmark(PRInt64 aPlaceId);
+
   // Called by History service when quitting.
   nsresult OnQuit();
 
@@ -225,6 +234,7 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
   nsCOMPtr<mozIStorageStatement> mDBInsertBookmark;
   nsCOMPtr<mozIStorageStatement> mDBIsBookmarkedInDatabase;
+  nsCOMPtr<mozIStorageStatement> mDBIsRealBookmark;
   nsCOMPtr<mozIStorageStatement> mDBGetLastBookmarkID;
   nsCOMPtr<mozIStorageStatement> mDBSetItemDateAdded;
   nsCOMPtr<mozIStorageStatement> mDBSetItemLastModified;

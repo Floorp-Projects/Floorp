@@ -40,6 +40,15 @@
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
+const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
+const TRANSITION_BOOKMARK = Ci.nsINavHistoryService.TRANSITION_BOOKMARK;
+const TRANSITION_EMBED = Ci.nsINavHistoryService.TRANSITION_EMBED;
+const TRANSITION_REDIRECT_PERMANENT = Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT;
+const TRANSITION_REDIRECT_TEMPORARY = Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY;
+const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
+
 let current_test = 0;
 
 function AutoCompleteInput(aSearches) {
@@ -164,7 +173,56 @@ let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 // Store the page info for each uri
 let gPages = [];
 
-function addPageBook(aURI, aTitle, aBook, aTags, aKey)
+/**
+ * Sets the page title synchronously.  The page must already be in the database.
+ *
+ * @param aURI
+ *        An nsIURI to set the title for.
+ * @param aTitle
+ *        The title to set the page to.
+ */
+function setPageTitle(aURI, aTitle)
+{
+  // XXX this function only exists because we have no API to do this. It should
+  //     be added in bug 421897.
+  let db = histsvc.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+  let stmt = db.createStatement(
+    "UPDATE moz_places_view " +
+    "SET title = :title " +
+    "WHERE url = :uri"
+  );
+  stmt.params.title = aTitle;
+  stmt.params.uri = aURI.spec;
+  stmt.execute();
+  stmt.finalize();
+}
+
+/**
+ * Adds a page, and creates various properties for it depending on the
+ * parameters passed in.  This function will also add one visit.
+ *
+ * @param aURI
+ *        An index into kURIs that holds the string for the URI we are to add a
+ *        page for.
+ * @param aTitle
+ *        An index into kTitles that holds the string for the title we are to
+ *        associate with the specified URI.
+ * @param aBook [optional]
+ *        An index into kTitles that holds the string for the title we are to
+ *        associate with the bookmark.  If this is undefined, no bookmark is
+ *        created.
+ * @param aTags [optional]
+ *        An array of indexes into kTitles that hold the strings for the tags we
+ *        are to associate with the URI.  If this is undefined (or aBook is), no
+ *        tags are added.
+ * @param aKey [optional]
+ *        A string to associate as the keyword for this bookmark.  aBook must be
+ *        a valid index into kTitles for this to be checked and used.
+ * @param aTransitionType [optional]
+ *        The transition type to use when adding the visit.  The default is
+ *        nsINavHistoryService::TRANSITION_LINK.
+ */
+function addPageBook(aURI, aTitle, aBook, aTags, aKey, aTransitionType)
 {
   // Add a page entry for the current uri
   gPages[aURI] = [aURI, aBook != undefined ? aBook : aTitle, aTags];
@@ -176,8 +234,12 @@ function addPageBook(aURI, aTitle, aBook, aTags, aKey)
   out.push("\nuri=" + kURIs[aURI]);
   out.push("\ntitle=" + title);
 
-  // Add the page and a visit for good measure
-  bhist.addPageWithDetails(uri, title, gDate);
+  // Add the page and a visit
+  let tt = aTransitionType || TRANSITION_LINK;
+  let isRedirect = tt == TRANSITION_REDIRECT_PERMANENT ||
+                   tt == TRANSITION_REDIRECT_TEMPORARY;
+  histsvc.addVisit(uri, gDate, null, tt, isRedirect, 0);
+  setPageTitle(uri, title);
 
   // Add a bookmark if we need to
   if (aBook != undefined) {

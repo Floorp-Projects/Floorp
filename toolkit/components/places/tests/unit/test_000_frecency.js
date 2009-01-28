@@ -145,6 +145,10 @@ bucketPrefs.every(function(bucket) {
     }
     else {
       // visited
+      // visited bookmarks get the visited bookmark bonus twice
+      if (visitType == Ci.nsINavHistoryService.TRANSITION_BOOKMARK)
+        bonusValue = bonusValue * 2;
+
       var points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
       if (!points) {
         if (!visitType ||
