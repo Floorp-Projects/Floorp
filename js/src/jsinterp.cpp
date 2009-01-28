@@ -5610,6 +5610,10 @@ js_Interpret(JSContext *cx)
                  * JSOP_SETGVAR has arity 1: [rval], not arity 2: [obj, rval]
                  * as JSOP_SETNAME does, where [obj] is due to JSOP_BINDNAME.
                  */
+#ifdef JS_TRACER
+                if (TRACE_RECORDER(cx))
+                    js_AbortRecording(cx, "SETGVAR with NULL slot");
+#endif
                 LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
