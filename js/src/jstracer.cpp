@@ -7294,11 +7294,18 @@ TraceRecorder::monitorRecording(JSOp op)
 
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
+            void *mark = JS_ARENA_MARK(&cx->tempPool);
+            Sprinter sprinter;
+            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+
             debug_only_print0(LC_TMRecorder, "\n");
             js_Disassemble1(cx, cx->fp()->script(), cx->regs->pc,
                             cx->fp()->hasImacropc()
                                 ? 0 : cx->regs->pc - cx->fp()->script()->code,
-                            !cx->fp()->hasImacropc(), stdout);
+                            !cx->fp()->hasImacropc(), &sprinter);
+
+            fprintf(stdout, "%s", sprinter.base);
+            JS_ARENA_RELEASE(&cx->tempPool, mark);
         }
     )
 
@@ -10313,7 +10320,14 @@ TraceRecorder::record_EnterFrame()
                       callDepth);
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
-            js_Disassemble(cx, cx->fp()->script(), JS_TRUE, stdout);
+            void *mark = JS_ARENA_MARK(&cx->tempPool);
+            Sprinter sprinter;
+            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+
+            js_Disassemble(cx, cx->fp()->script(), JS_TRUE, &sprinter);
+
+            debug_only_printf(LC_TMTracer, "%s", sprinter.base);
+            JS_ARENA_RELEASE(&cx->tempPool, mark);
             debug_only_print0(LC_TMTracer, "----\n");
         }
     )
