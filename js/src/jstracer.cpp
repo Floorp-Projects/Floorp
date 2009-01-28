@@ -1722,6 +1722,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
             ins = lir->insLoad(LIR_ldp, base, offset);
         }
     }
+    checkForGlobalObjectReallocation();
     tracker.set(p, ins);
 #ifdef DEBUG
     char name[64];
@@ -1809,7 +1810,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if (slot != uint16(slot)) /* we use a table of 16-bit ints, bail out if that's not enough */
         return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
-    if (tracker.has(vp))
+    if (known(vp))
         return true; /* we already have it */
     unsigned index = traceMonitor->globalSlots->length();
     /* If this the first global we are adding, remember the shape of the global object. */
@@ -1841,7 +1842,8 @@ TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset)
 JS_REQUIRES_STACK void
 TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 {
-    JS_ASSERT(initializing || tracker.has(p));
+    JS_ASSERT(initializing || known(p));
+    checkForGlobalObjectReallocation();
     tracker.set(p, i);
     /* If we are writing to this location for the first time, calculate the offset into the
        native frame manually, otherwise just look up the last load or store associated with
@@ -1873,9 +1875,41 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 }
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::get(jsval* p) const
+TraceRecorder::get(jsval* p)
 {
+    checkForGlobalObjectReallocation();
     return tracker.get(p);
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::known(jsval* p)
+{
+    checkForGlobalObjectReallocation();
+    return tracker.has(p);
+}
+
+/*
+ * The dslots of the global object are sometimes reallocated by the interpreter.
+ * This function check for that condition and re-maps the entries of the tracker
+ * accordingly.
+ */
+JS_REQUIRES_STACK void
+TraceRecorder::checkForGlobalObjectReallocation()
+{
+    if (global_dslots != globalObj->dslots) {
+        debug_only_v(printf("globalObj->dslots relocated, updating tracker\n");)
+        jsval* src = global_dslots;
+        jsval* dst = globalObj->dslots;
+        jsuint length = globalObj->dslots[-1] - JS_INITIAL_NSLOTS;
+        LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
+        for (jsuint n = 0; n < length; ++n) {
+            map[n] = tracker.get(src);
+            tracker.set(src++, NULL);
+        }
+        for (jsuint n = 0; n < length; ++n)
+            tracker.set(dst++, map[n]);
+        global_dslots = globalObj->dslots;
+    }
 }
 
 /* Determine whether the current branch instruction terminates the loop. */
@@ -1997,7 +2031,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
 }
 
 JS_REQUIRES_STACK uint8
-TraceRecorder::determineSlotType(jsval* vp) const
+TraceRecorder::determineSlotType(jsval* vp)
 {
     uint8 m;
     LIns* i = get(vp);
@@ -2072,7 +2106,7 @@ TraceRecorder::snapshot(ExitType exitType)
     bool resumeAfter = (pendingTraceableNative &&
                         JSTN_ERRTYPE(pendingTraceableNative) == FAIL_JSVAL);
     if (resumeAfter) {
-        JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEXTITER);
+        JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY);
         pc += cs.length;
         regs->pc = pc;
         MUST_FLOW_THROUGH("restore_pc");
@@ -2099,11 +2133,10 @@ TraceRecorder::snapshot(ExitType exitType)
     );
     JS_ASSERT(unsigned(m - typemap) == ngslots + stackSlots);
 
-    /* If we are capturing the stack state on a specific instruction, the value on or near
-       the top of the stack is a boxed value. Either pc[-cs.length] is JSOP_NEXTITER and we
-       want one below top of stack, or else it's JSOP_CALL and we want top of stack. */
+    /* If we are capturing the stack state on a specific instruction, the value on
+       the top of the stack is a boxed value. */
     if (resumeAfter) {
-        typemap[stackSlots + ((pc[-cs.length] == JSOP_NEXTITER) ? -2 : -1)] = JSVAL_BOXED;
+        typemap[stackSlots - 1] = JSVAL_BOXED;
 
         /* Now restore the the original pc (after which early returns are ok). */
         MUST_FLOW_LABEL(restore_pc);
@@ -2298,8 +2331,6 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
     if (stable_peer)
         *stable_peer = NULL;
 
-    demote = false;
-    
     /*
      * Rather than calculate all of this stuff twice, it gets cached locally.  The "stage" buffers 
      * are for calls to set() that will change the exit types.
@@ -2935,9 +2966,6 @@ js_DeleteRecorder(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Aborting and completing a trace end up here. */
-    JS_ASSERT(tm->onTrace);
-    tm->onTrace = false;
-
     delete tm->recorder;
     tm->recorder = NULL;
 }
@@ -2964,15 +2992,6 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
                  VMSideExit* expectedInnerExit, Fragment* outer)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    /*
-     * Emulate on-trace semantics and avoid rooting headaches while recording,
-     * by suppressing last-ditch GC attempts while recording a trace. This does
-     * means that trace recording must not nest or the following assertion will
-     * botch.
-     */
-    JS_ASSERT(!tm->onTrace);
-    tm->onTrace = true;
 
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
@@ -3477,7 +3496,7 @@ js_CloseLoop(JSContext* cx)
         return false;
     }
 
-    bool demote;
+    bool demote = false;
     Fragment* f = r->getFragment();
     r->closeLoop(tm, demote);
     js_DeleteRecorder(cx);
@@ -3867,15 +3886,12 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #endif
 #endif
 
-    /*
-     * We may be called from js_MonitorLoopEdge while not recording, or while
-     * recording. Rather than over-generalize by using a counter instead of a
-     * flag, we simply sample and update tm->onTrace if necessary.
-     */
-    bool onTrace = tm->onTrace;
-    if (!onTrace)
-        tm->onTrace = true;
-    VMSideExit* lr;
+    /* Set a flag that indicates to the runtime system that we are running in native code
+       now and we don't want automatic GC to happen. Instead we will get a silent failure,
+       which will cause a trace exit at which point the interpreter re-tries the operation
+       and eventually triggers the GC. */
+    JS_ASSERT(!tm->onTrace);
+    tm->onTrace = true;
     
     debug_only(fflush(NULL);)
     GuardRecord* rec;
@@ -3884,13 +3900,13 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 #else
     rec = u.func(&state, NULL);
 #endif
-    lr = (VMSideExit*)rec->exit;
+    VMSideExit* lr = (VMSideExit*)rec->exit;
 
     AUDIT(traceTriggered);
 
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
 
-    tm->onTrace = onTrace;
+    tm->onTrace = false;
 
     /* Except if we find that this is a nested bailout, the guard the call returned is the
        one we have to use to adjust pc and sp. */
@@ -4158,12 +4174,6 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         // Clear one-shot state used to communicate between record_JSOP_CALL and post-
         // opcode-case-guts record hook (record_FastNativeCallComplete).
         tr->pendingTraceableNative = NULL;
-
-        // In the future, handle dslots realloc by computing an offset from dslots instead.
-        if (tr->global_dslots != tr->globalObj->dslots) {
-            js_AbortRecording(cx, "globalObj->dslots reallocated");
-            return JSMRS_STOP;
-        }
 
         jsbytecode* pc = cx->fp->regs->pc;
 
@@ -4460,7 +4470,7 @@ js_FlushJITCache(JSContext* cx)
 JS_FORCES_STACK JSStackFrame *
 js_GetTopStackFrame(JSContext *cx)
 {
-    if (JS_EXECUTING_TRACE(cx)) {
+    if (JS_ON_TRACE(cx)) {
         /*
          * TODO: If executing a tree, synthesize stack frames and bail off
          * trace. See bug 462027.
@@ -5989,9 +5999,9 @@ TraceRecorder::record_JSOP_PICK()
     jsval* sp = cx->fp->regs->sp;
     jsint n = cx->fp->regs->pc[1];
     JS_ASSERT(sp - (n+1) >= StackBase(cx->fp));
-    LIns* top = tracker.get(sp - (n+1));
+    LIns* top = get(sp - (n+1));
     for (jsint i = 0; i < n; ++i)
-        set(sp - (n+1) + i, tracker.get(sp - n + i));
+        set(sp - (n+1) + i, get(sp - n + i));
     set(&sp[-1], top);
     return true;
 }
@@ -7674,114 +7684,40 @@ TraceRecorder::record_JSOP_IMACOP()
     return true;
 }
 
-static struct {
-    jsbytecode for_in[10];
-    jsbytecode for_each[10];
-} iter_imacros = {
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
-        JSOP_INT8, JSITER_ENUMERATE,
-        JSOP_CALL, 0, 1,
-        JSOP_PUSH,
-        JSOP_STOP
-    },
-
-    {
-        JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
-        JSOP_INT8, JSITER_ENUMERATE | JSITER_FOREACH,
-        JSOP_CALL, 0, 1,
-        JSOP_PUSH,
-        JSOP_STOP
-    }
-};
-
-JS_STATIC_ASSERT(sizeof(iter_imacros) < IMACRO_PC_ADJ_LIMIT);
-
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ITER()
 {
     jsval& v = stackval(-1);
-    if (!JSVAL_IS_PRIMITIVE(v)) {
-        jsuint flags = cx->fp->regs->pc[1];
+    if (JSVAL_IS_PRIMITIVE(v))
+        ABORT_TRACE("for-in on a primitive value");
 
-        if (!hasIteratorMethod(JSVAL_TO_OBJECT(v))) {
-            LIns* args[] = { get(&v), INS_CONST(flags), cx_ins };
-            LIns* v_ins = lir->insCall(&js_FastValueToIterator_ci, args);
-            guard(false, lir->ins_eq0(v_ins), MISMATCH_EXIT);
-            set(&v, v_ins);
+    jsuint flags = cx->fp->regs->pc[1];
 
-            LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-            stack(0, void_ins);
-            return true;
-        }
-
+    if (hasIteratorMethod(JSVAL_TO_OBJECT(v))) {
         if (flags == JSITER_ENUMERATE)
             return call_imacro(iter_imacros.for_in);
         if (flags == (JSITER_ENUMERATE | JSITER_FOREACH))
             return call_imacro(iter_imacros.for_each);
-        ABORT_TRACE("unimplemented JSITER_* flags");
+    } else {
+        if (flags == JSITER_ENUMERATE)
+            return call_imacro(iter_imacros.for_in_native);
+        if (flags == (JSITER_ENUMERATE | JSITER_FOREACH))
+            return call_imacro(iter_imacros.for_each_native);
     }
-
-    ABORT_TRACE("for-in on a primitive value");
+    ABORT_TRACE("unimplemented JSITER_* flags");
 }
-
-static JSTraceableNative js_FastCallIteratorNext_tn = {
-    NULL,                               // JSFastNative            native;
-    &js_FastCallIteratorNext_ci,        // const nanojit::CallInfo *builtin;
-    "C",                                // const char              *prefix;
-    "o",                                // const char              *argtypes;
-    FAIL_JSVAL                          // uintN                   flags;
-};
-
-static jsbytecode nextiter_imacro[] = {
-    JSOP_POP,
-    JSOP_DUP,
-    JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(next),
-    JSOP_CALL, 0, 0,
-    JSOP_TRUE,
-    JSOP_STOP
-};
-
-JS_STATIC_ASSERT(sizeof(nextiter_imacro) < IMACRO_PC_ADJ_LIMIT);
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NEXTITER()
 {
     jsval& iterobj_val = stackval(-2);
-    if (!JSVAL_IS_PRIMITIVE(iterobj_val)) {
-        LIns* iterobj_ins = get(&iterobj_val);
+    if (JSVAL_IS_PRIMITIVE(iterobj_val))
+        ABORT_TRACE("for-in on a primitive value");
 
-        if (guardClass(JSVAL_TO_OBJECT(iterobj_val), iterobj_ins, &js_IteratorClass, BRANCH_EXIT)) {
-            LIns* args[] = { iterobj_ins, cx_ins };
-            LIns* v_ins = lir->insCall(&js_FastCallIteratorNext_ci, args);
-            guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
-
-            LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_HOLE)));
-            stack(-1, v_ins);
-            stack(0, flag_ins);
-
-            pendingTraceableNative = &js_FastCallIteratorNext_tn;
-            return true;
-        }
-
-        // Custom iterator, possibly a generator.
-        return call_imacro(nextiter_imacro);
-    }
-
-    ABORT_TRACE("for-in on a primitive value");
-}
-
-JS_REQUIRES_STACK bool
-TraceRecorder::record_IteratorNextComplete()
-{
-    JS_ASSERT(*cx->fp->regs->pc == JSOP_NEXTITER);
-    JS_ASSERT(pendingTraceableNative == &js_FastCallIteratorNext_tn);
-
-    jsval& v = stackval(-2);
-    LIns* v_ins = get(&v);
-    unbox_jsval(v, v_ins);
-    set(&v, v_ins);
-    return true;
+    LIns* iterobj_ins = get(&iterobj_val);
+    if (guardClass(JSVAL_TO_OBJECT(iterobj_val), iterobj_ins, &js_IteratorClass, BRANCH_EXIT))
+        return call_imacro(nextiter_imacros.native_iter_next);
+    return call_imacro(nextiter_imacros.custom_iter_next);
 }
 
 JS_REQUIRES_STACK bool
@@ -8810,6 +8746,97 @@ TraceRecorder::record_JSOP_CALLARG()
     return true;
 }
 
+/* Functions for use with JSOP_CALLBUILTIN. */
+
+static JSBool
+ObjectToIterator(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_INT(argv[0]));
+    JS_SET_RVAL(cx, vp, JS_THIS(cx, vp));
+    return js_ValueToIterator(cx, JSVAL_TO_INT(argv[0]), &JS_RVAL(cx, vp));
+}
+
+static JSObject* FASTCALL
+ObjectToIterator_tn(JSContext* cx, JSObject *obj, int32 flags)
+{
+    jsval v = OBJECT_TO_JSVAL(obj);
+    if (!js_ValueToIterator(cx, flags, &v))
+        return NULL;
+    return JSVAL_TO_OBJECT(v);
+}
+
+static JSBool
+CallIteratorNext(JSContext *cx, uintN argc, jsval *vp)
+{
+    return js_CallIteratorNext(cx, JS_THIS_OBJECT(cx, vp), &JS_RVAL(cx, vp));
+}
+
+static jsval FASTCALL
+CallIteratorNext_tn(JSContext* cx, JSObject* iterobj)
+{
+    jsval v;
+    if (!js_CallIteratorNext(cx, iterobj, &v))
+        return JSVAL_ERROR_COOKIE;
+    return v;
+}
+
+JS_DEFINE_TRCINFO_1(ObjectToIterator,
+    (3, (static, OBJECT_FAIL_NULL, ObjectToIterator_tn, CONTEXT, THIS, INT32,   0, 0)))
+JS_DEFINE_TRCINFO_1(CallIteratorNext,
+    (2, (static, JSVAL_FAIL,       CallIteratorNext_tn, CONTEXT, THIS,          0, 0)))
+
+static const struct BuiltinFunctionInfo {
+    JSTraceableNative *tn;
+    int nargs;
+} builtinFunctionInfo[JSBUILTIN_LIMIT] = {
+    {ObjectToIterator_trcinfo,   1},
+    {CallIteratorNext_trcinfo,   0}
+};
+
+JSObject *
+js_GetBuiltinFunction(JSContext *cx, uintN index)
+{
+    JSRuntime *rt = cx->runtime;
+    JSObject *funobj = rt->builtinFunctions[index];
+
+    if (!funobj) {
+        /* Use NULL parent and atom. Builtin functions never escape to scripts. */
+        JSFunction *fun = js_NewFunction(cx,
+                                         NULL,
+                                         (JSNative) builtinFunctionInfo[index].tn,
+                                         builtinFunctionInfo[index].nargs,
+                                         JSFUN_FAST_NATIVE | JSFUN_TRACEABLE,
+                                         NULL,
+                                         NULL);
+        if (fun) {
+            funobj = FUN_OBJECT(fun);
+            STOBJ_CLEAR_PROTO(funobj);
+            STOBJ_CLEAR_PARENT(funobj);
+
+            JS_LOCK_GC(rt);
+            if (!rt->builtinFunctions[index])  /* retest now that the lock is held */
+                rt->builtinFunctions[index] = funobj;
+            else
+                funobj = rt->builtinFunctions[index];
+            JS_UNLOCK_GC(rt);
+        }
+    }
+    return funobj;
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::record_JSOP_CALLBUILTIN()
+{
+    JSObject *obj = js_GetBuiltinFunction(cx, GET_INDEX(cx->fp->regs->pc));
+    if (!obj)
+        return false;
+
+    stack(0, get(&stackval(-1)));
+    stack(-1, INS_CONSTPTR(obj));
+    return true;
+}
+
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_NULLTHIS()
 {
@@ -8968,7 +8995,7 @@ static void
 InitIMacroCode()
 {
     if (imacro_code[JSOP_NEXTITER]) {
-        JS_ASSERT(imacro_code[JSOP_NEXTITER] == nextiter_imacro - 1);
+        JS_ASSERT(imacro_code[JSOP_NEXTITER] == (jsbytecode*)&nextiter_imacros - 1);
         return;
     }
 
@@ -8979,7 +9006,7 @@ InitIMacroCode()
     imacro_code[JSOP_ADD] = (jsbytecode*)&add_imacros - 1;
 
     imacro_code[JSOP_ITER] = (jsbytecode*)&iter_imacros - 1;
-    imacro_code[JSOP_NEXTITER] = nextiter_imacro - 1;
+    imacro_code[JSOP_NEXTITER] = (jsbytecode*)&nextiter_imacros - 1;
     imacro_code[JSOP_APPLY] = (jsbytecode*)&apply_imacros - 1;
 
     imacro_code[JSOP_NEG] = (jsbytecode*)&unary_imacros - 1;
@@ -9005,4 +9032,3 @@ UNUSED(207)
 UNUSED(208)
 UNUSED(209)
 UNUSED(219)
-UNUSED(226)
