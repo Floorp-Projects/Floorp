@@ -1543,9 +1543,16 @@ js_LogOpcode(JSContext *cx)
     fprintf(logfp, "%4u: ",
             js_PCToLineNumber(cx, fp->script(),
                               fp->hasImacropc() ? fp->imacropc() : regs->pc));
+
+    Sprinter sprinter;
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
     js_Disassemble1(cx, fp->script(), regs->pc,
                     regs->pc - fp->script()->code,
-                    JS_FALSE, logfp);
+                    JS_FALSE, &sprinter);
+    fprintf(logfp, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+
     op = (JSOp) *regs->pc;
     nuses = js_GetStackUses(&js_CodeSpec[op], op, regs->pc);
     if (nuses != 0) {

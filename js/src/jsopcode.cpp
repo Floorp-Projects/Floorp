@@ -273,7 +273,7 @@ public:
 
 /* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, FILE *fp, jsbytecode *pc)
+js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
     jsbytecode *next, *end;
     uintN len;
@@ -282,16 +282,16 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, FILE *fp, jsby
     end = next + script->length;
     while (next < end) {
         if (next == script->main)
-            fputs("main:\n", fp);
+            SprintCString(sp, "main:\n");
         if (pc != NULL) {
             if (pc == next)
-                fputs("--> ", fp);
+                SprintCString(sp, "--> ");
             else
-                fputs("    ", fp);
+                SprintCString(sp, "    ");
         }
         len = js_Disassemble1(cx, script, next,
                               next - script->code,
-                              lines, fp);
+                              lines, sp);
         if (!len)
             return JS_FALSE;
         next += len;
@@ -300,21 +300,33 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, FILE *fp, jsby
 }
 
 JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp)
 {
-    return js_DisassembleAtPC(cx, script, lines, fp, NULL);
+    return js_DisassembleAtPC(cx, script, lines, NULL, sp);
 }
 
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    return js_DisassembleAtPC(cx, cx->fp()->script(), true, stdout, cx->regs->pc);
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    Sprinter sprinter;
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs->pc, &sprinter);
+    fprintf(stdout, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    return ok;
 }
 
 JSBool
 js_DumpScript(JSContext *cx, JSScript *script)
 {
-    return js_Disassemble(cx, script, true, stdout);
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    Sprinter sprinter;
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    JSBool ok = js_Disassemble(cx, script, true, &sprinter);
+    fprintf(stdout, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    return ok;
 }
 
 static bool
@@ -372,7 +384,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
 JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
-                uintN loc, JSBool lines, FILE *fp)
+                uintN loc, JSBool lines, Sprinter *sp)
 {
     JSOp op;
     const JSCodeSpec *cs;
@@ -397,10 +409,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     }
     cs = &js_CodeSpec[op];
     len = (ptrdiff_t) cs->length;
-    fprintf(fp, "%05u:", loc);
+    Sprint(sp, "%05u:", loc);
     if (lines)
-        fprintf(fp, "%4u", JS_PCToLineNumber(cx, script, pc));
-    fprintf(fp, "  %s", js_CodeName[op]);
+        Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
+    Sprint(sp, "  %s", js_CodeName[op]);
     type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
@@ -409,7 +421,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_JUMP:
       case JOF_JUMPX:
         off = GetJumpOffset(pc, pc);
-        fprintf(fp, " %u (%d)", loc + (intN) off, (intN) off);
+        Sprint(sp, " %u (%d)", loc + intN(off), intN(off));
         break;
 
       case JOF_ATOM:
@@ -434,7 +446,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             JSAutoByteString bytes;
             if (!ToDisassemblySource(cx, v, &bytes))
                 return 0;
-            fprintf(fp, " %s", bytes.ptr());
+            Sprint(sp, " %s", bytes.ptr());
         }
         break;
 
@@ -445,13 +457,13 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             JSAutoByteString bytes;
             if (!ToDisassemblySource(cx, v, &bytes))
                 return 0;
-            fprintf(fp, " %s", bytes.ptr());
+            Sprint(sp, " %s", bytes.ptr());
         }
         break;
 
       case JOF_UINT16PAIR:
         i = (jsint)GET_UINT16(pc);
-        fprintf(fp, " %d", i);
+        Sprint(sp, " %d", i);
         pc += UINT16_LEN;
         /* FALL THROUGH */
 
@@ -474,10 +486,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += JUMP_OFFSET_LEN;
         high = GET_JUMP_OFFSET(pc2);
         pc2 += JUMP_OFFSET_LEN;
-        fprintf(fp, " defaultOffset %d low %d high %d", (intN) off, low, high);
+        Sprint(sp, " defaultOffset %d low %d high %d", intN(off), low, high);
         for (i = low; i <= high; i++) {
             off = GetJumpOffset(pc, pc2);
-            fprintf(fp, "\n\t%d: %d", i, (intN) off);
+            Sprint(sp, "\n\t%d: %d", i, intN(off));
             pc2 += jmplen;
         }
         len = 1 + pc2 - pc;
@@ -497,7 +509,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += jmplen;
         npairs = GET_UINT16(pc2);
         pc2 += UINT16_LEN;
-        fprintf(fp, " offset %d npairs %u", (intN) off, (uintN) npairs);
+        Sprint(sp, " offset %d npairs %u", intN(off), uintN(npairs));
         while (npairs) {
             uint16 constIndex = GET_INDEX(pc2);
             pc2 += INDEX_LEN;
@@ -507,7 +519,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             JSAutoByteString bytes;
             if (!ToDisassemblySource(cx, Jsvalify(script->getConst(constIndex)), &bytes))
                 return 0;
-            fprintf(fp, "\n\t%s: %d", bytes.ptr(), (intN) off);
+            Sprint(sp, "\n\t%s: %d", bytes.ptr(), intN(off));
             npairs--;
         }
         len = 1 + pc2 - pc;
@@ -515,16 +527,16 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       }
 
       case JOF_QARG:
-        fprintf(fp, " %u", GET_ARGNO(pc));
+        Sprint(sp, " %u", GET_ARGNO(pc));
         break;
 
       case JOF_LOCAL:
-        fprintf(fp, " %u", GET_SLOTNO(pc));
+        Sprint(sp, " %u", GET_SLOTNO(pc));
         break;
 
       case JOF_SLOTATOM:
       case JOF_SLOTOBJECT: {
-        fprintf(fp, " %u", GET_SLOTNO(pc));
+        Sprint(sp, " %u", GET_SLOTNO(pc));
         index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
@@ -537,7 +549,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         JSAutoByteString bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
-        fprintf(fp, " %s", bytes.ptr());
+        Sprint(sp, " %s", bytes.ptr());
         break;
       }
 
@@ -558,7 +570,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         JS_ASSERT(op == JSOP_INT32);
         i = GET_INT32(pc);
       print_int:
-        fprintf(fp, " %d", i);
+        Sprint(sp, " %d", i);
         break;
 
       default: {
@@ -569,28 +581,13 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         return 0;
       }
     }
-    fputs("\n", fp);
+    SprintCString(sp, "\n");
     return len;
 }
 
 #endif /* DEBUG */
 
 /************************************************************************/
-
-/*
- * Sprintf, but with unlimited and automatically allocated buffering.
- */
-typedef struct Sprinter {
-    JSContext       *context;       /* context executing the decompiler */
-    JSArenaPool     *pool;          /* string allocation pool */
-    char            *base;          /* base address of buffer in pool */
-    size_t          size;           /* size of buffer allocated at base */
-    ptrdiff_t       offset;         /* offset of next free char in buffer */
-} Sprinter;
-
-#define INIT_SPRINTER(cx, sp, ap, off) \
-    ((sp)->context = cx, (sp)->pool = ap, (sp)->base = NULL, (sp)->size = 0,  \
-     (sp)->offset = off)
 
 #define OFF2STR(sp,off) ((sp)->base + (off))
 #define STR2OFF(sp,str) ((str) - (sp)->base)
@@ -620,7 +617,22 @@ SprintEnsureBuffer(Sprinter *sp, size_t len)
     return JS_TRUE;
 }
 
-static ptrdiff_t
+namespace js {
+
+char *
+SprintReserveAmount(Sprinter *sp, size_t len)
+{
+    /* Allocate space for s, including the '\0' at the end. */
+    if (!SprintEnsureBuffer(sp, len))
+        return NULL;
+
+    /* Advance offset and return the previous offset for caller to fill. */
+    ptrdiff_t offset = sp->offset;
+    sp->offset += len;
+    return sp->base + offset;
+}
+
+ptrdiff_t
 SprintPut(Sprinter *sp, const char *s, size_t len)
 {
     ptrdiff_t offset = sp->size; /* save old size */
@@ -644,13 +656,13 @@ SprintPut(Sprinter *sp, const char *s, size_t len)
     return offset;
 }
 
-static ptrdiff_t
+ptrdiff_t
 SprintCString(Sprinter *sp, const char *s)
 {
     return SprintPut(sp, s, strlen(s));
 }
 
-static ptrdiff_t
+ptrdiff_t
 SprintString(Sprinter *sp, JSString *str)
 {
     size_t length = str->length();
@@ -670,8 +682,7 @@ SprintString(Sprinter *sp, JSString *str)
     return offset;
 }
 
-
-static ptrdiff_t
+ptrdiff_t
 Sprint(Sprinter *sp, const char *format, ...)
 {
     va_list ap;
@@ -689,6 +700,8 @@ Sprint(Sprinter *sp, const char *format, ...)
     js_free(bp);
     return offset;
 }
+
+} // namespace js
 
 const char js_EscapeMap[] = {
     '\b', 'b',
