@@ -1722,6 +1722,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
             ins = lir->insLoad(LIR_ldp, base, offset);
         }
     }
+    checkForGlobalObjectReallocation();
     tracker.set(p, ins);
 #ifdef DEBUG
     char name[64];
@@ -1809,7 +1810,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if (slot != uint16(slot)) /* we use a table of 16-bit ints, bail out if that's not enough */
         return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
-    if (tracker.has(vp))
+    if (known(vp))
         return true; /* we already have it */
     unsigned index = traceMonitor->globalSlots->length();
     /* If this the first global we are adding, remember the shape of the global object. */
@@ -1841,7 +1842,8 @@ TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset)
 JS_REQUIRES_STACK void
 TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 {
-    JS_ASSERT(initializing || tracker.has(p));
+    JS_ASSERT(initializing || known(p));
+    checkForGlobalObjectReallocation();
     tracker.set(p, i);
     /* If we are writing to this location for the first time, calculate the offset into the
        native frame manually, otherwise just look up the last load or store associated with
@@ -1873,9 +1875,41 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 }
 
 JS_REQUIRES_STACK LIns*
-TraceRecorder::get(jsval* p) const
+TraceRecorder::get(jsval* p)
 {
+    checkForGlobalObjectReallocation();
     return tracker.get(p);
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::known(jsval* p)
+{
+    checkForGlobalObjectReallocation();
+    return tracker.has(p);
+}
+
+/*
+ * The dslots of the global object are sometimes reallocated by the interpreter.
+ * This function check for that condition and re-maps the entries of the tracker
+ * accordingly.
+ */
+JS_REQUIRES_STACK void
+TraceRecorder::checkForGlobalObjectReallocation()
+{
+    if (global_dslots != globalObj->dslots) {
+        debug_only_v(printf("globalObj->dslots relocated, updating tracker\n");)
+        jsval* src = global_dslots;
+        jsval* dst = globalObj->dslots;
+        jsuint length = globalObj->dslots[-1] - JS_INITIAL_NSLOTS;
+        LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
+        for (jsuint n = 0; n < length; ++n) {
+            map[n] = tracker.get(src);
+            tracker.set(src++, NULL);
+        }
+        for (jsuint n = 0; n < length; ++n)
+            tracker.set(dst++, map[n]);
+        global_dslots = globalObj->dslots;
+    }
 }
 
 /* Determine whether the current branch instruction terminates the loop. */
@@ -1997,7 +2031,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
 }
 
 JS_REQUIRES_STACK uint8
-TraceRecorder::determineSlotType(jsval* vp) const
+TraceRecorder::determineSlotType(jsval* vp)
 {
     uint8 m;
     LIns* i = get(vp);
@@ -4142,12 +4176,6 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         // opcode-case-guts record hook (record_FastNativeCallComplete).
         tr->pendingTraceableNative = NULL;
 
-        // In the future, handle dslots realloc by computing an offset from dslots instead.
-        if (tr->global_dslots != tr->globalObj->dslots) {
-            js_AbortRecording(cx, "globalObj->dslots reallocated");
-            return JSMRS_STOP;
-        }
-
         jsbytecode* pc = cx->fp->regs->pc;
 
         /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
@@ -5972,9 +6000,9 @@ TraceRecorder::record_JSOP_PICK()
     jsval* sp = cx->fp->regs->sp;
     jsint n = cx->fp->regs->pc[1];
     JS_ASSERT(sp - (n+1) >= StackBase(cx->fp));
-    LIns* top = tracker.get(sp - (n+1));
+    LIns* top = get(sp - (n+1));
     for (jsint i = 0; i < n; ++i)
-        set(sp - (n+1) + i, tracker.get(sp - n + i));
+        set(sp - (n+1) + i, get(sp - n + i));
     set(&sp[-1], top);
     return true;
 }
