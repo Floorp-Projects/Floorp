@@ -59,11 +59,9 @@ _TEST_FILES	= \
 	test_changingManifest.html \
 	test_refetchManifest.html \
 	test_offlineIFrame.html \
-	test_offlineMode.html \
 	test_bug445544.html \
 	test_foreign.html \
 	test_fallback.html \
-	test_updatingManifest.html \
 	445544_part1.html \
 	445544_part2.html \
 	445544.cacheManifest \
@@ -89,9 +87,6 @@ _TEST_FILES	= \
 	foreign2.cacheManifest \
 	foreign2.cacheManifest^headers^ \
 	foreign2.html \
-	notonwhitelist.html \
-	onwhitelist.html \
-	onwhitelist.html^headers^ \
 	updatingIFrame.html \
 	updatingIFrame.html^headers^ \
 	updatingImplicit.html \
@@ -108,6 +103,13 @@ _TEST_FILES	= \
 	changingManifest.cacheManifest^headers^ \
 	offlineChild.html \
 	$(NULL)
+
+# Bug 466314 - updatingImplicit.html (used by test_offlineMode.html and test_updatingManifest.html) crashes SeaMonkey
+#	test_offlineMode.html \
+#	notonwhitelist.html \
+#	test_updatingManifest.html \
+#	onwhitelist.html \
+#	onwhitelist.html^headers^ \
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
