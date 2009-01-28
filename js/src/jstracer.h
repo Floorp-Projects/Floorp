@@ -373,9 +373,11 @@ class TraceRecorder : public avmplus::GCObject {
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
-    JS_REQUIRES_STACK nanojit::LIns* get(jsval* p) const;
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset);
     JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false);
+    JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
+    JS_REQUIRES_STACK bool known(jsval* p);
+    JS_REQUIRES_STACK void checkForGlobalObjectReallocation();
 
     JS_REQUIRES_STACK bool checkType(jsval& v, uint8 t, jsval*& stage_val,
                                      nanojit::LIns*& stage_ins, unsigned& stage_count);
@@ -492,7 +494,7 @@ public:
 
     static JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);
 
-    JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp) const;
+    JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp);
     JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     JS_REQUIRES_STACK bool isLoopHeader(JSContext* cx) const;
@@ -518,7 +520,6 @@ public:
     JS_REQUIRES_STACK bool record_SetPropMiss(JSPropCacheEntry* entry);
     JS_REQUIRES_STACK bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK bool record_FastNativeCallComplete();
-    JS_REQUIRES_STACK bool record_IteratorNextComplete();
 
     nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
@@ -574,6 +575,9 @@ js_FlushJITCache(JSContext* cx);
 
 extern void
 js_FlushJITOracle(JSContext* cx);
+
+extern JSObject *
+js_GetBuiltinFunction(JSContext *cx, uintN index);
 
 #else  /* !JS_TRACER */
 

@@ -2574,21 +2574,15 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     /* We had better not be entering the interpreter from JIT-compiled code. */
-    TraceRecorder *tr = NULL;
-    if (JS_ON_TRACE(cx)) {
-        tr = TRACE_RECORDER(cx);
-        SET_TRACE_RECORDER(cx, NULL);
-        JS_TRACE_MONITOR(cx).onTrace = JS_FALSE;
-        /*
-         * ON_TRACE means either recording or coming from traced code.
-         * If there's no recorder (the latter case), don't care.
-         */
-        if (tr) {
-            if (tr->wasDeepAborted())
-                tr->removeFragmentoReferences();
-            else
-                tr->pushAbortStack();
-        }
+    TraceRecorder *tr = TRACE_RECORDER(cx);
+    SET_TRACE_RECORDER(cx, NULL);
+    /* If a recorder is pending and we try to re-enter the interpreter, flag 
+       the recorder to be destroyed when we return. */
+    if (tr) {
+        if (tr->wasDeepAborted())
+            tr->removeFragmentoReferences();
+        else
+            tr->pushAbortStack();
     }
 #endif
 
@@ -3221,7 +3215,6 @@ js_Interpret(JSContext *cx)
             CHECK_INTERRUPT_HANDLER();
             rval = BOOLEAN_TO_JSVAL(regs.sp[-1] != JSVAL_HOLE);
             PUSH(rval);
-            TRACE_0(IteratorNextComplete);
           END_CASE(JSOP_NEXTITER)
 
           BEGIN_CASE(JSOP_ENDITER)
@@ -5616,6 +5609,10 @@ js_Interpret(JSContext *cx)
                  * JSOP_SETGVAR has arity 1: [rval], not arity 2: [obj, rval]
                  * as JSOP_SETNAME does, where [obj] is due to JSOP_BINDNAME.
                  */
+#ifdef JS_TRACER
+                if (TRACE_RECORDER(cx))
+                    js_AbortRecording(cx, "SETGVAR with NULL slot");
+#endif
                 LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
@@ -6726,6 +6723,19 @@ js_Interpret(JSContext *cx)
           }
           END_CASE(JSOP_LEAVEBLOCK)
 
+          BEGIN_CASE(JSOP_CALLBUILTIN)
+#ifdef JS_TRACER
+              obj = js_GetBuiltinFunction(cx, GET_INDEX(regs.pc));
+              if (!obj)
+                  goto error;
+              rval = FETCH_OPND(-1);
+              PUSH_OPND(rval);
+              STORE_OPND(-2, OBJECT_TO_JSVAL(obj));
+#else
+              goto bad_opcode;  /* This is an imacro-only opcode. */
+#endif
+          END_CASE(JSOP_CALLBUILTIN)
+
 #if JS_HAS_GENERATORS
           BEGIN_CASE(JSOP_GENERATOR)
             ASSERT_NOT_THROWING(cx);
@@ -6835,10 +6845,12 @@ js_Interpret(JSContext *cx)
           L_JSOP_UNUSED208:
           L_JSOP_UNUSED209:
           L_JSOP_UNUSED219:
-          L_JSOP_UNUSED226:
 
 #else /* !JS_THREADED_INTERP */
           default:
+#endif
+#ifndef JS_TRACER
+        bad_opcode:
 #endif
           {
             char numBuf[12];
@@ -6857,7 +6869,8 @@ js_Interpret(JSContext *cx)
     if (fp->imacpc && cx->throwing) {
         // To keep things simple, we hard-code imacro exception handlers here.
         if (*fp->imacpc == JSOP_NEXTITER) {
-            JS_ASSERT(*regs.pc == JSOP_CALL);
+            // pc may point to JSOP_DUP here due to bug 474854.
+            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
             if (js_ValueIsStopIteration(cx->exception)) {
                 cx->throwing = JS_FALSE;
                 cx->exception = JSVAL_VOID;
@@ -7089,7 +7102,6 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     if (tr) {
-        JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
         if (!tr->wasDeepAborted()) {
             tr->popAbortStack();

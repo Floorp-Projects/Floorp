@@ -98,21 +98,41 @@ function formatoffset(n, w) {
 
 function immediate(op) {
     let info = op.info;
+    let imm1Expr = /^\(/.test(op.imm1);
     if (info.flags.indexOf("JOF_ATOM") >= 0) {
         if (/^(?:void|object|function|string|number|boolean)$/.test(op.imm1))
             return "0, COMMON_TYPE_ATOM_INDEX(JSTYPE_" + op.imm1.toUpperCase() + ")";
         return "0, COMMON_ATOM_INDEX(" + op.imm1 + ")";
     }
-    if (info.flags.indexOf("JOF_JUMP") >= 0)
+    if (info.flags.indexOf("JOF_JUMP") >= 0) {
+        ASSERT(!imm1Expr);
         return ((op.target >> 8) & 0xff) + ", " + (op.target & 0xff);
+    }
     if (info.flags.indexOf("JOF_UINT8") >= 0 ||
         info.flags.indexOf("JOF_INT8") >= 0) {
+        if (imm1Expr)
+            return op.imm1;
+        if (isNaN(Number(op.imm1)) || Number(op.imm1) != parseInt(op.imm1))
+            throw new Error("invalid 8-bit operand: " + op.imm1);
         return (op.imm1 & 0xff);
     }
-    if (info.flags.indexOf("JOF_UINT16") >= 0)
+    if (info.flags.indexOf("JOF_UINT16") >= 0) {
+        if (imm1Expr)
+            return '(_ & 0xff00) >> 8, (_ & 0xff)'.replace(/_/g, op.imm1);
         return ((op.imm1 & 0xff00) >> 8) + ", " + (op.imm1 & 0xff);
+    }
     throw new Error(info.jsop + " format not yet implemented");
 }
+
+const line_regexp_parts = [
+    "^(?:(\\w+):)?",
+    "\\s*(\\.?\\w+)",
+    "(?:\\s+(\\w+|\\([^)]*\\)))?",
+    "(?:\\s+([\\w-]+|\\([^)]*\\)))?",
+    "(?:\\s*(?:#.*))?$"
+];
+
+const line_regexp = new RegExp(line_regexp_parts.join(""));
 
 /*
  * Syntax (spaces are significant only to delimit tokens):
@@ -121,10 +141,13 @@ function immediate(op) {
  *   Directive  ::= (name ':')? Operation
  *   Operation  ::= opname Operands?
  *   Operands   ::= Operand (',' Operand)*
- *   Operand    ::= name | number
+ *   Operand    ::= name | number | '(' Expr ')'
+ *   Expr       ::= a constant-expression in the C++ language
+ *                  containing no parentheses
  *
  * We simplify given line structure and the maximum of one immediate operand,
- * by parsing using split and regexps.
+ * by parsing using split and regexps.  For ease of parsing, parentheses are
+ * banned in an Expr for now, even in quotes or a C++ comment.
  *
  * Pseudo-ops start with . and include .igroup and .imacro, terminated by .end.
  * .imacro must nest in .igroup, neither nests in itself. See imacros.jsasm for
@@ -141,7 +164,7 @@ function assemble(filename) {
     for (let i = 0; i < a.length; i++) {
         if (/^\s*(?:#.*)?$/.test(a[i]))
             continue;
-        let m = /(?:(\w+):)?\s*(\.?\w+)(?:\s+(\w+))?(?:\s+([\w-]+))?(?:\s*(?:#.*))?$/.exec(a[i]);
+        let m = line_regexp.exec(a[i]);
         if (!m)
             throw new Error(a[i]);
 
