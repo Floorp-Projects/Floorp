@@ -159,6 +159,31 @@ typedef struct JSTraceMonitor {
 # define JS_EXECUTING_TRACE(cx)     JS_FALSE
 #endif
 
+#ifdef DEBUG
+# define JS_EVAL_CACHE_METERING 1
+#endif
+
+/* Number of potentially reusable scriptsToGC to search for the eval cache. */
+#ifndef JS_EVAL_CACHE_SHIFT
+# define JS_EVAL_CACHE_SHIFT        6
+#endif
+#define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
+
+#ifdef JS_EVAL_CACHE_METERING
+# define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
+# define ID(x)                      x
+
+/* Have to typedef this for LiveConnect C code, which includes us. */
+typedef struct JSEvalCacheMeter {
+    uint64 EVAL_CACHE_METER_LIST(ID);
+} JSEvalCacheMeter;
+
+# undef ID
+# define DECLARE_EVAL_CACHE_METER   JSEvalCacheMeter evalCacheMeter;
+#else
+# define DECLARE_EVAL_CACHE_METER   /* nothing */
+#endif
+
 #ifdef JS_THREADSAFE
 
 /*
@@ -195,14 +220,13 @@ struct JSThread {
     JSTraceMonitor      traceMonitor;
 #endif
 
-    /* Lock-free list of scripts created by eval to garbage-collect. */
-    JSScript            *scriptsToGC;
+    /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
+
+    DECLARE_EVAL_CACHE_METER
 };
 
-#define JS_GSN_CACHE(cx)        ((cx)->thread->gsnCache)
-#define JS_PROPERTY_CACHE(cx)   ((cx)->thread->propertyCache)
-#define JS_TRACE_MONITOR(cx)    ((cx)->thread->traceMonitor)
-#define JS_SCRIPTS_TO_GC(cx)    ((cx)->thread->scriptsToGC)
+#define JS_CACHE_LOCUS(cx)      ((cx)->thread)
 
 extern void
 js_ThreadDestructorCB(void *ptr);
@@ -463,13 +487,12 @@ struct JSRuntime {
     /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
 
-    /* Lock-free list of scripts created by eval to garbage-collect. */
-    JSScript            *scriptsToGC;
+    /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
 
-#define JS_GSN_CACHE(cx)        ((cx)->runtime->gsnCache)
-#define JS_PROPERTY_CACHE(cx)   ((cx)->runtime->propertyCache)
-#define JS_TRACE_MONITOR(cx)    ((cx)->runtime->traceMonitor)
-#define JS_SCRIPTS_TO_GC(cx)    ((cx)->runtime->scriptsToGC)
+    DECLARE_EVAL_CACHE_METER
+
+#define JS_CACHE_LOCUS(cx)      ((cx)->runtime)
 #endif
 
     /*
@@ -586,6 +609,19 @@ struct JSRuntime {
     JSGCStats           gcStats;
 #endif
 };
+
+/* Common macros to access thread-local caches in JSThread or JSRuntime. */
+#define JS_GSN_CACHE(cx)        (JS_CACHE_LOCUS(cx)->gsnCache)
+#define JS_PROPERTY_CACHE(cx)   (JS_CACHE_LOCUS(cx)->propertyCache)
+#define JS_TRACE_MONITOR(cx)    (JS_CACHE_LOCUS(cx)->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    (JS_CACHE_LOCUS(cx)->scriptsToGC)
+
+#ifdef JS_EVAL_CACHE_METERING
+# define EVAL_CACHE_METER(x)    (JS_CACHE_LOCUS(cx)->evalCacheMeter.x++)
+#else
+# define EVAL_CACHE_METER(x)    ((void) 0)
+#endif
+#undef DECLARE_EVAL_CACHE_METER
 
 #ifdef DEBUG
 # define JS_RUNTIME_METER(rt, which)    JS_ATOMIC_INCREMENT(&(rt)->which)
@@ -1022,6 +1058,8 @@ class JSAutoResolveFlags
 
 #define JSVERSION_MASK                  0x0FFF  /* see JSVersion in jspubtd.h */
 #define JSVERSION_HAS_XML               0x1000  /* flag induced by XML option */
+#define JSVERSION_ANONFUNFIX            0x2000  /* see jsapi.h, the comments
+                                                   for JSOPTION_ANONFUNFIX */
 
 #define JSVERSION_NUMBER(cx)            ((JSVersion)((cx)->version &          \
                                                      JSVERSION_MASK))
