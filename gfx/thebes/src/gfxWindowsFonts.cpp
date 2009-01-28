@@ -1932,7 +1932,7 @@ public:
                         details->mGlyphID = mGlyphs[k + i];
                         details->mAdvance = mAdvances[k + i]*appUnitsPerDevUnit;
                         details->mXOffset = float(mOffsets[k + i].du)*appUnitsPerDevUnit*aRun->GetDirection();
-                        details->mYOffset = float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
+                        details->mYOffset = - float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
                     }
                     aRun->SetGlyphs(runOffset,
                         g.SetComplex(PR_TRUE, PR_TRUE, glyphCount), detailedGlyphs.Elements());
