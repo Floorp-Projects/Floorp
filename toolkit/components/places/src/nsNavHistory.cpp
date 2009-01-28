@@ -1311,12 +1311,6 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBGetPlaceVisitStats));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.parent FROM moz_bookmarks b "
-      "WHERE b.type = 1 AND b.fk = ?1"),
-    getter_AddRefs(mDBGetBookmarkParentsForPlace));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // when calculating frecency, we want the visit count to be 
   // all the visits.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -2760,7 +2754,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // Update frecency (*after* the visit info is in the db)
   // Swallow errors here, since if we've gotten this far, it's more
   // important to notify the observers below.
-  (void)UpdateFrecency(pageID, PR_FALSE);
+  nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
+  (void)UpdateFrecency(pageID, bs->IsRealBookmark(pageID));
 
   // Notify observers: The hidden detection code must match that in
   // GetQueryResults to maintain consistency.
@@ -7089,6 +7084,14 @@ nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
           break;
       }
 
+      // Always add the bookmark visit bonus.
+      if (aIsBookmarked)
+        bonus += mBookmarkVisitBonus;
+
+#ifdef DEBUG_FRECENCY
+      printf("CalculateFrecency() for place %lld has a bonus of %d\n", aPlaceId, bonus);
+#endif
+
       // if bonus was zero, we can skip the work to determine the weight
       if (bonus) {
         PRTime visitDate = mDBVisitsForFrecency->AsInt64(0);
@@ -7182,7 +7185,7 @@ nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsNavHistory::CalculateFrecency(PRInt64 aPlaceId,
                                 PRInt32 aTyped,
                                 PRInt32 aVisitCount,
@@ -7191,46 +7194,17 @@ nsNavHistory::CalculateFrecency(PRInt64 aPlaceId,
 {
   *aFrecency = 0;
 
-  nsresult rv;
-
-  nsCOMPtr<nsILivemarkService> lms = 
-    do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRBool isBookmark = PR_FALSE;
 
   // determine if the place is a (non-livemark item) bookmark and prevent
   // place: queries from showing up in the URL bar autocomplete results
   if (!IsQueryURI(aURL) && aPlaceId != -1) {
-    mozStorageStatementScoper scope(mDBGetBookmarkParentsForPlace);
-
-    rv = mDBGetBookmarkParentsForPlace->BindInt64Parameter(0, aPlaceId);
-    NS_ENSURE_SUCCESS(rv, rv);
-   
-    // this query can return multiple parent folders because
-    // it is possible for the user to bookmark something that
-    // is also a livemark item
-    PRBool hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(mDBGetBookmarkParentsForPlace->ExecuteStep(&hasMore)) 
-           && hasMore) {
-      PRInt64 folderId;
-      rv = mDBGetBookmarkParentsForPlace->GetInt64(0, &folderId);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      PRBool parentIsLivemark;
-      rv = lms->IsLivemark(folderId, &parentIsLivemark);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // we found one parent that is not a livemark feed, so we can stop
-      if (!parentIsLivemark) {
-        isBookmark = PR_TRUE;
-        break;
-      }
-    }
+    nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
+    isBookmark = bs->IsRealBookmark(aPlaceId);
   }
 
-  rv = CalculateFrecencyInternal(aPlaceId, aTyped, aVisitCount,
-                                 isBookmark, aFrecency);
+  nsresult rv = CalculateFrecencyInternal(aPlaceId, aTyped, aVisitCount,
+                                          isBookmark, aFrecency);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -7550,7 +7524,6 @@ nsNavHistory::FinalizeStatements() {
     mDBVisitsForFrecency,
     mDBUpdateFrecencyAndHidden,
     mDBGetPlaceVisitStats,
-    mDBGetBookmarkParentsForPlace,
     mDBFullVisitCount,
     mDBInvalidFrecencies,
     mDBOldFrecencies,
