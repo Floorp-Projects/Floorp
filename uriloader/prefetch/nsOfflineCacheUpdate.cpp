@@ -67,6 +67,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 #include "prlog.h"
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
@@ -1827,6 +1828,13 @@ nsresult
 nsOfflineCacheUpdate::Finish()
 {
     LOG(("nsOfflineCacheUpdate::Finish [%p]", this));
+
+    // Because call to service->UpdateFinished(this) at the end of this method
+    // may relese the last reference to this object but we still want to work
+    // with it after Finish() call ended, make sure to release this instance in
+    // the next thread loop round.
+    NS_ADDREF_THIS();
+    NS_ProxyRelease(NS_GetCurrentThread(), this, PR_TRUE);
 
     mState = STATE_FINISHED;
 
