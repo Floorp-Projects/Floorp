@@ -78,9 +78,11 @@ CanvasBrowser.prototype = {
       // stop monitor paint events for this browser
       currentBrowser.removeEventListener("MozAfterPaint", this._paintHandler, false);
       currentBrowser.setAttribute("type", "content");
+      currentBrowser.docShell.isOffScreenBrowser = false;
     }
 
     browser.setAttribute("type", "content-primary");
+    browser.docShell.isOffScreenBrowser = true;
 
     // start monitoring paint events for this browser
     var self = this;
