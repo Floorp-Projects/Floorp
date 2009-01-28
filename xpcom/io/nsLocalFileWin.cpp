@@ -1038,6 +1038,14 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
                       &file);
         if (file)
             PR_Close(file);
+
+        if (rv == NS_ERROR_FILE_ACCESS_DENIED)
+        {
+            // need to return already-exists for directories (bug 452217)
+            PRBool isdir;
+            if (NS_SUCCEEDED(IsDirectory(&isdir)) && isdir)
+                rv = NS_ERROR_FILE_ALREADY_EXISTS;
+        }
         return rv;
     }
 
