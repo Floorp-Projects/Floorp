@@ -53,6 +53,10 @@ ifeq (WINNT,$(OS_ARCH))
 DIRS = win32
 endif
 
+ifdef WINCE
+DIRS += wince/tools wince/shunt
+endif
+
 DIRS += pgo
 
 include $(topsrcdir)/config/rules.mk
