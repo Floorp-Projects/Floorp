@@ -2298,8 +2298,6 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
     if (stable_peer)
         *stable_peer = NULL;
 
-    demote = false;
-    
     /*
      * Rather than calculate all of this stuff twice, it gets cached locally.  The "stage" buffers 
      * are for calls to set() that will change the exit types.
@@ -3465,7 +3463,7 @@ js_CloseLoop(JSContext* cx)
         return false;
     }
 
-    bool demote;
+    bool demote = false;
     Fragment* f = r->getFragment();
     r->closeLoop(tm, demote);
     js_DeleteRecorder(cx);
