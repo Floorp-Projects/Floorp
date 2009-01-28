@@ -475,7 +475,6 @@ BookmarksStore.prototype = {
   },
 
   // Create a record starting from the weave id (places guid)
-  // FIXME: set id here
   createRecord: function BStore_createRecord(guid) {
     let record = this.cache.get(guid);
     if (record)
@@ -534,6 +533,7 @@ BookmarksStore.prototype = {
                      this._bms.getItemType(placeId));
     }
 
+    record.id = guid;
     record.parentid = this._getWeaveParentIdForItem(placeId);
     record.depth = this._itemDepth(placeId);
     record.sortindex = this._bms.getItemIndex(placeId);
@@ -709,7 +709,7 @@ BookmarksTracker.prototype = {
     // 2) note that engine/store are responsible for manually updating the
     //    tracker's placesId->weaveId cache
     if ((itemId in this._all) &&
-        (this._bms.getItemGUID(itemId) != this._all[itemId]) &&
+        (this._bms.getItemGUID(itemId) == this._all[itemId]) &&
         this.addChangedID(this._all[itemId]))
       this._upScore();
   },
