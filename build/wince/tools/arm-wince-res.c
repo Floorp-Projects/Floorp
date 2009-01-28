@@ -10,10 +10,12 @@ main(int argc, char **argv)
   int k = 0;
   int s = 0;
   args[i++] = RC_PATH;
+  args[i++] = "/I\"" WCE_RC_INC "\"";
+  args[i++] = "/I\"" WM_SDK_INC  "\"";
 
   argpath_conv(&argv[1], &args[i]);
 
-  dumpargs(args);
+  //  dumpargs(args);
 
   return run(args);
 }
