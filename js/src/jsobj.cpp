@@ -1191,19 +1191,42 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
     return caller->script->filename;
 }
 
+#ifndef EVAL_CACHE_CHAIN_LIMIT
+# define EVAL_CACHE_CHAIN_LIMIT 4
+#endif
+
+static inline JSScript **
+EvalCacheHash(JSContext *cx, JSString *str)
+{
+    const jschar *s;
+    size_t n;
+    uint32 h;
+
+    JSSTRING_CHARS_AND_LENGTH(str, s, n);
+    if (n > 100)
+        n = 100;
+    for (h = 0; n; s++, n--)
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
+
+    h *= JS_GOLDEN_RATIO;
+    h >>= 32 - JS_EVAL_CACHE_SHIFT;
+    return &JS_SCRIPTS_TO_GC(cx)[h];
+}
+
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
     JSObject *scopeobj;
-    JSString *str;
+    uint32 tcflags;
+    JSPrincipals *principals;
     const char *file;
     uintN line;
-    JSPrincipals *principals;
-    uint32 tcflags;
+    JSString *str;
     JSScript *script;
     JSBool ok;
+    JSScript **bucket = NULL;   /* avoid GCC warning with early decl&init */
 #if JS_HAS_EVAL_THIS_SCOPE
     JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
     JSObject *setCallerScopeChain = NULL;
@@ -1336,25 +1359,94 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         goto out;
     }
 
-    str = JSVAL_TO_STRING(argv[0]);
+    tcflags = TCF_COMPILE_N_GO;
     if (caller) {
+        tcflags |= TCF_PUT_STATIC_DEPTH(caller->script->staticDepth + 1);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
         file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
+        principals = NULL;
         file = NULL;
         line = 0;
-        principals = NULL;
     }
 
-    tcflags = TCF_COMPILE_N_GO;
-    if (caller)
-        tcflags |= TCF_PUT_STATIC_DEPTH(caller->script->staticDepth + 1);
-    script = js_CompileScript(cx, scopeobj, caller, principals, tcflags,
-                              JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
-                              NULL, file, line);
+    str = JSVAL_TO_STRING(argv[0]);
+    script = NULL;
+
+    /* Cache local eval scripts indexed by source qualified by scope. */
+    bucket = EvalCacheHash(cx, str);
+    if (caller->fun) {
+        uintN count = 0;
+        JSScript **scriptp = bucket;
+
+        EVAL_CACHE_METER(probe);
+        while ((script = *scriptp) != NULL) {
+            if ((script->flags & JSSF_SAVED_CALLER_FUN) &&
+                script->version == cx->version &&
+                (script->principals == principals ||
+                 (principals->subsume(principals, script->principals) &&
+                  script->principals->subsume(script->principals, principals)))) {
+                /*
+                 * Get the prior (cache-filling) eval's saved caller function.
+                 * See js_CompileScript in jsparse.cpp.
+                 */
+                JSFunction *fun;
+                JS_GET_SCRIPT_FUNCTION(script, 0, fun);
+
+                if (fun == caller->fun) {
+                    /*
+                     * Get the source string passed for safekeeping in the
+                     * atom map by the prior eval to js_CompileScript.
+                     */
+                    JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
+
+                    if (src == str || js_EqualStrings(src, str)) {
+                        /*
+                         * Source matches, qualify by comparing scopeobj to the
+                         * COMPILE_N_GO-memoized parent of the first literal
+                         * function or regexp object if any. If none, then this
+                         * script has no compiled-in dependencies on the prior
+                         * eval's scopeobj.
+                         */
+                        JSObjectArray *objarray = JS_SCRIPT_OBJECTS(script);
+                        int i = 1;
+                        if (objarray->length == 1) {
+                            if (script->regexpsOffset != 0) {
+                                objarray = JS_SCRIPT_REGEXPS(script);
+                                i = 0;
+                            } else {
+                                EVAL_CACHE_METER(noscope);
+                                i = -1;
+                            }
+                        }
+                        if (i < 0 ||
+                            STOBJ_GET_PARENT(objarray->vector[i]) == scopeobj) {
+                            EVAL_CACHE_METER(hit);
+                            *scriptp = script->u.nextToGC;
+                            script->u.nextToGC = NULL;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (++count == EVAL_CACHE_CHAIN_LIMIT) {
+                script = NULL;
+                break;
+            }
+            EVAL_CACHE_METER(step);
+            scriptp = &script->u.nextToGC;
+        }
+    }
+
     if (!script) {
-        ok = JS_FALSE;
-        goto out;
+        script = js_CompileScript(cx, scopeobj, caller, principals, tcflags,
+                                  JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                  NULL, file, line, str);
+        if (!script) {
+            ok = JS_FALSE;
+            goto out;
+        }
     }
 
     if (argc < 2) {
@@ -1372,8 +1464,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (ok)
         ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
-    script->u.nextToGC = JS_SCRIPTS_TO_GC(cx);
-    JS_SCRIPTS_TO_GC(cx) = script;
+    script->u.nextToGC = *bucket;
+    *bucket = script;
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;
 #endif

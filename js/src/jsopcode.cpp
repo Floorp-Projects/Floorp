@@ -2752,6 +2752,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_CALLUPVAR:
               case JSOP_GETUPVAR:
+                JS_ASSERT(jp->script->flags & JSSF_SAVED_CALLER_FUN);
 
                 if (!jp->fun)
                     JS_GET_SCRIPT_FUNCTION(jp->script, 0, jp->fun);
