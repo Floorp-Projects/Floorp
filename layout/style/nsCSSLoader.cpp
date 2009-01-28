@@ -1470,7 +1470,9 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     rv = classifier->Start(channel, PR_TRUE);
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to classify URI"));
+      aLoadData->mIsCancelled = PR_TRUE;
       channel->Cancel(rv);
+      SheetComplete(aLoadData, rv);
       return rv;
     }
   }
@@ -1479,6 +1481,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     LOG_ERROR(("  Failed to put data in loading table"));
     aLoadData->mIsCancelled = PR_TRUE;
     channel->Cancel(NS_ERROR_OUT_OF_MEMORY);
+    SheetComplete(aLoadData, NS_ERROR_OUT_OF_MEMORY);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
