@@ -62,14 +62,14 @@ WBORecord.prototype = {
       this.uri = uri;
   },
 
-  get id() { return decodeURI(this.data.id); },
-  set id(value) {
-    this.data.id = encodeURI(value);
-  },
+  get id() { return this.data.id; },
+  set id(value) { this.data.id = value; },
 
   // NOTE: baseUri must have a trailing slash, or baseUri.resolve() will omit
   //       the collection name
-  get uri() { return Utils.makeURI(this.baseUri.resolve(this.id)); },
+  get uri() {
+    return Utils.makeURI(this.baseUri.resolve(encodeURI(this.id)));
+  },
   set uri(value) {
     if (typeof(value) != "string")
       value = value.spec;
