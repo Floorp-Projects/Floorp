@@ -2960,7 +2960,7 @@ nanojit::Fragment::onDestroy()
     delete (TreeInfo *)vmprivate;
 }
 
-void
+bool
 js_DeleteRecorder(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -2968,6 +2968,16 @@ js_DeleteRecorder(JSContext* cx)
     /* Aborting and completing a trace end up here. */
     delete tm->recorder;
     tm->recorder = NULL;
+
+    /* 
+     * If we ran out of memory, flush the code cache.
+     */
+    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error() == OutOMem) {
+        js_FlushJITCache(cx);
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -3489,18 +3499,19 @@ js_CloseLoop(JSContext* cx)
     
     if (fragmento->assm()->error()) {
         js_AbortRecording(cx, "Error during recording");
-
-        /* If we ran out of memory, flush the code cache and abort. */
-        if (fragmento->assm()->error() == OutOMem)
-            js_FlushJITCache(cx);
         return false;
     }
 
     bool demote = false;
     Fragment* f = r->getFragment();
     r->closeLoop(tm, demote);
-    js_DeleteRecorder(cx);
-    
+
+    /* 
+     * If js_DeleteRecorder flushed the code cache, we can't rely on f any more.
+     */
+    if (!js_DeleteRecorder(cx))
+        return false;
+
     /*
      * If we just walked out of a thin loop, we can't immediately start the 
      * compiler again here since we didn't return to the loop header.
@@ -4283,8 +4294,17 @@ js_AbortRecording(JSContext* cx, const char* reason)
     /* Give outer two chances to stabilize before we start blacklisting. */
     if (outer != NULL && outer->recordAttempts >= 2)
         js_BlacklistPC(tm, outer);
-    js_DeleteRecorder(cx);
-    /* If this is the primary trace and we didn't succeed compiling, trash the TreeInfo object. */
+
+    /* 
+     * If js_DeleteRecorder flushed the code cache, we can't rely on f any more.
+     */
+    if (!js_DeleteRecorder(cx))
+        return;
+
+    /*
+     * If this is the primary trace and we didn't succeed compiling, trash the
+     * TreeInfo object.
+     */
     if (!f->code() && (f->root == f)) 
         js_TrashTree(cx, f);
 }
