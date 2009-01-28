@@ -483,6 +483,7 @@ BookmarksStore.prototype = {
     let placeId = this._bms.getItemIdForGUID(guid);
     if (placeId <= 0) { // deleted item
       record = new PlacesItem();
+      record.id = guid;
       record.cleartext = null;
       return record;
     }
