@@ -4335,7 +4335,7 @@ MOZ_ARG_WITH_STRING(static-checking,
     DEHYDRA_PATH= )
 
 if test -n "$DEHYDRA_PATH"; then
-    if ! test -f "$DEHYDRA_PATH"; then
+    if test ! -f "$DEHYDRA_PATH"; then
         AC_MSG_ERROR([The dehydra plugin is not at the specified path.])
     fi
     AC_DEFINE(NS_STATIC_CHECKING)

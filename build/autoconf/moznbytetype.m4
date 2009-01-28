@@ -64,7 +64,7 @@ AC_CACHE_CHECK([for a $2-byte type], moz_cv_n_byte_type_$1, [
                    ],
                    [moz_cv_n_byte_type_$1=$type; break], [])
   done
-  if ! test "$moz_cv_n_byte_type_$1"; then
+  if test ! "$moz_cv_n_byte_type_$1"; then
     AC_MSG_ERROR([Couldn't find a $2-byte type])
   fi
 ])
@@ -95,7 +95,7 @@ AC_CACHE_CHECK([for the size of $2], moz_cv_size_of_$1, [
                    ],
                    [moz_cv_size_of_$1=$size; break], [])
   done
-  if ! test "$moz_cv_size_of_$1"; then
+  if test ! "$moz_cv_size_of_$1"; then
     AC_MSG_ERROR([No size found for $2])
   fi
 ])
@@ -128,7 +128,7 @@ AC_CACHE_CHECK([for the alignment of $2], moz_cv_align_of_$1, [
                    ],
                    [moz_cv_align_of_$1=$align; break], [])
   done
-  if ! test "$moz_cv_align_of_$1"; then
+  if test ! "$moz_cv_align_of_$1"; then
     AC_MSG_ERROR([No alignment found for $2])
   fi
 ])
