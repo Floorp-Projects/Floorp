@@ -1729,7 +1729,6 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 
     if (num_transformed_glyphs != NULL) {
 	cairo_rectangle_int_t surface_extents;
-	double scale = _cairo_scaled_font_get_max_scale (gstate->scaled_font);
 
 	drop = TRUE;
 	status = _cairo_gstate_int_clip_extents (gstate, &surface_extents);
@@ -1739,6 +1738,7 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	    drop = FALSE; /* unbounded surface */
 	} else {
+	    double scale10 = 10 * _cairo_scaled_font_get_max_scale (gstate->scaled_font);
 	    if (surface_extents.width == 0 || surface_extents.height == 0) {
 	      /* No visible area.  Don't draw anything */
 	      *num_transformed_glyphs = 0;
@@ -1752,10 +1752,10 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 	     * to device if it's going to be visible, but I'm not inclined to
 	     * do that now.
 	     */
-	    x1 = surface_extents.x - 2*scale;
-	    y1 = surface_extents.y - 2*scale;
-	    x2 = surface_extents.x + surface_extents.width  + scale;
-	    y2 = surface_extents.y + surface_extents.height + scale;
+	    x1 = surface_extents.x - scale10;
+	    y1 = surface_extents.y - scale10;
+	    x2 = surface_extents.x + (int) surface_extents.width  + scale10;
+	    y2 = surface_extents.y + (int) surface_extents.height + scale10;
 	}
 
 	if (!drop)

@@ -40,6 +40,8 @@ ft-done-face.patch: bug 467874; only destroy FT_Faces created by cairo
 
 wince-fontconfig.patch: bug 462908; fixes required to compile for windows ce.  Also allows for building without fontconfig
 
+gfx/cairo/glyph-safety-margin.patch: Change the glyph dropping safety margin from 2em to 10em for bug 460023.  Upstream commit: 28a72648ba7abe02ebd4df7234424e333b85dc9c.
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
