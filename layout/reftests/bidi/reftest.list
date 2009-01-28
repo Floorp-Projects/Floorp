@@ -25,4 +25,3 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 386339.html 386339-ref.html
 == 413928-2.html 413928-2-ref.html
 == 425338-1a.html 425338-1-ref.html
 == 425338-1b.html 425338-1-ref.html
-HTTP(..) == 475092-glyph-vertical-delta.xhtml 475092-glyph-vertical-delta-ref.xhtml
