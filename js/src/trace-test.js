@@ -2545,6 +2545,42 @@ function testApply() {
 testApply.expected = "5,5,5,5,5,5,5,5,5,5";
 test(testApply);
 
+function testNestedForIn() {
+    var a = {x: 1, y: 2, z: 3};
+    var s = '';
+    for (var p1 in a)
+        for (var p2 in a)
+            s += p1 + p2 + ' ';
+    return s;
+}
+testNestedForIn.expected = 'xx xy xz yx yy yz zx zy zz ';
+test(testNestedForIn);
+
+function testForEach() {
+    var r;
+    var a = ["zero", "one", "two", "three"];
+    for (var i = 0; i < RUNLOOP; i++) {
+        r = "";
+        for each (var s in a)
+            r += s + " ";
+    }
+    return r;
+}
+testForEach.expected = "zero one two three ";
+test(testForEach);
+
+function testThinForEach() {
+    var a = ["red"];
+    var n = 0;
+    for (var i = 0; i < 10; i++)
+        for each (var v in a)
+            if (v)
+                n++;
+    return n;
+}
+testThinForEach.expected = 10;
+test(testThinForEach);
+
 function testComparisons()
 {
   // All the special values from each of the types in

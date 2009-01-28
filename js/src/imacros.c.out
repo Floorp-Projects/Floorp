@@ -536,6 +536,64 @@ static struct {
 /* 6*/  JSOP_STOP,
     },
 };
+static struct {
+    jsbytecode for_in[10];
+    jsbytecode for_each[10];
+    jsbytecode for_in_native[10];
+    jsbytecode for_each_native[10];
+} iter_imacros = {
+    {
+/* 0*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
+/* 3*/  JSOP_INT8, (JSITER_ENUMERATE),
+/* 5*/  JSOP_CALL, 0, 1,
+/* 8*/  JSOP_PUSH,
+/* 9*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
+/* 3*/  JSOP_INT8, (JSITER_ENUMERATE|JSITER_FOREACH),
+/* 5*/  JSOP_CALL, 0, 1,
+/* 8*/  JSOP_PUSH,
+/* 9*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_CALLBUILTIN, ((JSBUILTIN_ObjectToIterator) & 0xff00) >> 8, ((JSBUILTIN_ObjectToIterator) & 0xff),
+/* 3*/  JSOP_INT8, (JSITER_ENUMERATE),
+/* 5*/  JSOP_CALL, 0, 1,
+/* 8*/  JSOP_PUSH,
+/* 9*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_CALLBUILTIN, ((JSBUILTIN_ObjectToIterator) & 0xff00) >> 8, ((JSBUILTIN_ObjectToIterator) & 0xff),
+/* 3*/  JSOP_INT8, (JSITER_ENUMERATE|JSITER_FOREACH),
+/* 5*/  JSOP_CALL, 0, 1,
+/* 8*/  JSOP_PUSH,
+/* 9*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode custom_iter_next[10];
+    jsbytecode native_iter_next[12];
+} nextiter_imacros = {
+    {
+/* 0*/  JSOP_POP,
+/* 1*/  JSOP_DUP,
+/* 2*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(next),
+/* 5*/  JSOP_CALL, 0, 0,
+/* 8*/  JSOP_TRUE,
+/* 9*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_POP,
+/* 1*/  JSOP_DUP,
+/* 2*/  JSOP_CALLBUILTIN, ((JSBUILTIN_CallIteratorNext) & 0xff00) >> 8, ((JSBUILTIN_CallIteratorNext) & 0xff),
+/* 5*/  JSOP_CALL, 0, 0,
+/* 8*/  JSOP_DUP,
+/* 9*/  JSOP_HOLE,
+/*10*/  JSOP_STRICTNE,
+/*11*/  JSOP_STOP,
+    },
+};
 uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NOP */
     0,  /* JSOP_PUSH */
@@ -612,8 +670,8 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_STRICTEQ */
     0,  /* JSOP_STRICTNE */
     0,  /* JSOP_NULLTHIS */
-    0,  /* JSOP_ITER */
-    0,  /* JSOP_NEXTITER */
+    3,  /* JSOP_ITER */
+    2,  /* JSOP_NEXTITER */
     0,  /* JSOP_ENDITER */
     7,  /* JSOP_APPLY */
     0,  /* JSOP_SWAP */
@@ -763,7 +821,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_CALLGVAR */
     0,  /* JSOP_CALLLOCAL */
     0,  /* JSOP_CALLARG */
-    0,  /* JSOP_UNUSED226 */
+    0,  /* JSOP_CALLBUILTIN */
     0,  /* JSOP_INT8 */
     0,  /* JSOP_INT32 */
     0,  /* JSOP_LENGTH */
