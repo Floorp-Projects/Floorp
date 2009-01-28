@@ -365,6 +365,23 @@ nsNavBookmarks::InitStatements()
     getter_AddRefs(mDBIsBookmarkedInDatabase));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBIsRealBookmark
+  // Checks to make sure a place_id is a bookmark, and isn't a livemark.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id "
+      "FROM moz_bookmarks "
+      "WHERE fk = ?1 "
+        "AND type = ?2 "
+        "AND parent NOT IN ("
+          "SELECT a.item_id "
+          "FROM moz_items_annos a "
+          "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+          "WHERE n.name = ?3"
+        ") "
+      "LIMIT 1"),
+    getter_AddRefs(mDBIsRealBookmark));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBGetLastBookmarkID
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT id "
@@ -446,6 +463,7 @@ nsNavBookmarks::FinalizeStatements() {
     mDBGetRedirectDestinations,
     mDBInsertBookmark,
     mDBIsBookmarkedInDatabase,
+    mDBIsRealBookmark,
     mDBGetLastBookmarkID,
     mDBSetItemDateAdded,
     mDBSetItemLastModified,
@@ -890,10 +908,38 @@ nsNavBookmarks::UpdateBookmarkHashOnRemove(PRInt64 aPlaceId)
 }
 
 
+PRBool
+nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
+{
+  // Fast path is to check the hash table first.  If it is in the hash table,
+  // then verify that it is a real bookmark.
+  PRInt64 bookmarkId;
+  PRBool isBookmark = mBookmarksHash.Get(aPlaceId, &bookmarkId);
+  if (!isBookmark)
+    return PR_FALSE;
+
+  {
+    mozStorageStatementScoper scope(mDBIsRealBookmark);
+
+    (void)mDBIsRealBookmark->BindInt64Parameter(0, aPlaceId);
+    (void)mDBIsRealBookmark->BindInt32Parameter(1, TYPE_BOOKMARK);
+    (void)mDBIsRealBookmark->BindUTF8StringParameter(
+      2, NS_LITERAL_CSTRING(LMANNO_FEEDURI)
+    );
+
+    // If we get any rows, then there exists at least one bookmark corresponding
+    // to aPlaceId that is not a livemark item.
+    if (NS_SUCCEEDED(mDBIsRealBookmark->ExecuteStep(&isBookmark)))
+      return isBookmark;
+  }
+
+  return PR_FALSE;
+}
+
 // nsNavBookmarks::IsBookmarkedInDatabase
 //
-//    This checks to see if the specified URI is actually bookmarked, bypassing
-//    our hashtable. Normal IsBookmarked checks just use the hashtable.
+//    This checks to see if the specified place_id is actually bookmarked.
+//    This does not check for redirects in the hashtable.
 
 nsresult
 nsNavBookmarks::IsBookmarkedInDatabase(PRInt64 aPlaceId,
@@ -2577,42 +2623,8 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   // is: find all bookmarks corresponding to oldPlaceId that are not livemark
   // items, i.e., whose parents are not livemarks.  If any such bookmarks exist,
   // oldPlaceId is still bookmarked.
-  PRBool isBookmarked = PR_FALSE;
 
-  nsCOMPtr<mozIStorageStatement> isBookmarkedStmt;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id "
-      "FROM moz_bookmarks "
-      "WHERE fk = ?1 AND "
-            "type = ?2 AND "
-            "parent NOT IN ("
-              "SELECT a.item_id "
-              "FROM moz_items_annos a "
-              "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-              "WHERE n.name = ?3"
-            ")"),
-    getter_AddRefs(isBookmarkedStmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  {
-    mozStorageStatementScoper scope(isBookmarkedStmt);
-
-    rv = isBookmarkedStmt->BindInt64Parameter(0, oldPlaceId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = isBookmarkedStmt->BindInt32Parameter(1, TYPE_BOOKMARK);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = isBookmarkedStmt->BindUTF8StringParameter(
-           2, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // If executing isBookmarkedStmt returns any rows, then there exists at least
-    // one bookmark corresponding to oldPlaceId that is not a livemark item.
-    // isBookmarked will be set to true in that case and false otherwise.
-    rv = isBookmarkedStmt->ExecuteStep(&isBookmarked);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = History()->UpdateFrecency(oldPlaceId, isBookmarked);
+  rv = History()->UpdateFrecency(oldPlaceId, IsRealBookmark(oldPlaceId));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
