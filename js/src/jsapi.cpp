@@ -1183,6 +1183,10 @@ JS_GetOptions(JSContext *cx)
             (cx)->version |= JSVERSION_HAS_XML;                               \
         else                                                                  \
             (cx)->version &= ~JSVERSION_HAS_XML;                              \
+        if ((cx)->options & JSOPTION_ANONFUNFIX)                              \
+            (cx)->version |= JSVERSION_ANONFUNFIX;                            \
+        else                                                                  \
+            (cx)->version &= ~JSVERSION_ANONFUNFIX;                           \
     JS_END_MACRO
 
 JS_PUBLIC_API(uint32)
