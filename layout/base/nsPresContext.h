@@ -282,7 +282,6 @@ public:
 
   void FreeToShell(size_t aSize, void* aFreeChunk)
   {
-    NS_ASSERTION(mShell, "freeing after shutdown");
     if (mShell)
       mShell->FreeFrame(aSize, aFreeChunk);
   }
