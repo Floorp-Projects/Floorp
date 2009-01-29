@@ -89,7 +89,7 @@ interface nsIPrintSettingsX : nsISupports
   [noscript] void writePageFormatToPrefs();
 
   /**
-   * cleanUpAfterDialog
+   * cleanUpAfterCarbonDialog
    *
    * After bringing up Carbon print dialogs, clean up menus.
    * See bug 425844 for details.
