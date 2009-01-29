@@ -424,7 +424,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   return doc->GetRootContent();
 }
 
-nsIDOMNodeList*
+nsINodeList*
 nsINode::GetChildNodesList()
 {
   nsSlots *slots = GetSlots();
@@ -589,7 +589,7 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(node, aReturn);
 }
 
-nsINode*
+nsIContent*
 nsChildContentList::GetNodeAt(PRUint32 aIndex)
 {
   if (mNode) {
@@ -597,6 +597,16 @@ nsChildContentList::GetNodeAt(PRUint32 aIndex)
   }
 
   return nsnull;
+}
+
+PRInt32
+nsChildContentList::IndexOf(nsIContent* aContent)
+{
+  if (mNode) {
+    return mNode->IndexOf(aContent);
+  }
+
+  return -1;
 }
 
 //----------------------------------------------------------------------

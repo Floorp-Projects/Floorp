@@ -1570,14 +1570,11 @@ nsXBLBinding::ImplementsInterface(REFNSIID aIID) const
     (mNextBinding && mNextBinding->ImplementsInterface(aIID));
 }
 
-already_AddRefed<nsIDOMNodeList>
+nsINodeList*
 nsXBLBinding::GetAnonymousNodes()
 {
   if (mContent) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
-    nsIDOMNodeList *nodeList = nsnull;
-    elt->GetChildNodes(&nodeList);
-    return nodeList;
+    return mContent->GetChildNodesList();
   }
 
   if (mNextBinding)

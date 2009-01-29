@@ -108,7 +108,8 @@ public:
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
-  virtual nsINode* GetNodeAt(PRUint32 aIndex);  
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex);
+  virtual PRInt32 IndexOf(nsIContent* aContent);
   
   void DropReference()
   {

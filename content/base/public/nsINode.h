@@ -51,6 +51,7 @@ class nsIDocument;
 class nsIDOMEvent;
 class nsIDOMNode;
 class nsIDOMNodeList;
+class nsINodeList;
 class nsIPresShell;
 class nsPresContext;
 class nsEventChainVisitor;
@@ -153,8 +154,8 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x0dc8fad3, 0xcb3f, 0x4f14, \
- { 0x8e, 0x7e, 0x4f, 0x62, 0xab, 0x74, 0xb8, 0x1e } }
+{ 0x355cc896, 0x2ed0, 0x4237, \
+ { 0x85, 0xf7, 0x4d, 0xb0, 0xcf, 0x4d, 0xc4, 0x90 } }
  
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -690,7 +691,7 @@ public:
    */
   nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
 
-  virtual nsIDOMNodeList* GetChildNodesList();
+  virtual nsINodeList* GetChildNodesList();
   nsIContent* GetSibling(PRInt32 aOffset)
   {
     nsINode *parent = GetNodeParent();
