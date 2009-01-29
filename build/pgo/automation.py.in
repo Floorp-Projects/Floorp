@@ -113,8 +113,17 @@ class Process(subprocess.Popen):
 
   def kill(self):
     if IS_WIN32:
+      import platform
       pid = "%i" % self.pid
-      subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
+      if platform.release() == "2000":
+        # Windows 2000 needs 'kill.exe' from the 'Windows 2000 Resource Kit tools'. (See bug 475455.)
+        try:
+          subprocess.Popen(["kill", "-f", pid]).wait()
+        except:
+          log.info("ERROR FAIL Missing 'kill' utility to kill process with pid=%s. Kill it manually !", pid)
+      else:
+        # Windows XP and later.
+        subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
     else:
       os.kill(self.pid, signal.SIGKILL)
 
