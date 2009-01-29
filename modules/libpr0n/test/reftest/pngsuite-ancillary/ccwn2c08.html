@@ -1,4 +1,8 @@
-<html><body>
+<html>
+<head>
+<script src="lcms-asm-check.js" type="application/ecmascript"></script>
+</head>
+<body>
 <table cellpadding='0' cellspacing='0' width='32' height='32'>
 <tr height='1'>
   <td width='1' style='background-color: rgba(255,255,255,1)'></td>
@@ -219,7 +223,13 @@
   <td width='1' style='background-color: rgba(126,255,168,1)'></td>
   <td width='1' style='background-color: rgba(121,255,148,1)'></td>
   <td width='1' style='background-color: rgba(127,255,120,1)'></td>
-  <td width='1' style='background-color: rgba(150,255,91,1)'></td>
+<script type="application/ecmascript">
+if (lcms_has_assembly) {
+  document.write("<td width='1' style='background-color: rgba(150,255,91,1)'></td>");
+} else {
+  document.write("<td width='1' style='background-color: rgba(150,255,92,1)'></td>");
+}
+</script>
   <td width='1' style='background-color: rgba(165,255,73,1)'></td>
   <td width='1' style='background-color: rgba(176,255,53,1)'></td>
   <td width='1' style='background-color: rgba(205,255,133,1)'></td>
@@ -396,7 +406,13 @@
   <td width='1' style='background-color: rgba(238,255,113,1)'></td>
   <td width='1' style='background-color: rgba(247,255,96,1)'></td>
   <td width='1' style='background-color: rgba(254,253,75,1)'></td>
-  <td width='1' style='background-color: rgba(255,245,49,1)'></td>
+<script type="application/ecmascript">
+if (lcms_has_assembly) {
+  document.write("<td width='1' style='background-color: rgba(255,245,49,1)'></td>");
+} else {
+  document.write("<td width='1' style='background-color: rgba(255,245,50,1)'></td>");
+}
+</script>
   <td width='1' style='background-color: rgba(255,245,187,1)'></td>
   <td width='1' style='background-color: rgba(255,255,255,1)'></td>
   <td width='1' style='background-color: rgba(255,255,255,1)'></td>
@@ -431,7 +447,13 @@
   <td width='1' style='background-color: rgba(254,254,112,1)'></td>
   <td width='1' style='background-color: rgba(255,245,95,1)'></td>
   <td width='1' style='background-color: rgba(255,235,75,1)'></td>
-  <td width='1' style='background-color: rgba(255,224,49,1)'></td>
+<script type="application/ecmascript">
+if (lcms_has_assembly) {
+  document.write("<td width='1' style='background-color: rgba(255,224,49,1)'></td>");
+} else {
+  document.write("<td width='1' style='background-color: rgba(255,224,50,1)'></td>");
+}
+</script>
   <td width='1' style='background-color: rgba(255,240,203,1)'></td>
   <td width='1' style='background-color: rgba(255,255,255,1)'></td>
   <td width='1' style='background-color: rgba(255,255,255,1)'></td>
