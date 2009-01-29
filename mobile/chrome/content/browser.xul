@@ -66,8 +66,8 @@
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/CanvasBrowser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/WidgetStack.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/CanvasBrowser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/InputHandler.js"/>
 
   <stringbundleset id="stringbundleset">
