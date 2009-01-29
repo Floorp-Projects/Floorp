@@ -512,7 +512,7 @@
   ${GetShortcutsLogPath} $0
   ${Unless} ${FileExists} "$0"
     ; Default to ${BrandFullName} for the Start Menu Folder
-    StrCpy $TmpVal ${BrandFullName}
+    StrCpy $TmpVal "${BrandFullName}"
     ; Prior to Firefox 3.1 the Start Menu directory was written to the registry and
     ; this value can be used to set the Start Menu directory.
     ClearErrors
