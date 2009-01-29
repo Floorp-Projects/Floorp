@@ -41,6 +41,7 @@
 #include "gfxCore.h"
 #include "nsCoord.h"
 #include "nsStringGlue.h"
+#include "gfxFontConstants.h"
 
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
@@ -134,10 +135,6 @@ struct NS_GFX nsFont {
   static void GetGenericID(const nsString& aGeneric, PRUint8* aID);
 };
 
-#define NS_FONT_STYLE_NORMAL              0
-#define NS_FONT_STYLE_ITALIC              1
-#define NS_FONT_STYLE_OBLIQUE             2
-
 #define NS_FONT_VARIANT_NORMAL            0
 #define NS_FONT_VARIANT_SMALL_CAPS        1
 
@@ -145,8 +142,5 @@ struct NS_GFX nsFont {
 #define NS_FONT_DECORATION_UNDERLINE      0x1
 #define NS_FONT_DECORATION_OVERLINE       0x2
 #define NS_FONT_DECORATION_LINE_THROUGH   0x4
-
-#define NS_FONT_WEIGHT_NORMAL             400
-#define NS_FONT_WEIGHT_BOLD               700
 
 #endif /* nsFont_h___ */

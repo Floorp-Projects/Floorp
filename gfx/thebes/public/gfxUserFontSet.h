@@ -175,7 +175,7 @@ public:
 
     // add in a font face
     // weight, stretch - 0 == unknown, [1, 9] otherwise
-    // italic style = constants in gfxFont.h (e.g. FONT_STYLE_NORMAL)
+    // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
     // TODO: support for unicode ranges not yet implemented
     void AddFontFace(const nsAString& aFamilyName, 
                      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, 
