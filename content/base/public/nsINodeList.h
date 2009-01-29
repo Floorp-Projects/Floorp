@@ -40,15 +40,16 @@
 
 #include "nsIDOMNodeList.h"
 
-class nsINode;
+class nsIContent;
 
 // IID for the nsINodeList interface
 #define NS_INODELIST_IID \
-{ 0x943420c4, 0x8774, 0x43ea, \
- { 0xb3, 0x53, 0x62, 0xa1, 0x26, 0x1c, 0x9b, 0x55 } }
+{ 0x57ac9ea2, 0xe95f, 0x4856, \
+ { 0xbb, 0xac, 0x82, 0x2d, 0x65, 0xb1, 0x92, 0x57 } }
 
 /**
- * An internal interface that allows QI-less getting of nodes from node lists
+ * An internal interface that allows QI-less getting of nodes from
+ * node lists and reasonably fast indexOf.
  */
 class nsINodeList : public nsIDOMNodeList
 {
@@ -58,7 +59,13 @@ public:
   /**
    * Get the node at the index.  Returns null if the index is out of bounds
    */
-  virtual nsINode* GetNodeAt(PRUint32 aIndex) = 0;
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex) = 0;
+
+  /**
+   * Get the index of the given node in the list.  Will return -1 if the node
+   * is not in the list.
+   */
+  virtual PRInt32 IndexOf(nsIContent* aContent) = 0;
 };
 
 #define NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                  \

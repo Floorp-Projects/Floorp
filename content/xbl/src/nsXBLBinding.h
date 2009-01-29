@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMNodeList.h"
+#include "nsINodeList.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
@@ -156,7 +156,7 @@ public:
 
   void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData);
 
-  already_AddRefed<nsIDOMNodeList> GetAnonymousNodes();
+  nsINodeList* GetAnonymousNodes();
 
   static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                                 const nsAFlatCString& aClassName,
