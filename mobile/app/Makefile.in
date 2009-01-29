@@ -55,13 +55,19 @@ APP_ICON = mobile
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DAPP_BUILDID=$(APP_BUILDID) -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
 
-SOURCE_STAMP := $(shell cd $(srcdir)/.. ; hg identify 2>/dev/null | cut -f1 -d' ')
+SOURCE_STAMP := $(shell cd $(srcdir)/.. && hg identify 2>/dev/null | cut -f1 -d' ')
 ifdef SOURCE_STAMP
 DEFINES += -DMOZ_SOURCE_STAMP="$(SOURCE_STAMP)"
 endif
 
-SOURCE_REPO := $(shell hg -R $(srcdir)/.. showconfig paths.default 2>/dev/null | sed s/^ssh:/http:/)
-ifdef SOURCE_REPO
+# strip a trailing slash from the repo URL because it's not always present,
+# and we want to construct a working URL in buildconfig.html
+# make+shell+sed = awful
+_dollar=$$
+SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+# extra sanity check for old versions of hg
+# that don't support showconfig
+ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
 DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
 
