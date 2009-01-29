@@ -73,6 +73,7 @@
 #include "nsInspectorCSSUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
+#include "prlog.h"
 #include "nsCSSKeywords.h"
 #include "nsStyleCoord.h"
 #include "nsDisplayList.h"
@@ -1089,6 +1090,36 @@ nsComputedDOMStyle::GetFontSizeAdjust(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetFontStretch(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleFont* font = GetStyleFont();
+
+  // The computed value space isn't actually representable in string
+  // form, so just represent anything with widers or narrowers in it as
+  // 'wider' or 'narrower'.
+  PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER % 2 == 0);
+  PR_STATIC_ASSERT(NS_FONT_STRETCH_WIDER % 2 == 0);
+  PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER + NS_FONT_STRETCH_WIDER == 0);
+  PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER < 0);
+  PRInt16 stretch = font->mFont.stretch;
+  if (stretch == NS_FONT_STRETCH_NORMAL) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else if (stretch <= NS_FONT_STRETCH_NARROWER / 2) {
+    val->SetIdent(eCSSKeyword_narrower);
+  } else if (stretch >= NS_FONT_STRETCH_WIDER / 2) {
+    val->SetIdent(eCSSKeyword_wider);
+  } else {
+    val->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(stretch, nsCSSProps::kFontStretchKTable));
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetFontStyle(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -1114,6 +1145,7 @@ nsComputedDOMStyle::GetFontWeight(nsIDOMCSSValue** aValue)
 
   const nsStyleFont* font = GetStyleFont();
 
+  // XXX This doesn't deal with bolder/lighter very well.
   const nsCSSKeyword enum_weight =
     nsCSSProps::ValueToKeywordEnum(font->mFont.weight,
                                    nsCSSProps::kFontWeightKTable);
@@ -4025,7 +4057,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(font_family,                   FontFamily),
     COMPUTED_STYLE_MAP_ENTRY(font_size,                     FontSize),
     COMPUTED_STYLE_MAP_ENTRY(font_size_adjust,              FontSizeAdjust),
-    // COMPUTED_STYLE_MAP_ENTRY(font_stretch,               FontStretch),
+    COMPUTED_STYLE_MAP_ENTRY(font_stretch,                  FontStretch),
     COMPUTED_STYLE_MAP_ENTRY(font_style,                    FontStyle),
     COMPUTED_STYLE_MAP_ENTRY(font_variant,                  FontVariant),
     COMPUTED_STYLE_MAP_ENTRY(font_weight,                   FontWeight),

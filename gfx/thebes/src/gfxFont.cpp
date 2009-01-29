@@ -1228,18 +1228,19 @@ gfxFontGroup::GetGeneration()
 
 gfxFontStyle::gfxFontStyle() :
     style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), printerFont(PR_FALSE), 
-    familyNameQuirks(PR_FALSE), weight(FONT_WEIGHT_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
+    familyNameQuirks(PR_FALSE), weight(FONT_WEIGHT_NORMAL),
+    stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
     langGroup(NS_LITERAL_CSTRING("x-western")), sizeAdjust(0.0f)
 {
 }
 
-gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
-                           const nsACString& aLangGroup,
+gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
+                           gfxFloat aSize, const nsACString& aLangGroup,
                            float aSizeAdjust, PRPackedBool aSystemFont,
                            PRPackedBool aFamilyNameQuirks,
                            PRPackedBool aPrinterFont):
     style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
-    familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
+    familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
     size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
 {
     if (weight > 900)
@@ -1264,7 +1265,7 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
     familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
-    size(aStyle.size), langGroup(aStyle.langGroup),
+    stretch(aStyle.stretch), size(aStyle.size), langGroup(aStyle.langGroup),
     sizeAdjust(aStyle.sizeAdjust)
 {
 }
