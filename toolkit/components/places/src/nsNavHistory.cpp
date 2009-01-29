@@ -5144,6 +5144,10 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
+  // ignore internal redirects
+  if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)
+    return NS_OK;
+
   nsresult rv;
   nsCOMPtr<nsIURI> oldURI, newURI;
   rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
