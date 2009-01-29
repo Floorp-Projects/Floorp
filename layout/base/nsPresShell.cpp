@@ -7693,7 +7693,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
     if (counter != nsnull && counter->mName.EqualsASCII(aName)) {
       aRenderingContext->PushState();
       nsFont font("Times", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                  NS_FONT_WEIGHT_NORMAL, 0,
+                  NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0,
                   nsPresContext::CSSPixelsToAppUnits(11));
 
       nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);

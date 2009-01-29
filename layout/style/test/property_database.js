@@ -1040,7 +1040,6 @@ var gCSSProperties = {
 	"font-stretch": {
 		domProp: "fontStretch",
 		inherited: true,
-		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "wider", "narrower", "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded" ],

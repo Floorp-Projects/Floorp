@@ -146,9 +146,10 @@ private:
   /* Font properties */
   nsresult GetColor(nsIDOMCSSValue** aValue);
   nsresult GetFontFamily(nsIDOMCSSValue** aValue);
-  nsresult GetFontStyle(nsIDOMCSSValue** aValue);
   nsresult GetFontSize(nsIDOMCSSValue** aValue);
   nsresult GetFontSizeAdjust(nsIDOMCSSValue** aValue);
+  nsresult GetFontStretch(nsIDOMCSSValue** aValue);
+  nsresult GetFontStyle(nsIDOMCSSValue** aValue);
   nsresult GetFontWeight(nsIDOMCSSValue** aValue);
   nsresult GetFontVariant(nsIDOMCSSValue** aValue);
 

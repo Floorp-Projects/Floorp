@@ -5742,7 +5742,7 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
     // because it's only being used to call EnumerateFamilies
     nsAutoString valueStr;
     aValue.GetStringValue(valueStr);
-    nsFont font(valueStr, 0, 0, 0, 0, 0);
+    nsFont font(valueStr, 0, 0, 0, 0, 0, 0);
     ExtractFirstFamilyData dat;
 
     font.EnumerateFamilies(ExtractFirstFamily, (void*) &dat);
@@ -7306,7 +7306,7 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
 
       // the style parameters to the nsFont constructor are ignored,
       // because it's only being used to call EnumerateFamilies
-      nsFont font(family, 0, 0, 0, 0, 0);
+      nsFont font(family, 0, 0, 0, 0, 0, 0);
       ExtractFirstFamilyData dat;
 
       font.EnumerateFamilies(ExtractFirstFamily, (void*) &dat);
