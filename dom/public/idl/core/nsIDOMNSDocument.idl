@@ -43,7 +43,7 @@
 interface nsIBoxObject;
 interface nsIDOMLocation;
 
-[scriptable, uuid(533a8131-8d0c-4ebf-990b-7fad7cd514ee)]
+[scriptable, uuid(02c8cebd-44d1-4921-97c6-ce46b23ba31f)]
 interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString      characterSet;
