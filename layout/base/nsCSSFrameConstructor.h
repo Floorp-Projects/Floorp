@@ -1292,7 +1292,7 @@ private:
   // points to, following continuations if necessary.  aIter is passed by value
   // on purpose, so as not to modify the callee's iterator.
   nsIFrame* FindNextSibling(ChildIterator aIter,
-                            const ChildIterator& aIter);
+                            const ChildIterator& aLast);
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
