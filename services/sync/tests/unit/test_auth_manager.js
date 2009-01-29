@@ -46,7 +46,7 @@ function async_test() {
   let res = new Resource("http://localhost:8080/foo");
   let content = yield res.get(self.cb);
   do_check_eq(content, "This path exists and is protected");
-  do_check_eq(res.lastRequest.status, 200);
+  do_check_eq(res.lastChannel.responseStatus, 200);
 
   do_test_finished();
   server.stop();
