@@ -1,3 +1,4 @@
+# -*- indent-tabs-mode: nil; -*-
 # vim: set sw=4 ts=8 et tw=78 ft=asm:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -631,6 +632,67 @@
         dup                                         # iterobj nextval? nextval?
         hole                                        # iterobj nextval? nextval? hole
         strictne                                    # iterobj nextval? boolean
+        stop
+    .end
+
+.end
+
+.igroup getelem JSOP_GETELEM
+
+    .imacro getprop                                 # obj name
+        swap                                        # name obj
+        callbuiltin (JSBUILTIN_GetProperty)         # name fun obj
+        pick 2                                      # fun obj name
+        call 1                                      # propval
+        stop
+    .end
+
+    .imacro getelem                                 # obj i
+        swap                                        # i obj
+        callbuiltin (JSBUILTIN_GetElement)          # i fun obj
+        pick 2                                      # fun obj i
+        call 1                                      # propval
+        stop
+    .end
+
+.end
+
+.igroup setelem JSOP_SETELEM
+
+    .imacro setprop                                 # obj name val
+        dup                                         # obj name val val
+        pick 3                                      # name val val obj
+        callbuiltin (JSBUILTIN_SetProperty)         # name val val fun obj
+        pick 4                                      # val val fun obj name
+        pick 4                                      # val fun obj name val
+        call 2                                      # val junk
+        pop                                         # val
+        stop
+    .end
+
+    .imacro setelem                                 # obj i val
+        dup                                         # obj i val val
+        pick 3                                      # i val val obj
+        callbuiltin (JSBUILTIN_SetElement)          # i val val fun obj
+        pick 4                                      # val val fun obj i
+        pick 4                                      # val fun obj i val
+        call 2                                      # val junk
+        pop                                         # val
+        stop
+    .end
+
+.end
+
+.igroup initelem JSOP_INITELEM
+
+    .imacro initelem                                # obj i val
+        pick 2                                      # i val obj
+        dup                                         # i val obj obj
+        callbuiltin (JSBUILTIN_SetElement)          # i val obj fun obj
+        pick 4                                      # val obj fun obj i
+        pick 4                                      # obj fun obj i val
+        call 2                                      # obj junk
+        pop                                         # obj
         stop
     .end
 
