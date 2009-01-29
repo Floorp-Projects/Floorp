@@ -122,7 +122,10 @@ public:
   PRBool HasContentListFor(nsIContent* aContent);
 
   /**
-   * For a given element, retrieve the anonymous child content.
+   * Return the nodelist of "anonymous" kids for this node.  This might
+   * actually include some of the nodes actual DOM kids, if there are
+   * <children> tags directly as kids of <content>.  This will only end up
+   * returning a non-null list for nodes which have a binding attached.
    */
   nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
@@ -140,6 +143,11 @@ public:
    * points, then aResult will be null.
    */
   nsresult GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
+
+  /**
+   * Non-COMy version of GetXBLChildNodesFor
+   */
+  nsINodeList* GetXBLChildNodesFor(nsIContent* aContent);
 
   /**
    * Given a parent element and a child content, determine where the
@@ -212,12 +220,10 @@ protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
   nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
 
-  nsresult GetXBLChildNodesInternal(nsIContent* aContent,
-                                    nsIDOMNodeList** aResult,
-                                    PRBool* aIsAnonymousContentList);
-  nsresult GetAnonymousNodesInternal(nsIContent* aContent,
-                                     nsIDOMNodeList** aResult,
-                                     PRBool* aIsAnonymousContentList);
+  nsINodeList* GetXBLChildNodesInternal(nsIContent* aContent,
+                                        PRBool* aIsAnonymousContentList);
+  nsINodeList* GetAnonymousNodesInternal(nsIContent* aContent,
+                                         PRBool* aIsAnonymousContentList);
 
   nsIContent* GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild);
   nsIContent* GetNestedSingleInsertionPoint(nsIContent* aParent,
@@ -244,24 +250,22 @@ protected:
   // installed on that element.
   nsRefPtrHashtable<nsISupportsHashKey,nsXBLBinding> mBindingTable;
 
-  // A mapping from nsIContent* to an nsIDOMNodeList*
-  // (nsAnonymousContentList*).  This list contains an accurate
-  // reflection of our *explicit* children (once intermingled with
-  // insertion points) in the altered DOM.  There is an entry for a
-  // content node in this table only if that content node has some
-  // <children> kids.
+  // A mapping from nsIContent* to an nsAnonymousContentList*.  This
+  // list contains an accurate reflection of our *explicit* children
+  // (once intermingled with insertion points) in the altered DOM.
+  // There is an entry for a content node in this table only if that
+  // content node has some <children> kids.
   PLDHashTable mContentListTable;
 
-  // A mapping from nsIContent* to an nsIDOMNodeList*
-  // (nsAnonymousContentList*).  This list contains an accurate
-  // reflection of our *anonymous* children (if and only if they are
-  // intermingled with insertion points) in the altered DOM.  This
-  // table is not used if no insertion points were defined directly
-  // underneath a <content> tag in a binding.  The NodeList from the
-  // <content> is used instead as a performance optimization.  There
-  // is an entry for a content node in this table only if that content
-  // node has a binding with a <content> attached and this <content>
-  // contains <children> elements directly.
+  // A mapping from nsIContent* to an nsAnonymousContentList*.  This
+  // list contains an accurate reflection of our *anonymous* children
+  // (if and only if they are intermingled with insertion points) in
+  // the altered DOM.  This table is not used if no insertion points
+  // were defined directly underneath a <content> tag in a binding.
+  // The NodeList from the <content> is used instead as a performance
+  // optimization.  There is an entry for a content node in this table
+  // only if that content node has a binding with a <content> attached
+  // and this <content> contains <children> elements directly.
   PLDHashTable mAnonymousNodesTable;
 
   // A mapping from nsIContent* to nsIContent*.  The insertion parent
