@@ -6582,12 +6582,7 @@ PresShell::DoReflow(nsIFrame* target)
 
   // Don't pass size directly to the reflow state, since a
   // constrained height implies page/column breaking.
-  // Exception: the root frame always uses a constrained reflow
-  nsSize reflowSize;
-  if (target != rootFrame)
-    reflowSize = nsSize(size.width, NS_UNCONSTRAINEDSIZE);
-  else
-    reflowSize = size;
+  nsSize reflowSize(size.width, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState reflowState(mPresContext, target, rcx, reflowSize);
 
   // fix the computed height

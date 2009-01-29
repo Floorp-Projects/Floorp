@@ -239,14 +239,10 @@ void
 nsHTMLReflowState::SetComputedHeight(nscoord aComputedHeight)
 {
   NS_ASSERTION(frame, "Must have a frame!");
-  // It'd be nice to assert that |frame| is not in reflow, but this fails for
-  // two reasons:
+  // It'd be nice to assert that |frame| is not in reflow, but this fails
+  // because:
   //
-  // 1) Viewport frames reset the computed height on a copy of their reflow
-  //    state when reflowing fixed-pos kids.  In that case we actually don't
-  //    want to mess with the resize flags, because comparing the frame's rect
-  //    to the munged computed width is pointless.
-  // 2) nsFrame::BoxReflow creates a reflow state for its parent.  This reflow
+  //    nsFrame::BoxReflow creates a reflow state for its parent.  This reflow
   //    state is not used to reflow the parent, but just as a parent for the
   //    frame's own reflow state.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
@@ -255,9 +251,7 @@ nsHTMLReflowState::SetComputedHeight(nscoord aComputedHeight)
   NS_PRECONDITION(aComputedHeight >= 0, "Invalid computed height");
   if (mComputedHeight != aComputedHeight) {
     mComputedHeight = aComputedHeight;
-    if (frame->GetType() != nsGkAtoms::viewportFrame) { // Or check GetParent()?
-      InitResizeFlags(frame->PresContext());
-    }
+    InitResizeFlags(frame->PresContext());
   }
 }
 
