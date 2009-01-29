@@ -156,6 +156,7 @@ main (int argc, char **argv) {
    nsRefPtr<gfxContext> ctx = MakeContext();
    {
        gfxFontStyle style (FONT_STYLE_NORMAL,
+                           NS_FONT_STRETCH_NORMAL,
                            139,
                            10.0,
                            nsDependentCString("x-western"),

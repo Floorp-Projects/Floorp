@@ -78,8 +78,8 @@ class gfxUserFontData;
 
 struct THEBES_API gfxFontStyle {
     gfxFontStyle();
-    gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
-                 const nsACString& aLangGroup,
+    gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
+                 gfxFloat aSize, const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
                  PRPackedBool aFamilyNameQuirks,
                  PRPackedBool aPrinterFont);
@@ -106,6 +106,10 @@ struct THEBES_API gfxFontStyle {
     // 400, 700, and 900, a weight of 898 should lead to the weight 400
     // font being used, since it is two weights lighter than 900.
     PRUint16 weight;
+
+    // The stretch of the font (the sum of various NS_FONT_STRETCH_*
+    // constants; see gfxFontConstants.h).
+    PRInt16 stretch;
 
     // The logical size of the font, in pixels
     gfxFloat size;
@@ -143,6 +147,7 @@ struct THEBES_API gfxFontStyle {
             (printerFont == other.printerFont) &&
             (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
+            (stretch == other.stretch) &&
             (langGroup.Equals(other.langGroup)) &&
             (sizeAdjust == other.sizeAdjust);
     }

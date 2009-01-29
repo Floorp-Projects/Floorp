@@ -106,6 +106,7 @@ SetupTests()
 
     /* some common styles */
     gfxFontStyle style_western_normal_16 (FONT_STYLE_NORMAL,
+                                          NS_FONT_STRETCH_NORMAL,
                                           400,
                                           16.0,
                                           nsDependentCString("x-western"),
@@ -113,6 +114,7 @@ SetupTests()
                                           PR_FALSE, PR_FALSE, PR_FALSE);
 
     gfxFontStyle style_western_bold_16 (FONT_STYLE_NORMAL,
+                                        NS_FONT_STRETCH_NORMAL,
                                         700,
                                         16.0,
                                         nsDependentCString("x-western"),

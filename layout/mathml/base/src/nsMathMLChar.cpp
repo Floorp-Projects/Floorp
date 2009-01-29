@@ -806,7 +806,7 @@ InitGlobals(nsPresContext* aPresContext)
   // stretchy characters.
   // We just want to iterate over the font-family list using the
   // callback mechanism that nsFont has...
-  nsFont font("", 0, 0, 0, 0, 0);
+  nsFont font("", 0, 0, 0, 0, 0, 0);
   NS_NAMED_LITERAL_CSTRING(defaultKey, "font.mathfont-glyph-tables");
   rv = mathfontProp->GetStringProperty(defaultKey, font.name);
   if (NS_FAILED(rv)) return rv;
