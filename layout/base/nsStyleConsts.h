@@ -408,19 +408,22 @@
 #define NS_STYLE_FLOAT_RIGHT                    2
 
 // See nsStyleFont
-#define NS_STYLE_FONT_STYLE_NORMAL              0
-#define NS_STYLE_FONT_STYLE_ITALIC              1
-#define NS_STYLE_FONT_STYLE_OBLIQUE             2
+// We should eventually stop using the NS_STYLE_* variants here.
+#define NS_STYLE_FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
+#define NS_STYLE_FONT_STYLE_ITALIC              NS_FONT_STYLE_ITALIC
+#define NS_STYLE_FONT_STYLE_OBLIQUE             NS_FONT_STYLE_OBLIQUE
 
 // See nsStyleFont
-#define NS_STYLE_FONT_VARIANT_NORMAL            0
-#define NS_STYLE_FONT_VARIANT_SMALL_CAPS        1
+// We should eventually stop using the NS_STYLE_* variants here.
+#define NS_STYLE_FONT_VARIANT_NORMAL            NS_FONT_VARIANT_NORMAL
+#define NS_STYLE_FONT_VARIANT_SMALL_CAPS        NS_FONT_VARIANT_SMALL_CAPS
 
 // See nsStyleFont
-#define NS_STYLE_FONT_WEIGHT_NORMAL             400
-#define NS_STYLE_FONT_WEIGHT_BOLD               700
-#define NS_STYLE_FONT_WEIGHT_BOLDER             1
-#define NS_STYLE_FONT_WEIGHT_LIGHTER            -1
+// We should eventually stop using the NS_STYLE_* variants here.
+#define NS_STYLE_FONT_WEIGHT_NORMAL             NS_FONT_WEIGHT_NORMAL
+#define NS_STYLE_FONT_WEIGHT_BOLD               NS_FONT_WEIGHT_BOLD
+#define NS_STYLE_FONT_WEIGHT_BOLDER             NS_FONT_WEIGHT_BOLDER
+#define NS_STYLE_FONT_WEIGHT_LIGHTER            NS_FONT_WEIGHT_LIGHTER
 
 // See nsStyleFont
 #define NS_STYLE_FONT_SIZE_XXSMALL              0
