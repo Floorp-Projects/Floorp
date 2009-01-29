@@ -1005,41 +1005,26 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
 
   if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) {
 
-    nsITextControlFrame* textControlFrame = aFrame;
-    nsIFormControlFrame* formControlFrame = textControlFrame;
-    if (!textControlFrame) {
+    nsIFormControlFrame* formControlFrame = aFrame;
+    if (!formControlFrame) {
       // No need to flush here, if there's no frame at this point we
       // don't need to force creation of one just to tell it about this
       // new value.
       formControlFrame = GetFormControlFrame(PR_FALSE);
-
-      if (formControlFrame) {
-        textControlFrame = do_QueryFrame(formControlFrame);
-      }
     }
 
-    // File frames always own the value (if the frame is there).
-    // Text frames have a bit that says whether they own the value.
-    PRBool frameOwnsValue = PR_FALSE;
-    if (textControlFrame) {
-      textControlFrame->OwnsValue(&frameOwnsValue);
-    }
-    // If the frame owns the value, set the value in the frame
-    if (frameOwnsValue) {
+    if (formControlFrame) {
+      // Always set the value in the frame.  If the frame does not own the
+      // value yet (per OwnsValue()), it will turn around and call
+      // TakeTextFrameValue() on us, but will update its display with the new
+      // value if needed.
       formControlFrame->SetFormProperty(
         aUserInput ? nsGkAtoms::userInput : nsGkAtoms::value, aValue);
       return NS_OK;
     }
 
-    // If the frame does not own the value, set mValue
-    if (mValue) {
-      nsMemory::Free(mValue);
-    }
-
-    mValue = ToNewUTF8String(aValue);
-
     SetValueChanged(PR_TRUE);
-    return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return TakeTextFrameValue(aValue);
   }
 
   if (mType == NS_FORM_INPUT_FILE) {
