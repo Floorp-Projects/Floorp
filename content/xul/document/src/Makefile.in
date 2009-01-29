@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  appshell \
 		  util \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS		= nsXULControllers.cpp
