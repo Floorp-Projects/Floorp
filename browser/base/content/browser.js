@@ -1274,25 +1274,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     Components.utils.reportError("Failed to init content pref service:\n" + ex);
   }
 
-#ifdef XP_WIN
-  // For Vista, flip the default download folder pref once from Desktop to Downloads
-  // on new profiles.
-  try {
-    var sysInfo = Cc["@mozilla.org/system-info;1"].
-                  getService(Ci.nsIPropertyBag2);
-    if (parseFloat(sysInfo.getProperty("version")) >= 6 &&
-        !gPrefService.getPrefType("browser.download.dir") &&
-        gPrefService.getIntPref("browser.download.folderList") == 0) {
-      var dnldMgr = Cc["@mozilla.org/download-manager;1"]
-                              .getService(Ci.nsIDownloadManager);
-      gPrefService.setCharPref("browser.download.dir", 
-        dnldMgr.defaultDownloadsDirectory.path);
-      gPrefService.setIntPref("browser.download.folderList", 1);
-    }
-  } catch (ex) {
-  }
-#endif
-
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
     try {
