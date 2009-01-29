@@ -7627,24 +7627,24 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     char y[16];
     DR_state->PrettyUC(aMetrics.width, width);
     DR_state->PrettyUC(aMetrics.height, height);
-    printf("Reflow d=%s,%s ", width, height);
+    printf("Reflow d=%s,%s", width, height);
 
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
-      printf("status=0x%x", aStatus);
+      printf(" status=0x%x", aStatus);
     }
     if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
       DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
       DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
       DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
       DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
-      printf("o=(%s,%s) %s x %s", x, y, width, height);
+      printf(" o=(%s,%s) %s x %s", x, y, width, height);
       if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
         nsRect storedOverflow = aFrame->GetOverflowRect();
         DR_state->PrettyUC(storedOverflow.x, x);
         DR_state->PrettyUC(storedOverflow.y, y);
         DR_state->PrettyUC(storedOverflow.width, width);
         DR_state->PrettyUC(storedOverflow.height, height);
-        printf("sto=(%s,%s) %s x %s", x, y, width, height);
+        printf(" sto=(%s,%s) %s x %s", x, y, width, height);
       }
     }
     printf("\n");
