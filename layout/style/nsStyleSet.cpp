@@ -86,9 +86,9 @@ nsStyleSet::nsStyleSet()
     mRuleWalker(nsnull),
     mDestroyedCount(0),
     mBatching(0),
-    mOldRuleTree(nsnull),
     mInShutdown(PR_FALSE),
     mAuthorStyleDisabled(PR_FALSE),
+    mInReconstruct(PR_FALSE),
     mDirty(0)
 {
 }
@@ -126,7 +126,7 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 nsresult
 nsStyleSet::BeginReconstruct()
 {
-  NS_ASSERTION(!mOldRuleTree, "Unmatched begin/end?");
+  NS_ASSERTION(!mInReconstruct, "Unmatched begin/end?");
   NS_ASSERTION(mRuleTree, "Reconstructing before first construction?");
 
   // Create a new rule tree root
@@ -141,13 +141,19 @@ nsStyleSet::BeginReconstruct()
   }
 
   // Save the old rule tree so we can destroy it later
-  mOldRuleTree = mRuleTree;
+  if (!mOldRuleTrees.AppendElement(mRuleTree)) {
+    delete ruleWalker;
+    newTree->Destroy();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   // Delete mRuleWalker because it holds a reference to the rule tree root
   delete mRuleWalker;
-  // We don't need to clear out mRoots; NotifyStyleContextDestroyed
-  // will, and they're useful in EndReconstruct if they don't get
-  // completely cleared out.
 
+  // We need to keep mRoots so that the rule tree GC will only free the
+  // rule trees that really aren't referenced anymore (which should be
+  // all of them, if there are no bugs in reresolution code).
+
+  mInReconstruct = PR_TRUE;
   mRuleTree = newTree;
   mRuleWalker = ruleWalker;
 
@@ -157,6 +163,8 @@ nsStyleSet::BeginReconstruct()
 void
 nsStyleSet::EndReconstruct()
 {
+  NS_ASSERTION(mInReconstruct, "Unmatched begin/end?");
+  mInReconstruct = PR_FALSE;
 #ifdef DEBUG
   for (PRInt32 i = mRoots.Length() - 1; i >= 0; --i) {
     nsRuleNode *n = mRoots[i]->GetRuleNode();
@@ -170,16 +178,13 @@ nsStyleSet::EndReconstruct()
     // mRoots; we only need to check the rule nodes of mRoots
     // themselves.
 
-    NS_ABORT_IF_FALSE(n == mRuleTree, "style context has old rule node");
+    NS_ASSERTION(n == mRuleTree, "style context has old rule node");
   }
 #endif
-  NS_ASSERTION(mOldRuleTree, "Unmatched begin/end?");
-  // Reset the destroyed count; it's no longer valid
-  mDestroyedCount = 0;
-  // Destroy the old rule tree (all the associated style contexts should have
-  // been destroyed by the caller beforehand)
-  mOldRuleTree->Destroy();
-  mOldRuleTree = nsnull;
+  // This *should* destroy the only element of mOldRuleTrees, but in
+  // case of some bugs (which would trigger the above assertions), it
+  // won't.
+  GCRuleTrees();
 }
 
 void
@@ -875,6 +880,15 @@ nsStyleSet::Shutdown(nsPresContext* aPresContext)
   mRuleTree->Destroy();
   mRuleTree = nsnull;
 
+  // We can have old rule trees either because:
+  //   (1) we failed the assertions in EndReconstruct, or
+  //   (2) we're shutting down within a reconstruct (see bug 462392)
+  for (PRUint32 i = mOldRuleTrees.Length(); i > 0; ) {
+    --i;
+    mOldRuleTrees[i]->Destroy();
+  }
+  mOldRuleTrees.Clear();
+
   mDefaultStyleData.Destroy(0, aPresContext);
 }
 
@@ -895,27 +909,43 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     mRoots.RemoveElement(aStyleContext);
   }
 
-  if (mOldRuleTree)
+  if (mInReconstruct)
     return;
 
   if (++mDestroyedCount == kGCInterval) {
-    mDestroyedCount = 0;
+    GCRuleTrees();
+  }
+}
 
-    // Mark the style context tree by marking all roots, which will mark
-    // all descendants.  This will reach style contexts in the
-    // undisplayed map and "additional style contexts" since they are
-    // descendants of the root.
-    for (PRInt32 i = mRoots.Length() - 1; i >= 0; --i) {
-      mRoots[i]->Mark();
-    }
+void
+nsStyleSet::GCRuleTrees()
+{
+  mDestroyedCount = 0;
 
-    // Sweep the rule tree.
+  // Mark the style context tree by marking all style contexts which
+  // have no parent, which will mark all descendants.  This will reach
+  // style contexts in the undisplayed map and "additional style
+  // contexts" since they are descendants of the roots.
+  for (PRInt32 i = mRoots.Length() - 1; i >= 0; --i) {
+    mRoots[i]->Mark();
+  }
+
+  // Sweep the rule tree.
 #ifdef DEBUG
-    PRBool deleted =
+  PRBool deleted =
 #endif
-      mRuleTree->Sweep();
+    mRuleTree->Sweep();
+  NS_ASSERTION(!deleted, "Root node must not be gc'd");
 
-    NS_ASSERTION(!deleted, "Root node must not be gc'd");
+  // Sweep the old rule trees.
+  for (PRUint32 i = mOldRuleTrees.Length(); i > 0; ) {
+    --i;
+    if (mOldRuleTrees[i]->Sweep()) {
+      // It was deleted, as it should be.
+      mOldRuleTrees.RemoveElementAt(i);
+    } else {
+      NS_NOTREACHED("old rule tree still referenced");
+    }
   }
 }
 
