@@ -1118,9 +1118,16 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsStyleChangeList *aChangeList, 
                                       nsChangeHint       aMinChange)
 {
-  NS_ASSERTION(aFrame->GetContent() ||
-               (!aFrame->GetParent() && !aParentContent),
-               "frame must have content (unless viewport)");
+  // It would be nice if we could make stronger assertions here; they
+  // would let us simplify the ?: expressions below setting |content|
+  // and |pseudoContent| in sensible ways as well as making what
+  // |localContent|, |content|, and |pseudoContent| mean make more
+  // sense.  However, we can't, because of frame trees like the one in
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=472353#c14 .  Once we
+  // fix bug 242277 we should be able to make this make more sense.
+  NS_ASSERTION(aFrame->GetContent() || !aParentContent ||
+               !aParentContent->GetParent(),
+               "frame must have content (unless at the top of the tree)");
   // XXXldb get new context from prev-in-flow if possible, to avoid
   // duplication.  (Or should we just let |GetContext| handle that?)
   // Getting the hint would be nice too, but that's harder.
@@ -1146,7 +1153,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // |content| is the node that we used for rule matching of
     // normal elements (not pseudo-elements) and for which we generate
     // framechange hints if we need them.
-    // XXXldb Why does it make sense to use aParentContent
+    // XXXldb Why does it make sense to use aParentContent?  (See
+    // comment above assertion at start of function.)
     nsIContent* content = localContent ? localContent : aParentContent;
 
     nsStyleContext* parentContext;
@@ -1195,6 +1203,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     else if (pseudoTag) {
       // XXXldb This choice of pseudoContent seems incorrect for anon
       // boxes and perhaps other cases.
+      // See also the comment above the assertion at the start of this
+      // function.
       nsIContent* pseudoContent =
           aParentContent ? aParentContent : localContent;
       if (pseudoTag == nsCSSPseudoElements::before ||
