@@ -46,14 +46,12 @@
 #include "nsQueryFrame.h"
 #include "nsIContent.h"
 
-class nsPresContext;
 class nsIFrame;
 template <class T> class nsTArray;
 
 /**
  * Any source for anonymous content can implement this interface to provide it.
- * HTML frames like nsFileControlFrame currently use this as well as XUL frames
- * like nsScrollbarFrame and nsSliderFrame.
+ * HTML frames like nsFileControlFrame currently use this.
  *
  * @see nsCSSFrameConstructor
  */
@@ -80,12 +78,6 @@ public:
    * is created.
    */
   virtual nsIFrame* CreateFrameFor(nsIContent* aContent) { return nsnull; }
-
-  /**
-   * This gets called after the frames for the anonymous content have been
-   * created and added to the frame tree. By default it does nothing.
-   */
-  virtual void PostCreateFrames() {}
 };
 
 #endif

@@ -119,8 +119,6 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  virtual nsIFrame* CreateFrameFor(nsIContent* aContent);
-  virtual void PostCreateFrames();
 
   // Utility methods to set current widget state
 
@@ -139,7 +137,7 @@ public:
 
 //==== END NSIFORMCONTROLFRAME
 
-//==== NSIGFXTEXTCONTROLFRAME2
+//==== NSITEXTCONTROLFRAME
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor);
   NS_IMETHOD    OwnsValue(PRBool* aOwnsValue);
@@ -157,7 +155,7 @@ public:
 
   nsresult GetPhonetic(nsAString& aPhonetic);
 
-//==== END NSIGFXTEXTCONTROLFRAME2
+//==== END NSITEXTCONTROLFRAME
 //==== OVERLOAD of nsIFrame
   virtual nsIAtom* GetType() const;
 
@@ -195,8 +193,6 @@ public: //for methods who access nsTextControlFrame directly
   void SetValueChanged(PRBool aValueChanged);
   /** Called when the frame is focused, to remember the value for onChange. */
   nsresult InitFocusedValue();
-  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
-  nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
   void SetFireChangeEventState(PRBool aNewState)
   {
@@ -216,6 +212,34 @@ public: //for methods who access nsTextControlFrame directly
   void MaybeEndSecureKeyboardInput();
 
 protected:
+  class EditorInitializer;
+  friend class EditorInitializer;
+
+  class EditorInitializer : public nsRunnable {
+  public:
+    EditorInitializer(nsTextControlFrame* aFrame) :
+      mWeakFrame(aFrame),
+      mFrame(aFrame) {}
+
+    NS_IMETHOD Run() {
+      if (mWeakFrame) {
+        mFrame->DelayedEditorInit();
+      }
+      return NS_OK;
+    }
+
+  private:
+    nsWeakFrame mWeakFrame;
+    nsTextControlFrame* mFrame;
+  };
+
+  // Init our editor and then make sure to focus our text input
+  // listener if our content node has focus.
+  void DelayedEditorInit();
+
+  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
+  nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
+
   /**
    * Find out whether this control is scrollable (i.e. if it is not a single
    * line text control)
@@ -303,10 +327,6 @@ private:
   nsCOMPtr<nsFrameSelection> mFrameSel;
   nsTextInputListener* mTextListener;
   nsString mFocusedValue;
-
-#ifdef DEBUG
-  PRBool mCreateFrameForCalled;
-#endif
 };
 
 #endif
