@@ -28,7 +28,7 @@ var gGotOnError = false;
 
 function manifestUpdated()
 {
-  applicationCache.add("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
+  applicationCache.mozAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
   OfflineTest.waitForAdd("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", dynamicAdded);
 }
 
