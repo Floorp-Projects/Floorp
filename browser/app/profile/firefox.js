@@ -254,7 +254,7 @@ pref("browser.urlbar.default.behavior", 0);
 pref("browser.download.saveLinkAsFilenameTimeout", 1000);
 
 pref("browser.download.useDownloadDir", true);
-pref("browser.download.folderList", 0);
+pref("browser.download.folderList", 1);
 pref("browser.download.manager.showAlertOnComplete", true);
 pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);
