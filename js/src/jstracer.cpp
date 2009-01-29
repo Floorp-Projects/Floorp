@@ -4228,6 +4228,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
                             !cx->fp->imacpc, stdout);)                        \
         flag = tr->record_##x();                                              \
         if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||        \
+            x == JSOP_GETELEM || x == JSOP_SETELEM || x== JSOP_INITELEM ||    \
             JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                          \
             JSOP_IS_EQUALITY(x)) {                                            \
             goto imacro;                                                      \
@@ -6809,6 +6810,69 @@ TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
     return record_SetPropHit(entry, sprop);
 }
 
+/* Functions used by JSOP_GETELEM. */
+
+static JSBool
+GetProperty(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    jsid id;
+
+    JS_ASSERT(argc == 1);
+    argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_STRING(argv[0]));
+    if (!js_ValueToStringId(cx, argv[0], &id))
+        return JS_FALSE;
+    argv[0] = ID_TO_VALUE(id);
+    return OBJ_GET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &JS_RVAL(cx, vp));
+}
+
+static jsval FASTCALL
+GetProperty_tn(JSContext *cx, JSObject *obj, JSString *name)
+{
+    jsid id;
+    jsval v;
+
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), &id) ||
+        !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
+        return JSVAL_ERROR_COOKIE;
+    }
+    return v;
+}
+
+static JSBool
+GetElement(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    jsid id;
+
+    JS_ASSERT(argc == 1);
+    argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_NUMBER(argv[0]));
+    if (!JS_ValueToId(cx, argv[0], &id))
+        return JS_FALSE;
+    argv[0] = ID_TO_VALUE(id);
+    return OBJ_GET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &JS_RVAL(cx, vp));
+}
+
+static jsval FASTCALL
+GetElement_tn(JSContext* cx, JSObject* obj, int32 index)
+{
+    jsval v;
+    jsid id;
+
+    if (!js_Int32ToId(cx, index, &id))
+        return JSVAL_ERROR_COOKIE;
+    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+        return JSVAL_ERROR_COOKIE;
+    return v;
+}
+
+JS_DEFINE_TRCINFO_1(GetProperty,
+    (3, (static, JSVAL_FAIL,    GetProperty_tn, CONTEXT, THIS, STRING,          0, 0)))
+JS_DEFINE_TRCINFO_1(GetElement,
+    (3, (extern, JSVAL_FAIL,    GetElement_tn,  CONTEXT, THIS, INT32,           0, 0)))
+
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETELEM()
 {
@@ -6853,12 +6917,7 @@ TraceRecorder::record_JSOP_GETELEM()
             if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
                 return false;
         }
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
-        v_ins = lir->insCall(&js_Any_getprop_ci, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
-        unbox_jsval(v, v_ins);
-        set(&lval, v_ins);
-        return true;
+        return call_imacro(getelem_imacros.getprop);
     }
 
     /* At this point we expect a whole number or we bail. */
@@ -6870,17 +6929,11 @@ TraceRecorder::record_JSOP_GETELEM()
     /* Accessing an object using integer index but not a dense array. */
     if (!OBJ_IS_DENSE_ARRAY(cx, obj)) {
         idx_ins = makeNumberInt32(idx_ins);
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
         if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
             return false;
-        idx = ID_TO_VALUE(id);
         if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
             return false;
-        LIns* v_ins = lir->insCall(&js_Any_getelem_ci, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
-        unbox_jsval(v, v_ins);
-        set(&lval, v_ins);
-        return true;
+        return call_imacro(getelem_imacros.getelem);
     }
 
     jsval* vp;
@@ -6890,6 +6943,71 @@ TraceRecorder::record_JSOP_GETELEM()
     set(&lval, v_ins);
     return true;
 }
+
+/* Functions used by JSOP_SETELEM */
+
+static JSBool
+SetProperty(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    jsid id;
+
+    JS_ASSERT(argc == 2);
+    argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_STRING(argv[0]));
+    if (!js_ValueToStringId(cx, argv[0], &id))
+        return JS_FALSE;
+    argv[0] = ID_TO_VALUE(id);
+    if (!OBJ_SET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &argv[1]))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static int32 FASTCALL
+SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
+{
+    jsid id;
+
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id) ||
+        !OBJ_SET_PROPERTY(cx, obj, id, &v)) {
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    }
+    return JSVAL_TRUE;
+}
+
+static JSBool
+SetElement(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    jsid id;
+
+    JS_ASSERT(argc == 2);
+    argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_NUMBER(argv[0]));
+    if (!JS_ValueToId(cx, argv[0], &id))
+        return JS_FALSE;
+    argv[0] = ID_TO_VALUE(id);
+    if (!OBJ_SET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &argv[1]))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static int32 FASTCALL
+SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
+{
+    jsid id;
+
+    if (!js_Int32ToId(cx, index, &id) || !OBJ_SET_PROPERTY(cx, obj, id, &v))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    return JSVAL_TRUE;
+}
+
+JS_DEFINE_TRCINFO_1(SetProperty,
+    (4, (extern, BOOL_FAIL,     SetProperty_tn, CONTEXT, THIS, STRING, JSVAL,   0, 0)))
+JS_DEFINE_TRCINFO_1(SetElement,
+    (4, (extern, BOOL_FAIL,     SetElement_tn,  CONTEXT, THIS, INT32, JSVAL,    0, 0)))
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_SETELEM()
@@ -6918,35 +7036,36 @@ TraceRecorder::record_JSOP_SETELEM()
         idx = ID_TO_VALUE(id);
         if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, setProperty), NULL))
             return false;
-        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
-        LIns* ok_ins = lir->insCall(&js_Any_setprop_ci, args);
-        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);    
-    } else if (JSVAL_IS_INT(idx)) {
+        return call_imacro(setelem_imacros.setprop);
+    }
+    if (JSVAL_IS_INT(idx)) {
         if (JSVAL_TO_INT(idx) < 0)
             ABORT_TRACE("negative JSOP_SETELEM index");
         idx_ins = makeNumberInt32(idx_ins);
-        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
-        LIns* res_ins;
-        if (guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
-            res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
-        } else {
+
+        if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
             if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
                 return false;
             idx = ID_TO_VALUE(id);
             if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, setProperty), NULL))
                 return false;
-            res_ins = lir->insCall(&js_Any_setelem_ci, args);
+            jsbytecode* pc = cx->fp->regs->pc;
+            return call_imacro((*pc == JSOP_INITELEM)
+                               ? initelem_imacros.initelem
+                               : setelem_imacros.setelem);
         }
+
+        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
+        LIns* res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
         guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
-    } else {
-        ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
+
+        jsbytecode* pc = cx->fp->regs->pc;
+        if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
+            set(&lval, v_ins);
+
+        return true;
     }
-
-    jsbytecode* pc = cx->fp->regs->pc;
-    if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
-        set(&lval, v_ins);
-
-    return true;
+    ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
 }
 
 JS_REQUIRES_STACK bool
@@ -8811,7 +8930,11 @@ static const struct BuiltinFunctionInfo {
     int nargs;
 } builtinFunctionInfo[JSBUILTIN_LIMIT] = {
     {ObjectToIterator_trcinfo,   1},
-    {CallIteratorNext_trcinfo,   0}
+    {CallIteratorNext_trcinfo,   0},
+    {GetProperty_trcinfo,        1},
+    {GetElement_trcinfo,         1},
+    {SetProperty_trcinfo,        2},
+    {SetElement_trcinfo,         2}
 };
 
 JSObject *
@@ -9027,6 +9150,9 @@ InitIMacroCode()
 
     imacro_code[JSOP_ITER] = (jsbytecode*)&iter_imacros - 1;
     imacro_code[JSOP_NEXTITER] = (jsbytecode*)&nextiter_imacros - 1;
+    imacro_code[JSOP_GETELEM] = (jsbytecode*)&getelem_imacros - 1;
+    imacro_code[JSOP_SETELEM] = (jsbytecode*)&setelem_imacros - 1;
+    imacro_code[JSOP_INITELEM] = (jsbytecode*)&initelem_imacros - 1;
     imacro_code[JSOP_APPLY] = (jsbytecode*)&apply_imacros - 1;
 
     imacro_code[JSOP_NEG] = (jsbytecode*)&unary_imacros - 1;
