@@ -187,7 +187,7 @@ failEvent: function(e)
 },
 
 // The offline API as specified has no way to watch the load of a resource
-// added with applicationCache.add().
+// added with applicationCache.mozAdd().
 waitForAdd: function(url, onFinished) {
   // Check every half second for ten seconds.
   var numChecks = 20;
