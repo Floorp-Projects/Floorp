@@ -51,6 +51,7 @@
 #include "gfxSkipChars.h"
 #include "gfxRect.h"
 #include "nsExpirationTracker.h"
+#include "gfxFontConstants.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -64,12 +65,14 @@ class gfxFontGroup;
 class gfxUserFontSet;
 class gfxUserFontData;
 
-#define FONT_STYLE_NORMAL              0
-#define FONT_STYLE_ITALIC              1
-#define FONT_STYLE_OBLIQUE             2
+// We should eliminate these synonyms when it won't cause many merge conflicts.
+#define FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
+#define FONT_STYLE_ITALIC              NS_FONT_STYLE_ITALIC
+#define FONT_STYLE_OBLIQUE             NS_FONT_STYLE_OBLIQUE
 
-#define FONT_WEIGHT_NORMAL             400
-#define FONT_WEIGHT_BOLD               700
+// We should eliminate these synonyms when it won't cause many merge conflicts.
+#define FONT_WEIGHT_NORMAL             NS_FONT_WEIGHT_NORMAL
+#define FONT_WEIGHT_BOLD               NS_FONT_WEIGHT_BOLD
 
 #define FONT_MAX_SIZE                  2000.0
 
