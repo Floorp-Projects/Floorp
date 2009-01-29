@@ -246,9 +246,6 @@ class nsStyleSet
   // Returns false on out-of-memory.
   PRBool BuildDefaultStyleData(nsPresContext* aPresContext);
 
-  // Run mark-and-sweep GC on mRuleTree and mOldRuleTrees, based on mRoots.
-  void GCRuleTrees();
-
   // Update the rule processor list after a change to the style sheet list.
   nsresult GatherRuleProcessors(sheetType aType);
 
@@ -320,14 +317,11 @@ class nsStyleSet
 
   PRUint16 mBatching;
 
-  // Old rule trees, which should only be non-empty between
-  // BeginReconstruct and EndReconstruct, but in case of bugs that cause
-  // style contexts to exist too long, may last longer.
-  nsTArray<nsRuleNode*> mOldRuleTrees;
+  nsRuleNode* mOldRuleTree; // Old rule tree; used during tree reconstruction
+                            // (See BeginReconstruct and EndReconstruct)
 
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
-  unsigned mInReconstruct : 1;
   unsigned mDirty : 7;  // one dirty bit is used per sheet type
 
 };
