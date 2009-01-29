@@ -55,7 +55,7 @@ native nsPMPrintSession(PMPrintSession);
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(CD2A0A4F-0DE9-4c51-9232-42668F559F94)]
+[scriptable, uuid(3D3CF688-D988-4319-9CA2-1D7D20A116D8)]
 
 interface nsIPrintSettingsX : nsISupports
 {
@@ -87,4 +87,13 @@ interface nsIPrintSettingsX : nsISupports
    */
   [noscript] void readPageFormatFromPrefs();
   [noscript] void writePageFormatToPrefs();
+
+  /**
+   * cleanUpAfterDialog
+   *
+   * After bringing up Carbon print dialogs, clean up menus.
+   * See bug 425844 for details.
+   */
+  [noscript] void cleanUpAfterCarbonDialog();
+  
 };
