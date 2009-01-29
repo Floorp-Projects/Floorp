@@ -630,7 +630,14 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       [mWindow _setWindowNumber:-1];
       [mWindow _setWindowNumber:windowNumber];
       [mWindow setAcceptsMouseMovedEvents:YES];
+      // For reasons that aren't yet clear, calls to [NSWindow orderFront:] or
+      // [NSWindow makeKeyAndOrderFront:] can sometimes trigger "Error (1000)
+      // creating CGSWindow", which in turn triggers an internal inconsistency
+      // NSException.  These errors shouldn't be fatal.  So we need to wrap
+      // calls to ...orderFront: in LOGONLY blocks.  See bmo bug 470864.
+      NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
       [mWindow orderFront:nil];
+      NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has opened.  This is how the OS knows to
@@ -652,7 +659,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     }
     else {
       [mWindow setAcceptsMouseMovedEvents:YES];
+      NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
       [mWindow makeKeyAndOrderFront:nil];
+      NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
     }
   }
@@ -717,7 +726,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         else {
           // Sheet, that was hard.  No more siblings or parents, going back
           // to a real window.
+          NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
           [sheetParent makeKeyAndOrderFront:nil];
+          NS_OBJC_END_TRY_LOGONLY_BLOCK;
           [sheetParent setAcceptsMouseMovedEvents:YES];
         }
         SendSetZLevelEvent();
