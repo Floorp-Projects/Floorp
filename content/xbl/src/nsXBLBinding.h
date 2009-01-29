@@ -144,6 +144,8 @@ public:
 
   nsInsertionPointList* GetExistingInsertionPointsFor(nsIContent* aParent);
 
+  // XXXbz this aIndex has nothing to do with an index into the child
+  // list of the insertion parent or anything.
   nsIContent* GetInsertionPoint(nsIContent* aChild, PRUint32* aIndex);
 
   nsIContent* GetSingleInsertionPoint(PRUint32* aIndex,

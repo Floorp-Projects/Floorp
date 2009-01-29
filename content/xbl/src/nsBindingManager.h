@@ -155,6 +155,12 @@ public:
    * anonymous content tree. Specifically, aChild should be inserted
    * beneath aResult at the index specified by aIndex.
    */
+  // XXXbz That's false.  The aIndex doesn't seem to accurately reflect
+  // anything resembling reality in terms of inserting content.  It's really
+  // only used to tell apart two different insertion points with the same
+  // insertion parent when managing our internal data structures.  We really
+  // shouldn't be handing it out in our public API, since it's not useful to
+  // anyone.
   nsIContent* GetInsertionPoint(nsIContent* aParent,
                                 nsIContent* aChild, PRUint32* aIndex);
 

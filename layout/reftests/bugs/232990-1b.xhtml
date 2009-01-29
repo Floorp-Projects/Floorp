@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>display test</title>
+    <bindings xmlns="http://www.mozilla.org/xbl"
+              xmlns:pp="prettyprint"
+              xmlns:html="http://www.w3.org/1999/xhtml">
+
+      <binding id="expander">
+        <content><pp:float>-</pp:float><children/></content>
+      </binding>
+    </bindings>
+
+    <style type="text/css">
+<![CDATA[
+@namespace pp url("prettyprint");
+pp|expander-box,
+pp|pre-content {
+  display: block;
+}
+
+pp|expander-box[collapsed] > pp|float,
+pp|expander-box[collapsed] > pp|pre-content {
+  display: inline;
+  float: none;
+}
+
+pp|expander-box[xbl] {
+  -moz-binding: url(#expander);
+}
+
+pp|float {
+  float: left;
+}
+    ]]></style>
+    <script>
+<![CDATA[
+var target;
+function onLoad() {
+var res = document.evaluate("descendant::pp:expander-box",
+                    document.documentElement,
+                    function(aPref){return "prettyprint";},
+                    0, null);
+target = res.iterateNext();
+toggle();
+}
+
+function toggle() {
+  target.setAttribute("collapsed", "collapsed");
+}
+    ]]></script>
+  </head>
+
+  <body onload="onLoad()">
+    <div>
+<pp:content xmlns:pp="prettyprint">
+  <pp:expander-box xbl="yes">
+    <pp:pre-content>pre</pp:pre-content>
+  </pp:expander-box>
+</pp:content>
+    </div>
+  </body>
+</html>
