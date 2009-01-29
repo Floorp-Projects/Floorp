@@ -276,9 +276,6 @@ pref("browser.search.defaultenginename",      "chrome://browser-region/locale/re
 // disable logging for the search service by default
 pref("browser.search.log", false);
 
-// serialize search plugin XML
-pref("browser.search.cache.enabled", true);
-
 // Ordering of Search Engines in the Engine list. 
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
