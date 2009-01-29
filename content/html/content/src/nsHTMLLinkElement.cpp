@@ -164,7 +164,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLinkElement)
 NS_IMETHODIMP
 nsHTMLLinkElement::GetDisabled(PRBool* aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
+  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
   nsresult result = NS_OK;
 
   if (ss) {
@@ -179,7 +179,7 @@ nsHTMLLinkElement::GetDisabled(PRBool* aDisabled)
 NS_IMETHODIMP 
 nsHTMLLinkElement::SetDisabled(PRBool aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
+  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
   nsresult result = NS_OK;
 
   if (ss) {
@@ -303,7 +303,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (NS_SUCCEEDED(rv)) {
     PRBool dropSheet = PR_FALSE;
     if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel &&
-        mStyleSheet) {
+        GetStyleSheet()) {
       nsAutoTArray<nsString, 4> linkTypes;
       nsStyleLinkElement::ParseLinkTypes(aValue, linkTypes);
       dropSheet = !linkTypes.Contains(NS_LITERAL_STRING("stylesheet"));

@@ -156,8 +156,8 @@ nsHTMLStyleElement::GetDisabled(PRBool* aDisabled)
 {
   nsresult result = NS_OK;
   
-  if (mStyleSheet) {
-    nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
+  if (GetStyleSheet()) {
+    nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
 
     if (ss) {
       result = ss->GetDisabled(aDisabled);
@@ -175,8 +175,8 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
 {
   nsresult result = NS_OK;
   
-  if (mStyleSheet) {
-    nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
+  if (GetStyleSheet()) {
+    nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
 
     if (ss) {
       result = ss->SetDisabled(aDisabled);
