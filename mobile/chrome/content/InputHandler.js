@@ -203,7 +203,7 @@ KineticPanningModule.prototype = {
 
     // grab all events until we stop the drag
     this._owner.grab(this);
-
+    Browser.canvasBrowser.prepareForPanning()
     ws.dragStart(sX, sY);
 
     // set the kinetic start time
@@ -215,6 +215,7 @@ KineticPanningModule.prototype = {
     if (!this._startKinetic(sX, sY)) {
       this._endKinetic(sX, sY);
     }
+    Browser.canvasBrowser.prepareForPanning()
   },
 
   _dragMove: function(sX, sY) {
