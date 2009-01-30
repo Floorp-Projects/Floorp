@@ -253,7 +253,7 @@ function SignonClearFilter() {
   // Restore selection
   if (singleSelection) {
     signonsTreeView.selection.clearSelection();
-    for (let i = 0; i < signonsTreeView._lastSelectedRanges.length; ++i) {
+    for (i = 0; i < signonsTreeView._lastSelectedRanges.length; ++i) {
       var range = signonsTreeView._lastSelectedRanges[i];
       signonsTreeView.selection.rangedSelect(range.min, range.max, true);
     }
@@ -321,9 +321,7 @@ function _filterPasswords()
   signonsTreeView._filterSet = newFilterSet;
 
   // Clear the display
-  let oldRowCount = signonsTreeView.rowCount;
-  signonsTreeView.rowCount = 0;
-  signonsTree.treeBoxObject.rowCountChanged(0, -oldRowCount);
+  signonsTree.treeBoxObject.rowCountChanged(0, -signonsTreeView.rowCount);
   // Set up the filtered display
   signonsTreeView.rowCount = signonsTreeView._filterSet.length;
   signonsTree.treeBoxObject.rowCountChanged(0, signonsTreeView.rowCount);
