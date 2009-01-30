@@ -12,3 +12,6 @@ The patch from Annodex trac ticket 421 is applied to fix bug 459938:
 
 The patch from Bug 468327 (yuv_disable_optimized.patch) is applied
 to disable optimized yuv to rgb routines.
+
+The patch from Bug 464007 (bug464007.patch) is applied
+to fix oggplay issues.

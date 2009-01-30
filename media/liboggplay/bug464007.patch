@@ -1,0 +1,18 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/liboggplay/oggplay.c
+index 9a1c8b8..250064d 100644
+--- a/media/liboggplay/src/liboggplay/oggplay.c
++++ b/media/liboggplay/src/liboggplay/oggplay.c
+@@ -522,9 +522,11 @@ read_more_data:
+       }
+ 
+       /*
+-       * ensure all tracks have their final data packet set to end_of_stream
++       * ensure all tracks have their final data packet set to end_of_stream.
++       * But skip doing this if we're shutting down --- me->buffer may not
++       * be in a safe state.
+        */
+-      if (me->buffer != NULL) {
++      if (me->buffer != NULL && !me->shutdown) {
+         oggplay_buffer_set_last_data(me, me->buffer);
+       }
+ 
