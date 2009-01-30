@@ -311,9 +311,12 @@ function queryData(obj) {
   this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
   this.parentFolder = obj.parentFolder ? obj.parentFolder : bmsvc.placesRoot;
   this.feedURI = obj.feedURI ? obj.feedURI : "";
-  this.bmIndex = obj.bmIndex ? obj.bmIndex : bmsvc.DEFAULT_INDEX;
+  this.index = obj.index ? obj.index : bmsvc.DEFAULT_INDEX;
   this.isFolder = obj.isFolder ? obj.isFolder : false;
   this.contractId = obj.contractId ? obj.contractId : "";
+  this.lastModified = obj.lastModified ? obj.lastModified : today;
+  this.dateAdded = obj.dateAdded ? obj.dateAdded : today;
+  this.keyword = obj.keyword ? obj.keyword : "";
 
   // And now, the attribute for whether or not this object should appear in the
   // resulting query
@@ -324,15 +327,16 @@ function queryData(obj) {
 queryData.prototype = { }
 
 /**
- * Helper function to compare an array of query objects with a result set
- * NOTE: It assumes the array of query objects contains the SAME SORT as the
- *       result set and only checks the URI and title of the results.
- *       For deeper checks, you'll need to write your own method.
+ * Helper function to compare an array of query objects with a result set.
+ * It assumes the array of query objects contains the SAME SORT as the result
+ * set.  It checks the the uri, title, time, and bookmarkIndex properties of
+ * the results, where appropriate.
  */
 function compareArrayToResult(aArray, aRoot) {
   LOG("Comparing Array to Results");
 
-  if (!aRoot.containerOpen)
+  var wasOpen = aRoot.containerOpen;
+  if (!wasOpen)
     aRoot.containerOpen = true;
 
   // check expected number of results against actual
@@ -340,16 +344,26 @@ function compareArrayToResult(aArray, aRoot) {
   do_check_eq(expectedResultCount, aRoot.childCount);
 
   var inQueryIndex = 0;
-  for (var i=0; i < aArray.length; i++) {
+  for (var i = 0; i < aArray.length; i++) {
     if (aArray[i].isInQuery) {
       var child = aRoot.getChild(inQueryIndex);
       LOG("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
       LOG("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
-      //do_check_eq(aArray[i].uri, child.uri);
-      //do_check_eq(aArray[i].title, child.title);
+      if (!aArray[i].isFolder)
+        do_check_eq(aArray[i].uri, child.uri);
+      do_check_eq(aArray[i].title, child.title);
+      if (aArray[i].hasOwnProperty("lastVisit"))
+        do_check_eq(aArray[i].lastVisit, child.time);
+      if (aArray[i].hasOwnProperty("index") &&
+          aArray[i].index != bmsvc.DEFAULT_INDEX)
+        do_check_eq(aArray[i].index, child.bookmarkIndex);
+
       inQueryIndex++;
     }
   }
+
+  if (!wasOpen)
+    aRoot.containerOpen = false;
   LOG("Comparing Array to Results passes");
 }
 
