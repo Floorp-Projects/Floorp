@@ -40,11 +40,11 @@
 
 *|*:root {
   background-color: white;
+  color: black;
 }
 #viewsource {
   font-family: -moz-fixed;
   font-weight: normal;
-  color: black;
   white-space: pre;
 }
 #viewsource.wrap {
