@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	class="reftest-wait">
+
+<hbox style="display: none">
+  <bindings id="testBindings" xmlns="http://www.mozilla.org/xbl"
+	    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+    <binding id="testBinding" >
+      <content>
+	<xul:label value="anon label"/>
+	<children/>
+      </content>
+    </binding>
+  </bindings>
+</hbox>
+<script>
+<![CDATA[
+var cont;
+
+window.onload = function() {
+  const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  cont = document.getElementById("container");
+
+  for(var i=0; i<2; i++) {
+    var item = document.createElementNS(XUL_NS, "button");
+    cont.appendChild(item);
+    item.label = i;
+  }
+
+  document.documentElement.getBoundingClientRect();
+
+  var item = cont.firstChild;
+  //alert(item.label);
+  cont.insertBefore(item.nextSibling, item);
+  document.documentElement.removeAttribute("class");
+}
+]]>
+</script>
+
+<hbox id="container" style="-moz-binding: url('#testBinding');"/>
+
+</window>
