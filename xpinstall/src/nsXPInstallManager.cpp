@@ -116,6 +116,7 @@ nsXPInstallManager::nsXPInstallManager()
 
 nsXPInstallManager::~nsXPInstallManager()
 {
+    NS_ASSERT_OWNINGTHREAD(nsXPInstallManager);
     NS_ASSERTION(!mTriggers, "Shutdown not called, triggers still alive");
 }
 
@@ -136,8 +137,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPInstallManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsXPInstallManager)
-NS_IMPL_RELEASE(nsXPInstallManager)
+NS_IMPL_THREADSAFE_ADDREF(nsXPInstallManager)
+NS_IMPL_THREADSAFE_RELEASE(nsXPInstallManager)
 
 NS_IMETHODIMP
 nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs,
