@@ -86,7 +86,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
       r1 = r1->GetParent();
     while (r2->GetParent())
       r2 = r2->GetParent();
-    NS_ABORT_IF_FALSE(r1 == r2, "must be in the same rule tree as parent");
+    NS_ASSERTION(r1 == r2, "must be in the same rule tree as parent");
 #endif
   }
 
