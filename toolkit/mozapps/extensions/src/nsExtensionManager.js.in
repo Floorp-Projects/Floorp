@@ -4089,10 +4089,8 @@ ExtensionManager.prototype = {
 
     // If there are no compatibility checks running and no downloads in
     // progress then the install operations are complete.
-    if (this._compatibilityCheckCount == 0 && this._transactions.length == 0) {
-      for (var i = 0; i < this._installListeners.length; ++i)
-        this._installListeners[i].onInstallsCompleted();
-    }
+    if (this._compatibilityCheckCount == 0 && this._transactions.length == 0)
+      this._callInstallListeners("onInstallsCompleted");
   },
 
   /**
@@ -4300,8 +4298,7 @@ ExtensionManager.prototype = {
         this._xpi             = xpiFile;
         this._installManifest = installManifest;
 
-        for (var i = 0; i < em._installListeners.length; ++i)
-          em._installListeners[i].onCompatibilityCheckStarted(item);
+        em._callInstallListeners("onCompatibilityCheckStarted", item);
         em._compatibilityCheckCount++;
         em.update([item], 1, Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
       },
@@ -4343,8 +4340,7 @@ ExtensionManager.prototype = {
         em.datasource.removeDownload(this._xpi.path);
         LOG("Version Check Phone Home Completed");
 
-        for (var i = 0; i < em._installListeners.length; ++i)
-          em._installListeners[i].onCompatibilityCheckEnded(addon, status);
+        em._callInstallListeners("onCompatibilityCheckEnded", addon, status);
 
         // Only compatibility updates (e.g. STATUS_VERSIONINFO) are currently
         // supported
@@ -4389,9 +4385,8 @@ ExtensionManager.prototype = {
               BundleManager.appName + " " + gApp.version + ", Toolkit " +
               gApp.platformVersion + ". Remote compatibility check did not " +
               "resolve this.");
-          
-          for (var i = 0; i < em._installListeners.length; ++i)
-            em._installListeners[i].onInstallEnded(addon, INSTALLERROR_INCOMPATIBLE_VERSION);
+
+          em._callInstallListeners("onInstallEnded", addon, INSTALLERROR_INCOMPATIBLE_VERSION);
 
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
@@ -4400,10 +4395,8 @@ ExtensionManager.prototype = {
         em._compatibilityCheckCount--;
         // If there are no more compatibility checks running and no downloads in
         // progress then the install operations are complete.
-        if (em._compatibilityCheckCount == 0 && em._transactions.length == 0) {
-          for (var i = 0; i < em._installListeners.length; ++i)
-            em._installListeners[i].onInstallsCompleted();
-        }
+        if (em._compatibilityCheckCount == 0 && em._transactions.length == 0)
+          em._callInstallListeners("onInstallsCompleted");
       },
 
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonUpdateCheckListener])
@@ -4420,8 +4413,7 @@ ExtensionManager.prototype = {
                            aInstallLocationKey, "", "", "",
                            getURIFromFile(aXPIFile).spec,
                            "", "", "", "", 0, gApp.id);
-      for (var i = 0; i < this._installListeners.length; ++i)
-        this._installListeners[i].onInstallStarted(addon);
+      this._callInstallListeners("onInstallStarted", addon);
 
       shouldPhoneHomeIfNecessary = true;
       var installManifest = null;
@@ -4435,8 +4427,7 @@ ExtensionManager.prototype = {
       if (!installManifest) {
         LOG("The Install Manifest supplied by this item is not well-formed. " +
             "Installation will not proceed.");
-        for (var i = 0; i < this._installListeners.length; ++i)
-          this._installListeners[i].onInstallEnded(addon, INSTALLERROR_INVALID_MANIFEST);
+        this._callInstallListeners("onInstallEnded", addon, INSTALLERROR_INVALID_MANIFEST);
         return INSTALLERROR_INVALID_MANIFEST;
       }
     }
@@ -4504,8 +4495,7 @@ ExtensionManager.prototype = {
         // this function, BEFORE staging takes place... technically speaking
         // a location could become readonly during the phone home process,
         // but that's an edge case I don't care about.
-        for (var i = 0; i < this._installListeners.length; ++i)
-          this._installListeners[i].onInstallEnded(addon, INSTALLERROR_RESTRICTED);
+        this._callInstallListeners("onInstallEnded", addon, INSTALLERROR_RESTRICTED);
         return INSTALLERROR_RESTRICTED;
       }
 
@@ -4601,9 +4591,7 @@ ExtensionManager.prototype = {
     stageXPIForOtherApps(aXPIFile, installData);
 
     // The install of this item is complete, notify observers
-    for (var i = 0; i < this._installListeners.length; ++i)
-      this._installListeners[i].onInstallEnded(addon, installData.error);
-
+    this._callInstallListeners("onInstallEnded", addon, installData.error);
     return installData.error;
   },
 
@@ -5651,12 +5639,10 @@ ExtensionManager.prototype = {
     switch (state) {
     case nsIXPIProgressDialog.DOWNLOAD_START:
       ds.updateDownloadState(id, "downloading");
-      for (var i = 0; i < this._installListeners.length; ++i)
-        this._installListeners[i].onDownloadStarted(addon);
+      this._callInstallListeners("onDownloadStarted", addon);
       break;
     case nsIXPIProgressDialog.DOWNLOAD_DONE:
-      for (var i = 0; i < this._installListeners.length; ++i)
-        this._installListeners[i].onDownloadEnded(addon);
+      this._callInstallListeners("onDownloadEnded", addon);
       break;
     case nsIXPIProgressDialog.INSTALL_START:
       ds.updateDownloadState(id, "finishing");
@@ -5673,10 +5659,8 @@ ExtensionManager.prototype = {
       }
       transaction.removeDownload(addon.xpiURL);
       // A successful install will be passing notifications via installItemFromFile
-      if (value != 0) {
-        for (var i = 0; i < this._installListeners.length; ++i)
-          this._installListeners[i].onInstallEnded(addon, value);
-      }
+      if (value != 0)
+        this._callInstallListeners("onInstallEnded", addon, value);
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       for (var i = 0; i < this._transactions.length; ++i) {
@@ -5689,10 +5673,8 @@ ExtensionManager.prototype = {
 
             // If there are no compatibility checks running then the install
             // operations are complete.
-            if (this._compatibilityCheckCount == 0) {
-              for (var i = 0; i < this._installListeners.length; ++i)
-                this._installListeners[i].onInstallsCompleted();
-            }
+            if (this._compatibilityCheckCount == 0)
+              this._callInstallListeners("onInstallsCompleted");
           }
           break;
         }
@@ -5704,8 +5686,7 @@ ExtensionManager.prototype = {
   },
 
   onProgress: function EM_onProgress(addon, value, maxValue) {
-    for (var i = 0; i < this._installListeners.length; ++i)
-      this._installListeners[i].onDownloadProgress(addon, value, maxValue);
+    this._callInstallListeners("onDownloadProgress", addon, value, maxValue);
 
     var id = addon.id != addon.xpiURL ? PREFIX_ITEM_URI + addon.id : addon.xpiURL;
     var progress = Math.round((value / maxValue) * 100);
@@ -5723,7 +5704,25 @@ ExtensionManager.prototype = {
   },
 
   removeInstallListenerAt: function EM_removeInstallListenerAt(index) {
-    this._installListeners.splice(index, 1);
+    if (index < 0 || index >= this._installListeners.length)
+      throw Cr.NS_ERROR_INVALID_ARGUMENT;
+
+    this._installListeners[index] = null;
+    while (this._installListeners[this._installListeners.length - 1] === null)
+      this._installListeners.splice(this._installListeners.length - 1, 1);
+  },
+
+  _callInstallListeners: function EM__callInstallListeners(method) {
+    for (var i = 0; i < this._installListeners.length; ++i) {
+      try {
+        if (this._installListeners[i])
+          this._installListeners[i][method].apply(this._installListeners[i],
+                                                  Array.slice(arguments, 1));
+      }
+      catch (e) {
+        LOG("Failure in install listener's " + method + ": " + e);
+      }
+    }
   },
 
   /**
