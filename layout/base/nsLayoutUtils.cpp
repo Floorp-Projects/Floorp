@@ -2700,15 +2700,19 @@ MapToFloatUserPixels(const gfxSize& aSize,
                   aPt.y*aDest.size.height/aSize.height + aDest.pos.y);
 }
 
-/* static */ nsresult
-nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
-                         imgIContainer*       aImage,
-                         const nsRect&        aDest,
-                         const nsRect&        aFill,
-                         const nsPoint&       aAnchor,
-                         const nsRect&        aDirty)
+static nsresult
+DrawImageInternal(nsIRenderingContext* aRenderingContext,
+                  nsIImage*            aImage,
+                  const nsRect&        aDest,
+                  const nsRect&        aFill,
+                  const nsPoint&       aAnchor,
+                  const nsRect&        aDirty,
+                  const nsIntSize&     aImageSize,
+                  const nsIntRect&     aInnerRect)
 {
   if (aDest.IsEmpty() || aFill.IsEmpty())
+    return NS_OK;
+  if (aImageSize.width == 0 || aImageSize.height == 0)
     return NS_OK;
 
   nsCOMPtr<nsIDeviceContext> dc;
@@ -2739,19 +2743,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                 aDirty.width/appUnitsPerDevPixel,
                 aDirty.height/appUnitsPerDevPixel);
 
-  nsCOMPtr<gfxIImageFrame> imgFrame;
-  aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
-  if (!imgFrame) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
-  if (!img) return NS_ERROR_FAILURE;
-
-  nsIntSize intImageSize;
-  aImage->GetWidth(&intImageSize.width);
-  aImage->GetHeight(&intImageSize.height);
-  if (intImageSize.width == 0 || intImageSize.height == 0)
-    return NS_OK;
-  gfxSize imageSize(intImageSize.width, intImageSize.height);
+  gfxSize imageSize(aImageSize.width, aImageSize.height);
 
   // Compute the set of pixels that would be sampled by an ideal rendering
   gfxPoint subimageTopLeft =
@@ -2816,12 +2808,122 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   if (finalFillRect.IsEmpty())
     return NS_OK;
 
+  nsIntMargin padding(aInnerRect.x, aInnerRect.y,
+                      imageSize.width - aInnerRect.XMost(),
+                      imageSize.height - aInnerRect.YMost());
+  aImage->Draw(ctx, transform, finalFillRect, padding, intSubimage);
+  return NS_OK;
+}
+
+/* Workhorse for DrawSingleUnscaledImage.  */
+static nsresult
+DrawSingleUnscaledImageInternal(nsIRenderingContext* aRenderingContext,
+                                nsIImage*            aImage,
+                                const nsPoint&       aDest,
+                                const nsRect&        aDirty,
+                                const nsRect*        aSourceArea,
+                                const nsIntSize&     aImageSize,
+                                const nsIntRect&     aInnerRect)
+{
+  if (aImageSize.width == 0 || aImageSize.height == 0)
+    return NS_OK;
+
+  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+  nsSize size(aImageSize.width*appUnitsPerCSSPixel,
+              aImageSize.height*appUnitsPerCSSPixel);
+
+  nsRect source;
+  if (aSourceArea) {
+    source = *aSourceArea;
+  } else {
+    source.SizeTo(size);
+  }
+
+  nsRect dest(aDest - source.TopLeft(), size);
+  nsRect fill(aDest, source.Size());
+  // Ensure that only a single image tile is drawn. If aSourceArea extends
+  // outside the image bounds, we want to honor the aSourceArea-to-aDest
+  // translation but we don't want to actually tile the image.
+  fill.IntersectRect(fill, dest);
+  return DrawImageInternal(aRenderingContext, aImage, dest, fill,
+                           aDest, aDirty, aImageSize, aInnerRect);
+}
+
+/* Workhorse for DrawSingleImage.  */
+static nsresult
+DrawSingleImageInternal(nsIRenderingContext* aRenderingContext,
+                        nsIImage*            aImage,
+                        const nsRect&        aDest,
+                        const nsRect&        aDirty,
+                        const nsRect*        aSourceArea,
+                        const nsIntSize&     aImageSize,
+                        const nsIntRect&     aInnerRect)
+{
+  if (aImageSize.width == 0 || aImageSize.height == 0)
+    return NS_OK;
+
+  nsRect source;
+  if (aSourceArea) {
+    source = *aSourceArea;
+  } else {
+    nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+    source.SizeTo(aImageSize.width*appUnitsPerCSSPixel,
+                  aImageSize.height*appUnitsPerCSSPixel);
+  }
+
+  nsRect dest = nsLayoutUtils::GetWholeImageDestination(aImageSize, source,
+                                                        aDest);
+  // Ensure that only a single image tile is drawn. If aSourceArea extends
+  // outside the image bounds, we want to honor the aSourceArea-to-aDest
+  // transform but we don't want to actually tile the image.
+  nsRect fill;
+  fill.IntersectRect(aDest, dest);
+  return DrawImageInternal(aRenderingContext, aImage, dest, fill,
+                           fill.TopLeft(), aDirty, aImageSize, aInnerRect);
+}
+
+/* The exposed Draw*Image functions just do interface conversion and call the
+   appropriate Draw*ImageInternal workhorse.  */
+
+/* static */ nsresult
+nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
+                         imgIContainer*       aImage,
+                         const nsRect&        aDest,
+                         const nsRect&        aFill,
+                         const nsPoint&       aAnchor,
+                         const nsRect&        aDirty)
+{
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
+  if (!imgFrame) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
+  if (!img) return NS_ERROR_FAILURE;
+
   nsIntRect innerRect;
   imgFrame->GetRect(innerRect);
-  nsIntMargin padding(innerRect.x, innerRect.y,
-    imageSize.width - innerRect.XMost(), imageSize.height - innerRect.YMost());
-  img->Draw(ctx, transform, finalFillRect, padding, intSubimage);
-  return NS_OK;
+
+  nsIntSize imageSize;
+  aImage->GetWidth(&imageSize.width);
+  aImage->GetHeight(&imageSize.height);
+
+  return DrawImageInternal(aRenderingContext, img,
+                           aDest, aFill, aAnchor, aDirty,
+                           imageSize, innerRect);
+}
+
+/* static */ nsresult
+nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
+                         nsIImage*            aImage,
+                         const nsRect&        aDest,
+                         const nsRect&        aFill,
+                         const nsPoint&       aAnchor,
+                         const nsRect&        aDirty)
+{
+  nsIntSize imageSize(aImage->GetWidth(), aImage->GetHeight());
+  return DrawImageInternal(aRenderingContext, aImage,
+                           aDest, aFill, aAnchor, aDirty,
+                           imageSize, nsIntRect(nsIntPoint(0,0), imageSize));
 }
 
 /* static */ nsresult
@@ -2831,28 +2933,25 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
                                        const nsRect&        aDirty,
                                        const nsRect*        aSourceArea)
 {
-  nsIntSize size;
-  aImage->GetWidth(&size.width);
-  aImage->GetHeight(&size.height);
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
+  if (!imgFrame) return NS_ERROR_FAILURE;
+ 
+  nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
+  if (!img) return NS_ERROR_FAILURE;
+ 
+  nsIntRect innerRect;
+  imgFrame->GetRect(innerRect);
 
-  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
-  nsRect source;
-  if (aSourceArea) {
-    source = *aSourceArea;
-  } else {
-    source.SizeTo(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel);
-  }
+  nsIntSize imageSize;
+  aImage->GetWidth(&imageSize.width);
+  aImage->GetHeight(&imageSize.height);
 
-  nsRect dest(aDest - source.TopLeft(),
-    nsSize(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel));
-  nsRect fill(aDest, source.Size());
-  // Ensure that only a single image tile is drawn. If aSourceArea extends
-  // outside the image bounds, we want to honor the aSourceArea-to-aDest
-  // translation but we don't want to actually tile the image.
-  fill.IntersectRect(fill, dest);
-  return DrawImage(aRenderingContext, aImage, dest, fill, aDest, aDirty);
+  return DrawSingleUnscaledImageInternal(aRenderingContext, img,
+                                         aDest, aDirty, aSourceArea,
+                                         imageSize, innerRect);
 }
-
+ 
 /* static */ nsresult
 nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                imgIContainer*       aImage,
@@ -2860,29 +2959,39 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                const nsRect&        aDirty,
                                const nsRect*        aSourceArea)
 {
-  nsIntSize size;
-  aImage->GetWidth(&size.width);
-  aImage->GetHeight(&size.height);
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
+  if (!imgFrame) return NS_ERROR_FAILURE;
+ 
+  nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
+  if (!img) return NS_ERROR_FAILURE;
+ 
+  nsIntRect innerRect;
+  imgFrame->GetRect(innerRect);
 
-  if (size.width == 0 || size.height == 0)
-    return NS_OK;
-  
-  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
-  nsRect source;
-  if (aSourceArea) {
-    source = *aSourceArea;
-  } else {
-    source.SizeTo(size.width*appUnitsPerCSSPixel, size.height*appUnitsPerCSSPixel);
-  }
+  nsIntSize imageSize;
+  aImage->GetWidth(&imageSize.width);
+  aImage->GetHeight(&imageSize.height);
 
-  nsRect dest = GetWholeImageDestination(size, source, aDest);
-  // Ensure that only a single image tile is drawn. If aSourceArea extends
-  // outside the image bounds, we want to honor the aSourceArea-to-aDest
-  // transform but we don't want to actually tile the image.
-  nsRect fill;
-  fill.IntersectRect(aDest, dest);
-  return DrawImage(aRenderingContext, aImage, dest, fill, fill.TopLeft(), aDirty);
+  return DrawSingleImageInternal(aRenderingContext, img,
+                                 aDest, aDirty, aSourceArea,
+                                 imageSize, innerRect);
 }
+
+/* static */ nsresult
+nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
+                               nsIImage*            aImage,
+                               const nsRect&        aDest,
+                               const nsRect&        aDirty,
+                               const nsRect*        aSourceArea)
+{
+  nsIntSize imageSize(aImage->GetWidth(), aImage->GetHeight());
+  return DrawSingleImageInternal(aRenderingContext, aImage,
+                                 aDest, aDirty, aSourceArea,
+                                 imageSize,
+                                 nsIntRect(nsIntPoint(0, 0), imageSize));
+}
+
 
 /* static */ nsRect
 nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
