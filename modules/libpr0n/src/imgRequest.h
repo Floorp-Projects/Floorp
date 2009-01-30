@@ -110,10 +110,6 @@ public:
   // being made...
   PRBool IsReusable(void *aCacheId) { return !mLoading || (aCacheId == mCacheId); }
 
-  // get the current or last network status from our
-  // internal nsIChannel.
-  nsresult GetNetworkStatus();
-
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
   // won't be sufficient.
@@ -184,7 +180,6 @@ private:
   PRPackedBool mLoading;
   PRPackedBool mProcessing;
   PRPackedBool mHadLastPart;
-  PRUint32 mNetworkStatus;
   PRUint32 mImageStatus;
   PRUint32 mState;
   nsCString mContentType;
