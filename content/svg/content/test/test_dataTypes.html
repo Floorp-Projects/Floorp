@@ -27,6 +27,20 @@ function runTests()
   var convolve = doc.getElementById("convolve");
   var marker = doc.getElementById("marker");
 
+  // class attribute
+  filter.setAttribute("class", "foo");
+  is(filter.getAttribute("class"), "foo", "class attribute");
+  is(filter.className.baseVal, "foo", "className baseVal");
+  is(filter.className.animVal, "foo", "className animVal");
+  filter.className.baseVal = "bar";
+  is(filter.getAttribute("class"), "bar", "class attribute");
+  is(filter.className.baseVal, "bar", "className baseVal");
+  is(filter.className.animVal, "bar", "className animVal");
+  filter.removeAttribute("class");
+  is(filter.hasAttribute("class"), false, "class attribute");
+  is(filter.className.baseVal, "", "className baseVal");
+  is(filter.className.animVal, "", "className animVal");
+
   // length attribute
 
   marker.setAttribute("markerWidth", "12.5");
