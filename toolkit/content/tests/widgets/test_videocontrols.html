@@ -23,7 +23,7 @@ function runTest(event) {
   switch (testnum) {
     case 1:
       // Check initial state upon load
-      is(event.type, "loadeddata", "checking event type");
+      is(event.type, "load", "checking event type");
       is(video.paused, true, "checking video play state");
       is(video.muted, false, "checking video mute state");
 
@@ -104,8 +104,8 @@ function runTest(event) {
 var testnum = 1;
 var video = document.getElementById("video");
 
-// Kick off test once we've got enough to do something.
-video.addEventListener("loadeddata",  runTest, false);
+// Kick off test once video has loaded.
+video.addEventListener("load",  runTest, false);
 
 // Other events expected by the test.
 video.addEventListener("play",  runTest, false);
