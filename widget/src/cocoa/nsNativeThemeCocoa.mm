@@ -216,6 +216,7 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 
   mCheckboxCell = [[NSButtonCell alloc] initTextCell:nil];
   [mCheckboxCell setButtonType:NSSwitchButton];
+  [mCheckboxCell setAllowsMixedState:YES];
 
   mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
@@ -567,10 +568,15 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSButtonCell *cell = inCheckbox ? mCheckboxCell : mRadioButtonCell;
+  NSCellStateValue state = inSelected ? NSOnState : NSOffState;
+
+  // Check if we have an indeterminate checkbox
+  if (inCheckbox && GetIndeterminate(aFrame))
+    state = NSMixedState;
 
   [cell setEnabled:!inDisabled];
   [cell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
-  [cell setState:(inSelected ? NSOnState : NSOffState)];
+  [cell setState:state];
   [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
 

@@ -221,13 +221,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                 *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
             }
 
-            nsCOMPtr<nsIDOMNSHTMLInputElement> inputEltNS(do_QueryInterface(content));
-            if (inputEltNS) {
-              PRBool isIndeterminate;
-              inputEltNS->GetIndeterminate(&isIndeterminate);
-              if (isIndeterminate)
-                *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
-            }
+            if (GetIndeterminate(aFrame))
+              *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
           }
         }
       } else if (aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
