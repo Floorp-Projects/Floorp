@@ -45,7 +45,6 @@
 #include "nsIDOMSVGPatternElement.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGLength2.h"
-#include "nsStubMutationObserver.h"
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
 #include "nsSVGPreserveAspectRatio.h"
@@ -58,8 +57,7 @@ class nsSVGPatternElement : public nsSVGPatternElementBase,
                             public nsIDOMSVGURIReference,
                             public nsIDOMSVGFitToViewBox,
                             public nsIDOMSVGPatternElement,
-                            public nsIDOMSVGUnitTypes,
-                            public nsStubMutationObserver
+                            public nsIDOMSVGUnitTypes
 {
   friend class nsSVGPatternFrame;
 
@@ -82,13 +80,6 @@ public:
   // FitToViewbox
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
 
-  // Mutation Observer
-  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
   NS_FORWARD_NSIDOMNODE(nsSVGElement::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
@@ -99,8 +90,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-
-  void PushUpdate();
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual EnumAttributesInfo GetEnumInfo();
