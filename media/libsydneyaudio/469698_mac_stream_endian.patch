@@ -1,0 +1,12 @@
+diff --git a/media/libsydneyaudio/src/sydney_audio_mac.c b/media/libsydneyaudio/src/sydney_audio_mac.c
+--- a/media/libsydneyaudio/src/sydney_audio_mac.c
++++ b/media/libsydneyaudio/src/sydney_audio_mac.c
+@@ -129,7 +129,7 @@
+   if (mode != SA_MODE_WRONLY) {
+     return SA_ERROR_NOT_SUPPORTED;
+   }
+-  if (format != SA_PCM_FORMAT_S16_LE) {
++  if (format != SA_PCM_FORMAT_S16_NE) {
+     return SA_ERROR_NOT_SUPPORTED;
+   }
+ 
