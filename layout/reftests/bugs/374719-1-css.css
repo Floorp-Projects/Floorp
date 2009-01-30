@@ -1,0 +1,61 @@
+gridlikebox {
+  margin: 2px 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-binding: url('374719-1-xbl.xml#gridlike');
+  -moz-user-focus: normal;
+  -moz-appearance: listbox;
+}
+
+gridlikehead {
+  -moz-binding: url("374719-1-xbl.xml#gridlikehead");
+}
+
+gridlikebox > scrollbox > box {
+  display: -moz-grid;
+}
+
+gridlikecols, gridlikehead, gridlikerows, gridlikeboxbody {
+  display: -moz-grid-group;
+}
+
+gridlikecol, gridlikeitem, gridlikeheaditem {
+  display: -moz-grid-line;
+}
+
+gridlikehead {
+  -moz-box-orient: vertical;
+}
+
+gridlikerows {
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+}
+
+gridlikeboxbody {
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+}
+
+gridlikecol {
+  -moz-box-orient: vertical;
+  min-width: 16px;
+}
+
+gridlikeheader {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listheader");
+  -moz-box-ordinal-group: 2147483646;
+}
+
+gridlikeheader {
+  -moz-appearance: treeheadercell;
+  -moz-box-align: center;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  padding: 0 4px;
+}
