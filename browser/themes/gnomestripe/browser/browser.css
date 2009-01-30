@@ -794,7 +794,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #urlbar-icons {
-  height: 18px;
   -moz-box-align: center;
   -moz-padding-end: 2px;
 }
@@ -975,7 +974,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #autocomplete-security-wrapper {
   /* keep the URL bar content LTR */
   direction: ltr;
-  -moz-box-align: stretch;
   /* cover the white gap between the text field and the drop down button */
   margin-right: -3px;
 }
