@@ -2487,7 +2487,7 @@ testWeirdDateParse.jitstats = {
     traceCompleted: 6,
     traceTriggered: 14,
     unstableLoopVariable: 3,
-    noCompatInnerTrees: 1
+    noCompatInnerTrees: 0
 };
 test(testWeirdDateParse);
 
