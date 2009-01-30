@@ -838,8 +838,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  aMetrics.mOverflowArea = nsRect(0, 0,
-                                  aMetrics.width, aMetrics.height);
+  FinishAndStoreOverflow(&aMetrics);
 
   // delay plugin instantiation until all children have
   // arrived. Otherwise there may be PARAMs or other stuff that the
