@@ -5368,7 +5368,9 @@ nsRuleNode::Sweep()
   // However, we never allow the root node to GC itself, because nsStyleSet
   // wants to hold onto the root node and not worry about re-creating a
   // rule walker if the root node is deleted.
-  if (!(mDependentBits & NS_RULE_NODE_GC_MARK) && !IsRoot()) {
+  if (!(mDependentBits & NS_RULE_NODE_GC_MARK) &&
+      // Skip this only if we're the *current* root and not an old one.
+      !(IsRoot() && mPresContext->StyleSet()->GetRuleTree() == this)) {
     Destroy();
     return PR_TRUE;
   }
