@@ -3038,6 +3038,7 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
                  VMSideExit* expectedInnerExit, Fragment* outer)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
@@ -3614,7 +3615,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
             AUDIT(noCompatInnerTrees);
             debug_only_v(printf("No compatible inner tree (%p).\n", f);)
 
-                Fragment* old = getLoop(tm, tm->recorder->getFragment()->root->ip, ti->globalShape);
+            Fragment* old = getLoop(tm, tm->recorder->getFragment()->root->ip, ti->globalShape);
             if (old == NULL)
                 old = tm->recorder->getFragment();
             js_AbortRecording(cx, "No compatible inner tree");
@@ -4117,9 +4118,23 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     /* Is the recorder currently active? */
     if (tm->recorder) {
+        jsbytecode* innerLoopHeaderPC = cx->fp->regs->pc;
+
         if (js_RecordLoopEdge(cx, tm->recorder, inlineCallCount))
             return true;
-        /* recording was aborted, treat like a regular loop edge hit */
+
+        /* 
+         * js_RecordLoopEdge will invoke an inner tree if we have a matching one. If we
+         * arrive here, that tree didn't run to completion and instead we mis-matched
+         * or the inner tree took a side exit other than the loop exit. We are thus
+         * no longer guaranteed to be parked on the same loop header js_MonitorLoopEdge
+         * was called for. In fact, this might not even be a loop header at all. Hence
+         * if the program counter no longer hovers over the inner loop header, return to
+         * the interpreter and do not attempt to trigger or record a new tree at this
+         * location.
+         */
+        if (innerLoopHeaderPC != cx->fp->regs->pc)
+            return false;
     }
     JS_ASSERT(!tm->recorder);
 
