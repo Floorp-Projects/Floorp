@@ -2522,7 +2522,16 @@ js_Interpret(JSContext *cx)
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP: CHECK_RECORDER();
+# ifdef DEBUG
+#  define TRACE_OPCODE(OP)  JS_BEGIN_MACRO                                    \
+                                if (cx->tracefp)                              \
+                                    js_TraceOpcode(cx, len);                  \
+                            JS_END_MACRO
+# else
+#  define TRACE_OPCODE(OP)  (void)0
+# endif
+
+# define BEGIN_CASE(OP)     L_##OP: TRACE_OPCODE(OP); CHECK_RECORDER();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
