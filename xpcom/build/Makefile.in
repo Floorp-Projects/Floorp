@@ -67,7 +67,7 @@ REQUIRES	= string \
 		  $(NULL)
 
 # pull in MoreFiles for MacOSX
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 REQUIRES += macmorefiles
 endif
 
@@ -175,12 +175,12 @@ ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
-  ../MoreFiles/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX) \
   $(TK_LIBS) \
   $(NULL)
+SHARED_LIBRARY_LIBS += $(DEPTH)/xpcom/MoreFiles/libmacmorefiles_s.a
 endif
 
 ifeq ($(OS_ARCH),BeOS)
