@@ -659,6 +659,24 @@ nsDisplayBoxShadow::GetBounds(nsDisplayListBuilder* aBuilder) {
   return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
+PRBool
+nsDisplayBoxShadow::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                       nsRegion* aVisibleRegion) {
+  if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
+    return PR_FALSE;
+
+  const nsStyleBorder* border = mFrame->GetStyleBorder();
+  nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
+  if (nsRect(origin, mFrame->GetSize()).Contains(aVisibleRegion->GetBounds()) &&
+      !nsLayoutUtils::HasNonZeroCorner(border->mBorderRadius)) {
+    // the visible region is entirely inside the border-rect, and box shadows
+    // never render within the border-rect (unless there's a border radius).
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
   : nsDisplayItem(aFrame) {
   mList.AppendToTop(aList);
