@@ -173,4 +173,5 @@ class nsNativeTheme
   PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
 
   PRBool GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected);
+  PRBool GetIndeterminate(nsIFrame* aFrame);
 };

@@ -82,6 +82,7 @@ WIDGET_ATOM(vertical, "vertical")
 WIDGET_ATOM(id, "id")
 WIDGET_ATOM(image, "image")
 WIDGET_ATOM(input, "input")
+WIDGET_ATOM(indeterminate, "indeterminate")
 WIDGET_ATOM(key, "key") // The key element / attribute
 WIDGET_ATOM(label, "label")
 WIDGET_ATOM(max, "max")
