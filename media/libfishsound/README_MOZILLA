@@ -5,3 +5,5 @@ files for the Mozilla build system.
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.
+
+endian.patch is applied to fix Bug 45269.
