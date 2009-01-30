@@ -79,13 +79,10 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstracer.h"
 #include "jsdbgapi.h"
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
-
-#if !defined JS_THREADSAFE && defined JS_TRACER
-#include "jstracer.h"
-#endif
 
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
@@ -323,6 +320,7 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
             continue;
         argc++;
     }
+    js_LeaveTrace(cx);
     sp = js_AllocStack(cx, argc, markp);
     if (!sp)
         return NULL;
@@ -419,6 +417,7 @@ JS_PUBLIC_API(void)
 JS_PopArguments(JSContext *cx, void *mark)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT_NOT_ON_TRACE(cx);
     js_FreeStack(cx, mark);
 }
 
@@ -2067,6 +2066,7 @@ JS_TraceRuntime(JSTracer *trc)
 {
     JSBool allAtoms = trc->context->runtime->gcKeepAtoms != 0;
 
+    js_LeaveTrace(trc->context);
     js_TraceRuntime(trc, allAtoms);
 }
 
@@ -2483,6 +2483,8 @@ JS_IsGCMarkingTracer(JSTracer *trc)
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
+    js_LeaveTrace(cx);
+
     /* Don't nuke active arenas if executing or compiling. */
     if (cx->stackPool.current == &cx->stackPool.first)
         JS_FinishArenaPool(&cx->stackPool);
@@ -5446,8 +5448,7 @@ JS_SaveFrameChain(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
-    JS_ASSERT(!JS_ON_TRACE(cx));
-    VOUCH_DOES_NOT_REQUIRE_STACK();
+    JS_ASSERT_NOT_ON_TRACE(cx);
     JS_ASSERT(!cx->fp);
     if (!fp)
         return;
