@@ -107,6 +107,11 @@ var BrowserUI = {
 
     if (/\bicon\b/i(link.rel)) {
       this._faviconLink = link.href;
+
+      // If the link changes after pageloading, update it right away.
+      // otherwise we wait until the pageload finishes
+      if (this._favicon.src != "")
+        this._setIcon(this._faviconLink);
     }
   },
 
