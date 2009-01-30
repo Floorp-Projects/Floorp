@@ -71,7 +71,7 @@ div#findmore {
   margin-top: 2em;
   margin-bottom: 1em;
   font-size: large;
-  text-align: left;
+  text-align: start;
   font-weight: bold;
 }
 
@@ -83,7 +83,7 @@ table {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
-  text-align: left;
+  text-align: start;
   width: 100%;
   border: 1px solid ThreeDShadow;
   border-spacing: 0px;
@@ -102,11 +102,11 @@ th {
 
 th + th,
 td + td {
-  border-left: 1px dotted ThreeDShadow; 
+  -moz-border-start: 1px dotted ThreeDShadow; 
 }
 
 td {
-  text-align: left;
+  text-align: start;
   border-top: 1px dotted ThreeDShadow;
 }
 
