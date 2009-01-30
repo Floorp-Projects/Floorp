@@ -9,6 +9,7 @@ toolkit.jar:
    content/global/XPCNativeWrapper.js         (XPCNativeWrapper.js)
 *  content/global/xul.css                     (xul.css)
 *  content/global/about.xhtml                 (about.xhtml)
+   content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css
 *+  content/global/buildconfig.html            (buildconfig.html)

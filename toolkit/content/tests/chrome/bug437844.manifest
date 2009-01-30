@@ -1,0 +1,2 @@
+# Override intl.css with our own CSS file
+override chrome://global/locale/intl.css chrome://mochikit/content/chrome/toolkit/content/tests/chrome/bug437844.css

@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet 
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=437844
+-->
+<window title="Mozilla Bug 437844"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 437844</title>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body  xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank" 
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=437844">
+      Mozilla Bug 437844
+    </a>
+
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <script type="application/javascript">
+    <![CDATA[
+
+      /* This code is mostly copied from chrome/test/unit/head_crtestutils.js */
+      const NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
+
+      const Cc = Components.classes;
+      const Ci = Components.interfaces;
+      const Cr = Components.results;
+
+      function ArrayEnumerator(array)
+      {
+        this.array = array;
+      }
+
+      ArrayEnumerator.prototype = {
+        pos: 0,
+        
+        hasMoreElements: function() {
+          return this.pos < this.array.length;
+        },
+        
+        getNext: function() {
+          if (this.pos < this.array.length)
+            return this.array[this.pos++];
+          throw Cr.NS_ERROR_FAILURE;
+        },
+
+        QueryInterface: function(iid) {
+          if (iid.equals(Ci.nsISimpleEnumerator)
+           || iid.equals(Ci.nsISupports))
+            return this;
+
+          throw Cr.NS_ERROR_NO_INTERFACE;
+        }
+      };
+
+      function ChromeProvider(manifests)
+      {
+        this._manifests = manifests;
+      }
+
+      ChromeProvider.prototype = {
+        getFile: function(prop, persistent) {
+          throw Cr.NS_ERROR_FAILURE;
+        },
+
+        getFiles: function(prop) {
+          if (prop == NS_CHROME_MANIFESTS_FILE_LIST) {
+            return new ArrayEnumerator(this._manifests);
+          }
+          throw Cr.NS_ERROR_FAILURE;
+        },
+
+        QueryInterface: function(iid) {
+          if (iid.equals(Ci.nsIDirectoryServiceProvider)
+           || iid.equals(Ci.nsIDirectoryServiceProvider2)
+           || iid.equals(Ci.nsISupports))
+            return this;
+
+          throw Cr.NS_ERROR_NO_INTERFACE;
+        }
+      };
+
+      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                   getService(Ci.nsIDirectoryService);
+      function registerManifests(manifests)
+      {
+        let provider = new ChromeProvider(manifests);
+        dirSvc.registerProvider(provider);
+        return provider;
+      }
+
+
+    ]]>
+  </script>
+
+  <script class="testbody" type="application/javascript">
+    <![CDATA[
+
+      /** Test for Bug 437844 **/
+      SimpleTest.waitForExplicitFinish();
+
+      // Disable XUL cache temporarily
+      let prefs = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefBranch);
+      const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
+      prefs.setBoolPref(XUL_CACHE_PREF, true);
+
+      // Register our manifest
+      let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+               getService(Ci.nsIXULChromeRegistry);
+      let manifests = [];
+      let currentManifests = dirSvc.QueryInterface(Ci.nsIProperties)
+                                   .get(NS_CHROME_MANIFESTS_FILE_LIST,
+                                        Ci.nsISimpleEnumerator);
+      while (currentManifests.hasMoreElements())
+        manifests.push(currentManifests.getNext());
+      let uri = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService).
+                newURI("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/", null, null);
+      uri = cr.convertChromeURL(uri);
+      let newChromePath = uri.QueryInterface(Ci.nsIFileURL).file;
+      manifests.push(newChromePath);
+      let provider = registerManifests(manifests);
+      cr.checkForNewChrome();
+      cr.refreshSkins();
+
+      // Load about:plugins in an iframe
+      let frame = document.createElement("iframe");
+      frame.setAttribute("src", "about:plugins");
+      frame.addEventListener("load", function () {
+          frame.removeEventListener("load", arguments.callee, false);
+
+          is(frame.contentDocument.dir, "rtl", "about:plugins should be RTL in RTL locales");
+
+          // cleanup
+          dirSvc.unregisterProvider(provider);
+          cr.checkForNewChrome();
+          cr.refreshSkins();
+          prefs.clearUserPref(XUL_CACHE_PREF);
+          SimpleTest.finish();
+        }, false);
+      document.documentElement.appendChild(frame);
+
+    ]]>
+  </script>
+
+</window>
