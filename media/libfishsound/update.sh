@@ -38,3 +38,4 @@ cp $1/src/libfishsound/fs_vector.h ./src/libfishsound/fs_vector.h
 cp $1/src/libfishsound/fs_vector.c ./src/libfishsound/fs_vector.c
 cp $1/src/libfishsound/convert.h ./src/libfishsound/convert.h
 cp $1/AUTHORS ./AUTHORS
+patch -p4 <endian.patch
