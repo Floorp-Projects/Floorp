@@ -1978,7 +1978,6 @@ js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
 JS_REQUIRES_STACK bool
 TraceRecorder::adjustCallerTypes(Fragment* f)
 {
-    JSTraceMonitor* tm = traceMonitor;
     uint16* gslots = treeInfo->globalSlots->data();
     unsigned ngslots = treeInfo->globalSlots->length();
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
@@ -2642,7 +2641,6 @@ JS_REQUIRES_STACK void
 TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
 {
     if (fragment->kind == LoopTrace) {
-        JSTraceMonitor* tm = traceMonitor;
         TreeInfo* ti;
         Fragment* peer;
         uint8* t1, *t2;
