@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"
+                 type="text/css"?>
+<?xml-stylesheet href="374719-1-css.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="test2()">
+
+  <script>
+    function test2()
+    {
+      var r = document.getElementById('rbox');
+
+      const XULNS =
+        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+      var item = document.createElementNS(XULNS, "gridlikeitem");
+      item.setAttribute("value", "aValue");
+
+      var cell1 = document.createElementNS(XULNS, "gridlikecell");
+      var label1 = document.createElementNS(XULNS, "label");
+      label1.setAttribute("value", "aLabel1");
+      label1.setAttribute("flex", "1");
+      label1.setAttribute("crop", "end");
+      cell1.appendChild(label1);
+      item.appendChild(cell1);
+
+      var cell2 = document.createElementNS(XULNS, "gridlikecell");
+      var label2 = document.createElementNS(XULNS, "label");
+      label2.setAttribute("value", "aLabel2");
+      label2.setAttribute("flex", "1");
+      label2.setAttribute("crop", "end");
+      cell2.appendChild(label2);
+      item.appendChild(cell2);
+
+      var before = document.getElementById("inx");
+      if (!before)
+        r.appendChild(item);
+      else
+        r.insertBefore(item, before);
+    }
+  </script>
+
+  <gridlikebox flex="1" id="rbox">
+    <gridlikecols>
+      <gridlikecol flex="1"/>
+      <gridlikecol flex="1"/>
+    </gridlikecols>
+
+    <gridlikehead>
+      <gridlikeheader label="Col1"/>
+      <gridlikeheader label="Col2"/>
+    </gridlikehead>
+
+    <gridlikeitem value="hello1">
+      <gridlikecell><label value="Hello"/></gridlikecell>
+      <gridlikecell><label value="Hello"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="hello2" id="inx">
+      <gridlikecell><label value="Hello2"/></gridlikecell>
+      <gridlikecell><label value="Hello2.1"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="hello3">
+      <gridlikecell><label value="Hello592"/></gridlikecell>
+      <gridlikecell><label value="Hello592.1"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="hello4">
+      <gridlikecell><label value="Hello4"/></gridlikecell>
+      <gridlikecell><label value="Hello4--"/></gridlikecell>
+    </gridlikeitem>
+  </gridlikebox>
+</window>
