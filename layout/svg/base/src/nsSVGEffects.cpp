@@ -368,14 +368,16 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   GetEffectProperty(aFrame->GetStyleSVGReset()->mFilter,
                     aFrame, nsGkAtoms::filter, CreateFilterProperty);
 
-  // Set marker properties here to avoid reference loops
-  const nsStyleSVG *style = aFrame->GetStyleSVG();
-  GetEffectProperty(style->mMarkerStart, aFrame, nsGkAtoms::marker_start,
-                    CreateMarkerProperty);
-  GetEffectProperty(style->mMarkerMid, aFrame, nsGkAtoms::marker_mid,
-                    CreateMarkerProperty);
-  GetEffectProperty(style->mMarkerEnd, aFrame, nsGkAtoms::marker_end,
-                    CreateMarkerProperty);
+  if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    // Set marker properties here to avoid reference loops
+    const nsStyleSVG *style = aFrame->GetStyleSVG();
+    GetEffectProperty(style->mMarkerStart, aFrame, nsGkAtoms::marker_start,
+                      CreateMarkerProperty);
+    GetEffectProperty(style->mMarkerMid, aFrame, nsGkAtoms::marker_mid,
+                      CreateMarkerProperty);
+    GetEffectProperty(style->mMarkerEnd, aFrame, nsGkAtoms::marker_end,
+                      CreateMarkerProperty);
+  }
 }
 
 nsSVGFilterProperty *
