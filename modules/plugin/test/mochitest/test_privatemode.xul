@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="NPAPI Private Mode Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>NPAPI Private Mode Tests</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+<embed id="plugin2" type="application/x-test" width="200" height="200"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var pluginElement1 = document.getElementById("plugin1");
+  var pluginElement2 = document.getElementById("plugin2");
+
+  var state1 = false;
+  var state2 = false;
+  var exceptionThrown = false;
+
+  try {
+    state1 = pluginElement1.queryPrivateModeState();
+    state2 = pluginElement2.queryPrivateModeState();
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  is(exceptionThrown, false, "Exception thrown getting private mode state.");
+  is(state1, false, "Browser returned incorrect private mode state.");
+  is(state2, false, "Browser returned incorrect private mode state.");
+
+  // change private mode pref
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  var privateBrowsing = Components.classes["@mozilla.org/privatebrowsing;1"].getService(Components.interfaces.nsIPrivateBrowsingService);
+  var keepCurrentSession;
+  try {
+    keepCurrentSession = prefs.getBoolPref("browser.privatebrowsing.keep_current_session");
+  } catch (e) {
+    keepCurrentSession = false
+  }
+  prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  privateBrowsing.privateBrowsingEnabled = true;
+
+  try {
+    state1 = pluginElement1.lastReportedPrivateModeState();
+    state2 = pluginElement2.lastReportedPrivateModeState();
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  is(exceptionThrown, false, "Exception thrown getting private mode state.");
+  is(state1, true, "Private mode state reported incorrectly.");
+  is(state2, true, "Private mode state reported incorrectly.");
+
+  // reset preference states
+  privateBrowsing.privateBrowsingEnabled = false;
+  prefs.setBoolPref("browser.privatebrowsing.keep_current_session", keepCurrentSession);
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+</window>

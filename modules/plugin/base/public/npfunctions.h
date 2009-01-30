@@ -61,10 +61,10 @@ typedef void         (*NPP_URLNotifyProcPtr)(NPP instance, const char* url, NPRe
 /* Any NPObjects returned to the browser via NPP_GetValue should be retained
    by the plugin on the way out. The browser is responsible for releasing. */
 typedef NPError      (*NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
-typedef NPError      (*NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
+typedef NPError      (*NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *value);
 
 typedef NPError      (*NPN_GetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
-typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
+typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *value);
 typedef NPError      (*NPN_GetURLNotifyProcPtr)(NPP instance, const char* url, const char* window, void* notifyData);
 typedef NPError      (*NPN_PostURLNotifyProcPtr)(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData);
 typedef NPError      (*NPN_GetURLProcPtr)(NPP instance, const char* url, const char* window);

@@ -89,7 +89,6 @@ public:
 
     // nsNPAPIPluginInstance-specific methods
 
-    // Return the 4.x-style interface object.
     nsresult GetNPP(NPP * aNPP);
 
     // Return the callbacks for the plugin instance.
@@ -132,6 +131,7 @@ public:
 
     already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
+    nsresult PrivateModeStateChanged();
 protected:
 
     nsresult InitializePlugin(nsIPluginInstancePeer* peer);
