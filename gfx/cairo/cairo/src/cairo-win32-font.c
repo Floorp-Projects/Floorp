@@ -1187,12 +1187,12 @@ _add_glyph (cairo_glyph_state_t *state,
 	    if (status)
 		return status;
 	    state->start_x = logical_x;
+	} else {
+	    dx = logical_x - state->last_x;
+	    status = _cairo_array_append (&state->dx, &dx);
+	    if (status)
+		return status;
 	}
-
-	dx = logical_x - state->last_x;
-	status = _cairo_array_append (&state->dx, &dx);
-	if (status)
-	    return status;
     } else {
 	state->start_x = logical_x;
     }

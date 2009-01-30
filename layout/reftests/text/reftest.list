@@ -32,3 +32,5 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-01-notref.html # Bad 
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cgj-01.html cgj-01-ref.html # bug 455455
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
+HTTP(..) == 475092-sub.html 475092-ref.html
+HTTP(..) == 475092-pos.html 475092-ref.html
