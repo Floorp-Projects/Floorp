@@ -23,6 +23,7 @@
  *   Annie Sullivan <annie.sullivan@gmail.com>
  *   Asaf Romano <mano@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1732,11 +1733,11 @@ var ViewMenu = {
 
     var columnId;
     if (aColumn) {
-      columnId = aColumn.getAttribute("anonid")
+      columnId = aColumn.getAttribute("anonid");
       if (!aDirection) {
         var sortColumn = this._getSortColumn();
-        aDirection = sortColumn ?
-                     sortColumn.getAttribute("sortDirection") : "descending";
+        if (sortColumn)
+          aDirection = sortColumn.getAttribute("sortDirection");
       }
     }
     else {
@@ -1744,47 +1745,38 @@ var ViewMenu = {
       columnId = sortColumn ? sortColumn.getAttribute("anonid") : "title";
     }
 
-    var sortingMode;
-    var sortingAnnotation = "";
-    const NHQO = Ci.nsINavHistoryQueryOptions;
-    switch (columnId) {
-      case "title":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_TITLE_DESCENDING : NHQO.SORT_BY_TITLE_ASCENDING;
-        break;
-      case "url":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_URI_DESCENDING : NHQO.SORT_BY_URI_ASCENDING;
-        break;
-      case "date":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_DATE_DESCENDING : NHQO.SORT_BY_DATE_ASCENDING;
-        break;
-      case "visitCount":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_VISITCOUNT_DESCENDING : NHQO.SORT_BY_VISITCOUNT_ASCENDING;
-        break;
-      case "keyword":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_KEYWORD_DESCENDING : NHQO.SORT_BY_KEYWORD_ASCENDING;
-        break;
-      case "description":
-        sortingAnnotation = DESCRIPTION_ANNO;
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_ANNOTATION_DESCENDING : NHQO.SORT_BY_ANNOTATION_ASCENDING;
-        break;
-      case "dateAdded":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_DATEADDED_DESCENDING : NHQO.SORT_BY_DATEADDED_ASCENDING;
-        break;
-      case "lastModified":
-        sortingMode = aDirection == "descending" ?
-          NHQO.SORT_BY_LASTMODIFIED_DESCENDING : NHQO.SORT_BY_LASTMODIFIED_ASCENDING;
-        break;
-      default:
-        throw("Invalid Column");
-    }
-    result.sortingAnnotation = sortingAnnotation;
-    result.sortingMode = sortingMode;
+    // This maps the possible values of columnId (i.e., anonid's of treecols in
+    // placeContent) to the default sortingMode and sortingAnnotation values for
+    // each column.
+    //   key:  Sort key in the name of one of the
+    //         nsINavHistoryQueryOptions.SORT_BY_* constants
+    //   dir:  Default sort direction to use if none has been specified
+    //   anno: The annotation to sort by, if key is "ANNOTATION"
+    var colLookupTable = {
+      title:        { key: "TITLE",        dir: "ascending"  },
+      tags:         { key: "TAGS",         dir: "ascending"  },
+      url:          { key: "URI",          dir: "ascending"  },
+      date:         { key: "DATE",         dir: "descending" },
+      visitCount:   { key: "VISITCOUNT",   dir: "descending" },
+      keyword:      { key: "KEYWORD",      dir: "ascending"  },
+      dateAdded:    { key: "DATEADDED",    dir: "descending" },
+      lastModified: { key: "LASTMODIFIED", dir: "descending" },
+      description:  { key: "ANNOTATION",
+                      dir: "ascending",
+                      anno: DESCRIPTION_ANNO }
+    };
+
+    // Make sure we have a valid column.
+    if (!colLookupTable.hasOwnProperty(columnId))
+      throw("Invalid column");
+
+    // Use a default sort direction if none has been specified.  If aDirection
+    // is invalid, result.sortingMode will be undefined, which has the effect
+    // of unsorting the tree.
+    aDirection = (aDirection || colLookupTable[columnId].dir).toUpperCase();
+
+    var sortConst = "SORT_BY_" + colLookupTable[columnId].key + "_" + aDirection;
+    result.sortingAnnotation = colLookupTable[columnId].anno || "";
+    result.sortingMode = Ci.nsINavHistoryQueryOptions[sortConst];
   }
 };
