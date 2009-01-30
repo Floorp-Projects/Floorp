@@ -8278,7 +8278,6 @@ TraceRecorder::record_JSOP_GOTOX()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_IFEQX()
 {
-    trackCfgMerges(cx->fp->regs->pc);
     return record_JSOP_IFEQ();
 }
 
