@@ -26,6 +26,7 @@
    -   Frank Tang <ftang@netscape.com>
    -   Mike Connelly <mozilla@shepherdstown.com>
    -   Robert Kaiser <kairo@kairo.at>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,6 +57,29 @@
 <body>
 <div id="outside">
 <script type="application/javascript">
+
+  function setDirection() {
+    var frame = document.getElementById("directionDetector");
+    var direction = frame.contentDocument
+                         .defaultView
+                         .window
+                         .getComputedStyle(frame.contentDocument.getElementById("target"), "")
+                         .getPropertyValue("direction");
+    document.body.removeChild(frame);
+    document.dir = direction;
+  }
+
+  function setupDirection() {
+    var frame = document.createElement("iframe");
+    frame.setAttribute("id", "directionDetector");
+    frame.setAttribute("src", "chrome://global/content/directionDetector.html");
+    frame.setAttribute("width", "0");
+    frame.setAttribute("height", "0");
+    frame.setAttribute("style", "visibility: hidden;");
+    frame.setAttribute("onload", "setDirection();");
+    document.body.appendChild(frame);
+  }
+  setupDirection();
 
   /* JavaScript to enumerate and display all installed plug-ins
 
