@@ -45,6 +45,7 @@
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
+#include "nsIPrivateBrowsingService.h"
 
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
@@ -2040,6 +2041,15 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(NPBool*)result = PR_FALSE;
 #endif
     return NPERR_NO_ERROR;
+  }
+
+  case NPNVprivateModeBool: {
+    nsCOMPtr<nsIPrivateBrowsingService> pbs = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs) {
+      pbs->GetPrivateBrowsingEnabled((PRBool*)result);
+      return NPERR_NO_ERROR;
+    }
+    return NPERR_GENERIC_ERROR;
   }
 
 #ifdef XP_MACOSX

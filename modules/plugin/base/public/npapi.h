@@ -91,7 +91,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 21
+#define NP_VERSION_MINOR 22
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -327,7 +327,10 @@ typedef enum {
   /* Checks if the plugin is interested in receiving the http body of
    * all http requests (including failed ones, http status != 200).
    */
-  NPPVpluginWantsAllNetworkStreams = 18
+  NPPVpluginWantsAllNetworkStreams = 18,
+
+  NPPVprivateModeBool = 19
+
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */
   , NPPVpluginDrawingModel = 1000
@@ -358,7 +361,9 @@ typedef enum {
   /* Get the NPObject wrapper for the plugins DOM element. */
   NPNVPluginElementNPObject = 16,
 
-  NPNVSupportsWindowless = 17
+  NPNVSupportsWindowless = 17,
+
+  NPNVprivateModeBool = 18
 
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */
