@@ -49,6 +49,7 @@
 #include "nsILookAndFeel.h"
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
+#include "nsIDOMNSHTMLInputElement.h"
 
 nsNativeTheme::nsNativeTheme()
 {
@@ -150,6 +151,31 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
 
   return CheckBooleanAttr(aFrame, aCheckSelected ? nsWidgetAtoms::selected
                                                  : nsWidgetAtoms::checked);
+}
+
+PRBool
+nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  nsIContent* content = aFrame->GetContent();
+
+  if (content->IsNodeOfType(nsINode::eXUL)) {
+    // For a XUL checkbox or radio button, the state of the parent determines
+    // the state
+    return CheckBooleanAttr(aFrame->GetParent(), nsWidgetAtoms::indeterminate);
+  }
+
+  // Check for an HTML input element
+  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElt = do_QueryInterface(content);
+  if (inputElt) {
+    PRBool indeterminate;
+    inputElt->GetIndeterminate(&indeterminate);
+    return indeterminate;
+  }
+
+  return PR_FALSE;
 }
 
 PRBool
