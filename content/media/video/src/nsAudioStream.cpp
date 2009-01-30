@@ -91,7 +91,7 @@ void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aForm
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
                            NULL, 
                            SA_MODE_WRONLY, 
-                           SA_PCM_FORMAT_S16_LE,
+                           SA_PCM_FORMAT_S16_NE,
                            aRate,
                            aNumChannels) != SA_SUCCESS) {
     mAudioHandle = nsnull;
@@ -149,11 +149,15 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount)
         const short* buf = static_cast<const short*>(aBuf);
         PRInt32 volume = PRInt32((1 << 16) * mVolume);
         for (PRUint32 i = 0; i < aCount; ++i) {
-          s_data[i + offset] = short((PRInt32(buf[i]) * volume) >> 16);
+          short s = buf[i];
+#if defined(IS_BIG_ENDIAN)
+          s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
+#endif
+          s_data[i + offset] = short((PRInt32(s) * volume) >> 16);
         }
         break;
       }
-      case FORMAT_FLOAT32_LE: {
+      case FORMAT_FLOAT32: {
         const float* buf = static_cast<const float*>(aBuf);
         for (PRUint32 i = 0; i <  aCount; ++i) {
           float scaled_value = floorf(0.5 + 32768 * buf[i] * mVolume);

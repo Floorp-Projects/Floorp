@@ -129,7 +129,7 @@ sa_stream_create_pcm(
   if (mode != SA_MODE_WRONLY) {
     return SA_ERROR_NOT_SUPPORTED;
   }
-  if (format != SA_PCM_FORMAT_S16_LE) {
+  if (format != SA_PCM_FORMAT_S16_NE) {
     return SA_ERROR_NOT_SUPPORTED;
   }
 
