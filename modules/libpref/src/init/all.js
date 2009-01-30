@@ -1018,6 +1018,8 @@ pref("bidi.controlstextmode", 1);
 // 2 = hindicontextnumeralBidi
 // 3 = arabicnumeralBidi
 // 4 = hindinumeralBidi
+// 5 = persiancontextnumeralBidi
+// 6 = persiannumeralBidi
 pref("bidi.numeral", 0);
 // ------------------
 //  Support Mode

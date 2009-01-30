@@ -182,13 +182,6 @@ typedef enum nsCharType nsCharType;
   nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
 
   /**
-   * Scan an nsString, converting numerals to Arabic or Hindi forms
-   * @param aSrc is the input string
-   * @param aDst is the output string
-   */
-  nsresult HandleNumbers(const nsString& aSrc, nsString& aDst);
-
-  /**
    * Give a Unicode character, return the symmetric equivalent
    */
   PRUint32 SymmSwap(PRUint32 aChar);
@@ -277,6 +270,8 @@ typedef enum nsCharType nsCharType;
 #define IBMBIDI_NUMERAL_HINDICONTEXT  2 //  2 = hindicontextnumeralBidi
 #define IBMBIDI_NUMERAL_ARABIC        3 //  3 = arabicnumeralBidi
 #define IBMBIDI_NUMERAL_HINDI         4 //  4 = hindinumeralBidi
+#define IBMBIDI_NUMERAL_PERSIANCONTEXT 5 // 5 = persiancontextnumeralBidi
+#define IBMBIDI_NUMERAL_PERSIAN       6 //  6 = persiannumeralBidi
 //  ------------------
 //  Support Mode
 //  ------------------

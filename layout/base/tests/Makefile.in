@@ -90,6 +90,16 @@ _TEST_FILES += \
 		bug441782-4-ref.html \
 		bug441782-5.html \
 		bug441782-5-ref.html \
+		bug467672-1.html \
+		bug467672-1-ref.html \
+		bug467672-2.html \
+		bug467672-2-ref.html \
+		bug467672-3.html \
+		bug467672-3-ref.html \
+		bug467672-4.html \
+		bug467672-4-ref.html \
+		bug467672-5.html \
+		bug467672-5-ref.html \
 		$(NULL)
 endif
 
