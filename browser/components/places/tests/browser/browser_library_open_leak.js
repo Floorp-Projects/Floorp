@@ -51,6 +51,7 @@ let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
 let windowObserver = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic === "domwindowopened") {
+      ww.unregisterNotification(this);
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", function onLoad(event) {
         win.removeEventListener("load", onLoad, false);
