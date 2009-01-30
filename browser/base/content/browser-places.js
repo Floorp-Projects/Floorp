@@ -113,12 +113,13 @@ var StarUI = {
         break;
       case "keypress":
         if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-          // In edit mode, if we're not editing a folder, the ESC key is mapped
-          // to the cancel button
+          // If the panel is visible the ESC key is mapped to the cancel button
+          // unless we are editing a folder in the folderTree, or an
+          // autocomplete popup is open.
           if (!this._element("editBookmarkPanelContent").hidden) {
             var elt = aEvent.target;
-            if (elt.localName != "tree" ||
-                (elt.localName == "tree" && !elt.hasAttribute("editing")))
+            if ((elt.localName != "tree" || !elt.hasAttribute("editing")) &&
+                !elt.popupOpen)
               this.cancelButtonOnCommand();
           }
         }
