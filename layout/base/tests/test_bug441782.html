@@ -85,31 +85,68 @@ function bidiNumeral(val) {
 var bidiNumeralDefault = bidiNumeral();
 
 var passes = [
-  {file: 1, bidiNumeralValue: 0, op: "!="},
-  {file: 1, bidiNumeralValue: 1, op: "=="},
-  {file: 1, bidiNumeralValue: 2, op: "=="},
-  {file: 1, bidiNumeralValue: 3, op: "=="},
-  {file: 1, bidiNumeralValue: 4, op: "=="},
-  {file: 2, bidiNumeralValue: 0, op: "!="},
-  {file: 2, bidiNumeralValue: 1, op: "=="},
-  {file: 2, bidiNumeralValue: 2, op: "=="},
-  {file: 2, bidiNumeralValue: 3, op: "=="},
-  {file: 2, bidiNumeralValue: 4, op: "=="},
-  {file: 3, bidiNumeralValue: 0, op: "!="},
-  {file: 3, bidiNumeralValue: 1, op: "=="},
-  {file: 3, bidiNumeralValue: 2, op: "=="},
-  {file: 3, bidiNumeralValue: 3, op: "=="},
-  {file: 3, bidiNumeralValue: 4, op: "=="},
-  {file: 4, bidiNumeralValue: 0, op: "!="},
-  {file: 4, bidiNumeralValue: 1, op: "=="},
-  {file: 4, bidiNumeralValue: 2, op: "=="},
-  {file: 4, bidiNumeralValue: 3, op: "=="},
-  {file: 4, bidiNumeralValue: 4, op: "=="},
-  {file: 5, bidiNumeralValue: 0, op: "!="},
-  {file: 5, bidiNumeralValue: 1, op: "=="},
-  {file: 5, bidiNumeralValue: 2, op: "=="},
-  {file: 5, bidiNumeralValue: 3, op: "=="},
-  {file: 5, bidiNumeralValue: 4, op: "=="},
+  // bug 441782 tests (Arabic)
+  {prefix: "bug441782", file: 1, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug441782", file: 1, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug441782", file: 1, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug441782", file: 1, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug441782", file: 1, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug441782", file: 2, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug441782", file: 2, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug441782", file: 2, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug441782", file: 2, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug441782", file: 2, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug441782", file: 3, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug441782", file: 3, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug441782", file: 3, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug441782", file: 3, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug441782", file: 3, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug441782", file: 4, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug441782", file: 4, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug441782", file: 4, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug441782", file: 4, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug441782", file: 4, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug441782", file: 5, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug441782", file: 5, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug441782", file: 5, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug441782", file: 5, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug441782", file: 5, bidiNumeralValue: 4, op: "=="},
+  // bug 467672 tests (Arabic and Persian)
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 5, op: "=="},
+  {prefix: "bug467672", file: 1, bidiNumeralValue: 6, op: "=="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 5, op: "=="},
+  {prefix: "bug467672", file: 2, bidiNumeralValue: 6, op: "=="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 5, op: "=="},
+  {prefix: "bug467672", file: 3, bidiNumeralValue: 6, op: "=="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 5, op: "=="},
+  {prefix: "bug467672", file: 4, bidiNumeralValue: 6, op: "=="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 0, op: "!="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 1, op: "=="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 2, op: "=="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 3, op: "=="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 4, op: "=="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 5, op: "=="},
+  {prefix: "bug467672", file: 5, bidiNumeralValue: 6, op: "=="},
 ];
 var currentPass = 0;
 
@@ -131,10 +168,10 @@ function do_test()
       var img_1 = canvases[0].getCanvas().toDataURL("image/png", "");
       var img_2 = canvases[1].getCanvas().toDataURL("image/png", "");
       if (passes[currentPass].op == "==") {
-        ok(img_1 == img_2, "Rendering of reftest " + passes[currentPass].file +
+        ok(img_1 == img_2, "Rendering of reftest " + fileprefix + passes[currentPass].file +
            " is different with bidi.numeral == " + passes[currentPass].bidiNumeralValue);
       } else if (passes[currentPass].op == "!=") {
-        ok(img_1 != img_2, "Rendering of reftest " + passes[currentPass].file +
+        ok(img_1 != img_2, "Rendering of reftest " + fileprefix + passes[currentPass].file +
            " is not different with bidi.numeral == " + passes[currentPass].bidiNumeralValue);
       }
 
@@ -149,19 +186,21 @@ function do_test()
     }
   }
 
+  var fileprefix = passes[currentPass].prefix + "-";
   var file = passes[currentPass].file;
 
   var header = document.createElement("p");
-  header.appendChild(document.createTextNode("Testing reftest " + file +
-    " with bidi.numeral == " + passes[currentPass].bidiNumeralValue));
+  header.appendChild(document.createTextNode("Testing reftest " + fileprefix + file +
+    " with bidi.numeral == " + passes[currentPass].bidiNumeralValue +
+    " expecting " + passes[currentPass].op));
   document.body.appendChild(header);
 
   bidiNumeral(passes[currentPass].bidiNumeralValue);
 
-  var testCanvas = new RemoteCanvas("bug441782-" + file + ".html", "test-" + currentPass);
+  var testCanvas = new RemoteCanvas(fileprefix + file + ".html", "test-" + currentPass);
   testCanvas.load(callbackTestCanvas);
 
-  var refCanvas = new RemoteCanvas("bug441782-" + file + "-ref.html", "ref-" + currentPass);
+  var refCanvas = new RemoteCanvas(fileprefix + file + "-ref.html", "ref-" + currentPass);
   refCanvas.load(callbackTestCanvas);
 }
 
