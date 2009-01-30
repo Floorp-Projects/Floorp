@@ -533,26 +533,38 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 }
 
 // aRect is in app units and relative to the top-left of the aView->GetWidget()
-void nsViewManager::DefaultRefresh(nsView* aView, nsIRenderingContext *aContext, const nsRect* aRect)
+void nsViewManager::DefaultRefresh(nsView* aView,
+                                   nsIRenderingContext *aContext,
+                                   const nsRect* aRect)
 {
   NS_PRECONDITION(aView, "Must have a view to work with!");
+
+  // Don't draw anything if there's no widget or it's transparent.
   nsIWidget* widget = aView->GetNearestWidget(nsnull);
-  if (! widget)
+  if (!widget || widget->GetTransparencyMode() != eTransparencyOpaque)
     return;
 
   nsCOMPtr<nsIRenderingContext> context = aContext;
-  if (! aContext)
+  if (!context)
     context = CreateRenderingContext(*aView);
 
-  if (! context)
-    return;
-
-  nscolor bgcolor = mDefaultBackgroundColor;
-
-  if (NS_GET_A(mDefaultBackgroundColor) == 0) {
-    NS_WARNING("nsViewManager: Asked to paint a default background, but no default background color is set!");
+  // XXXzw I think this can only happen if we don't have a widget, in
+  // which case we bailed out above.
+  if (!context) {
+    NS_WARNING("nsViewManager: No rendering context for DefaultRefresh");
     return;
   }
+
+  nscolor bgcolor = mDefaultBackgroundColor;
+  // If we somehow get here before any default background color has
+  // been set, warn and use white.
+  if (bgcolor == NS_RGBA(0,0,0,0)) {
+    NS_WARNING("nsViewManager: DefaultRefresh called with no background set");
+    bgcolor = NS_RGB(255,255,255);
+  }
+
+  NS_ASSERTION(NS_GET_A(bgcolor) == 255,
+               "nsViewManager: non-opaque background color snuck in");
 
   context->SetColor(bgcolor);
   context->FillRect(*aRect);
@@ -2221,6 +2233,7 @@ nsViewManager::ProcessInvalidateEvent()
 NS_IMETHODIMP
 nsViewManager::SetDefaultBackgroundColor(nscolor aColor)
 {
+  NS_ASSERTION(NS_GET_A(aColor) == 255, "default background must be opaque");
   mDefaultBackgroundColor = aColor;
   return NS_OK;
 }
