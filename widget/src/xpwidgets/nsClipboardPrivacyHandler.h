@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Denis Issoupov <denis@macadamian.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,42 +35,47 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsClipboard_h__
-#define nsClipboard_h__
 
-#include "nsIClipboard.h"
-#include "nsITransferable.h"
-#include "nsIClipboardOwner.h"
-#include "nsClipboardPrivacyHandler.h"
-#include "nsAutoPtr.h"
+#ifndef nsClipboardPrivacyHandler_h__
+#define nsClipboardPrivacyHandler_h__
+
+#include "nsIObserver.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
-#include <qclipboard.h>
+class nsITransferable;
 
-/* Native Qt Clipboard wrapper */
-class nsClipboard : public nsIClipboard
+// nsClipboardPrivacyHandler makes sure that clipboard data copied during
+// the private browsing mode does not leak after exiting this mode.
+// In order to ensure this, callers should store an object of this class
+// for their lifetime, and call PrepareDataForClipboard in their
+// nsIClipboard::SetData implementation before starting to use the
+// nsITransferable object in any way.
+
+class nsClipboardPrivacyHandler : public nsIObserver,
+                                  public nsSupportsWeakReference
 {
+
 public:
-    nsClipboard();
-    virtual ~nsClipboard();
 
-    //nsISupports
-    NS_DECL_ISUPPORTS
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-    // nsIClipboard
-    NS_DECL_NSICLIPBOARD
+  // nsIObserver  
+  NS_DECL_NSIOBSERVER
 
-protected:
-    NS_IMETHOD SetNativeClipboardData(nsITransferable *aTransferable,
-                                      QClipboard::Mode cbMode);
-    NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable,
-                                      QClipboard::Mode cbMode);
+  nsresult Init();
+  nsresult PrepareDataForClipboard(nsITransferable * aTransferable);
 
-    nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
-    nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
-    nsCOMPtr<nsITransferable>   mSelectionTransferable;
-    nsCOMPtr<nsITransferable>   mGlobalTransferable;
-    nsRefPtr<nsClipboardPrivacyHandler> mPrivacyHandler;
+private:
+
+  PRBool InPrivateBrowsing();
+
+  nsCOMPtr<nsIPrivateBrowsingService> mPBService;
+
 };
 
-#endif // nsClipboard_h__
+nsresult NS_NewClipboardPrivacyHandler(nsClipboardPrivacyHandler ** aHandler);
+
+#endif // nsClipboardPrivacyHandler_h__
