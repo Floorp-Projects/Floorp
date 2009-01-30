@@ -1911,7 +1911,7 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
 
     return xpc_EvalInSandbox(cx, obj, source,
                              NS_ConvertUTF16toUTF8(source).get(), 1,
-                             returnStringOnly, rval);
+                             JSVERSION_DEFAULT, returnStringOnly, rval);
 #endif /* XPCONNECT_STANDALONE */
 }
 
