@@ -1053,6 +1053,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder, nsRegion* aVisibleRegion);
   NS_DISPLAY_DECL_NAME("BoxShadow")
 };
 
