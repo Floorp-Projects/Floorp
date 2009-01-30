@@ -2838,6 +2838,11 @@ public:
     }
 
     /**
+      * Drop our reference to our owner.
+      */
+    NS_IMETHOD InvalidateOwner() { return NS_ERROR_NOT_IMPLEMENTED; }
+
+    /**
      * Constructor
      */
     UpPluginInstancePeer2(void *pvThis) :
