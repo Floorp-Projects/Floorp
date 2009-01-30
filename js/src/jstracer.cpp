@@ -2953,7 +2953,7 @@ nanojit::Fragment::onDestroy()
     delete (TreeInfo *)vmprivate;
 }
 
-bool
+static JS_REQUIRES_STACK bool
 js_DeleteRecorder(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);

@@ -889,6 +889,7 @@ struct JSContext {
     JSRuntime           *runtime;
 
     /* Stack arena pool and frame pointer register. */
+    JS_REQUIRES_STACK
     JSArenaPool         stackPool;
 
     JS_REQUIRES_STACK
