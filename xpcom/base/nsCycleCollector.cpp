@@ -2822,7 +2822,7 @@ nsCycleCollector::CreateReversedEdges()
         for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
              e != e_end; ++e) {
             current->mTarget = pi;
-            current->mEdgeName = pi->mEdgeNames[i];
+            current->mEdgeName = &pi->mEdgeNames[i];
             current->mNext = (*e)->mReversedEdges;
             (*e)->mReversedEdges = current;
             ++current;
