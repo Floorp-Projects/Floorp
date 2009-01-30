@@ -87,7 +87,7 @@ CanvasBrowser.prototype = {
     browser.addEventListener("MozAfterPaint", this._paintHandler, false);
 
     this._browser = browser;
-    
+
     // endLoading(and startLoading in most cases) calls zoom anyway
     if (!skipZoom) {
       self.zoomToPage();
@@ -114,7 +114,6 @@ CanvasBrowser.prototype = {
   viewportHandler: function(bounds, oldBounds) {
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewingRect;
-    visibleBounds = visibleBounds.intersect(bounds)
     pageBounds.top = Math.floor(this._screenToPage(bounds.top));
     pageBounds.left = Math.floor(this._screenToPage(bounds.left));
     pageBounds.bottom = Math.ceil(this._screenToPage(bounds.bottom));
@@ -125,14 +124,14 @@ CanvasBrowser.prototype = {
     visibleBounds.left = Math.max(0, Math.floor(this._screenToPage(visibleBounds.left)));
     visibleBounds.bottom = Math.ceil(this._screenToPage(visibleBounds.bottom));
     visibleBounds.right = Math.ceil(this._screenToPage(visibleBounds.right));
-    this._visibleBounds = visibleBounds
-    
+    this._visibleBounds = visibleBounds;
+
     let dx = this._screenX - bounds.x;
     let dy = this._screenY - bounds.y;
     this._screenX = bounds.x;
     this._screenY = bounds.y;
     this._pageBounds = pageBounds;
-        
+
     if (!oldBounds) {
       // no old bounds means we resized the viewport, so redraw everything
       this._redrawRect(pageBounds.x, pageBounds.y,
@@ -446,19 +445,19 @@ CanvasBrowser.prototype = {
     let curRect = this._visibleBounds
     let newx = curRect.x;
     let newy = curRect.y;
-   
+
     if (elRect.x < curRect.x || elRect.width > curRect.width) {
       newx = elRect.x;
     } else if (elRect.x + elRect.width > curRect.x + curRect.width) {
       newx = elRect.x - curRect.width + elRect.width
-    } 
+    }
 
     if (elRect.y < curRect.y || elRect.height > curRect.height) {
       newy = elRect.y;
     } else if (elRect.y + elRect.height > curRect.y + curRect.height) {
       newy = elRect.y - curRect.height + elRect.height
-    } 
-    
+    }
+
     ws.panBy(this._pageToScreen(curRect.x-newx),this._pageToScreen(curRect.y  - newy), true)
   },
 
