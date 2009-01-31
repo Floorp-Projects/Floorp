@@ -1620,7 +1620,7 @@ typedef struct MSortArgs {
 } MSortArgs;
 
 /* Helper function for js_MergeSort. */
-static JSBool
+static JS_REQUIRES_STACK JSBool
 MergeArrays(MSortArgs *msa, void *src, void *dest, size_t run1, size_t run2)
 {
     void *arg, *a, *b, *c;
@@ -1681,7 +1681,7 @@ MergeArrays(MSortArgs *msa, void *src, void *dest, size_t run1, size_t run2)
  * This sort is stable, i.e. sequence of equal elements is preserved.
  * See also bug #224128.
  */
-JSBool
+JS_REQUIRES_STACK JSBool
 js_MergeSort(void *src, size_t nel, size_t elsize,
              JSComparator cmp, void *arg, void *tmp)
 {
@@ -1767,7 +1767,7 @@ typedef struct CompareArgs {
     jsval       *elemroot;      /* stack needed for js_Invoke */
 } CompareArgs;
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 sort_compare(void *arg, const void *a, const void *b, int *result)
 {
     jsval av = *(const jsval *)a, bv = *(const jsval *)b;
@@ -1835,7 +1835,7 @@ sort_compare_strings(void *arg, const void *a, const void *b, int *result)
  */
 JS_STATIC_ASSERT(JSVAL_NULL == 0);
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_sort(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv, fval, *vec, *mergesort_tmp, v;
@@ -2746,7 +2746,7 @@ typedef enum ArrayExtraMode {
 
 #define REDUCE_MODE(mode) ((mode) == REDUCE || (mode) == REDUCE_RIGHT)
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
 {
     JSObject *obj;
@@ -2930,43 +2930,43 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
     return ok;
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_forEach(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, FOREACH, argc, vp);
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_map(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, MAP, argc, vp);
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_reduce(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, REDUCE, argc, vp);
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_reduceRight(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, REDUCE_RIGHT, argc, vp);
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_filter(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, FILTER, argc, vp);
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_some(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, SOME, argc, vp);
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 array_every(JSContext *cx, uintN argc, jsval *vp)
 {
     return array_extra(cx, EVERY, argc, vp);

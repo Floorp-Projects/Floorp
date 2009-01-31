@@ -254,10 +254,10 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
 
-extern void
+extern JS_REQUIRES_STACK void
 js_TraceRuntime(JSTracer *trc, JSBool allAtoms);
 
-extern JS_FRIEND_API(void)
+extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx);
 
 /*

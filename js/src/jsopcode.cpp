@@ -4110,6 +4110,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     tmp = (TableEntry *)
                           JS_malloc(cx, (size_t)j * sizeof *table);
                     if (tmp) {
+                        VOUCH_DOES_NOT_REQUIRE_STACK();
                         ok = js_MergeSort(table, (size_t)j, sizeof(TableEntry),
                                           CompareOffsets, NULL, tmp);
                         JS_free(cx, tmp);
