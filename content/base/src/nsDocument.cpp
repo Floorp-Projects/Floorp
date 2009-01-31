@@ -3669,9 +3669,26 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 }
 
 void
+nsDocument::MaybeEndOutermostXBLUpdate()
+{
+  // Only call BindingManager()->EndOutermostUpdate() when
+  // we're not in an update and it is safe to run scripts.
+  if (mUpdateNestLevel == 0 && mInXBLUpdate) {
+    if (nsContentUtils::IsSafeToRunScript()) {
+      mInXBLUpdate = PR_FALSE;
+      BindingManager()->EndOutermostUpdate();
+    } else if (!mInDestructor) {
+      nsContentUtils::AddScriptRunner(
+        NS_NEW_RUNNABLE_METHOD(nsDocument, this, MaybeEndOutermostXBLUpdate));
+    }
+  }
+}
+
+void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
-  if (mUpdateNestLevel == 0) {
+  if (mUpdateNestLevel == 0 && !mInXBLUpdate) {
+    mInXBLUpdate = PR_TRUE;
     BindingManager()->BeginOutermostUpdate();
   }
   
@@ -3698,15 +3715,12 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
 
   --mUpdateNestLevel;
-  if (mUpdateNestLevel == 0) {
-    // This set of updates may have created XBL bindings.  Let the
-    // binding manager know we're done.
-    BindingManager()->EndOutermostUpdate();
-  }
 
-  if (mUpdateNestLevel == 0 && !mDelayFrameLoaderInitialization) {
-    InitializeFinalizeFrameLoaders();
-  }
+  // This set of updates may have created XBL bindings.  Let the
+  // binding manager know we're done.
+  MaybeEndOutermostXBLUpdate();
+
+  MaybeInitializeFinalizeFrameLoaders();
 }
 
 void
@@ -5135,18 +5149,6 @@ nsDocument::FlushSkinBindings()
   BindingManager()->FlushSkinBindings();
 }
 
-class nsFrameLoaderRunner : public nsRunnable
-{
-public:
-  nsFrameLoaderRunner(nsDocument* aDoc) : mDoc(aDoc) {}
-  NS_IMETHOD Run() {
-    mDoc->InitializeFinalizeFrameLoaders();
-    return NS_OK;
-  }
-private:
-  nsRefPtr<nsDocument> mDoc;
-};
-
 nsresult
 nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 {
@@ -5160,7 +5162,9 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 
   mInitializableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
-    mFrameLoaderRunner = new nsFrameLoaderRunner(this);
+    mFrameLoaderRunner =
+      NS_NEW_RUNNABLE_METHOD(nsDocument, this,
+                             MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -5177,7 +5181,9 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
 
   mFinalizableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
-    mFrameLoaderRunner = new nsFrameLoaderRunner(this);
+    mFrameLoaderRunner =
+      NS_NEW_RUNNABLE_METHOD(nsDocument, this,
+                             MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -5185,12 +5191,29 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
 }
 
 void
-nsDocument::InitializeFinalizeFrameLoaders()
+nsDocument::MaybeInitializeFinalizeFrameLoaders()
 {
-  mFrameLoaderRunner = nsnull;
   if (mDelayFrameLoaderInitialization || mUpdateNestLevel != 0) {
+    // This method will be recalled when mUpdateNestLevel drops to 0,
+    // or when !mDelayFrameLoaderInitialization.
+    mFrameLoaderRunner = nsnull;
     return;
   }
+
+  // We're not in an update, but it is not safe to run scripts, so
+  // postpone frameloader initialization and finalization.
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    if (!mInDestructor && !mFrameLoaderRunner &&
+        (mInitializableFrameLoaders.Length() ||
+         mFinalizableFrameLoaders.Length())) {
+      mFrameLoaderRunner =
+        NS_NEW_RUNNABLE_METHOD(nsDocument, this,
+                               MaybeInitializeFinalizeFrameLoaders);
+      nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
+    }
+    return;
+  }
+  mFrameLoaderRunner = nsnull;
 
   // Don't use a temporary array for mInitializableFrameLoaders, because
   // loading a frame may cause some other frameloader to be removed from the
