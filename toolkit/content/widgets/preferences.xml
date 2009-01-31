@@ -1106,8 +1106,12 @@
       </handler>
 
       <handler event="keypress" key="&windowClose.key;" modifiers="accel" phase="capturing">
+      <![CDATA[
         if (this.instantApply)
           window.close();
+        event.stopPropagation();
+        event.preventDefault();
+      ]]>
       </handler>
 
       <handler event="keypress"
