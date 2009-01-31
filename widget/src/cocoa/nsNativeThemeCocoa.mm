@@ -224,6 +224,8 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mSearchFieldCell setEditable:YES];
   [mSearchFieldCell setFocusRingType:NSFocusRingTypeExterior];
 
+  mDropdownCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:NO];
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -235,6 +237,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
   [mRadioButtonCell release];
   [mCheckboxCell release];
   [mSearchFieldCell release];
+  [mDropdownCell release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -728,7 +731,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   else {
     if (inKind == kThemeArrowButton)
       bdi.state = kThemeStateUnavailable; // these are always drawn as unavailable
-    else if (!isActive && (inKind == kThemeListHeaderButton || inKind == kThemePopupButton))
+    else if (!isActive && inKind == kThemeListHeaderButton)
       bdi.state = kThemeStateInactive;
     else
       bdi.state = kThemeStateActive;
@@ -744,8 +747,6 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   }
 
   HIRect drawFrame = inBoxRect;
-  PRBool needsScaling = PR_FALSE;
-  int drawWidth = 0, drawHeight = 0;
 
   if (inKind == kThemePushButton) {
     drawFrame.size.height -= 2;
@@ -759,49 +760,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       drawFrame.size.width -= 2;
     }
   }
-  else if (inKind == kThemePopupButton) {
-    /* popup buttons draw outside their frame by 1 pixel on each side and
-     * two on the bottom but of the bottom two pixels one is a 'shadow'
-     * and not the frame itself.  That extra pixel should be handled
-     * by GetWidgetOverflow, but we already extend each widget's overflow
-     * by 4px to handle a potential focus ring.
-     */
-
-    if (nsToolkit::OnLeopardOrLater()) {
-      /* Leopard will happily scale up for buttons that are sized 20px or higher,
-       * drawing 1px below the actual requested area.  (So 20px == 21px.)
-       * but anything below that will be clamped:
-       *  requested: 20 actual: 21 (handled above)
-       *  requested: 19 actual: 18 <- note that there is no way to draw a dropdown that's exactly 20 px in size
-       *  requested: 18 actual: 18
-       *  requested: 17 actual: 18
-       *  requested: 16 actual: 15 (min size)
-       * For those, draw to a buffer and scale
-       */
-      if (drawFrame.size.height != 18 && drawFrame.size.height != 15) {
-        if (drawFrame.size.height > 20) {
-          drawFrame.size.width -= 2;
-          drawFrame.origin.x += 1;
-          drawFrame.size.height -= 1;
-        }
-        else {
-          // pick which native height to use for the small scale
-          float nativeHeight = 15.0f;
-          if (drawFrame.size.height > 16)
-            nativeHeight = 18.0f;
-
-          drawWidth = (int) drawFrame.size.width;
-          drawHeight = (int) nativeHeight;
-
-          needsScaling = PR_TRUE;
-        }
-      }
-    }
-    else {
-      // leave things alone on Tiger
-      drawFrame.size.height -= 1;
-    }
-  } else if (inKind == kThemeListHeaderButton) {
+  else if (inKind == kThemeListHeaderButton) {
     CGContextClipToRect(cgContext, inBoxRect);
     // Always remove the top border.
     drawFrame.origin.y -= 1;
@@ -815,49 +774,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       drawFrame.origin.x -= 1;
   }
 
-  // Fall back to no bitmap buffer (and no scaling) if the area of our button
-  // (in pixels^2) is too large.
-  if (!needsScaling || (drawWidth * drawHeight > BITMAP_MAX_AREA)) {
-    HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
-  } else {
-    int w = drawWidth + MAX_FOCUS_RING_WIDTH*2;
-    int h = drawHeight + MAX_FOCUS_RING_WIDTH*2;
-
-    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-    CGContextRef ctx = CGBitmapContextCreate(NULL, w, h, 8, w * 4,
-                                             rgb, kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(rgb);
-
-    // Flip the context
-    CGContextTranslateCTM(ctx, 0.0f, h);
-    CGContextScaleCTM(ctx, 1.0f, -1.0f);
-
-    // then draw the button (offset by the focus ring size
-    CGRect tmpFrame = CGRectMake(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, drawWidth, drawHeight);
-    HIThemeDrawButton(&tmpFrame, &bdi, ctx, kHIThemeOrientationNormal, NULL);
-
-    CGImageRef img = CGBitmapContextCreateImage(ctx);
-    CGRect imgRect = CGRectMake(drawFrame.origin.x - MAX_FOCUS_RING_WIDTH,
-                                drawFrame.origin.y - MAX_FOCUS_RING_WIDTH,
-                                drawFrame.size.width + MAX_FOCUS_RING_WIDTH * 2.0,
-                                drawFrame.size.height + MAX_FOCUS_RING_WIDTH * 2.0);
-
-    // And then flip the main context here so that the image gets drawn right-side up
-    CGAffineTransform ctm = CGContextGetCTM (cgContext);
-
-    CGContextTranslateCTM (cgContext, imgRect.origin.x, imgRect.origin.y + imgRect.size.height);
-    CGContextScaleCTM (cgContext, 1.0, -1.0);
-
-    imgRect.origin.x = imgRect.origin.y = 0.0f;
-
-    // See comment about why we don't scale MAX_FOCUS_RING in DrawCellWithScaling
-    CGContextDrawImage(cgContext, imgRect, img);
-
-    CGContextSetCTM (cgContext, ctm);
-
-    CGImageRelease(img);
-    CGContextRelease(ctx);
-  }
+  HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -867,6 +784,50 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+
+static const CellRenderSettings dropdownSettings = {
+  {
+    NSMakeSize(0, 16), // mini
+    NSMakeSize(0, 19), // small
+    NSMakeSize(0, 22)  // regular
+  },
+  {
+    NSMakeSize(18, 0), // mini
+    NSMakeSize(38, 0), // small
+    NSMakeSize(44, 0)  // regular
+  },
+  {
+    { // Tiger
+      {1, 1, 2, 1},    // mini
+      {3, 0, 3, 1},    // small
+      {3, 0, 3, 0}     // regular
+    },
+    { // Leopard
+      {1, 1, 2, 1},    // mini
+      {3, 0, 3, 1},    // small
+      {3, 0, 3, 0}     // regular
+    }
+  }
+};
+
+
+void
+nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
+                                 PRInt32 inState, nsIFrame* aFrame)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mDropdownCell setEnabled:!IsDisabled(aFrame)];
+  [mDropdownCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
+  [mDropdownCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
+  [mDropdownCell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
+
+  DrawCellWithSnapping(mDropdownCell, cgContext, inBoxRect, dropdownSettings,
+                       0.5f, NativeViewForFrame(aFrame));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+ 
 
 void
 nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
@@ -1652,9 +1613,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_DROPDOWN:
-      DrawButton(cgContext, kThemePopupButton, macRect,
-                 IsDefaultButton(aFrame), IsDisabled(aFrame), 
-                 kThemeButtonOn, kThemeAdornmentNone, eventState, aFrame);
+      DrawDropdown(cgContext, macRect, eventState, aFrame);
       break;
 
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1888,7 +1847,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
-      aResult->SizeTo(kAquaDropdownLeftBorder, 2, kAquaDropdownRightBorder, 2);
+      aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 2);
       break;
 
     case NS_THEME_TEXTFIELD:
