@@ -307,6 +307,9 @@ nsUserFontSet::StartLoad(gfxFontEntry *aFontToLoad,
     nsCOMPtr<nsIStreamListener> listener =
       new nsCrossSiteListenerProxy(streamLoader, principal, channel, 
                                    PR_FALSE, &rv);
+    if (NS_FAILED(rv)) {
+      fontLoader->DropChannel();  // explicitly need to break ref cycle
+    }
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
 
