@@ -1802,6 +1802,7 @@ skipline:
         }
 
         if (MatchChar(ts, '*')) {
+            uintN lineno = ts->lineno;
             while ((c = GetChar(ts)) != EOF &&
                    !(c == '*' && MatchChar(ts, '/'))) {
                 /* Ignore all characters until comment close. */
@@ -1810,6 +1811,11 @@ skipline:
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_COMMENT);
                 goto error;
+            }
+            if ((ts->flags & TSF_NEWLINES) && lineno != ts->lineno) {
+                ts->flags &= ~TSF_DIRTYLINE;
+                tt = TOK_EOL;
+                goto eol_out;
             }
             ts->cursor = (ts->cursor - 1) & NTOKENS_MASK;
             goto retry;

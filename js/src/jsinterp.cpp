@@ -533,7 +533,7 @@ js_EnablePropertyCache(JSContext *cx)
  * Check if the current arena has enough space to fit nslots after sp and, if
  * so, reserve the necessary space.
  */
-static JSBool
+static JS_REQUIRES_STACK JSBool
 AllocateAfterSP(JSContext *cx, jsval *sp, uintN nslots)
 {
     uintN surplus;
@@ -558,7 +558,7 @@ AllocateAfterSP(JSContext *cx, jsval *sp, uintN nslots)
     return JS_TRUE;
 }
 
-JS_STATIC_INTERPRET jsval *
+JS_STATIC_INTERPRET JS_REQUIRES_STACK jsval *
 js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
@@ -583,13 +583,13 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     return sp;
 }
 
-JS_STATIC_INTERPRET void
+JS_STATIC_INTERPRET JS_REQUIRES_STACK void
 js_FreeRawStack(JSContext *cx, void *mark)
 {
     JS_ARENA_RELEASE(&cx->stackPool, mark);
 }
 
-JS_FRIEND_API(jsval *)
+JS_REQUIRES_STACK JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
@@ -635,7 +635,7 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
     return sp;
 }
 
-JS_FRIEND_API(void)
+JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark)
 {
     JSStackHeader *sh;
@@ -988,7 +988,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
     return ok;
 }
 
-static JSBool
+static JS_REQUIRES_STACK JSBool
 NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
 {
     jsval *invokevp;
@@ -1049,7 +1049,7 @@ const uint16 js_PrimitiveTestFlags[] = {
  * required arguments, allocate declared local variables, and pop everything
  * when done.  Then push the return value.
  */
-JS_FRIEND_API(JSBool)
+JS_REQUIRES_STACK JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
 {
     void *mark;
@@ -1265,7 +1265,7 @@ have_fun:
 
     /* Default return value for a constructor is the new object. */
     frame.rval = (flags & JSINVOKE_CONSTRUCT) ? vp[1] : JSVAL_VOID;
-    frame.down = js_GetTopStackFrame(cx);
+    frame.down = cx->fp;
     frame.annotation = NULL;
     frame.scopeChain = NULL;    /* set below for real, after cx->fp is set */
     frame.regs = NULL;
@@ -1372,7 +1372,7 @@ bad:
     goto out2;
 }
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval)
 {
@@ -1417,6 +1417,8 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
                     JSAccessMode mode, uintN argc, jsval *argv, jsval *rval)
 {
     JSSecurityCallbacks *callbacks;
+
+    js_LeaveTrace(cx);
 
     /*
      * js_InternalInvoke could result in another try to get or set the same id
@@ -1731,7 +1733,7 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
     return lval == rval;
 }
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
 {
     JSFunction *fun, *fun2;
@@ -2522,7 +2524,16 @@ js_Interpret(JSContext *cx)
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP: CHECK_RECORDER();
+# ifdef DEBUG
+#  define TRACE_OPCODE(OP)  JS_BEGIN_MACRO                                    \
+                                if (cx->tracefp)                              \
+                                    js_TraceOpcode(cx, len);                  \
+                            JS_END_MACRO
+# else
+#  define TRACE_OPCODE(OP)  (void)0
+# endif
+
+# define BEGIN_CASE(OP)     L_##OP: TRACE_OPCODE(OP); CHECK_RECORDER();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \

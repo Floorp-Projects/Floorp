@@ -2487,7 +2487,7 @@ testWeirdDateParse.jitstats = {
     traceCompleted: 6,
     traceTriggered: 14,
     unstableLoopVariable: 3,
-    noCompatInnerTrees: 1
+    noCompatInnerTrees: 0
 };
 test(testWeirdDateParse);
 
@@ -4126,6 +4126,47 @@ function testInterpreterReentry3() {
 }
 testInterpreterReentry3.expected = 1;
 test(testInterpreterReentry3);
+
+function testInterpreterReentry4() {
+    var obj = {a:1, b:1, c:1, d:1, get e() 1000 };
+    for (var p in obj)
+        obj[p];
+}
+test(testInterpreterReentry4);
+
+function testInterpreterReentry5() {
+    var arr = [0, 1, 2, 3, 4];
+    arr.__defineGetter__("4", function() 1000);
+    for (var i = 0; i < 5; i++)
+        arr[i];
+    for (var p in arr)
+        arr[p];
+}
+test(testInterpreterReentry5);
+
+/* // These tests should pass but currently crash, pending bug 462027.
+function testInterpreterReentry6() {
+    var obj = {a:1, b:1, c:1, d:1, set e(x) { this._e = x; }};
+    for (var p in obj)
+        obj[p] = "grue";
+    return obj._e;
+}
+testInterpreterReentry6.expected = "grue";
+test(testInterpreterReentry6);
+
+function testInterpreterReentry7() {
+    var arr = [0, 1, 2, 3, 4];
+    arr.__defineSetter__("4", function(x) { this._4 = x; });
+    for (var i = 0; i < 5; i++)
+        arr[i] = "grue";
+    var tmp = arr._4;
+    for (var p in arr)
+        arr[p] = "bleen";
+    return tmp + " " + arr._4;
+}
+testInterpreterReentry7.expected = "grue bleen";
+test(testInterpreterReentry7);
+*/
 
 /*****************************************************************************
  *                                                                           *

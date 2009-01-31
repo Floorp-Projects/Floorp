@@ -274,22 +274,35 @@ public:
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     TypeMap                 typeMap;
-    unsigned                stackSlots;
+    unsigned                nStackTypes;
+    uint32                  globalShape;
+    SlotList*               globalSlots;
     Queue<nanojit::Fragment*> dependentTrees;
     unsigned                branchCount;
     Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
 
-    TreeInfo(nanojit::Fragment* _fragment) : unstableExits(NULL) {
-        fragment = _fragment;
-    }
+    TreeInfo(nanojit::Fragment* _fragment,
+             uint32 _globalShape,
+             SlotList* _globalSlots)
+      : fragment(_fragment),
+        script(NULL),
+        maxNativeStackSlots(0),
+        nativeStackBase(0),
+        maxCallDepth(0),
+        nStackTypes(0),
+        globalShape(_globalShape),
+        globalSlots(_globalSlots),
+        branchCount(0),
+        unstableExits(NULL)
+            {}
     ~TreeInfo();
 
-    inline unsigned globalSlots() {
-        return typeMap.length() - stackSlots;
+    inline unsigned nGlobalTypes() {
+        return typeMap.length() - nStackTypes;
     }
     inline uint8* globalTypeMap() {
-        return typeMap.data() + stackSlots;
+        return typeMap.data() + nStackTypes;
     }
     inline uint8* stackTypeMap() {
         return typeMap.data();
@@ -586,5 +599,12 @@ js_GetBuiltinFunction(JSContext *cx, uintN index);
 #define TRACE_2(x,a,b)          ((void)0)
 
 #endif /* !JS_TRACER */
+
+static JS_INLINE JS_FORCES_STACK void
+js_LeaveTrace(JSContext *cx)
+{
+    if (JS_ON_TRACE(cx))
+        js_GetTopStackFrame(cx);
+}
 
 #endif /* jstracer_h___ */
