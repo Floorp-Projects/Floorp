@@ -489,8 +489,7 @@ OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3, -1,  0,  0,  JOF_UINT16
 /*
  * Pick an element from the stack.
  */
-OPDEF(JSOP_PICK,          201,"pick",        NULL,    2,  1,  0,  0,  JOF_UINT8)
-
+OPDEF(JSOP_PICK,          201,"pick",        NULL,    2,  0,  0,  0,  JOF_UINT8)
 
 /* Throws a TypeError if the value at the top of the stack is not primitive. */
 OPDEF(JSOP_PRIMTOP,       202, "primtop",    NULL,    1,  1,  1,  0,  JOF_BYTE)

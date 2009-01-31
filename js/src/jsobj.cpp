@@ -69,9 +69,10 @@
 #include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsstr.h"
-#include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
 #include "jsstaticcheck.h"
+#include "jsstr.h"
+#include "jstracer.h"
+#include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
 
 #if JS_HAS_GENERATORS
 #include "jsiter.h"
@@ -3983,7 +3984,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         return JS_FALSE;
 
     if (entryp) {
-        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
+        JS_ASSERT_NOT_ON_TRACE(cx);
         js_FillPropertyCache(cx, obj, shape, 0, protoIndex, obj2, sprop, entryp);
     }
     JS_UNLOCK_OBJ(cx, obj2);
@@ -4189,7 +4190,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         return JS_FALSE;
 
     if (entryp) {
-        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
+        JS_ASSERT_NOT_ON_TRACE(cx);
         if (!(attrs & JSPROP_SHARED))
             js_FillPropertyCache(cx, obj, shape, 0, 0, obj, sprop, entryp);
         else
@@ -5130,8 +5131,9 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
         JS_ClearPendingException(cx);
     JS_SetErrorReporter(cx, older);
 
-    return JSVAL_IS_PRIMITIVE(fval) ||
-           js_InternalCall(cx, obj, fval, argc, argv, rval);
+    if (JSVAL_IS_PRIMITIVE(fval))
+        return JS_TRUE;
+    return js_InternalCall(cx, obj, fval, argc, argv, rval);
 }
 
 #if JS_HAS_XDR

@@ -122,7 +122,7 @@ typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
  * comparator function cmp returns an error inside a comparison, so remember
  * to check the return value of this function.
  */
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
              void *arg, void *tmp);
 

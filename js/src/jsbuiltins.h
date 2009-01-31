@@ -322,6 +322,19 @@ js_StringToNumber(JSContext* cx, JSString* str);
 jsdouble FASTCALL
 js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
 
+static JS_INLINE JSBool
+js_Int32ToId(JSContext* cx, int32 index, jsid* id)
+{
+    if (index <= JSVAL_INT_MAX) {
+        *id = INT_TO_JSID(index);
+        return JS_TRUE;
+    }
+    JSString* str = js_NumberToString(cx, index);
+    if (!str)
+        return JS_FALSE;
+    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
+}
+
 #else
 
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)

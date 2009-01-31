@@ -187,62 +187,6 @@ js_StringToInt32(JSContext* cx, JSString* str)
     return js_DoubleToECMAInt32(d);
 }
 
-static inline JSBool
-js_Int32ToId(JSContext* cx, int32 index, jsid* id)
-{
-    if (index <= JSVAL_INT_MAX) {
-        *id = INT_TO_JSID(index);
-        return JS_TRUE;
-    }
-    JSString* str = js_NumberToString(cx, index);
-    if (!str)
-        return JS_FALSE;
-    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
-}
-
-jsval FASTCALL
-js_Any_getprop(JSContext* cx, JSObject* obj, JSString* idstr)
-{
-    jsval v;
-    jsid id;
-
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
-        return JSVAL_ERROR_COOKIE;
-    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-        return JSVAL_ERROR_COOKIE;
-    return v;
-}
-
-JSBool FASTCALL
-js_Any_setprop(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
-{
-    jsid id;
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
-        return JS_FALSE;
-    return OBJ_SET_PROPERTY(cx, obj, id, &v);
-}
-
-jsval FASTCALL
-js_Any_getelem(JSContext* cx, JSObject* obj, int32 index)
-{
-    jsval v;
-    jsid id;
-    if (!js_Int32ToId(cx, index, &id))
-        return JSVAL_ERROR_COOKIE;
-    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-        return JSVAL_ERROR_COOKIE;
-    return v;
-}
-
-JSBool FASTCALL
-js_Any_setelem(JSContext* cx, JSObject* obj, int32 index, jsval v)
-{
-    jsid id;
-    if (!js_Int32ToId(cx, index, &id))
-        return JSVAL_ERROR_COOKIE;
-    return OBJ_SET_PROPERTY(cx, obj, id, &v);
-}
-
 SideExit* FASTCALL
 js_CallTree(InterpState* state, Fragment* f)
 {

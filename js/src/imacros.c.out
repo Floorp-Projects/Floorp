@@ -594,6 +594,64 @@ static struct {
 /*11*/  JSOP_STOP,
     },
 };
+static struct {
+    jsbytecode getprop[10];
+    jsbytecode getelem[10];
+} getelem_imacros = {
+    {
+/* 0*/  JSOP_SWAP,
+/* 1*/  JSOP_CALLBUILTIN, ((JSBUILTIN_GetProperty) & 0xff00) >> 8, ((JSBUILTIN_GetProperty) & 0xff),
+/* 4*/  JSOP_PICK, 2,
+/* 6*/  JSOP_CALL, 0, 1,
+/* 9*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_SWAP,
+/* 1*/  JSOP_CALLBUILTIN, ((JSBUILTIN_GetElement) & 0xff00) >> 8, ((JSBUILTIN_GetElement) & 0xff),
+/* 4*/  JSOP_PICK, 2,
+/* 6*/  JSOP_CALL, 0, 1,
+/* 9*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode setprop[15];
+    jsbytecode setelem[15];
+} setelem_imacros = {
+    {
+/* 0*/  JSOP_DUP,
+/* 1*/  JSOP_PICK, 3,
+/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetProperty) & 0xff00) >> 8, ((JSBUILTIN_SetProperty) & 0xff),
+/* 6*/  JSOP_PICK, 4,
+/* 8*/  JSOP_PICK, 4,
+/*10*/  JSOP_CALL, 0, 2,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_DUP,
+/* 1*/  JSOP_PICK, 3,
+/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetElement) & 0xff00) >> 8, ((JSBUILTIN_SetElement) & 0xff),
+/* 6*/  JSOP_PICK, 4,
+/* 8*/  JSOP_PICK, 4,
+/*10*/  JSOP_CALL, 0, 2,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode initelem[15];
+} initelem_imacros = {
+    {
+/* 0*/  JSOP_PICK, 2,
+/* 2*/  JSOP_DUP,
+/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetElement) & 0xff00) >> 8, ((JSBUILTIN_SetElement) & 0xff),
+/* 6*/  JSOP_PICK, 4,
+/* 8*/  JSOP_PICK, 4,
+/*10*/  JSOP_CALL, 0, 2,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+};
 uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NOP */
     0,  /* JSOP_PUSH */
@@ -650,8 +708,8 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_ELEMDEC */
     0,  /* JSOP_GETPROP */
     0,  /* JSOP_SETPROP */
-    0,  /* JSOP_GETELEM */
-    0,  /* JSOP_SETELEM */
+    2,  /* JSOP_GETELEM */
+    2,  /* JSOP_SETELEM */
     0,  /* JSOP_CALLNAME */
     0,  /* JSOP_CALL */
     0,  /* JSOP_NAME */
@@ -687,7 +745,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NEWINIT */
     0,  /* JSOP_ENDINIT */
     0,  /* JSOP_INITPROP */
-    0,  /* JSOP_INITELEM */
+    2,  /* JSOP_INITELEM */
     0,  /* JSOP_DEFSHARP */
     0,  /* JSOP_USESHARP */
     0,  /* JSOP_INCARG */

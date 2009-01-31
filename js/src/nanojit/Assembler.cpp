@@ -854,6 +854,11 @@ namespace nanojit
 
 	void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
 	{
+		// don't try to patch code if we are in an error state since we might have partially 
+		// overwritten the code cache already
+		if (error())
+			return;
+
 	    NIns* SOT = 0;
 	    if (frag->isRoot()) {
 	        SOT = frag->loopEntry;
