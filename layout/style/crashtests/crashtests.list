@@ -26,6 +26,7 @@ load 456196.html
 load 460217-1.html
 load 466845-1.html
 load 472195-1.html
+load 472237-1.html # will fail, test for leak (474704)
 HTTP(..) load 472237-1.html
 load 473720-1.html
 load 473892-1.html
