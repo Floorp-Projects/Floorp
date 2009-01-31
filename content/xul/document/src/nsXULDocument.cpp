@@ -3216,7 +3216,7 @@ nsXULDocument::DoneWalking()
         NS_WARN_IF_FALSE(mUpdateNestLevel == 0,
                          "Constructing XUL document in middle of an update?");
         if (mUpdateNestLevel == 0) {
-            InitializeFinalizeFrameLoaders();
+            MaybeInitializeFinalizeFrameLoaders();
         }
 
         NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
@@ -3299,10 +3299,19 @@ nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
 }
 
 void
-nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
+nsXULDocument::MaybeBroadcast()
 {
-    nsXMLDocument::EndUpdate(aUpdateType);
-    if (mUpdateNestLevel == 0) {
+    // Only broadcast when not in an update and when safe to run scripts.
+    if (mUpdateNestLevel == 0 &&
+        (mDelayedAttrChangeBroadcasts.Length() ||
+         mDelayedBroadcasters.Length())) {
+        if (!nsContentUtils::IsSafeToRunScript()) {
+            if (!mInDestructor) {
+                nsContentUtils::AddScriptRunner(
+                  NS_NEW_RUNNABLE_METHOD(nsXULDocument, this, MaybeBroadcast));
+            }
+            return;
+        }
         if (!mHandlingDelayedAttrChange) {
             mHandlingDelayedAttrChange = PR_TRUE;
             for (PRUint32 i = 0; i < mDelayedAttrChangeBroadcasts.Length(); ++i) {
@@ -3340,6 +3349,14 @@ nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
             }
         }
     }
+}
+
+void
+nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+    nsXMLDocument::EndUpdate(aUpdateType);
+
+    MaybeBroadcast();
 }
 
 void
