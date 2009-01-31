@@ -1007,7 +1007,9 @@ public:
 
   nsresult CloneDocHelper(nsDocument* clone) const;
 
-  void InitializeFinalizeFrameLoaders();
+  void MaybeInitializeFinalizeFrameLoaders();
+
+  void MaybeEndOutermostXBLUpdate();
 protected:
 
   void RegisterNamedItems(nsIContent *aContent);
@@ -1188,6 +1190,8 @@ protected:
   // document was created entirely in memory
   PRPackedBool mHaveInputEncoding:1;
 
+  PRPackedBool mInXBLUpdate:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
@@ -1272,7 +1276,7 @@ private:
 
   nsTArray<nsRefPtr<nsFrameLoader> > mInitializableFrameLoaders;
   nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
-  nsCOMPtr<nsIRunnable> mFrameLoaderRunner;
+  nsRefPtr<nsRunnableMethod<nsDocument> > mFrameLoaderRunner;
 
   nsRevocableEventPtr<nsRunnableMethod<nsDocument> > mPendingTitleChangeEvent;
 

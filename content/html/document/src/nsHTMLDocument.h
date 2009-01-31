@@ -358,6 +358,7 @@ protected:
 
   nsresult TurnEditingOff();
   nsresult EditingStateChanged();
+  void MaybeEditingStateChanged();
 
   PRUint32 mContentEditableCount;
   EditingState mEditingState;
