@@ -57,6 +57,7 @@ menulist {
   -moz-appearance: menulist-text;
   -moz-box-align: center;
   -moz-box-pack: center;
+  margin-bottom: 1px;
 }
 
 .menulist-label {
