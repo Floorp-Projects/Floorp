@@ -65,8 +65,8 @@ class nsISMILAttr;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x2813b1d9, 0x7fe1, 0x496f, \
- { 0x85, 0x52, 0xa2, 0xc1, 0xc5, 0x6b, 0x15, 0x40 } }
+{ 0x48cb2d6d, 0x9ccc, 0x4d0b, \
+  { 0x8c, 0x07, 0x29, 0x96, 0xb5, 0xf9, 0x68, 0x55 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -160,7 +160,7 @@ public:
    */
   void SetNativeAnonymous()
   {
-    SetFlags(NODE_IS_ANONYMOUS);
+    SetFlags(NODE_IS_ANONYMOUS | NODE_IS_IN_ANONYMOUS_SUBTREE);
   }
 
   /**
