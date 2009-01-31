@@ -3505,7 +3505,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         goto bad);
 
     if (entryp) {
-        JS_ASSERT_NOT_EXECUTING_TRACE(cx);
+        JS_ASSERT_NOT_ON_TRACE(cx);
         if (!(attrs & JSPROP_SHARED))
             js_FillPropertyCache(cx, obj, OBJ_SHAPE(obj), 0, 0, obj, sprop, entryp);
         else
