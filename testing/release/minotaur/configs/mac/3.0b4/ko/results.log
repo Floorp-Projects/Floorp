@@ -1,9 +1,0 @@
----  
-+++  
-@@ -7,4 +7,4 @@
-  folder=toolbar title=최신 뉴스 보기 url=http://ko.fxfeeds.mozilla.com/ko/firefox/livebookmarks/ feedURL=http://ko.fxfeeds.mozilla.com/ko/firefox/headlines.xml icon=
-  folder=스마트 북마크 title=자주 방문 순 url=place:sort=8&maxResults=10 feedURL= icon=
-  folder=스마트 북마크 title=최근 북마크 순 url=place:folder=2&folder=5&folder=3&sort=12&excludeQueries=1&excludeItemIfParentHasAnnotation=livemark%2FfeedURI&maxResults=10&queryType=1 feedURL= icon=
-- folder=스마트 북마크 title=최근 태그 순 url=place:folder=4&group=3&sort=12&applyOptionsToContainers=1&maxResults=10&queryType=1 feedURL= icon=
-+ folder=스마트 북마크 title=최근 태그 순 url=place:sort=14&type=6&maxResults=10 feedURL= icon=
-
