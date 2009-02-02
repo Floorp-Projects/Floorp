@@ -70,4 +70,19 @@ mochitest-a11y:
 	$(RUN_MOCHITEST) --a11y $(MOCHITEST_PATH)
 	$(CHECK_TEST_ERROR)
 
-.PHONY: mochitest mochitest-plain mochitest-chrome mochitest-a11y
+# Package up the tests and test harnesses
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
+PKG_STAGE = $(DIST)/test-package-stage
+
+package-tests: stage-mochitest
+	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > $(DIST)/$(PKG_PATH)$(TEST_PACKAGE)
+
+make-stage-dir:
+	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs
+
+stage-mochitest: make-stage-dir
+	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
+
+.PHONY: mochitest mochitest-plain mochitest-chrome mochitest-a11y \
+  package-tests make-stage-dir stage-mochitest
