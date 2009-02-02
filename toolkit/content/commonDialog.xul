@@ -8,7 +8,7 @@
 
 <dialog id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        role="alert"
+        aria-describedby="info.body"
         onload="commonDialogOnLoad();"
         ondialogaccept="return commonDialogOnAccept();"
         ondialogextra1="return commonDialogOnExtra1();"
