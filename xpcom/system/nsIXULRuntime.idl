@@ -44,7 +44,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(2848AB92-D912-11D9-89F7-001124787B2E)]
+[scriptable, uuid(17311145-97da-49eb-b984-965bdee8879c)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -80,4 +80,10 @@ interface nsIXULRuntime : nsISupports
    * @throw NS_ERROR_NOT_AVAILABLE if not available.
    */
   readonly attribute AUTF8String XPCOMABI;
+
+  /**
+   * A string tag identifying the target widget toolkit in use.
+   * This is taken from the MOZ_WIDGET_TOOLKIT configure variable.
+   */
+  readonly attribute AUTF8String widgetToolkit;
 };
