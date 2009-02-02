@@ -683,26 +683,43 @@ BookmarksTracker.prototype = {
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
-    if (this._ls.isLivemark(folder))
+    if (this.ignoreAll ||
+	this._ls.isLivemark(folder))
       return;
+
     this._log.trace("onItemAdded: " + itemId);
+
     this._all[itemId] = this._bms.getItemGUID(itemId);
     if (this.addChangedID(this._all[itemId]))
       this._upScore();
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {
-    if (this._ls.isLivemark(folder))
+    if (this.ignoreAll ||
+	this._ls.isLivemark(folder))
       return;
+
     this._log.trace("onItemRemoved: " + itemId);
+
     if (this.addChangedID(this._all[itemId]))
       this._upScore();
     delete this._all[itemId];
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
+    if (this.ignoreAll)
+      return;
+
+    // ignore annotations except for the ones that we sync
+    if (isAnno && (property != "livemark/feedURI" ||
+		   property != "livemark/siteURI" ||
+		   property != "microsummary/generatorURI"))
+	return;
+
+    // ignore if parent is a livemark
     if (this._ls.isLivemark(this._bms.getFolderIdForItem(itemId)))
       return;
+
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
                     (value? (" = \"" + value + "\"") : ""));
@@ -716,7 +733,11 @@ BookmarksTracker.prototype = {
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
+    if (this.ignoreAll)
+      return;
+
     this._log.trace("onItemMoved: " + itemId);
+
     if (!this._all[itemId])
       this._all[itemId] = this._bms.itemGUID(itemId);
     if (this.addChangedID(this._all[itemId]))

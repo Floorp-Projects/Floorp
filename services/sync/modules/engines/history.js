@@ -487,6 +487,8 @@ HistoryTracker.prototype = {
   },
 
   onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
+    if (this.ignoreAll)
+      return;
     this._log.trace("onVisit: " + uri.spec);
     if (this.addChangedID(this._store._getGUID(uri)))
       this._upScore();
