@@ -641,5 +641,5 @@ GARBAGE += imacros.c.out imacro_asm.js
 libs:: imacros.c.out
 	@cmp -s $< $(srcdir)/$< || cp $< $(srcdir)
 
-%.c.out: %.jsasm js imacro_asm.js
-	./js imacro_asm.js $< > $@
+%.c.out: %.jsasm imacro_asm.js
+	$(DIST)/bin/js imacro_asm.js $< > $@
