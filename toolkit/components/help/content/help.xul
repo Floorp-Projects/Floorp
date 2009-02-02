@@ -182,6 +182,7 @@
         <toolbaritem id="search-box"
                      align="center" pack="center">
           <textbox id="findText" type="search" emptytext="&search.emptytext;"
+                   aria-controls="help-toc-panel"
                    oncommand="doFind();"/>
         </toolbaritem>
       </toolbar>
