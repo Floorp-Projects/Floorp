@@ -421,8 +421,7 @@ WeaveSvc.prototype = {
       this._log.debug("Verifying login for user " + user);
       let res = new Resource(this.baseURL + user);
       yield res.get(self.cb);
-      if (res.data != "\"1\"")
-        throw "Login failed";
+      Svc.Json.decode(res.data); // will throw if not json
       self.done(true);
     };
     this._notify("verify-login", "", fn).async(this, onComplete);
