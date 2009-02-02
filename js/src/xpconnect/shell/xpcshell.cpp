@@ -183,7 +183,11 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
             JSObject *locationObj = NULL;
 
-            location->Normalize();
+            PRBool symlink;
+            // don't normalize symlinks, because that's kind of confusing
+            if (NS_SUCCEEDED(location->IsSymlink(&symlink)) &&
+                !symlink)
+                location->Normalize();
             rv = xpc->WrapNative(cx, obj, location,
                                  NS_GET_IID(nsILocalFile),
                                  getter_AddRefs(locationHolder));
