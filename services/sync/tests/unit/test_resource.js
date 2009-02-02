@@ -61,7 +61,7 @@ function async_test() {
   let res = new Resource("http://localhost:8080/open");
   let content = yield res.get(self.cb);
   do_check_eq(content, "This path exists");
-  do_check_eq(res.lastRequest.status, 200);
+  do_check_eq(res.lastChannel.responseStatus, 200);
 
   // 2. A password protected resource (test that it'll fail w/o pass)
   let res2 = new Resource("http://localhost:8080/protected");
@@ -73,10 +73,11 @@ function async_test() {
   // 3. A password protected resource
 
   let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
-  let res3 = new Resource("http://localhost:8080/protected", auth);
+  let res3 = new Resource("http://localhost:8080/protected");
+  res3.authenticator = auth;
   content = yield res3.get(self.cb);
   do_check_eq(content, "This path exists and is protected");
-  do_check_eq(res3.lastRequest.status, 200);
+  do_check_eq(res3.lastChannel.responseStatus, 200);
 
   // 4. A non-existent resource (test that it'll fail)
 
@@ -85,8 +86,8 @@ function async_test() {
     let content = yield res4.get(self.cb);
     do_check_true(false); // unreachable, get() above must fail
   } catch (e) {}
-  do_check_eq(res4.lastRequest.responseText, "File not found");
-  do_check_eq(res4.lastRequest.status, 404);
+  do_check_eq(res4.lastChannel.responseStatusText, "Not Found");
+  do_check_eq(res4.lastChannel.responseStatus, 404);
 
   // FIXME: additional coverage needed:
   // * PUT requests
