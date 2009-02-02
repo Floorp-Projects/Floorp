@@ -178,12 +178,11 @@
   </popupset>
 
   <!-- stupid stack needs to be in a box. not sure why -->
-  <box>
+  <box flex="1">
   <stack id="browser-container" flex="1">
 
     <!-- begin: Browser View -->
     <hbox id="canvasbox"
-          style="-moz-stack-sizing: ignore;"
           left="0" top="-480"
           vptargetx="0"
           vptargety="0"
@@ -201,7 +200,7 @@
     <!-- end: Browser View -->
 
     <!-- begin: left bar -->
-    <vbox id="tabs-container" style="-moz-stack-sizing: ignore; width: 132px; height: 420px;"
+    <vbox id="tabs-container"
           left="-132" top="60"
           constraint="ignore-y,vp-relative">
       <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onclosetab="BrowserUI.closeTab(this);"/>
@@ -211,16 +210,16 @@
       </hbox>
     </vbox>
     <!-- barrier to the right of the left sidebar -->
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
+    <spacer barriertype="vertical" size="30" left="0" constraint="vp-relative"/>
     <!-- end: left bar -->
 
 
     <!-- begin: right bar -->
     <!-- barrier to the left of the right bar -->
-    <spacer style="-moz-stack-sizing: ignore; width: 1px; height: 1px;" barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
-    <vbox id="browser-controls" style="-moz-stack-sizing: ignore;"
+    <spacer barriertype="vertical" size="30" left="800" constraint="vp-relative"/>
+    <vbox id="browser-controls"
           left="800" top="60"
-          width="80" height="420"
+          width="80"
           constraint="ignore-y,vp-relative">
       <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
       <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
@@ -232,7 +231,9 @@
     <!-- end: right bar -->
 
     <!-- begin: Main Toolbar -->
-    <toolbar id="toolbar-main" style="-moz-stack-sizing: ignore; width: 800px; height: 60px" top="-60" left="0" constraint="ignore-x,vp-relative">
+    <toolbar id="toolbar-main"
+             top="-60" left="0"
+             constraint="ignore-x,vp-relative">
       <hbox id="urlbar-container" flex="1">
         <box id="identity-box"
              onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
@@ -265,10 +266,12 @@
     </toolbar>
     <!-- end: Main Toolbar -->
 
-    <notificationbox id="notifications" style="-moz-stack-sizing: ignore;" top="0" left="0"/>
+    <notificationbox id="notifications" top="0" left="0"/>
 
     <!-- barrier to the left of the right bar -->
-    <hbox id="panel-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <hbox id="panel-container"
+          hidden="true"
+          top="0" left="0">
       <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarspring/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button" linkedpanel="addons-container"/>
@@ -314,7 +317,9 @@
       </deck>
     </hbox>
 
-    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="urllist-container"
+          hidden="true"
+          top="0" left="0">
       <vbox id="urllist-items-container" flex="1">
         <richlistbox id="urllist-items" flex="1"
                      onkeypress="if (event.target == this &amp;&amp; event.keyCode == event.DOM_VK_RETURN)
@@ -326,14 +331,17 @@
       </hbox>
     </vbox>
 
-    <vbox id="popup_autocomplete" style="-moz-stack-sizing: ignore;" top="60" left="0" constraint="ignore-x,vp-relative">
+    <vbox id="popup_autocomplete"
+          top="60" left="0"
+          constraint="ignore-x,vp-relative">
       <hbox id="autocomplete_navbuttons" align="center" flex="1"
             oncommand="BrowserUI.doButtonSearch(event.target);">
         <image class="tool-search"/>
       </hbox>
     </vbox>
 
-    <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
+    <vbox id="bookmark-container" hidden="true"
+          top="60" left="0">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
         <editbookmark id="bookmark-edit" flex="1" onclose="BookmarkHelper.close()"
@@ -342,7 +350,6 @@
     </vbox>
 
   </stack>
-
   </box>
 
   <vbox id="findpanel-placeholder" sizetopopup="always">
