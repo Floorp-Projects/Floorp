@@ -368,10 +368,10 @@ js_EnablePropertyCache(JSContext *cx);
 /*
  * Interpreter stack arena-pool alloc and free functions.
  */
-extern JS_FRIEND_API(jsval *)
+extern JS_REQUIRES_STACK JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 
-extern JS_FRIEND_API(void)
+extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
 /*
@@ -422,7 +422,7 @@ extern const uint16 js_PrimitiveTestFlags[];
  * so the caller should not use that space for values that must be preserved
  * across the call.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_REQUIRES_STACK JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags);
 
 /*
@@ -468,7 +468,7 @@ extern JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp);
 
 extern JS_REQUIRES_STACK JSBool
@@ -507,10 +507,10 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
 #else
 # define JS_STATIC_INTERPRET
 
-extern jsval *
+extern JS_REQUIRES_STACK jsval *
 js_AllocRawStack(JSContext *cx, uintN nslots, void **markp);
 
-extern void
+extern JS_REQUIRES_STACK void
 js_FreeRawStack(JSContext *cx, void *mark);
 
 /*
