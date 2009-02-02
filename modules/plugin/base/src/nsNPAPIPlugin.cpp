@@ -1897,7 +1897,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     // XtDisplay just call gtk_xtbin_new(w,0) once
     static GtkWidget *gtkXtBinHolder = 0;
     if (!gtkXtBinHolder) {
-      gtkXtBinHolder = gtk_xtbin_new(GDK_ROOT_PARENT(),0);
+      gtkXtBinHolder = gtk_xtbin_new((GdkWindow*)GDK_ROOT_WINDOW(),0);
       // it crashes on destroy, let it leak
       // gtk_widget_destroy(gtkXtBinHolder);
     }

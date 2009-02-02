@@ -702,7 +702,7 @@ gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
     if (target->CairoStatus())
         return;
 
-    gdk_drawable_ref(drawable);
+    g_object_ref(drawable);
 
     cairo_surface_set_user_data (target->CairoSurface(),
                                  &cairo_gdk_drawable_key,
