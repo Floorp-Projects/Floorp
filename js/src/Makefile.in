@@ -635,11 +635,13 @@ imacro_asm.js: imacro_asm.js.in jsopcode.tbl
 
 GARBAGE += imacros.c.out imacro_asm.js
 
+ifndef CROSS_COMPILE
 # Build imacros.c.out after descending into DIRS and building the js shell.
 # This may result in an updated imacros.c.out file that requires a re-build
 # to stabilize.
 libs:: imacros.c.out
-	@cmp -s $< $(srcdir)/$< || cp $< $(srcdir)
+	@cmp -s imacros.c.out $(srcdir)/$< || cp imacros.c.out $(srcdir)
 
 %.c.out: %.jsasm imacro_asm.js
 	$(DIST)/bin/js imacro_asm.js $< > $@
+endif
