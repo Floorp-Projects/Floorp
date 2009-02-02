@@ -138,10 +138,10 @@ main(int argc, char **argv)
 
   window = gtk_plug_new(xid);
 
-  gtk_signal_connect(GTK_OBJECT(window), "destroy",
-		     GTK_SIGNAL_FUNC(gtk_main_quit), NULL);
+  g_signal_connect(GTK_OBJECT(window), "destroy",
+                   G_CALLBACK(gtk_main_quit), NULL);
 
-  gtk_container_border_width(GTK_CONTAINER(window), 0);
+  gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 
   vbox = gtk_vbox_new (FALSE, 0);
   gtk_container_add(GTK_CONTAINER(window), vbox);
@@ -159,12 +159,11 @@ main(int argc, char **argv)
   gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
   gtk_widget_show(button);
 
-  gtk_signal_connect(GTK_OBJECT(button), "clicked",
-		     GTK_SIGNAL_FUNC(load_page), NULL);
+  g_signal_connect(GTK_OBJECT(button), "clicked", G_CALLBACK(load_page), NULL);
 
   embed = gtk_moz_embed_new();
   gtk_box_pack_start(GTK_BOX(vbox), embed, TRUE, TRUE, 0);
-  gtk_widget_set_usize(embed, 200, 200);
+  gtk_widget_set_size_request(embed, 200, 200);
   gtk_widget_show(embed);
 
   gtk_widget_show(window);
