@@ -2271,8 +2271,8 @@ dnl the qsort routine under solaris is faulty
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
-    LIBS="-lCrun -lCstd $LIBS"
     if test -z "$GNU_CC"; then
+       LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
