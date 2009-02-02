@@ -186,7 +186,7 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
                    G_CALLBACK(plug_removed_cb), NULL);
 
   g_signal_connect(mSocketWidget, "destroy",
-                   GTK_SIGNAL_FUNC(gtk_widget_destroyed), &mSocketWidget);
+                   G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
 
   gpointer user_data = NULL;
   gdk_window_get_user_data(parent_win, &user_data);
