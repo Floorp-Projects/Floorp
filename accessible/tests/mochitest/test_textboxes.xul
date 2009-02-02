@@ -149,6 +149,36 @@
                "activate",  // ActionName
                "Activate"); // ActionDescription
 
+      //////////////////////////////////////////////////////////////////////////
+      // Search textbox without search button, searches as you type and filters
+      // a separate control.
+      testThis("search-box", // ID
+               "Search History:", // name
+               "", // value
+               "", // description
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (EXT_STATE_SUPPORTS_AUTOCOMPLETION), // extState
+               (0), // absentState
+               1, // numActions
+               "activate",  // ActionName
+               "Activate"); // ActionDescription
+
+      //////////////////////////////////////////////////////////////////////////
+      // Search textbox with search button, does not support autoCompletion.
+      testThis("searchfield", // ID
+               "Search all add-ons", // name
+               "", // value
+               "", // description
+               ROLE_ENTRY, // role
+               (STATE_FOCUSABLE), // state
+               (0), // extState
+               (0), // absentState
+               1, // numActions
+               "activate",  // ActionName
+               "Activate"); // ActionDescription
+      testStates("searchfield", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
       SimpleTest.finish();
     }
 
@@ -208,5 +238,13 @@
       <textbox multiline="true" id="readonly_textarea" readonly="true" cols="80"
                rows="5" value="You cannot change me, either."/>
     </vbox>
+    <hbox>
+      <label value="Search History:" accesskey="S" 
+             control="search-box"/>
+	  <textbox id="search-box" flex="1" type="search" cocoa-size="small"
+	           results="historyTree"/>
+    </hbox>
+    <textbox id="searchfield" emptytext="Search all add-ons"
+             type="search" searchbutton="true" cocoa-size="small"/>
   </vbox>
 </window>
