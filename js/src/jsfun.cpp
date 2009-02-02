@@ -1587,7 +1587,7 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
@@ -1646,7 +1646,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
@@ -1737,7 +1737,7 @@ out:
 }
 
 #ifdef NARCISSUS
-static JSBool
+static JS_REQUIRES_STACK JSBool
 fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *aobj;
