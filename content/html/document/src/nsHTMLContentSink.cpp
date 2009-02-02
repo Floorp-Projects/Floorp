@@ -567,22 +567,6 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
   NS_ENSURE_TRUE(nodeInfo, nsnull);
 
-  if (nodeInfo->NameAtom() == nsGkAtoms::input && aNodeType != eHTMLTag_input) {
-    printf("BOGUS INPUT IN CreateContentObject\n");
-
-    printf("aNodeType is userdefined: %d\n", aNodeType == eHTMLTag_userdefined);
-
-    if (aNodeType == eHTMLTag_userdefined) {
-      printf("aNode.GetText().Length(): %d\n", aNode.GetText().Length());
-      printf("aNode.GetText: '%s'\n", NS_ConvertUTF16toUTF8(aNode.GetText()).get());
-      printf("PRUnichars: ");
-      for (unsigned i = 0; i < aNode.GetText().Length(); ++i) {
-        printf("0x%u ", (unsigned)aNode.GetText().CharAt(i));
-      }
-      printf("\n");
-    }
-  }
-
   // Make the content object
   return CreateHTMLElement(aNodeType, nodeInfo, PR_TRUE);
 }
@@ -619,10 +603,6 @@ already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(PRUint32 aNodeType, nsINodeInfo *aNodeInfo,
                   PRBool aFromParser)
 {
-  if (aNodeInfo->NameAtom() == nsGkAtoms::input &&
-      aNodeType != eHTMLTag_input) {
-    printf("GOT INTO CreateHTMLElement WITH BOGUS INPUT\n");
-  }
   NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
                aNodeType == eHTMLTag_userdefined,
                "aNodeType is out of bounds");
