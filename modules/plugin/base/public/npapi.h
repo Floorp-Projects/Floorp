@@ -327,9 +327,7 @@ typedef enum {
   /* Checks if the plugin is interested in receiving the http body of
    * all http requests (including failed ones, http status != 200).
    */
-  NPPVpluginWantsAllNetworkStreams = 18,
-
-  NPPVprivateModeBool = 19
+  NPPVpluginWantsAllNetworkStreams = 18
 
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */
