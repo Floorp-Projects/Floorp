@@ -729,6 +729,13 @@ nsXULAppInfo::GetXPCOMABI(nsACString& aResult)
 #endif
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
+{
+  aResult.AssignLiteral(MOZ_WIDGET_TOOLKIT);
+  return NS_OK;
+}
+
 #ifdef XP_WIN
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
 // safely build with the Vista SDK and without it.
