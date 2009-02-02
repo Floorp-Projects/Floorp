@@ -5074,7 +5074,8 @@ nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
 
   if (!control) { // Speculative parsing is screwing up somehow, dammit
-    return nsnull;
+    printf("BOGUS INPUT DETECTED IN FRAME CONSTRUCTOR\n");
+    //    return nsnull;
   }
 
   return FindDataByInt(control->GetType(), aContent, aStyleContext,
