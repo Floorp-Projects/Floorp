@@ -5047,8 +5047,6 @@ nsCSSFrameConstructor::FindImgControlData(nsIContent* aContent,
   return &sImgControlData;
 }
 
-#include "nsIDOMHTMLInputElement.h"
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
@@ -5076,38 +5074,6 @@ nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
 
   if (!control) { // Speculative parsing is screwing up somehow, dammit
-    printf("TinderboxPrint: FOUND BOGUS INPUT\n");
-    printf("Passed in content pointer is: %p\n", (void*)aContent);
-    if (aContent) {
-      printf("Passed in content has namespace: %d\n",
-             aContent->GetNameSpaceID());
-      const char* localName = nsnull;
-      aContent->Tag()->GetUTF8String(&localName);
-      printf("Passed in content has localName: %s\n", localName);
-      nsCOMPtr<nsIDOMHTMLInputElement> elm = do_QueryInterface(aContent);
-      printf("Passed in content QI to nsIDOMHTMLInputElement is: %p\n",
-             (void*)elm.get());
-
-      nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aContent);
-      printf("Passed in content QI to nsIClassInfo is: %p\n",
-             (void*)classInfo.get());
-
-      if (classInfo) {
-        nsXPIDLCString desc;
-        classInfo->GetClassDescription(getter_Copies(desc));
-        printf("Passed in classinfo description is: %s\n", desc.get());
-        PRUint32 ifaceCount = 0;
-        nsIID** iidArray = nsnull;
-        classInfo->GetInterfaces(&ifaceCount, &iidArray);
-        for (PRUint32 i = 0; i < ifaceCount; ++i) {
-          char buf[NSID_LENGTH];
-          iidArray[i]->ToProvidedString(buf);
-          printf("Classinfo knows about interface: %s\n", buf);
-        }
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ifaceCount, iidArray);
-      }
-    }
-
     return nsnull;
   }
 
