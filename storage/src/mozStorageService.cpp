@@ -302,7 +302,7 @@ mozStorageService::BackupDatabaseFile(nsIFile *aDBFile,
     rv = backupDB->Remove(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    backupDB.swap(*backup);
+    backupDB.forget(backup);
 
     return aDBFile->CopyTo(parentDir, fileName);
 }
