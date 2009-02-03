@@ -5073,10 +5073,6 @@ nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
 
-  if (!control) { // Speculative parsing is screwing up somehow, dammit
-    return nsnull;
-  }
-
   return FindDataByInt(control->GetType(), aContent, aStyleContext,
                        sInputData, NS_ARRAY_LENGTH(sInputData));
 }
