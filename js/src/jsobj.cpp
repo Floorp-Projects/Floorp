@@ -3896,6 +3896,22 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     return JS_TRUE;
 }
 
+/*
+ * Find out where we currently are in the code. If no hint was supplied,
+ * de-optimize and consult the stack frame.
+ */
+static jsbytecode*
+js_GetCurrentBytecodePC(JSContext* cx)
+{
+    jsbytecode *pc = cx->pcHint;
+    if (!pc) {
+        JSStackFrame* fp = js_GetTopStackFrame(cx);
+        if (fp && fp->regs)
+            pc = fp->regs->pc;
+    }
+    return pc;
+}
+
 JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp)
@@ -3904,7 +3920,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     int protoIndex;
     JSObject *obj2;
     JSProperty *prop;
-    JSStackFrame *fp;
     JSScopeProperty *sprop;
 
     JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
@@ -3918,8 +3933,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     if (protoIndex < 0)
         return JS_FALSE;
     if (!prop) {
-        jsbytecode *pc;
-
         *vp = JSVAL_VOID;
 
         if (!OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, ID_TO_VALUE(id), vp))
@@ -3934,11 +3947,11 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
          * Give a strict warning if foo.bar is evaluated by a script for an
          * object foo with no property named 'bar'.
          */
-        if (JSVAL_IS_VOID(*vp) && (fp = js_GetTopStackFrame(cx)) && fp->regs) {
+        jsbytecode *pc;
+        if (JSVAL_IS_VOID(*vp) && ((pc = js_GetCurrentBytecodePC(cx)) != NULL)) {
             JSOp op;
             uintN flags;
 
-            pc = fp->regs->pc;
             op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
@@ -3956,7 +3969,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                     return JS_TRUE;
 
                 /* Kludge to allow (typeof foo == "undefined") tests. */
-                JS_ASSERT(fp->script);
                 pc += js_CodeSpec[op].length;
                 if (Detecting(cx, pc))
                     return JS_TRUE;

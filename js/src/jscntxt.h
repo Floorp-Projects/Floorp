@@ -130,6 +130,7 @@ typedef struct JSTraceMonitor {
      * JS_ReportOutOfMemory when failing due to runtime limits.
      */
     JSBool                  onTrace;
+
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
     CLS(TraceRecorder)      recorder;
@@ -980,7 +981,13 @@ struct JSContext {
 
     /* Stored here to avoid passing it around as a parameter. */
     uintN               resolveFlags;
+    
+    /* Current bytecode location (or NULL if no hint was supplied). */
+    jsbytecode         *pcHint;
 };
+
+#define BEGIN_PC_HINT(pc)       cx->pcHint = pc
+#define END_PC_HINT()           cx->pcHint = NULL
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
