@@ -976,8 +976,10 @@ static jsval JS_FASTCALL
 Print_tn(JSContext *cx, JSString *str)
 {
     char *bytes = JS_EncodeString(cx, str);
-    if (!bytes)
-        return JSVAL_ERROR_COOKIE;
+    if (!bytes) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
+        return JSVAL_VOID;
+    }
     fprintf(gOutFile, "%s\n", bytes);
     JS_free(cx, bytes);
     fflush(gOutFile);
