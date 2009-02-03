@@ -1456,8 +1456,9 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         debug_only_v(printf("double<%g> ", d);)
         return;
       case JSVAL_BOOLEAN:
+        /* Watch out for pseudo-booleans. */
         JS_ASSERT(tag == JSVAL_BOOLEAN);
-        *(JSBool*)slot = JSVAL_TO_BOOLEAN(v);
+        *(JSBool*)slot = JSVAL_TO_PSEUDO_BOOLEAN(v);
         debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
         return;
       case JSVAL_STRING:
@@ -1540,7 +1541,8 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
     jsdouble d;
     switch (type) {
       case JSVAL_BOOLEAN:
-        v = BOOLEAN_TO_JSVAL(*(JSBool*)slot);
+        /* Watch out for pseudo-booleans. */
+        v = PSEUDO_BOOLEAN_TO_JSVAL(*(JSBool*)slot);
         debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
         break;
       case JSVAL_INT:
@@ -4909,7 +4911,7 @@ TraceRecorder::ifop()
 
     if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         /* Test for boolean is true, negate later if we are testing for false. */
-        cond = JSVAL_TO_BOOLEAN(v) == 1;
+        cond = JSVAL_TO_PSEUDO_BOOLEAN(v) == JS_TRUE;
         x = lir->ins2i(LIR_eq, v_ins, 1);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
@@ -5178,10 +5180,10 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
             fp = true;
         }
     } else if (JSVAL_IS_NULL(l) && JSVAL_TAG(r) == JSVAL_BOOLEAN) {
-        l_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        l_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
         cond = (r == JSVAL_VOID);
     } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN && JSVAL_IS_NULL(r)) {
-        r_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        r_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
         cond = (l == JSVAL_VOID);
     } else if (isNumber(l) && JSVAL_IS_STRING(r)) {
         args[0] = r_ins, args[1] = cx_ins;
@@ -5432,13 +5434,13 @@ TraceRecorder::binary(LOpcode op)
     if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
         LIns* args[] = { a, cx_ins };
         a = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        lnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_BOOLEAN(l));
+        lnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_PSEUDO_BOOLEAN(l));
         leftIsNumber = true;
     }
     if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
         LIns* args[] = { b, cx_ins };
         b = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        rnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_BOOLEAN(r));
+        rnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_PSEUDO_BOOLEAN(r));
         rightIsNumber = true;
     }
     if (leftIsNumber && rightIsNumber) {
@@ -5735,12 +5737,9 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     if (sprop->slot != SPROP_INVALID_SLOT)
         v_ins = stobj_get_slot(pobj_ins, sprop->slot, dslots_ins);
     else
-        v_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        v_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
     return true;
 }
-
-// So box_jsval can emit no LIR_or at all to tag an object jsval.
-JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
 
 JS_REQUIRES_STACK void
 TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
@@ -6000,7 +5999,7 @@ TraceRecorder::record_EnterFrame()
     debug_only_v(
         js_Disassemble(cx, cx->fp->script, JS_TRUE, stdout);
         printf("----\n");)
-    LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    LIns* void_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];
     jsval* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
@@ -6039,7 +6038,7 @@ TraceRecorder::record_LeaveFrame()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_PUSH()
 {
-    stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    stack(0, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
@@ -6703,7 +6702,7 @@ success:
         break;
       }
       case FAIL_VOID:
-        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
         break;
       case FAIL_COOKIE:
         guard(false, lir->ins2(LIR_eq, res_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
@@ -6762,7 +6761,7 @@ TraceRecorder::record_JSOP_TYPEOF()
         if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
             // We specialize identically for boolean and undefined. We must not have a hole here.
             // Pass the unboxed type here, since TypeOfBoolean knows how to handle it.
-            JS_ASSERT(JSVAL_TO_BOOLEAN(r) <= 2);
+            JS_ASSERT(r == JSVAL_TRUE || r == JSVAL_FALSE || r == JSVAL_VOID);
             type = lir->insCall(&js_TypeOfBoolean_ci, args);
         } else {
             JS_ASSERT(JSVAL_TAG(r) == JSVAL_OBJECT);
@@ -6776,7 +6775,7 @@ TraceRecorder::record_JSOP_TYPEOF()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_VOID()
 {
-    stack(-1, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    stack(-1, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
@@ -7137,7 +7136,7 @@ SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
         !OBJ_SET_PROPERTY(cx, obj, id, &v)) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
     }
-    return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
 }
 
 static JSBool
@@ -7165,7 +7164,7 @@ SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
 
     if (!js_Int32ToId(cx, index, &id) || !OBJ_SET_PROPERTY(cx, obj, id, &v))
         cx->builtinStatus |= JSBUILTIN_ERROR;
-    return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
 }
 
 JS_DEFINE_TRCINFO_1(SetProperty,
@@ -7562,7 +7561,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     /* Check for non-existent property reference, which results in undefined. */
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     if (PCVAL_IS_NULL(pcval)) {
-        v_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        v_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
         JS_ASSERT(cs.ndefs == 1);
         stack(-cs.nuses, v_ins);
         slot = SPROP_INVALID_SLOT;
@@ -7653,7 +7652,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
                                         offsetof(JSRuntime, anyArrayProtoHasElement))),
               MISMATCH_EXIT);
         // Return undefined and indicate that we didn't actually read this (addr_ins).
-        v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        v_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
         addr_ins = NULL; 
         return true;
     }
@@ -7674,7 +7673,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
     if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
         // Optimize to guard for a hole only after untagging, so we know that
         // we have a boolean, to avoid an extra guard for non-boolean values.
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE))),
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE))),
               MISMATCH_EXIT);
     }
     return true;
@@ -8152,7 +8151,7 @@ TraceRecorder::record_JSOP_IN()
         ABORT_TRACE("string or integer expected");
     }        
 
-    guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+    guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
     x = lir->ins2i(LIR_eq, x, 1);
 
     JSObject* obj2;
@@ -8762,7 +8761,7 @@ TraceRecorder::record_JSOP_CALLPROP()
         } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
             if (l == JSVAL_VOID)
                 ABORT_TRACE("callprop on void");
-            guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_BOOLEAN(JSVAL_VOID)), MISMATCH_EXIT);
+            guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), MISMATCH_EXIT);
             i = JSProto_Boolean;
             debug_only(protoname = "Boolean.prototype";)
         } else {
@@ -8865,7 +8864,7 @@ TraceRecorder::record_JSOP_STOP()
         JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
-        rval_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        rval_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
     }
     clearFrameSlotsFromCache();
     return true;
@@ -8909,7 +8908,7 @@ TraceRecorder::record_JSOP_ENTERBLOCK()
     JSObject* obj;
     JS_GET_SCRIPT_OBJECT(script, GET_FULL_INDEX(0), obj);
 
-    LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    LIns* void_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
     for (int i = 0, n = OBJ_BLOCK_COUNT(cx, obj); i < n; i++)
         stack(i, void_ins);
     return true;
@@ -9272,7 +9271,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
+    stack(0, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE)));
     return true;
 }
 
