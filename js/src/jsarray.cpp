@@ -1544,10 +1544,8 @@ static JSString* FASTCALL
 Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsval v;
-    if (!array_join_sub(cx, obj, TO_STRING, str, &v)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
+    if (!array_join_sub(cx, obj, TO_STRING, str, &v))
         return NULL;
-    }
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
@@ -2148,8 +2146,7 @@ Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
         : array_push_slowly(cx, obj, 1, &v, &v)) {
         return v;
     }
-    cx->builtinStatus |= JSBUILTIN_ERROR;
-    return JSVAL_VOID;
+    return JSVAL_ERROR_COOKIE;
 }
 #endif
 
@@ -2216,13 +2213,12 @@ static jsval FASTCALL
 Array_p_pop(JSContext* cx, JSObject* obj)
 {
     jsval v;
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) 
         ? array_pop_dense(cx, obj, &v)
         : array_pop_slowly(cx, obj, &v)) {
         return v;
     }
-    cx->builtinStatus |= JSBUILTIN_ERROR;
-    return JSVAL_VOID;
+    return JSVAL_ERROR_COOKIE;
 }
 #endif
 
