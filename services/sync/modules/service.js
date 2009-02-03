@@ -294,8 +294,6 @@ WeaveSvc.prototype = {
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
 
-    this._setSchedule(this.schedule);
-
     // Create Weave identities (for logging in, and for encryption)
     ID.set('WeaveID', new Identity('Mozilla Services Password', this.username));
     Auth.defaultAuthenticator = new BasicAuthenticator(ID.get('WeaveID'));
@@ -421,7 +419,7 @@ WeaveSvc.prototype = {
       this._log.debug("Verifying login for user " + user);
       let res = new Resource(this.baseURL + user);
       yield res.get(self.cb);
-      Svc.Json.decode(res.data); // will throw if not json
+      //Svc.Json.decode(res.data); // will throw if not json
       self.done(true);
     };
     this._notify("verify-login", "", fn).async(this, onComplete);
@@ -459,24 +457,31 @@ WeaveSvc.prototype = {
 
       this._loggedIn = false;
 
-      if (typeof(user) != 'undefined')
-        this.username = user;
-      if (typeof(pass) != 'undefined')
-        ID.get('WeaveID').setTempPassword(pass);
-      if (typeof(passp) != 'undefined')
-        ID.get('WeaveCryptoID').setTempPassword(passp);
+      try {
+	if (typeof(user) != 'undefined')
+          this.username = user;
+	if (typeof(pass) != 'undefined')
+          ID.get('WeaveID').setTempPassword(pass);
+	if (typeof(passp) != 'undefined')
+          ID.get('WeaveCryptoID').setTempPassword(passp);
 
-      if (!this.username)
-        throw "No username set, login failed";
-      if (!this.password)
-        throw "No password given or found in password manager";
+	if (!this.username)
+          throw "No username set, login failed";
+	if (!this.password)
+          throw "No password given or found in password manager";
 
-      this._log.debug("Logging in user " + this.username);
+	this._log.debug("Logging in user " + this.username);
 
-      if (!(yield this.verifyLogin(self.cb, this.username, this.password)))
-	throw "Login failed";
-      this._loggedIn = true;
-      self.done(true);
+	if (!(yield this.verifyLogin(self.cb, this.username, this.password)))
+	  throw "Login failed";
+	this._loggedIn = true;
+	this._setSchedule(this.schedule);
+	self.done(true);
+
+      } catch (e) {
+	this._disableSchedule();
+	throw e;
+      }
     };
     this._localLock(this._notify("login", "", fn)).async(this, onComplete);
   },
@@ -549,8 +554,10 @@ WeaveSvc.prototype = {
   _sync: function WeaveSvc__sync() {
     let self = yield;
 
-    if (!this._loggedIn)
+    if (!this._loggedIn) {
+      this._disableSchedule();
       throw "aborting sync, not logged in";
+    }
 
     if (!(yield this._remoteSetup.async(this, self.cb))) {
       throw "aborting sync, remote setup failed";
@@ -603,6 +610,12 @@ WeaveSvc.prototype = {
     let self = yield;
 
     try {
+
+      if (!this._loggedIn) {
+	this._disableSchedule();
+	throw "aborting sync, not logged in";
+      }
+
       let engines = Engines.getAll();
       for each (let engine in engines) {
         if (!engine.enabled)
