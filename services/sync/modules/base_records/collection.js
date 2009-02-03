@@ -65,7 +65,7 @@ Collection.prototype = {
     this._init(uri);
     this.pushFilter(new JsonFilter());
     this._full = true;
-    this._modified = 0;
+    this._older = 0;
     this._data = [];
   },
 
@@ -74,8 +74,8 @@ Collection.prototype = {
     this.uri.QueryInterface(Ci.nsIURL);
 
     let args = [];
-    if (this.modified)
-      args.push('modified=' + this.modified);
+    if (this.older)
+      args.push('older=' + this.older);
     if (this.full)
       args.push('full=1');
     if (this.sort)
@@ -92,9 +92,9 @@ Collection.prototype = {
   },
 
   // get only items modified since some date
-  get modified() { return this._modified; },
-  set modified(value) {
-    this._modified = value;
+  get older() { return this._older; },
+  set older(value) {
+    this._older = value;
     this._rebuildURL();
   },
 
