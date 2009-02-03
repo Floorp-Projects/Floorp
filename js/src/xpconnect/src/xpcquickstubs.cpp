@@ -255,8 +255,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, jsval *vp)
     {
         if(attrs & JSPROP_GETTER)
         {
-            JS_SET_RVAL(cx, vp,
-                        OBJECT_TO_JSVAL(reinterpret_cast<JSObject *>(getter)));
+            JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(getter));
             return JS_TRUE;
         }
     }
@@ -264,8 +263,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, jsval *vp)
     {
         if(attrs & JSPROP_SETTER)
         {
-            JS_SET_RVAL(cx, vp,
-                        OBJECT_TO_JSVAL(reinterpret_cast<JSObject *>(setter)));
+            JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(setter));
             return JS_TRUE;
         }
     }
