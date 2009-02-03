@@ -743,6 +743,21 @@ JS_NewRuntime(uint32 maxbytes)
 #include "js.msg"
 #undef MSG_DEF
 
+        /*
+         * If it were possible for pure inline function calls with constant
+         * arguments to be computed at compile time, these would be static
+         * assertions, but since it isn't, this is the best we can do.
+         */
+        JS_ASSERT(JSVAL_NULL == OBJECT_TO_JSVAL(NULL));
+        JS_ASSERT(JSVAL_ZERO == INT_TO_JSVAL(0));
+        JS_ASSERT(JSVAL_ONE == INT_TO_JSVAL(1));
+        JS_ASSERT(JSVAL_FALSE == BOOLEAN_TO_JSVAL(JS_FALSE));
+        JS_ASSERT(JSVAL_TRUE == BOOLEAN_TO_JSVAL(JS_TRUE));
+
+        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID) == 2);
+        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE) == 3);
+        JS_ASSERT(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_ARETURN) == 4);
+
         js_NewRuntimeWasCalled = JS_TRUE;
     }
 #endif /* DEBUG */
