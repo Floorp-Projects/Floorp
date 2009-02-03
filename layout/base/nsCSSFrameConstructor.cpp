@@ -123,6 +123,7 @@
 #include "nsStyleUtil.h"
 #include "nsIFocusEventSuppressor.h"
 #include "nsBox.h"
+#include "nsTArray.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -8197,16 +8198,16 @@ nsCSSFrameConstructor::ReinsertContent(nsIContent* aContainer,
 }
 
 static void
-DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
-                       nsVoidArray&    aDestroyQueue,
-                       nsIFrame*       aRemovedFrame,
-                       nsIFrame*       aFrame);
+DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
+                       nsTArray<nsIFrame*>& aDestroyQueue,
+                       nsIFrame*            aRemovedFrame,
+                       nsIFrame*            aFrame);
 
 static void
-DoDeletingOverflowContainers(nsFrameManager* aFrameManager,
-                             nsVoidArray&    aDestroyQueue,
-                             nsIFrame*       aRemovedFrame,
-                             nsIFrame*       aFrame)
+DoDeletingOverflowContainers(nsFrameManager*      aFrameManager,
+                             nsTArray<nsIFrame*>& aDestroyQueue,
+                             nsIFrame*            aRemovedFrame,
+                             nsIFrame*            aFrame)
 {
   // The invariant that "continuing frames should be found as part of the
   // walk over the top-most frame's continuing frames" does not hold for
@@ -8247,10 +8248,10 @@ DoDeletingOverflowContainers(nsFrameManager* aFrameManager,
  *            this changes
  */
 static void
-DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
-                       nsVoidArray&    aDestroyQueue,
-                       nsIFrame*       aRemovedFrame,
-                       nsIFrame*       aFrame)
+DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
+                       nsTArray<nsIFrame*>& aDestroyQueue,
+                       nsIFrame*            aRemovedFrame,
+                       nsIFrame*            aFrame)
 {
 #undef RECURSE
 #define RECURSE(top, child)                                                  \
@@ -8331,7 +8332,7 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
     return NS_OK;
   }
 
-  nsAutoVoidArray destroyQueue;
+  nsAutoTArray<nsIFrame*, 8> destroyQueue;
 
   // If it's a "special" block-in-inline frame, then we can't really deal.
   // That really shouldn't be happening.
@@ -8355,8 +8356,8 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
 
   // Now destroy any out-of-flow frames that have been enqueued for
   // destruction.
-  for (PRInt32 i = destroyQueue.Count() - 1; i >= 0; --i) {
-    nsIFrame* outOfFlowFrame = static_cast<nsIFrame*>(destroyQueue[i]);
+  for (PRInt32 i = destroyQueue.Length() - 1; i >= 0; --i) {
+    nsIFrame* outOfFlowFrame = destroyQueue[i];
 
     // Ask the out-of-flow's parent to delete the out-of-flow
     // frame from the right list.

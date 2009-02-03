@@ -2917,8 +2917,8 @@ nsIFrame::InlineMinWidthData::ForceBreak(nsIRenderingContext *aRenderingContext)
   prevLines = PR_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
 
-  for (PRInt32 i = 0, i_end = floats.Count(); i != i_end; ++i) {
-    nsIFrame *floatFrame = static_cast<nsIFrame*>(floats[i]);
+  for (PRUint32 i = 0, i_end = floats.Length(); i != i_end; ++i) {
+    nsIFrame *floatFrame = floats[i];
     nscoord float_min =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, floatFrame,
                                            nsLayoutUtils::MIN_WIDTH);
@@ -2948,7 +2948,7 @@ nsIFrame::InlineMinWidthData::OptionallyBreak(nsIRenderingContext *aRenderingCon
 void
 nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext)
 {
-  if (floats.Count() != 0) {
+  if (floats.Length() != 0) {
             // preferred widths accumulated for floats that have already
             // been cleared past
     nscoord floats_done = 0,
@@ -2957,8 +2957,8 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
             floats_cur_left = 0,
             floats_cur_right = 0;
 
-    for (PRInt32 i = 0, i_end = floats.Count(); i != i_end; ++i) {
-      nsIFrame *floatFrame = static_cast<nsIFrame*>(floats[i]);
+    for (PRUint32 i = 0, i_end = floats.Length(); i != i_end; ++i) {
+      nsIFrame *floatFrame = floats[i];
       const nsStyleDisplay *floatDisp = floatFrame->GetStyleDisplay();
       if (floatDisp->mBreakType == NS_STYLE_CLEAR_LEFT ||
           floatDisp->mBreakType == NS_STYLE_CLEAR_RIGHT ||
@@ -6946,8 +6946,8 @@ struct DR_State
                   char* aBuf);
   DR_Rule* ParseRule(FILE* aFile);
   void ParseRulesFile();
-  void AddRule(nsVoidArray& aRules,
-               DR_Rule&     aRule);
+  void AddRule(nsTArray<DR_Rule*>& aRules,
+               DR_Rule&            aRule);
   PRBool IsWhiteSpace(int c);
   PRBool GetNumber(char*    aBuf, 
                  PRInt32&  aNumber);
@@ -6960,15 +6960,14 @@ struct DR_State
   PRBool      mInited;
   PRBool      mActive;
   PRInt32     mCount;
-  nsVoidArray mWildRules;
   PRInt32     mAssert;
   PRInt32     mIndent;
   PRBool      mIndentUndisplayedFrames;
-  nsVoidArray mFrameTypeTable;
   PRBool      mDisplayPixelErrors;
-
+  nsTArray<DR_Rule*>          mWildRules;
+  nsTArray<DR_FrameTypeInfo*> mFrameTypeTable;
   // reflow specific state
-  nsVoidArray mFrameTreeLeaves;
+  nsTArray<DR_FrameTreeNode*> mFrameTreeLeaves;
 };
 
 static DR_State *DR_state; // the one and only DR_State
@@ -7020,16 +7019,16 @@ struct DR_FrameTypeInfo
   ~DR_FrameTypeInfo() { 
       MOZ_COUNT_DTOR(DR_FrameTypeInfo);
       PRInt32 numElements;
-      numElements = mRules.Count();
+      numElements = mRules.Length();
       for (PRInt32 i = numElements - 1; i >= 0; i--) {
-        delete (DR_Rule *)mRules.ElementAt(i);
+        delete mRules.ElementAt(i);
       }
    }
 
   nsIAtom*    mType;
   char        mNameAbbrev[16];
   char        mName[32];
-  nsVoidArray mRules;
+  nsTArray<DR_Rule*> mRules;
 };
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 
@@ -7113,17 +7112,17 @@ DR_State::~DR_State()
 {
   MOZ_COUNT_DTOR(DR_State);
   PRInt32 numElements, i;
-  numElements = mWildRules.Count();
+  numElements = mWildRules.Length();
   for (i = numElements - 1; i >= 0; i--) {
-    delete (DR_Rule *)mWildRules.ElementAt(i);
+    delete mWildRules.ElementAt(i);
   }
-  numElements = mFrameTreeLeaves.Count();
+  numElements = mFrameTreeLeaves.Length();
   for (i = numElements - 1; i >= 0; i--) {
-    delete (DR_FrameTreeNode *)mFrameTreeLeaves.ElementAt(i);
+    delete mFrameTreeLeaves.ElementAt(i);
   }
-  numElements = mFrameTypeTable.Count();
+  numElements = mFrameTypeTable.Length();
   for (i = numElements - 1; i >= 0; i--) {
-    delete (DR_FrameTypeInfo *)mFrameTypeTable.ElementAt(i);
+    delete mFrameTypeTable.ElementAt(i);
   }
 }
 
@@ -7210,15 +7209,15 @@ DR_Rule* DR_State::ParseRule(FILE* aFile)
   return rule;
 }
 
-void DR_State::AddRule(nsVoidArray& aRules,
-                       DR_Rule&     aRule)
+void DR_State::AddRule(nsTArray<DR_Rule*>& aRules,
+                       DR_Rule&            aRule)
 {
-  PRInt32 numRules = aRules.Count();
+  PRInt32 numRules = aRules.Length();
   for (PRInt32 ruleX = 0; ruleX < numRules; ruleX++) {
-    DR_Rule* rule = (DR_Rule*)aRules.ElementAt(ruleX);
+    DR_Rule* rule = aRules.ElementAt(ruleX);
     NS_ASSERTION(rule, "program error");
     if (aRule.mLength > rule->mLength) {
-      aRules.InsertElementAt(&aRule, ruleX);
+      aRules.InsertElementAt(ruleX, &aRule);
       return;
     }
   }
@@ -7260,28 +7259,28 @@ void DR_State::AddFrameTypeInfo(nsIAtom* aFrameType,
 
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
 {
-  PRInt32 numEntries = mFrameTypeTable.Count();
+  PRInt32 numEntries = mFrameTypeTable.Length();
   NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
-    DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
+    DR_FrameTypeInfo* info = mFrameTypeTable.ElementAt(i);
     if (info && (info->mType == aFrameType)) {
       return info;
     }
   }
-  return (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
+  return mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
 }
 
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
 {
-  PRInt32 numEntries = mFrameTypeTable.Count();
+  PRInt32 numEntries = mFrameTypeTable.Length();
   NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
-    DR_FrameTypeInfo* info = (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(i);
+    DR_FrameTypeInfo* info = mFrameTypeTable.ElementAt(i);
     if (info && ((strcmp(aFrameName, info->mName) == 0) || (strcmp(aFrameName, info->mNameAbbrev) == 0))) {
       return info;
     }
   }
-  return (DR_FrameTypeInfo*)mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
+  return mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
 }
 
 void DR_State::InitFrameTypeTable()
@@ -7383,9 +7382,9 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode)
 
   DR_FrameTypeInfo* info = GetFrameTypeInfo(aNode.mFrame->GetType());
   NS_ASSERTION(info, "program error");
-  PRInt32 numRules = info->mRules.Count();
+  PRInt32 numRules = info->mRules.Length();
   for (PRInt32 ruleX = 0; ruleX < numRules; ruleX++) {
-    DR_Rule* rule = (DR_Rule*)info->mRules.ElementAt(ruleX);
+    DR_Rule* rule = info->mRules.ElementAt(ruleX);
     if (rule && RuleMatches(*rule, aNode)) {
       aNode.mDisplay = rule->mDisplay;
       matchingRule = PR_TRUE;
@@ -7393,9 +7392,9 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode)
     }
   }
   if (!matchingRule) {
-    PRInt32 numWildRules = mWildRules.Count();
+    PRInt32 numWildRules = mWildRules.Length();
     for (PRInt32 ruleX = 0; ruleX < numWildRules; ruleX++) {
-      DR_Rule* rule = (DR_Rule*)mWildRules.ElementAt(ruleX);
+      DR_Rule* rule = mWildRules.ElementAt(ruleX);
       if (rule && RuleMatches(*rule, aNode)) {
         aNode.mDisplay = rule->mDisplay;
         break;
@@ -7420,8 +7419,8 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   DR_FrameTreeNode* parentNode = nsnull;
   
   DR_FrameTreeNode* lastLeaf = nsnull;
-  if(mFrameTreeLeaves.Count())
-    lastLeaf = (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Count() - 1);
+  if(mFrameTreeLeaves.Length())
+    lastLeaf = (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Length() - 1);
   if (lastLeaf) {
     for (parentNode = lastLeaf; parentNode && (parentNode->mFrame != parentFrame); parentNode = parentNode->mParent) {
     }
@@ -7435,7 +7434,7 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   }
 
   if (lastLeaf && (lastLeaf == parentNode)) {
-    mFrameTreeLeaves.RemoveElementAt(mFrameTreeLeaves.Count() - 1);
+    mFrameTreeLeaves.RemoveElementAt(mFrameTreeLeaves.Length() - 1);
   }
   mFrameTreeLeaves.AppendElement(newNode);
   mCount++;
@@ -7463,8 +7462,8 @@ void DR_State::PrettyUC(nscoord aSize,
 void DR_State::DeleteTreeNode(DR_FrameTreeNode& aNode)
 {
   mFrameTreeLeaves.RemoveElement(&aNode);
-  PRInt32 numLeaves = mFrameTreeLeaves.Count();
-  if ((0 == numLeaves) || (aNode.mParent != (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(numLeaves - 1))) {
+  PRInt32 numLeaves = mFrameTreeLeaves.Length();
+  if ((0 == numLeaves) || (aNode.mParent != mFrameTreeLeaves.ElementAt(numLeaves - 1))) {
     mFrameTreeLeaves.AppendElement(aNode.mParent);
   }
 
