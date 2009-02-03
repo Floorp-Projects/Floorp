@@ -1201,7 +1201,7 @@ public:
     nscoord trailingWhitespace;
 
     // Floats encountered in the lines.
-    nsVoidArray floats; // of nsIFrame*
+    nsTArray<nsIFrame*> floats;
   };
 
   struct InlineMinWidthData : public InlineIntrinsicWidthData {

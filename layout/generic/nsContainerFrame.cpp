@@ -1147,12 +1147,12 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
   // with very many next-in-flows
   nsIFrame* nextNextInFlow = aNextInFlow->GetNextInFlow();
   if (nextNextInFlow) {
-    nsAutoVoidArray frames;
+    nsAutoTArray<nsIFrame*, 8> frames;
     for (nsIFrame* f = nextNextInFlow; f; f = f->GetNextInFlow()) {
       frames.AppendElement(f);
     }
-    for (PRInt32 i = frames.Count() - 1; i >= 0; --i) {
-      nsIFrame* delFrame = static_cast<nsIFrame*>(frames.ElementAt(i));
+    for (PRInt32 i = frames.Length() - 1; i >= 0; --i) {
+      nsIFrame* delFrame = frames.ElementAt(i);
       static_cast<nsContainerFrame*>(delFrame->GetParent())
         ->DeleteNextInFlowChild(aPresContext, delFrame, aDeletingEmptyFrames);
     }

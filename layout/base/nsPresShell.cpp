@@ -76,7 +76,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prinrval.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "nsIViewObserver.h"
@@ -1123,7 +1123,7 @@ protected:
   PRUint32                  mUpdateCount;
 #endif
   // reflow roots that need to be reflowed, as both a queue and a hashtable
-  nsVoidArray mDirtyRoots;
+  nsTArray<nsIFrame*> mDirtyRoots;
 
   PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
@@ -1133,7 +1133,7 @@ protected:
   
   nsIFrame*   mCurrentEventFrame;
   nsCOMPtr<nsIContent> mCurrentEventContent;
-  nsVoidArray mCurrentEventFrameStack;
+  nsTArray<nsIFrame*> mCurrentEventFrameStack;
   nsCOMArray<nsIContent> mCurrentEventContentStack;
 
   nsCOMPtr<nsIContent>          mLastAnchorScrolledTo;
@@ -1664,9 +1664,9 @@ PresShell::Destroy()
 
   mCurrentEventFrame = nsnull;
 
-  PRInt32 i, count = mCurrentEventFrameStack.Count();
+  PRInt32 i, count = mCurrentEventFrameStack.Length();
   for (i = 0; i < count; i++) {
-    mCurrentEventFrameStack.ReplaceElementAt(nsnull, i);
+    mCurrentEventFrameStack[i] = nsnull;
   }
 
   if (mViewManager) {
@@ -2440,14 +2440,14 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   if (rootFrame) {
     // Note: Because the frame just got created, it has the NS_FRAME_IS_DIRTY
     // bit set.  Unset it so that FrameNeedsReflow() will work right.
-    NS_ASSERTION(mDirtyRoots.IndexOf(rootFrame) == -1,
+    NS_ASSERTION(!mDirtyRoots.Contains(rootFrame),
                  "Why is the root in mDirtyRoots already?");
 
     rootFrame->RemoveStateBits(NS_FRAME_IS_DIRTY |
                                NS_FRAME_HAS_DIRTY_CHILDREN);
     FrameNeedsReflow(rootFrame, eResize, NS_FRAME_IS_DIRTY);
 
-    NS_ASSERTION(mDirtyRoots.IndexOf(rootFrame) != -1,
+    NS_ASSERTION(mDirtyRoots.Contains(rootFrame),
                  "Should be in mDirtyRoots now");
     NS_ASSERTION(mReflowEvent.IsPending(), "Why no reflow event pending?");
   }
@@ -2604,7 +2604,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   if (!mIgnoreFrameDestruction) {
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
-    for (PRInt32 idx = mDirtyRoots.Count(); idx; ) {
+    for (PRInt32 idx = mDirtyRoots.Length(); idx; ) {
       --idx;
       if (mDirtyRoots[idx] == aFrame) {
         mDirtyRoots.RemoveElementAt(idx);
@@ -3103,7 +3103,7 @@ PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame)
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {
     if (((aFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT) ||
          !aFrame->GetParent()) &&
-        mDirtyRoots.IndexOf(aFrame) != -1) {
+        mDirtyRoots.Contains(aFrame)) {
       return;
     }
 
@@ -3178,15 +3178,15 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   }
 
   if (aIntrinsicDirty == eStyleChange) {
-    // Mark all descendants dirty (using an nsVoidArray stack rather than
+    // Mark all descendants dirty (using an nsTArray stack rather than
     // recursion).
-    nsVoidArray stack;
+    nsTArray<nsIFrame*> stack;
     stack.AppendElement(aFrame);
 
-    while (stack.Count() != 0) {
+    while (stack.Length() != 0) {
       nsIFrame *f =
-        static_cast<nsIFrame*>(stack.FastElementAt(stack.Count() - 1));
-      stack.RemoveElementAt(stack.Count() - 1);
+        stack.ElementAt(stack.Length() - 1);
+      stack.RemoveElementAt(stack.Length() - 1);
 
       PRInt32 childListIndex = 0;
       nsIAtom *childListName;
@@ -3358,13 +3358,13 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   }
 #endif
 
-  for (int i=0; i<mCurrentEventFrameStack.Count(); i++) {
-    if (aFrame == (nsIFrame*)mCurrentEventFrameStack.ElementAt(i)) {
+  for (unsigned int i=0; i < mCurrentEventFrameStack.Length(); i++) {
+    if (aFrame == mCurrentEventFrameStack.ElementAt(i)) {
       //One of our stack frames was deleted.  Get its content so that when we
       //pop it we can still get its new frame from its content
       nsIContent *currentEventContent = aFrame->GetContent();
       mCurrentEventContentStack.ReplaceObjectAt(currentEventContent, i);
-      mCurrentEventFrameStack.ReplaceElementAt(nsnull, i);
+      mCurrentEventFrameStack[i] = nsnull;
     }
   }
 
@@ -4303,7 +4303,7 @@ PresShell::UnsuppressPainting()
   // the reflows and get all the frames where we want them
   // before actually unlocking the painting.  Otherwise
   // go ahead and unlock now.
-  if (mDirtyRoots.Count() > 0)
+  if (mDirtyRoots.Length() > 0)
     mShouldUnsuppressPainting = PR_TRUE;
   else
     UnsuppressAndInvalidate();
@@ -5431,7 +5431,7 @@ void
 PresShell::PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent)
 {
   if (mCurrentEventFrame || mCurrentEventContent) {
-    mCurrentEventFrameStack.InsertElementAt((void*)mCurrentEventFrame, 0);
+    mCurrentEventFrameStack.InsertElementAt(0, mCurrentEventFrame);
     mCurrentEventContentStack.InsertObjectAt(mCurrentEventContent, 0);
   }
   mCurrentEventFrame = aFrame;
@@ -5444,8 +5444,8 @@ PresShell::PopCurrentEventInfo()
   mCurrentEventFrame = nsnull;
   mCurrentEventContent = nsnull;
 
-  if (0 != mCurrentEventFrameStack.Count()) {
-    mCurrentEventFrame = (nsIFrame*)mCurrentEventFrameStack.ElementAt(0);
+  if (0 != mCurrentEventFrameStack.Length()) {
+    mCurrentEventFrame = mCurrentEventFrameStack.ElementAt(0);
     mCurrentEventFrameStack.RemoveElementAt(0);
     mCurrentEventContent = mCurrentEventContentStack.ObjectAt(0);
     mCurrentEventContentStack.RemoveObjectAt(0);
@@ -6503,7 +6503,7 @@ void
 PresShell::PostReflowEvent()
 {
   if (mReflowEvent.IsPending() || mIsDestroying || mIsReflowing ||
-      mDirtyRoots.Count() == 0)
+      mDirtyRoots.Length() == 0)
     return;
 
   nsRefPtr<ReflowEvent> ev = new ReflowEvent(this);
@@ -6659,7 +6659,7 @@ PresShell::DoVerifyReflow()
              ok ? "ok" : "failed");
     }
 
-    if (0 != mDirtyRoots.Count()) {
+    if (0 != mDirtyRoots.Length()) {
       printf("XXX yikes! reflow commands queued during verify-reflow\n");
     }
   }
@@ -6672,7 +6672,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   MOZ_TIMER_DEBUGLOG(("Start: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_START(mReflowWatch);  
 
-  if (0 != mDirtyRoots.Count()) {
+  if (0 != mDirtyRoots.Length()) {
 
 #ifdef DEBUG
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
@@ -6695,8 +6695,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
       do {
         // Send an incremental reflow notification to the target frame.
-        PRInt32 idx = mDirtyRoots.Count() - 1;
-        nsIFrame *target = static_cast<nsIFrame*>(mDirtyRoots[idx]);
+        PRInt32 idx = mDirtyRoots.Length() - 1;
+        nsIFrame *target = mDirtyRoots[idx];
         mDirtyRoots.RemoveElementAt(idx);
 
         if (!NS_SUBTREE_DIRTY(target)) {
@@ -6710,7 +6710,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
         // Keep going until we're out of reflow commands, or we've run
         // past our deadline.
-      } while (mDirtyRoots.Count() &&
+      } while (mDirtyRoots.Length() &&
                (!aInterruptible || PR_IntervalNow() < deadline));
 
       // XXXwaterson for interruptible reflow, examine the tree and
@@ -6739,7 +6739,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       // after DidDoReflow(), since that method can change whether there are
       // dirty roots around by flushing, and there's no point in posting a
       // reflow event just to have the flush revoke it.
-      if (mDirtyRoots.Count())
+      if (mDirtyRoots.Length())
         PostReflowEvent();
     }
   }
@@ -6748,7 +6748,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   MOZ_TIMER_STOP(mReflowWatch);  
 
   if (!mIsDestroying && mShouldUnsuppressPainting &&
-      mDirtyRoots.Count() == 0) {
+      mDirtyRoots.Length() == 0) {
     // We only unlock if we're out of reflows.  It's pointless
     // to unlock if reflows are still pending, since reflows
     // are just going to thrash the frames around some more.  By

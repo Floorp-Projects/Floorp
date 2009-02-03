@@ -46,7 +46,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
@@ -64,8 +64,8 @@
 // aOffset[0] is the first string, aOffset[1] is the second string, etc.
 // Used to parse attributes like columnalign='left right', rowalign='top bottom'
 static void
-SplitString(nsString&    aString, // [IN/OUT]
-            nsVoidArray& aOffset) // [OUT]
+SplitString(nsString&             aString, // [IN/OUT]
+            nsTArray<PRUnichar*>& aOffset) // [OUT]
 {
   static const PRUnichar kNullCh = PRUnichar('\0');
 
@@ -95,8 +95,8 @@ SplitString(nsString&    aString, // [IN/OUT]
 
 struct nsValueList
 {
-  nsString    mData;
-  nsVoidArray mArray;
+  nsString             mData;
+  nsTArray<PRUnichar*> mArray;
 
   nsValueList(nsString& aData) {
     mData.Assign(aData);
@@ -133,16 +133,16 @@ GetValueAt(nsIFrame* aTableOrRowFrame,
     aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttribute, values);
     if (!values.IsEmpty())
       valueList = new nsValueList(values);
-    if (!valueList || !valueList->mArray.Count()) {
+    if (!valueList || !valueList->mArray.Length()) {
       delete valueList; // ok either way, delete is null safe
       return nsnull;
     }
     aTableOrRowFrame->SetProperty(aAttribute, valueList, DestroyValueListFunc);
   }
-  PRInt32 count = valueList->mArray.Count();
+  PRInt32 count = valueList->mArray.Length();
   return (aRowOrColIndex < count)
-         ? (PRUnichar*)(valueList->mArray[aRowOrColIndex])
-         : (PRUnichar*)(valueList->mArray[count-1]);
+         ? valueList->mArray[aRowOrColIndex]
+         : valueList->mArray[count-1];
 }
 
 #ifdef NS_DEBUG

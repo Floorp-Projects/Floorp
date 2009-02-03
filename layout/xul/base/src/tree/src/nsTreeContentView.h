@@ -39,7 +39,7 @@
 #define nsTreeContentView_h__
 
 #include "nsFixedSizeAllocator.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIDocument.h"
 #include "nsStubDocumentObserver.h"
 #include "nsITreeBoxObject.h"
@@ -47,6 +47,8 @@
 #include "nsITreeView.h"
 #include "nsITreeContentView.h"
 #include "nsITreeSelection.h"
+
+class Row;
 
 nsresult NS_NewTreeContentView(nsITreeView** aResult);
 
@@ -80,17 +82,20 @@ class nsTreeContentView : public nsINativeTreeView,
 
   protected:
     // Recursive methods which deal with serializing of nested content.
-    void Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows);
+    void Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex,
+                   nsTArray<Row*>& aRows);
 
-    void SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows);
+    void SerializeItem(nsIContent* aContent, PRInt32 aParentIndex,
+                       PRInt32* aIndex, nsTArray<Row*>& aRows);
 
-    void SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows);
+    void SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex,
+                            PRInt32* aIndex, nsTArray<Row*>& aRows);
 
     void SerializeOption(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex,
-                         nsVoidArray& aRows);
+                         nsTArray<Row*>& aRows);
 
     void SerializeOptGroup(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex,
-                           nsVoidArray& aRows);
+                           nsTArray<Row*>& aRows);
 
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aResult);
     
@@ -127,7 +132,7 @@ class nsTreeContentView : public nsINativeTreeView,
     nsCOMPtr<nsIContent>                mBody;
     nsIDocument*                        mDocument;      // WEAK
     nsFixedSizeAllocator                mAllocator;
-    nsVoidArray                         mRows;
+    nsTArray<Row*>                      mRows;
 
     PRPackedBool                        mUpdateSelection;
 };

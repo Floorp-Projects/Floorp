@@ -51,7 +51,6 @@
 #include "nsMargin.h"
 #include "nsRect.h"
 #include "nsFont.h"
-#include "nsVoidArray.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
