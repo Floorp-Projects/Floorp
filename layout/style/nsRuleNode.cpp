@@ -73,6 +73,7 @@
 #include "nsStyleTransformMatrix.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSProps.h"
+#include "nsTArray.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
@@ -2730,7 +2731,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                            nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
-  nsAutoVoidArray contextPath;
+  nsAutoTArray<nsStyleContext*, 8> contextPath;
   contextPath.AppendElement(aContext);
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
@@ -2758,8 +2759,8 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   PRBool dummy;
   PRUint32 fontBit = nsCachedStyleData::GetBitForSID(eStyleStruct_Font);
   
-  for (PRInt32 i = contextPath.Count() - 1; i >= 0; --i) {
-    nsStyleContext* context = (nsStyleContext*)contextPath[i];
+  for (PRInt32 i = contextPath.Length() - 1; i >= 0; --i) {
+    nsStyleContext* context = contextPath[i];
     nsRuleDataFont fontData; // Declare a struct with null CSS values.
     nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), aPresContext, context);
     ruleData.mFontData = &fontData;

@@ -327,27 +327,25 @@ nsFrameList::GetLength() const
   return count;
 }
 
-static int CompareByContentOrder(const void* aF1, const void* aF2, void* aDummy)
+static int CompareByContentOrder(const nsIFrame* aF1, const nsIFrame* aF2)
 {
-  const nsIFrame* f1 = static_cast<const nsIFrame*>(aF1);
-  const nsIFrame* f2 = static_cast<const nsIFrame*>(aF2);
-  if (f1->GetContent() != f2->GetContent()) {
-    return nsLayoutUtils::CompareTreePosition(f1->GetContent(), f2->GetContent());
+  if (aF1->GetContent() != aF2->GetContent()) {
+    return nsLayoutUtils::CompareTreePosition(aF1->GetContent(), aF2->GetContent());
   }
 
-  if (f1 == f2) {
+  if (aF1 == aF2) {
     return 0;
   }
 
   const nsIFrame* f;
-  for (f = f2; f; f = f->GetPrevInFlow()) {
-    if (f == f1) {
+  for (f = aF2; f; f = f->GetPrevInFlow()) {
+    if (f == aF1) {
       // f1 comes before f2 in the flow
       return -1;
     }
   }
-  for (f = f1; f; f = f->GetPrevInFlow()) {
-    if (f == f2) {
+  for (f = aF1; f; f = f->GetPrevInFlow()) {
+    if (f == aF2) {
       // f1 comes after f2 in the flow
       return 1;
     }
@@ -357,21 +355,32 @@ static int CompareByContentOrder(const void* aF1, const void* aF2, void* aDummy)
   return 0;
 }
 
+class CompareByContentOrderComparator
+{
+  public:
+  PRBool Equals(const nsIFrame* aA, const nsIFrame* aB) const {
+    return aA == aB;
+  }
+  PRBool LessThan(const nsIFrame* aA, const nsIFrame* aB) const {
+    return CompareByContentOrder(aA, aB) < 0;
+  }
+};
+
 void
 nsFrameList::SortByContentOrder()
 {
   if (!mFirstChild)
     return;
 
-  nsAutoVoidArray array;
+  nsAutoTArray<nsIFrame*, 8> array;
   nsIFrame* f;
   for (f = mFirstChild; f; f = f->GetNextSibling()) {
     array.AppendElement(f);
   }
-  array.Sort(CompareByContentOrder, nsnull);
-  f = mFirstChild = static_cast<nsIFrame*>(array.FastElementAt(0));
-  for (PRInt32 i = 1; i < array.Count(); ++i) {
-    nsIFrame* ff = static_cast<nsIFrame*>(array.FastElementAt(i));
+  array.Sort(CompareByContentOrderComparator());
+  f = mFirstChild = array.ElementAt(0);
+  for (PRUint32 i = 1; i < array.Length(); ++i) {
+    nsIFrame* ff = array.ElementAt(i);
     f->SetNextSibling(ff);
     f = ff;
   }

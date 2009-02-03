@@ -61,7 +61,6 @@ class nsStyleContext;
 struct nsStyleContent;
 struct nsStyleDisplay;
 class nsIPresShell;
-class nsVoidArray;
 class nsFrameManager;
 class nsIDOMHTMLSelectElement;
 class nsPresContext;
