@@ -78,7 +78,6 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
  * asserts check these relations.
  */
 JS_STATIC_ASSERT(JSTYPE_LIMIT == 8);
-JS_STATIC_ASSERT(JSVAL_TO_BOOLEAN(JSVAL_VOID) == 2);
 JS_STATIC_ASSERT(JSTYPE_VOID == 0);
 
 const char *const js_common_atom_names[] = {

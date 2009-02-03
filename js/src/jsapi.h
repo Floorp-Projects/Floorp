@@ -83,13 +83,54 @@ JS_BEGIN_EXTERN_C
 /* Objects, strings, and doubles are GC'ed. */
 #define JSVAL_IS_GCTHING(v)     (!((v) & JSVAL_INT) &&                        \
                                  JSVAL_TAG(v) != JSVAL_BOOLEAN)
-#define JSVAL_TO_GCTHING(v)     ((void *)JSVAL_CLRTAG(v))
-#define JSVAL_TO_OBJECT(v)      ((JSObject *)JSVAL_TO_GCTHING(v))
-#define JSVAL_TO_DOUBLE(v)      ((jsdouble *)JSVAL_TO_GCTHING(v))
-#define JSVAL_TO_STRING(v)      ((JSString *)JSVAL_TO_GCTHING(v))
-#define OBJECT_TO_JSVAL(obj)    ((jsval)(obj))
-#define DOUBLE_TO_JSVAL(dp)     JSVAL_SETTAG((jsval)(dp), JSVAL_DOUBLE)
-#define STRING_TO_JSVAL(str)    JSVAL_SETTAG((jsval)(str), JSVAL_STRING)
+
+static JS_ALWAYS_INLINE void *
+JSVAL_TO_GCTHING(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_GCTHING(v));
+    return (void *) JSVAL_CLRTAG(v);
+}
+
+static JS_ALWAYS_INLINE JSObject *
+JSVAL_TO_OBJECT(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_OBJECT(v));
+    return (JSObject *) JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE jsdouble *
+JSVAL_TO_DOUBLE(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_DOUBLE(v));
+    return (jsdouble *) JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE JSString *
+JSVAL_TO_STRING(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    return (JSString *) JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE jsval
+OBJECT_TO_JSVAL(JSObject *obj)
+{
+    JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
+    JS_ASSERT(((jsval) obj & JSVAL_TAGBITS) == JSVAL_OBJECT);
+    return (jsval) obj;
+}
+
+static JS_ALWAYS_INLINE jsval
+DOUBLE_TO_JSVAL(jsdouble *dp)
+{
+    return JSVAL_SETTAG((jsval) dp, JSVAL_DOUBLE);
+}
+
+static JS_ALWAYS_INLINE jsval
+STRING_TO_JSVAL(JSString *str)
+{
+    return JSVAL_SETTAG((jsval) str, JSVAL_STRING);
+}
 
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
@@ -109,10 +150,45 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_TO_INT(v)         ((jsint)(v) >> 1)
 #define INT_TO_JSVAL(i)         (((jsval)(i) << 1) | JSVAL_INT)
 
-/* Convert between boolean and jsval. */
-#define JSVAL_TO_BOOLEAN(v)     ((JSBool)((v) >> JSVAL_TAGBITS))
-#define BOOLEAN_TO_JSVAL(b)     JSVAL_SETTAG((jsval)(b) << JSVAL_TAGBITS,     \
-                                             JSVAL_BOOLEAN)
+/*
+ * A pseudo-boolean is a 29-bit (for 32-bit jsval) or 61-bit (for 64-bit jsval)
+ * value other than 0 or 1 encoded as a jsval whose tag is JSVAL_BOOLEAN.
+ *
+ * JSVAL_VOID happens to be defined as a jsval encoding a pseudo-boolean, but
+ * embedders MUST NOT rely on this. All other possible pseudo-boolean values
+ * are implementation-reserved and MUST NOT be constructed by any embedding of
+ * SpiderMonkey.
+ */
+#define JSVAL_TO_PSEUDO_BOOLEAN(v) ((JSBool) ((v) >> JSVAL_TAGBITS))
+#define PSEUDO_BOOLEAN_TO_JSVAL(b) \
+  JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_BOOLEAN)
+
+/*
+ * Well-known JS values.  The extern'd variables are initialized when the
+ * first JSContext is created by JS_NewContext (see below).
+ */
+#define JSVAL_NULL              ((jsval) 0)
+#define JSVAL_ZERO              INT_TO_JSVAL(0)
+#define JSVAL_ONE               INT_TO_JSVAL(1)
+#define JSVAL_FALSE             PSEUDO_BOOLEAN_TO_JSVAL(JS_FALSE)
+#define JSVAL_TRUE              PSEUDO_BOOLEAN_TO_JSVAL(JS_TRUE)
+#define JSVAL_VOID              PSEUDO_BOOLEAN_TO_JSVAL(2)
+
+
+/* Convert between boolean and jsval, asserting that inputs are valid. */
+static JS_ALWAYS_INLINE JSBool
+JSVAL_TO_BOOLEAN(jsval v)
+{
+  JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE);
+  return JSVAL_TO_PSEUDO_BOOLEAN(v);
+}
+
+static JS_ALWAYS_INLINE jsval
+BOOLEAN_TO_JSVAL(JSBool b)
+{
+  JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
+  return PSEUDO_BOOLEAN_TO_JSVAL(b);
+}
 
 /* A private data pointer (2-byte-aligned) can be stored as an int jsval. */
 #define JSVAL_TO_PRIVATE(v)     ((void *)((v) & ~JSVAL_INT))
@@ -178,17 +254,6 @@ JS_BEGIN_EXTERN_C
  * JSFunctionSpec structs are allocated in static arrays.
  */
 #define JSFUN_GENERIC_NATIVE    JSFUN_LAMBDA
-
-/*
- * Well-known JS values.  The extern'd variables are initialized when the
- * first JSContext is created by JS_NewContext (see below).
- */
-#define JSVAL_VOID              BOOLEAN_TO_JSVAL(2)
-#define JSVAL_NULL              OBJECT_TO_JSVAL(0)
-#define JSVAL_ZERO              INT_TO_JSVAL(0)
-#define JSVAL_ONE               INT_TO_JSVAL(1)
-#define JSVAL_FALSE             BOOLEAN_TO_JSVAL(JS_FALSE)
-#define JSVAL_TRUE              BOOLEAN_TO_JSVAL(JS_TRUE)
 
 /*
  * Microseconds since the epoch, midnight, January 1, 1970 UTC.  See the
