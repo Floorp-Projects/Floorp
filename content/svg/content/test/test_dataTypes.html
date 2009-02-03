@@ -142,6 +142,44 @@ function runTests()
   is(basePreserveAspectRatio.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice baseVal");
   is(animPreserveAspectRatio.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice animVal");
 
+  // viewBox attribute
+  var baseViewBox = marker.viewBox.baseVal;
+  var animViewBox = marker.viewBox.animVal;
+  is(baseViewBox.x, 0, "viewBox baseVal");
+  is(animViewBox.x, 0, "viewBox baseVal");
+  is(baseViewBox.y, 0, "viewBox baseVal");
+  is(animViewBox.y, 0, "viewBox baseVal");
+  is(baseViewBox.width, 0, "viewBox baseVal");
+  is(animViewBox.width, 0, "viewBox baseVal");
+  is(baseViewBox.height, 0, "viewBox baseVal");
+  is(animViewBox.height, 0, "viewBox baseVal");
+  baseViewBox.x = 10;
+  baseViewBox.y = 11;
+  baseViewBox.width = 12;
+  baseViewBox.height = 13;
+  is(marker.getAttribute("viewBox"), "10 11 12 13", "viewBox attribute");
+
+  marker.setAttribute("viewBox", "1 2 3 4");
+  is(marker.viewBox.baseVal.x, 1, "viewBox.x baseVal");
+  is(marker.viewBox.animVal.x, 1, "viewBox.x animVal");
+  is(marker.viewBox.baseVal.y, 2, "viewbox.y baseVal");
+  is(marker.viewBox.animVal.y, 2, "viewbox.y animVal");
+  is(marker.viewBox.baseVal.width, 3, "viewbox.width baseVal");
+  is(marker.viewBox.animVal.width, 3, "viewbox.width animVal");
+  is(marker.viewBox.baseVal.height, 4, "viewbox.heigth baseVal");
+  is(marker.viewBox.animVal.height, 4, "viewbox.heigth animVal");
+  marker.viewBox.baseVal.x = 5;
+  is(marker.viewBox.animVal.x, 5, "viewBox.x animVal");
+  marker.viewBox.baseVal.y = 6;
+  is(marker.viewBox.animVal.y, 6, "viewBox.y animVal");
+  marker.viewBox.baseVal.width = 7;
+  is(marker.viewBox.animVal.width, 7, "viewBox.width animVal");
+  marker.viewBox.baseVal.height = 8;
+  is(marker.viewBox.animVal.height, 8, "viewBox.height animVal");
+  is(marker.getAttribute("viewBox"), "5 6 7 8", "viewBox attribute");
+  marker.removeAttribute("viewBox");
+  is(marker.hasAttribute("viewBox"), false, "viewBox hasAttribute");
+
   SimpleTest.finish();
 }
 
