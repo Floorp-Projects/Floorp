@@ -986,8 +986,8 @@ struct JSContext {
     jsbytecode         *pcHint;
 };
 
-#define BEGIN_PC_HINT(pc)       cx->pcHint = pc
-#define END_PC_HINT()           cx->pcHint = NULL
+#define BEGIN_PC_HINT(pc)       (cx->pcHint = (pc))
+#define END_PC_HINT()           (cx->pcHint = NULL)
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
