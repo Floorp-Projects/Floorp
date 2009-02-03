@@ -1932,11 +1932,11 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
 JS_DEFINE_TRCINFO_1(obj_valueOf,
-    (3, (static, JSVAL,      Object_p_valueOf,              CONTEXT, THIS, STRING,  0, 0)))
+    (3, (static, JSVAL, Object_p_valueOf, CONTEXT, THIS, STRING,                  0, 0)))
 JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
-    (3, (static, BOOL_RETRY, Object_p_hasOwnProperty,       CONTEXT, THIS, STRING,  0, 0)))
+    (3, (static, BOOL_FAIL, Object_p_hasOwnProperty, CONTEXT, THIS, STRING,       0, 0)))
 JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
-    (3, (static, BOOL_RETRY, Object_p_propertyIsEnumerable, CONTEXT, THIS, STRING,  0, 0)))
+    (3, (static, BOOL_FAIL, Object_p_propertyIsEnumerable, CONTEXT, THIS, STRING, 0, 0)))
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -3904,7 +3904,7 @@ static jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx)
 {
     jsbytecode *pc = cx->pcHint;
-    if (!pc || !JS_ON_TRACE(cx)) {
+    if (!pc) {
         JSStackFrame* fp = js_GetTopStackFrame(cx);
         if (fp && fp->regs) {
             pc = fp->regs->pc;
@@ -3912,8 +3912,6 @@ js_GetCurrentBytecodePC(JSContext* cx)
             //        JSOP_GETELEM imacro (bug 476559).
             if (*pc == JSOP_CALL && fp->imacpc && *fp->imacpc == JSOP_GETELEM)
                 pc = fp->imacpc;
-        } else {
-            pc = NULL;
         }
     }
     return pc;
