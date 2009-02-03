@@ -4148,6 +4148,21 @@ testInterpreterReentry7.expected = "grue bleen";
 test(testInterpreterReentry7);
 */
 
+function testHolePushing() {
+    var a = ["foobar", "baz"];
+    for (var i = 0; i < 5; i++)
+        a = [, "overwritten", "new"];
+    var s = "[";
+    for (i = 0; i < a.length; i++) {
+        s += (i in a) ? a[i] : "<hole>";
+        if (i != a.length - 1)
+            s += ",";
+    }
+    return s + "], " + (0 in a);
+}
+testHolePushing.expected = "[<hole>,overwritten,new], false";
+test(testHolePushing);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

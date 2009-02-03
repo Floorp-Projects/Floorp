@@ -1991,7 +1991,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
     AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
-    jsval funval = OBJECT_TO_JSVAL(aHandler);
+    jsval funval = OBJECT_TO_JSVAL(static_cast<JSObject *>(aHandler));
     JSAutoRequest ar(mContext);
     PRBool ok = ::JS_CallFunctionValue(mContext, target,
                                        funval, argc, argv, &rval);
