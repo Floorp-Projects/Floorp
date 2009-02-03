@@ -51,7 +51,7 @@ interface nsIDocShellTreeItem;
 interface nsIAppShell;
 interface nsIXULBrowserWindow;
 
-[scriptable, uuid(b6c2f9e1-53a0-45f2-a2b8-fe37861fe8a8)]
+[scriptable, uuid(c175a596-ee13-420a-aa74-13ad3a14deb1)]
 interface nsIXULWindow : nsISupports
 {
   /**
