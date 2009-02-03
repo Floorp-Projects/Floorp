@@ -4979,6 +4979,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
                                     nsIAtom* aTag,
                                     PRInt32 aNameSpaceID,
+                                    nsIFrame* aParentFrame,
                                     nsStyleContext* aStyleContext)
 {
   // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
@@ -4986,6 +4987,24 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
   // ShouldHaveFirstLineStyle.
   if (!aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID != kNameSpaceID_XHTML) {
+    return nsnull;
+  }
+
+  NS_ASSERTION(!aParentFrame ||
+               aParentFrame->GetStyleContext()->GetPseudoType() !=
+                 nsCSSAnonBoxes::fieldsetContent ||
+               aParentFrame->GetParent()->GetType() == nsGkAtoms::fieldSetFrame,
+               "Unexpected parent for fieldset content anon box");
+  if (aTag == nsGkAtoms::legend &&
+      (!aParentFrame ||
+       (aParentFrame->GetType() != nsGkAtoms::fieldSetFrame &&
+        aParentFrame->GetStyleContext()->GetPseudoType() !=
+          nsCSSAnonBoxes::fieldsetContent))) {
+    // <legend> is only special inside fieldset frames
+    // XXXbz it would be nice if we could just decide this based on the parent
+    // tag, and hence just use a SIMPLE_TAG_CHAIN for legend below, but the
+    // fact that with XBL we could end up with this legend element in some
+    // totally weird insertion point makes that chancy, I think.
     return nsnull;
   }
 
@@ -6720,7 +6739,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   if (isText) {
     data = FindTextData(aParentFrame);
   } else {
-    data = FindHTMLData(aContent, aTag, aNameSpaceID, styleContext);
+    data = FindHTMLData(aContent, aTag, aNameSpaceID, aParentFrame,
+                        styleContext);
     if (!data) {
       data = FindXULTagData(aContent, aTag, aNameSpaceID, styleContext);
     }

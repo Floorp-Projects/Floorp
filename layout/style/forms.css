@@ -49,7 +49,7 @@
 
 /* miscellaneous form elements */
 
-legend {
+fieldset > legend {
   padding-left: 2px;
   padding-right: 2px;
   border: none;
