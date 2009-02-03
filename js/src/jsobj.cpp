@@ -3904,7 +3904,7 @@ static jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx)
 {
     jsbytecode *pc = cx->pcHint;
-    if (!pc) {
+    if (!pc || !JS_ON_TRACE(cx)) {
         JSStackFrame* fp = js_GetTopStackFrame(cx);
         if (fp && fp->regs) {
             pc = fp->regs->pc;
@@ -3912,6 +3912,8 @@ js_GetCurrentBytecodePC(JSContext* cx)
             //        JSOP_GETELEM imacro (bug 476559).
             if (*pc == JSOP_CALL && fp->imacpc && *fp->imacpc == JSOP_GETELEM)
                 pc = fp->imacpc;
+        } else {
+            pc = NULL;
         }
     }
     return pc;

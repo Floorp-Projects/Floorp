@@ -4293,13 +4293,11 @@ js_Interpret(JSContext *cx)
                         LOAD_ATOM(i);
                 }
                 id = ATOM_TO_JSID(atom);
-                BEGIN_PC_HINT(regs.pc);
-                    if (entry
-                        ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
-                        : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
-                        goto error;
-                    }
-                END_PC_HINT();
+                if (entry
+                    ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
+                    : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
+                    goto error;
+                }
             } while (0);
 
             STORE_OPND(-1, rval);
@@ -4403,21 +4401,17 @@ js_Interpret(JSContext *cx)
                         goto error;
                 } else
 #endif
-                BEGIN_PC_HINT(regs.pc);
-                    if (entry
-                        ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
-                        : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
-                        goto error;
-                    }
-                END_PC_HINT();
+                if (entry
+                    ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
+                    : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
+                    goto error;
+                }
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
             } else {
                 JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
-                BEGIN_PC_HINT(regs.pc);
-                    if (!js_GetPropertyHelper(cx, obj, id, &rval, &entry))
-                        goto error;
-                END_PC_HINT();
+                if (!js_GetPropertyHelper(cx, obj, id, &rval, &entry))
+                    goto error;
                 STORE_OPND(-1, lval);
                 STORE_OPND(-2, rval);
             }
