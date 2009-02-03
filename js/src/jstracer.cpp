@@ -6887,15 +6887,16 @@ GetProperty(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static jsval FASTCALL
-GetProperty_tn(JSContext *cx, JSObject *obj, JSString *name)
+GetProperty_tn(JSContext *cx, jsbytecode *pc, JSObject *obj, JSString *name)
 {
     jsid id;
     jsval v;
 
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), &id) ||
-        !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
-        return JSVAL_ERROR_COOKIE;
-    }
+    BEGIN_PC_HINT(pc);
+        if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), &id) ||
+            !OBJ_GET_PROPERTY(cx, obj, id, &v))
+            v = JSVAL_ERROR_COOKIE;
+    END_PC_HINT();
     return v;
 }
 
@@ -6915,22 +6916,24 @@ GetElement(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static jsval FASTCALL
-GetElement_tn(JSContext* cx, JSObject* obj, int32 index)
+GetElement_tn(JSContext* cx, jsbytecode *pc, JSObject* obj, int32 index)
 {
     jsval v;
     jsid id;
 
     if (!js_Int32ToId(cx, index, &id))
         return JSVAL_ERROR_COOKIE;
-    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-        return JSVAL_ERROR_COOKIE;
+    BEGIN_PC_HINT(pc);
+        if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+            v = JSVAL_ERROR_COOKIE;
+    END_PC_HINT();
     return v;
 }
 
 JS_DEFINE_TRCINFO_1(GetProperty,
-    (3, (static, JSVAL_FAIL,    GetProperty_tn, CONTEXT, THIS, STRING,          0, 0)))
+    (4, (static, JSVAL_FAIL,    GetProperty_tn, CONTEXT, PC, THIS, STRING,      0, 0)))
 JS_DEFINE_TRCINFO_1(GetElement,
-    (3, (extern, JSVAL_FAIL,    GetElement_tn,  CONTEXT, THIS, INT32,           0, 0)))
+    (4, (extern, JSVAL_FAIL,    GetElement_tn,  CONTEXT, PC, THIS, INT32,       0, 0)))
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETELEM()
