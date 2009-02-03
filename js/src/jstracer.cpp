@@ -3040,6 +3040,9 @@ js_StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(f->root != f || !cx->fp->imacpc);
 
+    if (JS_TRACE_MONITOR(cx).prohibitRecording)
+        return false;
+
     /* start recording if no exception during construction */
     tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
                                            stackSlots, ngslots, typeMap,
@@ -3867,6 +3870,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                VMSideExit** innermostNestedGuardp)
 {
     JS_ASSERT(f->code() && f->vmprivate);
+    JS_ASSERT(cx->builtinStatus == 0);
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
@@ -4020,6 +4024,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     int32_t bs = cx->builtinStatus;
     cx->builtinStatus = 0;
     bool bailed = innermost->exitType == STATUS_EXIT && (bs & JSBUILTIN_BAILED);
+    if (bailed)
+        JS_TRACE_MONITOR(cx).prohibitRecording = false;
     if (bailed && !(bs & JSBUILTIN_ERROR)) {
         /*
          * Deep-bail case.
@@ -4620,6 +4626,7 @@ js_GetTopStackFrame(JSContext *cx)
         JS_ASSERT(cx->bailExit);
 
         JS_TRACE_MONITOR(cx).onTrace = false;
+        JS_TRACE_MONITOR(cx).prohibitRecording = true;
         LeaveTree(*cx->interpState, cx->bailExit);
 #ifdef DEBUG
         cx->bailExit = NULL;
