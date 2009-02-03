@@ -420,7 +420,7 @@ nsHTMLTags::LookupTag(const nsAString& aTagName)
     return eHTMLTag_userdefined;
   }
 
-  static PRUnichar buf[NS_HTMLTAG_NAME_MAX_LENGTH + 1];
+  PRUnichar buf[NS_HTMLTAG_NAME_MAX_LENGTH + 1];
 
   nsAString::const_iterator iter;
   PRUint32 i = 0;
