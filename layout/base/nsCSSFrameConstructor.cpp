@@ -7887,12 +7887,20 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     // this case.  If someone wants to use an index below, they should make
     // sure to use the right index (aIndexInContainer vs iter.position()) with
     // the right parent node.
-  } else {
-    // Do things the fast way if we can.
+  } else if (aIndexInContainer != -1) {
+    // Do things the fast way if we can.  The check for -1 is because editor is
+    // severely broken and calls us directly for native anonymous nodes that it
+    // creates.
     iter.seek(aIndexInContainer);
     NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
   }
-
+#ifdef DEBUG
+  else {
+    NS_WARNING("Someone passed native anonymous content directly into frame "
+               "construction.  Stop doing that!");
+  }
+#endif
+  
   nsIFrame* prevSibling = FindPreviousSibling(first, iter);
 
   PRBool    isAppend = PR_FALSE;
