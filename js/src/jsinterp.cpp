@@ -3590,7 +3590,7 @@ js_Interpret(JSContext *cx)
         JSXMLObjectOps *ops;                                                  \
                                                                               \
         ops = (JSXMLObjectOps *) obj2->map->ops;                              \
-        if (obj2 == JSVAL_TO_OBJECT(rval))                                    \
+        if (JSVAL_IS_OBJECT(rval) && obj2 == JSVAL_TO_OBJECT(rval))           \
             rval = lval;                                                      \
         if (!ops->equality(cx, obj2, rval, &cond))                            \
             goto error;                                                       \

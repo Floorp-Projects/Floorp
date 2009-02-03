@@ -383,7 +383,8 @@ js_TypeOfObject(JSContext* cx, JSObject* obj)
 JSString* FASTCALL
 js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 {
-    jsval boxed = BOOLEAN_TO_JSVAL(unboxed);
+    /* Watch out for pseudo-booleans. */
+    jsval boxed = PSEUDO_BOOLEAN_TO_JSVAL(unboxed);
     JS_ASSERT(JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed));
     JSType type = JS_TypeOfValue(cx, boxed);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
@@ -392,8 +393,9 @@ js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 jsdouble FASTCALL
 js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
 {
-    if (unboxed == JSVAL_TO_BOOLEAN(JSVAL_VOID))
+    if (unboxed == JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))
         return js_NaN;
+    JS_ASSERT(unboxed == JS_TRUE || unboxed == JS_FALSE);
     return unboxed;
 }
 
