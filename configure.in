@@ -8284,11 +8284,14 @@ rm conftest.sh
 
 echo $MAKEFILES > unallmakefiles
 
+mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
+
 AC_OUTPUT($MAKEFILES)
 
 dnl Prevent the regeneration of cairo-features.h forcing rebuilds of gfx stuff
 if test "$CAIRO_FEATURES_H"; then
   if cmp -s $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig; then
+    echo "$CAIRO_FEATURES_H is unchanged"
     mv -f "$CAIRO_FEATURES_H".orig "$CAIRO_FEATURES_H" 2> /dev/null
   else
     rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
@@ -8369,3 +8372,12 @@ AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
+
+dnl Prevent the regeneration of autoconf.mk forcing rebuilds of the world
+dnl Needs to be at the end to respect possible changes from NSPR configure
+if cmp -b config/autoconf.mk config/autoconf.mk.orig; then
+  echo "config/autoconf.mk is unchanged"
+  mv -f config/autoconf.mk.orig config/autoconf.mk 2> /dev/null
+else
+  rm -f config/autoconf.mk.orig 2> /dev/null
+fi
