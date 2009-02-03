@@ -3009,7 +3009,7 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
 
         GlobalState &state = tm->globalStates[i];
 
-        if (state.globalShape == -1) {
+        if (state.globalShape == (uint32) -1) {
             state.globalShape = globalShape;
             JS_ASSERT(state.globalSlots);
             JS_ASSERT(state.globalSlots->length() == 0);
