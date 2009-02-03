@@ -399,6 +399,10 @@ mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
     nsTArray<sqlite3_stmt *> stmts(aNumStatements);
     for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
         sqlite3_stmt *old_stmt = aStatements[i]->GetNativeStatementPointer();
+        if (!old_stmt) {
+          rc = SQLITE_MISUSE;
+          break;
+        }
         NS_ASSERTION(sqlite3_db_handle(old_stmt) == mDBConn,
                      "Statement must be from this database connection!");
 
