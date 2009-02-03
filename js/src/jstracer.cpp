@@ -6514,7 +6514,12 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             } else if (argtype == 'R') {
                 *argp = INS_CONSTPTR(cx->runtime);
             } else if (argtype == 'P') {
-                *argp = INS_CONSTPTR(pc);
+                // FIXME: Set pc to imacpc when recording JSOP_CALL inside the 
+                //        JSOP_GETELEM imacro (bug 476559).
+                if (*pc == JSOP_CALL && fp->imacpc && *fp->imacpc == JSOP_GETELEM)
+                    *argp = INS_CONSTPTR(fp->imacpc);
+                else
+                    *argp = INS_CONSTPTR(pc);
             } else if (argtype == 'D') {  /* this, as a number */
                 if (!isNumber(tval))
                     goto next_specialization;
@@ -6877,7 +6882,7 @@ GetProperty(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv;
     jsid id;
 
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(!JS_ON_TRACE(cx) && cx->fp->imacpc && argc == 1);
     argv = JS_ARGV(cx, vp);
     JS_ASSERT(JSVAL_IS_STRING(argv[0]));
     if (!js_ValueToStringId(cx, argv[0], &id))
@@ -6894,8 +6899,9 @@ GetProperty_tn(JSContext *cx, jsbytecode *pc, JSObject *obj, JSString *name)
 
     BEGIN_PC_HINT(pc);
         if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), &id) ||
-            !OBJ_GET_PROPERTY(cx, obj, id, &v))
+            !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
             v = JSVAL_ERROR_COOKIE;
+        }
     END_PC_HINT();
     return v;
 }
@@ -6906,7 +6912,7 @@ GetElement(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv;
     jsid id;
 
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(!JS_ON_TRACE(cx) && cx->fp->imacpc && argc == 1);
     argv = JS_ARGV(cx, vp);
     JS_ASSERT(JSVAL_IS_NUMBER(argv[0]));
     if (!JS_ValueToId(cx, argv[0], &id))

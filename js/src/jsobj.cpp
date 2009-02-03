@@ -3906,8 +3906,13 @@ js_GetCurrentBytecodePC(JSContext* cx)
     jsbytecode *pc = cx->pcHint;
     if (!pc) {
         JSStackFrame* fp = js_GetTopStackFrame(cx);
-        if (fp && fp->regs)
+        if (fp && fp->regs) {
             pc = fp->regs->pc;
+            // FIXME: Set pc to imacpc when recording JSOP_CALL inside the 
+            //        JSOP_GETELEM imacro (bug 476559).
+            if (*pc == JSOP_CALL && fp->imacpc && *fp->imacpc == JSOP_GETELEM)
+                pc = fp->imacpc;
+        }
     }
     return pc;
 }
