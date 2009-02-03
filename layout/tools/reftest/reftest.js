@@ -53,6 +53,9 @@ const NS_REFTESTHELPER_CONTRACTID =
           "@mozilla.org/reftest-helper;1";
 const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
           "@mozilla.org/network/protocol;1?name=";
+const NS_XREAPPINFO_CONTRACTID =
+          "@mozilla.org/xre/app-info;1";
+
 
 const LOAD_FAILURE_TIMEOUT = 10000; // ms
 
@@ -200,8 +203,11 @@ function ReadManifest(aURL)
 
     // Build the sandbox for fails-if(), etc., condition evaluation.
     var sandbox = new Components.utils.Sandbox(aURL.spec);
-    for (var prop in gAutoconfVars)
-        sandbox[prop] = gAutoconfVars[prop];
+    var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
+    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
+    sandbox.xulRuntime = {widgetToolkit: xr.widgetToolkit,
+                          OS: xr.OS,
+                          XPCOMABI: xr.XPCOMABI};
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
     sandbox.http = {};
