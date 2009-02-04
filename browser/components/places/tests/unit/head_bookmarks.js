@@ -41,6 +41,8 @@ version(170);
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
+const NS_APP_BOOKMARKS_50_FILE = "BMarks";
+
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
@@ -74,6 +76,11 @@ var dirProvider = {
     if (prop == NS_APP_USER_PROFILE_50_DIR ||
         prop == NS_APP_PROFILE_DIR_STARTUP)
       return gProfD.clone();
+    else if (prop == NS_APP_BOOKMARKS_50_FILE) {
+      var bmarks = gProfD.clone();
+      bmarks.append("bookmarks.html");
+      return bmarks;
+    }
     return null;
   },
   QueryInterface: function(iid) {
@@ -126,11 +133,6 @@ var updateSvc = Cc["@mozilla.org/updates/update-service;1"].
 
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-// The following components need to be initialized to perform tests without
-// asserting in debug builds (Bug 448804).
-Cc["@mozilla.org/browser/livemark-service;2"].getService(Ci.nsILivemarkService);
-Cc["@mozilla.org/feed-processor;1"].createInstance(Ci.nsIFeedProcessor);
-
 function uri(spec) {
   return iosvc.newURI(spec, null, null);
 }
@@ -166,4 +168,108 @@ function check_no_bookmarks() {
   root.containerOpen = true;
   do_check_eq(root.childCount, 0);
   root.containerOpen = false;
+}
+
+let gTestDir = do_get_file("browser/components/places/tests/unit/");
+const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
+let backup_date = new Date().toLocaleFormat("%Y-%m-%d");
+const FILENAME_BOOKMARKS_JSON = "bookmarks-" + backup_date + ".json";
+// Number of smart bookmarks we have on the toolbar
+const SMART_BOOKMARKS_ON_TOOLBAR = 1;
+
+/**
+ * Creates a bookmarks.html file in the profile folder from a given source file.
+ *
+ * @param aFilename
+ *        Name of the file to copy to the profile folder.  This file must
+ *        exist in the directory that contains the test files.
+ *
+ * @return nsIFile object for the file.
+ */
+function create_bookmarks_html(aFilename) {
+  remove_bookmarks_html();
+  let bookmarksHTMLFile = gTestDir.clone();
+  bookmarksHTMLFile.append(aFilename);
+  do_check_true(bookmarksHTMLFile.exists());
+  bookmarksHTMLFile.copyTo(gProfD, FILENAME_BOOKMARKS_HTML);
+  let profileBookmarksHTMLFile = gProfD.clone();
+  profileBookmarksHTMLFile.append(FILENAME_BOOKMARKS_HTML);
+  do_check_true(profileBookmarksHTMLFile.exists());
+  return profileBookmarksHTMLFile;
+}
+
+/**
+ * Remove bookmarks.html file from the profile folder.
+ */
+function remove_bookmarks_html() {
+  let profileBookmarksHTMLFile = gProfD.clone();
+  profileBookmarksHTMLFile.append(FILENAME_BOOKMARKS_HTML);
+  if (profileBookmarksHTMLFile.exists()) {
+    profileBookmarksHTMLFile.remove(false);
+    do_check_false(profileBookmarksHTMLFile.exists());
+  }
+}
+
+/**
+ * Check bookmarks.html file exists in the profile folder.
+ *
+ * @return nsIFile object for the file.
+ */
+function check_bookmarks_html() {
+  let profileBookmarksHTMLFile = gProfD.clone();
+  profileBookmarksHTMLFile.append(FILENAME_BOOKMARKS_HTML);
+  do_check_true(profileBookmarksHTMLFile.exists());
+  return profileBookmarksHTMLFile;
+}
+
+/**
+ * Creates a JSON backup in the profile folder folder from a given source file.
+ *
+ * @param aFilename
+ *        Name of the file to copy to the profile folder.  This file must
+ *        exist in the directory that contains the test files.
+ *
+ * @return nsIFile object for the file.
+ */
+function create_JSON_backup(aFilename) {
+  remove_all_JSON_backups();
+  let bookmarksBackupDir = gProfD.clone();
+  bookmarksBackupDir.append("bookmarkbackups");
+  if (!bookmarksBackupDir.exists()) {
+    bookmarksBackupDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+    do_check_true(bookmarksBackupDir.exists());
+  }
+  let bookmarksJSONFile = gTestDir.clone();
+  bookmarksJSONFile.append(aFilename);
+  do_check_true(bookmarksJSONFile.exists());
+  bookmarksJSONFile.copyTo(bookmarksBackupDir, FILENAME_BOOKMARKS_JSON);
+  let profileBookmarksJSONFile = bookmarksBackupDir.clone();
+  profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
+  do_check_true(profileBookmarksJSONFile.exists());
+  return profileBookmarksJSONFile;
+}
+
+/**
+ * Remove bookmarksbackup dir and all backups from the profile folder.
+ */
+function remove_all_JSON_backups() {
+  let bookmarksBackupDir = gProfD.clone();
+  bookmarksBackupDir.append("bookmarkbackups");
+  if (bookmarksBackupDir.exists()) {
+    bookmarksBackupDir.remove(true);
+    do_check_false(bookmarksBackupDir.exists());
+  }
+}
+
+/**
+ * Check a JSON backup file for today exists in the profile folder.
+ *
+ * @return nsIFile object for the file.
+ */
+function check_JSON_backup() {
+  let profileBookmarksJSONFile = gProfD.clone();
+  profileBookmarksJSONFile.append("bookmarkbackups");
+  profileBookmarksJSONFile.append(FILENAME_BOOKMARKS_JSON);
+  do_check_true(profileBookmarksJSONFile.exists());
+  return profileBookmarksJSONFile;
 }
