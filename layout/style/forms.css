@@ -64,6 +64,10 @@ fieldset > legend {
   white-space: nowrap;
 }
 
+legend {
+  display: block;
+}
+
 fieldset {
   display: block;
   margin-left: 2px;
