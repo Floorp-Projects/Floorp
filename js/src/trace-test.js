@@ -13,6 +13,12 @@ const RECORDLOOP = HOTLOOP;
 // The loop count at which we run the trace
 const RUNLOOP = HOTLOOP + 1;
 
+var gDoMandelbrotTest = true;
+if ("gSkipSlowTests" in this && gSkipSlowTests) {
+    print("** Skipping slow tests");
+    gDoMandelbrotTest = false;
+}
+
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
@@ -4264,6 +4270,7 @@ load("math-trace-tests.js");
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
 // the jit.
+if (gDoMandelbrotTest) {
 load("mandelbrot-results.js");
 //function testMandelbrotAll() {
   // Configuration options that affect which codepaths we follow.
@@ -4507,6 +4514,7 @@ load("mandelbrot-results.js");
   test(createMandelSet);
 //}
 //testMandelbrotAll();
+} /* if (gDoMandelbrotTest) */
 // END MANDELBROT STUFF
 
 /*****************************************************************************
