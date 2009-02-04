@@ -200,12 +200,19 @@ var PlacesOrganizer = {
    *          true if the search box should also be reset, false if it should
    *          be left alone.
    */
+  _cachedLeftPaneSelectedNode: null,
   onPlaceSelected: function PO_onPlaceSelected(resetSearchBox) {
     // Don't change the right-hand pane contents when there's no selection
     if (!this._places.hasSelection)
       return;
 
     var node = this._places.selectedNode;
+    // When we invalidate a container we use suppressSelectionEvent, when it is
+    // unset a select event is fired, in many cases the selection did not really
+    // change, so we should check for it, and return early in such a case.
+    if (node == this._cachedLeftPaneSelectedNode)
+      return;
+    this._cachedLeftPaneSelectedNode = node;
     var queries = asQuery(node).getQueries({});
 
     // Items are only excluded on the left pane
@@ -332,7 +339,7 @@ var PlacesOrganizer = {
       this._places.selectPlaceURI(aContainer.uri);
   },
 
-  openSelectedNode: function PU_openSelectedNode(aEvent) {
+  openSelectedNode: function PO_openSelectedNode(aEvent) {
     PlacesUIUtils.openNodeWithEvent(this._content.selectedNode, aEvent);
   },
 
