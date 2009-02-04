@@ -911,6 +911,9 @@ nsNavBookmarks::UpdateBookmarkHashOnRemove(PRInt64 aPlaceId)
 PRBool
 nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
 {
+  NS_ABORT_IF_FALSE(mBookmarksHash.IsInitialized(),
+                    "Bookmark hashtable has not been initialized!");
+
   // Fast path is to check the hash table first.  If it is in the hash table,
   // then verify that it is a real bookmark.
   PRInt64 bookmarkId;
