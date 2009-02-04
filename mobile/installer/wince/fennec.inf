@@ -1,0 +1,739 @@
+; Duplicated Filenames ==> One of the two files 
+;   needs renaming before packaging up the CAB
+; Here are a list of the currently duplicated filenames:
+;   classic.jar
+;       2=fennec/chrome
+;       8=fennec/xulrunner/chrome
+;   classic.manifest
+;       2=fennec/chrome
+;       8=fennec/xulrunner/chrome
+;   en-US.jar
+;       2=fennec/chrome
+;       8=fennec/xulrunner/chrome
+;   en-US.manifest
+;       2=fennec/chrome
+;       8=fennec/xulrunner/chrome
+;   localstore.rdf
+;       13=fennec/xulrunner/defaults/profile
+;       15=fennec/xulrunner/defaults/profile/US
+;   mozce_shunt.dll
+;       1=fennec 
+;       7=fennec/xulrunner
+;   userChrome-example.css 
+;       14=fennec/xulrunner/defaults/profile/chrome
+;       16=fennec/xulrunner/defaults profile/US/chrome
+;   userContent-example.css 
+;       14=fennec/xulrunner/defaults/profile/chrome
+;       16=fennec/xulrunner/defaults profile/US/chrome
+;
+; Technique: Rename the second directory's file to XXXX_1 prior to starting the CABWIZ, 
+;   then take care of the name in the File.xxxxx section
+;
+
+[Version]
+Signature   = "$Windows NT$"        ; required as-is
+Provider    = "Mozilla"             ; maximum of 30 characters, full app name will be "<Provider> <AppName>"
+CESignature = "$Windows CE$"        ; required as-is
+ 
+[CEStrings]
+AppName     = "Fennec"              ; maximum of 40 characters, full app name will be "<Provider> <AppName>"
+InstallDir  = %CE1%\%AppName%       ; Program Files\Fennec
+ 
+[SourceDisksNames]                  ; directory that holds the application's files
+ 1 = , "Fennec Main Directory",,fennec
+ 2 = , "Fennec Top Level Chrome",,fennec\chrome
+ 3 = , "Fennec Components",,fennec\components
+ 4 = , "Fennec Defaults",,fennec\defaults
+ 5 = , "Fennec Default Prefs",,fennec\defaults\preferences
+ 6 = , "Fennec Search Plugins",,fennec\searchplugins
+ 7 = , "XULRunner Main Directory",,fennec\xulrunner
+ 8 = , "XULRunner Top Level Chrome",,fennec\xulrunner\chrome
+ 9 = , "XULRunner Components",,fennec\xulrunner\components
+10 = , "XULRunner Defaults",,fennec\xulrunner\defaults
+11 = , "XULRunner Defaults Autoconfig",,fennec\xulrunner\defaults\autoconfig
+12 = , "XULRunner Default Prefs",,fennec\xulrunner\defaults\pref
+13 = , "XULRunner Default Profile",,fennec\xulrunner\defaults\profile
+14 = , "XULRunner Default Profile Chrome",,fennec\xulrunner\defaults\profile\chrome
+15 = , "XULRunner Default Profile US Lang",,fennec\xulrunner\defaults\profile\US
+16 = , "XULRunner Default Profile US Lang Chrome",,fennec\xulrunner\defaults\profile\US\chrome
+17 = , "XULRunner Dictionaries",,fennec\xulrunner\dictionaries
+18 = , "XULRunner Grep Prefs",,fennec\xulrunner\greprefs
+19 = , "XULRunner Modules (big)",,fennec\xulrunner\modules
+20 = , "XULRunner Resources",,fennec\xulrunner\res
+21 = , "XULRunner Res DTD",,fennec\xulrunner\res\dtd
+22 = , "XULRunner Res Entity Tables",,fennec\xulrunner\res\entityTables
+23 = , "XULRunner Res Fonts",,fennec\xulrunner\res\fonts
+24 = , "XULRunner Res HTML",,fennec\xulrunner\res\html
+25 = , "Other PreBuilt Files",,.
+ 
+[SourceDisksFiles]                  ; list of files to be included in .cab
+application.ini=1
+fennec.exe=1
+mozce_shunt.dll=1
+browser.jar=2
+browser.manifest=2
+classic.jar=2
+classic.manifest=2
+en-US.jar=2
+en-US.manifest=2
+firstrun.jar=2
+firstrun.manifest=2
+aboutFirstrun.js=3
+nsTelProtocolHandler.js=3
+mobile.js=5
+answers.xml=6
+google.xml=6
+wikipedia.xml=6
+yahoo.xml=6
+.autoreg=7
+dependentlibs.list=7
+freebl3.dll=7
+js.exe=7
+js3250.dll=7
+LICENSE=7
+mozce_shunt_2.dll=7
+nspr4.dll=7
+nss3.dll=7
+nssckbi.dll=7
+nssutil3.dll=7
+platform.ini=7
+plc4.dll=7
+plds4.dll=7
+README.txt=7
+regxpcom.exe=7
+smime3.dll=7
+softokn3.dll=7
+sqlite3.dll=7
+ssl3.dll=7
+xpcom.dll=7
+xpcshell.exe=7
+xpt_dump.exe=7
+xpt_link.exe=7
+xul.dll=7
+xulrunner-stub.exe=7
+xulrunner.exe=7
+classic_2.jar=8
+classic_2.manifest=8
+comm.jar=8
+comm.manifest=8
+en-US_2.jar=8
+en-US_2.manifest=8
+pippki.jar=8
+pippki.manifest=8
+toolkit.jar=8
+toolkit.manifest=8
+alerts.xpt=9
+appshell.xpt=9
+appstartup.xpt=9
+autocomplete.xpt=9
+autoconfig.xpt=9
+caps.xpt=9
+chardet.xpt=9
+chrome.xpt=9
+commandhandler.xpt=9
+commandlines.xpt=9
+composer.xpt=9
+contentprefs.xpt=9
+content_base.xpt=9
+content_html.xpt=9
+content_htmldoc.xpt=9
+content_xmldoc.xpt=9
+content_xslt.xpt=9
+content_xtf.xpt=9
+cookie.xpt=9
+directory.xpt=9
+docshell.xpt=9
+dom.xpt=9
+dom_base.xpt=9
+dom_canvas.xpt=9
+dom_core.xpt=9
+dom_css.xpt=9
+dom_events.xpt=9
+dom_geolocation.xpt=9
+dom_html.xpt=9
+dom_json.xpt=9
+dom_loadsave.xpt=9
+dom_offline.xpt=9
+dom_range.xpt=9
+dom_sidebar.xpt=9
+dom_storage.xpt=9
+dom_stylesheets.xpt=9
+dom_svg.xpt=9
+dom_threads.xpt=9
+dom_traversal.xpt=9
+dom_views.xpt=9
+dom_xbl.xpt=9
+dom_xpath.xpt=9
+dom_xul.xpt=9
+downloads.xpt=9
+editor.xpt=9
+embed_base.xpt=9
+extensions.xpt=9
+exthandler.xpt=9
+exthelper.xpt=9
+fastfind.xpt=9
+FeedProcessor.js=9
+feeds.xpt=9
+find.xpt=9
+gfx.xpt=9
+htmlparser.xpt=9
+imglib2.xpt=9
+inspector.xpt=9
+intl.xpt=9
+jar.xpt=9
+jsconsole-clhandler.js=9
+jsdservice.xpt=9
+layout_base.xpt=9
+layout_xul.xpt=9
+layout_xul_tree.xpt=9
+locale.xpt=9
+loginmgr.xpt=9
+lwbrk.xpt=9
+mimetype.xpt=9
+mozbrwsr.xpt=9
+mozfind.xpt=9
+necko.xpt=9
+necko_about.xpt=9
+necko_cache.xpt=9
+necko_cookie.xpt=9
+necko_dns.xpt=9
+necko_file.xpt=9
+necko_ftp.xpt=9
+necko_http.xpt=9
+necko_res.xpt=9
+necko_socket.xpt=9
+necko_strconv.xpt=9
+necko_viewsource.xpt=9
+nsAddonRepository.js=9
+nsBadCertHandler.js=9
+nsBlocklistService.js=9
+nsContentDispatchChooser.js=9
+nsContentPrefService.js=9
+nsDefaultCLH.js=9
+nsDownloadManagerUI.js=9
+nsExtensionManager.js=9
+nsHandlerService.js=9
+nsHelperAppDlg.js=9
+nsLivemarkService.js=9
+nsLoginInfo.js=9
+nsLoginManager.js=9
+nsLoginManagerPrompter.js=9
+nsPlacesDBFlush.js=9
+nsProgressDialog.js=9
+nsProxyAutoConfig.js=9
+nsSearchService.js=9
+nsSearchSuggestions.js=9
+nsTaggingService.js=9
+nsTryToClose.js=9
+nsUpdateService.js=9
+nsURLFormatter.js=9
+nsWebHandlerApp.js=9
+nsXULAppInstall.js=9
+parentalcontrols.xpt=9
+pipboot.xpt=9
+pipnss.xpt=9
+pippki.xpt=9
+places.xpt=9
+pluginGlue.js=9
+pref.xpt=9
+prefetch.xpt=9
+profile.xpt=9
+proxyObjInst.xpt=9
+rdf.xpt=9
+satchel.xpt=9
+saxparser.xpt=9
+shistory.xpt=9
+spellchecker.xpt=9
+storage-Legacy.js=9
+storage-mozStorage.js=9
+storage.xpt=9
+toolkitprofile.xpt=9
+toolkitsearch.xpt=9
+txEXSLTRegExFunctions.js=9
+txmgr.xpt=9
+txtsvc.xpt=9
+uconv.xpt=9
+unicharutil.xpt=9
+update.xpt=9
+uriloader.xpt=9
+urlformatter.xpt=9
+webbrowserpersist.xpt=9
+webBrowser_core.xpt=9
+webshell_idls.xpt=9
+widget.xpt=9
+windowds.xpt=9
+windowwatcher.xpt=9
+xpcom_base.xpt=9
+xpcom_components.xpt=9
+xpcom_ds.xpt=9
+xpcom_io.xpt=9
+xpcom_system.xpt=9
+xpcom_threads.xpt=9
+xpcom_xpti.xpt=9
+xpconnect.xpt=9
+xulapp.xpt=9
+xulapp_setup.xpt=9
+xuldoc.xpt=9
+xultmpl.xpt=9
+zipwriter.xpt=9
+platform.js=11
+prefcalls.js=11
+xulrunner.js=12
+localstore.rdf=13
+userChrome-example.css=14
+userContent-example.css=14
+localstore_2.rdf=15
+userChrome-example_2.css=16
+userContent-example_2.css=16
+en-US.aff=17
+en-US.dic=17
+all.js=18
+security-prefs.js=18
+debug.js=19
+DownloadLastDir.jsm=19
+DownloadUtils.jsm=19
+ISO8601DateUtils.jsm=19
+Microformats.js=19
+PlacesDBUtils.jsm=19
+PluralForm.jsm=19
+SpatialNavigation.js=19
+utils.js=19
+WindowDraggingUtils.jsm=19
+XPCOMUtils.jsm=19
+arrow.gif=20
+arrowd.gif=20
+broken-image.gif=20
+charsetalias.properties=20
+charsetData.properties=20
+contenteditable.css=20
+designmode.css=20
+EditorOverride.css=20
+forms.css=20
+grabber.gif=20
+hiddenWindow.html=20
+html.css=20
+langGroups.properties=20
+language.properties=20
+loading-image.gif=20
+mathml.css=20
+quirk.css=20
+svg.css=20
+table-add-column-after-active.gif=20
+table-add-column-after-hover.gif=20
+table-add-column-after.gif=20
+table-add-column-before-active.gif=20
+table-add-column-before-hover.gif=20
+table-add-column-before.gif=20
+table-add-row-after-active.gif=20
+table-add-row-after-hover.gif=20
+table-add-row-after.gif=20
+table-add-row-before-active.gif=20
+table-add-row-before-hover.gif=20
+table-add-row-before.gif=20
+table-remove-column-active.gif=20
+table-remove-column-hover.gif=20
+table-remove-column.gif=20
+table-remove-row-active.gif=20
+table-remove-row-hover.gif=20
+table-remove-row.gif=20
+ua.css=20
+viewsource.css=20
+wincharset.properties=20
+mathml.dtd=21
+xhtml11.dtd=21
+html40Latin1.properties=22
+html40Special.properties=22
+html40Symbols.properties=22
+htmlEntityVersions.properties=22
+mathml20.properties=22
+transliterate.properties=22
+mathfont.properties=23
+mathfontStandardSymbolsL.properties=23
+mathfontSTIXNonUnicode.properties=23
+mathfontSTIXSize1.properties=23
+mathfontSymbol.properties=23
+mathfontUnicode.properties=23
+folder.png=24
+ 
+[DefaultInstall]                    ; operations to be completed during install
+; WHOLE LIST, including those directories without files
+;CopyFiles   = Files.Fennec, Files.chrome, Files.components, Files.defaults, Files.defaults.preferences, Files.searchplugins, Files.xulrunner, Files.xulrunner.chrome, Files.xulrunner.components, Files.xulrunner.defaults, Files.xulrunner.defaults.autoconfig, Files.xulrunner.defaults.pref, Files.xulrunner.defaults.profile, Files.xulrunner.defaults.profile.chrome, Files.xulrunner.defaults.profile.US, Files.xulrunner.defaults.profile.US.chrome, Files.xulrunner.dictionaries, Files.xulrunner.greprefs, Files.xulrunner.modules, Files.xulrunner.res, Files.xulrunner.res.dtd, Files.xulrunner.res.entityTables, Files.xulrunner.res.fonts, Files.xulrunner.res.html
+CopyFiles   = Files.Fennec, Files.chrome, Files.components, Files.defaults.preferences, Files.searchplugins, Files.xulrunner, Files.xulrunner.chrome, Files.xulrunner.components, Files.xulrunner.defaults.autoconfig, Files.xulrunner.defaults.pref, Files.xulrunner.defaults.profile, Files.xulrunner.defaults.profile.chrome, Files.xulrunner.defaults.profile.US, Files.xulrunner.defaults.profile.US.chrome, Files.xulrunner.dictionaries, Files.xulrunner.greprefs, Files.xulrunner.modules, Files.xulrunner.res, Files.xulrunner.res.dtd, Files.xulrunner.res.entityTables, Files.xulrunner.res.fonts, Files.xulrunner.res.html
+AddReg      = RegData
+CEShortcuts = Shortcuts   
+
+[DestinationDirs]                   ; default destination directories for each operation section
+Files.Fennec                               = 0,%InstallDir%
+Files.chrome                               = 0,%InstallDir%\chrome
+Files.components                           = 0,%InstallDir%\components
+;Files.defaults                             = 0,%InstallDir%\defaults               ; NO FILES FOR THIS DIRECTORY
+Files.defaults.preferences                 = 0,%InstallDir%\defaults\preferences
+Files.searchplugins                        = 0,%InstallDir%\searchplugins
+Files.xulrunner                            = 0,%InstallDir%\xulrunner
+Files.xulrunner.chrome                     = 0,%InstallDir%\xulrunner\chrome
+Files.xulrunner.components                 = 0,%InstallDir%\xulrunner\components
+;Files.xulrunner.defaults                   = 0,%InstallDir%\xulrunner\defaults
+Files.xulrunner.defaults.autoconfig        = 0,%InstallDir%\xulrunner\defaults\autoconfig
+Files.xulrunner.defaults.pref              = 0,%InstallDir%\xulrunner\defaults\pref
+Files.xulrunner.defaults.profile           = 0,%InstallDir%\xulrunner\defaults\profile
+Files.xulrunner.defaults.profile.chrome    = 0,%InstallDir%\xulrunner\defaults\profile\chrome
+Files.xulrunner.defaults.profile.US        = 0,%InstallDir%\xulrunner\defaults\profile\US
+Files.xulrunner.defaults.profile.US.chrome = 0,%InstallDir%\xulrunner\defaults\profile\US\chrome
+Files.xulrunner.dictionaries               = 0,%InstallDir%\xulrunner\dictionaries
+Files.xulrunner.greprefs                   = 0,%InstallDir%\xulrunner\greprefs
+Files.xulrunner.modules                    = 0,%InstallDir%\xulrunner\modules
+Files.xulrunner.res                        = 0,%InstallDir%\xulrunner\res
+Files.xulrunner.res.dtd                    = 0,%InstallDir%\xulrunner\res\dtd
+Files.xulrunner.res.entityTables           = 0,%InstallDir%\xulrunner\res\entityTables
+Files.xulrunner.res.fonts                  = 0,%InstallDir%\xulrunner\res\fonts
+Files.xulrunner.res.html                   = 0,%InstallDir%\xulrunner\res\html
+Shortcuts   = 0, %CE11%             ; \Windows\Start Menu\Programs
+ 
+[Files.Fennec]
+"application.ini",application.ini
+"fennec.exe",fennec.exe
+"mozce_shunt.dll",mozce_shunt.dll
+
+
+[Files.chrome]
+"browser.jar",browser.jar
+"browser.manifest",browser.manifest
+"classic.jar",classic.jar
+"classic.manifest",classic.manifest
+"en-US.jar",en-US.jar
+"en-US.manifest",en-US.manifest
+"firstrun.jar",firstrun.jar
+"firstrun.manifest",firstrun.manifest
+
+[Files.components]
+"aboutFirstrun.js",aboutFirstrun.js
+"nsTelProtocolHandler.js",nsTelProtocolHandler.js
+
+;[Files.defaults]
+;===NO FILES===
+
+[Files.defaults.preferences]
+"mobile.js",mobile.js
+
+[Files.searchplugins]
+"answers.xml",answers.xml
+"google.xml",google.xml
+"wikipedia.xml",wikipedia.xml
+"yahoo.xml",yahoo.xml
+
+[Files.xulrunner]
+".autoreg",.autoreg
+"dependentlibs.list",dependentlibs.list
+"freebl3.dll",freebl3.dll
+"js.exe",js.exe
+"js3250.dll",js3250.dll
+"LICENSE",LICENSE
+"mozce_shunt.dll",mozce_shunt_2.dll
+"nspr4.dll",nspr4.dll
+"nss3.dll",nss3.dll
+"nssckbi.dll",nssckbi.dll
+"nssutil3.dll",nssutil3.dll
+"platform.ini",platform.ini
+"plc4.dll",plc4.dll
+"plds4.dll",plds4.dll
+"README.txt",README.txt
+"regxpcom.exe",regxpcom.exe
+"smime3.dll",smime3.dll
+"softokn3.dll",softokn3.dll
+"sqlite3.dll",sqlite3.dll
+"ssl3.dll",ssl3.dll
+"xpcom.dll",xpcom.dll
+"xpcshell.exe",xpcshell.exe
+"xpt_dump.exe",xpt_dump.exe
+"xpt_link.exe",xpt_link.exe
+"xul.dll",xul.dll
+"xulrunner-stub.exe",xulrunner-stub.exe
+"xulrunner.exe",xulrunner.exe
+
+[Files.xulrunner.chrome]
+"classic.jar",classic_2.jar
+"classic.manifest",classic_2.manifest
+"comm.jar",comm.jar
+"comm.manifest",comm.manifest
+"en-US.jar",en-US_2.jar
+"en-US.manifest",en-US_2.manifest
+"pippki.jar",pippki.jar
+"pippki.manifest",pippki.manifest
+"toolkit.jar",toolkit.jar
+"toolkit.manifest",toolkit.manifest
+
+[Files.xulrunner.components]
+"alerts.xpt",alerts.xpt
+"appshell.xpt",appshell.xpt
+"appstartup.xpt",appstartup.xpt
+"autocomplete.xpt",autocomplete.xpt
+"autoconfig.xpt",autoconfig.xpt
+"caps.xpt",caps.xpt
+"chardet.xpt",chardet.xpt
+"chrome.xpt",chrome.xpt
+"commandhandler.xpt",commandhandler.xpt
+"commandlines.xpt",commandlines.xpt
+"composer.xpt",composer.xpt
+"contentprefs.xpt",contentprefs.xpt
+"content_base.xpt",content_base.xpt
+"content_html.xpt",content_html.xpt
+"content_htmldoc.xpt",content_htmldoc.xpt
+"content_xmldoc.xpt",content_xmldoc.xpt
+"content_xslt.xpt",content_xslt.xpt
+"content_xtf.xpt",content_xtf.xpt
+"cookie.xpt",cookie.xpt
+"directory.xpt",directory.xpt
+"docshell.xpt",docshell.xpt
+"dom.xpt",dom.xpt
+"dom_base.xpt",dom_base.xpt
+"dom_canvas.xpt",dom_canvas.xpt
+"dom_core.xpt",dom_core.xpt
+"dom_css.xpt",dom_css.xpt
+"dom_events.xpt",dom_events.xpt
+"dom_geolocation.xpt",dom_geolocation.xpt
+"dom_html.xpt",dom_html.xpt
+"dom_json.xpt",dom_json.xpt
+"dom_loadsave.xpt",dom_loadsave.xpt
+"dom_offline.xpt",dom_offline.xpt
+"dom_range.xpt",dom_range.xpt
+"dom_sidebar.xpt",dom_sidebar.xpt
+"dom_storage.xpt",dom_storage.xpt
+"dom_stylesheets.xpt",dom_stylesheets.xpt
+"dom_svg.xpt",dom_svg.xpt
+"dom_threads.xpt",dom_threads.xpt
+"dom_traversal.xpt",dom_traversal.xpt
+"dom_views.xpt",dom_views.xpt
+"dom_xbl.xpt",dom_xbl.xpt
+"dom_xpath.xpt",dom_xpath.xpt
+"dom_xul.xpt",dom_xul.xpt
+"downloads.xpt",downloads.xpt
+"editor.xpt",editor.xpt
+"embed_base.xpt",embed_base.xpt
+"extensions.xpt",extensions.xpt
+"exthandler.xpt",exthandler.xpt
+"exthelper.xpt",exthelper.xpt
+"fastfind.xpt",fastfind.xpt
+"FeedProcessor.js",FeedProcessor.js
+"feeds.xpt",feeds.xpt
+"find.xpt",find.xpt
+"gfx.xpt",gfx.xpt
+"htmlparser.xpt",htmlparser.xpt
+"imglib2.xpt",imglib2.xpt
+"inspector.xpt",inspector.xpt
+"intl.xpt",intl.xpt
+"jar.xpt",jar.xpt
+"jsconsole-clhandler.js",jsconsole-clhandler.js
+"jsdservice.xpt",jsdservice.xpt
+"layout_base.xpt",layout_base.xpt
+"layout_xul.xpt",layout_xul.xpt
+"layout_xul_tree.xpt",layout_xul_tree.xpt
+"locale.xpt",locale.xpt
+"loginmgr.xpt",loginmgr.xpt
+"lwbrk.xpt",lwbrk.xpt
+"mimetype.xpt",mimetype.xpt
+"mozbrwsr.xpt",mozbrwsr.xpt
+"mozfind.xpt",mozfind.xpt
+"necko.xpt",necko.xpt
+"necko_about.xpt",necko_about.xpt
+"necko_cache.xpt",necko_cache.xpt
+"necko_cookie.xpt",necko_cookie.xpt
+"necko_dns.xpt",necko_dns.xpt
+"necko_file.xpt",necko_file.xpt
+"necko_ftp.xpt",necko_ftp.xpt
+"necko_http.xpt",necko_http.xpt
+"necko_res.xpt",necko_res.xpt
+"necko_socket.xpt",necko_socket.xpt
+"necko_strconv.xpt",necko_strconv.xpt
+"necko_viewsource.xpt",necko_viewsource.xpt
+"nsAddonRepository.js",nsAddonRepository.js
+"nsBadCertHandler.js",nsBadCertHandler.js
+"nsBlocklistService.js",nsBlocklistService.js
+"nsContentDispatchChooser.js",nsContentDispatchChooser.js
+"nsContentPrefService.js",nsContentPrefService.js
+"nsDefaultCLH.js",nsDefaultCLH.js
+"nsDownloadManagerUI.js",nsDownloadManagerUI.js
+"nsExtensionManager.js",nsExtensionManager.js
+"nsHandlerService.js",nsHandlerService.js
+"nsHelperAppDlg.js",nsHelperAppDlg.js
+"nsLivemarkService.js",nsLivemarkService.js
+"nsLoginInfo.js",nsLoginInfo.js
+"nsLoginManager.js",nsLoginManager.js
+"nsLoginManagerPrompter.js",nsLoginManagerPrompter.js
+"nsPlacesDBFlush.js",nsPlacesDBFlush.js
+"nsProgressDialog.js",nsProgressDialog.js
+"nsProxyAutoConfig.js",nsProxyAutoConfig.js
+"nsSearchService.js",nsSearchService.js
+"nsSearchSuggestions.js",nsSearchSuggestions.js
+"nsTaggingService.js",nsTaggingService.js
+"nsTryToClose.js",nsTryToClose.js
+"nsUpdateService.js",nsUpdateService.js
+"nsURLFormatter.js",nsURLFormatter.js
+"nsWebHandlerApp.js",nsWebHandlerApp.js
+"nsXULAppInstall.js",nsXULAppInstall.js
+"parentalcontrols.xpt",parentalcontrols.xpt
+"pipboot.xpt",pipboot.xpt
+"pipnss.xpt",pipnss.xpt
+"pippki.xpt",pippki.xpt
+"places.xpt",places.xpt
+"pluginGlue.js",pluginGlue.js
+"pref.xpt",pref.xpt
+"prefetch.xpt",prefetch.xpt
+"profile.xpt",profile.xpt
+"proxyObjInst.xpt",proxyObjInst.xpt
+"rdf.xpt",rdf.xpt
+"satchel.xpt",satchel.xpt
+"saxparser.xpt",saxparser.xpt
+"shistory.xpt",shistory.xpt
+"spellchecker.xpt",spellchecker.xpt
+"storage-Legacy.js",storage-Legacy.js
+"storage-mozStorage.js",storage-mozStorage.js
+"storage.xpt",storage.xpt
+"toolkitprofile.xpt",toolkitprofile.xpt
+"toolkitsearch.xpt",toolkitsearch.xpt
+"txEXSLTRegExFunctions.js",txEXSLTRegExFunctions.js
+"txmgr.xpt",txmgr.xpt
+"txtsvc.xpt",txtsvc.xpt
+"uconv.xpt",uconv.xpt
+"unicharutil.xpt",unicharutil.xpt
+"update.xpt",update.xpt
+"uriloader.xpt",uriloader.xpt
+"urlformatter.xpt",urlformatter.xpt
+"webbrowserpersist.xpt",webbrowserpersist.xpt
+"webBrowser_core.xpt",webBrowser_core.xpt
+"webshell_idls.xpt",webshell_idls.xpt
+"widget.xpt",widget.xpt
+"windowds.xpt",windowds.xpt
+"windowwatcher.xpt",windowwatcher.xpt
+"xpcom_base.xpt",xpcom_base.xpt
+"xpcom_components.xpt",xpcom_components.xpt
+"xpcom_ds.xpt",xpcom_ds.xpt
+"xpcom_io.xpt",xpcom_io.xpt
+"xpcom_system.xpt",xpcom_system.xpt
+"xpcom_threads.xpt",xpcom_threads.xpt
+"xpcom_xpti.xpt",xpcom_xpti.xpt
+"xpconnect.xpt",xpconnect.xpt
+"xulapp.xpt",xulapp.xpt
+"xulapp_setup.xpt",xulapp_setup.xpt
+"xuldoc.xpt",xuldoc.xpt
+"xultmpl.xpt",xultmpl.xpt
+"zipwriter.xpt",zipwriter.xpt
+
+;[Files.xulrunner.defaults]
+;===NO FILES===
+
+[Files.xulrunner.defaults.autoconfig]
+"platform.js",platform.js
+"prefcalls.js",prefcalls.js
+
+[Files.xulrunner.defaults.pref]
+"xulrunner.js",xulrunner.js
+
+[Files.xulrunner.defaults.profile]
+"localstore.rdf",localstore.rdf
+
+[Files.xulrunner.defaults.profile.chrome]
+"userChrome-example.css",userChrome-example.css
+"userContent-example.css",userContent-example.css
+
+[Files.xulrunner.defaults.profile.US]
+"localstore.rdf",localstore_2.rdf
+
+[Files.xulrunner.defaults.profile.US.chrome]
+"userChrome-example.css",userChrome-example_2.css
+"userContent-example.css",userContent-example_2.css
+
+[Files.xulrunner.dictionaries]
+"en-US.aff",en-US.aff
+"en-US.dic",en-US.dic
+
+[Files.xulrunner.greprefs]
+"all.js",all.js
+"security-prefs.js",security-prefs.js
+
+[Files.xulrunner.modules]
+"debug.js",debug.js
+"DownloadLastDir.jsm",DownloadLastDir.jsm
+"DownloadUtils.jsm",DownloadUtils.jsm
+"ISO8601DateUtils.jsm",ISO8601DateUtils.jsm
+"Microformats.js",Microformats.js
+"PlacesDBUtils.jsm",PlacesDBUtils.jsm
+"PluralForm.jsm",PluralForm.jsm
+"SpatialNavigation.js",SpatialNavigation.js
+"utils.js",utils.js
+"WindowDraggingUtils.jsm",WindowDraggingUtils.jsm
+"XPCOMUtils.jsm",XPCOMUtils.jsm
+
+[Files.xulrunner.res]
+"arrow.gif",arrow.gif
+"arrowd.gif",arrowd.gif
+"broken-image.gif",broken-image.gif
+"charsetalias.properties",charsetalias.properties
+"charsetData.properties",charsetData.properties
+"contenteditable.css",contenteditable.css
+"designmode.css",designmode.css
+"EditorOverride.css",EditorOverride.css
+"forms.css",forms.css
+"grabber.gif",grabber.gif
+"hiddenWindow.html",hiddenWindow.html
+"html.css",html.css
+"langGroups.properties",langGroups.properties
+"language.properties",language.properties
+"loading-image.gif",loading-image.gif
+"mathml.css",mathml.css
+"quirk.css",quirk.css
+"svg.css",svg.css
+"table-add-column-after-active.gif",table-add-column-after-active.gif
+"table-add-column-after-hover.gif",table-add-column-after-hover.gif
+"table-add-column-after.gif",table-add-column-after.gif
+"table-add-column-before-active.gif",table-add-column-before-active.gif
+"table-add-column-before-hover.gif",table-add-column-before-hover.gif
+"table-add-column-before.gif",table-add-column-before.gif
+"table-add-row-after-active.gif",table-add-row-after-active.gif
+"table-add-row-after-hover.gif",table-add-row-after-hover.gif
+"table-add-row-after.gif",table-add-row-after.gif
+"table-add-row-before-active.gif",table-add-row-before-active.gif
+"table-add-row-before-hover.gif",table-add-row-before-hover.gif
+"table-add-row-before.gif",table-add-row-before.gif
+"table-remove-column-active.gif",table-remove-column-active.gif
+"table-remove-column-hover.gif",table-remove-column-hover.gif
+"table-remove-column.gif",table-remove-column.gif
+"table-remove-row-active.gif",table-remove-row-active.gif
+"table-remove-row-hover.gif",table-remove-row-hover.gif
+"table-remove-row.gif",table-remove-row.gif
+"ua.css",ua.css
+"viewsource.css",viewsource.css
+"wincharset.properties",wincharset.properties
+
+[Files.xulrunner.res.dtd]
+"mathml.dtd",mathml.dtd
+"xhtml11.dtd",xhtml11.dtd
+
+[Files.xulrunner.res.entityTables]
+"html40Latin1.properties",html40Latin1.properties
+"html40Special.properties",html40Special.properties
+"html40Symbols.properties",html40Symbols.properties
+"htmlEntityVersions.properties",htmlEntityVersions.properties
+"mathml20.properties",mathml20.properties
+"transliterate.properties",transliterate.properties
+
+[Files.xulrunner.res.fonts]
+"mathfont.properties",mathfont.properties
+"mathfontStandardSymbolsL.properties",mathfontStandardSymbolsL.properties
+"mathfontSTIXNonUnicode.properties",mathfontSTIXNonUnicode.properties
+"mathfontSTIXSize1.properties",mathfontSTIXSize1.properties
+"mathfontSymbol.properties",mathfontSymbol.properties
+"mathfontUnicode.properties",mathfontUnicode.properties
+
+[Files.xulrunner.res.html]
+"folder.png",folder.png
+
+[Files.shortcuts]
+"XULRunner", xul_shortcut.lnk
+
+
+[RegData]                           ; registry key list
+HKCU,Software\%AppName%,MajorVersion,0x00010001,1
+HKCU,Software\%AppName%,MinorVersion,0x00010001,0
+ 
+[Shortcuts]                         ; Shortcut created in destination dir, %CE14%
+%AppName%,0,fennec.exe
