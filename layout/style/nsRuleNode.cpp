@@ -2820,7 +2820,8 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
                             const nsRuleDataStruct& aData, 
                             nsStyleContext* aContext, 
                             nsRuleNode* aHighestNode,
-                            const RuleDetail aRuleDetail, PRBool aInherited)
+                            const RuleDetail aRuleDetail,
+                            const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(Font, (mPresContext), font, parentFont,
                           Font, fontData)
@@ -2979,7 +2980,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                             const nsRuleDataStruct& aData, 
                             nsStyleContext* aContext, 
                             nsRuleNode* aHighestNode,
-                            const RuleDetail aRuleDetail, PRBool aInherited)
+                            const RuleDetail aRuleDetail,
+                            const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(Text, (), text, parentText, Text, textData)
 
@@ -3102,7 +3104,8 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
                                  const nsRuleDataStruct& aData, 
                                  nsStyleContext* aContext, 
                                  nsRuleNode* aHighestNode,
-                                 const RuleDetail aRuleDetail, PRBool aInherited)
+                                 const RuleDetail aRuleDetail,
+                                 const PRBool aInherited)
 {
   COMPUTE_START_RESET(TextReset, (), text, parentText, Text, textData)
   
@@ -3154,7 +3157,7 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
                                      nsStyleContext* aContext, 
                                      nsRuleNode* aHighestNode,
                                      const RuleDetail aRuleDetail,
-                                     PRBool aInherited)
+                                     const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(UserInterface, (), ui, parentUI,
                           UserInterface, uiData)
@@ -3254,7 +3257,8 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
                                nsStyleContext* aContext, 
                                nsRuleNode* aHighestNode,
-                               const RuleDetail aRuleDetail, PRBool aInherited)
+                               const RuleDetail aRuleDetail,
+                               const PRBool aInherited)
 {
   COMPUTE_START_RESET(UIReset, (), ui, parentUI, UserInterface, uiData)
   
@@ -3330,7 +3334,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
                                nsStyleContext* aContext, 
                                nsRuleNode* aHighestNode,
-                               const RuleDetail aRuleDetail, PRBool aInherited)
+                               const RuleDetail aRuleDetail,
+                               const PRBool aInherited)
 {
   COMPUTE_START_RESET(Display, (), display, parentDisplay,
                       Display, displayData)
@@ -3648,7 +3653,8 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
                                   const nsRuleDataStruct& aData, 
                                   nsStyleContext* aContext, 
                                   nsRuleNode* aHighestNode,
-                                  const RuleDetail aRuleDetail, PRBool aInherited)
+                                  const RuleDetail aRuleDetail,
+                                  const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(Visibility, (mPresContext),
                           visibility, parentVisibility,
@@ -3689,7 +3695,8 @@ nsRuleNode::ComputeColorData(void* aStartStruct,
                              const nsRuleDataStruct& aData, 
                              nsStyleContext* aContext, 
                              nsRuleNode* aHighestNode,
-                             const RuleDetail aRuleDetail, PRBool aInherited)
+                             const RuleDetail aRuleDetail,
+                             const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(Color, (mPresContext), color, parentColor,
                           Color, colorData)
@@ -3719,7 +3726,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   nsStyleContext* aContext, 
                                   nsRuleNode* aHighestNode,
                                   const RuleDetail aRuleDetail,
-                                  PRBool aInherited)
+                                  const PRBool aInherited)
 {
   COMPUTE_START_RESET(Background, (), bg, parentBG, Color, colorData)
 
@@ -3846,7 +3853,8 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
                               const nsRuleDataStruct& aData, 
                               nsStyleContext* aContext, 
                               nsRuleNode* aHighestNode,
-                              const RuleDetail aRuleDetail, PRBool aInherited)
+                              const RuleDetail aRuleDetail,
+                              const PRBool aInherited)
 {
   COMPUTE_START_RESET(Margin, (), margin, parentMargin, Margin, marginData)
 
@@ -3881,7 +3889,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                               const nsRuleDataStruct& aData, 
                               nsStyleContext* aContext, 
                               nsRuleNode* aHighestNode,
-                              const RuleDetail aRuleDetail, PRBool aInherited)
+                              const RuleDetail aRuleDetail,
+                              const PRBool aInherited)
 {
   COMPUTE_START_RESET(Border, (mPresContext), border, parentBorder,
                       Margin, marginData)
@@ -4180,7 +4189,8 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
                                nsStyleContext* aContext, 
                                nsRuleNode* aHighestNode,
-                               const RuleDetail aRuleDetail, PRBool aInherited)
+                               const RuleDetail aRuleDetail,
+                               const PRBool aInherited)
 {
   COMPUTE_START_RESET(Padding, (), padding, parentPadding, Margin, marginData)
 
@@ -4215,7 +4225,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
                                nsStyleContext* aContext, 
                                nsRuleNode* aHighestNode,
-                               const RuleDetail aRuleDetail, PRBool aInherited)
+                               const RuleDetail aRuleDetail,
+                               const PRBool aInherited)
 {
   COMPUTE_START_RESET(Outline, (mPresContext), outline, parentOutline,
                       Margin, marginData)
@@ -4310,7 +4321,8 @@ nsRuleNode::ComputeListData(void* aStartStruct,
                             const nsRuleDataStruct& aData, 
                             nsStyleContext* aContext, 
                             nsRuleNode* aHighestNode,
-                            const RuleDetail aRuleDetail, PRBool aInherited)
+                            const RuleDetail aRuleDetail,
+                            const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(List, (), list, parentList, List, listData)
 
@@ -4380,7 +4392,8 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
                                 const nsRuleDataStruct& aData, 
                                 nsStyleContext* aContext, 
                                 nsRuleNode* aHighestNode,
-                                const RuleDetail aRuleDetail, PRBool aInherited)
+                                const RuleDetail aRuleDetail,
+                                const PRBool aInherited)
 {
   COMPUTE_START_RESET(Position, (), pos, parentPos, Position, posData)
 
@@ -4439,7 +4452,8 @@ nsRuleNode::ComputeTableData(void* aStartStruct,
                              const nsRuleDataStruct& aData, 
                              nsStyleContext* aContext, 
                              nsRuleNode* aHighestNode,
-                             const RuleDetail aRuleDetail, PRBool aInherited)
+                             const RuleDetail aRuleDetail,
+                             const PRBool aInherited)
 {
   COMPUTE_START_RESET(Table, (), table, parentTable, Table, tableData)
 
@@ -4476,7 +4490,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
                                    const nsRuleDataStruct& aData, 
                                    nsStyleContext* aContext, 
                                    nsRuleNode* aHighestNode,
-                                   const RuleDetail aRuleDetail, PRBool aInherited)
+                                   const RuleDetail aRuleDetail,
+                                   const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(TableBorder, (mPresContext), table, parentTable,
                           Table, tableData)
@@ -4530,7 +4545,8 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
                                nsStyleContext* aContext, 
                                nsRuleNode* aHighestNode,
-                               const RuleDetail aRuleDetail, PRBool aInherited)
+                               const RuleDetail aRuleDetail,
+                               const PRBool aInherited)
 {
   COMPUTE_START_RESET(Content, (), content, parentContent,
                       Content, contentData)
@@ -4717,7 +4733,8 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
                               const nsRuleDataStruct& aData, 
                               nsStyleContext* aContext, 
                               nsRuleNode* aHighestNode,
-                              const RuleDetail aRuleDetail, PRBool aInherited)
+                              const RuleDetail aRuleDetail,
+                              const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(Quotes, (), quotes, parentQuotes,
                           Content, contentData)
@@ -4767,7 +4784,8 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
                            const nsRuleDataStruct& aData, 
                            nsStyleContext* aContext, 
                            nsRuleNode* aHighestNode,
-                           const RuleDetail aRuleDetail, PRBool aInherited)
+                           const RuleDetail aRuleDetail,
+                           const PRBool aInherited)
 {
   COMPUTE_START_RESET(XUL, (), xul, parentXUL, XUL, xulData)
 
@@ -4818,7 +4836,8 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                               const nsRuleDataStruct& aData, 
                               nsStyleContext* aContext, 
                               nsRuleNode* aHighestNode,
-                              const RuleDetail aRuleDetail, PRBool aInherited)
+                              const RuleDetail aRuleDetail,
+                              const PRBool aInherited)
 {
   COMPUTE_START_RESET(Column, (mPresContext), column, parent, Column, columnData)
 
@@ -4944,7 +4963,8 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const nsRuleDataStruct& aData, 
                            nsStyleContext* aContext, 
                            nsRuleNode* aHighestNode,
-                           const RuleDetail aRuleDetail, PRBool aInherited)
+                           const RuleDetail aRuleDetail,
+                           const PRBool aInherited)
 {
   COMPUTE_START_INHERITED(SVG, (), svg, parentSVG, SVG, SVGData)
 
@@ -5138,7 +5158,8 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                                 const nsRuleDataStruct& aData,
                                 nsStyleContext* aContext, 
                                 nsRuleNode* aHighestNode,
-                                const RuleDetail aRuleDetail, PRBool aInherited)
+                                const RuleDetail aRuleDetail,
+                                const PRBool aInherited)
 {
   COMPUTE_START_RESET(SVGReset, (), svgReset, parentSVGReset, SVG, SVGData)
 
