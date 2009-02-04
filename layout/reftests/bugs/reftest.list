@@ -1039,3 +1039,4 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 476063-1.html 476063-1-ref.html
 == 476063-2.html 476063-2-ref.html
 != 476063-3.html 476063-3-ref.html
+== 476063-4.xhtml 476063-4-ref.xhtml
