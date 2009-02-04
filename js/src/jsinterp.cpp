@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -6209,13 +6209,8 @@ js_Interpret(JSContext *cx)
                                            NULL, NULL)) {
                     goto error;
                 }
-                if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-                    ? !js_SetPropertyHelper(cx, obj, id, &rval, &entry)
-                    : !js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
-                                               JSPROP_ENUMERATE, 0, 0, NULL,
-                                               &entry)) {
+                if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
                     goto error;
-                }
 #ifdef JS_TRACER
                 if (entry)
                     TRACE_1(SetPropMiss, entry);
@@ -6243,11 +6238,13 @@ js_Interpret(JSContext *cx)
              * Check for property redeclaration strict warning (we may be in
              * an object initialiser, not an array initialiser).
              */
-            if (!js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL, NULL))
+            if (!js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL,
+                                       NULL)) {
                 goto error;
+            }
 
             /*
-             * If rval is a hole, do not call OBJ_DEFINE_PROPERTY. In this case,
+             * If rval is a hole, do not call OBJ_SET_PROPERTY. In this case,
              * obj must be an array, so if the current op is the last element
              * initialiser, set the array length to one greater than id.
              */
@@ -6256,11 +6253,12 @@ js_Interpret(JSContext *cx)
                 JS_ASSERT(JSID_IS_INT(id));
                 JS_ASSERT((jsuint) JSID_TO_INT(id) < ARRAY_INIT_LIMIT);
                 if ((JSOp) regs.pc[JSOP_INITELEM_LENGTH] == JSOP_ENDINIT &&
-                    !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1))) {
+                    !js_SetLengthProperty(cx, obj,
+                                          (jsuint) (JSID_TO_INT(id) + 1))) {
                     goto error;
                 }
             } else {
-                if (!OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, NULL))
+                if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                     goto error;
             }
             regs.sp -= 2;
@@ -6813,7 +6811,7 @@ js_Interpret(JSContext *cx)
                 goto error;
             }
             id = INT_TO_JSID(i);
-            if (!OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, NULL))
+            if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
             regs.sp--;
           END_CASE(JSOP_ARRAYPUSH)
