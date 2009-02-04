@@ -154,7 +154,6 @@ nsSystemFontsGTK2::nsSystemFontsGTK2()
     GtkWidget *accel_label = gtk_accel_label_new("M");
     GtkWidget *menuitem = gtk_menu_item_new();
     GtkWidget *menu = gtk_menu_new();
-    g_object_ref(GTK_OBJECT(menu));
     g_object_ref_sink(GTK_OBJECT(menu));
 
     gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
