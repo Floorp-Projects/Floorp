@@ -193,6 +193,12 @@ protected:
                        const PRUnichar *aString, PRUint32 aLength,
                        PRUint32 aLayoutStart, PRUint32 aLayoutLength,
                        PRUint32 aOffsetInTextRun, PRUint32 aLengthInTextRun);
+
+    /**
+     * Function to reinitialize our mFonts array and any other data
+     * that depends on mFonts.
+     */
+    void InitFontList();
     
     // cache the most recent pref font to avoid general pref font lookup
     nsRefPtr<MacOSFamilyEntry>    mLastPrefFamily;
