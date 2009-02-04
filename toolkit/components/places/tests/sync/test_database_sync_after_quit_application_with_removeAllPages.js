@@ -120,6 +120,12 @@ os.addObserver(observer, kQuitApplication, false);
 
 function run_test()
 {
+  // Run the event loop to be more like the browser, which normally runs the
+  // event loop long before code like this would run.
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+  while (tm.mainThread.hasPendingEvents())
+    tm.mainThread.processNextEvent(false);
+
   // Set the preference for the timer to a really large value, so it won't
   // run before the test finishes.
   prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);

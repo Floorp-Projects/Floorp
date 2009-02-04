@@ -13,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places Unit Test Code.
+ * The Original Code is Places Test code.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Marco Bonardo <mak77bonardo.net> (Original Author)
+ *  Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,20 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// main
-function run_test() {
-  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
+/**
+ * This tests a crash during startup found in bug 476292 that was caused by
+ * getting the bookmarks service during nsNavHistory::Init when the bookmarks
+ * service was created before the history service was.
+ */
 
-  // Run the event loop to be more like the browser, which normally runs the
-  // event loop long before code like this would run.
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-  while (tm.mainThread.hasPendingEvents())
-    tm.mainThread.processNextEvent(false);
+function run_test()
+{
+  // First, we need to move our old database file into our test profile
+  // directory.  This will trigger DATABASE_STATUS_UPGRADED (CREATE is not
+  // sufficient since there will be no entires to update frecencies for, which
+  // causes us to get the bookmarks service in the first place).
+  let dbFile = do_get_file("toolkit/components/places/tests/unit/bug476292.sqlite");
+  let profD = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
+  dbFile.copyTo(profD, "places.sqlite");
 
-  var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-
-  hs.QueryInterface(Ci.nsPIPlacesDatabase).finalizeInternalStatements();
-  mDBConn.close();
-  do_check_false(mDBConn.connectionReady);
+  // Now get the bookmarks service.  This will crash when the bug exists.
+  let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+           getService(Ci.nsINavBookmarksService);
 }
