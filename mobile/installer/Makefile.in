@@ -68,6 +68,11 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _BINPATH = /$(_APPNAME)/Contents/Resources
 endif
 
+ifeq ($(OS_TARGET),WINCE)
+MOZ_PKG_CAB_INF := $(srcdir)/wince/$(MOZ_APP_NAME).inf
+MOZ_PKG_CAB_SCRIPT := $(srcdir)/wince/make-cab-package
+endif
+
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 DEBDESTDIR=debian/$(MOZ_APP_NAME)
@@ -90,4 +95,5 @@ deb: debian/control
 	cp $(srcdir)/debian/$(MOZ_APP_NAME)_scalable.png $(DEBDESTDIR)/usr/share/icons/hicolor/scalable/hildon/$(MOZ_APP_NAME).png
 	dh_link; fakeroot dh_fixperms; fakeroot dh_installdeb; dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
+
 
