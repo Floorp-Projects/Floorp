@@ -1670,14 +1670,6 @@ NS_IMETHODIMP
 nsCSSFontFaceStyleDecl::GetPropertyCSSValue(const nsAString & propertyName,
                                             nsIDOMCSSValue **aResult NS_OUTPARAM)
 {
-  nsCOMPtr<nsIURI> sheetURI;
-  nsIStyleSheet *sheet = ContainingRule()->mSheet;
-  if (sheet) {
-    sheet->GetSheetURI(getter_AddRefs(sheetURI));
-  }
-  nsStyleUtil::ReportUseOfDeprecatedMethod(sheetURI,
-                                           "UseOfGetPropertyCSSValueWarning");
-
   // ??? nsDOMCSSDeclaration returns null/NS_OK, but that seems wrong.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
