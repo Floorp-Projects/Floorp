@@ -3617,7 +3617,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                  display->mTransformOrigin[0],
                  parentDisplay->mTransformOrigin[0],
                  SETCOORD_LPH | SETCOORD_INITIAL_HALF,
-                 aContext, mPresContext, aInherited);
+                 aContext, mPresContext, inherited);
       NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
     }
 
@@ -3635,7 +3635,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                  display->mTransformOrigin[1],
                  parentDisplay->mTransformOrigin[1],
                  SETCOORD_LPH | SETCOORD_INITIAL_HALF,
-                 aContext, mPresContext, aInherited);
+                 aContext, mPresContext, inherited);
       NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
     }
   }
