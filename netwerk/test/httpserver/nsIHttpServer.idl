@@ -52,7 +52,7 @@ interface nsIHttpServerIdentity;
 /**
  * An interface which represents an HTTP server.
  */
-[scriptable, uuid(ED95D475-3DFB-4995-AF27-8091337C8463)]
+[scriptable, uuid(DEEDE3E3-B813-4F3F-9C70-948E5700C410)]
 interface nsIHttpServer : nsISupports
 {
   /**
@@ -189,15 +189,30 @@ interface nsIHttpServer : nsISupports
   readonly attribute nsIHttpServerIdentity identity;
 
   /**
-   * Retrieves the string associated with the given key in this.  All keys are
-   * initially associated with the empty string.
+   * Retrieves the string associated with the given key in this, for the given
+   * path's saved state.  All keys are initially associated with the empty
+   * string.
    */
-  AString getState(in AString key);
+  AString getState(in AString path, in AString key);
 
   /**
-   * Sets the string associated with the given key in this.
+   * Sets the string associated with the given key in this, for the given path's
+   * saved state.
    */
-  void setState(in AString key, in AString value);
+  void setState(in AString path, in AString key, in AString value);
+
+  /**
+   * Retrieves the string associated with the given key in this, in
+   * entire-server saved state.  All keys are initially associated with the
+   * empty string.
+   */
+  AString getSharedState(in AString key);
+
+  /**
+   * Sets the string associated with the given key in this, in entire-server
+   * saved state.
+   */
+  void setSharedState(in AString key, in AString value);
 };
 
 /**
