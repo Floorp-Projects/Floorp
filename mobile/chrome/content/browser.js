@@ -311,14 +311,14 @@ var Browser = {
     event.initEvent("TabClose", true, false);
     tab.content.dispatchEvent(event);
 
+    this.selectedTab = nextTab;
+
     tab.destroy();
     this._tabs.splice(tabIndex, 1);
 
     // redraw the tabs
     for (let t = tabIndex; t < this._tabs.length; t++)
       this._tabs[t].updateThumbnail();
-
-    this.selectedTab = nextTab;
   },
 
   get selectedTab() {
