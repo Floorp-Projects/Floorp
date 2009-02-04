@@ -546,10 +546,13 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                   JSProperty **propp);
 
+#ifdef __cplusplus /* FIXME: bug 442399 removes this LiveConnect requirement. */
 extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                        uintN flags, intN shortid, JSProperty **propp);
+                        uintN flags, intN shortid, JSProperty **propp,
+                        JSPropCacheEntry** entryp = NULL);
+#endif
 
 /*
  * Unlike js_DefineProperty, propp must be non-null. On success, and if id was
