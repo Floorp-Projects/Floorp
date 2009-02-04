@@ -64,7 +64,13 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOZ_PKG_FORMAT  = BZ2
 else
+ifeq (,$(filter-out WINCE, $(OS_ARCH)))
+MOZ_PKG_CAB_SCRIPT ?= $(error MOZ_PKG_CAB_SCRIPT not specified)
+MOZ_PKG_CAB_INF ?= $(error MOZ_PKG_CAB_INF not specified)
+MOZ_PKG_FORMAT  = CAB
+else
 MOZ_PKG_FORMAT  = TGZ
+endif
 endif
 endif
 INSTALLER_DIR   = unix
@@ -106,6 +112,12 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
+UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
+MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
+endif
+ifeq ($(MOZ_PKG_FORMAT),CAB)
+PKG_SUFFIX	= .cab
+MAKE_PACKAGE = $(MOZ_PKG_CAB_SCRIPT) "$(VSINSTALLDIR)" "$(topsrcdir)" "$(MOZ_PKG_DIR)" "$(MOZ_PKG_CAB_INF)" "$(MOZ_APP_NAME)" "$(PACKAGE)"
 UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
 endif
