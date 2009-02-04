@@ -844,7 +844,8 @@ IdentityHandler.prototype = {
         .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
 
     // Update the popup strings
-    this.setPopupMessages(this._identityBox.className);
+    this.setPopupMessages(this._identityBox.className ||
+                          this.IDENTITY_MODE_UNKNOWN);
 
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, 'after_start');
