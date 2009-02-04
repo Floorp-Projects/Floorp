@@ -5092,6 +5092,9 @@ nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
 
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
+  if (!control) {
+    printf("BOGUS INPUT DETECTED IN FRAME CONSTRUCTION (about to crash).\n");
+  }
 
   return FindDataByInt(control->GetType(), aContent, aStyleContext,
                        sInputData, NS_ARRAY_LENGTH(sInputData));
