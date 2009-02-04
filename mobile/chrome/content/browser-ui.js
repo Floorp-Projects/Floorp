@@ -235,34 +235,27 @@ var BrowserUI = {
     document.getElementById("panel-items").selectedPanel = document.getElementById(id);
   },
 
-  _sizeControls : function(aEvent) {
-    if (window != aEvent.target)
-      return
-
-    if (!this._toolbarH)
-      this._toolbarH = document.getElementById("toolbar-main").boxObject.height;
-    
-    let popup = document.getElementById("popup_autocomplete");
+  sizeControls : function() {
     let windowW = window.innerWidth;
     let windowH = window.innerHeight;
+
+    let toolbar = document.getElementById("toolbar-main");
+    if (!this._toolbarH)
+      this._toolbarH = toolbar.boxObject.height;
+
+    toolbar.width = windowW;
+
+    let popup = document.getElementById("popup_autocomplete");
     popup.height = windowH - this._toolbarH;
     popup.width = windowW;
 
+    // notification box
     document.getElementById("notifications").width = windowW;
-    document.getElementById("browser-controls").height = windowH - this._toolbarH;
 
-    // XXX need to make some of these work again
-/*
-    var sidebar = document.getElementById("browser-controls");
-    var panelUI = document.getElementById("panel-container");
-    var tabbar = document.getElementById("tabs-container");
-    tabbar.left = -tabbar.boxObject.width;
-    panelUI.left = containerW + sidebar.boxObject.width;
-    sidebar.left = containerW;
-    sidebar.height = tabbar.height = (panelUI.height = containerH) - toolbarH;
-    panelUI.width = containerW - sidebar.boxObject.width - tabbar.boxObject.width;
-    toolbar.width = containerW;
-*/
+    // sidebars
+    let sideBarHeight = windowH - this._toolbarH;
+    document.getElementById("browser-controls").height = sideBarHeight;
+    document.getElementById("tabs-container").height = sideBarHeight;
   },
 
   init : function() {
@@ -281,8 +274,6 @@ var BrowserUI = {
     browsers.addEventListener("DOMLinkAdded", this, true);
 
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
-
-    window.addEventListener("resize", this, false);
   },
 
   update : function(aState) {
@@ -674,10 +665,6 @@ var BrowserUI = {
       // Favicon events
       case "error":
         this._favicon.src = "chrome://browser/skin/images/default-favicon.png";
-        break;
-      // Window size events
-      case "resize":
-        this._sizeControls(aEvent);
         break;
     }
   },

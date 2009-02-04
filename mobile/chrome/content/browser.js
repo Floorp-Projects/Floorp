@@ -114,6 +114,10 @@ var Browser = {
       if (e.target != window)
         return;
 
+      // tell the UI to resize the browser controls before calling
+      // updateSize
+      BrowserUI.sizeControls();
+
       // resize our container...
       let w = window.innerWidth;
       let h = window.innerHeight;
@@ -125,7 +129,9 @@ var Browser = {
     }
     window.addEventListener("resize", resizeHandler, false);
 
-    function viewportHandler(b, ob) { self._canvasBrowser.viewportHandler(b, ob); }
+    function viewportHandler(bounds, boundsSizeChanged) {
+      self._canvasBrowser.viewportHandler(bounds, boundsSizeChanged);
+    }
     ws.setViewportHandler(viewportHandler);
 
     // initialize input handling
