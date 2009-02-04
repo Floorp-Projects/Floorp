@@ -4454,7 +4454,7 @@ load("mandelbrot-results.js");
     pointArray[slotIdx+2] = colors[n][2];
     pointArray[slotIdx+3] = colors[n][3];
   }
-
+  /*
   function createMandelSet() {
     var realRange = { min: -2.1, max: 1 };
     var imagRange = { min: -1.5, max: 1.5 };
@@ -4533,7 +4533,7 @@ load("mandelbrot-results.js");
   doImageData = false;  // avoidSparseArray doesn't matter here
   test(createMandelSet);
 //}
-//testMandelbrotAll();
+//testMandelbrotAll();*/
 } /* if (gDoMandelbrotTest) */
 // END MANDELBROT STUFF
 
