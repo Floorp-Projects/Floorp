@@ -131,8 +131,26 @@ typedef struct JSTraceMonitor {
      * both interpreter activation and last-ditch garbage collection when up
      * against our runtime's memory limits. This flag also suppresses calls to
      * JS_ReportOutOfMemory when failing due to runtime limits.
+     *
+     * !onTrace && !recorder: not on trace.
+     * onTrace && recorder: recording a trace.
+     * onTrace && !recorder: executing a trace.
+     * !onTrace && recorder && !prohibitRecording:
+     *      not on trace; deep-aborted while recording.
+     * !onTrace && recorder && prohibitRecording:
+     *      not on trace; deep-bailed in SpiderMonkey code called from a
+     *      trace. JITted code is on the stack.
      */
-    JSBool                  onTrace;
+    JSPackedBool            onTrace;
+
+    /*
+     * Do not start recording after a deep bail.  That would free JITted code
+     * pages that we will later return to.
+     */
+    JSPackedBool            prohibitRecording;
+
+    /* See reservedObjects below. */
+    JSPackedBool            useReservedObjects;
 
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
@@ -149,7 +167,6 @@ typedef struct JSTraceMonitor {
      * The JIT uses this to ensure that leaving a trace tree can't fail.
      */
     JSObject                *reservedObjects;
-    JSBool                  useReservedObjects;
 
     /* Fragmento for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
