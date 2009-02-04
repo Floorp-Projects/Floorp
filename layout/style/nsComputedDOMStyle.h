@@ -76,8 +76,6 @@ public:
   static void Shutdown();
 
 private:
-  nsresult GetPropertyCSSValueInternal(const nsAString& aPropertyName,
-                                       nsIDOMCSSValue** aReturn);
   void FlushPendingReflows();
   
 #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
