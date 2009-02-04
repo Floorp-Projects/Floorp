@@ -352,9 +352,6 @@ var BookmarkPropertiesPanel = {
     if (!this._element("tagsRow").collapsed) {
       this._element("tagsSelectorRow")
           .addEventListener("DOMAttrModified", this, false);
-      // Set on document to get the event before an autocomplete popup could
-      // be hidden on Enter.
-      document.addEventListener("keypress", this, true);
     }
     if (!this._element("folderRow").collapsed) {
       this._element("folderTreeRow")
@@ -373,29 +370,43 @@ var BookmarkPropertiesPanel = {
           .addEventListener("input", this, false);
     }
 
+    // Set on document to get the event before an autocomplete popup could
+    // be hidden on Enter.
+    document.addEventListener("keypress", this, true);
+
     window.sizeToContent();
   },
 
   // nsIDOMEventListener
   _elementsHeight: [],
   handleEvent: function BPP_handleEvent(aEvent) {
+    var target = aEvent.target;
     switch (aEvent.type) {
       case "keypress":
-        if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN &&
-            aEvent.target.localName != "tree" &&
-            aEvent.target.className != "expander-up" &&
-            aEvent.target.className != "expander-down" &&
-            !aEvent.target.popupOpen) {
-          // Accept the dialog unless the folder tree or an expander are focused
-          // or an autocomplete popup is open.
-          document.documentElement.acceptDialog();
+        function canAcceptDialog(aElement) {
+          // on Enter we accept the dialog unless:
+          // - the folder tree is focused
+          // - an expander is focused
+          // - an autocomplete (eg. tags) popup is open
+          // - a menulist is open
+          // - a multiline textbox is focused
+          return aElement.localName != "tree" &&
+                 aElement.className != "expander-up" &&
+                 aElement.className != "expander-down" &&
+                 !aElement.popupOpen &&
+                 !aElement.open &&
+                 !(aElement.localName == "textbox" &&
+                   aElement.getAttribute("multiline") == "true");
         }
+        if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN &&
+            canAcceptDialog(target))
+          document.documentElement.acceptDialog();
         break;
 
       case "input":
-        if (aEvent.target.id == "editBMPanel_locationField" ||
-            aEvent.target.id == "editBMPanel_feedLocationField" ||
-            aEvent.target.id == "editBMPanel_siteLocationField") {
+        if (target.id == "editBMPanel_locationField" ||
+            target.id == "editBMPanel_feedLocationField" ||
+            target.id == "editBMPanel_siteLocationField") {
           // Check uri fields to enable accept button if input is valid
           document.documentElement
                   .getButton("accept").disabled = !this._inputIsValid();
@@ -405,17 +416,16 @@ var BookmarkPropertiesPanel = {
       case "DOMAttrModified":
         // this is called when collapsing a node, but also its direct children,
         // we only need to resize when the original node changes.
-        if ((aEvent.target.id == "editBMPanel_tagsSelectorRow" ||
-             aEvent.target.id == "editBMPanel_folderTreeRow") &&
+        if ((target.id == "editBMPanel_tagsSelectorRow" ||
+             target.id == "editBMPanel_folderTreeRow") &&
             aEvent.attrName == "collapsed" &&
-            aEvent.target == aEvent.originalTarget) {
-          var element = aEvent.target;
-          var id = element.id;
+            target == aEvent.originalTarget) {
+          var id = target.id;
           var newHeight = window.outerHeight;
           if (aEvent.newValue) // is collapsed
             newHeight -= this._elementsHeight[id];
           else {
-            this._elementsHeight[id] = element.boxObject.height;
+            this._elementsHeight[id] = target.boxObject.height;
             newHeight += this._elementsHeight[id];
           }
 
