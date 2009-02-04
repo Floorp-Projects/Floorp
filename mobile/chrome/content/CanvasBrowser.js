@@ -227,7 +227,7 @@ CanvasBrowser.prototype = {
     this.flushDrawQ();
   },
   
-  viewportHandler: function(bounds, oldBounds) {
+  viewportHandler: function(bounds, boundsSizeChanged) {
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewingRect;
     pageBounds.top = Math.floor(this._screenToPage(bounds.top));
@@ -244,7 +244,7 @@ CanvasBrowser.prototype = {
     // if the page is being panned, flush the queue, so things blit correctly
     // this avoids incorrect offsets due to a change in _pageBounds.x/y
     // should probably check that (visibleBounds|pageBounds).(x|y) actually changed
-    if (oldBounds)
+    if (!boundsSizeChanged)
       this.flushDrawQ();
 
     this._visibleBounds = visibleBounds;
@@ -255,16 +255,16 @@ CanvasBrowser.prototype = {
     this._screenX = bounds.x;
     this._screenY = bounds.y;
 
-    if (!oldBounds) {
-      // no old bounds means we resized the viewport, so redraw everything
+    if (boundsSizeChanged) {
+      // we resized the viewport, so redraw everything
       // In theory this shouldn't be needed since adding a big rect to the draw queue
       // should remove the prior draws
       this.clearDrawQ();
-      
+
       // make sure that ensureFullCanvasIsDrawn doesn't draw after a full redraw due to zoom
       if (!this._clippedPageDrawing)
         this._partiallyDrawn = false;
-       
+
       this._redrawRect(pageBounds);
       return;
     }

@@ -312,6 +312,13 @@ WidgetStack.prototype = {
 
   // a wsRect; the viewportBounds expanded by the viewportOverflow
   _pannableBounds: null,
+  get pannableBounds() {
+    if (!this._pannableBounds) {
+      this._pannableBounds = this._viewportBounds.clone()
+                                 .expandBy(this._viewportOverflow);
+    }
+    return this._pannableBounds.clone();
+  },
 
   // a wsRect; the currently visible part of pannableBounds.
   _viewingRect: null,
@@ -369,13 +376,14 @@ WidgetStack.prototype = {
         this._addNewWidget(c);
     }
 
+    // this also updates the viewportOverflow
+    this._updateWidgets();
+
     if (this._viewport) {
       this._viewportBounds = new wsRect(0, 0, this._viewport.rect.width, this._viewport.rect.height);
     } else {
       this._viewportBounds = new wsRect(0, 0, 0, 0);
     }
-
-    this._pannableBounds = this._widgetBounds();
   },
 
   // handleEvents: if this is called, WS will install its own event handlers
@@ -428,9 +436,7 @@ WidgetStack.prototype = {
   // panTo: pan the entire set of widgets so that the given x,y coordinates
   // are in the upper left of the stack.
   panTo: function (x, y) {
-    log2("panTo", x, y);
     this.panBy(this._viewingRect.x - x, this._viewingRect.y - y, true);
-    log2("-panTo", x, y, "vr", this._viewingRect, "vwib", this._viewport.viewportInnerBounds);
   },
 
   // freeze: set a widget as frozen.  A frozen widget won't be moved
@@ -463,10 +469,6 @@ WidgetStack.prototype = {
     state.widget.setAttribute("top", y);
   },
 
-  get pannableBounds() {
-    return this._pannableBounds.clone();
-  },
-
   get viewingRect() {
     return this._viewingRect.clone();
   },
@@ -497,9 +499,7 @@ WidgetStack.prototype = {
     this.globalOffsetX += x;
     this.globalOffsetY += y;
 
-    for (let wid in this._widgetState) {
-      let state = this._widgetState[wid];
-
+    for each (let state in this._widgetState) {
       state.rect.x += x;
       state.rect.y += y;
 
@@ -524,7 +524,6 @@ WidgetStack.prototype = {
   // place based on the new viewport bounds.
   setViewportBounds: function setViewportBounds() {
     let oldBounds = this._viewportBounds.clone();
-    let oldInner = this._viewport.viewportInnerBounds.clone();
 
     if (arguments.length == 1) {
       this._viewportBounds.copyFromTLBR(arguments[0]);
@@ -551,9 +550,7 @@ WidgetStack.prototype = {
     log2("setViewportBounds dltrb", dleft, dtop, dright, dbottom);
 
     // move all vp-relative widgets to be the right offset from the bounds again
-    for (let wid in this._widgetState) {
-      let state = this._widgetState[wid];
-
+    for each (let state in this._widgetState) {
       if (state.vpRelative) {
         log2("vpRelative widget", state.id, state.rect.x, dleft, dright);
         if (state.vpOffsetXBefore) {
@@ -599,19 +596,11 @@ WidgetStack.prototype = {
       }
     }
 
-    // and then define a new pannable bounds
-    this._pannableBounds = this._viewportBounds.clone().expandBy(this._viewportOverflow);
+    // clear the pannable bounds cache to make sure it gets rebuilt
+    this._pannableBounds = null;
 
-    log2("new pannableBounds:", this._pannableBounds.toString());
-
-    // now let's make sure that the inner bounds are still valid
-
-    log2("viewingRect old", this._viewingRect.toString());
-
+    // now let's make sure that the viewing rect and inner bounds are still valid
     this._adjustViewingRect();
-
-    log2("viewingRect new", this._viewingRect.toString());
-    log2("finished, inner bounds old:", oldInner, " new:", this._viewport.viewportInnerBounds);
 
     if (this._viewport && this._viewportUpdateHandler) {
       let vws = this._viewport;
@@ -622,15 +611,17 @@ WidgetStack.prototype = {
       vwib.right += vws.offsetRight;
       vwib.bottom += vws.offsetBottom;
 
-      this._viewportUpdateHandler.apply(window, [vwib]);
+      // notify the viewportUpdateHandler of the bounds change
+      this._viewportUpdateHandler.apply(window, [vwib, true]);
     }
   },
 
   // setViewportHandler
   //  uh: A function object
   //
-  // The given function object is called at the end of every drag, providing
-  // the new area that's to be displayed in the viewport widget.
+  // The given function object is called at the end of every drag and viewport
+  // bounds change, passing in the new rect that's to be displayed in the
+  // viewport.
   //
   setViewportHandler: function (uh) {
     this._viewportUpdateHandler = uh;
@@ -718,14 +709,25 @@ WidgetStack.prototype = {
   // updateSize: tell the WidgetStack to update its size, because it
   // was either resized or some other event took place.
   updateSize: function updateSize(width, height) {
-    // XXX assumes we can only be resized from the bottom left/bottom right
     if (width == undefined || height == undefined) {
       let rect = this._el.getBoundingClientRect();
       width = rect.width;
       height = rect.height;
     }
+
+    // update widget rects and viewportOverflow, since the resize might have
+    // caused them to change (widgets first, since the viewportOverflow depends
+    // on them).
+
+    // XXX these methods aren't working correctly yet, but they aren't strictly
+    // necessary in Fennec's default config
+    //for each (let s in this._widgetState)
+    //  this._updateWidgetRect(s);
+    //this._updateViewportOverflow();
+
     this._viewingRect.width = width;
     this._viewingRect.height = height;
+
     this._adjustViewingRect();
   },
 
@@ -733,35 +735,62 @@ WidgetStack.prototype = {
   // Internal code
   //
 
+  _updateWidgetRect: function(state) {
+    // don't need to support updating the viewport rect at the moment
+    // (we'd need to duplicate the vptarget* code from _addNewWidget if we did)
+    if (state == this._viewport)
+      return;
+
+    let w = state.widget;
+    let x = w.getAttribute("left") || 0;
+    let y = w.getAttribute("top") || 0;
+    let rect = w.getBoundingClientRect();
+    state.rect = new wsRect(parseInt(x), parseInt(y),
+                            rect.right - rect.left,
+                            rect.bottom - rect.top);
+    if (w.hasAttribute("widgetwidth") && w.hasAttribute("widgetheight")) {
+      state.rect.width = parseInt(w.getAttribute("widgetwidth"));
+      state.rect.height = parseInt(w.getAttribute("widgetheight"));
+    }
+  },
+
   _dumpRects: function () {
     dump("WidgetStack:\n");
-    //dump("\tthis._viewportBounds: " + this._viewportBounds + "\n");
+    dump("\tthis._viewportBounds: " + this._viewportBounds + "\n");
     dump("\tthis._viewingRect: " + this._viewingRect + "\n");
     dump("\tthis._viewport.viewportInnerBounds: " + this._viewport.viewportInnerBounds + "\n");
     dump("\tthis._viewport.rect: " + this._viewport.rect + "\n");
-    //dump("\tthis._pannableBounds: " + this._pannableBounds + "\n");
+    dump("\tthis.pannableBounds: " + this.pannableBounds + "\n");
   },
 
   // Ensures that _viewingRect is within _pannableBounds (call this when either
   // one is resized)
   _adjustViewingRect: function _adjustViewingRect() {
+    let vr = this._viewingRect;
+    let pb = this.pannableBounds;
 
-    if (this._pannableBounds.contains(this._viewingRect))
+    if (pb.contains(vr))
       return; // nothing to do here
+
+    // don't bother adjusting _viewingRect if it can't fit into
+    // _pannableBounds
+    if (vr.height > pb.height || vr.width > pb.width)
+      return;
 
     this._rectSanityCheck = false;
 
-    let vr = this._viewingRect;
-    let pb = this._pannableBounds;
+    let panX = 0, panY = 0;
     if (vr.right > pb.right)
-      this.panBy(pb.right - vr.right, 0, true);
+      panX = vr.right - pb.right;
     else if (vr.left < pb.left)
-      this.panBy(pb.left - vr.left, 0, true);
-    
+      panX = vr.left - pb.left;
+
     if (vr.bottom > pb.bottom)
-      this.panBy(0, pb.bottom - vr.bottom, true);
+      panY = vr.bottom - pb.bottom;
     else if(vr.top < pb.top)
-      this.panBy(0, pb.top - vr.top, true);
+      panY = vr.top - pb.top;
+
+    this.panBy(panX, panY);
 
     this._rectSanityCheck = true;
   },
@@ -828,12 +857,14 @@ WidgetStack.prototype = {
     this._dragState.dragging = true;
   },
 
+  // returns the amount of change needed to move _viewingRect back within
+  // _viewportBounds
   _panRegionOffsets: function () {
     let ioffsetx = 0;
     let ioffsety = 0;
 
     // _viewingRect is the currently visible part of the entire stack,
-    // but it's in the coordinates of the _pannableBounds -- that is,
+    // but it's in the coordinates of the pannableBounds -- that is,
     // the _viewingRect origin maps to 0,0 in the stack.
     //
     // _viewportBounds on the other hand, is in the origin of the
@@ -862,14 +893,11 @@ WidgetStack.prototype = {
     if (!this._viewport)
       return;
 
-    let originalViewportInnerBounds = this._viewport.viewportInnerBounds.clone();
     let needsUpdate = force;
 
     this._viewportUpdateTimeout = -1;
 
     let vws = this._viewport;
-
-//    log2("viewportUpdate start", vws.rect.toString(), this._viewingRect.toString(), vws.originX, vws.originY);
 
     let [ioffsetx, ioffsety] = this._panRegionOffsets();
 
@@ -908,8 +936,6 @@ WidgetStack.prototype = {
       vws.dragStartRect = vws.rect.clone();
     }
 
-    log2("_viewportUpdate - new vwib:", this._viewport.viewportInnerBounds);
-
     if (needsUpdate && this._viewport && this._viewportUpdateHandler) {
       let vwib = vws.viewportInnerBounds.clone();
 
@@ -918,7 +944,7 @@ WidgetStack.prototype = {
       vwib.right += vws.offsetRight;
       vwib.bottom += vws.offsetBottom;
 
-      this._viewportUpdateHandler.apply(window, [vwib, originalViewportInnerBounds]);
+      this._viewportUpdateHandler.apply(window, [vwib, false]);
     }
   },
 
@@ -1097,7 +1123,7 @@ WidgetStack.prototype = {
     // pan to the upper left, more of the bottom right becomes visible,
     // so the viewing rect moves to the bottom right of the virtual surface).
     log2("rectTranslateConstrain in", dx, dy);
-    [dx, dy] = this._rectTranslateConstrain(dx, dy, vr, this._pannableBounds);
+    [dx, dy] = this._rectTranslateConstrain(dx, dy, vr, this.pannableBounds);
     log2("rectTranslateConstrain out", dx, dy);
 
     // If the net result is that we don't have any room to move, then
@@ -1113,9 +1139,7 @@ WidgetStack.prototype = {
     // will be ignored in commitState.
     // The widget rects are in real stack space though, so we need to subtract
     // our (now negated) dx, dy from their coordinates.
-    for (let wid in this._widgetState) {
-      let state = this._widgetState[wid];
-
+    for each (let state in this._widgetState) {
       if (!state.ignoreX)
         state.rect.x -= dx;
       if (!state.ignoreY)
@@ -1152,11 +1176,6 @@ WidgetStack.prototype = {
     if (w.getAttribute("hidden") == "true")
       return;
 
-    let x = w.getAttribute("left") || 0;
-    let y = w.getAttribute("top") || 0;
-
-    // these widgets must be fixed size
-    // x and y must be ints!
     let state = {
       widget: w,
       id: wid,
@@ -1171,17 +1190,10 @@ WidgetStack.prototype = {
       offsetLeft: 0,
       offsetTop: 0,
       offsetRight: 0,
-      offsetBottom: 0,
+      offsetBottom: 0
     };
 
-    let rect = w.getBoundingClientRect();
-    state.rect = new wsRect(parseInt(x), parseInt(y),
-                            rect.right - rect.left,
-                            rect.bottom - rect.top);
-    if (w.hasAttribute("widgetwidth") && w.hasAttribute("widgetheight")) {
-      state.rect.width = parseInt(w.getAttribute("widgetwidth"));
-      state.rect.height = parseInt(w.getAttribute("widgetheight"));
-    }
+    this._updateWidgetRect(state);
 
     if (w.hasAttribute("constraint")) {
       let cs = w.getAttribute("constraint").split(",");
@@ -1199,7 +1211,7 @@ WidgetStack.prototype = {
       }
     }
 
-    if (/*w.localName == "canvas" &&*/ w.hasAttribute("viewport")) {
+    if (w.hasAttribute("viewport")) {
       if (this._viewport)
         reportError("WidgetStack: more than one viewport canvas in stack!");
 
@@ -1229,8 +1241,6 @@ WidgetStack.prototype = {
     this._widgetState[wid] = state;
 
     log ("(New widget: " + wid + (state.viewport ? " [viewport]" : "") + " at: " + state.rect + ")");
-
-    this._updateWidgets();
   },
 
   _removeWidget: function (w) {
@@ -1251,9 +1261,7 @@ WidgetStack.prototype = {
 
     let ofRect = this._viewingRect.clone();
 
-    for (let wid in this._widgetState) {
-      let state = this._widgetState[wid];
-
+    for each (let state in this._widgetState) {
       if (vp && state.vpRelative) {
         // compute the vpOffset from 0,0 assuming that the viewport rect is 0,0
         if (state.rect.left >= vp.rect.right) {
@@ -1286,9 +1294,7 @@ WidgetStack.prototype = {
 
     let ofRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
 
-    for (let wid in this._widgetState) {
-      let state = this._widgetState[wid];
-
+    for each (let state in this._widgetState) {
       if (vp && state.vpRelative) {
         ofRect.left = Math.min(ofRect.left, state.rect.left);
         ofRect.top = Math.min(ofRect.top, state.rect.top);
@@ -1297,23 +1303,28 @@ WidgetStack.prototype = {
       }
     }
 
+    // prevent the viewportOverflow from having positive top/left or negative
+    // bottom/right values, which would otherwise happen if there aren't widgets
+    // beyond each of those edges
     this._viewportOverflow = new wsBorder(
-      /*top*/ ofRect.top,
-      /*left*/ ofRect.left,
-      /*bottom*/ ofRect.bottom - vp.rect.height,
-      /*right*/ ofRect.right - vp.rect.width
+      /*top*/ Math.min(ofRect.top, 0),
+      /*left*/ Math.min(ofRect.left, 0),
+      /*bottom*/ Math.max(ofRect.bottom - vp.rect.height, 0),
+      /*right*/ Math.max(ofRect.right - vp.rect.width, 0)
     );
+
+    // clear the _pannableBounds cache, since it depends on the
+    // viewportOverflow
+    this._pannableBounds = null;
 
     log("_updateViewportOverflow", this._viewportOverflow.toString());
   },
 
   _widgetBounds: function () {
     let r = new wsRect(0,0,0,0);
-    for (let wid in this._widgetState) {
-      let state = this._widgetState[wid];
 
+    for each (let state in this._widgetState)
       r = r.union(state.rect);
-    }
 
     return r;
   },
@@ -1326,16 +1337,6 @@ WidgetStack.prototype = {
 
     state.widget.setAttribute("left", state.rect.x + state.offsetLeft);
     state.widget.setAttribute("top", state.rect.y + state.offsetTop);
-
-    if (0) {
-
-    if (state.id == "tabs-container")
-      dump("commitState: " + state.id + " -> " + state.rect.x + " " + state.rect.y + "\n");
-
-    dump("rect: " + state.widget.getBoundingClientRect().left + " " + state.widget.getBoundingClientRect().right + " " + state.widget.getBoundingClientRect().top + " " + state.widget.getBoundingClientRect().bottom + "\n");
-    dump("display: " + state.widget.style.display + " vis: " + state.widget.style.visibility + "\n");
-    dump("style: " + state.widget.getAttribute("hidden") + "\n");
-    }
   },
 
   // constrain translate of rect by dx dy to bounds; return dx dy that can
