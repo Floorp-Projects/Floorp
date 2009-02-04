@@ -134,7 +134,15 @@ var serverBasePath;
 //
 function runServer()
 {
-  serverBasePath = __LOCATION__.parent;
+  serverBasePath = Cc["@mozilla.org/file/local;1"]
+                     .createInstance(Ci.nsILocalFile);
+  var procDir = Cc["@mozilla.org/file/directory_service;1"]
+                  .getService(Ci.nsIProperties).get("CurProcD", Ci.nsIFile);
+  serverBasePath.initWithPath(procDir.parent.parent.path);
+  serverBasePath.append("_tests");
+  serverBasePath.append("testing");
+  serverBasePath.append("mochitest");
+
   server = createMochitestServer(serverBasePath);
   server.start(SERVER_PORT);
 
