@@ -49,6 +49,7 @@ import os.path
 import re
 import sys
 import time
+import shutil
 from urllib import quote_plus as encodeURIComponent
 import urllib2
 import commands
@@ -106,7 +107,23 @@ class MochitestOptions(optparse.OptionParser):
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
                     help = "absolute path to application, overriding default")
-    defaults["app"] = automation.DEFAULT_APP
+    defaults["app"] = os.path.join(SCRIPT_DIRECTORY, automation.DEFAULT_APP)
+
+    self.add_option("--xre-path",
+                    action = "store", type = "string", dest = "xrePath",
+                    help = "absolute path to directory containing XRE (probably xulrunner)")
+    # we'll default this to the directory of app below
+    defaults["xrePath"] = None
+
+    self.add_option("--utility-path",
+                    action = "store", type = "string", dest = "utilityPath",
+                    help = "absolute path to directory containing utility programs (xpcshell, ssltunnel, certutil)")
+    defaults["utilityPath"] = automation.DIST_BIN
+
+    self.add_option("--certificate-path",
+                    action = "store", type = "string", dest = "certPath",
+                    help = "absolute path to directory containing certificate store to use testing profile")
+    defaults["certPath"] = automation.CERTS_SRC_DIR
 
     self.add_option("--log-file",
                     action = "store", type = "string",
@@ -184,6 +201,11 @@ class MochitestOptions(optparse.OptionParser):
                            "(requires a debug build to be effective)")
     defaults["fatalAssertions"] = False
 
+    self.add_option("--extra-profile-file",
+                    action = "append", dest = "extraProfileFiles",
+                    help = "copy specified files/dirs to testing profile")
+    defaults["extraProfileFiles"] = []
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -207,21 +229,29 @@ class MochitestServer:
 
   def __init__(self, options):
     self._closeWhenDone = options.closeWhenDone
+    self._utilityPath = options.utilityPath
+    self._xrePath = options.xrePath
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
     
     env = dict(os.environ)
     if automation.UNIXISH:
-      env["LD_LIBRARY_PATH"] = automation.DIST_BIN
-      env["MOZILLA_FIVE_HOME"] = automation.DIST_BIN
+      env["LD_LIBRARY_PATH"] = self._xrePath
+      env["MOZILLA_FIVE_HOME"] = self._xrePath
       env["XPCOM_DEBUG_BREAK"] = "warn"
+    if automation.IS_MAC:
+      env["DYLD_LIBRARY_PATH"] = self._xrePath
+    elif automation.IS_WIN32:
+      env["PATH"] = env["PATH"] + ";" + self._xrePath
 
-    args = ["-v", "170",
+    args = ["-g", self._xrePath,
+            "-v", "170",
             "-f", "./" + "httpd.js",
             "-f", "./" + "server.js"]
 
-    xpcshell = automation.DIST_BIN + "/" + "xpcshell";
+    xpcshell = os.path.join(self._utilityPath,
+                            "xpcshell" + automation.BIN_SUFFIX)
     self._process = automation.Process([xpcshell] + args, env = env)
     pid = self._process.pid
     if pid < 0:
@@ -233,7 +263,7 @@ class MochitestServer:
   def ensureReady(self, timeout):
     assert timeout >= 0
 
-    aliveFile = PROFILE_DIRECTORY + "/" + "server_alive.txt"
+    aliveFile = os.path.join(PROFILE_DIRECTORY, "server_alive.txt")
     i = 0
     while i < timeout:
       if os.path.exists(aliveFile):
@@ -254,6 +284,9 @@ class MochitestServer:
     except:
       self._process.kill()
 
+def getFullPath(path):
+  "Get an absolute path relative to oldcwd."
+  return os.path.normpath(os.path.join(oldcwd, os.path.expanduser(path)))
 
 #################
 # MAIN FUNCTION #
@@ -269,12 +302,23 @@ def main():
   # enforced, just pass an explicit --leak-threshold=N to prevent the override.
   maybeForceLeakThreshold(options)
 
+  options.app = getFullPath(options.app)
   if not os.path.exists(options.app):
     msg = """\
 Error: Path %(app)s doesn't exist.
 Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     print msg % {"app": options.app}
     sys.exit(1)
+
+  # default xrePath to the app path if not provided
+  if options.xrePath is None:
+    options.xrePath = os.path.dirname(options.app)
+  else:
+    # allow relative paths
+    options.xrePath = getFullPath(options.xrePath)
+
+  options.utilityPath = getFullPath(options.utilityPath)
+  options.certPath = getFullPath(options.certPath)
 
   # browser environment
   browserEnv = dict(os.environ)
@@ -283,9 +327,10 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # via the commandline at your own risk.
   browserEnv["NO_EM_RESTART"] = "1"
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
+  appDir = os.path.dirname(options.app)
   if automation.UNIXISH:
-    browserEnv["LD_LIBRARY_PATH"] = automation.DIST_BIN 
-    browserEnv["MOZILLA_FIVE_HOME"] = automation.DIST_BIN 
+    browserEnv["LD_LIBRARY_PATH"] = appDir
+    browserEnv["MOZILLA_FIVE_HOME"] = appDir
     browserEnv["GNOME_DISABLE_CRASH_DIALOG"] = "1"
 
   for v in options.environment:
@@ -297,6 +342,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   automation.initializeProfile(PROFILE_DIRECTORY)
   manifest = addChromeToProfile(options)
+  copyExtraFilesToProfile(options)
   server = MochitestServer(options)
   server.start()
 
@@ -333,8 +379,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   # allow relative paths for logFile
   if options.logFile:
-    logpath = os.path.join(oldcwd, os.path.expanduser(options.logFile))
-    options.logFile = os.path.normpath(logpath)
+    options.logFile = getFullPath(options.logFile)
   if options.browserChrome:
     makeTestConfig(options)
   else:
@@ -356,7 +401,10 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
   (status, start) = automation.runApp(testURL, browserEnv, options.app,
-                                      PROFILE_DIRECTORY, options.browserArgs)
+                                      PROFILE_DIRECTORY, options.browserArgs,
+                                      utilityPath=options.utilityPath,
+                                      xrePath=options.xrePath,
+                                      certPath=options.certPath)
 
   # Server's no longer needed, and perhaps more importantly, anything it might
   # spew to console shouldn't disrupt the leak information table we print next.
@@ -494,7 +542,7 @@ def makeTestConfig(options):
          "logPath": logFile,
          "testPath": testPath}
 
-  config = open(PROFILE_DIRECTORY + "/" + "testConfig.js", "w")
+  config = open(os.path.join(PROFILE_DIRECTORY, "testConfig.js"), "w")
   config.write(content)
   config.close() 
 
@@ -502,7 +550,7 @@ def makeTestConfig(options):
 def addChromeToProfile(options):
   "Adds MochiKit chrome tests to the profile."
 
-  chromedir = PROFILE_DIRECTORY + "/" + "chrome"
+  chromedir = os.path.join(PROFILE_DIRECTORY, "chrome")
   os.mkdir(chromedir)
 
   chrome = []
@@ -522,7 +570,7 @@ toolbar#nav-bar {
 
 
   # write userChrome.css
-  chromeFile = open(PROFILE_DIRECTORY + "/" + "userChrome.css", "a")
+  chromeFile = open(os.path.join(PROFILE_DIRECTORY, "userChrome.css"), "a")
   chromeFile.write("".join(chrome))
   chromeFile.close()
 
@@ -534,7 +582,7 @@ toolbar#nav-bar {
 
 
   (path, leaf) = os.path.split(options.app)
-  manifest = path + "/" + "chrome/mochikit.manifest"
+  manifest = os.path.join(path, "chrome", "mochikit.manifest")
   manifestFile = open(manifest, "w")
   manifestFile.write("content mochikit " + chrometestDir + " contentaccessible=yes\n")
   if options.browserChrome:
@@ -544,6 +592,16 @@ toolbar#nav-bar {
   manifestFile.close()
 
   return manifest
+
+def copyExtraFilesToProfile(options):
+  "Copy extra files or dirs specified on the command line to the testing profile."
+  for f in options.extraProfileFiles:
+    abspath = getFullPath(f)
+    dest = os.path.join(PROFILE_DIRECTORY, os.path.basename(abspath))
+    if os.path.isdir(abspath):
+      shutil.copytree(abspath, dest)
+    else:
+      shutil.copy(abspath, dest)
 
 #########
 # DO IT #
