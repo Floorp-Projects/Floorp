@@ -52,7 +52,9 @@ endif
 
 DIRS         += src
 
+ifndef BUILD_STATIC_LIBS
 TOOL_DIRS    += shell
+endif
 
 ifdef ENABLE_TESTS
 TOOL_DIRS    += tests
