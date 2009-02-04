@@ -690,37 +690,5 @@ var BookmarkPropertiesPanel = {
 
     PlacesUIUtils.ptm.doTransaction(txn);
     this._itemId = PlacesUtils.bookmarks.getIdForItemAt(container, index);
-  },
-
-  _getFolderIdFromMenuList:
-  function BPP__getFolderIdFromMenuList() {
-    var selectedItem = this._element("folderPicker").selectedItem;
-    NS_ASSERT("folderId" in selectedItem,
-              "Invalid menuitem in the folders-menulist");
-    return selectedItem.folderId;
-  },
-
-  /**
-   * Get the corresponding menu-item in the folder-menu-list for a bookmarks
-   * folder if such an item exists. Otherwise, this creates a menu-item for the
-   * folder. If the items-count limit (see MAX_FOLDERS_IN_MENU_LIST) is reached,
-   * the new item replaces the last menu-item.
-   * @param aFolderId
-   *        The identifier of the bookmarks folder.
-   */
-  _getFolderMenuItem:
-  function BPP__getFolderMenuItem(aFolderId) {
-    var menupopup = this._folderMenuList.menupopup;
-
-    for (var i = 0; i < menupopup.childNodes.length; i++) {
-      if (menupopup.childNodes[i].folderId == aFolderId)
-        return menupopup.childNodes[i];
-    }
-
-    // 2 special folders + separator + folder-items-count limit
-    if (menupopup.childNodes.length == 3 + MAX_FOLDER_ITEM_IN_MENU_LIST)
-      menupopup.removeChild(menupopup.lastChild);
-
-    return this._appendFolderItemToMenupopup(menupopup, aFolderId);
   }
 };
