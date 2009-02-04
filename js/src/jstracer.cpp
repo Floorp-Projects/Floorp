@@ -4605,8 +4605,7 @@ js_FlushJITCache(JSContext* cx)
         fragmento->clearFrags();
 #ifdef DEBUG
         JS_ASSERT(fragmento->labels);
-        delete fragmento->labels;
-        fragmento->labels = new (&gc) LabelMap(core, NULL);
+        fragmento->labels->clear();
 #endif
         tm->lirbuf->rewind();
         memset(tm->vmfragments, 0, sizeof(tm->vmfragments));
