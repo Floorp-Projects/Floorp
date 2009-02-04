@@ -65,7 +65,6 @@ __all__ = [
            "initializeProfile",
            "DIST_BIN",
            "DEFAULT_APP",
-           "CERTS_SRC_DIR",
            "environment",
           ]
 
@@ -84,6 +83,7 @@ IS_CYGWIN = False
 UNIXISH = not IS_WIN32 and not IS_MAC
 
 #expand DEFAULT_APP = "./" + __BROWSER_PATH__
+#expand PROFILE_DIR = __PROFILE_DIR__
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
 #expand IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
@@ -318,7 +318,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   prefsFile.write("".join(prefs))
   prefsFile.close()
 
-def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
+def fillCertificateDB(profileDir):
+
   pwfilePath = os.path.join(profileDir, ".crtdbpw")
   
   pwfile = open(pwfilePath, "w")
@@ -326,11 +327,11 @@ def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
   pwfile.close()
 
   # Create head of the ssltunnel configuration file
-  sslTunnelConfigPath = os.path.join(profileDir, "ssltunnel.cfg")
+  sslTunnelConfigPath = os.path.join(PROFILE_DIR, "ssltunnel.cfg")
   sslTunnelConfig = open(sslTunnelConfigPath, "w")
   
   sslTunnelConfig.write("httpproxy:1\n")
-  sslTunnelConfig.write("certdbdir:%s\n" % certPath)
+  sslTunnelConfig.write("certdbdir:%s\n" % CERTS_SRC_DIR)
   sslTunnelConfig.write("forward:127.0.0.1:8888\n")
   sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
 
@@ -357,47 +358,41 @@ def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
   sslTunnelConfig.close()
 
   # Pre-create the certification database for the profile
-  env = environment(xrePath = xrePath)
-  certutil = os.path.join(utilityPath, "certutil" + BIN_SUFFIX)
-  pk12util = os.path.join(utilityPath, "pk12util" + BIN_SUFFIX)
+  certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
+  pk12util = DIST_BIN + "/pk12util" + BIN_SUFFIX
 
-  status = Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env = env).wait()
+  status = Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env = environment()).wait()
   if status != 0:
     return status
 
   # Walk the cert directory and add custom CAs and client certs
-  files = os.listdir(certPath)
+  files = os.listdir(CERTS_SRC_DIR)
   for item in files:
     root, ext = os.path.splitext(item)
     if ext == ".ca":
       trustBits = "CT,,"
       if root.endswith("-object"):
         trustBits = "CT,,CT"
-      Process([certutil, "-A", "-i", os.path.join(certPath, item),
+      Process([certutil, "-A", "-i", os.path.join(CERTS_SRC_DIR, item),
         "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
-        env = env).wait()
+        env = environment()).wait()
     if ext == ".client":
-      Process([pk12util, "-i", os.path.join(certPath, item), "-w",
+      Process([pk12util, "-i", os.path.join(CERTS_SRC_DIR, item), "-w",
         pwfilePath, "-d", profileDir], 
-        env = env).wait()
+        env = environment()).wait()
 
   os.unlink(pwfilePath)
   return 0
 
-def environment(env = None, xrePath = DIST_BIN):
+def environment(env = None):
   if env == None:
     env = dict(os.environ)
 
-  ldLibraryPath = os.path.abspath(os.path.join(SCRIPT_DIR, xrePath))
-  if UNIXISH or IS_MAC:
-    envVar = "LD_LIBRARY_PATH"
-    if IS_MAC:
-      envVar = "DYLD_LIBRARY_PATH"
-    if envVar in env:
-      ldLibraryPath = ldLibraryPath + ":" + env[envVar]
-    env[envVar] = ldLibraryPath
-  elif IS_WIN32:
-    env["PATH"] = env["PATH"] + ";" + ldLibraryPath
+  if UNIXISH:
+    ldLibraryPath = os.path.join(SCRIPT_DIR, DIST_BIN)
+    if "LD_LIBRARY_PATH" in env:
+      ldLibraryPath = ldLibraryPath + ":" + env["LD_LIBRARY_PATH"]
+    env["LD_LIBRARY_PATH"] = ldLibraryPath
 
   return env
 
@@ -405,18 +400,18 @@ def environment(env = None, xrePath = DIST_BIN):
 # RUN THE APP #
 ###############
 
-def runApp(testURL, env, app, profileDir, extraArgs, utilityPath = DIST_BIN, xrePath = DIST_BIN, certPath = CERTS_SRC_DIR):
+def runApp(testURL, env, app, profileDir, extraArgs):
   "Run the app, returning a tuple containing the status code and the time at which it was started."
   if (IS_TEST_BUILD):
     # create certificate database for the profile
-    certificateStatus = fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
+    certificateStatus = fillCertificateDB(profileDir)
     if certificateStatus != 0:
       log.info("ERROR FAIL Certificate integration")
       return certificateStatus
   
     # start ssltunnel to provide https:// URLs capability
-    ssltunnel = os.path.join(utilityPath, "ssltunnel" + BIN_SUFFIX)
-    ssltunnelProcess = Process([ssltunnel, os.path.join(profileDir, "ssltunnel.cfg")], env = environment(xrePath = xrePath))
+    ssltunnel = DIST_BIN + "/ssltunnel" + BIN_SUFFIX
+    ssltunnelProcess = Process([ssltunnel, os.path.join(PROFILE_DIR, "ssltunnel.cfg")], env = environment())
     log.info("SSL tunnel pid: %d", ssltunnelProcess.pid)
   
   "Run the app, returning the time at which it was started."
