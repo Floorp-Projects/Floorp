@@ -1120,7 +1120,8 @@ ProgressController.prototype = {
 
     if (Browser.selectedBrowser == this.browser) {
       // focus the dom window
-      this.browser.contentWindow.focus();
+      if (this.browser.currentURI.spec != "about:blank")
+        this.browser.contentWindow.focus();
 
       Browser.canvasBrowser.endLoading();
     }
