@@ -198,6 +198,10 @@ BookmarksStore.prototype = {
     case "microsummary": {
       this._log.debug(" -> creating bookmark \"" + record.cleartext.title + "\"");
       let uri = Utils.makeURI(record.cleartext.uri);
+      this._log.debug(" -> -> ParentID is " + parentId);
+      this._log.debug(" -> -> uri is " + record.cleartext.uri);
+      this._log.debug(" -> -> sortindex is " + record.sortindex);
+      this._log.debug(" -> -> title is " + record.cleartext.title);
       newId = this._bms.insertBookmark(parentId, uri, record.sortindex,
                                        record.cleartext.title);
       this._ts.untagURI(uri, null);
