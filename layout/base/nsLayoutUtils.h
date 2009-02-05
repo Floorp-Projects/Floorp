@@ -329,10 +329,10 @@ public:
   static PRUint8 CombineBreakType(PRUint8 aOrigBreakType, PRUint8 aNewBreakType);
 
   /**
-   * @return PR_TRUE if aFrame is the CSS initial containing block for
+   * @return PR_TRUE if aFrame is the root element frame for
    * its pres-shell
    */
-  static PRBool IsInitialContainingBlock(nsIFrame* aFrame);
+  static PRBool IsRootElementFrame(nsIFrame* aFrame);
 
   /**
    * Get the coordinates of a given DOM mouse event, relative to a given
