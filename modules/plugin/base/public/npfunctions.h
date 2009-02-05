@@ -40,28 +40,31 @@
 
 #ifdef __OS2__
 #pragma pack(1)
+#define NP_LOADDS _System
+#else
+#define NP_LOADDS
 #endif
 
 #include "npapi.h"
 #include "npruntime.h"
 
-typedef void         (*NPP_InitializeProcPtr)();
-typedef void         (*NPP_ShutdownProcPtr)();
-typedef NPError      (*NPP_NewProcPtr)(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
-typedef NPError      (*NPP_DestroyProcPtr)(NPP instance, NPSavedData** save);
-typedef NPError      (*NPP_SetWindowProcPtr)(NPP instance, NPWindow* window);
-typedef NPError      (*NPP_NewStreamProcPtr)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
-typedef NPError      (*NPP_DestroyStreamProcPtr)(NPP instance, NPStream* stream, NPReason reason);
-typedef int32_t      (*NPP_WriteReadyProcPtr)(NPP instance, NPStream* stream);
-typedef int32_t      (*NPP_WriteProcPtr)(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
-typedef void         (*NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, const char* fname);
-typedef void         (*NPP_PrintProcPtr)(NPP instance, NPPrint* platformPrint);
-typedef int16_t      (*NPP_HandleEventProcPtr)(NPP instance, void* event);
-typedef void         (*NPP_URLNotifyProcPtr)(NPP instance, const char* url, NPReason reason, void* notifyData);
+typedef void         (* NP_LOADDS NPP_InitializeProcPtr)();
+typedef void         (* NP_LOADDS NPP_ShutdownProcPtr)();
+typedef NPError      (* NP_LOADDS NPP_NewProcPtr)(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
+typedef NPError      (* NP_LOADDS NPP_DestroyProcPtr)(NPP instance, NPSavedData** save);
+typedef NPError      (* NP_LOADDS NPP_SetWindowProcPtr)(NPP instance, NPWindow* window);
+typedef NPError      (* NP_LOADDS NPP_NewStreamProcPtr)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
+typedef NPError      (* NP_LOADDS NPP_DestroyStreamProcPtr)(NPP instance, NPStream* stream, NPReason reason);
+typedef int32_t      (* NP_LOADDS NPP_WriteReadyProcPtr)(NPP instance, NPStream* stream);
+typedef int32_t      (* NP_LOADDS NPP_WriteProcPtr)(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
+typedef void         (* NP_LOADDS NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, const char* fname);
+typedef void         (* NP_LOADDS NPP_PrintProcPtr)(NPP instance, NPPrint* platformPrint);
+typedef int16_t      (* NP_LOADDS NPP_HandleEventProcPtr)(NPP instance, void* event);
+typedef void         (* NP_LOADDS NPP_URLNotifyProcPtr)(NPP instance, const char* url, NPReason reason, void* notifyData);
 /* Any NPObjects returned to the browser via NPP_GetValue should be retained
    by the plugin on the way out. The browser is responsible for releasing. */
-typedef NPError      (*NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
-typedef NPError      (*NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *value);
+typedef NPError      (* NP_LOADDS NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
+typedef NPError      (* NP_LOADDS NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *value);
 
 typedef NPError      (*NPN_GetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
 typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *value);
