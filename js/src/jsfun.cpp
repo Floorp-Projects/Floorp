@@ -884,7 +884,12 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     localKind = js_LookupLocal(cx, fun, JSID_TO_ATOM(id), &slot);
     if (localKind != JSLOCAL_NONE) {
         JS_ASSERT((uint16) slot == slot);
-        attrs = JSPROP_PERMANENT | JSPROP_SHARED;
+
+        /*
+         * We follow 10.2.3 of ECMA 262 v3 and make argument and variable
+         * properties of the Call objects enumerable.
+         */
+        attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
         if (localKind == JSLOCAL_ARG) {
             JS_ASSERT(slot < fun->nargs);
             getter = js_GetCallArg;
