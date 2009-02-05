@@ -77,7 +77,7 @@ interface jsdIProperty;
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(39c87dbc-85b6-41e3-9f69-beb8b1b27570)]
+[scriptable, uuid(e86c0173-49e2-48f3-b53f-b5b2691a7e45)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -272,13 +272,6 @@ interface jsdIDebuggerService : nsISupports
     void GC();
     
     /**
-     * Output dump of JS heap.
-     *
-     * @param fileName Filename to dump the heap into.
-     */
-    void DumpHeap(in AUTF8String fileName);
-
-    /**
      * Clear profile data for all scripts.
      */
     void clearProfileData();
@@ -388,6 +381,13 @@ interface jsdIDebuggerService : nsISupports
      *               nested.  your code can use it for sanity checks.
      */
     unsigned long exitNestedEventLoop ();
+
+    /**
+     * Output dump of JS heap.
+     *
+     * @param fileName Filename to dump the heap into.
+     */
+    void dumpHeap (in AUTF8String fileName);
 };
 
 /* callback interfaces */
