@@ -19,6 +19,15 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTests() {
+  // don't run these tests if we can't get ahold of the private browsing service
+  var privateBrowsing = null;
+  try {
+    privateBrowsing = Components.classes["@mozilla.org/privatebrowsing;1"].getService(Components.interfaces.nsIPrivateBrowsingService);
+  } catch (e) {
+    SimpleTest.finish();
+    return;
+  }
+
   var pluginElement1 = document.getElementById("plugin1");
   var pluginElement2 = document.getElementById("plugin2");
 
@@ -38,7 +47,6 @@ function runTests() {
 
   // change private mode pref
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var privateBrowsing = Components.classes["@mozilla.org/privatebrowsing;1"].getService(Components.interfaces.nsIPrivateBrowsingService);
   var keepCurrentSession;
   try {
     keepCurrentSession = prefs.getBoolPref("browser.privatebrowsing.keep_current_session");
