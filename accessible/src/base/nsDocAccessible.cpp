@@ -1708,8 +1708,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         // Fire reorder event if it's unconditional (see InvalidateCacheSubtree
         // method) or if changed node (that is the reason of this reorder event)
         // is accessible or has accessible children.
-        nsAccReorderEvent* reorderEvent = nsnull;
-        CallQueryInterface(accessibleEvent, &reorderEvent);
+        nsCOMPtr<nsAccReorderEvent> reorderEvent = do_QueryInterface(accessibleEvent);
         if (reorderEvent->IsUnconditionalEvent() ||
             reorderEvent->HasAccessibleInReasonSubtree()) {
           nsAccEvent::PrepareForEvent(accessibleEvent);
