@@ -262,10 +262,10 @@ public:
 
   nsresult RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame);
 
-  // This is misnamed! This returns the outermost frame for the root element
-  nsIFrame* GetInitialContainingBlock() { return mInitialContainingBlock; }
+  // GetInitialContainingBlock() is deprecated in favor of GetRootElementFrame();
+  // nsIFrame* GetInitialContainingBlock() { return mRootElementFrame; }
   // This returns the outermost frame for the root element
-  nsIFrame* GetRootElementFrame() { return mInitialContainingBlock; }
+  nsIFrame* GetRootElementFrame() { return mRootElementFrame; }
   // This returns the frame for the root element that does not
   // have a psuedo-element style
   nsIFrame* GetRootElementStyleFrame() { return mRootElementStyleFrame; }
@@ -1371,9 +1371,8 @@ private:
   // See the comment at the start of ConstructRootFrame for more details
   // about the following frames.
   
-  // This is not the real CSS 2.1 "initial containing block"! It is just
-  // the outermost frame for the root element.
-  nsIFrame*           mInitialContainingBlock;
+  // This is just the outermost frame for the root element.
+  nsIFrame*           mRootElementFrame;
   // This is the frame for the root element that has no pseudo-element style.
   nsIFrame*           mRootElementStyleFrame;
   // This is the containing block for fixed-pos frames --- the viewport

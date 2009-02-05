@@ -1798,7 +1798,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
                                              nsIPresShell *aPresShell)
   : mDocument(aDocument)
   , mPresShell(aPresShell)
-  , mInitialContainingBlock(nsnull)
+  , mRootElementFrame(nsnull)
   , mRootElementStyleFrame(nsnull)
   , mFixedContainingBlock(nsnull)
   , mDocElementContainingBlock(nsnull)
@@ -3253,10 +3253,10 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
       return rv;
     }
 
-    if (!mInitialContainingBlock) {
-      // The frame we're constructing will be the initial containing block.
-      // Set mInitialContainingBlock before processing children.
-      mInitialContainingBlock = aNewOuterFrame;
+    if (!mRootElementFrame) {
+      // The frame we're constructing will be the root element frame.
+      // Set mRootElementFrame before processing children.
+      mRootElementFrame = aNewOuterFrame;
     }
 
     nsFrameItems childItems;
@@ -3864,7 +3864,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 
   if (NS_UNLIKELY(display->mDisplay == NS_STYLE_DISPLAY_NONE)) {
     aState.mFrameManager->SetUndisplayedContent(aDocElement, styleContext);
-    mInitialContainingBlock = nsnull;
+    mRootElementFrame = nsnull;
     mRootElementStyleFrame = nsnull;
     return NS_OK;
   }
@@ -3972,10 +3972,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // set the primary frame
   aState.mFrameManager->SetPrimaryFrameFor(aDocElement, contentFrame);
 
-  NS_ASSERTION(processChildren ? !mInitialContainingBlock :
-                 mInitialContainingBlock == contentFrame,
-               "unexpected mInitialContainingBlock");
-  mInitialContainingBlock = contentFrame;
+  NS_ASSERTION(processChildren ? !mRootElementFrame :
+                 mRootElementFrame == contentFrame,
+               "unexpected mRootElementFrame");
+  mRootElementFrame = contentFrame;
 
   // Figure out which frame has the main style for the document element,
   // assigning it to mRootElementStyleFrame.
@@ -3984,7 +3984,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   contentFrame->GetParentStyleContextFrame(aState.mPresContext,
           &mRootElementStyleFrame, &isChild);
   if (!isChild) {
-    mRootElementStyleFrame = mInitialContainingBlock;
+    mRootElementStyleFrame = mRootElementFrame;
   }
 
   if (processChildren) {
@@ -4060,8 +4060,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   [abs-cb]: the default containing block for abs-pos content
  
   Meaning of nsCSSFrameConstructor fields:
-    mInitialContainingBlock is "root element frame".
-    mDocElementContainingBlock is the parent of mInitialContainingBlock
+    mRootElementFrame is "root element frame".
+    mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. CanvasFrame or nsRootBoxFrame)
     mFixedContainingBlock is the [fixed-cb]
     mGfxScrollFrame is the nsHTMLScrollFrame mentioned above, or null if there isn't one
@@ -6935,7 +6935,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
     }
     
     if (rootContent && NS_SUCCEEDED(rv)) {
-      mInitialContainingBlock = nsnull;
+      mRootElementFrame = nsnull;
       mRootElementStyleFrame = nsnull;
 
       // We don't reuse the old frame constructor state because,
@@ -6980,7 +6980,7 @@ nsCSSFrameConstructor::GetFrameFor(nsIContent* aContent)
 nsIFrame*
 nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(nsnull != mInitialContainingBlock, "no initial containing block");
+  NS_PRECONDITION(nsnull != mRootElementFrame, "no root element frame");
   
   // Starting with aFrame, look for a frame that is absolutely positioned or
   // relatively positioned
@@ -7037,7 +7037,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
 nsIFrame*
 nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(mInitialContainingBlock, "no initial containing block");
+  NS_PRECONDITION(mRootElementFrame, "no root element frame");
   
   // Starting with aFrame, look for a frame that is a float containing block.
   // IF we hit a mathml frame, bail out; we don't allow floating out of mathml
@@ -7831,7 +7831,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     nsIContent *docElement = mDocument->GetRootContent();
 
     if (aChild == docElement) {
-      NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
+      NS_PRECONDITION(nsnull == mRootElementFrame, "root element frame already created");
       
       if (!mDocElementContainingBlock)
         return NS_OK; // We get into this situation when an XBL binding is asynchronously
@@ -8616,12 +8616,12 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       }
     }
 
-    if (mInitialContainingBlock == childFrame) {
-      mInitialContainingBlock = nsnull;
+    if (mRootElementFrame == childFrame) {
+      mRootElementFrame = nsnull;
       mRootElementStyleFrame = nsnull;
     }
 
-    if (haveFLS && mInitialContainingBlock) {
+    if (haveFLS && mRootElementFrame) {
       NS_ASSERTION(containingBlock == GetFloatContainingBlock(parentFrame),
                    "What happened here?");
       nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
@@ -9756,14 +9756,13 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
     return NS_OK;
   }
 
-  //XXXbz Should mInitialContainingBlock be docRootFrame? It probably doesn't matter.
   // Don't allow abs-pos descendants of the fixed content to escape the content.
   // This should not normally be possible (because fixed-pos elements should
   // be absolute containers) but fixed-pos tables currently aren't abs-pos
   // containers.
   nsFrameConstructorState state(mPresShell, aParentFrame,
                                 nsnull,
-                                mInitialContainingBlock);
+                                mRootElementFrame);
 
   // Iterate across fixed frames and replicate each whose placeholder is a
   // descendant of aFrame. (We don't want to explicitly copy placeholders that
@@ -10460,7 +10459,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   nsPseudoFrames priorPseudoFrames;
   aState.mPseudoFrames.Reset(&priorPseudoFrames);
 
-  if (aFrame == mInitialContainingBlock) {
+  if (aFrame == mRootElementFrame) {
     // Create any anonymous frames the initial containing block frame requires.
     // This must happen before the rest of ProcessChildren to ensure that
     // popups are never constructed before the popupset.
@@ -10503,7 +10502,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     }
   }
 
-  if (aFrame != mInitialContainingBlock) {
+  if (aFrame != mRootElementFrame) {
     CreateAnonymousFrames(aContent->Tag(), aState, aContent, aFrame,
                           aFrameItems);
   }
@@ -11607,10 +11606,10 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   // See if we need to create a view, e.g. the frame is absolutely positioned
   nsHTMLContainerFrame::CreateViewForFrame(blockFrame, PR_FALSE);
 
-  if (!mInitialContainingBlock) {
-    // The frame we're constructing will be the initial containing block.
-    // Set mInitialContainingBlock before processing children.
-    mInitialContainingBlock = *aNewFrame;
+  if (!mRootElementFrame) {
+    // The frame we're constructing will be the root element frame.
+    // Set mRootElementFrame before processing children.
+    mRootElementFrame = *aNewFrame;
   }
 
   // We should make the outer frame be the absolute containing block,

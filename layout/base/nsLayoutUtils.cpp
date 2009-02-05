@@ -887,10 +887,10 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 }
 
 PRBool
-nsLayoutUtils::IsInitialContainingBlock(nsIFrame* aFrame)
+nsLayoutUtils::IsRootElementFrame(nsIFrame* aFrame)
 {
   return aFrame ==
-    aFrame->PresContext()->PresShell()->FrameConstructor()->GetInitialContainingBlock();
+    aFrame->PresContext()->PresShell()->FrameConstructor()->GetRootElementFrame();
 }
 
 #ifdef DEBUG
