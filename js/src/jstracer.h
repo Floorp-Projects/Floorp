@@ -626,11 +626,4 @@ js_LeaveTrace(JSContext *cx)
         js_GetTopStackFrame(cx);
 }
 
-static JS_INLINE bool
-js_CanLeaveTrace(JSContext *cx)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    return cx->bailExit;
-}
-
 #endif /* jstracer_h___ */
