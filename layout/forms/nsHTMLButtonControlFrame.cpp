@@ -182,7 +182,11 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   nsDisplayList onTop;
   if (IsVisibleForPainting(aBuilder)) {
-    nsresult rv = mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBoxShadow(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
