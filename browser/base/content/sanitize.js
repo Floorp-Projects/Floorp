@@ -342,13 +342,24 @@ Sanitizer.prototype = {
     siteSettings: {
       clear: function ()
       {
+        // Clear site-specific permissions like "Allow this site to open popups"
         var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                           .getService(Components.interfaces.nsIPermissionManager);
         pm.removeAll();
         
+        // Clear site-specific settings like page-zoom level
         var cps = Components.classes["@mozilla.org/content-pref/service;1"]
                            .getService(Components.interfaces.nsIContentPrefService);
         cps.removeGroupedPrefs();
+        
+        // Clear "Never remember passwords for this site", which is not handled by
+        // the permission manager
+        var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
+                   .getService(Components.interfaces.nsILoginManager);
+        var hosts = pwmgr.getAllDisabledHosts({})
+        for each (var host in hosts) {
+          pwmgr.setLoginSavingEnabled(host, true);
+        }
       },
       
       get canClear()

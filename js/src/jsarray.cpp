@@ -833,8 +833,6 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (!isIndex || attrs != JSPROP_ENUMERATE) {
         if (!ENSURE_SLOW_ARRAY(cx, obj))
             return JS_FALSE;
-        if (isIndex && STOBJ_IS_DELEGATE(obj))
-            cx->runtime->anyArrayProtoHasElement = JS_TRUE;
         return js_DefineProperty(cx, obj, id, value, getter, setter, attrs, propp);
     }
 
@@ -1544,8 +1542,10 @@ static JSString* FASTCALL
 Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsval v;
-    if (!array_join_sub(cx, obj, TO_STRING, str, &v))
+    if (!array_join_sub(cx, obj, TO_STRING, str, &v)) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
         return NULL;
+    }
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
@@ -2146,7 +2146,8 @@ Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
         : array_push_slowly(cx, obj, 1, &v, &v)) {
         return v;
     }
-    return JSVAL_ERROR_COOKIE;
+    cx->builtinStatus |= JSBUILTIN_ERROR;
+    return JSVAL_VOID;
 }
 #endif
 
@@ -2213,12 +2214,13 @@ static jsval FASTCALL
 Array_p_pop(JSContext* cx, JSObject* obj)
 {
     jsval v;
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) 
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)
         ? array_pop_dense(cx, obj, &v)
         : array_pop_slowly(cx, obj, &v)) {
         return v;
     }
-    return JSVAL_ERROR_COOKIE;
+    cx->builtinStatus |= JSBUILTIN_ERROR;
+    return JSVAL_VOID;
 }
 #endif
 

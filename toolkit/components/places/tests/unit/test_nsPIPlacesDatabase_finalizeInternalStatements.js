@@ -41,6 +41,12 @@ function run_test() {
   var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
            getService(Ci.nsINavHistoryService);
 
+  // Run the event loop to be more like the browser, which normally runs the
+  // event loop long before code like this would run.
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+  while (tm.mainThread.hasPendingEvents())
+    tm.mainThread.processNextEvent(false);
+
   var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 
   hs.QueryInterface(Ci.nsPIPlacesDatabase).finalizeInternalStatements();

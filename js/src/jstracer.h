@@ -213,7 +213,9 @@ enum ExitType {
     OOM_EXIT,
     OVERFLOW_EXIT,
     UNSTABLE_LOOP_EXIT,
-    TIMEOUT_EXIT
+    TIMEOUT_EXIT,
+    DEEP_BAIL_EXIT,
+    STATUS_EXIT
 };
 
 struct VMSideExit : public nanojit::SideExit
@@ -244,20 +246,18 @@ static inline uint8* getFullTypeMap(nanojit::SideExit* exit)
     return getStackTypeMap(exit);
 }
 
-struct InterpState
-{
-    void* sp; /* native stack pointer, stack[0] is spbase[0] */
-    void* rp; /* call stack pointer */
-    void* gp; /* global frame pointer */
-    JSContext *cx; /* current VM context handle */
-    void* eos; /* first unusable word after the native stack */
-    void* eor; /* first unusable word after the call stack */
-    VMSideExit* lastTreeExitGuard; /* guard we exited on during a tree call */
-    VMSideExit* lastTreeCallGuard; /* guard we want to grow from if the tree
-                                      call exit guard mismatched */
-    void* rpAtLastTreeCall; /* value of rp at innermost tree call guard */
-    JSObject* globalObj; /* pointer to the global object */
-}; 
+struct FrameInfo {
+    JSObject*       callee;     // callee function object
+    JSObject*       block;      // caller block chain head
+    intptr_t        ip_adj;     // caller script-based pc index and imacro pc
+    union {
+        struct {
+            uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
+            uint16  argc;       // actual argument count, may be < fun->nargs
+        } s;
+        uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
+    };
+};
 
 struct UnstableExit
 {
@@ -309,18 +309,37 @@ public:
     }
 };
 
-struct FrameInfo {
-    JSObject*       callee;     // callee function object
-    JSObject*       block;      // caller block chain head
-    intptr_t        ip_adj;     // caller script-based pc index and imacro pc
-    union {
-        struct {
-            uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
-            uint16  argc;       // actual argument count, may be < fun->nargs
-        } s;
-        uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
-    };
-};
+#if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
+# define EXECUTE_TREE_TIMER
+#endif
+
+struct InterpState
+{
+    double        *sp;                  // native stack pointer, stack[0] is spbase[0]
+    void          *rp;                  // call stack pointer
+    double        *global;              // global frame pointer
+    JSContext     *cx;                  // current VM context handle
+    double        *eos;                 // first unusable word after the native stack
+    void          *eor;                 // first unusable word after the call stack
+    VMSideExit*    lastTreeExitGuard;   // guard we exited on during a tree call
+    VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
+                                        // call exit guard mismatched
+    void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
+    TreeInfo*      outermostTree;       // the outermost tree we initially invoked
+    JSObject*      globalObj;           // pointer to the global object
+    double*        stackBase;           // native stack base
+    FrameInfo**    callstackBase;       // call stack base
+    uintN*         inlineCallCountp;    // inline call count counter
+    VMSideExit** innermostNestedGuardp;
+    void*          stackMark;
+    VMSideExit*    innermost;
+#ifdef EXECUTE_TREE_TIMER
+    uint64         startTime;
+#endif
+#ifdef DEBUG
+    bool           jsframe_pop_blocks_set_on_entry;
+#endif
+}; 
 
 enum JSMonitorRecordingStatus {
     JSMRS_CONTINUE,

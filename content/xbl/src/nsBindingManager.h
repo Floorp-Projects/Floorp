@@ -306,7 +306,7 @@ protected:
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;
-  nsCOMPtr<nsIRunnable> mProcessAttachedQueueEvent;
+  nsRefPtr< nsRunnableMethod<nsBindingManager> > mProcessAttachedQueueEvent;
 
   // Our document.  This is a weak ref; the document owns us
   nsIDocument* mDocument; 

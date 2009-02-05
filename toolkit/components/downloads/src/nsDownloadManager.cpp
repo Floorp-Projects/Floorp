@@ -1352,7 +1352,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  downloadDir.swap(*aResult);
+  downloadDir.forget(aResult);
 
   return NS_OK;
 }
@@ -1394,7 +1394,7 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
                              NS_GET_IID(nsILocalFile),
                              getter_AddRefs(downloadDir));
         NS_ENSURE_SUCCESS(rv, rv);
-        downloadDir.swap(*aResult);
+        downloadDir.forget(aResult);
         return NS_OK;
       }
       break;
@@ -1413,7 +1413,7 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
           if (!exists) {
             rv = customDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
             if (NS_SUCCEEDED(rv)) {
-              customDirectory.swap(*aResult);
+              customDirectory.forget(aResult);
               return NS_OK;
             }
 
@@ -1427,7 +1427,7 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
           (void)customDirectory->IsDirectory(&directory);
 
           if (exists && writable && directory) {
-            customDirectory.swap(*aResult);
+            customDirectory.forget(aResult);
             return NS_OK;
           }
         }

@@ -9,34 +9,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
+  <script type="application/javascript"
+    src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+    src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
+
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-    const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
-    const nsIAccessibleDocument = Components.interfaces.nsIAccessibleDocument;
-    const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
-    const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
-
-    // needed state flag
-    const state_focusable =
-          Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
-    const state_readonly =
-          Components.interfaces.nsIAccessibleStates.STATE_READONLY;
-
-    var gAccRetrieval = null;
-
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
       // Get accessible for body tag.
-      var docAcc = null;
-      try {
-        docAcc = gAccRetrieval.getAccessibleFor(document).
-                 QueryInterface(nsIAccessibleDocument);
-      } catch(e) {}
-      ok(docAcc, "No accessible with interface for document!");
-
+      var docAcc = getAccessible(document, [nsIAccessibleDocument]);
       if (docAcc) {
         // nsIAccessible
         is(docAcc.name, "nsIAccessibleDocument chrome tests",
@@ -45,11 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
            "Wrong role for document!");
 
         // check if it is focusable, read-only.
-        var state = {}, extraState = {}
-        docAcc.getState(state, extraState);
-        var desiredStates = (state_focusable | state_readonly);
-        is(state.value & desiredStates, desiredStates,
-           "Wrong state bits for document!");
+        testStates(docAcc, (STATE_READONLY | STATE_FOCUSABLE));
 
         // No actions wanted on doc
         is(docAcc.numActions, 0, "Wrong number of actions for document!");

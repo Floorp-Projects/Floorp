@@ -94,7 +94,7 @@ static const char kOldCookieFileName[] = "cookies.txt";
 
 // default limits for the cookie list. these can be tuned by the
 // network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
-static const PRUint32 kMaxNumberOfCookies = 1000;
+static const PRUint32 kMaxNumberOfCookies = 3000;
 static const PRUint32 kMaxCookiesPerHost  = 50;
 static const PRUint32 kMaxBytesPerCookie  = 4096;
 static const PRUint32 kMaxBytesPerPath    = 1024;
@@ -437,9 +437,14 @@ nsCookieService::Init()
     PrefChanged(prefBranch);
   }
 
-  // ignore failure here, since it's non-fatal (we can run fine without
+  // failure here is non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile)
   rv = InitDB();
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // database is corrupt - delete and try again
+    COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): db corrupt, trying again", rv));
+    rv = InitDB(PR_TRUE);
+  }
   if (NS_FAILED(rv))
     COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): InitDB() gave error %x", rv));
 
@@ -470,7 +475,7 @@ nsCookieService::Init()
 }
 
 nsresult
-nsCookieService::InitDB()
+nsCookieService::InitDB(PRBool aDeleteExistingDB)
 {
   // null out any existing connection
   CloseDB();
@@ -481,19 +486,18 @@ nsCookieService::InitDB()
 
   cookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
 
+  // remove an existing db, if we've been told to (i.e. it's corrupt)
+  if (aDeleteExistingDB) {
+    rv = cookieFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCOMPtr<mozIStorageService> storage = do_GetService("@mozilla.org/storage/service;1");
   if (!storage)
     return NS_ERROR_UNEXPECTED;
 
   // cache a connection to the cookie database
   rv = storage->OpenUnsharedDatabase(cookieFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // delete and try again
-    rv = cookieFile->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = storage->OpenUnsharedDatabase(cookieFile, getter_AddRefs(mDBConn));
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool tableExists = PR_FALSE;
@@ -590,19 +594,29 @@ nsCookieService::InitDB()
     "UPDATE moz_cookies SET lastAccessed = ?1 WHERE id = ?2"), getter_AddRefs(mStmtUpdate));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // if we deleted a corrupt db, don't attempt to import - return now
+  if (aDeleteExistingDB)
+    return NS_OK;
+
   // check whether to import or just read in the db
   if (tableExists)
     return Read();
 
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
+  nsCOMPtr<nsIFile> oldCookieFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(oldCookieFile));
   if (NS_FAILED(rv)) return rv;
 
-  cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
-  rv = ImportCookies(cookieFile);
-  if (NS_FAILED(rv)) return rv;
+  oldCookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
+  rv = ImportCookies(oldCookieFile);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND)
+      return NS_OK;
+
+    return rv;
+  }
 
   // we're done importing - delete the old cookie file
-  cookieFile->Remove(PR_FALSE);
+  oldCookieFile->Remove(PR_FALSE);
   return NS_OK;
 }
 
@@ -990,7 +1004,7 @@ nsCookieService::Read()
 
   nsCAutoString name, value, host, path;
   PRBool hasResult;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt64 creationID = stmt->AsInt64(0);
     
     stmt->GetUTF8String(1, name);
@@ -1028,7 +1042,7 @@ nsCookieService::Read()
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read(): %ld cookies read", mCookieCount));
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

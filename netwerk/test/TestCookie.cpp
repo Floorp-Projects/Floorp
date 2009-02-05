@@ -762,9 +762,9 @@ main(PRInt32 argc, char *argv[])
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
 
       // test that cookies are evicted by order of lastAccessed time, if the limit on total cookies
-      // (1000) is reached
+      // (3000) is reached
       nsCAutoString host;
-      for (PRInt32 i = 0; i < 1010; ++i) {
+      for (PRInt32 i = 0; i < 3010; ++i) {
         host = NS_LITERAL_CSTRING("http://eviction.");
         host.AppendInt(i);
         host += NS_LITERAL_CSTRING(".tests/");
@@ -793,7 +793,7 @@ main(PRInt32 argc, char *argv[])
         PRInt32 numInts = PR_sscanf(domain.get(), "eviction.%ld.tests", &hostNumber);
         if (numInts != 1 || hostNumber < 10) break;
       }
-      rv[2] = i == 1000;
+      rv[2] = i == 3000;
 
       allTestsPassed = PrintResult(rv, 3) && allTestsPassed;
 

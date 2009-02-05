@@ -448,6 +448,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 362594-2b.html 362594-2-standards-ref.html
 == 362594-2c.html 362594-2-standards-ref.html
 == 362901-1.html 362901-1-ref.html
+== 363247-1.html 363247-1-ref.html
 == 363329-1.html 363329-1-ref.html
 == 363329-2.html 363329-2-ref.html
 == 363370-1.html 363370-1-ref.html
@@ -1035,3 +1036,12 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 474336-1.xul 474336-1-ref.xul
 == 474417-1.html 474417-1-ref.html
 == 474472-1.html 474472-1-ref.html
+== 476063-1.html 476063-1-ref.html
+== 476063-2.html 476063-2-ref.html
+!= 476063-3.html 476063-3-ref.html
+== 476063-4.xhtml 476063-4-ref.xhtml
+== 476598-1a.html 476598-1-ref.html
+== 476598-1a.html 476598-1-ref2.html
+== 476598-1b.html 476598-1-ref.html
+== 476598-1b.html 476598-1-ref2.html
+!= 476598-1-ref.html about:blank

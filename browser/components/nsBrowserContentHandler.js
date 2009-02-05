@@ -478,6 +478,18 @@ var nsBrowserContentHandler = {
       cmdLine.preventDefault = true;
     }
 
+    var fileParam = cmdLine.handleFlagWithParam("file", false);
+    if (fileParam) {
+      var file = cmdLine.resolveFile(fileParam);
+      var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                          .getService(Components.interfaces.nsIIOService);
+      var uri = ios.newFileURI(file);
+      openWindow(null, this.chromeURL, "_blank", 
+                 "chrome,dialog=no,all" + this.getFeatures(cmdLine),
+                 uri.spec);
+      cmdLine.preventDefault = true;
+    }
+
 #ifdef XP_WIN
     // Handle "? searchterm" for Windows Vista start menu integration
     for (var i = cmdLine.length - 1; i >= 0; --i) {

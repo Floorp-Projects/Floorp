@@ -123,11 +123,6 @@ nsPrintData::~nsPrintData()
 
   delete mPrintObject;
 
-  if (mPrintDocList != nsnull) {
-    mPrintDocList->Clear();
-    delete mPrintDocList;
-  }
-
   if (mBrandName) {
     NS_Free(mBrandName);
   }

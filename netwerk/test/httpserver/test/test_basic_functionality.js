@@ -105,7 +105,10 @@ function start_functionHandler(ch, cx)
   do_check_eq(ch.getResponseHeader("foopy"), "quux-baz");
   do_check_eq(ch.responseStatusText, "Page Not Found");
 
+  var reqMin = {}, reqMaj = {}, respMin = {}, respMaj = {};
+  ch.getRequestVersion(reqMaj, reqMin);
   ch.getResponseVersion(respMaj, respMin);
+  do_check_true(reqMaj.value == 1 && reqMin.value == 1);
   do_check_true(respMaj.value == 1 && respMin.value == 1);
 }
 

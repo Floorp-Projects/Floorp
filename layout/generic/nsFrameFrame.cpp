@@ -257,8 +257,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   nsresult rv =  nsLeafFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv))
     return rv;
-    
-  nsPresContext *aPresContext = PresContext();
 
   // We are going to create an inner view.  If we need a view for the
   // OuterFrame but we wait for the normal view creation path in

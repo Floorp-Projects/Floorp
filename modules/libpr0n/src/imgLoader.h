@@ -61,7 +61,6 @@ class imgCacheEntry
 {
 public:
   imgCacheEntry(imgRequest *request, PRBool mustValidateIfExpired = PR_FALSE);
-  ~imgCacheEntry();
 
   nsrefcnt AddRef()
   {
@@ -144,11 +143,6 @@ public:
     return &mExpirationState;
   }
 
-  PRBool HasNoProxies() const
-  {
-    return mHasNoProxies;
-  }
-
 private: // methods
   friend class imgLoader;
   friend class imgCacheQueue;
@@ -158,24 +152,18 @@ private: // methods
   {
     mEvicted = evict;
   }
-  void SetHasNoProxies(PRBool hasNoProxies);
-
-  // Private, unimplemented copy constructor.
-  imgCacheEntry(const imgCacheEntry &);
 
 private: // data
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
   nsRefPtr<imgRequest> mRequest;
-  nsCOMPtr<nsIURI> mKeyURI;
   PRUint32 mDataSize;
   PRInt32 mTouchedTime;
   PRInt32 mExpiryTime;
   nsExpirationState mExpirationState;
-  PRPackedBool mMustValidateIfExpired : 1;
-  PRPackedBool mEvicted : 1;
-  PRPackedBool mHasNoProxies : 1;
+  PRBool mMustValidateIfExpired;
+  PRBool mEvicted;
 };
 
 #include <vector>
@@ -261,20 +249,6 @@ public:
   }
 
   static void VerifyCacheSizes();
-
-  // The image loader maintains a hash table of all imgCacheEntries. However,
-  // only some of them will be evicted from the cache: those who have no
-  // imgRequestProxies watching their imgRequests. 
-  //
-  // Once an imgRequest has no imgRequestProxies, it should notify us by
-  // calling HasNoObservers(), and null out its cache entry pointer.
-  // 
-  // Upon having a proxy start observing again, it should notify us by calling
-  // HasObservers(). The request's cache entry will be re-set before this
-  // happens, by calling imgRequest::SetCacheEntry() when an entry with no
-  // observers is re-requested.
-  static PRBool SetHasNoProxies(nsIURI *key, imgCacheEntry *entry);
-  static PRBool SetHasProxies(nsIURI *key);
 
 private: // methods
 

@@ -383,15 +383,13 @@ nsSVGPatternFrame::GetPatternTransform()
   return matrix;
 }
 
-NS_IMETHODIMP
-nsSVGPatternFrame::GetViewBox(nsIDOMSVGRect **aViewBox)
+const nsSVGViewBox &
+nsSVGPatternFrame::GetViewBox()
 {
   nsSVGPatternElement *patternElement =
     GetPatternWithAttr(nsGkAtoms::viewBox, mContent);
 
-  nsCOMPtr<nsIDOMSVGAnimatedRect> viewBox;
-  patternElement->GetViewBox(getter_AddRefs(viewBox));
-  return viewBox->GetAnimVal(aViewBox);
+  return patternElement->mViewBox;
 }
 
 const nsSVGPreserveAspectRatio &
@@ -403,28 +401,28 @@ nsSVGPatternFrame::GetPreserveAspectRatio()
   return patternElement->mPreserveAspectRatio;
 }
 
-nsSVGLength2 *
+const nsSVGLength2 *
 nsSVGPatternFrame::GetX()
 {
   nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::x, mContent);
   return &pattern->mLengthAttributes[nsSVGPatternElement::X];
 }
 
-nsSVGLength2 *
+const nsSVGLength2 *
 nsSVGPatternFrame::GetY()
 {
   nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::y, mContent);
   return &pattern->mLengthAttributes[nsSVGPatternElement::Y];
 }
 
-nsSVGLength2 *
+const nsSVGLength2 *
 nsSVGPatternFrame::GetWidth()
 {
   nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::width, mContent);
   return &pattern->mLengthAttributes[nsSVGPatternElement::WIDTH];
 }
 
-nsSVGLength2 *
+const nsSVGLength2 *
 nsSVGPatternFrame::GetHeight()
 {
   nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::height, mContent);
@@ -514,7 +512,7 @@ nsSVGPatternFrame::GetPatternRect(nsIDOMSVGRect **patternRect,
   float x,y,width,height;
 
   // Get the pattern x,y,width, and height
-  nsSVGLength2 *tmpX, *tmpY, *tmpHeight, *tmpWidth;
+  const nsSVGLength2 *tmpX, *tmpY, *tmpHeight, *tmpWidth;
   tmpX = GetX();
   tmpY = GetY();
   tmpHeight = GetHeight();
@@ -537,7 +535,7 @@ nsSVGPatternFrame::GetPatternRect(nsIDOMSVGRect **patternRect,
 }
 
 static float
-GetLengthValue(nsSVGLength2 *aLength)
+GetLengthValue(const nsSVGLength2 *aLength)
 {
   return aLength->GetAnimValue(static_cast<nsSVGSVGElement*>(nsnull));
 }
@@ -565,17 +563,9 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
     NS_NewSVGMatrix(getter_AddRefs(tCTM), scale, 0, 0, scale, 0, 0);
   }
 
-  // Do we have a viewbox?
-  nsCOMPtr<nsIDOMSVGRect> viewRect;
-  GetViewBox(getter_AddRefs(viewRect));
+  const nsSVGViewBoxRect viewBox = GetViewBox().GetAnimValue();
 
-  // See if we really have something
-  float viewBoxX, viewBoxY, viewBoxHeight, viewBoxWidth;
-  viewRect->GetX(&viewBoxX);
-  viewRect->GetY(&viewBoxY);
-  viewRect->GetHeight(&viewBoxHeight);
-  viewRect->GetWidth(&viewBoxWidth);
-  if (viewBoxHeight > 0.0f && viewBoxWidth > 0.0f) {
+  if (viewBox.height > 0.0f && viewBox.width > 0.0f) {
 
     float viewportWidth = GetLengthValue(GetWidth());
     float viewportHeight = GetLengthValue(GetHeight());
@@ -583,8 +573,8 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
     float refY = GetLengthValue(GetY());
 
     tempTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
-                                             viewBoxX + refX, viewBoxY + refY,
-                                             viewBoxWidth, viewBoxHeight,
+                                             viewBox.x + refX, viewBox.y + refY,
+                                             viewBox.width, viewBox.height,
                                              GetPreserveAspectRatio(),
                                              PR_TRUE);
 

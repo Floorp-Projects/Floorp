@@ -49,8 +49,6 @@ _TEST_FILES = 	test_bug399925.html \
                 bug468160.sjs \
                 test_bug468160.html \
                 red.png \
-                test_bug466586.html \
-                big.png \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

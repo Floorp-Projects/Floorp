@@ -327,10 +327,20 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         return JS_FALSE;
     }
 
-    // Maintain the "any Array prototype has indexed properties hazard" flag.
+    /*
+     * Maintain the "any Array prototype has indexed properties hazard" flag by
+     * conservatively setting it. We simply don't know what pobj has in the way
+     * of indexed properties, either directly or along its prototype chain, and
+     * we won't expend effort here to find out. We do know that if obj is not
+     * an array or a prototype (delegate), then we're ok. And, of course, pobj
+     * must be non-null.
+     *
+     * This pessimistic approach could be improved, but setting __proto__ is
+     * quite rare and arguably deserving of deoptimization.
+     */
     if (slot == JSSLOT_PROTO &&
-        OBJ_IS_ARRAY(cx, pobj) &&
-        pobj->fslots[JSSLOT_ARRAY_LENGTH] != 0) {
+        pobj &&
+        (OBJ_IS_ARRAY(cx, obj) || OBJ_IS_DELEGATE(cx, obj))) {
         rt->anyArrayProtoHasElement = JS_TRUE;
     }
     return JS_TRUE;
@@ -1682,10 +1692,12 @@ Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
     jsid id;
     jsval v;
 
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id))
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
+        !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v)) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
-    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v))
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    }
+
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     return JSVAL_TO_BOOLEAN(v);
 }
@@ -1725,8 +1737,12 @@ Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
     jsval v;
-    if (!js_PropertyIsEnumerable(cx, obj, id, &v))
+
+    if (!js_PropertyIsEnumerable(cx, obj, id, &v)) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    }
+
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     return JSVAL_TO_BOOLEAN(v);
 }
@@ -1932,11 +1948,11 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
 JS_DEFINE_TRCINFO_1(obj_valueOf,
-    (3, (static, JSVAL, Object_p_valueOf, CONTEXT, THIS, STRING,                  0, 0)))
+    (3, (static, JSVAL,      Object_p_valueOf,              CONTEXT, THIS, STRING,  0, 0)))
 JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
-    (3, (static, BOOL_FAIL, Object_p_hasOwnProperty, CONTEXT, THIS, STRING,       0, 0)))
+    (3, (static, BOOL_FAIL, Object_p_hasOwnProperty,        CONTEXT, THIS, STRING,  0, 0)))
 JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
-    (3, (static, BOOL_FAIL, Object_p_propertyIsEnumerable, CONTEXT, THIS, STRING, 0, 0)))
+    (3, (static, BOOL_FAIL, Object_p_propertyIsEnumerable,  CONTEXT, THIS, STRING,  0, 0)))
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -3389,6 +3405,9 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
  * nominal initial value of a slot-full property, while GC safety wants that
  * value to be stored before the call-out through the hook.  Optimize to do
  * both while saving cycles for classes that stub their addProperty hook.
+ *
+ * As in js_SetProtoOrParent (see above), we maintain the "any Array prototype
+ * has indexed properties hazard" flag by conservatively setting it.
  */
 #define ADD_PROPERTY_HELPER(cx,clasp,obj,scope,sprop,vp,cleanup)              \
     JS_BEGIN_MACRO                                                            \
@@ -3402,6 +3421,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                     LOCKED_OBJ_WRITE_BARRIER(cx, obj, (sprop)->slot, *(vp));  \
             }                                                                 \
         }                                                                     \
+        if (STOBJ_IS_DELEGATE(obj) && JSID_IS_INT(sprop->id))                 \
+            cx->runtime->anyArrayProtoHasElement = JS_TRUE;                   \
     JS_END_MACRO
 
 JSBool
@@ -3896,6 +3917,29 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     return JS_TRUE;
 }
 
+/*
+ * Find out where we currently are in the code. If no hint was supplied,
+ * de-optimize and consult the stack frame.
+ */
+static jsbytecode*
+js_GetCurrentBytecodePC(JSContext* cx)
+{
+    jsbytecode *pc = cx->pcHint;
+    if (!pc || !JS_ON_TRACE(cx)) {
+        JSStackFrame* fp = js_GetTopStackFrame(cx);
+        if (fp && fp->regs) {
+            pc = fp->regs->pc;
+            // FIXME: Set pc to imacpc when recording JSOP_CALL inside the 
+            //        JSOP_GETELEM imacro (bug 476559).
+            if (*pc == JSOP_CALL && fp->imacpc && *fp->imacpc == JSOP_GETELEM)
+                pc = fp->imacpc;
+        } else {
+            pc = NULL;
+        }
+    }
+    return pc;
+}
+
 JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp)
@@ -3904,7 +3948,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     int protoIndex;
     JSObject *obj2;
     JSProperty *prop;
-    JSStackFrame *fp;
     JSScopeProperty *sprop;
 
     JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
@@ -3918,8 +3961,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     if (protoIndex < 0)
         return JS_FALSE;
     if (!prop) {
-        jsbytecode *pc;
-
         *vp = JSVAL_VOID;
 
         if (!OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, ID_TO_VALUE(id), vp))
@@ -3934,11 +3975,11 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
          * Give a strict warning if foo.bar is evaluated by a script for an
          * object foo with no property named 'bar'.
          */
-        if (JSVAL_IS_VOID(*vp) && (fp = js_GetTopStackFrame(cx)) && fp->regs) {
+        jsbytecode *pc;
+        if (JSVAL_IS_VOID(*vp) && ((pc = js_GetCurrentBytecodePC(cx)) != NULL)) {
             JSOp op;
             uintN flags;
 
-            pc = fp->regs->pc;
             op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
@@ -3956,7 +3997,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                     return JS_TRUE;
 
                 /* Kludge to allow (typeof foo == "undefined") tests. */
-                JS_ASSERT(fp->script);
                 pc += js_CodeSpec[op].length;
                 if (Detecting(cx, pc))
                     return JS_TRUE;

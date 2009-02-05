@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsHashtable.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 
 #include "nsIComponentManager.h"
@@ -81,9 +80,9 @@ static PRInt32         gTableRefCount = 0;
 static PRInt32         gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nsnull;
 static nsHashtable*    gOperatorTable = nsnull;
-static nsVoidArray*    gStretchyOperatorArray = nsnull;
-static nsTArray<nsString>*  gInvariantCharArray = nsnull;
 static PRBool          gInitialized   = PR_FALSE;
+static nsTArray<OperatorData*>* gStretchyOperatorArray = nsnull;
+static nsTArray<nsString>*      gInvariantCharArray    = nsnull;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
 static const PRUnichar kDashCh  = PRUnichar('#');
@@ -378,7 +377,7 @@ InitGlobals()
   gInitialized = PR_TRUE;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   gInvariantCharArray = new nsTArray<nsString>();
-  gStretchyOperatorArray = new nsVoidArray();
+  gStretchyOperatorArray = new nsTArray<OperatorData*>();
   if (gInvariantCharArray && gStretchyOperatorArray) {
     gOperatorTable = new nsHashtable();
     if (gOperatorTable) {
@@ -566,7 +565,7 @@ nsMathMLOperators::CountStretchyOperator()
   if (!gInitialized) {
     InitGlobals();
   }
-  return (gStretchyOperatorArray) ? gStretchyOperatorArray->Count() : 0;
+  return (gStretchyOperatorArray) ? gStretchyOperatorArray->Length() : 0;
 }
 
 PRInt32
@@ -576,8 +575,8 @@ nsMathMLOperators::FindStretchyOperator(PRUnichar aOperator)
     InitGlobals();
   }
   if (gStretchyOperatorArray) {
-    for (PRInt32 k = 0; k < gStretchyOperatorArray->Count(); k++) {
-      OperatorData* data = (OperatorData*)gStretchyOperatorArray->ElementAt(k);
+    for (PRUint32 k = 0; k < gStretchyOperatorArray->Length(); k++) {
+      OperatorData* data = gStretchyOperatorArray->ElementAt(k);
       if (data && (aOperator == data->mStr[0])) {
         return k;
       }
@@ -591,8 +590,9 @@ nsMathMLOperators::GetStretchyDirectionAt(PRInt32 aIndex)
 {
   NS_ASSERTION(gStretchyOperatorArray, "invalid call");
   if (gStretchyOperatorArray) {
-    NS_ASSERTION(aIndex < gStretchyOperatorArray->Count(), "invalid call");
-    OperatorData* data = (OperatorData*)gStretchyOperatorArray->ElementAt(aIndex);
+    NS_ASSERTION(aIndex < PRInt32(gStretchyOperatorArray->Length()),
+                 "invalid call");
+    OperatorData* data = gStretchyOperatorArray->ElementAt(aIndex);
     if (data) {
       if (NS_MATHML_OPERATOR_IS_STRETCHY_VERT(data->mFlags))
         return NS_STRETCH_DIRECTION_VERTICAL;
@@ -609,8 +609,9 @@ nsMathMLOperators::DisableStretchyOperatorAt(PRInt32 aIndex)
 {
   NS_ASSERTION(gStretchyOperatorArray, "invalid call");
   if (gStretchyOperatorArray) {
-    NS_ASSERTION(aIndex < gStretchyOperatorArray->Count(), "invalid call");
-    gStretchyOperatorArray->ReplaceElementAt(nsnull, aIndex);
+    NS_ASSERTION(aIndex < PRInt32(gStretchyOperatorArray->Length()),
+                 "invalid call");
+    (*gStretchyOperatorArray)[aIndex] = nsnull;
   }
 }
 

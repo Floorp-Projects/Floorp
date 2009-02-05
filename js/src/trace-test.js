@@ -13,6 +13,12 @@ const RECORDLOOP = HOTLOOP;
 // The loop count at which we run the trace
 const RUNLOOP = HOTLOOP + 1;
 
+var gDoMandelbrotTest = true;
+if ("gSkipSlowTests" in this && gSkipSlowTests) {
+    print("** Skipping slow tests");
+    gDoMandelbrotTest = false;
+}
+
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
@@ -2094,6 +2100,84 @@ function testArrayPushPop() {
 testArrayPushPop.expected = "55,45";
 test(testArrayPushPop);
 
+function testSlowArrayPop() {
+    var a = [];
+    for (var i = 0; i < RUNLOOP; i++)
+        a[i] = [0];
+    a[RUNLOOP-1].__defineGetter__("0", function () { return 'xyzzy'; });
+
+    var last;
+    for (var i = 0; i < RUNLOOP; i++)
+        last = a[i].pop();  // reenters interpreter in getter
+    return last;
+}
+testSlowArrayPop.expected = 'xyzzy';
+test(testSlowArrayPop);
+
+// Same thing but it needs to reconstruct multiple stack frames (so,
+// multiple functions called inside the loop)
+function testSlowArrayPopMultiFrame() {    
+    var a = [];
+    for (var i = 0; i < RUNLOOP; i++)
+        a[i] = [0];
+    a[RUNLOOP-1].__defineGetter__("0", function () { return 23; });
+
+    function child(a, i) {
+        return a[i].pop();  // reenters interpreter in getter
+    }
+    function parent(a, i) {
+        return child(a, i);
+    }
+    function gramps(a, i) { 
+        return parent(a, i);
+    }
+
+    var last;
+    for (var i = 0; i < RUNLOOP; i++)
+        last = gramps(a, i);
+    return last;
+}
+testSlowArrayPopMultiFrame.expected = 23;
+test(testSlowArrayPopMultiFrame);
+
+// Same thing but nested trees, each reconstructing one or more stack frames 
+// (so, several functions with loops, such that the loops end up being
+// nested though they are not lexically nested)
+
+function testSlowArrayPopNestedTrees() {    
+    var a = [];
+    for (var i = 0; i < RUNLOOP; i++)
+        a[i] = [0];
+    a[RUNLOOP-1].__defineGetter__("0", function () { return 3.14159 });
+
+    function child(a, i, j, k) {
+        var last = 2.71828;
+        for (var l = 0; l < RUNLOOP; l++)
+            if (i == RUNLOOP-1 && j == RUNLOOP-1 && k == RUNLOOP-1)
+                last = a[l].pop();  // reenters interpreter in getter
+        return last;
+    }
+    function parent(a, i, j) {
+        var last;
+        for (var k = 0; k < RUNLOOP; k++)
+            last = child(a, i, j, k);
+        return last;
+    }
+    function gramps(a, i) { 
+        var last;
+        for (var j = 0; j < RUNLOOP; j++)
+            last = parent(a, i, j);
+        return last;
+    }
+
+    var last;
+    for (var i = 0; i < RUNLOOP; i++)
+        last = gramps(a, i);
+    return last;
+}
+testSlowArrayPopNestedTrees.expected = 3.14159;
+test(testSlowArrayPopNestedTrees);
+
 function testResumeOp() {
     var a = [1,"2",3,"4",5,"6",7,"8",9,"10",11,"12",13,"14",15,"16"];
     var x = "";
@@ -4144,7 +4228,6 @@ function testInterpreterReentry5() {
 }
 test(testInterpreterReentry5);
 
-/* // These tests should pass but currently crash, pending bug 462027.
 function testInterpreterReentry6() {
     var obj = {a:1, b:1, c:1, d:1, set e(x) { this._e = x; }};
     for (var p in obj)
@@ -4166,7 +4249,13 @@ function testInterpreterReentry7() {
 }
 testInterpreterReentry7.expected = "grue bleen";
 test(testInterpreterReentry7);
-*/
+
+// Bug 462027 comment 54.
+function testInterpreterReentery8() {
+    var e = <x><y/></x>;
+    for (var j = 0; j < 4; ++j) { +[e]; }
+}
+test(testInterpreterReentery8);
 
 /*****************************************************************************
  *                                                                           *
@@ -4201,6 +4290,7 @@ load("math-trace-tests.js");
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
 // the jit.
+if (gDoMandelbrotTest) {
 load("mandelbrot-results.js");
 //function testMandelbrotAll() {
   // Configuration options that affect which codepaths we follow.
@@ -4444,6 +4534,7 @@ load("mandelbrot-results.js");
   test(createMandelSet);
 //}
 //testMandelbrotAll();
+} /* if (gDoMandelbrotTest) */
 // END MANDELBROT STUFF
 
 /*****************************************************************************

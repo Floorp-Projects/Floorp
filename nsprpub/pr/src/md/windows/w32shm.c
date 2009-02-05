@@ -119,13 +119,32 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
             sa.bInheritHandle = FALSE;
             lpSA = &sa;
         }
-        shm->handle = CreateFileMapping(
+#ifdef WINCE
+        {
+            /*
+             * This is assuming that the name will never be larger than
+             * MAX_PATH.  Should we dynamically allocate?
+             */
+            PRUnichar wideIpcName[MAX_PATH];
+            MultiByteToWideChar(CP_ACP, 0, shm->ipcname, -1,
+                                wideIpcName, MAX_PATH);
+            shm->handle = CreateFileMappingW(
+                (HANDLE)-1 ,
+                lpSA,
+                flProtect,
+                dwHi,
+                dwLo,
+                wideIpcName);
+        }
+#else
+        shm->handle = CreateFileMappingA(
             (HANDLE)-1 ,
             lpSA,
             flProtect,
             dwHi,
             dwLo,
             shm->ipcname);
+#endif
         if (lpSA != NULL) {
             _PR_NT_FreeSecurityDescriptorACL(pSD, pACL);
         }
@@ -156,7 +175,12 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
             }
         }
     } else {
+#ifdef WINCE
+        PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
+        shm->handle = NULL;  /* OpenFileMapping not supported */
+#else
         shm->handle = OpenFileMapping( FILE_MAP_WRITE, TRUE, shm->ipcname );
+#endif
         if ( NULL == shm->handle ) {
             _PR_MD_MAP_DEFAULT_ERROR( GetLastError());
             PR_LOG(_pr_shm_lm, PR_LOG_DEBUG, 

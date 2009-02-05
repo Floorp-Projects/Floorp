@@ -79,6 +79,7 @@
 #include "gfxMatrix.h"
 #include "gfxTypes.h"
 #include "gfxUserFontSet.h"
+#include "nsTArray.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -1586,7 +1587,7 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
   }
   nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
 
-  nsAutoVoidArray frame1Ancestors;
+  nsAutoTArray<nsIFrame*, 8> frame1Ancestors;
   nsIFrame* f1;
   for (f1 = aFrame1; f1 && f1 != aKnownCommonAncestorHint;
        f1 = GetParentOrPlaceholderFor(frameManager, f1)) {
@@ -1598,7 +1599,7 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
     aKnownCommonAncestorHint = nsnull;
   }
 
-  nsAutoVoidArray frame2Ancestors;
+  nsAutoTArray<nsIFrame*, 8> frame2Ancestors;
   nsIFrame* f2;
   for (f2 = aFrame2; f2 && f2 != aKnownCommonAncestorHint;
        f2 = GetParentOrPlaceholderFor(frameManager, f2)) {
@@ -1615,10 +1616,10 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
   // the root frame. We need to walk from the end (i.e., the top of the
   // frame (sub)tree) down to aFrame1/aFrame2 looking for the first difference.
   nsIFrame* lastCommonFrame = aKnownCommonAncestorHint;
-  PRInt32 last1 = frame1Ancestors.Count() - 1;
-  PRInt32 last2 = frame2Ancestors.Count() - 1;
+  PRInt32 last1 = frame1Ancestors.Length() - 1;
+  PRInt32 last2 = frame2Ancestors.Length() - 1;
   while (last1 >= 0 && last2 >= 0) {
-    nsIFrame* frame1 = static_cast<nsIFrame*>(frame1Ancestors.ElementAt(last1));
+    nsIFrame* frame1 = frame1Ancestors.ElementAt(last1);
     if (frame1 != frame2Ancestors.ElementAt(last2))
       break;
     lastCommonFrame = frame1;
@@ -3055,6 +3056,15 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
 
   if (aFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
+
+  // We need an uninitialized window to be treated as opaque because
+  // doing otherwise breaks window display effects on some platforms,
+  // specifically Vista. (bug 450322)
+  if (aFrame->GetType() == nsGkAtoms::viewportFrame &&
+      !aFrame->GetFirstChild(nsnull)) {
+    return eTransparencyOpaque;
+  }
+
   PRBool isCanvas;
   const nsStyleBackground* bg;
   if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
