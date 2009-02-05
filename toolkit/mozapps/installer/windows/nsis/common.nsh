@@ -2181,15 +2181,8 @@
 
       ClearErrors
 
-      StrCpy $R8 "$R9"
-      StrCpy $R9 ""
-      GetFullPathName $R8 "$R8"
+      GetFullPathName $R8 "$R9"
       IfErrors end_GetLongPath +1 ; If the path doesn't exist return an empty string.
-
-      ; Remove trailing \'s from the path.
-      StrCpy $R6 "$R8" "" -1
-      StrCmp $R6 "\" +1 +2
-      StrCpy $R9 "$R8" -1
 
       System::Call 'kernel32::GetLongPathNameW(w r18, w .r17, i 1024)i .r16'
       StrCmp "$R7" "" +4 +1 ; Empty string when GetLongPathNameW is not present.
@@ -4619,6 +4612,7 @@
     !insertmacro GetLongPath
     !insertmacro GetOptions
     !insertmacro GetParameters
+    !insertmacro GetParent
     !insertmacro UnloadUAC
     !insertmacro UpdateUninstallLog
 
@@ -4639,7 +4633,7 @@
       Reboot
       Quit ; Nothing initialized so no need to call OnEndCommon
 
-      GetFullPathName $INSTDIR "$EXEDIR\.."
+      ${GetParent} "$EXEDIR" $INSTDIR
       ${GetLongPath} "$INSTDIR" $INSTDIR
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
