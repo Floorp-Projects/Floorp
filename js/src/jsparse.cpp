@@ -1167,8 +1167,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     return NULL;
                 }
             }
-            if (!AT_TOP_LEVEL(tc) && prevop == JSOP_DEFVAR)
-                tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
         } else {
             ale = js_IndexAtom(cx, funAtom, &tc->decls);
             if (!ale)
@@ -1645,8 +1643,6 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                 return JS_FALSE;
             }
         }
-        if (op == JSOP_DEFVAR && prevop == JSOP_DEFFUN)
-            tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
     }
     if (!ale) {
         ale = js_IndexAtom(cx, atom, &tc->decls);
