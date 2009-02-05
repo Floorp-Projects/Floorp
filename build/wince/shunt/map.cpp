@@ -36,9 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
- #include "stdlib.h"
- #include "Windows.h"
+#include "stdlib.h"
+#include "Windows.h"
  
 #include "mozce_shunt.h"
 #include "time_conversions.h"
@@ -65,14 +64,11 @@ static mapping initial_map[] = {
     {"NS_TIMELINE_LOG_FILE","\\bin\\timeline.log",initial_map + (init_i++)},
     {"NS_TIMELINE_ENABLE", "1",initial_map + (init_i++)},
 #endif
-    {"tmp", "/Temp",initial_map + (init_i++)},
-    {"GRE_HOME",".",initial_map + (init_i++)},
     {"NSS_DEFAULT_DB_TYPE", "sql",initial_map + (init_i++)},
     {"NSPR_FD_CACHE_SIZE_LOW", "10",initial_map + (init_i++)},              
     {"NSPR_FD_CACHE_SIZE_HIGH", "30",initial_map + (init_i++)},
-    {"XRE_PROFILE_PATH", "\\Application Data\\Mozilla\\Profiles",initial_map + (init_i++)},
-    {"XRE_PROFILE_LOCAL_PATH","./profile",initial_map + (init_i++)},
-    {"XRE_PROFILE_NAME","default",0}
+    {"XRE_PROFILE_NAME","default",initial_map + (init_i++)},
+    {"tmp", "/Temp", 0 }
 };
 
 static mapping* head = initial_map;
@@ -146,22 +142,21 @@ MOZCE_SHUNT_API char GetEnvironmentVariableW(const unsigned short * lpName, unsi
                                256,
                                NULL,
                                NULL);
-  if(rv < 0)
-    return rv;
+  if(rv <= 0)
+    return 0;
   
   char* val = map_get(key);
   
   if(val) 
     {
-      MultiByteToWideChar(CP_ACP,
-                          0,
-                          val,
-                          strlen(val)+1,
-                          lpBuffer,
-                          nSize );
-      return ERROR_SUCCESS;
+      return MultiByteToWideChar(CP_ACP,
+                                 0,
+                                 val,
+                                 strlen(val)+1,
+                                 lpBuffer,
+                                  nSize);
     }
-  return -1;
+  return 0;
 }
 
 MOZCE_SHUNT_API char SetEnvironmentVariableW( const unsigned short * name, const unsigned short * value )
@@ -584,8 +579,37 @@ MOZCE_SHUNT_API struct lconv * localeconv(void)
 {
   return &s_locale_conv;
 }
- 
 
+MOZCE_SHUNT_API
+unsigned short* mozce_GetEnvironmentCL()
+{
+  mapping* cur = head;
+  int len = 0;
+  while(cur != NULL){
+    len+=strlen(cur->key);
+	len+=strlen(cur->value);
+	len+=15;
+    cur = cur->next;
+  }	
+
+  unsigned short* env = (unsigned short*)malloc(sizeof(wchar_t)*(len +1));
+  cur = head;
+  int pos = 0;
+  while(cur != NULL){
+	wcscpy(env+pos, L" --environ:\"");
+	pos+=12;
+    pos+=MultiByteToWideChar( CP_ACP, 0, cur->key, -1, env+pos, len-pos );
+	env[pos-1] = '=';
+	pos+=MultiByteToWideChar( CP_ACP, 0, cur->value, -1, env+pos, len-pos );
+	env[pos-1]='\"';
+
+    cur = cur->next;
+  }	
+
+  env[pos] = '\0';
+  return env;
+  
+}
 
 BOOL WINAPI DllMain(HANDLE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
