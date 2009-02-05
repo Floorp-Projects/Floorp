@@ -318,6 +318,11 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
             continue; //  Do not need to check
 
           if (thisEvent->mDOMNode == tailEvent->mDOMNode) {
+            if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
+              CoalesceReorderEventsFromSameSource(thisEvent, tailEvent);
+              continue;
+            }
+
             // Dupe
             thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
             continue;
@@ -325,6 +330,11 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
           if (nsCoreUtils::IsAncestorOf(tailEvent->mDOMNode,
                                         thisEvent->mDOMNode)) {
             // thisDOMNode is a descendant of tailDOMNode
+            if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
+              CoalesceReorderEventsFromSameTree(tailEvent, thisEvent);
+              continue;
+            }
+
             // Do not emit thisEvent, also apply this result to sibling
             // nodes of thisDOMNode.
             thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
@@ -335,6 +345,11 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
           if (nsCoreUtils::IsAncestorOf(thisEvent->mDOMNode,
                                         tailEvent->mDOMNode)) {
             // tailDOMNode is a descendant of thisDOMNode
+            if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
+              CoalesceReorderEventsFromSameTree(thisEvent, tailEvent);
+              continue;
+            }
+
             // Do not emit tailEvent, also apply this result to sibling
             // nodes of tailDOMNode.
             tailEvent->mEventRule = nsAccEvent::eDoNotEmit;
@@ -387,7 +402,92 @@ nsAccEvent::ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
   }
 }
 
+/* static */
+void
+nsAccEvent::CoalesceReorderEventsFromSameSource(nsAccEvent *aAccEvent1,
+                                                nsAccEvent *aAccEvent2)
+{
+  // Do not emit event2 if event1 is unconditional.
+  nsAccReorderEvent* reorderEvent1 = nsnull;
+  CallQueryInterface(aAccEvent1, &reorderEvent1);
+  if (reorderEvent1->IsUnconditionalEvent()) {
+    aAccEvent2->mEventRule = nsAccEvent::eDoNotEmit;
+    return;
+  }
+
+  // Do not emit event1 if event2 is unconditional.
+  nsAccReorderEvent* reorderEvent2 = nsnull;
+  CallQueryInterface(aAccEvent2, &reorderEvent2);
+  if (reorderEvent2->IsUnconditionalEvent()) {
+    aAccEvent1->mEventRule = nsAccEvent::eDoNotEmit;
+    return;
+  }
+
+  // Do not emit event2 if event1 is valid, otherwise do not emit event1.
+  if (reorderEvent1->HasAccessibleInReasonSubtree())
+    aAccEvent2->mEventRule = nsAccEvent::eDoNotEmit;
+  else
+    aAccEvent1->mEventRule = nsAccEvent::eDoNotEmit;
+}
+
+void
+nsAccEvent::CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
+                                              nsAccEvent *aDescendantAccEvent)
+{
+  // Do not emit descendant event if this event is unconditional.
+  nsAccReorderEvent* reorderEvent = nsnull;
+  CallQueryInterface(aAccEvent, &reorderEvent);
+  if (reorderEvent->IsUnconditionalEvent()) {
+    aDescendantAccEvent->mEventRule = nsAccEvent::eDoNotEmit;
+    return;
+  }
+
+  // Do not emit descendant event if this event is valid otherwise do not emit
+  // this event.
+  if (reorderEvent->HasAccessibleInReasonSubtree())
+    aDescendantAccEvent->mEventRule = nsAccEvent::eDoNotEmit;
+  else
+    aAccEvent->mEventRule = nsAccEvent::eDoNotEmit;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccReorderEvent
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccReorderEvent, nsAccEvent,
+                             nsAccReorderEvent)
+
+nsAccReorderEvent::nsAccReorderEvent(nsIAccessible *aAccTarget,
+                                     PRBool aIsAsynch,
+                                     PRBool aIsUnconditional,
+                                     nsIDOMNode *aReasonNode) :
+  nsAccEvent(::nsIAccessibleEvent::EVENT_REORDER, aAccTarget,
+             aIsAsynch, nsAccEvent::eCoalesceFromSameSubtree),
+  mUnconditionalEvent(aIsUnconditional), mReasonNode(aReasonNode)
+{
+}
+
+PRBool
+nsAccReorderEvent::IsUnconditionalEvent()
+{
+  return mUnconditionalEvent;
+}
+
+PRBool
+nsAccReorderEvent::HasAccessibleInReasonSubtree()
+{
+  if (!mReasonNode)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  nsAccessNode::GetAccService()->GetAccessibleFor(mReasonNode,
+                                                  getter_AddRefs(accessible));
+
+  return accessible || nsAccUtils::HasAccessibleChildren(mReasonNode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsAccStateChangeEvent
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,
                              nsIAccessibleStateChangeEvent)
 
