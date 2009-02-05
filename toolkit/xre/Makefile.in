@@ -120,11 +120,7 @@ DEFINES += -DMOZ_UPDATER
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifdef WINCE
-CPPSRCS += nsNativeAppSupportDefault.cpp
-else
 CPPSRCS += nsNativeAppSupportWin.cpp
-endif
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
