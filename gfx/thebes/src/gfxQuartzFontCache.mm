@@ -133,11 +133,11 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSUFontID aFontID,
                                PRUint16 aWeight, PRUint16 aStretch, PRUint32 aItalicStyle,
                                gfxUserFontData *aUserFontData)
+    : gfxFontEntry(aPostscriptName), mFamily(nsnull), mATSUFontID(aFontID),
+      mATSUIDInitialized(PR_TRUE), mStandardFace(PR_FALSE)
 {
     // xxx - stretch is basically ignored for now
 
-    mATSUIDInitialized = PR_TRUE;
-    mATSUFontID = aFontID;
     mUserFontData = aUserFontData;
     mWeight = aWeight;
     mStretch = aStretch;
@@ -147,15 +147,12 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSUFontID aFon
     mTraits = (mItalic ? NSItalicFontMask : NSUnitalicFontMask) |
               (mFixedPitch ? NSFixedPitchFontMask : 0) |
               (mWeight >= 600 ? NSBoldFontMask : NSUnboldFontMask);
-
-    mName = aPostscriptName;
-
-    mStandardFace = PR_FALSE;
 }
 
 const nsString& 
 MacOSFontEntry::FamilyName()
 {
+    // XXXbz what if mFamily is null, as it seems to be for downloaded fonts?
     return mFamily->Name();
 }
 
