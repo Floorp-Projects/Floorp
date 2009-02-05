@@ -67,6 +67,8 @@ nsThebesImage::nsThebesImage()
       mImageComplete(PR_FALSE),
       mSinglePixel(PR_FALSE),
       mFormatChanged(PR_FALSE),
+      mNeverUseDeviceSurface(PR_FALSE),
+      mSinglePixelColor(0),
       mAlphaDepth(0)
 {
     static PRBool hasCheckedOptimize = PR_FALSE;
@@ -122,19 +124,25 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 
     mFormat = format;
 
+    // For Windows, we must create the device surface first (if we're
+    // going to) so that the image surface can wrap it.  Can't be done
+    // the other way around.
 #ifdef XP_WIN
-    if (!ShouldUseImageSurfaces()) {
+    if (!mNeverUseDeviceSurface && !ShouldUseImageSurfaces()) {
         mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
         if (mWinSurface && mWinSurface->CairoStatus() == 0) {
             // no error
             mImageSurface = mWinSurface->GetImageSurface();
+        } else {
+            mWinSurface = nsnull;
         }
     }
-
-    if (!mImageSurface)
-        mWinSurface = nsnull;
 #endif
 
+    // For other platforms we create the image surface first and then
+    // possibly wrap it in a device surface.  This branch is also used
+    // on Windows if we're not using device surfaces or if we couldn't
+    // create one.
     if (!mImageSurface)
         mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
 
@@ -145,7 +153,9 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     }
 
 #ifdef XP_MACOSX
-    mQuartzSurface = new gfxQuartzImageSurface(mImageSurface);
+    if (!mNeverUseDeviceSurface && !ShouldUseImageSurfaces()) {
+        mQuartzSurface = new gfxQuartzImageSurface(mImageSurface);
+    }
 #endif
 
     mStride = mImageSurface->Stride();
@@ -301,7 +311,7 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
 
     // if we're being forced to use image surfaces due to
     // resource constraints, don't try to optimize beyond same-pixel.
-    if (ShouldUseImageSurfaces())
+    if (mNeverUseDeviceSurface || ShouldUseImageSurfaces())
         return NS_OK;
 
     mOptSurface = nsnull;
@@ -688,6 +698,66 @@ nsThebesImage::Draw(gfxContext*        aContext,
         aContext->Paint();
         aContext->Restore();
     }
+}
+
+nsresult
+nsThebesImage::Extract(const nsIntRect& aRegion,
+                       nsIImage** aResult)
+{
+    nsRefPtr<nsThebesImage> subImage(new nsThebesImage());
+    if (!subImage)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // The scaling problems described in bug 468496 are especially
+    // likely to be visible for the sub-image, as at present the only
+    // user is the border-image code and border-images tend to get
+    // stretched a lot.  At the same time, the performance concerns
+    // that prevent us from just using Cairo's fallback scaler when
+    // accelerated graphics won't cut it are less relevant to such
+    // images, since they also tend to be small.  Thus, we forcibly
+    // disable the use of anything other than a client-side image
+    // surface for the sub-image; this ensures that the correct
+    // (albeit slower) Cairo fallback scaler will be used.
+    subImage->mNeverUseDeviceSurface = PR_TRUE;
+
+    // ->Init() is just going to convert this back, bleah.
+    nsMaskRequirements maskReq;
+    switch (mAlphaDepth) {
+    case 0: maskReq = nsMaskRequirements_kNoMask; break;
+    case 1: maskReq = nsMaskRequirements_kNeeds1Bit; break;
+    case 8: maskReq = nsMaskRequirements_kNeeds8Bit; break;
+    default:
+        NS_NOTREACHED("impossible alpha depth");
+        maskReq = nsMaskRequirements_kNeeds8Bit; // safe
+    }
+
+    nsresult rv = subImage->Init(aRegion.width, aRegion.height,
+                                 8 /* ignored */, maskReq);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    { // scope to destroy ctx
+        gfxContext ctx(subImage->ThebesSurface());
+        ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+        if (mSinglePixel) {
+            ctx.SetDeviceColor(mSinglePixelColor);
+        } else {
+            // SetSource() places point (0,0) of its first argument at
+            // the coordinages given by its second argument.  We want
+            // (x,y) of the image to be (0,0) of source space, so we
+            // put (0,0) of the image at (-x,-y).
+            ctx.SetSource(this->ThebesSurface(),
+                          gfxPoint(-aRegion.x, -aRegion.y));
+        }
+        ctx.Rectangle(gfxRect(0, 0, aRegion.width, aRegion.height));
+        ctx.Fill();
+    }
+
+    nsIntRect filled(0, 0, aRegion.width, aRegion.height);
+    subImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &filled);
+    subImage->Optimize(nsnull);
+
+    NS_ADDREF(*aResult = subImage);
+    return NS_OK;
 }
 
 PRBool

@@ -116,6 +116,9 @@ public:
 
     void SetHasNoAlpha();
 
+    NS_IMETHOD Extract(const nsIntRect& aSubimage,
+                       nsIImage** aResult NS_OUTPARAM);
+
 protected:
     static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight) {
         NS_ASSERTION(aWidth > 0, "invalid image width");
@@ -156,6 +159,7 @@ protected:
     PRPackedBool mImageComplete;
     PRPackedBool mSinglePixel;
     PRPackedBool mFormatChanged;
+    PRPackedBool mNeverUseDeviceSurface;
 #ifdef XP_WIN
     PRPackedBool mIsDDBSurface;
 #endif

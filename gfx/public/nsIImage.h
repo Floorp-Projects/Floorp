@@ -74,10 +74,10 @@ typedef enum {
 #define  nsImageUpdateFlags_kBitsChanged     0x2
 
 // IID for the nsIImage interface
-// 455fc276-01de-488f-9f8f-19b85a6b112d
+// c942f66c-97d0-470e-99de-a1efb4586afd
 #define NS_IIMAGE_IID \
-  { 0x455fc276, 0x01de, 0x488f, \
-    { 0x9f, 0x8f, 0x19, 0xb8, 0x5a, 0x6b, 0x11, 0x2d } }
+  { 0xc942f66c, 0x97d0, 0x470e, \
+    { 0x99, 0xde, 0xa1, 0xef, 0xb4, 0x58, 0x6a, 0xfd } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -289,6 +289,15 @@ public:
    * the original format requested a 1-bit or 8-bit alpha mask
    */
   virtual void SetHasNoAlpha() = 0;
+
+  /**
+   * Extract a rectangular region of the nsIImage and return it as a new
+   * nsIImage.
+   * @param aSubimage  the region to extract
+   * @param aResult    the extracted image
+   */
+  NS_IMETHOD Extract(const nsIntRect& aSubimage,
+                     nsIImage** aResult NS_OUTPARAM) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIImage, NS_IIMAGE_IID)
