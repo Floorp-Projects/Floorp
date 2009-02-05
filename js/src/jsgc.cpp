@@ -2290,8 +2290,15 @@ js_AddAsGCBytes(JSContext *cx, size_t sz)
 #endif
         ) {
         if (JS_ON_TRACE(cx)) {
-            JS_UNLOCK_GC(rt);
-            return JS_FALSE;
+            /*
+             * If we can't leave the trace, signal OOM condition, otherwise
+             * exit from trace and proceed with GC.
+             */
+            if (!js_CanLeaveTrace(cx)) {
+                JS_UNLOCK_GC(rt);
+                return JS_FALSE;
+            }
+            js_LeaveTrace(cx);
         }
         js_GC(cx, GC_LAST_DITCH);
         if (rt->gcBytes >= rt->gcMaxBytes ||
