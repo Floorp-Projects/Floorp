@@ -469,8 +469,9 @@ WidgetStack.prototype = {
     state.widget.setAttribute("top", y);
   },
 
-  get viewingRect() {
-    return this._viewingRect.clone();
+  // we're relying on viewportBounds and viewingRect having the same origin
+  get viewportVisibleRect () {
+    return this._viewportBounds.intersect(this._viewingRect)
   },
 
   // isWidgetVisible: return true if any portion of widget with id wid is

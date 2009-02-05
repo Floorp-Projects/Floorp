@@ -229,7 +229,7 @@ CanvasBrowser.prototype = {
   
   viewportHandler: function(bounds, boundsSizeChanged) {
     let pageBounds = bounds.clone();
-    let visibleBounds = ws.viewingRect;
+    let visibleBounds = ws.viewportVisibleRect;
     pageBounds.top = Math.floor(this._screenToPage(bounds.top));
     pageBounds.left = Math.floor(this._screenToPage(bounds.left));
     pageBounds.bottom = Math.ceil(this._screenToPage(bounds.bottom));
