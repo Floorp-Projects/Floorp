@@ -201,6 +201,10 @@ OS_LIBS		= advapi32.lib wsock32.lib winmm.lib
 endif
 endif
 
+ifeq ($(OS_TARGET),WINCE)
+OS_LIBS		= ws2.lib
+endif
+
 ifeq ($(OS_TARGET),MacOSX)
 OS_LIBS		= -framework CoreServices -framework CoreFoundation
 endif

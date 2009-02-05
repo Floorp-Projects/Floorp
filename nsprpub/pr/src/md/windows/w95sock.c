@@ -119,7 +119,7 @@ void _PR_MD_InitSockets(void)
     /* if Vista or later... */
     if (osvi.dwMajorVersion >= 6)
     {
-        libWinsock2 = LoadLibrary("Ws2_32.dll");
+        libWinsock2 = LoadLibraryW(L"Ws2_32.dll");
         if (libWinsock2)
         {
             wsaioctlProc = (WSAIOCTLPROC)GetProcAddress(libWinsock2, 
