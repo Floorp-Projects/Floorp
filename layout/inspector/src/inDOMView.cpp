@@ -1046,7 +1046,7 @@ inDOMView::ReplaceNode(inDOMViewNode* aNode, PRInt32 aRow)
     return;
 
   delete GetNodeAt(aRow);
-  mNodes.ReplaceElementsAt(aRow, 1, aNode);
+  mNodes.ElementAt(aRow) = aNode;
 }
 
 void
@@ -1101,7 +1101,7 @@ inDOMView::ExpandNode(PRInt32 aRow)
 
   for (PRInt32 i = 0; i < kidCount; ++i) {
     newNode = CreateNode(kids[i], node);
-    list.ReplaceElementsAt(i, 1, newNode);
+    list.AppendElement(newNode);
 
     if (prevNode)
       prevNode->next = newNode;
