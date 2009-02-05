@@ -1316,6 +1316,19 @@ PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 }
 
 
+// In QuickDraw mode the coordinate system used here should be that of the
+// browser window's content region (defined as everything but the 22-pixel
+// high titlebar).  But in CoreGraphics mode the coordinate system should be
+// that of the browser window as a whole (including its titlebar).  Both
+// coordinate systems have a top-left origin.  See bmo bug 474491.
+//
+// There's a bug in this method's code -- it currently uses the QuickDraw
+// coordinate system for both the QuickDraw and CoreGraphics drawing modes.
+// This bug is fixed by the patch for bug 474491.  But the Flash plugin (both
+// version 10.0.12.36 from Adobe and version 9.0 r151 from Apple) has Mozilla-
+// specific code to work around this bug, which breaks when we fix it (see bmo
+// bug 477077).  So we'll need to coordinate releasing a fix for this bug with
+// Adobe and other major plugin vendors that support the CoreGraphics mode.
 NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, PRBool& outWidgetVisible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
