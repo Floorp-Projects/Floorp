@@ -1316,11 +1316,6 @@ PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 }
 
 
-// In QuickDraw mode the coordinate system used here is that of the browser
-// window's content region (defined as everything but the 22-pixel high
-// titlebar).  But in CoreGraphics mode the coordinate system is that of the
-// browser window as a whole (including its titlebar).  Both coordinate
-// systems have a top-left origin.  See bmo bug 474491.
 NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, PRBool& outWidgetVisible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1332,20 +1327,14 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
   if (!window) return NS_ERROR_FAILURE;
   
   NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
-  NSRect frame;
-  if (mPluginIsCG) {
-    frame = [window frame];
-    frame.origin.x = frame.origin.y = 0;
-  } else {
-    frame = [[window contentView] frame];
-  }
+  NSRect frame = [[window contentView] frame];
   viewOrigin.y = frame.size.height - viewOrigin.y;
   
   // set up the clipping region for plugins.
   NSRect visibleBounds = [mView visibleRect];
   NSPoint clipOrigin   = [mView convertPoint:visibleBounds.origin toView:nil];
   
-  // Convert from cocoa to QuickDraw/CoreGraphics coordinates
+  // Convert from cocoa to QuickDraw coordinates
   clipOrigin.y = frame.size.height - clipOrigin.y;
   
   outClipRect.x = NSToIntRound(clipOrigin.x);
