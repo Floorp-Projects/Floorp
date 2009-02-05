@@ -3,7 +3,7 @@
      http://creativecommons.org/licenses/publicdomain/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-     onload="handle_load();" class="reftest-wait">
+     onload="startTest()" class="reftest-wait">
 
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=381285 -->
 
@@ -16,22 +16,17 @@
 
   <script>
 
-function handle_load()
-{
-  setTimeout(change_font_size, 50); // allow some time for layout and rendering
-}
+  function startTest() {
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+  }
 
-function change_font_size()
-{
-  document.getElementById('g').style.fontSize = '16px';
-  setTimeout(notify_test_finished, 50); // allow some time for layout and rendering
-}
-
-function notify_test_finished()
-{
-  document.documentElement.removeAttribute('class');
-}
-
+  function doTest() {
+    document.getElementById('g').style.fontSize = '16px';
+    
+    document.documentElement.removeAttribute('class');
+  }
   </script>
 
   <g id="g" style="font-size: 26px;">

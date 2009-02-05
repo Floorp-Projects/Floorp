@@ -3,7 +3,7 @@
      http://creativecommons.org/licenses/publicdomain/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait"
-     xmlns:xlink="http://www.w3.org/1999/xlink" onload="setTimeout(doTest,500)">
+     xmlns:xlink="http://www.w3.org/1999/xlink" onload="startTest()">
   <title>Testing that style changes are reflected in patterns</title>
   <style>
     .foo { fill:lime; }
@@ -21,6 +21,12 @@
   <rect id="u1" width="100%" height="100%" fill="url(#r1)"/>
 
   <script>
+  function startTest() {
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+  }
+
   function doTest() {
     document.getElementById("d").setAttribute("class", "foo");
     document.documentElement.removeAttribute("class");

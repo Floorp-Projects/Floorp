@@ -3,7 +3,7 @@
      http://creativecommons.org/licenses/publicdomain/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait"
-     xmlns:xlink="http://www.w3.org/1999/xlink" onload="setTimeout(doTest,500)">
+     xmlns:xlink="http://www.w3.org/1999/xlink" onload="startTest()">
   <title>Testing that dynamic changes to the element for a given ID are reflected in patterns</title>
 
   <rect id="u1" x="10%" width="11%" height="100%" fill="url(#r1)"/>
@@ -70,6 +70,12 @@
   <rect x="90%" width="11%" height="100%" fill="lime"/>
 
   <script>
+  function startTest() {
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+  }
+
   function doTest() {
     // check that changing an id to "r2" lets u2 find it
     var r2 = document.getElementById("x");
