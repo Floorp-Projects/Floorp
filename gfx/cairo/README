@@ -44,6 +44,8 @@ glyph-safety-margin.patch: Change the glyph dropping safety margin from 2em to 1
 
 win32-vertically-offset-glyph.patch: bug 454098; vertical positioning errors when drawing glyph runs including delta-y offsets on screen via GDI
 
+win32-cleartype-clipping.patch: bug 445087; some glyphs are clipped, mainly on right-hand edge, when ClearType is enabled and drawing to RGBA canvas
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
