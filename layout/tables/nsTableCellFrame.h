@@ -45,6 +45,7 @@
 #include "nsIPercentHeightObserver.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
+#include "nsTArray.h"
 
 class nsTableFrame;
 
@@ -250,13 +251,6 @@ protected:
    * handle invalidation correctly for dynamic border changes.
    */
   virtual void GetSelfOverflow(nsRect& aOverflowArea);
-
-private:  
-
-  // All these methods are support methods for RecalcLayoutData
-  nsIFrame* GetFrameAt(nsVoidArray* aList,  PRInt32 aIndex);
-
-protected:
 
   friend class nsTableRowFrame;
 

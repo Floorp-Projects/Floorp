@@ -612,8 +612,8 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
 
   PRInt32 colIndex;
   aCell->GetColIndex(colIndex);
-  NS_ASSERTION(colIndex < mNumCols, "prevent array boundary violation");
-  if (mNumCols <= colIndex)
+  NS_ASSERTION(colIndex < PRInt32(mNumCols), "prevent array boundary violation");
+  if (PRInt32(mNumCols) <= colIndex)
     return NS_OK;
 
   //Paint column group background

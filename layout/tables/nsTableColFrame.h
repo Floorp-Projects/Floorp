@@ -40,8 +40,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTablePainter.h"
+#include "nsTArray.h"
 
-class nsVoidArray;
 class nsTableCellFrame;
 
 enum nsTableColType {
@@ -111,9 +111,6 @@ public:
 
   /** return the number of the columns the col represents.  always >= 1 */
   PRInt32 GetSpan();
-
-  /** convenience method, calls into cellmap */
-  nsVoidArray * GetCells();
 
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;

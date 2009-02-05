@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 #include "nsTableFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
@@ -398,7 +397,7 @@ void nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
         cellFrame->GetRowIndex(rowIndex);
         cellFrame->GetColIndex(colIndex);
         RemoveCell(cellFrame, rowIndex);
-        nsAutoVoidArray cells;
+        nsAutoTArray<nsTableCellFrame*, 1> cells;
         cells.AppendElement(cellFrame);
         InsertCells(cells, rowIndex, colIndex - 1);
 
@@ -436,7 +435,7 @@ PRInt32 nsTableFrame::GetEffectiveColCount() const
 
 PRInt32 nsTableFrame::GetIndexOfLastRealCol()
 {
-  PRInt32 numCols = mColFrames.Count();
+  PRInt32 numCols = mColFrames.Length();
   if (numCols > 0) {
     for (PRInt32 colX = numCols - 1; colX >= 0; colX--) { 
       nsTableColFrame* colFrame = GetColFrame(colX);
@@ -454,9 +453,9 @@ nsTableColFrame*
 nsTableFrame::GetColFrame(PRInt32 aColIndex) const
 {
   NS_ASSERTION(!GetPrevInFlow(), "GetColFrame called on next in flow");
-  PRInt32 numCols = mColFrames.Count();
+  PRInt32 numCols = mColFrames.Length();
   if ((aColIndex >= 0) && (aColIndex < numCols)) {
-    return (nsTableColFrame *)mColFrames.ElementAt(aColIndex);
+    return mColFrames.ElementAt(aColIndex);
   }
   else {
     NS_ERROR("invalid col index");
@@ -616,16 +615,16 @@ void nsTableFrame::InsertColGroups(PRInt32         aStartColIndex,
 void nsTableFrame::InsertCol(nsTableColFrame& aColFrame,
                              PRInt32          aColIndex)
 {
-  mColFrames.InsertElementAt(&aColFrame, aColIndex);
+  mColFrames.InsertElementAt(aColIndex, &aColFrame);
   nsTableColType insertedColType = aColFrame.GetColType();
-  PRInt32 numCacheCols = mColFrames.Count();
+  PRInt32 numCacheCols = mColFrames.Length();
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     PRInt32 numMapCols = cellMap->GetColCount();
     if (numCacheCols > numMapCols) {
       PRBool removedFromCache = PR_FALSE;
       if (eColAnonymousCell != insertedColType) {
-        nsTableColFrame* lastCol = (nsTableColFrame *)mColFrames.ElementAt(numCacheCols - 1);
+        nsTableColFrame* lastCol = mColFrames.ElementAt(numCacheCols - 1);
         if (lastCol) {
           nsTableColType lastColType = lastCol->GetColType();
           if (eColAnonymousCell == lastColType) {
@@ -785,7 +784,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     childFrame = childFrame->GetNextSibling();
   }
 
-  PRInt32 startIndex = mColFrames.Count();
+  PRInt32 startIndex = mColFrames.Length();
   PRInt32 lastIndex  = startIndex + aNumColsToAdd - 1; 
 
   for (PRInt32 childX = startIndex; childX <= lastIndex; childX++) {
@@ -843,7 +842,7 @@ void
 nsTableFrame::MatchCellMapToColCache(nsTableCellMap* aCellMap)
 {
   PRInt32 numColsInMap   = GetColCount();
-  PRInt32 numColsInCache = mColFrames.Count();
+  PRInt32 numColsInCache = mColFrames.Length();
   PRInt32 numColsToAdd = numColsInMap - numColsInCache;
   if (numColsToAdd > 0) {
     // this sets the child list, updates the col cache and cell map
@@ -901,9 +900,9 @@ nsTableFrame::AppendCell(nsTableCellFrame& aCellFrame,
   }
 }
 
-void nsTableFrame::InsertCells(nsVoidArray&    aCellFrames, 
-                               PRInt32         aRowIndex, 
-                               PRInt32         aColIndexBefore)
+void nsTableFrame::InsertCells(nsTArray<nsTableCellFrame*>& aCellFrames,
+                               PRInt32                      aRowIndex,
+                               PRInt32                      aColIndexBefore)
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
@@ -921,7 +920,7 @@ PRInt32
 nsTableFrame::DestroyAnonymousColFrames(PRInt32 aNumFrames)
 {
   // only remove cols that are of type eTypeAnonymous cell (they are at the end)
-  PRInt32 endIndex   = mColFrames.Count() - 1;
+  PRInt32 endIndex   = mColFrames.Length() - 1;
   PRInt32 startIndex = (endIndex - aNumFrames) + 1;
   PRInt32 numColsRemoved = 0;
   for (PRInt32 colX = endIndex; colX >= startIndex; colX--) {
@@ -975,9 +974,9 @@ nsTableFrame::GetStartRowIndex(nsTableRowGroupFrame& aRowGroupFrame)
 }
 
 // this cannot extend beyond a single row group
-void nsTableFrame::AppendRows(nsTableRowGroupFrame& aRowGroupFrame,
-                              PRInt32               aRowIndex,
-                              nsVoidArray&          aRowFrames)
+void nsTableFrame::AppendRows(nsTableRowGroupFrame&       aRowGroupFrame,
+                              PRInt32                     aRowIndex,
+                              nsTArray<nsTableRowFrame*>& aRowFrames)
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
@@ -992,17 +991,17 @@ nsTableFrame::InsertRow(nsTableRowGroupFrame& aRowGroupFrame,
                         PRInt32               aRowIndex,
                         PRBool                aConsiderSpans)
 {
-  nsAutoVoidArray rows;
-  rows.AppendElement(&aRowFrame);
+  nsAutoTArray<nsTableRowFrame*, 1> rows;
+  rows.AppendElement((nsTableRowFrame*)&aRowFrame);
   return InsertRows(aRowGroupFrame, rows, aRowIndex, aConsiderSpans);
 }
 
 // this cannot extend beyond a single row group
 PRInt32
-nsTableFrame::InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
-                         nsVoidArray&          aRowFrames,
-                         PRInt32               aRowIndex,
-                         PRBool                aConsiderSpans)
+nsTableFrame::InsertRows(nsTableRowGroupFrame&       aRowGroupFrame,
+                         nsTArray<nsTableRowFrame*>& aRowFrames,
+                         PRInt32                     aRowIndex,
+                         PRBool                      aConsiderSpans)
 {
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== insertRowsBefore firstRow=%d \n", aRowIndex);
@@ -1014,7 +1013,7 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
     PRInt32 origNumRows = cellMap->GetRowCount();
-    PRInt32 numNewRows = aRowFrames.Count();
+    PRInt32 numNewRows = aRowFrames.Length();
     cellMap->InsertRows(aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans, damageArea);
     MatchCellMapToColCache(cellMap);
     if (aRowIndex < origNumRows) {
@@ -1023,7 +1022,7 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
     // assign the correct row indices to the new rows. If they were adjusted above
     // it may not have been done correctly because each row is constructed with index 0
     for (PRInt32 rowX = 0; rowX < numNewRows; rowX++) {
-      nsTableRowFrame* rowFrame = (nsTableRowFrame *) aRowFrames.ElementAt(rowX);
+      nsTableRowFrame* rowFrame = aRowFrames.ElementAt(rowX);
       rowFrame->SetRowIndex(aRowIndex + rowX);
     }
     if (IsBorderCollapse()) {
@@ -1119,8 +1118,8 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
 
 // collect the rows ancestors of aFrame
 PRInt32
-nsTableFrame::CollectRows(nsIFrame*       aFrame,
-                          nsVoidArray&    aCollection)
+nsTableFrame::CollectRows(nsIFrame*                   aFrame,
+                          nsTArray<nsTableRowFrame*>& aCollection)
 {
   if (!aFrame) return 0;
   PRInt32 numRows = 0;
@@ -1129,7 +1128,7 @@ nsTableFrame::CollectRows(nsIFrame*       aFrame,
     nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     while (childFrame) {
       if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
-        aCollection.AppendElement(childFrame);
+        aCollection.AppendElement(static_cast<nsTableRowFrame*>(childFrame));
         numRows++;
       }
       else {
@@ -1154,7 +1153,7 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
     RowGroupArray orderedRowGroups;
     OrderRowGroups(orderedRowGroups);
 
-    nsAutoVoidArray rows;
+    nsAutoTArray<nsTableRowFrame*, 8> rows;
     // Loop over the rowgroups and check if some of them are new, if they are
     // insert cellmaps in the order that is predefined by OrderRowGroups,
     PRUint32 rgIndex;
@@ -2457,13 +2456,13 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     // remove the cols from the table
     PRInt32 colX;
     for (colX = lastColIndex; colX >= firstColIndex; colX--) {
-      nsTableColFrame* colFrame = (nsTableColFrame*)mColFrames.SafeElementAt(colX);
+      nsTableColFrame* colFrame = mColFrames.SafeElementAt(colX);
       if (colFrame) {
         RemoveCol(colGroup, colX, PR_TRUE, PR_FALSE);
       }
     }
 
-    PRInt32 numAnonymousColsToAdd = GetColCount() - mColFrames.Count();
+    PRInt32 numAnonymousColsToAdd = GetColCount() - mColFrames.Length();
     if (numAnonymousColsToAdd > 0) {
       // this sets the child list, updates the col cache and cell map
       CreateAnonymousColFrames(numAnonymousColsToAdd,
@@ -3818,7 +3817,7 @@ nsTableFrame::Dump(PRBool          aDumpRows,
 	  // output col frame cache
     printf("\n col frame cache ->");
 	   for (colX = 0; colX < numCols; colX++) {
-      nsTableColFrame* colFrame = (nsTableColFrame *)mColFrames.ElementAt(colX);
+      nsTableColFrame* colFrame = mColFrames.ElementAt(colX);
       if (0 == (colX % 8)) {
         printf("\n");
       }
@@ -6048,7 +6047,7 @@ BCMapBorderIterator::SetNewRowGroup()
   isRepeatedHeader = PR_FALSE;
   isRepeatedFooter = PR_FALSE;
 
-  if (rowGroupIndex < rowGroups.Length()) {
+  if (PRUint32(rowGroupIndex) < rowGroups.Length()) {
     prevRg = rg;
     rg = rowGroups[rowGroupIndex];
     fifRowGroupStart = ((nsTableRowGroupFrame*)rg->GetFirstInFlow())->GetStartRowIndex();

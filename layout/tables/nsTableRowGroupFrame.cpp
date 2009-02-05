@@ -1392,14 +1392,14 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
   ClearRowCursor();
 
   // collect the new row frames in an array
-  nsAutoVoidArray rows;
+  nsAutoTArray<nsTableRowFrame*, 8> rows;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
     if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
       NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
                      rowFrame->GetStyleDisplay()->mDisplay,
                    "wrong display type on rowframe");      
-      rows.AppendElement(rowFrame);
+      rows.AppendElement(static_cast<nsTableRowFrame*>(rowFrame));
     }
   }
 
@@ -1407,7 +1407,7 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
   // Append the frames to the sibling chain
   mFrames.AppendFrames(nsnull, aFrameList);
 
-  if (rows.Count() > 0) {
+  if (rows.Length() > 0) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame) {
       tableFrame->AppendRows(*this, rowIndex, rows);
@@ -1437,7 +1437,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
     return NS_ERROR_NULL_POINTER;
 
   // collect the new row frames in an array
-  nsVoidArray rows;
+  nsTArray<nsTableRowFrame*> rows;
   PRBool gotFirstRow = PR_FALSE;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
@@ -1445,7 +1445,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
       NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
                      rowFrame->GetStyleDisplay()->mDisplay,
                    "wrong display type on rowframe");      
-      rows.AppendElement(rowFrame);
+      rows.AppendElement(static_cast<nsTableRowFrame*>(rowFrame));
       if (!gotFirstRow) {
         ((nsTableRowFrame*)rowFrame)->SetFirstInserted(PR_TRUE);
         gotFirstRow = PR_TRUE;
@@ -1458,7 +1458,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
   // Insert the frames in the sibling chain
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-  PRInt32 numRows = rows.Count();
+  PRInt32 numRows = rows.Length();
   if (numRows > 0) {
     nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsGkAtoms::tableRowFrame);
     PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
