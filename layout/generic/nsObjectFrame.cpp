@@ -423,27 +423,13 @@ public:
     return mLastEventloopNestingLevel; 
   }
 
+  static PRUint32 GetEventloopNestingLevel();
+      
   void ConsiderNewEventloopNestingLevel() {
-    nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-    if (appShell) {
-      PRUint32 currentLevel = 0;
-      appShell->GetEventloopNestingLevel(&currentLevel);
-#ifdef XP_MACOSX
-      // Cocoa widget code doesn't process UI events through the normal appshell
-      // event loop, so it needs an additional count here.
-      currentLevel++;
-#else
-      // No idea how this happens... but Linux doesn't consistently process UI
-      // events through the appshell event loop. If we get a 0 here on any
-      // platform we increment the level just in case so that we make sure we
-      // always tear the plugin down eventually.
-      if (!currentLevel) {
-        currentLevel++;
-      }
-#endif
-      if (currentLevel < mLastEventloopNestingLevel) {
-        mLastEventloopNestingLevel = currentLevel;
-      }
+    PRUint32 currentLevel = GetEventloopNestingLevel();
+
+    if (currentLevel < mLastEventloopNestingLevel) {
+      mLastEventloopNestingLevel = currentLevel;
     }
   }
 
@@ -3351,6 +3337,32 @@ void nsPluginInstanceOwner::EndCGPaint()
 
 #endif
 
+// static
+PRUint32
+nsPluginInstanceOwner::GetEventloopNestingLevel()
+{
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  PRUint32 currentLevel = 0;
+  if (appShell) {
+    appShell->GetEventloopNestingLevel(&currentLevel);
+#ifdef XP_MACOSX
+    // Cocoa widget code doesn't process UI events through the normal
+    // appshell event loop, so it needs an additional count here.
+    currentLevel++;
+#endif
+  }
+
+  // No idea how this happens... but Linux doesn't consistently
+  // process UI events through the appshell event loop. If we get a 0
+  // here on any platform we increment the level just in case so that
+  // we make sure we always tear the plugin down eventually.
+  if (!currentLevel) {
+    currentLevel++;
+  }
+
+  return currentLevel;
+}
+
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
 #ifdef XP_MACOSX
@@ -4442,11 +4454,7 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
                                      nsObjectFrame* aFrame,
                                      nsIContent*    aContent)
 {
-  mLastEventloopNestingLevel = 0;
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    appShell->GetEventloopNestingLevel(&mLastEventloopNestingLevel);
-  }
+  mLastEventloopNestingLevel = GetEventloopNestingLevel();
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner::Init() called on %p for frame %p\n", this,

@@ -81,8 +81,8 @@ protected:
     static void InitLookAndFeel();
     void InitWidget() {
         mWidget = gtk_invisible_new();
-        gtk_object_ref(GTK_OBJECT(mWidget));
-        gtk_object_sink(GTK_OBJECT(mWidget));
+        g_object_ref(GTK_OBJECT(mWidget));
+        g_object_ref_sink(GTK_OBJECT(mWidget));
         gtk_widget_ensure_style(mWidget);
         mStyle = gtk_widget_get_style(mWidget);
     }

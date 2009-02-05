@@ -47,6 +47,8 @@
 #define _PR_SI_ARCHITECTURE "x86"
 #elif defined(__alpha__)
 #define _PR_SI_ARCHITECTURE "alpha"
+#elif defined(__amd64__)
+#define _PR_SI_ARCHITECTURE "amd64"
 #elif defined(__m68k__)
 #define _PR_SI_ARCHITECTURE "m68k"
 #elif defined(__powerpc__)
@@ -90,12 +92,6 @@
 #define _PR_HAVE_GETHOSTBYNAME2
 #define _PR_HAVE_GETADDRINFO
 #define _PR_INET6_PROBE
-#endif
-
-#if __NetBSD_Version__ >= 106370000
-/* NetBSD 1.6ZK */
-#define _PR_HAVE_GETPROTO_R
-#define _PR_HAVE_GETPROTO_R_INT
 #endif
 
 #define USE_SETJMP
@@ -242,6 +238,10 @@ struct _MDCPU {
 #define _MD_CLEAN_THREAD(_thread)
 
 #endif /* ! _PR_PTHREADS */
+
+extern void _MD_EarlyInit(void);
+extern PRIntervalTime _PR_UNIX_GetInterval(void);
+extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit

@@ -73,6 +73,7 @@
 #include "nsSVGAngle.h"
 #include "nsSVGBoolean.h"
 #include "nsSVGEnum.h"
+#include "nsSVGViewBox.h"
 #include "nsSVGString.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGLengthList.h"
@@ -148,6 +149,12 @@ nsSVGElement::Init()
 
   for (i = 0; i < enumInfo.mEnumCount; i++) {
     enumInfo.Reset(i);
+  }
+
+  nsSVGViewBox *viewBox = GetViewBox();
+
+  if (viewBox) {
+    viewBox->Init();
   }
 
   nsSVGPreserveAspectRatio *preserveAspectRatio =
@@ -443,16 +450,28 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       }
     }
 
-    if (!foundMatch && aAttribute == nsGkAtoms::preserveAspectRatio) {
-      // Check for nsSVGPreserveAspectRatio attribute
-      nsSVGPreserveAspectRatio *preserveAspectRatio =
-        GetPreserveAspectRatio();
-      if (preserveAspectRatio) {
-        rv = preserveAspectRatio->SetBaseValueString(aValue, this, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          preserveAspectRatio->Init();
+    if (!foundMatch) {
+      // Check for nsSVGViewBox attribute
+      if (aAttribute == nsGkAtoms::viewBox) {
+        nsSVGViewBox* viewBox = GetViewBox();
+        if (viewBox) {
+          rv = viewBox->SetBaseValueString(aValue, this, PR_FALSE);
+          if (NS_FAILED(rv)) {
+            viewBox->Init();
+          }
+          foundMatch = PR_TRUE;
         }
-        foundMatch = PR_TRUE;
+      // Check for nsSVGPreserveAspectRatio attribute
+      } else if (aAttribute == nsGkAtoms::preserveAspectRatio) {
+        nsSVGPreserveAspectRatio *preserveAspectRatio =
+          GetPreserveAspectRatio();
+        if (preserveAspectRatio) {
+          rv = preserveAspectRatio->SetBaseValueString(aValue, this, PR_FALSE);
+          if (NS_FAILED(rv)) {
+            preserveAspectRatio->Init();
+          }
+          foundMatch = PR_TRUE;
+        }
       }
     }
   }
@@ -599,15 +618,25 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       }
     }
 
-    if (!foundMatch && aName == nsGkAtoms::preserveAspectRatio) {
+    if (!foundMatch) {
+      // Check if this is a nsViewBox attribute going away
+      if (aName == nsGkAtoms::viewBox) {
+        nsSVGViewBox* viewBox = GetViewBox();
+        if (viewBox) {
+          viewBox->Init();
+          DidChangeViewBox(PR_FALSE);
+          foundMatch = PR_TRUE;
+        }
       // Check if this is a preserveAspectRatio attribute going away
-      nsSVGPreserveAspectRatio *preserveAspectRatio =
-        GetPreserveAspectRatio();
+      } else if (aName == nsGkAtoms::preserveAspectRatio) {
+        nsSVGPreserveAspectRatio *preserveAspectRatio =
+          GetPreserveAspectRatio();
 
-      if (preserveAspectRatio) {
-        preserveAspectRatio->Init();
-        DidChangePreserveAspectRatio(PR_FALSE);
-        foundMatch = PR_TRUE;
+        if (preserveAspectRatio) {
+          preserveAspectRatio->Init();
+          DidChangePreserveAspectRatio(PR_FALSE);
+          foundMatch = PR_TRUE;
+        }
       }
     }
   }
@@ -644,12 +673,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 void
 nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
 {
-  nsCOMPtr<nsIDOMSVGAnimatedRect> r = do_QueryInterface(svg_value);
-  if (r) {
-    nsCOMPtr<nsIDOMSVGRect> rect;
-    r->GetBaseVal(getter_AddRefs(rect));
-    static_cast<nsSVGRect*>(rect.get())->Clear();
-  }
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> ll = do_QueryInterface(svg_value);
   if (ll) {
     nsCOMPtr<nsIDOMSVGLengthList> lengthlist;
@@ -1469,6 +1492,28 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   SetAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName,
           newStr, PR_TRUE);
+}
+
+nsSVGViewBox *
+nsSVGElement::GetViewBox()
+{
+  return nsnull;
+}
+
+void
+nsSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  nsSVGViewBox *viewBox = GetViewBox();
+
+  NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
+
+  nsAutoString newStr;
+  viewBox->GetBaseValueString(newStr);
+
+  SetAttr(kNameSpaceID_None, nsGkAtoms::viewBox, newStr, PR_TRUE);
 }
 
 nsSVGPreserveAspectRatio *

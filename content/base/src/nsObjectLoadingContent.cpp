@@ -751,6 +751,21 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
   }
 
   nsIFrame *nsiframe = do_QueryFrame(frame);
+
+  if (nsiframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    // A frame for this plugin element already exists now, but it has
+    // not been reflown yet. Force a reflow now so that we don't end
+    // up initializing a plugin before knowing its size. Also re-fetch
+    // the frame, as flushing can cause the frame to be deleted.
+    frame = GetExistingFrame(eFlushLayout);
+
+    if (!frame) {
+      return NS_OK;
+    }
+
+    nsiframe = do_QueryFrame(frame);
+  }
+
   nsWeakFrame weakFrame(nsiframe);
 
   // We may have a plugin instance already; if so, do nothing

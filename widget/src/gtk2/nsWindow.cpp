@@ -709,7 +709,7 @@ nsWindow::Destroy(void)
     mThebesSurface = nsnull;
 
     if (mDragMotionTimerID) {
-        gtk_timeout_remove(mDragMotionTimerID);
+        g_source_remove(mDragMotionTimerID);
         mDragMotionTimerID = 0;
     }
 
@@ -1504,7 +1504,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     // XXX ideally we should rescale. Also, we could modify the API to
     // allow trusted content to set larger cursors.
     if (width > 128 || height > 128) {
-        gdk_pixbuf_unref(pixbuf);
+        g_object_unref(pixbuf);
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -1513,7 +1513,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     // So add one if there isn't one yet
     if (!gdk_pixbuf_get_has_alpha(pixbuf)) {
         GdkPixbuf* alphaBuf = gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
-        gdk_pixbuf_unref(pixbuf);
+        g_object_unref(pixbuf);
         if (!alphaBuf) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -1525,7 +1525,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         // Fallback to a monochrome cursor
         GdkPixmap* mask = gdk_pixmap_new(NULL, width, height, 1);
         if (!mask) {
-            gdk_pixbuf_unref(pixbuf);
+            g_object_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1534,7 +1534,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
                                         width, height);
         if (!data) {
             g_object_unref(mask);
-            gdk_pixbuf_unref(pixbuf);
+            g_object_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1543,7 +1543,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         delete[] data;
         if (!image) {
             g_object_unref(mask);
-            gdk_pixbuf_unref(pixbuf);
+            g_object_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1563,7 +1563,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
                                              pixbuf,
                                              aHotspotX, aHotspotY);
     }
-    gdk_pixbuf_unref(pixbuf);
+    g_object_unref(pixbuf);
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     if (cursor) {
         if (mContainer) {
@@ -4452,7 +4452,7 @@ nsWindow::ApplyTransparencyBitmap()
         return;
 
     gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
-    gdk_bitmap_unref(maskBitmap);
+    g_object_unref(maskBitmap);
 }
 
 nsresult
@@ -5011,7 +5011,7 @@ is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
         window = gdk_window_get_parent(window);
     }
 
-    gdk_window_get_size(aWindow, &w, &h);
+    gdk_drawable_get_size(aWindow, &w, &h);
 
     if (aMouseX > x && aMouseX < x + w &&
         aMouseY > y && aMouseY < y + h)
@@ -5216,7 +5216,7 @@ get_gtk_cursor(nsCursor aCursor)
                                         (char *)GtkCursors[newType].mask_bits,
                                         32, 32);
         if (!mask) {
-            gdk_bitmap_unref(cursor);
+            g_object_unref(cursor);
             return NULL;
         }
 
@@ -5224,8 +5224,8 @@ get_gtk_cursor(nsCursor aCursor)
                                                GtkCursors[newType].hot_x,
                                                GtkCursors[newType].hot_y);
 
-        gdk_bitmap_unref(mask);
-        gdk_bitmap_unref(cursor);
+        g_object_unref(mask);
+        g_object_unref(cursor);
     }
 
     gCursorCache[aCursor] = gdkcursor;
@@ -5790,15 +5790,15 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
     // mDraMotionWidget be careful not to let the refcnt drop to zero.
     // Same with the drag context.
     if (aWidget)
-        gtk_widget_ref(aWidget);
+        g_object_ref(aWidget);
     if (mDragMotionWidget)
-        gtk_widget_unref(mDragMotionWidget);
+        g_object_unref(mDragMotionWidget);
     mDragMotionWidget = aWidget;
 
     if (aDragContext)
-        gdk_drag_context_ref(aDragContext);
+        g_object_ref(aDragContext);
     if (mDragMotionContext)
-        gdk_drag_context_unref(mDragMotionContext);
+        g_object_unref(mDragMotionContext);
     mDragMotionContext = aDragContext;
 
     mDragMotionX = aX;
@@ -5807,7 +5807,7 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
 
     // always clear the timer
     if (mDragMotionTimerID) {
-        gtk_timeout_remove(mDragMotionTimerID);
+        g_source_remove(mDragMotionTimerID);
         mDragMotionTimerID = 0;
         LOG(("*** canceled motion timer\n"));
     }
@@ -5819,9 +5819,9 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
     }
 
     // otherwise we create a new timer
-    mDragMotionTimerID = gtk_timeout_add(100,
-                                         (GtkFunction)DragMotionTimerCallback,
-                                         this);
+    mDragMotionTimerID = g_timeout_add(100,
+                                       (GtkFunction)DragMotionTimerCallback,
+                                       this);
 }
 
 void

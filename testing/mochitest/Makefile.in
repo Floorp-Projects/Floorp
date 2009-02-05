@@ -146,3 +146,40 @@ GARBAGE += runtests.py automation.py
 
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
+
+# Binaries that don't get packaged with the build,
+# but that we need for the test harness
+TEST_HARNESS_BINS := \
+  xpcshell$(BIN_SUFFIX) \
+  ssltunnel$(BIN_SUFFIX) \
+  certutil$(BIN_SUFFIX) \
+  pk12util$(BIN_SUFFIX) \
+  $(NULL)
+
+# Components / typelibs that don't get packaged with
+# the build, but that we need for the test harness.
+TEST_HARNESS_COMPONENTS := \
+  test_necko.xpt \
+  $(NULL)
+
+# We need the test plugin as some tests rely on it
+ifeq (Darwin,$(OS_TARGET))
+TEST_HARNESS_PLUGINS := \
+  Test.plugin/
+else
+TEST_HARNESS_PLUGINS := \
+  $(DLL_PREFIX)nptest$(DLL_SUFFIX)
+endif
+
+# Rules for staging the necessary harness bits for a test package
+PKG_STAGE = $(DIST)/test-package-stage
+
+stage-package:
+	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/plugins
+	@(cd $(DEPTH)/_tests/testing/mochitest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
+	@(cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)
+	@(cd $(DIST)/bin/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
+	@(cd $(topsrcdir)/build/pgo/certs && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/certs && tar -xf -)
+ifdef MOZ_PLUGINS
+	@(cd $(DIST)/bin/plugins && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PLUGINS)) | (cd $(PKG_STAGE)/plugins && tar -xf -)
+endif

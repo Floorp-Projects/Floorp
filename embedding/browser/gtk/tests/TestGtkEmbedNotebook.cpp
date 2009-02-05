@@ -55,8 +55,8 @@ int main(int argc, char *argv[])
 			      "Once you switch to mozembed page " 
 			      "you never see this message.");
 
-	gtk_signal_connect(GTK_OBJECT(mozembed), "destroy",
-					 GTK_SIGNAL_FUNC(gtk_main_quit),
+	g_signal_connect(GTK_OBJECT(mozembed), "destroy",
+	                 G_CALLBACK(gtk_main_quit),
 NULL);
 
 	gtk_container_add(GTK_CONTAINER(window), container);
@@ -72,7 +72,7 @@ NULL);
 
 
 
-	gtk_widget_set_usize(window, 400, 300);
+	gtk_widget_set_size_request(window, 400, 300);
 	gtk_widget_show(mozembed);
 	gtk_widget_show(label);
 	gtk_widget_show_all(window);

@@ -2031,7 +2031,7 @@ static JSFunctionSpec date_static_methods[] = {
 };
 
 JS_DEFINE_TRCINFO_1(date_valueOf,
-    (3, (static, JSVAL_FAIL, date_valueOf_tn, CONTEXT, THIS, STRING, 0, 0)))
+    (3, (static, JSVAL_RETRY, date_valueOf_tn, CONTEXT, THIS, STRING, 0, 0)))
 
 static JSFunctionSpec date_methods[] = {
     JS_FN("getTime",             date_getTime,            0,0),

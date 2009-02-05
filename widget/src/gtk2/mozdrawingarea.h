@@ -48,11 +48,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define MOZ_DRAWINGAREA_TYPE            (moz_drawingarea_get_type())
-#define MOZ_DRAWINGAREA(obj)            (GTK_CHECK_CAST((obj), MOZ_DRAWINGAREA_TYPE, MozDrawingarea))
-#define MOZ_DRAWINGAREA_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), MOZ_DRAWINGAREA_TYPE, MozDrawingareaClass))
-#define IS_MOZ_DRAWINGAREA(obj)         (GTK_CHECK_TYPE((obj), MOZ_DRAWINGAREA_TYPE))
-#define IS_MOZ_DRAWINGAREA_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), MOZ_DRAWINGAREA_TYPE))
-#define MOZ_DRAWINGAREA_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), MOZ_DRAWINGAREA_TYPE, MozDrawingareaClass))
+#define MOZ_DRAWINGAREA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), MOZ_DRAWINGAREA_TYPE, MozDrawingarea))
+#define MOZ_DRAWINGAREA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), MOZ_DRAWINGAREA_TYPE, MozDrawingareaClass))
+#define IS_MOZ_DRAWINGAREA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), MOZ_DRAWINGAREA_TYPE))
+#define IS_MOZ_DRAWINGAREA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), MOZ_DRAWINGAREA_TYPE))
+#define MOZ_DRAWINGAREA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), MOZ_DRAWINGAREA_TYPE, MozDrawingareaClass))
 
 #if (GTK_CHECK_VERSION(2, 12, 0) || \
     (GTK_CHECK_VERSION(2, 10, 0) && defined(MOZ_PLATFORM_HILDON)))
@@ -75,7 +75,7 @@ struct _MozDrawingareaClass
     GObjectClass parent_class;
 };
 
-GtkType         moz_drawingarea_get_type       (void);
+GType           moz_drawingarea_get_type       (void);
 MozDrawingarea *moz_drawingarea_new            (MozDrawingarea *parent,
                                                 MozContainer *widget_parent,
                                                 GdkVisual *visual);

@@ -190,6 +190,7 @@
             tooltiptext="&cmd.clearList.tooltip;"/>
     <spacer flex="1"/>
     <textbox type="search" id="searchbox" cocoa-size="small"
+             aria-controls="downloadView"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
   </windowdragbox>
 

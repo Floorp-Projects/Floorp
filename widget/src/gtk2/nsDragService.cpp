@@ -106,10 +106,10 @@ nsDragService::nsDragService()
     gtk_widget_realize(mHiddenWidget);
     // hook up our internal signals so that we can get some feedback
     // from our drag source
-    gtk_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_data_get",
-                       GTK_SIGNAL_FUNC(invisibleSourceDragDataGet), this);
-    gtk_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_end",
-                       GTK_SIGNAL_FUNC(invisibleSourceDragEnd), this);
+    g_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_data_get",
+                     G_CALLBACK(invisibleSourceDragDataGet), this);
+    g_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_end",
+                     G_CALLBACK(invisibleSourceDragEnd), this);
 
     // set up our logging module
     if (!sDragLm)
@@ -292,7 +292,7 @@ nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
     // The drag transaction addrefs the pixmap, so we can just unref it from us here
     gtk_drag_set_icon_pixmap(aContext, alphaColormap, pixmap, NULL,
                              aXOffset, aYOffset);
-    gdk_pixmap_unref(pixmap);
+    g_object_unref(pixmap);
     return PR_TRUE;
 }
 

@@ -187,6 +187,10 @@ nsAppShell::nsAppShell()
   //
   // Objects autoreleased to this pool may result in warnings in the future.
   mMainPool = [[NSAutoreleasePool alloc] init];
+
+  // A Cocoa event loop is running here if (and only if) we've been embedded
+  // by a Cocoa app (like Camino).
+  mRunningCocoaEmbedded = [NSApp isRunning] ? PR_TRUE : PR_FALSE;
 }
 
 nsAppShell::~nsAppShell()
@@ -209,27 +213,30 @@ nsAppShell::~nsAppShell()
   }
 
   [mDelegate release];
-  // When you quit Camino with at least one window open, embedding is shut
-  // down (by a call to NS_TermEmbedding()) and we (the current appshell)
-  // are destroyed as the last browser window (class BrowserWindow) is closed.
-  // (The call to NS_TermEmbedding() is ultimately made from
-  // [BrowserWindowController windowWillClose:].)  This means that some code
-  // runs _after_ the appshell is destroyed.  This code assumes that various
-  // objects which have a retain count >= 1 will remain in existence, and that
-  // an autorelease pool will still be available.  But because mMainPool sits
-  // so low on the autorelease stack, if we release it here there's a good
-  // chance that all the aforementioned objects (including the other
-  // autorelease pools) will be released, and havoc will result.
+  // Cocoa-based embedders (like Camino) call NS_TermEmbedding() (which
+  // destroys us) before their own Cocoa infrastructure is fully shut down.
+  // This infrastructure assumes that various objects which have a retain
+  // count >= 1 will remain in existence, and that an autorelease pool will
+  // still be available.  But because mMainPool sits so low on the autorelease
+  // stack, if we release it here there's a good chance that all the
+  // aforementioned objects (including the other autorelease pools) will be
+  // released, and havoc will result.
   //
-  // So if we've been terminated using [NSApplication terminate:] (which
-  // Camino always uses), we don't release mMainPool here.  This won't cause
-  // leaks, because after [NSApplication terminate:] sends an
-  // NSApplicationWillTerminate notification it calls [NSApplication
-  // _deallocHardCore:], which (after it uses [NSArray
+  // So if we've been called from a Cocoa embedder, or in general if we've
+  // been terminated using [NSApplication terminate:], we don't release
+  // mMainPool here.  This won't cause leaks, because after [NSApplication
+  // terminate:] sends an NSApplicationWillTerminate notification it calls
+  // [NSApplication _deallocHardCore:], which (after it uses [NSArray
   // makeObjectsPerformSelector:] to close all remaining windows) calls
   // [NSAutoreleasePool releaseAllPools] (to release all autorelease pools
   // on the current thread, which is the main thread).
-  if (!mNotifiedWillTerminate)
+  //
+  // Cocoa embedders will almost certainly be terminated using [NSApplication
+  // terminate:].  But we can be called from a Cocoa embedder's will-terminate
+  // notification handler before our own is called (so that
+  // mNotifiedWillTerminate isn't yet TRUE).  To avoid this, we also check
+  // mRunningCocoaEmbedded here.  See bug 471948.
+  if (!mNotifiedWillTerminate && !mRunningCocoaEmbedded)
     [mMainPool release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK

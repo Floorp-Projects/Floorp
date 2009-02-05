@@ -131,6 +131,7 @@ interface nsITreeSelection : nsISupports
    * one of our methods.  A view can use this to temporarily suppress
    * the selection while manipulating all of the indices, e.g., on 
    * a sort.
+   * Note: setting this attribute to false will fire a select event.
    */
   attribute boolean selectEventsSuppressed;
 

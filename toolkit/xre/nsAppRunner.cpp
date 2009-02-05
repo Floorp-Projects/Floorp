@@ -729,6 +729,13 @@ nsXULAppInfo::GetXPCOMABI(nsACString& aResult)
 #endif
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
+{
+  aResult.AssignLiteral(MOZ_WIDGET_TOOLKIT);
+  return NS_OK;
+}
+
 #ifdef XP_WIN
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
 // safely build with the Vista SDK and without it.
@@ -2887,8 +2894,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       _gtk_window_set_auto_startup_notification(PR_FALSE);
     }
 
-    gtk_widget_set_default_visual(gdk_rgb_get_visual());
-    gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
+    gtk_widget_set_default_colormap(gdk_rgb_get_colormap());
 #endif /* MOZ_WIDGET_GTK2 */
 
     // Call the code to install our handler

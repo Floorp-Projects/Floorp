@@ -69,9 +69,9 @@ const FINISHED_MAINTENANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
 // and we can hit without big troubles.
 const IDLE_TIMEOUT = 10 * 60 * 1000;
 
-// Check for idle every 30 minutes and do maintenance if the user has been idle
+// Check for idle every 10 minutes and do maintenance if the user has been idle
 // for more than IDLE_TIMEOUT.
-const IDLE_LOOKUP_REPEAT = 30 * 60 * 1000;
+const IDLE_LOOKUP_REPEAT = 10 * 60 * 1000;
 
 // These are the seconds between each maintenance (24h).
 const MAINTENANCE_REPEAT =  24 * 60 * 60;

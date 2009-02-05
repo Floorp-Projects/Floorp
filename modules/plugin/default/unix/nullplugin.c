@@ -86,10 +86,10 @@ static void
 DialogOKClicked (GtkButton *button, gpointer data)
 {
     PluginInstance* This = (PluginInstance*) data;
-    GtkWidget* dialogWindow = gtk_object_get_data(GTK_OBJECT(button), DIALOGID);
+    GtkWidget* dialogWindow = g_object_get_data(GTK_OBJECT(button), DIALOGID);
     char *url;
 
-    gtk_object_remove_data(GTK_OBJECT(button), DIALOGID);
+    g_object_set_data(GTK_OBJECT(button), DIALOGID, NULL);
 
     if (This->pluginsFileUrl != NULL)
     {
@@ -149,7 +149,7 @@ DialogEscapePressed (GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
     if (event->keyval == GDK_Escape)
     {
-        gtk_signal_emit_stop_by_name (GTK_OBJECT (widget), "key_press_event");
+        g_signal_stop_emission_by_name (GTK_OBJECT (widget), "key_press_event");
         gtk_object_destroy (GTK_OBJECT (widget));
         return TRUE;
     }
@@ -293,7 +293,7 @@ makeWidget(PluginInstance *This)
     gtk_window_set_modal(GTK_WINDOW(dialogWindow), FALSE);
     gtk_window_set_wmclass(GTK_WINDOW(dialogWindow), "Mozilla", "DefaultPlugin");
     gtk_container_set_border_width(GTK_CONTAINER(dialogWindow), 20);
-    gtk_window_set_policy(GTK_WINDOW(dialogWindow), FALSE, FALSE, TRUE);
+    gtk_window_set_resizable(GTK_WINDOW(dialogWindow), FALSE);
 
     PR_snprintf(message, sizeof(message) - 1, MESSAGE, This->type);
     dialogMessage = AddWidget(gtk_label_new (message), 
@@ -301,7 +301,7 @@ makeWidget(PluginInstance *This)
 
     okButton= AddWidget(gtk_button_new_with_label (OK_BUTTON), 
                    GTK_DIALOG(dialogWindow)->action_area);
-    gtk_object_set_data(GTK_OBJECT(okButton), DIALOGID, dialogWindow);
+    g_object_set_data(GTK_OBJECT(okButton), DIALOGID, dialogWindow);
 
     GTK_WIDGET_SET_FLAGS (okButton, GTK_CAN_DEFAULT);
     gtk_widget_grab_default(okButton);
@@ -309,18 +309,18 @@ makeWidget(PluginInstance *This)
     cancelButton= AddWidget(gtk_button_new_with_label (CANCEL_BUTTON), 
                    GTK_DIALOG(dialogWindow)->action_area);
 
-    gtk_signal_connect (GTK_OBJECT(okButton),  "clicked",
-                        GTK_SIGNAL_FUNC(DialogOKClicked), This);
+    g_signal_connect (GTK_OBJECT(okButton),  "clicked",
+                      G_CALLBACK(DialogOKClicked), This);
 
-    gtk_signal_connect (GTK_OBJECT(cancelButton),  "clicked",
-                        GTK_SIGNAL_FUNC(DialogCancelClicked), This);
+    g_signal_connect (GTK_OBJECT(cancelButton),  "clicked",
+                      G_CALLBACK(DialogCancelClicked), This);
 
-    gtk_signal_connect(GTK_OBJECT(dialogWindow), "key_press_event",
-                        GTK_SIGNAL_FUNC (DialogEscapePressed), NULL);
+    g_signal_connect(GTK_OBJECT(dialogWindow), "key_press_event",
+                     G_CALLBACK(DialogEscapePressed), NULL);
 
     /* hookup to when the dialog is destroyed */
-    gtk_signal_connect(GTK_OBJECT(dialogWindow), "destroy",
-                        GTK_SIGNAL_FUNC(onDestroyWidget), This);
+    g_signal_connect(GTK_OBJECT(dialogWindow), "destroy",
+                     G_CALLBACK(onDestroyWidget), This);
 
     gtk_widget_show_all(dialogWindow);
 }
@@ -428,7 +428,7 @@ drawPixmap(PluginInstance *This)
     if (nullPluginGdkPixmap)
     {
         int pixmap_with, pixmap_height, dest_x, dest_y;
-        gdk_window_get_size((GdkWindow *)nullPluginGdkPixmap, &pixmap_with, &pixmap_height);
+        gdk_drawable_get_size((GdkWindow *)nullPluginGdkPixmap, &pixmap_with, &pixmap_height);
         dest_x = This->width/2 - pixmap_with/2;
         dest_y = This->height/2 - pixmap_height/2;
         if (dest_x >= 0 && dest_y >= 0)

@@ -100,7 +100,9 @@
   <vbox flex="1">
     <hbox id="filterRow" align="center">
       <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
-      <textbox id="textbox" flex="1" type="search" cocoa-size="small" oncommand="FilterPrefs();"/>
+      <textbox id="textbox" flex="1" type="search" cocoa-size="small"
+               aria-controls="configTree"
+               oncommand="FilterPrefs();"/>
     </hbox>
   
     <tree id="configTree" flex="1" seltype="single"

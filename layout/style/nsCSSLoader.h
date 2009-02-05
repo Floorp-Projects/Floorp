@@ -492,7 +492,7 @@ private:
   
   // We're not likely to have many levels of @import...  But likely to have
   // some.  Allocate some storage, what the hell.
-  nsAutoVoidArray   mParsingDatas;
+  nsAutoTArray<SheetLoadData*, 8> mParsingDatas;
 
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
   // Note that these are rare.

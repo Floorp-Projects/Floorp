@@ -360,19 +360,6 @@ DEFINES		+= -DEXPORT_JS_API
 
 INCLUDES	+= -I$(srcdir)
 
-# MSVC '-Gy' cc flag and '/OPT:REF' linker flag cause JS_GetArgument and
-# JS_GetLocalVariable to be folded to the same address by the linker, 
-# leading to a crash on startup. See bug 151066. So, in optimized builds,
-# add the /OPT:NOICF flag, which turns off 'identical COMDAT folding'.
-#
-# N.B.: 'identical COMDAT folding' that folds functions whose addresses
-# are taken violates the ISO C and C++ standards.
-ifndef MOZ_DEBUG
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-LDFLAGS         += -OPT:NOICF
-endif
-endif
-
 GARBAGE		+= jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
@@ -600,7 +587,7 @@ SDK_BINARY = js-config
 install:: $(INSTALLED_HEADERS)
 	$(SYSINSTALL) $^ $(includedir)/$(MODULE)
 
-install:: $(SCRIPTS) $(PROGRAM)
+install:: $(SCRIPTS)
 	$(SYSINSTALL) $^ $(bindir)
 
 install:: $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
@@ -643,10 +630,24 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 $(addsuffix .$(OBJ_SUFFIX),jsdtracef jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
-imacro_asm.js: imacro_asm.js.in
-	$(CC) -c -x c -E -P -I$(srcdir) $? > $@
+ifdef GNU_CC
+imacro_asm.js: imacro_asm.js.in jsopcode.tbl
+	$(CC) -c -x c -E -P -I$(srcdir) $< > $@
 
-GARBAGE += imacro_asm.js
+GARBAGE += imacros.c.out imacro_asm.js
 
-%.c.out: %.jsasm $(PROGRAM) imacro_asm.js
-	./$(PROGRAM) imacro_asm.js $< > $@
+ifndef CROSS_COMPILE
+# Obsolete comment: if you replace update-imacros with libs, this would apply
+# but then parallel gmake would sometimes try to run $(DIST)/bin/js before it
+# had been built and installed. Want a fix for this, de-automating for now.
+
+# Build imacros.c.out after descending into DIRS and building the js shell.
+# This may result in an updated imacros.c.out file that requires a re-build
+# to stabilize.
+update-imacros:: imacros.c.out
+	@cmp -s imacros.c.out $(srcdir)/$< || cp imacros.c.out $(srcdir)
+
+%.c.out: %.jsasm imacro_asm.js
+	$(DIST)/bin/js imacro_asm.js $< > $@
+endif
+endif

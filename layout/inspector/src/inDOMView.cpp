@@ -980,13 +980,13 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
 inDOMViewNode*
 inDOMView::GetNodeAt(PRInt32 aRow)
 {
-  return (inDOMViewNode*)mNodes.ElementAt(aRow);
+  return mNodes.ElementAt(aRow);
 }
 
 PRInt32
 inDOMView::GetRowCount()
 {
-  return mNodes.Count();
+  return mNodes.Length();
 }
 
 PRInt32
@@ -1026,7 +1026,7 @@ inDOMView::InsertNode(inDOMViewNode* aNode, PRInt32 aRow)
   if (RowOutOfBounds(aRow, 1))
     AppendNode(aNode);
   else
-    mNodes.InsertElementAt(aNode, aRow);
+    mNodes.InsertElementAt(aRow, aNode);
 }
 
 void
@@ -1046,16 +1046,16 @@ inDOMView::ReplaceNode(inDOMViewNode* aNode, PRInt32 aRow)
     return;
 
   delete GetNodeAt(aRow);
-  mNodes.ReplaceElementAt(aNode, aRow);
+  mNodes.ReplaceElementsAt(aRow, 1, aNode);
 }
 
 void
-inDOMView::InsertNodes(nsVoidArray& aNodes, PRInt32 aRow)
+inDOMView::InsertNodes(nsTArray<inDOMViewNode*>& aNodes, PRInt32 aRow)
 {
   if (aRow < 0 || aRow > GetRowCount())
     return;
 
-  mNodes.InsertElementsAt(aNodes, aRow);
+  mNodes.InsertElementsAt(aRow, aNodes);
 }
 
 void
@@ -1094,14 +1094,14 @@ inDOMView::ExpandNode(PRInt32 aRow)
                    kids);
   PRInt32 kidCount = kids.Count();
 
-  nsVoidArray list(kidCount);
+  nsTArray<inDOMViewNode*> list(kidCount);
 
   inDOMViewNode* newNode = nsnull;
   inDOMViewNode* prevNode = nsnull;
 
   for (PRInt32 i = 0; i < kidCount; ++i) {
     newNode = CreateNode(kids[i], node);
-    list.ReplaceElementAt(newNode, i);
+    list.ReplaceElementsAt(i, 1, newNode);
 
     if (prevNode)
       prevNode->next = newNode;

@@ -3457,8 +3457,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx))
         goto out;
-    VOUCH_HAVE_STACK();
 #endif
+    VOUCH_HAVE_STACK();
 
     /* Reset malloc counter. */
     rt->gcMallocBytes = 0;

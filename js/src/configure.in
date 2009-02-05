@@ -2271,8 +2271,8 @@ dnl the qsort routine under solaris is faulty
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
-    LIBS="-lCrun -lCstd $LIBS"
     if test -z "$GNU_CC"; then
+       LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -5299,7 +5299,17 @@ rm conftest.sh
 
 echo $MAKEFILES > unallmakefiles
 
+mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
+
 AC_OUTPUT($MAKEFILES)
+
+dnl Prevent the regeneration of autoconf.mk forcing rebuilds of the world
+if cmp -s config/autoconf.mk config/autoconf.mk.orig; then
+  echo "config/autoconf.mk is unchanged"
+  mv -f config/autoconf.mk.orig config/autoconf.mk 2> /dev/null
+else
+  rm -f config/autoconf.mk.orig 2> /dev/null
+fi
 
 # Produce the js-config script at configure time; see the comments for
 # 'js-config' in Makefile.in.

@@ -50,7 +50,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCOMArray.h"
 
 class nsIURI;
@@ -78,7 +78,7 @@ public:
   // Create a new namespace map
   nsresult CreateNamespaceMap();
 
-  nsAutoVoidArray        mSheets;
+  nsAutoTArray<nsICSSStyleSheet*, 8> mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
@@ -224,7 +224,7 @@ protected:
 
   nsCSSStyleSheetInner* mInner;
 
-  nsAutoVoidArray*      mRuleProcessors;
+  nsAutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
 
   friend class nsMediaList;
   friend class nsCSSRuleProcessor;

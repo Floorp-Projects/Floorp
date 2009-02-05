@@ -82,8 +82,7 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-    //  gtk_widget_destroy(mWidget);
-    gtk_widget_unref(mWidget);
+    g_object_unref(mWidget);
 }
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
@@ -413,12 +412,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             GtkRequisition req;
             GtkWidget *text = gtk_entry_new();
             // needed to avoid memory leak
-            gtk_widget_ref(text);
-            gtk_object_sink(GTK_OBJECT(text));
+            g_object_ref(text);
+            g_object_ref_sink(GTK_OBJECT(text));
             gtk_widget_size_request(text,&req);
             aMetric = req.height;
             gtk_widget_destroy(text);
-            gtk_widget_unref(text);
+            g_object_unref(text);
         }
         break;
     case eMetric_TextFieldBorder:
@@ -491,8 +490,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             gboolean select_on_focus;
 
             entry = gtk_entry_new();
-            gtk_widget_ref(entry);
-            gtk_object_sink(GTK_OBJECT(entry));
+            g_object_ref(entry);
+            g_object_ref_sink(GTK_OBJECT(entry));
             settings = gtk_widget_get_settings(entry);
             g_object_get(settings, 
                          "gtk-entry-select-on-focus",
@@ -505,7 +504,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                 aMetric = 0;
 
             gtk_widget_destroy(entry);
-            gtk_widget_unref(entry);
+            g_object_unref(entry);
         }
         break;
     case eMetric_SubmenuDelay:
@@ -536,7 +535,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             g_object_get(gtk_widget_get_settings(box),
                          "gtk-dnd-drag-threshold", &threshold,
                          NULL);
-            gtk_object_sink(GTK_OBJECT(box));
+            g_object_ref_sink(GTK_OBJECT(box));
             aMetric = threshold;
         }
         break;
@@ -656,14 +655,14 @@ nsLookAndFeel::InitLookAndFeel()
     GtkWidget *accel_label = gtk_accel_label_new("M");
     GtkWidget *menuitem = gtk_menu_item_new();
     GtkWidget *menu = gtk_menu_new();
-    gtk_object_ref(GTK_OBJECT(menu));
-    gtk_object_sink(GTK_OBJECT(menu));
+    g_object_ref(GTK_OBJECT(menu));
+    g_object_ref_sink(GTK_OBJECT(menu));
 
     gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
-    gtk_menu_append(GTK_MENU(menu), menuitem);
+    gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(menu), menuitem);
 
-    gtk_widget_set_rc_style(accel_label);
-    gtk_widget_set_rc_style(menu);
+    gtk_widget_set_style(accel_label, NULL);
+    gtk_widget_set_style(menu, NULL);
     gtk_widget_realize(menu);
     gtk_widget_realize(accel_label);
 
@@ -683,7 +682,7 @@ nsLookAndFeel::InitLookAndFeel()
         sMenuHoverText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_PRELIGHT]);
     }
 
-    gtk_widget_unref(menu);
+    g_object_unref(menu);
 
 
     // button styles
@@ -704,12 +703,12 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_container_add(GTK_CONTAINER(parent), combobox);
     gtk_container_add(GTK_CONTAINER(window), parent);
 
-    gtk_widget_set_rc_style(button);
-    gtk_widget_set_rc_style(label);
-    gtk_widget_set_rc_style(treeView);
-    gtk_widget_set_rc_style(linkButton);
-    gtk_widget_set_rc_style(combobox);
-    gtk_widget_set_rc_style(comboboxLabel);
+    gtk_widget_set_style(button, NULL);
+    gtk_widget_set_style(label, NULL);
+    gtk_widget_set_style(treeView, NULL);
+    gtk_widget_set_style(linkButton, NULL);
+    gtk_widget_set_style(combobox, NULL);
+    gtk_widget_set_style(comboboxLabel, NULL);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
@@ -808,7 +807,7 @@ nsLookAndFeel::LookAndFeelChanged()
     nsXPLookAndFeel::LookAndFeelChanged();
 
     if (mWidget)
-        gtk_widget_unref(mWidget);
+        g_object_unref(mWidget);
  
     InitWidget();
     InitLookAndFeel();

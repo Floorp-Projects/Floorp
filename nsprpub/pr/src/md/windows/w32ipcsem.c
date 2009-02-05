@@ -42,6 +42,30 @@
 
 #include "primpl.h"
 
+#ifdef WINCE
+static HANDLE OpenSemaphore(DWORD inDesiredAccess,
+                            BOOL inInheritHandle,
+                            const char *inName)
+{
+    HANDLE retval = NULL;
+    HANDLE semaphore = NULL;
+    PRUnichar wideName[MAX_PATH];  /* name size is limited to MAX_PATH */
+    
+    MultiByteToWideChar(CP_ACP, 0, inName, -1, wideName, MAX_PATH);
+    /* 0x7fffffff is the max count for our semaphore */
+    semaphore = CreateSemaphoreW(NULL, 0, 0x7fffffff, wideName);
+    if (NULL != semaphore) {
+        DWORD lastErr = GetLastError();
+      
+        if (ERROR_ALREADY_EXISTS != lastErr)
+            CloseHandle(semaphore);
+        else
+            retval = semaphore;
+    }
+    return retval;
+}
+#endif
+
 /*
  * NSPR-to-NT access right mapping table for semaphore objects.
  *
@@ -147,7 +171,16 @@ PRSem *_PR_MD_OPEN_SEMAPHORE(
             sa.bInheritHandle = FALSE;
             lpSA = &sa;
         }
-        sem->sem = CreateSemaphore(lpSA, value, 0x7fffffff, osname);
+#ifdef WINCE
+        {
+            /* The size of a sem's name is limited to MAX_PATH. */
+            PRUnichar wosname[MAX_PATH]; 
+            MultiByteToWideChar(CP_ACP, 0, osname, -1, wosname, MAX_PATH);
+            sem->sem = CreateSemaphoreW(lpSA, value, 0x7fffffff, wosname);
+        }
+#else
+        sem->sem = CreateSemaphoreA(lpSA, value, 0x7fffffff, osname);
+#endif
         if (lpSA != NULL) {
             _PR_NT_FreeSecurityDescriptorACL(pSD, pACL);
         }

@@ -389,6 +389,7 @@
       <textbox id="searchFilter"
                clickSelectsAll="true"
                type="search"
+               aria-controls="placeContent"
                oncommand="PlacesSearchBox.search(this.value);"
                collection="bookmarks">
       </textbox>
