@@ -45,7 +45,6 @@
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsITimer.h"
-#include "prinrval.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gVideoDecoderLog;
@@ -57,8 +56,7 @@ extern PRLogModuleInfo* gVideoDecoderLog;
 class nsHTMLMediaElement;
 
 // All methods of nsMediaDecoder must be called from the main thread only
-// with the exception of SetRGBData and GetStatistics, which can be
-// called from any thread.
+// with the exception of SetRGBData. The latter can be called from any thread.
 class nsMediaDecoder : public nsIObserver
 {
  public:
@@ -140,39 +138,13 @@ class nsMediaDecoder : public nsIObserver
   // Call in the main thread only.
   virtual PRBool IsEnded() const = 0;
 
-  struct Statistics {
-    // Estimate of the current playback rate (bytes/second).
-    double mPlaybackRate;
-    // Estimate of the current download rate (bytes/second)
-    double mDownloadRate;
-    // Total length of media stream in bytes; -1 if not known
-    PRInt64 mTotalBytes;
-    // Current position of the download, in bytes. This position (and
-    // the other positions) should only increase unless the current
-    // playback position is explicitly changed. This may require
-    // some fudging by the decoder if operations like seeking or finding the
-    // duration require seeks in the underlying stream.
-    PRInt64 mDownloadPosition;
-    // Current position of decoding, in bytes (how much of the stream
-    // has been consumed)
-    PRInt64 mDecoderPosition;
-    // Current position of playback, in bytes
-    PRInt64 mPlaybackPosition;
-    // If false, then mDownloadRate cannot be considered a reliable
-    // estimate (probably because the download has only been running
-    // a short time).
-    PRPackedBool mDownloadRateReliable;
-    // If false, then mPlaybackRate cannot be considered a reliable
-    // estimate (probably because playback has only been running
-    // a short time).
-    PRPackedBool mPlaybackRateReliable;
-  };
+  // Return the current number of bytes loaded from the video file.
+  // This is used for progress events.
+  virtual PRUint64 GetBytesLoaded() = 0;
 
-  // Return statistics. This is used for progress events and other things.
-  // This can be called from any thread. It's only a snapshot of the
-  // current state, since other threads might be changing the state
-  // at any time.
-  virtual Statistics GetStatistics() = 0;
+  // Return the size of the video file in bytes. Return 0 if the
+  // size is unknown or the stream is infinite.
+  virtual PRInt64 GetTotalBytes() = 0;
 
   // Set the size of the video file in bytes.
   virtual void SetTotalBytes(PRInt64 aBytes) = 0;
@@ -192,32 +164,8 @@ class nsMediaDecoder : public nsIObserver
   // than the result of downloaded data.
   virtual void Progress(PRBool aTimer);
 
-  // Called by nsMediaStream when a seek operation happens (could be
-  // called either before or after the seek completes). Called on the main
-  // thread. This may be called as a result of the stream opening (the
-  // offset should be zero in that case).
-  // Reads from streams after a seek MUST NOT complete before
-  // NotifyDownloadSeeked has been delivered. (We assume the reads
-  // and the seeks happen on the same calling thread.)
-  virtual void NotifyDownloadSeeked(PRInt64 aOffsetBytes) = 0;
-
-  // Called by nsChannelToPipeListener or nsMediaStream when data has
-  // been received.
-  // Call on the main thread only. aBytes of data have just been received.
-  // Reads from streams MUST NOT complete before the NotifyBytesDownloaded
-  // for those bytes has been delivered. (We assume reads and seeks
-  // happen on the same calling thread.)
-  virtual void NotifyBytesDownloaded(PRInt64 aBytes) = 0;
-
-  // Called by nsChannelToPipeListener or nsMediaStream when the
-  // download has ended. Called on the main thread only. aStatus is
-  // the result from OnStopRequest.
-  virtual void NotifyDownloadEnded(nsresult aStatus) = 0;
-
-  // Called by nsMediaStream when data has been read from the stream
-  // for playback.
-  // Call on any thread. aBytes of data have just been consumed.
-  virtual void NotifyBytesConsumed(PRInt64 aBytes) = 0;
+  // Keep track of the number of bytes downloaded
+  virtual void UpdateBytesDownloaded(PRUint64 aBytes) = 0;
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.  
@@ -255,70 +203,6 @@ protected:
                   PRInt32 aHeight, 
                   float aFramerate, 
                   unsigned char* aRGBBuffer);
-
-  /**
-   * This class is useful for estimating rates of data passing through
-   * some channel. The idea is that activity on the channel "starts"
-   * and "stops" over time. At certain times data passes through the
-   * channel (usually while the channel is active; data passing through
-   * an inactive channel is ignored). The GetRate() function computes
-   * an estimate of the "current rate" of the channel, which is some
-   * kind of average of the data passing through over the time the
-   * channel is active.
-   * 
-   * Timestamps and time durations are measured in PRIntervalTimes, but
-   * all methods take "now" as a parameter so the user of this class can
-   * define what the timeline means.
-   */
-  class ChannelStatistics {
-  public:
-    ChannelStatistics() { Reset(); }
-    void Reset() {
-      mLastStartTime = mAccumulatedTime = 0;
-      mAccumulatedBytes = 0;
-      mIsStarted = PR_FALSE;
-    }
-    void Start(PRIntervalTime aNow) {
-      if (mIsStarted)
-        return;
-      mLastStartTime = aNow;
-      mIsStarted = PR_TRUE;
-    }
-    void Stop(PRIntervalTime aNow) {
-      if (!mIsStarted)
-        return;
-      mAccumulatedTime += aNow - mLastStartTime;
-      mIsStarted = PR_FALSE;
-    }
-    void AddBytes(PRInt64 aBytes) {
-      if (!mIsStarted) {
-        // ignore this data, it may be related to seeking or some other
-        // operation we don't care about
-        return;
-      }
-      mAccumulatedBytes += aBytes;
-    }
-    double GetRateAtLastStop(PRPackedBool* aReliable) {
-      *aReliable = mAccumulatedTime >= PR_TicksPerSecond();
-      return double(mAccumulatedBytes)*PR_TicksPerSecond()/mAccumulatedTime;
-    }
-    double GetRate(PRIntervalTime aNow, PRPackedBool* aReliable) {
-      PRIntervalTime time = mAccumulatedTime;
-      if (mIsStarted) {
-        time += aNow - mLastStartTime;
-      }
-      *aReliable = time >= PR_TicksPerSecond();
-      NS_ASSERTION(time >= 0, "Time wraparound?");
-      if (time <= 0)
-        return 0.0;
-      return double(mAccumulatedBytes)*PR_TicksPerSecond()/time;
-    }
-  private:
-    PRInt64        mAccumulatedBytes;
-    PRIntervalTime mAccumulatedTime;
-    PRIntervalTime mLastStartTime;
-    PRPackedBool   mIsStarted;
-  };
 
 protected:
   // Timer used for updating progress events 

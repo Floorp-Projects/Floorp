@@ -966,6 +966,8 @@ void nsHTMLMediaElement::MetadataLoaded()
 void nsHTMLMediaElement::FirstFrameLoaded()
 {
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+  mLoadedFirstFrame = PR_TRUE;
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadeddata"));
 }
 
 void nsHTMLMediaElement::ResourceLoaded()
@@ -993,6 +995,11 @@ void nsHTMLMediaElement::PlaybackEnded()
   DispatchSimpleEvent(NS_LITERAL_STRING("ended"));
 }
 
+void nsHTMLMediaElement::CanPlayThrough()
+{
+  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+}
+
 void nsHTMLMediaElement::SeekStarted()
 {
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeking"));
@@ -1010,109 +1017,30 @@ PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()
                                      PR_TRUE);
 }
 
-// Number of bytes to add to the download size when we're computing
-// when the download will finish --- a safety margin in case bandwidth
-// or other conditions are worse than expected
-static const PRInt32 gDownloadSizeSafetyMargin = 1000000;
-
-void nsHTMLMediaElement::UpdateReadyStateForData(PRBool aNextFrameAvailable)
-{
-  if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    NS_ASSERTION(!aNextFrameAvailable, "How can we have a frame but no metadata?");
-    // The arrival of more data can't change us out of this state.
-    return;
-  }
-
-  if (!aNextFrameAvailable && !mDecoder->IsEnded()) {
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    return;
-  }
-
-  // Now see if we should set HAVE_ENOUGH_DATA
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
-  if (stats.mTotalBytes < 0 || stats.mTotalBytes == stats.mDownloadPosition) {
-    // If it's something we don't know the size of, then we can't
-    // make an estimate, so let's just go straight to HAVE_ENOUGH_DATA,
-    // since otherwise autoplay elements will never play.
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-    return;
-  }
-
-  if (stats.mDownloadRateReliable && stats.mPlaybackRateReliable) {
-    PRInt64 bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
-    PRInt64 bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
-    double timeToDownload =
-      (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
-    double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
-    LOG(PR_LOG_DEBUG, ("Download rate=%f, playback rate=%f, timeToDownload=%f, timeToPlay=%f",
-        stats.mDownloadRate, stats.mPlaybackRate, timeToDownload, timeToPlay));
-    if (timeToDownload <= timeToPlay) {
-      ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-      return;
-    }
-  }
-
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
-}
-
 void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 {
-  nsMediaReadyState oldState = mReadyState;
-
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
-  if (mPlayingBeforeSeek && oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+  if (mPlayingBeforeSeek && aState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA)
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
-  }
- 
+
   mReadyState = aState;
   if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
-    switch (mReadyState) {
+    switch(mReadyState) {
     case nsIDOMHTMLMediaElement::HAVE_NOTHING:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_NOTHING"));
-      }
-      break;
-
-    case nsIDOMHTMLMediaElement::HAVE_METADATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_METADATA"));
-      }
+      LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_NOTHING"));
       break;
 
     case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_CURRENT_DATA"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_METADATA &&
-          !mLoadedFirstFrame) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadeddata"));
-        mLoadedFirstFrame = PR_TRUE;
-      }
+      LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_CURRENT_DATA"));
       break;
- 
+
     case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_FUTURE_DATA"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
-        if (IsPotentiallyPlaying()) {
-          DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
-        }
-      }
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
+      LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_FUTURE_DATA"));
       break;
- 
+
     case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
       DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_ENOUGH_DATA"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
-      }
       if (mAutoplaying &&
           mPaused &&
           HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) {
@@ -1123,10 +1051,6 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
         DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
       }
       LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_ENOUGH_DATA"));
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-          IsPotentiallyPlaying()) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
-      }
       break;
     }
   }
@@ -1177,9 +1101,9 @@ nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
   nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(event));
   NS_ENSURE_TRUE(progressEvent, NS_ERROR_FAILURE);
 
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+  PRInt64 length = mDecoder->GetTotalBytes();
   rv = progressEvent->InitProgressEvent(aName, PR_TRUE, PR_TRUE,
-    stats.mTotalBytes >= 0, stats.mDownloadPosition, stats.mTotalBytes);
+                                        length >= 0, mDecoder->GetBytesLoaded(), length);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool dummy;

@@ -12,23 +12,20 @@
 var completed = false;
 var load_count = 0;
 var last_progress = false;
-var last_progress_total = 0;
 
 function on_loadedmetadata() {
   var v = document.getElementById('v');
-  ok(v, "Found video element after metadata loaded");
+  ok(v, "Found video element after metadata loaded: " + v);
   v.play();
   dump('test_progress1: on_loadedmetadata exiting\n');
 }
 
 function do_progress(e) {
   dump('test_progress1: do_progress ' + e.loaded + '\n');
-  ok(!completed, "Check for progress event after completed");
+  ok(!completed, "Check for progress event after completed: " + completed);
   ok(e.lengthComputable, "Check progress lengthComputable");
-  ok(e.loaded >= last_progress_total, "Check progress increasing: " + e.loaded);
-  last_progress_total = e.loaded;
-  ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded);
-  is(e.total, 285310, "Check progress total");
+  ok(e.loaded >= 0 && e.loaded <= e.total, "Check progress loaded: " + e.loaded);
+  ok(e.total == 285310, "Check progress total: " + e.total);
   last_progress = e.loaded;
 }
 
@@ -36,8 +33,8 @@ function do_ended() {
   dump('test_progress1: do_ended\n');
   ok(!completed, "Check for duplicate ended event");
   completed = true;
-  is(last_progress, 285310, "Last progress event size");
-  is(load_count, 1, "load event raised");
+  ok(last_progress == 285310, "Last progress event size: " + last_progress);
+  ok(load_count == 1, "load event raised: " + load_count);
 
   SimpleTest.finish();
 }
