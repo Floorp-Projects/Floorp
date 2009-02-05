@@ -2161,7 +2161,7 @@ TraceRecorder::snapshot(ExitType exitType)
             VMSideExit* e = exits[n];
             if (e->ip_adj == ip_adj && 
                 !memcmp(getFullTypeMap(exits[n]), typemap, typemap_size)) {
-                LIns* data = lir_buf_writer->skip(sizeof(GuardRecord));
+                LIns* data = lir->skip(sizeof(GuardRecord));
                 GuardRecord* rec = (GuardRecord*)data->payload();
                 /* setup guard record structure with shared side exit */
                 memset(rec, 0, sizeof(GuardRecord));
@@ -2191,9 +2191,9 @@ TraceRecorder::snapshot(ExitType exitType)
     }
 
     /* We couldn't find a matching side exit, so create our own side exit structure. */
-    LIns* data = lir_buf_writer->skip(sizeof(GuardRecord) +
-                                      sizeof(VMSideExit) + 
-                                      (stackSlots + ngslots) * sizeof(uint8));
+    LIns* data = lir->skip(sizeof(GuardRecord) +
+                           sizeof(VMSideExit) + 
+                           (stackSlots + ngslots) * sizeof(uint8));
     GuardRecord* rec = (GuardRecord*)data->payload();
     VMSideExit* exit = (VMSideExit*)(rec + 1);
     /* setup guard record structure */
@@ -7318,7 +7318,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
     if (sizeof(FrameInfo) + stackSlots * sizeof(uint8) > MAX_SKIP_BYTES)
         ABORT_TRACE("interpreted function call requires saving too much stack");
-    LIns* data = lir_buf_writer->skip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
+    LIns* data = lir->skip(sizeof(FrameInfo) + stackSlots * sizeof(uint8));
     FrameInfo* fi = (FrameInfo*)data->payload();
     uint8* typemap = (uint8 *)(fi + 1);
     uint8* m = typemap;
@@ -8933,7 +8933,7 @@ TraceRecorder::record_JSOP_GENERATOR()
     unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
     if (stackSlots > MAX_SKIP_BYTES) 
         ABORT_TRACE("generator requires saving too much stack");
-    LIns* data = lir_buf_writer->skip(stackSlots * sizeof(uint8));
+    LIns* data = lir->skip(stackSlots * sizeof(uint8));
     uint8* typemap = (uint8 *)data->payload();
     uint8* m = typemap;
     /* Determine the type of a store by looking at the current type of the actual value the
