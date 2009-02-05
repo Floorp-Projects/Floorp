@@ -14,6 +14,7 @@
 // before metadata loaded is fired.
 var completed = false;
 var last_progress = false;
+var last_progress_total = 0;
 
 function on_loadedmetadata() {
   var v = document.getElementById('v');
@@ -21,17 +22,19 @@ function on_loadedmetadata() {
 }
 
 function do_progress(e) {
-  ok(!completed, "Check for progress event after completed: " + completed);
+  ok(!completed, "Check for progress event after completed");
   ok(e.lengthComputable, "Check progress lengthComputable");
-  ok(e.loaded >= 0 && e.loaded <= e.total, "Check progress loaded: " + e.loaded);
-  ok(e.total == 11069, "Check progress total: " + e.total);
+  ok(e.loaded >= last_progress_total, "Check progress increasing: " + e.loaded);
+  last_progress_total = e.loaded;
+  ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded);
+  is(e.total, 11069, "Check progress total");
   last_progress = e.loaded;
 }
 
 function do_ended() {
   ok(!completed, "Check for duplicate ended event");
   completed = true;
-  ok(last_progress == 11069, "Last progress event size: " + last_progress);
+  is(last_progress, 11069, "Last progress event size");
   SimpleTest.finish();
 }
 

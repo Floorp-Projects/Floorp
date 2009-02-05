@@ -14,44 +14,47 @@
 var completed = false;
 var load_count = 0;
 var last_progress = false;
+var last_progress_total = 0;
 
 function on_loadedmetadata() {
   var v = document.getElementById('v');
-  ok(v, "Found video element after metadata loaded: " + v);
+  ok(v, "Found video element after metadata loaded");
   v.play();
-  dump('test_progress1: on_loadedmetadata exiting\n');
+  dump('test_progress3: on_loadedmetadata exiting\n');
 }
 
 function do_progress(e) {
-  dump('test_progress1: do_progress ' + e.loaded + '\n');
-  ok(!completed, "Check for progress event after completed: " + completed);
+  dump('test_progress3: do_progress ' + e.loaded + '/' + e.total + '\n');
+  ok(!completed, "Check for progress event after completed");
   ok(e.lengthComputable, "Check progress lengthComputable");
-  ok(e.loaded >= 0 && e.loaded <= e.total, "Check progress loaded: " + e.loaded);
-  ok(e.total == 28942, "Check progress total: " + e.total);
+  ok(e.loaded >= last_progress_total, "Check progress increasing: " + e.loaded);
+  last_progress_total = e.loaded;
+  ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded);
+  is(e.total, 28942, "Check progress total");
   last_progress = e.loaded;
 }
 
 function do_ended() {
-  dump('test_progress1: do_ended\n');
+  dump('test_progress3: do_ended\n');
   ok(!completed, "Check for duplicate ended event");
   completed = true;
-  ok(last_progress == 28942, "Last progress event size: " + last_progress);
-  ok(load_count == 1, "load event raised: " + load_count);
+  is(last_progress, 28942, "Last progress event size");
+  is(load_count, 1, "load event raised");
   SimpleTest.finish();
 }
 
 function do_load(e) {
   load_count++;
-  dump('test_progress1: do_loaded ' + e.loaded + "\n");
+  dump('test_progress3: do_loaded ' + e.loaded + "\n");
 }
 
 function do_timeupdate() {
   var v = document.getElementById('v');
-  dump('test_progress1: timeupdate: ' + v.currentTime + "\n");
+  dump('test_progress3: timeupdate: ' + v.currentTime + "\n");
 }
 
 function do_play() {
-  dump('test_progress1: do_play\n');
+  dump('test_progress3: do_play\n');
 }
 
 SimpleTest.waitForExplicitFinish();

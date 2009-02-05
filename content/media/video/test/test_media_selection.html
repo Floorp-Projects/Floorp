@@ -86,7 +86,8 @@ function late_add_sources_first(element, name, type) {
 }
 
 function check_ogg(e) {
-  ok(e.videoWidth == 320 && e.videoHeight == 240, "video should be 320x240");
+  is(e.videoWidth, 320, "video width " + e.currentSrc);
+  is(e.videoHeight, 240, "video height " + e.currentSrc);
 }
 
 function check_wav(e) {
