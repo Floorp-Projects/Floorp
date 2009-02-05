@@ -52,7 +52,7 @@ interface imgIContainerObserver;
  * @version 0.1
  * @see "gfx2"
  */
-[scriptable, uuid(1a6290e6-8285-4e10-963d-d001f8d327b8)]
+[scriptable, uuid(186e80e1-476c-47f0-b340-424e6b7b6c9c)]
 interface imgIContainer : nsISupports
 {
   /** 

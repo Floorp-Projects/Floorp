@@ -572,19 +572,16 @@ nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
     return;
 
   PR_Lock(mSPTimerLock);
-  if (mSPTimer) {
-    mSPTimer->SetDelay(SIZE_PERSISTENCE_TIMEOUT);
-    PersistentAttributesDirty(aDirtyFlags);
-  } else {
+  if (!mSPTimer) {
     nsresult rv;
     mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF_THIS(); // for the timer, which holds a reference to this window
-      mSPTimer->InitWithFuncCallback(FirePersistenceTimer, this,
-                                     SIZE_PERSISTENCE_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
-      PersistentAttributesDirty(aDirtyFlags);
     }
   }
+  mSPTimer->InitWithFuncCallback(FirePersistenceTimer, this,
+                                 SIZE_PERSISTENCE_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
+  PersistentAttributesDirty(aDirtyFlags);
   PR_Unlock(mSPTimerLock);
 }
 

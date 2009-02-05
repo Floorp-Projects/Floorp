@@ -63,7 +63,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIAtom.h"
-#include "nsVoidArray.h"
 #include "nsCOMArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"

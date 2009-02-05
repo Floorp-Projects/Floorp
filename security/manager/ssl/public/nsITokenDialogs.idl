@@ -41,7 +41,7 @@
 interface nsIInterfaceRequestor;
 interface nsIProtectedAuthThread;
 
-[scriptable, uuid(bb4bae9c-39c5-11d5-ba26-00108303b117)]
+[scriptable, uuid(a1cbc159-468c-495d-8068-61dd538cbcca)]
 interface nsITokenDialogs : nsISupports
 {
   void ChooseToken(in nsIInterfaceRequestor ctx,

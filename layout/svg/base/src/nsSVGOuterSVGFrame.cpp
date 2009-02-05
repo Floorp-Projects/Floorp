@@ -41,12 +41,10 @@
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "nsSVGRect.h"
 #include "nsDisplayList.h"
 #include "nsStubMutationObserver.h"
 #include "gfxContext.h"
 #include "nsPresShellIterator.h"
-#include "nsIDOMSVGAnimatedRect.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
@@ -295,11 +293,10 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
   if (content->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     // XXXjwatt we need to fix our viewBox code so that we can tell whether the
     // viewBox attribute specifies a valid rect or not.
-    float viewBoxWidth, viewBoxHeight;
-    nsCOMPtr<nsIDOMSVGRect> viewBox;
-    content->mViewBox->GetAnimVal(getter_AddRefs(viewBox));
-    viewBox->GetWidth(&viewBoxWidth);
-    viewBox->GetHeight(&viewBoxHeight);
+    const nsSVGViewBoxRect viewbox = content->mViewBox.GetAnimValue();
+    float viewBoxWidth = viewbox.width;
+    float viewBoxHeight = viewbox.height;
+
     if (viewBoxWidth < 0.0f) {
       viewBoxWidth = 0.0f;
     }

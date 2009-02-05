@@ -1372,7 +1372,7 @@ bad:
     goto out2;
 }
 
-JS_REQUIRES_STACK JSBool
+JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval)
 {
@@ -1380,6 +1380,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     void *mark;
     JSBool ok;
 
+    js_LeaveTrace(cx);
     invokevp = js_AllocStack(cx, 2 + argc, &mark);
     if (!invokevp)
         return JS_FALSE;
@@ -1601,63 +1602,84 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     jsval value;
     const char *type, *name;
 
+    /*
+     * Both objp and propp must be either null or given. When given, *propp
+     * must be null. This way we avoid an extra "if (propp) *propp = NULL" for
+     * the common case of a non-existing property.
+     */
+    JS_ASSERT(!objp == !propp);
+    JS_ASSERT_IF(propp, !*propp);
+
+    /* The JSPROP_INITIALIZER case below may generate a warning. Since we must
+     * drop the property before reporting it, we insists on !propp to avoid
+     * looking up the property again after the reporting is done.
+     */
+    JS_ASSERT_IF(attrs & JSPROP_INITIALIZER, attrs == JSPROP_INITIALIZER);
+    JS_ASSERT_IF(attrs == JSPROP_INITIALIZER, !propp);
+
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
-    if (propp) {
-        *objp = obj2;
-        *propp = prop;
-    }
     if (!prop)
         return JS_TRUE;
 
-    /*
-     * Use prop as a speedup hint to OBJ_GET_ATTRIBUTES, but drop it on error.
-     * An assertion at label bad: will insist that it is null.
-     */
+    /* Use prop as a speedup hint to OBJ_GET_ATTRIBUTES. */
     if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs)) {
         OBJ_DROP_PROPERTY(cx, obj2, prop);
-#ifdef DEBUG
-        prop = NULL;
-#endif
-        goto bad;
+        return JS_FALSE;
     }
 
     /*
-     * From here, return true, or else goto bad on failure to null out params.
      * If our caller doesn't want prop, drop it (we don't need it any longer).
      */
     if (!propp) {
         OBJ_DROP_PROPERTY(cx, obj2, prop);
         prop = NULL;
+    } else {
+        *objp = obj2;
+        *propp = prop;
     }
 
     if (attrs == JSPROP_INITIALIZER) {
         /* Allow the new object to override properties. */
         if (obj2 != obj)
             return JS_TRUE;
+
+        /* The property must be dropped already. */
+        JS_ASSERT(!prop);
         report = JSREPORT_WARNING | JSREPORT_STRICT;
     } else {
         /* We allow redeclaring some non-readonly properties. */
         if (((oldAttrs | attrs) & JSPROP_READONLY) == 0) {
-            /*
-             * Allow redeclaration of variables and functions, but insist that
-             * the new value is not a getter if the old value was, ditto for
-             * setters -- unless prop is impermanent (in which case anyone
-             * could delete it and redefine it, willy-nilly).
-             */
+            /* Allow redeclaration of variables and functions. */
             if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
                 return JS_TRUE;
+
+            /*
+             * Allow adding a getter only if a property already has a setter
+             * but no getter and similarly for adding a setter. That is, we
+             * allow only the following transitions:
+             *
+             *   no-property --> getter --> getter + setter
+             *   no-property --> setter --> getter + setter
+             */
             if ((~(oldAttrs ^ attrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
                 return JS_TRUE;
+
+            /*
+             * Allow redeclaration of an impermanent property (in which case
+             * anyone could delete it and redefine it, willy-nilly).
+             */
             if (!(oldAttrs & JSPROP_PERMANENT))
                 return JS_TRUE;
         }
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
 
         report = JSREPORT_ERROR;
         isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
         if (!isFunction) {
             if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
-                goto bad;
+                return JS_FALSE;
             isFunction = VALUE_IS_FUNCTION(cx, value);
         }
     }
@@ -1675,19 +1697,11 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : js_var_str;
     name = js_ValueToPrintableString(cx, ID_TO_VALUE(id));
     if (!name)
-        goto bad;
+        return JS_FALSE;
     return JS_ReportErrorFlagsAndNumber(cx, report,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_REDECLARED_VAR,
                                         type, name);
-
-bad:
-    if (propp) {
-        *objp = NULL;
-        *propp = NULL;
-    }
-    JS_ASSERT(!prop);
-    return JS_FALSE;
 }
 
 JSBool
@@ -5655,6 +5669,7 @@ js_Interpret(JSContext *cx)
 
             /* Lookup id in order to check for redeclaration problems. */
             id = ATOM_TO_JSID(atom);
+            prop = NULL;
             if (!js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
                 goto error;
 
@@ -5677,11 +5692,11 @@ js_Interpret(JSContext *cx)
              */
             if (!fp->fun &&
                 index < GlobalVarCount(fp) &&
-                (attrs & JSPROP_PERMANENT) &&
                 obj2 == obj &&
                 OBJ_IS_NATIVE(obj)) {
                 sprop = (JSScopeProperty *) prop;
-                if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
+                if ((sprop->attrs & JSPROP_PERMANENT) &&
+                    SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
                     SPROP_HAS_STUB_GETTER(sprop) &&
                     SPROP_HAS_STUB_SETTER(sprop)) {
                     /*
@@ -6877,6 +6892,9 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
   error:
+    // Reset current pc location hinting.
+    cx->pcHint = NULL;
+
     if (fp->imacpc && cx->throwing) {
         // To keep things simple, we hard-code imacro exception handlers here.
         if (*fp->imacpc == JSOP_NEXTITER) {

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    function doTest() {
+      var l = document.createElement("legend");
+      l.textContent = "This is a test";
+      l.style.border = "2px solid green";
+      l.style.display = "block"
+      document.getElementById("f1").appendChild(l);
+
+      l = document.createElement("legend");
+      var d = document.createElement("div");
+      d.textContent = "This is a test";
+      l.style.border = "2px solid green";
+      l.style.display = "inline"
+      l.textContent = "before";
+      l.appendChild(d);
+      l.appendChild(document.createTextNode("after"));
+      document.getElementById("f2").appendChild(l);
+    }
+  </script>
+</head>
+<body onload="doTest()">
+  <fieldset id="f1">
+    First fieldset
+  </fieldset>
+  <fieldset id="f2">
+    First fieldset
+  </fieldset>
+</body>

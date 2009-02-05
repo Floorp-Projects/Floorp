@@ -33,7 +33,10 @@ const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
 
 const nsIObserverService = Components.interfaces.nsIObserverService;
 
+const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
+const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
+
 const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
 ////////////////////////////////////////////////////////////////////////////////

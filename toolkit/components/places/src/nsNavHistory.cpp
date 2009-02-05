@@ -524,6 +524,14 @@ nsNavHistory::Init()
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
   observerService->AddObserver(this, gAutoCompleteFeedback, PR_FALSE);
   observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+  // In case we've either imported or done a migration from a pre-frecency
+  // build, we will calculate the first cutoff period's frecencies once the rest
+  // of the places infrastructure has been initialized.
+  if (mDatabaseStatus == DATABASE_STATUS_CREATE ||
+      mDatabaseStatus == DATABASE_STATUS_UPGRADED) {
+    (void)observerService->AddObserver(this, PLACES_INIT_COMPLETE_EVENT_TOPIC,
+                                       PR_FALSE);
+  }
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -541,14 +549,6 @@ nsNavHistory::Init()
       ImportHistory(historyFile);
     }
   }
-
-  // In case we've either imported or done a migration from a pre-frecency build,
-  // calculate the first cutoff period's frecencies now.
-  // Swallow errors here to not block initialization.
-  if (mDatabaseStatus == DATABASE_STATUS_CREATE ||
-      mDatabaseStatus == DATABASE_STATUS_UPGRADED)
-    (void)RecalculateFrecencies(mNumCalculateFrecencyOnMigrate,
-                                PR_FALSE /* don't recalculate old */);
 
   // Don't add code that can fail here! Do it up above, before we add our
   // observers.
@@ -1600,21 +1600,26 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
   }
 
   // Temporary migration code for bug 396300
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  PRInt64 unfiledFolder, rootFolder;
-  bookmarks->GetUnfiledBookmarksFolder(&unfiledFolder);
-  bookmarks->GetPlacesRoot(&rootFolder);
-
   nsCOMPtr<mozIStorageStatement> moveUnfiledBookmarks;
   rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_bookmarks SET parent = ?1 WHERE type = ?2 AND parent=?3"),
+      "UPDATE moz_bookmarks "
+      "SET parent = ("
+        "SELECT folder_id "
+        "FROM moz_bookmarks_roots "
+        "WHERE root_name = ?1 "
+      ") "
+      "WHERE type = ?2 "
+      "AND parent = ("
+        "SELECT folder_id "
+        "FROM moz_bookmarks_roots "
+        "WHERE root_name = ?3 "
+      ")"),
     getter_AddRefs(moveUnfiledBookmarks));
-  rv = moveUnfiledBookmarks->BindInt64Parameter(0, unfiledFolder);
+  rv = moveUnfiledBookmarks->BindUTF8StringParameter(0, NS_LITERAL_CSTRING("unfiled"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = moveUnfiledBookmarks->BindInt32Parameter(1, nsINavBookmarksService::TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = moveUnfiledBookmarks->BindInt64Parameter(2, rootFolder);
+  rv = moveUnfiledBookmarks->BindUTF8StringParameter(2, NS_LITERAL_CSTRING("places"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = moveUnfiledBookmarks->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5308,7 +5313,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
-  if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
+  if (strcmp(aTopic, gQuitApplicationMessage) == 0) {
     if (mIdleTimer) {
       mIdleTimer->Cancel();
       mIdleTimer = nsnull;
@@ -5330,7 +5335,8 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     (void)bookmarks->OnQuit();
-  } else if (nsCRT::strcmp(aTopic, gXpcomShutdown) == 0) {
+  }
+  else if (strcmp(aTopic, gXpcomShutdown) == 0) {
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -5339,8 +5345,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gAutoCompleteFeedback);
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
-  } else if (nsCRT::strcmp(aTopic, gAutoCompleteFeedback) == 0) {
+  }
 #ifdef MOZ_XUL
+  else if (strcmp(aTopic, gAutoCompleteFeedback) == 0) {
     nsCOMPtr<nsIAutoCompleteInput> input = do_QueryInterface(aSubject);
     if (!input)
       return NS_OK;
@@ -5371,8 +5378,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     rv = AutoCompleteFeedback(selectedIndex, controller);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
 #endif
-  } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
+  else if (strcmp(aTopic, "nsPref:changed") == 0) {
     PRInt32 oldDaysMin = mExpireDaysMin;
     PRInt32 oldDaysMax = mExpireDaysMax;
     PRInt32 oldVisits = mExpireSites;
@@ -5380,12 +5388,25 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     if (oldDaysMin != mExpireDaysMin || oldDaysMax != mExpireDaysMax ||
         oldVisits != mExpireSites)
       mExpire.OnExpirationChanged();
-  } else if (nsCRT::strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
+  }
+  else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
       mInPrivateBrowsing = PR_TRUE;
     } else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
       mInPrivateBrowsing = PR_FALSE;
     }
+  }
+  else if (strcmp(aTopic, PLACES_INIT_COMPLETE_EVENT_TOPIC) == 0) {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1");
+    NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
+    (void)os->RemoveObserver(this, PLACES_INIT_COMPLETE_EVENT_TOPIC);
+
+    // This code is only called if we've either imported or done a migration
+    // from a pre-frecency build, so we will calculate the first cutoff period's
+    // frecencies now.
+    (void)RecalculateFrecencies(mNumCalculateFrecencyOnMigrate,
+                                PR_FALSE /* don't recalculate old */);
   }
 
   return NS_OK;

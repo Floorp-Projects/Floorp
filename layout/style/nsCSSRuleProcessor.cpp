@@ -65,7 +65,6 @@
 #include "nsGkAtoms.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsVoidArray.h"
 #include "nsDOMError.h"
 #include "nsRuleWalker.h"
 #include "nsCSSPseudoClasses.h"
@@ -662,7 +661,7 @@ void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 // Attribute selectors hash table.
 struct AttributeSelectorEntry : public PLDHashEntryHdr {
   nsIAtom *mAttribute;
-  nsVoidArray *mSelectors;
+  nsTArray<nsCSSSelector*> *mSelectors;
 };
 
 static void
@@ -702,23 +701,23 @@ struct RuleCascadeData {
   {
     PL_DHashTableFinish(&mAttributeSelectors);
   }
-  RuleHash          mRuleHash;
-  nsVoidArray       mStateSelectors;
-  nsVoidArray       mClassSelectors;
-  nsVoidArray       mIDSelectors;
-  PLDHashTable      mAttributeSelectors; // nsIAtom* -> nsVoidArray*
+  RuleHash                 mRuleHash;
+  nsTArray<nsCSSSelector*> mStateSelectors;
+  nsTArray<nsCSSSelector*> mClassSelectors;
+  nsTArray<nsCSSSelector*> mIDSelectors;
+  PLDHashTable             mAttributeSelectors;
 
   nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
-  nsVoidArray* AttributeListFor(nsIAtom* aAttribute);
+  nsTArray<nsCSSSelector*>* AttributeListFor(nsIAtom* aAttribute);
 
   nsMediaQueryResultCacheKey mCacheKey;
   RuleCascadeData*  mNext; // for a different medium
 };
 
-nsVoidArray*
+nsTArray<nsCSSSelector*>*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 {
   AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
@@ -726,7 +725,7 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
   if (!entry)
     return nsnull;
   if (!entry->mSelectors) {
-    if (!(entry->mSelectors = new nsVoidArray)) {
+    if (!(entry->mSelectors = new nsTArray<nsCSSSelector*>)) {
       PL_DHashTableRawRemove(&mAttributeSelectors, entry);
       return nsnull;
     }
@@ -1990,35 +1989,6 @@ IsSiblingOperator(PRUnichar oper)
   return oper == PRUnichar('+') || oper == PRUnichar('~');
 }
 
-struct StateEnumData {
-  StateEnumData(StateRuleProcessorData *aData)
-    : data(aData), change(nsReStyleHint(0)) {}
-
-  StateRuleProcessorData *data;
-  nsReStyleHint change;
-};
-
-static PRBool StateEnumFunc(void* aSelector, void* aData)
-{
-  StateEnumData *enumData = static_cast<StateEnumData*>(aData);
-  StateRuleProcessorData *data = enumData->data;
-  nsCSSSelector* selector = static_cast<nsCSSSelector*>(aSelector);
-
-  nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
-    eReStyle_LaterSiblings : eReStyle_Self;
-
-  // If enumData->change already includes all the bits of possibleChange, don't
-  // bother calling SelectorMatches, since even if it returns false
-  // enumData->change won't change.
-  if ((possibleChange & ~(enumData->change)) &&
-      SelectorMatches(*data, selector, data->mStateMask, nsnull, PR_TRUE) &&
-      SelectorMatchesTree(*data, selector->mNext, PR_TRUE)) {
-    enumData->change = nsReStyleHint(enumData->change | possibleChange);
-  }
-
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP
 nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
                                            nsReStyleHint* aResult)
@@ -2036,10 +2006,26 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
   // "body > p:hover" will be in |cascade->mStateSelectors|).  Note that
   // |IsStateSelector| below determines which selectors are in
   // |cascade->mStateSelectors|.
-  StateEnumData data(aData);
-  if (cascade)
-    cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, &data);
-  *aResult = data.change;
+  if (cascade) {
+    *aResult = nsReStyleHint(0);
+    nsCSSSelector **iter = cascade->mStateSelectors.Elements(),
+                  **end = iter + cascade->mStateSelectors.Length();
+    for(; iter != end; ++iter) {
+      nsCSSSelector* selector = *iter;
+
+      nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
+        eReStyle_LaterSiblings : eReStyle_Self;
+
+      // If *aResult already includes all the bits of possibleChange,
+      // don't bother calling SelectorMatches, since even if it returns false
+      // *aResult won't change.
+      if ((possibleChange & ~(*aResult)) &&
+          SelectorMatches(*aData, selector, aData->mStateMask, nsnull, PR_TRUE) &&
+          SelectorMatchesTree(*aData, selector->mNext, PR_TRUE)) {
+        *aResult = nsReStyleHint(*aResult | possibleChange);
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -2052,26 +2038,23 @@ struct AttributeEnumData {
 };
 
 
-static PRBool AttributeEnumFunc(void* aSelector, void* aData)
+static void
+AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
 {
-  AttributeEnumData *enumData = static_cast<AttributeEnumData*>(aData);
-  AttributeRuleProcessorData *data = enumData->data;
-  nsCSSSelector* selector = static_cast<nsCSSSelector*>(aSelector);
+  AttributeRuleProcessorData *data = aData->data;
 
-  nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
+  nsReStyleHint possibleChange = IsSiblingOperator(aSelector->mOperator) ?
     eReStyle_LaterSiblings : eReStyle_Self;
 
   // If enumData->change already includes all the bits of possibleChange, don't
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
-  if ((possibleChange & ~(enumData->change)) &&
-      SelectorMatches(*data, selector, data->mStateMask, data->mAttribute,
+  if ((possibleChange & ~(aData->change)) &&
+      SelectorMatches(*data, aSelector, data->mStateMask, data->mAttribute,
                       PR_TRUE) &&
-      SelectorMatchesTree(*data, selector->mNext, PR_TRUE)) {
-    enumData->change = nsReStyleHint(enumData->change | possibleChange);
+      SelectorMatchesTree(*data, aSelector->mNext, PR_TRUE)) {
+    aData->change = nsReStyleHint(aData->change | possibleChange);
   }
-
-  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -2113,18 +2096,30 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 
   if (cascade) {
     if (aData->mAttribute == aData->mContent->GetIDAttributeName()) {
-      cascade->mIDSelectors.EnumerateForwards(AttributeEnumFunc, &data);
+      nsCSSSelector **iter = cascade->mIDSelectors.Elements(),
+                    **end = iter + cascade->mIDSelectors.Length();
+      for(; iter != end; ++iter) {
+        AttributeEnumFunc(*iter, &data);
+      }
     }
     
     if (aData->mAttribute == aData->mContent->GetClassAttributeName()) {
-      cascade->mClassSelectors.EnumerateForwards(AttributeEnumFunc, &data);
+      nsCSSSelector **iter = cascade->mClassSelectors.Elements(),
+                    **end = iter + cascade->mClassSelectors.Length();
+      for(; iter != end; ++iter) {
+        AttributeEnumFunc(*iter, &data);
+      }
     }
 
     AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>
                                                (PL_DHashTableOperate(&cascade->mAttributeSelectors, aData->mAttribute,
                              PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      entry->mSelectors->EnumerateForwards(AttributeEnumFunc, &data);
+      nsCSSSelector **iter = entry->mSelectors->Elements(),
+                    **end = iter + entry->mSelectors->Length();
+      for(; iter != end; ++iter) {
+        AttributeEnumFunc(*iter, &data);
+      }
     }
   }
 
@@ -2232,9 +2227,9 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
   // Build the rule hash.
   cascade->mRuleHash.PrependRule(aRuleInfo);
 
-  nsVoidArray* stateArray = &cascade->mStateSelectors;
-  nsVoidArray* classArray = &cascade->mClassSelectors;
-  nsVoidArray* idArray = &cascade->mIDSelectors;
+  nsTArray<nsCSSSelector*>* stateArray = &cascade->mStateSelectors;
+  nsTArray<nsCSSSelector*>* classArray = &cascade->mClassSelectors;
+  nsTArray<nsCSSSelector*>* idArray = &cascade->mIDSelectors;
   
   for (nsCSSSelector* selector = aRuleInfo->mSelector;
            selector; selector = selector->mNext) {
@@ -2265,7 +2260,7 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
       // Build mAttributeSelectors.
       for (nsAttrSelector *attr = negation->mAttrList; attr;
            attr = attr->mNext) {
-        nsVoidArray *array = cascade->AttributeListFor(attr->mAttr);
+        nsTArray<nsCSSSelector*> *array = cascade->AttributeListFor(attr->mAttr);
         if (!array)
           return PR_FALSE;
         array->AppendElement(selector);

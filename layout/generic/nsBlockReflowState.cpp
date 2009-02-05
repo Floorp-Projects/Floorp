@@ -353,6 +353,9 @@ nsBlockReflowState::GetAvailableSpace(nscoord aY, PRBool aRelaxHeightConstraint)
                            mContentArea.width,
                            &hasFloats);
   mBandHasFloats = hasFloats;
+  // Keep the width >= 0 for compatibility with nsSpaceManager.
+  if (mAvailSpaceRect.width < 0)
+    mAvailSpaceRect.width = 0;
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {

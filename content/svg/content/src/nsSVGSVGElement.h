@@ -48,6 +48,7 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
+#include "nsSVGViewBox.h"
 #include "nsSVGPreserveAspectRatio.h"
 
 #ifdef MOZ_SMIL
@@ -87,7 +88,6 @@ protected:
                                       nsINodeInfo *aNodeInfo,
                                       PRBool aFromParser);
   nsSVGSVGElement(nsINodeInfo* aNodeInfo, PRBool aFromParser);
-  virtual ~nsSVGSVGElement();
   nsresult Init();
   
 public:
@@ -145,11 +145,6 @@ public:
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 #endif // MOZ_SMIL
 
-  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
-
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
@@ -159,23 +154,23 @@ public:
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeViewBox(PRBool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
 
   // nsSVGSVGElement methods:
   float GetLength(PRUint8 mCtxType);
   float GetMMPerPx(PRUint8 mCtxType = 0);
-  already_AddRefed<nsIDOMSVGRect> GetCtxRect();
 
   // public helpers:
   nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  svgFloatSize GetViewportSize() {
+  svgFloatSize GetViewportSize() const {
     return svgFloatSize(mViewportWidth, mViewportHeight);
   }
 
-  void SetViewportSize(svgFloatSize& aSize) {
+  void SetViewportSize(const svgFloatSize& aSize) {
     mViewportWidth  = aSize.width;
     mViewportHeight = aSize.height;
   }
@@ -231,12 +226,13 @@ protected:
   static nsSVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
+  virtual nsSVGViewBox *GetViewBox();
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
 
+  nsSVGViewBox             mViewBox;
   nsSVGPreserveAspectRatio mPreserveAspectRatio;
 
   nsSVGSVGElement                  *mCoordCtx;
-  nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
 
   // The size of the rectangular SVG viewport into which we render. This is
   // not (necessarily) the same as the content area. See:

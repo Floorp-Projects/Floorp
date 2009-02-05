@@ -234,15 +234,24 @@ _PR_MD_EXIT(PRIntn status)
 
 PRInt32 _PR_MD_SETTHREADAFFINITYMASK(PRThread *thread, PRUint32 mask )
 {
+#ifdef WINCE
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return -1;
+#else
     DWORD_PTR rv;
 
     rv = SetThreadAffinityMask(thread->md.handle, mask);
 
     return rv?0:-1;
+#endif
 }
 
 PRInt32 _PR_MD_GETTHREADAFFINITYMASK(PRThread *thread, PRUint32 *mask)
 {
+#ifdef WINCE
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return -1;
+#else
     BOOL rv;
     DWORD_PTR process_mask;
     DWORD_PTR system_mask;
@@ -253,6 +262,7 @@ PRInt32 _PR_MD_GETTHREADAFFINITYMASK(PRThread *thread, PRUint32 *mask)
         *mask = (PRUint32)process_mask;
 
     return rv?0:-1;
+#endif
 }
 
 void 

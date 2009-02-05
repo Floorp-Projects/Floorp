@@ -50,14 +50,12 @@
 #include "nsISVGValueUtils.h"
 #include "nsWeakReference.h"
 #include "nsContentUtils.h"
-#include "nsIDOMSVGAnimatedRect.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGLength class
 
 class nsSVGLength : public nsISVGLength,
-                    public nsSVGValue,
-                    public nsISVGValueObserver
+                    public nsSVGValue
 {
 protected:
   friend nsresult NS_NewSVGLength(nsISVGLength** result,
@@ -69,7 +67,6 @@ protected:
   
   nsSVGLength(float value, PRUint16 unit);
   nsSVGLength();
-  virtual ~nsSVGLength();
 
 public:
   // nsISupports interface:
@@ -85,12 +82,6 @@ public:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
   
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     modificationType aModType);
-
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
   
@@ -101,11 +92,6 @@ protected:
   float EmLength();
   float ExLength();
   PRBool IsValidUnitType(PRUint16 unit);
-  void MaybeAddAsObserver();
-  void MaybeRemoveAsObserver();
-
-  // helper - returns a rect if we need to observe it (percentage length)
-  already_AddRefed<nsIDOMSVGRect> MaybeGetCtxRect();
 
   nsWeakPtr mElement;  // owning element - weakptr to avoid reference loop
   float mValueInSpecifiedUnits;
@@ -154,16 +140,10 @@ nsSVGLength::nsSVGLength(float value,
       mSpecifiedUnitType(unit),
       mCtxType(0)
 {
-  // we don't have a context yet, so we don't call MaybeAddAsObserver()
 }
 
 nsSVGLength::nsSVGLength()
 {
-}
-
-nsSVGLength::~nsSVGLength()
-{
-  MaybeRemoveAsObserver();
 }
 
 //----------------------------------------------------------------------
@@ -174,10 +154,8 @@ NS_IMPL_RELEASE(nsSVGLength)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGLength)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsISVGLength)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGLength)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END
@@ -195,25 +173,6 @@ NS_IMETHODIMP
 nsSVGLength::GetValueString(nsAString& aValue)
 {
   return GetValueAsString(aValue);
-}
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods
-
-NS_IMETHODIMP
-nsSVGLength::WillModifySVGObservable(nsISVGValue* observable,
-                                     modificationType aModType)
-{
-  WillModify(aModType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGLength::DidModifySVGObservable(nsISVGValue* observable,
-                                    modificationType aModType)
-{
-  DidModify(aModType);
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -464,15 +423,9 @@ nsSVGLength::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUni
   if (!IsValidUnitType(unitType))
     return NS_ERROR_FAILURE;
 
-  PRBool observer_change = (unitType != mSpecifiedUnitType);
-
   WillModify();
-  if (observer_change)
-    MaybeRemoveAsObserver();
   mValueInSpecifiedUnits = valueInSpecifiedUnits;
   mSpecifiedUnitType     = unitType;
-  if (observer_change)
-    MaybeAddAsObserver();
   DidModify();
   
   return NS_OK;
@@ -485,17 +438,11 @@ nsSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
   if (!IsValidUnitType(unitType))
     return NS_ERROR_FAILURE;
 
-  PRBool observer_change = (unitType != mSpecifiedUnitType);
-
   WillModify();
-  if (observer_change)
-    MaybeRemoveAsObserver();
   float valueInUserUnits;
   GetValue(&valueInUserUnits);
   mSpecifiedUnitType = unitType;
   SetValue(valueInUserUnits);
-  if (observer_change)
-    MaybeAddAsObserver();
   DidModify();
   
   return NS_OK;
@@ -506,24 +453,9 @@ nsSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
 NS_IMETHODIMP
 nsSVGLength::SetContext(nsIWeakReference *aContext, PRUint8 aCtxType)
 {
-  /* Unless our unit type is SVG_LENGTHTYPE_NUMBER or SVG_LENGTHTYPE_PX, our
-     user unit value is determined by our context and we must notify our
-     observers that we have changed. */
-
-  if (mSpecifiedUnitType != SVG_LENGTHTYPE_NUMBER &&
-      mSpecifiedUnitType != SVG_LENGTHTYPE_PX) {
-    WillModify(mod_context);
-    MaybeRemoveAsObserver();
-  }
-
   mElement = aContext;
   mCtxType = aCtxType;
 
-  if (mSpecifiedUnitType != SVG_LENGTHTYPE_NUMBER &&
-      mSpecifiedUnitType != SVG_LENGTHTYPE_PX) {
-    MaybeAddAsObserver();
-    DidModify(mod_context);
-  }
   return NS_OK;
 }
 
@@ -595,34 +527,5 @@ PRBool nsSVGLength::IsValidUnitType(PRUint16 unit)
     return PR_TRUE;
 
   return PR_FALSE;
-}
-
-already_AddRefed<nsIDOMSVGRect> nsSVGLength::MaybeGetCtxRect()
-{
-  if ((mSpecifiedUnitType == SVG_LENGTHTYPE_PERCENTAGE) && mElement) {
-    nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
-    if (element) {
-      nsSVGSVGElement *ctx =
-        static_cast<nsSVGElement*>(element.get())->GetCtx();
-      if (ctx)
-        return ctx->GetCtxRect();
-    }
-  }
-
-  return nsnull;
-}
-
-void nsSVGLength::MaybeAddAsObserver()
-{
-  nsCOMPtr<nsIDOMSVGRect> rect = MaybeGetCtxRect();
-  if (rect)
-    NS_ADD_SVGVALUE_OBSERVER(rect);
-}
-
-void nsSVGLength::MaybeRemoveAsObserver()
-{
-  nsCOMPtr<nsIDOMSVGRect> rect = MaybeGetCtxRect();
-  if (rect)
-    NS_REMOVE_SVGVALUE_OBSERVER(rect);
 }
 

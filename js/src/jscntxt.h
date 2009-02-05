@@ -93,6 +93,9 @@ typedef struct JSGSNCache {
 #define JS_CLEAR_GSN_CACHE(cx)      GSN_CACHE_CLEAR(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
+typedef struct InterpState InterpState;
+typedef struct VMSideExit VMSideExit;
+
 #ifdef __cplusplus
 namespace nanojit {
     class Fragment;
@@ -128,8 +131,27 @@ typedef struct JSTraceMonitor {
      * both interpreter activation and last-ditch garbage collection when up
      * against our runtime's memory limits. This flag also suppresses calls to
      * JS_ReportOutOfMemory when failing due to runtime limits.
+     *
+     * !onTrace && !recorder: not on trace.
+     * onTrace && recorder: recording a trace.
+     * onTrace && !recorder: executing a trace.
+     * !onTrace && recorder && !prohibitRecording:
+     *      not on trace; deep-aborted while recording.
+     * !onTrace && recorder && prohibitRecording:
+     *      not on trace; deep-bailed in SpiderMonkey code called from a
+     *      trace. JITted code is on the stack.
      */
-    JSBool                  onTrace;
+    JSPackedBool            onTrace;
+
+    /*
+     * Do not start recording after a deep bail.  That would free JITted code
+     * pages that we will later return to.
+     */
+    JSPackedBool            prohibitRecording;
+
+    /* See reservedObjects below. */
+    JSPackedBool            useReservedObjects;
+
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
     CLS(TraceRecorder)      recorder;
@@ -145,7 +167,6 @@ typedef struct JSTraceMonitor {
      * The JIT uses this to ensure that leaving a trace tree can't fail.
      */
     JSObject                *reservedObjects;
-    JSBool                  useReservedObjects;
 
     /* Fragmento for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
@@ -156,6 +177,8 @@ typedef struct JSTraceMonitor {
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
 } JSTraceMonitor;
+
+typedef struct InterpStruct InterpStruct;
 
 #ifdef JS_TRACER
 # define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).onTrace)
@@ -259,6 +282,14 @@ typedef enum JSRuntimeState {
     JSRTS_UP,
     JSRTS_LANDING
 } JSRuntimeState;
+
+#ifdef JS_TRACER
+typedef enum JSBuiltinStatus {
+    JSBUILTIN_OK = 0,
+    JSBUILTIN_BAILED = 1,
+    JSBUILTIN_ERROR = 2
+} JSBuiltinStatus;
+#endif
 
 typedef enum JSBuiltinFunctionId {
     JSBUILTIN_ObjectToIterator,
@@ -980,7 +1011,30 @@ struct JSContext {
 
     /* Stored here to avoid passing it around as a parameter. */
     uintN               resolveFlags;
+    
+    /* Current bytecode location (or NULL if no hint was supplied). */
+    jsbytecode         *pcHint;
+
+#ifdef JS_TRACER
+    /*
+     * State for the current tree execution.  bailExit is valid if the tree has
+     * called back into native code via a _FAIL builtin and has not yet bailed,
+     * else garbage (NULL in debug builds).
+     */
+    InterpState         *interpState;
+    VMSideExit          *bailExit;
+
+    /*
+     * Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
+     * JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
+     * if an error or exception occurred. Cleared on side exit.
+     */
+    uint32              builtinStatus;
+#endif
 };
+
+#define BEGIN_PC_HINT(pc)       (cx->pcHint = (pc))
+#define END_PC_HINT()           (cx->pcHint = NULL)
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)

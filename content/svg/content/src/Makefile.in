@@ -72,7 +72,6 @@ CPPSRCS		= \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumberList.cpp \
-		nsSVGAnimatedRect.cpp \
 		nsSVGAnimatedTransformList.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGCircleElement.cpp \
@@ -136,6 +135,7 @@ CPPSRCS		= \
 		nsSVGTransformListParser.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
+		nsSVGViewBox.cpp \
 		$(NULL)
 
 ifdef MOZ_SMIL

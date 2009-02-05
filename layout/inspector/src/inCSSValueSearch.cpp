@@ -173,7 +173,7 @@ NS_IMETHODIMP
 inCSSValueSearch::GetStringResultAt(PRInt32 aIndex, nsAString& _retval)
 {
   if (mHoldResults) {
-    nsAutoString* result = (nsAutoString*)mResults->ElementAt(aIndex);
+    nsAutoString* result = mResults->ElementAt(aIndex);
     _retval = *result;
   } else if (aIndex == mResultCount-1) {
     _retval = mLastResult;
@@ -288,7 +288,7 @@ nsresult
 inCSSValueSearch::InitSearch()
 {
   if (mHoldResults) {
-    mResults = new nsVoidArray();
+    mResults = new nsTArray<nsAutoString *>();
   }
   
   mResultCount = 0;

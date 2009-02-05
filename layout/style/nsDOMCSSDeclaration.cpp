@@ -51,7 +51,6 @@
 #include "nsIPrincipal.h"
 
 #include "nsContentUtils.h"
-#include "nsStyleUtil.h"
 
 
 nsDOMCSSDeclaration::nsDOMCSSDeclaration()
@@ -146,21 +145,6 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName,
                                          nsIDOMCSSValue** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSParser> cssParser;
-  nsCOMPtr<nsIURI> baseURI, sheetURI;
-  nsCOMPtr<nsIPrincipal> sheetPrincipal;
-  
-  nsresult result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
-                                             getter_AddRefs(baseURI),
-                                             getter_AddRefs(sheetPrincipal),
-                                             getter_AddRefs(cssLoader),
-                                             getter_AddRefs(cssParser));
-  if (NS_SUCCEEDED(result)) {
-    nsStyleUtil::ReportUseOfDeprecatedMethod(sheetURI,
-                                             "UseOfGetPropertyCSSValueWarning");
-  }
 
   // We don't support CSSValue yet so we'll just return null...
   *aReturn = nsnull;

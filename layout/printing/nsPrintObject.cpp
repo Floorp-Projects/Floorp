@@ -53,8 +53,8 @@ nsPrintObject::nsPrintObject() :
 
 nsPrintObject::~nsPrintObject()
 {
-  for (PRInt32 i=0;i<mKids.Count();i++) {
-    nsPrintObject* po = (nsPrintObject*)mKids[i];
+  for (PRUint32 i=0;i<mKids.Length();i++) {
+    nsPrintObject* po = mKids[i];
     delete po;
   }
 

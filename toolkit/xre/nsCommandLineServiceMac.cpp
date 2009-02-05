@@ -62,6 +62,8 @@
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
+#include "nsICommandLineRunner.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsAEEventHandling.h"
 #include "nsXPFEComponentsCID.h"
@@ -357,16 +359,33 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
     // add a command-line "-url" argument to the global list. This means that if
     // the app is opened with documents on the mac, they'll be handled the same
     // way as if they had been typed on the command line in Unix or DOS.
-    return AddToCommandLine("-url", inFileSpec);
+    rv = AddToCommandLine("-url", inFileSpec);
+    return (NS_SUCCEEDED(rv)) ? noErr : errAEEventNotHandled;
   }
 
-  // Final case: we're not just starting up. How do we handle this?
-  nsCAutoString specBuf;
-  rv = NS_GetURLSpecFromFile(inFile, specBuf);
+  // Final case: we're not just starting up, use the arg as a -file <arg>
+  nsCOMPtr<nsICommandLineRunner> cmdLine
+    (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+  if (!cmdLine) {
+    NS_ERROR("Couldn't create command line!");
+    return errAEEventNotHandled;
+  }
+  nsCString filePath;
+  rv = inFile->GetNativePath(filePath);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
-  
-  return OpenURL(specBuf.get());
+
+  nsCOMPtr<nsIFile> workingDir;
+  rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+
+  const char *argv[3] = {nsnull, "-file", filePath.get()};
+  rv = cmdLine->Init(3, const_cast<char**>(argv), workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+  rv = cmdLine->Run();
+  return (NS_SUCCEEDED(rv)) ? noErr : errAEEventNotHandled;
 }
 
 OSErr nsMacCommandLine::OpenURL(const char* aURL)

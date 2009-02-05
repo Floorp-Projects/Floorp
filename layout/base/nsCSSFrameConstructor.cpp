@@ -123,6 +123,7 @@
 #include "nsStyleUtil.h"
 #include "nsIFocusEventSuppressor.h"
 #include "nsBox.h"
+#include "nsTArray.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -4979,6 +4980,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
                                     nsIAtom* aTag,
                                     PRInt32 aNameSpaceID,
+                                    nsIFrame* aParentFrame,
                                     nsStyleContext* aStyleContext)
 {
   // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
@@ -4986,6 +4988,24 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
   // ShouldHaveFirstLineStyle.
   if (!aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID != kNameSpaceID_XHTML) {
+    return nsnull;
+  }
+
+  NS_ASSERTION(!aParentFrame ||
+               aParentFrame->GetStyleContext()->GetPseudoType() !=
+                 nsCSSAnonBoxes::fieldsetContent ||
+               aParentFrame->GetParent()->GetType() == nsGkAtoms::fieldSetFrame,
+               "Unexpected parent for fieldset content anon box");
+  if (aTag == nsGkAtoms::legend &&
+      (!aParentFrame ||
+       (aParentFrame->GetType() != nsGkAtoms::fieldSetFrame &&
+        aParentFrame->GetStyleContext()->GetPseudoType() !=
+          nsCSSAnonBoxes::fieldsetContent))) {
+    // <legend> is only special inside fieldset frames
+    // XXXbz it would be nice if we could just decide this based on the parent
+    // tag, and hence just use a SIMPLE_TAG_CHAIN for legend below, but the
+    // fact that with XBL we could end up with this legend element in some
+    // totally weird insertion point makes that chancy, I think.
     return nsnull;
   }
 
@@ -5047,8 +5067,6 @@ nsCSSFrameConstructor::FindImgControlData(nsIContent* aContent,
   return &sImgControlData;
 }
 
-#include "nsIDOMHTMLInputElement.h"
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
@@ -5074,41 +5092,8 @@ nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
 
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
   NS_ASSERTION(control, "input doesn't implement nsIFormControl?");
-
-  if (!control) { // Speculative parsing is screwing up somehow, dammit
-    printf("TinderboxPrint: FOUND BOGUS INPUT\n");
-    printf("Passed in content pointer is: %p\n", (void*)aContent);
-    if (aContent) {
-      printf("Passed in content has namespace: %d\n",
-             aContent->GetNameSpaceID());
-      const char* localName = nsnull;
-      aContent->Tag()->GetUTF8String(&localName);
-      printf("Passed in content has localName: %s\n", localName);
-      nsCOMPtr<nsIDOMHTMLInputElement> elm = do_QueryInterface(aContent);
-      printf("Passed in content QI to nsIDOMHTMLInputElement is: %p\n",
-             (void*)elm.get());
-
-      nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aContent);
-      printf("Passed in content QI to nsIClassInfo is: %p\n",
-             (void*)classInfo.get());
-
-      if (classInfo) {
-        nsXPIDLCString desc;
-        classInfo->GetClassDescription(getter_Copies(desc));
-        printf("Passed in classinfo description is: %s\n", desc.get());
-        PRUint32 ifaceCount = 0;
-        nsIID** iidArray = nsnull;
-        classInfo->GetInterfaces(&ifaceCount, &iidArray);
-        for (PRUint32 i = 0; i < ifaceCount; ++i) {
-          char buf[NSID_LENGTH];
-          iidArray[i]->ToProvidedString(buf);
-          printf("Classinfo knows about interface: %s\n", buf);
-        }
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ifaceCount, iidArray);
-      }
-    }
-
-    return nsnull;
+  if (!control) {
+    printf("BOGUS INPUT DETECTED IN FRAME CONSTRUCTION (about to crash).\n");
   }
 
   return FindDataByInt(control->GetType(), aContent, aStyleContext,
@@ -6758,7 +6743,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   if (isText) {
     data = FindTextData(aParentFrame);
   } else {
-    data = FindHTMLData(aContent, aTag, aNameSpaceID, styleContext);
+    data = FindHTMLData(aContent, aTag, aNameSpaceID, aParentFrame,
+                        styleContext);
     if (!data) {
       data = FindXULTagData(aContent, aTag, aNameSpaceID, styleContext);
     }
@@ -7925,12 +7911,20 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     // this case.  If someone wants to use an index below, they should make
     // sure to use the right index (aIndexInContainer vs iter.position()) with
     // the right parent node.
-  } else {
-    // Do things the fast way if we can.
+  } else if (aIndexInContainer != -1) {
+    // Do things the fast way if we can.  The check for -1 is because editor is
+    // severely broken and calls us directly for native anonymous nodes that it
+    // creates.
     iter.seek(aIndexInContainer);
     NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
   }
-
+#ifdef DEBUG
+  else {
+    NS_WARNING("Someone passed native anonymous content directly into frame "
+               "construction.  Stop doing that!");
+  }
+#endif
+  
   nsIFrame* prevSibling = FindPreviousSibling(first, iter);
 
   PRBool    isAppend = PR_FALSE;
@@ -8207,16 +8201,16 @@ nsCSSFrameConstructor::ReinsertContent(nsIContent* aContainer,
 }
 
 static void
-DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
-                       nsVoidArray&    aDestroyQueue,
-                       nsIFrame*       aRemovedFrame,
-                       nsIFrame*       aFrame);
+DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
+                       nsTArray<nsIFrame*>& aDestroyQueue,
+                       nsIFrame*            aRemovedFrame,
+                       nsIFrame*            aFrame);
 
 static void
-DoDeletingOverflowContainers(nsFrameManager* aFrameManager,
-                             nsVoidArray&    aDestroyQueue,
-                             nsIFrame*       aRemovedFrame,
-                             nsIFrame*       aFrame)
+DoDeletingOverflowContainers(nsFrameManager*      aFrameManager,
+                             nsTArray<nsIFrame*>& aDestroyQueue,
+                             nsIFrame*            aRemovedFrame,
+                             nsIFrame*            aFrame)
 {
   // The invariant that "continuing frames should be found as part of the
   // walk over the top-most frame's continuing frames" does not hold for
@@ -8257,10 +8251,10 @@ DoDeletingOverflowContainers(nsFrameManager* aFrameManager,
  *            this changes
  */
 static void
-DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
-                       nsVoidArray&    aDestroyQueue,
-                       nsIFrame*       aRemovedFrame,
-                       nsIFrame*       aFrame)
+DoDeletingFrameSubtree(nsFrameManager*      aFrameManager,
+                       nsTArray<nsIFrame*>& aDestroyQueue,
+                       nsIFrame*            aRemovedFrame,
+                       nsIFrame*            aFrame)
 {
 #undef RECURSE
 #define RECURSE(top, child)                                                  \
@@ -8341,7 +8335,7 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
     return NS_OK;
   }
 
-  nsAutoVoidArray destroyQueue;
+  nsAutoTArray<nsIFrame*, 8> destroyQueue;
 
   // If it's a "special" block-in-inline frame, then we can't really deal.
   // That really shouldn't be happening.
@@ -8365,8 +8359,8 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
 
   // Now destroy any out-of-flow frames that have been enqueued for
   // destruction.
-  for (PRInt32 i = destroyQueue.Count() - 1; i >= 0; --i) {
-    nsIFrame* outOfFlowFrame = static_cast<nsIFrame*>(destroyQueue[i]);
+  for (PRInt32 i = destroyQueue.Length() - 1; i >= 0; --i) {
+    nsIFrame* outOfFlowFrame = destroyQueue[i];
 
     // Ask the out-of-flow's parent to delete the out-of-flow
     // frame from the right list.

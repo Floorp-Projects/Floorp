@@ -115,19 +115,19 @@ protected:
   nsSVGPatternElement* GetPatternWithAttr(nsIAtom *aAttrName, nsIContent *aDefault);
 
   //
-  nsSVGLength2 *GetX();
-  nsSVGLength2 *GetY();
-  nsSVGLength2 *GetWidth();
-  nsSVGLength2 *GetHeight();
+  const nsSVGLength2 *GetX();
+  const nsSVGLength2 *GetY();
+  const nsSVGLength2 *GetWidth();
+  const nsSVGLength2 *GetHeight();
 
   PRUint16 GetPatternUnits();
   PRUint16 GetPatternContentUnits();
   gfxMatrix GetPatternTransform();
 
+  const nsSVGViewBox &GetViewBox();
   const nsSVGPreserveAspectRatio &GetPreserveAspectRatio();
 
   NS_IMETHOD GetPatternFirstChild(nsIFrame **kid);
-  NS_IMETHOD GetViewBox(nsIDOMSVGRect * *aMatrix);
   nsresult   GetPatternRect(nsIDOMSVGRect **patternRect,
                             nsIDOMSVGRect *bbox,
                             nsIDOMSVGMatrix *callerCTM,
