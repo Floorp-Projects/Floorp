@@ -461,7 +461,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             }
             *objp = obj;
         }
-    } else {
+    } else if (JSVAL_IS_STRING(id)) {
         str = JSVAL_TO_STRING(id);
         atom = cx->runtime->atomState.lengthAtom;
         if (str == ATOM_TO_STRING(atom)) {
