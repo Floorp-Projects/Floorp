@@ -111,6 +111,11 @@ public:
   // when the video playback has ended.
   void PlaybackEnded();
 
+  // Called by the decoder object, on the main thread, when
+  // approximately enough of the resource has been loaded to play
+  // through without pausing for buffering.
+  void CanPlayThrough();
+
   // Called by the video decoder object, on the main thread,
   // when the resource has started seeking.
   void SeekStarted();
@@ -128,13 +133,6 @@ public:
   nsresult DispatchProgressEvent(const nsAString& aName);
   nsresult DispatchAsyncSimpleEvent(const nsAString& aName);
   nsresult DispatchAsyncProgressEvent(const nsAString& aName);
-
-  // Called by the decoder when some data has been downloaded or
-  // buffering/seeking has ended. aNextFrameAvailable is true when
-  // the data for the next frame is available. This method will
-  // decide whether to set the ready state to HAVE_CURRENT_DATA,
-  // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  void UpdateReadyStateForData(PRBool aNextFrameAvailable);
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.

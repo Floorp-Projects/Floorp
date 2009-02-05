@@ -149,8 +149,7 @@ public:
   PRBool IsEnded();
 
   // Called by the decoder to indicate that the media stream has closed.
-  // aAtEnd is true if we read to the end of the file.
-  void StreamEnded(PRBool aAtEnd);
+  void StreamEnded();
 
   // Main state machine loop. Runs forever, until shutdown state is reached.
   NS_IMETHOD Run();
@@ -159,23 +158,6 @@ public:
   // the current time offset of the state machine is updated to the new seek
   // position at the appropriate time.
   void UpdateTimeOffset(float aTime);
-
-  // Called by the decoder, on the main thread.
-  nsMediaDecoder::Statistics GetStatistics();
-
-  // Called on the main thread only
-  void SetTotalBytes(PRInt64 aBytes);
-  // Called on the main thread
-  void NotifyBytesDownloaded(PRInt64 aBytes);
-  // Called on the main thread
-  void NotifyDownloadSeeked(PRInt64 aOffset);
-  // Called on the main thread
-  void NotifyDownloadEnded(nsresult aStatus);
-  // Called on any thread
-  void NotifyBytesConsumed(PRInt64 aBytes);
-
-  // Called by the main thread
-  PRBool HasPendingData();
 
 private:
   // Change the current state and wake the playback thread if it is waiting
@@ -303,19 +285,6 @@ private:
   // recently requested state on completion.
   State mNextState;
 
-  // Length of the current resource, or -1 if not available.
-  PRInt64 mTotalBytes;
-  // Current download position in the stream.
-  // NOTE: because we don't have to read when we seek, there is no need
-  // to track a separate "progress position" which ignores download
-  // position changes due to reads servicing seeks.
-  PRInt64 mDownloadPosition;
-  // Current playback position in the stream.
-  PRInt64 mPlaybackPosition;
-  // Data needed to estimate download data rate. The channel timeline is
-  // wall-clock time.
-  nsMediaDecoder::ChannelStatistics mDownloadStatistics;
-
   // Volume that the audio backend will be initialized with.
   float mInitialVolume;
 
@@ -355,9 +324,6 @@ nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder, nsMediaStream* a
     mMonitor(nsnull),
     mState(STATE_LOADING_METADATA),
     mNextState(STATE_PAUSED),
-    mTotalBytes(-1),
-    mDownloadPosition(0),
-    mPlaybackPosition(0),
     mInitialVolume(aInitialVolume),
     mTimeOffset(0.0),
     mExpectMoreData(PR_TRUE),
@@ -365,7 +331,6 @@ nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder, nsMediaStream* a
     mMetadataValid(PR_FALSE)
 {
   mMonitor = nsAutoMonitor::NewMonitor("nsWaveStateMachine");
-  mDownloadStatistics.Start(PR_IntervalNow());
 }
 
 nsWaveStateMachine::~nsWaveStateMachine()
@@ -443,11 +408,12 @@ nsWaveStateMachine::GetDuration()
   nsAutoMonitor monitor(mMonitor);
   if (mMetadataValid) {
     PRUint32 length = mWaveLength;
+    PRInt64 contentLength = mDecoder->GetTotalBytes();
     // If the decoder has a valid content length, and it's shorter than the
     // expected length of the PCM data, calculate the playback duration from
     // the content length rather than the expected PCM data length.
-    if (mTotalBytes >= 0 && mTotalBytes - mWavePCMOffset < length) {
-      length = mTotalBytes - mWavePCMOffset;
+    if (contentLength >= 0 && contentLength - mWavePCMOffset < length) {
+      length = contentLength - mWavePCMOffset;
     }
     return BytesToTime(length);
   }
@@ -480,23 +446,10 @@ nsWaveStateMachine::IsEnded()
 }
 
 void
-nsWaveStateMachine::StreamEnded(PRBool aAtEnd)
+nsWaveStateMachine::StreamEnded()
 {
   nsAutoMonitor monitor(mMonitor);
   mExpectMoreData = PR_FALSE;
-
-  // If we know the content length, set the bytes downloaded to this
-  // so the final progress event gets the correct final value.
-  if (mTotalBytes >= 0) {
-    mDownloadPosition = mTotalBytes;
-  }
-}
-
-PRBool
-nsWaveStateMachine::HasPendingData()
-{
-  nsAutoMonitor monitor(mMonitor);
-  return mPlaybackPosition < mDownloadPosition;
 }
 
 NS_IMETHODIMP
@@ -538,13 +491,14 @@ nsWaveStateMachine::Run()
       }
       break;
 
-    case STATE_BUFFERING: {
-      PRIntervalTime now = PR_IntervalNow();
-      if ((PR_IntervalToMilliseconds(now - mBufferingStart) < mBufferingWait) &&
+    case STATE_BUFFERING:
+      if ((PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart) < mBufferingWait) &&
+          mStream->DownloadRate() >= 0 &&
           mStream->Available() < mBufferingBytes) {
-        LOG(PR_LOG_DEBUG, ("Buffering data until %d bytes or %d milliseconds\n",
+        LOG(PR_LOG_DEBUG, ("Buffering data until %d bytes or %d milliseconds (rate %f)\n",
                            mBufferingBytes - mStream->Available(),
-                           mBufferingWait - (now - mBufferingStart)));
+                           mBufferingWait - (PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart)),
+                           mStream->DownloadRate()));
         monitor.Wait(PR_MillisecondsToInterval(1000));
       } else {
         ChangeState(mNextState);
@@ -554,26 +508,30 @@ nsWaveStateMachine::Run()
       }
 
       break;
-    }
 
-    case STATE_PLAYING: {
+    case STATE_PLAYING:
       if (!mAudioStream) {
         OpenAudioStream();
       } else {
         mAudioStream->Resume();
       }
 
-      if (mStream->Available() < mSampleSize) {
-        if (mExpectMoreData) {
-          // Buffer until mBufferingWait milliseconds of data is available.
-          mBufferingBytes = TimeToBytes(float(mBufferingWait) / 1000.0);
-          mBufferingStart = PR_IntervalNow();
-          ChangeState(STATE_BUFFERING);
-        } else {
-          // Media stream has ended and there is less data available than a
-          // single sample so end playback.
-          ChangeState(STATE_ENDED);
-        }
+      if (mStream->DownloadRate() >= 0 &&
+          mStream->Available() < mStream->PlaybackRate() * BUFFERING_SECONDS_LOW_WATER_MARK) {
+        nsCOMPtr<nsIRunnable> event =
+          NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, BufferingStarted);
+        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+
+        // Buffer until mBufferingWait milliseconds of data is available.
+        mBufferingBytes = TimeToBytes(float(mBufferingWait) / 1000.0);
+        mBufferingStart = PR_IntervalNow();
+        ChangeState(STATE_BUFFERING);
+      }
+
+      if (!mExpectMoreData && mStream->Available() < mSampleSize) {
+        // Media stream has ended and there is less data available than a
+        // single sample so end playback.
+        ChangeState(STATE_ENDED);
       } else {
         // Assuming enough data is available from the network, we aim to
         // completely fill the audio backend's buffers with data.  This
@@ -635,7 +593,6 @@ nsWaveStateMachine::Run()
         monitor.Wait(PR_MillisecondsToInterval(PRUint32(nextWakeup)));
       }
       break;
-    }
 
     case STATE_SEEKING:
       {
@@ -800,59 +757,6 @@ nsWaveStateMachine::CloseAudioStream()
     mAudioStream->Shutdown();
     mAudioStream = nsnull;
   }
-}
-
-nsMediaDecoder::Statistics
-nsWaveStateMachine::GetStatistics()
-{
-  nsMediaDecoder::Statistics result;
-  nsAutoMonitor monitor(mMonitor);
-  PRIntervalTime now = PR_IntervalNow();
-  result.mDownloadRate = mDownloadStatistics.GetRate(now, &result.mDownloadRateReliable);
-  result.mPlaybackRate = mSampleRate*mChannels*mSampleSize;
-  result.mPlaybackRateReliable = PR_TRUE;
-  result.mTotalBytes = mTotalBytes;
-  result.mDownloadPosition = mDownloadPosition;
-  result.mDecoderPosition = mPlaybackPosition;
-  result.mPlaybackPosition = mPlaybackPosition;
-  return result;
-}
-
-void
-nsWaveStateMachine::SetTotalBytes(PRInt64 aBytes) {
-  nsAutoMonitor monitor(mMonitor);
-  mTotalBytes = aBytes;
-}
-
-void
-nsWaveStateMachine::NotifyBytesDownloaded(PRInt64 aBytes)
-{
-  nsAutoMonitor monitor(mMonitor);
-  mDownloadStatistics.AddBytes(aBytes);
-  mDownloadPosition += aBytes;
-}
-
-void
-nsWaveStateMachine::NotifyDownloadSeeked(PRInt64 aOffset)
-{
-  nsAutoMonitor monitor(mMonitor);
-  mDownloadPosition = mPlaybackPosition = aOffset;
-}
-
-void
-nsWaveStateMachine::NotifyDownloadEnded(nsresult aStatus)
-{
-  if (aStatus == NS_BINDING_ABORTED)
-    return;
-  nsAutoMonitor monitor(mMonitor);
-  mDownloadStatistics.Stop(PR_IntervalNow());
-}
-
-void
-nsWaveStateMachine::NotifyBytesConsumed(PRInt64 aBytes)
-{
-  nsAutoMonitor monitor(mMonitor);
-  mPlaybackPosition += aBytes;
 }
 
 static PRUint32
@@ -1086,7 +990,8 @@ nsWaveStateMachine::FindDataOffset()
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsWaveDecoder, nsIObserver)
 
 nsWaveDecoder::nsWaveDecoder()
-  : mInitialVolume(1.0),
+  : mBytesDownloaded(0),
+    mInitialVolume(1.0),
     mStream(nsnull),
     mTimeOffset(0.0),
     mEndedCurrentTime(0.0),
@@ -1094,9 +999,7 @@ nsWaveDecoder::nsWaveDecoder()
     mEnded(PR_FALSE),
     mNotifyOnShutdown(PR_FALSE),
     mSeekable(PR_TRUE),
-    mResourceLoaded(PR_FALSE),
-    mMetadataLoadedReported(PR_FALSE),
-    mResourceLoadedReported(PR_FALSE)
+    mResourceLoaded(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsWaveDecoder);
 }
@@ -1245,6 +1148,7 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
   mStopping = PR_FALSE;
 
   // Reset progress member variables
+  mBytesDownloaded = 0;
   mResourceLoaded = PR_FALSE;
 
   if (aStreamListener) {
@@ -1267,19 +1171,15 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
   mStream = new nsMediaStream();
   NS_ENSURE_TRUE(mStream, NS_ERROR_OUT_OF_MEMORY);
 
-  mPlaybackStateMachine = new nsWaveStateMachine(this, mStream.get(),
-                                                 BUFFERING_TIMEOUT * 1000,
-                                                 mInitialVolume);
-  NS_ENSURE_TRUE(mPlaybackStateMachine, NS_ERROR_OUT_OF_MEMORY);
-
-  // Open the stream *after* setting mPlaybackStateMachine, to ensure
-  // that callbacks (e.g. setting stream size) will actually work
   nsresult rv = mStream->Open(this, mURI, aChannel, aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewThread(getter_AddRefs(mPlaybackThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mPlaybackStateMachine = new nsWaveStateMachine(this, mStream.get(),
+                                                 BUFFERING_TIMEOUT * 1000,
+                                                 mInitialVolume);
   rv = mPlaybackThread->Dispatch(mPlaybackStateMachine, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1298,12 +1198,14 @@ nsWaveDecoder::MetadataLoaded()
     mElement->FirstFrameLoaded();
   }
 
-  mMetadataLoadedReported = PR_TRUE;
-
-  if (mResourceLoaded) {
-    ResourceLoaded();
-  } else {
+  if (!mResourceLoaded) {
     StartProgress();
+  }
+  else if (mElement)
+  {
+    // Resource was loaded during metadata loading, when progress
+    // events are being ignored. Fire the final progress event.
+    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
   }
 }
 
@@ -1326,25 +1228,28 @@ nsWaveDecoder::ResourceLoaded()
   if (mShuttingDown) {
     return;
   }
- 
-  if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->StreamEnded(PR_TRUE);
+
+  // If we know the content length, set the bytes downloaded to this
+  // so the final progress event gets the correct final value.
+  if (mContentLength >= 0) {
+    mBytesDownloaded = mContentLength;
   }
 
   mResourceLoaded = PR_TRUE;
 
-  if (!mMetadataLoadedReported || mResourceLoadedReported)
-    return;
+  if (mElement) {
+    mElement->ResourceLoaded();
+  }
+  if (mPlaybackStateMachine) {
+    mPlaybackStateMachine->StreamEnded();
+  }
 
   StopProgress();
 
+  // Ensure the final progress event gets fired
   if (mElement) {
-    // Ensure the final progress event gets fired
     mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
-    mElement->ResourceLoaded();
   }
-
-  mResourceLoadedReported = PR_TRUE;
 }
 
 void
@@ -1357,7 +1262,7 @@ nsWaveDecoder::NetworkError()
     mElement->NetworkError();
   }
   if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->StreamEnded(PR_FALSE);
+    mPlaybackStateMachine->StreamEnded();
   }
   Stop();
 }
@@ -1380,63 +1285,28 @@ nsWaveDecoder::IsEnded() const
   return mEnded;
 }
 
-nsMediaDecoder::Statistics
-nsWaveDecoder::GetStatistics()
+PRUint64
+nsWaveDecoder::GetBytesLoaded()
 {
-  if (!mPlaybackStateMachine)
-    return Statistics();
-  return mPlaybackStateMachine->GetStatistics();
+  return mBytesDownloaded;
 }
 
-void
-nsWaveDecoder::NotifyBytesDownloaded(PRInt64 aBytes)
+PRInt64
+nsWaveDecoder::GetTotalBytes()
 {
-  if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->NotifyBytesDownloaded(aBytes);
-  }
-  UpdateReadyStateForData();
-}
-
-void
-nsWaveDecoder::NotifyDownloadSeeked(PRInt64 aBytes)
-{
-  if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->NotifyDownloadSeeked(aBytes);
-  }
-}
-
-void
-nsWaveDecoder::NotifyDownloadEnded(nsresult aStatus)
-{
-  if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->NotifyDownloadEnded(aStatus);
-  }
-  if (aStatus != NS_BINDING_ABORTED) {
-    if (NS_SUCCEEDED(aStatus)) {
-      ResourceLoaded();
-    } else if (aStatus != NS_BASE_STREAM_CLOSED) {
-      NetworkError();
-    }
-  }
-  UpdateReadyStateForData();
-}
-
-void
-nsWaveDecoder::NotifyBytesConsumed(PRInt64 aBytes)
-{
-  if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->NotifyBytesConsumed(aBytes);
-  }
+  return mContentLength;
 }
 
 void
 nsWaveDecoder::SetTotalBytes(PRInt64 aBytes)
 {
-  if (mPlaybackStateMachine) {
-    mPlaybackStateMachine->SetTotalBytes(aBytes);
-  } else {
-    NS_WARNING("Forgot total bytes since there is no state machine set up");
-  }
+  mContentLength = aBytes;
+}
+
+void
+nsWaveDecoder::UpdateBytesDownloaded(PRUint64 aBytes)
+{
+  mBytesDownloaded = aBytes;
 }
 
 // An event that gets posted to the main thread, when the media element is
@@ -1484,20 +1354,27 @@ nsWaveDecoder::Observe(nsISupports* aSubject, const char* aTopic, const PRUnicha
 }
 
 void
-nsWaveDecoder::UpdateReadyStateForData()
+nsWaveDecoder::BufferingStarted()
 {
-  if (!mElement || mShuttingDown || !mPlaybackStateMachine)
+  if (mShuttingDown) {
     return;
+  }
 
-  PRBool haveDataToPlay =
-    mPlaybackStateMachine->HasPendingData() && mMetadataLoadedReported;
-  mElement->UpdateReadyStateForData(haveDataToPlay);
+  if (mElement) {
+    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+  }
 }
 
 void
 nsWaveDecoder::BufferingStopped()
 {
-  UpdateReadyStateForData();
+  if (mShuttingDown) {
+    return;
+  }
+
+  if (mElement) {
+    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
+  }
 }
 
 void
@@ -1525,7 +1402,6 @@ nsWaveDecoder::SeekingStopped()
 
   if (mElement) {
     mElement->SeekCompleted();
-    UpdateReadyStateForData();
   }
 }
 

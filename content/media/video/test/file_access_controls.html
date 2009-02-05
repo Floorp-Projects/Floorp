@@ -64,8 +64,8 @@ var gTestedRemoved = false;
 var gOldPref;
 
 function result(code) {
-  dump((gTestNum - 1) + ": " + code + "\n");
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  dump("result " + code);
   opener.is(code, gExpectedResult, gTestDescription);
   nextTest();
 }
@@ -105,9 +105,7 @@ function nextTest() {
   }
   gExpectedResult = gTests[gTestNum].result;
   gTestDescription = gTests[gTestNum].description;
-  dump("Starting test " + gTestNum + " at " + gTests[gTestNum].url + "\n");
   video.src = gTests[gTestNum].url;
-  video.load();
   gTestNum++;
 }
 
