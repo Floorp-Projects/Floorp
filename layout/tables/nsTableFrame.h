@@ -38,7 +38,7 @@
 #define nsTableFrame_h__
 
 #include "nscore.h"
-#include "nsVoidArray.h"
+#include "nsTPtrArray.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
@@ -484,26 +484,26 @@ public:
   virtual void AppendCell(nsTableCellFrame& aCellFrame,
                           PRInt32           aRowIndex);
 
-  virtual void InsertCells(nsVoidArray&    aCellFrames, 
-                           PRInt32         aRowIndex, 
-                           PRInt32         aColIndexBefore);
+  virtual void InsertCells(nsTArray<nsTableCellFrame*>& aCellFrames,
+                           PRInt32                      aRowIndex,
+                           PRInt32                      aColIndexBefore);
 
   virtual void RemoveCell(nsTableCellFrame* aCellFrame,
                           PRInt32           aRowIndex);
 
-  void AppendRows(nsTableRowGroupFrame& aRowGroupFrame,
-                  PRInt32               aRowIndex,
-                  nsVoidArray&          aRowFrames);
+  void AppendRows(nsTableRowGroupFrame&       aRowGroupFrame,
+                  PRInt32                     aRowIndex,
+                  nsTArray<nsTableRowFrame*>& aRowFrames);
 
   PRInt32 InsertRow(nsTableRowGroupFrame& aRowGroupFrame,
                     nsIFrame&             aFrame,
                     PRInt32               aRowIndex,
                     PRBool                aConsiderSpans);
 
-  PRInt32 InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
-                     nsVoidArray&          aFrames,
-                     PRInt32               aRowIndex,
-                     PRBool                aConsiderSpans);
+  PRInt32 InsertRows(nsTableRowGroupFrame&       aRowGroupFrame,
+                     nsTArray<nsTableRowFrame*>& aFrames,
+                     PRInt32                     aRowIndex,
+                     PRBool                      aConsiderSpans);
 
   virtual void RemoveRows(nsTableRowFrame& aFirstRowFrame,
                           PRInt32          aNumRowsToRemove,
@@ -767,7 +767,7 @@ public:
   void ResetRowIndices(nsIFrame* aFirstRowGroupFrame = nsnull,
                        nsIFrame* aLastRowGroupFrame = nsnull);
 
-  nsVoidArray& GetColCache();
+  nsTArray<nsTableColFrame*>& GetColCache();
 
   /** Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
     */
@@ -785,8 +785,8 @@ protected:
   void SetColumnDimensions(nscoord         aHeight,
                            const nsMargin& aReflowState);
 
-  PRInt32 CollectRows(nsIFrame*       aFrame,
-                      nsVoidArray&    aCollection);
+  PRInt32 CollectRows(nsIFrame*                   aFrame,
+                      nsTArray<nsTableRowFrame*>& aCollection);
 
 public: /* ----- Cell Map public methods ----- */
 
@@ -847,7 +847,7 @@ protected:
   void DumpRowGroup(nsIFrame* aChildFrame);
 #endif
   // DATA MEMBERS
-  nsAutoVoidArray mColFrames;  
+  nsAutoTPtrArray<nsTableColFrame, 8> mColFrames;
 
   struct TableBits {
     PRUint32 mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow
@@ -953,7 +953,7 @@ inline nsFrameList& nsTableFrame::GetColGroups()
   return static_cast<nsTableFrame*>(GetFirstInFlow())->mColGroups;
 }
 
-inline nsVoidArray& nsTableFrame::GetColCache()
+inline nsTArray<nsTableColFrame*>& nsTableFrame::GetColCache()
 {
   return mColFrames;
 }
