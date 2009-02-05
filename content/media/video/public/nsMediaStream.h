@@ -89,11 +89,12 @@ public:
   virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
   virtual PRInt64  Tell() = 0;
   virtual PRUint32 Available() = 0;
-  virtual float    DownloadRate() = 0;
   virtual void     Cancel() { }
   virtual nsIPrincipal* GetCurrentPrincipal() = 0;
   virtual void     Suspend() = 0;
   virtual void     Resume() = 0;
+
+  nsMediaDecoder* Decoder() { return mDecoder; }
 
 protected:
   // This is not an nsCOMPointer to prevent a circular reference
@@ -175,15 +176,6 @@ class nsMediaStream
   // read without blocking. Can be called from any thread.
   PRUint32 Available();
 
-  // Return the current download rate in bytes per second. Returns less than
-  // zero if the download has completed. Can be called from any
-  // thread.
-  float DownloadRate();
-
-  // Return the current playback rate in bytes per second. Can be
-  // called from any thread.
-  float PlaybackRate();
-
   // Cancels any currently blocking request and forces that request to
   // return an error. Call on main thread only.
   void Cancel();
@@ -205,17 +197,6 @@ class nsMediaStream
   // only. Open is always called first on the main thread before any
   // other calls from other threads.
   nsAutoPtr<nsStreamStrategy> mStreamStrategy;
-
-  // Time used for computing average playback rate. Written on the 
-  // main thread only during the Open call. Read from any thread during
-  // calls to PlaybackRate() - which can only ever happen after Open.
-  PRIntervalTime mPlaybackRateStart;
-
-  // Bytes downloaded for average playback rate computation. Initialized
-  // on the main thread during Open(). After that it is read and written
-  // possibly on a different thread, but exclusively from that
-  // thread. In the case of the Ogg Decoder, it is the Decoder thread.
-  PRUint32 mPlaybackRateCount;
 };
 
 #endif
