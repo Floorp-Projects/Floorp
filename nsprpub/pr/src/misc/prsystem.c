@@ -313,7 +313,7 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
 
     /* Try to use the newer GlobalMemoryStatusEx API for Windows 2000+. */
     GlobalMemoryStatusExFn globalMemory = (GlobalMemoryStatusExFn) NULL;
-    HMODULE module = GetModuleHandle("kernel32.dll");
+    HMODULE module = GetModuleHandleW(L"kernel32.dll");
 
     if (module) {
         globalMemory = (GlobalMemoryStatusExFn)GetProcAddress(module, "GlobalMemoryStatusEx");

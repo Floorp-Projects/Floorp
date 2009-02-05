@@ -99,6 +99,16 @@ static PRLock *_pr_logLock;
 #define WIN32_DEBUG_FILE (FILE*)-2
 #endif
 
+#ifdef WINCE
+static void OutputDebugStringA(const char* msg) {
+    int len = MultiByteToWideChar(CP_ACP, 0, msg, -1, 0, 0);
+    WCHAR *wMsg = (WCHAR *)PR_Malloc(len * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, msg, -1, wMsg, len);
+    OutputDebugStringW(wMsg);
+    PR_Free(wMsg);
+}
+#endif
+
 /* Macros used to reduce #ifdef pollution */
 
 #if defined(_PR_USE_STDIO_FOR_LOGGING) && defined(XP_PC)
@@ -107,7 +117,7 @@ static PRLock *_pr_logLock;
     if (logFile == WIN32_DEBUG_FILE) { \
         char savebyte = buf[nb]; \
         buf[nb] = '\0'; \
-        OutputDebugString(buf); \
+        OutputDebugStringA(buf); \
         buf[nb] = savebyte; \
     } else { \
         fwrite(buf, 1, nb, fd); \
@@ -254,7 +264,7 @@ void _PR_InitLog(void)
 #ifdef XP_PC
                 char* str = PR_smprintf("Unable to create nspr log file '%s'\n", ev);
                 if (str) {
-                    OutputDebugString(str);
+                    OutputDebugStringA(str);
                     PR_smprintf_free(str);
                 }
 #else
