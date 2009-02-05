@@ -2080,7 +2080,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   nsCOMPtr<nsIAccessibleEvent> reorderEvent =
     new nsAccReorderEvent(containerAccessible, isAsynch,
                           isUnconditionalEvent,
-                          aChild ? childNode : nsnull);
+                          aChild ? childNode.get() : nsnull);
   NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
 
   FireDelayedAccessibleEvent(reorderEvent);
