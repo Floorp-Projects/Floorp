@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Soft hyphen font fallback (for bug 476378)</title>
+</head>
+<body>
+
+<!-- On OS X, Hoefler Text has a distinctive hyphen; on Windows, Segoe UI does.
+     In each case U+2010 will fall back to a font with a very different glyph. -->
+<div style="width: 50pt;
+     font-family: Hoefler Text, Segoe UI, Trebuchet MS, Lucida Grande;
+     font-size: 24pt;">
+
+<!-- reference text uses an explicit ASCII hyphen at the expected break point -->
+<p>aaa-<br>aa</p>
+
+</div>
+
+</body>
+</html>
