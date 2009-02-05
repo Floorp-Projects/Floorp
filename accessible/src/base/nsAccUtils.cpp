@@ -46,6 +46,7 @@
 #include "nsAccessibleEventData.h"
 #include "nsHyperTextAccessible.h"
 #include "nsAccessibilityAtoms.h"
+#include "nsAccessibleTreeWalker.h"
 #include "nsAccessible.h"
 #include "nsARIAMap.h"
 
@@ -354,6 +355,33 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return pAccessible->FireAccessibleEvent(event);
+}
+
+PRBool
+nsAccUtils::HasAccessibleChildren(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (!content)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIPresShell> presShell = nsCoreUtils::GetPresShellFor(aNode);
+  if (!presShell)
+    return PR_FALSE;
+
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  if (!frame)
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+  nsAccessibleTreeWalker walker(weakShell, aNode, PR_FALSE);
+
+  walker.mState.frame = frame;
+
+  walker.GetFirstChild();
+  return walker.mState.accessible ? PR_TRUE : PR_FALSE;
 }
 
 already_AddRefed<nsIAccessible>

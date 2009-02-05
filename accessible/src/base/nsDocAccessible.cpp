@@ -1704,6 +1704,18 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           }
         } 
       }
+      else if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
+        // Fire reorder event if it's unconditional (see InvalidateCacheSubtree
+        // method) or if changed node (that is the reason of this reorder event)
+        // is accessible or has accessible children.
+        nsAccReorderEvent* reorderEvent = nsnull;
+        CallQueryInterface(accessibleEvent, &reorderEvent);
+        if (reorderEvent->IsUnconditionalEvent() ||
+            reorderEvent->HasAccessibleInReasonSubtree()) {
+          nsAccEvent::PrepareForEvent(accessibleEvent);
+          FireAccessibleEvent(accessibleEvent);
+        }
+      }
       else {
         // The input state was previously stored with the nsIAccessibleEvent,
         // so use that state now when firing the event
@@ -2050,15 +2062,29 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   FireValueChangeForTextFields(containerAccessible);
 
-  if (childAccessible) {
-    // Fire an event so the MSAA clients know the children have changed. Also
-    // the event is used internally by MSAA part.
-    nsCOMPtr<nsIAccessibleEvent> reorderEvent =
-      new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible,
-                     isAsynch, nsAccEvent::eCoalesceFromSameSubtree);
-    NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
-    FireDelayedAccessibleEvent(reorderEvent);
-  }
+  // Fire an event so the MSAA clients know the children have changed. Also
+  // the event is used internally by MSAA part.
+
+  // We need to fire reorder event for accessible parent of the changed node if
+  // the changed node is accessible or has accessible children. In this case
+  // we fire delayed unconditional reorder event which means it will be fired
+  // after timeout in any case (of course if it won't be coalesced from event
+  // queue). But at this point in the case of show events accessible object may
+  // be not created for generally accessible changed node (because its frame may
+  // be not constructed yet). Therefore we can to check whether the changed node
+  // is accessible or has accessible children after timeout only. In the case we
+  // fire conditional reorder event.
+
+  PRBool isUnconditionalEvent = childAccessible ||
+    aChild && nsAccUtils::HasAccessibleChildren(childNode);
+
+  nsCOMPtr<nsIAccessibleEvent> reorderEvent =
+    new nsAccReorderEvent(containerAccessible, isAsynch,
+                          isUnconditionalEvent,
+                          aChild ? childNode : nsnull);
+  NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  FireDelayedAccessibleEvent(reorderEvent);
 
   return NS_OK;
 }
