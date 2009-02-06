@@ -511,7 +511,7 @@ struct MessageWindow {
         static PRUnichar *mClassName = 0;
         if ( !mClassName ) {
             ::_snwprintf(classNameBuffer,
-                         sizeof classNameBuffer,
+                         128,   // size of classNameBuffer in PRUnichars
                          L"%s%s",
                          NS_ConvertUTF8toUTF16(gAppData->name).get(),
                          L"MessageWindow" );
@@ -673,8 +673,8 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     // Grab mutex first.
 
     // Build mutex name from app name.
-    ::_snwprintf(mMutexName, sizeof mMutexName, L"%s%s%s", MOZ_MUTEX_NAMESPACE,
-                 gAppData->name, MOZ_STARTUP_MUTEX_NAME );
+    ::_snwprintf(mMutexName, sizeof mMutexName / sizeof(PRUnichar), L"%s%s%s", 
+                 MOZ_MUTEX_NAMESPACE, gAppData->name, MOZ_STARTUP_MUTEX_NAME );
     Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
