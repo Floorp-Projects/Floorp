@@ -131,7 +131,7 @@ extern JSBool
 js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 #endif
 
-extern JS_FASTCALL JSBool
+extern JSBool JS_FASTCALL
 js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v);
 
 /*
