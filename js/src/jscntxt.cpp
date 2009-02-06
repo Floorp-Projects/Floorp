@@ -358,6 +358,26 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if defined DEBUG && defined XP_UNIX
 # include <stdio.h>
 
+class AutoFile {
+public:
+    AutoFile() : mFp(NULL) {}
+
+    ~AutoFile() {
+        if (mFp)
+            fclose(mFp);
+    }
+
+    FILE *open(const char *fname, const char *mode) {
+        return mFp = fopen(fname, mode);
+    }
+    operator FILE *() {
+        return mFp;
+    }
+
+private:
+    FILE *mFp;
+};
+
 static void
 DumpEvalCacheMeter(JSContext *cx)
 {
@@ -371,18 +391,18 @@ DumpEvalCacheMeter(JSContext *cx)
     };
     JSEvalCacheMeter *ecm = &JS_CACHE_LOCUS(cx)->evalCacheMeter;
 
-    static FILE *fp;
+    static AutoFile fp;
     if (!fp) {
-        fp = fopen("/tmp/evalcache.stats", "w");
+        fp.open("/tmp/evalcache.stats", "w");
         if (!fp)
             return;
     }
 
     fprintf(fp, "eval cache meter (%p):\n",
 #ifdef JS_THREADSAFE
-            cx->thread
+            (void *) cx->thread
 #else
-            cx->runtime
+            (void *) cx->runtime
 #endif
             );
     for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
