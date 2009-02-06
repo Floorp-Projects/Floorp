@@ -4027,41 +4027,44 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     int32_t bs = cx->builtinStatus;
     cx->builtinStatus = 0;
     bool bailed = innermost->exitType == STATUS_EXIT && (bs & JSBUILTIN_BAILED);
-    if (bailed)
-        JS_TRACE_MONITOR(cx).prohibitRecording = false;
-    if (bailed && !(bs & JSBUILTIN_ERROR)) {
+    if (bailed) {
         /*
          * Deep-bail case.
          *
          * A _FAIL native already called LeaveTree. We already reconstructed
          * the interpreter stack, in pre-call state, with pc pointing to the
          * CALL/APPLY op, for correctness. Then we continued in native code.
-         * The native succeeded (no exception or error). After it returned, the
-         * trace stored the return value (at the top of the native stack) and
-         * then immediately flunked the guard on cx->builtinStatus.
-         *
-         * Now LeaveTree has been called again from the tail of
-         * js_ExecuteTree. We are about to return to the interpreter. Adjust
-         * the top stack frame to resume on the next op.
          */
-        JS_ASSERT(*cx->fp->regs->pc == JSOP_CALL || *cx->fp->regs->pc == JSOP_APPLY);
-        uintN argc = GET_ARGC(cx->fp->regs->pc);
-        cx->fp->regs->pc += JSOP_CALL_LENGTH;
-        cx->fp->regs->sp -= argc + 1;
-        JS_ASSERT_IF(!cx->fp->imacpc,
-                     cx->fp->slots + cx->fp->script->nfixed +
-                     js_ReconstructStackDepth(cx, cx->fp->script, cx->fp->regs->pc) ==
-                     cx->fp->regs->sp);
+        if (!(bs & JSBUILTIN_ERROR)) {
+            /*
+             * The native succeeded (no exception or error). After it returned, the
+             * trace stored the return value (at the top of the native stack) and
+             * then immediately flunked the guard on cx->builtinStatus.
+             *
+             * Now LeaveTree has been called again from the tail of
+             * js_ExecuteTree. We are about to return to the interpreter. Adjust
+             * the top stack frame to resume on the next op.
+             */
+            JS_ASSERT(*cx->fp->regs->pc == JSOP_CALL || *cx->fp->regs->pc == JSOP_APPLY);
+            uintN argc = GET_ARGC(cx->fp->regs->pc);
+            cx->fp->regs->pc += JSOP_CALL_LENGTH;
+            cx->fp->regs->sp -= argc + 1;
+            JS_ASSERT_IF(!cx->fp->imacpc,
+                         cx->fp->slots + cx->fp->script->nfixed +
+                         js_ReconstructStackDepth(cx, cx->fp->script, cx->fp->regs->pc) ==
+                         cx->fp->regs->sp);
 
-        /*
-         * The return value was not available when we reconstructed the stack,
-         * but we have it now. Box it.
-         */
-        uint8* typeMap = getStackTypeMap(innermost);
-        NativeToValue(cx,
-                      cx->fp->regs->sp[-1],
-                      typeMap[innermost->numStackSlots - 1],
-                      (jsdouble *) state.sp + innermost->sp_adj / sizeof(jsdouble) - 1);
+            /*
+             * The return value was not available when we reconstructed the stack,
+             * but we have it now. Box it.
+             */
+            uint8* typeMap = getStackTypeMap(innermost);
+            NativeToValue(cx,
+                          cx->fp->regs->sp[-1],
+                          typeMap[innermost->numStackSlots - 1],
+                          (jsdouble *) state.sp + innermost->sp_adj / sizeof(jsdouble) - 1);
+        }
+        JS_TRACE_MONITOR(cx).prohibitRecording = false;
         return;
     }
 
