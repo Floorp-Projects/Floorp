@@ -759,6 +759,8 @@ namespace nanojit
 	
 	void Assembler::beginAssembly(Fragment *frag, RegAllocMap* branchStateMap)
 	{
+		internalReset();
+
         _thisfrag = frag;
 		_activation.lowwatermark = 1;
 		_activation.tos = _activation.lowwatermark;
