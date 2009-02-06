@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=475214
+-->
+<head>
+  <title>Test for Bug 475214</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=475214">Mozilla Bug 475214</a>
+<p id="display"></p>
+<div id="content">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 475214 **/
+
+var e = document.getElementById("content");
+var s = e.style;
+
+e.style.font = "menu";
+is(e.style.cssText, "font: menu;", "serialize system font alone");
+is(e.style.font, "menu", "font getter returns value");
+
+e.style.fontFamily = "inherit";
+is(e.style.cssText, "font: menu; font-family: inherit;", "serialize system font and font-family");
+is(e.style.font, "", "font getter should be empty");
+
+e.style.font = "message-box";
+is(e.style.cssText, "font: message-box;", "serialize system font alone");
+is(e.style.font, "message-box", "font getter returns value");
+
+e.setAttribute("style", "font-weight:bold;font:caption;line-height:3;");
+is(e.style.cssText, "font: caption; line-height: 3;", "serialize system font and font-family");
+is(e.style.font, "", "font getter should be empty");
+
+e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font");
+is(e.style.cssText, "font: menu;", "serialize system font alone");
+is(e.style.font, "menu", "font getter returns value");
+
+e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font ! important");
+is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font ! important;", "serialize system font and subproperty that is important");
+is(e.style.font, "", "font getter returns nothing");
+
+</script>
+</pre>
+</body>
+</html>
