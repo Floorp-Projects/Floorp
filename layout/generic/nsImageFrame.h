@@ -253,7 +253,7 @@ private:
   /**
    * This function will recalculate mTransform.
    */
-  void RecalculateTransform();
+  void RecalculateTransform(PRBool aInnerAreaChanged);
 
   /**
    * Helper functions to check whether the request or image container
