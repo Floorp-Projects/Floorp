@@ -4310,6 +4310,23 @@ function testArrayComp2() {
 testArrayComp2.expected='0123412345234563456745678';
 test(testArrayComp2);
 
+function testSwitchUndefined()
+{
+  var x = undefined;
+  var y = 0;
+  for (var i = 0; i < 5; i++)
+  {
+    switch (x)
+    {
+      default:
+        y++;
+    }
+  }
+  return y;
+}
+testSwitchUndefined.expected = 5;
+test(testSwitchUndefined);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

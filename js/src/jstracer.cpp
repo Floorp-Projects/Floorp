@@ -4966,7 +4966,7 @@ TraceRecorder::switchop()
               BRANCH_EXIT);
     } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         guard(true,
-              addName(lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_BOOLEAN(v))),
+              addName(lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_PUBLIC_PSEUDO_BOOLEAN(v))),
                       "guard(switch on boolean)"),
               BRANCH_EXIT);
     } else {
