@@ -1261,8 +1261,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // prepare to do the function call. This adds a fair amount of complexity,
     // but is a good optimization compared to calling JS_AddRoot for each item.
 
-    js_LeaveTrace(cx);
-
     // setup stack
 
     // if this isn't a function call then we don't need to push extra stuff
