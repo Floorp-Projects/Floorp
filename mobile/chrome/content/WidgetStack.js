@@ -471,7 +471,10 @@ WidgetStack.prototype = {
 
   // we're relying on viewportBounds and viewingRect having the same origin
   get viewportVisibleRect () {
-    return this._viewportBounds.intersect(this._viewingRect)
+    let rect = this._viewportBounds.intersect(this._viewingRect);
+    if (!rect)
+        rect = new wsRect(0, 0, 0, 0);
+    return rect;
   },
 
   // isWidgetVisible: return true if any portion of widget with id wid is
