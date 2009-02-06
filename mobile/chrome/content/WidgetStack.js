@@ -376,7 +376,7 @@ WidgetStack.prototype = {
         this._addNewWidget(c);
     }
 
-    // this also updates the viewportOverflow
+    // this also updates the viewportOverflow and pannableBounds
     this._updateWidgets();
 
     if (this._viewport) {
@@ -606,18 +606,7 @@ WidgetStack.prototype = {
     // now let's make sure that the viewing rect and inner bounds are still valid
     this._adjustViewingRect();
 
-    if (this._viewport && this._viewportUpdateHandler) {
-      let vws = this._viewport;
-      let vwib = vws.viewportInnerBounds.clone();
-
-      vwib.left += vws.offsetLeft;
-      vwib.top += vws.offsetTop;
-      vwib.right += vws.offsetRight;
-      vwib.bottom += vws.offsetBottom;
-
-      // notify the viewportUpdateHandler of the bounds change
-      this._viewportUpdateHandler.apply(window, [vwib, true]);
-    }
+    this._callViewportUpdateHandler(true);
   },
 
   // setViewportHandler
@@ -729,8 +718,8 @@ WidgetStack.prototype = {
     //  this._updateWidgetRect(s);
     //this._updateViewportOverflow();
 
-    this._viewingRect.width = width;
-    this._viewingRect.height = height;
+    this._viewingRect.width = Math.min(width, this._viewportBounds.width);
+    this._viewingRect.height = Math.min(height, this._viewportBounds.height);
 
     this._adjustViewingRect();
   },
@@ -923,9 +912,7 @@ WidgetStack.prototype = {
     // rectangle formed by 0,0,w,h, where w and h come from the current viewingRect.
     // This must be done after the above, since we'll manipulate vws.rect here.
     let boundsRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
-    let viewportRect = vws.rect;
-
-    if (!boundsRect.contains(viewportRect)) {
+    if (!boundsRect.contains(vws.rect)) {
       vws.rect.x = ioffsetx;
       vws.rect.y = ioffsety;
 
@@ -940,16 +927,22 @@ WidgetStack.prototype = {
       vws.dragStartRect = vws.rect.clone();
     }
 
-    if (needsUpdate && this._viewport && this._viewportUpdateHandler) {
-      let vwib = vws.viewportInnerBounds.clone();
+    if (needsUpdate)
+      this._callViewportUpdateHandler(false);
+  },
 
-      vwib.left += vws.offsetLeft;
-      vwib.top += vws.offsetTop;
-      vwib.right += vws.offsetRight;
-      vwib.bottom += vws.offsetBottom;
+  _callViewportUpdateHandler: function _callViewportUpdateHandler(boundsChanged) {
+    if (!this._viewport || !this._viewportUpdateHandler)
+      return;
 
-      this._viewportUpdateHandler.apply(window, [vwib, false]);
-    }
+    let vwib = this._viewport.viewportInnerBounds.clone();
+
+    vwib.left += this._viewport.offsetLeft;
+    vwib.top += this._viewport.offsetTop;
+    vwib.right += this._viewport.offsetRight;
+    vwib.bottom += this._viewport.offsetBottom;
+
+    this._viewportUpdateHandler.apply(window, [vwib, boundsChanged]);
   },
 
   _dragCoordsFromClient: function (cx, cy, t) {
@@ -1291,6 +1284,7 @@ WidgetStack.prototype = {
     this._updateViewportOverflow();
   },
 
+  // updates the viewportOverflow/pannableBounds
   _updateViewportOverflow: function() {
     let vp = this._viewport;
     if (!vp)
@@ -1320,8 +1314,6 @@ WidgetStack.prototype = {
     // clear the _pannableBounds cache, since it depends on the
     // viewportOverflow
     this._pannableBounds = null;
-
-    log("_updateViewportOverflow", this._viewportOverflow.toString());
   },
 
   _widgetBounds: function () {
