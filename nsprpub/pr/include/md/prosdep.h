@@ -63,10 +63,6 @@ PR_BEGIN_EXTERN_C
 #error unknown Windows platform
 #endif
 
-#elif defined XP_MAC
-
-#include "_macos.h"
-
 #elif defined(XP_UNIX)
 
 #if defined(AIX)

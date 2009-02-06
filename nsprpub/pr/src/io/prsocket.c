@@ -459,11 +459,6 @@ PRIntervalTime timeout)
 	 * of the listening socket.  As an optimization, these
 	 * platforms can skip the following _PR_MD_MAKE_NONBLOCK
 	 * call.
-	 * 
-	 * On Mac, we MUST make this call, because _PR_MD_MAKE_NONBLOCK
-	 * (which maps to _MD_makenonblock, see macsockotpt.c)
-	 * installs the async notifier routine needed to make blocking
-	 * I/O work properly.
 	 */
 #if !defined(SOLARIS) && !defined(IRIX) && !defined(WINNT)
 	_PR_MD_MAKE_NONBLOCK(fd2);

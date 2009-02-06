@@ -87,8 +87,10 @@ PR_Now(void)
 {
     PRTime prt;
     FILETIME ft;
+    SYSTEMTIME st;
 
-    GetSystemTimeAsFileTime(&ft);
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st, &ft);
     _PR_FileTimeToPRTime(&ft, &prt);
     return prt;       
 }
@@ -236,7 +238,19 @@ static int assembleEnvBlock(char **envp, char **envBlock)
         return 0;
     }
 
+#ifdef WINCE
+    {
+        PRUnichar *wideCurEnv = mozce_GetEnvString();
+        int len = WideCharToMultiByte(CP_ACP, 0, wideCurEnv, -1,
+                                      NULL, 0, NULL, NULL);
+        curEnv = (char *) PR_MALLOC(len * sizeof(char));
+        WideCharToMultiByte(CP_ACP, 0, wideCurEnv, -1,
+                            curEnv, len, NULL, NULL);
+        free(wideCurEnv);
+    }
+#else
     curEnv = GetEnvironmentStrings();
+#endif
 
     cwdStart = curEnv;
     while (*cwdStart) {
@@ -266,7 +280,11 @@ static int assembleEnvBlock(char **envp, char **envBlock)
 
     p = *envBlock = PR_MALLOC((PRUint32) envBlockSize);
     if (p == NULL) {
+#ifdef WINCE
+        PR_Free(curEnv);
+#else
         FreeEnvironmentStrings(curEnv);
+#endif
         return -1;
     }
 
@@ -274,7 +292,11 @@ static int assembleEnvBlock(char **envp, char **envBlock)
     while (q < cwdEnd) {
         *p++ = *q++;
     }
+#ifdef WINCE
+    PR_Free(curEnv);
+#else
     FreeEnvironmentStrings(curEnv);
+#endif
 
     for (env = envp; *env; env++) {
         q = *env;
@@ -302,7 +324,14 @@ PRProcess * _PR_CreateWindowsProcess(
     char *const *envp,
     const PRProcessAttr *attr)
 {
+#ifdef WINCE
+    STARTUPINFOW startupInfo;
+    PRUnichar *wideCmdLine;
+    PRUnichar *wideCwd;
+    int len = 0;
+#else
     STARTUPINFO startupInfo;
+#endif
     PROCESS_INFORMATION procInfo;
     BOOL retVal;
     char *cmdLine = NULL;
@@ -323,6 +352,7 @@ PRProcess * _PR_CreateWindowsProcess(
         goto errorExit;
     }
 
+#ifndef WINCE
     /*
      * If attr->fdInheritBuffer is not NULL, we need to insert
      * it into the envp array, so envp cannot be NULL.
@@ -392,7 +422,36 @@ PRProcess * _PR_CreateWindowsProcess(
         }
         cwd = attr->currentDirectory;
     }
+#endif
 
+#ifdef WINCE
+    len = MultiByteToWideChar(CP_ACP, 0, cmdLine, -1, NULL, 0);
+    wideCmdLine = (PRUnichar *)PR_MALLOC(len * sizeof(PRUnichar));
+    MultiByteToWideChar(CP_ACP, 0, cmdLine, -1, wideCmdLine, len);
+    len = MultiByteToWideChar(CP_ACP, 0, cwd, -1, NULL, 0);
+    wideCwd = PR_MALLOC(len * sizeof(PRUnichar));
+    MultiByteToWideChar(CP_ACP, 0, cwd, -1, wideCwd, len);
+    retVal = CreateProcessW(NULL,
+                            wideCmdLine,
+                            NULL,  /* security attributes for the new
+                                    * process */
+                            NULL,  /* security attributes for the primary
+                                    * thread in the new process */
+                            TRUE,  /* inherit handles */
+                            0,     /* creation flags */
+                            envBlock,  /* an environment block, consisting
+                                        * of a null-terminated block of
+                                        * null-terminated strings.  Each
+                                        * string is in the form:
+                                        *     name=value
+                                        * XXX: usually NULL */
+                            wideCwd,  /* current drive and directory */
+                            &startupInfo,
+                            &procInfo
+                           );
+    PR_Free(wideCmdLine);
+    PR_Free(wideCwd);
+#else
     retVal = CreateProcess(NULL,
                            cmdLine,
                            NULL,  /* security attributes for the new
@@ -411,6 +470,8 @@ PRProcess * _PR_CreateWindowsProcess(
                            &startupInfo,
                            &procInfo
                           );
+#endif
+
     if (retVal == FALSE) {
         /* XXX what error code? */
         PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
@@ -603,8 +664,14 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
         fmap->md.dwAccess = FILE_MAP_WRITE;
     } else {
         PR_ASSERT(fmap->prot == PR_PROT_WRITECOPY);
+#ifdef WINCE
+        /* WINCE does not have FILE_MAP_COPY. */
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        return PR_FAILURE;
+#else
         flProtect = PAGE_WRITECOPY;
         fmap->md.dwAccess = FILE_MAP_COPY;
+#endif
     }
 
     fmap->md.hFileMap = CreateFileMapping(
