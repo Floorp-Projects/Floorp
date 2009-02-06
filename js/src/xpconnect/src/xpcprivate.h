@@ -82,6 +82,7 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsgc.h"
+#include "jstracer.h"
 #include "xptinfo.h"
 #include "xpcforwards.h"
 #include "xpclog.h"
