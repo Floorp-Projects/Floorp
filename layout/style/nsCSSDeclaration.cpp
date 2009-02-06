@@ -134,27 +134,6 @@ nsCSSDeclaration::AppendComment(const nsAString& aComment)
   return /* NS_ERROR_NOT_IMPLEMENTED, or not any longer that is */ NS_OK;
 }
 
-nsresult
-nsCSSDeclaration::GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue) const
-{
-  aValue.Reset();
-
-  NS_ASSERTION(aProperty >= 0, "out of range");
-  if (aProperty >= eCSSProperty_COUNT_no_shorthands ||
-      nsCSSProps::kTypeTable[aProperty] != eCSSType_Value) {
-    NS_ERROR("can't query for shorthand properties");
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
-                                     ? mImportantData : mData;
-  const void *storage = data->StorageFor(aProperty);
-  if (!storage)
-    return NS_OK;
-  aValue = *static_cast<const nsCSSValue*>(storage);
-  return NS_OK;
-}
-
 PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const
 {
   nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
@@ -919,9 +898,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       AppendValueToString(eCSSProperty_list_style_image, aValue);
       break;
     case eCSSProperty_overflow: {
-      nsCSSValue xValue, yValue;
-      GetValueOrImportantValue(eCSSProperty_overflow_x, xValue);
-      GetValueOrImportantValue(eCSSProperty_overflow_y, yValue);
+      const nsCSSValue &xValue = *static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty_overflow_x));
+      const nsCSSValue &yValue = *static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty_overflow_y));
       if (xValue == yValue)
         AppendCSSValueToString(eCSSProperty_overflow_x, xValue, aValue);
       break;
@@ -936,10 +916,12 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     }
 #ifdef MOZ_SVG
     case eCSSProperty_marker: {
-      nsCSSValue endValue, midValue, startValue;
-      GetValueOrImportantValue(eCSSProperty_marker_end, endValue);
-      GetValueOrImportantValue(eCSSProperty_marker_mid, midValue);
-      GetValueOrImportantValue(eCSSProperty_marker_start, startValue);
+      const nsCSSValue &endValue = *static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty_marker_end));
+      const nsCSSValue &midValue = *static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty_marker_mid));
+      const nsCSSValue &startValue = *static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty_marker_start));
       if (endValue == midValue && midValue == startValue)
         AppendValueToString(eCSSProperty_marker_end, aValue);
       break;
