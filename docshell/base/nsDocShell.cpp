@@ -6652,7 +6652,7 @@ nsDocShell::CheckLoadingPermissions()
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && subjPrincipal, rv);
 
     // Check if the caller is from the same origin as this docshell,
-    // or any of it's ancestors.
+    // or any of its ancestors.
     nsCOMPtr<nsIDocShellTreeItem> item(this);
     do {
         nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(item));

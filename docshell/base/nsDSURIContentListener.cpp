@@ -159,7 +159,7 @@ nsDSURIContentListener::IsPreferred(const char* aContentType,
     NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
     // the docshell has no idea if it is the preferred content provider or not.
-    // It needs to ask it's parent if it is the preferred content handler or not...
+    // It needs to ask its parent if it is the preferred content handler or not...
 
     nsCOMPtr<nsIURIContentListener> parentListener;
     GetParentContentListener(getter_AddRefs(parentListener));
