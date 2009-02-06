@@ -2572,27 +2572,35 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
     if (opt) {
         JSSTRING_CHARS_AND_LENGTH(opt, s, n);
         for (i = 0; i < n; i++) {
+#define HANDLE_FLAG(name)                                                     \
+            JS_BEGIN_MACRO                                                    \
+                if (flags & (name))                                           \
+                    goto bad_flag;                                            \
+                flags |= (name);                                              \
+            JS_END_MACRO
             switch (s[i]) {
               case 'g':
-                flags |= JSREG_GLOB;
+                HANDLE_FLAG(JSREG_GLOB);
                 break;
               case 'i':
-                flags |= JSREG_FOLD;
+                HANDLE_FLAG(JSREG_FOLD);
                 break;
               case 'm':
-                flags |= JSREG_MULTILINE;
+                HANDLE_FLAG(JSREG_MULTILINE);
                 break;
               case 'y':
-                flags |= JSREG_STICKY;
+                HANDLE_FLAG(JSREG_STICKY);
                 break;
               default:
+              bad_flag:
                 charBuf[0] = (char)s[i];
                 charBuf[1] = '\0';
                 JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                              js_GetErrorMessage, NULL,
-                                             JSMSG_BAD_FLAG, charBuf);
+                                             JSMSG_BAD_REGEXP_FLAG, charBuf);
                 return NULL;
             }
+#undef HANDLE_FLAG
         }
     }
     return js_NewRegExp(cx, NULL, str, flags, flat);
