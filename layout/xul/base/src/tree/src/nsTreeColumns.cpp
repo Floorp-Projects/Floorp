@@ -324,6 +324,9 @@ nsTreeColumn::Invalidate()
       (mTextAlignment == NS_STYLE_TEXT_ALIGN_END &&
        vis->mDirection == NS_STYLE_DIRECTION_LTR)) {
     mTextAlignment = NS_STYLE_TEXT_ALIGN_RIGHT;
+  } else if (mTextAlignment == NS_STYLE_TEXT_ALIGN_DEFAULT ||
+             mTextAlignment == NS_STYLE_TEXT_ALIGN_END) {
+    mTextAlignment = NS_STYLE_TEXT_ALIGN_LEFT;
   }
 
   // Figure out if we're the primary column (that has to have indentation
