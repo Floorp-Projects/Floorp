@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="data:text/css,treecol { visibility: hidden; }"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <tree>
+    <treecols>
+      <treecol style="text-align: start; direction: ltr" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: start; direction: rtl" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: left; direction: ltr" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: left; direction: rtl" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: right; direction: ltr" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: right; direction: rtl" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: end; direction: ltr" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <tree>
+    <treecols>
+      <treecol style="text-align: end; direction: rtl" flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="This is a test"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+</window>

@@ -582,21 +582,21 @@
 #define NS_STYLE_MARGIN_SIZE_AUTO               0
 
 // See nsStyleText
-// 
-// Note: make sure the numbers are less than the numbers that start
-// the vertical_align values below!
 #define NS_STYLE_TEXT_ALIGN_DEFAULT               0
 #define NS_STYLE_TEXT_ALIGN_LEFT                  1
 #define NS_STYLE_TEXT_ALIGN_RIGHT                 2
 #define NS_STYLE_TEXT_ALIGN_CENTER                3
 #define NS_STYLE_TEXT_ALIGN_JUSTIFY               4
 #define NS_STYLE_TEXT_ALIGN_CHAR                  5   //align based on a certain character, for table cell
-#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER            6
-#define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT             7
-#define NS_STYLE_TEXT_ALIGN_MOZ_LEFT              8
+#define NS_STYLE_TEXT_ALIGN_END                   6
+#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER            7
+#define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT             8
+#define NS_STYLE_TEXT_ALIGN_MOZ_LEFT              9
 // NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT is only used in data structs; it
 // is never present in stylesheets or computed data.
-#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT 9
+#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT 10
+// Note: make sure that the largest NS_STYLE_TEXT_ALIGN_* value is smaller than
+// the smallest NS_STYLE_VERTICAL_ALIGN_* value below!
 
 // See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_NONE           0
@@ -618,15 +618,15 @@
 // Note: these values pickup after the text-align values because there
 // are a few html cases where an object can have both types of
 // alignment applied with a single attribute
-#define NS_STYLE_VERTICAL_ALIGN_BASELINE             10
-#define NS_STYLE_VERTICAL_ALIGN_SUB                  11
-#define NS_STYLE_VERTICAL_ALIGN_SUPER                12
-#define NS_STYLE_VERTICAL_ALIGN_TOP                  13
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP             14
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE               15
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM          16
-#define NS_STYLE_VERTICAL_ALIGN_BOTTOM               17
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 18
+#define NS_STYLE_VERTICAL_ALIGN_BASELINE             11
+#define NS_STYLE_VERTICAL_ALIGN_SUB                  12
+#define NS_STYLE_VERTICAL_ALIGN_SUPER                13
+#define NS_STYLE_VERTICAL_ALIGN_TOP                  14
+#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP             15
+#define NS_STYLE_VERTICAL_ALIGN_MIDDLE               16
+#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM          17
+#define NS_STYLE_VERTICAL_ALIGN_BOTTOM               18
+#define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 19
 
 // See nsStyleDisplay
 #define NS_STYLE_VISIBILITY_HIDDEN              0
