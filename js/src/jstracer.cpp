@@ -8960,7 +8960,21 @@ TraceRecorder::record_JSOP_YIELD()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ARRAYPUSH()
 {
-    return false;
+    uint32_t slot = GET_UINT16(cx->fp->regs->pc);
+    JS_ASSERT(cx->fp->script->nfixed <= slot);
+    JS_ASSERT(cx->fp->slots + slot < cx->fp->regs->sp - 1);
+    jsval &arrayval = cx->fp->slots[slot];
+    JS_ASSERT(JSVAL_IS_OBJECT(arrayval));
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(arrayval)));
+    LIns *array_ins = get(&arrayval);
+    jsval &elt = stackval(-1);
+    LIns *elt_ins = get(&elt);
+    box_jsval(elt, elt_ins);
+
+    LIns *args[] = { elt_ins, array_ins, cx_ins };
+    LIns *ok_ins = lir->insCall(&js_ArrayCompPush_ci, args);
+    guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
+    return true;
 }
 
 JS_REQUIRES_STACK bool
