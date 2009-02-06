@@ -67,7 +67,7 @@
 
  When mozilla starts (and when NS_InitEmbedding()) is invoked
  we create an instance of the AppStartupNotifier component (which 
- implements nsIObserver) and invoke it's Observe() method. 
+ implements nsIObserver) and invoke its Observe() method. 
 
  Observe()  will enumerate the components registered into the
  APPSTARTUP_CATEGORY and notify them that startup has begun

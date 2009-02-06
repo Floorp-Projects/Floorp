@@ -328,7 +328,7 @@ void CBrowserView::OnSize( UINT nType, int cx, int cy)
 }
 
 // Called by this object's creator i.e. the CBrowserFrame object
-// to pass it's pointer to us
+// to pass its pointer to us
 //
 void CBrowserView::SetBrowserFrame(CBrowserFrame* pBrowserFrame)
 {

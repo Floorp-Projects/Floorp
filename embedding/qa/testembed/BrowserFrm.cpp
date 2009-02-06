@@ -215,7 +215,7 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	// The third pane(i.e. at index 2) of the status bar will have 
-	// the security lock icon displayed in it. Set up it's size(16) 
+	// the security lock icon displayed in it. Set up its size(16) 
 	// and style(no border)so that the padlock icons can be properly drawn
 //	m_wndStatusBar.SetPaneInfo(2, -1, SBPS_NORMAL|SBPS_NOBORDERS, 16);
 
@@ -299,7 +299,7 @@ void CBrowserFrame::OnSize(UINT nType, int cx, int cy)
        RECT rc;
        m_wndStatusBar.GetItemRect(1, &rc);
 
-       // Move the progress bar into it's correct location
+       // Move the progress bar into its correct location
        //
        m_wndProgressBar.MoveWindow(&rc);
 }

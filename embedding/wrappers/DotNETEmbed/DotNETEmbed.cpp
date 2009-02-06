@@ -68,7 +68,7 @@ Mozilla::Embedding::CopyString(const nsAFlatCString& aStr)
 }
 
 // In stead of copying String's to nsAString's we could write a class
-// that wraps a String object and exposes it's underlying
+// that wraps a String object and exposes its underlying
 // buffer. Doable, if we pin the String object, and so on, but this'll
 // do for now.
 nsAFlatString&

@@ -368,7 +368,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
     }
 
     //NOTE:  The IE control fires a DownloadBegin after the first BeforeNavigate.
-    //      It then fires a DownloadComplete after the engine has made it's
+    //      It then fires a DownloadComplete after the engine has made its
     //      initial connection to the server.  It then fires a second
     //      DownloadBegin/DownloadComplete pair around the loading of
     //      everything on the page.  These events get fired out of

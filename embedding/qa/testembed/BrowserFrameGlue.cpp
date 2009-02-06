@@ -315,7 +315,7 @@ PRBool CBrowserFrame::BrowserFrameGlueObj::CreateNewBrowserFrame(PRUint32 chrome
 	// objects. The CBrowserView also would have an embedded browser
 	// object created. Get the mWebBrowser member from the CBrowserView
 	// and return it. (See CBrowserView's CreateBrowser() on how the
-	// embedded browser gets created and how it's mWebBrowser member
+	// embedded browser gets created and how its mWebBrowser member
 	// gets initialized)
 
 	NS_IF_ADDREF(*aWebBrowser = pFrm->m_wndBrowserView.mWebBrowser);
