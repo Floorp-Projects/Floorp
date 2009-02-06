@@ -4272,6 +4272,13 @@ function testHolePushing() {
 testHolePushing.expected = "[<hole>,overwritten,new], false";
 test(testHolePushing);
 
+function testDeepBail1() {
+    var y = <z/>;
+    for (var i = 0; i < RUNLOOP; i++)
+        "" in y;
+}
+test(testDeepBail1);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
