@@ -87,6 +87,7 @@ TabStore.prototype = {
   _remoteClients: {},
 
   _TabStore_init: function TabStore__init() {
+    dump("Initializing TabStore!!\n");
     this._init();
     this._readFromFile();
   },
@@ -101,6 +102,7 @@ TabStore.prototype = {
 
   _writeToFile: function TabStore_writeToFile() {
     // use JSON service to serialize the records...
+    this._log.debug("Writing out to file...");
     let file = Utils.getProfileFile(
       {path: this._filePath, autoCreate: true});
     let jsonObj = {};
@@ -116,6 +118,7 @@ TabStore.prototype = {
     // use JSON service to un-serialize the records...
     // call on initialization.
     // Put stuff into remoteClients.
+    this._log.debug("Reading in from file...");
     let file = Utils.getProfileFile(this._filePath);
     if (!file.exists())
       return;
@@ -128,7 +131,7 @@ TabStore.prototype = {
 	this._remoteClients[id] = new TabSetRecord();
 	this._remoteClients[id].fromJson(jsonObj[id]);
 	this._remoteClients[id].id = id;
-    }
+      }
     } catch (e) {
       this._log.warn("Failed to load saved tabs file" + e);
     }
@@ -163,6 +166,7 @@ TabStore.prototype = {
       for (let j = 0; j < window.tabs.length; j++) {
         let tab = window.tabs[j];
 	let title = tab.contentDocument.title.innerHtml; // will this work?
+	this._log.debug("Wrapping a tab with title " + title);
 	let urlHistory = [];
 	let entries = tab.entries.slice(tab.entries.length - 10);
 	for (let entry in entries) {
@@ -175,20 +179,27 @@ TabStore.prototype = {
   },
 
   itemExists: function TabStore_itemExists(id) {
+    this._log.debug("ItemExists called.");
     if (id == this._localClientGUID) {
+      this._log.debug("It's me.");
       return true;
     } else if (this._remoteClients[id]) {
+      this._log.debug("It's somebody else.");
       return true;
     } else {
+      this._log.debug("It doesn't exist!");
       return false;
     }
   },
 
   createRecord: function TabStore_createRecord(id) {
+    this._log.debug("CreateRecord called for id " + id );
     let record;
     if (id == this._localClientGUID) {
+      this._log.debug("That's Me!");
       record = this._createLocalClientTabSetRecord();
     } else {
+      this._log.debug("That's Somebody Else.");
       record = this._remoteClients[id];
     }
     record.id = id;
@@ -196,6 +207,7 @@ TabStore.prototype = {
   },
 
   changeItemId: function TabStore_changeItemId(oldId, newId) {
+    this._log.debug("changeItemId called.");
     if (this._remoteClients[oldId]) {
       let record = this._remoteClients[oldId];
       record.id = newId;
@@ -205,6 +217,7 @@ TabStore.prototype = {
   },
 
   getAllIds: function TabStore_getAllIds() {
+    this._log.debug("getAllIds called.");
     let items = {};
     items[ this._localClientGUID ] = true;
     for (let id in this._remoteClients) {
