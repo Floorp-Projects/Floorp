@@ -606,14 +606,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                      kNotFound, "third subprop must be bottom");
       NS_ASSERTION(nsCSSProps::GetStringValue(subprops[3]).Find("-left") !=
                      kNotFound, "fourth subprop must be left");
-      const nsCSSValue &topValue =
-        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[0]));
-      const nsCSSValue &rightValue =
-        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[1]));
-      const nsCSSValue &bottomValue =
-        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[2]));
-      const nsCSSValue &leftValue =
-        *static_cast<const nsCSSValue*>(data->StorageFor(subprops[3]));
+      const nsCSSValue &topValue = *data->ValueStorageFor(subprops[0]);
+      const nsCSSValue &rightValue = *data->ValueStorageFor(subprops[1]);
+      const nsCSSValue &bottomValue = *data->ValueStorageFor(subprops[2]);
+      const nsCSSValue &leftValue = *data->ValueStorageFor(subprops[3]);
       PRBool haveValue;
       haveValue = AppendCSSValueToString(subprops[0], topValue, aValue);
       NS_ASSERTION(haveValue, "should have bailed before");
@@ -645,10 +641,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                    nsCSSProps::kTypeTable[subprops[3]] == eCSSType_ValuePair,
                    "type mismatch");
       const nsCSSValuePair* vals[4] = {
-        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[0])),
-        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[1])),
-        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[2])),
-        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[3]))
+        data->ValuePairStorageFor(subprops[0]),
+        data->ValuePairStorageFor(subprops[1]),
+        data->ValuePairStorageFor(subprops[2]),
+        data->ValuePairStorageFor(subprops[3])
       };
 
       AppendCSSValueToString(aProperty, vals[0]->mXValue, aValue);
@@ -688,11 +684,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
            subprops < subprops_end; ++subprops) {
         // Check only the first four subprops in each table, since the
         // others are extras for dimensional box properties.
-        const nsCSSValue *firstSide =
-          static_cast<const nsCSSValue*>(data->StorageFor((*subprops)[0]));
+        const nsCSSValue *firstSide = data->ValueStorageFor((*subprops)[0]);
         for (PRInt32 side = 1; side < 4; ++side) {
           const nsCSSValue *otherSide =
-            static_cast<const nsCSSValue*>(data->StorageFor((*subprops)[side]));
+            data->ValueStorageFor((*subprops)[side]);
           if (*firstSide != *otherSide)
             match = PR_FALSE;
         }
@@ -723,8 +718,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
                    StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
                                   NS_LITERAL_CSTRING("-color-value")),
                    "third subprop must be the color property");
-      const nsCSSValue *colorValue =
-        static_cast<const nsCSSValue*>(data->StorageFor(subprops[2]));
+      const nsCSSValue *colorValue = data->ValueStorageFor(subprops[2]);
       PRBool isMozUseTextColor =
         colorValue->GetUnit() == eCSSUnit_Enumerated &&
         colorValue->GetIntValue() == NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR;
@@ -824,24 +818,24 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     case eCSSProperty_font: {
       // systemFont might not be present; the others are guaranteed to be
       // based on the shorthand check at the beginning of the function
-      const nsCSSValue *systemFont = static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty__x_system_font));
-      const nsCSSValue &style = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_style));
-      const nsCSSValue &variant = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_variant));
-      const nsCSSValue &weight = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_weight));
-      const nsCSSValue &size = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_size));
-      const nsCSSValue &lh = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_line_height));
-      const nsCSSValue &family = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_family));
-      const nsCSSValue &stretch = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_stretch));
-      const nsCSSValue &sizeAdjust = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_font_size_adjust));
+      const nsCSSValue *systemFont =
+        data->ValueStorageFor(eCSSProperty__x_system_font);
+      const nsCSSValue &style =
+        *data->ValueStorageFor(eCSSProperty_font_style);
+      const nsCSSValue &variant =
+        *data->ValueStorageFor(eCSSProperty_font_variant);
+      const nsCSSValue &weight =
+        *data->ValueStorageFor(eCSSProperty_font_weight);
+      const nsCSSValue &size =
+        *data->ValueStorageFor(eCSSProperty_font_size);
+      const nsCSSValue &lh =
+        *data->ValueStorageFor(eCSSProperty_line_height);
+      const nsCSSValue &family =
+        *data->ValueStorageFor(eCSSProperty_font_family);
+      const nsCSSValue &stretch =
+        *data->ValueStorageFor(eCSSProperty_font_stretch);
+      const nsCSSValue &sizeAdjust =
+        *data->ValueStorageFor(eCSSProperty_font_size_adjust);
 
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
@@ -898,10 +892,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       AppendValueToString(eCSSProperty_list_style_image, aValue);
       break;
     case eCSSProperty_overflow: {
-      const nsCSSValue &xValue = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_overflow_x));
-      const nsCSSValue &yValue = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_overflow_y));
+      const nsCSSValue &xValue =
+        *data->ValueStorageFor(eCSSProperty_overflow_x);
+      const nsCSSValue &yValue =
+        *data->ValueStorageFor(eCSSProperty_overflow_y);
       if (xValue == yValue)
         AppendCSSValueToString(eCSSProperty_overflow_x, xValue, aValue);
       break;
@@ -916,12 +910,12 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     }
 #ifdef MOZ_SVG
     case eCSSProperty_marker: {
-      const nsCSSValue &endValue = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_marker_end));
-      const nsCSSValue &midValue = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_marker_mid));
-      const nsCSSValue &startValue = *static_cast<const nsCSSValue*>(
-        data->StorageFor(eCSSProperty_marker_start));
+      const nsCSSValue &endValue =
+        *data->ValueStorageFor(eCSSProperty_marker_end);
+      const nsCSSValue &midValue =
+        *data->ValueStorageFor(eCSSProperty_marker_mid);
+      const nsCSSValue &startValue =
+        *data->ValueStorageFor(eCSSProperty_marker_start);
       if (endValue == midValue && midValue == startValue)
         AppendValueToString(eCSSProperty_marker_end, aValue);
       break;
@@ -1001,8 +995,8 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 {
   nsCSSCompressedDataBlock *systemFontData =
     GetValueIsImportant(eCSSProperty__x_system_font) ? mImportantData : mData;
-  const nsCSSValue *systemFont = static_cast<const nsCSSValue*>(
-    systemFontData->StorageFor(eCSSProperty__x_system_font));
+  const nsCSSValue *systemFont = 
+    systemFontData->ValueStorageFor(eCSSProperty__x_system_font);
   const PRBool haveSystemFont = systemFont &&
                                 systemFont->GetUnit() != eCSSUnit_None &&
                                 systemFont->GetUnit() != eCSSUnit_Null;
@@ -1070,8 +1064,8 @@ nsCSSDeclaration::ToString(nsAString& aString) const
         //       the hidden system font subproperty in importance.
         NS_ASSERTION(nsCSSProps::kTypeTable[property] == eCSSType_Value,
                      "not a value typed subproperty");
-        const nsCSSValue *val = static_cast<const nsCSSValue*>(
-          systemFontData->StorageFor(property));
+        const nsCSSValue *val =
+          systemFontData->ValueStorageFor(property);
         if (property == eCSSProperty__x_system_font ||
             (val && val->GetUnit() == eCSSUnit_System_Font)) {
           doneProperty = PR_TRUE;
