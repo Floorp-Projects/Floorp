@@ -318,9 +318,12 @@ nsTreeColumn::Invalidate()
   const nsStyleText* textStyle = frame->GetStyleText();
 
   mTextAlignment = textStyle->mTextAlign;
-  if (mTextAlignment == 0 || mTextAlignment == 2) { // Left or Right
-    if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-      mTextAlignment = 2 - mTextAlignment; // Right becomes left, left becomes right.
+  // DEFAULT or END alignment sometimes means RIGHT
+  if ((mTextAlignment == NS_STYLE_TEXT_ALIGN_DEFAULT &&
+       vis->mDirection == NS_STYLE_DIRECTION_RTL) ||
+      (mTextAlignment == NS_STYLE_TEXT_ALIGN_END &&
+       vis->mDirection == NS_STYLE_DIRECTION_LTR)) {
+    mTextAlignment = NS_STYLE_TEXT_ALIGN_RIGHT;
   }
 
   // Figure out if we're the primary column (that has to have indentation
