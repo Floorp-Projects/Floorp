@@ -238,8 +238,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 != 294306-1.html 294306-1b-ref.html
 == 296904-1.html 296904-1-ref.html
 == 299837-1.html 299837-1-ref.html
-== 299837-2.html 299837-2-ref.html
-== 299837-3.html 299837-3-ref.html
+== 299837-2.xul 299837-2-ref.xul
+== 299837-3.xul 299837-3-ref.xul
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
