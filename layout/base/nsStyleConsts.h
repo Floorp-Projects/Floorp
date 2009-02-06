@@ -585,15 +585,18 @@
 // 
 // Note: make sure the numbers are less than the numbers that start
 // the vertical_align values below!
-#define NS_STYLE_TEXT_ALIGN_DEFAULT             0
-#define NS_STYLE_TEXT_ALIGN_LEFT                1
-#define NS_STYLE_TEXT_ALIGN_RIGHT               2
-#define NS_STYLE_TEXT_ALIGN_CENTER              3
-#define NS_STYLE_TEXT_ALIGN_JUSTIFY             4
-#define NS_STYLE_TEXT_ALIGN_CHAR                5   //align based on a certain character, for table cell
-#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER          6
-#define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT           7
-#define NS_STYLE_TEXT_ALIGN_MOZ_LEFT            8
+#define NS_STYLE_TEXT_ALIGN_DEFAULT               0
+#define NS_STYLE_TEXT_ALIGN_LEFT                  1
+#define NS_STYLE_TEXT_ALIGN_RIGHT                 2
+#define NS_STYLE_TEXT_ALIGN_CENTER                3
+#define NS_STYLE_TEXT_ALIGN_JUSTIFY               4
+#define NS_STYLE_TEXT_ALIGN_CHAR                  5   //align based on a certain character, for table cell
+#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER            6
+#define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT             7
+#define NS_STYLE_TEXT_ALIGN_MOZ_LEFT              8
+// NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT is only used in data structs; it
+// is never present in stylesheets or computed data.
+#define NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT 9
 
 // See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_NONE           0
