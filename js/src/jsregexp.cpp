@@ -2119,6 +2119,46 @@ class RegExpNativeCompiler {
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
+    LIns* compileFlatDoubleChar(jschar ch1, jschar ch2, LIns* pos, 
+                                LInsList& fails) 
+    {
+        uint32 word = (ch2 << 16) | ch1;
+        /* 
+         * Fast case-insensitive test for ASCII letters: convert text
+         * char to lower case by bit-or-ing in 32 and compare.
+         */
+        JSBool useFastCI = JS_FALSE;
+        union { jschar c[2]; uint32 i; } mask;
+        if (cs->flags & JSREG_FOLD) {
+            JSBool mask1 = (L'A' <= ch1 && ch1 <= L'Z') || (L'a' <= ch1 && ch1 <= L'z');
+            JSBool mask2 = (L'A' <= ch2 && ch2 <= L'Z') || (L'a' <= ch2 && ch2 <= L'z');
+            if ((!mask1 && JS_TOLOWER(ch1) != ch1) || (!mask2 && JS_TOLOWER(ch2) != ch2)) {
+                pos = compileFlatSingleChar(ch1, pos, fails);
+                if (!pos) return NULL;
+                return compileFlatSingleChar(ch2, pos, fails);
+            }
+            if (mask1)
+                mask.c[0] |= 0x0020;
+            if (mask2)
+                mask.c[1] |= 0x0020;
+
+            if (mask.i) {
+                word |= mask.i;
+                useFastCI = JS_TRUE;
+            }
+        }
+
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        fails.add(to_fail);
+        LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
+        LIns* comp_word = useFastCI ? 
+            lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
+            text_word;
+        fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_word, lir->insImm(word)), 0));
+
+        return lir->ins2(LIR_piadd, pos, lir->insImm(4));
+    }
+
     LIns* compileClass(RENode* node, LIns* pos, LInsList& fails) 
     {
         if (!node->u.ucclass.sense)
@@ -2194,14 +2234,27 @@ class RegExpNativeCompiler {
                 break;
             case REOP_FLAT:
                 if (node->u.flat.length == 1) {
-                    pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
-                } else {
-                    for (size_t i = 0; i < node->u.flat.length; ++i) {
-                        if (fragment->lirbuf->outOMem()) 
-                            return JS_FALSE;
-                        pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
-                        if (!pos) break;
+                    if (node->next && node->next->op == REOP_FLAT && 
+                        node->next->u.flat.length == 1) {
+                        pos = compileFlatDoubleChar(node->u.flat.chr,
+                                                    node->next->u.flat.chr,
+                                                    pos, fails);
+                        node = node->next;
+                    } else {
+                        pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
                     }
+                } else {
+                   size_t i;
+                   for (i = 0; i < node->u.flat.length - 1; i += 2) {
+                       if (fragment->lirbuf->outOMem()) 
+                           return JS_FALSE;
+                       pos = compileFlatDoubleChar(((jschar*) node->kid)[i], 
+                                                   ((jschar*) node->kid)[i+1], 
+                                                   pos, fails);
+                       if (!pos) break;
+                   }
+                   if (pos && i == node->u.flat.length - 1)
+                       pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
                 }
                 break;
             case REOP_ALT:
