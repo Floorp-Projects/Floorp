@@ -394,8 +394,10 @@ PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
         if (!newLogFile)
             return PR_FALSE;
 
+#ifndef WINCE  /* _IONBF does not exist in the Windows Mobile 6 SDK. */
         /* We do buffering ourselves. */
         setvbuf(newLogFile, NULL, _IONBF, 0);
+#endif
     }
     if (logFile
         && logFile != stdout

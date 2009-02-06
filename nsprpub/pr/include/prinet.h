@@ -122,10 +122,6 @@ struct sockaddr_dl;
 
 #include <winsock.h>
 
-#elif defined(XP_MAC)
-
-#include "macsocket.h"
-
 #else
 
 #error Unknown platform

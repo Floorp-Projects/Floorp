@@ -49,6 +49,100 @@
 #include <wchar.h>
 #endif /* MOZ_UNICODE */
 
+#ifdef WINCE
+
+static long GetDriveType(const char *lpRootPathName)
+{
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return 0; // The drive type cannot be determined.
+}
+
+static DWORD GetFullPathName(const char *lpFileName,
+                             DWORD nBufferLength,
+                             const char *lpBuffer,
+                             const char **lpFilePart)
+{
+    // needs work dft
+    DWORD len = strlen(lpFileName);
+    if (len > nBufferLength)
+        return len;
+  
+    strncpy((char *)lpBuffer, lpFileName, len);
+    ((char *)lpBuffer)[len] = '\0';
+  
+    if (lpFilePart) {
+        char *sep = strrchr(lpBuffer, '\\');
+        if (sep) {
+            sep++; // pass the seperator
+            *lpFilePart = sep;
+        } else {
+            *lpFilePart = lpBuffer;
+        }
+    }
+    return len;
+}
+
+static BOOL LockFile(HANDLE hFile,
+                     DWORD dwFileOffsetLow,
+                     DWORD dwFileOffsetHigh,
+                     DWORD nNumberOfBytesToLockLow,
+                     DWORD nNumberOfBytesToLockHigh)
+{
+    OVERLAPPED overlapped = {0};
+    overlapped.Offset = dwFileOffsetLow;
+    overlapped.OffsetHigh = dwFileOffsetHigh;
+    return LockFileEx(hFile,
+                      LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY,
+                      0, // reserved
+                      nNumberOfBytesToLockLow,
+                      nNumberOfBytesToLockHigh, &overlapped);
+}
+
+static BOOL UnlockFile(HANDLE hFile,
+                       DWORD dwFileOffsetLow,
+                       DWORD dwFileOffsetHigh,
+                       DWORD nNumberOfBytesToUnlockLow,
+                       DWORD nNumberOfBytesToUnlockHigh)
+{
+    OVERLAPPED overlapped = {0};
+    overlapped.Offset = dwFileOffsetLow;
+    overlapped.OffsetHigh = dwFileOffsetHigh;
+    return UnlockFileEx(hFile,
+                        0, // reserved
+                        nNumberOfBytesToUnlockLow,
+                        nNumberOfBytesToUnlockHigh, &overlapped);
+}
+
+static unsigned char *_mbsdec(const unsigned char *string1,
+                              const unsigned char *string2)
+{
+    // needs work dft
+    return NULL;
+}
+
+static unsigned char *_mbsinc(const unsigned char *inCurrent)
+{
+    // needs work dft
+    return (unsigned char *)(inCurrent + 1);
+}
+
+static unsigned char *_mbspbrk(const unsigned char *inString,
+                               const unsigned char *inStrCharSet)
+{
+    // needs work dft
+    return NULL;
+}
+
+static const unsigned short *_wcsdec(const unsigned short *s,
+                                     const unsigned short *p)
+{
+    // needs work dft
+  
+    p = s < p ? (const unsigned short *)(s - 1) : 0;
+    return p;
+}
+
+#endif
 
 struct _MDLock               _pr_ioq_lock;
 
@@ -90,6 +184,7 @@ static void InitGetFileInfo(void);
 static void InitUnicodeSupport(void);
 
 static PRBool IsPrevCharSlash(const char *str, const char *current);
+static PRBool IsPrevCharSlashW(const PRUnichar *str, const PRUnichar *current);
 
 void
 _PR_MD_INIT_IO()
@@ -481,6 +576,16 @@ void FlipSlashes(char *cp, size_t len)
     }
 } /* end FlipSlashes() */
 
+void FlipSlashesW(PRUnichar *cp, size_t len)
+{
+    while (len-- > 0) {
+        if (cp[0] == L'/') {
+            cp[0] = L'\\';
+        }
+        cp++;
+    }
+} /* end FlipSlashesW() */
+
 
 /*
 **
@@ -644,6 +749,11 @@ _PR_FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm)
 PRInt32
 _PR_MD_STAT(const char *fn, struct stat *info)
 {
+#ifdef WINCE
+    // needs work. dft
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return -1;
+#else
     PRInt32 rv;
 
     rv = _stat(fn, (struct _stat *)info);
@@ -675,6 +785,7 @@ _PR_MD_STAT(const char *fn, struct stat *info)
         _PR_MD_MAP_STAT_ERROR(errno);
     }
     return rv;
+#endif
 }
 
 #define _PR_IS_SLASH(ch) ((ch) == '/' || (ch) == '\\')
@@ -687,6 +798,17 @@ IsPrevCharSlash(const char *str, const char *current)
     if (str >= current)
         return PR_FALSE;
     prev = _mbsdec(str, current);
+    return (prev == current - 1) && _PR_IS_SLASH(*prev);
+}
+
+static PRBool
+IsPrevCharSlashW(const PRUnichar *str, const PRUnichar *current)
+{
+    const PRUnichar *prev;
+
+    if (str >= current)
+        return PR_FALSE;
+    prev = _wcsdec(str, current);
     return (prev == current - 1) && _PR_IS_SLASH(*prev);
 }
 
@@ -789,7 +911,7 @@ IsRootDirectory(char *fn, size_t buflen)
 static void InitGetFileInfo(void)
 {
     HMODULE module;
-    module = GetModuleHandle("Kernel32.dll");
+    module = GetModuleHandleW(L"Kernel32.dll");
     if (!module) {
         PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
                 ("InitGetFileInfo: GetModuleHandle() failed: %d",
@@ -801,6 +923,7 @@ static void InitGetFileInfo(void)
             GetProcAddress(module, "GetFileAttributesExA");
 }
 
+#ifndef WINCE
 /*
  * If GetFileAttributeEx doesn't exist, we call FindFirstFile as a
  * fallback.
@@ -878,6 +1001,7 @@ GetFileAttributesExFB(const char *fn, WIN32_FIND_DATA *findFileData)
     FindClose(hFindFile);
     return TRUE;
 }
+#endif
 
 PRInt32
 _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
@@ -983,6 +1107,10 @@ _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info)
 PRStatus
 _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
 {
+#ifdef WINCE
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+#else
     BOOL rv;
 
     /*
@@ -998,6 +1126,7 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
         return PR_FAILURE;
     }
     return PR_SUCCESS;
+#endif
 } 
 
 void
@@ -1013,6 +1142,9 @@ _PR_MD_INIT_FD_INHERITABLE(PRFileDesc *fd, PRBool imported)
 void
 _PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
 {
+#ifdef WINCE
+    fd->secret->inheritable = _PR_TRI_FALSE;
+#else
     DWORD flags;
 
     PR_ASSERT(_PR_TRI_UNKNOWN == fd->secret->inheritable);
@@ -1023,6 +1155,7 @@ _PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
             fd->secret->inheritable = _PR_TRI_FALSE;
         }
     }
+#endif
 }
 
 PRInt32
@@ -1040,6 +1173,10 @@ _PR_MD_RENAME(const char *from, const char *to)
 PRInt32
 _PR_MD_ACCESS(const char *name, PRAccessHow how)
 {
+#ifdef WINCE
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return -1;
+#else
 PRInt32 rv;
     switch (how) {
       case PR_ACCESS_WRITE_OK:
@@ -1058,6 +1195,7 @@ PRInt32 rv;
 	if (rv < 0)
 		_PR_MD_MAP_ACCESS_ERROR(errno);
     return rv;
+#endif
 }
 
 PRInt32
@@ -1187,6 +1325,10 @@ PRBool _pr_useUnicode = PR_FALSE;
 
 static void InitUnicodeSupport(void)
 {
+#ifdef WINCE
+    /* The A functions don't even exist in Windows Mobile. */
+    _pr_useUnicode = PR_TRUE;
+#else
     /*
      * The W functions exist on Win9x as stubs that fail with the
      * ERROR_CALL_NOT_IMPLEMENTED error.  We plan to emulate the
@@ -1210,20 +1352,12 @@ static void InitUnicodeSupport(void)
     if (getenv("WINAPI_USE_ANSI"))
         _pr_useUnicode = PR_FALSE;
 #endif
+#endif
 }
 
 #ifdef MOZ_UNICODE
 
 /* ================ UTF16 Interfaces ================================ */
-void FlipSlashesW(PRUnichar *cp, size_t len)
-{
-    while (len-- > 0) {
-        if (cp[0] == L'/') {
-            cp[0] = L'\\';
-        }
-        cp++;
-    }
-} /* end FlipSlashesW() */
 
 PROsfd
 _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
