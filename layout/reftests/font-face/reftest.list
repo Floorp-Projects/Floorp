@@ -54,7 +54,7 @@ HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
 HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
 HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
 HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
-random HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # failure is bug 468217
+HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html
 HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
 HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
 HTTP(..) == delete-rule-1.html delete-rule-1-ref.html

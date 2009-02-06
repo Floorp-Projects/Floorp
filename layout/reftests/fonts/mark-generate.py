@@ -68,21 +68,3 @@ for codepoint in range(ord("A"), ord("D") + 1):
         f.generate("mark" + mark + charname + ".ttf")
         f.generate("mark" + mark + charname + ".otf")
 
-# And, for references, generate markXmark2Y
-f = fontforge.font()
-n = "MarkXMark2Y"
-f.fontname = n
-f.familyname = n
-f.fullname = n
-f.copyright = "Copyright (c) 2008 Mozilla Corporation"
-
-g = f.createChar(ord("X"), "X")
-g.importOutlines("mark-glyph.svg")
-g.width = 1500
-
-g = f.createChar(ord("Y"), "Y")
-g.importOutlines("mark2-glyph.svg")
-g.width = 1800
-
-f.generate("markXmark2Y.ttf")
-
