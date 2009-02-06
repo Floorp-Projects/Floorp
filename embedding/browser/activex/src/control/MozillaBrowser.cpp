@@ -354,7 +354,7 @@ void CMozillaBrowser::ShowURIPropertyDlg(const nsAString &aURI, const nsAString 
 //
 int CMozillaBrowser::MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption, UINT nType)
 {
-    // Let the doc host display it's own message box if it can
+    // Let the doc host display its own message box if it can
     CIPtr(IDocHostShowUI) spIDocHostShowUI = m_spClientSite;
     if (spIDocHostShowUI)
     {

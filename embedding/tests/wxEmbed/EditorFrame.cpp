@@ -225,7 +225,7 @@ void EditorFrame::OnUpdateToggleCmd(wxUpdateUIEvent &event)
         params->GetBooleanValue(kStateMixed, &bMixedStyle);
 
         // We're not in STATE_MIXED. Enable/Disable the
-        // toolbar button based on it's current state
+        // toolbar button based on its current state
         //
         PRBool bCmdEnabled = PR_FALSE;
         params->GetBooleanValue(kStateAll, &bCmdEnabled);
