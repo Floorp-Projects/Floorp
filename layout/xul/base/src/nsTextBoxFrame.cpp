@@ -1023,13 +1023,12 @@ nsTextBoxFrame::CalcTextRect(nsIRenderingContext &aRenderingContext, const nsPoi
 
     if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_CENTER)
       textRect.x += (outerWidth - textRect.width)/2;
-    else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT) {
-      if (vis->mDirection == NS_STYLE_DIRECTION_LTR)
-        textRect.x += (outerWidth - textRect.width);
-    }
-    else {
-      if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-        textRect.x += (outerWidth - textRect.width);
+    else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT ||
+             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT &&
+              vis->mDirection == NS_STYLE_DIRECTION_RTL) ||
+             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_END &&
+              vis->mDirection == NS_STYLE_DIRECTION_LTR)) {
+      textRect.x += (outerWidth - textRect.width);
     }
     return textRect;
 }

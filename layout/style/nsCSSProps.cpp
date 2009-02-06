@@ -1076,6 +1076,7 @@ const PRInt32 nsCSSProps::kTextAlignKTable[] = {
   eCSSKeyword__moz_right, NS_STYLE_TEXT_ALIGN_MOZ_RIGHT,
   eCSSKeyword__moz_left, NS_STYLE_TEXT_ALIGN_MOZ_LEFT,
   eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT,
+  eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END,
   eCSSKeyword_UNKNOWN,-1
 };
 
