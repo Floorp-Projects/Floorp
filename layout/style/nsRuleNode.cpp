@@ -970,6 +970,26 @@ CheckColorCallback(const nsRuleDataStruct& aData,
   return aResult;
 }
 
+static nsRuleNode::RuleDetail
+CheckTextCallback(const nsRuleDataStruct& aData,
+                  nsRuleNode::RuleDetail aResult)
+{
+  const nsRuleDataText& textData =
+    static_cast<const nsRuleDataText&>(aData);
+
+  if (textData.mTextAlign.GetUnit() == eCSSUnit_Enumerated &&
+      textData.mTextAlign.GetIntValue() ==
+        NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT) {
+    // Promote reset to mixed since we have something that depends on
+    // the parent.
+    if (aResult == nsRuleNode::eRulePartialReset)
+      aResult = nsRuleNode::eRulePartialMixed;
+    else if (aResult == nsRuleNode::eRuleFullReset)
+      aResult = nsRuleNode::eRuleFullMixed;
+  }
+
+  return aResult;
+}
 
 // for nsCSSPropList.h, so we get information on things in the style
 // structs but not nsCSS*
@@ -3059,6 +3079,13 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   // text-align: enum, string, inherit, initial
   if (eCSSUnit_String == textData.mTextAlign.GetUnit()) {
     NS_NOTYETIMPLEMENTED("align string");
+  } else if (eCSSUnit_Enumerated == textData.mTextAlign.GetUnit() &&
+             NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT ==
+               textData.mTextAlign.GetIntValue()) {
+    canStoreInRuleTree = PR_FALSE;
+    PRUint8 parentAlign = parentText->mTextAlign;
+    text->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign) ?
+      NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
   } else
     SetDiscrete(textData.mTextAlign, text->mTextAlign, canStoreInRuleTree,
                 SETDSC_ENUMERATED, parentText->mTextAlign,
