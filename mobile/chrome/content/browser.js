@@ -1115,6 +1115,7 @@ ProgressController.prototype = {
 
     if (Browser.selectedBrowser == this.browser) {
       BrowserUI.update(TOOLBARSTATE_LOADED);
+      this.browser.docShell.isOffScreenBrowser = true;
     }
   },
 

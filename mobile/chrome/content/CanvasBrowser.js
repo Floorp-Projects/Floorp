@@ -83,7 +83,8 @@ CanvasBrowser.prototype = {
     }
 
     browser.setAttribute("type", "content-primary");
-    browser.docShell.isOffScreenBrowser = true;
+    if (!skipZoom)
+      browser.docShell.isOffScreenBrowser = true;
 
     // start monitoring paint events for this browser
     var self = this;
@@ -92,13 +93,13 @@ CanvasBrowser.prototype = {
     browser.addEventListener("MozAfterPaint", this._paintHandler, false);
 
     this._browser = browser;
-    
+
     // endLoading(and startLoading in most cases) calls zoom anyway
     if (!skipZoom) {
       self.zoomToPage();
     }
   },
-  
+
   /*Heuristic heaven: Either adds things to a queue + starts timer or paints immediately */
   addToDrawQ: function addToDrawQ(rect) {
     let q = this._drawQ;
@@ -111,7 +112,7 @@ CanvasBrowser.prototype = {
     }
     for(let i = q.length - 1;i>=0;i--) {
       let old = q[i];
-      if (!old) 
+      if (!old)
         continue;
       //in the future do an intersect first, then intersect/trim/union
       if (old.contains(rect)) {
@@ -122,11 +123,11 @@ CanvasBrowser.prototype = {
         q[i] = null;
       }
     }
-    
+
     /* During pageload:
      * do the paint immediately if it is something that can be drawn fast(and there aren't things queued up to be painted already */
     let flushNow = !this._clippedPageDrawing;
-    
+
     if (this._clippedPageDrawing) {
       if (!this._drawInterval) {
         //always flush the first draw
@@ -135,7 +136,7 @@ CanvasBrowser.prototype = {
         this._drawInterval = setInterval(resizeAndPaint, 2000, this);
       }
     }
-        
+
     q.push(rect);
 
     if (flushNow) {
@@ -143,7 +144,7 @@ CanvasBrowser.prototype = {
     }
   },
 
-  // Change in zoom or offsets should require a clear 
+  // Change in zoom or offsets should require a clear
   // or a flush operation on the queue. XXX need tochanged justone to
   // be based on time taken..ie do as many paints as we can <200ms
   flushDrawQ: function flushDrawQ(justOne) {
@@ -154,7 +155,7 @@ CanvasBrowser.prototype = {
       let dest = this._drawQ.pop();
       if (!dest)
         continue;
-      ctx.translate(dest.x - this._pageBounds.x, dest.y - this._pageBounds.y);  
+      ctx.translate(dest.x - this._pageBounds.x, dest.y - this._pageBounds.y);
       ctx.drawWindow(this._browser.contentWindow,
                      dest.x, dest.y,
                      dest.width, dest.height,
@@ -165,11 +166,11 @@ CanvasBrowser.prototype = {
     }
     ctx.restore();
   },
-  
+
   clearDrawQ: function clearDrawQ() {
     this._drawQ = [];
   },
-  
+
   startLoading: function() {
     // Clear the whole canvas
     // we clear the whole canvas because the browser's width or height
@@ -192,7 +193,7 @@ CanvasBrowser.prototype = {
       this._drawInterval = null;
     }
   },
-  
+
   // ensure that the canvas outside of the viewport is also drawn
   ensureFullCanvasIsDrawn: function ensureFullCanvasIsDrawn() {
     if (!this._partiallyDrawn) return;
@@ -226,7 +227,7 @@ CanvasBrowser.prototype = {
     // flush it immediately
     this.flushDrawQ();
   },
-  
+
   viewportHandler: function(bounds, boundsSizeChanged) {
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewportVisibleRect;
@@ -249,7 +250,7 @@ CanvasBrowser.prototype = {
 
     this._visibleBounds = visibleBounds;
     this._pageBounds = pageBounds;
-        
+
     let dx = this._screenX - bounds.x;
     let dy = this._screenY - bounds.y;
     this._screenX = bounds.x;
@@ -284,7 +285,7 @@ CanvasBrowser.prototype = {
 
     // blit what we can
     var ctx = this._canvas.getContext("2d");
-    
+
     ctx.drawImage(this._canvas,
                   srcRect.x, srcRect.y,
                   srcRect.width, srcRect.height,
@@ -363,7 +364,7 @@ CanvasBrowser.prototype = {
     }
 
     let dest = rect.intersect(r2);
-    
+
     if (dest)
       this.addToDrawQ(dest);
   },
@@ -404,7 +405,7 @@ CanvasBrowser.prototype = {
 
     if (contentW > canvasW)
       this.zoomLevel = canvasW / contentW;
-    
+
     if (this._clippedPageDrawing)
       this._maybeZoomToPage = false
   },
@@ -536,19 +537,19 @@ CanvasBrowser.prototype = {
     let curRect = this._visibleBounds
     let newx = curRect.x;
     let newy = curRect.y;
-   
+
     if (elRect.x < curRect.x || elRect.width > curRect.width) {
       newx = elRect.x;
     } else if (elRect.x + elRect.width > curRect.x + curRect.width) {
       newx = elRect.x - curRect.width + elRect.width;
-    } 
+    }
 
     if (elRect.y < curRect.y || elRect.height > curRect.height) {
       newy = elRect.y;
     } else if (elRect.y + elRect.height > curRect.y + curRect.height) {
       newy = elRect.y - curRect.height + elRect.height;
-    } 
-    
+    }
+
     ws.panBy(this._pageToScreen(curRect.x-newx),this._pageToScreen(curRect.y  - newy), true);
   },
 
