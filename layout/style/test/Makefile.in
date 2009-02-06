@@ -122,6 +122,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_selectors_on_anonymous_content.html \
 		test_shorthand_property_getters.html \
 		test_style_struct_copy_constructors.html \
+		test_system_font_serialization.html \
 		test_value_computation.html \
 		test_value_storage.html \
 		test_visited_pref.html \
