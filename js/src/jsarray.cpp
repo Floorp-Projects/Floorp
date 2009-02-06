@@ -2137,7 +2137,7 @@ array_push1_dense(JSContext* cx, JSObject* obj, jsval v, jsval *rval)
     return IndexToValue(cx, obj->fslots[JSSLOT_ARRAY_LENGTH], rval);
 }
 
-JS_FASTCALL JSBool
+JSBool JS_FASTCALL
 js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
 {
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
