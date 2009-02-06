@@ -119,6 +119,8 @@ CFStringRef kOurTISPropertyInputSourceLanguages = NULL;
 
 extern PRBool gCocoaWindowMethodsSwizzled; // Defined in nsCocoaWindow.mm
 
+PRBool gChildViewMethodsSwizzled = PR_FALSE;
+
 extern nsISupportsArray *gDraggedTransferables;
 
 PRBool nsTSMManager::sIsIMEEnabled = PR_TRUE;
@@ -571,6 +573,12 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     nsToolkit::SwizzleMethods([NSWindow class], @selector(sendEvent:),
                               @selector(nsCocoaWindow_NSWindow_sendEvent:));
     gCocoaWindowMethodsSwizzled = PR_TRUE;
+  }
+  // See NSView (MethodSwizzling) below.
+  if (nsToolkit::OnLeopardOrLater() && !gChildViewMethodsSwizzled) {
+    nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
+                              @selector(nsChildView_NSView_mouseDownCanMoveWindow));
+    gChildViewMethodsSwizzled = PR_TRUE;
   }
 
   mBounds = aRect;
@@ -6938,3 +6946,33 @@ void NS_RemovePluginKeyEventsHandler()
   ::RemoveEventHandler(gPluginKeyEventsHandler);
   gPluginKeyEventsHandler = NULL;
 }
+
+@interface NSView (MethodSwizzling)
+- (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;
+@end
+
+@implementation NSView (MethodSwizzling)
+
+// All top-level browser windows belong to the ToolbarWindow class and have
+// NSTexturedBackgroundWindowMask turned on in their "style" (see particularly
+// [ToolbarWindow initWithContentRect:...] in nsCocoaWindow.mm).  This style
+// normally means the window "may be moved by clicking and dragging anywhere
+// in the window background", but we've suppressed this by giving the
+// ChildView class a mouseDownCanMoveWindow method that always returns NO.
+// Normally a ToolbarWindow's contentView (not a ChildView) returns YES when
+// NSTexturedBackgroundWindowMask is turned on.  But normally this makes no
+// difference.  However, under some (probably very unusual) circumstances
+// (and only on Leopard) it *does* make a difference -- for example it
+// triggers bmo bugs 431902 and 476393.  So here we make sure that a
+// ToolbarWindow's contentView always returns NO from the
+// mouseDownCanMoveWindow method.
+- (BOOL)nsChildView_NSView_mouseDownCanMoveWindow
+{
+  NSWindow *ourWindow = [self window];
+  NSView *contentView = [ourWindow contentView];
+  if ([ourWindow isKindOfClass:[ToolbarWindow class]] && (self == contentView))
+    return NO;
+  return [self nsChildView_NSView_mouseDownCanMoveWindow];
+}
+
+@end
