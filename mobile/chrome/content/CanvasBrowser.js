@@ -186,7 +186,6 @@ CanvasBrowser.prototype = {
     this._clippedPageDrawing = false;
     this.zoomToPage();
     this.ensureFullCanvasIsDrawn();
-    this.flushDrawQ();
 
     if (this._drawInterval) {
       clearInterval(this._drawInterval);
@@ -196,36 +195,42 @@ CanvasBrowser.prototype = {
 
   // ensure that the canvas outside of the viewport is also drawn
   ensureFullCanvasIsDrawn: function ensureFullCanvasIsDrawn() {
-    if (!this._partiallyDrawn) return;
-    let v = this._visibleBounds
-    let r_above = new wsRect(this._pageBounds.x, this._pageBounds.y,
-              this._pageBounds.width, v.y - this._pageBounds.y)
-    let r_left = new wsRect(this._pageBounds.x, v.y,
-                            v.x - this._pageBounds.x,
-                            v.height)
-    let r_right = new wsRect(v.x + v.width, v.y,
-                             this._pageBounds.width - v.x - v.width,
-                             v.height)
-    let r_below = new wsRect(this._pageBounds.x, v.y+v.height,
-                             this._pageBounds.width,
-                             this._pageBounds.height - v.y - v.height)
-    this._redrawRect(r_above);
-    this._redrawRect(r_left);
-    this._redrawRect(r_right);
-    this._redrawRect(r_below)
-    this._partiallyDrawn = false;
+    if (this._partiallyDrawn) {
+      let v = this._visibleBounds
+      let r_above = new wsRect(this._pageBounds.x, this._pageBounds.y,
+                               this._pageBounds.width, v.y - this._pageBounds.y)
+      let r_left = new wsRect(this._pageBounds.x, v.y,
+                              v.x - this._pageBounds.x,
+                              v.height)
+      let r_right = new wsRect(v.x + v.width, v.y,
+                               this._pageBounds.width - v.x - v.width,
+                               v.height)
+      let r_below = new wsRect(this._pageBounds.x, v.y+v.height,
+                               this._pageBounds.width,
+                               this._pageBounds.height - v.y - v.height)
+      this._redrawRect(r_above);
+      this._redrawRect(r_left);
+      this._redrawRect(r_right);
+      this._redrawRect(r_below);
+      this._partiallyDrawn = false;
+    }
+    // flush all pending draws
+    this.flushDrawQ()
   },
 
-  // turns off incremental mode...goes into what is typically a post-page-loading mode
+
+  // Turn off incremental mode if it is on.
+  // Switch _redrawRect to drawing the full canvas
   prepareForPanning: function prepareForPanning() {
+    if (!this._clippedPageDrawing) 
+      return;
+
     // keep checking page size
     this._maybeZoomToPage = true;
-    if (!this._clippedPageDrawing) return;
+
     // draw the rest of the canvas
     this._clippedPageDrawing = false;
     this.ensureFullCanvasIsDrawn();
-    // flush it immediately
-    this.flushDrawQ();
   },
 
   viewportHandler: function(bounds, boundsSizeChanged) {
