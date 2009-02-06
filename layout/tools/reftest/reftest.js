@@ -111,7 +111,8 @@ const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
 const EXPECTED_LOAD = 4; // test without a reference (just test that it does
                          // not assert, crash, hang, or leak)
 
-const HTTP_SERVER_PORT = 4444;
+var HTTP_SERVER_PORT = 4444;
+const HTTP_SERVER_PORTS_TO_TRY = 50;
 
 var gRecycledCanvases = new Array();
 
@@ -151,14 +152,32 @@ function OnRefTestLoad()
 
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
+    gServer = CC["@mozilla.org/server/jshttp;1"].
+                  createInstance(CI.nsIHttpServer);
 
     try {
-        ReadTopManifest(window.arguments[0]);
-        BuildUseCounts();
         if (gServer) {
             gServer.registerContentType("sjs", "sjs");
-            gServer.start(HTTP_SERVER_PORT);
+            // We want to try different ports in case the port we want
+            // is being used.
+            var tries = HTTP_SERVER_PORTS_TO_TRY;
+            var succeeded = false;
+            do {
+                try {
+                    gServer.start(HTTP_SERVER_PORT);
+                    succeeded = true;
+                } catch (ex) {
+                    gServer.stop();
+                    ++HTTP_SERVER_PORT;
+                    if (--tries == 0) {
+                        throw ex;
+                    }
+                }
+            } while (!succeeded);
         }
+        // Need to read the manifest once we have the final HTTP_SERVER_PORT.
+        ReadTopManifest(window.arguments[0]);
+        BuildUseCounts();
         gTotalTests = gURLs.length;
         gURICanvases = {};
         StartCurrentTest();
@@ -390,10 +409,6 @@ function BuildUseCounts()
 
 function ServeFiles(manifestURL, depth, directory, files)
 {
-    if (!gServer)
-        gServer = CC["@mozilla.org/server/jshttp;1"].
-                      createInstance(CI.nsIHttpServer);
-
     // Allow serving a tree that's an ancestor of the directory containing
     // the files so that they can use resources in ../ (etc.).
     var dirPath = "/";
