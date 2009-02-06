@@ -1165,7 +1165,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    }
 
    // HACK ALERT - this registration registers the nsDocShellTreeOwner as a 
-   // nsIWebBrowserListener so it can setup it's MouseListener in one of the 
+   // nsIWebBrowserListener so it can setup its MouseListener in one of the 
    // progress callbacks. If we can register the MouseListener another way, this 
    // registration can go away, and nsDocShellTreeOwner can stop implementing
    // nsIWebProgressListener.

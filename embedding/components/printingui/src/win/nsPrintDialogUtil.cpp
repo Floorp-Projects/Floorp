@@ -703,7 +703,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     }
 
     // Here we figure out the old height of the dlg
-    // then figure it's gap from the old grpbx to the bottom
+    // then figure its gap from the old grpbx to the bottom
     // then size the dlg
     RECT pr, cr; 
     ::GetWindowRect(hdlg, &pr);
