@@ -46,8 +46,7 @@ function runTest(event) {
       is(video.muted, false,  "checking video mute state");
 
       // Click the mute button
-      // XXX volume event is sent synchronously, so do this in a timeout
-      setTimeout("synthesizeMouse(video, 308, 228, { });", 0);
+      synthesizeMouse(video, 308, 228, { });
       break;
 
     case 4:
@@ -56,8 +55,7 @@ function runTest(event) {
       is(video.muted,  true,  "checking video mute state");
 
       // Click the unmute button
-      // XXX volume event is sent synchronously, so do this in a timeout
-      setTimeout("synthesizeMouse(video, 308, 228, { });", 0);
+      synthesizeMouse(video, 308, 228, { });
       break;
 
     case 5:
@@ -82,8 +80,7 @@ function runTest(event) {
       is(video.muted, false,  "checking video mute state");
 
       // Click the mute button
-      // XXX volume event is sent synchronously, so do this in a timeout
-      setTimeout("synthesizeMouse(video, 100 + 308, 40 + 228, { });", 0);
+      synthesizeMouse(video, 100 + 308, 40 + 228, { });
       break;
 
     case 7:
