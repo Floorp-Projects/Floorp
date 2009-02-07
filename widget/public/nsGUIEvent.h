@@ -105,6 +105,7 @@ class nsHashKey;
 #define NS_DRAG_EVENT                     35
 #define NS_NOTIFYPAINT_EVENT              36
 #define NS_SIMPLE_GESTURE_EVENT           37
+#define NS_SELECTION_EVENT                38
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -344,14 +345,18 @@ class nsHashKey;
 #define NS_QUERY_SELECTED_TEXT          (NS_QUERY_CONTENT_EVENT_START)
 // Query for the text content of specified range, it returns actual lengh (if
 // the specified range is too long) and the text of the specified range.
+// Returns the entire text if requested length > actual length.
 #define NS_QUERY_TEXT_CONTENT           (NS_QUERY_CONTENT_EVENT_START + 1)
-// Query for the character rect of nth character. If there is no character at
-// the offset, the query will be failed. The offset of the result is relative
-// position from the top level widget.
-#define NS_QUERY_CHARACTER_RECT         (NS_QUERY_CONTENT_EVENT_START + 2)
 // Query for the caret rect of nth insertion point. The offset of the result is
 // relative position from the top level widget.
 #define NS_QUERY_CARET_RECT             (NS_QUERY_CONTENT_EVENT_START + 3)
+// Query for the bounding rect of a range of characters. This works on any
+// valid character range given offset and length. Result is relative to top
+// level widget coordinates
+#define NS_QUERY_TEXT_RECT              (NS_QUERY_CONTENT_EVENT_START + 4)
+// Query for the bounding rect of the current focused frame. Result is relative
+// to top level widget coordinates
+#define NS_QUERY_EDITOR_RECT             (NS_QUERY_CONTENT_EVENT_START + 5)
 
 // Video events
 #ifdef MOZ_MEDIA
@@ -396,6 +401,11 @@ class nsHashKey;
 // event needs to be passed to the focused plug-in directly.
 #define NS_PLUGIN_EVENT_START   3600
 #define NS_PLUGIN_EVENT         (NS_PLUGIN_EVENT_START)
+
+// Events to manipulate selection (nsSelectionEvent)
+#define NS_SELECTION_EVENT_START        3700
+// Clear any previous selection and set the given range as the selection
+#define NS_SELECTION_SET                (NS_SELECTION_EVENT_START)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -858,11 +868,11 @@ class nsTextEvent : public nsInputEvent
 public:
   nsTextEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_TEXT_EVENT),
-      theText(nsnull), rangeCount(0), rangeArray(nsnull), isChar(PR_FALSE)
+      rangeCount(0), rangeArray(nsnull), isChar(PR_FALSE)
   {
   }
 
-  const PRUnichar*  theText;
+  nsString          theText;
   nsTextEventReply  theReply;
   PRUint32          rangeCount;
   // Note that the range array may not specify a caret position; in that
@@ -965,18 +975,19 @@ public:
     mInput.mLength = aLength;
   }
 
-  void InitForQueryCharacterRect(PRUint32 aOffset)
-  {
-    NS_ASSERTION(message == NS_QUERY_CHARACTER_RECT,
-                 "wrong initializer is called");
-    mInput.mOffset = aOffset;
-  }
-
   void InitForQueryCaretRect(PRUint32 aOffset)
   {
     NS_ASSERTION(message == NS_QUERY_CARET_RECT,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
+  }
+
+  void InitForQueryTextRect(PRUint32 aOffset, PRUint32 aLength)
+  {
+    NS_ASSERTION(message == NS_QUERY_TEXT_RECT,
+                 "wrong initializer is called");
+    mInput.mOffset = aOffset;
+    mInput.mLength = aLength;
   }
 
   PRBool mSucceeded;
@@ -991,7 +1002,23 @@ public:
     nsIntRect mRect; // Finally, the coordinates is system coordinates.
     // The return widget has the caret. This is set at all query events.
     nsIWidget* mFocusedWidget;
+    PRPackedBool mReversed; // true if selection is reversed (end < start)
   } mReply;
+};
+
+class nsSelectionEvent : public nsGUIEvent
+{
+public:
+  nsSelectionEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget) :
+    nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_SELECTION_EVENT),
+    mSucceeded(PR_FALSE)
+  {
+  }
+
+  PRUint32 mOffset; // start offset of selection
+  PRUint32 mLength; // length of selection
+  PRPackedBool mReversed; // selection "anchor" should be in front
+  PRPackedBool mSucceeded;
 };
 
 /**
@@ -1232,8 +1259,12 @@ enum nsDragDropEventStatus {
 #define NS_IS_QUERY_CONTENT_EVENT(evnt) \
        (((evnt)->message == NS_QUERY_SELECTED_TEXT) || \
         ((evnt)->message == NS_QUERY_TEXT_CONTENT) || \
-        ((evnt)->message == NS_QUERY_CHARACTER_RECT) || \
-        ((evnt)->message == NS_QUERY_CARET_RECT))
+        ((evnt)->message == NS_QUERY_CARET_RECT) || \
+        ((evnt)->message == NS_QUERY_TEXT_RECT) || \
+        ((evnt)->message == NS_QUERY_EDITOR_RECT))
+
+#define NS_IS_SELECTION_EVENT(evnt) \
+       (((evnt)->message == NS_SELECTION_SET))
 
 #define NS_IS_PLUGIN_EVENT(evnt) \
        (((evnt)->message == NS_PLUGIN_EVENT))
