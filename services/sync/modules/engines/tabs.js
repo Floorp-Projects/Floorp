@@ -43,6 +43,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
@@ -264,22 +265,40 @@ TabStore.prototype = {
 };
 
 function TabTracker() {
-  this._init();
+  this._TabTracker_init();
 }
 TabTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "TabTracker",
   file: "tab_tracker",
 
-  _init: function TabTracker__init() {
-    this.__proto__.__proto__.init.call(this);
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  _TabTracker_init: function TabTracker__init() {
+    this._init();
 
     // Register me as an observer!!  Listen for tabs opening and closing:
-    let container = gBrowser.tabContainer;
-    container.addEventListener("TabOpen", this.onTabChanged, false);
-    container.addEventListener("TabClose", this.onTabChanged, false);
-    // TODO: remove these event listeners when not needed?
-    // as in container.removeEventListener("TabOpen", this.onTabChanged, false);
+    // TODO We need to also register with any windows that are ALREDY
+    // open.
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+	       .getService(Ci.nsIWindowWatcher);
+    dump("Initialized TabTracker\n");
+    ww.registerNotification(this);
+  },
+
+  observe: function TabTracker_observe(aSubject, aTopic, aData) {
+    dump("TabTracker spotted window open/close...\n");
+    let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    // TODO: Not all windows have tabContainers.  Fennec windows don't,
+    // for instance.
+    let container = window.getBrowser().tabContainer;
+    if (aTopic == "domwindowopened") {
+      container.addEventListener("TabOpen", this.onTabChanged, false);
+      container.addEventListener("TabClose", this.onTabChanged, false);
+    } else if (aTopic == "domwindowclosed") {
+      container.removeEventListener("TabOpen", this.onTabChanged, false);
+      container.removeEventListener("TabClose", this.onTabChanged, false);
+    }
   },
 
   onTabChanged: function TabTracker_onTabChanged(event) {
