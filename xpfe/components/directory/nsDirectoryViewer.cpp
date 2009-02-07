@@ -200,24 +200,25 @@ nsHTTPIndex::OnFTPControlLog(PRBool server, const char *msg)
     nsIScriptContext *context = scriptGlobal->GetContext();
     NS_ENSURE_TRUE(context, NS_OK);
 
-    JSContext* jscontext = reinterpret_cast<JSContext*>
-                                           (context->GetNativeContext());
-    NS_ENSURE_TRUE(jscontext, NS_OK);
+    JSContext* cx = reinterpret_cast<JSContext*>
+                                    (context->GetNativeContext());
+    NS_ENSURE_TRUE(cx, NS_OK);
 
-    JSObject* global = JS_GetGlobalObject(jscontext);
+    JSObject* global = JS_GetGlobalObject(cx);
     NS_ENSURE_TRUE(global, NS_OK);
 
     jsval params[2];
 
     nsString unicodeMsg;
     unicodeMsg.AssignWithConversion(msg);
-    JSString* jsMsgStr = JS_NewUCStringCopyZ(jscontext, (jschar*) unicodeMsg.get());
+    JSAutoRequest ar(cx);
+    JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, (jschar*) unicodeMsg.get());
 
     params[0] = BOOLEAN_TO_JSVAL(server);
     params[1] = STRING_TO_JSVAL(jsMsgStr);
     
     jsval val;
-    JS_CallFunctionName(jscontext, 
+    JS_CallFunctionName(cx,
                         global, 
                         "OnFTPControlLog",
                         2, 
@@ -277,9 +278,9 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     nsIScriptContext *context = scriptGlobal->GetContext();
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-    JSContext* jscontext = reinterpret_cast<JSContext*>
-                                           (context->GetNativeContext());
-    JSObject* global = JS_GetGlobalObject(jscontext);
+    JSContext* cx = reinterpret_cast<JSContext*>
+                                    (context->GetNativeContext());
+    JSObject* global = JS_GetGlobalObject(cx);
 
     // Using XPConnect, wrap the HTTP index object...
     static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
@@ -287,7 +288,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = xpc->WrapNative(jscontext,
+    rv = xpc->WrapNative(cx,
                          global,
                          static_cast<nsIHTTPIndex*>(this),
                          NS_GET_IID(nsIHTTPIndex),
@@ -306,7 +307,8 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 
     // ...and stuff it into the global context
     PRBool ok;
-    ok = JS_SetProperty(jscontext, global, "HTTPIndex", &jslistener);
+    JSAutoRequest ar(cx);
+    ok = JS_SetProperty(cx, global, "HTTPIndex", &jslistener);
 
     NS_ASSERTION(ok, "unable to set Listener property");
     if (! ok)
