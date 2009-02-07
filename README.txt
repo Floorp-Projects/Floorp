@@ -1,3 +1,8 @@
+An explanation of the Mozilla Source Code Directory Structure and links to
+project pages with documentation can be found at:
+
+    https://developer.mozilla.org/en/Mozilla_Source_Code_Directory_Structure
+
 For information on how to build Mozilla from the source code, see:
 
     http://developer.mozilla.org/en/docs/Build_Documentation
