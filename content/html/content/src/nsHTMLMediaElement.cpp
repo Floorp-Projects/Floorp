@@ -460,7 +460,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetVolume(float aVolume)
     if (mDecoder)
       mDecoder->SetVolume(aVolume);
 
-    DispatchSimpleEvent(NS_LITERAL_STRING("volumechange"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("volumechange"));
   }
   return NS_OK;
 }
@@ -490,7 +490,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
   mMuted = aMuted;
 
   if (oldMuted != mMuted) 
-    DispatchSimpleEvent(NS_LITERAL_STRING("volumechange"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("volumechange"));
   return NS_OK;
 }
 
