@@ -172,7 +172,7 @@ js_GetCurrentThread(JSRuntime *rt)
         memset(thread->scriptsToGC, 0, sizeof thread->scriptsToGC);
 
         /*
-         * js_SetContextThread initializes the remaining fields as necessary.
+         * js_InitContextThread initializes the remaining fields as necessary.
          */
     }
     return thread;
@@ -180,18 +180,14 @@ js_GetCurrentThread(JSRuntime *rt)
 
 /*
  * Sets current thread as owning thread of a context by assigning the
- * thread-private info to the context. If the current thread doesn't have
- * private JSThread info, create one.
+ * thread-private info to the context.
  */
-JSBool
-js_SetContextThread(JSContext *cx)
+void
+js_InitContextThread(JSContext *cx, JSThread *thread)
 {
-    JSThread *thread = js_GetCurrentThread(cx->runtime);
-
-    if (!thread) {
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
-    }
+    JS_ASSERT(CURRENT_THREAD_IS_ME(thread));
+    JS_ASSERT(!cx->thread);
+    JS_ASSERT(cx->requestDepth == 0);
 
     /*
      * Clear caches on each transition from 0 to 1 context active on the
@@ -205,25 +201,8 @@ js_SetContextThread(JSContext *cx)
 #endif
     }
 
-    /* Assert that the previous cx->thread called JS_ClearContextThread(). */
-    JS_ASSERT(!cx->thread || cx->thread == thread);
-    if (!cx->thread)
-        JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
+    JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
     cx->thread = thread;
-    return JS_TRUE;
-}
-
-/* Remove the owning thread info of a context. */
-void
-js_ClearContextThread(JSContext *cx)
-{
-    /*
-     * If cx is associated with a thread, this must be called only from that
-     * thread.  If not, this is a harmless no-op.
-     */
-    JS_ASSERT(cx->thread == js_GetCurrentThread(cx->runtime) || !cx->thread);
-    JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
-    cx->thread = NULL;
 }
 
 #endif /* JS_THREADSAFE */
@@ -251,6 +230,12 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JSContext *cx;
     JSBool ok, first;
     JSContextCallback cxCallback;
+#ifdef JS_THREADSAFE
+    JSThread *thread = js_GetCurrentThread(rt);
+
+    if (!thread)
+        return NULL;
+#endif
 
     cx = (JSContext *) malloc(sizeof *cx);
     if (!cx)
@@ -266,8 +251,12 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 #ifdef JS_THREADSAFE
     cx->gcLocalFreeLists = (JSGCFreeListSet *) &js_GCEmptyFreeListSet;
-    JS_INIT_CLIST(&cx->threadLinks);
-    js_SetContextThread(cx);
+
+    /*
+     * At this point cx is not on rt->contextList. Thus we do not need to
+     * prevent a race against the GC when adding cx to JSThread.contextList.
+     */
+    js_InitContextThread(cx, thread);
 #endif
 
     JS_LOCK_GC(rt);
@@ -428,6 +417,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JSLocalRootStack *lrs;
     JSLocalRootChunk *lrc;
 
+#ifdef JS_THREADSAFE
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+#endif
     rt = cx->runtime;
 
     if (mode != JSDCM_NEW_FAILED) {
@@ -495,10 +487,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
      * js_DestroyContext that was not last might be waiting in the GC for our
      * request to end.  We'll let it run below, just before we do the truly
      * final GC and then free atom state.
-     *
-     * At this point, cx must be inaccessible to other threads.  It's off the
-     * rt->contextList, and it should not be reachable via any object private
-     * data structure.
      */
     while (cx->requestDepth != 0)
         JS_EndRequest(cx);
@@ -560,7 +548,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     }
 
 #ifdef JS_THREADSAFE
-    js_ClearContextThread(cx);
+    /*
+     * Since cx is not on rt->contextList, it cannot be accessed by the GC
+     * running on another thread. Thus, compared with JS_ClearContextThread,
+     * we can safely unlink cx from from JSThread.contextList without taking
+     * the GC lock.
+     */
+    JS_REMOVE_LINK(&cx->threadLinks);
 #endif
 
     /* Finally, free cx itself. */
