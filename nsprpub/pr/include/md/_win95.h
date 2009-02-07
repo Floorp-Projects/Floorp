@@ -160,7 +160,7 @@ struct _MDSegment {
 
 struct _MDDir {
     HANDLE           d_hdl;
-    WIN32_FIND_DATA  d_entry;
+    WIN32_FIND_DATAA d_entry;
     PRBool           firstEntry;     /* Is this the entry returned
                                       * by FindFirstFile()? */
     PRUint32         magic;          /* for debugging */
