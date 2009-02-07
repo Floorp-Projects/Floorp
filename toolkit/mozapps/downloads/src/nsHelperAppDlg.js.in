@@ -171,6 +171,9 @@ nsUnknownContentTypeDialog.prototype = {
 
       let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch);
+      let bundle = Components.classes["@mozilla.org/intl/stringbundle;1"].
+        getService(Components.interfaces.nsIStringBundleService).
+        createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
 
       if (!aForcePrompt) {
         // Check to see if the user wishes to auto save to the default download
@@ -185,7 +188,23 @@ nsUnknownContentTypeDialog.prototype = {
           let dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
                                   .getService(Components.interfaces.nsIDownloadManager);
           let defaultFolder = dnldMgr.userDownloadsDirectory;
-          result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
+
+          try {
+            result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
+          }
+          catch (ex) {
+            if (ex.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED) {
+              let prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+                getService(Components.interfaces.nsIPromptService);
+
+              // Display error alert (using text supplied by back-end)
+              prompter.alert(this.dialog,
+                             bundle.GetStringFromName("badPermissions.title"),
+                             bundle.GetStringFromName("badPermissions"));
+
+              return;
+            }
+          }
 
           // Check to make sure we have a valid directory, otherwise, prompt
           if (result)
@@ -196,10 +215,6 @@ nsUnknownContentTypeDialog.prototype = {
       // Use file picker to show dialog.
       var nsIFilePicker = Components.interfaces.nsIFilePicker;
       var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-
-      var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-      bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
-
       var windowTitle = bundle.GetStringFromName("saveDialogTitle");
       var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowInternal);
       picker.init(parent, windowTitle, nsIFilePicker.modeSave);
@@ -372,6 +387,10 @@ nsUnknownContentTypeDialog.prototype = {
       }
       catch (e) {
         dump("*** exception in validateLeafName: " + e + "\n");
+
+        if (e.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED)
+          throw e;
+
         if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
           aLocalFile.append("unnamed");
           if (aLocalFile.exists())
