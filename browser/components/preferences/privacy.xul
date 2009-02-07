@@ -25,6 +25,7 @@
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Roberto Estrada <roberto.estrada@yahoo.es>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,6 +99,7 @@
       <!-- Clear Private Data -->
       <preference id="privacy.sanitize.sanitizeOnShutdown"
                   name="privacy.sanitize.sanitizeOnShutdown"
+                  onchange="gPrivacyPane._updateSanitizeSettingsButton();"
                   type="bool"/>
 
     </preferences>
