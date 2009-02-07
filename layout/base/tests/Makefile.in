@@ -77,7 +77,7 @@ _TEST_FILES =	\
 # excessive number of leaks that they expose see bug 474016 for details.
 
 # Tests for bug 441782 don't pass reliably on Windows, because of bug 469208
-ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += \
 		test_bug441782.html \
 		bug441782-1.html \
