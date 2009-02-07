@@ -39,9 +39,40 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = widget/test 
+relativesrcdir  = widget/tests
 
 include $(DEPTH)/config/autoconf.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifneq ($(OS_ARCH), WINCE)
+ifndef MOZ_ENABLE_LIBXUL
+MOZILLA_INTERNAL_API = 1
+else
+LIBS += $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+        $(NULL)
+endif
+
+CPP_UNIT_TESTS += TestWinTSF.cpp  \
+                  $(NULL)
+
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
+
+CPPSRCS += $(CPP_UNIT_TESTS)
+
+SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+
+REQUIRES += appshell content docshell \
+            dom embed_base gfx layout locale \
+            necko string thebes uriloader view \
+            webbrwsr widget xpcom \
+            $(NULL)
+
+LIBS += $(XPCOM_LIBS) \
+        $(NSPR_LIBS) \
+        $(NULL)
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	test_bug343416.xul \
@@ -60,3 +91,13 @@ endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifneq ($(OS_ARCH), WINCE)
+check::
+	@$(EXIT_ON_ERROR) \
+	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
+	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	done
+endif
+endif

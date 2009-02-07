@@ -93,11 +93,14 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_QD    100
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
+#ifdef XP_WIN
+#define NS_NATIVE_TSF_POINTER       100
+#endif
 
-// a85944af-7fce-4e45-bf04-ac12c823394b
+// {51C24E3B-229F-4c4f-ADA5-BE891FD9EFE9}
 #define NS_IWIDGET_IID \
-{ 0xa85944af, 0x7fce, 0x4e45, \
-  { 0xbf, 0x04, 0xac, 0x12, 0xc8, 0x23, 0x39, 0x4b } }
+{ 0x51c24e3b, 0x229f, 0x4c4f, \
+  { 0xad, 0xa5, 0xbe, 0x89, 0x1f, 0xd9, 0xef, 0xe9 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -1241,6 +1244,29 @@ class nsIWidget : public nsISupports {
      * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
      */
     NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
+
+    /*
+     * An editable node (i.e. input/textarea/design mode document)
+     *  is receiving or giving up focus
+     * aFocus is true if node is receiving focus
+     * aFocus is false if node is giving up focus (blur)
+     */
+    NS_IMETHOD OnIMEFocusChange(PRBool aFocus) = 0;
+
+    /*
+     * Text content of the focused node has changed
+     * aStart is the starting offset of the change
+     * aOldEnd is the ending offset of the change
+     * aNewEnd is the caret offset after the change
+     */
+    NS_IMETHOD OnIMETextChange(PRUint32 aStart,
+                               PRUint32 aOldEnd,
+                               PRUint32 aNewEnd) = 0;
+
+    /*
+     * Selection has changed in the focused node
+     */
+    NS_IMETHOD OnIMESelectionChange(void) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
