@@ -2755,7 +2755,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
   }
 
   // compute what the new title should be
-  nsCAutoString newTitle = NS_ConvertUTF16toUTF8(aPageTitle);
+  NS_ConvertUTF16toUTF8 newTitle(aPageTitle);
 
   PRBool onlyOneEntry = (mOptions->ResultType() ==
                          nsINavHistoryQueryOptions::RESULTS_AS_URI ||
@@ -2840,7 +2840,7 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
 
   switch (aWhat) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      nsCString newFavicon = NS_ConvertUTF16toUTF8(aValue);
+      NS_ConvertUTF16toUTF8 newFavicon(aValue);
       PRBool onlyOneEntry = (mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_URI ||
                              mOptions->ResultType() ==

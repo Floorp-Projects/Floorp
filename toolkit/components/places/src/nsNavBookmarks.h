@@ -263,7 +263,7 @@ private:
       nsCAutoString type;
       rv = bookmarks->GetFolderType(mID, type);
       NS_ENSURE_SUCCESS(rv, rv);
-      mType = NS_ConvertUTF8toUTF16(type);
+      CopyUTF8toUTF16(type, mType);
 
       return bookmarks->RemoveFolder(mID);
     }
