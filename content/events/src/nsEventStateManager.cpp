@@ -28,7 +28,6 @@
  *   Ginn Chen <ginn.chen@sun.com>
  *   Simon Bünzli <zeniko@gmail.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
- *   Ningjie Chen <chenn@email.uc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,7 +47,7 @@
 #include "nsEventStateManager.h"
 #include "nsEventListenerManager.h"
 #include "nsIMEStateManager.h"
-#include "nsContentEventHandler.h"
+#include "nsQueryContentEventHandler.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
@@ -960,8 +959,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         break;
 
       if (mDocument) {
-        nsIMEStateManager::OnTextStateBlur(mPresContext, mCurrentFocus);
-
         if (gLastFocusedDocument && gLastFocusedPresContextWeak) {
           nsCOMPtr<nsPIDOMWindow> ourWindow =
             gLastFocusedDocument->GetWindow();
@@ -1079,8 +1076,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           NS_IF_RELEASE(gLastFocusedContent);
           gLastFocusedContent = mCurrentFocus;
           NS_IF_ADDREF(gLastFocusedContent);
-
-          nsIMEStateManager::OnTextStateFocus(mPresContext, mCurrentFocus);
         }
 
         // Try to keep the focus controllers and the globals in synch
@@ -1151,8 +1146,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (gLastFocusedContent && !gLastFocusedContent->IsInDoc()) {
           NS_RELEASE(gLastFocusedContent);
         }
-
-        nsIMEStateManager::OnTextStateBlur(nsnull, nsnull);
 
         // Now fire blurs.  We fire a blur on the focused document, element,
         // and window.
@@ -1326,8 +1319,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       if (focusController)
         focusController->SetSuppressFocus(PR_TRUE, "Deactivate Suppression");
-
-      nsIMEStateManager::OnTextStateBlur(nsnull, nsnull);
 
       // Now fire blurs.  Blur the content, then the document, then the window.
 
@@ -1503,38 +1494,26 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_QUERY_SELECTED_TEXT:
     {
-      nsContentEventHandler handler(mPresContext);
+      nsQueryContentEventHandler handler(mPresContext);
       handler.OnQuerySelectedText((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
-      nsContentEventHandler handler(mPresContext);
+      nsQueryContentEventHandler handler(mPresContext);
       handler.OnQueryTextContent((nsQueryContentEvent*)aEvent);
+    }
+    break;
+  case NS_QUERY_CHARACTER_RECT:
+    {
+      nsQueryContentEventHandler handler(mPresContext);
+      handler.OnQueryCharacterRect((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_CARET_RECT:
     {
-      nsContentEventHandler handler(mPresContext);
+      nsQueryContentEventHandler handler(mPresContext);
       handler.OnQueryCaretRect((nsQueryContentEvent*)aEvent);
-    }
-    break;
-  case NS_QUERY_TEXT_RECT:
-    {
-      nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextRect((nsQueryContentEvent*)aEvent);
-    }
-    break;
-  case NS_QUERY_EDITOR_RECT:
-    {
-      nsContentEventHandler handler(mPresContext);
-      handler.OnQueryEditorRect((nsQueryContentEvent*)aEvent);
-    }
-    break;
-  case NS_SELECTION_SET:
-    {
-      nsContentEventHandler handler(mPresContext);
-      handler.OnSelectionEvent((nsSelectionEvent*)aEvent);
     }
     break;
   }
@@ -5052,8 +5031,6 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
   // Track the old focus controller if any focus suppressions is used on it.
   nsFocusSuppressor oldFocusSuppressor;
   
-  nsIMEStateManager::OnTextStateBlur(aPresContext, aContent);
-
   if (nsnull != gLastFocusedPresContextWeak) {
 
     nsCOMPtr<nsIContent> focusAfterBlur;
@@ -5284,8 +5261,6 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     if (clearFirstFocusEvent) {
       mFirstFocusEvent = nsnull;
     }
-
-    nsIMEStateManager::OnTextStateFocus(mPresContext, mCurrentFocus);
   } else if (!aContent) {
     //fire focus on document even if the content isn't focusable (ie. text)
     //see bugzilla bug 93521

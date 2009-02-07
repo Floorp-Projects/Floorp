@@ -40,15 +40,12 @@
 #define nsIMEStateManager_h__
 
 #include "nscore.h"
-#include "nsGUIEvent.h"
 
 class nsIContent;
 class nsPIDOMWindow;
 class nsPresContext;
 class nsIWidget;
 class nsIFocusController;
-class nsTextStateManager;
-class nsISelection;
 
 /*
  * IME state manager
@@ -65,25 +62,6 @@ public:
   static nsresult OnActivate(nsPresContext* aPresContext);
   static nsresult OnDeactivate(nsPresContext* aPresContext);
   static void OnInstalledMenuKeyboardListener(PRBool aInstalling);
-
-  // These two methods manage focus and selection/text observers.
-  // They are separate from OnChangeFocus above because this offers finer
-  // control compared to having the two methods incorporated into OnChangeFocus
-
-  // OnTextStateBlur should be called *before* NS_BLUR_CONTENT fires
-  // aPresContext is the nsPresContext receiving focus (not lost focus)
-  // aContent is the nsIContent receiving focus (not lost focus)
-  // aPresContext and/or aContent may be null
-  static nsresult OnTextStateBlur(nsPresContext* aPresContext,
-                                  nsIContent* aContent);
-  // OnTextStateFocus should be called *after* NS_FOCUS_CONTENT fires
-  // aPresContext is the nsPresContext receiving focus
-  // aContent is the nsIContent receiving focus
-  static nsresult OnTextStateFocus(nsPresContext* aPresContext,
-                                   nsIContent* aContent);
-  // Get the focused editor's selection and root
-  static nsresult GetFocusSelectionAndRoot(nsISelection** aSel,
-                                           nsIContent** aRoot);
 protected:
   static void SetIMEState(nsPresContext* aPresContext,
                           PRUint32 aState,
@@ -100,8 +78,6 @@ protected:
   static nsPresContext* sPresContext;
   static nsPIDOMWindow* sActiveWindow;
   static PRBool         sInstalledMenuKeyboardListener;
-
-  static nsTextStateManager* sTextStateObserver;
 };
 
 #endif // nsIMEStateManager_h__

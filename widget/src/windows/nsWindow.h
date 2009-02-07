@@ -25,7 +25,6 @@
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
  *   Masayuki Nakano <masayuki@d-toybox.com>
- *   Ningjie Chen <chenn@email.uc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -73,11 +72,6 @@ struct nsFakeCharMessage;
 #endif
 
 #include "gfxWindowsSurface.h"
-
-// Text Services Framework support
-#ifndef WINCE
-#define NS_ENABLE_TSF
-#endif //WINCE
 
 #define IME_MAX_CHAR_POS       64
 
@@ -241,12 +235,6 @@ public:
   NS_IMETHOD CancelIMEComposition();
   NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
-#ifdef NS_ENABLE_TSF
-  NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
-  NS_IMETHOD OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
-  NS_IMETHOD OnIMESelectionChange(void);
-#endif //NS_ENABLE_TSF
-
   PRBool IMEMouseHandling(PRInt32 aAction, LPARAM lParam);
   PRBool IMECompositionHitTest(POINT * ptPos);
   PRBool HandleMouseActionOfIME(PRInt32 aAction, POINT* ptPos);
@@ -262,8 +250,6 @@ public:
                                              LPARAM lParam,
                                              PRBool aIsContextMenuKey = PR_FALSE,
                                              PRInt16 aButton = nsMouseEvent::eLeftButton);
-  virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
-  virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
 #ifdef ACCESSIBILITY
   virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsIntPoint* aPoint = nsnull);
   already_AddRefed<nsIAccessible> GetRootAccessible();
@@ -317,6 +303,8 @@ protected:
   LRESULT                 ProcessKeyDownMessage(const MSG &aMsg,
                                                 PRBool *aEventDispatched);
 
+  virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
+  virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
 
    // Allow Derived classes to modify the height that is passed
    // when the window is created or resized.
