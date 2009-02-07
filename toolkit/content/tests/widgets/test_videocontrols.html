@@ -16,11 +16,40 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+/*
+ * Positions of the  UI elements, relative to the upper-left corner of the
+ * <video> box.
+ */
+const videoWidth = 320;
+const videoHeight = 240;
+const videoDuration = 3.8329999446868896;
+
+const playButtonWidth = 28;
+const playButtonHeight = 28;
+const muteButtonWidth = 33;
+const muteButtonHeight = 28;
+const scrubberWidth = videoWidth - playButtonWidth - muteButtonWidth;
+const scrubberHeight = 28;
+const thumbWidth = 11;
+
+// Play button is on the bottom-left
+const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
+const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
+// Mute button is on the bottom-right
+const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2);
+const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
+// Scrubber bar is between the play and mute buttons. We don't need it's
+// X center, just the offset of its box.
+const scrubberOffsetX = 0 + playButtonWidth;
+const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 
 function runTest(event) {
   ok(true, "----- test #" + testnum + " -----");
 
   switch (testnum) {
+    /*
+     * Check operation of play/pause/mute/unmute buttons.
+     */
     case 1:
       // Check initial state upon load
       is(event.type, "load", "checking event type");
@@ -28,7 +57,7 @@ function runTest(event) {
       is(video.muted, false, "checking video mute state");
 
       // Click the play button
-      synthesizeMouse(video, 12, 228, { });
+      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
       break;
 
     case 2:
@@ -37,7 +66,7 @@ function runTest(event) {
       is(video.muted, false,  "checking video mute state");
 
       // Click the pause button
-      synthesizeMouse(video, 12, 228, { });
+      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
       break;
 
     case 3:
@@ -46,7 +75,7 @@ function runTest(event) {
       is(video.muted, false,  "checking video mute state");
 
       // Click the mute button
-      synthesizeMouse(video, 308, 228, { });
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
       break;
 
     case 4:
@@ -55,38 +84,118 @@ function runTest(event) {
       is(video.muted,  true,  "checking video mute state");
 
       // Click the unmute button
-      synthesizeMouse(video, 308, 228, { });
+      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
       break;
 
+    /*
+     * Bug 470596: Make sure that having CSS border or padding doesn't
+     * break the controls (though it should move them)
+     */
     case 5:
       is(event.type, "volumechange", "checking event type");
       is(video.paused, true,  "checking video play state");
       is(video.muted,  false, "checking video mute state");
 
-      // Bug 470596: Make sure that having CSS border or padding doesn't
-      // break the controls (though it should move them)
       video.style.border = "medium solid purple";
       video.style.borderWidth = "30px 40px 50px 60px";
       video.style.padding = "10px 20px 30px 40px";
       // totals: top: 40px, right: 60px, bottom: 80px, left: 100px
 
       // Click the play button
-      synthesizeMouse(video, 100 + 12, 40 + 228, { });
+      synthesizeMouse(video, 100 + playButtonCenterX, 40 + playButtonCenterY, { });
       break;
 
     case 6:
       is(event.type, "play",  "checking event type");
       is(video.paused, false, "checking video play state");
       is(video.muted, false,  "checking video mute state");
-
-      // Click the mute button
-      synthesizeMouse(video, 100 + 308, 40 + 228, { });
+      video.pause();
       break;
 
     case 7:
+      is(event.type, "pause",  "checking event type");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, false,  "checking video mute state");
+
+      // Click the mute button
+      synthesizeMouse(video, 100 + muteButtonCenterX, 40 + muteButtonCenterY, { });
+      break;
+
+    case 8:
       is(event.type, "volumechange", "checking event type");
-      is(video.paused, false,  "checking video play state");
+      is(video.paused, true,  "checking video play state");
       is(video.muted,  true,  "checking video mute state");
+      // Clear the style set in test 5.
+      video.style.border = "";
+      video.style.borderWidth = "";
+      video.style.padding = "";
+
+      video.muted = false;
+      break;
+
+    /*
+     * Previous tests have moved playback postion, reset it to 0.
+     */
+    case 9:
+      is(event.type, "volumechange", "checking event type");
+      is(video.paused, true,  "checking video play state");
+      is(video.muted,  false,  "checking video mute state");
+      ok(true, "video position is at " + video.currentTime);
+      video.currentTime = 0.0;
+      break;
+
+    case 10:
+      is(event.type, "seeking", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      break;
+
+    /*
+     * Drag the slider's thumb to the halfway point with the mouse.
+     */
+    case 11:
+      is(event.type, "seeked", "checking event type");
+      is(video.currentTime, 0.0, "checking playback position");
+
+      var beginDragX = scrubberOffsetX + (thumbWidth / 2);
+      var endDragX = scrubberOffsetX + (scrubberWidth / 2);
+      synthesizeMouse(video, beginDragX, scrubberCenterY, { type: "mousedown", button: 0 });
+      synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mousemove", button: 0 });
+      synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mouseup",   button: 0 });
+      break;
+                      
+    case 12:
+      is(event.type, "seeking", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      break;
+
+    /*
+     * Click the slider at the 1/4 point with the mouse (jump backwards)
+     */
+    case 13:
+      is(event.type, "seeked", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      var expectedTime = videoDuration / 2;
+      ok(Math.abs(video.currentTime - expectedTime) < 0.1, "checking expected playback position");
+
+      synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, { });
+      break;
+
+    case 14:
+      is(event.type, "seeking", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      break;
+
+    case 15:
+      is(event.type, "seeked", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      // The scrubber currently just jumps towards the nearest pageIncrement point, not
+      // precisely to the point clicked. So, expectedTime isn't (videoDuration / 4).
+      // We should end up at 1.733, but sometimes we end up at 1.498. I guess
+      // it's timing depending if the <scale> things it's click-and-hold, or a
+      // single click. So, just make sure we end up less that the previous
+      // position.
+      lastPosition = (videoDuration / 2) - 0.1;
+      ok(video.currentTime < lastPosition, "checking expected playback position");
 
       SimpleTest.finish();
       break;
@@ -108,6 +217,8 @@ video.addEventListener("load",  runTest, false);
 video.addEventListener("play",  runTest, false);
 video.addEventListener("pause", runTest, false);
 video.addEventListener("volumechange", runTest, false);
+video.addEventListener("seeking", runTest, false);
+video.addEventListener("seeked", runTest, false);
 
 SimpleTest.waitForExplicitFinish();
 
