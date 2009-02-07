@@ -2044,22 +2044,22 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   nsXPIDLCString prefStr;
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_HISTORY,
                            getter_Copies(prefStr));
-  mAutoCompleteRestrictHistory = NS_ConvertUTF8toUTF16(prefStr);
+  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictHistory);
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK,
                            getter_Copies(prefStr));
-  mAutoCompleteRestrictBookmark = NS_ConvertUTF8toUTF16(prefStr);
+  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictBookmark);
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_TAG,
                            getter_Copies(prefStr));
-  mAutoCompleteRestrictTag = NS_ConvertUTF8toUTF16(prefStr);
+  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictTag);
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_TITLE,
                            getter_Copies(prefStr));
-  mAutoCompleteMatchTitle = NS_ConvertUTF8toUTF16(prefStr);
+  CopyUTF8toUTF16(prefStr, mAutoCompleteMatchTitle);
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_URL,
                            getter_Copies(prefStr));
-  mAutoCompleteMatchUrl = NS_ConvertUTF8toUTF16(prefStr);
+  CopyUTF8toUTF16(prefStr, mAutoCompleteMatchUrl);
   mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_TYPED,
                            getter_Copies(prefStr));
-  mAutoCompleteRestrictTyped = NS_ConvertUTF8toUTF16(prefStr);
+  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictTyped);
 
   // Clear out the search on any pref change to invalidate cached search
   mCurrentSearchString = EmptyString();
@@ -4455,7 +4455,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   TitleForDomain(EmptyCString(), localFiles);
   nsAutoString host16;
   if (!aHost.Equals(localFiles))
-    host16 = NS_ConvertUTF8toUTF16(aHost);
+    CopyUTF8toUTF16(aHost, host16);
 
   // nsISupports version of the host string for passing to observers
   nsCOMPtr<nsISupportsString> hostSupports(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
@@ -6809,7 +6809,7 @@ GetReversedHostname(nsIURI* aURI, nsAString& aRevHost)
   }
 
   // can't do reversing in UTF8, better use 16-bit chars
-  nsAutoString forward = NS_ConvertUTF8toUTF16(forward8);
+  NS_ConvertUTF8toUTF16 forward(forward8);
   GetReversedHostname(forward, aRevHost);
   return NS_OK;
 }
@@ -6952,7 +6952,7 @@ GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  aTitle = NS_ConvertUTF8toUTF16(name);
+  CopyUTF8toUTF16(name, aTitle);
   return NS_OK;
 }
 
