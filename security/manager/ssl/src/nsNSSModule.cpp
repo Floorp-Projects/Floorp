@@ -81,22 +81,27 @@
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
-static void EnsureNSSInitialized(PRBool triggeredByNSSComponent)
+static nsresult EnsureNSSInitialized(PRBool triggeredByNSSComponent)
 {
   static PRBool haveLoaded = PR_FALSE;
   if (haveLoaded)
-    return;
+    return NS_OK;
 
-  haveLoaded = PR_TRUE;
-  
   if (triggeredByNSSComponent) {
     // We must prevent a recursion, as nsNSSComponent creates
     // additional instances
-    return;
+    return NS_OK;
   }
-  
+
+  nsresult rv;
   nsCOMPtr<nsISupports> nssComponent 
-    = do_GetService(PSM_COMPONENT_CONTRACTID);
+    = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  haveLoaded = PR_TRUE;
+  return NS_OK;
 }
 
 // These two macros are ripped off from nsIGenericFactory.h and slightly
@@ -110,7 +115,9 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
     nsresult rv;                                                              \
     _InstanceClass * inst;                                                    \
                                                                               \
-    EnsureNSSInitialized(triggeredByNSSComponent);                            \
+    rv = EnsureNSSInitialized(triggeredByNSSComponent);                       \
+    if (NS_FAILED(rv))                                                        \
+        return rv;                                                            \
                                                                               \
     *aResult = NULL;                                                          \
     if (NULL != aOuter) {                                                     \
@@ -140,7 +147,9 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
     nsresult rv;                                                              \
     _InstanceClass * inst;                                                    \
                                                                               \
-    EnsureNSSInitialized(triggeredByNSSComponent);                            \
+    rv = EnsureNSSInitialized(triggeredByNSSComponent);                       \
+    if (NS_FAILED(rv))                                                        \
+        return rv;                                                            \
                                                                               \
     *aResult = NULL;                                                          \
     if (NULL != aOuter) {                                                     \
