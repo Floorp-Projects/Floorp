@@ -24,6 +24,7 @@
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Roberto Estrada <roberto.estrada@yahoo.es>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,7 @@ var gPrivacyPane = {
   init: function ()
   {
     this._updateHistoryDaysUI();
+    this._updateSanitizeSettingsButton();
   },
 
   // HISTORY
@@ -315,6 +317,17 @@ var gPrivacyPane = {
     var glue = Cc["@mozilla.org/browser/browserglue;1"]
                  .getService(Ci.nsIBrowserGlue);
     glue.sanitize(window || null);
-  }
+  },
+  
+  /**
+   * Enables or disables the "Settings..." button depending
+   * on the privacy.sanitize.sanitizeOnShutdown preference value
+   */
+  _updateSanitizeSettingsButton: function () {
+    var settingsButton = document.getElementById("clearDataSettings");
+    var sanitizeOnShutdownPref = document.getElementById("privacy.sanitize.sanitizeOnShutdown");
+    
+    settingsButton.disabled = !sanitizeOnShutdownPref.value;  	
+   }
 
 };
