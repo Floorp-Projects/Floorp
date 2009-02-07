@@ -91,7 +91,7 @@ CPPSRCS		= \
 		nsPLDOMEvent.cpp \
 		nsEventDispatcher.cpp \
 		nsIMEStateManager.cpp \
-		nsContentEventHandler.cpp \
+		nsQueryContentEventHandler.cpp \
 		nsDOMProgressEvent.cpp \
 		nsDOMDataTransfer.cpp \
 		nsDOMNotifyPaintEvent.cpp \

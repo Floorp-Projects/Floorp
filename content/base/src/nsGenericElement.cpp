@@ -118,7 +118,7 @@
 #include "nsIDOMNSFeatureFactory.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMUserDataHandler.h"
-#include "nsGenericHTMLElement.h"
+#include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
 #include "nsIEditorDocShell.h"
 #include "nsEventDispatcher.h"
@@ -343,15 +343,13 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
   if (aEditor)
     *aEditor = nsnull;
   for (nsINode* node = this; node; node = node->GetNodeParent()) {
-    if (!node->IsNodeOfType(eHTML))
+    nsCOMPtr<nsIDOMNSEditableElement> editableElement(do_QueryInterface(node));
+    if (!editableElement)
       continue;
 
     nsCOMPtr<nsIEditor> editor;
-    static_cast<nsGenericHTMLElement*>(node)->
-        GetEditorInternal(getter_AddRefs(editor));
-    if (!editor)
-      continue;
-
+    editableElement->GetEditor(getter_AddRefs(editor));
+    NS_ENSURE_TRUE(editor, nsnull);
     nsIContent* rootContent = GetEditorRootContent(editor);
     if (aEditor)
       editor.swap(*aEditor);
