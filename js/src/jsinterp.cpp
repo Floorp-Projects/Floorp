@@ -6435,6 +6435,14 @@ js_Interpret(JSContext *cx)
             }
           END_CASE(JSOP_PRIMTOP)
 
+          BEGIN_CASE(JSOP_OBJTOP)
+            lval = FETCH_OPND(-1);
+            if (JSVAL_IS_PRIMITIVE(lval)) {
+                js_ReportValueError(cx, GET_UINT16(regs.pc), -1, lval, NULL);
+                goto error;
+            }
+          END_CASE(JSOP_OBJTOP)
+
           BEGIN_CASE(JSOP_INSTANCEOF)
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval) ||
@@ -6884,7 +6892,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED135:
           L_JSOP_UNUSED203:
           L_JSOP_UNUSED204:
           L_JSOP_UNUSED205:
