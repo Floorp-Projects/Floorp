@@ -1575,6 +1575,13 @@ nsWaveDecoder::MediaErrorDecode()
 }
 
 void
+nsWaveDecoder::SetDuration(PRInt64 /* aDuration */)
+{
+  // Ignored by the wave decoder since we can compute the
+  // duration directly from the wave data itself.
+}
+
+void
 nsWaveDecoder::SetSeekable(PRBool aSeekable)
 {
   mSeekable = aSeekable;
