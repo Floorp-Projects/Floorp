@@ -405,7 +405,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(b2ddc328-194b-45d6-95c6-52e487438096)]
+[uuid(f8bf005e-3700-411c-ba0c-e018075f22a4)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -785,28 +785,4 @@ interface nsIXPConnect : nsISupports
         in PRUint32 flags,
         in PRUint32 interfaceCount,
         [array, size_is(interfaceCount)] in nsIIDPtr interfaceArray);
-
-    /**
-     * Returns a XPCNativeWrapper, XPCSafeJSObjectWrapper, or
-     * XPCCrossOriginWrapper for the given object based on the principal, scope,
-     * and filename flags that are passed in.
-     *
-     * @param aJSContext
-     *     A JSContext.
-     * @param aObject
-     *     The object to wrap.
-     * @param aScope
-     *     The scope to be used in the event that we create a
-     *     XPCCrossOriginWrapper. Can be null.
-     * @param aPrincipal
-     *     The principal that should be used for the wrapper.
-     * @param aFilenameFlags
-     *     The filename flags from the script that will use this wrapper.
-     */
-    [noscript] JSVal getWrapperForObject(
-        in JSContextPtr aJSContext,
-        in JSObjectPtr aObject,
-        in JSObjectPtr aScope,
-        in nsIPrincipal aPrincipal,
-        in unsigned long aFilenameFlags);
 };

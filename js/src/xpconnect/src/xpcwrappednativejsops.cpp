@@ -43,7 +43,6 @@
 
 #include "xpcprivate.h"
 #include "XPCNativeWrapper.h"
-#include "XPCWrapper.h"
 
 /***************************************************************************/
 
@@ -1276,110 +1275,6 @@ XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
     js_ObjectOps.clear(cx, obj);
 }
 
-namespace {
-
-NS_STACK_CLASS class AutoPopJSContext
-{
-public:
-  AutoPopJSContext(XPCJSContextStack *stack)
-  : mCx(nsnull), mStack(stack)
-  {
-      NS_ASSERTION(stack, "Null stack!");
-  }
-
-  ~AutoPopJSContext()
-  {
-      if(mCx)
-          mStack->Pop(nsnull);
-  }
-
-  void PushIfNotTop(JSContext *cx)
-  {
-      NS_ASSERTION(cx, "Null context!");
-      NS_ASSERTION(!mCx, "This class is only meant to be used once!");
-
-      JSContext *cxTop = nsnull;
-      mStack->Peek(&cxTop);
-
-      if(cxTop != cx && NS_SUCCEEDED(mStack->Push(cx)))
-          mCx = cx;
-  }
-
-private:
-  JSContext *mCx;
-  XPCJSContextStack *mStack;
-};
-
-} // namespace
-
-static JSObject*
-XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
-{
-    // None of the wrappers we could potentially hand out are threadsafe so
-    // just hand out the given object.
-    if(!XPCPerThreadData::IsMainThread(cx))
-        return obj;
-
-    JSObject *scope = JS_GetScopeChain(cx);
-    if(!scope)
-    {
-        XPCThrower::Throw(NS_ERROR_FAILURE, cx);
-        return nsnull;
-    }
-
-    scope = JS_GetGlobalForObject(cx, scope);
-
-    XPCPerThreadData *threadData = XPCPerThreadData::GetData(cx);
-    if(!threadData)
-    {
-        XPCThrower::Throw(NS_ERROR_FAILURE, cx);
-        return nsnull;
-    }
-
-    AutoPopJSContext popper(threadData->GetJSContextStack());
-    popper.PushIfNotTop(cx);
-
-    nsIScriptSecurityManager* secMan = XPCWrapper::GetSecurityManager();
-    if(!secMan)
-    {
-        XPCThrower::Throw(NS_ERROR_FAILURE, cx);
-        return nsnull;
-    }
-
-    JSStackFrame *fp;
-    nsIPrincipal *principal = secMan->GetCxSubjectPrincipalAndFrame(cx, &fp);
-
-    jsval retval = OBJECT_TO_JSVAL(obj);
-    JSAutoTempValueRooter atvr(cx, retval);
-
-    if(principal && fp)
-    {
-        JSScript* script = JS_GetFrameScript(cx, fp);
-
-        PRUint32 flags = script ? JS_GetScriptFilenameFlags(script) : 0;
-        NS_ASSERTION(flags != JSFILENAME_NULL, "Null filename!");
-
-        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
-        if(!xpc)
-        {
-            XPCThrower::Throw(NS_ERROR_FAILURE, cx);
-            return nsnull;
-        }
-
-        jsval val = JSVAL_VOID;
-        
-        nsresult rv = xpc->GetWrapperForObject(cx, obj, scope, principal, flags,
-                                               &retval);
-        if(NS_FAILED(rv))
-        {
-            XPCThrower::Throw(rv, cx);
-            return nsnull;
-        }
-    }
-
-    return JSVAL_TO_OBJECT(retval);
-}
-
 JSObjectOps *
 XPC_WN_GetObjectOpsNoCall(JSContext *cx, JSClass *clazz)
 {
@@ -1398,15 +1293,14 @@ JSBool xpc_InitWrappedNativeJSOps()
     {
         memcpy(&XPC_WN_NoCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
         XPC_WN_NoCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
-        XPC_WN_NoCall_JSOps.call = nsnull;
-        XPC_WN_NoCall_JSOps.construct = nsnull;
-        XPC_WN_NoCall_JSOps.clear = XPC_WN_JSOp_Clear;
-        XPC_WN_NoCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;
 
         memcpy(&XPC_WN_WithCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
         XPC_WN_WithCall_JSOps.enumerate = XPC_WN_JSOp_Enumerate;
         XPC_WN_WithCall_JSOps.clear = XPC_WN_JSOp_Clear;
-        XPC_WN_WithCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;
+
+        XPC_WN_NoCall_JSOps.call = nsnull;
+        XPC_WN_NoCall_JSOps.construct = nsnull;
+        XPC_WN_NoCall_JSOps.clear = XPC_WN_JSOp_Clear;
     }
     return JS_TRUE;
 }
