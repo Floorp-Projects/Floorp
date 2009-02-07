@@ -437,7 +437,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 355548-3.xml 355548-3-ref.xml
 == 355548-4.xml 355548-4-ref.xml
 == 355548-5.xml 355548-5-ref.xml
-== 356774-1.html 356774-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html
 == 356775-1.html 356775-1-ref.html
 == 359903-1.html 359903-1-ref.html
 == 359869-1.html 359869-1-ref.html
