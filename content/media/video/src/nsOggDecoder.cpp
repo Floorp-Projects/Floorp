@@ -286,6 +286,11 @@ public:
   // resource. The decoder monitor must be obtained before calling this.
   void SetContentLength(PRInt64 aLength);
 
+  // Called from the main thread to set the duration of the media resource
+  // if it is able to be obtained via HTTP headers. The decoder monitor
+  // must be obtained before calling this.
+  void SetDuration(PRInt64 aDuration);
+
   // Called from the main thread to set whether the media resource can
   // be seeked. The decoder monitor must be obtained before calling this.
   void SetSeekable(PRBool aSeekable);
@@ -839,6 +844,12 @@ void nsOggDecodeStateMachine::SetContentLength(PRInt64 aLength)
   mContentLength = aLength;
 }
 
+void nsOggDecodeStateMachine::SetDuration(PRInt64 aDuration)
+{
+   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetDuration() called without acquiring decoder monitor");
+  mDuration = aDuration;
+}
+
 void nsOggDecodeStateMachine::SetSeekable(PRBool aSeekable)
 {
    //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetSeekable() called without acquiring decoder monitor");
@@ -1188,12 +1199,14 @@ void nsOggDecodeStateMachine::LoadOggHeaders()
     // Get the duration from the Ogg file. We only do this if the
     // content length of the resource is known as we need to seek
     // to the end of the file to get the last time field. We also
-    // only do this if the resource is seekable.
+    // only do this if the resource is seekable and if we haven't
+    // already obtained the duration via an HTTP header.
     {
       nsAutoMonitor mon(mDecoder->GetMonitor());
       if (mState != DECODER_STATE_SHUTDOWN &&
           mContentLength >= 0 && 
-          mSeekable) {
+          mSeekable &&
+          mDuration == -1) {
         mDecoder->StopProgressUpdates();
         // Don't hold the monitor during the duration
         // call as it can issue seek requests
@@ -1913,6 +1926,15 @@ void nsOggDecoder::PlaybackPositionChanged()
 
   if (mElement && lastTime != mCurrentTime) {
     mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+  }
+}
+
+void nsOggDecoder::SetDuration(PRInt64 aDuration)
+{
+  mDuration = aDuration;
+  if (mDecodeStateMachine) {
+    nsAutoMonitor mon(mMonitor);
+    mDecodeStateMachine->SetDuration(mDuration);
   }
 }
 

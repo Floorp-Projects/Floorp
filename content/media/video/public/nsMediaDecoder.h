@@ -177,6 +177,11 @@ class nsMediaDecoder : public nsIObserver
   // Set the size of the video file in bytes.
   virtual void SetTotalBytes(PRInt64 aBytes) = 0;
 
+  // Set the duration of the media resource in units of milliseconds.
+  // This is called via a channel listener if it can pick up the duration
+  // from a content header. Must be called from the main thread only.
+  virtual void SetDuration(PRInt64 aDuration) = 0;
+ 
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(PRBool aSeekable) = 0;
 

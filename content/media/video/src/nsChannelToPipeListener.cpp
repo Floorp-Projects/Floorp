@@ -110,6 +110,28 @@ nsresult nsChannelToPipeListener::OnStartRequest(nsIRequest* aRequest, nsISuppor
                           ranges);
     PRBool acceptsRanges = ranges.EqualsLiteral("bytes"); 
 
+    if (!mSeeking) {
+      // Look for duration headers from known Ogg content systems. In the case
+      // of multiple options for obtaining the duration the order of precedence is;
+      // 1) The Media resource metadata if possible (done by the decoder itself).
+      // 2) X-Content-Duration.
+      // 3) x-amz-meta-content-duration.
+      // 4) Perform a seek in the decoder to find the value.
+      nsCAutoString durationText;
+      PRInt32 ec = 0;
+      nsresult rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-Content-Duration"), durationText);
+      if (NS_FAILED(rv)) {
+        rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-AMZ-Meta-Content-Duration"), durationText);
+      }
+
+      if (NS_SUCCEEDED(rv)) {
+        float duration = durationText.ToFloat(&ec);
+        if (ec == NS_OK && duration >= 0) {
+          mDecoder->SetDuration(PRInt64(duration*1000));
+        }
+      }
+    }
+ 
     PRUint32 responseStatus = 0; 
     hc->GetResponseStatus(&responseStatus);
     if (mSeeking && responseStatus == HTTP_OK_CODE) {

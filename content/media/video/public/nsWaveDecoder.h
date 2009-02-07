@@ -200,6 +200,10 @@ class nsWaveDecoder : public nsMediaDecoder
 
   virtual void SetTotalBytes(PRInt64 aBytes);
 
+  // Setter for the duration. This is ignored by the wave decoder since it can
+  // compute the duration directly from the wave data.
+  virtual void SetDuration(PRInt64 aDuration);
+
   // Getter/setter for mSeekable.
   virtual void SetSeekable(PRBool aSeekable);
   virtual PRBool GetSeekable();

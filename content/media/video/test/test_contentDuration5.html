@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 1</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function on_metadataloaded() {
+  var v = document.getElementById('v');
+  var d = Math.round(v.duration*1000);
+  ok(d.toString() == "NaN", "Checking duration: " + d);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v'
+       src='contentDuration5.sjs'
+       onloadedmetadata='on_metadataloaded();'></video>
+</body>
+</html>

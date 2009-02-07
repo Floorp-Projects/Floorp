@@ -65,6 +65,12 @@ _TEST_FILES += \
 		test_bug448534.html \
 		test_bug461281.html \
 		test_can_play_type_ogg.html \
+		test_contentDuration1.html \
+		test_contentDuration2.html \
+		test_contentDuration3.html \
+		test_contentDuration4.html \
+		test_contentDuration5.html \
+		test_contentDuration6.html \
 		test_duration1.html \
 		test_ended1.html \
 		test_ended2.html \
@@ -80,6 +86,12 @@ _TEST_FILES += \
 		320x240.allow-origin.ogv^headers^ \
  		bug461281.ogg \
 		redirect.sjs \
+		contentDuration1.sjs \
+		contentDuration2.sjs \
+		contentDuration3.sjs \
+		contentDuration4.sjs \
+		contentDuration5.sjs \
+		contentDuration6.sjs \
 		seek.ogv \
 		$(NULL)
 
