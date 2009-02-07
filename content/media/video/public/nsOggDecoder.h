@@ -349,6 +349,11 @@ class nsOggDecoder : public nsMediaDecoder
   // Get the size of the media file in bytes. Called on the main thread only.
   virtual void SetTotalBytes(PRInt64 aBytes);
 
+  // Set the duration of the media resource in units of milliseconds.
+  // This is called via a channel listener if it can pick up the duration
+  // from a content header. Must be called from the main thread only.
+  virtual void SetDuration(PRInt64 aDuration);
+
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(PRBool aSeekable);
 
