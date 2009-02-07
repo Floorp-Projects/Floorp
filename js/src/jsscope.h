@@ -336,7 +336,7 @@ struct JSScopeProperty {
      ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
                            OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,      \
                            0, 0, vp)                                          \
-     : (sprop)->getter(cx, obj, SPROP_USERID(sprop), vp))
+     : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
 
 /*
  * NB: SPROP_SET must not be called if (SPROP_HAS_STUB_SETTER(sprop) &&
@@ -350,7 +350,7 @@ struct JSScopeProperty {
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
      ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
                              JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
-     : (sprop)->setter(cx, obj, SPROP_USERID(sprop), vp))
+     : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
 
 /* Macro for common expression to test for shared permanent attributes. */
 #define SPROP_IS_SHARED_PERMANENT(sprop)                                      \
