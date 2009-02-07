@@ -1,9 +1,16 @@
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == solid-image-1.html solid-image-1-ref.html # bug 445911
 == transparent-image-1.html transparent-image-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == solid-image-2.html solid-image-2-ref.html # bug 445911
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == solid-image-2a.html solid-image-2-ref.html # bug 445911
 == multicolor-image-1.html multicolor-image-1-ref.html
 == multicolor-image-2.html multicolor-image-2-ref.html
 == multicolor-image-3.html multicolor-image-3-ref.html
 == multicolor-image-4.html multicolor-image-4-ref.html
 == multicolor-image-5.html multicolor-image-5-ref.html
 != repeat-image-1.html repeat-image-1-ref.html
+!= different-h-v-1.html different-h-v-ref.html
+!= different-h-v-2.html different-h-v-ref.html
+!= different-h-v-1.html different-h-v-2.html
+== center-scaling-1.html center-scaling-1-ref.png
+== center-scaling-2.html center-scaling-2-ref.png
+== center-scaling-3.html center-scaling-3-ref.png
