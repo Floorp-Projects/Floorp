@@ -737,18 +737,19 @@ GetScopeOfObject(JSObject* obj)
 
 
 #ifdef DEBUG
-void DEBUG_CheckForComponentsInScope(XPCCallContext& ccx, JSObject* obj,
-                                     JSBool OKIfNotInitialized)
+void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
+                                     JSBool OKIfNotInitialized,
+                                     XPCJSRuntime* runtime)
 {
     if(OKIfNotInitialized)
         return;
 
-    if(!(JS_GetOptions(ccx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
+    if(!(JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
         return;
 
-    const char* name = ccx.GetRuntime()->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
+    const char* name = runtime->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
     jsval prop;
-    if(JS_LookupProperty(ccx, obj, name, &prop) && !JSVAL_IS_PRIMITIVE(prop))
+    if(JS_LookupProperty(cx, obj, name, &prop) && !JSVAL_IS_PRIMITIVE(prop))
         return;
 
     // This is pretty much always bad. It usually means that native code is
@@ -764,13 +765,15 @@ void DEBUG_CheckForComponentsInScope(XPCCallContext& ccx, JSObject* obj,
 #endif
 }
 #else
-#define DEBUG_CheckForComponentsInScope(ccx, obj, OKIfNotInitialized) ((void)0)
+#define DEBUG_CheckForComponentsInScope(ccx, obj, OKIfNotInitialized, runtime) \
+    ((void)0)
 #endif
 
 // static
 XPCWrappedNativeScope*
-XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
-                                           JSBool OKIfNotInitialized)
+XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
+                                           JSBool OKIfNotInitialized,
+                                           XPCJSRuntime* runtime)
 {
     XPCWrappedNativeScope* scope;
 
@@ -786,13 +789,19 @@ XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
 
     // Else we'll have to look up the parent chain to get the scope
 
-    obj = JS_GetGlobalForObject(ccx, obj);
+    obj = JS_GetGlobalForObject(cx, obj);
+
+    if(!runtime)
+    {
+        runtime = nsXPConnect::GetRuntimeInstance();
+        NS_ASSERTION(runtime, "This should never be null!");
+    }
 
     // XXX We are assuming that the scope count is low enough that traversing
     // the linked list is more reasonable then doing a hashtable lookup.
     XPCWrappedNativeScope* found = nsnull;
     {   // scoped lock
-        XPCAutoLock lock(ccx.GetRuntime()->GetMapLock());
+        XPCAutoLock lock(runtime->GetMapLock());
 
         DEBUG_TrackScopeTraversal();
 
@@ -808,7 +817,7 @@ XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
 
     if(found) {
         // This cannot be called within the map lock!
-        DEBUG_CheckForComponentsInScope(ccx, obj, OKIfNotInitialized);
+        DEBUG_CheckForComponentsInScope(cx, obj, OKIfNotInitialized, runtime);
         return found;
     }
 
@@ -818,7 +827,6 @@ XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
     NS_ASSERTION(OKIfNotInitialized, "No scope has this global object!");
     return nsnull;
 }
-
 
 /***************************************************************************/
 
