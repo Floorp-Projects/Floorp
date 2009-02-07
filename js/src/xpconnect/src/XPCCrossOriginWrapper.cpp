@@ -472,31 +472,24 @@ XPC_XOW_RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
 }
 
 JSBool
-XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
-                   XPCWrappedNative* wn)
+XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
 {
-  NS_ASSERTION(XPCPerThreadData::IsMainThread(cx),
-               "Can't wrap object on non-main thread!");
-
-  // Our argument should be a wrapped native object, but the caller may have
-  // passed it in as an optimization.
+  // Our argument should be a wrapped native object.
   JSObject *wrappedObj;
+  XPCWrappedNative *wn;
   if (!JSVAL_IS_OBJECT(*vp) ||
       !(wrappedObj = JSVAL_TO_OBJECT(*vp)) ||
-      STOBJ_GET_CLASS(wrappedObj) == &sXPC_XOW_JSClass.base) {
-    return JS_TRUE;
-  }
-
-  if (!wn &&
+      STOBJ_GET_CLASS(wrappedObj) == &sXPC_XOW_JSClass.base ||
       !(wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj))) {
     return JS_TRUE;
   }
 
   XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+  XPCCallContext ccx(NATIVE_CALLER, cx);
+  NS_ENSURE_TRUE(ccx.IsValid(), JS_FALSE);
 
   // The parent must be the inner global object for its scope.
   parent = JS_GetGlobalForObject(cx, parent);
-
   JSClass *clasp = STOBJ_GET_CLASS(parent);
   if (clasp->flags & JSCLASS_IS_EXTENDED) {
     JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
@@ -509,7 +502,7 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
   }
 
   XPCWrappedNativeScope *parentScope =
-    XPCWrappedNativeScope::FindInJSObjectScope(cx, parent, nsnull, rt);
+    XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
 
 #ifdef DEBUG_mrbkap_off
   printf("Wrapping object at %p (%s) [%p]\n",
@@ -520,7 +513,11 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
   JSObject *outerObj = nsnull;
   WrappedNative2WrapperMap *map = parentScope->GetWrapperMap();
 
-  outerObj = map->Find(wrappedObj);
+  { // Scoped lock
+    XPCAutoLock al(rt->GetMapLock());
+    outerObj = map->Find(wrappedObj);
+  }
+
   if (outerObj) {
     NS_ASSERTION(STOBJ_GET_CLASS(outerObj) == &sXPC_XOW_JSClass.base,
                               "What crazy object are we getting here?");
@@ -550,7 +547,10 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
 
   *vp = OBJECT_TO_JSVAL(outerObj);
 
-  map->Add(wn->GetScope()->GetWrapperMap(), wrappedObj, outerObj);
+  { // Scoped lock
+    XPCAutoLock al(rt->GetMapLock());
+    map->Add(wn->GetScope()->GetWrapperMap(), wrappedObj, outerObj);
+  }
 
   return JS_TRUE;
 }

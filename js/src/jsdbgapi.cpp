@@ -653,7 +653,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                      ((sprop->attrs & JSPROP_SETTER)
                       ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(wp->setter),
                                         1, vp, vp)
-                      : wp->setter(cx, obj, userid, vp));
+                      : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
                 if (injectFrame) {
                     /* Evil code can cause us to have an arguments object. */
                     if (frame.callobj)
