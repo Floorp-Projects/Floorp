@@ -334,6 +334,7 @@ fails == 315920-5.html 315920-5-ref.html # bug 229915 ???
 == 321402-4.xul 321402-4-ref.xul
 == 321402-5.xul 321402-5-ref.xul
 == 321402-6.xul 321402-6-ref.xul
+== 321738-1.html 321738-1-ref.html
 == 322436-1.html 322436-1-ref.html
 == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
