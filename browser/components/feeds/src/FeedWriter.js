@@ -1114,8 +1114,8 @@ FeedWriter.prototype = {
         this._document.getElementById("feedSubscriptionInfo2");
       this._contentSandbox.feedinfo2Str = this._getString(textfeedinfo2);
       this._contentSandbox.header = header;
-      codeStr = "feedinfo1.value = feedinfo1Str; " +
-                "feedinfo2.value = feedinfo2Str; " +
+      codeStr = "feedinfo1.textContent = feedinfo1Str; " +
+                "feedinfo2.textContent = feedinfo2Str; " +
                 "header.setAttribute('firstrun', 'true');"
       Cu.evalInSandbox(codeStr, this._contentSandbox);
       prefs.setBoolPref(PREF_SHOW_FIRST_RUN_UI, false);
