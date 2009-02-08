@@ -213,9 +213,6 @@ public:
   // Get the offset from the border box to the area where the row groups fit
   nsMargin GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const;
 
-  // Get the offset from the border box to the area where the content fits
-  nsMargin GetContentAreaOffset(const nsHTMLReflowState* aReflowState) const;
-
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
                                  
@@ -284,26 +281,26 @@ public:
                                   const nsRect& aDirtyRect,
                                   nsPoint aPt);
 
-  // Get the outer half (i.e., the part outside the height and width of
-  // the table) of the largest segment (?) of border-collapsed border on
-  // the table on each side, or 0 for non border-collapsed tables.
+  /** Get the outer half (i.e., the part outside the height and width of
+   *  the table) of the largest segment (?) of border-collapsed border on
+   *  the table on each side, or 0 for non border-collapsed tables.
+   */
   nsMargin GetOuterBCBorder() const;
 
-  // Same as above, but only if it's included from the border-box width
-  // of the table (nonzero only in quirks mode).
+  /** Same as above, but only if it's included from the border-box width
+   *  of the table.
+   */
   nsMargin GetIncludedOuterBCBorder() const;
 
-  // Same as above, but only if it's excluded from the border-box width
-  // of the table (nonzero only in standards mode).  This is the area
-  // that leaks out into the margin (or potentially past it, if there is
-  // no margin).
+  /** Same as above, but only if it's excluded from the border-box width
+   *  of the table.  This is the area that leaks out into the margin
+   *  (or potentially past it, if there is no margin).
+   */
   nsMargin GetExcludedOuterBCBorder() const;
 
   /** Get width of table + colgroup + col collapse: elements that
    *  continue along the length of the whole left side.
    *  see nsTablePainter about continuous borders
-   *  @param aPixelsToTwips - conversion factor
-   *  @param aGetInner - get only inner half of border width
    */
   nscoord GetContinuousLeftBCBorderWidth() const;
   friend class nsDelayedCalcBCBorders;

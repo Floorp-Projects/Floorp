@@ -145,13 +145,17 @@ struct nsTableReflowState {
 
 struct BCPropertyData
 {
-  BCPropertyData() { mDamageArea.x = mDamageArea.y = mDamageArea.width = mDamageArea.height =
-                     mTopBorderWidth = mRightBorderWidth = mBottomBorderWidth = mLeftBorderWidth = 0; }
+  BCPropertyData() { mDamageArea.x = mDamageArea.y = mDamageArea.width =
+                     mDamageArea.height = mTopBorderWidth = mRightBorderWidth =
+                     mBottomBorderWidth = mLeftBorderWidth =
+                     mLeftCellBorderWidth = mRightCellBorderWidth = 0; }
   nsRect  mDamageArea;
   BCPixelSize mTopBorderWidth;
   BCPixelSize mRightBorderWidth;
   BCPixelSize mBottomBorderWidth;
   BCPixelSize mLeftBorderWidth;
+  BCPixelSize mLeftCellBorderWidth;
+  BCPixelSize mRightCellBorderWidth;
 };
 
 NS_IMETHODIMP 
@@ -2550,10 +2554,10 @@ nsTableFrame::GetOuterBCBorder() const
   BCPropertyData* propData = 
     (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this, nsGkAtoms::tableBCProperty, PR_FALSE);
   if (propData) {
-    border.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
-    border.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
-    border.bottom += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
-    border.left += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
+    border.top    = BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
+    border.right  = BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
+    border.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
+    border.left   = BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
   }
   return border;
 }
@@ -2561,21 +2565,28 @@ nsTableFrame::GetOuterBCBorder() const
 nsMargin
 nsTableFrame::GetIncludedOuterBCBorder() const
 {
-  if (eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) {
-    return GetOuterBCBorder();
-  }
+  if (NeedToCalcBCBorders())
+    const_cast<nsTableFrame*>(this)->CalcBCBorders();
+
   nsMargin border(0, 0, 0, 0);
+  PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
+  BCPropertyData* propData =
+    (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this,
+                                                nsGkAtoms::tableBCProperty,
+                                                PR_FALSE);
+  if (propData) {
+    border.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
+    border.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightCellBorderWidth);
+    border.bottom += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
+    border.left += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftCellBorderWidth);
+  }
   return border;
 }
 
 nsMargin
 nsTableFrame::GetExcludedOuterBCBorder() const
 {
-  if (eCompatibility_NavQuirks != PresContext()->CompatibilityMode()) {
-    return GetOuterBCBorder();
-  }
-  nsMargin border(0, 0, 0, 0);
-  return border;
+  return GetOuterBCBorder() - GetIncludedOuterBCBorder();
 }
 static
 void GetSeparateModelBorderPadding(const nsHTMLReflowState* aReflowState,
@@ -2597,34 +2608,7 @@ nsTableFrame::GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const
 {
   nsMargin offset(0,0,0,0);
   if (IsBorderCollapse()) {
-    nsPresContext* presContext = PresContext();
-    if (eCompatibility_NavQuirks == presContext->CompatibilityMode()) {
-      nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT1(offset);
-      PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
-      BCPropertyData* propData = 
-        (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)firstInFlow, nsGkAtoms::tableBCProperty, PR_FALSE);
-      if (!propData) ABORT1(offset);
-
-      offset.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
-      offset.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
-      offset.bottom += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
-      offset.left += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
-    }
-  }
-  else {
-    GetSeparateModelBorderPadding(aReflowState, *mStyleContext, offset);
-  }
-  return offset;
-}
-
-nsMargin 
-nsTableFrame::GetContentAreaOffset(const nsHTMLReflowState* aReflowState) const
-{
-  nsMargin offset(0,0,0,0);
-  if (IsBorderCollapse()) {
-    // LDB: This used to unconditionally include the inner half as well,
-    // but that's pretty clearly wrong per the CSS2.1 spec.
-    offset = GetOuterBCBorder();
+    offset = GetIncludedOuterBCBorder();
   }
   else {
     GetSeparateModelBorderPadding(aReflowState, *mStyleContext, offset);
@@ -3702,7 +3686,7 @@ nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState)
 {
   nscoord height = aState.ComputedHeight();
   if (NS_AUTOHEIGHT != height) {
-    nsMargin borderPadding = GetContentAreaOffset(&aState);
+    nsMargin borderPadding = GetChildAreaOffset(&aState);
     height += borderPadding.top + borderPadding.bottom;
   }
   height = PR_MAX(0, height);
@@ -5498,6 +5482,15 @@ nsTableFrame::CalcBCBorders()
         tableCellMap->SetBCBorderCorner(eTopLeft, *info.cellMap, iter.mRowGroupStart, rowX, 
                                         0, tlCorner.ownerSide, tlCorner.subWidth, tlCorner.bevel);
         bottomCorners[0].Set(NS_SIDE_TOP, currentBorder); // bottom left             
+        // update the left/right first cell border
+        if (0 == rowX) {
+          if (tableIsLTR) {
+            propData->mLeftCellBorderWidth = currentBorder.width;
+          }
+          else {
+            propData->mRightCellBorderWidth = currentBorder.width;
+          }
+        }
         // update lastVerBordersBorder and see if a new segment starts
         startSeg = SetBorder(currentBorder, lastVerBorders[0]);
         // store the border segment in the cell map 
@@ -5554,6 +5547,15 @@ nsTableFrame::CalcBCBorders()
         // store the border segment in the cell map and update cellBorders
         tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *info.cellMap, iter.mRowGroupStart, rowX,
                                       cellEndColIndex, 1, currentBorder.owner, currentBorder.width, startSeg);
+        // update the left/right first cell border
+        if (0 == rowX) {
+          if (tableIsLTR) {
+            propData->mRightCellBorderWidth = currentBorder.width;
+          }
+          else {
+            propData->mLeftCellBorderWidth = currentBorder.width;
+          }
+        }
         // update the affected borders of the cell, col, and table
         if (info.cell) {
           info.cell->SetBorderWidth(secondSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(secondSide)));
