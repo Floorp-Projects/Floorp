@@ -2118,7 +2118,7 @@ GetDashInfo(nscoord  aBorderLength,
     aEndDashLength = 0;
   }
   else {
-    aNumDashSpaces = aBorderLength / (2 * aDashLength); // round down
+    aNumDashSpaces = (aBorderLength - aDashLength)/ (2 * aDashLength); // round down
     nscoord extra = aBorderLength - aStartDashLength - aEndDashLength - (((2 * aNumDashSpaces) - 1) * aDashLength);
     if (extra > 0) {
       nscoord half = RoundIntToPixel(extra / 2, aTwipsPerPixel);
