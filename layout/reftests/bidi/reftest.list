@@ -17,6 +17,10 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02.html mixedChartype-02-
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02-j.html mixedChartype-02-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03.html mixedChartype-03-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03-j.html mixedChartype-03-ref.html
+== with-first-letter-1a.html with-first-letter-1-ref.html
+== with-first-letter-1b.html with-first-letter-1-ref.html
+== with-first-letter-2a.html with-first-letter-2-ref.html
+== with-first-letter-2b.html with-first-letter-2-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 386339.html 386339-ref.html
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
