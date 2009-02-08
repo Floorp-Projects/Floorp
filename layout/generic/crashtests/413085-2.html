@@ -1,0 +1,14 @@
+<html>
+<head>
+<style>
+ body:first-letter { float: right; }
+</style>
+<script>
+  function boom() {
+   document.body.removeChild(document.body.firstChild);
+  }
+</script>
+</head>
+<body onload="boom();">abc&#x05DB;d
+<div>This sentence should be the only text on the page.</div></body>
+</html>
