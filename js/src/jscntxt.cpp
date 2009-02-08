@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -61,6 +61,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jspubtd.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -207,6 +208,38 @@ js_InitContextThread(JSContext *cx, JSThread *thread)
 
 #endif /* JS_THREADSAFE */
 
+/*
+ * JSOPTION_XML and JSOPTION_ANONFUNFIX must be part of the JS version
+ * associated with scripts, so in addition to storing them in cx->options we
+ * duplicate them in cx->version (script->version, etc.) and ensure each bit
+ * remains synchronized between the two through these two functions.
+ */
+void
+js_SyncOptionsToVersion(JSContext* cx)
+{
+    if (cx->options & JSOPTION_XML)
+        cx->version |= JSVERSION_HAS_XML;
+    else
+        cx->version &= ~JSVERSION_HAS_XML;
+    if (cx->options & JSOPTION_ANONFUNFIX)
+        cx->version |= JSVERSION_ANONFUNFIX;
+    else
+        cx->version &= ~JSVERSION_ANONFUNFIX;
+}
+
+inline void
+js_SyncVersionToOptions(JSContext* cx)
+{
+    if (cx->version & JSVERSION_HAS_XML)
+        cx->options |= JSOPTION_XML;
+    else
+        cx->options &= ~JSOPTION_XML;
+    if (cx->version & JSVERSION_ANONFUNFIX)
+        cx->options |= JSOPTION_ANONFUNFIX;
+    else
+        cx->options &= ~JSOPTION_ANONFUNFIX;
+}
+
 void
 js_OnVersionChange(JSContext *cx)
 {
@@ -221,6 +254,7 @@ void
 js_SetVersion(JSContext *cx, JSVersion version)
 {
     cx->version = version;
+    js_SyncVersionToOptions(cx);
     js_OnVersionChange(cx);
 }
 
