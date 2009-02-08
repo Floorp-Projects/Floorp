@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+        <title>Testcase #2 for bug 349655</title>
+<style type="text/css">
+           table table tr { background: yellow; }
+</style>
+</head>
+<body>
+
+<table><tr><th colspan="2"><h5>Tables on the left have no bordercolor attribute. Right side is the same but with bordercolor.</h5></th></tr>
+<tr><td>
+<table border="1" frame="hsides" rules="none">
+        <tr><td>border="1" frame="hsides" rules="none"</td><td>cell2</td></tr>
+</table>
+<br>
+<table border="8" frame="hsides" rules="none">
+        <tr><td>border="8" frame="hsides" rules="none"</td><td>cell2</td></tr>
+</table>
+<br>
+<table border="8" frame="hsides">
+        <tr><td>border="8" frame="hsides"</td><td>cell2</td></tr>
+</table>
+<br>
+<table border="8" rules="none">
+        <tr><td>border="8" rules="none"</td><td>cell2</td></tr>
+</table>
+</td><td>
+<table bordercolor="red" border="1" frame="hsides" rules="none">
+        <tr><td>border="1" frame="hsides" rules="none"</td><td>cell2</td></tr>
+</table>
+<br>
+<table bordercolor="red" border="8" frame="hsides" rules="none">
+        <tr><td>border="8" frame="hsides" rules="none"</td><td>cell2</td></tr>
+</table>
+<br>
+<table bordercolor="red" border="8" frame="hsides">
+        <tr><td>border="8" frame="hsides"</td><td>cell2</td></tr>
+</table>
+<br>
+<table bordercolor="red" border="8" rules="none">
+        <tr><td>border="8" rules="none"</td><td>cell2</td></tr>
+</table>
+</td></tr>
+
+<tr><th colspan="2"><h5>Without "frame"/"rules" attribute.</h5></th></tr>
+<tr><td>
+<table border="1">
+        <tr><td>border="1"</td><td>cell2</td></tr>
+</table>
+<br>
+<table border="8">
+        <tr><td>border="8"</td><td>cell2</td></tr>
+</table>
+</td><td>
+<table bordercolor="red"  border="1">
+        <tr><td>border="1"</td><td>cell2</td></tr>
+</table>
+<br>
+<table bordercolor="red"  border="8" >
+        <tr><td>border="8" </td><td>cell2</td></tr>
+</table>
+</td></tr>
+<tr><th colspan="2"><h5>border-collapse</h5></th></tr>
+<tr><td>
+<table style="border-collapse:collapse" border="1">
+        <tr><td>border="1"</td><td>cell2</td></tr>
+</table>
+<br>
+<table style="border-collapse:collapse" border="8">
+        <tr><td>border="8"</td><td>cell2</td></tr>
+</table>
+</td><td>
+<table style="border-collapse:collapse" bordercolor="red"  border="1">
+        <tr><td>border="1"</td><td>cell2</td></tr>
+</table>
+<br>
+<table style="border-collapse:collapse" bordercolor="red"  border="8" >
+        <tr><td>border="8" </td><td>cell2</td></tr>
+</table>
+</td></tr>
+<tr><td></td><td>
+<h5>bordercolor attribute on other elements</h5>
+<table border="8">
+        <tbody bordercolor="red"><tr><td>TBODY bordercolor</td><td>cell2</td></tr></tbody>
+</table><br>
+<table border="8">
+        <tr bordercolor="red"><td>TR bordercolor</td><td>cell2</td></tr>
+</table>
+<table bordercolor="red" border="8">
+        <tr><td bordercolor="red">TD bordercolor</td><td>cell2</td></tr>
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>
