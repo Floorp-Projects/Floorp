@@ -6765,34 +6765,6 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
   delete [] verInfo;
 }
 
-#ifdef DEBUG
-
-static PRBool 
-GetFrameTypeName(nsIAtom* aFrameType,
-                 char*    aName)
-{
-  PRBool isTable = PR_FALSE;
-  if (nsGkAtoms::tableOuterFrame == aFrameType) 
-    strcpy(aName, "Tbl");
-  else if (nsGkAtoms::tableFrame == aFrameType) {
-    strcpy(aName, "Tbl");
-    isTable = PR_TRUE;
-  }
-  else if (nsGkAtoms::tableRowGroupFrame == aFrameType) 
-    strcpy(aName, "RowG");
-  else if (nsGkAtoms::tableRowFrame == aFrameType) 
-    strcpy(aName, "Row");
-  else if (IS_TABLE_CELL(aFrameType)) 
-    strcpy(aName, "Cell");
-  else if (nsGkAtoms::blockFrame == aFrameType) 
-    strcpy(aName, "Block");
-  else 
-    NS_ASSERTION(PR_FALSE, "invalid call to GetFrameTypeName");
-
-  return isTable;
-}
-#endif
-
 PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols)
 {
   PRBool result = PR_FALSE;
@@ -6940,62 +6912,3 @@ nsTableFrame::InvalidateFrame(nsIFrame* aFrame,
     parent->InvalidateRectDifference(aOrigRect, rect);
   }    
 }
-
-#ifdef DEBUG
-#define MAX_SIZE  128
-#define MIN_INDENT 30
-
-static 
-void DumpTableFramesRecur(nsIFrame*       aFrame,
-                          PRUint32        aIndent)
-{
-  char indent[MAX_SIZE + 1];
-  aIndent = PR_MIN(aIndent, MAX_SIZE - MIN_INDENT);
-  memset (indent, ' ', aIndent + MIN_INDENT);
-  indent[aIndent + MIN_INDENT] = 0;
-
-  char fName[MAX_SIZE];
-  nsIAtom* fType = aFrame->GetType();
-  GetFrameTypeName(fType, fName);
-
-  printf("%s%s %p", indent, fName, aFrame);
-  nsIFrame* flowFrame = aFrame->GetPrevInFlow();
-  if (flowFrame) {
-    printf(" pif=%p", flowFrame);
-  }
-  flowFrame = aFrame->GetNextInFlow();
-  if (flowFrame) {
-    printf(" nif=%p", flowFrame);
-  }
-  printf("\n");
-
-  if (nsGkAtoms::tableFrame         == fType ||
-      nsGkAtoms::tableRowGroupFrame == fType ||
-      nsGkAtoms::tableRowFrame      == fType ||
-      IS_TABLE_CELL(fType)) {
-    nsIFrame* child = aFrame->GetFirstChild(nsnull);
-    while(child) {
-      DumpTableFramesRecur(child, aIndent+1);
-      child = child->GetNextSibling();
-    }
-  }
-}
-  
-void
-nsTableFrame::DumpTableFrames(nsIFrame* aFrame)
-{
-  nsTableFrame* tableFrame = nsnull;
-
-  if (nsGkAtoms::tableFrame == aFrame->GetType()) { 
-    tableFrame = static_cast<nsTableFrame*>(aFrame);
-  }
-  else {
-    tableFrame = nsTableFrame::GetTableFrame(aFrame);
-  }
-  tableFrame = static_cast<nsTableFrame*>(tableFrame->GetFirstInFlow());
-  while (tableFrame) {
-    DumpTableFramesRecur(tableFrame, 0);
-    tableFrame = static_cast<nsTableFrame*>(tableFrame->GetNextInFlow());
-  }
-}
-#endif
