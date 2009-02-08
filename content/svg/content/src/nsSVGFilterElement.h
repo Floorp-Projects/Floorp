@@ -61,10 +61,6 @@ protected:
                                          nsINodeInfo *aNodeInfo);
   nsSVGFilterElement(nsINodeInfo* aNodeInfo);
 
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
-  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
-
 public:
   // interfaces:
 
