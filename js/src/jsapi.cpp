@@ -1191,24 +1191,12 @@ JS_GetOptions(JSContext *cx)
     return cx->options;
 }
 
-#define SYNC_OPTIONS_TO_VERSION(cx)                                           \
-    JS_BEGIN_MACRO                                                            \
-        if ((cx)->options & JSOPTION_XML)                                     \
-            (cx)->version |= JSVERSION_HAS_XML;                               \
-        else                                                                  \
-            (cx)->version &= ~JSVERSION_HAS_XML;                              \
-        if ((cx)->options & JSOPTION_ANONFUNFIX)                              \
-            (cx)->version |= JSVERSION_ANONFUNFIX;                            \
-        else                                                                  \
-            (cx)->version &= ~JSVERSION_ANONFUNFIX;                           \
-    JS_END_MACRO
-
 JS_PUBLIC_API(uint32)
 JS_SetOptions(JSContext *cx, uint32 options)
 {
     uint32 oldopts = cx->options;
     cx->options = options;
-    SYNC_OPTIONS_TO_VERSION(cx);
+    js_SyncOptionsToVersion(cx);
     return oldopts;
 }
 
@@ -1217,7 +1205,7 @@ JS_ToggleOptions(JSContext *cx, uint32 options)
 {
     uint32 oldopts = cx->options;
     cx->options ^= options;
-    SYNC_OPTIONS_TO_VERSION(cx);
+    js_SyncOptionsToVersion(cx);
     return oldopts;
 }
 
