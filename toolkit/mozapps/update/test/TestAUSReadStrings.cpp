@@ -91,8 +91,8 @@ int NS_main(int argc, NS_tchar **argv)
 
   NS_tchar *slash = NS_tstrrchr(argv[0], PATH_SEPARATOR_CHAR);
   if (!slash) {
-    printf("%s | %s | unable to find platform specific path separator '%s'\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, PATH_SEPARATOR_CHAR);
+    printf("%s | %s | unable to find platform specific path separator\n",
+           UNEXPECTED_FAIL_PREFIX, TEST_NAME);
     return 20;
   }
 
@@ -150,7 +150,7 @@ int NS_main(int argc, NS_tchar **argv)
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 27;
-    printf("%s | %s %s ReadStrings returned %i | Test 3\n",
+    printf("%s | %s ReadStrings returned %i | Test 3\n",
            UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
   }
 
