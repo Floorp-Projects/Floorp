@@ -33,4 +33,4 @@ HTTP(..) load 472237-1.html
 load 473720-1.html
 load 473892-1.html
 load 473914-1.html
-load long-url-list-stack-overflow.html
+skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
