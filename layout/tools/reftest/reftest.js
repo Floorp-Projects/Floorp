@@ -89,7 +89,7 @@ var gTestResults = {
 var gTotalTests = 0;
 var gState;
 var gCurrentURL;
-var gFailureTimeout;
+var gFailureTimeout = null;
 var gFailureReason;
 var gServer;
 var gCount = 0;
@@ -468,6 +468,11 @@ function StartCurrentTest()
 function StartCurrentURI(aState)
 {
     gCurrentTestStartTime = Date.now();
+    if (gFailureTimeout != null) {
+        dump("REFTEST TEST-UNEXPECTED-FAIL | " + 
+             "| program error managing timeouts\n");
+        ++gTestResults.Exception;
+    }
     gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
     gFailureReason = "timed out waiting for onload to fire";
 
@@ -787,6 +792,7 @@ function DocumentLoaded()
 
     clearTimeout(gFailureTimeout);
     gFailureReason = null;
+    gFailureTimeout = null;
 
     if (gURLs[0].expected == EXPECTED_LOAD) {
         ++gTestResults.LoadOnly;
@@ -888,6 +894,7 @@ function DocumentLoaded()
 
 function LoadFailed()
 {
+    gFailureTimeout = null;
     ++gTestResults.FailedLoad;
     dump("REFTEST TEST-UNEXPECTED-FAIL | " +
          gURLs[0]["url" + gState].spec + " | " + gFailureReason + "\n");
