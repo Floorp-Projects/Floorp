@@ -150,8 +150,8 @@ int NS_main(int argc, NS_tchar **argv)
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 27;
-    printf("%s | %s %s ReadStrings returned %i, expected %i| Test 3\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval, PARSE_ERROR);
+    printf("%s | %s %s ReadStrings returned %i | Test 3\n",
+           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
   }
 
   // Test failure when the ini file exists with Title and without InfoText and
@@ -160,8 +160,8 @@ int NS_main(int argc, NS_tchar **argv)
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 28;
-    printf("%s | %s ReadStrings returned %i, expected %i| Test 4\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval, PARSE_ERROR);
+    printf("%s | %s ReadStrings returned %i | Test 4\n",
+           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
   }
 
   // Test failure when the ini file doesn't exist
