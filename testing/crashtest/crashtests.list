@@ -28,6 +28,7 @@ include ../../dom/src/jsurl/crashtests/crashtests.list
 include ../../editor/libeditor/html/crashtests/crashtests.list
 include ../../editor/libeditor/base/crashtests/crashtests.list
 include ../../editor/composer/src/crashtests/crashtests.list
+include ../../editor/txmgr/tests/crashtests/crashtests.list
 
 include ../../intl/lwbrk/src/crashtests/crashtests.list
 

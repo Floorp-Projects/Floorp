@@ -13,6 +13,8 @@ load 399289-1.svg
 load 404470-1.html
 load 411603-1.html
 load 413274-1.xhtml
+load 416461-1.xul
+load 431705-1.xul
 load 432561-1.html
 load 437170-1.html
 skip load 439184-1.html # skip until we figure out how to test this
