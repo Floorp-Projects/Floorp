@@ -50,11 +50,53 @@ XPCSHELL_TESTS = \
 
 TESTROOT	= $(shell cd $(DEPTH) && pwd)/_tests/xpcshell-simple/$(MODULE)
 
+CPPSRCS = \
+  TestAUSReadStrings.cpp \
+  $(NULL)
+
+SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+INI_TEST_FILES = \
+  TestAUSReadStrings1.ini \
+  TestAUSReadStrings2.ini \
+  TestAUSReadStrings3.ini \
+  TestAUSReadStrings4.ini \
+  $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(srcdir) \
+  -I$(topsrcdir)/toolkit/mozapps/update/src/updater \
+  $(NULL)
+
+MOZ_WINCONSOLE = 1
+
 DEFINES += \
-	-DAB_CD=$(AB_CD) \
-	$(NULL)
+  -DAB_CD=$(AB_CD) \
+  -DNS_NO_XPCOM \
+  $(NULL)
+
+LIBS += \
+  $(DEPTH)/toolkit/mozapps/update/src/updater/readstrings.$(OBJ_SUFFIX) \
+  $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
+DEFINES += -DUNICODE -D_UNICODE
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+# TestAUSReadStrings runs during check in the following directory with a Unicode
+# char in order to test bug 473417.
+bug473417dir = test_bug473417-ó
+
 libs:: unit/test_0040_general.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $^ > $(TESTROOT)/unit/test_0040_general.js
+
+check::
+	$(RM) -rf $(DEPTH)/_tests/updater/ && $(NSINSTALL) -D $(DEPTH)/_tests/updater/$(bug473417dir)/
+	for i in $(INI_TEST_FILES); do \
+	  $(INSTALL) $(srcdir)/$$i $(DEPTH)/_tests/updater/$(bug473417dir)/; \
+	done
+	$(INSTALL) $(FINAL_TARGET)/TestAUSReadStrings$(BIN_SUFFIX) $(DEPTH)/_tests/updater/$(bug473417dir)/
+	@$(RUN_TEST_PROGRAM) $(DEPTH)/_tests/updater/$(bug473417dir)/TestAUSReadStrings$(BIN_SUFFIX)
