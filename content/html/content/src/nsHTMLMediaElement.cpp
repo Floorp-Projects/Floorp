@@ -138,8 +138,6 @@ NS_IMETHODIMP nsHTMLMediaElement::nsMediaLoadListener::OnStartRequest(nsIRequest
     // the connection since we aren't interested in keeping the channel
     // alive ourselves.
     rv = NS_BINDING_ABORTED;
-    if (mElement)
-      mElement->NetworkError();
   }
 
   // The element is only needed until we've had a chance to call
@@ -245,31 +243,16 @@ PRBool nsHTMLMediaElement::AbortExistingLoads()
   return PR_FALSE;
 }
 
-void nsHTMLMediaElement::NoSupportedMediaError()
-{
-  mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_NONE_SUPPORTED);
-  mBegun = PR_FALSE;
-  DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
-  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
-  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("emptied"));
-}
-
 /* void load (); */
 NS_IMETHODIMP nsHTMLMediaElement::Load()
 {
   if (AbortExistingLoads())
     return NS_OK;
 
-  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
-  mBegun = PR_TRUE;
-  DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
-
   nsCOMPtr<nsIURI> uri;
   nsresult rv = PickMediaElement(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    NoSupportedMediaError();
+  if (NS_FAILED(rv))
     return rv;
-  }
 
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
@@ -287,7 +270,6 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
                                  nsContentUtils::GetContentPolicy(),
                                  nsContentUtils::GetSecurityManager());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-    NoSupportedMediaError();
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
@@ -297,10 +279,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
                      nsnull,
                      nsnull,
                      nsIRequest::LOAD_NORMAL);
-  if (NS_FAILED(rv)) {
-    NetworkError();
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // The listener holds a strong reference to us.  This creates a reference
   // cycle which is manually broken in the listener's OnStartRequest method
   // after it is finished with the element.
@@ -315,19 +295,14 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
                                             PR_FALSE,
                                             &rv);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-    if (NS_FAILED(rv)) {
-      NoSupportedMediaError();
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = nsContentUtils::GetSecurityManager()->
            CheckLoadURIWithPrincipal(NodePrincipal(),
                                      uri,
                                      nsIScriptSecurityManager::STANDARD);
-    if (NS_FAILED(rv)) {
-      NoSupportedMediaError();
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
     listener = loadListener;
   }
 
@@ -350,10 +325,14 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
     // and is useless now anyway, so drop our reference to it to allow it to
     // be destroyed.
     mChannel = nsnull;
-    NetworkError();
     return rv;
   }
 
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
+
+  mBegun = PR_TRUE;
+
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
 }
@@ -1184,6 +1163,9 @@ nsresult nsHTMLMediaElement::DispatchAsyncProgressEvent(const nsAString& aName)
 
 nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
 {
+  if (!mDecoder)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(GetOwnerDoc()));
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(static_cast<nsIContent*>(this)));
   NS_ENSURE_TRUE(docEvent && target, NS_ERROR_INVALID_ARG);
@@ -1195,15 +1177,9 @@ nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
   nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(event));
   NS_ENSURE_TRUE(progressEvent, NS_ERROR_FAILURE);
 
-  PRInt64 totalBytes = 0;
-  PRUint64 downloadPosition = 0;
-  if (mDecoder) {
-    nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
-    totalBytes = stats.mTotalBytes;
-    downloadPosition = stats.mDownloadPosition;
-  }
+  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
   rv = progressEvent->InitProgressEvent(aName, PR_TRUE, PR_TRUE,
-    totalBytes >= 0, downloadPosition, totalBytes);
+    stats.mTotalBytes >= 0, stats.mDownloadPosition, stats.mTotalBytes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool dummy;

@@ -28,25 +28,25 @@ var gOldWavePref = branch.getBoolPref("wave.enabled");
 branch.setBoolPref("ogg.enabled", false);
 branch.setBoolPref("wave.enabled", false);
 
-var gLoadError = new Object();
+</script>
 
-gLoadError['video1'] = 0; 
-gLoadError['video2'] = 0;
-gLoadError['video3'] = 0;
+<video id="video1">
+  <source type="video/ogg" src="320x240.ogv"/>
+  <source type="audio/wave" src="r11025_u8_c1.wav"/>
+</video>
 
-var gErrorCount = 0;
+<video id="video2" src="320x240.ogv"></video>
+<video id="video3" src="r11025_u8_c1.wav"></video>
+
+<script>
 
 SimpleTest.waitForExplicitFinish();
 
-function finishTest() {
-  is(document.getElementById('video1').currentSrc, "", 'video1.currentSrc==""');
-  is(document.getElementById('video2').currentSrc, "", 'video2.currentSrc==""');
-  is(document.getElementById('video3').currentSrc, "", 'video3.currentSrc==""');
+function doTest() {
+  is(document.getElementById('video1').currentSrc, "");
+  is(document.getElementById('video2').currentSrc, "");
+  is(document.getElementById('video3').currentSrc, "");
 
-  is(gLoadError['video1'], 1, "Load error on video1");
-  is(gLoadError['video2'], 1, "Load error on video2");
-  is(gLoadError['video3'], 1, "Load error on video3");
-  
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   branch.setBoolPref("ogg.enabled", gOldOggPref);
@@ -55,26 +55,12 @@ function finishTest() {
   SimpleTest.finish();
 }
 
-function videoError(event, id) {
-  event.stopPropagation();
-  gLoadError[id]++;
-  gErrorCount++;
-  if (gErrorCount == 3) {
-    finishTest();
-  }
-}
+// Using a timeout here sucks, but we currently have no way
+// to be notified that the element couldn't load. At least if this timeout
+// happens "too early", the test will pass instead of failing.
+setTimeout(doTest, 1000);
 
 </script>
-
-<video id="video1" onerror="videoError(event, 'video1');">
-  <source type="video/ogg" src="320x240.ogv"/>
-  <source type="audio/wave" src="r11025_u8_c1.wav"/>
-</video>
-
-<video id="video2" src="320x240.ogv" onerror="videoError(event, 'video2');"></video>
-<video id="video3" src="r11025_u8_c1.wav" onerror="videoError(event, 'video3');"></video>
-
 </pre>
-
 </body>
 </html>
