@@ -617,7 +617,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                 numString = new PRUnichar[length];
                 for (PRUint32 j = 0; j < length; ++j) {
                     numString[j] = HandleNumberInChar(aText[wordStart+j],
-                                                      !!(wordStart+j > 0 ?
+                                                      !!(j > 0 ?
                                                           IS_ARABIC_CHAR(numString[j-1]) :
                                                           (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR)),
                                                       mBidiNumeral);
@@ -737,7 +737,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                 numString = new PRUnichar[length];
                 for (PRUint32 j = 0; j < length; ++j) {
                     numString[j] = HandleNumberInChar(aText[wordStart+j],
-                                                      !!(wordStart+j > 0 ?
+                                                      !!(j > 0 ?
                                                           IS_ARABIC_CHAR(numString[j-1]) :
                                                           (aFlags & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR)),
                                                       mBidiNumeral);
