@@ -74,6 +74,7 @@ _TEST_FILES += \
 		test_duration1.html \
 		test_ended1.html \
 		test_ended2.html \
+		test_error_on_404.html \
 		test_onloadedmetadata.html \
 		test_progress1.html \
 		test_progress3.html \

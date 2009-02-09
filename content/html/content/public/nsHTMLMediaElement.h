@@ -213,6 +213,12 @@ protected:
    */
   nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
 
+  /**
+   * Does step 12 of the media load() algorithm, sends error/emptied events to
+   * to the media element, and reset network/begun state.
+   */
+  void NoSupportedMediaError();
+
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   nsCOMPtr<nsIChannel> mChannel;
