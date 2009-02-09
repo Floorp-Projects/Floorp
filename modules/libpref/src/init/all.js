@@ -2680,3 +2680,10 @@ pref("image.cache.size", 5242880);
 // A weight, from 0-1000, to place on time when comparing to size.
 // Size is given a weight of 1000 - timeweight.
 pref("image.cache.timeweight", 500);
+
+#ifdef XP_WIN
+#ifndef WINCE
+// The default TCP send window on Windows is too small, and autotuning only occurs on receive
+pref("network.tcp.sendbuffer", 131072);
+#endif
+#endif

@@ -1126,7 +1126,18 @@ nsSocketTransport::InitiateSocket()
     opt.value.non_blocking = PR_TRUE;
     status = PR_SetSocketOption(fd, &opt);
     NS_ASSERTION(status == PR_SUCCESS, "unable to make socket non-blocking");
-    
+
+    // if the network.tcp.sendbuffer preference is set, use it to size SO_SNDBUF
+    // The Windows default of 8KB is too small and as of vista sp1, autotuning
+    // only applies to receive window
+    PRInt32 sndBufferSize;
+    gSocketTransportService->GetSendBufferSize(&sndBufferSize);
+    if (sndBufferSize > 0) {
+        opt.option = PR_SockOpt_SendBufferSize;
+        opt.value.send_buffer_size = sndBufferSize;
+        PR_SetSocketOption(fd, &opt);
+    }
+
     // inform socket transport about this newly created socket...
     rv = gSocketTransportService->AttachSocket(fd, this);
     if (NS_FAILED(rv)) {
