@@ -46,6 +46,9 @@
 #include "nsICharsetAlias.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocShell.h"
+#include "nsEncoderDecoderUtils.h"
+#include "nsContentUtils.h"
+#include "nsICharsetDetector.h"
 
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5Tokenizer.h"
@@ -159,6 +162,12 @@ nsHtml5Parser::~nsHtml5Parser()
   
   delete mTokenizer;
   delete mTreeBuilder;
+  if (mSniffingBuffer) {
+    delete[] mSniffingBuffer;
+  }
+  if (mMetaScanner) {
+    delete mMetaScanner;
+  }
 }
 
 NS_IMETHODIMP_(void) 
@@ -487,10 +496,12 @@ nsHtml5Parser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 //    }
 //  }
 
-  nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mCharsetSource >= kCharsetFromChannel) {
+    nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return rv;
 }
@@ -566,7 +577,13 @@ ParserWriteFunc(nsIInputStream* aInStream,
                 PRUint32* aWriteCount)
 {
   nsHtml5Parser* parser = static_cast<nsHtml5Parser*> (aHtml5Parser);
-  return parser->WriteStreamBytes(aFromSegment, aCount, aWriteCount);
+  if (parser->HasDecoder()) {
+    NS_WARNING("not siffing\n");
+    return parser->WriteStreamBytes((const PRUint8*)aFromSegment, aCount, aWriteCount);  
+  } else {
+    NS_WARNING("sniffing");
+    return parser->SniffStreamBytes((const PRUint8*)aFromSegment, aCount, aWriteCount);      
+  }
 }
 
 nsresult
@@ -576,6 +593,7 @@ nsHtml5Parser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
+  NS_WARNING("OnDataAvailable FFFF\n");
   NS_PRECONDITION((eOnStart == mStreamListenerState ||
                    eOnDataAvail == mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");
@@ -635,7 +653,6 @@ nsHtml5Parser::internalEncodingDeclaration(nsString* aEncoding)
 void 
 nsHtml5Parser::documentMode(nsHtml5DocumentMode m)
 {
-#if 0
   nsCompatibility mode = eCompatibility_NavQuirks;
   switch (m) {
     case STANDARDS_MODE:
@@ -650,10 +667,7 @@ nsHtml5Parser::documentMode(nsHtml5DocumentMode m)
   }
   nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
   NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  if (htmlDocument) {
-    htmlDocument->SetCompatibilityMode(mode);  
-  }
-#endif
+  htmlDocument->SetCompatibilityMode(mode);  
 }
 
 // nsIContentSink
@@ -661,7 +675,7 @@ nsHtml5Parser::documentMode(nsHtml5DocumentMode m)
 NS_IMETHODIMP
 nsHtml5Parser::WillParse()
 {
-  NS_NOTREACHED("No one shuld call this");
+  NS_NOTREACHED("No one should call this");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -767,7 +781,224 @@ nsHtml5Parser::HandleParserContinueEvent(nsHtml5ParserContinueEvent* ev)
 }
 
 NS_IMETHODIMP
-nsHtml5Parser::WriteStreamBytes(const char* aFromSegment,
+nsHtml5Parser::Notify(const char* aCharset, nsDetectionConfident aConf)
+{
+  if (aConf == eBestAnswer || aConf == eSureAnswer) {
+    mCharset.Assign(aCharset);
+    mCharsetSource = kCharsetFromAutoDetection;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHtml5Parser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
+                                                                    PRUint32 aCount,
+                                                                    PRUint32* aWriteCount)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
+  if (rv == NS_ERROR_UCONV_NOCONV) {
+    mCharset.Assign("windows-1252"); // lower case the raw form
+    mCharsetSource = kCharsetFromWeakDocTypeDefault;
+    rv = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));  
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+}
+
+nsresult
+nsHtml5Parser::WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
+                                                    PRUint32 aCount,
+                                                    PRUint32* aWriteCount)
+{
+  nsresult rv = NS_OK;
+  if (mSniffingBuffer) {
+    PRUint32 writeCount;
+    rv = WriteStreamBytes(mSniffingBuffer, mSniffingLength, &writeCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    delete[] mSniffingBuffer;
+    mSniffingBuffer = nsnull;
+  }
+  if (mMetaScanner) {
+    delete mMetaScanner;
+    mMetaScanner = nsnull;
+  }
+  rv = WriteStreamBytes(aFromSegment, aCount, aWriteCount);
+  return rv;
+}
+
+nsresult
+nsHtml5Parser::SetupDecodingFromBom(const char* aCharsetName, const char* aDecoderCharsetName)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = convManager->GetUnicodeDecoderRaw(aDecoderCharsetName, getter_AddRefs(mUnicodeDecoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mCharset.Assign(aCharsetName);
+  mCharsetSource = kCharsetFromByteOrderMark;
+  if (mSniffingBuffer) {
+    delete[] mSniffingBuffer;
+    mSniffingBuffer = nsnull;
+  }
+  if (mMetaScanner) {
+    delete mMetaScanner;
+    mMetaScanner = nsnull;
+  }
+  mBomState = BOM_SNIFFING_OVER;
+  return rv;
+}
+
+nsresult
+nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
+                                PRUint32 aCount,
+                                PRUint32* aWriteCount)
+{
+  nsresult rv = NS_OK;
+  PRUint32 writeCount;
+  for (PRUint32 i = 0; i < aCount; i++) {
+    switch (mBomState) {
+      case BOM_SNIFFING_NOT_STARTED:
+        NS_ASSERTION((i == 0), "Bad BOM sniffing state.");
+        switch (*aFromSegment) {
+          case 0xEF:
+            mBomState = SEEN_UTF_8_FIRST_BYTE;
+            break;
+          case 0xFF:
+            mBomState = SEEN_UTF_16_LE_FIRST_BYTE;
+            break;
+          case 0xFE:
+            mBomState = SEEN_UTF_16_BE_FIRST_BYTE;
+            break;
+          default:
+            mBomState = BOM_SNIFFING_OVER;
+            break;
+        }
+        break;
+      case SEEN_UTF_16_LE_FIRST_BYTE:
+        if (aFromSegment[i] == 0xFE) {
+            rv = SetupDecodingFromBom("UTF-16", "UTF-16LE"); // upper case the raw form
+            NS_ENSURE_SUCCESS(rv, rv);
+            PRUint32 count = aCount - (i + 1);
+            rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
+            NS_ENSURE_SUCCESS(rv, rv);
+            *aWriteCount = writeCount + (i + 1);
+            return rv;
+        }
+        mBomState = BOM_SNIFFING_OVER;
+        break;
+      case SEEN_UTF_16_BE_FIRST_BYTE:
+        if (aFromSegment[i] == 0xFF) {
+            rv = SetupDecodingFromBom("UTF-16", "UTF-16BE"); // upper case the raw form
+            NS_ENSURE_SUCCESS(rv, rv);
+            PRUint32 count = aCount - (i + 1);
+            rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
+            NS_ENSURE_SUCCESS(rv, rv);
+            *aWriteCount = writeCount + (i + 1);
+            return rv;
+        }
+        mBomState = BOM_SNIFFING_OVER;
+        break;
+      case SEEN_UTF_8_FIRST_BYTE:
+        if (aFromSegment[i] == 0xBB) {
+          mBomState = SEEN_UTF_8_SECOND_BYTE;
+        } else {
+          mBomState = BOM_SNIFFING_OVER;
+        }
+        break;
+      case SEEN_UTF_8_SECOND_BYTE:
+        if (aFromSegment[i] == 0xBF) {
+            rv = SetupDecodingFromBom("UTF-8", "UTF-8"); // upper case the raw form
+            NS_ENSURE_SUCCESS(rv, rv);
+            PRUint32 count = aCount - (i + 1);
+            rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
+            NS_ENSURE_SUCCESS(rv, rv);
+            *aWriteCount = writeCount + (i + 1);
+            return rv;
+        }
+        mBomState = BOM_SNIFFING_OVER;
+        break;
+      default:
+        goto bom_loop_end;
+    }
+  }
+  // if we get here, there either was no BOM or the BOM sniffing isn't complete yet
+  bom_loop_end:
+  if (!mMetaScanner) {
+    mMetaScanner = new nsHtml5MetaScanner();
+  }
+  if (mSniffingLength + aCount >= NS_HTML5_PARSER_SNIFFING_BUFFER_SIZE) {
+    // this is the last buffer
+    PRUint32 countToSniffingLimit = NS_HTML5_PARSER_SNIFFING_BUFFER_SIZE - mSniffingLength;
+    nsHtml5ByteReadable readable(aFromSegment, aFromSegment + countToSniffingLimit);
+    mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
+    if (mUnicodeDecoder) {
+      // meta scan successful
+      mCharsetSource = kCharsetFromMetaPrescan;
+      delete mMetaScanner;
+      mMetaScanner = nsnull;
+      return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+    }
+    // meta scan failed.
+    if (mCharsetSource >= kCharsetFromHintPrevDoc) {
+      return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+    }
+    // maybe try chardet now; instantiation copied from nsDOMFile
+    const nsAdoptingString& detectorName = nsContentUtils::GetLocalizedStringPref("intl.charset.detector");
+    if (!detectorName.IsEmpty()) {
+      nsCAutoString detectorContractID;
+      detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
+      AppendUTF16toUTF8(detectorName, detectorContractID);
+      nsCOMPtr<nsICharsetDetector> detector = do_CreateInstance(detectorContractID.get());
+      if (detector) {
+        detector->Init(this);
+        PRBool dontFeed = PR_FALSE;
+        if (mSniffingBuffer) {
+          detector->DoIt((const char*)mSniffingBuffer, mSniffingLength, &dontFeed);
+        }
+        if (!dontFeed) {
+          detector->DoIt((const char*)aFromSegment, countToSniffingLimit, &dontFeed);
+        }
+        detector->Done();
+        // fall thru; callback may have changed charset
+      } else {
+        NS_ERROR("Could not instantiate charset detector.");
+      }
+    }
+    
+    if (mCharsetSource == kCharsetUninitialized) {
+      // Hopefully this case is never needed, but dealing with it anyway
+      mCharset.Assign("windows-1252");
+      mCharsetSource = kCharsetFromWeakDocTypeDefault;
+    }
+    return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+  }
+
+  // not the last buffer
+  nsHtml5ByteReadable readable(aFromSegment, aFromSegment + aCount);
+  mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
+  if (mUnicodeDecoder) {
+    // meta scan successful
+    mCharsetSource = kCharsetFromMetaPrescan;
+    delete mMetaScanner;
+    mMetaScanner = nsnull;
+    return WriteSniffingBufferAndCurrentSegment(aFromSegment, aCount, aWriteCount);
+  }
+
+  if (!mSniffingBuffer) {
+    mSniffingBuffer = new PRUint8[NS_HTML5_PARSER_SNIFFING_BUFFER_SIZE];
+  }
+  memcpy(mSniffingBuffer + mSniffingLength, aFromSegment, aCount);
+  mSniffingLength += aCount;
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
                                 PRUint32 aCount,
                                 PRUint32* aWriteCount)
 {
@@ -782,7 +1013,7 @@ nsHtml5Parser::WriteStreamBytes(const char* aFromSegment,
     PRInt32 byteCount = aCount - totalByteCount;
     PRInt32 utf16Count = NS_HTML5_PARSER_READ_BUFFER_SIZE - end;
 
-    nsresult convResult = mUnicodeDecoder->Convert(aFromSegment, &byteCount, mLastBuffer->getBuffer() + end, &utf16Count);  
+    nsresult convResult = mUnicodeDecoder->Convert((const char*)aFromSegment, &byteCount, mLastBuffer->getBuffer() + end, &utf16Count);  
   
     mLastBuffer->setEnd(end + utf16Count);
     totalByteCount += byteCount;

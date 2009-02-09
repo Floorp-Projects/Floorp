@@ -64,6 +64,7 @@ REQUIRES	= \
 		util \
 		webshell \
 		docshell \
+		chardet \
 		$(NULL)
 
 CPPSRCS		= \
@@ -82,6 +83,7 @@ CPPSRCS		= \
     nsHtml5Module.cpp \
     nsHtml5ReleasableAttributeName.cpp \
     nsHtml5ReleasableElementName.cpp \
+    nsHtml5MetaScanner.cpp \
     $(NULL)
 
 FORCE_STATIC_LIB = 1
