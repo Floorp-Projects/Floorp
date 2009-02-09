@@ -5295,9 +5295,8 @@ nsNavHistory::CommitPendingChanges()
     CommitLazyMessages();
   #endif
 
-  // Immediately serve topics we generated, and remove observers, this way
-  // they won't try to access the database after CommitPendingChanges has
-  // been called.
+  // Immediately serve topics we generated, this way they won't try to access
+  // the database after CommitPendingChanges has been called.
   nsCOMPtr<nsIObserverService> os =
     do_GetService("@mozilla.org/observer-service;1");
   NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
