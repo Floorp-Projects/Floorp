@@ -25,6 +25,7 @@
  *   Brad Lassey <blassey@mozilla.com>
  *   Mark Finkle <mfinkle@mozilla.com>
  *   Gavin Sharp <gavin.sharp@gmail.com>
+ *   Ben Combee <combee@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -105,8 +106,12 @@ InputHandler.prototype = {
     if (this._grabbed) {
       this._grabbed.handleEvent(aEvent);
     } else {
-      for each(mod in this._modules)
+      for each(mod in this._modules) {
         mod.handleEvent(aEvent);
+        // if event got grabbed, don't pass to other handlers
+        if (this._grabbed)
+          break;
+      }
     }
   }
 };
