@@ -997,7 +997,7 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
                                 PRUint32 aCount,
                                 PRUint32* aWriteCount)
