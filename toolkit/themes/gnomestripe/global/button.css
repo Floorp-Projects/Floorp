@@ -67,7 +67,7 @@ button {
 }
 
 .button-icon {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 .button-text {
