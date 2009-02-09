@@ -74,9 +74,6 @@
 #define COUNT_DAYS(Y)  ( ((Y)-1)*365 + COUNT_LEAPS(Y) )
 #define DAYS_BETWEEN_YEARS(A, B)  (COUNT_DAYS(B) - COUNT_DAYS(A))
 
-
-
-
 /*
  * Static variables used by functions in this file
  */
@@ -105,7 +102,7 @@ static const PRInt8 nDays[2][12] = {
  */
 
 static void        ComputeGMT(PRTime time, PRExplodedTime *gmt);
-static int        IsLeapYear(PRInt16 year);
+static int         IsLeapYear(PRInt16 year);
 static void        ApplySecOffset(PRExplodedTime *time, PRInt32 secOffset);
 
 /*
@@ -115,7 +112,6 @@ static void        ApplySecOffset(PRExplodedTime *time, PRInt32 secOffset);
  *
  *     Caveats:
  *     - we ignore leap seconds
- *     - our leap-year calculation is only correct for years 1901-2099
  *
  *------------------------------------------------------------------------
  */
@@ -175,49 +171,47 @@ ComputeGMT(PRTime time, PRExplodedTime *gmt)
     gmt->tm_min = rem / 60;
     gmt->tm_sec = rem % 60;
 
-    /* Compute the four-year span containing the specified time */
-
-    tmp = numDays / (4 * 365 + 1);
-    rem = numDays % (4 * 365 + 1);
-
-    if (rem < 0) {
-        tmp--;
-        rem += (4 * 365 + 1);
-    }
-
     /*
-     * Compute the year after 1900 by taking the four-year span and
-     * adjusting for the remainder.  This works because 2000 is a 
-     * leap year, and 1900 and 2100 are out of the range.
+     * Compute the year by finding the 400 year period, then working
+     * down from there.
+     *
+     * Since numDays is originally the number of days since January 1, 1970,
+     * we must change it to be the number of days from January 1, 0001.
      */
     
-    tmp = (tmp * 4) + 1970;
-    isLeap = 0;
+    numDays += 719162;       /* 719162 = days from year 1 up to 1970 */
+    tmp = numDays / 146097;  /* 146097 = days in 400 years */
+    rem = numDays % 146097;
+    gmt->tm_year = tmp * 400 + 1;
 
-    /*
-     * 1970 has 365 days
-     * 1971 has 365 days
-     * 1972 has 366 days (leap year)
-     * 1973 has 365 days
-     */
+    /* Compute the 100 year period. */
 
-    if (rem >= 365) {                                /* 1971, etc. */
-        tmp++;
-        rem -= 365;
-        if (rem >= 365) {                        /* 1972, etc. */
-            tmp++;
-            rem -= 365;
-            if (rem >= 366) {                        /* 1973, etc. */
-                tmp++;
-                rem -= 366;
-            } else {
-                isLeap = 1;
-            }
-        }
+    tmp = rem / 36524;    /* 36524 = days in 100 years */
+    rem %= 36524;
+    if (tmp == 4) {       /* the 400th year is a leap year */
+        tmp = 3;
+        rem = 36524;
+    }
+    gmt->tm_year += tmp * 100;
+
+    /* Compute the 4 year period. */
+
+    tmp = rem / 1461;     /* 1461 = days in 4 years */
+    rem %= 1461;
+    gmt->tm_year += tmp * 4;
+    
+    /* Compute which year in the 4. */
+
+    tmp = rem / 365;
+    rem %= 365;
+    if (tmp == 4) {       /* the 4th year is a leap year */
+        tmp = 3;
+        rem = 365;
     }
 
-    gmt->tm_year = tmp;
+    gmt->tm_year += tmp;
     gmt->tm_yday = rem;
+    isLeap = IsLeapYear(gmt->tm_year);
 
     /* Compute the month and day of month. */
 
