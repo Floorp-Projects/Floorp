@@ -732,9 +732,10 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
 nsresult
 nsSeamonkeyProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
+  nsresult rv;
   if (aReplace) {
     // Initialize the default bookmarks
-    nsresult rv = InitializeBookmarks(mTargetProfile);
+    rv = InitializeBookmarks(mTargetProfile);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Merge in the bookmarks from the source profile
@@ -743,17 +744,13 @@ nsSeamonkeyProfileMigrator::CopyBookmarks(PRBool aReplace)
     sourceFile->Append(FILE_NAME_BOOKMARKS);
     rv = ImportBookmarksHTML(sourceFile, PR_TRUE, PR_FALSE, EmptyString().get());
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // we need to set this pref so that on startup
-    // we don't blow away what we just imported
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
   }
-
-  return ImportNetscapeBookmarks(FILE_NAME_BOOKMARKS, 
+  else {
+    rv = ImportNetscapeBookmarks(FILE_NAME_BOOKMARKS, 
                                  NS_LITERAL_STRING("sourceNameSeamonkey").get());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
 }
 
 nsresult
