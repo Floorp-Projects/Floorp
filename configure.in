@@ -1100,6 +1100,21 @@ linux*)
     ;;
 solaris*)
     HOST_OS_ARCH=SunOS
+    SOLARIS_SUNPRO_CC=
+    SOLARIS_SUNPRO_CXX=
+    if test -z "$GNU_CC"; then
+        if test "`$_SUBDIR_CC -V 2>&1 | grep -c 'Sun C '`" != "0"; then
+            SOLARIS_SUNPRO_CC=1
+       fi
+    fi
+
+    if test -z "$GNU_CXX"; then
+       if test "`$_SUBDIR_CXX -V 2>&1 | grep -c 'Sun C++ '`" != "0"; then
+           SOLARIS_SUNPRO_CXX=1
+       fi
+    fi
+    AC_SUBST(SOLARIS_SUNPRO_CC)
+    AC_SUBST(SOLARIS_SUNPRO_CXX)
     ;;
 BSD_386)
     HOST_OS_ARCH=BSD
@@ -1370,6 +1385,24 @@ if test "$GNU_CC"; then
 
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
+elif test "$SOLARIS_SUNPRO_CC"; then
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+
+    DSO_LDOPTS='-shared'
+    if test "$GNU_LD"; then
+        # Don't allow undefined symbols in libraries
+        DSO_LDOPTS="$DSO_LDOPTS -z defs"
+    fi
+
+    DSO_CFLAGS=''
+    if test "$CPU_ARCH" = "sparc"; then
+        # for Sun Studio on Solaris/SPARC
+        DSO_PIC_CFLAGS='-xcode=pic32'
+    else
+        DSO_PIC_CFLAGS='-KPIC'
+    fi
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
     MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
@@ -2456,21 +2489,13 @@ dnl the qsort routine under solaris is faulty
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
     MOZ_MEMORY=1
-    if test -z "$GNU_CC"; then
+    if test "$SOLARIS_SUNPRO_CC"; then
        LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-
-       if test "$CPU_ARCH" != "sparc"; then
-          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
-          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
-       else
-          # Do not use -xbuiltin on SPARC to get around a bug of compiler
-          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%none"
-          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%none -features=tmplife -norunpath"
-       fi
-
+       CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2496,19 +2521,19 @@ dnl the qsort routine under solaris is faulty
        ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
        AS_DASH_C_FLAG=''
        TARGET_COMPILER_ABI="sunc"
-        CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-        CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-       AC_MSG_CHECKING([for Forte compiler version >= WS6U2])
+       CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
+       CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
+       AC_MSG_CHECKING([for Sun C++ compiler version >= 5.9])
        AC_LANG_SAVE
        AC_LANG_CPLUSPLUS
        AC_TRY_COMPILE([],
-           [#if (__SUNPRO_CC < 0x530)
+           [#if (__SUNPRO_CC < 0x590)
            #error "Denied"
            #endif],
            _BAD_COMPILER=,_BAD_COMPILER=1)
         if test -n "$_BAD_COMPILER"; then
             _res="no"
-            AC_MSG_ERROR([Forte version WS6U2 or higher is required to build. Your compiler version is $CC_VERSION .])
+            AC_MSG_ERROR([Sun C++ 5.9 (Sun Studio 12) or higher is required to build. Your compiler version is $CXX_VERSION .])
         else
             _res="yes"
         fi
@@ -2948,7 +2973,7 @@ EOF
 fi         # GNU_CC
 
 # visibility hidden flag for Sun Studio on Solaris
-if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+if test "$SOLARIS_SUNPRO_CC"; then
 VISIBILITY_FLAGS='-xldscope=hidden'
 fi         # Sun Studio on Solaris
 
@@ -3306,8 +3331,8 @@ then
 			;;
 
 	    *-*-solaris*) 
-    			AC_DEFINE(_REENTRANT) 
-			if test ! "$GNU_CC"; then
+			AC_DEFINE(_REENTRANT)
+			if test "$SOLARIS_SUNPRO_CC"; then
 				CFLAGS="$CFLAGS -mt" 
 				CXXFLAGS="$CXXFLAGS -mt" 
 			fi
@@ -7007,7 +7032,7 @@ if test -n "$INTEL_CC"; then
 fi
 
 dnl Sun Studio on Solaris
-if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+if test "$SOLARIS_SUNPRO_CC"; then
   PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
   PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
   if test "$CPU_ARCH" != "sparc"; then
@@ -7197,7 +7222,7 @@ MOZ_ARG_DISABLE_BOOL(md,
      _cpp_md_flag=1
    fi
   dnl Default is to use -xM if using Sun Studio on Solaris
-   if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+   if test "$SOLARIS_SUNPRO_CC"; then
      _cpp_md_flag=1
    fi])
 if test "$_cpp_md_flag"; then
@@ -7208,7 +7233,7 @@ if test "$_cpp_md_flag"; then
     _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(basename $(@F)).pp)'
   fi
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
-  if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+  if test "$SOLARIS_SUNPRO_CC"; then
     _DEPEND_CFLAGS=
   fi
 else
