@@ -87,8 +87,12 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 # TestAUSReadStrings runs during check in the following directory with a Unicode
-# char in order to test bug 473417.
+# char in order to test bug 473417 on Windows.
+ifeq ($(OS_ARCH),WINNT)
 bug473417dir = test_bug473417-ó
+else
+bug473417dir = test_bug473417
+endif
 
 libs:: unit/test_0040_general.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $^ > $(TESTROOT)/unit/test_0040_general.js
