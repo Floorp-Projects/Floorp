@@ -52,7 +52,7 @@
 ]>
 
 <window id="main-window"
-        width="720" height="420"
+        sizemode="maximized"
         onload="Browser.startup();"
         windowtype="navigator:browser"
         title="&brandShortName;"
