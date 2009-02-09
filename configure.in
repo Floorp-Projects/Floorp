@@ -8375,7 +8375,7 @@ fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
 
 dnl Prevent the regeneration of autoconf.mk forcing rebuilds of the world
 dnl Needs to be at the end to respect possible changes from NSPR configure
-if cmp -b config/autoconf.mk config/autoconf.mk.orig; then
+if cmp -s config/autoconf.mk config/autoconf.mk.orig; then
   echo "config/autoconf.mk is unchanged"
   mv -f config/autoconf.mk.orig config/autoconf.mk 2> /dev/null
 else
