@@ -67,35 +67,32 @@ static HANDLE CreateFileA(LPCSTR lpFileName,
 }
 
 /*
- * We seem to call FindFirstFileA and FindNextFileA just to
- * get the file names in a directory listing.  If so, the
- * WIN32_FIND_DATAA structure could be defined to contain
- * just the cFileName field, and the CopyFindFileDataW2A
- * function could just copy/convert the cFileName field.
+ * We seem to call FindFirstFileA and FindNextFileA just to get
+ * the file names in a directory listing.  If so, we could define
+ * a custom WIN32_FIND_DATAA structure with just the cFileName
+ * member, and the CopyFindFileDataW2A function could just
+ * copy/convert the cFileName member.
  */
-typedef struct _WIN32_FIND_DATAA {
-    DWORD dwFileAttributes;
-    FILETIME ftCreationTime;
-    FILETIME ftLastAccessTime;
-    FILETIME ftLastWriteTime;
-    DWORD nFileSizeHigh;
-    DWORD nFileSizeLow;
-    DWORD dwOID;
-    CHAR  cFileName[MAX_PATH];
-} WIN32_FIND_DATAA, *LPWIN32_FIND_DATAA;
-
 static void CopyFindFileDataW2A(LPWIN32_FIND_DATAW from,
                                 LPWIN32_FIND_DATAA to)
 {
+    /*
+     * WIN32_FIND_DATAA and WIN32_FIND_DATAW are slightly different.
+     * The dwReserved0, dwReserved1, and cAlternateFileName members
+     * exist only in WIN32_FIND_DATAA.  The dwOID member exists only
+     * in WIN32_FIND_DATAW.
+     */
     to->dwFileAttributes = from->dwFileAttributes;
     to->ftCreationTime = from->ftCreationTime;
     to->ftLastAccessTime = from->ftLastAccessTime;
     to->ftLastWriteTime = from->ftLastWriteTime;
     to->nFileSizeHigh = from->nFileSizeHigh;
     to->nFileSizeLow = from->nFileSizeLow;
-    to->dwOID = from->dwOID;
+    to->dwReserved0 = 0;
+    to->dwReserved1 = 0;
     WideCharToMultiByte(CP_ACP, 0, from->cFileName, -1,
                         to->cFileName, MAX_PATH, NULL, NULL);
+    to->cAlternateFileName[0] = '\0';
 }
 
 static HANDLE FindFirstFileA(LPCSTR lpFileName,
