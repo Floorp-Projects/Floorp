@@ -41,11 +41,13 @@
 #include "nsHtml5Parser.h"
 #include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
+#include "nsHtml5ByteReadable.h"
 
 class nsHtml5Parser;
 
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
+class nsHtml5MetaScanner;
 class nsHtml5AttributeName;
 class nsHtml5ElementName;
 class nsHtml5HtmlAttributes;

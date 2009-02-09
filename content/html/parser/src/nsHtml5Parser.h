@@ -58,13 +58,18 @@
 #include "nsAutoPtr.h"
 #include "nsIInputStream.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsICharsetDetectionObserver.h"
+#include "nsDetectionConfident.h"
 #include "nsHtml5UTF16Buffer.h"
+#include "nsHtml5MetaScanner.h"
 
 #define NS_HTML5_PARSER_CID \
   {0x3113adb0, 0xe56d, 0x459e, \
     {0xb9, 0x5b, 0xf1, 0xf2, 0x4a, 0xba, 0x2a, 0x80}}
 
 #define NS_HTML5_PARSER_READ_BUFFER_SIZE 1024
+
+#define NS_HTML5_PARSER_SNIFFING_BUFFER_SIZE 512
 
 enum eHtml5ParserLifecycle {
   NOT_STARTED = 0,
@@ -73,8 +78,18 @@ enum eHtml5ParserLifecycle {
   TERMINATED = 3
 };
 
+enum eBomState {
+  BOM_SNIFFING_NOT_STARTED = 0,
+  SEEN_UTF_16_LE_FIRST_BYTE = 1,
+  SEEN_UTF_16_BE_FIRST_BYTE = 2,
+  SEEN_UTF_8_FIRST_BYTE = 3,
+  SEEN_UTF_8_SECOND_BYTE = 4,
+  BOM_SNIFFING_OVER = 5
+};
+
 class nsHtml5Parser : public nsIParser,
                       public nsIStreamListener,
+                      public nsICharsetDetectionObserver,
                       public nsIContentSink,
                       public nsContentSink {
 
@@ -266,6 +281,9 @@ class nsHtml5Parser : public nsIParser,
 
     void documentMode(nsHtml5DocumentMode m);
 
+    // nsICharsetDetectionObserver
+    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
+
     // nsIContentSink
 
     NS_IMETHOD WillParse();
@@ -288,11 +306,23 @@ class nsHtml5Parser : public nsIParser,
     virtual nsresult ProcessBASETag(nsIContent* aContent);
     virtual void UpdateChildCounts();
     virtual nsresult FlushTags();
+    using nsContentSink::Notify;
     
     // Non-inherited methods
-    NS_IMETHOD WriteStreamBytes(const char* aFromSegment,
-                                PRUint32 aCount,
-                                PRUint32* aWriteCount);
+    nsresult SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
+                                                                  PRUint32 aCount,
+                                                                  PRUint32* aWriteCount);
+    nsresult WriteSniffingBufferAndCurrentSegment(const PRUint8* aFromSegment,
+                                                  PRUint32 aCount,
+                                                  PRUint32* aWriteCount);
+    nsresult SetupDecodingFromBom(const char* aCharsetName, 
+                                  const char* aDecoderCharsetName);
+    nsresult SniffStreamBytes(const PRUint8* aFromSegment,
+                              PRUint32 aCount,
+                              PRUint32* aWriteCount);
+    nsresult WriteStreamBytes(const PRUint8* aFromSegment,
+                              PRUint32 aCount,
+                              PRUint32* aWriteCount);
     void Suspend();
     void SetScriptElement(nsIContent* aScript);
     void UpdateStyleSheet(nsIContent* aElement);
@@ -305,6 +335,9 @@ class nsHtml5Parser : public nsIParser,
     }
     nsIDocShell* GetDocShell() {
       return mDocShell;
+    }
+    PRBool HasDecoder() {
+      return !!mUnicodeDecoder;
     }
   private:
     void ExecuteScript();
@@ -346,6 +379,10 @@ class nsHtml5Parser : public nsIParser,
     nsCString                    mCharset;
     nsCString                    mPendingCharset;
     nsCOMPtr<nsIUnicodeDecoder>  mUnicodeDecoder;
+    PRUint8*                     mSniffingBuffer;
+    PRUint32                     mSniffingLength; // number of meaningful bytes in mSniffingBuffer
+    eBomState                    mBomState;
+    nsHtml5MetaScanner*          mMetaScanner;
         
     // Portable parser objects    
     nsHtml5UTF16Buffer*          mFirstBuffer; // manually managed strong ref

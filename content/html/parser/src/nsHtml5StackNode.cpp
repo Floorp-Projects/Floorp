@@ -41,9 +41,11 @@
 #include "nsHtml5Parser.h"
 #include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
+#include "nsHtml5ByteReadable.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
+#include "nsHtml5MetaScanner.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
 #include "nsHtml5HtmlAttributes.h"
