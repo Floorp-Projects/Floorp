@@ -174,11 +174,6 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
     return scope;
 }
 
-#ifdef DEBUG_SCOPE_COUNT
-extern void
-js_unlog_scope(JSScope *scope);
-#endif
-
 #if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
 # include "jsprf.h"
 # define LIVE_SCOPE_METER(cx,expr) JS_LOCK_RUNTIME_VOID(cx->runtime,expr)
@@ -189,10 +184,6 @@ js_unlog_scope(JSScope *scope);
 void
 js_DestroyScope(JSContext *cx, JSScope *scope)
 {
-#ifdef DEBUG_SCOPE_COUNT
-    js_unlog_scope(scope);
-#endif
-
 #ifdef JS_THREADSAFE
     js_FinishTitle(cx, &scope->title);
 #endif
