@@ -9108,10 +9108,6 @@ ObjectToIterator_tn(JSContext* cx, jsbytecode* pc, JSObject *obj, int32 flags)
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return NULL;
     }
-    if (OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_GeneratorClass) {
-        js_LeaveTrace(cx);
-        return NULL;
-    }
     return JSVAL_TO_OBJECT(v);
 }
 
