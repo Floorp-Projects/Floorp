@@ -509,6 +509,18 @@ BrowserGlue.prototype = {
     var importBookmarks = databaseStatus == histsvc.DATABASE_STATUS_CREATE ||
                           databaseStatus == histsvc.DATABASE_STATUS_CORRUPT;
 
+    if (databaseStatus == histsvc.DATABASE_STATUS_CREATE) {
+      // If the database has just been created, but we already have any
+      // bookmark, this is not the initial import.  This can happen after a
+      // migration from a different browser since migrators run before us.
+      // In such a case we should not import, unless some pref has been set.
+      var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                  getService(Ci.nsINavBookmarksService);
+      if (bmsvc.getIdForItemAt(bmsvc.bookmarksMenuFolder, 0) != -1 ||
+          bmsvc.getIdForItemAt(bmsvc.toolbarFolder, 0) != -1)
+        importBookmarks = false;
+    }
+
     // Check if user or an extension has required to import bookmarks.html
     var importBookmarksHTML = false;
     try {
