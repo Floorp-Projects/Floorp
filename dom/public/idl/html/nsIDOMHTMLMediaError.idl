@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "domstubs.idl"
 
-[scriptable, uuid(7bd8c29f-8a76-453f-9373-79f820f2dc01)]
+[scriptable, uuid(9BEA222F-13CF-42AD-A14E-E01F4F66B833)]
 interface nsIDOMHTMLMediaError : nsISupports
 {
   /* The download of the media resource was aborted by
@@ -51,9 +51,6 @@ interface nsIDOMHTMLMediaError : nsISupports
   /* An error of some description occurred while decoding 
      the media resource */
   const unsigned short MEDIA_ERR_DECODE  = 3;
-
-  /* No suitable media resource could be found */
-  const unsigned short MEDIA_ERR_NONE_SUPPORTED = 4;
 
   readonly attribute unsigned short code;
 };

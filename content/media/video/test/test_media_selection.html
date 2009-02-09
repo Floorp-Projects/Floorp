@@ -15,8 +15,6 @@ function maketest(expect_load, attach_media, name, type, check_metadata) {
   return function (testNum) {
     var e = document.createElement('video');
 
-    e.addEventListener('error', function(e) { e.stopPropagation();}, false);
-    
     if (expect_load) {
       // this could be loadedmetadata, but needs bug 466410 fixed
       e.addEventListener('loadeddata', function () {
