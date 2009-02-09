@@ -296,9 +296,19 @@ fi
 ## to locate shared libraries.
 ##
 ## Note: 
-##  We choose libxul.so as a representative shared library. If it is 
-##  a symbolic link, all other shared libraries are symbolic links also.
-if [ `uname -s` != "SunOS" -o -h "$MOZ_DIST_BIN/libxul.so" ]
+##  We test $MOZ_DIST_BIN/*.so. If any of them is a symbolic link,
+##  we need to set LD_LIBRARY_PATH.
+##########################################################################
+moz_should_set_ld_library_path()
+{
+	[ `uname -s` != "SunOS" ] && return 0
+	for sharedlib in $MOZ_DIST_BIN/*.so
+	do
+		[ -h $sharedlib ] && return 0
+	done
+	return 1
+}
+if moz_should_set_ld_library_path
 then
 	LD_LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/plugins:${MRE_HOME}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
 fi 
