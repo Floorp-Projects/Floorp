@@ -76,6 +76,7 @@
 
 #elif defined(XP_UNIX)
 
+#include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/param.h>
@@ -100,7 +101,9 @@
 #endif
 
 #ifndef MAXPATHLEN
-#ifdef MAX_PATH
+#ifdef PATH_MAX
+#define MAXPATHLEN PATH_MAX
+#elif defined(MAX_PATH)
 #define MAXPATHLEN MAX_PATH
 #elif defined(_MAX_PATH)
 #define MAXPATHLEN _MAX_PATH
