@@ -978,8 +978,6 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
         }
     }
 
-    js_LeaveTrace(cx);
-
     arg = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0)
           ? vp[2]
           : JSVAL_VOID;
