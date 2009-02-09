@@ -72,7 +72,7 @@ button[type="default"] {
 /* .......... disabled state .......... */
 
 button[disabled="true"] {
-  color: #777777 !important;
+  color: GrayText;
 }
 
 /* ::::: menu/menu-button buttons ::::: */
