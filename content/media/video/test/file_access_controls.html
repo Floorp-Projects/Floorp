@@ -1,5 +1,7 @@
 <html>
 <head>
+</head>
+<body onload="setTimeout(load, 0);" onunload="done()">
 <script>
 
 // Page URL: http://example.org/tests/content/media/video/test/file_access_controls.html
@@ -86,7 +88,15 @@ function load() {
   opener.ok(branch!=null, "Get media pref branch");
   gOldPref = branch.getBoolPref("enforce_same_site_origin");
   branch.setBoolPref("enforce_same_site_origin", true);
+  
+  video = document.createElement('video');
+  video.addEventListener('loadeddata', function(){result('loaded');}, false);
+  video.addEventListener('error', function(){result('error');}, false);
+  video.id = 'video';
+ 
   nextTest();
+  document.body.appendChild(video);
+
 }
 
 function nextTest() {
@@ -122,16 +132,6 @@ function done() {
 }
 
 </script>
-
-
-</head>
-<body onload="load();" onunload="done()">
-
-  <!-- Change onloadedfirstframe to onloadeddata after bug 462570 lands -->
-  <video id="video"
-         onloadeddata="result('loaded');" 
-         onerror="result('error');">
-  </video>
 </body>
 </html>
 
