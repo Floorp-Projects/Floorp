@@ -295,6 +295,12 @@ function run_test() {
 
   // test getIdForItemAt
   do_check_eq(bmsvc.getIdForItemAt(testRoot, 0), workFolder);
+  // wrong parent, should return -1
+  do_check_eq(bmsvc.getIdForItemAt(1337, 0), -1);
+  // wrong index, should return -1
+  do_check_eq(bmsvc.getIdForItemAt(testRoot, 1337), -1);
+  // wrong parent and index, should return -1
+  do_check_eq(bmsvc.getIdForItemAt(1337, 1337), -1);
 
   // move folder, appending, to different folder
   var oldParentCC = getChildCount(testRoot);
