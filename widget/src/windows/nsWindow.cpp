@@ -1773,11 +1773,13 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
   if (aMode == mSizeMode)
     return NS_OK;
 
+#ifdef WINCE
   // on windows mobile, dialogs and top level windows are full screen
   // This is partly due to the lack of a GetWindowPlacement.
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel) {
     aMode = nsSizeMode_Maximized;
   }
+#endif
 
   // save the requested state
   rv = nsBaseWidget::SetSizeMode(aMode);
