@@ -57,12 +57,14 @@ button {
 }
 
 .button-text {
-  margin: 0 2px 0 3px !important;
+  margin: 0 !important;
+  -moz-margin-start: 3px !important;
+  -moz-margin-end: 2px !important;
   text-align: center;
 }
 
 .button-icon {
-  margin-left: 1px;
+  -moz-margin-start: 1px;
 }
 
 button[type="default"] {
