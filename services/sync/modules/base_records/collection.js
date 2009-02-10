@@ -77,8 +77,10 @@ Collection.prototype = {
     let args = [];
     if (this.older)
       args.push('older=' + this.older);
-    else if (this.newer)
+    else if (this.newer) {
       args.push('newer=' + this.newer);
+      args.push('modified=' + this.newer); // tmp hack for older servers
+    }
     if (this.full)
       args.push('full=1');
     if (this.sort)
