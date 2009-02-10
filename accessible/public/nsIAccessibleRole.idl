@@ -305,8 +305,8 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents read-only text, such as labels for other controls or
    * instructions in a dialog box. Static text cannot be modified or selected.
-   * Is is used for xul:label, xul:description, html:lablel,
-   * role="label" or role="description", xforms:output.
+   * Is is used for xul:label, xul:description, html:label, role="label",
+   * or xforms:output.
    */
   const unsigned long ROLE_STATICTEXT = 41;
 
