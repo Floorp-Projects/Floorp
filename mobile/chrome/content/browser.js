@@ -243,7 +243,6 @@ var Browser = {
         h != this._currentViewportBounds.height) {
       this._currentViewportBounds = {width: w, height: h};
       let bounds = { top: 0, left: 0, right: Math.max(800, w), bottom: Math.max(480, h) }
-      //dump("setViewportBounds: " + bounds.toSource() + "\n");
       ws.setViewportBounds(bounds);
     }
   },
@@ -1088,8 +1087,8 @@ ProgressController.prototype = {
         // var nBox = Browser.getNotificationBox();
         // nBox.removeTransientNotifications();
       }
-    } 
-    
+    }
+
     if (aWebProgress.DOMWindow == selectedBrowser.contentWindow) {
       BrowserUI.setURI();
     }

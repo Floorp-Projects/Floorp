@@ -419,11 +419,6 @@ CanvasBrowser.prototype = {
   zoomToElement: function(aElement) {
     const margin = 15;
 
-    // XXX The widget stack code doesn't do what we want when you change
-    // the viewport bounds to something smaller than your current position
-    // so pan back to 0,0 before we resize and then pan to our destination
-    ws.panTo(0, 0);
-
     // scale to the element's width
     let [canvasW, ] = this.canvasDimensions;
 
@@ -438,11 +433,6 @@ CanvasBrowser.prototype = {
 
   zoomFromElement: function(aElement) {
     let elRect = this._getPagePosition(aElement);
-
-    // XXX The widget stack code doesn't do what we want when you change
-    // the viewport bounds to something smaller than your current position
-    // so pan back to 0,0 before we resize and then pan to our destination
-    ws.panTo(0, 0);
 
     // pan to the element
     // don't bother with x since we're zooming all the way out
@@ -556,7 +546,7 @@ CanvasBrowser.prototype = {
       newy = elRect.y - curRect.height + elRect.height;
     }
 
-    ws.panBy(this._pageToScreen(curRect.x-newx),this._pageToScreen(curRect.y  - newy), true);
+    ws.panTo(this._pageToScreen(newx), this._pageToScreen(newy));
   },
 
   /* Pans directly to a given content element */
