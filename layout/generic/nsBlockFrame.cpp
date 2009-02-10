@@ -677,6 +677,7 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
         // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
         data.line = &line;
+        data.lineContainer = curFrame;
         nsIFrame *kid = line->mFirstChild;
         for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
@@ -751,6 +752,7 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
         // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
         data.line = &line;
+        data.lineContainer = curFrame;
         nsIFrame *kid = line->mFirstChild;
         for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
@@ -5243,7 +5245,7 @@ nsBlockInFlowLineIterator::FindValidLine()
 {
   line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
   if (mLine != end)
-    return PR_TRUE; 
+    return PR_TRUE;
   PRBool currentlyInOverflowLines = mInOverflowLines != nsnull;
   while (PR_TRUE) {
     if (currentlyInOverflowLines) {
