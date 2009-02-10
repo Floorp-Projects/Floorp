@@ -4589,6 +4589,20 @@ js_FlushJITOracle(JSContext* cx)
 }
 
 extern JS_REQUIRES_STACK void
+js_FlushScriptFragments(JSContext* cx, JSScript* script)
+{
+    if (!TRACING_ENABLED(cx))
+        return;
+    debug_only_v(printf("Flushing fragments for script %p.\n", script);)
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+        VMFragment *f = tm->vmfragments[i];
+        if (f && JS_UPTRDIFF(f->ip, script->code) < script->length)
+            tm->vmfragments[i] = NULL;
+    }
+}
+
+extern JS_REQUIRES_STACK void
 js_FlushJITCache(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
