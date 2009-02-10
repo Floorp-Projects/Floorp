@@ -5490,8 +5490,8 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   nsIntRect r;
   PRBool useCaretRect = theRange.length == 0;
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, mGeckoChild);
-    charRect.InitForQueryTextRect(theRange.location, 1);
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_CHARACTER_RECT, mGeckoChild);
+    charRect.InitForQueryCharacterRect(theRange.location);
     mGeckoChild->DispatchWindowEvent(charRect);
     if (charRect.mSucceeded)
       r = charRect.mReply.mRect;
