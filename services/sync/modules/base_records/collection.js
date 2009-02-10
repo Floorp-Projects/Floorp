@@ -66,6 +66,7 @@ Collection.prototype = {
     this.pushFilter(new JsonFilter());
     this._full = true;
     this._older = 0;
+    this._newer = 0;
     this._data = [];
   },
 
@@ -76,6 +77,8 @@ Collection.prototype = {
     let args = [];
     if (this.older)
       args.push('older=' + this.older);
+    else if (this.newer)
+      args.push('newer=' + this.newer);
     if (this.full)
       args.push('full=1');
     if (this.sort)
@@ -91,10 +94,17 @@ Collection.prototype = {
     this._rebuildURL();
   },
 
-  // get only items modified since some date
+  // get only items modified before some date
   get older() { return this._older; },
   set older(value) {
     this._older = value;
+    this._rebuildURL();
+  },
+
+  // get only items modified since some date
+  get newer() { return this._newer; },
+  set newer(value) {
+    this._newer = value;
     this._rebuildURL();
   },
 
