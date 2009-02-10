@@ -2025,7 +2025,6 @@ testReservedObjects:
     if (gcLocked)
         JS_UNLOCK_GC(rt);
 #endif
-    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION);
     return thing;
 
 fail:
@@ -2173,7 +2172,6 @@ RefillDoubleFreeList(JSContext *cx)
         } while (bit != 0);
     }
     JS_ASSERT(list);
-    JS_COUNT_OPERATION(cx, JSOW_ALLOCATION * JS_BITS_PER_WORD);
 
     /*
      * We delegate assigning cx->doubleFreeList to js_NewDoubleInRootedValue as
@@ -3312,7 +3310,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(cx->thread->id == js_CurrentThreadId());
-
+    
     /* Bump gcLevel and return rather than nest on this thread. */
     if (rt->gcThread == cx->thread) {
         JS_ASSERT(rt->gcLevel > 0);
@@ -3382,6 +3380,14 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* No other thread is in GC, so indicate that we're now in GC. */
     rt->gcLevel = 1;
     rt->gcThread = cx->thread;
+
+    /*
+     * Notify all operation callbacks, which will give them a chance to
+     * yield their current request. Contexts that are not currently
+     * executing will perform their callback at some later point,
+     * which then will be unnecessary, but harmless.
+     */
+    js_NudgeOtherContexts(cx);
 
     /* Wait for all other requests to finish. */
     while (rt->requestCount > 0)
