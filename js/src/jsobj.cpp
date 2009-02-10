@@ -463,7 +463,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     char buf[20];
     size_t len;
 
-    if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_ENTER_SHARP))
+    if (!JS_CHECK_OPERATION_LIMIT(cx))
         return NULL;
 
     /* Set to null in case we return an early error. */
@@ -3574,7 +3574,6 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_LOOKUP_PROPERTY);
 
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
@@ -3963,7 +3962,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_GET_PROPERTY);
 
     shape = OBJ_SHAPE(obj);
     protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
@@ -4064,7 +4062,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_SET_PROPERTY);
 
     /*
      * We peek at OBJ_SCOPE(obj) without locking obj. Any race means a failure
@@ -4329,7 +4326,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_DELETE_PROPERTY);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
         return JS_FALSE;

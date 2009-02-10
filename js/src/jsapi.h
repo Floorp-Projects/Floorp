@@ -629,15 +629,6 @@ JS_StringToVersion(const char *string);
                                                    not backward compatible with
                                                    the comment-hiding hack used
                                                    in HTML script tags. */
-#define JSOPTION_NATIVE_BRANCH_CALLBACK \
-                                JS_BIT(7)       /* the branch callback set by
-                                                   JS_SetBranchCallback may be
-                                                   called with a null script
-                                                   parameter, by native code
-                                                   that loops intensively.
-                                                   Deprecated, use
-                                                   JS_SetOperationCallback
-                                                   instead */
 #define JSOPTION_DONT_REPORT_UNCAUGHT \
                                 JS_BIT(8)       /* When returning from the
                                                    outermost API call, prevent
@@ -2264,67 +2255,30 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
 /*
- * The maximum value of the operation limit to pass to JS_SetOperationCallback
- * and JS_SetOperationLimit.
+ * These functions allow setting an operation callback that will be called
+ * from the thread the context is associated with some time after any thread
+ * triggered the callback using JS_TriggerOperationCallback(cx).
+ * 
+ * In a threadsafe build the engine internally triggers operation callbacks
+ * under certain circumstances (i.e. GC and title transfer) to force the
+ * context to yield its current request, which the engine always 
+ * automatically does immediately prior to calling the callback function.
+ * The embedding should thus not rely on callbacks being triggered through
+ * the external API only.
+ * 
+ * Important note: Additional callbacks can occur inside the callback handler
+ * if it re-enters the JS engine. The embedding must ensure that the callback
+ * is disconnected before attempting such re-entry.
  */
-#define JS_MAX_OPERATION_LIMIT ((uint32) 0x7FFFFFFF - (uint32) 1)
 
-#define JS_OPERATION_WEIGHT_BASE 4096
-
-extern JS_PUBLIC_API(void)
-JS_SetOperationCallbackFunction(JSContext *cx, JSOperationCallback callback);
+extern JS_PUBLIC_API(JSOperationCallback)
+JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback);
 
 extern JS_PUBLIC_API(JSOperationCallback)
 JS_GetOperationCallback(JSContext *cx);
 
-/*
- * Force a call to operation callback at some later moment. The function can be
- * called from an arbitrary thread for any context.
- */
 extern JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx);
-
-/*
- * Set the limit for the internal operation counter. The engine calls the
- * operation callback When the limit is reached.
- *
- * When operationLimit is JS_OPERATION_WEIGHT_BASE, the callback will be
- * called at least after each backward jump in the interpreter. To minimize
- * the overhead of the callback invocation we suggest at least
- *
- *   100 * JS_OPERATION_WEIGHT_BASE
- *
- * as a value for operationLimit.
- */
-extern JS_PUBLIC_API(void)
-JS_SetOperationLimit(JSContext *cx, uint32 operationLimit);
-
-/*
- * Get the operation limit associated with the operation callback. This API
- * function may be called only when the result of JS_GetOperationCallback(cx)
- * is not null.
- */
-extern JS_PUBLIC_API(uint32)
-JS_GetOperationLimit(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
-                        uint32 operationLimit);
-
-extern JS_PUBLIC_API(void)
-JS_ClearOperationCallback(JSContext *cx);
-
-/*
- * Note well: JS_SetBranchCallback is deprecated. It is similar to
- *
- *   JS_SetOperationCallback(cx, callback, 4096, NULL);
- *
- * except that the callback will not be called from a long-running native
- * function when JSOPTION_NATIVE_BRANCH_CALLBACK is not set and the top-most
- * frame is native.
- */
-extern JS_PUBLIC_API(JSBranchCallback)
-JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);

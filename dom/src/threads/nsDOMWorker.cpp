@@ -951,7 +951,6 @@ nsDOMWorker::nsDOMWorker(nsDOMWorker* aParent,
                          nsIXPConnectWrappedNative* aParentWN)
 : mParent(aParent),
   mParentWN(aParentWN),
-  mCallbackCount(0),
   mLock(nsnull),
   mInnerScope(nsnull),
   mGlobal(NULL),

@@ -854,9 +854,6 @@ PrintWinCodebase(nsGlobalWindow *win)
 }
 #endif
 
-// The accumulated operation weight before we call MaybeGC
-const PRUint32 MAYBE_GC_OPERATION_WEIGHT = 5000 * JS_OPERATION_WEIGHT_BASE;
-
 static void
 MaybeGC(JSContext *cx)
 {
@@ -927,7 +924,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     nsJSContext::CC();
 
     // never prevent system scripts from running
-    if (! ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx))) {
+    if (!::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx))) {
 
       // lets see if CC() did anything, if not, cancel the script.
       mem->IsLowMemory(&lowMemory);
@@ -988,7 +985,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check if we should offer the option to debug
   JSStackFrame* fp = ::JS_GetScriptedCaller(cx, NULL);
-  PRBool debugPossible = (fp != nsnull &&
+  PRBool debugPossible = (fp != nsnull && cx->debugHooks &&
                           cx->debugHooks->debuggerHandler != nsnull);
 #ifdef MOZ_JSDEBUGGER
   // Get the debugger service if necessary.
@@ -1097,10 +1094,15 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   if (debugPossible)
     buttonFlags += nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2;
 
+  // Null out the operation callback while we're re-entering JS here.
+  ::JS_SetOperationCallback(cx, nsnull);
+
   // Open the dialog.
   rv = prompt->ConfirmEx(title, msg, buttonFlags, stopButton, waitButton,
                          debugButton, neverShowDlg, &neverShowDlgChk,
                          &buttonPressed);
+
+  ::JS_SetOperationCallback(cx, DOMOperationCallback);
 
   if (NS_FAILED(rv) || (buttonPressed == 1)) {
     // Allow the script to continue running
@@ -1249,8 +1251,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
                                          JSOptionChangedCallback,
                                          this);
 
-    ::JS_SetOperationCallback(mContext, DOMOperationCallback,
-                              MAYBE_GC_OPERATION_WEIGHT);
+    ::JS_SetOperationCallback(mContext, DOMOperationCallback);
 
     static JSLocaleCallbacks localeCallbacks =
       {
@@ -1301,9 +1302,6 @@ nsJSContext::Unlink()
 
   // Clear our entry in the JSContext, bugzilla bug 66413
   ::JS_SetContextPrivate(mContext, nsnull);
-
-  // Clear the operation callback, bugzilla bug 238218
-  ::JS_ClearOperationCallback(mContext);
 
   // Unregister our "javascript.options.*" pref-changed callback.
   nsContentUtils::UnregisterPrefCallback(js_options_dot_str,

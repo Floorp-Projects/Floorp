@@ -1027,8 +1027,6 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     spp = js_SearchScope(scope, id, JS_TRUE);
     sprop = overwriting = SPROP_FETCH(spp);
     if (!sprop) {
-        JS_COUNT_OPERATION(cx, JSOW_NEW_PROPERTY);
-
         /* Check whether we need to grow, if the load factor is >= .75. */
         size = SCOPE_CAPACITY(scope);
         if (scope->entryCount + scope->removedCount >= size - (size >> 2)) {
