@@ -1009,6 +1009,8 @@ public:
   static PRLogModuleInfo* gLog;
 #endif
 
+  NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable);
+
 protected:
   virtual ~PresShell();
 
@@ -1175,6 +1177,8 @@ protected:
   ReflowCountMgr * mReflowCountMgr;
 #endif
 
+  static PRBool sDisableNonTestMouseEvents;
+
 private:
 
   PRBool InZombieDocument(nsIContent *aContent);
@@ -1249,6 +1253,8 @@ public:
 
   nsRefPtr<PresShell> mPresShell;
 };
+
+PRBool PresShell::sDisableNonTestMouseEvents = PR_FALSE;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* PresShell::gLog;
@@ -5531,13 +5537,22 @@ nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
 }
 
 NS_IMETHODIMP
+PresShell::DisableNonTestMouseEvents(PRBool aDisable)
+{
+  sDisableNonTestMouseEvents = aDisable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
                        nsEventStatus*  aEventStatus)
 {
   NS_ASSERTION(aView, "null view");
 
-  if (mIsDestroying || !nsContentUtils::IsSafeToRunScript()) {
+  if (mIsDestroying || !nsContentUtils::IsSafeToRunScript() ||
+      (sDisableNonTestMouseEvents && NS_IS_MOUSE_EVENT(aEvent) &&
+       !(aEvent->flags & NS_EVENT_FLAG_SYNTETIC_TEST_EVENT))) {
     return NS_OK;
   }
 
