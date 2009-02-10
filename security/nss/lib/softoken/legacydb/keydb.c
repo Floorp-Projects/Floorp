@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.10 2008/06/06 01:16:25 wtc%google.com Exp $ */
+/* $Id: keydb.c,v 1.11 2009/02/03 05:34:44 julien.pierre.boogz%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "secasn1.h"
@@ -1051,7 +1051,7 @@ nsslowkey_CloseKeyDB(NSSLOWKEYDBHandle *handle)
 	    SECITEM_FreeItem(handle->global_salt,PR_TRUE);
 	}
 	if (handle->lock != NULL) {
-	    PZ_DestroyLock(handle->lock);
+	    SKIP_AFTER_FORK(PZ_DestroyLock(handle->lock));
 	}
 	    
 	PORT_Free(handle);
@@ -2194,11 +2194,11 @@ keydb_Close(NSSLOWKEYDBHandle *kdb)
     DB *db = kdb->db;
 
     PORT_Assert(kdbLock != NULL);
-    PZ_Lock(kdbLock);
+    SKIP_AFTER_FORK(PZ_Lock(kdbLock));
 
     (* db->close)(db);
     
-    prstat = PZ_Unlock(kdbLock);
+    SKIP_AFTER_FORK(prstat = PZ_Unlock(kdbLock));
 
     return;
 }

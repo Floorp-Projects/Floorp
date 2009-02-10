@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.12 $ $Date: 2007/10/06 01:41:28 $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.13 $ $Date: 2009/02/09 07:55:53 $";
 #endif /* DEBUG */
 
 /*
@@ -218,13 +218,13 @@ nssCKFWToken_Create
    */
 
   arena = NSSArena_Create();
-  if( (NSSArena *)NULL == arena ) {
+  if (!arena) {
     *pError = CKR_HOST_MEMORY;
     goto loser;
   }
 
   fwToken = nss_ZNEW(arena, NSSCKFWToken);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     *pError = CKR_HOST_MEMORY;
     goto loser;
   }    
@@ -239,7 +239,7 @@ nssCKFWToken_Create
   fwToken->rwSessionCount = 0;
 
   fwToken->mutex = nssCKFWInstance_CreateMutex(fwToken->fwInstance, arena, pError);
-  if( (NSSCKFWMutex *)NULL == fwToken->mutex ) {
+  if (!fwToken->mutex) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -247,7 +247,7 @@ nssCKFWToken_Create
   }
 
   fwToken->sessions = nssCKFWHash_Create(fwToken->fwInstance, arena, pError);
-  if( (nssCKFWHash *)NULL == fwToken->sessions ) {
+  if (!fwToken->sessions) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -258,7 +258,7 @@ nssCKFWToken_Create
                    fwToken->fwInstance) ) {
     fwToken->sessionObjectHash = nssCKFWHash_Create(fwToken->fwInstance, 
                                    arena, pError);
-    if( (nssCKFWHash *)NULL == fwToken->sessionObjectHash ) {
+    if (!fwToken->sessionObjectHash) {
       if( CKR_OK == *pError ) {
         *pError = CKR_GENERAL_ERROR;
       }
@@ -268,7 +268,7 @@ nssCKFWToken_Create
 
   fwToken->mdObjectHash = nssCKFWHash_Create(fwToken->fwInstance, 
                             arena, pError);
-  if( (nssCKFWHash *)NULL == fwToken->mdObjectHash ) {
+  if (!fwToken->mdObjectHash) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -277,7 +277,7 @@ nssCKFWToken_Create
 
   fwToken->mdMechanismHash = nssCKFWHash_Create(fwToken->fwInstance, 
                             arena, pError);
-  if( (nssCKFWHash *)NULL == fwToken->mdMechanismHash ) {
+  if (!fwToken->mdMechanismHash) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -286,7 +286,7 @@ nssCKFWToken_Create
 
   /* More here */
 
-  if( (void *)NULL != (void *)mdToken->Setup ) {
+  if (mdToken->Setup) {
     *pError = mdToken->Setup(mdToken, fwToken, fwToken->mdInstance, fwToken->fwInstance);
     if( CKR_OK != *pError ) {
       goto loser;
@@ -308,12 +308,12 @@ nssCKFWToken_Create
  loser:
 
   if( CK_TRUE == called_setup ) {
-    if( (void *)NULL != (void *)mdToken->Invalidate ) {
+    if (mdToken->Invalidate) {
       mdToken->Invalidate(mdToken, fwToken, fwToken->mdInstance, fwToken->fwInstance);
     }
   }
 
-  if( (NSSArena *)NULL != arena ) {
+  if (arena) {
     (void)NSSArena_Destroy(arena);
   }
 
@@ -373,7 +373,7 @@ nssCKFWToken_Destroy
 
   (void)nssCKFWMutex_Destroy(fwToken->mutex);
   
-  if( (void *)NULL != (void *)fwToken->mdToken->Invalidate ) {
+  if (fwToken->mdToken->Invalidate) {
     fwToken->mdToken->Invalidate(fwToken->mdToken, fwToken,
       fwToken->mdInstance, fwToken->fwInstance);
   }
@@ -440,7 +440,7 @@ nssCKFWToken_GetArena
 )
 {
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSArena *)NULL;
   }
 
@@ -552,12 +552,12 @@ nssCKFWToken_InitToken
     goto done;
   }
 
-  if( (void *)NULL == (void *)fwToken->mdToken->InitToken ) {
+  if (!fwToken->mdToken->InitToken) {
     error = CKR_DEVICE_ERROR;
     goto done;
   }
 
-  if( (NSSItem *)NULL == pin ) {
+  if (!pin) {
     if( nssCKFWToken_GetHasProtectedAuthenticationPath(fwToken) ) {
       ; /* okay */
     } else {
@@ -566,7 +566,7 @@ nssCKFWToken_InitToken
     }
   }
 
-  if( (NSSUTF8 *)NULL == label ) {
+  if (!label) {
     label = (NSSUTF8 *) "";
   }
 
@@ -607,11 +607,11 @@ nssCKFWToken_GetLabel
     return error;
   }
 
-  if( (NSSUTF8 *)NULL == fwToken->label ) {
-    if( (void *)NULL != (void *)fwToken->mdToken->GetLabel ) {
+  if (!fwToken->label) {
+    if (fwToken->mdToken->GetLabel) {
       fwToken->label = fwToken->mdToken->GetLabel(fwToken->mdToken, fwToken,
         fwToken->mdInstance, fwToken->fwInstance, &error);
-      if( ((NSSUTF8 *)NULL == fwToken->label) && (CKR_OK != error) ) {
+      if ((!fwToken->label) && (CKR_OK != error)) {
         goto done;
       }
     } else {
@@ -656,11 +656,11 @@ nssCKFWToken_GetManufacturerID
     return error;
   }
 
-  if( (NSSUTF8 *)NULL == fwToken->manufacturerID ) {
-    if( (void *)NULL != (void *)fwToken->mdToken->GetManufacturerID ) {
+  if (!fwToken->manufacturerID) {
+    if (fwToken->mdToken->GetManufacturerID) {
       fwToken->manufacturerID = fwToken->mdToken->GetManufacturerID(fwToken->mdToken,
         fwToken, fwToken->mdInstance, fwToken->fwInstance, &error);
-      if( ((NSSUTF8 *)NULL == fwToken->manufacturerID) && (CKR_OK != error) ) {
+      if ((!fwToken->manufacturerID) && (CKR_OK != error)) {
         goto done;
       }
     } else {
@@ -705,11 +705,11 @@ nssCKFWToken_GetModel
     return error;
   }
 
-  if( (NSSUTF8 *)NULL == fwToken->model ) {
-    if( (void *)NULL != (void *)fwToken->mdToken->GetModel ) {
+  if (!fwToken->model) {
+    if (fwToken->mdToken->GetModel) {
       fwToken->model = fwToken->mdToken->GetModel(fwToken->mdToken, fwToken,
         fwToken->mdInstance, fwToken->fwInstance, &error);
-      if( ((NSSUTF8 *)NULL == fwToken->model) && (CKR_OK != error) ) {
+      if ((!fwToken->model) && (CKR_OK != error)) {
         goto done;
       }
     } else {
@@ -754,11 +754,11 @@ nssCKFWToken_GetSerialNumber
     return error;
   }
 
-  if( (NSSUTF8 *)NULL == fwToken->serialNumber ) {
-    if( (void *)NULL != (void *)fwToken->mdToken->GetSerialNumber ) {
+  if (!fwToken->serialNumber) {
+    if (fwToken->mdToken->GetSerialNumber) {
       fwToken->serialNumber = fwToken->mdToken->GetSerialNumber(fwToken->mdToken, 
         fwToken, fwToken->mdInstance, fwToken->fwInstance, &error);
-      if( ((NSSUTF8 *)NULL == fwToken->serialNumber) && (CKR_OK != error) ) {
+      if ((!fwToken->serialNumber) && (CKR_OK != error)) {
         goto done;
       }
     } else {
@@ -791,7 +791,7 @@ nssCKFWToken_GetHasRNG
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetHasRNG ) {
+  if (!fwToken->mdToken->GetHasRNG) {
     return CK_FALSE;
   }
 
@@ -815,7 +815,7 @@ nssCKFWToken_GetIsWriteProtected
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetIsWriteProtected ) {
+  if (!fwToken->mdToken->GetIsWriteProtected) {
     return CK_FALSE;
   }
 
@@ -839,7 +839,7 @@ nssCKFWToken_GetLoginRequired
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetLoginRequired ) {
+  if (!fwToken->mdToken->GetLoginRequired) {
     return CK_FALSE;
   }
 
@@ -863,7 +863,7 @@ nssCKFWToken_GetUserPinInitialized
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetUserPinInitialized ) {
+  if (!fwToken->mdToken->GetUserPinInitialized) {
     return CK_FALSE;
   }
 
@@ -887,7 +887,7 @@ nssCKFWToken_GetRestoreKeyNotNeeded
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetRestoreKeyNotNeeded ) {
+  if (!fwToken->mdToken->GetRestoreKeyNotNeeded) {
     return CK_FALSE;
   }
 
@@ -911,7 +911,7 @@ nssCKFWToken_GetHasClockOnToken
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetHasClockOnToken ) {
+  if (!fwToken->mdToken->GetHasClockOnToken) {
     return CK_FALSE;
   }
 
@@ -935,7 +935,7 @@ nssCKFWToken_GetHasProtectedAuthenticationPath
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetHasProtectedAuthenticationPath ) {
+  if (!fwToken->mdToken->GetHasProtectedAuthenticationPath) {
     return CK_FALSE;
   }
 
@@ -959,7 +959,7 @@ nssCKFWToken_GetSupportsDualCryptoOperations
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetSupportsDualCryptoOperations ) {
+  if (!fwToken->mdToken->GetSupportsDualCryptoOperations) {
     return CK_FALSE;
   }
 
@@ -983,7 +983,7 @@ nssCKFWToken_GetMaxSessionCount
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMaxSessionCount ) {
+  if (!fwToken->mdToken->GetMaxSessionCount) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1007,7 +1007,7 @@ nssCKFWToken_GetMaxRwSessionCount
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMaxRwSessionCount ) {
+  if (!fwToken->mdToken->GetMaxRwSessionCount) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1031,7 +1031,7 @@ nssCKFWToken_GetMaxPinLen
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMaxPinLen ) {
+  if (!fwToken->mdToken->GetMaxPinLen) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1055,7 +1055,7 @@ nssCKFWToken_GetMinPinLen
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMinPinLen ) {
+  if (!fwToken->mdToken->GetMinPinLen) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1079,7 +1079,7 @@ nssCKFWToken_GetTotalPublicMemory
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetTotalPublicMemory ) {
+  if (!fwToken->mdToken->GetTotalPublicMemory) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1103,7 +1103,7 @@ nssCKFWToken_GetFreePublicMemory
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetFreePublicMemory ) {
+  if (!fwToken->mdToken->GetFreePublicMemory) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1127,7 +1127,7 @@ nssCKFWToken_GetTotalPrivateMemory
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetTotalPrivateMemory ) {
+  if (!fwToken->mdToken->GetTotalPrivateMemory) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1151,7 +1151,7 @@ nssCKFWToken_GetFreePrivateMemory
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetFreePrivateMemory ) {
+  if (!fwToken->mdToken->GetFreePrivateMemory) {
     return CK_UNAVAILABLE_INFORMATION;
   }
 
@@ -1189,7 +1189,7 @@ nssCKFWToken_GetHardwareVersion
     goto done;
   }
 
-  if( (void *)NULL != (void *)fwToken->mdToken->GetHardwareVersion ) {
+  if (fwToken->mdToken->GetHardwareVersion) {
     fwToken->hardwareVersion = fwToken->mdToken->GetHardwareVersion(
       fwToken->mdToken, fwToken, fwToken->mdInstance, fwToken->fwInstance);
   } else {
@@ -1234,7 +1234,7 @@ nssCKFWToken_GetFirmwareVersion
     goto done;
   }
 
-  if( (void *)NULL != (void *)fwToken->mdToken->GetFirmwareVersion ) {
+  if (fwToken->mdToken->GetFirmwareVersion) {
     fwToken->firmwareVersion = fwToken->mdToken->GetFirmwareVersion(
       fwToken->mdToken, fwToken, fwToken->mdInstance, fwToken->fwInstance);
   } else {
@@ -1279,7 +1279,7 @@ nssCKFWToken_GetUTCTime
     return CKR_OK;
   }
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetUTCTime ) {
+  if (!fwToken->mdToken->GetUTCTime) {
     /* It said it had one! */
     return CKR_GENERAL_ERROR;
   }
@@ -1355,7 +1355,7 @@ nssCKFWToken_OpenSession
   NSSCKMDSession *mdSession;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSCKFWSession *)NULL;
   }
 
@@ -1395,7 +1395,7 @@ nssCKFWToken_OpenSession
 
   /* We could compare sesion counts to any limits we know of, I guess.. */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->OpenSession ) {
+  if (!fwToken->mdToken->OpenSession) {
     /*
      * I'm not sure that the Module actually needs to implement
      * mdSessions -- the Framework can keep track of everything 
@@ -1406,7 +1406,7 @@ nssCKFWToken_OpenSession
   }
 
   fwSession = nssCKFWSession_Create(fwToken, rw, pApplication, Notify, pError);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -1416,7 +1416,7 @@ nssCKFWToken_OpenSession
   mdSession = fwToken->mdToken->OpenSession(fwToken->mdToken, fwToken,
                 fwToken->mdInstance, fwToken->fwInstance, fwSession,
                 rw, pError);
-  if( (NSSCKMDSession *)NULL == mdSession ) {
+  if (!mdSession) {
     (void)nssCKFWSession_Destroy(fwSession, CK_FALSE);
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
@@ -1426,7 +1426,7 @@ nssCKFWToken_OpenSession
 
   *pError = nssCKFWSession_SetMDSession(fwSession, mdSession);
   if( CKR_OK != *pError ) {
-    if( (void *)NULL != (void *)mdSession->Close ) {
+    if (mdSession->Close) {
       mdSession->Close(mdSession, fwSession, fwToken->mdToken, fwToken,
       fwToken->mdInstance, fwToken->fwInstance);
     }
@@ -1462,7 +1462,7 @@ nssCKFWToken_GetMechanismCount
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMechanismCount ) {
+  if (!fwToken->mdToken->GetMechanismCount) {
     return 0;
   }
 
@@ -1486,12 +1486,12 @@ nssCKFWToken_GetMechanismTypes
     return CKR_ARGUMENTS_BAD;
   }
 
-  if( (CK_MECHANISM_TYPE *)NULL == types ) {
+  if (!types) {
     return CKR_ARGUMENTS_BAD;
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMechanismTypes ) {
+  if (!fwToken->mdToken->GetMechanismTypes) {
     /*
      * This should only be called with a sufficiently-large
      * "types" array, which can only be done if GetMechanismCount
@@ -1519,12 +1519,12 @@ nssCKFWToken_GetMechanism
 )
 {
   NSSCKMDMechanism *mdMechanism;
-  if ((nssCKFWHash *)NULL == fwToken->mdMechanismHash) {
+  if (!fwToken->mdMechanismHash) {
     *pError = CKR_GENERAL_ERROR;
     return (NSSCKFWMechanism *)NULL;
   }
   
-  if( (void *)NULL == (void *)fwToken->mdToken->GetMechanism ) {
+  if (!fwToken->mdToken->GetMechanism) {
     /*
      * If we don't implement any GetMechanism function, then we must
      * not support any.
@@ -1536,7 +1536,7 @@ nssCKFWToken_GetMechanism
   /* lookup in hash table */
   mdMechanism = fwToken->mdToken->GetMechanism(fwToken->mdToken, fwToken,
     fwToken->mdInstance, fwToken->fwInstance, which, pError);
-  if ((NSSCKMDMechanism *)NULL == mdMechanism) {
+  if (!mdMechanism) {
     return (NSSCKFWMechanism *) NULL;
   }
   /* store in hash table */
@@ -1665,7 +1665,7 @@ nssCKFWToken_CloseAllSessions
   nssCKFWHash_Destroy(fwToken->sessions);
 
   fwToken->sessions = nssCKFWHash_Create(fwToken->fwInstance, fwToken->arena, &error);
-  if( (nssCKFWHash *)NULL == fwToken->sessions ) {
+  if (!fwToken->sessions) {
     if( CKR_OK == error ) {
       error = CKR_GENERAL_ERROR;
     }
@@ -1854,7 +1854,7 @@ NSSCKFWToken_GetArena
 )
 {
 #ifdef DEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSArena *)NULL;
   }
 

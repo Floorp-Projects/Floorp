@@ -165,6 +165,10 @@ endif
 	# Purify requires /FIXED:NO when linking EXEs.
 	LDFLAGS    += /FIXED:NO
     endif
+    # Convert certain deadly warnings to errors (see list at end of file)
+    OS_CFLAGS += -we4002 -we4003 -we4004 -we4006 -we4009 \
+     -we4013 -we4015 -we4033 -we4035 -we4045 -we4053 -we4054 -we4063 \
+     -we4064 -we4078 -we4087 -we4098 -we4390 -we4551 -we4553 -we4715
 endif # NS_USE_GCC
 
 ifdef USE_64
@@ -305,4 +309,29 @@ endif
 ifndef TARGETS
     TARGETS = $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(PROGRAM)
 endif
+
+# list of MSVC warnings converted to errors above:
+# 4002: too many actual parameters for macro 'identifier'
+# 4003: not enough actual parameters for macro 'identifier'
+# 4004: incorrect construction after 'defined'
+# 4006: #undef expected an identifier
+# 4009: string too big; trailing characters truncated
+# 4015: 'identifier' : type of bit field must be integral
+# 4033: 'function' must return a value
+# 4035: 'function' : no return value
+# 4045: 'identifier' : array bounds overflow
+# 4053: one void operand for '?:'
+# 4054: 'conversion' : from function pointer 'type1' to data pointer 'type2'
+# 4059: pascal string too big, length byte is length % 256
+# 4063: case 'identifier' is not a valid value for switch of enum 'identifier'
+# 4064: switch of incomplete enum 'identifier'
+# 4078: case constant 'value' too big for the type of the switch expression
+# 4087: 'function' : declared with 'void' parameter list
+# 4098: 'function' : void function returning a value
+# 4390: ';' : empty controlled statement found; is this the intent?
+# 4541: RTTI train wreck
+# 4715: not all control paths return a value
+# 4013: function undefined; assuming extern returning int
+# 4553: '==' : operator has no effect; did you intend '='?
+# 4551: function call missing argument list
 

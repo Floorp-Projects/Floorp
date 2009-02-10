@@ -3267,6 +3267,11 @@ int main(int argc, char **argv)
     	SECU_PrintPRandOSError(progName);
 	return -1;
     }
+    rv = BL_Init();
+    if (rv != SECSuccess) {
+    	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
     RNG_SystemInfoForRNG();
 
     rv = SECU_ParseCommandLine(argc, argv, progName, &bltest);

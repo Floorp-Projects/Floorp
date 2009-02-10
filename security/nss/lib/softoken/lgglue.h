@@ -66,9 +66,9 @@ typedef SECStatus (*LGDeleteSecmodFunc)(const char *appName,
 typedef SECStatus (*LGAddSecmodFunc)(const char *appName, 
 			const char *filename, 
 			const char *dbname, char *params, PRBool rw);
-typedef SECStatus (*LGShutdownFunc)(void);
+typedef SECStatus (*LGShutdownFunc)(PRBool forked);
+typedef void (*LGSetForkStateFunc)(PRBool);
 typedef void (*LGSetCryptFunc)(LGEncryptFunc, LGDecryptFunc);
-
 
 /*
  * Softoken Glue Functions

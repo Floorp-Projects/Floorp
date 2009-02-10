@@ -4126,7 +4126,7 @@ ecgn_done:
 			"self-test: pair-wise consistency test failed",
 			(PRUint32)hSession,(PRUint32)pMechanism->mechanism,
 			(PRUint32)crv);
-	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
+	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, NSS_AUDIT_SELF_TEST, msg);
 	}
 	return crv;
     }

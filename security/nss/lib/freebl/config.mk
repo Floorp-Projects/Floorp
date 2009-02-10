@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -84,6 +83,10 @@ SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_
 
 RES     = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = freebl.rc
+
+ifndef WINCE
+OS_LIBS += shell32.lib
+endif
 
 ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \

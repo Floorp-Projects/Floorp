@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.40 2008/12/17 06:09:12 nelson%bolyard.com Exp $ */
+/* $Id: loader.c,v 1.41 2009/02/03 05:34:40 julien.pierre.boogz%sun.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -198,6 +198,13 @@ freebl_RunLoaderOnce( void )
   return status;
 }
 
+SECStatus 
+BL_Init(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_BL_Init)();
+}
 
 RSAPrivateKey * 
 RSA_NewKey(int keySizeInBits, SECItem * publicExponent)
@@ -1640,4 +1647,11 @@ Camellia_Decrypt(CamelliaContext *cx, unsigned char *output,
 	return SECFailure;
     return (vector->p_Camellia_Decrypt)(cx, output, outputLen, maxOutputLen, 
 					input, inputLen);
+}
+
+void BL_SetForkState(PRBool forked)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return;
+    (vector->p_BL_SetForkState)(forked);
 }

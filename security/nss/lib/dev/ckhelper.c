@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.38 $ $Date: 2008/09/30 04:09:02 $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.39 $ $Date: 2009/01/22 01:29:24 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -133,8 +133,8 @@ nssCKObject_GetAttributes (
 	/* Allocate memory for each attribute. */
 	for (i=0; i<count; i++) {
 	    CK_ULONG ulValueLen = obj_template[i].ulValueLen;
-	    if (ulValueLen == 0) continue;
-	    if (ulValueLen == (CK_ULONG) -1) {
+	    if (ulValueLen == 0 || ulValueLen == (CK_ULONG) -1) {
+		obj_template[i].pValue = NULL;
 		obj_template[i].ulValueLen = 0;
 		continue;
 	    }

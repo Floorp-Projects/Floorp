@@ -346,6 +346,7 @@ typedef PKIX_Error *
         PKIX_PL_Cert *cert,
         PKIX_PL_Cert *issuer,
         PKIX_PL_Date *date,
+        PKIX_Boolean delayCrlSigCheck,
         PKIX_UInt32 *reasonCode,
         PKIX_RevocationStatus *revStatus,
         void *plContext);
