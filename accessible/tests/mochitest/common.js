@@ -60,6 +60,7 @@ const ROLE_GRID_CELL = nsIAccessibleRole.ROLE_GRID_CELL;
 const ROLE_HEADING = nsIAccessibleRole.ROLE_HEADING;
 const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
+const ROLE_LISTBOX = nsIAccessibleRole.ROLE_LISTBOX;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
 const ROLE_PARAGRAPH = nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
