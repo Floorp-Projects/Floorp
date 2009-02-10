@@ -602,6 +602,9 @@ extern void
 js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
+js_FlushScriptFragments(JSContext* cx, JSScript* script);
+
+extern void
 js_FlushJITCache(JSContext* cx);
 
 extern void
