@@ -1539,7 +1539,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     jsval symbols;
     if (targetObj) {
-        JSAutoRequest ar(mContext);
+        JSCLContextHelper cx(this);
 
         if (!JS_GetProperty(mContext, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {

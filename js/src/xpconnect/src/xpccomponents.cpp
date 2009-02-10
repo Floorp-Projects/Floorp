@@ -3404,8 +3404,7 @@ ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
                       JSOPTION_PRIVATE_IS_NSISUPPORTS);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
-        JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback,
-                                JS_GetOperationLimit(aOuterCx));
+        JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback);
     }
 }
 
@@ -3421,7 +3420,6 @@ ContextHolder::ContextHolderOperationCallback(JSContext *cx)
     JSBool ok = JS_TRUE;
     if(callback)
         ok = callback(origCx);
-    JS_SetOperationLimit(cx, JS_GetOperationLimit(origCx));
     return ok;
 }
 

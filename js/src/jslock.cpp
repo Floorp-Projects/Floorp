@@ -459,6 +459,38 @@ js_FinishSharingTitle(JSContext *cx, JSTitle *title)
 }
 
 /*
+ * Notify all contexts that are currently in a request, which will give them a
+ * chance to yield their current request.
+ */
+void
+js_NudgeOtherContexts(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    JSContext *acx = NULL;
+
+    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
+        if (cx != acx)
+            JS_TriggerOperationCallback(acx);
+    }
+}
+
+/*
+ * Notify all contexts that are currently in a request and execute on this
+ * specific thread.
+ */
+void
+js_NudgeThread(JSContext *cx, JSThread *thread)
+{
+    JSRuntime *rt = cx->runtime;
+    JSContext *acx = NULL;
+    
+    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
+        if (cx != acx && cx->thread == thread)
+            JS_TriggerOperationCallback(acx);
+    }
+}
+
+/*
  * Given a title with apparently non-null ownercx different from cx, try to
  * set ownercx to cx, claiming exclusive (single-threaded) ownership of title.
  * If we claim ownership, return true.  Otherwise, we wait for ownercx to be
@@ -560,6 +592,8 @@ ClaimTitle(JSTitle *title, JSContext *cx)
                     JS_NOTIFY_REQUEST_DONE(rt);
             }
         }
+
+        js_NudgeThread(cx, ownercx->thread);
 
         /*
          * We know that some other thread's context owns title, which is now
