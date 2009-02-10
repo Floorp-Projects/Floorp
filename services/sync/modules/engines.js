@@ -181,8 +181,13 @@ SyncEngine.prototype = {
   },
 
   get baseURL() {
-    let url = Utils.prefs.getCharPref("serverURL");
-    if (url && url[url.length-1] != '/')
+    let url = Svc.Prefs.get("clusterURL");
+    if (!url)
+      return null;
+    // XXX tmp hack for sm-weave-proxy01
+    if (url == "https://sm-weave-proxy01.services.mozilla.com/")
+      return "https://sm-weave-proxy01.services.mozilla.com/weave/0.3/";
+    if (url[url.length-1] != '/')
       url += '/';
     url += "0.3/user/";
     return url;
@@ -287,7 +292,7 @@ SyncEngine.prototype = {
     this._store.cache.clear();
 
     let newitems = new Collection(this.engineURL, this._recordObj);
-    newitems.modified = this.lastSync;
+    newitems.newer = this.lastSync;
     newitems.full = true;
     newitems.sort = "depthindex";
     yield newitems.get(self.cb);
