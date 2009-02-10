@@ -1,0 +1,31 @@
+diff --git a/gfx/cairo/cairo/src/cairo-win32-font.c b/gfx/cairo/cairo/src/cairo-win32-font.c
+--- a/gfx/cairo/cairo/src/cairo-win32-font.c
++++ b/gfx/cairo/cairo/src/cairo-win32-font.c
+@@ -1182,22 +1182,22 @@ _add_glyph (cairo_glyph_state_t *state,
+     if (state->glyphs.num_elements > 0) {
+ 	int dx;
+ 
+ 	if (logical_y != state->last_y) {
+ 	    status = _flush_glyphs (state);
+ 	    if (status)
+ 		return status;
+ 	    state->start_x = logical_x;
++	} else {
++	    dx = logical_x - state->last_x;
++	    status = _cairo_array_append (&state->dx, &dx);
++	    if (status)
++		return status;
+ 	}
+-
+-	dx = logical_x - state->last_x;
+-	status = _cairo_array_append (&state->dx, &dx);
+-	if (status)
+-	    return status;
+     } else {
+ 	state->start_x = logical_x;
+     }
+ 
+     state->last_x = logical_x;
+     state->last_y = logical_y;
+ 
+     status = _cairo_array_append (&state->glyphs, &glyph_index);
