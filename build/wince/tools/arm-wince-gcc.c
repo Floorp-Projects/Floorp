@@ -34,7 +34,6 @@ main(int argc, char **argv)
   args[i++] = "/Zc:wchar_t-";          //
   args[i++] = "/GS-";                  // disable security checks
   args[i++] = "/GR-";                  // disable C++ RTTI
-  args[i++] = "/fp:fast";
 
   startOfArgvs = i;
 
