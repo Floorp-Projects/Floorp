@@ -166,7 +166,7 @@ NS_IMETHODIMP
 nsCommandLine::RemoveArguments(PRInt32 aStart, PRInt32 aEnd)
 {
   NS_ENSURE_ARG_MIN(aStart, 0);
-  NS_ENSURE_ARG_MAX(aEnd, mArgs.Length() - 1);
+  NS_ENSURE_ARG_MAX(aEnd + 1, mArgs.Length());
 
   for (PRInt32 i = aEnd; i >= aStart; --i) {
     mArgs.RemoveElementAt(i);

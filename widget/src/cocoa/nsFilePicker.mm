@@ -125,8 +125,8 @@ NSView* nsFilePicker::GetAccessoryView()
 
   // set up popup button
   NSPopUpButton* popupButton = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 0, 0) pullsDown:NO] autorelease];
-  PRInt32 numMenuItems = mTitles.Length();
-  for (int i = 0; i < numMenuItems; i++) {
+  PRUint32 numMenuItems = mTitles.Length();
+  for (PRUint32 i = 0; i < numMenuItems; i++) {
     const nsString& currentTitle = mTitles[i];
     NSString *titleString;
     if (currentTitle.IsEmpty()) {
@@ -423,7 +423,7 @@ nsFilePicker::GenerateFilterList()
     NSMutableString *giantFilterString = [[[NSMutableString alloc] initWithString:@""] autorelease];
 
     // Loop through each of the filter strings
-    for (PRInt32 loop = 0; PRInt32(loop < mFilters.Length()); loop++) {
+    for (PRUint32 loop = 0; loop < mFilters.Length(); loop++) {
       const nsString& filterWide = mFilters[loop];
 
       // separate individual filters

@@ -172,7 +172,7 @@ nsNameList::ContainsNS(const nsAString& aNamespaceURI, const nsAString& aName,
                        PRBool *aResult)
 {
   PRUint32 index = mNames.IndexOf(aName);
-  if (index != PRUint32(-1)) {
+  if (index != mNames.NoIndex) {
     *aResult = mNamespaceURIs[index].Equals(aNamespaceURI);
   }
   else {
