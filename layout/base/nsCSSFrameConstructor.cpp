@@ -8027,10 +8027,11 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       // Removing the letterframes messes around with the frame tree, removing
       // and creating frames.  We need to reget our prevsibling.
       ChildIterator::Init(container, &first, &last);
-      if (container == aContainer && !last.XBLInvolved()) {
-        last.seek(aIndexInContainer);
-      } else {
+      if (last.XBLInvolved() || container != aContainer) {
         last.seek(aChild);
+      } else if (aIndexInContainer != -1) {
+        last.seek(aIndexInContainer);
+        NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
       }
 
       prevSibling = FindPreviousSibling(first, last);
