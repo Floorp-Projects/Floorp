@@ -103,11 +103,6 @@ public:
   void  SetAutoValue(void);
   void  SetNoneValue(void);
 
-#ifdef DEBUG
-  void  AppendToString(nsString& aBuffer) const;
-  void  ToString(nsString& aBuffer) const;
-#endif
-
 public:
   nsStyleUnit   mUnit;
   nsStyleUnion  mValue;
@@ -149,11 +144,6 @@ public:
   inline void SetRight(const nsStyleCoord& aCoord);
   inline void SetBottom(const nsStyleCoord& aCoord);
 
-#ifdef DEBUG
-  void  AppendToString(nsString& aBuffer) const;
-  void  ToString(nsString& aBuffer) const;
-#endif
-
 protected:
   PRUint8       mUnits[4];
   nsStyleUnion  mValues[4];
@@ -181,11 +171,6 @@ public:
   void  Reset(void);
 
   inline void Set(PRUint8 aHalfCorner, const nsStyleCoord& aCoord);
-
-#ifdef DEBUG
-  void  AppendToString(nsString& aBuffer) const;
-  void  ToString(nsString& aBuffer) const;
-#endif
 
 protected:
   PRUint8       mUnits[8];

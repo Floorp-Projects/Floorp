@@ -56,8 +56,7 @@ interface nsILayoutRegressionTester : nsISupports
                                 whether the page was still loading, or whether some other error happened.
    */
   const short DUMP_FLAGS_MASK_DEFAULT        = 0;
-  const short DUMP_FLAGS_MASK_DUMP_STYLE     = 1;
-  const short DUMP_FLAGS_MASK_PRINT_MODE     = 2;
+  const short DUMP_FLAGS_MASK_PRINT_MODE     = 1;
   
   const long DUMP_RESULT_COMPLETED           = 0;   // loaded OK
   const long DUMP_RESULT_LOADING             = 1;   // still loading

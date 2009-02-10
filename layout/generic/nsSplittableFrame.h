@@ -109,7 +109,7 @@ protected:
   nsSplittableFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
 
 #ifdef DEBUG
-  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
+  virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
 #endif
 
   nsIFrame*   mPrevContinuation;
