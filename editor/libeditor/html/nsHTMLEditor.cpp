@@ -3727,9 +3727,9 @@ nsresult
 nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
 {
   // is it already in the list?
-  PRInt32 foundIndex;
+  PRUint32 foundIndex;
   foundIndex = mStyleSheetURLs.IndexOf(aURL);
-  if (foundIndex < 0)
+  if (foundIndex == mStyleSheetURLs.NoIndex)
     return NS_ERROR_FAILURE;
 
   // Attempt both removals; if one fails there's not much we can do.
@@ -3749,9 +3749,9 @@ nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
   *aStyleSheet = 0;
 
   // is it already in the list?
-  PRInt32 foundIndex;
+  PRUint32 foundIndex;
   foundIndex = mStyleSheetURLs.IndexOf(aURL);
-  if (foundIndex < 0)
+  if (foundIndex == mStyleSheetURLs.NoIndex)
     return NS_OK; //No sheet -- don't fail!
 
   *aStyleSheet = mStyleSheets[foundIndex];
@@ -3771,6 +3771,8 @@ nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
   PRInt32 foundIndex = mStyleSheets.IndexOf(aStyleSheet);
 
   // Don't fail if we don't find it in our list
+  // Note: mStyleSheets is nsCOMArray, so its IndexOf() method
+  // returns -1 on failure.
   if (foundIndex == -1)
     return NS_OK;
 

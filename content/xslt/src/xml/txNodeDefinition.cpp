@@ -254,7 +254,7 @@ nsresult NodeDefinition::getBaseURI(nsAString& aURI)
 
     while (count > 0) {
       nsAutoString dest;
-      URIUtils::resolveHref(*baseUrls[--count], aURI, dest);
+      URIUtils::resolveHref(baseUrls[--count], aURI, dest);
       aURI = dest;
     }
   }
