@@ -1456,7 +1456,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
 
     if (!move)
         copyOK = ::CopyFileW(filePath.get(), destPath.get(), PR_TRUE);
-    else
+    else {
 #ifndef WINCE
         copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
                                MOVEFILE_REPLACE_EXISTING |
@@ -1466,6 +1466,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         DeleteFile(destPath.get());
         copyOK = :: MoveFileW(filePath.get(), destPath.get());
 #endif
+    }
 
     if (!copyOK)  // CopyFile and MoveFileEx return zero at failure.
         rv = ConvertWinError(GetLastError());
@@ -2711,12 +2712,13 @@ nsLocalFile::Reveal()
 #endif
 }
 #ifdef WINCE 
-#ifdef UNICODE
-#define SHELLEXECUTEINFOW SHELLEXECUTEINFO
-#define ShellExecuteExW ShellExecuteEx
-#else
+#ifndef UNICODE
 #error "we don't support narrow char wince"
 #endif
+
+#define SHELLEXECUTEINFOW SHELLEXECUTEINFO
+#define ShellExecuteExW ShellExecuteEx
+
 #endif
 
 NS_IMETHODIMP
