@@ -73,6 +73,14 @@
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
 #ifdef WINCE
+
+/* These functions might or might not be present; FrameRect probably isn't,
+ * but GetViewportOrgEx might be -- so #define them to avoid name collisions.
+ */
+
+#define FrameRect moz_FrameRect
+#define GetViewportOrgEx moz_GetViewportOrgEx
+
 static int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
  {
    HBRUSH oldBrush = (HBRUSH)SelectObject(inDC, inBrush);
@@ -81,26 +89,30 @@ static int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
 
    // The width and height of the border are always one
    // logical unit.
-   // 1  ---->   2
-   //
-   //            |
-   //            v
-   //
-   // 4  ---->   3
-   
+
+   // move to top-left, and go clockwise.
    MoveToEx(inDC, myRect.left, myRect.top, (LPPOINT) NULL);
-   
    // 1 -> 2
    LineTo(inDC, myRect.right, myRect.top);
    // 2 -> 3
    LineTo(inDC, myRect.right, myRect.bottom);
    // 3 -> 4
    LineTo(inDC, myRect.left, myRect.bottom);
-   
+   // 4 -> 1
+   LineTo(inDC, myRect.left, myRect.top);
+
    SelectObject(inDC, oldBrush);
    return 1;
 }
 
+static BOOL
+GetViewportOrgEx(HDC hdc, LPPOINT lpPoint)
+{
+  SetViewportOrgEx(hdc, 0, 0, lpPoint);
+  if (lpPoint->x != 0 || lpPoint->y != 0)
+    SetViewportOrgEx(hdc, lpPoint->x, lpPoint->y, NULL);
+  return TRUE;
+}
 #endif
 
 static inline bool IsHTMLContent(nsIFrame *frame)
