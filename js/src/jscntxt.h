@@ -837,10 +837,10 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 
 struct JSContext {
     /*
-     * Operation count. It is declared as the first field in the struct to
-     * ensure the fastest possible access.
+     * If this flag is set, we were asked to call back the operation callback
+     * as soon as possible.
      */
-    volatile int32      operationCount;
+    volatile jsint      operationCallbackFlag;
 
     /* JSRuntime contextList linkage. */
     JSCList             link;
@@ -950,12 +950,7 @@ struct JSContext {
     /* Per-context optional error reporter. */
     JSErrorReporter     errorReporter;
 
-    /*
-     * Flag indicating that operationCallback stores the deprecated branch
-     * callback.
-     */
-    uint32              branchCallbackWasSet   :    1;
-    uint32              operationLimit         :    31;
+    /* Branch callback. */
     JSOperationCallback operationCallback;
 
     /* Interpreter activation count. */
@@ -1211,6 +1206,14 @@ extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
 
 /*
+ * Iterate through contexts with active requests. The caller must be holding
+ * rt->gcLock in case of a thread-safe build, or otherwise guarantee that the
+ * context list is not alternated asynchroniously.
+ */
+extern JS_FRIEND_API(JSContext *)
+js_NextActiveContext(JSRuntime *, JSContext *);
+
+/*
  * JSClass.resolve and watchpoint recursion damping machinery.
  */
 extern JSBool
@@ -1361,72 +1364,19 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #endif
 
 /*
- * Update the operation counter according to the given weight and call the
- * operation callback when we reach the operation limit. To make this
- * frequently executed macro faster we decrease the counter from
- * JSContext.operationLimit and compare against zero to check the limit.
- *
+ * If the operation callback flag was set, call the operation callback.
  * This macro can run the full GC. Return true if it is OK to continue and
  * false otherwise.
  */
-#define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
-    (JS_CHECK_OPERATION_WEIGHT(weight),                                       \
-     (((cx)->operationCount -= (weight)) > 0 || js_ResetOperationCount(cx)))
+#define JS_CHECK_OPERATION_LIMIT(cx) \
+    (!(cx)->operationCallbackFlag || js_InvokeOperationCallback(cx))
 
 /*
- * A version of JS_CHECK_OPERATION_LIMIT that just updates the operation count
- * without calling the operation callback or any other API. This macro resets
- * the count to 0 when it becomes negative to prevent a wrap-around when the
- * macro is called repeatably.
- */
-#define JS_COUNT_OPERATION(cx, weight)                                        \
-    ((void)(JS_CHECK_OPERATION_WEIGHT(weight),                                \
-            (cx)->operationCount = ((cx)->operationCount > 0)                 \
-                                   ? (cx)->operationCount - (weight)          \
-                                   : 0))
-
-/*
- * The implementation of the above macros assumes that subtracting weights
- * twice from a positive number does not wrap-around INT32_MIN.
- */
-#define JS_CHECK_OPERATION_WEIGHT(weight)                                     \
-    (JS_ASSERT((uint32) (weight) > 0),                                        \
-     JS_ASSERT((uint32) (weight) < JS_BIT(30)))
-
-/* Relative operations weights. */
-#define JSOW_JUMP                   1
-#define JSOW_ALLOCATION             100
-#define JSOW_LOOKUP_PROPERTY        5
-#define JSOW_GET_PROPERTY           10
-#define JSOW_SET_PROPERTY           20
-#define JSOW_NEW_PROPERTY           200
-#define JSOW_DELETE_PROPERTY        30
-#define JSOW_ENTER_SHARP            JS_OPERATION_WEIGHT_BASE
-#define JSOW_SCRIPT_JUMP            JS_OPERATION_WEIGHT_BASE
-
-/*
- * Reset the operation count and call the operation callback assuming that the
- * operation limit is reached.
+ * Invoke the operation callback and return false if the current execution
+ * is to be terminated.
  */
 extern JSBool
-js_ResetOperationCount(JSContext *cx);
-
-static JS_INLINE void
-js_InitOperationLimit(JSContext *cx)
-{
-    /*
-     * Set the limit to 1 + max to detect if JS_SetOperationLimit() was ever
-     * called.
-     */
-    cx->operationCount = (int32) JS_MAX_OPERATION_LIMIT + 1;
-    cx->operationLimit = JS_MAX_OPERATION_LIMIT + 1;
-}
-
-static JS_INLINE JSBool
-js_HasOperationLimit(JSContext *cx)
-{
-    return cx->operationLimit <= JS_MAX_OPERATION_LIMIT;
-}
+js_InvokeOperationCallback(JSContext *cx);
 
 /*
  * Get the current cx->fp, first lazily instantiating stack frames if needed.

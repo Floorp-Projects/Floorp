@@ -217,8 +217,6 @@ private:
   nsDOMWorker* mParent;
   nsCOMPtr<nsIXPConnectWrappedNative> mParentWN;
 
-  PRUint32 mCallbackCount;
-
   PRLock* mLock;
 
   nsRefPtr<nsDOMWorkerMessageHandler> mInnerHandler;
