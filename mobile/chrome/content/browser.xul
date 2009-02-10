@@ -204,7 +204,7 @@
     <vbox id="tabs-container" style="-moz-stack-sizing: ignore; width: 132px; height: 420px;"
           left="-132" top="60"
           constraint="ignore-y,vp-relative">
-      <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onclosetab="BrowserUI.closeTab(this);"/>
+      <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onmouseup="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this);"/>
       <hbox>
         <toolbarbutton id="newtab-button" command="cmd_newTab"/>
         <toolbarbutton id="retrievetab-button" command="" hidden="true"/>
