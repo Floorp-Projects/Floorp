@@ -145,6 +145,10 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
+namespace nanojit { 
+  class LirBuffer;
+}
+
 namespace avmplus {
     
     class GC;
@@ -158,13 +162,8 @@ namespace avmplus {
             return calloc(1, size);
         }
         
-        inline void*
-        operator new(size_t size, char* c)
-        {
-          // We use placement-new in LIR buffers sometimes.
-          memset(c, 0, size);
-          return c;
-        }
+        // We use placement-new in LIR buffers sometimes.
+        void* operator new(size_t size, nanojit::LirBuffer *buf);
     
         static void operator delete (void *gcObject)
         {

@@ -583,6 +583,7 @@
         callprop iterator                           # fun obj
         int8 (JSITER_ENUMERATE)                     # fun obj flags
         call 1                                      # iterobj
+        objtop (JSMSG_BAD_ITERATOR_RETURN)          # iterobj
         push                                        # iterobj undef
         stop
     .end
@@ -591,6 +592,7 @@
         callprop iterator                           # fun obj
         int8 (JSITER_ENUMERATE|JSITER_FOREACH)      # fun obj flags
         call 1                                      # iterobj
+        objtop (JSMSG_BAD_ITERATOR_RETURN)          # iterobj
         push                                        # iterobj undef
         stop
     .end
