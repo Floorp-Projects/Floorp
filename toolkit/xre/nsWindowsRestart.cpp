@@ -174,7 +174,16 @@ MakeCommandLine(int argc, PRUnichar **argv)
 
 #ifdef WINCE
   wchar_t *env = mozce_GetEnvironmentCL();
-  len += (wcslen(env));
+  // XXX There's a buffer overrun here somewhere that causes a heap
+  // check to fail in the final free of the results of this function
+  // in WinLaunchChild.  I can't honestly figure out where it is,
+  // because I'm pretty sure with the + 1 above and the wcslen here,
+  // we have enough room for a trailing NULL.  But, adding a little
+  // bit more slop (the +10) seems to fix the problem.
+  //
+  // Supposedly CreateProcessW can modify its arguments, so maybe it's
+  // doing some scribbling?
+  len += (wcslen(env)) + 10;
 #endif
 
   // Protect against callers that pass 0 arguments
@@ -300,7 +309,7 @@ WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv)
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   } else {
-    LPVOID lpMsgBuf;
+    LPVOID lpMsgBuf = NULL;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 		  FORMAT_MESSAGE_FROM_SYSTEM |
 		  FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -311,7 +320,7 @@ WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv)
 		  0,
 		  NULL
 		  );
-    wprintf(L"Error restarting: %s\n", lpMsgBuf);
+    wprintf(L"Error restarting: %s\n", lpMsgBuf ? lpMsgBuf : L"(null)");
   }
 
   free(cl);
