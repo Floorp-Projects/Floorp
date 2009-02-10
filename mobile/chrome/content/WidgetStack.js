@@ -340,8 +340,6 @@ WidgetStack.prototype = {
 
   _dragState: null,
 
-  _rectSanityCheck: true,
-
   //
   // init:
   //   el: the <stack> element whose children are to be managed
@@ -352,8 +350,8 @@ WidgetStack.prototype = {
     this._barriers = [];
 
     let rect = this._el.getBoundingClientRect();
-    let width = rect.right - rect.left;
-    let height = rect.bottom - rect.top;
+    let width = rect.width;
+    let height = rect.height;
 
     if (ew != undefined && eh != undefined) {
       width = ew;
@@ -363,8 +361,6 @@ WidgetStack.prototype = {
     this._viewportOverflow = new wsBorder(0, 0, 0, 0);
 
     this._viewingRect = new wsRect(0, 0, width, height);
-
-    log ("viewingRect:", this._viewingRect);
 
     // listen for DOMNodeInserted/DOMNodeRemoved/DOMAttrModified
     let children = this._el.childNodes;
@@ -418,9 +414,10 @@ WidgetStack.prototype = {
   //
   // if ignoreBarriers is true, then barriers are ignored for the pan.
   panBy: function panBy(dx, dy, ignoreBarriers) {
-    let needsDragWrap = !this._dragging;
+    if (dx == 0 && dy ==0)
+      return;
 
-    //log2("tlc rect.x start", this._widgetState['tab-list-container'].rect.x, needsDragWrap);
+    let needsDragWrap = !this._dragging;
 
     if (needsDragWrap)
       this.dragStart(0, 0);
@@ -429,14 +426,12 @@ WidgetStack.prototype = {
 
     if (needsDragWrap)
       this.dragStop();
-
-    //log2("tlc rect.x", this._widgetState['tab-list-container'].rect.x);
   },
 
   // panTo: pan the entire set of widgets so that the given x,y coordinates
   // are in the upper left of the stack.
   panTo: function (x, y) {
-    this.panBy(this._viewingRect.x - x, this._viewingRect.y - y, true);
+    this.panBy(x - this._viewingRect.x, y - this._viewingRect.y, true);
   },
 
   // freeze: set a widget as frozen.  A frozen widget won't be moved
@@ -541,8 +536,6 @@ WidgetStack.prototype = {
     } else {
       throw "Invalid number of arguments to setViewportBounds";
     }
-
-    log2("setViewportBounds old:", oldBounds.toString(), "new:", this._viewportBounds);
 
     let vp = this._viewport;
 
@@ -658,7 +651,6 @@ WidgetStack.prototype = {
       // create a copy of these so that we can compute
       // deltas correctly to update the viewport
       this._viewport.dragStartRect = this._viewport.rect.clone();
-      this._viewport.dragStartOffsets = this._panRegionOffsets();
     }
 
     this._dragState.dragging = true;
@@ -674,8 +666,7 @@ WidgetStack.prototype = {
     if (this._viewportUpdateTimeout != -1)
       clearTimeout(this._viewportUpdateTimeout);
 
-    if (this._viewport)
-      this._viewportUpdate();
+    this._viewportUpdate();
 
     this._dragState = null;
   },
@@ -718,8 +709,8 @@ WidgetStack.prototype = {
     //  this._updateWidgetRect(s);
     //this._updateViewportOverflow();
 
-    this._viewingRect.width = Math.min(width, this._viewportBounds.width);
-    this._viewingRect.height = Math.min(height, this._viewportBounds.height);
+    this._viewingRect.width = width;
+    this._viewingRect.height = height;
 
     this._adjustViewingRect();
   },
@@ -770,22 +761,18 @@ WidgetStack.prototype = {
     if (vr.height > pb.height || vr.width > pb.width)
       return;
 
-    this._rectSanityCheck = false;
-
     let panX = 0, panY = 0;
     if (vr.right > pb.right)
-      panX = vr.right - pb.right;
+      panX = pb.right - vr.right;
     else if (vr.left < pb.left)
-      panX = vr.left - pb.left;
+      panX = pb.left - vr.left;
 
     if (vr.bottom > pb.bottom)
-      panY = vr.bottom - pb.bottom;
+      panY = pb.bottom - vr.bottom;
     else if(vr.top < pb.top)
-      panY = vr.top - pb.top;
+      panY = pb.top - vr.top;
 
-    this.panBy(panX, panY);
-
-    this._rectSanityCheck = true;
+    this.panBy(panX, panY, true);
   },
 
   _getState: function (wid) {
@@ -850,85 +837,39 @@ WidgetStack.prototype = {
     this._dragState.dragging = true;
   },
 
-  // returns the amount of change needed to move _viewingRect back within
-  // _viewportBounds
-  _panRegionOffsets: function () {
-    let ioffsetx = 0;
-    let ioffsety = 0;
-
-    // _viewingRect is the currently visible part of the entire stack,
-    // but it's in the coordinates of the pannableBounds -- that is,
-    // the _viewingRect origin maps to 0,0 in the stack.
-    //
-    // _viewportBounds on the other hand, is in the origin of the
-    // viewport -- usually at 0,0.
-    //
-    // But, this still seems to work -- I thought there was a bug
-    // here, and there still might be.  An alternative is to just not
-    // do this, always snap the canvas back to 0,0 -unless- that would
-    // cause the viewport inner bounds to go outside the viewport
-    // bounds (in _viewportUpdate).
-
-    if (this._viewingRect.left < this._viewportBounds.left)
-      ioffsetx = this._viewportBounds.left - this._viewingRect.left;
-    else if (this._viewingRect.right > this._viewportBounds.right)
-      ioffsetx = this._viewportBounds.right - this._viewingRect.right;
-
-    if (this._viewingRect.top < this._viewportBounds.top)
-      ioffsety = this._viewportBounds.top - this._viewingRect.top;
-    else if (this._viewingRect.bottom > this._viewportBounds.bottom)
-      ioffsety = this._viewportBounds.bottom - this._viewingRect.bottom;
-
-    return [ioffsetx, ioffsety];
-  },
-
-  _viewportUpdate: function _viewportUpdate(force) {
+  _viewportUpdate: function _viewportUpdate() {
     if (!this._viewport)
       return;
-
-    let needsUpdate = force;
 
     this._viewportUpdateTimeout = -1;
 
     let vws = this._viewport;
+    let vwib = vws.viewportInnerBounds;
+    let vpb = this._viewportBounds;
 
-    let [ioffsetx, ioffsety] = this._panRegionOffsets();
+    // recover the amount the inner bounds moved by the amount the viewport
+    // widget moved, but don't include offsets that we're making up from previous
+    // drags that didn't affect viewportInnerBounds
+    let [ignoreX, ignoreY] = this._offsets || [0, 0];
+    let rx = (vws.dragStartRect.x - vws.rect.x) - ignoreX;
+    let ry = (vws.dragStartRect.y - vws.rect.y) - ignoreY;
 
-    // recover the amount the inner bounds moved by the amount the viewport widget moved.
-    // the rects are in screen space though, so we have to convert them to the virtual
-    // coordinate space.
-    if (this._dragging) {
-      let idx = (vws.dragStartRect.x - vws.dragStartOffsets[0]) - (vws.rect.x - ioffsetx);
-      let idy = (vws.dragStartRect.y - vws.dragStartOffsets[1]) - (vws.rect.y - ioffsety);
+    let [dX, dY] = this._rectTranslateConstrain(rx, ry, vwib, vpb);
 
-      if (idx || idy) {
-        vws.viewportInnerBounds.translate(idx, idy);
-        needsUpdate = true;
-      }
-    }
+    // record the offsets that correpond to the amount of the drag we're ignoring
+    // to ensure the viewportInnerBounds remains within the viewportBounds
+    this._offsets = [dX - rx, dY - ry];
 
-    // Attempt to snap the viewport widget back to its origin, if necessary.
-    // Check to see if any part of the viewport widget is outside of the
-    // rectangle formed by 0,0,w,h, where w and h come from the current viewingRect.
-    // This must be done after the above, since we'll manipulate vws.rect here.
-    let boundsRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
-    if (!boundsRect.contains(vws.rect)) {
-      vws.rect.x = ioffsetx;
-      vws.rect.y = ioffsety;
+    // adjust the viewportInnerBounds, and snap the viewport back
+    vwib.translate(dX, dY);
+    vws.rect.translate(dX, dY);
+    this._commitState(vws);
 
-      this._commitState(vws);
-      needsUpdate = true;
-    }
+    // update this so that we can call this function again during the same drag
+    // and get the right values.
+    vws.dragStartRect = vws.rect.clone();
 
-    // if we're dragging, update this so that we can call this function again
-    // during the same drag and get the right values.
-    if (this._dragging) {
-      vws.dragStartOffsets = [ioffsetx, ioffsety];
-      vws.dragStartRect = vws.rect.clone();
-    }
-
-    if (needsUpdate)
-      this._callViewportUpdateHandler(false);
+    this._callViewportUpdateHandler(false);
   },
 
   _callViewportUpdateHandler: function _callViewportUpdateHandler(boundsChanged) {
@@ -1099,18 +1040,10 @@ WidgetStack.prototype = {
   },
 
   _panBy: function _panBy(dx, dy, ignoreBarriers) {
-    // initially we work in viewingRect coords, so the direction
-    // of the move is opposite from the direction of the pan
-    dx = -dx;
-    dy = -dy;
-
     let vr = this._viewingRect;
 
     // check if any barriers would be crossed by this pan, and take them
     // into account.  do this first.
-
-    log2("******* _panBy", dx, dy, "v lr", vr.left, vr.right, "tb", vr.top, vr.bottom);
-
     if (!ignoreBarriers)
       [dx, dy] = this._panHandleBarriers(dx, dy);
 
@@ -1119,9 +1052,7 @@ WidgetStack.prototype = {
     // direction of the pan, so we fiddle with the signs here (as you
     // pan to the upper left, more of the bottom right becomes visible,
     // so the viewing rect moves to the bottom right of the virtual surface).
-    log2("rectTranslateConstrain in", dx, dy);
     [dx, dy] = this._rectTranslateConstrain(dx, dy, vr, this.pannableBounds);
-    log2("rectTranslateConstrain out", dx, dy);
 
     // If the net result is that we don't have any room to move, then
     // just return.
@@ -1151,13 +1082,13 @@ WidgetStack.prototype = {
   },
 
   _dragUpdate: function () {
-    let dx = this._dragState.outerDX - this._dragState.outerLastUpdateDX;
-    let dy = this._dragState.outerDY - this._dragState.outerLastUpdateDY;
+    let dx = this._dragState.outerLastUpdateDX - this._dragState.outerDX;
+    let dy = this._dragState.outerLastUpdateDY - this._dragState.outerDY;
 
     this._dragState.outerLastUpdateDX = this._dragState.outerDX;
     this._dragState.outerLastUpdateDY = this._dragState.outerDY;
 
-    this._panBy(dx, dy);
+    this.panBy(dx, dy);
   },
 
   //
@@ -1338,30 +1269,29 @@ WidgetStack.prototype = {
   // constrain translate of rect by dx dy to bounds; return dx dy that can
   // be used to bring rect up to the edge of bounds if we'd go over.
   _rectTranslateConstrain: function (dx, dy, rect, bounds) {
-    if (this._rectSanityCheck && !bounds.contains(rect)) {
-      throw "Invalid rectTranslateConstrain -- rect already outside bounds! rect: " + rect.toString() + " bounds: " + bounds.toString();
+    let newX, newY;
+
+    // If the rect is larger than the bounds, allow it to increase its overlap
+    let woverflow = rect.width > bounds.width;
+    let hoverflow = rect.height > bounds.height;
+    if (woverflow || hoverflow) {
+      intersection = rect.intersect(bounds);
+      newIntersection = rect.clone().translate(dx, dy).intersect(bounds);
+      if (woverflow)
+        newX = (newIntersection.width > intersection.width) ? rect.x + dx : rect.x;
+      if (hoverflow)
+        newY = (newIntersection.height > intersection.height) ? rect.y + dy : rect.y;
     }
 
-    let nleft = rect.left + dx;
-    let nright = rect.right + dx;
-    let ntop = rect.top + dy;
-    let nbot = rect.bottom + dy;
+    // Common case, rect fits within the bounds
+    // clamp new X to within [bounds.left, bounds.right - rect.width],
+    //       new Y to within [bounds.top, bounds.bottom - rect.height]
+    if (isNaN(newX))
+      newX = Math.min(Math.max(bounds.left, rect.x + dx), bounds.right - rect.width);
+    if (isNaN(newY))
+      newY = Math.min(Math.max(bounds.top, rect.y + dy), bounds.bottom - rect.height);
 
-    // did we move too far to the left or right?
-    if (nleft < bounds.left) {
-      dx = bounds.left - rect.left;
-    } else if (nright > bounds.right) {
-      dx = bounds.right - rect.right;
-    }
-
-    // did we move too far to the top or bottom?
-    if (ntop < bounds.top) {
-      dy = bounds.top - rect.top;
-    } else if (nbot > bounds.bottom) {
-      dy = bounds.bottom - rect.bottom;
-    }
-
-    return [dx, dy];
+    return [newX - rect.x, newY - rect.y];
   },
 
   // add a new barrier from a <spacer>
