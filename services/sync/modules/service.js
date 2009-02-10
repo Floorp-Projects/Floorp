@@ -431,21 +431,22 @@ WeaveSvc.prototype = {
   findCluster: function WeaveSvc_findCluster(onComplete, username) {
     let fn = function WeaveSvc__findCluster() {
       let self = yield;
-      if (Svc.Prefs.get("independentNode")) {
-	this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-	this.clusterURL = Svc.Prefs.get("serverURL");
-	self.done(true);
-	return;
-      }
+      let ret = false;
+
       this._log.debug("Finding cluster for user " + username);
       let res = new Resource(this.baseURL + "api/register/chknode/" + username);
       yield res.get(self.cb);
-      if (res.lastChannel.responseStatus != 200) {
-	self.done(false);
-	return;
+
+      if (res.lastChannel.responseStatus == 404) {
+        this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
+        this.clusterURL = Svc.Prefs.get("serverURL");
+        ret = true;
+
+      } else if (res.lastChannel.responseStatus == 200) {
+        this.clusterURL = 'https://' + res.data + '/';
+        ret = true;
       }
-      this.clusterURL = 'https://' + res.data + '/';
-      self.done(true);
+      self.done(ret);
     };
     fn.async(this, onComplete);
   },
