@@ -2169,8 +2169,9 @@ nsUrlClassifierDBServiceWorker::GetShaEntries(PRUint32 tableId,
           return NS_ERROR_FAILURE;
         }
         const nsCSubstring& str = Substring(chunk, start, 4);
-        const PRUint32 *p = reinterpret_cast<const PRUint32*>(str.BeginReading());
-        entry->mAddChunkId = PR_ntohl(*p);
+        PRUint32 p;
+        memcpy(&p, str.BeginReading(), 4);
+        entry->mAddChunkId = PR_ntohl(p);
         if (entry->mAddChunkId == 0) {
           NS_WARNING("Received invalid chunk number.");
           return NS_ERROR_FAILURE;
@@ -2198,8 +2199,9 @@ nsUrlClassifierDBServiceWorker::GetShaEntries(PRUint32 tableId,
 
         if (chunkType == CHUNK_SUB) {
           const nsCSubstring& str = Substring(chunk, start, 4);
-          const PRUint32 *p = reinterpret_cast<const PRUint32*>(str.BeginReading());
-          entry->mAddChunkId = PR_ntohl(*p);
+          PRUint32 p;
+          memcpy(&p, str.BeginReading(), 4);
+          entry->mAddChunkId = PR_ntohl(p);
           if (entry->mAddChunkId == 0) {
             NS_WARNING("Received invalid chunk number.");
             return NS_ERROR_FAILURE;
