@@ -347,7 +347,7 @@ var Browser = {
     document.getElementById("tabs").selectedItem = tab.content;
 
     if (!firstTab) {
-      ws.panTo(0,0, true);
+      ws.panTo(0, 0, true);
 
       let webProgress = this.selectedBrowser.webProgress;
       let securityUI = this.selectedBrowser.securityUI;

@@ -632,11 +632,14 @@ var BrowserUI = {
 
   closeTab : function(aTab) {
     Browser.closeTab(aTab);
-    this.show(UIMODE_NONE);
   },
 
   selectTab : function(aTab) {
     Browser.selectedTab = aTab;
+  },
+
+  hideTabs : function() {
+    ws.panTo(0, 0);
     this.show(UIMODE_NONE);
   },
 
