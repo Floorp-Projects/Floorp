@@ -62,7 +62,9 @@
 //---------------------------------------------------------------------------
 
 GK_ATOM(_empty, "")
+GK_ATOM(moz, "_moz")
 GK_ATOM(mozdirty, "_moz_dirty")
+GK_ATOM(mozeditorbogusnode, "_moz_editor_bogus_node")
 GK_ATOM(mozgeneratedcontentbefore, "_moz_generated_content_before")
 GK_ATOM(mozgeneratedcontentafter, "_moz_generated_content_after")
 GK_ATOM(mozgeneratedcontentimage, "_moz_generated_content_image")
