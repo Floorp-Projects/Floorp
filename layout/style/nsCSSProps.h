@@ -188,6 +188,7 @@ public:
   static const PRInt32 kColorInterpolationKTable[];
 #endif
   static const PRInt32 kBoxPropSourceKTable[];
+  static const PRInt32 kBoxShadowTypeKTable[];
   static const PRInt32 kBoxSizingKTable[];
   static const PRInt32 kCaptionSideKTable[];
   static const PRInt32 kClearKTable[];

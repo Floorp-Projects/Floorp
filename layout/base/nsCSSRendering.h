@@ -61,11 +61,17 @@ struct nsCSSRendering {
    */
   static void Shutdown();
   
-  static void PaintBoxShadow(nsPresContext* aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             nsIFrame* aForFrame,
-                             const nsPoint& aForFramePt,
-                             const nsRect& aDirtyRect);
+  static void PaintBoxShadowInner(nsPresContext* aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  nsIFrame* aForFrame,
+                                  const nsRect& aFrameArea,
+                                  const nsRect& aDirtyRect);
+
+  static void PaintBoxShadowOuter(nsPresContext* aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  nsIFrame* aForFrame,
+                                  const nsRect& aFrameArea,
+                                  const nsRect& aDirtyRect);
 
   /**
    * Render the border for an element using css rendering rules

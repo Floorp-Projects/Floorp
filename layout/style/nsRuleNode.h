@@ -712,7 +712,7 @@ protected:
   NS_HIDDEN_(already_AddRefed<nsCSSShadowArray>)
                           GetShadowData(nsCSSValueList* aList,
                                         nsStyleContext* aContext,
-                                        PRBool aUsesSpread,
+                                        PRBool aIsBoxShadow,
                                         PRBool& inherited);
 
 private:

@@ -2937,7 +2937,7 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
 already_AddRefed<nsCSSShadowArray>
 nsRuleNode::GetShadowData(nsCSSValueList* aList,
                           nsStyleContext* aContext,
-                          PRBool aUsesSpread,
+                          PRBool aIsBoxShadow,
                           PRBool& canStoreInRuleTree)
 {
   PRUint32 arrayLength = 0;
@@ -2981,7 +2981,7 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
     }
 
     // Find the spread radius
-    if (aUsesSpread && arr->Item(3).GetUnit() != eCSSUnit_Null) {
+    if (aIsBoxShadow && arr->Item(3).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
                         SETCOORD_LENGTH, aContext, mPresContext,
                         canStoreInRuleTree);
@@ -2997,6 +2997,14 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
       unitOK = SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
                         canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
+    }
+
+    if (aIsBoxShadow && arr->Item(5).GetUnit() == eCSSUnit_Enumerated) {
+      NS_ASSERTION(arr->Item(5).GetIntValue() == NS_STYLE_BOX_SHADOW_INSET,
+                   "invalid keyword type for box shadow");
+      item->mInset = PR_TRUE;
+    } else {
+      item->mInset = PR_FALSE;
     }
   }
 
