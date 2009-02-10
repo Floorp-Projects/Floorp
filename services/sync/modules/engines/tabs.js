@@ -100,6 +100,13 @@ TabStore.prototype = {
     return Clients.clientName;
   },
 
+  get _fennecTabs() {
+    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+	       .getService(Ci.nsIWindowMediator);
+    let browserWindow = wm.getMostRecentWindow("navigator:browser");
+    return browserWindow.Browser._tabs;
+  },
+
   _writeToFile: function TabStore_writeToFile() {
     // use JSON service to serialize the records...
     this._log.debug("Writing out to file...");
@@ -138,7 +145,6 @@ TabStore.prototype = {
   },
 
   get _sessionStore() {
-    // TODO: sessionStore seems to not exist on Fennec?
     let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
 		       getService(Ci.nsISessionStore);
     this.__defineGetter__("_sessionStore", function() { return sessionStore;});
@@ -151,29 +157,40 @@ TabStore.prototype = {
     return this._json;
   },
 
-  _createLocalClientTabSetRecord: function TabStore__createLocalTabSet() {
-    let session = this._json.decode(this._sessionStore.getBrowserState());
+  _addTabToRecord: function( tab, record ) {
+    // TODO contentDocument not defined for fennec's tab objects
+    let title = tab.contentDocument.title.innerHtml; // will this work?
+    this._log.debug("Wrapping a tab with title " + title);
+    let urlHistory = [];
+    let entries = tab.entries.slice(tab.entries.length - 10);
+    for (let entry in entries) {
+      urlHistory.push( entry.url );
+    }
+    record.addTab(title, urlHistory);
+  },
 
+  _createLocalClientTabSetRecord: function TabStore__createLocalTabSet() {
+    // Test for existence of sessionStore.  If it doesn't exist, then
+    // use get _fennecTabs instead.
     let record = new TabSetRecord();
     record.setClientName( this._localClientName );
 
-    for (let i = 0; i < session.windows.length; i++) {
-      let window = session.windows[i];
-      // For some reason, session store uses one-based array index references,
-      // (f.e. in the "selectedWindow" and each tab's "index" properties), so we
-      // convert them to and from JavaScript's zero-based indexes as needed.
-      let windowID = i + 1;
+    if (Cc["@mozilla.org/browser/sessionstore;1"])  {
+      let session = this._json.decode(this._sessionStore.getBrowserState());
+      for (let i = 0; i < session.windows.length; i++) {
+	let window = session.windows[i];
+	/* For some reason, session store uses one-based array index references,
+	 (f.e. in the "selectedWindow" and each tab's "index" properties), so we
+	 convert them to and from JavaScript's zero-based indexes as needed. */
+	let windowID = i + 1;
 
-      for (let j = 0; j < window.tabs.length; j++) {
-        let tab = window.tabs[j];
-	let title = tab.contentDocument.title.innerHtml; // will this work?
-	this._log.debug("Wrapping a tab with title " + title);
-	let urlHistory = [];
-	let entries = tab.entries.slice(tab.entries.length - 10);
-	for (let entry in entries) {
-	  urlHistory.push( entry.url );
+	for (let j = 0; j < window.tabs.length; j++) {
+	  this._addTabToRecord(window.tabs[j], record);
 	}
-	record.addTab(title, urlHistory);
+      }
+    } else {
+      for each ( let tab in this._fennecTabs) {
+	this._addTabToRecord(tab, record);
       }
     }
     return record;
@@ -279,7 +296,8 @@ TabTracker.prototype = {
 
     // Register me as an observer!!  Listen for tabs opening and closing:
     // TODO We need to also register with any windows that are ALREDY
-    // open.
+    // open.  On Fennec maybe try to get this from getBrowser(), which is
+    // defined differently but should still exist...
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
 	       .getService(Ci.nsIWindowWatcher);
     dump("Initialized TabTracker\n");
