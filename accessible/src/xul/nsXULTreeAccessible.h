@@ -129,7 +129,8 @@ public:
   NS_IMETHOD SetSelected(PRBool aSelect); 
   NS_IMETHOD TakeFocus(void); 
 
-  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 
   // nsIAccessNode
   NS_IMETHOD GetUniqueID(void **aUniqueID);

@@ -70,6 +70,7 @@
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIMutableArray.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -740,6 +741,51 @@ nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
          !walkUp->GetAttr(kNameSpaceID_None,
                           nsAccessibilityAtoms::lang, aLanguage))
     walkUp = walkUp->GetParent();
+}
+
+void
+nsCoreUtils::GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
+                                     nsIArray **aRefElements)
+{
+  *aRefElements = nsnull;
+  
+  nsAutoString ids;
+  if (!aContent->GetAttr(kNameSpaceID_None, aAttr, ids))
+    return;
+  
+  ids.CompressWhitespace(PR_TRUE, PR_TRUE);
+  
+  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(aContent->GetOwnerDoc());
+  NS_ASSERTION(document, "The given node is not in document!");
+  if (!document)
+    return;
+
+  nsCOMPtr<nsIMutableArray> refElms = do_CreateInstance(NS_ARRAY_CONTRACTID);
+
+  while (!ids.IsEmpty()) {
+    nsAutoString id;
+    PRInt32 idLength = ids.FindChar(' ');
+    NS_ASSERTION(idLength != 0,
+                 "Should not be 0 because of CompressWhitespace() call above");
+
+    if (idLength == kNotFound) {
+      id = ids;
+      ids.Truncate();
+    } else {
+      id = Substring(ids, 0, idLength);
+      ids.Cut(0, idLength + 1);
+    }
+
+    nsCOMPtr<nsIDOMElement> refElement;
+    document->GetElementById(id, getter_AddRefs(refElement));
+    if (!refElement)
+      continue;
+
+    refElms->AppendElement(refElement, PR_FALSE);
+  }
+
+  NS_ADDREF(*aRefElements = refElms);
+  return;
 }
 
 void

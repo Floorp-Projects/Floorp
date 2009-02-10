@@ -28,21 +28,32 @@
       testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
       testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
 
+      // aria-labelledby, multiple relations
+      testRelation("label3", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("label4", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("checkbox3", RELATION_LABELLED_BY, ["label3", "label4"]);
+
       // aria-describedby
-      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox3");
-      testRelation("checkbox3", RELATION_DESCRIBED_BY, "descr1");
+      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox4");
+      testRelation("checkbox4", RELATION_DESCRIBED_BY, "descr1");
+
+      // aria-describedby, multiple relations
+      testRelation("descr2", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("descr3", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("checkbox5", RELATION_DESCRIBED_BY, ["descr2", "descr3"]);
 
       // xul:description@control
-      testRelation("descr2", RELATION_DESCRIPTION_FOR, "checkbox4");
-      testRelation("checkbox4", RELATION_DESCRIBED_BY, "descr2");
+      testRelation("descr4", RELATION_DESCRIPTION_FOR, "checkbox6");
+      testRelation("checkbox6", RELATION_DESCRIBED_BY, "descr4");
 
-      // aria_owns
+      // aria_owns, multiple relations
       testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
 
       // 'node child of' relation for outlineitem role
-      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
-      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "treeitem3");
+      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
 
       // 'node child of' relation for the document having window, returns
       // direct accessible parent (fixed in bug 419770).
@@ -56,9 +67,19 @@
       testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
       testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
 
+      // aria-controls, multiple relations
+      testRelation("lr1", RELATION_CONTROLLED_BY, "button");
+      testRelation("lr2", RELATION_CONTROLLED_BY, "button");
+      testRelation("button", RELATION_CONTROLLER_FOR, ["lr1", "lr2"]);
+
       // aria-flowto
       testRelation("flowto", RELATION_FLOWS_TO, "flowfrom");
       testRelation("flowfrom", RELATION_FLOWS_FROM, "flowto");
+
+      // aria-flowto, multiple relations
+      testRelation("flowto1", RELATION_FLOWS_TO, ["flowfrom1", "flowfrom2"]);
+      testRelation("flowfrom1", RELATION_FLOWS_FROM, "flowto1");
+      testRelation("flowfrom2", RELATION_FLOWS_FROM, "flowto1");
 
       // 'default button' relation
       testRelation("textbox", RELATION_DEFAULT_BUTTON, "submit");
@@ -113,17 +134,28 @@
     <description id="label2">label</description>
     <description role="checkbox" id="checkbox2" aria-labelledby="label2"/>
 
-    <description id="descr1">description</description>
-    <description role="checkbox" id="checkbox3" aria-describedby="descr1"/>
+    <description id="label3">label</description>
+    <description id="label4">label</description>
+    <description role="checkbox" id="checkbox3"
+                 aria-labelledby="label3 label4"/>
 
-    <description id="descr2" control="checkbox4">description</description>
-    <checkbox id="checkbox4"/>
+    <description id="descr1">description</description>
+    <description role="checkbox" id="checkbox4" aria-describedby="descr1"/>
+
+    <description id="descr2">label</description>
+    <description id="descr3">label</description>
+    <description role="checkbox" id="checkbox5"
+                 aria-describedby="descr2 descr3"/>
+
+    <description id="descr4" control="checkbox6">description</description>
+    <checkbox id="checkbox6"/>
 
     <description role="treeitem" id="treeitem1">Yellow</description>
-    <vbox id="tree" role="tree" aria-owns="treeitem1">
-      <description role="treeitem" id="treeitem2">Blue</description>
-      <description role="treeitem" id="treeitem3" aria-level="1">Green</description>
-      <description role="treeitem" id="treeitem4" aria-level="2">Light green</description>
+    <description role="treeitem" id="treeitem2">Orange</description>
+    <vbox id="tree" role="tree" aria-owns="treeitem1 treeitem2">
+      <description role="treeitem" id="treeitem3">Blue</description>
+      <description role="treeitem" id="treeitem4" aria-level="1">Green</description>
+      <description role="treeitem" id="treeitem5" aria-level="2">Light green</description>
     </vbox>
 
     <iframe id="iframe"/>
@@ -132,6 +164,15 @@
       <description id="tab" role="tab" aria-controls="tabpanel">tab</description>
     </hbox>
     <description id="tabpanel" role="tabpanel">tabpanel</description>
+
+    <description id="lr1" aria-live="assertive">1</description>
+    <description id="lr2" aria-live="assertive">a</description>
+    <button id="button" aria-controls="lr1 lr2" label="button"
+            oncommand="getNode('lr1').textContent += '1'; getNode('lr2').textContent += 'a';"/>
+
+    <description id="flowto1" aria-flowto="flowfrom1 flowfrom2">flow to</description>
+    <description id="flowfrom1">flow from</description>
+    <description id="flowfrom2">flow from</description>
 
     <description id="flowto" aria-flowto="flowfrom">flow to</description>
     <description id="flowfrom">flow from</description>

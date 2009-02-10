@@ -283,6 +283,22 @@ function relationTypeToString(aRelationType)
   return gAccRetrieval.getStringRelationType(aRelationType);
 }
 
+/**
+ * Return pretty name for identifier, it may be ID, DOM node or accessible.
+ */
+function prettyName(aIdentifier)
+{
+  if (aIdentifier instanceof nsIAccessible) {
+    var acc = getAccessible(aIdentifier, [nsIAccessNode]);
+    return getNodePrettyName(acc.DOMNode);
+  }
+
+  if (aIdentifier instanceof nsIDOMNode)
+    return getNodePrettyName(aIdentifier);
+
+  return " '" + aIdentifier + "' ";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,3 +313,11 @@ function initialize()
 }
 
 addLoadEvent(initialize);
+
+function getNodePrettyName(aNode)
+{
+  if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE && aNode.hasAttribute("id"))
+    return " '" + aNode.getAttribute("id") + "' ";
+
+  return " '" + aNode.localName + " node' ";
+}

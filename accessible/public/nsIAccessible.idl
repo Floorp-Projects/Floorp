@@ -58,7 +58,7 @@ interface nsIAccessibleRelation;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(670fc322-14ec-4f3b-8279-9d62ab8895c0)]
+[scriptable, uuid(76c72c70-2c4b-4fce-8e75-b121db024333)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -251,10 +251,10 @@ interface nsIAccessible : nsISupports
   nsIAccessible getAccessibleBelow();
 
   /**
-   * Return accessible related to this one by the given relation type (see.
+   * Return accessible relation by the given relation type (see.
    * constants defined in nsIAccessibleRelation).
    */
-  nsIAccessible getAccessibleRelated(in unsigned long aRelationType);
+  nsIAccessibleRelation getRelationByType(in unsigned long aRelationType);
 
   /**
    * Returns the number of accessible relations for this object.
