@@ -1653,6 +1653,14 @@ static int tableExists(sqlite3 *sqlDB, const char *tableName)
     return (sqlerr == SQLITE_OK) ? 1 : 0;
 }
 
+void sdb_SetForkState(PRBool forked)
+{
+    /* XXXright now this is a no-op. The global fork state in the softokn3
+     * shared library is already taken care of at the PKCS#11 level.
+     * If and when we add fork state to the sqlite shared library and extern
+     * interface, we will need to set it and reset it from here */
+}
+
 /*
  * initialize a single database
  */
@@ -1900,6 +1908,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     sdb->sdb_Commit = sdb_Commit;
     sdb->sdb_Abort = sdb_Abort;
     sdb->sdb_Close = sdb_Close;
+    sdb->sdb_SetForkState = sdb_SetForkState;
 
     if (inTransaction) {
 	sqlerr = sqlite3_exec(sqlDB, COMMIT_CMD, NULL, 0, NULL);

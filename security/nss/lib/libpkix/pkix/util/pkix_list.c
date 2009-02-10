@@ -1225,7 +1225,10 @@ pkix_List_BubbleSort(
 
         PKIX_ENTER(BUILD, "pkix_List_BubbleSort");
         PKIX_NULLCHECK_THREE(fromList, comparator, pSortedList);
-
+        
+        if (fromList->immutable) {
+            PKIX_ERROR(PKIX_CANNOTSORTIMMUTABLELIST);
+        }
         PKIX_CHECK(pkix_List_Duplicate
                 ((PKIX_PL_Object *) fromList,
                 (PKIX_PL_Object **) &sortedList,

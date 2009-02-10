@@ -60,6 +60,7 @@
 #include "lgglue.h"
 #include "sftkpars.h"
 #include "secerr.h"
+#include "softoken.h"
 
 /*
  * We want all databases to have the same binary representation independent of
@@ -76,11 +77,18 @@ static PRBool
 sftkdb_isULONGAttribute(CK_ATTRIBUTE_TYPE type) 
 {
     switch(type) {
-    case CKA_CLASS:
-    case CKA_CERTIFICATE_TYPE:
     case CKA_CERTIFICATE_CATEGORY:
-    case CKA_KEY_TYPE:
+    case CKA_CERTIFICATE_TYPE:
+    case CKA_CLASS:
     case CKA_JAVA_MIDP_SECURITY_DOMAIN:
+    case CKA_KEY_GEN_MECHANISM:
+    case CKA_KEY_TYPE:
+    case CKA_MECHANISM_TYPE:
+    case CKA_MODULUS_BITS:
+    case CKA_PRIME_BITS:
+    case CKA_SUBPRIME_BITS:
+    case CKA_VALUE_BITS:
+    case CKA_VALUE_LEN:
 
     case CKA_TRUST_DIGITAL_SIGNATURE:
     case CKA_TRUST_NON_REPUDIATION:
@@ -873,12 +881,12 @@ sftkdb_checkConflicts(SDB *db, CK_OBJECT_CLASS objectType,
     /* fetch the subject of the source. For creation and merge, this should
      * be found in the template */
     attr2 = sftkdb_getAttributeFromConstTemplate(CKA_SUBJECT, ptemplate, len);
-    if ((attr2 == NULL) || (attr2->ulValueLen == 0)) {
-	if (sourceID == CK_INVALID_HANDLE) {
+    if (sourceID == CK_INVALID_HANDLE) {
+	if ((attr2 == NULL) || ((CK_LONG)attr2->ulValueLen < 0)) {
 	    crv = CKR_TEMPLATE_INCOMPLETE; 
 	    goto done;
 	}
-
+    } else if ((attr2 == NULL) || ((CK_LONG)attr2->ulValueLen <= 0)) {
 	/* sourceID is set if we are trying to modify an existing entry instead
 	 * of creating a new one. In this case the subject may not be (probably
 	 * isn't) in the template, we have to read it from the database */
@@ -889,11 +897,11 @@ sftkdb_checkConflicts(SDB *db, CK_OBJECT_CLASS objectType,
 	if (crv != CKR_OK) {
 	    goto done;
 	}
-	if (subject.ulValueLen <= 0) {
+	if ((CK_LONG)subject.ulValueLen < 0) {
 	    crv = CKR_DEVICE_ERROR; /* closest pkcs11 error to corrupted DB */
 	    goto done;
 	}
-	temp1 = subject.pValue = PORT_Alloc(subject.ulValueLen);
+	temp1 = subject.pValue = PORT_Alloc(++subject.ulValueLen);
 	if (temp1 == NULL) {
 	    crv = CKR_HOST_MEMORY;
 	    goto done;
@@ -934,7 +942,7 @@ sftkdb_checkConflicts(SDB *db, CK_OBJECT_CLASS objectType,
      * source subject is too big, and therefore not a match. GetAttributeValue 
      * will return CKR_BUFFER_TOO_SMALL. Otherwise it should be exactly enough 
      * space (or enough space to be able to compare the result. */
-    temp2 = findTemplate[0].pValue = PORT_Alloc(attr2->ulValueLen);
+    temp2 = findTemplate[0].pValue = PORT_Alloc(++findTemplate[0].ulValueLen);
     if (temp2 == NULL) {
 	crv = CKR_HOST_MEMORY;
 	goto done;
@@ -954,7 +962,9 @@ sftkdb_checkConflicts(SDB *db, CK_OBJECT_CLASS objectType,
     /* Ok, we have both subjects, make sure they are the same. 
      * Compare the subjects */
     if ((findTemplate[0].ulValueLen != attr2->ulValueLen) || 
-	(PORT_Memcmp(findTemplate[0].pValue,attr2->pValue,attr2->ulValueLen) != 0)) {
+	(attr2->ulValueLen > 0 &&
+	 PORT_Memcmp(findTemplate[0].pValue, attr2->pValue, attr2->ulValueLen) 
+	 != 0)) {
     	crv = CKR_ATTRIBUTE_VALUE_INVALID; 
 	goto loser;
     }
@@ -1392,17 +1402,26 @@ loser:
 CK_RV
 sftkdb_CloseDB(SFTKDBHandle *handle)
 {
+#ifdef NO_FORK_CHECK
+    PRBool parentForkedAfterC_Initialize = PR_FALSE;
+#endif
     if (handle == NULL) {
 	return CKR_OK;
     }
     if (handle->update) {
+        if (handle->db->sdb_SetForkState) {
+            (*handle->db->sdb_SetForkState)(parentForkedAfterC_Initialize);
+        }
 	(*handle->update->sdb_Close)(handle->update);
     }
     if (handle->db) {
+        if (handle->db->sdb_SetForkState) {
+            (*handle->db->sdb_SetForkState)(parentForkedAfterC_Initialize);
+        }
 	(*handle->db->sdb_Close)(handle->db);
     }
     if (handle->passwordLock) {
-	PZ_DestroyLock(handle->passwordLock);
+	SKIP_AFTER_FORK(PZ_DestroyLock(handle->passwordLock));
     }
     if (handle->updatePasswordKey) {
 	SECITEM_FreeItem(handle->updatePasswordKey, PR_TRUE);
@@ -1750,7 +1769,7 @@ typedef enum {
 } sftkdbUpdateStatus;
 
 /*
- * helper function to reconsile a single trust entry.
+ * helper function to reconcile a single trust entry.
  *   Identify which trust entry we want to keep.
  *   If we don't need to do anything (the records are already equal).
  *       return SFTKDB_DO_NOTHING.
@@ -1765,7 +1784,7 @@ typedef enum {
  *   any SFTKDB_MODIFY_OBJECT returns.
  */
 sftkdbUpdateStatus
-sftkdb_reconsileTrustEntry(PRArenaPool *arena, CK_ATTRIBUTE *target, 
+sftkdb_reconcileTrustEntry(PRArenaPool *arena, CK_ATTRIBUTE *target, 
 			   CK_ATTRIBUTE *source)
 {
     CK_ULONG targetTrust = sftkdb_getULongFromTemplate(target->type,
@@ -1849,12 +1868,12 @@ const CK_ATTRIBUTE_TYPE sftkdb_trustList[] =
 #define SFTK_TRUST_TEMPLATE_COUNT \
 		(sizeof(sftkdb_trustList)/sizeof(sftkdb_trustList[0]))
 /*
- * Run through the list of known trust types, and reconsile each trust
+ * Run through the list of known trust types, and reconcile each trust
  * entry one by one. Keep track of we really need to write out the source
  * trust object (overwriting the existing one).
  */
 static sftkdbUpdateStatus
-sftkdb_reconsileTrust(PRArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id, 
+sftkdb_reconcileTrust(PRArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id, 
 		      CK_ATTRIBUTE *ptemplate, CK_ULONG *plen)
 {
     CK_ATTRIBUTE trustTemplate[SFTK_TRUST_TEMPLATE_COUNT];
@@ -1900,7 +1919,7 @@ sftkdb_reconsileTrust(PRArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id,
 	    continue;
 		
 	}
-	status = sftkdb_reconsileTrustEntry(arena, &trustTemplate[i], attr);
+	status = sftkdb_reconcileTrustEntry(arena, &trustTemplate[i], attr);
 	if (status == SFTKDB_MODIFY_OBJECT) {
 	    update = SFTKDB_MODIFY_OBJECT;
 	} else if (status == SFTKDB_DROP_ATTRIBUTE) {
@@ -2062,9 +2081,9 @@ sftkdb_updateObjectTemplate(PRArenaPool *arena, SDB *db,
 		return sftkdb_handleIDAndName(arena, db, id, ptemplate, plen);
 	    case CKO_NSS_TRUST:
 		/* if we have conflicting trust object types,
-		 * we need to reconsile them */
+		 * we need to reconcile them */
 		*targetID = id;
-		return sftkdb_reconsileTrust(arena, db, id, ptemplate, plen);
+		return sftkdb_reconcileTrust(arena, db, id, ptemplate, plen);
 	    case CKO_SECRET_KEY:
 		/* secret keys in the old database are all sdr keys, 
 		 * unfortunately they all appear to have the same CKA_ID, 
@@ -2364,12 +2383,12 @@ sftk_getKeyDB(SFTKSlot *slot)
 {
     SFTKDBHandle *dbHandle;
 
-    PZ_Lock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
     dbHandle = slot->keyDB;
     if (dbHandle) {
         PR_AtomicIncrement(&dbHandle->ref);
     }
-    PZ_Unlock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
     return dbHandle;
 }
 

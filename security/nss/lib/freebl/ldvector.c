@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.19 2008/12/17 06:09:12 nelson%bolyard.com Exp $ */
+/* $Id: ldvector.c,v 1.20 2009/02/03 05:34:40 julien.pierre.boogz%sun.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -249,10 +249,14 @@ static const struct FREEBLVectorStr vector =
     SEED_CreateContext,
     SEED_DestroyContext,
     SEED_Encrypt,
-    SEED_Decrypt
+    SEED_Decrypt,
 
     /* End of Version 3.011. */
 
+    BL_Init,
+    BL_SetForkState
+
+    /* End of Version 3.012. */
 };
 
 const FREEBLVector * 

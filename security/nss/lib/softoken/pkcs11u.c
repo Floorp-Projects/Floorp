@@ -45,6 +45,7 @@
 #include "secerr.h"
 #include "prnetdb.h" /* for PR_ntohl */
 #include "sftkdb.h"
+#include "softoken.h"
 
 /*
  * ******************** Attribute Utilities *******************************
@@ -843,12 +844,12 @@ sftk_lookupTokenKeyByHandle(SFTKSlot *slot, CK_OBJECT_HANDLE handle)
  */
 static void
 sftk_tokenKeyLock(SFTKSlot *slot) {
-    PZ_Lock(slot->objectLock);
+    SKIP_AFTER_FORK(PZ_Lock(slot->objectLock));
 }
 
 static void
 sftk_tokenKeyUnlock(SFTKSlot *slot) {
-    PZ_Unlock(slot->objectLock);
+    SKIP_AFTER_FORK(PZ_Unlock(slot->objectLock));
 }
 
 static PRIntn
@@ -966,7 +967,7 @@ sftk_CleanupFreeList(SFTKObjectFreeList *list, PRBool isSessionList)
     if (!list->lock) {
 	return;
     }
-    PZ_Lock(list->lock);
+    SKIP_AFTER_FORK(PZ_Lock(list->lock));
     for (object= list->head; object != NULL; 
 					object = sftk_freeObjectData(object)) {
 	PZ_DestroyLock(object->refLock);
@@ -976,8 +977,8 @@ sftk_CleanupFreeList(SFTKObjectFreeList *list, PRBool isSessionList)
     }
     list->count = 0;
     list->head = NULL;
-    PZ_Unlock(list->lock);
-    PZ_DestroyLock(list->lock);
+    SKIP_AFTER_FORK(PZ_Unlock(list->lock));
+    SKIP_AFTER_FORK(PZ_DestroyLock(list->lock));
     list->lock = NULL;
 }
 

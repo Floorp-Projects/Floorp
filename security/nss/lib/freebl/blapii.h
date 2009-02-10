@@ -1,5 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/*
+ * blapii.h - private data structures and prototypes for the crypto library
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +14,12 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Netscape security libraries.
+ * The Original Code is the Network Security Services Library.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
+ * Sun Microsystems, Inc.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,11 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * A dummy header file that is a dependency for all the object files.
- * Used to force a full recompilation of NSS in Mozilla's Tinderbox
- * depend builds.  See comments in rules.mk.
- */
+#ifndef _BLAPII_H_
+#define _BLAPII_H_
 
-#error "Do not include this header file."
+#include "blapit.h"
+
+SEC_BEGIN_PROTOS
+
+#if defined(XP_UNIX) && !defined(NO_CHECK_FORK)
+
+extern PRBool parentForkedAfterC_Initialize;
+
+#define SKIP_AFTER_FORK(x) if (!parentForkedAfterC_Initialize) x
+
+#else
+
+#define SKIP_AFTER_FORK(x) x
+
+#endif
+
+SEC_END_PROTOS
+
+#endif /* _BLAPII_H_ */
 

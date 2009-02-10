@@ -1490,6 +1490,7 @@ pkix_pl_Cert_CreateWithNSSCert(
         cert->store = NULL;
         cert->authorityInfoAccess = NULL;
         cert->subjectInfoAccess = NULL;
+        cert->isUserTrustAnchor = PKIX_FALSE;
 
         *pCert = cert;
 
@@ -3252,6 +3253,7 @@ cleanup:
 PKIX_Error *
 PKIX_PL_Cert_IsCertTrusted(
         PKIX_PL_Cert *cert,
+        PKIX_Boolean trustOnlyUserAnchors,
         PKIX_Boolean *pTrusted,
         void *plContext)
 {
@@ -3267,6 +3269,11 @@ PKIX_PL_Cert_IsCertTrusted(
 
         PKIX_ENTER(CERT, "pkix_pl_Cert_IsCertTrusted");
         PKIX_NULLCHECK_TWO(cert, pTrusted);
+
+        if (trustOnlyUserAnchors) {
+            *pTrusted = cert->isUserTrustAnchor;
+            goto cleanup;
+        }
 
         /* no key usage information and store is not trusted */
         if (plContext == NULL || cert->store == NULL) {
@@ -3320,6 +3327,19 @@ PKIX_PL_Cert_IsCertTrusted(
 
 cleanup:
         PKIX_RETURN(CERT);
+}
+
+/* FUNCTION: PKIX_PL_Cert_SetAsTrustAnchor */
+PKIX_Error*
+PKIX_PL_Cert_SetAsTrustAnchor(PKIX_PL_Cert *cert, 
+                              void *plContext)
+{
+    PKIX_ENTER(CERT, "PKIX_PL_Cert_SetAsTrustAnchor");
+    PKIX_NULLCHECK_ONE(cert);
+    
+    cert->isUserTrustAnchor = PKIX_TRUE;
+    
+    PKIX_RETURN(CERT);
 }
 
 /*

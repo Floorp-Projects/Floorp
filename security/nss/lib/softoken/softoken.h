@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.20 2008/11/19 00:16:56 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: softoken.h,v 1.22 2009/02/03 05:34:43 julien.pierre.boogz%sun.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -189,7 +189,8 @@ unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 */
 extern PRBool sftk_audit_enabled;
 
-extern void sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg);
+extern void sftk_LogAuditMessage(NSSAuditSeverity severity, 
+				 NSSAuditType, const char *msg);
 
 extern void sftk_AuditCreateObject(CK_SESSION_HANDLE hSession,
 			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
@@ -325,47 +326,48 @@ extern PRBool usePthread_atfork;
 extern pid_t myPid;
 extern PRBool forked;
 
-#define CHECK_FORK() \
-    do { \
-        if (usePthread_atfork ? forked : (myPid && myPid != getpid()) ) { \
-            FORK_ASSERT(); \
-            return CKR_DEVICE_ERROR; \
-        } \
-    } while (0)
+#define PARENT_FORKED() usePthread_atfork ? forked : (myPid && myPid != getpid())
 
 #elif defined(CHECK_FORK_PTHREAD)
 
 extern PRBool forked;
 
-#define CHECK_FORK() \
-    do { if (forked) { FORK_ASSERT(); return CKR_DEVICE_ERROR; } } while (0)
+#define PARENT_FORKED() forked
 
-#else
+#elif defined(CHECK_FORK_GETPID)
 
 #include <unistd.h>
 extern pid_t myPid;
 
+#define PARENT_FORKED() myPid && myPid != getpid()
+    
+#endif
+
+extern PRBool parentForkedAfterC_Initialize;
+
 #define CHECK_FORK() \
     do { \
-        if (myPid && myPid != getpid()) { \
+        if (PARENT_FORKED()) { \
             FORK_ASSERT(); \
             return CKR_DEVICE_ERROR; \
         } \
     } while (0)
-    
-#endif
+
+#define SKIP_AFTER_FORK(x) if (!parentForkedAfterC_Initialize) x
 
 #else
 
 /* non-Unix platforms, or fork check disabled */
 
 #define CHECK_FORK()
+#define SKIP_AFTER_FORK(x) x
 
 #ifndef NO_FORK_CHECK
 #define NO_FORK_CHECK
 #endif
 
 #endif
+
 
 SEC_END_PROTOS
 

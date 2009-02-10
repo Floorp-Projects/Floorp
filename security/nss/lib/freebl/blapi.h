@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.28 2008/12/17 06:09:12 nelson%bolyard.com Exp $ */
+/* $Id: blapi.h,v 1.29 2009/02/03 05:34:40 julien.pierre.boogz%sun.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -52,6 +52,8 @@ SEC_BEGIN_PROTOS
 ** RSA encryption/decryption. When encrypting/decrypting the output
 ** buffer must be at least the size of the public key modulus.
 */
+
+extern SECStatus BL_Init(void);
 
 /*
 ** Generate and return a new RSA public and private key.
@@ -1192,6 +1194,8 @@ PRBool BLAPI_VerifySelf(const char *name);
 
 /*********************************************************************/
 extern const SECHashObject * HASH_GetRawHashObject(HASH_HashType hashType);
+
+extern void BL_SetForkState(PRBool forked);
 
 SEC_END_PROTOS
 

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.65 $ $Date: 2008/06/14 04:38:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.66 $ $Date: 2009/02/09 07:51:27 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -317,6 +317,9 @@ nssCertificate_GetDecoding (
 )
 {
     nssDecodedCert* deco = NULL;
+    if (c->type == NSSCertificateType_PKIX) {
+        (void)STAN_GetCERTCertificate(c);
+    }
     nssPKIObject_Lock(&c->object);
     if (!c->decoding) {
 	deco = nssDecodedCert_Create(NULL, &c->encoding, c->type);

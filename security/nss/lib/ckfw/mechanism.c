@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mechanism.c,v $ $Revision: 1.5 $ $Date: 2007/12/12 00:50:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: mechanism.c,v $ $Revision: 1.6 $ $Date: 2009/02/09 07:55:52 $";
 #endif /* DEBUG */
 
 /*
@@ -118,7 +118,7 @@ nssCKFWMechanism_Create
 
 
   fwMechanism = nss_ZNEW(NULL, NSSCKFWMechanism);
-  if ((NSSCKFWMechanism *)NULL == fwMechanism) {
+  if (!fwMechanism) {
     return (NSSCKFWMechanism *)NULL;
   }
   fwMechanism->mdMechanism = mdMechanism;
@@ -141,7 +141,7 @@ nssCKFWMechanism_Destroy
 {
   /* destroy any fw resources held by nssCKFWMechanism (currently none) */
 
-  if ((void *)NULL == (void *)fwMechanism->mdMechanism->Destroy) {
+  if (!fwMechanism->mdMechanism->Destroy) {
     /* destroys it's parent as well */
     fwMechanism->mdMechanism->Destroy(
         fwMechanism->mdMechanism, 
@@ -178,7 +178,7 @@ nssCKFWMechanism_GetMinKeySize
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GetMinKeySize) {
+  if (!fwMechanism->mdMechanism->GetMinKeySize) {
     return 0;
   }
 
@@ -198,7 +198,7 @@ nssCKFWMechanism_GetMaxKeySize
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GetMaxKeySize) {
+  if (!fwMechanism->mdMechanism->GetMaxKeySize) {
     return 0;
   }
 
@@ -218,7 +218,7 @@ nssCKFWMechanism_GetInHardware
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GetInHardware) {
+  if (!fwMechanism->mdMechanism->GetInHardware) {
     return CK_FALSE;
   }
 
@@ -243,7 +243,7 @@ nssCKFWMechanism_GetCanEncrypt
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->EncryptInit) {
+  if (!fwMechanism->mdMechanism->EncryptInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -260,7 +260,7 @@ nssCKFWMechanism_GetCanDecrypt
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->DecryptInit) {
+  if (!fwMechanism->mdMechanism->DecryptInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -277,7 +277,7 @@ nssCKFWMechanism_GetCanDigest
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->DigestInit) {
+  if (!fwMechanism->mdMechanism->DigestInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -294,7 +294,7 @@ nssCKFWMechanism_GetCanSign
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->SignInit) {
+  if (!fwMechanism->mdMechanism->SignInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -311,7 +311,7 @@ nssCKFWMechanism_GetCanSignRecover
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->SignRecoverInit) {
+  if (!fwMechanism->mdMechanism->SignRecoverInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -328,7 +328,7 @@ nssCKFWMechanism_GetCanVerify
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->VerifyInit) {
+  if (!fwMechanism->mdMechanism->VerifyInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -345,7 +345,7 @@ nssCKFWMechanism_GetCanVerifyRecover
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->VerifyRecoverInit) {
+  if (!fwMechanism->mdMechanism->VerifyRecoverInit) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -362,7 +362,7 @@ nssCKFWMechanism_GetCanGenerate
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GenerateKey) {
+  if (!fwMechanism->mdMechanism->GenerateKey) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -379,7 +379,7 @@ nssCKFWMechanism_GetCanGenerateKeyPair
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GenerateKeyPair) {
+  if (!fwMechanism->mdMechanism->GenerateKeyPair) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -396,7 +396,7 @@ nssCKFWMechanism_GetCanUnwrap
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->UnwrapKey) {
+  if (!fwMechanism->mdMechanism->UnwrapKey) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -413,7 +413,7 @@ nssCKFWMechanism_GetCanWrap
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->WrapKey) {
+  if (!fwMechanism->mdMechanism->WrapKey) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -430,7 +430,7 @@ nssCKFWMechanism_GetCanDerive
   CK_RV *pError
 )
 {
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->DeriveKey) {
+  if (!fwMechanism->mdMechanism->DeriveKey) {
     return CK_FALSE;
   }
   return CK_TRUE;
@@ -462,11 +462,11 @@ nssCKFWMechanism_EncryptInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_EncryptDecrypt);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->EncryptInit) {
+  if (!fwMechanism->mdMechanism->EncryptInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -486,7 +486,7 @@ nssCKFWMechanism_EncryptInit
         fwObject,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -494,7 +494,7 @@ nssCKFWMechanism_EncryptInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_Encrypt, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_EncryptDecrypt);
   }
@@ -525,11 +525,11 @@ nssCKFWMechanism_DecryptInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_EncryptDecrypt);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->DecryptInit) {
+  if (!fwMechanism->mdMechanism->DecryptInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -549,7 +549,7 @@ nssCKFWMechanism_DecryptInit
         fwObject,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -557,7 +557,7 @@ nssCKFWMechanism_DecryptInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_Decrypt, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_EncryptDecrypt);
   }
@@ -586,11 +586,11 @@ nssCKFWMechanism_DigestInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_Digest);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->DigestInit) {
+  if (!fwMechanism->mdMechanism->DigestInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -607,7 +607,7 @@ nssCKFWMechanism_DigestInit
         fwMechanism->fwInstance,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -615,7 +615,7 @@ nssCKFWMechanism_DigestInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_Digest, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_Digest);
   }
@@ -646,11 +646,11 @@ nssCKFWMechanism_SignInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_SignVerify);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->SignInit) {
+  if (!fwMechanism->mdMechanism->SignInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -670,7 +670,7 @@ nssCKFWMechanism_SignInit
         fwObject,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -678,7 +678,7 @@ nssCKFWMechanism_SignInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_Sign, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_SignVerify);
   }
@@ -709,11 +709,11 @@ nssCKFWMechanism_VerifyInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_SignVerify);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->VerifyInit) {
+  if (!fwMechanism->mdMechanism->VerifyInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -733,7 +733,7 @@ nssCKFWMechanism_VerifyInit
         fwObject,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -741,7 +741,7 @@ nssCKFWMechanism_VerifyInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_Verify, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_SignVerify);
   }
@@ -772,11 +772,11 @@ nssCKFWMechanism_SignRecoverInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_SignVerify);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->SignRecoverInit) {
+  if (!fwMechanism->mdMechanism->SignRecoverInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -796,7 +796,7 @@ nssCKFWMechanism_SignRecoverInit
         fwObject,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -804,7 +804,7 @@ nssCKFWMechanism_SignRecoverInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_SignRecover, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_SignVerify);
   }
@@ -835,11 +835,11 @@ nssCKFWMechanism_VerifyRecoverInit
 
   fwOperation = nssCKFWSession_GetCurrentCryptoOperation(fwSession, 
                         NSSCKFWCryptoOperationState_SignVerify);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     return CKR_OPERATION_ACTIVE;
   }
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->VerifyRecoverInit) {
+  if (!fwMechanism->mdMechanism->VerifyRecoverInit) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -859,7 +859,7 @@ nssCKFWMechanism_VerifyRecoverInit
         fwObject,
         &error
   );
-  if ((NSSCKMDCryptoOperation *)NULL == mdOperation) {
+  if (!mdOperation) {
     goto loser;
   }
 
@@ -867,7 +867,7 @@ nssCKFWMechanism_VerifyRecoverInit
         mdSession, fwSession, fwMechanism->mdToken, fwMechanism->fwToken,
         fwMechanism->mdInstance, fwMechanism->fwInstance,
         NSSCKFWCryptoOperationType_VerifyRecover, &error);
-  if ((NSSCKFWCryptoOperation *)NULL != fwOperation) {
+  if (fwOperation) {
     nssCKFWSession_SetCurrentCryptoOperation(fwSession, fwOperation,
                 NSSCKFWCryptoOperationState_SignVerify);
   }
@@ -895,13 +895,13 @@ nssCKFWMechanism_GenerateKey
   NSSCKFWObject  *fwObject = NULL;
   NSSArena       *arena;
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GenerateKey) {
+  if (!fwMechanism->mdMechanism->GenerateKey) {
     *pError = CKR_FUNCTION_FAILED;
     return (NSSCKFWObject *)NULL;
   }
 
   arena = nssCKFWToken_GetArena(fwMechanism->fwToken, pError);
-  if ((NSSArena *)NULL == arena) {
+  if (!arena) {
     if (CKR_OK == *pError) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -923,7 +923,7 @@ nssCKFWMechanism_GenerateKey
         ulAttributeCount,
         pError);
 
-  if ((NSSCKMDObject *)NULL == mdObject) {
+  if (!mdObject) {
     return (NSSCKFWObject *)NULL;
   }
 
@@ -956,12 +956,12 @@ nssCKFWMechanism_GenerateKeyPair
   NSSArena       *arena;
   CK_RV         error = CKR_OK;
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->GenerateKey) {
+  if (!fwMechanism->mdMechanism->GenerateKey) {
     return CKR_FUNCTION_FAILED;
   }
 
   arena = nssCKFWToken_GetArena(fwMechanism->fwToken, &error);
-  if ((NSSArena *)NULL == arena) {
+  if (!arena) {
     if (CKR_OK == error) {
       error = CKR_GENERAL_ERROR;
     }
@@ -992,7 +992,7 @@ nssCKFWMechanism_GenerateKeyPair
 
   *fwPublicKeyObject = nssCKFWObject_Create(arena, mdPublicKeyObject, 
         fwSession, fwMechanism->fwToken, fwMechanism->fwInstance, &error);
-  if ((NSSCKFWObject *)NULL == *fwPublicKeyObject) {
+  if (!*fwPublicKeyObject) {
     return error;
   }
   *fwPrivateKeyObject = nssCKFWObject_Create(arena, mdPrivateKeyObject, 
@@ -1019,7 +1019,7 @@ nssCKFWMechanism_GetWrapKeyLength
   NSSCKMDObject  *mdWrappingKeyObject;
   NSSCKMDObject  *mdKeyObject;
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->WrapKey) {
+  if (!fwMechanism->mdMechanism->WrapKey) {
     *pError = CKR_FUNCTION_FAILED;
     return (CK_ULONG) 0;
   }
@@ -1062,7 +1062,7 @@ nssCKFWMechanism_WrapKey
   NSSCKMDObject  *mdWrappingKeyObject;
   NSSCKMDObject  *mdKeyObject;
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->WrapKey) {
+  if (!fwMechanism->mdMechanism->WrapKey) {
     return CKR_FUNCTION_FAILED;
   }
 
@@ -1108,7 +1108,7 @@ nssCKFWMechanism_UnwrapKey
   NSSCKFWObject  *fwObject = NULL;
   NSSArena       *arena;
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->UnwrapKey) {
+  if (!fwMechanism->mdMechanism->UnwrapKey) {
     /* we could simulate UnwrapKey using Decrypt and Create object, but
      * 1) it's not clear that would work well, and 2) the low level token
      * may want to restrict unwrap key for a reason, so just fail it it
@@ -1118,7 +1118,7 @@ nssCKFWMechanism_UnwrapKey
   }
 
   arena = nssCKFWToken_GetArena(fwMechanism->fwToken, pError);
-  if ((NSSArena *)NULL == arena) {
+  if (!arena) {
     if (CKR_OK == *pError) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -1144,7 +1144,7 @@ nssCKFWMechanism_UnwrapKey
         ulAttributeCount,
         pError);
 
-  if ((NSSCKMDObject *)NULL == mdObject) {
+  if (!mdObject) {
     return (NSSCKFWObject *)NULL;
   }
 
@@ -1175,13 +1175,13 @@ nssCKFWMechanism_DeriveKey
   NSSCKFWObject  *fwObject = NULL;
   NSSArena       *arena;
 
-  if ( (void *)NULL == (void *)fwMechanism->mdMechanism->DeriveKey) {
+  if (!fwMechanism->mdMechanism->DeriveKey) {
     *pError = CKR_FUNCTION_FAILED;
     return (NSSCKFWObject *)NULL;
   }
 
   arena = nssCKFWToken_GetArena(fwMechanism->fwToken, pError);
-  if ((NSSArena *)NULL == arena) {
+  if (!arena) {
     if (CKR_OK == *pError) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -1206,7 +1206,7 @@ nssCKFWMechanism_DeriveKey
         ulAttributeCount,
         pError);
 
-  if ((NSSCKMDObject *)NULL == mdObject) {
+  if (!mdObject) {
     return (NSSCKFWObject *)NULL;
   }
 

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: lginit.c,v 1.12 2008/02/16 04:38:07 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: lginit.c,v 1.14 2009/02/03 23:18:48 julien.pierre.boogz%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "pcert.h"
@@ -429,14 +429,14 @@ void
 lg_DBLock(SDB *sdb) 
 {
     LGPrivate *lgdb_p = (LGPrivate *)sdb->private;
-    PR_Lock(lgdb_p->dbLock);
+    SKIP_AFTER_FORK(PR_Lock(lgdb_p->dbLock));
 }
 
 void
 lg_DBUnlock(SDB *sdb) 
 {
     LGPrivate *lgdb_p = (LGPrivate *)sdb->private;
-    PR_Unlock(lgdb_p->dbLock);
+    SKIP_AFTER_FORK(PR_Unlock(lgdb_p->dbLock));
 }
 
 PLHashTable *
@@ -462,6 +462,13 @@ lg_getKeyDB(SDB *sdb)
     return lgdb_p->keyDB;
 }
 
+PRBool parentForkedAfterC_Initialize;
+
+void lg_SetForkState(PRBool forked)
+{
+    parentForkedAfterC_Initialize = forked;
+}
+
 CK_RV
 lg_Close(SDB *sdb)
 {
@@ -474,7 +481,7 @@ lg_Close(SDB *sdb)
 	    nsslowkey_CloseKeyDB(lgdb_p->keyDB);
 	}
 	if (lgdb_p->dbLock) {
-	    PR_DestroyLock(lgdb_p->dbLock);
+	    SKIP_AFTER_FORK(PR_DestroyLock(lgdb_p->dbLock));
 	}
 	if (lgdb_p->hashTable) {
 	    PL_HashTableDestroy(lgdb_p->hashTable);
@@ -498,7 +505,6 @@ lg_CompareValues(const void *v1, const void *v2)
     PLHashNumber value2 = (PLHashNumber) v2;
     return (value1 == value2);
 }
-
 
 /*
  * helper function to wrap a NSSLOWCERTCertDBHandle or a NSSLOWKEYDBHandle
@@ -551,7 +557,7 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
     sdb->sdb_Abort = lg_Abort;
     sdb->sdb_Reset = lg_Reset;
     sdb->sdb_Close = lg_Close;
-
+    sdb->sdb_SetForkState = lg_SetForkState;
 
     *pSdb = sdb;
     return CKR_OK;
@@ -654,10 +660,13 @@ loser:
 }
 
 CK_RV
-legacy_Shutdown(void)
+legacy_Shutdown(PRBool forked)
 {
+    lg_SetForkState(forked);
     nsslowcert_DestroyFreeLists();
     nsslowcert_DestroyGlobalLocks();
     SECOID_Shutdown();
+    lg_SetForkState(PR_FALSE);
     return CKR_OK;
 }
+

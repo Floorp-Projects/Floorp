@@ -728,7 +728,6 @@ pkix_CheckChain(
         void *plContext)
 {
         PKIX_UInt32 j = 0;
-        SECErrorCodes reasonCode = 0;
         PKIX_Boolean revChecking = PKIX_FALSE;
         PKIX_Error *checkCertError = NULL;
         void *nbioContext = NULL;
@@ -793,23 +792,29 @@ pkix_CheckChain(
 
                 if (revChecking == PKIX_TRUE) {
                         PKIX_RevocationStatus revStatus;
-                        PKIX_CHECK(
+                        pkixErrorResult =
                             PKIX_RevocationChecker_Check(
                                       cert, issuer, revChecker,
                                       procParams, PKIX_TRUE,
-                                      (j == 0) ? PKIX_TRUE : PKIX_FALSE,
-                                      &revStatus, &reasonCode,
-                                      &nbioContext, plContext),
-                        PKIX_REVCHECKCERTFAILED);
+                                      (j == numCerts - 1) ? PKIX_TRUE : PKIX_FALSE,
+                                      &revStatus, pReasonCode,
+                                      &nbioContext, plContext);
                         if (nbioContext != NULL) {
                                 *pCertCheckedIndex = j;
                                 *pRevChecking = revChecking;
                                 *pNBIOContext = nbioContext;
                                 goto cleanup;
                         }
-                        if (revStatus == PKIX_RevStatus_Revoked) {
-                            PKIX_ERROR_CREATE(VALIDATE, PKIX_CERTIFICATEREVOKED,
-                                              pkixErrorResult);
+                        if (revStatus == PKIX_RevStatus_Revoked ||
+                            pkixErrorResult) {
+                            if (!pkixErrorResult) {
+                                /* if pkixErrorResult is returned then
+                                 * use it as it has a detailed revocation
+                                 * error code. Otherwise create a new error */
+                                PKIX_ERROR_CREATE(VALIDATE,
+                                                  PKIX_CERTIFICATEREVOKED,
+                                                  pkixErrorResult);
+                            }
                             goto cleanup;
                         }
                         revChecking = PKIX_FALSE;
@@ -825,7 +830,6 @@ pkix_CheckChain(
                     (checkers, pFinalSubjPubKey, pPolicyTree, plContext),
                     PKIX_RETRIEVEOUTPUTSFAILED);
 
-        *pReasonCode = (PKIX_UInt32)reasonCode;
         *pNBIOContext = NULL;
 
 cleanup:
