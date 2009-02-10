@@ -1000,6 +1000,12 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
     // find a parent content node to append to, which is fine.
     return PR_FALSE;
   }
+
+  if (aTagName == nsGkAtoms::html &&
+      aNameSpaceID == kNameSpaceID_XHTML) {
+    ProcessOfflineManifest(aContent);
+  }
+
   return PR_TRUE;
 }
 
