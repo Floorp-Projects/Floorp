@@ -43,7 +43,19 @@
 #include "nsIAccessibleRelation.h"
 
 #include "nsCOMPtr.h"
+#include "nsIMutableArray.h"
 
+#define NS_ACCRELATION_IMPL_CID                         \
+{                                                       \
+  0xb20390d0,                                           \
+  0x40d3,                                               \
+  0x4c76,                                               \
+  { 0xb6, 0x2e, 0xc2, 0x30, 0xc8, 0xea, 0x0c, 0x1e }    \
+}
+
+/**
+ * Class represents an accessible relation.
+ */
 class nsAccessibleRelation: public nsIAccessibleRelation
 {
 public:
@@ -52,9 +64,20 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLERELATION
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCRELATION_IMPL_CID)
+
+  /**
+   * Add target for the given key.
+   *
+   * @param aTarget - accessible target for the given relation.
+   */
+  nsresult AddTarget(nsIAccessible *aTarget);
+
 private:
   PRUint32 mType;
-  nsCOMPtr<nsIAccessible> mTarget;
+  nsCOMPtr<nsIMutableArray> mTargets;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessibleRelation, NS_ACCRELATION_IMPL_CID)
 
 #endif

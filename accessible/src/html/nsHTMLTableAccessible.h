@@ -75,7 +75,8 @@ public:
   // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aResult); 
   NS_IMETHOD GetDescription(nsAString& aDescription);
-  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -160,7 +161,9 @@ public:
   // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aRole)
     { *aRole = nsIAccessibleRole::ROLE_CAPTION; return NS_OK; }
-  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 };
 
 #endif  

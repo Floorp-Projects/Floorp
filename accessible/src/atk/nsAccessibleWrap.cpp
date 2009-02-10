@@ -1053,7 +1053,6 @@ refRelationSetCB(AtkObject *aAtkObj)
         return relation_set;
     }
 
-    AtkObject *accessible_array[1];
     AtkRelation* relation;
     
     PRUint32 relationType[] = {nsIAccessibleRelation::RELATION_LABELLED_BY,
@@ -1074,14 +1073,28 @@ refRelationSetCB(AtkObject *aAtkObj)
             atk_relation_set_remove(relation_set, relation);
         }
 
-        nsIAccessible* accRelated;
-        nsresult rv = accWrap->GetAccessibleRelated(relationType[i], &accRelated);
-        if (NS_SUCCEEDED(rv) && accRelated) {
-            accessible_array[0] = nsAccessibleWrap::GetAtkObject(accRelated);
-            relation = atk_relation_new(accessible_array, 1,
-                                        static_cast<AtkRelationType>(relationType[i]));
-            atk_relation_set_add(relation_set, relation);
-            g_object_unref(relation);
+        nsCOMPtr<nsIAccessibleRelation> geckoRelation;
+        nsresult rv = accWrap->GetRelationByType(relationType[i],
+                                                 getter_AddRefs(geckoRelation));
+        if (NS_SUCCEEDED(rv) && geckoRelation) {
+            PRUint32 targetsCount = 0;
+            geckoRelation->GetTargetsCount(&targetsCount);
+            if (targetsCount) {
+                AtkObject** accessible_array = new AtkObject*[targetsCount];
+                for (PRUint32 index = 0; index < targetsCount; index++) {
+                    nsCOMPtr<nsIAccessible> geckoTarget;
+                    geckoRelation->GetTarget(index, getter_AddRefs(geckoTarget));
+                    accessible_array[index] =
+                        nsAccessibleWrap::GetAtkObject(geckoTarget);
+                }
+
+                relation = atk_relation_new(accessible_array, targetsCount,
+                                            static_cast<AtkRelationType>(relationType[i]));
+                atk_relation_set_add(relation_set, relation);
+                g_object_unref(relation);
+
+                delete [] accessible_array;
+            }
         }
     }
 

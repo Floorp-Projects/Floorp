@@ -82,6 +82,7 @@ CPPSRCS = \
   nsCoreUtils.cpp \
   nsAccUtils.cpp \
   nsNameUtils.cpp \
+  nsRelUtils.cpp \
   nsAccessibilityService.cpp \
   nsAccessible.cpp \
   nsAccessibleRelation.cpp \
