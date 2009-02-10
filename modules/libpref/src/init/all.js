@@ -83,6 +83,7 @@ pref("offline-apps.quota.warn",        51200);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
+pref("ui.use_native_colors", true);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
 pref("browser.display.use_system_colors",   false);
