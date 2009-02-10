@@ -109,6 +109,22 @@
 #define MODE_ATTRIBUTE     NS_LITERAL_STRING("sizemode")
 #define ZLEVEL_ATTRIBUTE   NS_LITERAL_STRING("zlevel")
 
+// Unit conversion helpers
+static PRInt32
+CSSToDevPixels(PRInt32 aPixels, PRInt32 aAppPerDev)
+{
+  return NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aPixels),
+                               aAppPerDev);
+}
+
+static PRInt32
+DevToCSSPixels(PRInt32 aPixels, PRInt32 aAppPerDev)
+{
+  return nsPresContext::AppUnitsToIntCSSPixels(
+    NSIntPixelsToAppUnits(aPixels, aAppPerDev));
+}
+
+
 //*****************************************************************************
 //***    nsXULWindow: Object Management
 //*****************************************************************************
@@ -578,14 +594,8 @@ NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
   mWindow->SetSizeMode(nsSizeMode_Normal);
 
   mIntrinsicallySized = PR_FALSE;
-  PRInt32 devX = NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aCX),
-                                       float(mWindow->GetDeviceContext()->
-                                             AppUnitsPerDevPixel()));
-  PRInt32 devY = NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aCY),
-                                       float(mWindow->GetDeviceContext()->
-                                             AppUnitsPerDevPixel()));
 
-  NS_ENSURE_SUCCESS(mWindow->Resize(devX, devY, aRepaint), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
   PersistentAttributesDirty(PAD_SIZE);
   SavePersistentAttributes();
   return NS_OK;
@@ -1045,12 +1055,13 @@ PRBool nsXULWindow::LoadPositionFromXUL()
   PRInt32 specX = currX;
   PRInt32 specY = currY;
   nsAutoString posString;
+  PRInt32 appPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
 
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenX"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode)) {
-      specX = temp;
+      specX = CSSToDevPixels(temp, appPerDev);
       gotPosition = PR_TRUE;
     }
   }
@@ -1058,7 +1069,7 @@ PRBool nsXULWindow::LoadPositionFromXUL()
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode)) {
-      specY = temp;
+      specY = CSSToDevPixels(temp, appPerDev);
       gotPosition = PR_TRUE;
     }
   }
@@ -1111,12 +1122,13 @@ PRBool nsXULWindow::LoadSizeFromXUL()
   PRInt32 specWidth = currWidth;
   PRInt32 specHeight = currHeight;
   nsAutoString sizeString;
+  PRInt32 appPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
 
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("width"), sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
-      specWidth = temp > 100 ? temp : 100;
+      specWidth = CSSToDevPixels(PR_MAX(temp, 100), appPerDev);
       gotSize = PR_TRUE;
     }
   }
@@ -1124,7 +1136,7 @@ PRBool nsXULWindow::LoadSizeFromXUL()
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
-      specHeight = temp > 100 ? temp : 100;
+      specHeight = CSSToDevPixels(PR_MAX(temp, 100), appPerDev);
       gotSize = PR_TRUE;
     }
   }
@@ -1141,6 +1153,8 @@ PRBool nsXULWindow::LoadSizeFromXUL()
         PRInt32 screenHeight;
         screen->GetAvailWidth(&screenWidth);
         screen->GetAvailHeight(&screenHeight);
+        screenWidth = CSSToDevPixels(screenWidth, appPerDev);
+        screenHeight = CSSToDevPixels(screenHeight, appPerDev);
         if (specWidth > screenWidth)
           specWidth = screenWidth;
         if (specHeight > screenHeight)
@@ -1451,6 +1465,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   nsAutoString                sizeString;
   nsAutoString                windowElementId;
   nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
+  PRInt32 appPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
 
   { // fetch docShellElement's ID and XUL owner document
     nsCOMPtr<nsIDOMDocument> ownerDoc;
@@ -1465,14 +1480,16 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_POSITION) &&
       sizeMode == nsSizeMode_Normal) {
     if (persistString.Find("screenX") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
+                  (long)DevToCSSPixels(x, appPerDev));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
       if (ownerXULDoc) // force persistence in case the value didn't change
         ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
     }
     if (persistString.Find("screenY") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)y);
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
+                  (long)DevToCSSPixels(y, appPerDev));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
       if (ownerXULDoc)
@@ -1483,14 +1500,16 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_SIZE) &&
       sizeMode == nsSizeMode_Normal) {
     if (persistString.Find("width") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
+                  (long)DevToCSSPixels(cx, appPerDev));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
       if (ownerXULDoc)
         ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
     }
     if (persistString.Find("height") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cy);
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
+                  (long)DevToCSSPixels(cy, appPerDev));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
       if (ownerXULDoc)
@@ -1906,7 +1925,7 @@ PRBool nsXULWindow::ConstrainToZLevel(PRBool      aImmediate,
        to the foreground. */
     if (altered &&
         (position == nsIWindowMediator::zLevelTop ||
-         position == nsIWindowMediator::zLevelBelow && aReqBelow == 0))
+         (position == nsIWindowMediator::zLevelBelow && aReqBelow == 0)))
       PlaceWindowLayersBehind(zLevel + 1, nsIXULWindow::highestZ, 0);
 
     if (*aPlacement != nsWindowZBottom &&
