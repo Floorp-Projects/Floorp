@@ -149,13 +149,13 @@ WeaveSvc.prototype = {
   _scheduleTimer: null,
 
   get username() {
-    return Utils.prefs.getCharPref("username");
+    return Svc.Prefs.get("username");
   },
   set username(value) {
     if (value)
-      Utils.prefs.setCharPref("username", value);
+      Svc.Prefs.set("username", value);
     else
-      Utils.prefs.clearUserPref("username");
+      Svc.Prefs.reset("username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
     ID.get('WeaveID').username = value;
@@ -180,14 +180,32 @@ WeaveSvc.prototype = {
   },
 
   get baseURL() {
-    let url = Utils.prefs.getCharPref("serverURL");
-    if (url && url[url.length-1] != '/')
+    let url = Svc.Prefs.get("serverURL");
+    if (!url)
+      throw "No server URL set";
+    if (url[url.length-1] != '/')
+      url += '/';
+    url += "0.3/";
+    return url;
+  },
+  set baseURL(value) {
+    Svc.Prefs.set("serverURL", value);
+  },
+
+  get clusterURL() {
+    let url = Svc.Prefs.get("clusterURL");
+    if (!url)
+      return null;
+    // XXX tmp hack for sm-weave-proxy01
+    if (url == "https://sm-weave-proxy01.services.mozilla.com/")
+      return "https://sm-weave-proxy01.services.mozilla.com/weave/0.3/";
+    if (url[url.length-1] != '/')
       url += '/';
     url += "0.3/user/";
     return url;
   },
-  set baseURL(value) {
-    Utils.prefs.setCharPref("serverURL", value);
+  set clusterURL(value) {
+    Svc.Prefs.set("clusterURL", value);
     this._genKeyURLs();
   },
 
@@ -204,15 +222,12 @@ WeaveSvc.prototype = {
   get keyGenEnabled() this._keyGenEnabled,
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
-  get enabled() Utils.prefs.getBoolPref("enabled"),
+  get enabled() Svc.Prefs.get("enabled"),
 
   get schedule() {
     if (!this.enabled)
       return 0; // manual/off
-    return Utils.prefs.getIntPref("schedule");
-  },
-
-  onWindowOpened: function Weave__onWindowOpened() {
+    return Svc.Prefs.get("schedule");
   },
 
   get locked() this._locked,
@@ -274,9 +289,27 @@ WeaveSvc.prototype = {
   },
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
-    let url = this.baseURL + this.username;
+    let url = this.clusterURL + this.username;
     PubKeys.defaultKeyUri = url + "/keys/pubkey";
     PrivKeys.defaultKeyUri = url + "/keys/privkey";
+  },
+
+  _checkCrypto: function WeaveSvc__checkCrypto() {
+    let ok = false;
+
+    try {
+      let svc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+	createInstance(Ci.IWeaveCrypto);
+      let iv = svc.generateRandomIV();
+      if (iv.length == 24)
+	ok = true;
+
+    } catch (e) {}
+
+    return ok;
+  },
+
+  onWindowOpened: function Weave__onWindowOpened() {
   },
 
   // one-time initialization like setting up observers and the like
@@ -285,7 +318,17 @@ WeaveSvc.prototype = {
   _onStartup: function WeaveSvc__onStartup() {
     let self = yield;
     this._initLogs();
-    this._log.info("Weave Service Initializing");
+    this._log.info("Weave " + WEAVE_VERSION + " initializing");
+
+    let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
+      getService(Ci.nsIHttpProtocolHandler).userAgent;
+    this._log.info(ua);
+
+    if (!this._checkCrypto()) {
+      this.enabled = false;
+      this._log.error("Could not load the Weave crypto component. Disabling " +
+		      "Weave, since it will not work correctly.");
+    }
 
     Utils.prefs.addObserver("", this, false);
     this._os.addObserver(this, "quit-application", true);
@@ -303,12 +346,12 @@ WeaveSvc.prototype = {
 
     this._genKeyURLs();
 
-    if (Utils.prefs.getBoolPref("autoconnect") &&
-        this.username && this.username != 'nobody')
+    if (Svc.Prefs.get("autoconnect") && this.username) {
       try {
 	if (yield this.login(self.cb))
 	  yield this.sync(self.cb);
       } catch (e) {}
+    }
     self.done();
   },
   onStartup: function WeaveSvc_onStartup(callback) {
@@ -318,18 +361,18 @@ WeaveSvc.prototype = {
   _initLogs: function WeaveSvc__initLogs() {
     this._log = Log4Moz.repository.getLogger("Service.Main");
     this._log.level =
-      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.main")];
+      Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
 
     let formatter = new Log4Moz.BasicFormatter();
     let root = Log4Moz.repository.rootLogger;
-    root.level = Log4Moz.Level[Utils.prefs.getCharPref("log.rootLogger")];
+    root.level = Log4Moz.Level[Svc.Prefs.get("log.rootLogger")];
 
     let capp = new Log4Moz.ConsoleAppender(formatter);
-    capp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.console")];
+    capp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.console")];
     root.addAppender(capp);
 
     let dapp = new Log4Moz.DumpAppender(formatter);
-    dapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.dump")];
+    dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
     let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
@@ -346,10 +389,10 @@ WeaveSvc.prototype = {
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
     this._briefApp = new Log4Moz.RotatingFileAppender(brief, formatter);
-    this._briefApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.briefLog")];
+    this._briefApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.briefLog")];
     root.addAppender(this._briefApp);
     this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter);
-    this._debugApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.debugLog")];
+    this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
     root.addAppender(this._debugApp);
   },
 
@@ -380,46 +423,44 @@ WeaveSvc.prototype = {
   },
 
   _onQuitApplication: function WeaveSvc__onQuitApplication() {
-/*
-    if (!this.enabled || !this._loggedIn)
-      return;
-
-    // Don't quit on exit if this is a forced restart due to application update
-    // or extension install.
-    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                                        getService(Ci.nsIPrefBranch);
-    // non browser apps may throw
-    try {
-      if(prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
-        return;
-    } catch (ex) {}
-
-    this.isQuitting = true;
-
-    let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-             getService(Ci.nsIWindowWatcher);
-
-    // This window has to be modal to prevent the application from quitting
-    // until the sync finishes and the window closes.
-    let window = ww.openWindow(null,
-                               "chrome://weave/content/status.xul",
-                               "Weave:Status",
-                               "chrome,centerscreen,modal,close=0",
-                               null);
-*/
   },
 
   // These are global (for all engines)
 
-  verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password) {
+  // gets cluster from central LDAP server and sets this.clusterURL
+  findCluster: function WeaveSvc_findCluster(onComplete, username) {
+    let fn = function WeaveSvc__findCluster() {
+      let self = yield;
+      this._log.debug("Finding cluster for user " + username);
+      let res = new Resource(this.baseURL + "api/register/chknode/" + username);
+      yield res.get(self.cb);
+      if (res.lastChannel.responseStatus != 200) {
+	self.done(false);
+	return;
+      }
+      this.clusterURL = 'https://' + res.data + '/';
+      self.done(true);
+    };
+    fn.async(this, onComplete);
+  },
+
+  verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password, isLogin) {
     let user = username, pass = password;
 
     let fn = function WeaveSvc__verifyLogin() {
       let self = yield;
       this._log.debug("Verifying login for user " + user);
-      let res = new Resource(this.baseURL + user);
+
+      let cluster = this.clusterURL;
+      yield this.findCluster(self.cb, username);
+
+      let res = new Resource(this.clusterURL + user);
       yield res.get(self.cb);
-      //Svc.Json.decode(res.data); // will throw if not json
+
+      if (!isLogin) // restore cluster so verifyLogin has no impact
+	this.clusterURL = cluster;
+
+      //Svc.Json.decode(res.data); // throws if not json
       self.done(true);
     };
     this._notify("verify-login", "", fn).async(this, onComplete);
@@ -472,7 +513,7 @@ WeaveSvc.prototype = {
 
 	this._log.debug("Logging in user " + this.username);
 
-	if (!(yield this.verifyLogin(self.cb, this.username, this.password)))
+	if (!(yield this.verifyLogin(self.cb, this.username, this.password, true)))
 	  throw "Login failed";
 	this._loggedIn = true;
 	this._setSchedule(this.schedule);
@@ -535,7 +576,8 @@ WeaveSvc.prototype = {
           ret = true;
         } catch (e) {
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
-          this._log.error(keys.pubkey.lastRequest.responseText);
+	  // FIXME no lastRequest anymore
+          //this._log.error(keys.pubkey.lastRequest.responseText);
         }
       } else {
         this._log.warn("Could not get encryption passphrase");
@@ -715,87 +757,5 @@ WeaveSvc.prototype = {
   wipeClient: function WeaveSvc_wipeClient(onComplete) {
     this._localLock(this._notify("wipe-client", "",
                                  this._wipeClient)).async(this, onComplete);
-  } /*,
-
-  shareData: function WeaveSvc_shareData(dataType,
-					 isShareEnabled,
-                                         onComplete,
-                                         guid,
-                                         username) {
-    // Shares data of the specified datatype (which must correspond to
-    // one of the registered engines) with the user specified by username.
-    // The data node indicated by guid will be shared, along with all its
-    // children, if it has any.  onComplete is a function that will be called
-    // when sharing is done; it takes an argument that will be true or false
-    // to indicate whether sharing succeeded or failed.
-    // Implementation, as well as the interpretation of what 'guid' means,
-    // is left up to the engine for the specific dataType.
-
-    // isShareEnabled: true to start sharing, false to stop sharing.
-
-    let messageName = "share-" + dataType;
-    // so for instance, if dataType is "bookmarks" then a message
-    // "share-bookmarks" will be sent out to any observers who are listening
-    // for it.  As far as I know, there aren't currently any listeners for
-    // "share-bookmarks" but we'll send it out just in case.
-
-    let self = this;
-    let saved_dataType = dataType;
-    let saved_onComplete = onComplete;
-    let saved_guid = guid;
-    let saved_username = username;
-    let saved_isShareEnabled = isShareEnabled;
-    let successMsg = "weave:service:global:success";
-    let errorMsg = "weave:service:global:error";
-    let os = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
-
-    let observer = {
-      observe: function(subject, topic, data) {
-	if (!Weave.DAV.locked) {
-          self._notify(messageName, "", self._lock(self._shareData,
-					saved_dataType,
-					saved_isShareEnabled,
-                                        saved_guid,
-                                    saved_username)).async(self,
-							   saved_onComplete);
-	  os.removeObserver(observer, successMsg);
-	  os.removeObserver(observer, errorMsg);
-	}
-      },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
-    };
-
-    if (Weave.DAV.locked) {
-      // then we have to wait until it's not locked.
-      dump( "DAV is locked, gonna set up observer to do it later.\n");
-      os.addObserver( observer, successMsg, true );
-      os.addObserver( observer, errorMsg, true );
-    } else {
-      // Just do it right now!
-      dump( "DAV not locked, doing it now.\n");
-      observer.observe();
-    }
-  },
-
-  _shareData: function WeaveSvc__shareData(dataType,
-					   isShareEnabled,
-                                           guid,
-                                           username) {
-    let self = yield;
-    let ret;
-    if (Engines.get(dataType).enabled) {
-      if (isShareEnabled) {
-        Engines.get(dataType).share(self.cb, guid, username);
-      } else {
-        Engines.get(dataType).stopSharing(self.cb, guid, username);
-      }
-      ret = yield;
-    } else {
-      this._log.warn( "Can't share disabled data type: " + dataType );
-      ret = false;
-    }
-    self.done(ret);
   }
-*/
 };
