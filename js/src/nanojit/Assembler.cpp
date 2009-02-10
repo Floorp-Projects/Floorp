@@ -1026,8 +1026,10 @@ namespace nanojit
 
 	void Assembler::gen(LirFilter* reader,  NInsList& loopJumps)
 	{
-		// trace must start with LIR_x or LIR_loop
-		NanoAssert(reader->pos()->isop(LIR_x) || reader->pos()->isop(LIR_loop));
+		// trace must end with LIR_x, LIR_loop, or LIR_ret
+		NanoAssert(reader->pos()->isop(LIR_x) ||
+		           reader->pos()->isop(LIR_loop) ||
+		           reader->pos()->isop(LIR_ret));
 		 
 		for (LInsp ins = reader->read(); ins != 0 && !error(); ins = reader->read())
 		{
