@@ -131,6 +131,9 @@ extern JSBool
 js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 #endif
 
+extern JSBool JS_FASTCALL
+js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v);
+
 /*
  * Fast dense-array-to-buffer conversions.
  *

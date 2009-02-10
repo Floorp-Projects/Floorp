@@ -183,7 +183,7 @@
 # elif defined _MSC_VER
 #  define JS_ALWAYS_INLINE   __forceinline
 # elif defined __GNUC__
-#  define JS_ALWAYS_INLINE   __attribute__((always_inline))
+#  define JS_ALWAYS_INLINE   __attribute__((always_inline)) JS_INLINE
 # else
 #  define JS_ALWAYS_INLINE   JS_INLINE
 # endif

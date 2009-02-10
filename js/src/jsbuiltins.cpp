@@ -328,16 +328,17 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)
 {
-    // check whether we know how the resolve op will behave
+    // Check that we know how the lookup op will behave.
+    if (obj->map->ops->lookupProperty != js_LookupProperty)
+        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
     JSClass* clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
 
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
     JSObject* obj2;
     JSProperty* prop;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    if (!js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
+        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
     if (prop)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
     return prop != NULL;
@@ -383,7 +384,8 @@ js_TypeOfObject(JSContext* cx, JSObject* obj)
 JSString* FASTCALL
 js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 {
-    jsval boxed = BOOLEAN_TO_JSVAL(unboxed);
+    /* Watch out for pseudo-booleans. */
+    jsval boxed = PSEUDO_BOOLEAN_TO_JSVAL(unboxed);
     JS_ASSERT(JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed));
     JSType type = JS_TypeOfValue(cx, boxed);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
@@ -392,8 +394,9 @@ js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 jsdouble FASTCALL
 js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
 {
-    if (unboxed == JSVAL_TO_BOOLEAN(JSVAL_VOID))
+    if (unboxed == JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))
         return js_NaN;
+    JS_ASSERT(unboxed == JS_TRUE || unboxed == JS_FALSE);
     return unboxed;
 }
 

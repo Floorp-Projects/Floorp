@@ -1822,7 +1822,7 @@ skipline:
         }
 
         if (ts->flags & TSF_OPERAND) {
-            uintN flags;
+            uintN flags, length;
             JSBool inCharClass = JS_FALSE;
 
             INIT_TOKENBUF();
@@ -1847,15 +1847,15 @@ skipline:
                 }
                 ADD_TO_TOKENBUF(c);
             }
-            for (flags = 0; ; ) {
+            for (flags = 0, length = TOKENBUF_LENGTH() + 1; ; length++) {
                 c = PeekChar(ts);
-                if (c == 'g')
+                if (c == 'g' && !(flags & JSREG_GLOB))
                     flags |= JSREG_GLOB;
-                else if (c == 'i')
+                else if (c == 'i' && !(flags & JSREG_FOLD))
                     flags |= JSREG_FOLD;
-                else if (c == 'm')
+                else if (c == 'm' && !(flags & JSREG_MULTILINE))
                     flags |= JSREG_MULTILINE;
-                else if (c == 'y')
+                else if (c == 'y' && !(flags & JSREG_STICKY))
                     flags |= JSREG_STICKY;
                 else
                     break;
@@ -1863,9 +1863,11 @@ skipline:
             }
             c = PeekChar(ts);
             if (JS7_ISLET(c)) {
-                tp->ptr = ts->linebuf.ptr - 1;
+                char buf[2] = { '\0' };
+                tp->pos.begin.index += length + 1;
+                buf[0] = (char)c;
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                            JSMSG_BAD_REGEXP_FLAG);
+                                            JSMSG_BAD_REGEXP_FLAG, buf);
                 (void) GetChar(ts);
                 goto error;
             }
