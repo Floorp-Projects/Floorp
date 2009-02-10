@@ -1104,12 +1104,10 @@ nsOfflineCacheDevice::Init()
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ns.NameSpace <= ?1 AND ?1 GLOB ns.NameSpace || '*'"
                                                      " ORDER BY ns.NameSpace DESC, groups.ActivateTimeStamp DESC;"),
-    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT ns.NameSpace, ns.Data, ns.ItemType FROM "
-                                                     "  moz_cache_namespaces AS ns JOIN moz_cache_groups AS groups"
-                                                     "  ON ns.ClientID = groups.ActiveClientID"
+    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT NameSpace, Data, ItemType FROM moz_cache_namespaces"
                                                      " WHERE ClientID = ?1"
                                                      " AND NameSpace <= ?2 AND ?2 GLOB NameSpace || '*'"
-                                                     " ORDER BY ns.NameSpace DESC, groups.ActivateTimeStamp DESC;"),
+                                                     " ORDER BY NameSpace DESC;"),
     StatementSql ( mStatement_InsertNamespaceEntry,  "INSERT INTO moz_cache_namespaces (ClientID, NameSpace, Data, ItemType) VALUES(?, ?, ?, ?);"),
   };
   for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < NS_ARRAY_LENGTH(prepared); ++i)
