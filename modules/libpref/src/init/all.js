@@ -1543,9 +1543,6 @@ pref("intl.jis0208.map", "CP932");
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
 
-// Enable/Disable TSF support
-pref("intl.enable_tsf_support", false);
-
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
 
