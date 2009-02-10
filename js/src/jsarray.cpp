@@ -2163,7 +2163,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
 static jsval FASTCALL
 Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
 {
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) 
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)
         ? array_push1_dense(cx, obj, v, &v)
         : array_push_slowly(cx, obj, 1, &v, &v)) {
         return v;
@@ -2228,7 +2228,6 @@ array_pop_dense(JSContext *cx, JSObject* obj, jsval *vp)
         return JS_FALSE;
     obj->fslots[JSSLOT_ARRAY_LENGTH] = index;
     return JS_TRUE;
-    
 }
 
 #ifdef JS_TRACER
@@ -2254,7 +2253,7 @@ array_pop(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) 
+    if (OBJ_IS_DENSE_ARRAY(cx, obj))
         return array_pop_dense(cx, obj, vp);
     return array_pop_slowly(cx, obj, vp);
 }

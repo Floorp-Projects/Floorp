@@ -191,7 +191,6 @@ namespace nanojit
 			void			releaseTreeMem(Fragmento* frago);
 			bool			isAnchor() { return anchor == this; }
 			bool			isRoot() { return root == this; }
-            void            onDestroy();
 			
 			verbose_only( uint32_t		_called; )
 			verbose_only( uint32_t		_native; )
