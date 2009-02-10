@@ -33,6 +33,18 @@ function manifestUpdatedAgain()
   OfflineTest.ok(gGotChecking, "Should get a checking event on the second update");
   OfflineTest.ok(gGotDownloading, "Should get a downloading event on the second update");
 
+  // The second manifest has no NETWORK entry, but we are still
+  // associated with the first version of the manifest, so we should
+  // be able to access the whitelisted entry.
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "onwhitelist.html", false);
+    xhr.send();
+    OfflineTest.ok(true, "Fetched from the initial cache's whitelist.");
+  } catch (e) {
+    OfflineTest.ok(false, "Failed to fetch from the initial cache's whitelist.");
+  }
+
   // Get the initial contents of the first two files.
   fetcher = new OfflineCacheContents([g1SecUrl, g1HourUrl]);
   fetcher.fetch(function(contents) {
