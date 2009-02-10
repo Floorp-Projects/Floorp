@@ -67,7 +67,8 @@ nsSVGRenderingObserver::~nsSVGRenderingObserver()
   if (mElement.get()) {
     mElement.get()->RemoveMutationObserver(this);
   }
-  if (mReferencedFrame && !mReferencedFramePresShell->IsDestroying()) {
+  if (mReferencedFrame &&
+      !mReferencedFramePresShell->FrameConstructor()->IsDestroyingFrameTree()) {
     nsSVGEffects::RemoveRenderingObserver(mReferencedFrame, this);
   }
 }
@@ -75,8 +76,14 @@ nsSVGRenderingObserver::~nsSVGRenderingObserver()
 nsIFrame*
 nsSVGRenderingObserver::GetReferencedFrame()
 {
-  if (mReferencedFrame && !mReferencedFramePresShell->IsDestroying()) {
+  if (mReferencedFrame &&
+      !mReferencedFramePresShell->FrameConstructor()->IsDestroyingFrameTree()) {
+    // We may be destroying frames in mReferencedFramePresShell, which
+    // means we can't call GetPrimaryFrame there. But that's OK, since
+    // mReferencedFrame cannot have been destroyed yet (or we would have
+    // lost our reference to it).
     NS_ASSERTION(mElement.get() &&
+                 !mReferencedFramePresShell->FrameManager()->IsDestroyingFrames() &&
                  static_cast<nsGenericElement*>(mElement.get())->GetPrimaryFrame() == mReferencedFrame,
                  "Cached frame is incorrect!");
     return mReferencedFrame;
@@ -113,7 +120,7 @@ nsSVGRenderingObserver::GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK)
 void
 nsSVGRenderingObserver::DoUpdate()
 {
-  if (mFramePresShell->IsDestroying()) {
+  if (mFramePresShell->FrameConstructor()->IsDestroyingFrameTree()) {
     // mFrame is no longer valid. Bail out.
     mFrame = nsnull;
     return;
