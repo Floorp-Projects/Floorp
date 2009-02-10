@@ -24,17 +24,28 @@
       testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
       testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
 
-      // aria-describedby
-      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox3");
-      testRelation("checkbox3", RELATION_DESCRIBED_BY, "descr1");
+      // aria-labelledby, multiple relations
+      testRelation("label3", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("label4", RELATION_LABEL_FOR, "checkbox3");
+      testRelation("checkbox3", RELATION_LABELLED_BY, ["label3", "label4"]);
 
-      // aria_owns
+      // aria-describedby
+      testRelation("descr1", RELATION_DESCRIPTION_FOR, "checkbox4");
+      testRelation("checkbox4", RELATION_DESCRIBED_BY, "descr1");
+
+      // aria-describedby, multiple relations
+      testRelation("descr2", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("descr3", RELATION_DESCRIPTION_FOR, "checkbox5");
+      testRelation("checkbox5", RELATION_DESCRIBED_BY, ["descr2", "descr3"]);
+
+      // aria_owns, multiple relations
       testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
 
       // 'node child of' relation for outlineitem role
-      testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
-      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "treeitem3");
+      testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
 
       // 'node child of' relation for the document having window, returns
       // direct accessible parent (fixed in bug 419770).
@@ -48,9 +59,19 @@
       testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
       testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
 
+      // aria-controls, multiple relations
+      testRelation("lr1", RELATION_CONTROLLED_BY, "button");
+      testRelation("lr2", RELATION_CONTROLLED_BY, "button");
+      testRelation("button", RELATION_CONTROLLER_FOR, ["lr1", "lr2"]);
+
       // aria-flowto
       testRelation("flowto", RELATION_FLOWS_TO, "flowfrom");
       testRelation("flowfrom", RELATION_FLOWS_FROM, "flowto");
+
+      // aria-flowto, multiple relations
+      testRelation("flowto1", RELATION_FLOWS_TO, ["flowfrom1", "flowfrom2"]);
+      testRelation("flowfrom1", RELATION_FLOWS_FROM, "flowto1");
+      testRelation("flowfrom2", RELATION_FLOWS_FROM, "flowto1");
 
       // 'default button' relation
       testRelation("input", RELATION_DEFAULT_BUTTON, "submit");
@@ -104,16 +125,25 @@
   <input id="checkbox1" />
 
   <span id="label2">label</span>
-  <span role="checkbox" id="checkbox2" aria-labelledby="label2" />
+  <span role="checkbox" id="checkbox2" aria-labelledby="label2"></span>
+
+  <span id="label3">label1</span>
+  <span id="label4">label2</span>
+  <span role="checkbox" id="checkbox3" aria-labelledby="label3 label4"></span>
 
   <span id="descr1">description</span>
-  <span role="checkbox" id="checkbox3" aria-describedby="descr1" />
+  <span role="checkbox" id="checkbox4" aria-describedby="descr1"></span>
+
+  <span id="descr2">description1</span>
+  <span id="descr3">description2</span>
+  <span role="checkbox" id="checkbox5" aria-describedby="descr2 descr3"></span>
 
   <div role="treeitem" id="treeitem1">Yellow</div>
-  <div id="tree" role="tree" aria-owns="treeitem1">
-    <div role="treeitem" id="treeitem2">Blue</div>
-    <div role="treeitem" id="treeitem3" aria-level="1">Green</div>
-    <div role="treeitem" id="treeitem4" aria-level="2">Light green</div>
+  <div role="treeitem" id="treeitem2">Orange</div>
+  <div id="tree" role="tree" aria-owns="treeitem1 treeitem2">
+    <div role="treeitem" id="treeitem3">Blue</div>
+    <div role="treeitem" id="treeitem4" aria-level="1">Green</div>
+    <div role="treeitem" id="treeitem5" aria-level="2">Light green</div>
   </div>
 
   <iframe id="iframe"></iframe>
@@ -123,8 +153,17 @@
   </div>
   <div id="tabpanel" role="tabpanel">tabpanel</div>
 
+  <div id="lr1" aria-live="assertive">1</div>
+  <div id="lr2" aria-live="assertive">a</div>
+  <input type="button" id="button" aria-controls="lr1 lr2"
+         onclick="getNode('lr1').textContent += '1'; getNode('lr2').textContent += 'a';"/>
+
   <span id="flowto" aria-flowto="flowfrom">flow to</span>
   <span id="flowfrom">flow from</span>
+
+  <span id="flowto1" aria-flowto="flowfrom1 flowfrom2">flow to</span>
+  <span id="flowfrom1">flow from</span>
+  <span id="flowfrom2">flow from</span>
 
   <form>
     <input id="input" />

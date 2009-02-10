@@ -84,6 +84,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIURI.h"
 #include "nsITimer.h"
+#include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
@@ -1701,48 +1702,35 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aNa
   // Get DHTML name from content subtree pointed to by ID attribute
   aName.Truncate();
   NS_ASSERTION(mDOMNode, "Called from shutdown accessible");
+
   nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
   if (!content)
     return NS_OK;
 
-  nsAutoString ids;
-  if (!content->GetAttr(kNameSpaceID_None, aIDProperty, ids))
+  nsCOMPtr<nsIArray> refElms;
+  nsCoreUtils::GetElementsByIDRefsAttr(content, aIDProperty,
+                                       getter_AddRefs(refElms));
+
+  if (!refElms)
     return NS_OK;
 
-  ids.CompressWhitespace(PR_TRUE, PR_TRUE);
+  PRUint32 count = 0;
+  nsresult rv = refElms->GetLength(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(content->GetOwnerDoc());
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> refContent;
+  for (PRUint32 idx = 0; idx < count; idx++) {
+    refContent = do_QueryElementAt(refElms, idx, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // Support idlist as in aria-labelledby="id1 id2 id3"
-  while (!ids.IsEmpty()) {
-    nsAutoString id;
-    PRInt32 idLength = ids.FindChar(' ');
-    NS_ASSERTION(idLength != 0, "Should not be 0 because of CompressWhitespace() call above");
-    if (idLength == kNotFound) {
-      id = ids;
-      ids.Truncate();
-    } else {
-      id = Substring(ids, 0, idLength);
-      ids.Cut(0, idLength + 1);
-    }
-
-    if (!aName.IsEmpty()) {
+    if (!aName.IsEmpty())
       aName += ' '; // Need whitespace between multiple labels or descriptions
-    }
-    nsCOMPtr<nsIDOMElement> labelElement;
-    domDoc->GetElementById(id, getter_AddRefs(labelElement));
-    content = do_QueryInterface(labelElement);
-    if (!content) {
-      return NS_OK;
-    }
-    // We have a label content
-    nsresult rv = AppendFlatStringFromSubtree(content, &aName);
-    if (NS_SUCCEEDED(rv)) {
-      aName.CompressWhitespace();
-    }
+
+    rv = AppendFlatStringFromSubtree(refContent, &aName);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
+  aName.CompressWhitespace();
   return NS_OK;
 }
 
@@ -1922,7 +1910,8 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
         *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
       }
       else {   // Check to see if combo owns the listbox instead
-        GetAccessibleRelated(nsIAccessibleRelation::RELATION_NODE_CHILD_OF, getter_AddRefs(possibleCombo));
+        possibleCombo = nsRelUtils::
+          GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
         if (nsAccUtils::Role(possibleCombo) == nsIAccessibleRole::ROLE_COMBOBOX)
           *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
       }
@@ -2228,10 +2217,8 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     } else {
       // Expose 'selected' state on ARIA tab if the focus is on internal element
       // of related tabpanel.
-      nsCOMPtr<nsIAccessible> tabPanel;
-      rv = GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABEL_FOR,
-                                getter_AddRefs(tabPanel));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIAccessible> tabPanel = nsRelUtils::
+        GetRelatedAccessible(this, nsIAccessibleRelation::RELATION_LABEL_FOR);
 
       if (nsAccUtils::Role(tabPanel) == nsIAccessibleRole::ROLE_PROPERTYPAGE) {
         nsCOMPtr<nsIAccessNode> tabPanelAccessNode(do_QueryInterface(tabPanel));
@@ -2705,78 +2692,119 @@ nsIDOMNode* nsAccessible::GetAtomicRegion()
   return atomicRegion;
 }
 
-/* nsIAccessible getAccessibleRelated(); */
-NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
+// nsIAccessible getRelationByType()
+NS_IMETHODIMP
+nsAccessible::GetRelationByType(PRUint32 aRelationType,
+                                nsIAccessibleRelation **aRelation)
 {
-  // When adding support for relations, make sure to add them to
-  // appropriate places in nsAccessibleWrap implementations
-  *aRelated = nsnull;
+  NS_ENSURE_ARG_POINTER(aRelation);
+  *aRelation = nsnull;
 
-  // Relationships are defined on the same content node
-  // that the role would be defined on
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  // Relationships are defined on the same content node that the role would be
+  // defined on.
   nsIContent *content = nsCoreUtils::GetRoleContent(mDOMNode);
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
+  if (!content)
+    return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> relatedNode;
-  nsAutoString relatedID;
+  nsresult rv;
 
-  // Search for the related DOM node according to the specified "relation type"
   switch (aRelationType)
   {
   case nsIAccessibleRelation::RELATION_LABEL_FOR:
     {
       if (content->Tag() == nsAccessibilityAtoms::label) {
-        nsIAtom *relatedIDAttr = content->IsNodeOfType(nsINode::eHTML) ?
+        nsIAtom *IDAttr = content->IsNodeOfType(nsINode::eHTML) ?
           nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
-        content->GetAttr(kNameSpaceID_None, relatedIDAttr, relatedID);
+        rv = nsRelUtils::
+          AddTargetFromIDRefAttr(aRelationType, aRelation, content, IDAttr);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (rv != NS_OK_NO_RELATION_TARGET)
+          return NS_OK; // XXX bug 381599, avoid performance problems
       }
-      if (relatedID.IsEmpty()) {
-        relatedNode =
-          do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_labelledby));
-      }
-      break;
+
+      return nsRelUtils::
+        AddTargetFromNeighbour(aRelationType, aRelation, content,
+                               nsAccessibilityAtoms::aria_labelledby);
     }
+
   case nsIAccessibleRelation::RELATION_LABELLED_BY:
     {
-      if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby, relatedID)) {
-        relatedNode = do_QueryInterface(nsCoreUtils::GetLabelContent(content));
-      }
-      break;
+      rv = nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, content,
+                                nsAccessibilityAtoms::aria_labelledby);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (rv != NS_OK_NO_RELATION_TARGET)
+        return NS_OK; // XXX bug 381599, avoid performance problems
+
+      return nsRelUtils::
+        AddTargetFromContent(aRelationType, aRelation,
+                             nsCoreUtils::GetLabelContent(content));
     }
+
   case nsIAccessibleRelation::RELATION_DESCRIBED_BY:
     {
-      if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_describedby, relatedID)) {
-        relatedNode = do_QueryInterface(
-          nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::control, nsAccessibilityAtoms::description));
-      }
-      break;
+      rv = nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, content,
+                                nsAccessibilityAtoms::aria_describedby);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (rv != NS_OK_NO_RELATION_TARGET)
+        return NS_OK; // XXX bug 381599, avoid performance problems
+
+      return nsRelUtils::
+        AddTargetFromNeighbour(aRelationType, aRelation, content,
+                               nsAccessibilityAtoms::control,
+                               nsAccessibilityAtoms::description);
     }
+
   case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
     {
-      relatedNode =
-        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_describedby));
+      rv = nsRelUtils::
+        AddTargetFromNeighbour(aRelationType, aRelation, content,
+                               nsAccessibilityAtoms::aria_describedby);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
+      if (rv != NS_OK_NO_RELATION_TARGET)
+        return NS_OK; // XXX bug 381599, avoid performance problems
+
+      if (content->Tag() == nsAccessibilityAtoms::description &&
           content->IsNodeOfType(nsINode::eXUL)) {
         // This affectively adds an optional control attribute to xul:description,
         // which only affects accessibility, by allowing the description to be
         // tied to a control.
-        content->GetAttr(kNameSpaceID_None,
-                         nsAccessibilityAtoms::control, relatedID);
+        return nsRelUtils::
+          AddTargetFromIDRefAttr(aRelationType, aRelation, content,
+                                 nsAccessibilityAtoms::control);
       }
-      break;
+
+      return NS_OK;
     }
+
   case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
     {
-      relatedNode =
-        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_owns));
-      if (!relatedNode && mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-        // This is an ARIA tree that doesn't use owns, so we need to get the parent the hard way
-        nsAccUtils::GetARIATreeItemParent(this, content, aRelated);
-        return NS_OK;
+      rv = nsRelUtils::
+        AddTargetFromNeighbour(aRelationType, aRelation, content,
+                               nsAccessibilityAtoms::aria_owns);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (rv != NS_OK_NO_RELATION_TARGET)
+        return NS_OK; // XXX bug 381599, avoid performance problems
+
+      if (mRoleMapEntry &&
+          mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+        // This is an ARIA tree that doesn't use owns, so we need to get
+        // the parent the hard way.
+        nsCOMPtr<nsIAccessible> accTarget;
+        nsAccUtils::GetARIATreeItemParent(this, content,
+                                          getter_AddRefs(accTarget));
+        return nsRelUtils::AddTarget(aRelationType, aRelation, accTarget);
       }
+
       // If accessible is in its own Window then we should provide NODE_CHILD_OF relation
       // so that MSAA clients can easily get to true parent instead of getting to oleacc's
       // ROLE_WINDOW accessible which will prevent us from going up further (because it is
@@ -2787,34 +2815,44 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
         if (view) {
           nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
           if (scrollFrame || view->GetWidget()) {
-            return GetParent(aRelated);
+            nsCOMPtr<nsIAccessible> accTarget;
+            GetParent(getter_AddRefs(accTarget));
+            return nsRelUtils::AddTarget(aRelationType, aRelation, accTarget);
           }
         }
       }
-      break;
+
+      return NS_OK;
     }
+
   case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
     {
-      relatedNode =
-        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_controls));
-      break;
+      return nsRelUtils::
+        AddTargetFromNeighbour(aRelationType, aRelation, content,
+                               nsAccessibilityAtoms::aria_controls);
     }
+
   case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
     {
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_controls, relatedID);
-      break;
+      return nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, content,
+                                nsAccessibilityAtoms::aria_controls);
     }
+
   case nsIAccessibleRelation::RELATION_FLOWS_TO:
     {
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_flowto, relatedID);
-      break;
+      return nsRelUtils::
+        AddTargetFromIDRefsAttr(aRelationType, aRelation, content,
+                                nsAccessibilityAtoms::aria_flowto);
     }
+
   case nsIAccessibleRelation::RELATION_FLOWS_FROM:
     {
-      relatedNode =
-        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_flowto));
-      break;
+      return nsRelUtils::
+        AddTargetFromNeighbour(aRelationType, aRelation, content,
+                               nsAccessibilityAtoms::aria_flowto);
     }
+
   case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
     {
       if (content->IsNodeOfType(nsINode::eHTML)) {
@@ -2824,8 +2862,12 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
           nsCOMPtr<nsIDOMHTMLFormElement> htmlform;
           control->GetForm(getter_AddRefs(htmlform));
           nsCOMPtr<nsIForm> form(do_QueryInterface(htmlform));
-          if (form)
-            relatedNode = do_QueryInterface(form->GetDefaultSubmitElement());
+          if (form) {
+            nsCOMPtr<nsIContent> formContent =
+              do_QueryInterface(form->GetDefaultSubmitElement());
+            return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                                    formContent);
+          }
         }
       }
       else {
@@ -2864,37 +2906,24 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
               }
             }
           }
-          relatedNode = do_QueryInterface(buttonEl);
+          nsCOMPtr<nsIContent> relatedContent(do_QueryInterface(buttonEl));
+          return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                                  relatedContent);
         }
       }
-      break;
+      return NS_OK;
     }
+
   case nsIAccessibleRelation::RELATION_MEMBER_OF:
     {
-      relatedNode = GetAtomicRegion();
-      break;
+      nsCOMPtr<nsIContent> regionContent = do_QueryInterface(GetAtomicRegion());
+      return nsRelUtils::
+        AddTargetFromContent(aRelationType, aRelation, regionContent);
     }
+
   default:
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_INVALID_ARG;
   }
-
-  if (!relatedID.IsEmpty()) {
-    // In some cases we need to get the relatedNode from an ID-style attribute
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMElement> relatedEl;
-    domDoc->GetElementById(relatedID, getter_AddRefs(relatedEl));
-    relatedNode = do_QueryInterface(relatedEl);
-  }
-
-  // Return the corresponding accessible if the related DOM node is found
-  if (relatedNode) {
-    nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
-    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-    accService->GetAccessibleInWeakShell(relatedNode, mWeakShell, aRelated);
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2945,16 +2974,12 @@ nsAccessible::GetRelations(nsIArray **aRelations)
   for (PRUint32 relType = nsIAccessibleRelation::RELATION_FIRST;
        relType < nsIAccessibleRelation::RELATION_LAST;
        ++relType) {
-    nsCOMPtr<nsIAccessible> accessible;
-    GetAccessibleRelated(relType, getter_AddRefs(accessible));
 
-    if (accessible) {
-      nsCOMPtr<nsIAccessibleRelation> relation =
-        new nsAccessibleRelationWrap(relType, accessible);
-      NS_ENSURE_TRUE(relation, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsIAccessibleRelation> relation;
+    nsresult rv = GetRelationByType(relType, getter_AddRefs(relation));
 
+    if (NS_SUCCEEDED(rv) && relation)
       relations->AppendElement(relation, PR_FALSE);
-    }
   }
 
   NS_ADDREF(*aRelations = relations);

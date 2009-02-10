@@ -45,6 +45,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIArray.h"
 #include "nsPoint.h"
 
 class nsCoreUtils
@@ -232,6 +233,17 @@ public:
    */
   static void GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
                              nsAString& aLanguage);
+
+  /**
+   * Return the array of elements the given node is referred to by its
+   * IDRefs attribute.
+   *
+   * @param aContent     [in] the given node
+   * @param aAttr        [in] IDRefs attribute on the given node
+   * @param aRefElements [out] result array of elements
+   */
+  static void GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
+                                      nsIArray **aRefElements);
 
   /**
    * Return computed styles declaration for the given node.

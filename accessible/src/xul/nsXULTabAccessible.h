@@ -58,8 +58,8 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
-                                  nsIAccessible **aRelatedAccessible);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 
   // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
@@ -108,8 +108,8 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
-                                  nsIAccessible **aRelatedAccessible);
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation **aRelation);
 };
 
 #endif
