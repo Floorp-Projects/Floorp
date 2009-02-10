@@ -793,49 +793,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
-// Auto JS GC lock helper.
-class AutoLockJSGC
-{
-public:
-    AutoLockJSGC(JSRuntime* rt) : mJSRuntime(rt) { JS_LOCK_GC(mJSRuntime); }
-    ~AutoLockJSGC() { JS_UNLOCK_GC(mJSRuntime); }
-private:
-    JSRuntime* mJSRuntime;
-
-    // Disable copy or assignment semantics.
-    AutoLockJSGC(const AutoLockJSGC&);
-    void operator=(const AutoLockJSGC&);
-};
-
-//static
-void
-XPCJSRuntime::WatchdogMain(void *arg)
-{
-    XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
-
-    // Lock lasts until we return
-    AutoLockJSGC lock(self->mJSRuntime);
-
-    while (self->mWatchdogThread)
-    {
-#ifdef DEBUG
-        PRStatus status =
-#endif
-            PR_WaitCondVar(self->mWatchdogWakeup, PR_TicksPerSecond());
-        JS_ASSERT(status == PR_SUCCESS);
-
-        JSContext* cx = nsnull;
-        while((cx = js_NextActiveContext(self->mJSRuntime, cx)))
-        {
-            JS_TriggerOperationCallback(cx);
-        }
-    }
-
-    /* Wake up the main thread waiting for the watchdog to terminate. */
-    PR_NotifyCondVar(self->mWatchdogWakeup);
-}
-
-
 /***************************************************************************/
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -884,24 +841,6 @@ void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
 
 XPCJSRuntime::~XPCJSRuntime()
 {
-    if (mWatchdogWakeup)
-    {
-        // If the watchdog thread is running, tell it to terminate waking it
-        // up if necessary and wait until it signals that it finished. As we
-        // must release the lock before calling PR_DestroyCondVar, we use an
-        // extra block here.
-        {
-            AutoLockJSGC lock(mJSRuntime);
-            if (mWatchdogThread) {
-                mWatchdogThread = nsnull;
-                PR_NotifyCondVar(mWatchdogWakeup);
-                PR_WaitCondVar(mWatchdogWakeup, PR_INTERVAL_NO_TIMEOUT);
-            }
-        }
-        PR_DestroyCondVar(mWatchdogWakeup);
-        mWatchdogWakeup = nsnull;
-    }
-
 #ifdef XPC_DUMP_AT_SHUTDOWN
     {
     // count the total JSContexts in use
@@ -1075,9 +1014,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mVariantRoots(nsnull),
    mWrappedJSRoots(nsnull),
    mObjectHolderRoots(nsnull),
-   mUnrootedGlobalCount(0),
-   mWatchdogWakeup(nsnull),
-   mWatchdogThread(nsnull)
+   mUnrootedGlobalCount(0)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
@@ -1120,7 +1057,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
-        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
     }
 
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
@@ -1132,12 +1068,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if(mJSRuntime && !JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
-
-    AutoLockJSGC lock(mJSRuntime);
-
-    mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
-                                      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-                                      PR_UNJOINABLE_THREAD, 0);
 }
 
 // static
@@ -1159,8 +1089,7 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
        self->GetNativeScriptableSharedMap()  &&
        self->GetDyingWrappedNativeProtoMap() &&
        self->GetExplicitNativeWrapperMap()   &&
-       self->GetMapLock()                    &&
-       self->mWatchdogThread)
+       self->GetMapLock())
     {
         return self;
     }
@@ -1330,8 +1259,7 @@ void
 XPCRootSetElem::AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead)
 {
     NS_ASSERTION(!mSelfp, "Must be not linked");
-
-    AutoLockJSGC lock(rt);
+    JS_LOCK_GC(rt);
     mSelfp = listHead;
     mNext = *listHead;
     if(mNext)
@@ -1340,18 +1268,19 @@ XPCRootSetElem::AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead)
         mNext->mSelfp = &mNext;
     }
     *listHead = this;
+    JS_UNLOCK_GC(rt);
 }
 
 void
 XPCRootSetElem::RemoveFromRootSet(JSRuntime* rt)
 {
     NS_ASSERTION(mSelfp, "Must be linked");
-
-    AutoLockJSGC lock(rt);
+    JS_LOCK_GC(rt);
     NS_ASSERTION(*mSelfp == this, "Link invariant");
     *mSelfp = mNext;
     if(mNext)
         mNext->mSelfp = mSelfp;
+    JS_UNLOCK_GC(rt);
 #ifdef DEBUG
     mSelfp = nsnull;
     mNext = nsnull;
