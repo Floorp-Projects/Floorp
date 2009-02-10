@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>Crash TR.cells = null</title>
+<script language="javascript">
+function crashme()
+{
+	var elm = document.createElement('tr');
+
+	elm.cells = null;
+}
+
+</script>
+</head>
+<body onload="crashme()">
+
+<p>
+This test case creates a TR element then tries to assign to the cells property
+</p>
+<p>
+Crash
+</p>
+
+</body>
+</html>

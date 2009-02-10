@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY  editAwayMessageSpecial3.label " %%d = Current date">
+<!ELEMENT foo EMPTY>
+]>
+<foo/>
