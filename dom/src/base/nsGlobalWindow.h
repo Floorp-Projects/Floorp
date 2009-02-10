@@ -628,6 +628,14 @@ protected:
     return aList != &mTimeouts;
   }
 
+  // Convenience functions for the many methods that need to scale
+  // from device to CSS pixels or vice versa.  Note: if a presentation
+  // context is not available, they will assume a 1:1 ratio.
+  PRInt32 DevToCSSIntPixels(PRInt32 px);
+  PRInt32 CSSToDevIntPixels(PRInt32 px);
+  nsIntSize DevToCSSIntPixels(nsIntSize px);
+  nsIntSize CSSToDevIntPixels(nsIntSize px);
+
   static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
 
   // When adding new member variables, be careful not to create cycles
