@@ -569,6 +569,13 @@ public:
 
   static nsresult GetHashFromHrefString(const nsAString &aHref,
                                         nsAString& aHash);
+
+  /**
+   * Locate an nsIEditor rooted at this content node, if there is one.
+   */
+  NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
+  NS_HIDDEN_(nsresult) GetEditorInternal(nsIEditor** aEditor);
+
 protected:
   /**
    * Focus or blur the element.  This is what you should call if you want to
@@ -727,12 +734,6 @@ protected:
    * @param aResult  result value [out]
    */
   NS_HIDDEN_(nsresult) GetURIListAttr(nsIAtom* aAttr, nsAString& aResult);
-
-  /**
-   * Locate an nsIEditor rooted at this content node, if there is one.
-   */
-  NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
-  NS_HIDDEN_(nsresult) GetEditorInternal(nsIEditor** aEditor);
 
   /**
    * Locates the nsIEditor associated with this node.  In general this is
