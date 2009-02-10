@@ -360,7 +360,7 @@ NS_IMETHODIMP nsHTMLSelectListAccessible::GetRole(PRUint32 *aRole)
   if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX)
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
   else
-    *aRole = nsIAccessibleRole::ROLE_LIST;
+    *aRole = nsIAccessibleRole::ROLE_LISTBOX;
 
   return NS_OK;
 }
