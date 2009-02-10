@@ -2632,11 +2632,9 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     re_debug("\tBT_Push: %lu,%lu",
              (unsigned long) parenIndex, (unsigned long) parenCount);
 
-    JS_COUNT_OPERATION(gData->cx, JSOW_JUMP * (1 + parenCount));
     if (btincr > 0) {
         ptrdiff_t offset = (char *)result - (char *)gData->backTrackStack;
 
-        JS_COUNT_OPERATION(gData->cx, JSOW_ALLOCATION);
         btincr = JS_ROUNDUP(btincr, btsize);
         JS_ARENA_GROW_CAST(gData->backTrackStack, REBackTrackData *,
                            &gData->cx->regexpPool, btsize, btincr);
@@ -3813,7 +3811,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
         if (!result) {
             if (gData->cursz == 0)
                 return NULL;
-            if (!JS_CHECK_OPERATION_LIMIT(gData->cx, JSOW_JUMP)) {
+            if (!JS_CHECK_OPERATION_LIMIT(gData->cx)) {
                 gData->ok = JS_FALSE;
                 return NULL;
             }
