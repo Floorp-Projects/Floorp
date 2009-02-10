@@ -119,7 +119,6 @@ struct JSTitle {
 #define JS_ATOMIC_INCREMENT(p)      PR_AtomicIncrement((PRInt32 *)(p))
 #define JS_ATOMIC_DECREMENT(p)      PR_AtomicDecrement((PRInt32 *)(p))
 #define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
-#define JS_ATOMIC_SET(p,v)          PR_AtomicSet((PRInt32 *)(p), (PRInt32)(v))
 
 #define js_CurrentThreadId()        (jsword)PR_GetCurrentThread()
 #define JS_NEW_LOCK()               PR_NewLock()
@@ -199,9 +198,6 @@ extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);
 extern void js_FinishSharingTitle(JSContext *cx, JSTitle *title);
 
-extern void js_NudgeOtherContexts(JSContext *cx);
-extern void js_NudgeThread(JSContext *cx, JSThread *thread);
-
 #ifdef DEBUG
 
 #define JS_IS_RUNTIME_LOCKED(rt)        js_IsRuntimeLocked(rt)
@@ -241,7 +237,6 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
 #define JS_ATOMIC_DECREMENT(p)      (--*(p))
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
-#define JS_ATOMIC_SET(p,v)          (*(p) = (v))
 
 #define JS_CurrentThreadId() 0
 #define JS_NEW_LOCK()               NULL

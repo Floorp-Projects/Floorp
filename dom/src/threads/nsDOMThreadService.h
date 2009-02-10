@@ -134,8 +134,6 @@ private:
     GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
                      PRBool aRemove);
 
-  void TriggerOperationCallbackForPool(nsDOMWorkerPool* aPool);
-
   void NoteEmptyPool(nsDOMWorkerPool* aPool);
 
   void TimeoutReady(nsDOMWorkerTimeout* aTimeout);
@@ -160,10 +158,6 @@ private:
 
   // A map from nsDOMWorkerThread to nsDOMWorkerRunnable.
   nsRefPtrHashtable<nsVoidPtrHashKey, nsDOMWorkerRunnable> mWorkersInProgress;
-
-  // A list of active JSContexts that we've created. Always protected with
-  // mMonitor.
-  nsTArray<JSContext*> mJSContexts;
 
   nsString mAppName;
   nsString mAppVersion;
