@@ -154,6 +154,8 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
+pref("accessibility.browserwithcaret_shortcut.enabled", true);
+
 #ifndef XP_MACOSX
 // Tab focus model bit field:
 // 1 focuses text controls, 2 focuses other form elements, 4 adds links.

@@ -1002,6 +1002,10 @@
           if (event.getPreventDefault() || !event.isTrusted)
             return;
 
+          var isEnabled = this.mPrefs.getBoolPref("accessibility.browsewithcaret_shortcut.enabled");
+          if (!isEnabled)
+            return;
+
           // Toggle browse with caret mode
           var browseWithCaretOn = false;
           var warn = true;
