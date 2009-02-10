@@ -546,14 +546,33 @@ getLoop(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
     return getVMFragment(tm, ip, globalShape);
 }
 
+static inline void*
+placementNewInLirBuffer(size_t size, nanojit::LirBuffer *buf)
+{
+    LirBufWriter writer(buf);
+    char *mem = (char*) writer.skip(size)->payload();
+    if (!mem)
+        return NULL;
+    memset (mem, 0, size);
+    return mem;
+}
+
+void*
+avmplus::GCObject::operator new(size_t size, nanojit::LirBuffer *buf)
+{
+    return placementNewInLirBuffer(size, buf);
+}
+
+void*
+operator new(size_t size, nanojit::LirBuffer *buf)
+{
+    return placementNewInLirBuffer(size, buf);
+}
+
 static Fragment*
 getAnchor(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
 {
-    LirBufWriter writer(tm->lirbuf);
-    char *fragmem = (char*) writer.skip(sizeof(VMFragment))->payload();
-    if (!fragmem)
-        return NULL;
-    VMFragment *f = new (fragmem) VMFragment(ip, globalShape);
+    VMFragment *f = new (tm->lirbuf) VMFragment(ip, globalShape);
     JS_ASSERT(f);
 
     Fragment *p = getVMFragment(tm, ip, globalShape);
@@ -1256,16 +1275,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     }
 }
 
-TreeInfo::~TreeInfo()
-{
-    UnstableExit* temp;
-
-    while (unstableExits) {
-        temp = unstableExits->next;
-        delete unstableExits;
-        unstableExits = temp;
-    }
-}
 
 TraceRecorder::~TraceRecorder()
 {
@@ -1282,7 +1291,6 @@ TraceRecorder::~TraceRecorder()
     if (fragment) {
         if (wasRootFragment && !fragment->root->code()) {
             JS_ASSERT(!fragment->root->vmprivate);
-            delete treeInfo;
         }
 
         if (trashSelf)
@@ -1290,8 +1298,6 @@ TraceRecorder::~TraceRecorder()
 
         for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
             js_TrashTree(cx, whichTreesToTrash.get(i));
-    } else if (wasRootFragment) {
-        delete treeInfo;
     }
 #ifdef DEBUG
     delete verbose_filter;
@@ -2603,7 +2609,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
              */
             debug_only_v(printf("Trace has unstable loop variable with no stable peer, "
                                 "compiling anyway.\n");)
-            UnstableExit* uexit = new UnstableExit;
+            UnstableExit* uexit = new (tm->lirbuf) UnstableExit;
             uexit->fragment = fragment;
             uexit->exit = exit;
             uexit->next = treeInfo->unstableExits;
@@ -2708,7 +2714,6 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
                 }
                 if (remove) {
                     *unext = uexit->next;
-                    delete uexit;
                     uexit = *unext;
                 } else {
                     unext = &uexit->next;
@@ -2952,12 +2957,6 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 }
 #endif
 
-void
-nanojit::Fragment::onDestroy()
-{
-    delete (TreeInfo *)vmprivate;
-}
-
 static JS_REQUIRES_STACK bool
 js_DeleteRecorder(JSContext* cx)
 {
@@ -3076,7 +3075,6 @@ js_TrashTree(JSContext* cx, Fragment* f)
     unsigned length = ti->dependentTrees.length();
     for (unsigned n = 0; n < length; ++n)
         js_TrashTree(cx, data[n]);
-    delete ti;
     JS_ASSERT(!f->code() && !f->vmprivate);
 }
 
@@ -3320,7 +3318,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer,
     JS_ASSERT(!f->code() && !f->vmprivate);
 
     /* setup the VM-private treeInfo structure for this fragment */
-    TreeInfo* ti = new (&gc) TreeInfo(f, globalShape, globalSlots);
+    TreeInfo* ti = new (tm->lirbuf) TreeInfo(f, globalShape, globalSlots);
 
     /* capture the coerced type of each active slot in the type map */
     ti->typeMap.captureTypes(cx, *globalSlots, 0/*callDepth*/);
@@ -3443,7 +3441,6 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, Fragment* outer)
             for (UnstableExit* uexit = from_ti->unstableExits; uexit != NULL; uexit = uexit->next) {
                 if (uexit->exit == exit) {
                     *tail = uexit->next;
-                    delete uexit;
                     bound = true;
                     break;
                 }
