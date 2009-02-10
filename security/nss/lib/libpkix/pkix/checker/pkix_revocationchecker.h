@@ -166,7 +166,6 @@ extern "C" {
 /* Defines check time for the cert, revocation methods lists and
  * flags for leaf and chain certs revocation tests. */
 struct PKIX_RevocationCheckerStruct {
-    PKIX_PL_Date *date;
     PKIX_List *leafMethodList;
     PKIX_List *chainMethodList;
     PKIX_UInt32 leafMethodListFlags;

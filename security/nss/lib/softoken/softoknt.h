@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoknt.h,v 1.4 2006/05/05 20:02:47 wtchang%redhat.com Exp $ */
+/* $Id: softoknt.h,v 1.5 2009/01/27 23:13:21 rrelyea%redhat.com Exp $ */
 
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_
@@ -69,5 +69,26 @@ typedef enum {
     NSS_AUDIT_WARNING = 2,  /* warning messages */
     NSS_AUDIT_INFO = 1      /* informational messages */
 } NSSAuditSeverity;
+
+typedef enum {
+    NSS_AUDIT_ACCESS_KEY = 0,
+    NSS_AUDIT_CHANGE_KEY,
+    NSS_AUDIT_COPY_KEY,
+    NSS_AUDIT_CRYPT,
+    NSS_AUDIT_DERIVE_KEY,
+    NSS_AUDIT_DESTROY_KEY,
+    NSS_AUDIT_DIGEST_KEY,
+    NSS_AUDIT_FIPS_STATE,
+    NSS_AUDIT_GENERATE_KEY,
+    NSS_AUDIT_INIT_PIN,
+    NSS_AUDIT_INIT_TOKEN,
+    NSS_AUDIT_LOAD_KEY,
+    NSS_AUDIT_LOGIN,
+    NSS_AUDIT_LOGOUT,
+    NSS_AUDIT_SELF_TEST,
+    NSS_AUDIT_SET_PIN,
+    NSS_AUDIT_UNWRAP_KEY,
+    NSS_AUDIT_WRAP_KEY,
+} NSSAuditType;
 
 #endif /* _SOFTOKNT_H_ */

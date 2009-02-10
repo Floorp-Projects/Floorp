@@ -1511,6 +1511,8 @@ PKIX_PL_Cert_VerifySignature(
  *  "cert"
  *      Address of Cert whose trustworthiness is to be determined. Must be
  *      non-NULL.
+ *  "trustOnlyUserAnchors"
+ *      States that we can only trust explicitly defined user trust anchors.
  *  "pTrusted"
  *      Address where the Boolean value will be stored. Must be non-NULL.
  *  "plContext"
@@ -1525,8 +1527,14 @@ PKIX_PL_Cert_VerifySignature(
 PKIX_Error *
 PKIX_PL_Cert_IsCertTrusted(
         PKIX_PL_Cert *cert,
+        PKIX_Boolean trustOnlyUserAnchors,
         PKIX_Boolean *pTrusted,
         void *plContext);
+
+/* FUNCTION: PKIX_PL_Cert_SetAsTrustAnchor */
+PKIX_Error*
+PKIX_PL_Cert_SetAsTrustAnchor(PKIX_PL_Cert *cert, 
+                              void *plContext);
 
 /*
  * FUNCTION: PKIX_PL_Cert_GetCacheFlag

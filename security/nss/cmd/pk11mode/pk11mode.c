@@ -741,6 +741,18 @@ int main(int argc, char **argv)
             goto cleanup;
     }
 
+    if (doForkTests)
+    {
+        /* In this next test, we fork and try to re-initialize softoken in
+         * the child. This should now work because softoken has the ability
+         * to hard reset.
+         */
+        /* try to fork with softoken both loaded and initialized */
+        crv = PKM_ForkCheck(CKR_OK, pFunctionList, PR_TRUE, &initArgs);
+        if (crv != CKR_OK)
+            goto cleanup;
+    }
+
     crv = PKM_ShowInfo(pFunctionList, slotID);
     if (crv == CKR_OK) {
         PKM_LogIt("PKM_ShowInfo succeeded\n");

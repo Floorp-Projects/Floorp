@@ -114,7 +114,7 @@ Usage(const char *progName)
         "\t\t\tPossible types are \"crl\" and \"ocsp\".\n"
         "\t-s method flags\t Sets revocation flags for the method it follows.\n"
         "\t\t\tPossible types are \"doNotUse\", \"forbidFetching\",\n"
-        "\t\t\t\"ignoreDefaultSrc\", \"requireInfo\" and \"failInNoInfo\".\n",
+        "\t\t\t\"ignoreDefaultSrc\", \"requireInfo\" and \"failIfNoInfo\".\n",
         progName);
     exit(1);
 }
@@ -258,7 +258,7 @@ getCert(const char *name, PRBool isAscii, const char * progName)
 #define REVCONFIG_METHOD_FORBIDNETWORKFETCHIN_STR "forbidFetching"
 #define REVCONFIG_METHOD_IGNOREDEFAULTSRC_STR     "ignoreDefaultSrc"
 #define REVCONFIG_METHOD_REQUIREINFO_STR          "requireInfo"
-#define REVCONFIG_METHOD_FAILIFNOINFO_STR         "failInNoInfo" 
+#define REVCONFIG_METHOD_FAILIFNOINFO_STR         "failIfNoInfo" 
 
 #define REV_METHOD_INDEX_MAX  4
 
@@ -680,10 +680,6 @@ breakout:
         cvin[inParamIndex].value.scalar.b = certFetching;
         inParamIndex++;
 
-        cvin[inParamIndex].type = cert_pi_date;
-        cvin[inParamIndex].value.scalar.time = time;
-        inParamIndex++;
-
         rev.leafTests.cert_rev_flags_per_method = revFlagsLeaf;
         rev.chainTests.cert_rev_flags_per_method = revFlagsChain;
         secStatus = configureRevocationParams(&rev);
@@ -695,6 +691,10 @@ breakout:
         cvin[inParamIndex].type = cert_pi_revocationFlags;
         cvin[inParamIndex].value.pointer.revocation = &rev;
 	inParamIndex++;
+
+        cvin[inParamIndex].type = cert_pi_date;
+        cvin[inParamIndex].value.scalar.time = time;
+        inParamIndex++;
 
         cvin[inParamIndex].type = cert_pi_end;
         

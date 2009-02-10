@@ -566,7 +566,7 @@ cert_CreatePkixProcessingParams(
         PKIX_PROCESSINGPARAMSSETDATEFAILED);
 
     PKIX_CHECK(
-        PKIX_RevocationChecker_Create(date,
+        PKIX_RevocationChecker_Create(
                                   PKIX_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST |
                                   PKIX_REV_MI_NO_OVERALL_INFO_REQUIREMENT,
                                   PKIX_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST |
@@ -1650,13 +1650,8 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
             chainIMFlags =
                 flags->chainTests.cert_rev_method_independent_flags;
 
-            error = PKIX_ProcessingParams_GetDate(procParams, &date, plContext);
-            if (error != NULL) {
-                errCode = SEC_ERROR_INVALID_TIME;
-            }
-
             error =
-                PKIX_RevocationChecker_Create(date, leafIMFlags, chainIMFlags,
+                PKIX_RevocationChecker_Create(leafIMFlags, chainIMFlags,
                                               &revChecker, plContext);
             if (error) {
                 break;

@@ -37,7 +37,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.38 2008/11/18 19:48:24 rrelyea%redhat.com Exp $
+ * $Id: rsa.c,v 1.39 2009/02/03 05:34:41 julien.pierre.boogz%sun.com Exp $
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -54,6 +54,7 @@
 #include "mplogic.h"
 #include "secmpi.h"
 #include "secitem.h"
+#include "blapii.h"
 
 /*
 ** Number of times to attempt to generate a prime (p or q) from a random
@@ -602,10 +603,8 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
     struct RSABlindingParamsStr *rsabp = NULL;
     /* Init the list if neccessary (the init function is only called once!) */
     if (blindingParamsList.lock == NULL) {
-	if (PR_CallOnce(&coBPInit, init_blinding_params_list) != PR_SUCCESS) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    return SECFailure;
-	}
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
     /* Acquire the list lock */
     PZ_Lock(blindingParamsList.lock);
@@ -921,6 +920,20 @@ cleanup:
     return rv;
 }
 
+static SECStatus RSA_Init(void)
+{
+    if (PR_CallOnce(&coBPInit, init_blinding_params_list) != PR_SUCCESS) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+    return SECSuccess;
+}
+
+SECStatus BL_Init(void)
+{
+    return RSA_Init();
+}
+
 /* cleanup at shutdown */
 void RSA_Cleanup(void)
 {
@@ -940,7 +953,7 @@ void RSA_Cleanup(void)
 
     if (blindingParamsList.lock)
     {
-	PZ_DestroyLock(blindingParamsList.lock);
+	SKIP_AFTER_FORK(PZ_DestroyLock(blindingParamsList.lock));
 	blindingParamsList.lock = NULL;
     }
 
@@ -958,3 +971,14 @@ void BL_Cleanup(void)
 {
     RSA_Cleanup();
 }
+
+PRBool parentForkedAfterC_Initialize;
+
+/*
+ * Set fork flag so it can be tested in SKIP_AFTER_FORK on relevant platforms.
+ */
+void BL_SetForkState(PRBool forked)
+{
+    parentForkedAfterC_Initialize = forked;
+}
+

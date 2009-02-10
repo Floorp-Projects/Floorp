@@ -567,9 +567,12 @@ PKIX_ProcessingParams_Create(
         PKIX_CHECK(PKIX_List_SetImmutable(params->trustAnchors, plContext),
                     PKIX_LISTSETIMMUTABLEFAILED);
 
+        PKIX_CHECK(PKIX_PL_Date_Create_UTCTime
+                   (NULL, &params->date, plContext),
+                   PKIX_DATECREATEUTCTIMEFAILED);
+
         params->hintCerts = NULL;
         params->constraints = NULL;
-        params->date = NULL;
         params->initialPolicies = NULL;
         params->initialPolicyMappingInhibit = PKIX_FALSE;
         params->initialAnyPolicyInhibit = PKIX_FALSE;

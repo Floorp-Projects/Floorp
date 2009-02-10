@@ -42,7 +42,7 @@
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.10 2008/06/14 14:20:38 wtc%google.com Exp $
+ * $Id: secoid.h,v 1.11 2009/02/03 05:34:47 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "plarena.h"
@@ -146,6 +146,8 @@ extern SECStatus SECOID_Shutdown(void);
  */
 extern SECStatus SEC_StringToOID(PLArenaPool *pool, SECItem *to, 
                                  const char *from, PRUint32 len);
+
+extern void UTIL_SetForkState(PRBool forked);
 
 SEC_END_PROTOS
 

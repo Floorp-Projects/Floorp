@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.95 2008/12/02 23:24:48 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.96 2009/02/09 07:51:30 nelson%bolyard.com Exp $
  */
 
 #include "nssilock.h"
@@ -938,14 +938,14 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 	goto loser;
     }
 
+    /* determine if this is a root cert */
+    cert->isRoot = cert_IsRootCert(cert);
+
     /* initialize the certType */
     rv = cert_GetCertType(cert);
     if ( rv != SECSuccess ) {
 	goto loser;
     }
-
-    /* determine if this is a root cert */
-    cert->isRoot = cert_IsRootCert(cert);
 
     tmpname = CERT_NameToAscii(&cert->subject);
     if ( tmpname != NULL ) {

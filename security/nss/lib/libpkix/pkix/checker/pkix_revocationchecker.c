@@ -67,7 +67,6 @@ pkix_RevocationChecker_Destroy(
 
         checker = (PKIX_RevocationChecker *)object;
 
-        PKIX_DECREF(checker->date);
         PKIX_DECREF(checker->leafMethodList);
         PKIX_DECREF(checker->chainMethodList);
         
@@ -116,8 +115,7 @@ pkix_RevocationChecker_Duplicate(
         }
 
         PKIX_CHECK(
-            PKIX_RevocationChecker_Create(checker->date,
-                                          checker->leafMethodListFlags,
+            PKIX_RevocationChecker_Create(checker->leafMethodListFlags,
                                           checker->chainMethodListFlags,
                                           &checkerDuplicate,
                                           plContext),
@@ -201,7 +199,6 @@ pkix_RevocationChecker_SortComparator(
  */
 PKIX_Error *
 PKIX_RevocationChecker_Create(
-    PKIX_PL_Date *revDate,
     PKIX_UInt32 leafMethodListFlags,
     PKIX_UInt32 chainMethodListFlags,
     PKIX_RevocationChecker **pChecker,
@@ -219,9 +216,6 @@ PKIX_RevocationChecker_Create(
                              plContext),
         PKIX_COULDNOTCREATECERTCHAINCHECKEROBJECT);
     
-    PKIX_INCREF(revDate);
-    checker->date = revDate;
-
     checker->leafMethodListFlags = leafMethodListFlags;
     checker->chainMethodListFlags = chainMethodListFlags;
     checker->leafMethodList = NULL;
@@ -341,12 +335,13 @@ PKIX_RevocationChecker_Check(
     PKIX_Boolean onlyUseRemoteMethods = PKIX_FALSE;
     PKIX_UInt32 revFlags = 0;
     PKIX_List *revList = NULL;
+    PKIX_PL_Date *date = NULL;
     pkix_RevocationMethod *method = NULL;
     void *nbioContext;
     int tries;
     
     PKIX_ENTER(REVOCATIONCHECKER, "PKIX_RevocationChecker_Check");
-    PKIX_NULLCHECK_ONE(revChecker);
+    PKIX_NULLCHECK_TWO(revChecker, procParams);
 
     nbioContext = *pNbioContext;
     *pNbioContext = NULL;
@@ -365,6 +360,8 @@ PKIX_RevocationChecker_Check(
 
     PORT_Memset(methodStatus, PKIX_RevStatus_NoInfo,
                 sizeof(PKIX_RevocationStatus) * PKIX_RevocationMethod_MAX);
+
+    date = procParams->date;
 
     /* Need to have two loops if we testing all local info first:
      *    first we are going to test all local(cached) info
@@ -392,21 +389,23 @@ PKIX_RevocationChecker_Check(
                 PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
 
                 pkixErrorResult =
-                    (*method->localRevChecker)(cert, issuer,
-                                               revChecker->date,
+                    (*method->localRevChecker)(cert, issuer, date,
                                                method, procParams,
-                                               methodFlags, &revStatus,
+                                               methodFlags, 
+                                               chainVerificationState,
+                                               &revStatus,
                                                pReasonCode, plContext);
                 methodStatus[methodNum] = revStatus;
+                if (revStatus == PKIX_RevStatus_Revoked) {
+                    /* if error was generated use it as final error. */
+                    overallStatus = PKIX_RevStatus_Revoked;
+                    goto cleanup;
+                }
                 if (pkixErrorResult) {
                     /* Disregard errors. Only returned revStatus matters. */
                     PKIX_PL_Object_DecRef((PKIX_PL_Object*)pkixErrorResult,
                                           plContext);
                     pkixErrorResult = NULL;
-                }
-                if (revStatus == PKIX_RevStatus_Revoked) {
-                    overallStatus = PKIX_RevStatus_Revoked;
-                    goto cleanup;
                 }
             }
             if ((!(revFlags & PKIX_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST) ||
@@ -416,22 +415,22 @@ PKIX_RevocationChecker_Check(
                 if (!(methodFlags & PKIX_REV_M_FORBID_NETWORK_FETCHING)) {
                     PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
                     pkixErrorResult =
-                        (*method->externalRevChecker)(cert, issuer,
-                                                      revChecker->date,
+                        (*method->externalRevChecker)(cert, issuer, date,
                                                       method,
                                                       procParams, methodFlags,
                                                       &revStatus, pReasonCode,
                                                       &nbioContext, plContext);
                     methodStatus[methodNum] = revStatus;
+                    if (revStatus == PKIX_RevStatus_Revoked) {
+                        /* if error was generated use it as final error. */
+                        overallStatus = PKIX_RevStatus_Revoked;
+                        goto cleanup;
+                    }
                     if (pkixErrorResult) {
                         /* Disregard errors. Only returned revStatus matters. */
                         PKIX_PL_Object_DecRef((PKIX_PL_Object*)pkixErrorResult,
                                               plContext);
                         pkixErrorResult = NULL;
-                    }
-                    if (revStatus == PKIX_RevStatus_Revoked) {
-                        overallStatus = PKIX_RevStatus_Revoked;
-                        goto cleanup;
                     }
                 } else if (methodFlags &
                            PKIX_REV_M_FAIL_ON_MISSING_FRESH_INFO) {

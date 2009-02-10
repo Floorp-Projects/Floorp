@@ -126,7 +126,6 @@ extern "C" {
  */
 PKIX_Error *
 PKIX_RevocationChecker_Create(
-    PKIX_PL_Date *revDate,
     PKIX_UInt32 leafMethodListFlags,
     PKIX_UInt32 chainMethodListFlags,
     PKIX_RevocationChecker **pChecker,

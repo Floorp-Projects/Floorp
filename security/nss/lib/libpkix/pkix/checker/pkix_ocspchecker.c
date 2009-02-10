@@ -165,6 +165,7 @@ pkix_OcspChecker_CheckLocal(
         pkix_RevocationMethod *checkerObject,
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 methodFlags,
+        PKIX_Boolean chainVerificationState,
         PKIX_RevocationStatus *pRevStatus,
         PKIX_UInt32 *pReasonCode,
         void *plContext)
@@ -203,6 +204,11 @@ pkix_OcspChecker_CheckLocal(
 
 cleanup:
         *pRevStatus = revStatus;
+
+        /* ocsp carries only tree statuses: good, bad, and unknown.
+         * revStatus is used to pass them. reasonCode is always set
+         * to be unknown. */
+        *pReasonCode = crlEntryReasonUnspecified;
         PKIX_DECREF(cid);
 
         PKIX_RETURN(OCSPCHECKER);
@@ -314,7 +320,6 @@ pkix_OcspChecker_CheckExternal(
                 goto cleanup;
         }
         if (passed == PKIX_FALSE) {
-                resultCode = PORT_GetError();
                 goto cleanup;
         }
 
@@ -335,6 +340,11 @@ cleanup:
             revStatus = PKIX_RevStatus_Revoked;
         }
         *pRevStatus = revStatus;
+
+        /* ocsp carries only tree statuses: good, bad, and unknown.
+         * revStatus is used to pass them. reasonCode is always set
+         * to be unknown. */
+        *pReasonCode = crlEntryReasonUnspecified;
 
         if (!passed && cid && cid->certID) {
                 /* We still own the certID object, which means that 

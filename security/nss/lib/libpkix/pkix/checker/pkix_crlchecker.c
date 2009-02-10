@@ -226,7 +226,8 @@ pkix_CrlChecker_CheckLocal(
         pkix_RevocationMethod *checkerObject,
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 methodFlags,
-        PKIX_RevocationStatus *revStatus,
+        PKIX_Boolean chainVerificationState,
+        PKIX_RevocationStatus *pRevStatus,
         PKIX_UInt32 *pReasonCode,
         void *plContext)
 {
@@ -237,6 +238,7 @@ pkix_CrlChecker_CheckLocal(
     PKIX_UInt32 crlStoreIndex = 0;
     PKIX_UInt32 numCrlStores = 0;
     PKIX_Boolean storeIsLocal = PKIX_FALSE;
+    PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
 
     PKIX_ENTER(CERTCHAINCHECKER, "pkix_CrlChecker_CheckLocal");
     PKIX_NULLCHECK_FOUR(cert, issuer, checkerObject, checkerObject);
@@ -268,10 +270,14 @@ pkix_CrlChecker_CheckLocal(
             if (storeCheckRevocationFn) {
                 PKIX_CHECK(
                     storeCheckRevocationFn(certStore, cert, issuer,
-                                           date, &reasonCode,
-                                           revStatus, plContext),
+                                           date,
+                                           /* delay sig check if building
+                                            * a chain */
+                                           !chainVerificationState,
+                                           &reasonCode,
+                                           &revStatus, plContext),
                     PKIX_CERTSTORECRLCHECKFAILED);
-                if (*revStatus == PKIX_RevStatus_Revoked) {
+                if (revStatus == PKIX_RevStatus_Revoked) {
                     break;
                 }
             }
@@ -280,6 +286,7 @@ pkix_CrlChecker_CheckLocal(
     } /* while */
 
 cleanup:
+    *pRevStatus = revStatus;
     PKIX_DECREF(certStore);
 
     PKIX_RETURN(CERTCHAINCHECKER);
@@ -426,6 +433,7 @@ pkix_CrlChecker_CheckExternal(
         
         PKIX_CHECK(
             storeCheckRevocationFn(certStore, cert, issuer, date,
+                                   PKIX_FALSE /* do not delay sig check */,
                                    &reasonCode, &revStatus, plContext),
             PKIX_CERTSTORECRLCHECKFAILED);
         if (revStatus != PKIX_RevStatus_NoInfo) {
