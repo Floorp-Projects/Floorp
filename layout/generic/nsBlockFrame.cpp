@@ -3009,6 +3009,17 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       aState.mPrevBottomMargin = incomingMargin;
       continue;
     }
+
+    if (blockHtmlRS.WillReflowAgainForClearance()) {
+      // If an ancestor of ours is going to reflow for clearance, we
+      // need to avoid calling PlaceBlock, because it unsets dirty bits
+      // on the child block (both itself, and through its call to
+      // nsFrame::DidReflow), and those dirty bits imply dirtiness for
+      // all of the child block, including the lines it didn't reflow.
+      NS_ASSERTION(originalPosition == frame->GetPosition(),
+                   "we need to call PositionChildViews");
+      return NS_OK;
+    }
     
     aState.mPrevChild = frame;
     
