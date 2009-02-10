@@ -34,6 +34,7 @@
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Ningjie Chen <chenn@email.uc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -150,6 +151,9 @@
 #include "prmem.h"
 
 
+#ifdef NS_ENABLE_TSF
+#include "nsTextStore.h"
+#endif //NS_ENABLE_TSF
 
 #ifdef WINCE
 
@@ -746,14 +750,19 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsTopWidgetWindow = PR_FALSE;
   mLastKeyboardLayout = 0;
 
+#ifdef NS_ENABLE_TSF
+  if (!sInstanceCount)
+    nsTextStore::Initialize();
+#endif //NS_ENABLE_TSF
+
 #ifndef WINCE
   if (!sInstanceCount && SUCCEEDED(::OleInitialize(NULL))) {
     sIsOleInitialized = TRUE;
   }
   NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
+#endif
 
   sInstanceCount++;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -788,11 +797,17 @@ nsWindow::~nsWindow()
     SetCursor(eCursor_standard);
   }
 
+  sInstanceCount--;
+
+#ifdef NS_ENABLE_TSF
+  if (!sInstanceCount)
+    nsTextStore::Terminate();
+#endif //NS_ENABLE_TSF
+
 #ifndef WINCE
   //
   // delete any of the IME structures that we allocated
   //
-  sInstanceCount--;
   if (sInstanceCount == 0) {
     if (sIMECompUnicode) 
       delete sIMECompUnicode;
@@ -2826,6 +2841,12 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 #else
       return (void*)::GetDC(mWnd);
 #endif
+
+#ifdef NS_ENABLE_TSF
+    case NS_NATIVE_TSF_POINTER:
+      return nsTextStore::GetNativeData();
+#endif //NS_ENABLE_TSF
+
     case NS_NATIVE_COLORMAP:
     default:
       break;
@@ -5303,6 +5324,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
 #endif // WINCE
 
+#ifdef NS_ENABLE_TSF
+      else if (msg == WM_USER_TSF_TEXTCHANGE) {
+        nsTextStore::OnTextChangeMsg();
+      }
+#endif //NS_ENABLE_TSF
+
     }
     break;
 #ifndef WINCE
@@ -7427,8 +7454,8 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
 
   nsIntRect r;
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_CHARACTER_RECT, this);
-    charRect.InitForQueryCharacterRect(offset);
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, this);
+    charRect.InitForQueryTextRect(offset, 1);
     InitEvent(charRect, &point);
     DispatchWindowEvent(&charRect);
     if (charRect.mSucceeded)
@@ -7536,6 +7563,11 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 #ifdef DEBUG_KBSTATE
   printf("ResetInputState\n");
 #endif
+
+#ifdef NS_ENABLE_TSF
+  nsTextStore::CommitComposition(PR_FALSE);
+#endif //NS_ENABLE_TSF
+
   HIMC hIMC = ::ImmGetContext(mWnd);
   if (hIMC) {
     BOOL ret = FALSE;
@@ -7553,6 +7585,11 @@ NS_IMETHODIMP nsWindow::SetIMEOpenState(PRBool aState)
 #ifdef DEBUG_KBSTATE
   printf("SetIMEOpenState %s\n", (aState ? "Open" : "Close"));
 #endif 
+
+#ifdef NS_ENABLE_TSF
+  nsTextStore::SetIMEOpenState(aState);
+#endif //NS_ENABLE_TSF
+
   HIMC hIMC = ::ImmGetContext(mWnd);
   if (hIMC) {
     ::ImmSetOpenStatus(hIMC, aState ? TRUE : FALSE);
@@ -7571,12 +7608,21 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
     ::ImmReleaseContext(mWnd, hIMC);
   } else 
     *aState = PR_FALSE;
+
+#ifdef NS_ENABLE_TSF
+  *aState |= nsTextStore::GetIMEOpenState();
+#endif //NS_ENABLE_TSF
+
   return NS_OK;
 }
 
 //==========================================================================
 NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
 {
+#ifdef NS_ENABLE_TSF
+  nsTextStore::SetIMEEnabled(aState);
+#endif //NS_ENABLE_TSF
+
   if (sIMEIsComposing)
     ResetInputState();
   mIMEEnabled = aState;
@@ -7603,6 +7649,11 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition()
 #ifdef DEBUG_KBSTATE
   printf("CancelIMEComposition\n");
 #endif 
+
+#ifdef NS_ENABLE_TSF
+  nsTextStore::CommitComposition(PR_TRUE);
+#endif //NS_ENABLE_TSF
+
   HIMC hIMC = ::ImmGetContext(mWnd);
   if (hIMC) {
     BOOL ret = FALSE;
@@ -7807,6 +7858,30 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
   else
     gAttentionTimerMonitor->KillTimer(hwnd);
 }
+
+
+#ifdef NS_ENABLE_TSF
+NS_IMETHODIMP
+nsWindow::OnIMEFocusChange(PRBool aFocus)
+{
+  return nsTextStore::OnFocusChange(aFocus, this, mIMEEnabled);
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMETextChange(PRUint32 aStart,
+                          PRUint32 aOldEnd,
+                          PRUint32 aNewEnd)
+{
+  return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMESelectionChange(void)
+{
+  return nsTextStore::OnSelectionChange();
+}
+#endif //NS_ENABLE_TSF
+
 
 // Draw user's attention to this window until it comes to foreground.
 NS_IMETHODIMP

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Ningjie Chen <chenn@email.uc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsQueryContentEventHandler_h__
-#define nsQueryContentEventHandler_h__
+#ifndef nsContentEventHandler_h__
+#define nsContentEventHandler_h__
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -50,29 +51,36 @@
 class nsPresContext;
 class nsIPresShell;
 class nsQueryContentEvent;
+class nsSelectionEvent;
 class nsCaret;
 struct nsRect;
 
 /*
  * Query Content Event Handler
- *   nsQueryContentEventHandler is a helper class for nsEventStateManager.
+ *   nsContentEventHandler is a helper class for nsEventStateManager.
  *   The platforms request some content informations, e.g., the selected text,
  *   the offset of the selected text and the text for specified range.
  *   This class answers to NS_QUERY_* events from actual contents.
  */
 
-class NS_STACK_CLASS nsQueryContentEventHandler {
+class NS_STACK_CLASS nsContentEventHandler {
 public:
-  nsQueryContentEventHandler(nsPresContext *aPresContext);
+  nsContentEventHandler(nsPresContext *aPresContext);
 
   // NS_QUERY_SELECTED_TEXT event handler
   nsresult OnQuerySelectedText(nsQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_CONTENT event handler
   nsresult OnQueryTextContent(nsQueryContentEvent* aEvent);
-  // NS_QUERY_CHARACTER_RECT event handler
-  nsresult OnQueryCharacterRect(nsQueryContentEvent* aEvent);
   // NS_QUERY_CARET_RECT event handler
   nsresult OnQueryCaretRect(nsQueryContentEvent* aEvent);
+  // NS_QUERY_TEXT_RECT event handler
+  nsresult OnQueryTextRect(nsQueryContentEvent* aEvent);
+  // NS_QUERY_EDITOR_RECT event handler
+  nsresult OnQueryEditorRect(nsQueryContentEvent* aEvent);
+
+  // NS_SELECTION_* event
+  nsresult OnSelectionEvent(nsSelectionEvent* aEvent);
+
 protected:
   nsPresContext* mPresContext;
   nsIPresShell* mPresShell;
@@ -82,11 +90,19 @@ protected:
 
   nsresult Init(nsQueryContentEvent* aEvent);
 
+public:
   // FlatText means the text that is generated from DOM tree. The BR elements
   // are replaced to native linefeeds. Other elements are ignored.
 
-  // Generate the FlatText from DOM range.
-  nsresult GenerateFlatTextContent(nsIRange* aRange, nsAFlatString& aString);
+  // Get the offset in FlatText of the range. (also used by nsIMEStateManager)
+  static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
+                                           nsINode* aNode,
+                                           PRInt32 aNodeOffset,
+                                           PRUint32* aOffset);
+  static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
+                                           nsIRange* aRange,
+                                           PRUint32* aOffset);
+protected:
   // Make the DOM range from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
@@ -94,22 +110,18 @@ protected:
                                       PRUint32 aNativeOffset,
                                       PRUint32 aNativeLength,
                                       PRBool aExpandToClusterBoundaries);
-  // Get the offset in FlatText of the range.
-  nsresult GetFlatTextOffsetOfRange(nsIRange* aRange, PRUint32* aOffset);
   // Find the first textframe for the range, and get the start offset in
   // the frame.
   nsresult GetStartFrameAndOffset(nsIRange* aRange,
-                                  nsIFrame** aFrame, PRInt32* aOffsetInFrame);
+                                  nsIFrame** aFrame,
+                                  PRInt32* aOffsetInFrame);
   // Convert the frame relative offset to the root view relative offset.
-  nsresult ConvertToRootViewRelativeOffset(nsIFrame* aFrame, nsRect& aRect);
-  // The helper for OnQueryCharacterRect/OnQueryCaretRect.
-  // Don't call for another event.
-  nsresult QueryRectFor(nsQueryContentEvent* aEvent, nsIRange* aRange,
-                        nsCaret* aCaret);
+  nsresult ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
+                                           nsRect& aRect);
   // Expand aXPOffset to the nearest offset in cluster boundary. aForward is
   // true, it is expanded to forward.
   nsresult ExpandToClusterBoundary(nsIContent* aContent, PRBool aForward,
                                    PRUint32* aXPOffset);
 };
 
-#endif // nsQueryContentEventHandler_h__
+#endif // nsContentEventHandler_h__
