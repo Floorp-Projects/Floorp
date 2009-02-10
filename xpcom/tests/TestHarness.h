@@ -55,14 +55,14 @@
 
 /**
  * Prints the given failure message and arguments using printf, prepending
- * "FAIL " for the benefit of the test harness and appending "\n" to eliminate
- * having to type it at each call site.
+ * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
+ * appending "\n" to eliminate having to type it at each call site.
  */
 void fail(const char* msg, ...)
 {
   va_list ap;
 
-  printf("FAIL ");
+  printf("TEST-UNEXPECTED-FAIL | ");
 
   va_start(ap, msg);
   vprintf(msg, ap);
