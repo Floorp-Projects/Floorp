@@ -522,7 +522,6 @@ namespace nanojit
 
 	Fragment::~Fragment()
 	{
-        onDestroy();
 		NanoAssert(_pages == 0);
     }
 
