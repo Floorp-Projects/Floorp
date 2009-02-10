@@ -880,8 +880,6 @@ public:
   {
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(aTarget);
     NS_ASSERTION(svgChildFrame, "Expected SVG frame here");
-    NS_ASSERTION(!svgChildFrame->GetMatrixPropagation(),
-                 "This should have been set to false already");
 
     nsIntRect* dirtyRect = nsnull;
     nsIntRect tmpDirtyRect;
@@ -889,15 +887,11 @@ public:
     // aDirtyRect is in user-space pixels, we need to convert to
     // outer-SVG-frame-relative device pixels.
     if (aDirtyRect) {
-      // Temporarily set SetMatrixPropagation so we can find out what
-      // the actual CTM is.
-      svgChildFrame->SetMatrixPropagation(PR_TRUE);
       nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(aTarget);
       NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
-      svgChildFrame->SetMatrixPropagation(PR_FALSE);
 
-      gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
-      gfxRect dirtyBounds = matrix.TransformBounds(
+      gfxMatrix userToDeviceSpace = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
+      gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(
         gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height));
       dirtyBounds.RoundOut();
       if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect))) {

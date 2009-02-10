@@ -45,3 +45,25 @@
 == feTile-2.svg feTile-2-ref.svg
 
 # no tests for feSpecularLighting, feDiffuseLighting or feTurbulence
+
+== filter-clipped-rect-01.svg pass.svg
+== filter-filterRes-high-01.svg pass.svg
+== filter-filterRes-high-02.svg pass.svg
+== filter-filterRes-low-01.svg pass.svg
+== filter-inner-svg-01.svg pass.svg
+== filter-inner-svg-02.svg pass.svg
+== filter-inner-svg-03.svg pass.svg
+fails == filter-marked-line-01.svg pass.svg # bug 477704
+== filter-marked-line-02.svg pass.svg
+== filter-marked-line-03.svg pass.svg
+== filter-marked-line-04.svg pass.svg
+== filter-marked-line-05.svg pass.svg
+== filter-marked-line-06.svg pass.svg
+== filter-marked-line-07.svg pass.svg
+== filter-marked-line-08.svg pass.svg
+== filter-marked-line-09.svg pass.svg
+== filter-nested-filtering-01.svg pass.svg
+== filter-nested-filtering-02.svg pass.svg
+== filter-patterned-rect-01.svg pass.svg
+== filter-patterned-rect-02.svg pass.svg
+
