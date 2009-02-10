@@ -2522,8 +2522,11 @@ freebsd*|kfreebsd*)
 *cygwin*|*mingw*|*mks*|*msvc*|*wince)
     AC_DEFINE(AVMPLUS_WIN32)
     ;;
+*os2*)
+    AC_DEFINE(AVMPLUS_OS2)
+    ;;
 *)
-    AC_MSG_ERROR([Unrecognized nanojit platform])
+    AC_MSG_ERROR([Unrecognized nanojit platform. Use --disable-jit to build without JIT support.])
 esac
 
 fi # ENABLE_JIT
