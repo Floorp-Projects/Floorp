@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Myk Melez <myk@mozilla.org>
+ *  Jono DiCarlo <jdicarlo@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,13 +41,15 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/constants.js");
+Cu.import("resource://weave/type_records/tabs.js");
+Cu.import("resource://weave/engines/clientData.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -60,212 +63,268 @@ TabEngine.prototype = {
   logName: "Tabs",
   _storeObj: TabStore,
   _trackerObj: TabTracker,
-  _recordObj: ClientTabsRecord
+  _recordObj: TabSetRecord,
 
-  get virtualTabs() {
-    let virtualTabs = {};
-    let realTabs = this._store.wrap();
+  // API for use by Weave UI code to give user choices of tabs to open:
+  getAllClients: function TabEngine_getAllClients() {
+    return this._store._remoteClients;
+  },
 
-    for (let profileId in this._file.data) {
-      let tabset = this._file.data[profileId];
-      for (let guid in tabset) {
-        if (!(guid in realTabs) && !(guid in virtualTabs)) {
-          virtualTabs[guid] = tabset[guid];
-          virtualTabs[guid].profileId = profileId;
-        }
-      }
-    }
-    return virtualTabs;
+  getClientById: function TabEngine_getClientById(id) {
+    return this._store._remoteClients[id];
   }
+
 };
+
 
 function TabStore() {
   this._TabStore_init();
 }
 TabStore.prototype = {
-  __proto__: new Store(),
+  __proto__: Store.prototype,
   _logName: "Tabs.Store",
+  _filePath: "weave/meta/tabSets.json",
+  _remoteClients: {},
+
+  _TabStore_init: function TabStore__init() {
+    dump("Initializing TabStore!!\n");
+    this._init();
+    this._readFromFile();
+  },
+
+  get _localClientGUID() {
+    return Clients.clientID;
+  },
+
+  get _localClientName() {
+    return Clients.clientName;
+  },
+
+  get _fennecTabs() {
+    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+	       .getService(Ci.nsIWindowMediator);
+    let browserWindow = wm.getMostRecentWindow("navigator:browser");
+    return browserWindow.Browser._tabs;
+  },
+
+  _writeToFile: function TabStore_writeToFile() {
+    // use JSON service to serialize the records...
+    this._log.debug("Writing out to file...");
+    let file = Utils.getProfileFile(
+      {path: this._filePath, autoCreate: true});
+    let jsonObj = {};
+    for (let id in this._remoteClients) {
+      jsonObj[id] = this._remoteClients[id].toJson();
+    }
+    let [fos] = Utils.open(file, ">");
+    fos.writeString(this._json.encode(jsonObj));
+    fos.close();
+  },
+
+  _readFromFile: function TabStore_readFromFile() {
+    // use JSON service to un-serialize the records...
+    // call on initialization.
+    // Put stuff into remoteClients.
+    this._log.debug("Reading in from file...");
+    let file = Utils.getProfileFile(this._filePath);
+    if (!file.exists())
+      return;
+    try {
+      let [is] = Utils.open(file, "<");
+      let json = Utils.readStream(is);
+      is.close();
+      let jsonObj = this._json.decode(json);
+      for (let id in jsonObj) {
+	this._remoteClients[id] = new TabSetRecord();
+	this._remoteClients[id].fromJson(jsonObj[id]);
+	this._remoteClients[id].id = id;
+      }
+    } catch (e) {
+      this._log.warn("Failed to load saved tabs file" + e);
+    }
+  },
 
   get _sessionStore() {
     let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
 		       getService(Ci.nsISessionStore);
-    this.__defineGetter__("_sessionStore", function() sessionStore);
+    this.__defineGetter__("_sessionStore", function() { return sessionStore;});
     return this._sessionStore;
   },
 
-  _createCommand: function TabStore__createCommand(command) {
-    this._log.debug("_createCommand: " + command.GUID);
-
-    if (command.GUID in this._virtualTabs || command.GUID in this._wrapRealTabs())
-      throw "trying to create a tab that already exists; id: " + command.GUID;
-
-    // Don't do anything if the command isn't valid (i.e. it doesn't contain
-    // the minimum information about the tab that is necessary to recreate it).
-    if (!this.validateVirtualTab(command.data)) {
-      this._log.warn("could not create command " + command.GUID + "; invalid");
-      return;
-    }
-
-    // Cache the tab and notify the UI to prompt the user to open it.
-    this._virtualTabs[command.GUID] = command.data;
-    this._os.notifyObservers(null, "weave:store:tabs:virtual:created", null);
+  get _json() {
+    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    this.__defineGetter__("_json", function() {return json;});
+    return this._json;
   },
 
-  /**
-   * Serialize the current state of tabs.
-   */
-  wrap: function TabStore_wrap() {
-    let items = {};
+  _addTabToRecord: function( tab, record ) {
+    // TODO contentDocument not defined for fennec's tab objects
+    let title = tab.contentDocument.title.innerHtml; // will this work?
+    this._log.debug("Wrapping a tab with title " + title);
+    let urlHistory = [];
+    let entries = tab.entries.slice(tab.entries.length - 10);
+    for (let entry in entries) {
+      urlHistory.push( entry.url );
+    }
+    record.addTab(title, urlHistory);
+  },
 
-    let session = this._json.decode(this._sessionStore.getBrowserState());
+  _createLocalClientTabSetRecord: function TabStore__createLocalTabSet() {
+    // Test for existence of sessionStore.  If it doesn't exist, then
+    // use get _fennecTabs instead.
+    let record = new TabSetRecord();
+    record.setClientName( this._localClientName );
 
-    for (let i = 0; i < session.windows.length; i++) {
-      let window = session.windows[i];
-      // For some reason, session store uses one-based array index references,
-      // (f.e. in the "selectedWindow" and each tab's "index" properties), so we
-      // convert them to and from JavaScript's zero-based indexes as needed.
-      let windowID = i + 1;
+    if (Cc["@mozilla.org/browser/sessionstore;1"])  {
+      let session = this._json.decode(this._sessionStore.getBrowserState());
+      for (let i = 0; i < session.windows.length; i++) {
+	let window = session.windows[i];
+	/* For some reason, session store uses one-based array index references,
+	 (f.e. in the "selectedWindow" and each tab's "index" properties), so we
+	 convert them to and from JavaScript's zero-based indexes as needed. */
+	let windowID = i + 1;
 
-      for (let j = 0; j < window.tabs.length; j++) {
-        let tab = window.tabs[j];
-
-	// The session history entry for the page currently loaded in the tab.
-	// We use the URL of the current page as the ID for the tab.
-	let currentEntry = tab.entries[tab.index - 1];
-	if (!currentEntry || !currentEntry.url) {
-	  this._log.warn("_wrapRealTabs: no current entry or no URL, can't " +
-                         "identify " + this._json.encode(tab));
-	  continue;
+	for (let j = 0; j < window.tabs.length; j++) {
+	  this._addTabToRecord(window.tabs[j], record);
 	}
-
-	let tabID = currentEntry.url;
-
-        // Only sync up to 10 back-button entries, otherwise we can end up with
-        // some insanely large snapshots.
-        tab.entries = tab.entries.slice(tab.entries.length - 10);
-
-        // The ID property of each entry in the tab, which I think contains
-        // nsISHEntry::ID, changes every time session store restores the tab,
-        // so we can't sync them, or we would generate edit commands on every
-        // restart (even though nothing has actually changed).
-        for (let k = 0; k < tab.entries.length; k++) {
-            delete tab.entries[k].ID;
-        }
-
-	items[tabID] = {
-          // Identify this item as a tab in case we start serializing windows
-          // in the future.
-	  type: "tab",
-
-          // The position of this tab relative to other tabs in the window.
-          // For consistency with session store data, we make this one-based.
-          position: j + 1,
-
-	  windowID: windowID,
-
-	  state: tab
-	};
+      }
+    } else {
+      for each ( let tab in this._fennecTabs) {
+	this._addTabToRecord(tab, record);
       }
     }
+    return record;
+  },
 
+  itemExists: function TabStore_itemExists(id) {
+    this._log.debug("ItemExists called.");
+    if (id == this._localClientGUID) {
+      this._log.debug("It's me.");
+      return true;
+    } else if (this._remoteClients[id]) {
+      this._log.debug("It's somebody else.");
+      return true;
+    } else {
+      this._log.debug("It doesn't exist!");
+      return false;
+    }
+  },
+
+  createRecord: function TabStore_createRecord(id) {
+    this._log.debug("CreateRecord called for id " + id );
+    let record;
+    if (id == this._localClientGUID) {
+      this._log.debug("That's Me!");
+      record = this._createLocalClientTabSetRecord();
+    } else {
+      this._log.debug("That's Somebody Else.");
+      record = this._remoteClients[id];
+    }
+    record.id = id;
+    return record;
+  },
+
+  changeItemId: function TabStore_changeItemId(oldId, newId) {
+    this._log.debug("changeItemId called.");
+    if (this._remoteClients[oldId]) {
+      let record = this._remoteClients[oldId];
+      record.id = newId;
+      delete this._remoteClients[oldId];
+      this._remoteClients[newId] = record;
+    }
+  },
+
+  getAllIDs: function TabStore_getAllIds() {
+    this._log.debug("getAllIds called.");
+    let items = {};
+    items[ this._localClientGUID ] = true;
+    for (let id in this._remoteClients) {
+      items[id] = true;
+    }
     return items;
   },
 
   wipe: function TabStore_wipe() {
-    // We're not going to close tabs, since that's probably not what
-    // the user wants
+    this._log.debug("Wipe called.  Clearing cache of remote client tabs.");
+    this._remoteClients = {};
+    this._writeToFile();
+  },
+
+  create: function TabStore_create(record) {
+    if (record.id == this._localClientGUID)
+      return; // can't happen?
+    this._log.debug("Create called.  Adding remote client record for ");
+    this._log.debug(record.getClientName());
+    this._remoteClients[record.id] = record;
+    this._writeToFile();
+    // TODO writing to file after every change is inefficient.  How do we
+    // make sure to do it (or at least flush it) only after sync is done?
+    // override syncFinished
+  },
+
+  update: function TabStore_update(record) {
+    if (record.id == this._localClientGUID)
+      return; // can't happen?
+    this._log.debug("Update called.  Updating remote client record for");
+    this._log.debug(record.getClientName());
+    this._remoteClients[record.id] = record;
+    this._writeToFile();
+  },
+
+  remove: function TabStore_remove(record) {
+    if (record.id == this._localClientGUID)
+      return; // can't happen?
+    this._log.debug("Remove called.  Deleting record with id " + record.id);
+    delete this._remoteClients[record.id];
+    this._writeToFile();
   }
+
 };
 
-function TabTracker(engine) {
-  this._engine = engine;
-  this._init();
+function TabTracker() {
+  this._TabTracker_init();
 }
 TabTracker.prototype = {
-  __proto__: new Tracker(),
-
+  __proto__: Tracker.prototype,
   _logName: "TabTracker",
+  file: "tab_tracker",
 
-  _engine: null,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return this._json;
+  _TabTracker_init: function TabTracker__init() {
+    this._init();
+
+    // Register me as an observer!!  Listen for tabs opening and closing:
+    // TODO We need to also register with any windows that are ALREDY
+    // open.  On Fennec maybe try to get this from getBrowser(), which is
+    // defined differently but should still exist...
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+	       .getService(Ci.nsIWindowWatcher);
+    dump("Initialized TabTracker\n");
+    ww.registerNotification(this);
   },
 
-  /**
-   * There are two ways we could calculate the score.  We could calculate it
-   * incrementally by using the window mediator to watch for windows opening/
-   * closing and FUEL (or some other API) to watch for tabs opening/closing
-   * and changing location.
-   *
-   * Or we could calculate it on demand by comparing the state of tabs
-   * according to the session store with the state according to the snapshot.
-   *
-   * It's hard to say which is better.  The incremental approach is less
-   * accurate if it simply increments the score whenever there's a change,
-   * but it might be more performant.  The on-demand approach is more accurate,
-   * but it might be less performant depending on how often it's called.
-   *
-   * In this case we've decided to go with the on-demand approach, and we
-   * calculate the score as the percent difference between the snapshot set
-   * and the current tab set, where tabs that only exist in one set are
-   * completely different, while tabs that exist in both sets but whose data
-   * doesn't match (f.e. because of variations in history) are considered
-   * "half different".
-   *
-   * So if the sets don't match at all, we return 100;
-   * if they completely match, we return 0;
-   * if half the tabs match, and their data is the same, we return 50;
-   * and if half the tabs match, but their data is all different, we return 75.
-   */
-  get score() {
-    // The snapshot data is a singleton that we can't modify, so we have to
-    // copy its unique items to a new hash.
-    let snapshotData = this._engine.snapshot.data;
-    let a = {};
-
-    // The wrapped current state is a unique instance we can munge all we want.
-    let b = this._engine.store.wrap();
-
-    // An array that counts the number of intersecting IDs between a and b
-    // (represented as the length of c) and whether or not their values match
-    // (represented by the boolean value of each item in c).
-    let c = [];
-
-    // Generate c and update a and b to contain only unique items.
-    for (id in snapshotData) {
-      if (id in b) {
-        c.push(this._json.encode(snapshotData[id]) == this._json.encode(b[id]));
-        delete b[id];
-      }
-      else {
-        a[id] = snapshotData[id];
-      }
+  observe: function TabTracker_observe(aSubject, aTopic, aData) {
+    dump("TabTracker spotted window open/close...\n");
+    let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    // TODO: Not all windows have tabContainers.  Fennec windows don't,
+    // for instance.
+    if (! window.getBrowser)
+      return;
+    let browser = window.getBrowser();
+    if (! browser.tabContainer)
+      return;
+    let container = browser.tabContainer;
+    if (aTopic == "domwindowopened") {
+      container.addEventListener("TabOpen", this.onTabChanged, false);
+      container.addEventListener("TabClose", this.onTabChanged, false);
+    } else if (aTopic == "domwindowclosed") {
+      container.removeEventListener("TabOpen", this.onTabChanged, false);
+      container.removeEventListener("TabClose", this.onTabChanged, false);
     }
-
-    let numShared = c.length;
-    let numUnique = [true for (id in a)].length + [true for (id in b)].length;
-    let numTotal = numShared + numUnique;
-
-    // We're going to divide by the total later, so make sure we don't try
-    // to divide by zero, even though we should never be in a state where there
-    // are no tabs in either set.
-    if (numTotal == 0)
-      return 0;
-
-    // The number of shared items whose data is different.
-    let numChanged = c.filter(function(v) !v).length;
-
-    let fractionSimilar = (numShared - (numChanged / 2)) / numTotal;
-    let fractionDissimilar = 1 - fractionSimilar;
-    let percentDissimilar = Math.round(fractionDissimilar * 100);
-
-    return percentDissimilar;
   },
 
-  resetScore: function FormsTracker_resetScore() {
-    // Not implemented, since we calculate the score on demand.
+  onTabChanged: function TabTracker_onTabChanged(event) {
+    this._score += 10; // meh?  meh.
   }
 }
