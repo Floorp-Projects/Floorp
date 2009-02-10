@@ -1183,11 +1183,13 @@ private:
   nsresult GetHostKeys(const nsACString &spec,
                        nsTArray<nsCString> &hostKeys);
 
+// Read all relevant entries for the given URI into mCachedEntries.
+  nsresult CacheEntries(const nsCSubstring& spec);
+
   // Look for a given lookup string (www.hostname.com/path/to/resource.html)
-  // in the entries at the given key.  Returns a list of entries that match.
-  nsresult CheckKey(const nsCSubstring& spec,
-                    const nsACString& key,
-                    nsTArray<nsUrlClassifierLookupResult>& results);
+  // Returns a list of entries that match.
+  nsresult Check(const nsCSubstring& spec,
+                 nsTArray<nsUrlClassifierLookupResult>& results);
 
   // Perform a classifier lookup for a given url.
   nsresult DoLookup(const nsACString& spec, nsIUrlClassifierLookupCallback* c);
@@ -1534,41 +1536,76 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
 }
 
 nsresult
-nsUrlClassifierDBServiceWorker::CheckKey(const nsACString& spec,
-                                         const nsACString& hostKey,
-                                         nsTArray<nsUrlClassifierLookupResult>& results)
+nsUrlClassifierDBServiceWorker::CacheEntries(const nsACString& spec)
 {
-  // First, if this key has been checked since our last update and had
-  // no entries, we can exit early.  We also do this check before
-  // posting the lookup to this thread, but in case multiple lookups
-  // are queued at the same time, it's worth checking again here.
-  {
-    nsAutoLock lock(mCleanHostKeysLock);
-    if (mCleanHostKeys.Has(hostKey))
-      return NS_OK;
+  nsAutoTArray<nsCString, 2> lookupHosts;
+  nsresult rv = GetHostKeys(spec, lookupHosts);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Build a unique string for this set of lookup hosts.
+  nsCAutoString hostKey;
+  for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
+    hostKey.Append(lookupHosts[i]);
+    hostKey.Append("|");
   }
 
-  // Now read host key entries from the db if necessary.
-  if (hostKey != mCachedHostKey) {
-    mCachedEntries.Clear();
-    nsUrlClassifierDomainHash hostKeyHash;
-    hostKeyHash.FromPlaintext(hostKey, mCryptoHash);
-    mMainStore.ReadAddEntries(hostKeyHash, mCachedEntries);
-    mCachedHostKey = hostKey;
+  if (hostKey == mCachedHostKey) {
+    // mCachedHostKeys is valid for this set of lookup hosts.
+    return NS_OK;
   }
+
+  mCachedEntries.Clear();
+  mCachedHostKey.Truncate();
+
+  PRUint32 prevLength = 0;
+  for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
+    // First, if this key has been checked since our last update and
+    // had no entries, we don't need to check the DB here.  We also do
+    // this check before posting the lookup to this thread, but in
+    // case multiple lookups are queued at the same time, it's worth
+    // checking again here.
+    {
+      nsAutoLock lock(mCleanHostKeysLock);
+      if (mCleanHostKeys.Has(lookupHosts[i]))
+        continue;
+    }
+
+    // Read the entries for this lookup houst
+    nsUrlClassifierDomainHash hostKeyHash;
+    hostKeyHash.FromPlaintext(lookupHosts[i], mCryptoHash);
+    mMainStore.ReadAddEntries(hostKeyHash, mCachedEntries);
+
+    if (mCachedEntries.Length() == prevLength) {
+      // There were no entries in the db for this host key.  Go
+      // ahead and mark the host key as clean to help short-circuit
+      // future lookups.
+      nsAutoLock lock(mCleanHostKeysLock);
+      mCleanHostKeys.Put(lookupHosts[i]);
+    } else {
+      prevLength = mCachedEntries.Length();
+    }
+  }
+
+  mCachedHostKey = hostKey;
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::Check(const nsACString& spec,
+                                      nsTArray<nsUrlClassifierLookupResult>& results)
+{
+  // Read any entries that might apply to this URI into mCachedEntries
+  nsresult  rv = CacheEntries(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCachedEntries.Length() == 0) {
-    // There were no entries in the db for this host key.  Go ahead
-    // and mark the host key as clean to help short-circuit future
-    // lookups.
-    nsAutoLock lock(mCleanHostKeysLock);
-    mCleanHostKeys.Put(hostKey);
     return NS_OK;
   }
 
   // Now get the set of fragments to look up.
   nsTArray<nsCString> fragments;
-  nsresult rv = GetLookupFragments(spec, fragments);
+  rv = GetLookupFragments(spec, fragments);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
@@ -1671,14 +1708,9 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsAutoTArray<nsCString, 2> lookupHosts;
-  rv = GetHostKeys(spec, lookupHosts);
-
-  for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
-    // we ignore failures from CheckKey because we'd rather try to
-    // find more results than fail.
-    CheckKey(spec, lookupHosts[i], *results);
-  }
+  // we ignore failures from Check because we'd rather return the
+  // results that were found than fail.
+  Check(spec, *results);
 
 #if defined(PR_LOGGING)
   if (LOG_ENABLED()) {
