@@ -184,6 +184,7 @@ CanvasBrowser.prototype = {
 
   endLoading: function() {
     this._clippedPageDrawing = false;
+    this._maybeZoomToPage = false;
     this.zoomToPage();
     this.ensureFullCanvasIsDrawn();
 
