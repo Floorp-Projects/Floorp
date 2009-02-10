@@ -303,7 +303,7 @@ js_FinishLock(JSThinLock *tl)
 #include <stdio.h>
 #include "jsdhash.h"
 
-static FILE *logfp;
+static FILE *logfp = NULL;
 static JSDHashTable logtbl;
 
 typedef struct logentry {
@@ -314,7 +314,7 @@ typedef struct logentry {
 } logentry;
 
 static void
-logit(JSScope *scope, char op, const char *file, int line)
+logit(JSTitle *title, char op, const char *file, int line)
 {
     logentry *entry;
 
@@ -324,35 +324,35 @@ logit(JSScope *scope, char op, const char *file, int line)
             return;
         setvbuf(logfp, NULL, _IONBF, 0);
     }
-    fprintf(logfp, "%p %c %s %d\n", scope, op, file, line);
+    fprintf(logfp, "%p %d %c %s %d\n", title, title->u.count, op, file, line);
 
     if (!logtbl.entryStore &&
         !JS_DHashTableInit(&logtbl, JS_DHashGetStubOps(), NULL,
                            sizeof(logentry), 100)) {
         return;
     }
-    entry = (logentry *) JS_DHashTableOperate(&logtbl, scope, JS_DHASH_ADD);
+    entry = (logentry *) JS_DHashTableOperate(&logtbl, title, JS_DHASH_ADD);
     if (!entry)
         return;
-    entry->stub.key = scope;
+    entry->stub.key = title;
     entry->op = op;
     entry->file = file;
     entry->line = line;
 }
 
 void
-js_unlog_scope(JSScope *scope)
+js_unlog_title(JSTitle *title)
 {
     if (!logtbl.entryStore)
         return;
-    (void) JS_DHashTableOperate(&logtbl, scope, JS_DHASH_REMOVE);
+    (void) JS_DHashTableOperate(&logtbl, title, JS_DHASH_REMOVE);
 }
 
-# define LOGIT(scope,op) logit(scope, op, __FILE__, __LINE__)
+# define LOGIT(title,op) logit(title, op, __FILE__, __LINE__)
 
 #else
 
-# define LOGIT(scope,op) /* nothing */
+# define LOGIT(title, op) /* nothing */
 
 #endif /* DEBUG_SCOPE_COUNT */
 
@@ -459,6 +459,38 @@ js_FinishSharingTitle(JSContext *cx, JSTitle *title)
 }
 
 /*
+ * Notify all contexts that are currently in a request, which will give them a
+ * chance to yield their current request.
+ */
+void
+js_NudgeOtherContexts(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    JSContext *acx = NULL;
+
+    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
+        if (cx != acx)
+            JS_TriggerOperationCallback(acx);
+    }
+}
+
+/*
+ * Notify all contexts that are currently in a request and execute on this
+ * specific thread.
+ */
+void
+js_NudgeThread(JSContext *cx, JSThread *thread)
+{
+    JSRuntime *rt = cx->runtime;
+    JSContext *acx = NULL;
+    
+    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
+        if (cx != acx && cx->thread == thread)
+            JS_TriggerOperationCallback(acx);
+    }
+}
+
+/*
  * Given a title with apparently non-null ownercx different from cx, try to
  * set ownercx to cx, claiming exclusive (single-threaded) ownership of title.
  * If we claim ownership, return true.  Otherwise, we wait for ownercx to be
@@ -560,6 +592,8 @@ ClaimTitle(JSTitle *title, JSContext *cx)
                     JS_NOTIFY_REQUEST_DONE(rt);
             }
         }
+
+        js_NudgeThread(cx, ownercx->thread);
 
         /*
          * We know that some other thread's context owns title, which is now
@@ -665,7 +699,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
-                LOGIT(scope, '1');
+                LOGIT(title, '1');
                 title->u.count = 1;
                 js_UnlockObj(cx, obj);
             }
@@ -755,7 +789,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
-                LOGIT(scope, '1');
+                LOGIT(title, '1');
                 title->u.count = 1;
                 js_UnlockObj(cx, obj);
             }
@@ -1211,7 +1245,7 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
         JS_ASSERT(0);   /* unbalanced unlock */
         return;
     }
-    LOGIT(scope, '-');
+    LOGIT(title, '-');
     if (--title->u.count == 0)
         ThinUnlock(&title->lock, me);
 }
@@ -1279,7 +1313,7 @@ js_TransferTitle(JSContext *cx, JSTitle *oldtitle, JSTitle *newtitle)
     /*
      * Reset oldtitle's lock state so that it is completely unlocked.
      */
-    LOGIT(oldscope, '0');
+    LOGIT(oldtitle, '0');
     oldtitle->u.count = 0;
     ThinUnlock(&oldtitle->lock, CX_THINLOCK_ID(cx));
 }
@@ -1350,6 +1384,10 @@ js_InitTitle(JSContext *cx, JSTitle *title)
 void
 js_FinishTitle(JSContext *cx, JSTitle *title)
 {
+#ifdef DEBUG_SCOPE_COUNT
+    js_unlog_title(title);
+#endif
+
 #ifdef JS_THREADSAFE
     /* Title must be single-threaded at this point, so set ownercx. */
     JS_ASSERT(title->u.count == 0);

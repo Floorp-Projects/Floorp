@@ -613,6 +613,11 @@ typedef enum JSContextOp {
 typedef JSBool
 (* JSContextCallback)(JSContext *cx, uintN contextOp);
 
+#ifndef JS_THREADSAFE
+typedef void
+(* JSHeartbeatCallback)(JSRuntime *rt);
+#endif
+
 typedef enum JSGCStatus {
     JSGC_BEGIN,
     JSGC_END,

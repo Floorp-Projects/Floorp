@@ -2119,6 +2119,46 @@ class RegExpNativeCompiler {
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
+    LIns* compileFlatDoubleChar(jschar ch1, jschar ch2, LIns* pos, 
+                                LInsList& fails) 
+    {
+        uint32 word = (ch2 << 16) | ch1;
+        /* 
+         * Fast case-insensitive test for ASCII letters: convert text
+         * char to lower case by bit-or-ing in 32 and compare.
+         */
+        JSBool useFastCI = JS_FALSE;
+        union { jschar c[2]; uint32 i; } mask;
+        if (cs->flags & JSREG_FOLD) {
+            JSBool mask1 = (L'A' <= ch1 && ch1 <= L'Z') || (L'a' <= ch1 && ch1 <= L'z');
+            JSBool mask2 = (L'A' <= ch2 && ch2 <= L'Z') || (L'a' <= ch2 && ch2 <= L'z');
+            if ((!mask1 && JS_TOLOWER(ch1) != ch1) || (!mask2 && JS_TOLOWER(ch2) != ch2)) {
+                pos = compileFlatSingleChar(ch1, pos, fails);
+                if (!pos) return NULL;
+                return compileFlatSingleChar(ch2, pos, fails);
+            }
+            if (mask1)
+                mask.c[0] |= 0x0020;
+            if (mask2)
+                mask.c[1] |= 0x0020;
+
+            if (mask.i) {
+                word |= mask.i;
+                useFastCI = JS_TRUE;
+            }
+        }
+
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        fails.add(to_fail);
+        LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
+        LIns* comp_word = useFastCI ? 
+            lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
+            text_word;
+        fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_word, lir->insImm(word)), 0));
+
+        return lir->ins2(LIR_piadd, pos, lir->insImm(4));
+    }
+
     LIns* compileClass(RENode* node, LIns* pos, LInsList& fails) 
     {
         if (!node->u.ucclass.sense)
@@ -2194,14 +2234,27 @@ class RegExpNativeCompiler {
                 break;
             case REOP_FLAT:
                 if (node->u.flat.length == 1) {
-                    pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
-                } else {
-                    for (size_t i = 0; i < node->u.flat.length; ++i) {
-                        if (fragment->lirbuf->outOMem()) 
-                            return JS_FALSE;
-                        pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
-                        if (!pos) break;
+                    if (node->next && node->next->op == REOP_FLAT && 
+                        node->next->u.flat.length == 1) {
+                        pos = compileFlatDoubleChar(node->u.flat.chr,
+                                                    node->next->u.flat.chr,
+                                                    pos, fails);
+                        node = node->next;
+                    } else {
+                        pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
                     }
+                } else {
+                   size_t i;
+                   for (i = 0; i < node->u.flat.length - 1; i += 2) {
+                       if (fragment->lirbuf->outOMem()) 
+                           return JS_FALSE;
+                       pos = compileFlatDoubleChar(((jschar*) node->kid)[i], 
+                                                   ((jschar*) node->kid)[i+1], 
+                                                   pos, fails);
+                       if (!pos) break;
+                   }
+                   if (pos && i == node->u.flat.length - 1)
+                       pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
                 }
                 break;
             case REOP_ALT:
@@ -2519,27 +2572,35 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
     if (opt) {
         JSSTRING_CHARS_AND_LENGTH(opt, s, n);
         for (i = 0; i < n; i++) {
+#define HANDLE_FLAG(name)                                                     \
+            JS_BEGIN_MACRO                                                    \
+                if (flags & (name))                                           \
+                    goto bad_flag;                                            \
+                flags |= (name);                                              \
+            JS_END_MACRO
             switch (s[i]) {
               case 'g':
-                flags |= JSREG_GLOB;
+                HANDLE_FLAG(JSREG_GLOB);
                 break;
               case 'i':
-                flags |= JSREG_FOLD;
+                HANDLE_FLAG(JSREG_FOLD);
                 break;
               case 'm':
-                flags |= JSREG_MULTILINE;
+                HANDLE_FLAG(JSREG_MULTILINE);
                 break;
               case 'y':
-                flags |= JSREG_STICKY;
+                HANDLE_FLAG(JSREG_STICKY);
                 break;
               default:
+              bad_flag:
                 charBuf[0] = (char)s[i];
                 charBuf[1] = '\0';
                 JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                              js_GetErrorMessage, NULL,
-                                             JSMSG_BAD_FLAG, charBuf);
+                                             JSMSG_BAD_REGEXP_FLAG, charBuf);
                 return NULL;
             }
+#undef HANDLE_FLAG
         }
     }
     return js_NewRegExp(cx, NULL, str, flags, flat);
@@ -2571,11 +2632,9 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     re_debug("\tBT_Push: %lu,%lu",
              (unsigned long) parenIndex, (unsigned long) parenCount);
 
-    JS_COUNT_OPERATION(gData->cx, JSOW_JUMP * (1 + parenCount));
     if (btincr > 0) {
         ptrdiff_t offset = (char *)result - (char *)gData->backTrackStack;
 
-        JS_COUNT_OPERATION(gData->cx, JSOW_ALLOCATION);
         btincr = JS_ROUNDUP(btincr, btsize);
         JS_ARENA_GROW_CAST(gData->backTrackStack, REBackTrackData *,
                            &gData->cx->regexpPool, btsize, btincr);
@@ -3752,7 +3811,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
         if (!result) {
             if (gData->cursz == 0)
                 return NULL;
-            if (!JS_CHECK_OPERATION_LIMIT(gData->cx, JSOW_JUMP)) {
+            if (!JS_CHECK_OPERATION_LIMIT(gData->cx)) {
                 gData->ok = JS_FALSE;
                 return NULL;
             }

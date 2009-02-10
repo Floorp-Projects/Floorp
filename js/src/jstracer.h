@@ -188,8 +188,8 @@ public:
     JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
     void clearHitCounts();
     void clearDemotability();
-    void clear() { 
-        clearDemotability(); 
+    void clear() {
+        clearDemotability();
         clearHitCounts();
     }
 };
@@ -206,8 +206,8 @@ public:
 };
 
 enum ExitType {
-    BRANCH_EXIT, 
-    LOOP_EXIT, 
+    BRANCH_EXIT,
+    LOOP_EXIT,
     NESTED_EXIT,
     MISMATCH_EXIT,
     OOM_EXIT,
@@ -231,9 +231,9 @@ struct VMSideExit : public nanojit::SideExit
     ExitType exitType;
 };
 
-static inline uint8* getStackTypeMap(nanojit::SideExit* exit) 
-{ 
-    return (uint8*)(((VMSideExit*)exit) + 1); 
+static inline uint8* getStackTypeMap(nanojit::SideExit* exit)
+{
+    return (uint8*)(((VMSideExit*)exit) + 1);
 }
 
 static inline uint8* getGlobalTypeMap(nanojit::SideExit* exit)
@@ -296,7 +296,6 @@ public:
         branchCount(0),
         unstableExits(NULL)
             {}
-    ~TreeInfo();
 
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
@@ -339,7 +338,7 @@ struct InterpState
 #ifdef DEBUG
     bool           jsframe_pop_blocks_set_on_entry;
 #endif
-}; 
+};
 
 enum JSMonitorRecordingStatus {
     JSMRS_CONTINUE,
@@ -391,7 +390,7 @@ class TraceRecorder : public avmplus::GCObject {
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
-    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
+    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned stackSlots,
                                   unsigned callDepth, unsigned ngslots, uint8* typeMap);
@@ -431,7 +430,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK nanojit::LIns* stack(int n);
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
-    JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1, 
+    JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
                                          nanojit::LIns* s0, nanojit::LIns* s1);
     nanojit::LIns* f2i(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
@@ -520,7 +519,7 @@ class TraceRecorder : public avmplus::GCObject {
 public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
-                  unsigned stackSlots, unsigned ngslots, uint8* typeMap, 
+                  unsigned stackSlots, unsigned ngslots, uint8* typeMap,
                   VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
     ~TraceRecorder();
 
@@ -603,6 +602,9 @@ extern void
 js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
+js_FlushScriptFragments(JSContext* cx, JSScript* script);
+
+extern void
 js_FlushJITCache(JSContext* cx);
 
 extern void
@@ -624,6 +626,17 @@ js_LeaveTrace(JSContext *cx)
 {
     if (JS_ON_TRACE(cx))
         js_GetTopStackFrame(cx);
+}
+
+static JS_INLINE bool
+js_CanLeaveTrace(JSContext *cx)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+#ifdef JS_TRACER
+    return cx->bailExit;
+#else
+    return false;
+#endif
 }
 
 #endif /* jstracer_h___ */

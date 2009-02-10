@@ -94,7 +94,7 @@ struct JSTraceableNative {
  * in use. If it is, a performance regression occurs, not an actual runtime
  * error.
  */
-#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((void*)0x10)
+#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((JSObject*)0x10)
 
 /* Macros used by JS_DEFINE_CALLINFOn. */
 #ifdef DEBUG
@@ -390,6 +390,7 @@ JS_DECLARE_CALLINFO(js_FastNewArray)
 JS_DECLARE_CALLINFO(js_NewUninitializedArray)
 JS_DECLARE_CALLINFO(js_FastNewArrayWithLength)
 JS_DECLARE_CALLINFO(js_Array_1str)
+JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
 /* Defined in jsdate.cpp */
 JS_DECLARE_CALLINFO(js_FastNewDate)

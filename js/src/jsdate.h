@@ -119,6 +119,11 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds);
 extern JS_FRIEND_API(jsdouble)
 js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
 
+typedef uint32 JSIntervalTime;
+
+JSIntervalTime
+js_IntervalNow();
+
 JS_END_EXTERN_C
 
 #endif /* jsdate_h___ */

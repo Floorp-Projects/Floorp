@@ -463,7 +463,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     char buf[20];
     size_t len;
 
-    if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_ENTER_SHARP))
+    if (!JS_CHECK_OPERATION_LIMIT(cx))
         return NULL;
 
     /* Set to null in case we return an early error. */
@@ -1879,7 +1879,7 @@ obj_lookupGetter(JSContext *cx, uintN argc, jsval *vp)
         if (OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *) prop;
             if (sprop->attrs & JSPROP_GETTER)
-                *vp = OBJECT_TO_JSVAL(sprop->getter);
+                *vp = OBJECT_TO_JSVAL((JSObject *) sprop->getter);
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
@@ -1904,7 +1904,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, jsval *vp)
         if (OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *) prop;
             if (sprop->attrs & JSPROP_SETTER)
-                *vp = OBJECT_TO_JSVAL(sprop->setter);
+                *vp = OBJECT_TO_JSVAL((JSObject *) sprop->setter);
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
@@ -3428,7 +3428,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                        uintN flags, intN shortid, JSProperty **propp)
+                        uintN flags, intN shortid, JSProperty **propp,
+                        JSPropCacheEntry** entryp /* = NULL */)
 {
     JSClass *clasp;
     JSScope *scope;
@@ -3436,6 +3437,8 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
+
+    uint32 shape = OBJ_SHAPE(obj);
 
 #if JS_HAS_GETTER_SETTER
     /*
@@ -3524,6 +3527,13 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         js_RemoveScopeProperty(cx, scope, id);
                         goto bad);
 
+    if (entryp) {
+        JS_ASSERT_NOT_ON_TRACE(cx);
+        if (!(attrs & JSPROP_SHARED))
+            js_FillPropertyCache(cx, obj, shape, 0, 0, obj, sprop, entryp);
+        else
+            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+    }
     if (propp)
         *propp = (JSProperty *) sprop;
     else
@@ -3564,7 +3574,6 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_LOOKUP_PROPERTY);
 
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
@@ -3953,7 +3962,6 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     JS_ASSERT_IF(entryp, !JS_ON_TRACE(cx));
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_GET_PROPERTY);
 
     shape = OBJ_SHAPE(obj);
     protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
@@ -4054,7 +4062,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_SET_PROPERTY);
 
     /*
      * We peek at OBJ_SCOPE(obj) without locking obj. Any race means a failure
@@ -4156,7 +4163,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                     return JS_TRUE;
                 }
 
-                return !!SPROP_SET(cx, sprop, obj, pobj, vp);
+                return SPROP_SET(cx, sprop, obj, pobj, vp);
             }
 
             /* Restore attrs to the ECMA default for new properties. */
@@ -4319,7 +4326,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
-    JS_COUNT_OPERATION(cx, JSOW_DELETE_PROPERTY);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
         return JS_FALSE;

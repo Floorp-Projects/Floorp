@@ -587,7 +587,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     } else if (oldlen - newlen < (1 << 24)) {
         do {
             --oldlen;
-            if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
+            if (!JS_CHECK_OPERATION_LIMIT(cx) ||
                 !DeleteArrayElement(cx, obj, oldlen)) {
                 return JS_FALSE;
             }
@@ -608,7 +608,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         JS_PUSH_TEMP_ROOT_OBJECT(cx, iter, &tvr);
         gap = oldlen - newlen;
         for (;;) {
-            ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+            ok = (JS_CHECK_OPERATION_LIMIT(cx) &&
                   JS_NextProperty(cx, iter, &id));
             if (!ok)
                 break;
@@ -1326,7 +1326,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
 
     /* Use rval to locally root each element value as we loop and convert. */
     for (index = 0; index < length; index++) {
-        ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+        ok = (JS_CHECK_OPERATION_LIMIT(cx) &&
               GetArrayElement(cx, obj, index, &hole, rval));
         if (!ok)
             goto done;
@@ -1379,7 +1379,6 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
             goto done;
         }
         growth *= sizeof(jschar);
-        JS_COUNT_OPERATION(cx, JSOW_ALLOCATION);
         if (!chars) {
             chars = (jschar *) malloc(growth);
             if (!chars)
@@ -1500,7 +1499,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint end,
     }
 
     while (start != end) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !SetArrayElement(cx, obj, start++, *vector++)) {
             return JS_FALSE;
         }
@@ -1598,7 +1597,7 @@ array_reverse(JSContext *cx, uintN argc, jsval *vp)
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
     half = len / 2;
     for (i = 0; i < half; i++) {
-        ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+        ok = JS_CHECK_OPERATION_LIMIT(cx) &&
              GetArrayElement(cx, obj, i, &hole, &tvr.u.value) &&
              GetArrayElement(cx, obj, len - i - 1, &hole2, vp) &&
              SetOrDeleteArrayElement(cx, obj, len - i - 1, hole, tvr.u.value) &&
@@ -1783,7 +1782,7 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     JS_ASSERT(!JSVAL_IS_VOID(av));
     JS_ASSERT(!JSVAL_IS_VOID(bv));
 
-    if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP))
+    if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
     invokevp = ca->elemroot;
@@ -1821,7 +1820,7 @@ sort_compare_strings(void *arg, const void *a, const void *b, int *result)
 
     JS_ASSERT(JSVAL_IS_STRING(av));
     JS_ASSERT(JSVAL_IS_STRING(bv));
-    if (!JS_CHECK_OPERATION_LIMIT((JSContext *)arg, JSOW_JUMP))
+    if (!JS_CHECK_OPERATION_LIMIT((JSContext *)arg))
         return JS_FALSE;
 
     *result = (int) js_CompareStrings(JSVAL_TO_STRING(av), JSVAL_TO_STRING(bv));
@@ -1915,7 +1914,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     newlen = 0;
     all_strings = JS_TRUE;
     for (i = 0; i < len; i++) {
-        ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP);
+        ok = JS_CHECK_OPERATION_LIMIT(cx);
         if (!ok)
             goto out;
 
@@ -2001,7 +2000,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             i = newlen;
             do {
                 --i;
-                ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP);
+                ok = JS_CHECK_OPERATION_LIMIT(cx);
                 if (!ok)
                     goto out;
                 v = vec[i];
@@ -2080,7 +2079,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     /* Set undefs that sorted after the rest of elements. */
     while (undefs != 0) {
         --undefs;
-        if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !SetArrayElement(cx, obj, newlen++, JSVAL_VOID)) {
             return JS_FALSE;
         }
@@ -2088,7 +2087,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
 
     /* Re-create any holes that sorted to the end of the array. */
     while (len > newlen) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !DeleteArrayElement(cx, obj, --len)) {
             return JS_FALSE;
         }
@@ -2137,11 +2136,34 @@ array_push1_dense(JSContext* cx, JSObject* obj, jsval v, jsval *rval)
     return IndexToValue(cx, obj->fslots[JSSLOT_ARRAY_LENGTH], rval);
 }
 
+JSBool JS_FASTCALL
+js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+    uint32_t length = (uint32_t) obj->fslots[JSSLOT_ARRAY_LENGTH];
+    JS_ASSERT(length <= ARRAY_DENSE_LENGTH(obj));
+
+    if (length == ARRAY_DENSE_LENGTH(obj)) {
+        if (length >= ARRAY_INIT_LIMIT) {
+            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                                   JSMSG_ARRAY_INIT_TOO_BIG);
+            return JS_FALSE;
+        }
+
+        if (!ResizeSlots(cx, obj, length, length + ARRAY_GROWBY))
+            return JS_FALSE;
+    }
+    obj->fslots[JSSLOT_ARRAY_LENGTH] = length + 1;
+    obj->fslots[JSSLOT_ARRAY_COUNT]++;
+    obj->dslots[length] = v;
+    return JS_TRUE;
+}
+
 #ifdef JS_TRACER
 static jsval FASTCALL
 Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
 {
-    if (OBJ_IS_DENSE_ARRAY(cx, obj) 
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)
         ? array_push1_dense(cx, obj, v, &v)
         : array_push_slowly(cx, obj, 1, &v, &v)) {
         return v;
@@ -2206,7 +2228,6 @@ array_pop_dense(JSContext *cx, JSObject* obj, jsval *vp)
         return JS_FALSE;
     obj->fslots[JSSLOT_ARRAY_LENGTH] = index;
     return JS_TRUE;
-    
 }
 
 #ifdef JS_TRACER
@@ -2232,7 +2253,7 @@ array_pop(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) 
+    if (OBJ_IS_DENSE_ARRAY(cx, obj))
         return array_pop_dense(cx, obj, vp);
     return array_pop_slowly(cx, obj, vp);
 }
@@ -2261,7 +2282,7 @@ array_shift(JSContext *cx, uintN argc, jsval *vp)
         ok = JS_TRUE;
         JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
         for (i = 0; i != length; i++) {
-            ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+            ok = JS_CHECK_OPERATION_LIMIT(cx) &&
                  GetArrayElement(cx, obj, i + 1, &hole, &tvr.u.value) &&
                  SetOrDeleteArrayElement(cx, obj, i, hole, tvr.u.value);
             if (!ok)
@@ -2299,7 +2320,7 @@ array_unshift(JSContext *cx, uintN argc, jsval *vp)
             JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
             do {
                 --last;
-                ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+                ok = JS_CHECK_OPERATION_LIMIT(cx) &&
                      GetArrayElement(cx, obj, last, &hole, &tvr.u.value) &&
                      SetOrDeleteArrayElement(cx, obj, last + argc, hole,
                                              tvr.u.value);
@@ -2396,7 +2417,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     /* If there are elements to remove, put them into the return value. */
     if (count > 0) {
         for (last = begin; last < end; last++) {
-            ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+            ok = JS_CHECK_OPERATION_LIMIT(cx) &&
                  GetArrayElement(cx, obj, last, &hole, &tvr.u.value);
             if (!ok)
                 goto out;
@@ -2420,7 +2441,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         last = length;
         /* (uint) end could be 0, so can't use vanilla >= test */
         while (last-- > end) {
-            ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+            ok = JS_CHECK_OPERATION_LIMIT(cx) &&
                  GetArrayElement(cx, obj, last, &hole, &tvr.u.value) &&
                  SetOrDeleteArrayElement(cx, obj, last + delta, hole,
                                          tvr.u.value);
@@ -2431,7 +2452,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     } else if (argc < count) {
         delta = count - (jsuint)argc;
         for (last = end; last < length; last++) {
-            ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+            ok = JS_CHECK_OPERATION_LIMIT(cx) &&
                  GetArrayElement(cx, obj, last, &hole, &tvr.u.value) &&
                  SetOrDeleteArrayElement(cx, obj, last - delta, hole,
                                          tvr.u.value);
@@ -2508,7 +2529,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
 
     /* Loop over [0, argc] to concat args into nobj, expanding all Arrays. */
     for (i = 0; i <= argc; i++) {
-        ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP);
+        ok = JS_CHECK_OPERATION_LIMIT(cx);
         if (!ok)
             goto out;
         v = argv[i];
@@ -2529,7 +2550,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
                 if (!ok)
                     goto out;
                 for (slot = 0; slot < alength; slot++) {
-                    ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+                    ok = JS_CHECK_OPERATION_LIMIT(cx) &&
                          GetArrayElement(cx, aobj, slot, &hole,
                                          &tvr.u.value);
                     if (!ok)
@@ -2635,7 +2656,7 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
 
     for (slot = begin; slot < end; slot++) {
-        ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+        ok = JS_CHECK_OPERATION_LIMIT(cx) &&
              GetArrayElement(cx, obj, slot, &hole, &tvr.u.value);
         if (!ok)
             goto out;
@@ -2707,7 +2728,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
     }
 
     for (;;) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !GetArrayElement(cx, obj, (jsuint)i, &hole, vp)) {
             return JS_FALSE;
         }
@@ -2856,7 +2877,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
     invokevp = elemroot + 1;
 
     for (i = start; i != end; i += step) {
-        ok = JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
+        ok = JS_CHECK_OPERATION_LIMIT(cx) &&
              GetArrayElement(cx, obj, i, &hole, elemroot);
         if (!ok)
             goto out;
@@ -3416,3 +3437,4 @@ JS_DEFINE_CALLINFO_2(extern, OBJECT, js_FastNewArray, CONTEXT, OBJECT,          
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewUninitializedArray, CONTEXT, OBJECT, UINT32,       0, 0)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_FastNewArrayWithLength, CONTEXT, OBJECT, UINT32,      0, 0)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Array_1str, CONTEXT, OBJECT, STRING,                  0, 0)
+JS_DEFINE_CALLINFO_3(extern, BOOL,   js_ArrayCompPush, CONTEXT, OBJECT, JSVAL,                0, 0)
