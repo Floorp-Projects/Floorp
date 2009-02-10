@@ -42,6 +42,8 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/ext/Preferences.js");
+Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/log4moz.js");
 
@@ -507,6 +509,7 @@ Utils.EventListener.prototype = {
  */
 
 let Svc = {};
+Svc.Prefs = new Preferences(PREFS_BRANCH);
 Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
 Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
 Utils.lazySvc(Svc, 'Crypto', "@labs.mozilla.com/Weave/Crypto;1", Ci.IWeaveCrypto);
