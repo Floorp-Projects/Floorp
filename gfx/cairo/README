@@ -46,6 +46,8 @@ win32-vertically-offset-glyph.patch: bug 454098; vertical positioning errors whe
 
 ignore-rank0.patch: bug 474886; Not redrawing the background when changing page on flickr
 
+win32-canvas-glyph-position.patch: bug 475092; horizontal positioning errors when drawing glyph runs with delta-y offsets to canvas through win32-font
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
