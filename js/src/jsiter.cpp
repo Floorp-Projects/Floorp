@@ -416,12 +416,8 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
                 goto bad;
             }
             if (JSVAL_IS_PRIMITIVE(*vp)) {
-                const char *printable = js_AtomToPrintableString(cx, atom);
-                if (printable) {
-                    js_ReportValueError2(cx, JSMSG_BAD_ITERATOR_RETURN,
-                                         JSDVG_SEARCH_STACK, *vp, NULL,
-                                         printable);
-                }
+                js_ReportValueError(cx, JSMSG_BAD_ITERATOR_RETURN,
+                                    JSDVG_SEARCH_STACK, *vp, NULL);
                 goto bad;
             }
         }
@@ -981,8 +977,6 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
             return JS_TRUE;
         }
     }
-
-    js_LeaveTrace(cx);
 
     arg = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0)
           ? vp[2]
