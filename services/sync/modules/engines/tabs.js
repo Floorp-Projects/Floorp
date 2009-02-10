@@ -37,8 +37,6 @@
 
 const EXPORTED_SYMBOLS = ['TabEngine'];
 
-const SESSION_STORE_KEY = "weave-tab-sync-id";
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -51,6 +49,7 @@ Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/type_records/tabs.js");
+Cu.import("resource://weave/engines/clientData.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -94,11 +93,11 @@ TabStore.prototype = {
   },
 
   get _localClientGUID() {
-    return Engines.get("clients").clientID;
+    return Clients.clientID;
   },
 
   get _localClientName() {
-    return Engines.get("clients").clientName;
+    return Clients.clientName;
   },
 
   _writeToFile: function TabStore_writeToFile() {
@@ -139,6 +138,7 @@ TabStore.prototype = {
   },
 
   get _sessionStore() {
+    // TODO: sessionStore seems to not exist on Fennec?
     let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
 		       getService(Ci.nsISessionStore);
     this.__defineGetter__("_sessionStore", function() { return sessionStore;});
@@ -217,7 +217,7 @@ TabStore.prototype = {
     }
   },
 
-  getAllIds: function TabStore_getAllIds() {
+  getAllIDs: function TabStore_getAllIds() {
     this._log.debug("getAllIds called.");
     let items = {};
     items[ this._localClientGUID ] = true;
@@ -291,7 +291,12 @@ TabTracker.prototype = {
     let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
     // TODO: Not all windows have tabContainers.  Fennec windows don't,
     // for instance.
-    let container = window.getBrowser().tabContainer;
+    if (! window.getBrowser)
+      return;
+    let browser = window.getBrowser();
+    if (! browser.tabContainer)
+      return;
+    let container = browser.tabContainer;
     if (aTopic == "domwindowopened") {
       container.addEventListener("TabOpen", this.onTabChanged, false);
       container.addEventListener("TabClose", this.onTabChanged, false);
