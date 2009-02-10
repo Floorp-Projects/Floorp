@@ -367,7 +367,20 @@ nsSVGFilterInstance::BuildSourceImages()
     if (NS_FAILED(rv))
       return rv;
 
-    tmpState.GetGfxContext()->Multiply(userSpaceToFilterSpace);
+    // SVG graphics paint to device space, so we need to set an initial device
+    // space to filter space transform on the gfxContext that SourceGraphic
+    // and SourceAlpha will paint to.
+    //
+    // (In theory it would be better to minimize error by having filtered SVG
+    // graphics temporarily paint to user space when painting the sources and
+    // only set a user space to filter space transform on the gfxContext
+    // (since that would elliminate the transform multiplications from user
+    // space to device space and back again). However, that would make the
+    // code more complex while being hard to get right without introducing
+    // subtle bugs, and in practice it probably makes no real difference.)
+    gfxMatrix deviceToFilterSpace =
+      nsSVGUtils::ConvertSVGMatrixToThebes(GetFilterSpaceToDeviceSpaceTransform()).Invert();
+    tmpState.GetGfxContext()->Multiply(deviceToFilterSpace);
     mPaintCallback->Paint(&tmpState, mTargetFrame, &dirty);
 
     gfxContext copyContext(sourceColorAlpha);
