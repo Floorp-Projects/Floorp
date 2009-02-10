@@ -4593,12 +4593,21 @@ js_FlushScriptFragments(JSContext* cx, JSScript* script)
 {
     if (!TRACING_ENABLED(cx))
         return;
-    debug_only_v(printf("Flushing fragments for script %p.\n", script);)
+    debug_only_v(printf("Flushing fragments for JSScript %p.\n", script);)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-        VMFragment *f = tm->vmfragments[i];
-        if (f && JS_UPTRDIFF(f->ip, script->code) < script->length)
-            tm->vmfragments[i] = NULL;
+        for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
+            /* Disable future use of any script-associated VMFragment.*/
+            if (JS_UPTRDIFF((*f)->ip, script->code) < script->length) {
+                debug_only_v(printf("Disconnecting VMFragment %p "
+                                    "with ip %p, in range [%p,%p).\n",
+                                    *f, (*f)->ip, script->code,
+                                    script->code + script->length));
+                *f = (*f)->next;
+            } else {
+                f = &((*f)->next);
+            }
+        }
     }
 }
 
