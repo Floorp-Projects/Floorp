@@ -880,7 +880,13 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   jsval native = argv[0];
 
   if (JSVAL_IS_PRIMITIVE(native)) {
-    return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+    JSStackFrame *fp = nsnull;
+    if (JS_FrameIterator(cx, &fp) && JS_IsConstructorFrame(cx, fp)) {
+      return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+    }
+
+    *rval = native;
+    return JS_TRUE;
   }
 
   JSObject *nativeObj = JSVAL_TO_OBJECT(native);
