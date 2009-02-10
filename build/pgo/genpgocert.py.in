@@ -201,14 +201,14 @@ if len(sys.argv) == 1:
 if sys.argv[1] == "--gen-server":
   certificateStatus = createSSLServerCertificate(PROFILE_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
-    print "ERROR FAIL: SSL Server Certificate generation"
+    print "TEST-UNEXPECTED-FAIL | SSL Server Certificate generation"
   
   sys.exit(certificateStatus)
   
 if sys.argv[1] == "--gen-ca":
   certificateStatus = createCertificateAuthority(PROFILE_DIR, CERTS_SRC_DIR)
   if certificateStatus != 0:
-    print "ERROR FAIL: Certificate Authority generation"
+    print "TEST-UNEXPECTED-FAIL | Certificate Authority generation"
   else:
     print "\n\n"
     print "==================================================="
