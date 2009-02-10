@@ -220,7 +220,7 @@ ifeq ($(os), Linux)
               -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align \
               -Wno-long-long \
               -include xpcom-config.h $(headers)
-ifeq ($(arch), x86)
+ifneq ($(arch), arm)
   cppflags += -fshort-wchar
 else
 endif
