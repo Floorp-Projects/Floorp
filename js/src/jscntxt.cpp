@@ -79,6 +79,9 @@
 static PRUintn threadTPIndex;
 static JSBool  tpIndexInited = JS_FALSE;
 
+static void
+InitOperationLimit(JSContext *cx);
+
 JS_BEGIN_EXTERN_C
 JSBool
 js_InitThreadPrivateIndex(void (*ptr)(void *))
@@ -240,6 +243,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
+    js_InitOperationLimit(cx);
     cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword)-1;
@@ -584,21 +588,6 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     if (unlocked)
         JS_UNLOCK_GC(rt);
     return cx;
-}
-
-JS_FRIEND_API(JSContext *)
-js_NextActiveContext(JSRuntime *rt, JSContext *cx)
-{
-    JSContext *iter = cx;
-#ifdef JS_THREADSAFE
-    while ((cx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-        if (cx->requestDepth)
-            break;
-    }
-    return cx;
-#else
-    return js_ContextIterator(rt, JS_FALSE, &iter);
-#endif           
 }
 
 static JSDHashNumber
@@ -1424,37 +1413,31 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 }
 
 JSBool
-js_InvokeOperationCallback(JSContext *cx)
+js_ResetOperationCount(JSContext *cx)
 {
-    JS_ASSERT(cx->operationCallbackFlag);
-    
-    /*
-     * Reset the callback flag first, then yield. If another thread is racing
-     * us here we will accumulate another callback request which will be 
-     * serviced at the next opportunity.
-     */
-    cx->operationCallbackFlag = 0;
+    JSScript *script;
+    JSStackFrame *fp;
 
-    /*
-     * We automatically yield the current context every time the operation
-     * callback is hit since we might be called as a result of an impending
-     * GC, which would deadlock if we do not yield. Operation callbacks
-     * are supposed to happen rarely (seconds, not milliseconds) so it is
-     * acceptable to yield at every callback.
-     */
-#ifdef JS_THREADSAFE    
-    JS_YieldRequest(cx);
-#endif
+    JS_ASSERT(cx->operationCount <= 0);
+    JS_ASSERT(cx->operationLimit > 0);
 
+    cx->operationCount = (int32) cx->operationLimit;
     JSOperationCallback cb = cx->operationCallback;
+    if (cb) {
+        if (!cx->branchCallbackWasSet)
+            return cb(cx);
 
-    /*
-     * Important: Additional callbacks can occur inside the callback handler
-     * if it re-enters the JS engine. The embedding must ensure that the
-     * callback is disconnected before attempting such re-entry.
-     */
-
-    return !cb || cb(cx);
+        /*
+         * Invoke the deprecated branch callback. It may be called only when
+         * the top-most frame is scripted or JSOPTION_NATIVE_BRANCH_CALLBACK
+         * is set.
+         */
+        fp = js_GetTopStackFrame(cx);
+        script = fp ? fp->script : NULL;
+        if (script || JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK))
+            return ((JSBranchCallback) cb)(cx, script);
+    }
+    return JS_TRUE;
 }
 
 #ifndef JS_TRACER
