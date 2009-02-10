@@ -113,7 +113,7 @@ private:
 
   nsresult GetCSSShadowArray(nsCSSShadowArray* aArray,
                              const nscolor& aDefaultColor,
-                             PRBool aUsesSpread,
+                             PRBool aIsBoxShadow,
                              nsIDOMCSSValue** aValue);
 
   /* Properties Queryable as CSSValues */

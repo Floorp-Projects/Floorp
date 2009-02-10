@@ -557,7 +557,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // box-shadow
   if (GetStyleBorder()->mBoxShadow) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBoxShadow(this));
+        nsDisplayBoxShadowOuter(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

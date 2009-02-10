@@ -8,3 +8,5 @@
 == boxshadow-rounding.html boxshadow-rounding-ref.html
 == boxshadow-button.html boxshadow-button-ref.html
 == boxshadow-fileupload.html boxshadow-fileupload-ref.html
+== boxshadow-inner-basic.html boxshadow-inner-basic-ref.html
+== boxshadow-mixed.html boxshadow-mixed-ref.html

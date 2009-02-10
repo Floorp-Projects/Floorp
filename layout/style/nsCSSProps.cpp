@@ -570,6 +570,11 @@ const PRInt32 nsCSSProps::kBoxPropSourceKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kBoxShadowTypeKTable[] = {
+  eCSSKeyword_inset, NS_STYLE_BOX_SHADOW_INSET,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kBoxSizingKTable[] = {
   eCSSKeyword_content_box,  NS_STYLE_BOX_SIZING_CONTENT,
   eCSSKeyword_border_box,   NS_STYLE_BOX_SIZING_BORDER,
