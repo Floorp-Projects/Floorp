@@ -108,6 +108,8 @@ _TEST_FILES	= \
 	changingManifest.cacheManifest^headers^ \
 	offlineChild.html \
 	test_xhtmlManifest.xhtml \
+	test_missingManifest.html \
+	missing.html \
 	$(NULL)
 
 libs::	$(_TEST_FILES)
