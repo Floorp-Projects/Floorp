@@ -4176,8 +4176,8 @@ function testBug458838() {
 testBug458838.expected = 10;
 testBug458838.jitstats = {
   recorderStarted: 1,
-  recorderAborted: 0,
-  traceCompleted: 1
+  recorderAborted: 1,
+  traceCompleted: 0
 };
 test(testBug458838);
 
@@ -4256,6 +4256,89 @@ function testInterpreterReentery8() {
     for (var j = 0; j < 4; ++j) { +[e]; }
 }
 test(testInterpreterReentery8);
+
+function testHolePushing() {
+    var a = ["foobar", "baz"];
+    for (var i = 0; i < 5; i++)
+        a = [, "overwritten", "new"];
+    var s = "[";
+    for (i = 0; i < a.length; i++) {
+        s += (i in a) ? a[i] : "<hole>";
+        if (i != a.length - 1)
+            s += ",";
+    }
+    return s + "], " + (0 in a);
+}
+testHolePushing.expected = "[<hole>,overwritten,new], false";
+test(testHolePushing);
+
+function testDeepBail1() {
+    var y = <z/>;
+    for (var i = 0; i < RUNLOOP; i++)
+        "" in y;
+}
+test(testDeepBail1);
+
+/* Array comprehension tests */
+
+function Range(start, stop) {
+    this.i = start;
+    this.stop = stop;
+}
+Range.prototype = {
+    __iterator__: function() this,
+    next: function() {
+        if (this.i >= this.stop)
+            throw StopIteration;
+        return this.i++;
+    }
+};
+
+function range(start, stop) {
+    return new Range(start, stop);
+}
+
+function testArrayComp1() {
+    return [a for (a in range(0, 10))].join('');
+}
+testArrayComp1.expected='0123456789';
+test(testArrayComp1);
+
+function testArrayComp2() {
+    return [a + b for (a in range(0, 5)) for (b in range(0, 5))].join('');
+}
+testArrayComp2.expected='0123412345234563456745678';
+test(testArrayComp2);
+
+function testSwitchUndefined()
+{
+  var x = undefined;
+  var y = 0;
+  for (var i = 0; i < 5; i++)
+  {
+    switch (x)
+    {
+      default:
+        y++;
+    }
+  }
+  return y;
+}
+testSwitchUndefined.expected = 5;
+test(testSwitchUndefined);
+
+function testGeneratorDeepBail() {
+    function g() { yield 2; }
+    var iterables = [[1], [], [], [], g()];
+
+    var total = 0;
+    for (let i = 0; i < iterables.length; i++)
+        for each (let j in iterables[i])
+                     total += j;
+    return total;
+}
+testGeneratorDeepBail.expected = 3;
+test(testGeneratorDeepBail);
 
 /*****************************************************************************
  *                                                                           *

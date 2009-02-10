@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -54,6 +54,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jsdate.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
@@ -2684,7 +2685,7 @@ js_Interpret(JSContext *cx)
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_SCRIPT_JUMP))                  \
+        if (!JS_CHECK_OPERATION_LIMIT(cx))                                    \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -3590,7 +3591,7 @@ js_Interpret(JSContext *cx)
         JSXMLObjectOps *ops;                                                  \
                                                                               \
         ops = (JSXMLObjectOps *) obj2->map->ops;                              \
-        if (obj2 == JSVAL_TO_OBJECT(rval))                                    \
+        if (JSVAL_IS_OBJECT(rval) && obj2 == JSVAL_TO_OBJECT(rval))           \
             rval = lval;                                                      \
         if (!ops->equality(cx, obj2, rval, &cond))                            \
             goto error;                                                       \
@@ -5714,6 +5715,13 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_CASE(JSOP_DEFFUN)
+          {
+            JSPropertyOp getter, setter;
+            bool doSet;
+            JSObject *pobj;
+            JSProperty *prop;
+            uint32 old;
+
             /*
              * A top-level function defined in Global or Eval code (see
              * ECMA-262 Ed. 3), or else a SpiderMonkey extension: a named
@@ -5752,7 +5760,7 @@ js_Interpret(JSContext *cx)
              * paths from here must flow through the "Restore fp->scopeChain"
              * code below the OBJ_DEFINE_PROPERTY call.
              */
-            MUST_FLOW_THROUGH("restore");
+            MUST_FLOW_THROUGH("restore_scope");
             fp->scopeChain = obj;
             rval = OBJECT_TO_JSVAL(obj);
 
@@ -5769,10 +5777,17 @@ js_Interpret(JSContext *cx)
              * and setters do not need a slot, their value is stored elsewhere
              * in the property itself, not in obj slots.
              */
+            setter = getter = JS_PropertyStub;
             flags = JSFUN_GSFLAG2ATTR(fun->flags);
             if (flags) {
+                /* Function cannot be both getter a setter. */
+                JS_ASSERT(flags == JSPROP_GETTER || flags == JSPROP_SETTER);
                 attrs |= flags | JSPROP_SHARED;
                 rval = JSVAL_VOID;
+                if (flags == JSPROP_GETTER)
+                    getter = JS_EXTENSION (JSPropertyOp) obj;
+                else
+                    setter = JS_EXTENSION (JSPropertyOp) obj;
             }
 
             /*
@@ -5791,33 +5806,54 @@ js_Interpret(JSContext *cx)
              * as well as multiple HTML script tags.
              */
             id = ATOM_TO_JSID(fun->atom);
-            ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
-            if (ok) {
-                if (attrs == JSPROP_ENUMERATE) {
-                    JS_ASSERT(fp->flags & JSFRAME_EVAL);
-                    ok = OBJ_SET_PROPERTY(cx, parent, id, &rval);
-                } else {
-                    JS_ASSERT(attrs & JSPROP_PERMANENT);
+            prop = NULL;
+            ok = js_CheckRedeclaration(cx, parent, id, attrs, &pobj, &prop);
+            if (!ok)
+                goto restore_scope;
 
-                    ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
-                                             (flags & JSPROP_GETTER)
-                                             ? JS_EXTENSION (JSPropertyOp) obj
-                                             : JS_PropertyStub,
-                                             (flags & JSPROP_SETTER)
-                                             ? JS_EXTENSION (JSPropertyOp) obj
-                                             : JS_PropertyStub,
-                                             attrs,
-                                             NULL);
+            /*
+             * We deviate from 10.1.2 in ECMA 262 v3 and under eval use for
+             * function declarations OBJ_SET_PROPERTY, not OBJ_DEFINE_PROPERTY,
+             * to preserve the JSOP_PERMANENT attribute of existing properties
+             * and make sure that such properties cannot be deleted.
+             *
+             * We also use OBJ_SET_PROPERTY for the existing properties of
+             * Call objects with matching attributes to preserve the native
+             * getters and setters that store the value of the property in the
+             * interpreter frame, see bug 467495.
+             */
+            doSet = (attrs == JSPROP_ENUMERATE);
+            JS_ASSERT_IF(doSet, fp->flags & JSFRAME_EVAL);
+            if (prop) {
+                if (parent == pobj &&
+                    OBJ_GET_CLASS(cx, parent) == &js_CallClass &&
+                    (old = ((JSScopeProperty *) prop)->attrs,
+                     !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
+                     (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs)) {
+                    /*
+                     * js_CheckRedeclaration must reject attempts to add a
+                     * getter or setter to an existing property without a
+                     * getter or setter.
+                     */
+                    JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
+                    JS_ASSERT(!(old & JSPROP_READONLY));
+                    doSet = JS_TRUE;
                 }
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
             }
+            ok = doSet
+                 ? OBJ_SET_PROPERTY(cx, parent, id, &rval)
+                 : OBJ_DEFINE_PROPERTY(cx, parent, id, rval, getter, setter,
+                                       attrs, NULL);
 
+          restore_scope:
             /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
-            MUST_FLOW_LABEL(restore)
             fp->scopeChain = obj2;
             if (!ok) {
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                 goto error;
             }
+          }
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
@@ -6209,8 +6245,13 @@ js_Interpret(JSContext *cx)
                                            NULL, NULL)) {
                     goto error;
                 }
-                if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
+                if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
+                    ? !js_SetPropertyHelper(cx, obj, id, &rval, &entry)
+                    : !js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+                                               JSPROP_ENUMERATE, 0, 0, NULL,
+                                               &entry)) {
                     goto error;
+                }
 #ifdef JS_TRACER
                 if (entry)
                     TRACE_1(SetPropMiss, entry);
@@ -6238,13 +6279,11 @@ js_Interpret(JSContext *cx)
              * Check for property redeclaration strict warning (we may be in
              * an object initialiser, not an array initialiser).
              */
-            if (!js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL,
-                                       NULL)) {
+            if (!js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL, NULL))
                 goto error;
-            }
 
             /*
-             * If rval is a hole, do not call OBJ_SET_PROPERTY. In this case,
+             * If rval is a hole, do not call OBJ_DEFINE_PROPERTY. In this case,
              * obj must be an array, so if the current op is the last element
              * initialiser, set the array length to one greater than id.
              */
@@ -6253,12 +6292,11 @@ js_Interpret(JSContext *cx)
                 JS_ASSERT(JSID_IS_INT(id));
                 JS_ASSERT((jsuint) JSID_TO_INT(id) < ARRAY_INIT_LIMIT);
                 if ((JSOp) regs.pc[JSOP_INITELEM_LENGTH] == JSOP_ENDINIT &&
-                    !js_SetLengthProperty(cx, obj,
-                                          (jsuint) (JSID_TO_INT(id) + 1))) {
+                    !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1))) {
                     goto error;
                 }
             } else {
-                if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
+                if (!OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, NULL))
                     goto error;
             }
             regs.sp -= 2;
@@ -6397,6 +6435,14 @@ js_Interpret(JSContext *cx)
                 goto error;
             }
           END_CASE(JSOP_PRIMTOP)
+
+          BEGIN_CASE(JSOP_OBJTOP)
+            lval = FETCH_OPND(-1);
+            if (JSVAL_IS_PRIMITIVE(lval)) {
+                js_ReportValueError(cx, GET_UINT16(regs.pc), -1, lval, NULL);
+                goto error;
+            }
+          END_CASE(JSOP_OBJTOP)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
             rval = FETCH_OPND(-1);
@@ -6795,23 +6841,8 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(slot < script->nslots);
             lval = fp->slots[slot];
             obj  = JSVAL_TO_OBJECT(lval);
-            JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
             rval = FETCH_OPND(-1);
-
-            /*
-             * We know that the array is created with only a 'length' private
-             * data slot at JSSLOT_ARRAY_LENGTH, and that previous iterations
-             * of the comprehension have added the only properties directly in
-             * the array object.
-             */
-            i = obj->fslots[JSSLOT_ARRAY_LENGTH];
-            if (i == ARRAY_INIT_LIMIT) {
-                JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                       JSMSG_ARRAY_INIT_TOO_BIG);
-                goto error;
-            }
-            id = INT_TO_JSID(i);
-            if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
+            if (!js_ArrayCompPush(cx, obj, rval))
                 goto error;
             regs.sp--;
           END_CASE(JSOP_ARRAYPUSH)
@@ -6862,7 +6893,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED135:
           L_JSOP_UNUSED203:
           L_JSOP_UNUSED204:
           L_JSOP_UNUSED205:

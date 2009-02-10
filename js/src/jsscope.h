@@ -328,29 +328,40 @@ struct JSScopeProperty {
 #define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
-/*
- * NB: SPROP_GET must not be called if SPROP_HAS_STUB_GETTER(sprop).
- */
-#define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
-    (((sprop)->attrs & JSPROP_GETTER)                                         \
-     ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
-                           OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,      \
-                           0, 0, vp)                                          \
-     : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+static JS_INLINE JSBool
+SPROP_GET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, jsval* vp)
+{
+    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
 
-/*
- * NB: SPROP_SET must not be called if (SPROP_HAS_STUB_SETTER(sprop) &&
- * !(sprop->attrs & JSPROP_GETTER)).
- */
-#define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
-    (((sprop)->attrs & JSPROP_SETTER)                                         \
-     ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
-                           OBJECT_TO_JSVAL((sprop)->setter), JSACC_WRITE,     \
-                           1, vp, vp)                                         \
-     : ((sprop)->attrs & JSPROP_GETTER)                                       \
-     ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
-                             JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
-     : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+    if (sprop->attrs & JSPROP_GETTER) {
+        return js_InternalGetOrSet(cx, obj, sprop->id,
+                                   OBJECT_TO_JSVAL((JSObject *) sprop->getter), JSACC_READ,
+                                   0, 0, vp);
+    }
+
+    return sprop->getter(cx, OBJ_THIS_OBJECT(cx, obj), SPROP_USERID(sprop), vp);
+}
+
+static JS_INLINE JSBool
+SPROP_SET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, jsval* vp)
+{
+    JS_ASSERT(!(SPROP_HAS_STUB_SETTER(sprop) &&
+                !(sprop->attrs & JSPROP_GETTER)));
+
+    if (sprop->attrs & JSPROP_SETTER) {
+        return js_InternalGetOrSet(cx, obj, (sprop)->id,
+                                   OBJECT_TO_JSVAL((JSObject *) sprop->setter),
+                                   JSACC_WRITE, 1, vp, vp);
+    }
+
+    if (sprop->attrs & JSPROP_GETTER) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_GETTER_ONLY, NULL);
+        return JS_FALSE;
+    }
+
+    return sprop->setter(cx, OBJ_THIS_OBJECT(cx, obj), SPROP_USERID(sprop), vp);
+}
 
 /* Macro for common expression to test for shared permanent attributes. */
 #define SPROP_IS_SHARED_PERMANENT(sprop)                                      \

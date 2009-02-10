@@ -441,6 +441,9 @@ namespace nanojit
 		virtual LInsp insAlloc(int32_t size) {
 			return out->insAlloc(size);
 		}
+		virtual LInsp skip(size_t size) {
+			return out->skip(size);
+		}
 
 		// convenience
 	    LIns*		insLoadi(LIns *base, int disp);
