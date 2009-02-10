@@ -4294,7 +4294,7 @@ nsIFrame::GetConstFrameSelection()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
+nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   IndentBy(out, aIndent);
   fprintf(out, "<frame va=\"%ld\" type=\"", PRUptrdiff(this));
@@ -4306,7 +4306,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
           GetDebugStateBits(), PRUptrdiff(mParent));
 
   aIndent++;
-  DumpBaseRegressionData(aPresContext, out, aIndent, aIncludeStyleData);
+  DumpBaseRegressionData(aPresContext, out, aIndent);
   aIndent--;
 
   IndentBy(out, aIndent);
@@ -4316,7 +4316,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
 }
 
 void
-nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
+nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   if (nsnull != mNextSibling) {
     IndentBy(out, aIndent);
@@ -4331,19 +4331,6 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
     aIndent--;
     IndentBy(out, aIndent);
     fprintf(out, "</view>\n");
-  }
-
-  if(aIncludeStyleData) {
-    if(mStyleContext) {
-      IndentBy(out, aIndent);
-      fprintf(out, "<stylecontext va=\"%ld\">\n", PRUptrdiff(mStyleContext));
-      aIndent++;
-      // Dump style context regression data
-      mStyleContext->DumpRegressionData(aPresContext, out, aIndent);
-      aIndent--;
-      IndentBy(out, aIndent);
-      fprintf(out, "</stylecontext>\n");
-    }
   }
 
   IndentBy(out, aIndent);
@@ -4373,7 +4360,7 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
       while (kid) {
         nsIFrameDebug* frameDebug = do_QueryFrame(kid);
         if (kid) {
-          frameDebug->DumpRegressionData(aPresContext, out, aIndent, aIncludeStyleData);
+          frameDebug->DumpRegressionData(aPresContext, out, aIndent);
         }
         kid = kid->GetNextSibling();
       }

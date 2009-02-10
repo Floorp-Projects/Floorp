@@ -2147,7 +2147,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
       nsIFrame* root = poPresShell->FrameManager()->GetRootFrame();
       nsIFrameDebug* fdbg = do_QueryFrame(root);
       if (fdbg) {
-        fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0, PR_TRUE);
+        fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0);
       }
       fclose(mPrt->mDebugFilePtr);
       SetIsPrinting(PR_FALSE);

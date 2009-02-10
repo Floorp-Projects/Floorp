@@ -114,8 +114,6 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aD
   nsIFrameDebug*  fdbg = do_QueryFrame(root);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool  dumpStyle = (aFlagsMask & DUMP_FLAGS_MASK_DUMP_STYLE) != 0;
-
   FILE* fp = stdout;
   if (aDestFile)
   {
@@ -133,7 +131,7 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aD
     }
   }
   else {
-    fdbg->DumpRegressionData(presShell->GetPresContext(), fp, 0, dumpStyle);
+    fdbg->DumpRegressionData(presShell->GetPresContext(), fp, 0);
   }
   if (fp != stdout)
     fclose(fp);

@@ -77,10 +77,8 @@ public:
    * specific kind of data dumped is up to the frame itself, with
    * the caveat that some base types are defined.
    * For more information, see XXX.
-   *
-   * Argument aIncludeStyleData: if PR_TRUE, style information is dumpted, otherwise it is not
    */
-  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData) = 0;
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
 
   NS_IMETHOD  VerifyTree() const = 0;
 
