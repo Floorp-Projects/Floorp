@@ -915,9 +915,10 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  if (GetStyleBorder()->mBoxShadow) {
+  PRBool hasBoxShadow = !!(GetStyleBorder()->mBoxShadow);
+  if (hasBoxShadow) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBoxShadow(this));
+        nsDisplayBoxShadowOuter(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -928,6 +929,12 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
       !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBackground(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (hasBoxShadow) {
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBoxShadowInner(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
@@ -3824,6 +3831,10 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
     for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
       nsRect tmpRect = r;
       nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
+
+      // inset shadows are never painted outside the frame
+      if (shadow->mInset)
+        continue;
       nscoord outsetRadius = shadow->mRadius + shadow->mSpread;
 
       tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));

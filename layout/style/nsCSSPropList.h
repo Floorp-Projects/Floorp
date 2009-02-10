@@ -390,7 +390,7 @@ CSS_PROP_BORDER(border-top-style, border_top_style, BorderTopStyle, CSS_PROPERTY
 CSS_PROP_BORDER(border-top-width, border_top_width, BorderTopWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mTop, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_SHORTHAND(border-width, border_width, BorderWidth, 0)
 CSS_PROP_POSITION(bottom, bottom, Bottom, 0, Position, mOffset.mBottom, eCSSType_Value, nsnull)
-CSS_PROP_BORDER(-moz-box-shadow, box_shadow, MozBoxShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Margin, mBoxShadow, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(-moz-box-shadow, box_shadow, MozBoxShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Margin, mBoxShadow, eCSSType_ValueList, kBoxShadowTypeKTable)
 CSS_PROP_POSITION(-moz-box-sizing, box_sizing, MozBoxSizing, 0, Position, mBoxSizing, eCSSType_Value, kBoxSizingKTable) // XXX bug 3935
 CSS_PROP_TABLEBORDER(caption-side, caption_side, CaptionSide, 0, Table, mCaptionSide, eCSSType_Value, kCaptionSideKTable)
 CSS_PROP_DISPLAY(clear, clear, Clear, 0, Display, mClear, eCSSType_Value, kClearKTable)

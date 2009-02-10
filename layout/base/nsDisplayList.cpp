@@ -647,21 +647,21 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayBoxShadow::Paint(nsDisplayListBuilder* aBuilder,
+nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
-  nsCSSRendering::PaintBoxShadow(mFrame->PresContext(), *aCtx,
-                                 mFrame, offset, aDirtyRect);
+  nsCSSRendering::PaintBoxShadowOuter(mFrame->PresContext(), *aCtx, mFrame,
+                                      nsRect(offset, mFrame->GetSize()), aDirtyRect);
 }
 
 nsRect
-nsDisplayBoxShadow::GetBounds(nsDisplayListBuilder* aBuilder) {
+nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
   return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 PRBool
-nsDisplayBoxShadow::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                       nsRegion* aVisibleRegion) {
+nsDisplayBoxShadowOuter::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                            nsRegion* aVisibleRegion) {
   if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
@@ -675,6 +675,14 @@ nsDisplayBoxShadow::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   }
 
   return PR_TRUE;
+}
+
+void
+nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsCSSRendering::PaintBoxShadowInner(mFrame->PresContext(), *aCtx, mFrame,
+                                      nsRect(offset, mFrame->GetSize()), aDirtyRect);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)

@@ -446,8 +446,10 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       currentItem->UpdateForFrameBackground(this);
     }
 
-    if (GetStyleBorder()->mBoxShadow) {
-      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadow(this);
+    // display outset box-shadows if we need to.
+    PRBool hasBoxShadow = !!(GetStyleBorder()->mBoxShadow);
+    if (hasBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowOuter(this);
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -463,6 +465,13 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
       item->UpdateForFrameBackground(this);
+    }
+
+    // display inset box-shadows if we need to.
+    if (hasBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowInner(this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     
     // display borders if we need to
