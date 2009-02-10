@@ -164,22 +164,21 @@ nsDOMWorkerPool::Cancel()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mCanceled, "Canceled more than once!");
 
-  nsAutoTArray<nsDOMWorker*, 10> workers;
   {
     nsAutoMonitor mon(mMonitor);
 
     mCanceled = PR_TRUE;
 
+    nsAutoTArray<nsDOMWorker*, 10> workers;
     GetWorkers(workers);
-  }
 
-  PRUint32 count = workers.Length();
-  if (count) {
-    for (PRUint32 index = 0; index < count; index++) {
-      workers[index]->Cancel();
+    PRUint32 count = workers.Length();
+    if (count) {
+      for (PRUint32 index = 0; index < count; index++) {
+        workers[index]->Cancel();
+      }
+      mon.NotifyAll();
     }
-    nsAutoMonitor mon(mMonitor);
-    mon.NotifyAll();
   }
 
   mParentGlobal = nsnull;
