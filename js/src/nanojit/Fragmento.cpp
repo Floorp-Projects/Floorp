@@ -131,10 +131,11 @@ namespace nanojit
 	Page* Fragmento::pageAlloc()
 	{
         NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
-		if (!_freePages.size())
-			pagesGrow(_pagesGrowth);	// try to get more mem
-			            if ((_pagesGrowth << 1) < _max_pages)
-							_pagesGrowth <<= 1;						
+        if (!_freePages.size()) {
+            pagesGrow(_pagesGrowth);    // try to get more mem
+            if ((_pagesGrowth << 1) < _max_pages)
+                _pagesGrowth <<= 1;
+        }
 
 		trackPages();
 		Page* page = 0;
