@@ -349,7 +349,7 @@ ifeq ($(OS_TARGET), OpenVMS)
 	  fi; \
 	fi
 endif	# OpenVMS
-	$(MKSHLIB) $(OBJS) $(RES) $(EXTRA_LIBS)
+	$(MKSHLIB) $(OBJS) $(RES) $(LDFLAGS) $(EXTRA_LIBS)
 endif	# WINNT && !GCC
 endif	# AIX 4.1
 ifdef ENABLE_STRIP

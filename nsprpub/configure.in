@@ -1101,11 +1101,7 @@ tools are selected during the Xcode/Developer Tools installation.])
                     MACOS_SDK_LIBS="-Wl,-syslibroot,${MACOS_SDK_DIR}"
                 fi
 
-                dnl LDFLAGS is for the utilities built in config (now and
-                dnl nsinstall).  DSO_LDOPTS is used when linking shared
-                dnl libraries.
                 LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
-                DSO_LDOPTS="${MACOS_SDK_LIBS} $DSO_LDOPTS"
                 export NEXT_ROOT=$MACOS_SDK_DIR
 
                 if test -n "$CROSS_COMPILE" ; then
@@ -1127,19 +1123,14 @@ tools are selected during the Xcode/Developer Tools installation.])
                 dnl has an ld that supports -syslibroot.  Don't set
                 dnl NEXT_ROOT because it will be ignored and cause
                 dnl warnings when -syslibroot is specified.
-                dnl
-                dnl Both LDFLAGS and DSO_LDOPTS are set here, see the
-                dnl gcc < 4.0 case for the explanation.
                 if test "$GCC_VERSION_FULL" != "4.0.0" ; then
                     dnl gcc > 4.0.0 will pass -syslibroot to ld automatically
                     dnl based on the -isysroot it receives.
                     LDFLAGS="$LDFLAGS -isysroot ${MACOS_SDK_DIR}"
-                    DSO_LDOPTS="$DSO_LDOPTS -isysroot ${MACOS_SDK_DIR}"
                 else
                     dnl gcc 4.0.0 doesn't pass -syslibroot to ld, it needs
                     dnl to be explicit.
                     LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
-                    DSO_LDOPTS="$DSO_LDOPTS -Wl,-syslibroot,${MACOS_SDK_DIR}"
                 fi
             fi
         fi
@@ -1860,7 +1851,7 @@ mips-sony-newsos*)
     AR_FLAGS='c $@'
     MDCPUCFG_H=_openvms.cfg
     PR_MD_CSRCS=openvms.c
-    DSO_LDOPTS='-shared -auto_symvec $(LDFLAGS)'
+    DSO_LDOPTS='-shared -auto_symvec'
     if test -n "$MOZ_DEBUG"; then
       DSO_LDOPTS="$DSO_LDOPTS $_DEBUG_FLAGS"
     else
@@ -2196,7 +2187,7 @@ mips-sony-newsos*)
     CXXFLAGS="$CFLAGS -Wall -Zomf"
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     DSO_CFLAGS=
-    DSO_LDOPTS='-Zomf -Zdll -Zmap'
+    DSO_LDOPTS='-Zomf -Zdll'
     LDFLAGS='-Zmap'
     _OPTIMIZE_FLAGS="-O2 -s"
     _DEBUG_FLAGS="-g -fno-inline"
@@ -2207,7 +2198,6 @@ mips-sony-newsos*)
     IMPLIB='emximp -o'
     FILTER='emxexp -o'
     if test -n "$MOZ_OS2_HIGH_MEMORY"; then
-      DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
       LDFLAGS="$LDFLAGS -Zhigh-mem"
       AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
     fi
