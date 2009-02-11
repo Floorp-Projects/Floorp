@@ -221,13 +221,10 @@ class nsWaveDecoder : public nsMediaDecoder
   // main thread only.
   virtual void Resume();
 
-private:
-  // Change the element's ready state as necessary
+  // Change the element's ready state as necessary. Main thread only.
   void UpdateReadyStateForData();
 
-  // Notifies the element that buffering has stopped.
-  void BufferingStopped();
-
+private:
   // Notifies the element that seeking has started.
   void SeekingStarted();
 

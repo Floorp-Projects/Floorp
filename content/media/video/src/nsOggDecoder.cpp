@@ -308,7 +308,15 @@ public:
   // Must be called with the decode monitor held. Can be called by main
   // thread.
   PRBool HaveNextFrameData() const {
-    return !mDecodedFrames.IsEmpty();
+    return !mDecodedFrames.IsEmpty() &&
+      (mState == DECODER_STATE_DECODING ||
+       mState == DECODER_STATE_COMPLETED);
+  }
+
+  // Must be called with the decode monitor held. Can be called by main
+  // thread.
+  PRBool IsBuffering() const {
+    return mState == nsOggDecodeStateMachine::DECODER_STATE_BUFFERING;
   }
 
 protected:
@@ -993,6 +1001,19 @@ nsresult nsOggDecodeStateMachine::Run()
             StopPlayback();
           }
 
+          // We need to tell the element that buffering has started.
+          // We can't just directly send an asynchronous runnable that
+          // eventually fires the "waiting" event. The problem is that
+          // there might be pending main-thread events, such as "data
+          // received" notifications, that mean we're not actually still
+          // buffering by the time this runnable executes. So instead
+          // we just trigger UpdateReadyStateForData; when it runs, it
+          // will check the current state and decide whether to tell
+          // the element we're buffering or not.
+          nsCOMPtr<nsIRunnable> event = 
+            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
+          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+
           mBufferingStart = PR_IntervalNow();
           double playbackRate = mDecoder->GetStatistics().mPlaybackRate;
           mBufferingBytes = BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
@@ -1096,7 +1117,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
         if (mState != DECODER_STATE_BUFFERING) {
           nsCOMPtr<nsIRunnable> event = 
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, BufferingStopped);
+            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
           if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
             if (!mPlaying) {
@@ -1769,17 +1790,18 @@ void nsOggDecoder::UpdateReadyStateForData()
   if (!mElement || mShuttingDown || !mDecodeStateMachine)
     return;
 
-  PRBool haveNextFrame;
+  nsHTMLMediaElement::NextFrameStatus frameStatus;
   {
     nsAutoMonitor mon(mMonitor);
-    haveNextFrame = mDecodeStateMachine->HaveNextFrameData();
+    if (mDecodeStateMachine->HaveNextFrameData()) {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
+    } else if (mDecodeStateMachine->IsBuffering()) {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+    } else {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
+    }
   }
-  mElement->UpdateReadyStateForData(haveNextFrame);
-}
-
-void nsOggDecoder::BufferingStopped()
-{
-  UpdateReadyStateForData();
+  mElement->UpdateReadyStateForData(frameStatus);
 }
 
 void nsOggDecoder::SeekingStopped()
