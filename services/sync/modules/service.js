@@ -434,8 +434,10 @@ WeaveSvc.prototype = {
       let ret = false;
 
       this._log.debug("Finding cluster for user " + username);
-      let res = new Resource(this.baseURL + "api/register/chknode/" + username);
-      yield res.get(self.cb);
+      try {
+	let res = new Resource(this.baseURL + "api/register/chknode/" + username);
+	yield res.get(self.cb);
+      } catch (e) { /* we check status below */ }
 
       if (res.lastChannel.responseStatus == 404) {
         this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
