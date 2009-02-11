@@ -434,8 +434,9 @@ WeaveSvc.prototype = {
       let ret = false;
 
       this._log.debug("Finding cluster for user " + username);
+
+      let res = new Resource(this.baseURL + "api/register/chknode/" + username);
       try {
-	let res = new Resource(this.baseURL + "api/register/chknode/" + username);
 	yield res.get(self.cb);
       } catch (e) { /* we check status below */ }
 
