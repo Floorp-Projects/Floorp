@@ -149,7 +149,8 @@ Resource.prototype = {
       getService(Ci.nsIIOService);
     this._lastChannel = ios.newChannel(this.spec, null, null).
       QueryInterface(Ci.nsIHttpChannel);
-
+    this._lastChannel.notificationCallbacks = new badCertListener();
+    
     let headers = this.headers; // avoid calling the authorizer more than once
     for (let key in headers) {
       if (key == 'Authorization')
@@ -346,5 +347,32 @@ JsonFilter.prototype = {
     this._log.trace("Decoding JSON data");
     Observers.notify(null, "weave:service:sync:status", "stats.decoding-json");
     self.done(this._json.decode(data));
+  }
+};
+
+function badCertListener() {
+}
+badCertListener.prototype = {
+  getInterface: function(aIID) {
+    return this.QueryInterface(aIID);
+  },
+  
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
+        aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+      
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+  
+  notifyCertProblem: function certProblem(socketInfo, sslStatus, targetHost) {
+    // Silently ignore?
+    let log = Log4Moz.repository.getLogger("Service.CertListener");
+    log.level =
+      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
+    log.debug("Invalid HTTPS certificate encountered, ignoring!");
+
+    return true;
   }
 };
