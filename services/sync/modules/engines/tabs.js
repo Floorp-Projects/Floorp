@@ -193,7 +193,7 @@ TabStore.prototype = {
     let browserWindow = wm.getMostRecentWindow("navigator:browser");
     for each (let tab in browserWindow.Browser._tabs ) {
       let title = tab.browser.contentDocument.title;
-      let url = tab.browser.contentWindow.location;
+      let url = tab.browser.contentWindow.location.toString();
       let urlHistory = [url];
       // TODO how to get older entries in urlHistory?
       dump("Making tab with title = " + title + ", url = " + url + "\n");
