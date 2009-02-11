@@ -1,0 +1,14 @@
+<html>
+<body>
+  <form name="frmlogin">
+    <input type="text" name="username" 
+           onfocus="frmlogin.username.select();" 
+           onblur="frmlogin.password.focus();">
+    <input type="password" name="password" 
+           onfocus="frmlogin.password.select();">
+  </form>
+  <script language="JavaScript">
+    document.frmlogin.username.focus();
+  </script>
+</body>
+</html>
