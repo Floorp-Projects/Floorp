@@ -196,9 +196,6 @@ WeaveSvc.prototype = {
     let url = Svc.Prefs.get("clusterURL");
     if (!url)
       return null;
-    // XXX tmp hack for sm-weave-proxy01
-    if (url == "https://sm-weave-proxy01.services.mozilla.com/")
-      return "https://sm-weave-proxy01.services.mozilla.com/weave/0.3/";
     if (url[url.length-1] != '/')
       url += '/';
     url += "0.3/user/";
