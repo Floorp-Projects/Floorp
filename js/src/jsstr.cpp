@@ -1453,6 +1453,7 @@ static jsval FASTCALL
 String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
 {
     jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    JSAutoTempValueRooter tvr(cx, 3, vp);
     if (!StringMatchHelper(cx, 1, vp, pc)) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_VOID;
@@ -1464,6 +1465,7 @@ static jsval FASTCALL
 String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
 {
     jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    JSAutoTempValueRooter tvr(cx, 3, vp);
     if (!StringMatchHelper(cx, 1, vp, pc)) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_VOID;
@@ -2488,7 +2490,7 @@ JS_DEFINE_CALLINFO_2(extern, BOOL,   js_EqualStrings, STRING, STRING,           
 JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,                     1, 1)
 
 JS_DEFINE_TRCINFO_1(str_toString,
-    (2, (extern, STRING_FAIL,       String_p_toString, CONTEXT, THIS,                        1, 1)))
+    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
 JS_DEFINE_TRCINFO_2(str_substring,
     (4, (static, STRING_RETRY,      String_p_substring, CONTEXT, THIS_STRING, INT32, INT32,   1, 1)),
     (3, (static, STRING_RETRY,      String_p_substring_1, CONTEXT, THIS_STRING, INT32,        1, 1)))
