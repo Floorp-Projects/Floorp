@@ -72,12 +72,13 @@ void fail(const char* msg, ...)
 }
 
 /**
- * Prints the given string followed by " PASSED!\n", to be used at the end
- * of a successful test function.
+ * Prints the given string prepending "TEST-PASS | " for the benefit of
+ * the test harness and with "\n" at the end, to be used at the end of a
+ * successful test function.
  */
 void passed(const char* test)
 {
-  printf("%s PASSED!\n", test);
+  printf("TEST-PASS | %s\n", test);
 }
 
 
