@@ -7017,17 +7017,17 @@ GetProperty(JSContext *cx, uintN argc, jsval *vp)
 static jsval FASTCALL
 GetProperty_tn(JSContext *cx, jsbytecode *pc, JSObject *obj, JSString *name)
 {
-    jsid id;
-    jsval v;
+    JSAutoTempIdRooter idr(cx);
+    JSAutoTempValueRooter tvr(cx);
 
     BEGIN_PC_HINT(pc);
-        if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), &id) ||
-            !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
+        if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), idr.addr()) ||
+            !OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
             cx->builtinStatus |= JSBUILTIN_ERROR;
-            v = JSVAL_ERROR_COOKIE;
+            *tvr.addr() = JSVAL_ERROR_COOKIE;
         }
     END_PC_HINT();
-    return v;
+    return tvr.value();
 }
 
 static JSBool
@@ -7048,20 +7048,20 @@ GetElement(JSContext *cx, uintN argc, jsval *vp)
 static jsval FASTCALL
 GetElement_tn(JSContext* cx, jsbytecode *pc, JSObject* obj, int32 index)
 {
-    jsval v;
-    jsid id;
+    JSAutoTempValueRooter tvr(cx);
+    JSAutoTempIdRooter idr(cx);
 
-    if (!js_Int32ToId(cx, index, &id)) {
+    if (!js_Int32ToId(cx, index, idr.addr())) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_ERROR_COOKIE;
     }
     BEGIN_PC_HINT(pc);
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &v)) {
+        if (!OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
             cx->builtinStatus |= JSBUILTIN_ERROR;
-            v = JSVAL_ERROR_COOKIE;
+            *tvr.addr() = JSVAL_ERROR_COOKIE;
         }
     END_PC_HINT();
-    return v;
+    return tvr.value();
 }
 
 JS_DEFINE_TRCINFO_1(GetProperty,
@@ -7163,10 +7163,11 @@ SetProperty(JSContext *cx, uintN argc, jsval *vp)
 static int32 FASTCALL
 SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
-    jsid id;
+    JSAutoTempValueRooter tvr(cx, v);
+    JSAutoTempIdRooter idr(cx);
 
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id) ||
-        !OBJ_SET_PROPERTY(cx, obj, id, &v)) {
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), idr.addr()) ||
+        !OBJ_SET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
     }
     return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
@@ -7193,10 +7194,13 @@ SetElement(JSContext *cx, uintN argc, jsval *vp)
 static int32 FASTCALL
 SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
 {
-    jsid id;
+    JSAutoTempIdRooter idr(cx);
+    JSAutoTempValueRooter tvr(cx, v);
 
-    if (!js_Int32ToId(cx, index, &id) || !OBJ_SET_PROPERTY(cx, obj, id, &v))
+    if (!js_Int32ToId(cx, index, idr.addr()) ||
+        !OBJ_SET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
+    }
     return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
 }
 
@@ -9141,17 +9145,17 @@ CallIteratorNext(JSContext *cx, uintN argc, jsval *vp)
 static jsval FASTCALL
 CallIteratorNext_tn(JSContext* cx, jsbytecode* pc, JSObject* iterobj)
 {
-    jsval v;
+    JSAutoTempValueRooter tvr(cx);
 
     BEGIN_PC_HINT(pc);
-        bool ok = js_CallIteratorNext(cx, iterobj, &v);
+        bool ok = js_CallIteratorNext(cx, iterobj, tvr.addr());
     END_PC_HINT();
 
     if (!ok) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_ERROR_COOKIE;
     }
-    return v;
+    return tvr.value();
 }
 
 JS_DEFINE_TRCINFO_1(ObjectToIterator,
