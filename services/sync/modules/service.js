@@ -223,6 +223,7 @@ WeaveSvc.prototype = {
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
   get enabled() Svc.Prefs.get("enabled"),
+  set enabled(value) Svc.Prefs.set("enabled", value),
 
   get schedule() {
     if (!this.enabled)
