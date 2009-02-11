@@ -1,0 +1,20 @@
+<!--/*
+Crash in error handler on invalid JavaScript
+http://bugzilla.mozilla.org/show_bug.cgi?id=117307
+*/-->
+
+<HTML><HEAD><TITLE>Bug 117307</title><SCRIPT>
+
+window.onerror=f;
+function f() {f.caller;}
+
+</script></head><BODY><SCRIPT>
+
+function syntaxError() {1=2;}
+
+</script><SCRIPT>
+
+runtimeError();
+function runtimeError() {d.d.d;}
+
+</script></body></html>

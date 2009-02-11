@@ -1,0 +1,45 @@
+<html>
+<head>
+<title></title>
+<script type="text/javascript">
+function toggle(b) {		
+	var adv = document.getElementById("it_guru");
+	var ns = 'none';
+	if (b) {
+			ns= "table-row";
+	}
+	adv.style.display = ns;
+}
+function boom()
+{
+  toggle(true);
+  document.documentElement.offsetHeight;
+  toggle(false);
+  document.documentElement.offsetHeight;
+  toggle(true);
+  document.documentElement.offsetHeight;
+  toggle(false);
+  document.documentElement.offsetHeight;
+}
+</script></head><body onload="boom();">
+<form action="http://localhost/">
+<table>
+<tbody>
+<tr>
+<td>Without the &lt;tbody&gt; tags Mozilla doesn't crash
+		</td>
+</tr>
+</tbody>
+<tr id="it_guru">
+<td>I disappear
+		</td>
+</tr>
+<tr>
+<td>Without this row Mozilla doesn't crash
+		</td>
+</tr>
+</table>
+</form>
+</body>
+</html>
+
