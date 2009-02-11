@@ -181,8 +181,7 @@ namespace nanojit
 		void nativePageReset();\
 		void nativePageSetup();\
         void underrunProtect(int);\
-        void asm_farg(LInsp);\
-        void asm_align_code();
+        void asm_farg(LInsp);
 		
 	#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 		
