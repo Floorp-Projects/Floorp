@@ -2689,13 +2689,11 @@ var newTabButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession) {
     var statusTextFld = document.getElementById("statusbar-display");
     statusTextFld.label = gNavigatorBundle.getString("droponnewtabbutton");
-    aEvent.target.setAttribute("dragover", "true");
     return true;
   },
   onDragExit: function (aEvent, aDragSession) {
     var statusTextFld = document.getElementById("statusbar-display");
     statusTextFld.label = "";
-    aEvent.target.removeAttribute("dragover");
   },
   onDrop: function (aEvent, aXferData, aDragSession) {
     var xferData = aXferData.data.split("\n");
@@ -2722,14 +2720,12 @@ var newWindowButtonObserver = {
     {
       var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.label = gNavigatorBundle.getString("droponnewwindowbutton");
-      aEvent.target.setAttribute("dragover", "true");
       return true;
     },
   onDragExit: function (aEvent, aDragSession)
     {
       var statusTextFld = document.getElementById("statusbar-display");
       statusTextFld.label = "";
-      aEvent.target.removeAttribute("dragover");
     },
   onDrop: function (aEvent, aXferData, aDragSession)
     {
