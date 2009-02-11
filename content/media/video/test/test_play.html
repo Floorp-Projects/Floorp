@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: play() method</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<video id="v"></video>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var v = document.getElementById("v");
+
+var playEvents = ["play", "canplay", "playing", "canplaythrough"];
+function gotPlayEvent(event) {
+  is(event.type, playEvents.shift(), "Check expected event");
+}
+for (var i = 0; i < playEvents.length; ++i) {
+  v.addEventListener(playEvents[i], gotPlayEvent, false);
+}
+
+function ended() {
+  is(playEvents.length, 0, "Undelivered event " + playEvents[0]);
+  SimpleTest.finish();
+}
+v.addEventListener("ended", ended, false);
+
+v.src = "320x240.ogv";
+v.load();
+v.play();
+</script>
+</pre>
+</body>
+</html>

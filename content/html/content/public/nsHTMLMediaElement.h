@@ -272,8 +272,4 @@ protected:
   // to ensure that the playstate doesn't change when the user goes Forward/Back
   // from the bfcache.
   PRPackedBool mPausedBeforeFreeze;
-
-  // True if playback was requested before a decoder was available to begin
-  // playback with.
-  PRPackedBool mPlayRequested;
 };
