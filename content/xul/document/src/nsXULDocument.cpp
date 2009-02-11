@@ -3427,6 +3427,18 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
         }
     }
 
+    // Allow security manager and content policies to veto the load. Note that
+    // at this point we already lost context information of the script.
+    rv = nsScriptLoader::ShouldLoadScript(
+                            this,
+                            static_cast<nsIDocument*>(this),
+                            aScriptProto->mSrcURI,
+                            NS_LITERAL_STRING("application/x-javascript"));
+    if (NS_FAILED(rv)) {
+      *aBlock = PR_FALSE;
+      return rv;
+    }
+
     // Set the current script prototype so that OnStreamComplete can report
     // the right file if there are errors in the script.
     NS_ASSERTION(!mCurrentScriptProto,
