@@ -262,4 +262,5 @@ pref("plugins.enabled", false);
 
 #ifdef WINCE
 pref("layout.css.dpi", 96);
+pref("javascript.options.jit.content", false);
 #endif
