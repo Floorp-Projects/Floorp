@@ -423,9 +423,9 @@ private:
   // accessed in the decoder thread.
   PRIntervalTime mBufferingStart;
 
-  // Number of bytes to buffer when buffering. Only accessed in the
-  // decoder thread.
-  PRInt64 mBufferingBytes;
+  // Download position where we should stop buffering. Only
+  // accessed in the decoder thread.
+  PRInt64 mBufferingEndOffset;
 
   // The time value of the last decoded video frame. Used for
   // computing the sleep period between frames for a/v sync.
@@ -502,7 +502,7 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mAudioChannels(0),
   mAudioTrack(-1),
   mBufferingStart(0),
-  mBufferingBytes(0),
+  mBufferingEndOffset(0),
   mLastFrameTime(0),
   mLastFramePosition(-1),
   mState(DECODER_STATE_DECODING_METADATA),
@@ -1016,9 +1016,10 @@ nsresult nsOggDecodeStateMachine::Run()
 
           mBufferingStart = PR_IntervalNow();
           double playbackRate = mDecoder->GetStatistics().mPlaybackRate;
-          mBufferingBytes = BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
+          mBufferingEndOffset = mDecoder->mDownloadPosition +
+              BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
           mState = DECODER_STATE_BUFFERING;
-          LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING (%d bytes)", PRInt32(mBufferingBytes)));
+          LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
         } else {
           PlayFrame();
         }
@@ -1101,11 +1102,11 @@ nsresult nsOggDecodeStateMachine::Run()
       {
         PRIntervalTime now = PR_IntervalNow();
         if ((PR_IntervalToMilliseconds(now - mBufferingStart) < BUFFERING_WAIT*1000) &&
-            reader->Available() < mBufferingBytes &&
+            mDecoder->mDownloadPosition < mBufferingEndOffset &&
             (mDecoder->mTotalBytes < 0 || mDecoder->mDownloadPosition < mDecoder->mTotalBytes)) {
           LOG(PR_LOG_DEBUG, 
               ("In buffering: buffering data until %d bytes available or %d milliseconds", 
-               PRUint32(mBufferingBytes - reader->Available()),
+               PRUint32(mBufferingEndOffset - mDecoder->mDownloadPosition),
                BUFFERING_WAIT*1000 - (PR_IntervalToMilliseconds(now - mBufferingStart))));
           mon.Wait(PR_MillisecondsToInterval(1000));
           if (mState == DECODER_STATE_SHUTDOWN)
