@@ -4340,6 +4340,16 @@ function testGeneratorDeepBail() {
 testGeneratorDeepBail.expected = 3;
 test(testGeneratorDeepBail);
 
+function testRegexpGet() {
+    var re = /hi/;
+    var a = [];
+    for (let i = 0; i < 5; ++i)
+        a.push(re.source);
+    return a.toString();
+}
+testRegexpGet.expected = "hi,hi,hi,hi,hi";
+test(testRegexpGet);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
