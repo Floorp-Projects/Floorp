@@ -506,8 +506,7 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
     mPaused(PR_TRUE),
     mMuted(PR_FALSE),
     mIsDoneAddingChildren(!aFromParser),
-    mPlayingBeforeSeek(PR_FALSE),
-    mPlayRequested(PR_FALSE)
+    mPlayingBeforeSeek(PR_FALSE)
 {
 }
 
@@ -525,32 +524,36 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
 
 NS_IMETHODIMP nsHTMLMediaElement::Play()
 {
-  if (!mDecoder) {
-    mPlayRequested = PR_TRUE;
-    return NS_OK;
-  }
-
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
-    mPlayRequested = PR_TRUE;
-    return Load();
-  }
-
-  if (mDecoder->IsEnded()) {
-    SetCurrentTime(0);
+    nsresult rv = Load();
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (mDecoder) {
+    if (mDecoder->IsEnded()) {
+      SetCurrentTime(0);
+    }
+    nsresult rv = mDecoder->Play();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // TODO: If the playback has ended, then the user agent must set 
   // currentLoop to zero and seek to the effective start.
   // TODO: The playback rate must be set to the default playback rate.
-  nsresult rv = mDecoder->Play();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mPaused) {
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
+    switch (mReadyState) {
+    case nsIDOMHTMLMediaElement::HAVE_METADATA:
+    case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
+      break;
+    case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
+    case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
+      break;
+    }
+  }
 
-  PRBool oldPaused = mPaused;
   mPaused = PR_FALSE;
   mAutoplaying = PR_FALSE;
-
-  if (oldPaused)
-    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
 
   return NS_OK;
 }
@@ -870,7 +873,15 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
-  return mDecoder->Load(nsnull, aChannel, aListener);
+  nsresult rv = mDecoder->Load(nsnull, aChannel, aListener);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!mPaused) {
+    rv = mDecoder->Play();
+  }
+
+  return rv;
 }
 
 nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI)
@@ -953,14 +964,6 @@ void nsHTMLMediaElement::MetadataLoaded()
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
-  if (mPlayRequested) {
-    mPlayRequested = PR_FALSE;
-    mPaused = PR_FALSE;
-    if (mDecoder) {
-      mDecoder->Play();
-    }
-    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
-  }
 }
 
 void nsHTMLMediaElement::FirstFrameLoaded()
@@ -1103,15 +1106,11 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       break;
  
     case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
-      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
       if (oldState != mReadyState) {
         LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_ENOUGH_DATA"));
       }
       if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
         DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
       }
       if (mAutoplaying &&
           mPaused &&
@@ -1126,6 +1125,9 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
           IsPotentiallyPlaying()) {
         DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
+      }
+      if (oldState <= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
       }
       break;
     }
