@@ -1159,6 +1159,8 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 {
+  NS_ENSURE_TRUE(aItemId != mRoot, NS_ERROR_INVALID_ARG);
+
   nsresult rv;
   PRInt32 childIndex;
   PRInt64 placeId, folderId;
@@ -1602,10 +1604,11 @@ nsNavBookmarks::GetParentAndIndexOfFolder(PRInt64 aFolder, PRInt64* aParent,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolder(PRInt64 aFolderId)
 {
+  NS_ENSURE_TRUE(aFolderId != mRoot, NS_ERROR_INVALID_ARG);
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   nsresult rv;
-
   PRInt64 parent;
   PRInt32 index, type;
   nsCAutoString folderType;
@@ -1894,6 +1897,8 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
 NS_IMETHODIMP
 nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
 {
+  NS_ENSURE_TRUE(aItemId != mRoot, NS_ERROR_INVALID_ARG);
+
   // You can pass -1 to indicate append, but no other negative number is allowed
   if (aIndex < -1)
     return NS_ERROR_INVALID_ARG;
