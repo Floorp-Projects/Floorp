@@ -175,14 +175,17 @@ TabStore.prototype = {
 
       for (let j = 0; j < window.tabs.length; j++) {
         let tab = window.tabs[j];
-        let title = tab.contentDocument.title.innerHtml; // will this work?
-        this._log.debug("Wrapping a tab with title " + title);
+	let currentPage = tab.entries[tab.entries.length - 1];
+	/* TODO not always accurate -- if you've hit Back in this tab, then the current
+	 * page might not be the last entry.  Deal with this later.
+	 */
+        this._log.debug("Wrapping a tab with title " + currentPage.title);
         let urlHistory = [];
         let entries = tab.entries.slice(tab.entries.length - 10);
         for (let entry in entries) {
           urlHistory.push( entry.url );
         }
-        record.addTab(title, urlHistory);
+        record.addTab(currentPage.title, urlHistory);
       }
     }
   },
