@@ -1103,6 +1103,12 @@ let observer = {
       }
       else {
         os.removeObserver(this, FINISHED_MAINTANANCE_NOTIFICATION_TOPIC);
+        // Sanity check: all roots should be intact
+        do_check_eq(bs.getFolderIdForItem(bs.placesRoot), 0);
+        do_check_eq(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
+        do_check_eq(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
+        do_check_eq(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
+        do_check_eq(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
         do_test_finished();
       }
     }
