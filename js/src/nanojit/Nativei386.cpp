@@ -137,34 +137,8 @@ namespace nanojit
 				PUSHr(savedRegs[i]);
 		}
 
-        // align the entry point
-        asm_align_code();
-
 		return fragEntry;
 	}
-
-    void Assembler::asm_align_code() {
-        static uint8_t nop[][9] = {
-                {0x90},
-                {0x66,0x90},
-                {0x0f,0x1f,0x00},
-                {0x0f,0x1f,0x40,0x00},
-                {0x0f,0x1f,0x44,0x00,0x00},
-                {0x66,0x0f,0x1f,0x44,0x00,0x00},
-                {0x0f,0x1f,0x80,0x00,0x00,0x00,0x00},
-                {0x0f,0x1f,0x84,0x00,0x00,0x00,0x00,0x00},
-                {0x66,0x0f,0x1f,0x84,0x00,0x00,0x00,0x00,0x00},
-        };
-        unsigned n;
-        while((n = uintptr_t(_nIns) & 15) != 0) {
-            if (n > 9)
-                n = 9;
-            underrunProtect(n);
-            _nIns -= n;
-            memcpy(_nIns, nop[n-1], n);
-            asm_output("nop%d", n);
-        }
-    }
 
 	void Assembler::nFragExit(LInsp guard)
 	{
