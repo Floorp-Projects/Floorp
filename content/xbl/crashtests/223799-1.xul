@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  >
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="foo">
+      <content><xul:box><xul:box><children/></xul:box></xul:box></content>
+    </binding>
+      <implementation>
+        <field name="box">document.getAnonymousNodes(this)[0]</field>
+      </implementation>
+  </bindings>
+  <html:style type="text/css">
+  <!-- CSS style rules for XBL bindings go here -->
+  <![CDATA[
+foo {
+  -moz-binding: url("#foo");
+}
+  ]]>
+  </html:style>
+  <!-- XUL application goes here -->
+
+  <foo><description>World</description></foo>
+</window>
