@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<?xml-stylesheet type="text/xsl" href="226425.xsl" ?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:output method="html" indent="yes"/>
 
-<text></text>
-
-
+<xsl:template match="/">
+<html><body>
+<xsl:apply-templates select="document('dontmatter')"/>
+</body></html>
+</xsl:template>
+</xsl:stylesheet>
