@@ -9500,7 +9500,7 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  if (!mGeolocation) {
+  if (!mGeolocation && mDocShell) {
     nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
     mGeolocation = new nsGeolocation(contentDOMWindow);
   }
