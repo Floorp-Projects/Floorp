@@ -422,10 +422,6 @@ protected:
   // Call on the main thread only.
   void PlaybackEnded();
 
-  // Buffering of data has stopped. Inform the element on the main
-  // thread.
-  void BufferingStopped();
-
   // Seeking has stopped. Inform the element on the main
   // thread.
   void SeekingStopped();
@@ -439,15 +435,15 @@ protected:
   // This must be called on the main thread only.
   void PlaybackPositionChanged();
 
+  // Calls mElement->UpdateReadyStateForData, telling it whether we have
+  // data for the next frame and if we're buffering. Main thread only.
+  void UpdateReadyStateForData();
+
 private:
   // Register/Unregister with Shutdown Observer. 
   // Call on main thread only.
   void RegisterShutdownObserver();
   void UnregisterShutdownObserver();
-
-  // Calls mElement->UpdateReadyStateForData, telling it whether we have
-  // data for the next frame.
-  void UpdateReadyStateForData();
 
   /******
    * The following members should be accessed with the decoder lock held.
