@@ -85,7 +85,6 @@ _TEST_FILES =\
 		test_nsIAccessible_name_link.html \
 		$(warning test_nsIAccessible_name.xul temporarily disabled) \
  		test_nsIAccessible_selects.html \
-		test_nsIAccessible_states.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleEditableText.html \
@@ -104,6 +103,7 @@ _TEST_FILES =\
 		test_relations.xul \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
+		test_states.html \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \

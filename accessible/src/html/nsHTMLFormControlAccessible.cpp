@@ -41,6 +41,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMNSEditableElement.h"
@@ -112,13 +113,27 @@ nsHTMLCheckboxAccessible::GetStateInternal(PRUint32 *aState,
   *aState |= nsIAccessibleStates::STATE_CHECKABLE;
 
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
+  PRBool mixed = PR_FALSE;     // or mixed.
 
+  nsCOMPtr<nsIDOMNSHTMLInputElement>
+           html5CheckboxElement(do_QueryInterface(mDOMNode));
+           
+  if (html5CheckboxElement) {
+    html5CheckboxElement->GetIndeterminate(&mixed);
+
+    if (mixed) {
+      *aState |= nsIAccessibleStates::STATE_MIXED;
+      return NS_OK;  // indeterminate can't be checked at the same time.
+    }
+  }
+  
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
-  if (htmlCheckboxElement)
+  if (htmlCheckboxElement) {
     htmlCheckboxElement->GetChecked(&checked);
-
-  if (checked)
-    *aState |= nsIAccessibleStates::STATE_CHECKED;
+  
+    if (checked)
+      *aState |= nsIAccessibleStates::STATE_CHECKED;
+  }
 
   return NS_OK;
 }
