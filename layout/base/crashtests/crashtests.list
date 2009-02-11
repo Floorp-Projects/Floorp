@@ -22,7 +22,7 @@ load 143862-2.html
 load 147320-1.html
 load 148245-1.html
 load 149014-1.html
-load 150431-1.html
+skip load 150431-1.html # slow test
 load 176915-1.html
 load 191272-1.html
 load 199696-1.html
