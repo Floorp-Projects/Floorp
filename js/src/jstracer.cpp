@@ -8941,6 +8941,9 @@ TraceRecorder::record_JSOP_TYPEOFEXPR()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENTERBLOCK()
 {
+    if (cx->fp->flags & JSFRAME_POP_BLOCKS)
+        ABORT_TRACE("can't trace after js_GetScopeChain");
+
     JSScript* script = cx->fp->script;
     JSFrameRegs& regs = *cx->fp->regs;
     JSObject* obj;
