@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
 <bindings id="toolbarbuttonBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -11,7 +16,7 @@
       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
     </resources>
     
-    <content>
+    <content chromedir="&locale.dir;">
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
@@ -29,7 +34,7 @@
 
   <binding id="menu" display="xul:menu" 
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-    <content>
+    <content chromedir="&locale.dir;">
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
