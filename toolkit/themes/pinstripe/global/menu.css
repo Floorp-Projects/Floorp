@@ -47,7 +47,7 @@
 
 menu,
 menuitem {
-  -moz-appearance: menuitem !important;
+  -moz-appearance: menuitem;
   -moz-box-align: center;
   color: MenuText;
   font: -moz-pull-down-menu;
@@ -163,6 +163,7 @@ menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
 popup > menuitem[_moz-menuactive="true"] {
   color: -moz-mac-menutextselect;
+  background-color: Highlight;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
@@ -182,6 +183,16 @@ menulist > menupopup > menuitem > .menu-iconic-left,
 .menulist-menupopup > menu > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
   margin: 0 2px 0 0 !important;
+}
+
+/* ::::: menuitems in editable menulist popups ::::: */
+
+menulist[editable="true"] > menupopup > menuitem {
+  -moz-appearance: none;
+}
+
+menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
+  display: none;
 }
 
 /* ::::: checked menuitems ::::: */

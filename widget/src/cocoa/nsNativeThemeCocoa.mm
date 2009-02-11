@@ -81,7 +81,20 @@ extern "C" {
 - (int)_realControlTint { return [self controlTint]; }
 @end
 
-// On 10.4, NSSearchFieldCells can't draw focus rings.
+static void DrawFocusRing(NSRect rect, float radius)
+{
+  NSSetFocusRingStyle(NSFocusRingOnly);
+  NSBezierPath* path = [NSBezierPath bezierPath];
+  rect = NSInsetRect(rect, radius, radius);
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
+  [path closePath];
+  [path fill];
+}
+
+// On 10.4, NSSearchFieldCells and NSComboBoxCells can't draw focus rings.
 @interface SearchFieldCellWithFocusRing : NSSearchFieldCell {} @end
 
 @implementation SearchFieldCellWithFocusRing
@@ -90,16 +103,21 @@ extern "C" {
 {
   [super drawWithFrame:rect inView:controlView];
   if (!nsToolkit::OnLeopardOrLater() && [self showsFirstResponder]) {
-    NSSetFocusRingStyle(NSFocusRingOnly);
-    NSBezierPath* path = [NSBezierPath bezierPath];
-    float radius = NSHeight(rect) / 2;
-    rect = NSInsetRect(rect, radius, radius);
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
-    [path closePath];
-    [path fill];
+    DrawFocusRing(rect, NSHeight(rect) / 2);
+  }
+}
+
+@end
+
+@interface ComboBoxCellWithFocusRing : NSComboBoxCell {} @end
+
+@implementation ComboBoxCellWithFocusRing
+
+- (void) drawWithFrame:(NSRect)rect inView:(NSView*)controlView
+{
+  [super drawWithFrame:rect inView:controlView];
+  if (!nsToolkit::OnLeopardOrLater() && [self showsFirstResponder]) {
+    DrawFocusRing(NSMakeRect(rect.origin.x, rect.origin.y + 2, rect.size.width - 3, rect.size.height - 4), 0);
   }
 }
 
@@ -226,6 +244,11 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 
   mDropdownCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:NO];
 
+  mComboBoxCell = [[ComboBoxCellWithFocusRing alloc] initTextCell:@""];
+  [mComboBoxCell setBezeled:YES];
+  [mComboBoxCell setEditable:YES];
+  [mComboBoxCell setFocusRingType:NSFocusRingTypeExterior];
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -238,6 +261,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
   [mCheckboxCell release];
   [mSearchFieldCell release];
   [mDropdownCell release];
+  [mComboBoxCell release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -811,18 +835,47 @@ static const CellRenderSettings dropdownSettings = {
 };
 
 
+static const CellRenderSettings editableMenulistSettings = {
+  {
+    NSMakeSize(0, 15), // mini
+    NSMakeSize(0, 18), // small
+    NSMakeSize(0, 21)  // regular
+  },
+  {
+    NSMakeSize(18, 0), // mini
+    NSMakeSize(38, 0), // small
+    NSMakeSize(44, 0)  // regular
+  },
+  {
+    { // Tiger
+      {0, 0, 2, 2},    // mini
+      {0, 0, 3, 2},    // small
+      {0, 1, 3, 3}     // regular
+    },
+    { // Leopard
+      {0, 0, 2, 2},    // mini
+      {0, 0, 3, 2},    // small
+      {0, 1, 3, 3}     // regular
+    }
+  }
+};
+
+
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 PRInt32 inState, nsIFrame* aFrame)
+                                 PRInt32 inState, PRBool aIsEditable, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mDropdownCell setEnabled:!IsDisabled(aFrame)];
-  [mDropdownCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
-  [mDropdownCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
-  [mDropdownCell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
+  NSCell* cell = aIsEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
 
-  DrawCellWithSnapping(mDropdownCell, cgContext, inBoxRect, dropdownSettings,
+  [cell setEnabled:!IsDisabled(aFrame)];
+  [cell setShowsFirstResponder:(IsFocused(aFrame) || (inState & NS_EVENT_STATE_FOCUS))];
+  [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
+  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
+
+  const CellRenderSettings& settings = aIsEditable ? editableMenulistSettings : dropdownSettings;
+  DrawCellWithSnapping(cell, cgContext, inBoxRect, settings,
                        0.5f, NativeViewForFrame(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1613,7 +1666,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_DROPDOWN:
-      DrawDropdown(cgContext, macRect, eventState, aFrame);
+    case NS_THEME_DROPDOWN_TEXTFIELD:
+      DrawDropdown(cgContext, macRect, eventState,
+                   (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD), aFrame);
       break;
 
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1818,6 +1873,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
 static const int kAquaDropdownLeftBorder = 5;
 static const int kAquaDropdownRightBorder = 22;
+static const int kAquaComboboxLeftBorder = 4;
+static const int kAquaComboboxTopBorder = 3;
+static const int kAquaComboboxRightBorder = 20;
+static const int kAquaComboboxBottomBorder = 3;
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext, 
@@ -1848,6 +1907,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
       aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 2);
+      break;
+
+    case NS_THEME_DROPDOWN_TEXTFIELD:
+      aResult->SizeTo(kAquaComboboxLeftBorder, kAquaComboboxTopBorder,
+                      kAquaComboboxRightBorder, kAquaComboboxBottomBorder);
       break;
 
     case NS_THEME_TEXTFIELD:
@@ -1954,6 +2018,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
     case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_DROPDOWN_TEXTFIELD:
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO:
     case NS_THEME_TAB:
@@ -2329,6 +2394,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_DROPDOWN_TEXT:
+    case NS_THEME_DROPDOWN_TEXTFIELD:
       return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
       break;
   }
@@ -2357,6 +2423,7 @@ PRBool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (aWidgetType == NS_THEME_DROPDOWN ||
+      aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
       aWidgetType == NS_THEME_BUTTON ||
       aWidgetType == NS_THEME_RADIO ||
       aWidgetType == NS_THEME_CHECKBOX)
