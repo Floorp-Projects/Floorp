@@ -559,18 +559,8 @@ nsNavBookmarks::InitRoots()
 
   // Set titles for special folders
   // We cannot rely on createdPlacesRoot due to Fx3beta->final migration path
-  nsCOMPtr<nsIPrefService> prefService =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch("", getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRUint16 databaseStatus = nsINavHistoryService::DATABASE_STATUS_OK;
   rv = History()->GetDatabaseStatus(&databaseStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (NS_FAILED(rv) ||
       databaseStatus != nsINavHistoryService::DATABASE_STATUS_OK) {
     rv = InitDefaults();
@@ -1814,13 +1804,17 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
   // Delete items from the database now.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  rv = mDBConn->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageStatement> deleteStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_bookmarks "
-      "WHERE parent IN (") +
-        nsPrintfCString("%d", aFolderId) +
+      "WHERE parent IN (?1") +
         foldersToRemove +
-      NS_LITERAL_CSTRING(")"));
+      NS_LITERAL_CSTRING(")"),
+    getter_AddRefs(deleteStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->BindInt64Parameter(0, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Clean up orphan items annotations.
