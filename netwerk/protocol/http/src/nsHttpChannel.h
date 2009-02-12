@@ -153,7 +153,10 @@ private:
     }
 
     // AsyncCall may be used to call a member function asynchronously.
-    nsresult AsyncCall(nsAsyncCallback funcPtr);
+    // retval isn't refcounted and is set only when event was successfully
+    // posted, the event is returned for the purpose of cancelling when needed
+    nsresult AsyncCall(nsAsyncCallback funcPtr,
+                       nsRunnableMethod<nsHttpChannel> **retval = nsnull);
 
     PRBool   RequestIsConditional();
     nsresult Connect(PRBool firstTime = PR_TRUE);
@@ -205,6 +208,7 @@ private:
     nsresult InstallOfflineCacheListener();
     void     MaybeInvalidateCacheEntryForSubsequentGet();
     nsCacheStoragePolicy DetermineStoragePolicy();
+    void     AsyncOnExamineCachedResponse();
 
     // Handle the bogus Content-Encoding Apache sometimes sends
     void ClearBogusContentEncodingIfNeeded();
