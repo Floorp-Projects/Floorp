@@ -3064,12 +3064,12 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 
     nsCOMPtr<nsIBadCertListener2> bcl = do_GetInterface(callbacks);
     if (bcl) {
-      nsIBadCertListener2 *proxy_bcl = nsnull;
+      nsCOMPtr<nsIBadCertListener2> proxy_bcl;
       NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                            NS_GET_IID(nsIBadCertListener2),
                            bcl,
                            NS_PROXY_SYNC,
-                           (void**)&proxy_bcl);
+                           getter_AddRefs(proxy_bcl));
       if (proxy_bcl) {
         nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(infoObject);
         rv = proxy_bcl->NotifyCertProblem(csi, status, hostWithPortString, 
