@@ -375,88 +375,47 @@ class nsMouseWheelTransaction {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
   static void BeginTransaction(nsIFrame* aTargetFrame,
-                               PRInt32 aNumLines,
-                               PRBool aScrollHorizontal);
-  static PRBool UpdateTransaction(PRInt32 aNumLines,
-                                  PRBool aScrollHorizontal);
+                               nsGUIEvent* aEvent);
+  static void UpdateTransaction();
   static void EndTransaction();
   static void OnEvent(nsEvent* aEvent);
-  static void Shutdown();
 protected:
   static nsIntPoint GetScreenPoint(nsGUIEvent* aEvent);
-  static void OnFailToScrollTarget();
-  static void OnTimeout(nsITimer *aTimer, void *aClosure);
-  static void SetTimeout();
   static PRUint32 GetTimeoutTime();
   static PRUint32 GetIgnoreMoveDelayTime();
 
   static nsWeakFrame sTargetFrame;
   static PRUint32    sTime;        // in milliseconds
   static PRUint32    sMouseMoved;  // in milliseconds
-  static nsITimer*   sTimer;
 };
 
 nsWeakFrame nsMouseWheelTransaction::sTargetFrame(nsnull);
 PRUint32    nsMouseWheelTransaction::sTime        = 0;
 PRUint32    nsMouseWheelTransaction::sMouseMoved  = 0;
-nsITimer*   nsMouseWheelTransaction::sTimer       = nsnull;
-
-static PRBool
-CanScrollOn(nsIScrollableView* aScrollView, PRInt32 aNumLines,
-            PRBool aScrollHorizontal)
-{
-  NS_PRECONDITION(aScrollView, "aScrollView is null");
-  NS_PRECONDITION(aNumLines, "aNumLines must be non-zero");
-  PRBool canScroll;
-  nsresult rv =
-    aScrollView->CanScroll(aScrollHorizontal, aNumLines > 0, canScroll);
-  return NS_SUCCEEDED(rv) && canScroll;
-}
 
 void
 nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
-                                          PRInt32 aNumLines,
-                                          PRBool aScrollHorizontal)
+                                          nsGUIEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   sTargetFrame = aTargetFrame;
-  if (!UpdateTransaction(aNumLines, aScrollHorizontal)) {
-    NS_ERROR("BeginTransaction is called even cannot scroll the frame");
-    EndTransaction();
-  }
+  UpdateTransaction();
 }
 
-PRBool
-nsMouseWheelTransaction::UpdateTransaction(PRInt32 aNumLines,
-                                           PRBool aScrollHorizontal)
+void
+nsMouseWheelTransaction::UpdateTransaction()
 {
-  nsIScrollableViewProvider* svp = do_QueryFrame(GetTargetFrame());
-  NS_ENSURE_TRUE(svp, PR_FALSE);
-  nsIScrollableView *scrollView = svp->GetScrollableView();
-  NS_ENSURE_TRUE(scrollView, PR_FALSE);
-
-  if (!CanScrollOn(scrollView, aNumLines, aScrollHorizontal)) {
-    OnFailToScrollTarget();
-    // We should not modify the transaction state when the view will not be
-    // scrolled actually.
-    return PR_FALSE;
-  }
-
-  SetTimeout();
   // We should use current time instead of nsEvent.time.
   // 1. Some events doesn't have the correct creation time.
   // 2. If the computer runs slowly by other processes eating the CPU resource,
   //    the event creation time doesn't keep real time.
   sTime = PR_IntervalToMilliseconds(PR_IntervalNow());
   sMouseMoved = 0;
-  return PR_TRUE;
 }
 
 void
 nsMouseWheelTransaction::EndTransaction()
 {
-  if (sTimer)
-    sTimer->Cancel();
   sTargetFrame = nsnull;
 }
 
@@ -474,11 +433,8 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
     return;
 
   if (OutOfTime(sTime, GetTimeoutTime())) {
-    // Even if the scroll event which is handled after timeout, but onTimeout
-    // was not fired by timer, then the scroll event will scroll old frame,
-    // therefore, we should call OnTimeout here and ensure to finish the old
-    // transaction.
-    OnTimeout(nsnull, nsnull);
+    // Time out the current transaction.
+    EndTransaction();
     return;
   }
 
@@ -525,61 +481,6 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
       EndTransaction();
       return;
   }
-}
-
-void
-nsMouseWheelTransaction::Shutdown()
-{
-  NS_IF_RELEASE(sTimer);
-}
-
-void
-nsMouseWheelTransaction::OnFailToScrollTarget()
-{
-  NS_PRECONDITION(sTargetFrame, "We don't have mouse scrolling transaction");
-  // This event is used for automated tests, see bug 442774.
-  nsContentUtils::DispatchTrustedEvent(
-                    sTargetFrame->GetContent()->GetOwnerDoc(),
-                    sTargetFrame->GetContent(),
-                    NS_LITERAL_STRING("MozMouseScrollFailed"),
-                    PR_TRUE, PR_TRUE);
-}
-
-void
-nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
-{
-  if (!sTargetFrame) {
-    // The transaction target was destroyed already
-    EndTransaction();
-    return;
-  }
-  // Store the sTargetFrame, the variable becomes null in EndTransaction.
-  nsIFrame* frame = sTargetFrame;
-  // We need to finish current transaction before DOM event firing. Because
-  // the next DOM event might create strange situation for us.
-  EndTransaction();
-  // This event is used for automated tests, see bug 442774.
-  nsContentUtils::DispatchTrustedEvent(
-                    frame->GetContent()->GetOwnerDoc(),
-                    frame->GetContent(),
-                    NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"),
-                    PR_TRUE, PR_TRUE);
-}
-
-void
-nsMouseWheelTransaction::SetTimeout()
-{
-  if (!sTimer) {
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (!timer)
-      return;
-    timer.swap(sTimer);
-  }
-  sTimer->Cancel();
-  nsresult rv =
-    sTimer->InitWithFuncCallback(OnTimeout, nsnull, GetTimeoutTime(),
-                                 nsITimer::TYPE_ONE_SHOT);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsITimer::InitWithFuncCallback failed");
 }
 
 nsIntPoint
@@ -720,7 +621,6 @@ nsEventStateManager::~nsEventStateManager()
 
   --sESMInstanceCount;
   if(sESMInstanceCount == 0) {
-    nsMouseWheelTransaction::Shutdown();
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
     if (gUserInteractionTimerCallback) {
@@ -2732,8 +2632,9 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
   if (lastScrollFrame) {
     nsIScrollableViewProvider* svp = do_QueryFrame(lastScrollFrame);
-    if (svp && (scrollView = svp->GetScrollableView())) {
-      nsMouseWheelTransaction::UpdateTransaction(aNumLines, aScrollHorizontal);
+    if (svp) {
+      scrollView = svp->GetScrollableView();
+      nsMouseWheelTransaction::UpdateTransaction();
     } else {
       nsMouseWheelTransaction::EndTransaction();
       lastScrollFrame = nsnull;
@@ -2765,10 +2666,12 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     scrollView->GetLineHeight(&lineHeight);
 
     if (lineHeight != 0) {
-      if (CanScrollOn(scrollView, aNumLines, aScrollHorizontal)) {
+      PRBool canScroll;
+      nsresult rv = scrollView->CanScroll(aScrollHorizontal,
+                                          (aNumLines > 0), canScroll);
+      if (NS_SUCCEEDED(rv) && canScroll) {
         passToParent = PR_FALSE;
-        nsMouseWheelTransaction::BeginTransaction(scrollFrame,
-                                                  aNumLines, aScrollHorizontal);
+        nsMouseWheelTransaction::BeginTransaction(scrollFrame, aEvent);
       }
 
       // Comboboxes need special care.
