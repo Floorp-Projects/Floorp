@@ -61,8 +61,6 @@ _TEST_FILES =	test_bug343416.xul \
 		test_bug444800.xul \
 		test_bug462106.xul \
 		test_keycodes.xul \
-		test_wheeltransaction.xul \
-		window_wheeltransaction.xul \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
