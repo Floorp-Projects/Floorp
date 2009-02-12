@@ -578,10 +578,8 @@ ParserWriteFunc(nsIInputStream* aInStream,
 {
   nsHtml5Parser* parser = static_cast<nsHtml5Parser*> (aHtml5Parser);
   if (parser->HasDecoder()) {
-    NS_WARNING("not siffing\n");
     return parser->WriteStreamBytes((const PRUint8*)aFromSegment, aCount, aWriteCount);  
   } else {
-    NS_WARNING("sniffing");
     return parser->SniffStreamBytes((const PRUint8*)aFromSegment, aCount, aWriteCount);      
   }
 }
@@ -593,7 +591,6 @@ nsHtml5Parser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-  NS_WARNING("OnDataAvailable FFFF\n");
   NS_PRECONDITION((eOnStart == mStreamListenerState ||
                    eOnDataAvail == mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");

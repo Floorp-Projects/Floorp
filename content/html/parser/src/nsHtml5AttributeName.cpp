@@ -33,6 +33,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -135,6 +136,7 @@ nsHtml5AttributeName::nsHtml5AttributeName(PRInt32* uri, nsIAtom** local, nsIAto
     local(local),
     prefix(prefix)
 {
+  MOZ_COUNT_CTOR(nsHtml5AttributeName);
 }
 
 nsHtml5AttributeName* 
@@ -151,6 +153,7 @@ nsHtml5AttributeName::release()
 
 nsHtml5AttributeName::~nsHtml5AttributeName()
 {
+  MOZ_COUNT_DTOR(nsHtml5AttributeName);
   nsHtml5Portability::releaseLocal(local[0]);
   delete[] local;
 }

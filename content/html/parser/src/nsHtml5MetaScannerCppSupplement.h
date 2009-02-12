@@ -39,6 +39,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsICharsetAlias.h"
 #include "nsEncoderDecoderUtils.h"
+#include "nsTraceRefcnt.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -51,10 +52,12 @@ nsHtml5MetaScanner::nsHtml5MetaScanner()
    strBufLen(0),
    strBuf(jArray<PRUnichar,PRInt32>(36))
 {
+  MOZ_COUNT_CTOR(nsHtml5MetaScanner);
 }
 
 nsHtml5MetaScanner::~nsHtml5MetaScanner()
 {
+  MOZ_COUNT_DTOR(nsHtml5MetaScanner);
   strBuf.release();
 }
 

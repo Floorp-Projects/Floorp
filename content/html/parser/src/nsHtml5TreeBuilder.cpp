@@ -36,6 +36,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -519,6 +520,10 @@ nsHtml5TreeBuilder::eof()
 void 
 nsHtml5TreeBuilder::endTokenization()
 {
+  nsHtml5Portability::releaseElement(formPointer);
+  formPointer = nsnull;
+  nsHtml5Portability::releaseElement(headPointer);
+  headPointer = nsnull;
   while (currentPtr > -1) {
     stack[currentPtr]->release();
     currentPtr--;
