@@ -298,6 +298,7 @@ public:
         branchCount(0),
         unstableExits(NULL)
             {}
+    ~TreeInfo();
 
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
