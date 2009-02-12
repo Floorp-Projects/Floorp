@@ -1338,7 +1338,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
   NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
 NS_INTERFACE_MAP_END
 
@@ -3500,11 +3499,10 @@ nsJSContext::CCIfUserInactive()
   }
 }
 
-NS_IMETHODIMP
-nsJSContext::Notify(nsITimer *timer)
+// static
+void
+GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
-  NS_ASSERTION(mContext, "No context in nsJSContext::Notify()!");
-
   NS_RELEASE(sGCTimer);
 
   if (sPendingLoadCount == 0 || sLoadInProgressGCTimer) {
@@ -3518,14 +3516,12 @@ nsJSContext::Notify(nsITimer *timer)
     // loading and move on as if they weren't.
     sPendingLoadCount = 0;
 
-    CCIfUserInactive();
+    nsJSContext::CCIfUserInactive();
   } else {
-    FireGCTimer(PR_TRUE);
+    nsJSContext::FireGCTimer(PR_TRUE);
   }
 
   sReadyForGC = PR_TRUE;
-
-  return NS_OK;
 }
 
 // static
@@ -3554,15 +3550,10 @@ nsJSContext::LoadEnd()
   }
 }
 
+// static
 void
 nsJSContext::FireGCTimer(PRBool aLoadInProgress)
 {
-  // Always clear the newborn roots.  If there's already a timer, this
-  // will let the GC from that timer clean up properly.  If we're going
-  // to create a timer, we still want to do this now so that XPCOM
-  // shutdown can clean up properly.
-  ::JS_ClearNewbornRoots(mContext);
-
   if (sGCTimer) {
     // There's already a timer for GC'ing, just return
     return;
@@ -3583,11 +3574,11 @@ nsJSContext::FireGCTimer(PRBool aLoadInProgress)
 
   static PRBool first = PR_TRUE;
 
-  sGCTimer->InitWithCallback(this,
-                             first ? NS_FIRST_GC_DELAY :
-                             aLoadInProgress ? NS_LOAD_IN_PROCESS_GC_DELAY :
-                                               NS_GC_DELAY,
-                             nsITimer::TYPE_ONE_SHOT);
+  sGCTimer->InitWithFuncCallback(GCTimerFired, nsnull,
+                                 first ? NS_FIRST_GC_DELAY :
+                                 aLoadInProgress ? NS_LOAD_IN_PROCESS_GC_DELAY :
+                                                   NS_GC_DELAY,
+                                 nsITimer::TYPE_ONE_SHOT);
 
   sLoadInProgressGCTimer = aLoadInProgress;
 
