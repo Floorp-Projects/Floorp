@@ -1289,25 +1289,37 @@ gfxQuartzFontCache::AddOtherFamilyName(MacOSFamilyEntry *aFamilyEntry, nsAString
 }
 
 gfxFontEntry* 
-gfxQuartzFontCache::LookupLocalFont(const nsAString& aFontName)
+gfxQuartzFontCache::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                    const nsAString& aFontName)
 {
     NSString *faceName = GetNSStringForString(aFontName);
-    NSFont *font = [NSFont fontWithName:faceName size:0.0];
+    
+    // first lookup a single face based on postscript name
+    ATSFontRef fontRef = ATSFontFindFromPostScriptName(CFStringRef(faceName), 
+                                                       kATSOptionFlagsDefault);
 
-    if (font) {
-        nsAutoString availableFamilyName;
-        NSString *availableFamily = [font familyName];
-        GetStringForNSString(availableFamily, availableFamilyName);
+    // if not found, lookup using full font name
+    if (fontRef == kInvalidFont)
+        fontRef = ATSFontFindFromName(CFStringRef(faceName), 
+                                      kATSOptionFlagsDefault);
+                                      
+    // not found                                  
+    if (fontRef == kInvalidFont)
+        return nsnull;
 
-        MacOSFamilyEntry *familyEntry = FindFamily(availableFamilyName);
-        if (familyEntry) {
-            MacOSFontEntry *fontEntry = familyEntry->FindFont(aFontName);
-            return fontEntry;
-        }
-    }
+    PRUint16 w = aProxyEntry->mWeight;
+    NS_ASSERTION(w >= 100 && w <= 900, "bogus font weight value!");
 
-    // didn't find the font
-    return nsnull;
+    MacOSFontEntry *newFontEntry =
+        new MacOSFontEntry(aFontName, 
+                           FMGetFontFromATSFontRef(fontRef),
+                           w, aProxyEntry->mStretch, 
+                           (PRUint32(aProxyEntry->mItalic) ? 
+                           FONT_STYLE_ITALIC : 
+                           FONT_STYLE_NORMAL), 
+                           nsnull);
+
+    return newFontEntry;
 }
 
 // grumble, another non-publised Apple API dependency (found in Webkit code)
