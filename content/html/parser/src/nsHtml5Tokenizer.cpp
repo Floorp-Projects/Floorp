@@ -36,6 +36,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -63,6 +64,7 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, nsHtml5Pars
     bmpChar(jArray<PRUnichar,PRInt32>(1)),
     astralChar(jArray<PRUnichar,PRInt32>(2))
 {
+  MOZ_COUNT_CTOR(nsHtml5Tokenizer);
 }
 
 void 
@@ -75,6 +77,7 @@ nsHtml5Tokenizer::initLocation(nsString* newPublicId, nsString* newSystemId)
 
 nsHtml5Tokenizer::~nsHtml5Tokenizer()
 {
+  MOZ_COUNT_DTOR(nsHtml5Tokenizer);
   bmpChar.release();
   astralChar.release();
 }
@@ -2519,6 +2522,9 @@ nsHtml5Tokenizer::handleNcrValue(PRInt32 returnState)
 
     emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
   } else if (isNonCharacter(value)) {
+
+    emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
+  } else if (value >= 0xFDD0 && value <= 0xFDEF) {
 
     emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
   } else if (value <= 0xFFFF) {

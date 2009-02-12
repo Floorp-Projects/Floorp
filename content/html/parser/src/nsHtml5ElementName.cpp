@@ -33,6 +33,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -95,6 +96,7 @@ nsHtml5ElementName::nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, PR
     scoping(scoping),
     fosterParenting(fosterParenting)
 {
+  MOZ_COUNT_CTOR(nsHtml5ElementName);
 }
 
 
@@ -106,6 +108,7 @@ nsHtml5ElementName::nsHtml5ElementName(nsIAtom* name)
     scoping(PR_FALSE),
     fosterParenting(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsHtml5ElementName);
 }
 
 void 
@@ -116,6 +119,7 @@ nsHtml5ElementName::release()
 
 nsHtml5ElementName::~nsHtml5ElementName()
 {
+  MOZ_COUNT_DTOR(nsHtml5ElementName);
   nsHtml5Portability::releaseLocal(name);
 }
 
