@@ -195,6 +195,13 @@ public:
     // channel's and the global redirect observers.
     nsresult OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
                                PRUint32 flags);
+
+    // Called by the channel when the response is read from the cache without
+    // communicating with the server.
+    void OnExamineCachedResponse(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC);
+    }
 private:
 
     //
