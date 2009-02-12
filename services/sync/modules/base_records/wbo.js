@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['WBORecord', 'RecordManager'];
+const EXPORTED_SYMBOLS = ['WBORecord', 'RecordManager', 'Records'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -138,6 +138,8 @@ WBORecord.prototype = {
   }
 };
 
+Utils.lazy(this, 'Records', RecordManager);
+
 function RecordManager() {
   this._init();
 }
@@ -159,12 +161,12 @@ RecordManager.prototype = {
       this._log.trace("Importing record: " + (url.spec? url.spec : url));
 
       try {
-        let rsrc = new Resource(url);
-        yield rsrc.get(self.cb);
+        this.lastResource = new Resource(url);
+        yield this.lastResource.get(self.cb);
 
         record = new this._recordType();
-	record.deserialize(rsrc.data);
-	record.uri = url; // NOTE: may override id in rsrc.data
+	record.deserialize(this.lastResource.data);
+	record.uri = url; // NOTE: may override id in this.lastResource.data
 
         this.set(url, record);
       } catch (e) {
