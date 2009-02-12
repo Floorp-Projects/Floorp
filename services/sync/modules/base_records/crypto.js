@@ -174,7 +174,7 @@ CryptoMeta.prototype = {
 
     // each hash key is a relative uri, resolve those and match against ours
     for (let relUri in this.payload.keyring) {
-      if (pubkeyUri == this.uri.resolve(relUri))
+      if (pubkeyUri == this.baseUri.resolve(relUri))
         wrapped_key = this.payload.keyring[relUri];
     }
     if (!wrapped_key)
