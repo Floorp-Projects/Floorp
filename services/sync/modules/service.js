@@ -112,7 +112,6 @@ WeaveSvc.prototype = {
   _localLock: Wrap.localLock,
   _catchAll: Wrap.catchAll,
   _osPrefix: "weave:service:",
-  _cancelRequested: false,
   _isQuitting: false,
   _loggedIn: false,
   _syncInProgress: false,
@@ -208,19 +207,19 @@ WeaveSvc.prototype = {
 
   get userPath() { return ID.get('WeaveID').username; },
 
-  get isLoggedIn() this._loggedIn,
+  get isLoggedIn() { return this._loggedIn; },
 
-  get isQuitting() this._isQuitting,
+  get isQuitting() { return this._isQuitting; },
   set isQuitting(value) { this._isQuitting = value; },
 
-  get cancelRequested() this._cancelRequested,
-  set cancelRequested(value) { this._cancelRequested = value; },
+  get cancelRequested() { return Engines.cancelRequested; },
+  set cancelRequested(value) { Engines.cancelRequested = value; },
 
-  get keyGenEnabled() this._keyGenEnabled,
+  get keyGenEnabled() { return this._keyGenEnabled; },
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
-  get enabled() Svc.Prefs.get("enabled"),
-  set enabled(value) Svc.Prefs.set("enabled", value),
+  get enabled() { return Svc.Prefs.get("enabled"); },
+  set enabled(value) { Svc.Prefs.set("enabled", value); },
 
   get schedule() {
     if (!this.enabled)
@@ -228,7 +227,7 @@ WeaveSvc.prototype = {
     return Svc.Prefs.get("schedule");
   },
 
-  get locked() this._locked,
+  get locked() { return this._locked; },
   lock: function Svc_lock() {
     if (this._locked)
       return false;
@@ -277,11 +276,12 @@ WeaveSvc.prototype = {
   _onSchedule: function WeaveSvc__onSchedule() {
     if (this.enabled) {
       if (this.locked) {
-        this._log.info("Skipping scheduled sync; local operation in progress");
+        this._log.trace("Skipping scheduled sync; local operation in progress");
       } else {
         this._log.info("Running scheduled sync");
-        this._notify("sync", "",
-                     this._localLock(this._sync)).async(this);
+        this._catchAll(
+	  this._notify("sync", "",
+		       this._localLock(this._sync))).async(this);
       }
     }
   },
@@ -471,7 +471,7 @@ WeaveSvc.prototype = {
       //Svc.Json.decode(res.data); // throws if not json
       self.done(true);
     };
-    this._notify("verify-login", "", fn).async(this, onComplete);
+    this._catchAll(this._notify("verify-login", "", fn)).async(this, onComplete);
   },
 
   _verifyPassphrase: function WeaveSvc__verifyPassphrase(username, password,
@@ -493,9 +493,10 @@ WeaveSvc.prototype = {
   },
   verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
                                                        password, passphrase) {
-    this._localLock(this._notify("verify-passphrase", "", this._verifyPassphrase,
-                                 username, password, passphrase)).
-      async(this, onComplete);
+    this._catchAll(
+      this._localLock(
+	this._notify("verify-passphrase", "", this._verifyPassphrase,
+                     username, password, passphrase))).async(this, onComplete);
   },
 
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
@@ -532,7 +533,9 @@ WeaveSvc.prototype = {
 	throw e;
       }
     };
-    this._localLock(this._notify("login", "", fn)).async(this, onComplete);
+    this._catchAll(
+      this._localLock(
+	this._notify("login", "", fn))).async(this, onComplete);
   },
 
   logout: function WeaveSvc_logout() {
@@ -551,7 +554,8 @@ WeaveSvc.prototype = {
       this._log.error("Server wipe not supported");
       this.logout();
     };
-    this._notify("server-wipe", "", this._localLock(cb)).async(this, onComplete);
+    this._catchAll(
+      this._notify("server-wipe", "", this._localLock(cb))).async(this, onComplete);
   },
 
   // stuff we need to to after login, before we can really do
@@ -625,18 +629,10 @@ WeaveSvc.prototype = {
         if (!engine.enabled)
           continue;
 
-        this._log.debug("Syncing engine " + engine.name);
-        yield this._notify(engine.name + "-engine:sync", "",
-                           this._syncEngine, engine).async(this, self.cb);
-
-        if (this._cancelRequested) {
-          this._log.info("Cancel requested, aborting sync");
-          break;
-        }
-        if (this.abortSync) {
-          this._log.error("Aborting sync");
-          break;
-        }
+	if (!(yield this._syncEngine.async(this, self.cb, engine))) {
+	  this._log.info("Aborting sync");
+	  break;
+	}
       }
 
       if (this._syncError)
@@ -645,13 +641,14 @@ WeaveSvc.prototype = {
         this._log.info("Sync completed successfully");
 
     } finally {
-      this._cancelRequested = false;
-      this._abortSync = false;
+      this.cancelRequested = false;
       this._syncError = false;
     }
   },
   sync: function WeaveSvc_sync(onComplete) {
-    this._notify("sync", "", this._localLock(this._sync)).async(this, onComplete);
+    this._catchAll(
+      this._notify("sync", "",
+		   this._localLock(this._sync))).async(this, onComplete);
   },
 
   // The values that engine scores must meet or exceed before we sync them
@@ -685,8 +682,10 @@ WeaveSvc.prototype = {
           this._log.debug(engine.name + " score " + score +
                           " reaches threshold " +
                           this._syncThresholds[engine.name] + "; syncing");
-          yield this._notify(engine.name + "-engine:sync", "",
-                             this._syncEngine, engine).async(this, self.cb);
+          if (!(yield this._syncEngine.async(this, self.cb, engine))) {
+	    this._log.info("Aborting sync");
+	    break;
+	  }
 
           // Reset the engine's threshold to the initial value.
           // Note: we do this after syncing the engine so that we'll try again
@@ -710,15 +709,6 @@ WeaveSvc.prototype = {
           if (this._syncThresholds[engine.name] <= 0)
             this._syncThresholds[engine.name] = 1;
         }
-
-        if (this._cancelRequested) {
-          this._log.info("Cancel requested, aborting sync");
-          break;
-        }
-        if (this.abortSync) {
-          this._log.error("Aborting sync");
-          break;
-        }
       }
 
       if (this._syncError)
@@ -728,17 +718,23 @@ WeaveSvc.prototype = {
 
     } finally {
       this._cancelRequested = false;
-      this._abortSync = false;
       this._syncError = false;
     }
   },
 
+  // returns true if sync should proceed
+  // false / no return value means sync should be aborted
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     let self = yield;
-    try { yield engine.sync(self.cb); }
+    try {
+      yield engine.sync(self.cb);
+      if (!this.cancelRequested)
+	self.done(true);
+    }
     catch(e) {
       this._syncError = true;
-      this._abortSync = !FaultTolerance.Service.onException(e);
+      if (FaultTolerance.Service.onException(e))
+	self.done(true);
     }
   },
 
@@ -754,22 +750,8 @@ WeaveSvc.prototype = {
     }
   },
   wipeServer: function WeaveSvc_wipeServer(onComplete) {
-    this._notify("wipe-server", "",
-                 this._localLock(this._wipeServer)).async(this, onComplete);
-  },
-
-  _wipeClient: function WeaveSvc__wipeClient() {
-    let self = yield;
-    let engines = Engines.getAll();
-    for (let i = 0; i < engines.length; i++) {
-      if (!engines[i].enabled)
-        continue;
-      engines[i].wipeClient(self.cb);
-      yield;
-    }
-  },
-  wipeClient: function WeaveSvc_wipeClient(onComplete) {
-    this._localLock(this._notify("wipe-client", "",
-                                 this._wipeClient)).async(this, onComplete);
+    this._catchAll(
+      this._notify("wipe-server", "",
+                   this._localLock(this._wipeServer))).async(this, onComplete);
   }
 };
