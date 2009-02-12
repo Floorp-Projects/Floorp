@@ -43,7 +43,6 @@
 #include "jsapi.h"
 #include "nsIObserver.h"
 #include "nsIXPCScriptNotify.h"
-#include "nsITimer.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsScriptNameSpaceManager.h"
@@ -51,8 +50,7 @@
 class nsIXPConnectJSObjectHolder;
 
 class nsJSContext : public nsIScriptContext,
-                    public nsIXPCScriptNotify,
-                    public nsITimerCallback
+                    public nsIXPCScriptNotify
 {
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -168,8 +166,6 @@ public:
 
   NS_DECL_NSIXPCSCRIPTNOTIFY
 
-  NS_DECL_NSITIMERCALLBACK
-
   static void LoadStart();
   static void LoadEnd();
 
@@ -194,6 +190,9 @@ public:
 
   // Calls CC() if user is currently inactive, otherwise MaybeCC(PR_TRUE)
   static void CCIfUserInactive();
+
+  static void FireGCTimer(PRBool aLoadInProgress);
+
 protected:
   nsresult InitializeExternalClasses();
   // aHolder should be holding our global object
@@ -206,8 +205,6 @@ protected:
                                    void **aMarkp);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
-
-  void FireGCTimer(PRBool aLoadInProgress);
 
   // given an nsISupports object (presumably an event target or some other
   // DOM object), get (or create) the JSObject wrapping it.
