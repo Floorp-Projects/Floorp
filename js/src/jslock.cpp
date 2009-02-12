@@ -485,7 +485,7 @@ js_NudgeThread(JSContext *cx, JSThread *thread)
     JSContext *acx = NULL;
     
     while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
-        if (cx != acx && cx->thread == thread)
+        if (cx != acx && acx->thread == thread)
             JS_TriggerOperationCallback(acx);
     }
 }
