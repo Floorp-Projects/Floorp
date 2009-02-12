@@ -2038,7 +2038,7 @@ PRBool
 CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
 {
   if (!ExpectSymbol('{', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclBlockStart);
+    REPORT_UNEXPECTED_TOKEN(PEBadFontBlockStart);
     return PR_FALSE;
   }
 
@@ -2070,7 +2070,7 @@ CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
     }
   }
   if (!ExpectSymbol('}', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
+    REPORT_UNEXPECTED_TOKEN(PEBadFontBlockEnd);
     return PR_FALSE;
   }
   (*aAppendFunc)(rule, aData);
