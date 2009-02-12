@@ -1889,6 +1889,7 @@ namespace nanojit
 			case LIR_xt:
 			case LIR_xf:
 			case LIR_xbarrier:
+			case LIR_xtbl:
 				formatGuard(i, s);
 				break;
 

@@ -62,6 +62,7 @@ namespace nanojit {
 	
     class Fragment;
     struct SideExit;
+	struct SwitchInfo;
     
     struct GuardRecord 
     {
@@ -75,6 +76,7 @@ namespace nanojit {
         GuardRecord* guards;
         Fragment* from;
         Fragment* target;
+		SwitchInfo* switchInfo;
         
         void addGuard(GuardRecord* lr) 
         {
