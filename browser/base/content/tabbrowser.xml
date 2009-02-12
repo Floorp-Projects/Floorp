@@ -1712,6 +1712,7 @@
               Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
             this.setTabTitle(aOurTab);
+            this.updateIcon(aOurTab);
 
             // If the tab was already selected (this happpens in the scenario
             // of replaceTabWithWindow), notify onLocationChange, etc.
