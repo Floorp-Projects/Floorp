@@ -249,7 +249,6 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
 
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
-  event.flags |= NS_EVENT_FLAG_SYNTETIC_TEST_EVENT;
 
   float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
   event.refPoint.x =
@@ -681,22 +680,4 @@ nsDOMWindowUtils::GetIsMozAfterPaintPending(PRBool *aResult)
     return NS_OK;
   *aResult = presContext->IsDOMPaintEventPending();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
-{
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->
-                  IsCapabilityEnabled("UniversalXPConnect", &hasCap)) ||
-      !hasCap)
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
-  nsIDocShell *docShell = mWindow->GetDocShell();
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-  return presShell->DisableNonTestMouseEvents(aDisable);
 }

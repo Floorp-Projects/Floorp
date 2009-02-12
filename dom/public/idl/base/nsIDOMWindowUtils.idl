@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(8C6263C9-F3EF-419d-80EF-D5D716635FAA)]
+[scriptable, uuid(190be8e6-35af-4e3e-9a9f-719f5b1a44a0)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -297,16 +297,4 @@ interface nsIDOMWindowUtils : nsISupports {
    * fired.
    */
   readonly attribute boolean isMozAfterPaintPending;
-
-  /**
-   * Disable or enable non synthetic test mouse events on *all* windows.
-   *
-   * Cannot be accessed from unprivileged context (not content-accessible).
-   * Will throw a DOM security error if called without UniversalXPConnect
-   * privileges.
-   *
-   * @param aDisable  If true, disable all non synthetic test mouse events
-   *               on all windows.  Otherwise, enable them.
-   */
-  void disableNonTestMouseEvents(in boolean aDisable);
 };

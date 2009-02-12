@@ -101,10 +101,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 780d34b0-00c3-4bbd-b57d-c600aaf53613
+// b86c23c5-602d-4ca6-a968-379b244fed9e
 #define NS_IPRESSHELL_IID \
-{ 0x780d34b0, 0xc3, 0x4bbd, \
-  { 0xb5, 0x7d, 0xc6, 0x0, 0xaa, 0xf5, 0x36, 0x13 } }
+{ 0xb86c23c5, 0x602d, 0x4ca6, \
+  { 0xa9, 0x68, 0x37, 0x9b, 0x24, 0x4f, 0xed, 0x9e } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -771,15 +771,6 @@ public:
 #ifdef NS_DEBUG
   nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
 #endif
-
-  /**
-   * Stop or restart non synthetic test mouse event handling on *all*
-   * presShells.
-   *
-   * @param aDisable  If true, disable all non synthetic test mouse events on all
-   * presShells.  Otherwise, enable them.
-   */
-  NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable) = 0;
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
