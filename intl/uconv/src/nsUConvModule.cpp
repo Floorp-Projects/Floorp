@@ -121,7 +121,6 @@
 #include "nsMacCroatianToUnicode.h"
 #include "nsMacRomanianToUnicode.h"
 #include "nsMacCyrillicToUnicode.h"
-#include "nsMacUkrainianToUnicode.h"
 #include "nsMacIcelandicToUnicode.h"
 #include "nsGEOSTD8ToUnicode.h"
 #include "nsARMSCII8ToUnicode.h"
@@ -173,7 +172,6 @@
 #include "nsUnicodeToMacCroatian.h"
 #include "nsUnicodeToMacRomanian.h"
 #include "nsUnicodeToMacCyrillic.h"
-#include "nsUnicodeToMacUkrainian.h"
 #include "nsUnicodeToMacIcelandic.h"
 #include "nsUnicodeToGEOSTD8.h"
 #include "nsUnicodeToARMSCII8.h"
@@ -332,7 +330,6 @@ NS_UCONV_REG_UNREG("x-mac-turkish", NS_MACTURKISHTOUNICODE_CID, NS_UNICODETOMACT
 NS_UCONV_REG_UNREG("x-mac-croatian", NS_MACCROATIANTOUNICODE_CID, NS_UNICODETOMACCROATIAN_CID)
 NS_UCONV_REG_UNREG("x-mac-romanian", NS_MACROMANIANTOUNICODE_CID, NS_UNICODETOMACROMANIAN_CID)
 NS_UCONV_REG_UNREG("x-mac-cyrillic", NS_MACCYRILLICTOUNICODE_CID, NS_UNICODETOMACCYRILLIC_CID)
-NS_UCONV_REG_UNREG("x-mac-ukrainian", NS_MACUKRAINIANTOUNICODE_CID, NS_UNICODETOMACUKRAINIAN_CID)
 NS_UCONV_REG_UNREG("x-mac-icelandic", NS_MACICELANDICTOUNICODE_CID, NS_UNICODETOMACICELANDIC_CID)
 NS_UCONV_REG_UNREG("GEOSTD8", NS_GEOSTD8TOUNICODE_CID, NS_UNICODETOGEOSTD8_CID)
 NS_UCONV_REG_UNREG("armscii-8", NS_ARMSCII8TOUNICODE_CID, NS_UNICODETOARMSCII8_CID)
@@ -911,11 +908,6 @@ static const nsModuleComponentInfo components[] =
     nsMacCyrillicToUnicodeConstructor ,
   },
   { 
-    DECODER_NAME_BASE "x-mac-ukrainian" , NS_MACUKRAINIANTOUNICODE_CID, 
-    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-ukrainian",
-    nsMacUkrainianToUnicodeConstructor ,
-  },
-  { 
     DECODER_NAME_BASE "x-mac-icelandic" , NS_MACICELANDICTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-icelandic",
     nsMacIcelandicToUnicodeConstructor ,
@@ -1219,11 +1211,6 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-mac-cyrillic" , NS_UNICODETOMACCYRILLIC_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-cyrillic",
     nsUnicodeToMacCyrillicConstructor, 
-  },
-  { 
-    ENCODER_NAME_BASE "x-mac-ukrainian" , NS_UNICODETOMACUKRAINIAN_CID, 
-    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-ukrainian",
-    nsUnicodeToMacUkrainianConstructor, 
   },
   { 
     ENCODER_NAME_BASE "x-mac-icelandic" , NS_UNICODETOMACICELANDIC_CID, 

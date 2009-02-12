@@ -92,7 +92,6 @@ CPPSRCS		= \
 		nsMacCroatianToUnicode.cpp \
 		nsMacRomanianToUnicode.cpp \
 		nsMacCyrillicToUnicode.cpp \
-		nsMacUkrainianToUnicode.cpp \
 		nsMacIcelandicToUnicode.cpp \
 		nsMacHebrewToUnicode.cpp \
 		nsMacArabicToUnicode.cpp \
@@ -152,7 +151,6 @@ CPPSRCS		= \
 		nsUnicodeToMacCroatian.cpp \
 		nsUnicodeToMacRomanian.cpp \
 		nsUnicodeToMacCyrillic.cpp \
-		nsUnicodeToMacUkrainian.cpp \
 		nsUnicodeToMacIcelandic.cpp \
 		nsUnicodeToMacHebrew.cpp \
 		nsUnicodeToMacArabic.cpp \
