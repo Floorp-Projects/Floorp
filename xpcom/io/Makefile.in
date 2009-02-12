@@ -57,10 +57,6 @@ MODULE_OPTIMIZE_FLAGS = -Os -fno-strict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
 endif
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-REQUIRES		+= macmorefiles
-endif
-
 CPPSRCS		= \
 		nsAppFileLocationProvider.cpp \
 		nsBinaryStream.cpp \
