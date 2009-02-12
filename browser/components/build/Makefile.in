@@ -25,7 +25,6 @@ REQUIRES = \
 	uriloader \
 	intl \
 	necko \
-	migration \
 	shellservice \
 	xulapp \
 	places \
@@ -45,7 +44,6 @@ OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
 endif
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../migration/src \
 	-I$(srcdir)/../shell/src \
 	-I$(srcdir)/../feeds/src \
 	-I$(srcdir)/../places/src \
@@ -56,22 +54,28 @@ OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
 
 SHARED_LIBRARY_LIBS = \
-	../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
 	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
-  ../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
+	../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
-	$(NULL)
+SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+
+# migration requires mozreg, which doesn't build on WINCE; only include
+# it on non-CE
+ifndef WINCE
+REQUIRES += migration
+LOCAL_INCLUDES += -I$(srcdir)/../migration/src
+SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)
+endif
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
 # GTK2: Need to link with glib for GNOME shell service
