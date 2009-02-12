@@ -165,7 +165,15 @@ include $(topsrcdir)/config/config.mk
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+endif
+
+ifdef WINCE
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,corelibc)
 endif
 
 ifdef BUILD_STATIC_LIBS
@@ -269,7 +277,7 @@ LDFLAGS += -Zlinker /NOE
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINNT WINCE,$(OS_ARCH)))
 
 $(MOZ_APP_NAME):: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
 	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" \
