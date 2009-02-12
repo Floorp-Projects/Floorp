@@ -255,11 +255,19 @@ nsHttpChannel::Init(nsIURI *uri,
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
+nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr,
+                         nsRunnableMethod<nsHttpChannel> **retval)
 {
-    nsCOMPtr<nsIRunnable> event =
+    nsresult rv;
+
+    nsRefPtr<nsRunnableMethod<nsHttpChannel> > event =
             new nsRunnableMethod<nsHttpChannel>(this, funcPtr);
-    return NS_DispatchToCurrentThread(event);
+    rv = NS_DispatchToCurrentThread(event);
+    if (NS_SUCCEEDED(rv) && retval) {
+        *retval = event;
+    }
+
+    return rv;
 }
 
 PRBool
@@ -341,7 +349,15 @@ nsHttpChannel::Connect(PRBool firstTime)
 
         // read straight from the cache if possible...
         if (mCachedContentIsValid) {
-            return ReadFromCache();
+            nsRunnableMethod<nsHttpChannel> *event = nsnull;
+            if (!mCachedContentIsPartial) {
+                AsyncCall(&nsHttpChannel::AsyncOnExamineCachedResponse, &event);
+            }
+            rv = ReadFromCache();
+            if (NS_FAILED(rv) && event) {
+                event->Revoke();
+            }
+            return rv;
         }
         else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
             // the cache contains the requested resource, but it must be 
@@ -5591,3 +5607,8 @@ nsHttpChannel::DetermineStoragePolicy()
     return policy;
 }
 
+void
+nsHttpChannel::AsyncOnExamineCachedResponse()
+{
+    gHttpHandler->OnExamineCachedResponse(this);
+}
