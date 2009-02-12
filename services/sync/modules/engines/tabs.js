@@ -334,5 +334,17 @@ TabTracker.prototype = {
 
   onTabChanged: function TabTracker_onTabChanged(event) {
     this._score += 10; // meh?  meh.
+  },
+
+  get changedIDs() {
+    let obj = {};
+    obj[Clients.clientID] = true;
+    return obj;
+  },
+
+  // TODO this hard-coded score is a hack; replace with maybe +25 or +35
+  // per tab open event.
+  get score() {
+    return 100;
   }
 }
