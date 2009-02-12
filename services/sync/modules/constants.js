@@ -34,8 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['WEAVE_VERSION', 'STORAGE_FORMAT_VERSION',
-                          'ENGINE_STORAGE_FORMAT_VERSION',
+const EXPORTED_SYMBOLS = ['WEAVE_VERSION', 'MIN_SERVER_STORAGE_VERSION',
 			  'PREFS_BRANCH',
 			  'MODE_RDONLY', 'MODE_WRONLY',
 			  'MODE_CREATE', 'MODE_APPEND', 'MODE_TRUNCATE',
@@ -44,8 +43,11 @@ const EXPORTED_SYMBOLS = ['WEAVE_VERSION', 'STORAGE_FORMAT_VERSION',
                           'CONNECTION_TIMEOUT', 'KEEP_DELTAS'];
 
 const WEAVE_VERSION = "@weave_version@";
-const STORAGE_FORMAT_VERSION = 3;
-const ENGINE_STORAGE_FORMAT_VERSION = 3;
+
+// last client version's server storage this version supports
+// e.g. if set to the current version, this client will wipe the server
+// data stored by any older client
+const MIN_SERVER_STORAGE_VERSION = "@weave_version@";
 
 const PREFS_BRANCH = "extensions.weave.";
 
