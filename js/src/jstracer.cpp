@@ -348,6 +348,18 @@ static inline bool isInt32(jsval v)
     return JSDOUBLE_IS_INT(d, i);
 }
 
+static inline bool asInt32(jsval v, jsint& rv)
+{
+    if (!isNumber(v))
+        return false;
+    if (JSVAL_IS_INT(v)) {
+        rv = JSVAL_TO_INT(v);
+        return true;
+    }
+    jsdouble d = asNumber(v);
+    return JSDOUBLE_IS_INT(d, rv);
+}
+
 /* Return JSVAL_DOUBLE for all numbers (int and double) and the tag otherwise. */
 static inline uint8 getPromotedType(jsval v)
 {
@@ -2498,7 +2510,8 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         js_BlacklistPC(tm, fragment, treeInfo->globalShape);
         return;
     }
-    ++treeInfo->branchCount;
+    if (anchor && anchor->exitType != CASE_EXIT)
+        ++treeInfo->branchCount;
     if (lirbuf->outOMem()) {
         fragmento->assm()->setError(nanojit::OutOMem);
         return;
@@ -2510,8 +2523,14 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         js_BlacklistPC(tm, fragment, treeInfo->globalShape);
         return;
     }
-    if (anchor)
-        fragmento->assm()->patch(anchor);
+    if (anchor) {
+#ifdef NANOJIT_IA32
+        if (anchor->exitType == CASE_EXIT)
+            fragmento->assm()->patch(anchor, anchor->switchInfo);
+        else
+#endif
+            fragmento->assm()->patch(anchor);
+    }
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
     if (fragment == fragment->root)
@@ -4278,6 +4297,7 @@ monitor_loop:
       case UNSTABLE_LOOP_EXIT:
         return js_AttemptToStabilizeTree(cx, lr, NULL);
       case BRANCH_EXIT:
+      case CASE_EXIT:
         return js_AttemptToExtendTree(cx, lr, NULL, NULL);
       case LOOP_EXIT:
         if (innermostNestedGuard)
@@ -4333,6 +4353,18 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
             js_DeleteRecorder(cx);
             return JSMRS_STOP; /* done recording */
         }
+#ifdef NANOJIT_IA32
+        /* Handle tableswitches specially--prepare a jump table if needed. */
+        if (*pc == JSOP_TABLESWITCH || *pc == JSOP_TABLESWITCHX) {
+            LIns* guardIns = tr->tableswitch();
+            if (guardIns) {
+                tr->fragment->lastIns = guardIns;
+                tr->compile(&JS_TRACE_MONITOR(cx));
+                js_DeleteRecorder(cx);
+                return JSMRS_STOP;
+            }
+        }
+#endif
     }
 
     /* If it's not a break or a return from a loop, continue recording and follow the trace. */
@@ -4964,6 +4996,64 @@ TraceRecorder::ifop()
     guard(expected, x, BRANCH_EXIT);
     return true;
 }
+
+#ifdef NANOJIT_IA32
+/* Record LIR for a tableswitch or tableswitchx op. We record LIR only
+ * the "first" time we hit the op. Later, when we start traces after
+ * exiting that trace, we just patch. */
+JS_REQUIRES_STACK LIns*
+TraceRecorder::tableswitch()
+{
+    jsval& v = stackval(-1);
+    LIns* v_ins = get(&v);
+    /* no need to guard if condition is constant */
+    if (v_ins->isconst() || v_ins->isconstq())
+        return NULL;
+
+    jsbytecode* pc = cx->fp->regs->pc;
+    /* Starting a new trace after exiting a trace via switch. */
+    if (anchor && (anchor->exitType == CASE_EXIT ||
+                   anchor->exitType == DEFAULT_EXIT) && fragment->ip == pc)
+        return NULL;
+
+    /* Decode jsop. */
+    jsint low, high;
+    if (*pc == JSOP_TABLESWITCH) {
+        pc += JUMP_OFFSET_LEN;
+        low = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        high = GET_JUMP_OFFSET(pc);
+    } else {
+        pc += JUMPX_OFFSET_LEN;
+        low = GET_JUMPX_OFFSET(pc);
+        pc += JUMPX_OFFSET_LEN;
+        high = GET_JUMPX_OFFSET(pc);            
+    }
+
+    /* Really large tables won't fit in a page. This is a conservative
+     * check. If it matters in practice we need to go off-page. */
+    if ((high + 1 - low) * sizeof(intptr_t*) + 128 > (unsigned) LARGEST_UNDERRUN_PROT) {
+        // This throws away the return value of switchop but it seems
+        // ok because switchop always returns true.
+        (void) switchop();
+        return NULL;
+    }
+
+    /* Generate switch LIR. */
+    LIns* si_ins = lir_buf_writer->skip(sizeof(SwitchInfo));
+    SwitchInfo* si = (SwitchInfo*) si_ins->payload();
+    si->count = high + 1 - low;
+    si->table = 0;
+    si->index = (uint32) -1;
+    LIns* diff = lir->ins2(LIR_sub, f2i(v_ins), lir->insImm(low));
+    LIns* cmp = lir->ins2(LIR_ult, diff, lir->insImm(si->count));
+    lir->insGuard(LIR_xf, cmp, snapshot(DEFAULT_EXIT));
+    lir->insStore(diff, lir->insImmPtr(&si->index), lir->insImm(0));
+    LIns* exit = snapshot(CASE_EXIT);
+    ((GuardRecord*) exit->payload())->exit->switchInfo = si;
+    return lir->insGuard(LIR_xtbl, diff, exit);
+}
+#endif
 
 JS_REQUIRES_STACK bool
 TraceRecorder::switchop()
@@ -7833,7 +7923,11 @@ TraceRecorder::record_JSOP_AND()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
+#ifdef NANOJIT_IA32
+    return true;
+#else
     return switchop();
+#endif
 }
 
 JS_REQUIRES_STACK bool
@@ -8474,7 +8568,11 @@ TraceRecorder::record_JSOP_DEFAULTX()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TABLESWITCHX()
 {
+#ifdef NANOJIT_IA32
+    return true;
+#else
     return switchop();
+#endif
 }
 
 JS_REQUIRES_STACK bool

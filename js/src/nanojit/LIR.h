@@ -139,8 +139,21 @@ namespace nanojit
 		// fargs = args - iargs
 	};
 
+	/*
+	 * Record for extra data used to compile switches as jump tables.
+	 */
+	struct SwitchInfo
+	{
+		NIns**      table;       // Jump table; a jump address is NIns*
+		uint32_t    count;       // Number of table entries
+		// Index value at last execution of the switch. The index value
+		// is the offset into the jump table. Thus it is computed as 
+		// (switch expression) - (lowest case value).
+		uint32_t    index;
+	};
+
     inline bool isGuard(LOpcode op) {
-        return op == LIR_x || op == LIR_xf || op == LIR_xt || op == LIR_loop || op == LIR_xbarrier;
+        return op == LIR_x || op == LIR_xf || op == LIR_xt || op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
     }
 
     inline bool isCall(LOpcode op) {

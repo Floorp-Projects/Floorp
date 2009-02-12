@@ -679,6 +679,17 @@ namespace nanojit
         }
     }
 
+#ifdef NANOJIT_IA32
+    void Assembler::patch(SideExit* exit, SwitchInfo* si)
+    {
+		for (GuardRecord* lr = exit->guards; lr; lr = lr->next) {
+			Fragment *frag = lr->exit->target;
+			NanoAssert(frag->fragEntry != 0);
+			si->table[si->index] = frag->fragEntry;
+		}
+    }
+#endif
+
     NIns* Assembler::asm_exit(LInsp guard)
     {
 		SideExit *exit = guard->record()->exit;
@@ -1026,10 +1037,11 @@ namespace nanojit
 
 	void Assembler::gen(LirFilter* reader,  NInsList& loopJumps)
 	{
-		// trace must end with LIR_x, LIR_loop, or LIR_ret
+		// trace must end with LIR_x, LIR_loop, LIR_ret, or LIR_xtbl
 		NanoAssert(reader->pos()->isop(LIR_x) ||
 		           reader->pos()->isop(LIR_loop) ||
-		           reader->pos()->isop(LIR_ret));
+		           reader->pos()->isop(LIR_ret) ||
+				   reader->pos()->isop(LIR_xtbl));
 		 
 		for (LInsp ins = reader->read(); ins != 0 && !error(); ins = reader->read())
 		{
@@ -1341,6 +1353,17 @@ namespace nanojit
 				case LIR_xbarrier: {
 					break;
 				}
+#ifdef NANOJIT_IA32
+				case LIR_xtbl: {
+                    NIns* exit = asm_exit(ins); // does intersectRegisterState()
+					asm_switch(ins, exit);
+					break;
+				}
+#else
+ 			    case LIR_xtbl:
+					NanoAssertMsg(0, "Not supported for this architecture");
+					break;
+#endif
                 case LIR_xt:
 				case LIR_xf:
 				{
@@ -1440,6 +1463,28 @@ namespace nanojit
 			debug_only( pageValidate(); )
 			debug_only( resourceConsistencyCheck();  )
 		}
+	}
+
+	/*
+	 * Write a jump table for the given SwitchInfo and store the table
+	 * address in the SwitchInfo. Every entry will initially point to
+	 * target.
+	 */
+	void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
+	{
+		underrunProtect(si->count * sizeof(NIns*) + 20);
+		// Align for platform. The branch should be optimized away and is
+		// required to select the compatible int type.
+		if (sizeof(NIns*) == 8) {
+			_nIns = (NIns*) (uint64(_nIns) & ~7);
+		} else if (sizeof(NIns*) == 4) {
+		    _nIns = (NIns*) (uint32(_nIns) & ~3);
+		}
+		for (uint32_t i = 0; i < si->count; ++i) {
+			_nIns = (NIns*) (((uint8*) _nIns) - sizeof(NIns*));
+			*(NIns**) _nIns = target;
+		}
+		si->table = (NIns**) _nIns;
 	}
 
     void Assembler::assignSavedRegs()
