@@ -2825,18 +2825,59 @@
           return document.getBindingParent(this).childNodes;
         ]]></body>
       </method>
-
-#ifndef XP_MACOSX
-    </implementation>
-#else
+#ifdef XP_MACOSX
       <field name="_scrollButtonDownBox">
         document.getAnonymousElementByAttribute(this, "anonid", "down-box");
       </field>
       <field name="_scrollButtonDownBoxAnimate">
         document.getAnonymousElementByAttribute(this, "anonid", "down-box-animate");
       </field>
+#endif
     </implementation>
 
+    <handlers>
+      <handler event="underflow"><![CDATA[
+         if (event.detail == 0)
+           return; // Ignore vertical events
+
+         var tabs = document.getBindingParent(this);
+         tabs.removeAttribute("overflow");
+#ifdef XP_MACOSX
+         this._scrollButtonDownBox.collapsed = true;
+         this._scrollButtonDownBoxAnimate.collapsed = true;
+#endif
+      ]]></handler>
+      <handler event="overflow"><![CDATA[
+         if (event.detail == 0)
+           return; // Ignore vertical events
+
+         var tabs = document.getBindingParent(this);
+         tabs.setAttribute("overflow", "true");
+#ifdef XP_MACOSX
+         this._scrollButtonDownBox.collapsed = false;
+         this._scrollButtonDownBoxAnimate.collapsed = false;
+#endif
+         this.scrollBoxObject.ensureElementIsVisible(tabs.selectedItem);
+      ]]></handler>
+
+#ifdef XP_MACOSX
+      <handler event="UpdatedScrollButtonsDisabledState"><![CDATA[
+        // fix for bug #352353
+        // unlike the scrollup button on the tab strip (which is a 
+        // simple toolbarbutton) the scrolldown button is 
+        // a more complicated stack of boxes and a toolbarbutton
+        // so that we can animate when a tab is opened offscreen.
+        // in order to style the box with the actual background image
+        // we need to manually set the disable state to match the
+        // disable state of the toolbarbutton.
+        this._scrollButtonDownBox
+            .setAttribute("disabled", this._scrollButtonDown.disabled);
+      ]]></handler>
+#endif
+
+    </handlers>
+
+#ifdef XP_MACOSX
     <content>
       <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
                          xbl:inherits="orient"
@@ -2866,54 +2907,6 @@
                            chromedir="&locale.dir;"/>
       </xul:stack>
     </content>
-
-    <handlers>
-      <handler event="underflow"><![CDATA[
-        // filter underflow events which were dispatched on nested scrollboxes
-        if (event.target != this)
-          return;
-
-        // Ignore vertical events.
-        if (event.detail == 0) {
-          return;
-        }
-
-        this._scrollButtonDownBox.collapsed = true;
-        this._scrollButtonDownBoxAnimate.collapsed = true;
-      ]]></handler>
-
-      <handler event="overflow"><![CDATA[
-        // filter underflow events which were dispatched on nested scrollboxes
-        if (event.target != this)
-          return;
-
-        // Ignore vertical events.
-        if (event.detail == 0) {
-          return;
-        }
-
-        this._scrollButtonDownBox.collapsed = false;
-        this._scrollButtonDownBoxAnimate.collapsed = false;
-      ]]></handler>
-
-      <handler event="UpdatedScrollButtonsDisabledState"><![CDATA[
-        // filter underflow events which were dispatched on nested scrollboxes
-        if (event.target != this)
-          return;
-
-        // fix for bug #352353
-        // unlike the scrollup button on the tab strip (which is a 
-        // simple toolbarbutton) the scrolldown button is 
-        // a more complicated stack of boxes and a toolbarbutton
-        // so that we can animate when a tab is opened offscreen.
-        // in order to style the box with the actual background image
-        // we need to manually set the disable state to match the
-        // disable state of the toolbarbutton.
-        this._scrollButtonDownBox
-            .setAttribute("disabled", this._scrollButtonDown.disabled);
-      ]]></handler>
-
-    </handlers>
 #endif
   </binding>
 
@@ -2999,14 +2992,6 @@
                           this._prefObserver, false);
 
           window.addEventListener("resize", this, false);
-
-          // Listen to overflow/underflow events on the tabstrip,
-          // we cannot put these as xbl handlers on the entire binding because
-          // they would also get called for the all-tabs popup scrollbox.
-          // Also, we can't rely on event.target becuase these are all
-          // anonymous nodes.
-          this.mTabstrip.addEventListener("overflow", this, false);
-          this.mTabstrip.addEventListener("underflow", this, false);
         ]]>
       </constructor>
 
@@ -3022,9 +3007,6 @@
             this._animateTimer.cancel();
             this._animateTimer = null;
           }
-
-          this.mTabstrip.removeEventListener("overflow", this, false);
-          this.mTabstrip.removeEventListener("underflow", this, false);
         ]]>
       </destructor>
 
@@ -3146,14 +3128,6 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           switch (aEvent.type) {
-            case "overflow":
-              this.setAttribute("overflow", "true");
-              this.mTabstrip.scrollBoxObject
-                            .ensureElementIsVisible(this.selectedItem);
-              break;
-            case "underflow":
-              this.removeAttribute("overflow");
-              break;
             case "resize":
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
