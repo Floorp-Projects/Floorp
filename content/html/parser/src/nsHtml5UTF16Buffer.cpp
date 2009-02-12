@@ -33,6 +33,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -59,6 +60,7 @@ nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* buffer, PRInt32 start, PRInt32
     start(start),
     end(end)
 {
+  MOZ_COUNT_CTOR(nsHtml5UTF16Buffer);
 }
 
 PRInt32 

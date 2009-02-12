@@ -34,6 +34,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -66,6 +67,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsI
     fosterParenting(fosterParenting),
     tainted(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
   nsHtml5Portability::retainElement(node);
@@ -83,6 +85,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     fosterParenting(elementName->fosterParenting),
     tainted(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
   nsHtml5Portability::retainElement(node);
@@ -100,6 +103,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     fosterParenting(elementName->fosterParenting),
     tainted(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
   nsHtml5Portability::retainElement(node);
@@ -117,6 +121,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     fosterParenting(PR_FALSE),
     tainted(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
   nsHtml5Portability::retainLocal(popName);
   nsHtml5Portability::retainElement(node);
@@ -125,6 +130,7 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
 
 nsHtml5StackNode::~nsHtml5StackNode()
 {
+  MOZ_COUNT_DTOR(nsHtml5StackNode);
   nsHtml5Portability::releaseLocal(name);
   nsHtml5Portability::releaseLocal(popName);
   nsHtml5Portability::releaseElement(node);

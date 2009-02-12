@@ -34,6 +34,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
@@ -61,11 +62,13 @@ nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(PRInt32 mode)
     names(jArray<nsHtml5AttributeName*,PRInt32>(5)),
     values(jArray<nsString*,PRInt32>(5))
 {
+  MOZ_COUNT_CTOR(nsHtml5HtmlAttributes);
 }
 
 
 nsHtml5HtmlAttributes::~nsHtml5HtmlAttributes()
 {
+  MOZ_COUNT_DTOR(nsHtml5HtmlAttributes);
   clear(0);
   names.release();
   values.release();
