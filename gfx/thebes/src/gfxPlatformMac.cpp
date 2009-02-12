@@ -127,7 +127,8 @@ gfxFontEntry*
 gfxPlatformMac::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                 const nsAString& aFontName)
 {
-    return gfxQuartzFontCache::SharedFontCache()->LookupLocalFont(aFontName);
+    return gfxQuartzFontCache::SharedFontCache()->LookupLocalFont(aProxyEntry, 
+                                                                  aFontName);
 }
 
 gfxFontEntry* 
