@@ -25,6 +25,11 @@ HTTP(..) == src-list-format-6.html src-list-format-3-ref.html
 # assumes AAT fonts are only supported on MacOS
 skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-list-format-7.html src-list-format-2-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full.html src-list-local-full-ref.html # bug 468387
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full-quotes.html src-list-local-full-ref.html # bug 468387
+# Postscript name lookup only supported on MacOS currently
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
+
 # FIXME: The behavior here is neither mandated nor specified by the spec, but
 # it really ought to be.
 HTTP(..) == order-1.html order-1-ref.html
@@ -66,4 +71,4 @@ HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
-fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == local-1.html local-1-ref.html # fails on MS Windows and Mac due to bug 465463
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == local-1.html local-1-ref.html # bug 468387
