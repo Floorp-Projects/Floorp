@@ -362,6 +362,12 @@ let Utils = {
     }
   },
 
+  makeURL: function Weave_makeURL(URIString) {
+    let url = Utils.makeURI(URIString);
+    url.QueryInterface(Ci.nsIURL);
+    return url;
+  },
+
   xpath: function Weave_xpath(xmlDoc, xpathString) {
     let root = xmlDoc.ownerDocument == null ?
       xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement;
@@ -513,3 +519,4 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
 Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
 Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
 Utils.lazySvc(Svc, 'Crypto', "@labs.mozilla.com/Weave/Crypto;1", Ci.IWeaveCrypto);
+Utils.lazySvc(Svc, 'Memory', "@mozilla.org/xpcom/memory-service;1", Ci.nsIMemory);
