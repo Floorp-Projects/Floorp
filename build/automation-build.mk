@@ -12,7 +12,7 @@ browser_path = \"$(TARGET_DIST)/Camino.app/Contents/MacOS/Camino\"
 else
 ifeq ($(OS_ARCH),Darwin)
 ifdef MOZ_DEBUG
-browser_path = \"($(TARGET_DIST)/$(MOZ_APP_DISPLAYNAME)Debug.app/Contents/MacOS/$(PROGRAM)\"
+browser_path = \"$(TARGET_DIST)/$(MOZ_APP_DISPLAYNAME)Debug.app/Contents/MacOS/$(PROGRAM)\"
 else
 browser_path = \"$(TARGET_DIST)/$(MOZ_APP_DISPLAYNAME).app/Contents/MacOS/$(PROGRAM)\"
 endif
