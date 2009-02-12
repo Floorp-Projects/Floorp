@@ -57,8 +57,6 @@
 #include "nsCRT.h"
 #include "nsHashKeys.h"
 
-#include "MoreFilesX.h"
-#include "FSCopyObject.h"
 #include "nsTArray.h"
 #include "nsTraceRefcntImpl.h"
 
@@ -284,12 +282,12 @@ NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 #define FILENAME_BUFFER_SIZE 512
 
-const char nsLocalFile::kPathSepChar = '/';
+const char kPathSepChar = '/';
 
 // The HFS+ epoch is Jan. 1, 1904 GMT - differs from HFS in which times were local
 // The NSPR epoch is Jan. 1, 1970 GMT
 // 2082844800 is the difference in seconds between those dates
-const PRInt64   nsLocalFile::kJanuaryFirst1970Seconds = 2082844800LL;
+const PRInt64 kJanuaryFirst1970Seconds = 2082844800LL;
 
 #pragma mark -
 #pragma mark [CTORs/DTOR]
@@ -727,14 +725,15 @@ NS_IMETHODIMP nsLocalFile::Remove(PRBool recursive)
     return rv;
 
   if (recursive && isDirectory) {
-    FSRef fsRef;
-    rv = GetFSRefInternal(fsRef);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Call MoreFilesX to do a recursive removal.
-    OSStatus err = ::FSDeleteContainer(&fsRef);
-    rv = MacErrorMapper(err);
+    CFURLRef urlRef;
+    rv = GetCFURL(&urlRef);
+    if (NS_SUCCEEDED(rv) && urlRef) {
+      NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+      BOOL removeSuccess = [[NSFileManager defaultManager] removeFileAtPath:[(NSURL*)urlRef path] handler:nil];
+      [ap release];
+      ::CFRelease(urlRef);
+      rv = removeSuccess ? NS_OK : NS_ERROR_FAILURE;
+    }
   }
   else {
     nsCAutoString path;
@@ -1029,44 +1028,36 @@ NS_IMETHODIMP nsLocalFile::Exists(PRBool *_retval)
 
 NS_IMETHODIMP nsLocalFile::IsWritable(PRBool *_retval)
 {
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-    // Check we are correctly initialized.
-    CHECK_mBaseRef();
+  CHECK_mBaseRef();
 
-    NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = PR_FALSE;
-    
-    FSRef fsRef;
-    nsresult rv = GetFSRefInternal(fsRef);
-    if (NS_FAILED(rv))
-      return rv;
-    if (::FSCheckLock(&fsRef) == noErr) {      
-      PRUint32 permissions;
-      rv = GetPermissions(&permissions);
-      if (NS_FAILED(rv))
-        return rv;
-      *_retval = ((permissions & S_IWUSR) != 0);
-    }
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
 
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+  // don't bother resolving, this always traverses symbolic links
+  *_retval = (PRBool)[[NSFileManager defaultManager] isWritableFileAtPath:[(NSURL*)mBaseRef path]];
+  [ap release];
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLocalFile::IsReadable(PRBool *_retval)
 {
-    // Check we are correctly initialized.
-    CHECK_mBaseRef();
+  CHECK_mBaseRef();
 
-    NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = PR_FALSE;
-    
-    PRUint32 permissions;
-    nsresult rv = GetPermissions(&permissions);
-    if (NS_FAILED(rv))
-      return rv;
-    *_retval = ((permissions & S_IRUSR) != 0);
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+
+  PRUint32 permissions;
+  nsresult rv = GetPermissions(&permissions);
+  if (NS_FAILED(rv))
+    return rv;
+  *_retval = ((permissions & S_IRUSR) != 0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsLocalFile::IsExecutable(PRBool *_retval)
@@ -1745,39 +1736,12 @@ NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *aFileSpec)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG(aFileSpec);
-  
+
   FSRef fsRef;
   OSErr err = ::FSpMakeFSRef(aFileSpec, &fsRef);
   if (err == noErr)
     return InitWithFSRef(&fsRef);
-  else if (err == fnfErr) {
-    CInfoPBRec  pBlock;
-    FSSpec parentDirSpec;
-    
-    memset(&pBlock, 0, sizeof(CInfoPBRec));
-    parentDirSpec.name[0] = 0;
-    pBlock.dirInfo.ioVRefNum = aFileSpec->vRefNum;
-    pBlock.dirInfo.ioDrDirID = aFileSpec->parID;
-    pBlock.dirInfo.ioNamePtr = (StringPtr)parentDirSpec.name;
-    pBlock.dirInfo.ioFDirIndex = -1;        //get info on parID
-    err = ::PBGetCatInfoSync(&pBlock);
-    if (err != noErr)
-      return MacErrorMapper(err);
-    
-    parentDirSpec.vRefNum = aFileSpec->vRefNum;
-    parentDirSpec.parID = pBlock.dirInfo.ioDrParID;
-    err = ::FSpMakeFSRef(&parentDirSpec, &fsRef);
-    if (err != noErr)
-      return MacErrorMapper(err);
-    HFSUniStr255 unicodeName;
-    err = ::HFSNameGetUnicodeName(aFileSpec->name, kTextEncodingUnknown, &unicodeName);
-    if (err != noErr)
-      return MacErrorMapper(err);
-    nsresult rv = InitWithFSRef(&fsRef);
-    if (NS_FAILED(rv))
-      return rv;
-    return Append(nsDependentString(unicodeName.unicode, unicodeName.length));  
-  }
+
   return MacErrorMapper(err);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1817,49 +1781,17 @@ NS_IMETHODIMP nsLocalFile::GetFSRef(FSRef *_retval)
 }
 
 NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *_retval)
-{  
+{
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(_retval);
-
-  // Check we are correctly initialized.
   CHECK_mBaseRef();
 
-  OSErr err;
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
   if (NS_SUCCEEDED(rv)) {
-    // If the leaf node exists, things are simple.
-    err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone,
-              nsnull, nsnull, _retval, nsnull);
+    OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nsnull, nsnull, _retval, nsnull);
     return MacErrorMapper(err); 
-  }
-  else if (rv == NS_ERROR_FILE_NOT_FOUND) {
-    // If the parent of the leaf exists, make an FSSpec from that.
-    CFURLRef parentURLRef = ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, mBaseRef);
-    if (!parentURLRef)
-      return NS_ERROR_FAILURE;
-
-    err = fnfErr;
-    if (::CFURLGetFSRef(parentURLRef, &fsRef)) {
-      FSCatalogInfo catalogInfo;
-      if ((err = ::FSGetCatalogInfo(&fsRef,
-                        kFSCatInfoVolume + kFSCatInfoNodeID + kFSCatInfoTextEncoding,
-                        &catalogInfo, nsnull, nsnull, nsnull)) == noErr) {
-        nsAutoString leafName;
-        if (NS_SUCCEEDED(GetLeafName(leafName))) {
-          Str31 hfsName;
-          if ((err = ::UnicodeNameGetHFSName(leafName.Length(),
-                          leafName.get(),
-                          catalogInfo.textEncodingHint,
-                          catalogInfo.nodeID == fsRtDirID,
-                          hfsName)) == noErr)
-            err = ::FSMakeFSSpec(catalogInfo.volume, catalogInfo.nodeID, hfsName, _retval);        
-        }
-      }
-    }
-    ::CFRelease(parentURLRef);
-    rv = MacErrorMapper(err);
   }
   return rv;
 
@@ -1894,18 +1826,21 @@ NS_IMETHODIMP nsLocalFile::GetFileType(OSType *aFileType)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(aFileType);
+
+  CHECK_mBaseRef();
   
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  FinderInfo fInfo;  
-  OSErr err = ::FSGetFinderInfo(&fsRef, &fInfo, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  *aFileType = fInfo.file.fileType;
-  return NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+  NSDictionary* dict = [[NSFileManager defaultManager] fileAttributesAtPath:[(NSURL*)mBaseRef path] traverseLink:YES];
+  NSNumber* typeNum = (NSNumber*)[dict objectForKey:NSFileHFSTypeCode];
+  if (typeNum) {
+    *aFileType = [typeNum unsignedLongValue];
+    rv = NS_OK;
+  }
+  [ap release];
+
+  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -1914,13 +1849,13 @@ NS_IMETHODIMP nsLocalFile::SetFileType(OSType aFileType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  OSErr err = ::FSChangeCreatorType(&fsRef, 0, aFileType);
-  return MacErrorMapper(err);
+  CHECK_mBaseRef();
+
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+  NSDictionary* dict = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:aFileType] forKey:NSFileHFSTypeCode];
+  BOOL success = [[NSFileManager defaultManager] changeFileAttributes:dict atPath:[(NSURL*)mBaseRef path]];
+  [ap release];
+  return (success ? NS_OK : NS_ERROR_FAILURE);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -1930,18 +1865,21 @@ NS_IMETHODIMP nsLocalFile::GetFileCreator(OSType *aFileCreator)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(aFileCreator);
-  
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  FinderInfo fInfo;  
-  OSErr err = ::FSGetFinderInfo(&fsRef, &fInfo, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  *aFileCreator = fInfo.file.fileCreator;
-  return NS_OK;
+
+  CHECK_mBaseRef();
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+  NSDictionary* dict = [[NSFileManager defaultManager] fileAttributesAtPath:[(NSURL*)mBaseRef path] traverseLink:YES];
+  id creatorNum = (NSNumber*)[dict objectForKey:NSFileHFSCreatorCode];
+  if (creatorNum) {
+    *aFileCreator = [creatorNum unsignedLongValue];
+    rv = NS_OK;
+  }
+  [ap release];
+
+  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -1950,13 +1888,13 @@ NS_IMETHODIMP nsLocalFile::SetFileCreator(OSType aFileCreator)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  OSErr err = ::FSChangeCreatorType(&fsRef, aFileCreator, 0);
-  return MacErrorMapper(err);
+  CHECK_mBaseRef();
+
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+  NSDictionary* dict = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:aFileCreator] forKey:NSFileHFSCreatorCode];
+  BOOL success = [[NSFileManager defaultManager] changeFileAttributes:dict atPath:[(NSURL*)mBaseRef path]];
+  [ap release];
+  return (success ? NS_OK : NS_ERROR_FAILURE);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -2254,7 +2192,7 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
 
   nsresult rv;
   OSErr err;
-  FSRef srcFSRef, newFSRef;
+  FSRef srcFSRef;
 
   rv = GetFSRefInternal(srcFSRef);
   if (NS_FAILED(rv))
@@ -2289,10 +2227,11 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
   if (NS_FAILED(rv))
     return rv;
 
-  err =
-   ::FSCopyObject(&srcFSRef, &destFSRef, newName.Length(),
-                  newName.Length() ? PromiseFlatString(newName).get() : NULL,
-                  0, kFSCatInfoNone, false, false, NULL, NULL, &newFSRef);
+  CFStringRef destNameStr = ::CFStringCreateWithCharacters(kCFAllocatorDefault,
+                                                           PromiseFlatString(newName).get(),
+                                                           newName.Length());
+  err = ::FSCopyObjectSync(&srcFSRef, &destFSRef, destNameStr, NULL, kFSFileOperationDefaultOptions);
+  ::CFRelease(destNameStr);
 
   return MacErrorMapper(err);
 
