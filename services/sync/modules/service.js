@@ -72,6 +72,7 @@ Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/faultTolerance.js");
 Cu.import("resource://weave/auth.js");
 Cu.import("resource://weave/resource.js");
+Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/oauth.js");
@@ -564,6 +565,44 @@ WeaveSvc.prototype = {
     let self = yield;
     let ret = false; // false to abort sync
 
+    this._log.debug("Fetching global metadata record");
+    let meta = yield Records.import(self.cb, this.clusterURL +
+				    this.username + "/meta/global");
+    if (meta) {
+      // FIXME: version is a string, and we don't have any version
+      // parsing function so we can implement greater-than.  So we
+      // just check for != which is wrong!
+      if (meta.payload.storageVersion != MIN_SERVER_STORAGE_VERSION) {
+	this._log.debug("Last upload client version too old, wiping server data" +
+			"to ensure consistency");
+	yield this._wipeServer.async(this, self.cb);
+
+	this._log.debug("Uploading new metadata record");
+	meta.payload.storageVersion = WEAVE_VERSION;
+	let res = new Resource(meta.uri);
+	yield res.put(self.cb, meta.serialize());
+      }
+
+    } else {
+      if (Records.lastResource.lastChannel.responseStatus == 404) {
+	this._log.debug("Metadata record not found, deleting all server " +
+			"data to ensure consistency");
+	yield this._wipeServer.async(this, self.cb);
+
+	this._log.debug("Uploading new metadata record");
+	meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
+	meta.payload.storageVersion = WEAVE_VERSION;
+	let res = new Resource(meta.uri);
+	yield res.put(self.cb, meta.serialize());
+
+      } else {
+	this._log.debug("Unknown error while downloading metadata record.  " +
+			"Aborting sync.");
+	self.done(false);
+	return;
+      }
+    }
+
     // FIXME: too easy to generate a keypair.  we should be absolutely certain
     // that the keys are not there (404) and that it's not some other
     // transient network problem instead
@@ -578,7 +617,25 @@ WeaveSvc.prototype = {
       }
     }
 
-    if (needKeys && this._keyGenEnabled) {
+    if (needKeys) {
+      if (PubKeys.lastResource.lastChannel.responseStatus != 404 &&
+	  PrivKeys.lastResource.lastChannel.responseStatus != 404) {
+	this._log.warn("Couldn't download keys from server, aborting sync");
+	this._log.debug("PubKey HTTP response status: " +
+			PubKeys.lastResource.lastChannel.responseStatus);
+	this._log.debug("PrivKey HTTP response status: " +
+			PrivKeys.lastResource.lastChannel.responseStatus);
+	self.done(false);
+	return;
+      }
+
+      if (!this._keyGenEnabled) {
+	this._log.warn("Couldn't download keys from server, and key generation" +
+		       "is disabled.  Aborting sync");
+	self.done(false);
+	return;
+      }
+
       let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
       if (pass) {
         let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
@@ -594,10 +651,6 @@ WeaveSvc.prototype = {
       } else {
         this._log.warn("Could not get encryption passphrase");
       }
-    }
-
-    if (needKeys && !this._keyGenEnabled) {
-      this._log.warn("Can't get keys from server and local keygen disabled.");
     }
 
     self.done(ret);
@@ -741,12 +794,15 @@ WeaveSvc.prototype = {
   _wipeServer: function WeaveSvc__wipeServer() {
     let self = yield;
 
-    let engines = Engines.getAll();
-    for (let i = 0; i < engines.length; i++) {
-      if (!engines[i].enabled)
-        continue;
-      engines[i].wipeServer(self.cb);
-      yield;
+    // tmp, delete all known collections
+    for each (let coll in ["keys", "crypto", "clients",
+			   "bookmarks", "history", "tabs"]) {
+      let res = new Resource(this.clusterURL + this.username + "/" + coll + "/");
+      try {
+	yield res.delete(self.cb);
+      } catch (e) {
+	this._log.debug("Exception on delete: " + Utils.exceptionStr(e));
+      }
     }
   },
   wipeServer: function WeaveSvc_wipeServer(onComplete) {
