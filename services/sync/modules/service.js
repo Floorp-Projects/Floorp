@@ -444,7 +444,7 @@ WeaveSvc.prototype = {
         ret = true;
 
       } else if (res.lastChannel.responseStatus == 200) {
-        this.clusterURL = res.data;
+        this.clusterURL = 'https://' + res.data + '/';
         ret = true;
       }
       self.done(ret);
