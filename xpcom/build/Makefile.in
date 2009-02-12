@@ -66,11 +66,6 @@ MOZILLA_INTERNAL_API = 1
 REQUIRES	= string \
 		  $(NULL)
 
-# pull in MoreFiles for MacOSX
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-REQUIRES += macmorefiles
-endif
-
 ifdef NS_TRACE_MALLOC
 REQUIRES += tracemalloc
 endif
@@ -180,7 +175,6 @@ CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
   $(TK_LIBS) \
   $(NULL)
-SHARED_LIBRARY_LIBS += $(DEPTH)/xpcom/MoreFiles/libmacmorefiles_s.a
 endif
 
 ifeq ($(OS_ARCH),BeOS)
