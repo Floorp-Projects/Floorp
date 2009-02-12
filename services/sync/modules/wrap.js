@@ -101,10 +101,9 @@ let Wrap = {
 
       } catch (e) {
         this._log.debug("Event: " + this._osPrefix + savedName + ":error");
-	this._log.debug("Caught exception: " + Utils.exceptionStr(e));
         this._os.notifyObservers(null, this._osPrefix + savedName + ":error", savedPayload);
         this._os.notifyObservers(null, this._osPrefix + "global:error", savedPayload);
-	ret = undefined;
+	throw e;
       }
 
       self.done(ret);
@@ -149,7 +148,7 @@ let Wrap = {
 
   // NOTE: see notify, this works the same way.  they can be
   // chained together as well.
-  // catchAll catches any exceptions and passes them to the fault tolerance svc
+  // catchAll catches any exceptions and prints a stack trace for them
   catchAll: function WeaveSync_catchAll(method /* , arg1, arg2, ..., argN */) {
     let savedMethod = method;
     let savedArgs = Array.prototype.slice.call(arguments, 1);
@@ -165,9 +164,7 @@ let Wrap = {
         ret = yield Async.run.apply(Async, args);
 
       } catch (e) {
-        ret = FaultTolerance.Service.onException(e);
-        if (!ret)
-          throw e;
+	this._log.debug("Caught exception: " + Utils.exceptionStr(e));
       }
       self.done(ret);
     };
