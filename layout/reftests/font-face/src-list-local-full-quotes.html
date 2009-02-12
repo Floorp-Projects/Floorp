@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>src local with full names</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-size: 24pt;
+}
+
+/* use full names */
+
+@font-face {
+  font-family: test-regular;
+  src: local("Helvetica Neue"), local("Bitstream Vera Sans"), local("Arial");
+}
+
+/* use Helvetica on the Mac, since Futura has no bold face on 10.4, 10.5 */
+@font-face {
+  font-family: test-bold;
+  src: local("Helvetica Neue Bold"), local("Bitstream Vera Sans Bold"), local("Arial Bold");
+}
+
+@font-face {
+  font-family: test-italic;
+  src: local("Helvetica Neue Italic"), local("Bitstream Vera Sans Oblique"), local("Arial Italic");
+}
+
+.regular { font-family: test-regular, serif; }
+.bold { font-family: test-bold, serif; }
+.italic { font-family: test-italic, serif; }
+
+</style>
+  
+<script type="text/javascript">
+
+</script>
+  
+</head>
+<body>
+
+<p class="regular">This should be a sans-serif face</p>
+
+<p class="bold">This should be a bold sans-serif face</p>
+
+<p class="italic">This should be an italic sans-serif face</p>
+
+</body>
+</html>
+
+
