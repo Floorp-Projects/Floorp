@@ -3262,12 +3262,13 @@ void
 nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
 {
   if (IsEditingOn()) {
+    EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
 
     nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(aEditor);
     if (editorss) {
       editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-      if (mEditingState == eDesignMode)
+      if (oldState == eDesignMode)
         editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
     }
   }
@@ -3366,6 +3367,7 @@ nsHTMLDocument::EditingStateChanged()
   nsCOMPtr<nsIEditor> editor;
 
   {
+    EditingState oldState = mEditingState;
     nsAutoEditingState push(this, eSettingUp);
 
     if (makeWindowEditable) {
@@ -3404,9 +3406,9 @@ nsHTMLDocument::EditingStateChanged()
       NS_ENSURE_SUCCESS(rv, rv);
 
       updateState = PR_TRUE;
-      spellRecheckAll = mEditingState == eContentEditable;
+      spellRecheckAll = oldState == eContentEditable;
     }
-    else if (mEditingState == eDesignMode) {
+    else if (oldState == eDesignMode) {
       // designMode is being turned off (contentEditable is still on).
       editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
 
