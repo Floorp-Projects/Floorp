@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1948,7 +1948,7 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
 JS_DEFINE_TRCINFO_1(obj_valueOf,
-    (3, (static, JSVAL,      Object_p_valueOf,              CONTEXT, THIS, STRING,  0, 0)))
+    (3, (static, JSVAL,     Object_p_valueOf,               CONTEXT, THIS, STRING,  0, 0)))
 JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
     (3, (static, BOOL_FAIL, Object_p_hasOwnProperty,        CONTEXT, THIS, STRING,  0, 0)))
 JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
@@ -3901,9 +3901,15 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
          * Allow API consumers to create shared properties with stub setters.
          * Such properties lack value storage, so setting them is like writing
          * to /dev/null.
+         *
+         * But we can't short-circuit if there's a scripted getter or setter
+         * since we might need to throw. In that case, we let SPROP_SET
+         * decide whether to throw an exception. See bug 478047.
          */
-        if (SPROP_HAS_STUB_SETTER(sprop))
+        if (!(sprop->attrs & JSPROP_GETTER) && SPROP_HAS_STUB_SETTER(sprop)) {
+            JS_ASSERT(!(sprop->attrs & JSPROP_SETTER));
             return JS_TRUE;
+        }
     }
 
     sample = cx->runtime->propertyRemovals;

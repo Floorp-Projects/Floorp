@@ -4929,16 +4929,6 @@ js_Interpret(JSContext *cx)
                     while (nvars--)
                         *newsp++ = JSVAL_VOID;
 
-                    /* Call the debugger hook if present. */
-                    hook = cx->debugHooks->callHook;
-                    if (hook) {
-                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
-                                                cx->debugHooks->callHookData);
-                        CHECK_INTERRUPT_HANDLER();
-                    } else {
-                        newifp->hookData = NULL;
-                    }
-
                     /* Scope with a call object parented by callee's parent. */
                     if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                         !js_GetCallObject(cx, &newifp->frame, parent)) {
@@ -4960,6 +4950,16 @@ js_Interpret(JSContext *cx)
                     regs.pc = script->code;
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
+
+                    /* Call the debugger hook if present. */
+                    hook = cx->debugHooks->callHook;
+                    if (hook) {
+                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
+                                                cx->debugHooks->callHookData);
+                        CHECK_INTERRUPT_HANDLER();
+                    } else {
+                        newifp->hookData = NULL;
+                    }
 
                     TRACE_0(EnterFrame);
 
