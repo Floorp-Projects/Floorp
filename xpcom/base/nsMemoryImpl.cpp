@@ -193,9 +193,17 @@ NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(PRBool *result)
 {
 #if defined(WINCE)
+    *result = PR_FALSE;
+    // See bug 475595 -- this is incorrect right now, and causes a big
+    // perf hit since GlobalMemoryStatus has to grab a kernel VM lock
+    // and do a bunch of munging through VM pages to get the data
+    // that's requested.  We call IsLowMemory in some performance
+    // critical code (e.g. during painting), so that's bad.
+#if 0
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = ((float)stat.dwAvailPhys / stat.dwTotalPhys) < 0.1;
+#endif
 #elif defined(XP_WIN)
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof stat;
