@@ -86,7 +86,7 @@ $(_HARNESS_FILES): $(_DEST_DIR)
 
 # copy harness and the reftest extension bits to $(_DEST_DIR)
 copy-harness: $(_HARNESS_FILES)
-	$(INSTALL) $^ $(_DEST_DIR)
+	$(INSTALL) $(_HARNESS_FILES) $(_DEST_DIR)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - reftest) | (cd $(_DEST_DIR) && tar -xf -)
 	$(INSTALL) $(DIST)/bin/components/httpd.js $(_DEST_DIR)/reftest/components
 	$(INSTALL) $(DIST)/bin/components/test_necko.xpt $(_DEST_DIR)/reftest/components
