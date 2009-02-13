@@ -169,14 +169,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 // CC will be called if there are at least NS_MAX_SUSPECT_CHANGES new suspected
 // objects.
 #define NS_MAX_SUSPECT_CHANGES      100
-// Regular GC runs once JS gcBytes increases by a certain factor from
-// what it was after the previous GC. NS_GC_ACCEL_TIME_1 seconds after
-// the last GC, the factor goes down, making GC more likely, and 
-// after NS_GC_ACCEL_TIME_2 seconds, it goes down again. This helps make
-// sure GC happens eventually in situations where the factor heuristic
-// fails to detect memory pressure.
-#define NS_GC_ACCEL_TIME_1          60
-#define NS_GC_ACCEL_TIME_2          600
 
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
@@ -190,7 +182,6 @@ static PRUint32 sCCSuspectChanges;
 static PRUint32 sCCSuspectedCount;
 static nsITimer *sGCTimer;
 static PRBool sReadyForGC;
-static PRTime sPreviousGCTime;
 
 // The number of currently pending document loads. This count isn't
 // guaranteed to always reflect reality and can't easily as we don't
@@ -868,21 +859,11 @@ MaybeGC(JSContext *cx)
 {
   size_t bytes = cx->runtime->gcBytes;
   size_t lastBytes = cx->runtime->gcLastBytes;
-  PRTime now = PR_Now();
-
-  PRInt32 factor = 16;
-  if (sPreviousGCTime) {
-    PRInt64 usec = now - sPreviousGCTime;
-    if (usec >= PRInt64(NS_GC_ACCEL_TIME_1 * PR_USEC_PER_SEC))
-      factor = usec < PRInt64(NS_GC_ACCEL_TIME_2 * PR_USEC_PER_SEC) ? 4 : 1;
-  }
-  
-  if ((bytes > 8192 && bytes > lastBytes * factor)
+  if ((bytes > 8192 && bytes > lastBytes * 16)
 #ifdef DEBUG
       || cx->runtime->gcZeal > 0
 #endif
       ) {
-    sPreviousGCTime = now;
     JS_GC(cx);
   }
 }
@@ -3720,7 +3701,6 @@ nsJSRuntime::Startup()
   sCCollectCount = 0;
   sUserIsActive = PR_FALSE;
   sPreviousCCTime = 0;
-  sPreviousGCTime = 0;
   sCollectedObjectsCounts = 0;
   sSavedGCCount = 0;
   sCCSuspectChanges = 0;
