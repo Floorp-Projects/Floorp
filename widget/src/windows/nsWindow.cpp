@@ -1660,20 +1660,25 @@ NS_METHOD nsWindow::Show(PRBool bState)
     if (bState) {
       if (!wasVisible && mWindowType == eWindowType_toplevel) {
         switch (mSizeMode) {
-          case nsSizeMode_Maximized :
 #ifdef WINCE
+          case nsSizeMode_Maximized :
+#ifdef WINCE_WINDOWS_MOBILE
             ::SetForegroundWindow(mWnd);
 #endif
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
-#ifndef WINCE
+          // use default for nsSizeMode_Minimized on Windows CE
+#else
+          case nsSizeMode_Maximized :
+            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
+            break;
           case nsSizeMode_Minimized :
             ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
             break;
 #endif
           default:
             if (CanTakeFocus()) {
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
               ::SetForegroundWindow(mWnd);
 #endif
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
@@ -1788,7 +1793,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
   if (aMode == mSizeMode)
     return NS_OK;
 
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
   // on windows mobile, dialogs and top level windows are full screen
   // This is partly due to the lack of a GetWindowPlacement.
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel) {
@@ -5678,15 +5683,36 @@ DWORD nsWindow::WindowStyle()
 {
   DWORD style;
 
-#ifdef WINCE
+  /* On Windows Mobile, we want very simple window styles; this is
+   * just optimizing for full-screen apps that don't want any
+   * titlebar/etc.  UI.  We should probably allow apps some
+   * finer-grained control over these types at some point, but for now
+   * this will work fine.  If we're on Windows CE, we probably have a
+   * full window manager, so we make dialog/toplevel windows be real
+   * windows.  In addition, we do the post-processing on the style
+   * (e.g. disabling the thick resize window if we don't have resize
+   * handles specified in the style).
+   */
+  /* Note: On Windows CE (and presumably Mobile), WS_OVERLAPPED provides
+   * space for a menu bar in the window, which we don't want; it shouldn't
+   * be used. */
+#if defined(WINCE)
   switch (mWindowType) {
     case eWindowType_child:
       style = WS_CHILD;
       break;
 
     case eWindowType_dialog:
-    case eWindowType_popup:
       style = WS_BORDER | WS_POPUP;
+#ifndef WINCE_WINDOWS_MOBILE
+      style |= WS_SYSMENU;
+      if (mBorderStyle != eBorderStyle_default)
+        style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+#endif
+      break;
+
+    case eWindowType_popup:
+      style = WS_POPUP;
       break;
 
     default:
@@ -5696,9 +5722,11 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_toplevel:
     case eWindowType_invisible:
       style = WS_BORDER;
+#ifndef WINCE_WINDOWS_MOBILE
+      style |= WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+#endif
       break;
   }
-
 #else
   switch (mWindowType) {
     case eWindowType_child:
@@ -5706,25 +5734,20 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_dialog:
-      if (mBorderStyle == eBorderStyle_default) {
-        style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
-                DS_3DLOOK | DS_MODALFRAME;
-      } else {
-        style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
-                DS_3DLOOK | DS_MODALFRAME |
-                WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-      }
+      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME;
+      if (mBorderStyle != eBorderStyle_default)
+        style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
       break;
 
     case eWindowType_popup:
+      style = WS_POPUP;
       if (mTransparencyMode == eTransparencyGlass) {
         /* Glass seems to need WS_CAPTION or WS_THICKFRAME to work.
            WS_THICKFRAME has issues with autohiding popups but looks better */
-        style = WS_POPUP | WS_THICKFRAME;
+        style |= WS_THICKFRAME;
       } else {
-        style = WS_OVERLAPPED | WS_POPUP;
+        style |= WS_OVERLAPPED;
       }
-      break;
 
     default:
       NS_ASSERTION(0, "unknown border style");
@@ -5736,7 +5759,9 @@ DWORD nsWindow::WindowStyle()
               WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
       break;
   }
+#endif
 
+#ifndef WINCE_WINDOWS_MOBILE
   if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_border))
       style &= ~WS_BORDER;
