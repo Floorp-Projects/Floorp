@@ -5760,6 +5760,7 @@ DWORD nsWindow::WindowStyle()
       } else {
         style |= WS_OVERLAPPED;
       }
+      break;
 
     default:
       NS_ASSERTION(0, "unknown border style");
