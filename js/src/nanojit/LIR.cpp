@@ -980,10 +980,14 @@ namespace nanojit
 					return 0; // no guard needed
 				}
 				else {
-					// need a way to EOT now, since this is trace end.
 #ifdef JS_TRACER
-				    NanoAssertMsg(0, "need a way to EOT now, since this is trace end");
-#endif				    
+					// We're emitting a guard that will always fail. Any code
+					// emitted after this guard is dead code. We could
+					// silently optimize out the rest of the emitted code, but
+					// this could indicate a performance problem or other bug,
+					// so assert in debug builds.
+					NanoAssertMsg(0, "Constantly false guard detected");
+#endif
 					return out->insGuard(LIR_x, out->insImm(1), x);
 				}
 			}
