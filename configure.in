@@ -2043,10 +2043,10 @@ case "$target" in
 
     # Sanity check for WINCE_WINDOWS_MOBILE
     # XXX disabled until we can fix the mobile tinderbox
-    if test "$WINCE_WINDOWS_MOBILE"; then
+    ##if test "$WINCE_WINDOWS_MOBILE"; then
     ##   AC_CHECK_HEADER(tpcshell.h, [],
     ##        AC_MSG_ERROR([Can't find tpcshell.h in your SDK; are you sure you don't need --disable-windows-mobile-components?]))
-    fi
+    ##fi
 ;;
 
 
