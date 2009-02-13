@@ -2693,3 +2693,10 @@ pref("image.cache.timeweight", 500);
 pref("network.tcp.sendbuffer", 131072);
 #endif
 #endif
+
+#ifdef WINCE
+// Note that this overwrites an option set earlier, until
+// we can fix the jit on CE.
+pref("javascript.options.jit.content",      false);
+pref("mozilla.widget.disable-native-theme", true);
+#endif
