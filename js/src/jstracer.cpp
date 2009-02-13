@@ -5024,12 +5024,12 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::tableswitch()
 {
     jsval& v = stackval(-1);
-    LIns* v_ins = get(&v);
-    /* no need to guard if condition is constant */
-    if (v_ins->isconst() || v_ins->isconstq())
+    if (!isNumber(v))
         return NULL;
 
-    if (!isNumber(v))
+    /* no need to guard if condition is constant */
+    LIns* v_ins = f2i(get(&v));
+    if (v_ins->isconst() || v_ins->isconstq())
         return NULL;
 
     jsbytecode* pc = cx->fp->regs->pc;
@@ -5067,7 +5067,7 @@ TraceRecorder::tableswitch()
     si->count = high + 1 - low;
     si->table = 0;
     si->index = (uint32) -1;
-    LIns* diff = lir->ins2(LIR_sub, f2i(v_ins), lir->insImm(low));
+    LIns* diff = lir->ins2(LIR_sub, v_ins, lir->insImm(low));
     LIns* cmp = lir->ins2(LIR_ult, diff, lir->insImm(si->count));
     lir->insGuard(LIR_xf, cmp, snapshot(DEFAULT_EXIT));
     lir->insStore(diff, lir->insImmPtr(&si->index), lir->insImm(0));
