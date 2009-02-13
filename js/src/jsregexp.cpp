@@ -2123,7 +2123,7 @@ class RegExpNativeCompiler {
                                 LInsList& fails) 
     {
         uint32 word = (ch2 << 16) | ch1;
-        /* 
+        /*
          * Fast case-insensitive test for ASCII letters: convert text
          * char to lower case by bit-or-ing in 32 and compare.
          */
@@ -2137,10 +2137,9 @@ class RegExpNativeCompiler {
                 if (!pos) return NULL;
                 return compileFlatSingleChar(ch2, pos, fails);
             }
-            if (mask1)
-                mask.c[0] |= 0x0020;
-            if (mask2)
-                mask.c[1] |= 0x0020;
+
+            mask.c[0] = mask1 ? 0x0020 : 0x0;
+            mask.c[1] = mask2 ? 0x0020 : 0x0;
 
             if (mask.i) {
                 word |= mask.i;
@@ -2151,7 +2150,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
         LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
-        LIns* comp_word = useFastCI ? 
+        LIns* comp_word = useFastCI ?
             lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
             text_word;
         fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_word, lir->insImm(word)), 0));
