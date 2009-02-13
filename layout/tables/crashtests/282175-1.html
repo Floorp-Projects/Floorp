@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <title>bug 282175</title>
+      <script type="text/javascript">
+         function modifyPosition2()
+         {
+            document.getElementById("table").style.position = "inherit";
+            document.body.offsetHeight;
+            document.getElementById("tr").style.position = "inherit";
+            document.getElementById("table").style.position = "fixed";
+            document.body.offsetHeight;
+            document.getElementById("table").style.position = "inherit";
+         }
+      </script>
+   </head>
+   <body onload="modifyPosition2()">
+      <table style="position: fixed" id="table">
+         <tbody style="position: inherit">
+            <tr style="position: fixed" id="tr">
+               <td>0.2 miles</td>
+            </tr>
+         </tbody>
+      </table>
+   </body>
+</html>
