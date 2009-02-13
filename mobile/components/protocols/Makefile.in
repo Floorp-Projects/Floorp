@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = protocols
 
-EXTRA_COMPONENTS = nsTelProtocolHandler.js
+EXTRA_PP_COMPONENTS = nsTelProtocolHandler.js
+
+ifdef WINCE
+DEFINES += -DWINCE=$(WINCE)
+endif 
 
 include $(topsrcdir)/config/rules.mk
