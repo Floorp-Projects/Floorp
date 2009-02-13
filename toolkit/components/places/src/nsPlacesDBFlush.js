@@ -131,6 +131,7 @@ nsPlacesDBFlush.prototype = {
           // Close the database connection, this was the last sync and we can't
           // ensure database coherence from now on.
           pip.finalizeInternalStatements();
+          this._self._cachedStatements.forEach(function(stmt) stmt.finalize());
           this._self._db.close();
         }
       }, Ci.nsIThread.DISPATCH_NORMAL);
@@ -238,9 +239,6 @@ nsPlacesDBFlush.prototype = {
 
     // Execute sync statements async in a transaction
     this._db.executeAsync(statements, statements.length, this);
-
-    // Finalize statements, otherwise we could get in trouble
-    statements.forEach(function(stmt) stmt.finalize());
   },
 
   /**
@@ -252,8 +250,13 @@ nsPlacesDBFlush.prototype = {
    * @param aTableName
    *        name of the table to build statement for, as moz_{TableName}_temp.
    */
+  _cachedStatements: [],
   _getSyncTableStatement: function DBFlush_getSyncTableStatement(aTableName)
   {
+    // Statement creating can be expensive, so always cache if we can.
+    if (aTableName in this._cachedStatements)
+      return this._cachedStatements[aTableName];
+
     // Delete all the data in the temp table.
     // We have triggers setup that ensure that the data is transferred over
     // upon deletion.
@@ -278,7 +281,8 @@ nsPlacesDBFlush.prototype = {
         break;
     }
 
-    return this._db.createStatement("DELETE FROM moz_" + aTableName + "_temp " + condition);
+    let sql = "DELETE FROM moz_" + aTableName + "_temp " + condition;
+    return this._cachedStatements[aTableName] = this._db.createStatement(sql);
   },
 
   /**
