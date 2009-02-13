@@ -447,8 +447,10 @@ def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utili
   args.extend(extraArgs)
   proc = Process([cmd] + args, env = environment(env), stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
   log.info("Application pid: %d", proc.pid)
-  for line in proc.stdout:
+  line = proc.stdout.readline()
+  while line != "":
     log.info(line.rstrip())
+    line = proc.stdout.readline()
   status = proc.wait()
   if status != 0:
     log.info("TEST-UNEXPECTED-FAIL | Exited with code %d during test run", status)
