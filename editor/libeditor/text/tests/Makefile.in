@@ -15,13 +15,13 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
-# Alternatively, the contents of this file may be used under the terms of
+# Alternatively, the contents of this file may be used under the terms of+
 # either of the GNU General Public License Version 2 or later (the "GPL"),
 # or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
@@ -35,57 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = editor/libeditor/text/tests
 
 include $(DEPTH)/config/autoconf.mk
-
-ifdef ENABLE_TESTS
-DIRS            += tests
-endif
-
-MODULE		= editor
-LIBRARY_NAME	= texteditor_s
-LIBXUL_LIBRARY	= 1
-
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  locale \
-		  layout \
-		  content \
-		  txmgr \
-		  txtsvc \
-		  necko \
-		  pref \
-		  lwbrk \
-		  view \
-		  gfx \
-		  thebes \
-		  widget \
-		  unicharutil \
-		  $(NULL)
-
-CPPSRCS		=                           \
-		nsPlaintextDataTransfer.cpp \
-		nsPlaintextEditor.cpp       \
-		nsTextEditUtils.cpp         \
-		nsTextEditRules.cpp         \
-		nsEditorEventListeners.cpp  \
-		nsWrapUtils.cpp  \
-		nsInternetCiter.cpp  \
-		nsAOLCiter.cpp  \
-		nsTextEditRulesBidi.cpp \
-		$(NULL)
-
-# don't want the shared lib; force the creation of a static lib.
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
-		-I$(topsrcdir)/editor/libeditor/base \
-		-I$(topsrcdir)/content/base/src \
+_TEST_FILES = \
+		test_bug471722.html \
 		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
