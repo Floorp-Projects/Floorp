@@ -1,3 +1,4 @@
+#filter substitution
 <?xml version="1.0"?>
 # -*- Mode: HTML -*-
 #
@@ -31,6 +32,7 @@
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Dão Gottwald <dao@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,19 +70,19 @@
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
         ondragleave="gBrowser.browserWindowOnDragLeave(event);"
         ondragenter="gBrowser.browserWindowOnDragEnter(event);"
-        title="&mainWindow.title;"
-        title_normal="&mainWindow.title;"
+        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title_normal="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
 #ifdef XP_MACOSX
-        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
-        titledefault="&mainWindow.title;"
+        title_privatebrowsing="&mainWindow.title;@PRE_RELEASE_SUFFIX@&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
 #else
-        title_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
-        titlemodifier="&mainWindow.titlemodifier;"
-        titlemodifier_normal="&mainWindow.titlemodifier;"
-        titlemodifier_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
+        title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
+        titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
+        titlemodifier_normal="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
