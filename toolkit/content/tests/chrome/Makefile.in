@@ -61,6 +61,7 @@ _TEST_FILES = 	findbar_window.xul \
 		bug429723_window.xul \
 		test_bug429723.xul \
 		bug437844.css \
+		bug437844.dtd \
 		bug437844.manifest \
 		test_bug437844.xul \
 		bug451286_window.xul \
