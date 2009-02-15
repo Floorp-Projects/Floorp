@@ -587,10 +587,7 @@ nsMouseWheelTransaction::GetScreenPoint(nsGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "aEvent is null");
   NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
-  nsIntRect tmpRect;
-  aEvent->widget->WidgetToScreen(nsIntRect(aEvent->refPoint, nsIntSize(1, 1)),
-                                 tmpRect);
-  return tmpRect.TopLeft();
+  return aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
 }
 
 PRUint32
@@ -2081,10 +2078,8 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
 {
   // Note that |inDownEvent| could be either a mouse down event or a
   // synthesized mouse move event.
-  nsIntRect screenPt;
-  inDownEvent->widget->WidgetToScreen(nsIntRect(inDownEvent->refPoint, nsIntSize(1, 1)),
-                                      screenPt);
-  mGestureDownPoint = screenPt.TopLeft();
+  mGestureDownPoint = inDownEvent->refPoint + 
+    inDownEvent->widget->WidgetToScreenOffset();
 
   inDownFrame->GetContentForEvent(aPresContext, inDownEvent,
                                   getter_AddRefs(mGestureDownContent));
@@ -2125,9 +2120,8 @@ nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)
   // Set the coordinates in the new event to the coordinates of
   // the old event, adjusted for the fact that the widget might be
   // different
-  nsIntRect tmpRect(0, 0, 1, 1);
-  aEvent->widget->WidgetToScreen(tmpRect, tmpRect);
-  aEvent->refPoint = mGestureDownPoint - tmpRect.TopLeft();
+  nsIntPoint tmpPoint = aEvent->widget->WidgetToScreenOffset();
+  aEvent->refPoint = mGestureDownPoint - tmpPoint;
   aEvent->isShift = mGestureDownShift;
   aEvent->isControl = mGestureDownControl;
   aEvent->isAlt = mGestureDownAlt;
@@ -2186,10 +2180,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     }
 
     // fire drag gesture if mouse has moved enough
-    nsIntRect tmpRect;
-    aEvent->widget->WidgetToScreen(nsIntRect(aEvent->refPoint, nsIntSize(1, 1)),
-                                   tmpRect);
-    nsIntPoint pt = tmpRect.TopLeft();
+    nsIntPoint pt = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
     if (PR_ABS(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
         PR_ABS(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
 #ifdef CLICK_HOLD_CONTEXT_MENUS
