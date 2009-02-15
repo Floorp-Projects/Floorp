@@ -3555,13 +3555,12 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
     nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
 
     if (widget) {
-      nsIntRect localRect(0,0,0,0), screenRect;
-      widget->WidgetToScreen(localRect, screenRect);
+      nsIntPoint screenPoint = widget->WidgetToScreenOffset();
 
       retval = mRect;
       retval.MoveTo(toViewOffset + toWidgetOffset);
-      retval.x += PresContext()->DevPixelsToAppUnits(screenRect.x);
-      retval.y += PresContext()->DevPixelsToAppUnits(screenRect.y);
+      retval.x += PresContext()->DevPixelsToAppUnits(screenPoint.x);
+      retval.y += PresContext()->DevPixelsToAppUnits(screenPoint.y);
     }
   }
 

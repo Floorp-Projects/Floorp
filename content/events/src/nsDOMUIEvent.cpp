@@ -136,9 +136,8 @@ nsDOMUIEvent::GetScreenPoint()
     return mEvent->refPoint;
   }
 
-  nsIntRect bounds(mEvent->refPoint, nsIntSize(1, 1));
-  nsIntRect offset;
-  ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
+  nsIntPoint offset = mEvent->refPoint + 
+    ((nsGUIEvent*)mEvent)->widget->WidgetToScreenOffset();
   nscoord factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
   return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
                     nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
