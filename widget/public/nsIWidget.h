@@ -97,10 +97,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_POINTER       100
 #endif
 
-// 0dda48db-4f61-44a7-9f92-041cd92b8a9c
+// 075a7792-6ba9-454e-b431-25a43fdbd3f6
 #define NS_IWIDGET_IID \
-{ 0x0dda48db, 0x4f61, 0x44a7, \
-  { 0x9f, 0x92, 0x04, 0x1c, 0xd9, 0x2b, 0x8a, 0x9c } }
+{ 0x075a7792, 0x6ba9, 0x454e, \
+  { 0xb4, 0x31, 0x25, 0xa4, 0x3f, 0xdb, 0xd3, 0xf6 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -901,12 +901,22 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
 
     /**
-     * Return this widget's origin in screen coordinates.
+     * Convert from this widget coordinates to screen coordinates.
      *
-     * @return screen coordinates stored in the x,y members
+     * @param  aOldRect  widget coordinates stored in the x,y members
+     * @param  aNewRect  screen coordinates stored in the x,y members
      */
 
-    virtual nsIntPoint WidgetToScreenOffset() = 0;
+    NS_IMETHOD WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect) = 0;
+
+    /**
+     * Convert from screen coordinates to this widget's coordinates.
+     *
+     * @param  aOldRect  screen coordinates stored in the x,y members
+     * @param  aNewRect  widget's coordinates stored in the x,y members
+     */
+
+    NS_IMETHOD ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect) = 0;
 
     /**
      * When adjustments are to made to a whole set of child widgets, call this
