@@ -13,10 +13,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463162
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463162">Mozilla Bug 463162</a>
-<audio id='a1'><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a2'><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a3'><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a4'><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a1' onerror="event.stopPropagation();"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a2' onerror="event.stopPropagation();"><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a3' onerror="event.stopPropagation();"><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a4' onerror="event.stopPropagation();"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 <![CDATA[
