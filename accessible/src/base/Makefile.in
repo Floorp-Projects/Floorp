@@ -93,7 +93,7 @@ CPPSRCS = \
   nsApplicationAccessible.cpp \
   nsCaretAccessible.cpp \
   nsTextAccessible.cpp \
-  nsTextUtils.cpp \
+  nsTextAttrs.cpp \
   $(NULL)
 
 EXPORTS = \
