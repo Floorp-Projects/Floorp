@@ -844,11 +844,8 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
   if (fromRoot == toRoot) {
     widgetPoint = aPt + fromOffset - toOffset;
   } else {
-    nsIntRect widgetRect(0, 0, 0, 0);
-    nsIntRect screenRect;
-    aWidget->WidgetToScreen(widgetRect, screenRect);
-    viewWidget->ScreenToWidget(screenRect, widgetRect);
-    widgetPoint = aPt + widgetRect.TopLeft();
+    nsIntPoint screenPoint = aWidget->WidgetToScreenOffset();
+    widgetPoint = aPt + screenPoint - viewWidget->WidgetToScreenOffset();
   }
 
   nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
