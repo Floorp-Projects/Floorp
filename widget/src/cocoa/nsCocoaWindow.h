@@ -222,7 +222,8 @@ public:
     NS_IMETHOD              SetMenuBar(void* aMenuBar);
     virtual nsMenuBarX*     GetMenuBar();
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
-    virtual nsIntPoint WidgetToScreenOffset();
+    NS_IMETHOD WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect);
+    NS_IMETHOD ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect);
     
     virtual void* GetNativeData(PRUint32 aDataType) ;
 
