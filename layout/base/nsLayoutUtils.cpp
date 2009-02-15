@@ -2451,7 +2451,8 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
                           nsIRenderingContext* aContext,
                           const PRUnichar*     aString,
                           PRInt32              aLength,
-                          nsPoint              aPoint)
+                          nsPoint              aPoint,
+                          PRUint8              aDirection)
 {
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
@@ -2460,9 +2461,11 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
     nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
     if (bidiUtils) {
-      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+      if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
+        aDirection = aFrame->GetStyleVisibility()->mDirection;
+      }
       nsBidiDirection direction =
-        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+        (NS_STYLE_DIRECTION_RTL == aDirection) ?
         NSBIDI_RTL : NSBIDI_LTR;
       rv = bidiUtils->RenderText(aString, aLength, direction,
                                  presContext, *aContext,
