@@ -8,7 +8,7 @@
 </head>
 <body>
 <pre id="test">
-<video id="v"></video>
+<video id="v" onerror="event.stopPropagation();"></video>
 <script>
 SimpleTest.waitForExplicitFinish();
 
