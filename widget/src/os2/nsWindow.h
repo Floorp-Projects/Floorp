@@ -162,7 +162,8 @@ class nsWindow : public nsBaseWidget,
 
    NS_IMETHOD BeginResizingChildren();
    NS_IMETHOD EndResizingChildren();
-   virtual nsIntPoint WidgetToScreenOffset();
+   NS_IMETHOD WidgetToScreen( const nsIntRect &aOldRect, nsIntRect &aNewRect);
+   NS_IMETHOD ScreenToWidget( const nsIntRect &aOldRect, nsIntRect &aNewRect);
    NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 

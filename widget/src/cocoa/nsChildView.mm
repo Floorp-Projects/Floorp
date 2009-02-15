@@ -2097,31 +2097,66 @@ PRBool nsChildView::PointInWidget(Point aThePoint)
 #pragma mark -
 
 
-//    Return the offset between this child view and the screen.
-//    @return       -- widget origin in screen coordinates
-nsIntPoint nsChildView::WidgetToScreenOffset()
+//    Convert the given rect to global coordinates.
+//    @param aLocalRect  -- rect in local coordinates of this widget
+//    @param aGlobalRect -- |aLocalRect| in global coordinates
+NS_IMETHODIMP nsChildView::WidgetToScreen(const nsIntRect& aLocalRect, nsIntRect& aGlobalRect)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSPoint temp;
-  temp.x = 0;
-  temp.y = 0;
+  NSRect temp;
+  GeckoRectToNSRect(aLocalRect, temp);
   
-  // 1. First translate this point into window coords. The returned point is always in
+  // 1. First translate this rect into window coords. The returned rect is always in
   //    bottom-left coordinates.
-  temp = [mView convertPoint:temp toView:nil];  
+  //
+  //    NOTE: convertRect:toView:nil doesn't care if |mView| is a flipped view (with
+  //          top-left coords) and so assumes that our passed-in rect's origin is in
+  //          bottom-left coordinates. We adjust this further down, by subtracting
+  //          the final screen rect's origin by the rect's height, to get the origo
+  //          where we want it.
+  temp = [mView convertRect:temp toView:nil];  
   
   // 2. We turn the window-coord rect's origin into screen (still bottom-left) coords.
-  temp = [[mView nativeWindow] convertBaseToScreen:temp];
+  temp.origin = [[mView nativeWindow] convertBaseToScreen:temp.origin];
   
   // 3. Since we're dealing in bottom-left coords, we need to make it top-left coords
   //    before we pass it back to Gecko.
-  FlipCocoaScreenCoordinate(temp);
+  FlipCocoaScreenCoordinate(temp.origin);
   
-  return nsIntPoint(NSToIntRound(temp.x), NSToIntRound(temp.y));
+  // 4. If this is rect has a size (and is not simply a point), it is important to account 
+  //    for the fact that convertRect:toView:nil thought our passed-in point was in bottom-left 
+  //    coords in step #1. Thus, we subtract the rect's height, to get the top-left rect's origin 
+  //     where we want it.
+  temp.origin.y -= temp.size.height;
+  
+  NSRectToGeckoRect(temp, aGlobalRect);
+  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+
+//    Convert the given rect to local coordinates.
+//    @param aGlobalRect  -- rect in screen coordinates 
+//    @param aLocalRect -- |aGlobalRect| in coordinates of this widget
+NS_IMETHODIMP nsChildView::ScreenToWidget(const nsIntRect& aGlobalRect, nsIntRect& aLocalRect)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NSRect temp;
+  GeckoRectToNSRect(aGlobalRect, temp);
+  FlipCocoaScreenCoordinate(temp.origin);
+
+  temp.origin = [[mView nativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
+  temp = [mView convertRect:temp fromView:nil];                     // convert to window coords
+
+  NSRectToGeckoRect(temp, aLocalRect);
+  
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+} 
 
 
 // Convert the coordinates to some device coordinates so GFX can draw.
