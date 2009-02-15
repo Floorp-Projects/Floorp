@@ -131,12 +131,6 @@ public:
                                          nsIContent *aTopContent);
 
   /**
-   * Return PR_TRUE if the ARIA property should always be exposed as an object
-   * attribute.
-   */
-  static PRBool IsARIAPropForObjectAttr(nsIAtom *aAtom);
-
-  /**
    * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA
    * property is not present, or is "" or "undefined". Do not call 
    * this method for properties of type string, decimal, IDREF or IDREFS.
@@ -266,6 +260,15 @@ public:
 
     return state;
   }
+
+  /**
+   * Get the ARIA attribute characteristics for a given ARIA attribute.
+   * 
+   * @param aAtom  ARIA attribute
+   * @return       A bitflag representing the attribute characteristics
+   *               (see nsARIAMap.h for possible bit masks, prefixed "ARIA_")
+   */
+  static PRUint8 GetAttributeCharacteristics(nsIAtom* aAtom);
 
   /**
    * Query nsAccessNode from the given nsIAccessible.
