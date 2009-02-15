@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,9 +55,14 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+PRE_RELEASE_SUFFIX = $(shell cat $(srcdir)/../config/version.txt | \
+  sed -e '/pre/s/.*//g' -e '/[ab][0-9]/!s/.*//g' \
+      -e 's/.*[0-9]a\([0-9]\+\)/ Alpha \1/g' -e 's/.*[0-9]b\([0-9]\+\)/ Beta \1/g')
+
 DEFINES += \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
 	-DAPP_LICENSE_BLOCK=$(abs_srcdir)/content/overrides/app-license.html \
+	-DPRE_RELEASE_SUFFIX="$(PRE_RELEASE_SUFFIX)" \
 	$(NULL)
 
 ifndef MOZ_BRANDING_DIRECTORY
