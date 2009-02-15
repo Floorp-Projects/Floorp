@@ -457,8 +457,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
 #saveSearch {
   -moz-appearance: none;
   margin: 0;
-  padding: 4px 0 3px 0;
-  -moz-padding-start: 7px;
+  padding: 4px 0 3px 8px;
   background: url("chrome://global/skin/icons/round-button-leftcap.png") no-repeat center left;
   border: none;
 }
@@ -469,7 +468,7 @@ menulist[open="true"] > .menulist-label-box  .menulist-label {
 
 #saveSearch .button-text {
   margin: 0 !important;
-  padding: 2px 8px 2px 1px !important;
+  padding: 2px 8px 2px 0 !important;
   background: url("chrome://global/skin/icons/round-button-right.png") no-repeat center right;
   font-size: 12px;
 }
