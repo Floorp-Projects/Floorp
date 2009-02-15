@@ -1071,34 +1071,32 @@ nsresult
 nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackground)
 {
+  nsAutoDisableGetUsedXAssertions disableAssert;
+
   nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
   nsDisplayList list;
   nsRect dirtyRect = aDirtyRegion.GetBounds();
 
   builder.EnterPresShell(aFrame, dirtyRect);
 
-  nsresult rv;
-  {
-    nsAutoDisableGetUsedXAssertions disableAssert;
-    rv =
-      aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+  nsresult rv =
+    aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
     
-    if (NS_SUCCEEDED(rv) && aFrame->GetType() == nsGkAtoms::pageContentFrame) {
-      // We may need to paint out-of-flow frames whose placeholders are
-      // on other pages. Add those pages to our display list. Note that
-      // out-of-flow frames can't be placed after their placeholders so
-      // we don't have to process earlier pages. The display lists for
-      // these extra pages are pruned so that only display items for the
-      // page we currently care about (which we would have reached by
-      // following placeholders to their out-of-flows) end up on the list.
-      nsIFrame* page = aFrame;
-      nscoord y = aFrame->GetSize().height;
-      while ((page = GetNextPage(page)) != nsnull) {
-        rv = BuildDisplayListForExtraPage(&builder, page, y, &list);
-        if (NS_FAILED(rv))
-          break;
-        y += page->GetSize().height;
-      }
+  if (NS_SUCCEEDED(rv) && aFrame->GetType() == nsGkAtoms::pageContentFrame) {
+    // We may need to paint out-of-flow frames whose placeholders are
+    // on other pages. Add those pages to our display list. Note that
+    // out-of-flow frames can't be placed after their placeholders so
+    // we don't have to process earlier pages. The display lists for
+    // these extra pages are pruned so that only display items for the
+    // page we currently care about (which we would have reached by
+    // following placeholders to their out-of-flows) end up on the list.
+    nsIFrame* page = aFrame;
+    nscoord y = aFrame->GetSize().height;
+    while ((page = GetNextPage(page)) != nsnull) {
+      rv = BuildDisplayListForExtraPage(&builder, page, y, &list);
+      if (NS_FAILED(rv))
+        break;
+      y += page->GetSize().height;
     }
   }
 
