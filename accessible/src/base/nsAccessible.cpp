@@ -2022,8 +2022,12 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       attrAtom->GetUTF8String(&attrStr);
       if (PL_strncmp(attrStr, "aria-", 5)) 
         continue; // Not ARIA
-      if (!nsAccUtils::IsARIAPropForObjectAttr(attrAtom))
+      PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
+      if (attrFlags & ATTR_EXPOSEOBJ)
         continue; // No need to expose obj attribute -- will be exposed some other way
+      if ((attrFlags & ATTR_VALTOKEN) &&
+          !nsAccUtils::HasDefinedARIAToken(content, attrAtom))
+        continue; // only expose token based attributes if they are defined
       nsAutoString value;
       if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
         attributes->SetStringProperty(nsDependentCString(attrStr + 5), value, oldValueUnused);

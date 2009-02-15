@@ -99,6 +99,7 @@ _TEST_FILES =\
 		$(warning test_nsIAccessibleTable_listboxes.xul temporarily disabled) \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
+ 		test_objectattrs.html \
 		test_relations.html \
 		test_relations.xul \
 		test_role_nsHyperTextAcc.html \

@@ -540,3 +540,41 @@ nsStateMapEntry nsARIAMap::gWAIUnivStateMap[] = {
   kEndEntry
 };
 
+
+/**
+ * ARIA attribute map for attribute characteristics
+ * 
+ * @note ARIA attributes that don't have any flags are not included here
+ */
+nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
+  {&nsAccessibilityAtoms::aria_activedescendant,  ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_atomic,                             ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_busy,                               ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_checked,           ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_controls,          ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_describedby,       ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_disabled,          ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_dropeffect,                         ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_expanded,          ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_flowto,            ATTR_EXPOSEOBJ                 },  
+  {&nsAccessibilityAtoms::aria_grabbed,                            ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_haspopup,          ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_invalid,           ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_labelledby,        ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_live,                               ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_multiline,         ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_multiselectable,   ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_owns,              ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_pressed,           ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_readonly,          ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_relevant,          ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_required,          ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_selected,          ATTR_EXPOSEOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_sort,                               ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_valuenow,          ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_valuemin,          ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_valuemax,          ATTR_EXPOSEOBJ                 },
+  {&nsAccessibilityAtoms::aria_valuetext,         ATTR_EXPOSEOBJ                 }
+};
+
+PRUint32 nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);

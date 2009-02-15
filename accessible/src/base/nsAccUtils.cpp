@@ -302,33 +302,6 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
 }
 
 PRBool
-nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
-{
-  return aAtom != nsAccessibilityAtoms::aria_activedescendant &&
-    aAtom != nsAccessibilityAtoms::aria_checked &&
-    aAtom != nsAccessibilityAtoms::aria_controls &&
-    aAtom != nsAccessibilityAtoms::aria_describedby &&
-    aAtom != nsAccessibilityAtoms::aria_disabled &&
-    aAtom != nsAccessibilityAtoms::aria_expanded &&
-    aAtom != nsAccessibilityAtoms::aria_flowto &&
-    aAtom != nsAccessibilityAtoms::aria_invalid &&
-    aAtom != nsAccessibilityAtoms::aria_haspopup &&
-    aAtom != nsAccessibilityAtoms::aria_labelledby &&
-    aAtom != nsAccessibilityAtoms::aria_multiline &&
-    aAtom != nsAccessibilityAtoms::aria_multiselectable &&
-    aAtom != nsAccessibilityAtoms::aria_owns &&
-    aAtom != nsAccessibilityAtoms::aria_pressed &&
-    aAtom != nsAccessibilityAtoms::aria_readonly &&
-    aAtom != nsAccessibilityAtoms::aria_relevant &&
-    aAtom != nsAccessibilityAtoms::aria_required &&
-    aAtom != nsAccessibilityAtoms::aria_selected &&
-    aAtom != nsAccessibilityAtoms::aria_valuemax &&
-    aAtom != nsAccessibilityAtoms::aria_valuemin &&
-    aAtom != nsAccessibilityAtoms::aria_valuenow &&
-    aAtom != nsAccessibilityAtoms::aria_valuetext;
-}
-
-PRBool
 nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
 {
   if (!aContent->HasAttr(kNameSpaceID_None, aAtom) ||
@@ -684,6 +657,16 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   // Always use some entry if there is a role string
   // To ensure an accessible object is created
   return &nsARIAMap::gLandmarkRoleMap;
+}
+
+PRUint8
+nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
+{
+    for (PRUint32 i = 0; i < nsARIAMap::gWAIUnivAttrMapLength; i++)
+      if (*nsARIAMap::gWAIUnivAttrMap[i].attributeName == aAtom)
+        return nsARIAMap::gWAIUnivAttrMap[i].characteristics;
+
+    return 0;
 }
 
 

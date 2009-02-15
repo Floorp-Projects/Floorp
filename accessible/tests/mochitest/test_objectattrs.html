@@ -1,0 +1,56 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=475006
+-->
+<head>
+  <title>Group attributes tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      testAttrs("atomic", {"atomic" : "true"}, true); 
+      testAttrs("autocomplete", {"autocomplete" : "true"}, true); 
+      // bug 477876 testAttrs("checked", {"checkable" : "true"}, true); 
+      testAttrs("dropeffect", {"dropeffect" : "copy"}, true); 
+      testAttrs("live", {"live" : "polite"}, true);
+      testAttrs("me", {"container-live" : "polite"}, true);
+      
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=475006"
+     title="Extend nsARIAMap to capture ARIA attribute characteristics">
+    Mozilla Bug 475006
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="atomic" aria-atomic="true"></div>
+  <div id="autocomplete" role="textbox" aria-autocomplete="true"></div>
+  <div id="checked" aria-checked="true"></div>
+  <div id="dropeffect" aria-dropeffect="copy"></div>
+  <div id="live" aria-live="polite">excuse <div id="me">me</div></div>  
+  
+</body>
+</html>
