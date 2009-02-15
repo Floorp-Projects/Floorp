@@ -344,7 +344,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   rect += offsetFromWidget;
   caretRect = nsRect::ToOutsidePixels(rect, presContext->AppUnitsPerDevPixel());
 
-  caretRect.MoveBy((*aOutWidget)->WidgetToScreenOffset());
+  (*aOutWidget)->WidgetToScreen(caretRect, caretRect);
 
   // Correct for character size, so that caret always matches the size of the character
   // This is important for font size transitions, and is necessary because the Gecko caret uses the
