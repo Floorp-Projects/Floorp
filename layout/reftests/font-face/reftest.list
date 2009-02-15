@@ -7,6 +7,8 @@ HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
+HTTP(..) != download-3-notref.html download-3.html
+HTTP(..) == download-3-ref.html download-3.html
 HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html

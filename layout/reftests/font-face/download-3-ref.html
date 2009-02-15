@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	@font-face {
+		font-family: "MarkA";
+		src: url(../fonts/markA.ttf);
+	}
+
+	body { font-family: "MarkA"; }
+
+	</style>
+</head>
+<body>
+
+<div id="t" style="visibility:hidden; width: -moz-fit-content">ABC</div>
+<script>
+  // Force a reflow to make sure we start our font download now
+  document.body.offsetWidth;
+  window.addEventListener("load",
+    function() {
+      var n = document.getElementById("t");
+      var w = document.defaultView.getComputedStyle(n, "").width;
+      var h = document.defaultView.getComputedStyle(n, "").height;
+      var d = document.createElement("div");
+      d.style.width = w;
+      d.style.height = h;
+      d.style.backgroundColor = "green";
+      n.parentNode.removeChild(n);
+      document.body.appendChild(d);
+    },
+    false);
+</script>
+</body>
+</html>
