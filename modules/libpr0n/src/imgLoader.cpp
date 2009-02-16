@@ -59,7 +59,7 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 
-#include "ImageErrors.h"
+#include "nsURILoader.h"
 #include "ImageLogging.h"
 
 #include "nsIComponentRegistrar.h"
@@ -1210,7 +1210,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   if (request) {
     // we have this in our cache already.. cancel the current (document) load
 
-    channel->Cancel(NS_IMAGELIB_ERROR_LOAD_ABORTED); // this should fire an OnStopRequest
+    channel->Cancel(NS_ERROR_PARSED_DATA_CACHED); // this should fire an OnStopRequest
 
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
