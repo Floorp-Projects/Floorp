@@ -1274,11 +1274,8 @@ nsDisplayTableItem::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilde
 /* static */ void
 nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
 {
-  PRBool isCanvas;
   const nsStyleBackground* bg;
-  PRBool hasBG =
-    nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas);
-  if (!hasBG)
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
     return;
   if (!bg->HasFixedBackground())
     return;

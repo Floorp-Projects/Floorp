@@ -898,8 +898,8 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
 // We need to treat the viewport as canvas because, even though
 // it does not actually paint a background, we need to get the right
 // background style so we correctly detect transparent documents.
-inline PRBool
-IsCanvasFrame(nsIFrame *aFrame)
+PRBool
+nsCSSRendering::IsCanvasFrame(nsIFrame *aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
   return frameType == nsGkAtoms::canvasFrame ||
@@ -909,50 +909,54 @@ IsCanvasFrame(nsIFrame *aFrame)
          frameType == nsGkAtoms::viewportFrame;
 }
 
-inline PRBool
+const nsStyleBackground*
+nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame)
+{
+  const nsStyleBackground* result = aForFrame->GetStyleBackground();
+
+  // Check if we need to do propagation from BODY rather than HTML.
+  if (result->IsTransparent()) {
+    nsIContent* content = aForFrame->GetContent();
+    // The root element content can't be null. We wouldn't know what
+    // frame to create for aForFrame.
+    // Use |GetOwnerDoc| so it works during destruction.
+    nsIDocument* document = content->GetOwnerDoc();
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
+    if (htmlDoc) {
+      nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
+      // We need to null check the body node (bug 118829) since
+      // there are cases, thanks to the fix for bug 5569, where we
+      // will reflow a document with no body.  In particular, if a
+      // SCRIPT element in the head blocks the parser and then has a
+      // SCRIPT that does "document.location.href = 'foo'", then
+      // nsParser::Terminate will call |DidBuildModel| methods
+      // through to the content sink, which will call |StartLayout|
+      // and thus |InitialReflow| on the pres shell.  See bug 119351
+      // for the ugly details.
+      if (bodyContent) {
+        nsIFrame *bodyFrame = aForFrame->PresContext()->GetPresShell()->
+          GetPrimaryFrameFor(bodyContent);
+        if (bodyFrame)
+          result = bodyFrame->GetStyleBackground();
+      }
+    }
+  }
+
+  return result;
+}
+
+inline void
 FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
                      const nsStyleBackground** aBackground)
 {
   if (aRootElementFrame) {
-    const nsStyleBackground* result = aRootElementFrame->GetStyleBackground();
-
-    // Check if we need to do propagation from BODY rather than HTML.
-    if (result->IsTransparent()) {
-      nsIContent* content = aRootElementFrame->GetContent();
-      // The root element content can't be null. We wouldn't know what
-      // frame to create for aRootElementFrame.
-      // Use |GetOwnerDoc| so it works during destruction.
-      nsIDocument* document = content->GetOwnerDoc();
-      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-      if (htmlDoc) {
-        nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
-        // We need to null check the body node (bug 118829) since
-        // there are cases, thanks to the fix for bug 5569, where we
-        // will reflow a document with no body.  In particular, if a
-        // SCRIPT element in the head blocks the parser and then has a
-        // SCRIPT that does "document.location.href = 'foo'", then
-        // nsParser::Terminate will call |DidBuildModel| methods
-        // through to the content sink, which will call |StartLayout|
-        // and thus |InitialReflow| on the pres shell.  See bug 119351
-        // for the ugly details.
-        if (bodyContent) {
-          nsIFrame *bodyFrame = aForFrame->PresContext()->GetPresShell()->
-            GetPrimaryFrameFor(bodyContent);
-          if (bodyFrame)
-            result = bodyFrame->GetStyleBackground();
-        }
-      }
-    }
-
-    *aBackground = result;
+    *aBackground = nsCSSRendering::FindRootFrameBackground(aRootElementFrame);
   } else {
     // This should always give transparent, so we'll fill it in with the
     // default color if needed.  This seems to happen a bit while a page is
     // being loaded.
     *aBackground = aForFrame->GetStyleBackground();
   }
-
-  return PR_TRUE;
 }
 
 inline PRBool
@@ -1001,16 +1005,16 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
 PRBool
 nsCSSRendering::FindBackground(nsPresContext* aPresContext,
                                nsIFrame* aForFrame,
-                               const nsStyleBackground** aBackground,
-                               PRBool* aIsCanvas)
+                               const nsStyleBackground** aBackground)
 {
   nsIFrame* rootElementFrame =
     aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-  PRBool isCanvasFrame = IsCanvasFrame(aForFrame);
-  *aIsCanvas = isCanvasFrame;
-  return isCanvasFrame
-      ? FindCanvasBackground(aForFrame, rootElementFrame, aBackground)
-      : FindElementBackground(aForFrame, rootElementFrame, aBackground);
+  if (IsCanvasFrame(aForFrame)) {
+    FindCanvasBackground(aForFrame, rootElementFrame, aBackground);
+    return PR_TRUE;
+  } else {
+    return FindElementBackground(aForFrame, rootElementFrame, aBackground);
+  }
 }
 
 void
@@ -1271,10 +1275,8 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
-  PRBool isCanvas;
   const nsStyleBackground *color;
-
-  if (!FindBackground(aPresContext, aForFrame, &color, &isCanvas)) {
+  if (!FindBackground(aPresContext, aForFrame, &color)) {
     // we don't want to bail out of moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, other wise keep going in order to let the theme stuff
@@ -1290,13 +1292,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
     }
         
     color = aForFrame->GetStyleBackground();
-  }
-
-  if (isCanvas) {
-    nsIViewManager* vm = aPresContext->GetViewManager();
-    vm->SetDefaultBackgroundColor(
-      NS_ComposeColors(aPresContext->DefaultBackgroundColor(),
-                       color->mBackgroundColor));
   }
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
