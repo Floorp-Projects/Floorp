@@ -83,8 +83,8 @@ NS_IMPL_ISUPPORTS8(imgRequest, imgILoad,
 
 imgRequest::imgRequest() : 
   mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
-  mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0),
-  mValidator(nsnull), mIsMultiPartChannel(PR_FALSE),
+  mGotData(PR_FALSE), mImageStatus(imgIRequest::STATUS_NONE),
+  mState(0), mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE),
   mImageSniffers("image-sniffing-services") 
 {
   /* member initializers and constructor code */
@@ -832,6 +832,8 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", count);
 
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
+
+  mGotData = PR_TRUE;
 
   if (!mProcessing) {
     LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |First time through... finding mimetype|");
