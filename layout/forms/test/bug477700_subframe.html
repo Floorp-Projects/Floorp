@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      function doIs(arg1, arg2, arg3) {
+        window.parent.postMessage("t " + encodeURIComponent(arg1) + " " +
+                                  encodeURIComponent(arg2) + " " +
+                                  encodeURIComponent(arg3), "*");
+      }
+
+      function $(arg) { return document.getElementById(arg); }
+
+      window.addEventListener("message",
+        function(evt) {
+          doIs(evt.data, "start", "Unexpected message");
+          sendString("Test");
+          var t = $("target");
+          doIs(t.value, "Test", "Typing should work");
+          (function() {
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+            t.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor.undo(1);
+          })()
+          doIs(t.value, "", "Undo should work");
+          (function() {
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+            t.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor.redo(1);
+          })()
+          doIs(t.value, "Test", "Redo should work");
+          window.parent.postMessage("f", "*");
+        },
+        "false");
+      
+    </script>
+  </head>
+  <body>
+    <input id="target">
+  </body>
+</html>
+           
