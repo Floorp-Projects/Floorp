@@ -55,7 +55,7 @@ typedef PRUint16 nsMediaReadyState;
 class nsMediaLoad : public nsISupports
 {
 public:
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 };
 
 class nsHTMLMediaElement : public nsGenericHTMLElement
