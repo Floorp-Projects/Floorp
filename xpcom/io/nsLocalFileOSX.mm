@@ -2227,11 +2227,15 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
   if (NS_FAILED(rv))
     return rv;
 
-  CFStringRef destNameStr = ::CFStringCreateWithCharacters(kCFAllocatorDefault,
-                                                           PromiseFlatString(newName).get(),
-                                                           newName.Length());
+  CFStringRef destNameStr = NULL;
+  if (newName.Length() > 0) {
+    destNameStr = ::CFStringCreateWithCharacters(kCFAllocatorDefault,
+                                                 PromiseFlatString(newName).get(),
+                                                 newName.Length());
+  }
   err = ::FSCopyObjectSync(&srcFSRef, &destFSRef, destNameStr, NULL, kFSFileOperationDefaultOptions);
-  ::CFRelease(destNameStr);
+  if (destNameStr)
+    ::CFRelease(destNameStr);
 
   return MacErrorMapper(err);
 
