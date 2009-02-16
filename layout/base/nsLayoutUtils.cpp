@@ -3066,9 +3066,8 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
     return eTransparencyOpaque;
   }
 
-  PRBool isCanvas;
   const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
     return eTransparencyTransparent;
   if (NS_GET_A(bg->mBackgroundColor) < 255)
     return eTransparencyTransparent;
