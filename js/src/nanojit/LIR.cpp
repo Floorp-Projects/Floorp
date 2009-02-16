@@ -689,8 +689,13 @@ namespace nanojit
         return *(const uint64_t*)ptr;
     #else
         union { uint64_t tmp; int32_t dst[2]; } u;
+		#ifdef AVMPLUS_BIG_ENDIAN
+        u.dst[0] = l->v[1];
+        u.dst[1] = l->v[0];
+		#else
         u.dst[0] = l->v[0];
         u.dst[1] = l->v[1];
+		#endif
         return u.tmp;
     #endif
 	}
@@ -704,8 +709,13 @@ namespace nanojit
 		return *(const double*)ptr;
 	#else
 		union { uint32_t dst[2]; double tmpf; } u;
+		#ifdef AVMPLUS_BIG_ENDIAN
+		u.dst[0] = l->v[1];
+		u.dst[1] = l->v[0];
+		#else
 		u.dst[0] = l->v[0];
 		u.dst[1] = l->v[1];
+		#endif
 		return u.tmpf;
 	#endif
 	}

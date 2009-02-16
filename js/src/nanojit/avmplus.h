@@ -46,6 +46,14 @@
 
 #include "jstypes.h"
 
+#if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
+#ifdef IS_BIG_ENDIAN
+#define AVMPLUS_BIG_ENDIAN
+#else
+#define AVMPLUS_LITTLE_ENDIAN
+#endif
+#endif
+
 #define FASTCALL JS_FASTCALL
 
 #if defined(JS_NO_FASTCALL)
