@@ -1213,14 +1213,11 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   rv = UpdateBookmarkHashOnRemove(placeId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX is this too expensive when updating livemarks?
-  // UpdateBookmarkHashOnRemove() does a sanity check using
-  // IsBookmarkedInDatabase(),  so it might not have actually 
-  // removed the bookmark.  should we have a boolean out param
-  // for if we actually removed it, and use that to decide if we call
-  // UpdateFrecency() and the rest of this code?
   if (itemType == TYPE_BOOKMARK) {
-    rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+    // UpdateFrecency needs to know whether placeId is still bookmarked.
+    // Although we removed aItemId, placeId may still be bookmarked elsewhere;
+    // IsRealBookmark will know.
+    rv = History()->UpdateFrecency(placeId, IsRealBookmark(placeId));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1837,13 +1834,10 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
       PRInt64 placeId = child.placeId;
       UpdateBookmarkHashOnRemove(placeId);
 
-      // XXX is this too expensive when updating livemarks?
-      // UpdateBookmarkHashOnRemove() does a sanity check using
-      // IsBookmarkedInDatabase(),  so it might not have actually
-      // removed the bookmark.  should we have a boolean out param
-      // for if we actually removed it, and use that to decide if we call
-      // UpdateFrecency() and the rest of this code?
-      rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+      // UpdateFrecency needs to know whether placeId is still bookmarked.
+      // Although we removed a child of aFolderId that bookmarked it, it may
+      // still be bookmarked elsewhere; IsRealBookmark will know.
+      rv = History()->UpdateFrecency(placeId, IsRealBookmark(placeId));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
