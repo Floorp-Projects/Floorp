@@ -85,6 +85,10 @@
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
 
+// Don't put more than this many rects in the dirty region, just fluff
+// out to the bounding-box if there are more
+#define MAX_RECTS_IN_REGION 100
+
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
@@ -3049,25 +3053,30 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   if (rgn)
     rgn->Init();
 
-  const NSRect *rects;
-  int count, i;
-  [self getRectsBeingDrawn:&rects count:&count];
-  for (i = 0; i < count; ++i) {
-    const NSRect& r = rects[i];
-
-    // add to the region
-    if (rgn)
-      rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
-
-    // to the context for clipping
-    targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
-  }
-  targetContext->Clip();
-  
   // bounding box of the dirty area
   nsIntRect fullRect;
   NSRectToGeckoRect(aRect, fullRect);
 
+  const NSRect *rects;
+  int count, i;
+  [self getRectsBeingDrawn:&rects count:&count];
+  if (count < MAX_RECTS_IN_REGION) {
+    for (i = 0; i < count; ++i) {
+      const NSRect& r = rects[i];
+
+      // add to the region
+      if (rgn)
+        rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
+
+      // to the context for clipping
+      targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
+    }
+  } else {
+    rgn->Union(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
+    targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
+  }
+  targetContext->Clip();
+  
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
   paintEvent.renderingContext = rc;
   paintEvent.rect = &fullRect;
