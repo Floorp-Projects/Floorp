@@ -178,6 +178,13 @@ public:
   nsHTMLMediaElement::NextFrameStatus GetNextFrameStatus();
 
 private:
+
+  // Returns PR_TRUE if we're in shutdown state. Threadsafe.
+  PRBool IsShutdown();
+
+  // Reads from the media stream. Returns PR_FALSE on failure or EOF.
+  PRBool ReadAll(char* aBuf, PRUint32 aSize);
+
   // Change the current state and wake the playback thread if it is waiting
   // on mMonitor.  Used by public member functions called from both threads,
   // so must hold mMonitor.  Threadsafe.
@@ -898,16 +905,25 @@ ReadUint16LE(const char** aBuffer)
   return result;
 }
 
-static PRBool
-ReadAll(nsMediaStream* aStream, char* aBuf, PRUint32 aSize)
+PRBool
+nsWaveStateMachine::IsShutdown()
+{
+  nsAutoMonitor monitor(mMonitor);
+  return mState == STATE_SHUTDOWN;
+}
+
+PRBool
+nsWaveStateMachine::ReadAll(char* aBuf, PRUint32 aSize)
 {
   PRUint32 got = 0;
   do {
     PRUint32 read = 0;
-    if (NS_FAILED(aStream->Read(aBuf + got, aSize - got, &read))) {
+    if (NS_FAILED(mStream->Read(aBuf + got, aSize - got, &read))) {
       NS_WARNING("Stream read failed");
       return PR_FALSE;
     }
+    if (IsShutdown())
+      return PR_FALSE;
     got += read;
   } while (got != aSize);
   return PR_TRUE;
@@ -922,7 +938,7 @@ nsWaveStateMachine::LoadRIFFChunk()
   NS_ABORT_IF_FALSE(mStream->Tell() == 0,
                     "LoadRIFFChunk called when stream in invalid state");
 
-  if (!ReadAll(mStream, riffHeader, sizeof(riffHeader))) {
+  if (!ReadAll(riffHeader, sizeof(riffHeader))) {
     return PR_FALSE;
   }
 
@@ -953,7 +969,7 @@ nsWaveStateMachine::LoadFormatChunk()
   NS_ABORT_IF_FALSE(mStream->Tell() % 2 == 0,
                     "LoadFormatChunk called with unaligned stream");
 
-  if (!ReadAll(mStream, waveFormat, sizeof(waveFormat))) {
+  if (!ReadAll(waveFormat, sizeof(waveFormat))) {
     return PR_FALSE;
   }
 
@@ -988,7 +1004,7 @@ nsWaveStateMachine::LoadFormatChunk()
     char extLength[2];
     const char* p = extLength;
 
-    if (!ReadAll(mStream, extLength, sizeof(extLength))) {
+    if (!ReadAll(extLength, sizeof(extLength))) {
       return PR_FALSE;
     }
 
@@ -1001,7 +1017,7 @@ nsWaveStateMachine::LoadFormatChunk()
 
     if (extra > 0) {
       nsAutoArrayPtr<char> chunkExtension(new char[extra]);
-      if (!ReadAll(mStream, chunkExtension.get(), extra)) {
+      if (!ReadAll(chunkExtension.get(), extra)) {
         return PR_FALSE;
       }
     }
@@ -1050,7 +1066,7 @@ nsWaveStateMachine::FindDataOffset()
     char chunkHeader[8];
     const char* p = chunkHeader;
 
-    if (!ReadAll(mStream, chunkHeader, sizeof(chunkHeader))) {
+    if (!ReadAll(chunkHeader, sizeof(chunkHeader))) {
       return PR_FALSE;
     }
 
@@ -1070,7 +1086,7 @@ nsWaveStateMachine::FindDataOffset()
     size += size % 2;
 
     nsAutoArrayPtr<char> chunk(new char[size]);
-    if (!ReadAll(mStream, chunk.get(), size)) {
+    if (!ReadAll(chunk.get(), size)) {
       return PR_FALSE;
     }
   }
