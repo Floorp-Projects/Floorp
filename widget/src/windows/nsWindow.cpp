@@ -4095,6 +4095,10 @@ EventMsgInfo gAllEvents[] = {
   {"WM_PENWINFIRST",            0x0380},
   {"WM_PENWINLAST",             0x038F},
   {"WM_APP",                    0x8000},
+  {"WM_DWMCOMPOSITIONCHANGED",  0x031E},
+  {"WM_DWMNCRENDERINGCHANGED",  0x031F},
+  {"WM_DWMCOLORIZATIONCOLORCHANGED", 0x0320},
+  {"WM_DWMWINDOWMAXIMIZEDCHANGE", 0x0321},
   {NULL, 0x0}
 };
 
@@ -4990,7 +4994,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           }
           gJustGotDeactivate = PR_FALSE;
           result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
-        } else if (pl.showCmd == SW_SHOWNORMAL){
+        } else if (pl.showCmd == SW_SHOWNORMAL && !(wp->flags & SWP_NOACTIVATE)){
           // Make sure we're active
           result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
           result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
