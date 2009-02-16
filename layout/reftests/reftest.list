@@ -83,6 +83,9 @@ include line-breaking/reftest.list
 # mathml/
 include mathml/reftest.list
 
+# margin-collapsing
+include margin-collapsing/reftest.list
+
 # marquee/
 include marquee/reftest.list
 
