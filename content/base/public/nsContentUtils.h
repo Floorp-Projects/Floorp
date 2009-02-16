@@ -1476,12 +1476,25 @@ public:
 
   // Returns PR_FALSE if something erroneous happened.
   PRBool Push(nsPIDOMEventTarget *aCurrentTarget);
+  // If a null JSContext is passed to Push(), that will cause no
+  // Push() to happen and an error to be returned.
   PRBool Push(JSContext *cx);
+  // Explicitly push a null JSContext on the the stack
+  PRBool PushNull();
+
+  // Pop() will be a no-op if Push() or PushNull() fail
   void Pop();
 
 private:
+  // Combined code for PushNull() and Push(JSContext*)
+  PRBool DoPush(JSContext* cx);
+
   nsCOMPtr<nsIScriptContext> mScx;
   PRBool mScriptIsRunning;
+  PRBool mPushedSomething;
+#ifdef DEBUG
+  JSContext* mPushedContext;
+#endif
 };
 
 class nsAutoGCRoot {
