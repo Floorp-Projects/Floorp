@@ -37,8 +37,17 @@
  
 #include "nsISupports.idl"
 
-[scriptable, uuid(9E03B4C6-8B79-41a8-A3E5-C41F9E015598)]
+[scriptable, uuid(b8cc9126-9319-4415-afd9-b82220d453ed)]
 interface nsISecurityInfoProvider : nsISupports
 {
+  /**
+   * The security info for this provider, if any.
+   */
   readonly attribute nsISupports securityInfo;
+
+  /**
+   * Whether this provider has transferred data.  If it hasn't, its
+   * security info should be ignored.
+   */
+  readonly attribute boolean hasTransferredData;
 };

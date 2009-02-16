@@ -823,17 +823,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 #endif
 
   PRBool isSubDocumentRelevant = PR_TRUE;
-  PRBool isImageRequest = PR_FALSE;
 
   // We are only interested in requests that load in the browser window...
   nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
   if (imgRequest) {
-    // Remember this is an image request. Because image loads doesn't
-    // support any TRANSFERRING notifications but only START and
-    // STOP we must simply predict there were a content transferred.
-    // See bug 432685 for details.
-    isImageRequest = PR_TRUE;
-
     // for image requests, we get the URI from here
     imgRequest->GetURI(getter_AddRefs(uri));
   } else { // is not imgRequest
@@ -998,11 +991,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     // The listing of a request in mTransferringRequests
     // means, there has already been data transfered.
 
-    if (!isImageRequest) 
-    {
-      nsAutoMonitor lock(mMonitor);
-      PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_ADD);
-    }
+    nsAutoMonitor lock(mMonitor);
+    PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_ADD);
     
     return NS_OK;
   }
@@ -1013,12 +1003,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       aProgressStateFlags & STATE_IS_REQUEST)
   {
-    if (isImageRequest) 
-    {
-      requestHasTransferedData = PR_TRUE;
-    }
-    else
-    {
+    { /* scope for the nsAutoMonitor */
       nsAutoMonitor lock(mMonitor);
       PLDHashEntryHdr *entry = PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_LOOKUP);
       if (PL_DHASH_ENTRY_IS_BUSY(entry))
@@ -1027,6 +1012,22 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
         requestHasTransferedData = PR_TRUE;
       }
+    }
+
+    if (!requestHasTransferedData) {
+      // Because image loads doesn't support any TRANSFERRING notifications but
+      // only START and STOP we must ask them directly whether content was
+      // transferred.  See bug 432685 for details.
+      nsCOMPtr<nsISecurityInfoProvider> securityInfoProvider =
+        do_QueryInterface(aRequest);
+      // Guess true in all failure cases to be safe.  But if we're not
+      // an nsISecurityInfoProvider, then we just haven't transferred
+      // any data.
+      PRBool hasTransferred;
+      requestHasTransferedData =
+        securityInfoProvider &&
+        (NS_FAILED(securityInfoProvider->GetHasTransferredData(&hasTransferred)) ||
+         hasTransferred);
     }
   }
 
