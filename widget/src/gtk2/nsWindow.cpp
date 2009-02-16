@@ -135,6 +135,10 @@ D_DEBUG_DOMAIN( ns_Window, "nsWindow", "nsWindow" );
 #define D_DEBUG_AT(x,y...)    do {} while (0)
 #endif
 
+// Don't put more than this many rects in the dirty region, just fluff
+// out to the bounding-box if there are more
+#define MAX_RECTS_IN_REGION 100
+
 /* For PrepareNativeWidget */
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
@@ -2126,6 +2130,12 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
     if (NS_UNLIKELY(!rects)) // OOM
         return FALSE;
+
+    if (nrects > MAX_RECTS_IN_REGION) {
+        // Just use the bounding box
+        rects[0] = aEvent->area;
+        nrects = 1;
+    }
 
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
              (void *)this, (void *)aEvent->window,
