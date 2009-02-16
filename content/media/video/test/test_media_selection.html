@@ -14,33 +14,32 @@ SimpleTest.waitForExplicitFinish();
 function maketest(expect_load, attach_media, name, type, check_metadata) {
   return function (testNum) {
     var e = document.createElement('video');
-
-    e.addEventListener('error', function(e) { e.stopPropagation();}, false);
-    
+    var errorRun = false;
     if (expect_load) {
-      // this could be loadedmetadata, but needs bug 466410 fixed
-      e.addEventListener('loadeddata', function () {
+      e.addEventListener('loadedmetadata', function () {
           ok(e.readyState >= HTMLMediaElement.HAVE_METADATA,
-             'test ' +  testNum + ' networkState ' + e.networkState + ' expected >= ' + e.LOADED_METADATA);
+             'test ' +  testNum + ' readyState ' + e.readyState + ' expected >= ' + HTMLMediaElement.HAVE_METADATA);
           is(e.currentSrc.substring(e.currentSrc.length - name.length), name, 'test ' + testNum);
+          ok(e.networkState >= HTMLMediaElement.NETWORK_LOADING,
+              'test ' + testNum + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_LOADING);
           check_metadata(e);
           e.parentNode.removeChild(e);
           runNextTest();
         }, false);
-    }
-
-    attach_media(e, name, type);
-
-    if (expect_load) {
-      ok(e.networkState >= HTMLMediaElement.NETWORK_LOADING,
-         'test ' + testNum + ' networkState ' + e.networkState + ' expected >= ' + e.LOADING);
+      e.addEventListener('error', function(e) { e.stopPropagation();}, false);      
     } else {
-      ok(e.networkState == HTMLMediaElement.NETWORK_EMPTY,
-         'test ' + testNum + ' networkState ' + e.networkState + ' expected ' + e.EMPTY);
-      is(e.currentSrc, '', 'test ' + testNum);
-      e.parentNode.removeChild(e);
-      runNextTest();
-    }
+      e.addEventListener('error', function(event) {
+        event.stopPropagation();
+        is(expect_load, false, "Didn't load when we weren't expecting to.");
+        is(errorRun, false, "error handler should run once only!");
+        errorRun = true;
+        is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
+           'test ' + testNum + ' readyState should be HAVE_NOTHING when load fails.');
+        e.parentNode.removeChild(e);
+        runNextTest();
+      }, false);
+    }    
+    attach_media(e, name, type);
   }
 }
 
@@ -119,14 +118,14 @@ var subTests = [
                 maketest(false, add_source, 'unknown.raw', 'bogus/type', null),
 
                 // should start loading, then fire error, needs bug 462455 fixed
-                // maketest(true, add_source, 'unknown.raw', 'application/ogg', null),
-                // maketest(true, add_source, 'unknown.raw', 'audio/x-wav', null),
+                maketest(false, add_source, 'unknown.raw', 'application/ogg', null),
+                maketest(false, add_source, 'unknown.raw', 'audio/x-wav', null),
 
                 // element doesn't notice source children attached later, needs bug 462455 fixed
-                // maketest(true, late_add_sources_last, '320x240.ogv', null, 0.2, 0.4),
-                // maketest(true, late_add_sources_first, '320x240.ogv', 'application/ogg', 0.2, 0.4),
-                // maketest(true, late_add_sources_last, 'r11025_u8_c1.wav', null, 0.2, 0.4),
-                // maketest(true, late_add_sources_first, 'r11025_u8_c1.wav', 'audio/x-wav', 0.2, 0.4),
+                maketest(true, late_add_sources_last, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, late_add_sources_first, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, late_add_sources_last, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
+                maketest(true, late_add_sources_first, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
 
                 SimpleTest.finish
                 ];
