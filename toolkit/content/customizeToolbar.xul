@@ -51,7 +51,7 @@
 <window id="CustomizeToolbarWindow"
         title="&dialog.title;"
         onload="onLoad();"
-        onunload="finishToolbarCustomization();"
+        onunload="onUnload();"
         style="&dialog.style;"
         persist="width height"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -61,10 +61,10 @@
 
 <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
-<keyset>
-  <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="window.close();"/>
-  <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="window.close();"/>
-  <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="window.close();"/>
+<keyset id="CustomizeToolbarKeyset">
+  <key id="cmd_close1" keycode="VK_ESCAPE" oncommand="onClose();"/>
+  <key id="cmd_close2" keycode="VK_RETURN" oncommand="onClose();"/>
+  <key id="cmd_close3" keycode="VK_ENTER"  oncommand="onClose();"/>
 </keyset>
 
 <vbox id="main-box" flex="1">
@@ -96,7 +96,7 @@
   <separator class="groove"/>
 
   <hbox align="center" pack="end">
-    <button id="donebutton" label="&saveChanges.label;" oncommand="window.close();"
+    <button id="donebutton" label="&saveChanges.label;" oncommand="onClose();"
             default="true" icon="close"/>
   </hbox>
 </vbox>
