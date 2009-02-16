@@ -1811,6 +1811,12 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
     Initialize(mDrawingArea);
 
+    // disable focus handling for secondary windows (problems with mouse selection and NS_ACTIVATE)
+    if (aParent != nsnull)
+    {
+        mDrawingArea->setFocusPolicy(Qt::NoFocus);
+    }
+
     LOG(("Create: nsWindow [%p] [%p]\n", (void *)this, (void *)mDrawingArea));
 
     // resize so that everything is set to the right dimensions
