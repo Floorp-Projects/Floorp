@@ -76,6 +76,8 @@ public:
         return NS_OK;
      }
 
+  virtual PRUnichar GetCharacterForUnMapped();
+
 private:
 
 private:
