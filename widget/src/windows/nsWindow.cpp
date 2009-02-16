@@ -165,6 +165,10 @@
 #include "nsTextStore.h"
 #endif //NS_ENABLE_TSF
 
+// Don't put more than this many rects in the dirty region, just fluff
+// out to the bounding-box if there are more
+#define MAX_RECTS_IN_REGION 100
+
 /*
  * WinCE helpers
  */
@@ -5947,6 +5951,12 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
+static void
+AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion)
+{
+  aRegion->Union(aRect.left, aRect.top, aRect.right - aRect.left, aRect.bottom - aRect.top);
+}
+
 static already_AddRefed<nsIRegion>
 ConvertHRGNToRegion(HRGN aRgn)
 {
@@ -5966,11 +5976,16 @@ ConvertHRGNToRegion(HRGN aRgn)
   RGNDATA* data = reinterpret_cast<RGNDATA*>(buffer.Elements());
   if (!::GetRegionData(aRgn, size, data))
     return region.forget();
-    
+
+  if (data->rdh.nCount > MAX_RECTS_IN_REGION) {
+    AddRECTToRegion(data->rdh.rcBound, region);
+    return region.forget();
+  }
+
   RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
   for (PRUint32 i = 0; i < data->rdh.nCount; ++i) {
     RECT* r = rects + i;
-    region->Union(r->left, r->top, r->right - r->left, r->bottom - r->top);
+    AddRECTToRegion(*r, region);
   }
 
   return region.forget();
