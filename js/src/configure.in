@@ -2502,6 +2502,10 @@ arm*-*)
     ENABLE_JIT=1
     NANOJIT_ARCH=ARM
     ;;
+sparc*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=Sparc
+    ;;
 esac
 
 MOZ_ARG_DISABLE_BOOL(jit,
@@ -2520,6 +2524,9 @@ i?86-*)
 
 arm*-*)
     AC_DEFINE(AVMPLUS_ARM)
+    ;;
+sparc-*)
+    AC_DEFINE(AVMPLUS_SPARC)
     ;;
 esac
 
