@@ -253,8 +253,24 @@ DEFINES     += -DHAVE_USR_LIB64_DIR
 endif
 endif
 
+SOURCE_STAMP := $(shell cd $(topsrcdir) && hg identify 2>/dev/null | cut -f1 -d' ')
+# strip a trailing slash from the repo URL because it's not always present,
+# and we want to construct a working URL in buildconfig.html
+# make+shell+sed = awful
+_dollar=$$
+SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+
+ifdef SOURCE_STAMP
+INIARGS = --sourcestamp=$(SOURCE_STAMP)
+# extra sanity check for old versions of hg
+# that don't support showconfig
+ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
+INIARGS += --sourcerepo=$(SOURCE_REPO)
+endif
+endif
+
 platform.ini: FORCE
-	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(topsrcdir)/config/milestone.txt > $@
+	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(INIARGS) $(topsrcdir)/config/milestone.txt > $@
 
 GARBAGE += platform.ini
 
