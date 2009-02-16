@@ -2045,52 +2045,6 @@ TraceRecorder::determineSlotType(jsval* vp)
     return m;
 }
 
-/*
- * Combine fp->imacpc and fp->regs->pc into one word, with 8 bits for the pc
- * adjustment from one byte before the imacro's start (so a 0 high byte means
- * we're not in an imacro), and 22 for the pc adjustment from script->code.
- */
-#define IMACRO_PC_ADJ_BITS   10
-#define SCRIPT_PC_ADJ_BITS   (32 - IMACRO_PC_ADJ_BITS)
-
-// The stored imacro_pc_adj byte offset is biased by 1.
-#define IMACRO_PC_ADJ_LIMIT  (JS_BIT(IMACRO_PC_ADJ_BITS) - 1)
-#define SCRIPT_PC_ADJ_LIMIT  JS_BIT(SCRIPT_PC_ADJ_BITS)
-
-#define IMACRO_PC_ADJ(ip)    ((uintptr_t)(ip) >> SCRIPT_PC_ADJ_BITS)
-#define SCRIPT_PC_ADJ(ip)    ((ip) & JS_BITMASK(SCRIPT_PC_ADJ_BITS))
-
-#define FI_SCRIPT_PC(fi,fp)  ((fp)->script->code + SCRIPT_PC_ADJ((fi).ip_adj))
-
-#define FI_IMACRO_PC(fi,fp)  (IMACRO_PC_ADJ((fi).ip_adj)                      \
-                              ? imacro_code[*FI_SCRIPT_PC(fi, fp)] +          \
-                                IMACRO_PC_ADJ((fi).ip_adj)                    \
-                              : NULL)
-
-#define IMACRO_PC_OK(fp,pc)  JS_ASSERT(uintN((pc)-imacro_code[*(fp)->imacpc]) \
-                                       < JS_BIT(IMACRO_PC_ADJ_BITS))
-#define ENCODE_IP_ADJ(fp,pc) ((fp)->imacpc                                    \
-                              ? (IMACRO_PC_OK(fp, pc),                        \
-                                 (((pc) - imacro_code[*(fp)->imacpc])         \
-                                  << SCRIPT_PC_ADJ_BITS) +                    \
-                                 (fp)->imacpc - (fp)->script->code)           \
-                              : (pc) - (fp)->script->code)
-
-#define DECODE_IP_ADJ(ip,fp) (IMACRO_PC_ADJ(ip)                               \
-                              ? (fp)->imacpc = (fp)->script->code +           \
-                                               SCRIPT_PC_ADJ(ip),             \
-                                (fp)->regs->pc = imacro_code[*(fp)->imacpc] + \
-                                                 IMACRO_PC_ADJ(ip)            \
-                              : (fp)->regs->pc = (fp)->script->code + (ip))
-
-static jsbytecode* imacro_code[JSOP_LIMIT];
-
-JS_STATIC_ASSERT(sizeof(equality_imacros) < IMACRO_PC_ADJ_LIMIT);
-JS_STATIC_ASSERT(sizeof(binary_imacros) < IMACRO_PC_ADJ_LIMIT);
-JS_STATIC_ASSERT(sizeof(add_imacros) < IMACRO_PC_ADJ_LIMIT);
-JS_STATIC_ASSERT(sizeof(unary_imacros) < IMACRO_PC_ADJ_LIMIT);
-JS_STATIC_ASSERT(sizeof(apply_imacros) < IMACRO_PC_ADJ_LIMIT);
-
 JS_REQUIRES_STACK LIns*
 TraceRecorder::snapshot(ExitType exitType)
 {
@@ -2152,7 +2106,6 @@ TraceRecorder::snapshot(ExitType exitType)
         else if (*pc == JSOP_GOTOX)
             pc += GET_JUMPX_OFFSET(pc);
     }
-    intptr_t ip_adj = ENCODE_IP_ADJ(fp, pc);
 
     JS_STATIC_ASSERT (sizeof(GuardRecord) + sizeof(VMSideExit) < MAX_SKIP_BYTES);
 
@@ -2163,7 +2116,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (exitType == LOOP_EXIT) {
         for (unsigned n = 0; n < nexits; ++n) {
             VMSideExit* e = exits[n];
-            if (e->ip_adj == ip_adj &&
+            if (e->pc == pc && e->imacpc == fp->imacpc &&
                 !memcmp(getFullTypeMap(exits[n]), typemap, typemap_size)) {
                 LIns* data = lir->skip(sizeof(GuardRecord));
                 GuardRecord* rec = (GuardRecord*)data->payload();
@@ -2215,7 +2168,8 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->exitType = exitType;
     exit->addGuard(rec);
     exit->block = fp->blockChain;
-    exit->ip_adj = ip_adj;
+    exit->pc = pc;
+    exit->imacpc = fp->imacpc;
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     memcpy(getFullTypeMap(exit), typemap, typemap_size);
@@ -2624,8 +2578,10 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
              * If we walked out of a loop, this exit is wrong. We need to back
              * up to the if operation.
              */
-            if (walkedOutOfLoop())
-                exit->ip_adj = terminate_ip_adj;
+            if (walkedOutOfLoop()) {
+                exit->pc = terminate_pc;
+                exit->imacpc = terminate_imacpc;
+            }
         } else {
             JS_ASSERT(peer->code());
             exit->target = peer;
@@ -2872,7 +2828,8 @@ TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
             pc += GET_JUMPX_OFFSET(pc);
         else
             pc += GET_JUMP_OFFSET(pc);
-        terminate_ip_adj = ENCODE_IP_ADJ(cx->fp, pc);
+        terminate_pc = pc;
+        terminate_imacpc = cx->fp->imacpc;
     }
 }
 
@@ -2952,12 +2909,12 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 
     x = (VMSideExit *)i->record()->exit;
     sprintf(out,
-            "%s: %s %s -> %lu:%lu sp%+ld rp%+ld",
+            "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld",
             formatRef(i),
             lirNames[i->opcode()],
             i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
-            IMACRO_PC_ADJ(x->ip_adj),
-            SCRIPT_PC_ADJ(x->ip_adj),
+            (void *)x->pc,
+            (void *)x->imacpc,
             (long int)x->sp_adj,
             (long int)x->rp_adj);
 }
@@ -3103,8 +3060,8 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
     /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
     JSStackFrame* fp = cx->fp;
-    JS_ASSERT_IF(!FI_IMACRO_PC(fi, fp),
-                 js_ReconstructStackDepth(cx, fp->script, FI_SCRIPT_PC(fi, fp))
+    JS_ASSERT_IF(!fi.imacpc,
+                 js_ReconstructStackDepth(cx, fp->script, fi.pc)
                  == uintN(fi.s.spdist - fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
@@ -3175,12 +3132,9 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
     bool constructing = fi.s.argc & 0x8000;
     newifp->frame.argc = argc;
-
-    jsbytecode* imacro_pc = FI_IMACRO_PC(fi, fp);
-    jsbytecode* script_pc = FI_SCRIPT_PC(fi, fp);
-    newifp->callerRegs.pc = imacro_pc ? imacro_pc : script_pc;
+    newifp->callerRegs.pc = fi.pc;
     newifp->callerRegs.sp = fp->slots + fi.s.spdist;
-    fp->imacpc = imacro_pc ? script_pc : NULL;
+    fp->imacpc = fi.imacpc;
 
     JS_ASSERT(!(fp->flags & JSFRAME_POP_BLOCKS));
 #ifdef DEBUG
@@ -3291,12 +3245,6 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer,
               uint32 globalShape, SlotList* globalSlots)
 {
     JS_ASSERT(f->root == f);
-
-    /* Avoid recording loops in overlarge scripts. */
-    if (cx->fp->script->length >= SCRIPT_PC_ADJ_LIMIT) {
-        js_AbortRecording(cx, "script too large");
-        return false;
-    }
 
     /* Make sure the global type map didn't change on us. */
     JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
@@ -4128,7 +4076,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
        is whatever slots frames around us consume. */
-    DECODE_IP_ADJ(innermost->ip_adj, fp);
+    fp->regs->pc = innermost->pc;
+    fp->imacpc = innermost->imacpc;
     fp->regs->sp = StackBase(fp) + (innermost->sp_adj / sizeof(double)) - calldepth_slots;
     JS_ASSERT_IF(!fp->imacpc,
                  fp->slots + fp->script->nfixed +
@@ -4506,8 +4455,6 @@ js_CheckForSSE2()
 }
 #endif
 
-static void InitIMacroCode();
-
 extern void
 js_InitJIT(JSTraceMonitor *tm)
 {
@@ -4541,7 +4488,6 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(fragmento, NULL);
     }
-    InitIMacroCode();
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
@@ -7483,7 +7429,8 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     fi->callee = JSVAL_TO_OBJECT(fval);
     fi->block = fp->blockChain;
-    fi->ip_adj = ENCODE_IP_ADJ(fp, fp->regs->pc);
+    fi->pc = fp->regs->pc;
+    fi->imacpc = fp->imacpc;
     fi->s.spdist = fp->regs->sp - fp->slots;
     fi->s.argc = argc | (constructing ? 0x8000 : 0);
 
@@ -9484,44 +9431,6 @@ js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, uint32 globalShape)
     }
 }
 #endif
-
-/*
- * 17 potentially-converting binary operators:
- *  | ^ & == != < <= > >= << >> >>> + - * / %
- */
-JS_STATIC_ASSERT((uintN)(JSOP_MOD - JSOP_BITOR) == 16);
-
-/*
- * Use an old <ctype.h> trick: bias imacro_code[op] by -1 to allow zero high
- * FrameInfo.ip_adj byte to mean "not in an imacro".
- */
-static void
-InitIMacroCode()
-{
-    if (imacro_code[JSOP_NEXTITER]) {
-        JS_ASSERT(imacro_code[JSOP_NEXTITER] == (jsbytecode*)&nextiter_imacros - 1);
-        return;
-    }
-
-    for (uintN op = JSOP_BITOR; op <= JSOP_MOD; op++)
-        imacro_code[op] = (jsbytecode*)&binary_imacros - 1;
-
-    // NB: above loop mis-set JSOP_ADD's entry, so order here is crucial.
-    imacro_code[JSOP_ADD] = (jsbytecode*)&add_imacros - 1;
-
-    imacro_code[JSOP_ITER] = (jsbytecode*)&iter_imacros - 1;
-    imacro_code[JSOP_NEXTITER] = (jsbytecode*)&nextiter_imacros - 1;
-    imacro_code[JSOP_GETELEM] = (jsbytecode*)&getelem_imacros - 1;
-    imacro_code[JSOP_SETELEM] = (jsbytecode*)&setelem_imacros - 1;
-    imacro_code[JSOP_INITELEM] = (jsbytecode*)&initelem_imacros - 1;
-    imacro_code[JSOP_APPLY] = (jsbytecode*)&apply_imacros - 1;
-
-    imacro_code[JSOP_NEG] = (jsbytecode*)&unary_imacros - 1;
-    imacro_code[JSOP_POS] = (jsbytecode*)&unary_imacros - 1;
-
-    imacro_code[JSOP_EQ] = (jsbytecode*)&equality_imacros - 1;
-    imacro_code[JSOP_NE] = (jsbytecode*)&equality_imacros - 1;
-}
 
 #define UNUSED(n)                                                             \
     JS_REQUIRES_STACK bool                                                    \
