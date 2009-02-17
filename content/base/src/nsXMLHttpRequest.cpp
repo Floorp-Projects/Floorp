@@ -501,6 +501,30 @@ nsACProxyListener::GetInterface(const nsIID & aIID, void **aResult)
 }
 
 /**
+ * Simple class to resume timeouts on a window asynchronously.
+ */
+class nsResumeTimeoutsRunnable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsResumeTimeoutsRunnable(nsPIDOMWindow* aWindow)
+  : mWindow(aWindow)
+  {
+    NS_ASSERTION(aWindow, "Null pointer!");
+  }
+
+  NS_IMETHOD Run() {
+    return mWindow->ResumeTimeouts();
+  }
+
+private:
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsResumeTimeoutsRunnable, nsIRunnable)
+
+/**
  * Gets the nsIDocument given the script context. Will return nsnull on failure.
  *
  * @param aScriptContext the script context to get the document for; can be null
@@ -2763,12 +2787,29 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
+
+    nsCOMPtr<nsIRunnable> resumeTimeoutRunnable;
+    if (mOwner) {
+      nsCOMPtr<nsIDOMWindow> topWindow;
+      if (NS_SUCCEEDED(mOwner->GetTop(getter_AddRefs(topWindow)))) {
+        nsCOMPtr<nsPIDOMWindow> suspendedWindow(do_QueryInterface(topWindow));
+        if (suspendedWindow) {
+          suspendedWindow->SuspendTimeouts();
+          resumeTimeoutRunnable = new nsResumeTimeoutsRunnable(suspendedWindow);
+        }
+      }
+    }
+
     nsIThread *thread = NS_GetCurrentThread();
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       if (!NS_ProcessNextEvent(thread)) {
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
+    }
+
+    if (resumeTimeoutRunnable) {
+      NS_DispatchToCurrentThread(resumeTimeoutRunnable);
     }
   } else {
     if (!mUploadComplete &&
