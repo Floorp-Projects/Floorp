@@ -128,7 +128,8 @@ nsDOMUIEvent::GetScreenPoint()
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-        mEvent->eventStructType != NS_DRAG_EVENT)) {
+        mEvent->eventStructType != NS_DRAG_EVENT &&
+        mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT)) {
     return nsIntPoint(0, 0);
   }
 
@@ -151,7 +152,8 @@ nsDOMUIEvent::GetClientPoint()
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT) ||
+       mEvent->eventStructType != NS_DRAG_EVENT &&
+       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
       !mPresContext ||
       !((nsGUIEvent*)mEvent)->widget) {
     return mClientPoint;
@@ -317,7 +319,8 @@ nsDOMUIEvent::GetLayerPoint()
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT) ||
+       mEvent->eventStructType != NS_DRAG_EVENT &&
+       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
       !mPresContext ||
       mEventIsInternal) {
     return mLayerPoint;
