@@ -775,7 +775,8 @@ class nsDragEvent : public nsMouseEvent
 {
 public:
   nsDragEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsMouseEvent(isTrusted, msg, w, NS_DRAG_EVENT, eReal)
+    : nsMouseEvent(isTrusted, msg, w, NS_DRAG_EVENT, eReal),
+      userCancelled(PR_FALSE)
   {
     if (msg == NS_DRAGDROP_EXIT_SYNTH ||
         msg == NS_DRAGDROP_LEAVE_SYNTH ||
@@ -785,6 +786,7 @@ public:
   }
 
   nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+  PRPackedBool userCancelled;
 };
 
 /**
