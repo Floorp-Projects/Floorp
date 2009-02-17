@@ -814,7 +814,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 // it is the height (minus border, padding) of the cell's first in flow during its final 
 // reflow without an unconstrained height.
 static nscoord
-CalcUnpaginagedHeight(nsPresContext*       aPresContext,
+CalcUnpaginagedHeight(nsPresContext*        aPresContext,
                       nsTableCellFrame&     aCellFrame, 
                       nsTableFrame&         aTableFrame,
                       nscoord               aVerticalBorderPadding)
@@ -856,14 +856,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     GetFirstInFlow()->AddStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW);
   }
 
-  // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
-  nscoord availHeight = aReflowState.availableHeight;
-
   // see if a special height reflow needs to occur due to having a pct height
   nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   aStatus = NS_FRAME_COMPLETE;
-  nsSize availSize(aReflowState.availableWidth, availHeight);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   /* It's the 'border-collapse' on the table that matters */
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -881,9 +878,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   nscoord leftInset   = borderPadding.left;
 
   // reduce available space by insets, if we're in a constrained situation
-  availSize.width -= leftInset+rightInset;
-  if (NS_UNCONSTRAINEDSIZE!=availSize.height)
-    availSize.height -= topInset+bottomInset;
+  availSize.width -= leftInset + rightInset;
+  if (NS_UNCONSTRAINEDSIZE != availSize.height)
+    availSize.height -= topInset + bottomInset;
 
   // Try to reflow the child into the available space. It might not
   // fit or might need continuing.
