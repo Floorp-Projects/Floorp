@@ -175,10 +175,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
     switch (tmp->mEvent->eventStructType) {
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
+      case NS_SIMPLE_GESTURE_EVENT:
         static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nsnull;
         break;
       case NS_DRAG_EVENT:
         static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer = nsnull;
+        static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nsnull;
         break;
       case NS_XUL_COMMAND_EVENT:
         static_cast<nsXULCommandEvent*>(tmp->mEvent)->sourceEvent = nsnull;
@@ -203,6 +205,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
     switch (tmp->mEvent->eventStructType) {
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
+      case NS_SIMPLE_GESTURE_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
           static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
@@ -211,6 +214,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->dataTransfer");
         cb.NoteXPCOMChild(
           static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
+        cb.NoteXPCOMChild(
+          static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
         break;
       case NS_XUL_COMMAND_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->sourceEvent");
@@ -1005,10 +1011,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = PR_TRUE;
       simpleGestureEvent->direction = oldSimpleGestureEvent->direction;
       simpleGestureEvent->delta = oldSimpleGestureEvent->delta;
-      simpleGestureEvent->isAlt = oldSimpleGestureEvent->isAlt;
-      simpleGestureEvent->isControl = oldSimpleGestureEvent->isControl;
-      simpleGestureEvent->isShift = oldSimpleGestureEvent->isShift;
-      simpleGestureEvent->isMeta = oldSimpleGestureEvent->isMeta;
       newEvent = simpleGestureEvent;
       break;
     }
