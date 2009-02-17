@@ -147,12 +147,6 @@ nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGTransformList *transforms)
 }
 
 //----------------------------------------------------------------------
-// XPConnect interface list
-NS_CLASSINFO_MAP_BEGIN(SVGTransformList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformList)
-NS_CLASSINFO_MAP_END
-
-//----------------------------------------------------------------------
 // nsISupports methods:
 
 NS_IMPL_ADDREF(nsSVGTransformList)
