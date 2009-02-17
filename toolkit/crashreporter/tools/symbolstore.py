@@ -259,7 +259,7 @@ class SVNFileInfo(VCSFileInfo):
         print >> sys.stderr, "Failed to get SVN Filename for %s" % self.file
         return self.file
 
-class HGRepoInfo():
+class HGRepoInfo:
     # HG info is per-repo, so cache it in a static
     # member var
     repos = {}
@@ -330,7 +330,7 @@ def IsInDir(file, dir):
     # but the srcdir can be mixed case
     return os.path.abspath(file).lower().startswith(os.path.abspath(dir).lower())
 
-def GetVCSFilename(file, srcdir):
+def GetVCSFilename(file, srcdirs):
     """Given a full path to a file, and the top source directory,
     look for version control information about this file, and return
     a tuple containing
@@ -350,15 +350,21 @@ def GetVCSFilename(file, srcdir):
         # Already cached this info, use it.
         fileInfo = vcsFileInfoCache[file]
     else:
-        if os.path.isdir(os.path.join(path, "CVS")):
-            fileInfo = CVSFileInfo(file, srcdir)
-        elif os.path.isdir(os.path.join(path, ".svn")) or \
-             os.path.isdir(os.path.join(path, "_svn")):
-            fileInfo = SVNFileInfo(file);
-        elif os.path.isdir(os.path.join(srcdir, '.hg')) and \
-             IsInDir(file, srcdir):
-            fileInfo = HGFileInfo(file, srcdir)
-        vcsFileInfoCache[file] = fileInfo
+        for srcdir in srcdirs:
+            if os.path.isdir(os.path.join(path, "CVS")):
+                fileInfo = CVSFileInfo(file, srcdir)
+                if fileInfo:
+                    root = fileInfo.root
+            elif os.path.isdir(os.path.join(path, ".svn")) or \
+                 os.path.isdir(os.path.join(path, "_svn")):
+                 fileInfo = SVNFileInfo(file);
+            elif os.path.isdir(os.path.join(srcdir, '.hg')) and \
+                 IsInDir(file, srcdir):
+                 fileInfo = HGFileInfo(file, srcdir)
+
+            if fileInfo: 
+                vcsFileInfoCache[file] = fileInfo
+                break
 
     if fileInfo:
         file = fileInfo.filename
@@ -406,7 +412,7 @@ class Dumper:
     ProcessDir.  Instead, call GetPlatformSpecificDumper to
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
-                 archs=None, srcdir=None, copy_debug=False, vcsinfo=False, srcsrv=False):
+                 archs=None, srcdirs=None, copy_debug=False, vcsinfo=False, srcsrv=False):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
@@ -415,10 +421,10 @@ class Dumper:
             self.archs = ['']
         else:
             self.archs = ['-a %s' % a for a in archs.split()]
-        if srcdir is not None:
-            self.srcdir = os.path.normpath(srcdir)
+        if srcdirs is not None:
+            self.srcdirs = [os.path.normpath(a) for a in srcdirs]
         else:
-            self.srcdir = None
+            self.srcdirs = None
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
@@ -511,14 +517,15 @@ class Dumper:
                             # FILE index filename
                             (x, index, filename) = line.split(None, 2)
                             if sys.platform == "sunos5":
-                                start = filename.find(self.srcdir)
-                                if start == -1:
-                                    start = 0
-                                filename = filename[start:]
+                                for srcdir in self.srcdirs:
+                                    start = filename.find(self.srcdir)
+                                    if start != -1:
+                                        filename = filename[start:]
+                                        break
                             filename = self.FixFilenameCase(filename.rstrip())
                             sourcepath = filename
                             if self.vcsinfo:
-                                (filename, rootname) = GetVCSFilename(filename, self.srcdir)
+                                (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
                                 # sets vcs_root in case the loop through files were to end on an empty rootname
                                 if vcs_root is None:
                                   if rootname:
@@ -715,7 +722,7 @@ def main():
                       action="store", dest="archs",
                       help="Run dump_syms -a <arch> for each space separated cpu architecture in ARCHS (only on OS X)")
     parser.add_option("-s", "--srcdir",
-                      action="store", dest="srcdir",
+                      action="append", dest="srcdir", default=[],
                       help="Use SRCDIR to determine relative paths to source files")
     parser.add_option("-v", "--vcs-info",
                       action="store_true", dest="vcsinfo",
@@ -740,7 +747,7 @@ def main():
                                        symbol_path=args[1],
                                        copy_debug=options.copy_debug,
                                        archs=options.archs,
-                                       srcdir=options.srcdir,
+                                       srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
                                        srcsrv=options.srcsrv)
     for arg in args[2:]:

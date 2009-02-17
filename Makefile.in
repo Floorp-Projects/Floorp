@@ -176,6 +176,8 @@ DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
 
+SYM_STORE_SOURCE_DIRS := $(topsrcdir)
+
 ifdef MOZ_SYMBOLS_EXTRA_BUILDID
 EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
@@ -187,10 +189,12 @@ buildsymbols:
 ifdef MOZ_CRASHREPORTER
 	echo building symbol store
 	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
-	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py    \
-	  $(MAKE_SYM_STORE_ARGS) -s $(topsrcdir) $(DUMP_SYMS_BIN)     \
-	  $(DIST)/crashreporter-symbols/$(BUILDID)                    \
-	  $(MAKE_SYM_STORE_PATH) >                                    \
+	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
+	  $(MAKE_SYM_STORE_ARGS)                                          \
+	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \
+	  $(DUMP_SYMS_BIN)                                                \
+	  $(DIST)/crashreporter-symbols/$(BUILDID)                        \
+	  $(MAKE_SYM_STORE_PATH) >                                        \
 	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
