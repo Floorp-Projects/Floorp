@@ -155,6 +155,8 @@ function test_DataTransfer(dt)
   expectError(function() dt.mozSetDataAt("text/plain", "Some Text", 1),
               "NS_ERROR_DOM_INDEX_SIZE_ERR", "setDataAt index too high");
 
+  is(dt.mozUserCancelled, false, "userCancelled");
+
   // because an exception occured, the data should not have been added
   is(dt.mozItemCount, 0, "empty setDataAt index too high itemCount");
   dt.getData("text/plain", "", "empty setDataAt index too high getData");

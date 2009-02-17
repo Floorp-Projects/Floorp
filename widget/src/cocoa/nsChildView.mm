@@ -146,6 +146,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 PRUint32 gLastModifierState = 0;
 
+PRBool gUserCancelledDrag = PR_FALSE;
 
 @interface ChildView(Private)
 
@@ -6360,6 +6361,10 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   gDraggedTransferables = nsnull;
+
+  NSEvent *currentEvent = [NSApp currentEvent];
+  gUserCancelledDrag = ([currentEvent type] == NSKeyDown &&
+                        [currentEvent keyCode] == kEscapeKeyCode);
 
   if (!mDragService) {
     CallGetService(kDragServiceContractID, &mDragService);
