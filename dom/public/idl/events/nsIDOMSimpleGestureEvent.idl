@@ -36,11 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#include "nsIDOMUIEvent.idl"
+#include "nsIDOMMouseEvent.idl"
 
 /**
  * The nsIDOMSimpleGestureEvent interface is the datatype for all
- * Mozila-specific simple gesture events in the Document Object Model.
+ * Mozilla-specific simple gesture events in the Document Object Model.
  *
  * The following events are generated:
  *
@@ -79,8 +79,8 @@
  * amount of rotation represented by the user's gesture.
  */
 
-[scriptable, uuid(20AB8E74-BF9B-4D1D-8A18-B5EE0F3C0A36)]
-interface nsIDOMSimpleGestureEvent : nsIDOMUIEvent
+[scriptable, uuid(8aa40c61-9be7-4de1-93fa-30d6406d345b)]
+interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
   /* Direction constants */
   const unsigned long DIRECTION_UP = 1;
@@ -121,21 +121,21 @@ interface nsIDOMSimpleGestureEvent : nsIDOMUIEvent
    */
   readonly attribute double delta;
 
-  /* Modifier keys that may have been pressed during the gesture. */
-  readonly attribute boolean altKey;
-  readonly attribute boolean ctrlKey;
-  readonly attribute boolean shiftKey;
-  readonly attribute boolean metaKey;
-
   void initSimpleGestureEvent(in DOMString typeArg,
                               in boolean canBubbleArg,
                               in boolean cancelableArg,
                               in nsIDOMAbstractView viewArg,
                               in long detailArg,
-                              in unsigned long directionArg,
-                              in double deltaArg,
-                              in boolean altKeyArg,
+                              in long screenXArg,
+                              in long screenYArg,
+                              in long clientXArg,
+                              in long clientYArg,
                               in boolean ctrlKeyArg,
+                              in boolean altKeyArg,
                               in boolean shiftKeyArg,
-                              in boolean metaKeyArg);
+                              in boolean metaKeyArg,
+                              in unsigned short buttonArg,
+                              in nsIDOMEventTarget relatedTargetArg,
+                              in unsigned long directionArg,
+                              in double deltaArg);
 };
