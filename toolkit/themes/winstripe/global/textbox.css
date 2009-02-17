@@ -127,10 +127,6 @@ textbox.plain {
   cursor: default;
 }
 
-.textbox-search-clear[chromedir="rtl"] {
-  list-style-image: url(chrome://global/skin/icons/Search-close-rtl.png);
-}
-
 .textbox-search-clear:not([disabled]):hover ,
 .textbox-search-icon[searchbutton]:not([disabled]):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
