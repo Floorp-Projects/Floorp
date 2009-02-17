@@ -6994,7 +6994,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     // positioned child frames.
     const nsStyleDisplay* disp = frame->GetStyleDisplay();
 
-    if (disp->IsPositioned() && !IsTableRelated(disp->mDisplay)) {
+    if (disp->IsPositioned() && !IsTableRelated(frame->GetType(), PR_TRUE)) {
       // Find the outermost wrapped block under this frame
       for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
