@@ -77,7 +77,6 @@ _TEST_FILES += \
 		test_error_on_404.html \
 		test_onloadedmetadata.html \
 		test_load_coalescing.html \
-		test_play.html \
 		test_progress1.html \
 		test_progress3.html \
 		test_source.html \
@@ -99,6 +98,9 @@ _TEST_FILES += \
 		contentDuration6.sjs \
 		seek.ogv \
 		$(NULL)
+
+#XXX: disabled for now, see bug 478868
+# 		test_play.html \
 
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
