@@ -377,6 +377,8 @@ public:
   static void BeginTransaction(nsIFrame* aTargetFrame,
                                PRInt32 aNumLines,
                                PRBool aScrollHorizontal);
+  // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
+  // frame might be destroyed in the event handler.
   static PRBool UpdateTransaction(PRInt32 aNumLines,
                                   PRBool aScrollHorizontal);
   static void EndTransaction();
@@ -543,6 +545,10 @@ nsMouseWheelTransaction::OnFailToScrollTarget()
                     sTargetFrame->GetContent(),
                     NS_LITERAL_STRING("MozMouseScrollFailed"),
                     PR_TRUE, PR_TRUE);
+  // The target frame might be destroyed in the event handler, at that time,
+  // we need to finish the current transaction
+  if (!sTargetFrame)
+    EndTransaction();
 }
 
 void
@@ -2734,6 +2740,12 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     nsIScrollableViewProvider* svp = do_QueryFrame(lastScrollFrame);
     if (svp && (scrollView = svp->GetScrollableView())) {
       nsMouseWheelTransaction::UpdateTransaction(aNumLines, aScrollHorizontal);
+      // When the scroll event will not scroll any views, UpdateTransaction
+      // fired MozMouseScrollFailed event which is for automated testing.
+      // In the event handler, the target frame might be destroyed.  Then,
+      // we should not keep handling this scroll event.
+      if (!nsMouseWheelTransaction::GetTargetFrame())
+        return NS_OK;
     } else {
       nsMouseWheelTransaction::EndTransaction();
       lastScrollFrame = nsnull;
