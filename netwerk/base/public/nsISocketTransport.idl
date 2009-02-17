@@ -150,6 +150,14 @@ interface nsISocketTransport : nsITransport
      */
     const unsigned long BYPASS_CACHE = (1 << 0);
 
+    /**
+     * When setting this flag, the socket will not apply any
+     * credentials when establishing a connection. For example,
+     * an SSL connection would not send any client-certificates
+     * if this flag is set.
+     */
+    const unsigned long ANONYMOUS_CONNECT = (1 << 1);
+
 };
 
 %{C++
