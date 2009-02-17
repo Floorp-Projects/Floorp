@@ -72,10 +72,6 @@ classname::~classname() {}                                                   \
                                                                              \
 NS_IMPL_ADDREF_INHERITED(classname, nsBaseDOMException)                      \
 NS_IMPL_RELEASE_INHERITED(classname, nsBaseDOMException)                     \
-NS_CLASSINFO_MAP_BEGIN(domname)                                              \
-  NS_CLASSINFO_MAP_ENTRY(nsIException)                                       \
-  NS_CLASSINFO_MAP_ENTRY(ifname)                                             \
-NS_CLASSINFO_MAP_END                                                         \
 NS_INTERFACE_MAP_BEGIN(classname)                                            \
   NS_INTERFACE_MAP_ENTRY(ifname)                                             \
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(domname)                              \

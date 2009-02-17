@@ -78,7 +78,7 @@ nsTreeColumn::~nsTreeColumn()
 NS_INTERFACE_MAP_BEGIN(nsTreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeColumn)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeColumn)
   if (aIID.Equals(NS_GET_IID(nsTreeColumn))) {
     AddRef();
     *aInstancePtr = this;
@@ -395,7 +395,7 @@ nsTreeColumns::~nsTreeColumns()
 NS_INTERFACE_MAP_BEGIN(nsTreeColumns)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumns)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeColumns)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeColumns)
 NS_INTERFACE_MAP_END
                                                                                 
 NS_IMPL_ADDREF(nsTreeColumns)
