@@ -178,12 +178,14 @@ endif
 
 SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
 ifdef MOZ_SYMBOLS_EXTRA_BUILDID
 EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
 
-SYMBOL_ARCHIVE_BASENAME = \
-  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)
+SYMBOL_INDEX_NAME = \
+  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
 
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
@@ -195,18 +197,16 @@ ifdef MOZ_CRASHREPORTER
 	  $(DUMP_SYMS_BIN)                                                \
 	  $(DIST)/crashreporter-symbols/$(BUILDID)                        \
 	  $(MAKE_SYM_STORE_PATH) >                                        \
-	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
+	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(SYMBOL_INDEX_NAME)
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
 	cd $(DIST)/crashreporter-symbols/$(BUILDID) && \
-          zip -r9D ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip .
-	mv $(DIST)/crashreporter-symbols/crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip \
-          $(topsrcdir)/../$(BUILDID)
+          zip -r9D ../../$(SYMBOL_ARCHIVE_BASENAME).zip .
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
+	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip
 endif
 
 ifeq ($(OS_ARCH),WINNT)

@@ -511,6 +511,7 @@ upload:
 		$(call QUOTED_WILDCARD,$(INSTALLER_PACKAGE)) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(COMPLETE_MAR)) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip) \
 		$(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 ifndef MOZ_PKG_SRCDIR
