@@ -777,7 +777,7 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
   // by the width. Similarly, if the alignment is on the bottom edge of the
   // popup, move the popup up by the height. In addition, account for the
   // margins of the popup on the edge on which it is aligned.
-  nsMargin margin;
+  nsMargin margin(0, 0, 0, 0);
   GetStyleMargin()->GetMargin(margin);
   switch (popupAlign) {
     case POPUPALIGNMENT_TOPLEFT:
@@ -880,9 +880,9 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
 }
 
 nsresult
-nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
+nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
 {
-  if (!mShouldAutoPosition && !mInContentShell) 
+  if (!mShouldAutoPosition && !aIsMove && !mInContentShell)
     return NS_OK;
 
   nsPresContext* presContext = PresContext();
@@ -950,7 +950,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   // indicators of whether the popup should be flipped or resized.
   PRBool hFlip = PR_FALSE, vFlip = PR_FALSE;
   
-  nsMargin margin;
+  nsMargin margin(0, 0, 0, 0);
   GetStyleMargin()->GetMargin(margin);
 
   // the screen rectangle of the root frame, in dev pixels.
@@ -1016,6 +1016,11 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     // screen positioned popups can be flipped vertically but never horizontally
     vFlip = PR_TRUE;
   }
+
+  // if a panel is being moved, don't flip it. But always do this for content
+  // shells, so that the popup doesn't extend outside the containing frame.
+  if (aIsMove && mPopupType == ePopupTypePanel && !mInContentShell)
+    hFlip = vFlip = PR_FALSE;
 
   // screenRect will hold the rectangle of the available screen space. It
   // will be reduced by the OS chrome such as menubars. It addition, for
@@ -1487,11 +1492,11 @@ nsMenuPopupFrame::MoveToAttributePosition()
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
   PRInt32 err1, err2;
-  mScreenXPos = left.ToInteger(&err1);
-  mScreenYPos = top.ToInteger(&err2);
+  PRInt32 xpos = left.ToInteger(&err1);
+  PRInt32 ypos = top.ToInteger(&err2);
 
   if (NS_SUCCEEDED(err1) && NS_SUCCEEDED(err2))
-    MoveToInternal(mScreenXPos, mScreenYPos);
+    MoveTo(xpos, ypos, PR_FALSE);
 }
 
 void
@@ -1510,50 +1515,32 @@ nsMenuPopupFrame::Destroy()
   nsBoxFrame::Destroy();
 }
 
-void
-nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop)
-{
-  // Set the 'left' and 'top' attributes
-  nsAutoString left, top;
-  left.AppendInt(aLeft);
-  top.AppendInt(aTop);
-
-  nsWeakFrame weakFrame(this);
-  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::left, left, PR_FALSE);
-  if (!weakFrame.IsAlive()) {
-    return;
-  }
-  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::top, top, PR_FALSE);
-  if (!weakFrame.IsAlive()) {
-    return;
-  }
-
-  MoveToInternal(aLeft, aTop);
-}
 
 void
-nsMenuPopupFrame::MoveToInternal(PRInt32 aLeft, PRInt32 aTop)
+nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs)
 {
   // just don't support moving popups for content shells
   if (mInContentShell)
     return;
 
-  nsIView* view = GetView();
-  NS_ASSERTION(view->GetParent(), "Must have parent!");
+  // reposition the popup at the specified coordinates. Don't clear the anchor
+  // and position, because the popup can be reset to its anchor position by
+  // using (-1, -1) as coordinates.
+  mScreenXPos = aLeft;
+  mScreenYPos = aTop;
 
-  // Retrieve screen position of parent view
-  nsIntPoint screenPos = view->GetParent()->GetScreenPosition();
+  SetPopupPosition(nsnull, PR_TRUE);
 
-  nsPresContext* context = PresContext();
-  aLeft = context->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(aLeft));
-  aTop = context->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(aTop));
-
-  // Move the widget. The widget will be null if it hasn't been created yet,
-  // but that's OK as the popup won't be open in this case.
-  // XXXbz don't we want screenPos to be the parent _widget_'s position, then?
-  nsIWidget* widget = view->GetWidget();
-  if (widget) 
-    widget->Move(aLeft - screenPos.x, aTop - screenPos.y);
+  nsCOMPtr<nsIContent> popup = mContent;
+  if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||
+                       popup->HasAttr(kNameSpaceID_None, nsGkAtoms::top)))
+  {
+    nsAutoString left, top;
+    left.AppendInt(aLeft);
+    top.AppendInt(aTop);
+    popup->SetAttr(kNameSpaceID_None, nsGkAtoms::left, left, PR_FALSE);
+    popup->SetAttr(kNameSpaceID_None, nsGkAtoms::top, top, PR_FALSE);
+  }
 }
 
 PRBool
