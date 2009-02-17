@@ -623,7 +623,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull),
-    mPendingStorageEvents(nsnull)
+    mPendingStorageEvents(nsnull),
+    mTimeoutsSuspendDepth(0)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -7438,7 +7439,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   PRTime delta = (PRTime)realInterval * PR_USEC_PER_MSEC;
 
-  if (!IsFrozen()) {
+  if (!IsFrozen() && !mTimeoutsSuspendDepth) {
     // If we're not currently frozen, then we set timeout->mWhen to be the
     // actual firing time of the timer (i.e., now + delta). We also actually
     // create a timer and fire it off.
@@ -7551,7 +7552,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 {
   // If a modal dialog is open for this window, return early. Pending
   // timeouts will run when the modal dialog is dismissed.
-  if (IsInModalState()) {
+  if (IsInModalState() || mTimeoutsSuspendDepth) {
     return;
   }
 
@@ -8368,6 +8369,10 @@ nsGlobalWindow::SuspendTimeouts()
 {
   FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
 
+  if (++mTimeoutsSuspendDepth != 1) {
+    return;
+  }
+
   nsDOMThreadService* dts = nsDOMThreadService::get();
   if (dts) {
     dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
@@ -8427,6 +8432,11 @@ nsresult
 nsGlobalWindow::ResumeTimeouts()
 {
   FORWARD_TO_INNER(ResumeTimeouts, (), NS_ERROR_NOT_INITIALIZED);
+
+  NS_ASSERTION(mTimeoutsSuspendDepth, "Mismatched calls to ResumeTimeouts!");
+  if (--mTimeoutsSuspendDepth != 0) {
+    return NS_OK;
+  }
 
   nsDOMThreadService* dts = nsDOMThreadService::get();
   if (dts) {
