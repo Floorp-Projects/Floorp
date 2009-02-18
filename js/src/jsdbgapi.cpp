@@ -41,7 +41,6 @@
 /*
  * JS debugging API.
  */
-#include "jsstddef.h"
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */

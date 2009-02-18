@@ -43,8 +43,6 @@
 /*
  * JS bytecode generation.
  */
-
-#include "jsstddef.h"
 #include "jstypes.h"
 #include "jsatom.h"
 #include "jsopcode.h"
@@ -379,7 +377,7 @@ struct JSCodeGenerator {
 #define CG_LIMIT(cg)            ((cg)->current->limit)
 #define CG_NEXT(cg)             ((cg)->current->next)
 #define CG_CODE(cg,offset)      (CG_BASE(cg) + (offset))
-#define CG_OFFSET(cg)           PTRDIFF(CG_NEXT(cg), CG_BASE(cg), jsbytecode)
+#define CG_OFFSET(cg)           (CG_NEXT(cg) - CG_BASE(cg))
 
 #define CG_NOTES(cg)            ((cg)->current->notes)
 #define CG_NOTE_COUNT(cg)       ((cg)->current->noteCount)
@@ -391,8 +389,7 @@ struct JSCodeGenerator {
 #define CG_PROLOG_LIMIT(cg)     ((cg)->prolog.limit)
 #define CG_PROLOG_NEXT(cg)      ((cg)->prolog.next)
 #define CG_PROLOG_CODE(cg,poff) (CG_PROLOG_BASE(cg) + (poff))
-#define CG_PROLOG_OFFSET(cg)    PTRDIFF(CG_PROLOG_NEXT(cg), CG_PROLOG_BASE(cg),\
-                                        jsbytecode)
+#define CG_PROLOG_OFFSET(cg)    (CG_PROLOG_NEXT(cg) - CG_PROLOG_BASE(cg))
 
 #define CG_SWITCH_TO_MAIN(cg)   ((cg)->current = &(cg)->main)
 #define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)

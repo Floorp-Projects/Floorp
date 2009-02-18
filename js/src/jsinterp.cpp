@@ -41,7 +41,6 @@
 /*
  * JavaScript bytecode interpreter.
  */
-#include "jsstddef.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -350,7 +349,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
                 entry->kshape,
                 OBJ_SHAPE(obj));
                 js_Disassemble1(cx, cx->fp->script, pc,
-                                PTRDIFF(pc, cx->fp->script->code, jsbytecode),
+                                pc - cx->fp->script->code,
                                 JS_FALSE, stderr);
 #endif
 
@@ -2060,7 +2059,7 @@ js_TraceOpcode(JSContext *cx, jsint len)
     fprintf(tracefp, "%4u: ",
             js_PCToLineNumber(cx, fp->script, fp->imacpc ? fp->imacpc : regs->pc));
     js_Disassemble1(cx, fp->script, regs->pc,
-                    PTRDIFF(regs->pc, fp->script->code, jsbytecode),
+                    regs->pc - fp->script->code,
                     JS_FALSE, tracefp);
     op = (JSOp) *regs->pc;
     nuses = js_CodeSpec[op].nuses;
@@ -6351,14 +6350,14 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_GOSUB)
             PUSH(JSVAL_FALSE);
-            i = PTRDIFF(regs.pc, script->main, jsbytecode) + JSOP_GOSUB_LENGTH;
+            i = (regs.pc - script->main) + JSOP_GOSUB_LENGTH;
             PUSH(INT_TO_JSVAL(i));
             len = GET_JUMP_OFFSET(regs.pc);
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_GOSUBX)
             PUSH(JSVAL_FALSE);
-            i = PTRDIFF(regs.pc, script->main, jsbytecode) + JSOP_GOSUBX_LENGTH;
+            i = (regs.pc - script->main) + JSOP_GOSUBX_LENGTH;
             len = GET_JUMPX_OFFSET(regs.pc);
             PUSH(INT_TO_JSVAL(i));
           END_VARLEN_CASE
