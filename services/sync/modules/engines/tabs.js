@@ -315,8 +315,9 @@ TabTracker.prototype = {
   observe: function TabTracker_observe(aSubject, aTopic, aData) {
     dump("TabTracker spotted window open/close...\n");
     let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    // TODO: Not all windows have tabContainers.  Fennec windows don't,
-    // for instance.
+    // Ignore windows that don't have tabContainers.
+    // TODO: Fennec windows don't have tabContainers, but we still want
+    // to register an observer in them.
     if (! window.getBrowser)
       return;
     let browser = window.getBrowser();
@@ -330,6 +331,7 @@ TabTracker.prototype = {
       container.removeEventListener("TabOpen", this.onTabChanged, false);
       container.removeEventListener("TabClose", this.onTabChanged, false);
     }
+    // TODO
   },
 
   onTabChanged: function TabTracker_onTabChanged(event) {
@@ -337,6 +339,7 @@ TabTracker.prototype = {
   },
 
   get changedIDs() {
+    // The record for my own client is always the only changed record.
     let obj = {};
     obj[Clients.clientID] = true;
     return obj;
