@@ -6,6 +6,8 @@
 
 #include "lcms.h"
 
+using std::isspace;
+
 /* Nabbed from the http://www.jonh.net/~jonh/md5/crc32/crc32.c. License is
  * "do anything, no restrictions." */
 unsigned long crc32(const unsigned char *s, unsigned int len);
