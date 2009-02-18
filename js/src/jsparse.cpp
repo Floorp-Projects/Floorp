@@ -1098,6 +1098,25 @@ NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
     return fun;
 }
 
+static JSBool
+MatchOrInsertSemicolon(JSContext *cx, JSTokenStream *ts)
+{
+    JSTokenType tt;
+
+    ts->flags |= TSF_OPERAND;
+    tt = js_PeekTokenSameLine(cx, ts);
+    ts->flags &= ~TSF_OPERAND;
+    if (tt == TOK_ERROR)
+        return JS_FALSE;
+    if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                    JSMSG_SEMI_BEFORE_STMNT);
+        return JS_FALSE;
+    }
+    (void) js_MatchToken(cx, ts, TOK_SEMI);
+    return JS_TRUE;
+}
+
 static JSParseNode *
 FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             uintN lambda)
@@ -1320,8 +1339,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_EXPR_CLOSURES
     if (tt == TOK_LC)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
-    else if (lambda == 0)
-        js_MatchToken(cx, ts, TOK_SEMI);
+    else if (lambda == 0 && !MatchOrInsertSemicolon(cx, ts))
+        return NULL;
 #else
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
 #endif
@@ -3542,21 +3561,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     }
 
     /* Check termination of this primitive statement. */
-    if (ON_CURRENT_LINE(ts, pn->pn_pos)) {
-        ts->flags |= TSF_OPERAND;
-        tt = js_PeekTokenSameLine(cx, ts);
-        ts->flags &= ~TSF_OPERAND;
-        if (tt == TOK_ERROR)
-            return NULL;
-        if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                        JSMSG_SEMI_BEFORE_STMNT);
-            return NULL;
-        }
-    }
-
-    (void) js_MatchToken(cx, ts, TOK_SEMI);
-    return pn;
+    return MatchOrInsertSemicolon(cx, ts) ? pn : NULL;
 }
 
 static JSParseNode *

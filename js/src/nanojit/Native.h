@@ -51,6 +51,8 @@
 #endif
 #elif defined(NANOJIT_PPC)
 #include "NativePpc.h"
+#elif defined(NANOJIT_SPARC)
+#include "NativeSparc.h"
 #elif defined(NANOJIT_AMD64)
 #include "NativeAMD64.h"
 #else
@@ -62,6 +64,7 @@ namespace nanojit {
 	
     class Fragment;
     struct SideExit;
+	struct SwitchInfo;
     
     struct GuardRecord 
     {
@@ -75,6 +78,7 @@ namespace nanojit {
         GuardRecord* guards;
         Fragment* from;
         Fragment* target;
+		SwitchInfo* switchInfo;
         
         void addGuard(GuardRecord* lr) 
         {
@@ -113,7 +117,7 @@ namespace nanojit {
 		#define gpn(r)					regNames[(r)] 
 		#define fpn(r)					regNames[(r)] 
 	#else
-		#define asm_output(f, ...)
+		#define asm_output(...)
 		#define gpn(r)		
 		#define fpn(r)		
 	#endif /* NJ_VERBOSE */
