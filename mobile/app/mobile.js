@@ -160,6 +160,8 @@ pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
 pref("accessibility.typeaheadfind.casesensitive", 0);
+// zoom key(F7) conflicts with caret browsing on maemo
+pref("accessibility.browsewithcaret_shortcut.enabled", false);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
