@@ -418,7 +418,7 @@ private:
                                       PRInt32                  aNameSpaceID,
                                       nsFrameItems&            aChildItems,
                                       nsIFrame*&               aNewFrame,
-                                      PRBool&                  aIsPseudoParent);
+                                      PRBool*                  aHasPseudoParent);
 
   nsresult ConstructTableRowGroupFrame(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
@@ -428,7 +428,7 @@ private:
                                        PRBool                   aIsPseudo,
                                        nsFrameItems&            aChildItems,
                                        nsIFrame*&               aNewFrame,
-                                       PRBool&                  aIsPseudoParent);
+                                       PRBool*                  aHasPseudoParent);
 
   nsresult ConstructTableColGroupFrame(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
@@ -438,7 +438,7 @@ private:
                                        PRBool                   aIsPseudo,
                                        nsFrameItems&            aChildItems,
                                        nsIFrame*&               aNewFrame,
-                                       PRBool&                  aIsPseudoParent);
+                                       PRBool*                  aHasPseudoParent);
 
   nsresult ConstructTableRowFrame(nsFrameConstructorState& aState,
                                   nsIContent*              aContent,
@@ -448,7 +448,7 @@ private:
                                   PRBool                   aIsPseudo,
                                   nsFrameItems&            aChildItems,
                                   nsIFrame*&               aNewFrame,
-                                  PRBool&                  aIsPseudoParent);
+                                  PRBool*                  aHasPseudoParent);
 
   nsresult ConstructTableColFrame(nsFrameConstructorState& aState,
                                   nsIContent*              aContent,
@@ -458,7 +458,7 @@ private:
                                   PRBool                   aIsPseudo,
                                   nsFrameItems&            aChildItems,
                                   nsIFrame*&               aNewFrame,
-                                  PRBool&                  aIsPseudoParent);
+                                  PRBool*                  aHasPseudoParent);
 
   nsresult ConstructTableCellFrame(nsFrameConstructorState& aState,
                                    nsIContent*              aContent,
@@ -469,7 +469,7 @@ private:
                                    nsFrameItems&            aChildItems,
                                    nsIFrame*&               aNewCellOuterFrame,
                                    nsIFrame*&               aNewCellInnerFrame,
-                                   PRBool&                  aIsPseudoParent);
+                                   PRBool*                  aHasPseudoParent);
 
   nsresult CreatePseudoTableFrame(PRInt32                  aNameSpaceID,
                                   nsFrameConstructorState& aState, 
