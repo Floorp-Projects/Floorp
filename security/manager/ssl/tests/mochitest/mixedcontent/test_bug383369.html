@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 383369 test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  // We want to start this test from an insecure context
+  loadAsInsecure = true;
+  // We don't want to go through the navigation back/forward test
+  bypassNavigationTest = true;
+
+  function runTest()
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  
+    // Force download to be w/o user assistance for our testing mime type
+    const mimeSvc = Components.classes["@mozilla.org/mime;1"]
+      .getService(Components.interfaces.nsIMIMEService);
+    var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
+    handlerInfo.preferredAction = Components.interfaces.nsIHandlerInfo.saveToDisk;
+    handlerInfo.alwaysAskBeforeHandling = false;
+    handlerInfo.preferredApplicationHandler = null;
+    
+    const handlerSvc = Components.classes["@mozilla.org/uriloader/handler-service;1"]
+      .getService(Components.interfaces.nsIHandlerService);
+    handlerSvc.store(handlerInfo);
+    
+    var dirProvider = Components.classes["@mozilla.org/file/directory_service;1"]
+      .getService(Components.interfaces.nsIProperties);
+    var profileDir = dirProvider.get("ProfDS", Components.interfaces.nsIFile);
+    profileDir.append("downloads");
+    
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefService);
+    prefs = prefs.getBranch("browser.download.");
+        
+    prefs.setCharPref("dir", profileDir.path);
+    prefs.setIntPref("folderList", 2);
+    prefs.setBoolPref("manager.closeWhenDone", true);
+    prefs.setBoolPref("manager.showWhenStarting", false);
+  
+    var downloadManager = Components.classes["@mozilla.org/download-manager;1"]
+      .getService(Components.interfaces.nsIDownloadManager);
+    var theWindow = window;
+    window.setTimeout(function()
+    {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      downloadManager.cleanUp();
+      theWindow.location = "bug383369step2.html";
+    }, 3000);
+  
+    window.location = "download.auto";
+  }
+
+  function afterNavigationTest()
+  {
+  }
+  
+  testCleanUp = function cleanup()
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    const mimeSvc = Components.classes["@mozilla.org/mime;1"]
+      .getService(Components.interfaces.nsIMIMEService);
+    var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
+    
+    const handlerSvc = Components.classes["@mozilla.org/uriloader/handler-service;1"]
+      .getService(Components.interfaces.nsIHandlerService);
+    handlerSvc.remove(handlerInfo);
+    
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefService);
+    prefs = prefs.getBranch("browser.download.");
+
+    prefs.setCharPref("dir", "");
+    prefs.setIntPref("folderList", 0);
+    prefs.setBoolPref("manager.closeWhenDone", false);
+    prefs.setBoolPref("manager.showWhenStarting", true);
+  }
+  
+  </script>
+</head>
+
+<body>
+</body>
+</html>
