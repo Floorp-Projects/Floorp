@@ -248,7 +248,6 @@ public:
   static nsresult Init();
   static void Cleanup();
 
-  static PRBool nsSSLIOLayerInitialized;
   static PRDescIdentity nsSSLIOLayerIdentity;
   static PRIOMethods nsSSLIOLayerMethods;
 

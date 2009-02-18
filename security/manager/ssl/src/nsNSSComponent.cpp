@@ -275,34 +275,8 @@ nsTokenEventRunnable::Run()
   return nssComponent->DispatchEvent(mType, mTokenName);
 }
 
-// We must ensure that the nsNSSComponent has been loaded before
-// creating any other components.
-PRBool EnsureNSSInitialized(PRBool ensure)
-{
-  static PRBool haveLoaded = PR_FALSE;
-
-  if (!ensure) {
-    haveLoaded = PR_FALSE;
-    return PR_FALSE;
-  }
-
-  if (haveLoaded)
-    return PR_TRUE;
-
-  nsCOMPtr<nsISupports> nssComponent 
-    = do_GetService(PSM_COMPONENT_CONTRACTID);
-
-  // If we succeeded to get the PSM service rise the flag to avoid
-  // unnecessary calls to GetService.
-  if (nssComponent)
-    haveLoaded = PR_TRUE;
-
-  return haveLoaded;
-}
-
 nsNSSComponent::nsNSSComponent()
-  :mNSSInitialized(PR_FALSE), mThreadList(nsnull),
-   mSSLThread(NULL), mCertVerificationThread(NULL)
+  :mNSSInitialized(PR_FALSE), mThreadList(nsnull)
 {
   mutex = PR_NewLock();
   
@@ -322,11 +296,19 @@ nsNSSComponent::nsNSSComponent()
   // registering all identity data until first needed.
   memset(&mIdentityInfoCallOnce, 0, sizeof(PRCallOnceType));
 
+  nsSSLIOLayerHelpers::Init();
+  
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
   hashTableCerts = nsnull;
   mShutdownObjectList = nsNSSShutDownList::construct();
   mIsNetworkDown = PR_FALSE;
+  mSSLThread = new nsSSLThread();
+  if (mSSLThread)
+    mSSLThread->startThread();
+  mCertVerificationThread = new nsCertVerificationThread();
+  if (mCertVerificationThread)
+    mCertVerificationThread->startThread();
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -374,8 +356,6 @@ nsNSSComponent::~nsNSSComponent()
     PR_DestroyLock(mutex);
     mutex = nsnull;
   }
-
-  EnsureNSSInitialized(PR_FALSE);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor finished\n"));
 }
@@ -1490,6 +1470,9 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       return NS_ERROR_FAILURE;
     }
     
+    hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare, 
+      certHashtable_valueCompare, 0, 0 );
+
     nsresult rv;
     nsCAutoString profileStr;
     nsCOMPtr<nsIFile> profilePath;
@@ -1537,9 +1520,6 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
     rv = profilePath->GetNativePath(profileStr);
     if (NS_FAILED(rv)) 
       return rv;
-
-    hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare, 
-      certHashtable_valueCompare, 0, 0 );
 
   #if defined(XP_MACOSX)
     // function may modify the parameters
@@ -1730,7 +1710,8 @@ nsNSSComponent::Init()
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
 
-  if (!mutex || !mShutdownObjectList)
+  if (!mutex || !mShutdownObjectList || 
+      !mSSLThread || !mCertVerificationThread)
   {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS init, out of memory in constructor\n"));
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1766,28 +1747,7 @@ nsNSSComponent::Init()
   rv = InitializeNSS(PR_TRUE); // ok to show a warning box on failure
   if (NS_FAILED(rv)) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS.\n"));
-
-    DeregisterObservers();
-    mPIPNSSBundle = nsnull;
     return rv;
-  }
-
-  nsSSLIOLayerHelpers::Init();
-  
-  mSSLThread = new nsSSLThread();
-  if (mSSLThread)
-    mSSLThread->startThread();
-  mCertVerificationThread = new nsCertVerificationThread();
-  if (mCertVerificationThread)
-    mCertVerificationThread->startThread();
-
-  if (!mSSLThread || !mCertVerificationThread)
-  {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS init, could not create threads\n"));
-
-    DeregisterObservers();
-    mPIPNSSBundle = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   InitializeCRLUpdateTimer();
@@ -2222,31 +2182,6 @@ nsNSSComponent::RegisterObservers()
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsNSSComponent::DeregisterObservers()
-{
-  if (!mObserversRegistered)
-    return NS_OK;
-
-  nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
-  NS_ASSERTION(observerService, "could not get observer service");
-  if (observerService) {
-    mObserversRegistered = PR_FALSE;
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent: removing observers\n"));
-
-    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-    observerService->RemoveObserver(this, PROFILE_APPROVE_CHANGE_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC);
   }
   return NS_OK;
 }
