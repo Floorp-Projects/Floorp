@@ -74,6 +74,7 @@ _TEST_FILES	= \
 	460353_iframe_samemanifest.html \
 	test_obsolete.html \
 	obsolete.html \
+	obsoletingManifest.sjs \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
 	bypass.cacheManifest \
@@ -92,20 +93,17 @@ _TEST_FILES	= \
 	notonwhitelist.html \
 	onwhitelist.html \
 	onwhitelist.html^headers^ \
-	updatingIFrame.html \
-	updatingIFrame.html^headers^ \
+	updatingIframe.sjs \
 	updatingImplicit.html \
 	missingFile.cacheManifest \
 	missingFile.cacheManifest^headers^ \
 	simpleManifest.cacheManifest \
 	simpleManifest.cacheManifest^headers^ \
-	updating.cacheManifest \
-	updating.cacheManifest^headers^ \
+	updatingManifest.sjs \
 	simpleManifest.notmanifest \
 	changing1Sec.sjs \
 	changing1Hour.sjs \
-	changingManifest.cacheManifest \
-	changingManifest.cacheManifest^headers^ \
+	changingManifest.sjs \
 	offlineChild.html \
 	test_xhtmlManifest.xhtml \
 	test_missingManifest.html \
