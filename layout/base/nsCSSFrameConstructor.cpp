@@ -5434,16 +5434,20 @@ static
 PRBool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 {
   return (aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX || 
+#ifdef MOZ_XUL
           aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID || 
           aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK ||
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_BOX ||
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID ||
+#endif
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_BOX
+#ifdef MOZ_XUL
+          || aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_STACK ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_LINE ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_DECK ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_POPUP ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GROUPBOX
+#endif
           );
 }
 
@@ -5657,10 +5661,6 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
                                           nsIContent* aContent,
                                           nsStyleContext* aStyleContext)
 {
-  if (!IsXULDisplayType(aDisplay)) {
-    return nsnull;
-  }
-
   static const FrameConstructionDataByInt sXULDisplayData[] = {
     SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_INLINE_BOX, NS_NewBoxFrame),
     SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_BOX, NS_NewBoxFrame),
@@ -5716,6 +5716,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   if (!gfxScrollFrame) {
     // Build a XULScrollFrame when the child is a box, otherwise an
     // HTMLScrollFrame
+    // XXXbz this is the lone remaining consumer of IsXULDisplayType.
+    // I wonder whether we can eliminate that somehow.
     if (IsXULDisplayType(aContentStyle->GetStyleDisplay())) {
       gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot);
     } else {
