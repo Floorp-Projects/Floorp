@@ -79,4 +79,8 @@
 #undef JS_INTPTR_TYPE
 #undef JS_BYTES_PER_WORD
 
+/* Some mozilla code uses JS-friend APIs that depend on JS_TRACER being
+   correct. */
+#undef JS_TRACER
+
 #endif /* js_config_h___ */

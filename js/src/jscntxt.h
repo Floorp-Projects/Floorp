@@ -1401,17 +1401,53 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 extern JSBool
 js_InvokeOperationCallback(JSContext *cx);
 
+extern JSStackFrame *
+js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
+
+#ifdef JS_TRACER
+/*
+ * Reconstruct the JS stack and clear cx->onTrace. We must be currently
+ * executing a _FAIL builtin from trace on cx. The machine code for the trace
+ * remains on the C stack when js_DeepBail returns.
+ *
+ * Implemented in jstracer.cpp.
+ */
+JS_FORCES_STACK JS_FRIEND_API(void)
+js_DeepBail(JSContext *cx);
+#endif
+
+static JS_FORCES_STACK JS_INLINE void
+js_LeaveTrace(JSContext *cx)
+{
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx))
+        js_DeepBail(cx);
+#endif
+}
+
+static JS_INLINE JSBool
+js_CanLeaveTrace(JSContext *cx)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+#ifdef JS_TRACER
+    return cx->bailExit != NULL;
+#else
+    return JS_FALSE;
+#endif
+}
+
 /*
  * Get the current cx->fp, first lazily instantiating stack frames if needed.
  * (Do not access cx->fp directly except in JS_REQUIRES_STACK code.)
  *
  * Defined in jstracer.cpp if JS_TRACER is defined.
  */
-extern JS_FORCES_STACK JSStackFrame *
-js_GetTopStackFrame(JSContext *cx);
-
-extern JSStackFrame *
-js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
+static JS_FORCES_STACK JS_INLINE JSStackFrame *
+js_GetTopStackFrame(JSContext *cx)
+{
+    js_LeaveTrace(cx);
+    return cx->fp;
+}
 
 JS_END_EXTERN_C
 
