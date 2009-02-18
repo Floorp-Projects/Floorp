@@ -4010,10 +4010,15 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                 if (id == ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom))
                     return JS_TRUE;
 
-                /* Kludge to allow (typeof foo == "undefined") tests. */
-                pc += js_CodeSpec[op].length;
-                if (Detecting(cx, pc))
+                /* Do not warn about tests like (obj[prop] == undefined). */
+                if (cx->resolveFlags == JSRESOLVE_INFER) {
+                    js_LeaveTrace(cx);
+                    pc += js_CodeSpec[op].length;
+                    if (Detecting(cx, pc))
+                        return JS_TRUE;
+                } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
                     return JS_TRUE;
+                }
 
                 flags = JSREPORT_WARNING | JSREPORT_STRICT;
             }
