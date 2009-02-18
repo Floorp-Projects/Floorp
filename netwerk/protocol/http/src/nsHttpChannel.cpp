@@ -2762,6 +2762,21 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
                            getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
 
+    if (mApplicationCache) {
+        // if we are redirected to a different origin check if there is a fallback
+        // cache entry to fall back to. we don't care about file strict 
+        // checking, at least mURI is not a file URI.
+        if (!NS_SecurityCompareURIs(mURI, newURI, PR_FALSE)) {
+            PRBool fallingBack;
+            rv = ProcessFallback(&fallingBack);
+            if (NS_SUCCEEDED(rv) && fallingBack) {
+                // do not continue with redirect processing, fallback is in
+                // progress now.
+                return NS_OK;
+            }
+        }
+    }
+
     // Kill the current cache entry if we are redirecting
     // back to ourself.
     PRBool redirectingBackToSameURI = PR_FALSE;
