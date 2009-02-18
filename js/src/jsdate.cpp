@@ -51,7 +51,6 @@
  * Frederick Brooks, 'The Second-System Effect'.
  */
 
-#include "jsstddef.h"
 #include <ctype.h>
 #include <locale.h>
 #include <math.h>

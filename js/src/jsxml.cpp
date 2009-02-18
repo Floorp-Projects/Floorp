@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsstddef.h"
 #include "jsversion.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -1279,7 +1278,7 @@ ParseNodeToQName(JSContext *cx, JSParseContext *pc, JSParseNode *pn,
     limit = start + length;
     colon = js_strchr_limit(start, ':', limit);
     if (colon) {
-        offset = PTRDIFF(colon, start, jschar);
+        offset = colon - start;
         prefix = js_NewDependentString(cx, str, 0, offset);
         if (!prefix)
             return NULL;
@@ -1371,10 +1370,10 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
             break;
         --end;
     }
-    newlength = PTRDIFF(end, cp, jschar);
+    newlength = end - cp;
     if (newlength == length)
         return str;
-    offset = PTRDIFF(cp, start, jschar);
+    offset = cp - start;
     return js_NewDependentString(cx, str, offset, newlength);
 }
 
@@ -2460,13 +2459,13 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     while (--cp > start) {
         if (*cp == '.' || *cp == '/' || *cp == ':') {
             ++cp;
-            length = PTRDIFF(end, cp, jschar);
+            length = end - cp;
             if (IsXMLName(cp, length) && !STARTS_WITH_XML(cp, length))
                 break;
             end = --cp;
         }
     }
-    length = PTRDIFF(end, cp, jschar);
+    length = end - cp;
 
     /*
      * If the namespace consisted only of non-XML names or names that begin
@@ -2527,7 +2526,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     } while (!done);
 
     if (bp == cp) {
-        offset = PTRDIFF(cp, start, jschar);
+        offset = cp - start;
         prefix = js_NewDependentString(cx, uri, offset, length);
     } else {
         prefix = js_NewString(cx, bp, newlength);
