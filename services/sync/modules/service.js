@@ -603,9 +603,6 @@ WeaveSvc.prototype = {
       }
     }
 
-    // FIXME: too easy to generate a keypair.  we should be absolutely certain
-    // that the keys are not there (404) and that it's not some other
-    // transient network problem instead
     let needKeys = true;
     let pubkey = yield PubKeys.getDefaultKey(self.cb);
     if (pubkey) {
@@ -616,7 +613,6 @@ WeaveSvc.prototype = {
         ret = true;
       }
     }
-
     if (needKeys) {
       if (PubKeys.lastResource.lastChannel.responseStatus != 404 &&
 	  PrivKeys.lastResource.lastChannel.responseStatus != 404) {
@@ -791,18 +787,23 @@ WeaveSvc.prototype = {
     }
   },
 
+  // XXX deletes all known collections; we should have a way to delete
+  //     everything on the server by querying it to get all collections
   _wipeServer: function WeaveSvc__wipeServer() {
     let self = yield;
 
-    // tmp, delete all known collections
-    for each (let coll in ["keys", "crypto", "clients",
-			   "bookmarks", "history", "tabs"]) {
-      let res = new Resource(this.clusterURL + this.username + "/" + coll + "/");
+    let engines = Engines.getAll();
+    engines.push(Clients, {name: "keys"}, {name: "crypto"});
+    for each (let engine in engines) {
+      let url = this.clusterURL + this.username + "/" + engine.name + "/";
+      let res = new Resource(url);
       try {
 	yield res.delete(self.cb);
       } catch (e) {
 	this._log.debug("Exception on delete: " + Utils.exceptionStr(e));
       }
+      if (engine.resetLastSync)
+	engine.resetLastSync();
     }
   },
   wipeServer: function WeaveSvc_wipeServer(onComplete) {
