@@ -196,7 +196,6 @@ INSTALLED_HEADERS = \
 		jsscope.h \
 		jsscript.h \
 		jsstaticcheck.h \
-		jsstddef.h \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
