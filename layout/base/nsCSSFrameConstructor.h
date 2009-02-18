@@ -393,6 +393,34 @@ private:
 
   // BEGIN TABLE SECTION
   /**
+   * Construct an outer table frame.  This is the FrameConstructionData
+   * callback used for the job.
+   */
+  nsresult ConstructTable(nsFrameConstructorState& aState,
+                          nsIContent*              aContent,
+                          nsIFrame*                aParentFrame,
+                          nsIAtom*                 aTag,
+                          PRInt32                  aNameSpaceID,
+                          nsStyleContext*          aStyleContext,
+                          const nsStyleDisplay*    aDisplay,
+                          nsFrameItems&            aFrameItems,
+                          nsIFrame**               aNewFrame);
+  
+  /**
+   * Construct some part of a table other than the outer table frame.  This is
+   * the FrameConstructionData callback used for the job.
+   */
+  nsresult ConstructTablePart(nsFrameConstructorState& aState,
+                              nsIContent*              aContent,
+                              nsIFrame*                aParentFrame,
+                              nsIAtom*                 aTag,
+                              PRInt32                  aNameSpaceID,
+                              nsStyleContext*          aStyleContext,
+                              const nsStyleDisplay*    aDisplay,
+                              nsFrameItems&            aFrameItems,
+                              nsIFrame**               aNewFrame);
+  
+  /**
    * ConstructTableFrame will construct the outer and inner table frames and
    * return them.  Unless aIsPseudo is PR_TRUE, it will put the inner frame in
    * the child list of the outer frame, and will put any pseudo frames it had
@@ -552,6 +580,7 @@ private:
      @param aParentFrame the frame to set as the parent of the
                          newly-constructed frame.
      @param aTag the content's XBL-resolved tag.
+     @param aNameSpaceID the content's XBL-resolved namespace.
      @param aStyleContext the style context to use for the new frame.
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
@@ -563,6 +592,7 @@ private:
                                                     nsIContent* aContent,
                                                     nsIFrame* aParentFrame,
                                                     nsIAtom* aTag,
+                                                    PRInt32 aNameSpaceID,
                                                     nsStyleContext* aStyleContext,
                                                     const nsStyleDisplay* aStyleDisplay,
                                                     nsFrameItems& aFrameItems,
@@ -624,6 +654,10 @@ private:
      content when processing kids of this frame.  This should not be used with
      FCDATA_FUNC_IS_FULL_CTOR */
 #define FCDATA_DISALLOW_GENERATED_CONTENT 0x800
+  /* If FCDATA_IS_TABLE_PART is set, then the frame is some sort of
+     table-related thing and we should not attempt to fetch a table-cell parent
+     for it if it's inside another table-related frame. */
+#define FCDATA_IS_TABLE_PART 0x1000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -693,8 +727,7 @@ private:
    * @param aParentFrame the frame we think should be the parent.  This will be
    *        adjusted to point to a pseudo-frame if needed.
    * @param aFCData the FrameConstructionData that would be used for frame
-   *        construction.  If this is null, then frame construction will be
-   *        done based on the CSS display value.   
+   *        construction.
    * @param aNameSpaceID namespace that will be used for frame construction
    * @param aDisplay the display style struct for aChildContent
    * @param aFrameItems the framelist we think we need to put the child frame
@@ -740,6 +773,7 @@ private:
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsIAtom*                 aTag,
+                                PRInt32                  aNameSpaceID,
                                 nsStyleContext*          aStyleContext,
                                 const nsStyleDisplay*    aStyleDisplay,
                                 nsFrameItems&            aFrameItems,
@@ -751,6 +785,7 @@ private:
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsIAtom*                 aTag,
+                                PRInt32                  aNameSpaceID,
                                 nsStyleContext*          aStyleContext,
                                 const nsStyleDisplay*    aStyleDisplay,
                                 nsFrameItems&            aFrameItems,
@@ -762,6 +797,7 @@ private:
                                   nsIContent*              aContent,
                                   nsIFrame*                aParentFrame,
                                   nsIAtom*                 aTag,
+                                  PRInt32                  aNameSpaceID,
                                   nsStyleContext*          aStyleContext,
                                   const nsStyleDisplay*    aStyleDisplay,
                                   nsFrameItems&            aFrameItems,
@@ -925,21 +961,43 @@ private:
                                           nsIContent* aContent,
                                           nsIFrame* aParentFrame,
                                           nsIAtom* aTag,
+                                          PRInt32 aNameSpaceID,
                                           nsStyleContext* aStyleContext,
                                           const nsStyleDisplay* aStyleDisplay,
                                           nsFrameItems& aFrameItems,
                                           nsIFrame** aNewFrame);
 #endif
 
-  nsresult ConstructFrameByDisplayType(nsFrameConstructorState& aState,
-                                       const nsStyleDisplay*    aDisplay,
+  /* Not static because it does PropagateScrollToViewport.  If this
+     changes, make this static */
+  const FrameConstructionData*
+    FindDisplayData(const nsStyleDisplay* aDisplay, nsIContent* aContent);
+
+  /**
+   * Construct a scrollable block frame
+   */
+  nsresult ConstructScrollableBlock(nsFrameConstructorState& aState,
+                                    nsIContent*              aContent,
+                                    nsIFrame*                aParentFrame,
+                                    nsIAtom*                 aTag,
+                                    PRInt32                  aNameSpaceID,
+                                    nsStyleContext*          aStyleContext,
+                                    const nsStyleDisplay*    aDisplay,
+                                    nsFrameItems&            aFrameItems,
+                                    nsIFrame**               aNewFrame);
+
+  /**
+   * Construct a non-scrollable block frame
+   */
+  nsresult ConstructNonScrollableBlock(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
-                                       PRInt32                  aNameSpaceID,
-                                       nsIAtom*                 aTag,
                                        nsIFrame*                aParentFrame,
+                                       nsIAtom*                 aTag,
+                                       PRInt32                  aNameSpaceID,
                                        nsStyleContext*          aStyleContext,
+                                       const nsStyleDisplay*    aDisplay,
                                        nsFrameItems&            aFrameItems,
-                                       PRBool                   aHasPseudoParent);
+                                       nsIFrame**               aNewFrame);
 
   /**
    * Construct the frames for the children of aContent.  "children" is defined
@@ -1115,12 +1173,14 @@ private:
                           PRBool                   aAbsPosContainer);
 
   nsresult ConstructInline(nsFrameConstructorState& aState,
-                           const nsStyleDisplay*    aDisplay,
                            nsIContent*              aContent,
                            nsIFrame*                aParentFrame,
+                           nsIAtom*                 aTag,
+                           PRInt32                  aNameSpaceID,
                            nsStyleContext*          aStyleContext,
-                           PRBool                   aIsPositioned,
-                           nsIFrame*                aNewFrame);
+                           const nsStyleDisplay*    aDisplay,
+                           nsFrameItems&            aFrameItems,
+                           nsIFrame**               aNewFrame);
 
   /**
    * Move an already-constructed framelist into the inline frame at
