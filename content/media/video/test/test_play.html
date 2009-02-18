@@ -14,16 +14,27 @@ SimpleTest.waitForExplicitFinish();
 
 var v = document.getElementById("v");
 
-var playEvents = ["play", "canplay", "playing", "canplaythrough"];
+var tokens = {
+  0:                ["play"],
+  "play":           ["canplay"],
+  "canplay":        ["playing"],
+  "playing":        ["canplay", "canplaythrough"],
+  "canplaythrough": ["canplay", "canplaythrough"]
+};
+
+var state = 0;
+
 function gotPlayEvent(event) {
-  is(event.type, playEvents.shift(), "Check expected event");
-}
-for (var i = 0; i < playEvents.length; ++i) {
-  v.addEventListener(playEvents[i], gotPlayEvent, false);
+  ok(tokens[state].indexOf(event.type) >= 0, "Check expected event got " + event.type + " at " + state);
+  state = event.type;
 }
 
+["play", "canplay", "playing", "canplaythrough"].forEach(function (e) {
+  v.addEventListener(e, gotPlayEvent, false);
+});
+
 function ended() {
-  is(playEvents.length, 0, "Undelivered event " + playEvents[0]);
+  is(state, "canplaythrough", "Last event should be canplaythrough");
   SimpleTest.finish();
 }
 v.addEventListener("ended", ended, false);
