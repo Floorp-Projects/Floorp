@@ -777,6 +777,7 @@ nsComboboxControlFrame::GetDropDown()
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplaySelectedText()
 {
+  nsAutoScriptBlocker scriptBlocker;
   return RedisplayText(mListControlFrame->GetSelectedIndex());
 }
 
@@ -805,10 +806,14 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
     // displaying the wrong text.
     mRedisplayTextEvent.Revoke();
 
+    NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+                 "If we happen to run our redisplay event now, we might kill "
+                 "ourselves!");
+
     nsRefPtr<RedisplayTextEvent> event = new RedisplayTextEvent(this);
-    rv = NS_DispatchToCurrentThread(event);
-    if (NS_SUCCEEDED(rv))
-      mRedisplayTextEvent = event;
+    mRedisplayTextEvent = event;
+    if (!nsContentUtils::AddScriptRunner(event))
+      mRedisplayTextEvent.Forget();
   }
   return rv;
 }
@@ -874,19 +879,19 @@ nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
+nsComboboxControlFrame::AddOption(PRInt32 aIndex)
 {
   if (aIndex <= mDisplayedIndex) {
     ++mDisplayedIndex;
   }
 
   nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-  return lcf->AddOption(aPresContext, aIndex);
+  return lcf->AddOption(aIndex);
 }
   
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
+nsComboboxControlFrame::RemoveOption(PRInt32 aIndex)
 {
   if (mListControlFrame->GetNumberOfOptions() > 0) {
     if (aIndex < mDisplayedIndex) {
@@ -902,7 +907,7 @@ nsComboboxControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex
   }
 
   nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-  return lcf->RemoveOption(aPresContext, aIndex);
+  return lcf->RemoveOption(aIndex);
 }
 
 NS_IMETHODIMP
@@ -919,6 +924,7 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 NS_IMETHODIMP
 nsComboboxControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
+  nsAutoScriptBlocker scriptBlocker;
   RedisplayText(aNewIndex);
   NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
   
@@ -1433,21 +1439,23 @@ nsIScrollableView* nsComboboxControlFrame::GetScrollableView()
 // being selected or not selected
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::OnOptionSelected(nsPresContext* aPresContext,
-                                         PRInt32 aIndex,
-                                         PRBool aSelected)
+nsComboboxControlFrame::OnOptionSelected(PRInt32 aIndex, PRBool aSelected)
 {
   if (mDroppedDown) {
     nsISelectControlFrame *selectFrame = do_QueryFrame(mListControlFrame);
     if (selectFrame) {
-      selectFrame->OnOptionSelected(aPresContext, aIndex, aSelected);
+      selectFrame->OnOptionSelected(aIndex, aSelected);
     }
   } else {
     if (aSelected) {
+      nsAutoScriptBlocker blocker;
       RedisplayText(aIndex);
     } else {
+      nsWeakFrame weakFrame(this);
       RedisplaySelectedText();
-      FireValueChangeEvent(); // Fire after old option is unselected
+      if (weakFrame.IsAlive()) {
+        FireValueChangeEvent(); // Fire after old option is unselected
+      }
     }
   }
 
