@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 383369 test, step 2</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/does_not_exist.css">
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  window.onload = function runTest()
+  {
+    window.setTimeout(function () 
+    {
+      window.location = 
+        "https://example.com/tests/security/ssl/mixedcontent/bug383369step3.html?runtest";
+    }, 0);
+  }
+
+  function afterNavigationTest()
+  {
+  }
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>
