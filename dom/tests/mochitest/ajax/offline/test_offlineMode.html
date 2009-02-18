@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updating.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs">
 <head>
 <title>Offline mode test</title>
 
@@ -41,7 +41,7 @@ function dynamicAdded()
 function notwhitelistOnLoad()
 {
   gGotDynamicVersion = 1;
-  aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html";
+  aFrame.location = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs";
 }
 
 // Called by the explicit iframe on load
@@ -75,7 +75,7 @@ function finalize()
   if (!ioserv.offline)
   {
     OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true);
-    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html", true);
+    OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", true);
     OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
 
     OfflineTest.is(gGotExplicitVersion, 1, "Explicit entry loaded");
@@ -96,7 +96,7 @@ function finalize()
       entry.doom();
     }
     doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
-    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIFrame.html");
+    doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs");
     doomHTTPCacheEntry("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
 
 
