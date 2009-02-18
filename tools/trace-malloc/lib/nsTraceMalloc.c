@@ -1995,9 +1995,10 @@ PR_IMPLEMENT(nsTMStackTraceID)
 NS_TraceMallocGetStackTrace(void)
 {
     callsite *site;
+    int dummy;
     tm_thread *t = tm_get_thread();
 
-    site = backtrace(t, 2);
+    site = backtrace(t, 2, &dummy);
     return (nsTMStackTraceID) site;
 }
 
