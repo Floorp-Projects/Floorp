@@ -1273,9 +1273,7 @@ nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex) const
 }
 
 NS_IMETHODIMP
-nsListControlFrame::OnOptionSelected(nsPresContext* aPresContext,
-                                     PRInt32 aIndex,
-                                     PRBool aSelected)
+nsListControlFrame::OnOptionSelected(PRInt32 aIndex, PRBool aSelected)
 {
   if (aSelected) {
     ScrollToIndex(aIndex);
@@ -1466,7 +1464,7 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
+nsListControlFrame::AddOption(PRInt32 aIndex)
 {
 #ifdef DO_REFLOW_DEBUG
   printf("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
@@ -1493,7 +1491,7 @@ nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
+nsListControlFrame::RemoveOption(PRInt32 aIndex)
 {
   // Need to reset if we're a dropdown
   if (IsInDropDownMode()) {
@@ -1585,15 +1583,15 @@ nsListControlFrame::UpdateSelection()
 {
   if (mIsAllFramesHere) {
     // if it's a combobox, display the new text
+    nsWeakFrame weakFrame(this);
     if (mComboboxFrame) {
       mComboboxFrame->RedisplaySelectedText();
     }
     // if it's a listbox, fire on change
     else if (mIsAllContentHere) {
-      nsWeakFrame weakFrame(this);
       FireOnChange();
-      return weakFrame.IsAlive();
     }
+    return weakFrame.IsAlive();
   }
   return PR_TRUE;
 }
@@ -1608,11 +1606,15 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
 
     PRInt32 displayIndex = mComboboxFrame->GetIndexOfDisplayArea();
 
+    nsWeakFrame weakFrame(this);
+
     if (displayIndex != aIndex) {
-      mComboboxFrame->RedisplaySelectedText();
+      mComboboxFrame->RedisplaySelectedText(); // might destroy us
     }
 
-    mComboboxFrame->RollupFromList(); // might destroy us
+    if (weakFrame.IsAlive() && mComboboxFrame) {
+      mComboboxFrame->RollupFromList(); // might destroy us
+    }
   }
 }
 
