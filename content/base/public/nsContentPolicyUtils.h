@@ -261,8 +261,20 @@ NS_CheckContentProcessPolicy(PRUint32          contentType,
  * will be returned.
  *
  * @param aContext the context to find a docshell for (can be null)
+ *
  * @return a WEAK pointer to the docshell, or nsnull if it could
  *     not be obtained
+ *     
+ * @note  As of this writing, calls to nsIContentPolicy::Should{Load,Process}
+ * for TYPE_DOCUMENT and TYPE_SUBDOCUMENT pass in an aContext that either
+ * points to the frameElement of the window the load is happening in
+ * (in which case NS_CP_GetDocShellFromContext will return the parent of the
+ * docshell the load is happening in), or points to the window the load is
+ * happening in (in which case NS_CP_GetDocShellFromContext will return
+ * the docshell the load is happening in).  It's up to callers to QI aContext
+ * and handle things accordingly if they want the docshell the load is
+ * happening in.  These are somewhat odd semantics, and bug 466687 has been
+ * filed to consider improving them.
  */
 inline nsIDocShell*
 NS_CP_GetDocShellFromContext(nsISupports *aContext)
