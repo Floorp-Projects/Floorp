@@ -51,6 +51,7 @@ XPIDL_MODULE = browsercompsbase
 
 EXTRA_COMPONENTS = \
 	aboutFirstrun.js \
+	geolocationPrompt.js \
 	$(NULL)
 
 DIRS = protocols \
