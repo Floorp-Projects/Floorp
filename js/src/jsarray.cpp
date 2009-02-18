@@ -1540,23 +1540,23 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector,
 static JSString* FASTCALL
 Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
 {
-    jsval v;
-    if (!array_join_sub(cx, obj, TO_STRING, str, &v)) {
+    JSAutoTempValueRooter tvr(cx);
+    if (!array_join_sub(cx, obj, TO_STRING, str, tvr.addr())) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return NULL;
     }
-    JS_ASSERT(JSVAL_IS_STRING(v));
-    return JSVAL_TO_STRING(v);
+    return JSVAL_TO_STRING(tvr.value());
 }
 
 static JSString* FASTCALL
 Array_p_toString(JSContext* cx, JSObject* obj)
 {
-    jsval v;
-    if (!array_join_sub(cx, obj, TO_STRING, NULL, &v))
+    JSAutoTempValueRooter tvr(cx);
+    if (!array_join_sub(cx, obj, TO_STRING, NULL, tvr.addr())) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
         return NULL;
-    JS_ASSERT(JSVAL_IS_STRING(v));
-    return JSVAL_TO_STRING(v);
+    }
+    return JSVAL_TO_STRING(tvr.value());
 }
 #endif
 
@@ -2163,10 +2163,11 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
 static jsval FASTCALL
 Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
 {
+    JSAutoTempValueRooter tvr(cx, v);
     if (OBJ_IS_DENSE_ARRAY(cx, obj)
-        ? array_push1_dense(cx, obj, v, &v)
-        : array_push_slowly(cx, obj, 1, &v, &v)) {
-        return v;
+        ? array_push1_dense(cx, obj, v, tvr.addr())
+        : array_push_slowly(cx, obj, 1, tvr.addr(), tvr.addr())) {
+        return tvr.value();
     }
     cx->builtinStatus |= JSBUILTIN_ERROR;
     return JSVAL_VOID;
@@ -2234,11 +2235,11 @@ array_pop_dense(JSContext *cx, JSObject* obj, jsval *vp)
 static jsval FASTCALL
 Array_p_pop(JSContext* cx, JSObject* obj)
 {
-    jsval v;
+    JSAutoTempValueRooter tvr(cx);
     if (OBJ_IS_DENSE_ARRAY(cx, obj)
-        ? array_pop_dense(cx, obj, &v)
-        : array_pop_slowly(cx, obj, &v)) {
-        return v;
+        ? array_pop_dense(cx, obj, tvr.addr())
+        : array_pop_slowly(cx, obj, tvr.addr())) {
+        return tvr.value();
     }
     cx->builtinStatus |= JSBUILTIN_ERROR;
     return JSVAL_VOID;

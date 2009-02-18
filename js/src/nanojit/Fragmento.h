@@ -141,8 +141,8 @@ namespace nanojit
 			
 			uint32_t cacheUsed() const { return (_stats.pages-_freePages.size())<<NJ_LOG2_PAGE_SIZE; }
 			uint32_t cacheUsedMax() const { return (_stats.maxPageUse)<<NJ_LOG2_PAGE_SIZE; }
-		private:
 		    void        clearFragment(Fragment *f);
+		private:
 			void		pagesGrow(int32_t count);
 			void		trackPages();
 
@@ -191,6 +191,7 @@ namespace nanojit
 			void			releaseTreeMem(Fragmento* frago);
 			bool			isAnchor() { return anchor == this; }
 			bool			isRoot() { return root == this; }
+			void            onDestroy();
 			
 			verbose_only( uint32_t		_called; )
 			verbose_only( uint32_t		_native; )

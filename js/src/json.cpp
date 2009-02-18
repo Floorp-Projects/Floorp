@@ -69,14 +69,12 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
     JSString *s = NULL;
     jsval *argv = vp + 2;
 
-    // Must throw an Error if there isn't a first arg
-    if (!JS_ConvertArguments(cx, argc, argv, "S", &s))
+    if (!JS_ConvertArguments(cx, argc, argv, "S", &s)) {
         return JS_FALSE;
-
+    }
 
     JSONParser *jp = js_BeginJSONParse(cx, vp);
     JSBool ok = jp != NULL;
-
     if (ok) {
         ok = js_ConsumeJSONText(cx, jp, JS_GetStringChars(s), JS_GetStringLength(s));
         ok &= js_FinishJSONParse(cx, jp);
@@ -124,26 +122,22 @@ WriteCallback(const jschar *buf, uint32 len, void *data)
 JSBool
 js_json_stringify(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *obj;
     jsval *argv = vp + 2;
-    
+    JSBool ok = JS_TRUE;
+
     // Must throw an Error if there isn't a first arg
-    if (!JS_ConvertArguments(cx, argc, argv, "o", &obj))
+    if (!JS_ConvertArguments(cx, argc, argv, "v", vp))
         return JS_FALSE;
 
-    // Only use objects and arrays as the root for now
-    *vp = OBJECT_TO_JSVAL(obj);
-    
-    JSBool ok = js_TryJSON(cx, vp);
+    ok = js_TryJSON(cx, vp);
+
     JSType type;
-    if (!ok ||
-        JSVAL_IS_PRIMITIVE(*vp) ||
-        ((type = JS_TypeOfValue(cx, *vp)) == JSTYPE_FUNCTION ||
-        type == JSTYPE_XML)) {
+    if (!ok || *vp == JSVAL_VOID || 
+        ((type = JS_TypeOfValue(cx, *vp)) == JSTYPE_FUNCTION || type == JSTYPE_XML)) {
         JS_ReportError(cx, "Invalid argument");
         return JS_FALSE;
     }
-    
+
     JSString *s = JS_NewStringCopyN(cx, "", 0);
     if (!s)
         ok = JS_FALSE;
@@ -218,9 +212,47 @@ write_string(JSContext *cx, JSONWriteCallback callback, void *data, const jschar
     return JS_TRUE;
 }
 
-JSBool
-js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
-             JSONWriteCallback callback, void *data, uint32 depth)
+static JSBool
+stringify_primitive(JSContext *cx, jsval *vp, 
+                    JSONWriteCallback callback, void *data, JSType type) {
+
+    JSString *outputString;
+    JSString *s = js_ValueToString(cx, *vp);
+
+    if (!s)
+        return JS_FALSE;
+
+    if (type == JSTYPE_STRING)
+        return write_string(cx, callback, data, JS_GetStringChars(s), JS_GetStringLength(s));
+
+    if (type == JSTYPE_NUMBER) {
+        if (JSVAL_IS_DOUBLE(*vp)) {
+            jsdouble d = *JSVAL_TO_DOUBLE(*vp);
+            if (!JSDOUBLE_IS_FINITE(d))
+                outputString = JS_NewStringCopyN(cx, "null", 4);
+            else
+                outputString = s;
+        } else {
+            outputString = s;
+        }
+    } else if (type == JSTYPE_BOOLEAN) {
+        outputString = s;
+    } else if (JSVAL_IS_NULL(*vp)) {
+        outputString = JS_NewStringCopyN(cx, "null", 4);
+    } else {
+        JS_NOT_REACHED("A type we don't know about");
+        return JS_FALSE; // encoding error
+    }
+
+    if (!outputString)
+        return JS_FALSE;
+
+    return callback(JS_GetStringChars(outputString), JS_GetStringLength(outputString), data);
+}
+
+static JSBool
+stringify(JSContext *cx, jsval *vp, JSObject *replacer,
+          JSONWriteCallback callback, void *data, uint32 depth)
 {
     if (depth > JSON_MAX_DEPTH)
         return JS_FALSE; /* encoding error */
@@ -276,8 +308,20 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
                 }
             }
 
-            ok = JS_GetUCProperty(cx, obj, JS_GetStringChars(ks),
-                                  JS_GetStringLength(ks), &outputValue);
+            // Don't include prototype properties, since this operation is
+            // supposed to be implemented as if by ES3.1 Object.keys()
+            jsid id;
+            jsval v = JS_FALSE;
+            if (!js_ValueToStringId(cx, STRING_TO_JSVAL(ks), &id) ||
+                !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v)) {
+                ok = JS_FALSE;
+                break;
+            } else if (v == JSVAL_TRUE) {
+                ok = JS_GetUCProperty(cx, obj, JS_GetStringChars(ks),
+                                      JS_GetStringLength(ks), &outputValue);
+            } else {
+                continue;
+            }
         }
 
         if (!ok)
@@ -301,7 +345,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
             output = jschar(',');
             ok = callback(&output, 1, data);
         if (!ok)
-                break;
+            break;
         }
         memberWritten = JS_TRUE;
 
@@ -334,48 +378,9 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
 
         if (!JSVAL_IS_PRIMITIVE(outputValue)) {
             // recurse
-            ok = js_Stringify(cx, &outputValue, replacer, callback, data, depth + 1);
+            ok = stringify(cx, &outputValue, replacer, callback, data, depth + 1);
         } else {
-            JSString *outputString;
-            s = js_ValueToString(cx, outputValue);
-            if (!s) {
-                ok = JS_FALSE;
-                break;
-            }
-
-            if (type == JSTYPE_STRING) {
-                ok = write_string(cx, callback, data, JS_GetStringChars(s), JS_GetStringLength(s));
-                if (!ok)
-                    break;
-
-                continue;
-            }
-
-            if (type == JSTYPE_NUMBER) {
-                if (JSVAL_IS_DOUBLE(outputValue)) {
-                    jsdouble d = *JSVAL_TO_DOUBLE(outputValue);
-                    if (!JSDOUBLE_IS_FINITE(d))
-                        outputString = JS_NewStringCopyN(cx, "null", 4);
-                    else
-                        outputString = s;
-                } else {
-                    outputString = s;
-                }
-            } else if (type == JSTYPE_BOOLEAN) {
-                outputString = s;
-            } else if (JSVAL_IS_NULL(outputValue)) {
-                outputString = JS_NewStringCopyN(cx, "null", 4);
-            } else {
-                ok = JS_FALSE; // encoding error
-                break;
-            }
-
-            if (!outputString) {
-                ok = JS_FALSE;
-                break;
-            }
-
-            ok = callback(JS_GetStringChars(outputString), JS_GetStringLength(outputString), data);
+            ok = stringify_primitive(cx, &outputValue, callback, data, type);
         }
     } while (ok);
 
@@ -385,13 +390,29 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
         // encoding error or propagate? FIXME: Bug 408838.
     }
 
-    if (!ok) {
-        JS_ReportError(cx, "Error during JSON encoding");
+    if (!ok)
         return JS_FALSE;
-    }
 
     output = jschar(isArray ? ']' : '}');
     ok = callback(&output, 1, data);
+
+    return ok;                      
+}
+
+JSBool
+js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
+             JSONWriteCallback callback, void *data, uint32 depth)
+{
+    JSBool ok = JS_TRUE;
+
+    if (JSVAL_IS_PRIMITIVE(*vp)) {
+        ok = stringify_primitive(cx, vp, callback, data, JS_TypeOfValue(cx, *vp));
+    } else {
+        ok = stringify(cx, vp, replacer, callback, data, depth);
+    }
+
+    if (!ok)
+        JS_ReportError(cx, "Error during JSON encoding");
 
     return ok;
 }
@@ -401,6 +422,9 @@ static JSBool IsNumChar(jschar c)
 {
     return ((c <= '9' && c >= '0') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E');
 }
+
+static JSBool HandleData(JSContext *cx, JSONParser *jp, JSONDataType type);
+static JSBool PopState(JSONParser *jp);
 
 JSONParser *
 js_BeginJSONParse(JSContext *cx, jsval *rootVal)
@@ -450,6 +474,20 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp)
     if (!jp)
         return JS_TRUE;
 
+    // Check for unprocessed primitives at the root. This doesn't happen for
+    // strings because a closing quote triggers value processing.
+    if ((jp->statep - jp->stateStack) == 1) {
+        if (*jp->statep == JSON_PARSE_STATE_KEYWORD) {
+            if (HandleData(cx, jp, JSON_DATA_KEYWORD)) {
+                PopState(jp);
+            }
+        } else if (*jp->statep == JSON_PARSE_STATE_NUMBER) {
+            if (HandleData(cx, jp, JSON_DATA_NUMBER)) {
+                PopState(jp);
+            }
+        }
+    }
+
     if (jp->objectKey)
         js_FinishStringBuffer(jp->objectKey);
     JS_free(cx, jp->objectKey);
@@ -457,7 +495,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp)
     if (jp->buffer)
         js_FinishStringBuffer(jp->buffer);
     JS_free(cx, jp->buffer);
-    
+
     if (!js_RemoveRoot(cx->runtime, &jp->objectStack))
         return JS_FALSE;
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
@@ -567,11 +605,14 @@ GetTopOfObjectStack(JSContext *cx, JSONParser *jp)
     jsuint length;
     if (!js_GetLengthProperty(cx, jp->objectStack, &length))
         return NULL;
-    
+
+    if (length == 0)
+        return NULL;
+
     jsval o;
     if (!OBJ_GET_PROPERTY(cx, jp->objectStack, INT_TO_JSID(length - 1), &o))
         return NULL;
-    
+
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(o));
     return JSVAL_TO_OBJECT(o);
 }
@@ -623,15 +664,18 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
     if (!js_strtod(cx, buf, buf + len, &ep, &val) || ep != buf + len)
         return JS_FALSE;
 
-    JSBool ok;
     jsval numVal;
     JSObject *obj = GetTopOfObjectStack(cx, jp);
-    if (obj && JS_NewNumberValue(cx, val, &numVal))
-        ok = PushValue(cx, jp, obj, numVal);
-    else
-        ok = JS_FALSE; // decode error
 
-    return ok;
+    if (!JS_NewNumberValue(cx, val, &numVal))
+        return JS_FALSE;
+
+    if (obj)
+        return PushValue(cx, jp, obj, numVal);
+
+    // nothing on the object stack, so number value as root
+    *jp->rootVal = numVal;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -639,10 +683,15 @@ HandleString(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 {
     JSObject *obj = GetTopOfObjectStack(cx, jp);
     JSString *str = js_NewStringCopyN(cx, buf, len);
-    if (!obj || !str)
+    if (!str)
         return JS_FALSE;
 
-    return PushValue(cx, jp, obj, STRING_TO_JSVAL(str));
+    if (obj)
+        return PushValue(cx, jp, obj, STRING_TO_JSVAL(str));
+
+    // root value must be primitive
+    *jp->rootVal = STRING_TO_JSVAL(str);
+    return JS_TRUE;
 }
 
 static JSBool
@@ -663,10 +712,12 @@ HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
         return JS_FALSE;
 
     JSObject *obj = GetTopOfObjectStack(cx, jp);
-    if (!obj)
-        return JS_FALSE;
+    if (obj)
+        return PushValue(cx, jp, obj, keyword);
 
-    return PushValue(cx, jp, obj, keyword);
+    // root value must be primitive
+    *jp->rootVal = keyword;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -711,7 +762,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
     uint32 i;
 
     if (*jp->statep == JSON_PARSE_STATE_INIT) {
-        PushState(jp, JSON_PARSE_STATE_OBJECT_VALUE);
+        PushState(jp, JSON_PARSE_STATE_VALUE);
     }
 
     for (i = 0; i < len; i++) {
@@ -930,8 +981,8 @@ static JSFunctionSpec json_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  json_toSource,      0, 0),
 #endif
-    JS_FN("parse",          js_json_parse,      0, 0),
-    JS_FN("stringify",      js_json_stringify,  0, 0),
+    JS_FN("parse",          js_json_parse,      1, 0),
+    JS_FN("stringify",      js_json_stringify,  1, 0),
     JS_FS_END
 };
 

@@ -1874,9 +1874,14 @@ JS_malloc(JSContext *cx, size_t nbytes)
 JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes)
 {
+    void *orig = p;
     p = realloc(p, nbytes);
-    if (!p)
+    if (!p) {
         JS_ReportOutOfMemory(cx);
+        return NULL;
+    }
+    if (!orig)
+        js_UpdateMallocCounter(cx, nbytes);
     return p;
 }
 

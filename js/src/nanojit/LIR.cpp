@@ -88,7 +88,13 @@ namespace nanojit
 	
 	// LCompressedBuffer
 	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
-		: _frago(frago), _functions(functions), abi(ABI_FASTCALL), _pages(frago->core()->GetGC())
+		: _frago(frago),
+#ifdef NJ_VERBOSE
+		  names(NULL),
+#endif
+		  _functions(functions), abi(ABI_FASTCALL),
+		  state(NULL), param1(NULL), sp(NULL), rp(NULL),
+		  _pages(frago->core()->GetGC())
 	{
 		rewind();
 	}
@@ -683,8 +689,13 @@ namespace nanojit
         return *(const uint64_t*)ptr;
     #else
         union { uint64_t tmp; int32_t dst[2]; } u;
+		#ifdef AVMPLUS_BIG_ENDIAN
+        u.dst[0] = l->v[1];
+        u.dst[1] = l->v[0];
+		#else
         u.dst[0] = l->v[0];
         u.dst[1] = l->v[1];
+		#endif
         return u.tmp;
     #endif
 	}
@@ -698,8 +709,13 @@ namespace nanojit
 		return *(const double*)ptr;
 	#else
 		union { uint32_t dst[2]; double tmpf; } u;
+		#ifdef AVMPLUS_BIG_ENDIAN
+		u.dst[0] = l->v[1];
+		u.dst[1] = l->v[0];
+		#else
 		u.dst[0] = l->v[0];
 		u.dst[1] = l->v[1];
+		#endif
 		return u.tmpf;
 	#endif
 	}
@@ -974,10 +990,14 @@ namespace nanojit
 					return 0; // no guard needed
 				}
 				else {
-					// need a way to EOT now, since this is trace end.
 #ifdef JS_TRACER
-				    NanoAssertMsg(0, "need a way to EOT now, since this is trace end");
-#endif				    
+					// We're emitting a guard that will always fail. Any code
+					// emitted after this guard is dead code. We could
+					// silently optimize out the rest of the emitted code, but
+					// this could indicate a performance problem or other bug,
+					// so assert in debug builds.
+					NanoAssertMsg(0, "Constantly false guard detected");
+#endif
 					return out->insGuard(LIR_x, out->insImm(1), x);
 				}
 			}
@@ -1883,6 +1903,7 @@ namespace nanojit
 			case LIR_xt:
 			case LIR_xf:
 			case LIR_xbarrier:
+			case LIR_xtbl:
 				formatGuard(i, s);
 				break;
 
