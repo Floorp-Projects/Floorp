@@ -77,9 +77,7 @@ public:
 
     // initialize with Apple-type weight [1..14]
     MacOSFontEntry(const nsAString& aPostscriptName, PRInt32 aAppleWeight, PRUint32 aTraits, 
-                   MacOSFamilyEntry *aFamily, PRBool aIsStandardFace = PR_FALSE);
-
-    const nsString& FamilyName();
+                   PRBool aIsStandardFace = PR_FALSE);
 
     PRUint32 Traits() { return mTraits; }
     
@@ -93,7 +91,6 @@ protected:
                    gfxUserFontData *aUserFontData);
 
     PRUint32 mTraits;
-    MacOSFamilyEntry *mFamily;
 
     ATSUFontID mATSUFontID;
     PRPackedBool mATSUIDInitialized;
