@@ -138,11 +138,15 @@ Preferences.prototype = {
   },
 
   reset: function(prefName) {
-    this._prefSvc.clearUserPref(prefName);
+    try {
+      this._prefSvc.clearUserPref(prefName);
+    } catch (e) {}
   },
 
   resetBranch: function(prefBranch) {
-    this._prefSvc.resetBranch(prefBranch);
+    try {
+      this._prefSvc.resetBranch(prefBranch);
+    } catch (e) {}
   }
 
 };
