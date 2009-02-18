@@ -859,8 +859,7 @@ MaybeGC(JSContext *cx)
 {
   size_t bytes = cx->runtime->gcBytes;
   size_t lastBytes = cx->runtime->gcLastBytes;
-
-  if ((bytes > 8192 && bytes / 16 > lastBytes)
+  if ((bytes > 8192 && bytes > lastBytes * 16)
 #ifdef DEBUG
       || cx->runtime->gcZeal > 0
 #endif

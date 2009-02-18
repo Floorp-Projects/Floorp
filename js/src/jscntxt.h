@@ -1050,7 +1050,7 @@ class JSAutoTempValueRooter
         : mContext(cx) {
         JS_PUSH_TEMP_ROOT(mContext, len, vec, &mTvr);
     }
-    JSAutoTempValueRooter(JSContext *cx, jsval v)
+    explicit JSAutoTempValueRooter(JSContext *cx, jsval v = JSVAL_NULL)
         : mContext(cx) {
         JS_PUSH_SINGLE_TEMP_ROOT(mContext, v, &mTvr);
     }
@@ -1063,6 +1063,9 @@ class JSAutoTempValueRooter
         JS_POP_TEMP_ROOT(mContext, &mTvr);
     }
 
+    jsval value() { return mTvr.u.value; }
+    jsval * addr() { return &mTvr.u.value; }
+
   protected:
     JSContext *mContext;
 
@@ -1072,6 +1075,26 @@ class JSAutoTempValueRooter
     static void operator delete(void *, size_t);
 #endif
 
+    JSTempValueRooter mTvr;
+};
+
+class JSAutoTempIdRooter
+{
+public:
+    explicit JSAutoTempIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0))
+        : mContext(cx) {
+        JS_PUSH_SINGLE_TEMP_ROOT(mContext, ID_TO_VALUE(id), &mTvr);
+    }
+
+    ~JSAutoTempIdRooter() {
+        JS_POP_TEMP_ROOT(mContext, &mTvr);
+    }
+
+    jsid id() { return (jsid) mTvr.u.value; }
+    jsid * addr() { return (jsid *) &mTvr.u.value; }
+
+private:
+    JSContext *mContext;
     JSTempValueRooter mTvr;
 };
 

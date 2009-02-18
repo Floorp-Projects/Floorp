@@ -116,13 +116,14 @@ static JS_ALWAYS_INLINE jsval
 OBJECT_TO_JSVAL(JSObject *obj)
 {
     JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
-    JS_ASSERT(((jsval) obj & JSVAL_TAGBITS) == JSVAL_OBJECT);
+    JS_ASSERT(((jsval) obj & JSVAL_TAGMASK) == JSVAL_OBJECT);
     return (jsval) obj;
 }
 
 static JS_ALWAYS_INLINE jsval
 DOUBLE_TO_JSVAL(jsdouble *dp)
 {
+    JS_ASSERT(((jsword) dp & JSVAL_TAGMASK) == 0);
     return JSVAL_SETTAG((jsval) dp, JSVAL_DOUBLE);
 }
 
@@ -160,8 +161,8 @@ STRING_TO_JSVAL(JSString *str)
  * SpiderMonkey.
  */
 #define JSVAL_TO_PSEUDO_BOOLEAN(v) ((JSBool) ((v) >> JSVAL_TAGBITS))
-#define PSEUDO_BOOLEAN_TO_JSVAL(b) \
-  JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_BOOLEAN)
+#define PSEUDO_BOOLEAN_TO_JSVAL(b)                                            \
+    JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_BOOLEAN)
 
 /*
  * Well-known JS values.  The extern'd variables are initialized when the
@@ -179,15 +180,15 @@ STRING_TO_JSVAL(JSString *str)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_TO_BOOLEAN(jsval v)
 {
-  JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE);
-  return JSVAL_TO_PSEUDO_BOOLEAN(v);
+    JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE);
+    return JSVAL_TO_PSEUDO_BOOLEAN(v);
 }
 
 static JS_ALWAYS_INLINE jsval
 BOOLEAN_TO_JSVAL(JSBool b)
 {
-  JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
-  return PSEUDO_BOOLEAN_TO_JSVAL(b);
+    JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
+    return PSEUDO_BOOLEAN_TO_JSVAL(b);
 }
 
 /* A private data pointer (2-byte-aligned) can be stored as an int jsval. */

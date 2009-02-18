@@ -83,10 +83,10 @@ function getTestPairs() {
   //testPairs.push(['[1]', x]);
 
   // prototype
-  var X = function() { this.a = "b" }
+  var X = function() { this.foo = "b" }
   X.prototype = {c:"d"}
   var y = new X();
-  testPairs.push(['{"a":"b","c":"d"}', y]);
+  testPairs.push(['{"foo":"b"}', y]);
 
   // useless roots will be dropped
   testPairs.push([null, null]);

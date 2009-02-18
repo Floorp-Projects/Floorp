@@ -46,6 +46,14 @@
 
 #include "jstypes.h"
 
+#if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
+#ifdef IS_BIG_ENDIAN
+#define AVMPLUS_BIG_ENDIAN
+#else
+#define AVMPLUS_LITTLE_ENDIAN
+#endif
+#endif
+
 #define FASTCALL JS_FASTCALL
 
 #if defined(JS_NO_FASTCALL)
@@ -145,10 +153,6 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
-namespace nanojit { 
-  class LirBuffer;
-}
-
 namespace avmplus {
     
     class GC;
@@ -162,9 +166,6 @@ namespace avmplus {
             return calloc(1, size);
         }
         
-        // We use placement-new in LIR buffers sometimes.
-        void* operator new(size_t size, nanojit::LirBuffer *buf);
-    
         static void operator delete (void *gcObject)
         {
             free(gcObject); 

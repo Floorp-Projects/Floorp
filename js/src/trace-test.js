@@ -4340,6 +4340,16 @@ function testGeneratorDeepBail() {
 testGeneratorDeepBail.expected = 3;
 test(testGeneratorDeepBail);
 
+function testRegexpGet() {
+    var re = /hi/;
+    var a = [];
+    for (let i = 0; i < 5; ++i)
+        a.push(re.source);
+    return a.toString();
+}
+testRegexpGet.expected = "hi,hi,hi,hi,hi";
+test(testRegexpGet);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
@@ -4386,10 +4396,6 @@ load("mandelbrot-results.js");
   const scaler = 5;
   const numRows = 600;
   const numCols = 600;
-
-  // For now, avoid hitting memory pressure
-  gcparam("maxBytes", 1300000000);
-  gcparam("maxMallocBytes", 1300000000);
 
   const colorNames = [
     "black",
