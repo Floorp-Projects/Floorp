@@ -50,6 +50,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES	= \
         opp.html \
         script.js \
+        redirectToDifferentOrigin.sjs \
         $(NULL)
 
 libs::	$(_TEST_FILES)
