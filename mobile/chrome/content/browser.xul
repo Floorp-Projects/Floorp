@@ -205,9 +205,8 @@
           left="-132" top="60"
           constraint="ignore-y,vp-relative">
       <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onmouseup="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this);"/>
-      <hbox>
+      <hbox id="tabs-controls">
         <toolbarbutton id="newtab-button" command="cmd_newTab"/>
-        <toolbarbutton id="retrievetab-button" command="" hidden="true"/>
       </hbox>
     </vbox>
     <!-- barrier to the right of the left sidebar -->
