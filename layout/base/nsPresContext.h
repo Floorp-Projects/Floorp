@@ -68,6 +68,7 @@
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -92,7 +93,6 @@ class nsILookAndFeel;
 class nsICSSPseudoComparator;
 class nsIAtom;
 struct nsStyleBackground;
-template <class T> class nsRunnableMethod;
 class nsIRunnable;
 class gfxUserFontSet;
 class nsUserFontSet;
