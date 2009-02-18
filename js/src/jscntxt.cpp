@@ -1490,15 +1490,6 @@ js_InvokeOperationCallback(JSContext *cx)
     return !cb || cb(cx);
 }
 
-#ifndef JS_TRACER
-/* This is defined in jstracer.cpp in JS_TRACER builds. */
-extern JS_FORCES_STACK JSStackFrame *
-js_GetTopStackFrame(JSContext *cx)
-{
-    return cx->fp;
-}
-#endif
-
 JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 {

@@ -630,22 +630,4 @@ js_GetBuiltinFunction(JSContext *cx, uintN index);
 
 #endif /* !JS_TRACER */
 
-static JS_INLINE JS_FORCES_STACK void
-js_LeaveTrace(JSContext *cx)
-{
-    if (JS_ON_TRACE(cx))
-        js_GetTopStackFrame(cx);
-}
-
-static JS_INLINE bool
-js_CanLeaveTrace(JSContext *cx)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-#ifdef JS_TRACER
-    return cx->bailExit;
-#else
-    return false;
-#endif
-}
-
 #endif /* jstracer_h___ */

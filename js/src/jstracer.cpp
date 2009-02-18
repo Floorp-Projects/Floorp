@@ -4640,22 +4640,21 @@ js_FlushJITCache(JSContext* cx)
     oracle.clearHitCounts();
 }
 
-JS_FORCES_STACK JSStackFrame *
-js_GetTopStackFrame(JSContext *cx)
+JS_FORCES_STACK JS_FRIEND_API(void)
+js_DeepBail(JSContext *cx)
 {
-    if (JS_ON_TRACE(cx)) {
-        /* It's a bug if a non-FAIL_STATUS builtin gets here. */
-        JS_ASSERT(cx->bailExit);
+    JS_ASSERT(JS_ON_TRACE(cx));
 
-        JS_TRACE_MONITOR(cx).onTrace = false;
-        JS_TRACE_MONITOR(cx).prohibitRecording = true;
-        LeaveTree(*cx->interpState, cx->bailExit);
+    /* It's a bug if a non-FAIL_STATUS builtin gets here. */
+    JS_ASSERT(cx->bailExit);
+
+    JS_TRACE_MONITOR(cx).onTrace = false;
+    JS_TRACE_MONITOR(cx).prohibitRecording = true;
+    LeaveTree(*cx->interpState, cx->bailExit);
 #ifdef DEBUG
-        cx->bailExit = NULL;
+    cx->bailExit = NULL;
 #endif
-        cx->builtinStatus |= JSBUILTIN_BAILED;
-    }
-    return cx->fp;
+    cx->builtinStatus |= JSBUILTIN_BAILED;
 }
 
 JS_REQUIRES_STACK jsval&
