@@ -271,6 +271,27 @@ JS_STATIC_ASSERT(offsetof(JSScope, title) == sizeof(JSObjectMap));
 #define SCOPE_LAST_PROP(scope)          ((scope)->lastProp)
 #define SCOPE_REMOVE_LAST_PROP(scope)   ((scope)->lastProp =                  \
                                          (scope)->lastProp->parent)
+/*
+ * Helpers for reinterpreting JSPropertyOp as JSObject* for scripted getters
+ * and setters.
+ */
+static inline JSObject *
+js_CastAsObject(JSPropertyOp op)
+{
+    return JS_FUNC_TO_DATA_PTR(JSObject *, op);
+}
+
+static inline jsval
+js_CastAsObjectJSVal(JSPropertyOp op)
+{
+    return OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, op));
+}
+
+static inline JSPropertyOp
+js_CastAsPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
 
 struct JSScopeProperty {
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
@@ -334,8 +355,8 @@ SPROP_GET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, 
     JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
 
     if (sprop->attrs & JSPROP_GETTER) {
-        return js_InternalGetOrSet(cx, obj, sprop->id,
-                                   OBJECT_TO_JSVAL((JSObject *) sprop->getter), JSACC_READ,
+        jsval fval = js_CastAsObjectJSVal(sprop->getter);
+        return js_InternalGetOrSet(cx, obj, sprop->id, fval, JSACC_READ,
                                    0, 0, vp);
     }
 
@@ -349,9 +370,9 @@ SPROP_SET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, 
                 !(sprop->attrs & JSPROP_GETTER)));
 
     if (sprop->attrs & JSPROP_SETTER) {
-        return js_InternalGetOrSet(cx, obj, (sprop)->id,
-                                   OBJECT_TO_JSVAL((JSObject *) sprop->setter),
-                                   JSACC_WRITE, 1, vp, vp);
+        jsval fval = js_CastAsObjectJSVal(sprop->setter);
+        return js_InternalGetOrSet(cx, obj, (sprop)->id, fval, JSACC_WRITE,
+                                   1, vp, vp);
     }
 
     if (sprop->attrs & JSPROP_GETTER) {

@@ -5786,9 +5786,9 @@ js_Interpret(JSContext *cx)
                 attrs |= flags | JSPROP_SHARED;
                 rval = JSVAL_VOID;
                 if (flags == JSPROP_GETTER)
-                    getter = JS_EXTENSION (JSPropertyOp) obj;
+                    getter = js_CastAsPropertyOp(obj);
                 else
-                    setter = JS_EXTENSION (JSPropertyOp) obj;
+                    setter = js_CastAsPropertyOp(obj);
             }
 
             /*
