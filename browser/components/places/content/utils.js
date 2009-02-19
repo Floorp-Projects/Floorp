@@ -386,8 +386,9 @@ var PlacesUIUtils = {
         break;
       default:
         if (type == PlacesUtils.TYPE_X_MOZ_URL ||
-            type == PlacesUtils.TYPE_UNICODE) {
-          var title = (type == PlacesUtils.TYPE_X_MOZ_URL) ? data.title :
+            type == PlacesUtils.TYPE_UNICODE ||
+            type == TAB_DROP_TYPE) {
+          var title = (type != PlacesUtils.TYPE_UNICODE) ? data.title :
                                                              data.uri;
           return this.ptm.createItem(PlacesUtils._uri(data.uri),
                                      container, index, title);

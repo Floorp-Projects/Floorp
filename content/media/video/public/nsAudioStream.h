@@ -92,29 +92,11 @@ class nsAudioStream
   // Block until buffered audio data has been consumed.
   void Drain();
 
-  // Pause sound playback.
-  void Pause();
-
-  // Resume sound playback.
-  void Resume();
-
-  // Return the position (in seconds) of the audio sample currently being
-  // played by the audio hardware.
-  double GetTime();
-
  private:
   double mVolume;
   void* mAudioHandle;
   int mRate;
   int mChannels;
-
-  // The byte position in the audio buffer where playback was last paused.
-  PRInt64 mSavedPauseBytes;
-  PRInt64 mPauseBytes;
-
-  float mStartTime;
-  float mPauseTime;
-  PRInt64 mSamplesBuffered;
 
   SampleFormat mFormat;
 
@@ -123,7 +105,5 @@ class nsAudioStream
   // backend, the remaining samples are stored in this variable. They
   // will be written on the next Write() request.
   nsTArray<short> mBufferOverflow;
-
-  PRPackedBool mPaused;
 };
 #endif

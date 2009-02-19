@@ -4344,7 +4344,7 @@ nsresult nsEditor::EndUpdateViewBatch()
       // the reflows we caused will get processed before the invalidates.
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
         updateFlag = NS_VMREFRESH_DEFERRED;
-      } else {
+      } else if (presShell) {
         // Flush out layout.  Need to do this because if we have no invalidates
         // to flush the viewmanager code won't flush our reflow here, and we
         // have selection code that does sync caret scrolling in this case.

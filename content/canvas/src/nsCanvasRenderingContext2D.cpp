@@ -3819,18 +3819,20 @@ nsCanvasRenderingContext2D::PutImageData()
         PRUint8 ir, ig, ib, ia;
         PRUint8 *ptr = imgPtr;
         for (int32 i = 0; i < w*h; i++) {
-#ifdef IS_LITTLE_ENDIAN
             ir = ptr[0];
             ig = ptr[1];
             ib = ptr[2];
             ia = ptr[3];
+
+#ifdef IS_LITTLE_ENDIAN
             ptr[0] = (ib*ia + 254) / 255;
             ptr[1] = (ig*ia + 254) / 255;
             ptr[2] = (ir*ia + 254) / 255;
 #else
-            ptr[0] = (ptr[0]*ptr[3] + 254) / 255;
-            ptr[1] = (ptr[1]*ptr[3] + 254) / 255;
-            ptr[2] = (ptr[2]*ptr[3] + 254) / 255;
+            ptr[0] = ia;
+            ptr[1] = (ir*ia + 254) / 255;
+            ptr[2] = (ig*ia + 254) / 255;
+            ptr[3] = (ib*ia + 254) / 255;
 #endif
             ptr += 4;
         }
