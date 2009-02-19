@@ -70,14 +70,12 @@ Preferences.prototype = {
     * @returns the value of the pref, if any; otherwise the default value
     */
   get: function(prefName, defaultValue) {
-    // We can't check for |prefName.constructor == Array| here, since we have
-    // a different global object, so we check the constructor name instead.
-    if (typeof prefName == "object" && prefName.constructor.name == Array.name)
+    if (isArray(prefName))
       return prefName.map(function(v) this.get(v), this);
 
     switch (this._prefSvc.getPrefType(prefName)) {
       case Ci.nsIPrefBranch.PREF_STRING:
-        return this._prefSvc.getCharPref(prefName);
+        return this._prefSvc.getComplexValue(prefName, Ci.nsISupportsString).data;
 
       case Ci.nsIPrefBranch.PREF_INT:
         return this._prefSvc.getIntPref(prefName);
@@ -92,26 +90,55 @@ Preferences.prototype = {
   },
 
   set: function(prefName, prefValue) {
-    // We can't check for |prefName.constructor == Object| here, since we have
-    // a different global object, so we check the constructor name instead.
-    if (typeof prefName == "object" && prefName.constructor.name == Object.name)
+    if (isObject(prefName)) {
       for (let [name, value] in Iterator(prefName))
         this.set(name, value);
-    else {
-      switch (typeof prefValue) {
-        case "number":
-          this._prefSvc.setIntPref(prefName, prefValue);
-          break;
+      return;
+    }
 
-        case "boolean":
-          this._prefSvc.setBoolPref(prefName, prefValue);
-          break;
+    switch (typeof prefValue) {
+      case "number":
+        this._prefSvc.setIntPref(prefName, prefValue);
+        if (prefValue % 1 != 0)
+          Cu.reportError("WARNING: setting " + prefName + " pref to non-integer number " +
+                         prefValue + " converts it to integer number " + this.get(prefName) +
+                         "; to retain precision, store non-integer numbers as strings");
+        break;
 
-        case "string":
-        default:
-          this._prefSvc.setCharPref(prefName, prefValue);
-          break;
+      case "boolean":
+        this._prefSvc.setBoolPref(prefName, prefValue);
+        break;
+
+      case "string":
+      default: {
+        let string = Cc["@mozilla.org/supports-string;1"].
+                     createInstance(Ci.nsISupportsString);
+        string.data = prefValue;
+        this._prefSvc.setComplexValue(prefName, Ci.nsISupportsString, string);
+        break;
       }
+    }
+  },
+
+  reset: function(prefName) {
+    if (isArray(prefName)) {
+      prefName.map(function(v) this.reset(v), this);
+      return;
+    }
+
+    try {
+      this._prefSvc.clearUserPref(prefName);
+    }
+    catch(ex) {
+      // The pref service throws NS_ERROR_UNEXPECTED when the caller tries
+      // to reset a pref that doesn't exist or is already set to its default
+      // value.  This interface fails silently in those cases, so callers
+      // can unconditionally reset a pref without having to check if it needs
+      // resetting first or trap exceptions after the fact.  It passes through
+      // other exceptions, however, so callers know about them, since we don't
+      // know what other exceptions might be thrown and what they might mean.
+      if (ex.result != Cr.NS_ERROR_UNEXPECTED)
+        throw ex;
     }
   },
 
@@ -137,16 +164,18 @@ Preferences.prototype = {
     this._prefSvc.unlockPref(prefName);
   },
 
-  reset: function(prefName) {
-    try {
-      this._prefSvc.clearUserPref(prefName);
-    } catch (e) {}
-  },
-
   resetBranch: function(prefBranch) {
     try {
       this._prefSvc.resetBranch(prefBranch);
-    } catch (e) {}
+    }
+    catch(ex) {
+      // The current implementation of nsIPrefBranch in Mozilla
+      // doesn't implement resetBranch, so we do it ourselves.
+      if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED)
+        this.reset(this._prefSvc.getChildList(prefBranch, []));
+      else
+        throw ex;
+    }
   }
 
 };
@@ -155,3 +184,15 @@ Preferences.prototype = {
 // preferences directly via the constructor without having to create an instance
 // first.
 Preferences.__proto__ = Preferences.prototype;
+
+function isArray(val) {
+  // We can't check for |val.constructor == Array| here, since we might have
+  // a different global object, so we check the constructor name instead.
+  return (typeof val == "object" && val.constructor.name == Array.name);
+}
+
+function isObject(val) {
+  // We can't check for |val.constructor == Object| here, since we might have
+  // a different global object, so we check the constructor name instead.
+  return (typeof val == "object" && val.constructor.name == Object.name);
+}
