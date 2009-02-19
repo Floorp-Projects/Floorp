@@ -73,6 +73,7 @@ Cu.import("resource://weave/faultTolerance.js");
 Cu.import("resource://weave/auth.js");
 Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/base_records/wbo.js");
+Cu.import("resource://weave/base_records/crypto.js");
 Cu.import("resource://weave/base_records/keys.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/oauth.js");
@@ -319,6 +320,9 @@ WeaveSvc.prototype = {
     this._initLogs();
     this._log.info("Weave " + WEAVE_VERSION + " initializing");
 
+    if (WEAVE_VERSION != Svc.Prefs.get("lastversion"))
+      this._wipeClientMetadata();
+
     let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
       getService(Ci.nsIHttpProtocolHandler).userAgent;
     this._log.info(ua);
@@ -564,6 +568,7 @@ WeaveSvc.prototype = {
   _remoteSetup: function WeaveSvc__remoteSetup() {
     let self = yield;
     let ret = false; // false to abort sync
+    let reset = false;
 
     this._log.debug("Fetching global metadata record");
     let meta = yield Records.import(self.cb, this.clusterURL +
@@ -573,27 +578,26 @@ WeaveSvc.prototype = {
       // parsing function so we can implement greater-than.  So we
       // just check for != which is wrong!
       if (meta.payload.storageVersion != MIN_SERVER_STORAGE_VERSION) {
-	this._log.debug("Last upload client version too old, wiping server data" +
-			"to ensure consistency");
-	yield this._wipeServer.async(this, self.cb);
+	reset = true;
+	yield this._freshStart.async(this, self.cb);
+	this._log.info("Server data wiped to ensure consistency after client upgrade");
 
-	this._log.debug("Uploading new metadata record");
-	meta.payload.storageVersion = WEAVE_VERSION;
-	let res = new Resource(meta.uri);
-	yield res.put(self.cb, meta.serialize());
+      } else if (!meta.payload.syncID) {
+	reset = true;
+	yield this._freshStart.async(this, self.cb);
+	this._log.info("Server data wiped to ensure consistency after client upgrade");
+
+      } else if (meta.payload.syncID != Clients.syncID) {
+	this._wipeClientMetadata();
+	Clients.syncID = meta.payload.syncID;
+	this._log.info("Cleared local caches after server wipe was detected");
       }
 
     } else {
       if (Records.lastResource.lastChannel.responseStatus == 404) {
-	this._log.debug("Metadata record not found, deleting all server " +
-			"data to ensure consistency");
-	yield this._wipeServer.async(this, self.cb);
-
-	this._log.debug("Uploading new metadata record");
-	meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
-	meta.payload.storageVersion = WEAVE_VERSION;
-	let res = new Resource(meta.uri);
-	yield res.put(self.cb, meta.serialize());
+	reset = true;
+	yield this._freshStart.async(this, self.cb);
+	this._log.info("Metadata record not found, server wiped to ensure consistency");
 
       } else {
 	this._log.debug("Unknown error while downloading metadata record.  " +
@@ -630,6 +634,11 @@ WeaveSvc.prototype = {
 		       "is disabled.  Aborting sync");
 	self.done(false);
 	return;
+      }
+
+      if (!reset) {
+	yield this._freshStart.async(this, self.cb);
+	this._log.info("Server data wiped to ensure consistency due to missing keys");
       }
 
       let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
@@ -684,10 +693,12 @@ WeaveSvc.prototype = {
 	}
       }
 
-      if (this._syncError)
+      if (!this._syncError) {
+	Svc.Prefs.reset("lastsync");
+	Svc.Prefs.set("lastsync", Date.now());
+	this._log.info("Sync completed successfully");
+      } else
         this._log.warn("Some engines did not sync correctly");
-      else
-        this._log.info("Sync completed successfully");
 
     } finally {
       this.cancelRequested = false;
@@ -760,10 +771,12 @@ WeaveSvc.prototype = {
         }
       }
 
-      if (this._syncError)
-        this._log.warn("Some engines did not sync correctly");
-      else
+      if (!this._syncError) {
+	Svc.Prefs.reset("lastsync");
+	Svc.Prefs.set("lastsync", Date.now());
         this._log.info("Sync completed successfully");
+      } else
+        this._log.warn("Some engines did not sync correctly");
 
     } finally {
       this._cancelRequested = false;
@@ -787,10 +800,27 @@ WeaveSvc.prototype = {
     }
   },
 
+  _freshStart: function WeaveSvc__freshStart() {
+    let self = yield;
+
+    this._wipeClientMetadata();
+    this._log.info("Client metadata wiped, deleting server data");
+    yield this._wipeServer.async(this, self.cb);
+
+    this._log.debug("Uploading new metadata record");
+    meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
+    meta.payload.storageVersion = WEAVE_VERSION;
+    meta.payload.syncID = Clients.syncID;
+    let res = new Resource(meta.uri);
+    yield res.put(self.cb, meta.serialize());
+  },
+
   // XXX deletes all known collections; we should have a way to delete
   //     everything on the server by querying it to get all collections
   _wipeServer: function WeaveSvc__wipeServer() {
     let self = yield;
+
+    Clients.resetSyncID();
 
     let engines = Engines.getAll();
     engines.push(Clients, {name: "keys"}, {name: "crypto"});
@@ -806,9 +836,30 @@ WeaveSvc.prototype = {
 	engine.resetLastSync();
     }
   },
-  wipeServer: function WeaveSvc_wipeServer(onComplete) {
-    this._catchAll(
-      this._notify("wipe-server", "",
-                   this._localLock(this._wipeServer))).async(this, onComplete);
+
+  _wipeClientMetadata: function WeaveSvc__wipeClientMetadata() {
+    this.clearLogs();
+    this._log.info("Logs reinitialized");
+
+    PubKeys.clearCache();
+    PrivKeys.clearCache();
+    CryptoMetas.clearCache();
+    Records.clearCache();
+
+    Clients._store.wipe();
+    Engines.get("tabs")._store.wipe();
+
+    try {
+      let cruft = this._dirSvc.get("ProfD", Ci.nsIFile);
+      cruft.QueryInterface(Ci.nsILocalFile);
+      cruft.append("weave");
+      cruft.append("snapshots");
+      if (cruft.exists())
+	cruft.remove(true);
+    } catch (e) {
+      this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
+    }
   }
 };
+
+
