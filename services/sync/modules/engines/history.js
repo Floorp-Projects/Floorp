@@ -433,7 +433,7 @@ HistoryStore.prototype = {
     return this._hsvc.isVisited(url);
   },
 
-  createRecord: function HistStore_createRecord(guid) {
+  createRecord: function HistStore_createRecord(guid, cryptoMetaURL) {
     let foo = this._findURLByGUID(guid);
     let record = new HistoryRec();
     record.id = guid;
@@ -441,6 +441,7 @@ HistoryStore.prototype = {
       record.histUri = foo.url;
       record.title = foo.title;
       record.visits = this._getVisits(record.histUri);
+      record.encryption = cryptoMetaURL;
     } else {
       record.cleartext = null; // deleted item
     }

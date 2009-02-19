@@ -74,13 +74,6 @@ ClientEngine.prototype = {
       this.setInfo(this.clientID, {name: "Firefox", type: "desktop"});
   },
 
-  // Override SyncEngine's to not set encryption URL
-  _createRecord: function SyncEngine__createRecord(id) {
-    let record = this._store.createRecord(id);
-    record.uri = this.engineURL + id;
-    return record;
-  },
-
   // get and set info for clients
 
   // FIXME: callers must use the setInfo interface or changes won't get synced,
@@ -225,5 +218,5 @@ ClientTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "ClientTracker",
   file: "clients",
-  get score() "75" // we always want to sync, but are not dying to do so
+  get score() 100 // always sync
 };

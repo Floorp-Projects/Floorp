@@ -224,7 +224,7 @@ TabStore.prototype = {
     }
   },
 
-  createRecord: function TabStore_createRecord(id) {
+  createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
     this._log.debug("CreateRecord called for id " + id );
     let record;
     if (id == this._localClientGUID) {
@@ -235,6 +235,7 @@ TabStore.prototype = {
       record = this._remoteClients[id];
     }
     record.id = id;
+    record.encryption = cryptoMetaURL;
     return record;
   },
 
