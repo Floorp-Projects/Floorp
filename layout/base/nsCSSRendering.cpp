@@ -1792,6 +1792,33 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
   nsMargin border(aBorderStyle.GetActualBorder());
 
+  // Compute the special scale factors for the middle component.
+  // Step 1 of the scaling algorithm in css3-background section 4.4,
+  // fourth bullet point:
+  //     The middle image's width is scaled by the same factor as
+  //     the top image unless that factor is zero or infinity, in
+  //     which case the scaling factor of the bottom is substituted,
+  //     and failing that, the width is not scaled. The height of
+  //     the middle image is scaled by the same factor as the left
+  //     image unless that factor is zero or infinity, in which case
+  //     the scaling factor of the right image is substituted, and
+  //     failing that, the height is not scaled.
+  gfxFloat hFactor, vFactor;
+
+  if (0 < border.left && 0 < split.left)
+    vFactor = gfxFloat(border.left)/split.left;
+  else if (0 < border.right && 0 < split.right)
+    vFactor = gfxFloat(border.right)/split.right;
+  else
+    vFactor = 1.0;
+
+  if (0 < border.top && 0 < split.top)
+    hFactor = gfxFloat(border.top)/split.top;
+  else if (0 < border.bottom && 0 < split.bottom)
+    hFactor = gfxFloat(border.bottom)/split.bottom;
+  else
+    hFactor = 1.0;
+
   // These helper tables recharacterize the 'split' and 'border' margins
   // in a more convenient form: they are the x/y/width/height coords
   // required for various bands of the border, and they have been transformed
@@ -1847,68 +1874,31 @@ DrawBorderImage(nsPresContext*       aPresContext,
       nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
       nsIntRect subArea(splitX[i], splitY[j], splitWidth[i], splitHeight[j]);
 
-      PRUint8 fillStyleH, fillStyleV;
+      // Corners are always stretched to fit the corner.
+      // Sides are always stretched to the thickness of their border.
+      PRUint8 fillStyleH = (i == 1
+                            ? aBorderStyle.mBorderImageHFill
+                            : NS_STYLE_BORDER_IMAGE_STRETCH);
+      PRUint8 fillStyleV = (j == 1
+                            ? aBorderStyle.mBorderImageVFill
+                            : NS_STYLE_BORDER_IMAGE_STRETCH);
+
+      // For everything except the middle, whichever axis is always
+      // stretched determines the size of the 'unit square' for tiling.
+      // The middle uses the special scale factors calculated above.
       nsSize unitSize;
-
       if (i == MIDDLE && j == MIDDLE) {
-        // css-background:
-        //     The middle image's width is scaled by the same factor as
-        //     the top image unless that factor is zero or infinity, in
-        //     which case the scaling factor of the bottom is substituted,
-        //     and failing that, the width is not scaled. The height of
-        //     the middle image is scaled by the same factor as the left
-        //     image unless that factor is zero or infinity, in which case
-        //     the scaling factor of the right image is substituted, and
-        //     failing that, the height is not scaled.
-        gfxFloat hFactor, vFactor;
-
-        if (0 < border.left && 0 < split.left)
-          vFactor = gfxFloat(border.left)/split.left;
-        else if (0 < border.right && 0 < split.right)
-          vFactor = gfxFloat(border.right)/split.right;
-        else
-          vFactor = 1.0;
-
-        if (0 < border.top && 0 < split.top)
-          hFactor = gfxFloat(border.top)/split.top;
-        else if (0 < border.bottom && 0 < split.bottom)
-          hFactor = gfxFloat(border.bottom)/split.bottom;
-        else
-          hFactor = 1.0;
-
         unitSize.width = splitWidth[i]*hFactor;
         unitSize.height = splitHeight[j]*vFactor;
-        fillStyleH = aBorderStyle.mBorderImageHFill;
-        fillStyleV = aBorderStyle.mBorderImageVFill;
-
-      } else if (i == MIDDLE) { // top, bottom
-        // Sides are always stretched to the thickness of their border,
-        // and stretched proportionately on the other axis.
-        gfxFloat factor = 1.0;
-        if (0 < borderHeight[j] && 0 < splitHeight[j])
-          factor = gfxFloat(borderHeight[j])/splitHeight[j];
-
-        unitSize.width = splitWidth[i]*factor;
+      } else if (i == MIDDLE) {
+        unitSize.width = borderHeight[j];
         unitSize.height = borderHeight[j];
-        fillStyleH = aBorderStyle.mBorderImageHFill;
-        fillStyleV = NS_STYLE_BORDER_IMAGE_STRETCH;
-
-      } else if (j == MIDDLE) { // left, right
-        gfxFloat factor = 1.0;
-        if (0 < borderWidth[i] && 0 < splitWidth[i])
-          factor = gfxFloat(borderWidth[i])/splitWidth[i];
-
+      } else if (j == MIDDLE) {
         unitSize.width = borderWidth[i];
-        unitSize.height = splitHeight[j]*factor;
-        fillStyleH = NS_STYLE_BORDER_IMAGE_STRETCH;
-        fillStyleV = aBorderStyle.mBorderImageVFill;
-
+        unitSize.height = borderWidth[i];
       } else {
-        // Corners are always stretched to fit the corner.
         unitSize.width = borderWidth[i];
         unitSize.height = borderHeight[j];
-        fillStyleH = NS_STYLE_BORDER_IMAGE_STRETCH;
-        fillStyleV = NS_STYLE_BORDER_IMAGE_STRETCH;
       }
 
       DrawBorderImageComponent(aRenderingContext, img, aDirtyRect,
@@ -1937,10 +1927,8 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
 
   // If we have no tiling in either direction, we can skip the intermediate
   // scaling step.
-  if ((aHFill == NS_STYLE_BORDER_IMAGE_STRETCH &&
-       aVFill == NS_STYLE_BORDER_IMAGE_STRETCH) ||
-      (aUnitSize.width == aFill.width &&
-       aUnitSize.height == aFill.height)) {
+  if (aHFill == NS_STYLE_BORDER_IMAGE_STRETCH &&
+      aVFill == NS_STYLE_BORDER_IMAGE_STRETCH) {
     nsLayoutUtils::DrawSingleImage(&aRenderingContext, subImage,
                                    aFill, aDirtyRect);
     return;
