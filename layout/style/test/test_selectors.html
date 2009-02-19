@@ -39,9 +39,8 @@ function run() {
      *   body_contents has been inserted, produces an array of nodes that
      *   should match selector
      * notmatch_fn: likewise, but for nodes that should not match
-     * namespaces (optional): @namespace rules to be included in the sheet
      */
-    function test_selector_in_html(selector, body_contents, match_fn, notmatch_fn, namespaces)
+    function test_selector_in_html(selector, body_contents, match_fn, notmatch_fn)
     {
         var zi = ++gCounter;
         if (typeof(body_contents) == "string") {
@@ -51,10 +50,7 @@ function run() {
             ifdoc.body.innerHTML = "";
             body_contents(ifdoc.body);
         }
-        if (!namespaces) {
-            namespaces = "";
-        }
-        style_text.data = namespaces + selector + "{ z-index: " + zi + " }";
+        style_text.data = selector + "{ z-index: " + zi + " }";
         var should_match = match_fn(ifdoc);
         var should_not_match = notmatch_fn(ifdoc);
         if (should_match.length + should_not_match.length == 0) {
@@ -77,12 +73,8 @@ function run() {
         // but it should produce a selector that matches the same
         // elements.
         zi = ++gCounter;
-        var idx = style_text.parentNode.sheet.cssRules.length - 1;
-        if (namespaces == "") {
-            is(idx, 0, "unexpected rule index");
-        }
-        var ser1 = style_text.parentNode.sheet.cssRules[idx].selectorText;
-        style_text.data = namespaces + ser1 + "{ z-index: " + zi + " }";
+        var ser1 = style_text.parentNode.sheet.cssRules[0].selectorText;
+        style_text.data = ser1 + "{ z-index: " + zi + " }";
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
             is(ifwin.getComputedStyle(e, "").zIndex, zi,
@@ -98,21 +90,12 @@ function run() {
 
         // But when we serialize the serialized result, we should get
         // the same text.
-        var ser2 = style_text.parentNode.sheet.cssRules[idx].selectorText;
+        var ser2 = style_text.parentNode.sheet.cssRules[0].selectorText;
         is(ser2, ser1, "parse+serialize of selector \"" + selector +
                        "\" is idempotent");
 
         ifdoc.body.innerHTML = "";
         style_text.data = "";
-    }
-
-    function should_serialize_to(selector, serialization)
-    {
-        style_text.data = selector + "{ z-index: 0 }";
-        is(style_text.parentNode.sheet.cssRules[0].selectorText,
-           serialization,
-           "selector '" + selector + "' should serialize to '" +
-             serialization + "'.");
     }
 
     function test_parseable(selector)
@@ -475,76 +458,6 @@ function run() {
     test_selector_in_html(":nth-last-of-type(even)", mixed_elements,
                           pdaset([2], [1], []),
                           pdaset([1, 3, 4], [2], [1, 2]));
-
-    // Test greediness of descendant combinators.
-    var four_children="<div id='a'><div id='b'><div id='c'><div id='d'><\/div><\/div><\/div><\/div>";
-    test_selector_in_html("#a > div div", four_children,
-                          idset(["c", "d"]), idset(["a", "b"]));
-    test_selector_in_html("#a > #b div", four_children,
-                          idset(["c", "d"]), idset(["a", "b"]));
-    test_selector_in_html("#a div > div", four_children,
-                          idset(["c", "d"]), idset(["a", "b"]));
-    test_selector_in_html("#a #b > div", four_children,
-                          idset(["c"]), idset(["a", "b", "d"]));
-    test_selector_in_html("#a > #b div", four_children,
-                          idset(["c", "d"]), idset(["a", "b"]));
-    test_selector_in_html("#a #c > div", four_children,
-                          idset(["d"]), idset(["a", "b", "c"]));
-    test_selector_in_html("#a > #c div", four_children,
-                          idset([]), idset(["a", "b", "c", "d"]));
-
-    // Test serialization of pseudo-elements.
-    should_serialize_to("p:first-letter", "p:first-letter");
-    should_serialize_to("div>p:first-letter", "div > p:first-letter");
-    should_serialize_to("span +div:first-line", "span + div:first-line");
-
-    // Test default namespaces, including inside :not().
-    var html_default_ns = "@namespace url(http://www.w3.org/1999/xhtml);";
-    var html_ns = "@namespace html url(http://www.w3.org/1999/xhtml);";
-    var xul_default_ns = "@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);";
-    var single_a = "<a id='a' href='data:text/plain,this_better_be_unvisited'></a>";
-    var set_single = idset(['a']);
-    var empty_set = idset([]);
-    test_selector_in_html("a", single_a, set_single, empty_set,
-                          html_default_ns);
-    test_selector_in_html("a", single_a, empty_set, set_single,
-                          xul_default_ns);
-    test_selector_in_html("*|a", single_a, set_single, empty_set,
-                          xul_default_ns);
-    test_selector_in_html("html|a", single_a, set_single, empty_set,
-                          xul_default_ns + html_ns);
-	// Type selectors inside :not() bring in default namespaces, but
-	// non-type selectors don't.
-    test_selector_in_html("*|a:not(*)", single_a, set_single, empty_set,
-                          xul_default_ns);
-    test_selector_in_html("*|a:not(a)", single_a, set_single, empty_set,
-                          xul_default_ns);
-    test_selector_in_html("*|a:not(*|*)", single_a, empty_set, set_single,
-                          xul_default_ns);
-    test_selector_in_html("*|a:not(*|a)", single_a, empty_set, set_single,
-                          xul_default_ns);
-    test_selector_in_html("*|a:not(:link)", single_a + "<a id='b'></a>",
-                          idset(["b"]), set_single,
-                          xul_default_ns);
-    test_selector_in_html("*|a:not(:visited)", single_a + "<a id='b'></a>",
-                          idset(["a", "b"]), empty_set,
-                          xul_default_ns);
-    test_selector_in_html("*|a:not(html|*)", single_a, empty_set, set_single,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("*|a:not(html|a)", single_a, empty_set, set_single,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("*|a:not(|*)", single_a, set_single, empty_set,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("*|a:not(|a)", single_a, set_single, empty_set,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("html|a:not(|*)", single_a, set_single, empty_set,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("html|a:not(|a)", single_a, set_single, empty_set,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("html|a:not(*|*)", single_a, empty_set, set_single,
-                          xul_default_ns + html_ns);
-    test_selector_in_html("html|a:not(*|a)", single_a, empty_set, set_single,
-                          xul_default_ns + html_ns);
 
     SimpleTest.finish();
 }
