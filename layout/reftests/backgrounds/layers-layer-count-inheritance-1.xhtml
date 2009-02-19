@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>css3-background: number of background layers determined by background-image</title>
+		<link rel="author" title="L. David Baron" href="http://dbaron.org/" />
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+		<link rel="help" href="http://dev.w3.org/csswg/css3-background/#layering" />
+		<meta name="flags" content="" />
+		<style type="text/css"><![CDATA[
+
+		body > div {
+			position: relative; height: 300px; width: 100px;
+			background-repeat: no-repeat;
+			background-position: 10px 10px, 5px 5px, 20px 20px, 15px 15px;
+			background-image: url(aqua-32x32.png);
+		}
+
+		body > div > div {
+			position: absolute; height: 200px; width: 100px; top: 100px; left: 0;
+			background-repeat: no-repeat;
+			background-position: inherit;
+			background-image: url(yellow-32x32.png), url(aqua-32x32.png), url(blue-32x32.png), url(fuchsia-32x32.png), url(red-32x32.png);
+		}
+
+		body > div > div > div {
+			position: absolute; height: 100px; width: 100px; top: 100px; left: 0;
+			background: inherit;
+			background-image: url(blue-32x32.png), url(yellow-32x32.png), url(fuchsia-32x32.png);
+		}
+
+
+		]]></style>
+	</head>
+	<body>
+
+	<div><div><div></div></div></div>
+
+	</body>
+</html>
