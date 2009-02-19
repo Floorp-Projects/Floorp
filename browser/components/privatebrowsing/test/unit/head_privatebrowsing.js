@@ -109,16 +109,3 @@ function cleanUp()
   }
 }
 cleanUp();
-
-var PRIVATEBROWSING_CONTRACT_ID;
-function run_test_on_all_services() {
-  var contractIDs = [
-    "@mozilla.org/privatebrowsing;1",
-    "@mozilla.org/privatebrowsing-wrapper;1"
-  ];
-  for (var i = 0; i < contractIDs.length; ++i) {
-    PRIVATEBROWSING_CONTRACT_ID = contractIDs[i];
-    run_test_on_service();
-    cleanUp();
-  }
-}

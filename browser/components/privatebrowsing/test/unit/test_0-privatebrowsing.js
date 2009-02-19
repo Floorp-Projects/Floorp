@@ -41,7 +41,7 @@
 // This test should run before the rest of private browsing service unit tests,
 // hence the naming used for this file.
 
-function run_test_on_service() {
+function run_test() {
   // initialization
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
@@ -50,14 +50,14 @@ function run_test_on_service() {
   prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   // the contract ID should be available
-  do_check_true(PRIVATEBROWSING_CONTRACT_ID in Cc);
+  do_check_true("@mozilla.org/privatebrowsing;1" in Cc);
 
   // the interface should be available
   do_check_true("nsIPrivateBrowsingService" in Ci);
 
   // it should be possible to initialize the component
   try {
-    var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
+    var pb = Cc["@mozilla.org/privatebrowsing;1"].
              getService(Ci.nsIPrivateBrowsingService);
   } catch (ex) {
     LOG("exception thrown when trying to get the service: " + ex);
@@ -221,9 +221,4 @@ function run_test_on_service() {
   do_check_eq(observer.notifications.join(","), reference_order.join(","));
 
   prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
-}
-
-// Support running tests on both the service itself and its wrapper
-function run_test() {
-  run_test_on_all_services();
 }
