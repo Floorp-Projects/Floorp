@@ -688,7 +688,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     if (fp->fun && !fp->callobj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
                   OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
-        if (!js_GetCallObject(cx, fp, fp->scopeChain))
+        if (!js_GetCallObject(cx, fp))
             return NULL;
     }
 
@@ -1325,7 +1325,7 @@ have_fun:
         frame.scopeChain = parent;
         if (JSFUN_HEAVYWEIGHT_TEST(fun->flags)) {
             /* Scope with a call object parented by the callee's parent. */
-            if (!js_GetCallObject(cx, &frame, parent)) {
+            if (!js_GetCallObject(cx, &frame)) {
                 ok = JS_FALSE;
                 goto out;
             }
@@ -4932,7 +4932,7 @@ js_Interpret(JSContext *cx)
 
                     /* Scope with a call object parented by callee's parent. */
                     if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
-                        !js_GetCallObject(cx, &newifp->frame, parent)) {
+                        !js_GetCallObject(cx, &newifp->frame)) {
                         goto bad_inline_call;
                     }
 
