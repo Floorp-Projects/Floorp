@@ -310,7 +310,7 @@ static JSBool
 script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
-    JSObject *scopeobj, *parent;
+    JSObject *scopeobj;
     JSStackFrame *caller;
     JSPrincipals *principals;
     JSScript *script;
@@ -343,9 +343,8 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         /* Called from a lightweight function. */
         JS_ASSERT(caller->fun && !JSFUN_HEAVYWEIGHT_TEST(caller->fun->flags));
 
-        /* Scope chain links from Call object to callee's parent. */
-        parent = OBJ_GET_PARENT(cx, caller->callee);
-        if (!js_GetCallObject(cx, caller, parent))
+        /* Scope chain links from Call object to caller's scope chain. */
+        if (!js_GetCallObject(cx, caller))
             return JS_FALSE;
     }
 
@@ -362,7 +361,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         } else {
             /*
              * Called from native code, so we don't know what scope object to
-             * use.  We could use parent (see above), but Script.prototype.exec
+             * use.  We could use the caller's scope chain (see above), but Script.prototype.exec
              * might be a shared/sealed "superglobal" method.  A more general
              * approach would use cx->globalObject, which will be the same as
              * exec.__parent__ in the non-superglobal case.  In the superglobal
@@ -1755,6 +1754,7 @@ js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp)
 uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
+    JSOp op;
     JSFunction *fun;
     uintN lineno;
     ptrdiff_t offset, target;
@@ -1769,8 +1769,9 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Special case: function definition needs no line number note because
      * the function's script contains its starting line number.
      */
-    if (js_CodeSpec[*pc].format & JOF_INDEXBASE)
-        pc += js_CodeSpec[*pc].length;
+    op = js_GetOpcode(cx, script, pc);
+    if (js_CodeSpec[op].format & JOF_INDEXBASE)
+        pc += js_CodeSpec[op].length;
     if (*pc == JSOP_DEFFUN) {
         GET_FUNCTION_FROM_BYTECODE(script, pc, 0, fun);
         return fun->u.i.script->lineno;
