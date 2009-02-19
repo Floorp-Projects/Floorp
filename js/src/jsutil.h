@@ -83,8 +83,14 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 #ifdef __SUNPRO_CC
 #define JS_STATIC_ASSERT(condition)
 #else
-#define JS_STATIC_ASSERT(condition)                                           \
-    extern void js_static_assert(int arg[(condition) ? 1 : -1])
+#ifdef __COUNTER__
+    #define JS_STATIC_ASSERT_GLUE1(x,y) x##y
+    #define JS_STATIC_ASSERT_GLUE(x,y) JS_STATIC_ASSERT_GLUE1(x,y)
+    #define JS_STATIC_ASSERT(cond)                                            \
+        typedef int JS_STATIC_ASSERT_GLUE(js_static_assert, __COUNTER__)[(cond) ? 1 : -1]
+#else
+    #define JS_STATIC_ASSERT(cond) extern void js_static_assert(int arg[(condition) ? 1 : -1])
+#endif
 #endif
 
 /*
