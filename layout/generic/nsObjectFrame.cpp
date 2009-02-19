@@ -1515,7 +1515,8 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         printProc = reinterpret_cast<PrintWindowPtr>
           (::GetProcAddress(module, "PrintWindow"));
       }
-      if (printProc) {
+      // Disable this for Sun Java, it makes it go into a 100% cpu burn loop.
+      if (printProc && !mInstanceOwner->MatchPluginName("Java(TM) Platform")) {
         HWND hwnd = reinterpret_cast<HWND>(window->window);
         RECT rc;
         GetWindowRect(hwnd, &rc);
