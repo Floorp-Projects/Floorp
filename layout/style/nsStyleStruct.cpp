@@ -1207,44 +1207,28 @@ nsChangeHint nsStyleColor::MaxDifference()
 //
 
 nsStyleBackground::nsStyleBackground()
-  : mAttachmentCount(1)
-  , mClipCount(1)
-  , mOriginCount(1)
-  , mRepeatCount(1)
-  , mPositionCount(1)
-  , mImageCount(1)
-  , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
-  , mFallbackBackgroundColor(NS_RGBA(0, 0, 0, 0))
-  , mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS)
+  : mBackgroundFlags(NS_STYLE_BG_IMAGE_NONE),
+    mBackgroundAttachment(NS_STYLE_BG_ATTACHMENT_SCROLL),
+    mBackgroundClip(NS_STYLE_BG_CLIP_BORDER),
+    mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS),
+    mBackgroundOrigin(NS_STYLE_BG_ORIGIN_PADDING),
+    mBackgroundRepeat(NS_STYLE_BG_REPEAT_XY),
+    mBackgroundColor(NS_RGBA(0, 0, 0, 0))
 {
-  Layer *onlyLayer = mLayers.AppendElement();
-  NS_ASSERTION(onlyLayer, "auto array must have room for 1 element");
-  onlyLayer->SetInitialValues();
 }
 
 nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
-  : mAttachmentCount(aSource.mAttachmentCount)
-  , mClipCount(aSource.mClipCount)
-  , mOriginCount(aSource.mOriginCount)
-  , mRepeatCount(aSource.mRepeatCount)
-  , mPositionCount(aSource.mPositionCount)
-  , mImageCount(aSource.mImageCount)
-  , mLayers(aSource.mLayers) // deep copy
-  , mBackgroundColor(aSource.mBackgroundColor)
-  , mFallbackBackgroundColor(aSource.mFallbackBackgroundColor)
-  , mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy)
+  : mBackgroundFlags(aSource.mBackgroundFlags),
+    mBackgroundAttachment(aSource.mBackgroundAttachment),
+    mBackgroundClip(aSource.mBackgroundClip),
+    mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy),
+    mBackgroundOrigin(aSource.mBackgroundOrigin),
+    mBackgroundRepeat(aSource.mBackgroundRepeat),
+    mBackgroundXPosition(aSource.mBackgroundXPosition),
+    mBackgroundYPosition(aSource.mBackgroundYPosition),
+    mBackgroundColor(aSource.mBackgroundColor),
+    mBackgroundImage(aSource.mBackgroundImage)
 {
-  // If the deep copy of mLayers failed, truncate the counts.
-  PRUint32 count = mLayers.Length();
-  if (count != aSource.mLayers.Length()) {
-    NS_WARNING("truncating counts due to out-of-memory");
-    mAttachmentCount = PR_MAX(mAttachmentCount, count);
-    mClipCount = PR_MAX(mClipCount, count);
-    mOriginCount = PR_MAX(mOriginCount, count);
-    mRepeatCount = PR_MAX(mRepeatCount, count);
-    mPositionCount = PR_MAX(mPositionCount, count);
-    mImageCount = PR_MAX(mImageCount, count);
-  }
 }
 
 nsStyleBackground::~nsStyleBackground()
@@ -1253,19 +1237,24 @@ nsStyleBackground::~nsStyleBackground()
 
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 {
-  if (mBackgroundColor != aOther.mBackgroundColor ||
-      mFallbackBackgroundColor != aOther.mFallbackBackgroundColor ||
-      mBackgroundInlinePolicy != aOther.mBackgroundInlinePolicy ||
-      mImageCount != aOther.mImageCount)
-    return NS_STYLE_HINT_VISUAL;
-
-  // We checked the image count above.
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
-    if (mLayers[i] != aOther.mLayers[i])
-      return NS_STYLE_HINT_VISUAL;
-  }
-
-  return NS_STYLE_HINT_NONE;
+  if ((mBackgroundAttachment == aOther.mBackgroundAttachment) &&
+      (mBackgroundFlags == aOther.mBackgroundFlags) &&
+      (mBackgroundRepeat == aOther.mBackgroundRepeat) &&
+      (mBackgroundColor == aOther.mBackgroundColor) &&
+      (mBackgroundClip == aOther.mBackgroundClip) &&
+      (mBackgroundInlinePolicy == aOther.mBackgroundInlinePolicy) &&
+      (mBackgroundOrigin == aOther.mBackgroundOrigin) &&
+      EqualImages(mBackgroundImage, aOther.mBackgroundImage) &&
+      ((!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_PERCENT) ||
+       (mBackgroundXPosition.mFloat == aOther.mBackgroundXPosition.mFloat)) &&
+       (!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_LENGTH) ||
+        (mBackgroundXPosition.mCoord == aOther.mBackgroundXPosition.mCoord))) &&
+      ((!(mBackgroundFlags & NS_STYLE_BG_Y_POSITION_PERCENT) ||
+       (mBackgroundYPosition.mFloat == aOther.mBackgroundYPosition.mFloat)) &&
+       (!(mBackgroundFlags & NS_STYLE_BG_Y_POSITION_LENGTH) ||
+        (mBackgroundYPosition.mCoord == aOther.mBackgroundYPosition.mCoord))))
+    return NS_STYLE_HINT_NONE;
+  return NS_STYLE_HINT_VISUAL;
 }
 
 #ifdef DEBUG
@@ -1278,80 +1267,8 @@ nsChangeHint nsStyleBackground::MaxDifference()
 
 PRBool nsStyleBackground::HasFixedBackground() const
 {
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
-    const Layer &layer = mLayers[i];
-    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-        layer.mImage.mRequest) {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-PRBool nsStyleBackground::IsTransparent() const
-{
-  return !BottomLayer().mImage.mRequest && mImageCount == 1 &&
-         NS_GET_A(mBackgroundColor) == 0;
-}
-
-void
-nsStyleBackground::Position::SetInitialValues()
-{
-  mXPosition.mFloat = 0.0f;
-  mYPosition.mFloat = 0.0f;
-  mXIsPercent = PR_TRUE;
-  mYIsPercent = PR_TRUE;
-}
-
-// Initialize to initial values
-nsStyleBackground::Image::Image()
-{
-  SetInitialValues();
-}
-
-nsStyleBackground::Image::~Image()
-{
-}
-
-void nsStyleBackground::Image::SetInitialValues()
-{
-  mRequest = nsnull;
-  mSpecified = PR_FALSE;
-}
-
-PRBool nsStyleBackground::Image::operator==(const Image& aOther) const
-{
-  return mSpecified == aOther.mSpecified &&
-         EqualImages(mRequest, aOther.mRequest);
-}
-
-nsStyleBackground::Layer::Layer()
-{
-}
-
-nsStyleBackground::Layer::~Layer()
-{
-}
-
-void
-nsStyleBackground::Layer::SetInitialValues()
-{
-  mAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-  mClip = NS_STYLE_BG_CLIP_BORDER;
-  mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
-  mRepeat = NS_STYLE_BG_REPEAT_XY;
-  mPosition.SetInitialValues();
-  mImage.SetInitialValues();
-}
-
-PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
-{
-  return mAttachment == aOther.mAttachment &&
-         mClip == aOther.mClip &&
-         mOrigin == aOther.mOrigin &&
-         mRepeat == aOther.mRepeat &&
-         mPosition == aOther.mPosition &&
-         mImage == aOther.mImage;
+  return mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+         mBackgroundImage;
 }
 
 // --------------------

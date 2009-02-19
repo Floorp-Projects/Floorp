@@ -209,17 +209,12 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
           NS_ASSERTION(item->mXValue.GetUnit() != eCSSUnit_Null,
                        "unexpected null unit");
           AppendCSSValueToString(aProperty, item->mXValue, aResult);
-          if (item->mXValue.GetUnit() != eCSSUnit_Inherit &&
-              item->mXValue.GetUnit() != eCSSUnit_Initial &&
-              item->mYValue.GetUnit() != eCSSUnit_Null) {
+          if (item->mYValue.GetUnit() != eCSSUnit_Null) {
             aResult.Append(PRUnichar(' '));
             AppendCSSValueToString(aProperty, item->mYValue, aResult);
           }
           item = item->mNext;
           if (item) {
-            if (nsCSSProps::PropHasFlags(aProperty,
-                                         CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-              aResult.Append(PRUnichar(','));
             aResult.Append(PRUnichar(' '));
           }
         } while (item);
@@ -766,97 +761,50 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_background: {
-      // We know from above that all subproperties were specified.
-      // However, we still can't represent that in the shorthand unless
-      // they're all lists of the same length.  So if they're different
-      // lengths, we need to bail out.
-      // We also need to bail out if an item has background-clip and
-      // background-origin that are different and not the default
-      // values.  (We omit them if they're both default.)
-      const nsCSSValueList *image =
-        * data->ValueListStorageFor(eCSSProperty_background_image);
-      const nsCSSValueList *repeat =
-        * data->ValueListStorageFor(eCSSProperty_background_repeat);
-      const nsCSSValueList *attachment =
-        * data->ValueListStorageFor(eCSSProperty_background_attachment);
-      const nsCSSValuePairList *position =
-        * data->ValuePairListStorageFor(eCSSProperty_background_position);
-      const nsCSSValueList *clip =
-        * data->ValueListStorageFor(eCSSProperty__moz_background_clip);
-      const nsCSSValueList *origin =
-        * data->ValueListStorageFor(eCSSProperty__moz_background_origin);
-      for (;;) {
-        AppendCSSValueToString(eCSSProperty_background_image,
-                               image->mValue, aValue);
-        aValue.Append(PRUnichar(' '));
-        AppendCSSValueToString(eCSSProperty_background_repeat,
-                               repeat->mValue, aValue);
-        aValue.Append(PRUnichar(' '));
-        AppendCSSValueToString(eCSSProperty_background_attachment,
-                               attachment->mValue, aValue);
-        aValue.Append(PRUnichar(' '));
-        AppendCSSValueToString(eCSSProperty_background_position,
-                               position->mXValue, aValue);
-        aValue.Append(PRUnichar(' '));
-        AppendCSSValueToString(eCSSProperty_background_position,
-                               position->mYValue, aValue);
-        NS_ASSERTION(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
-                     origin->mValue.GetUnit() == eCSSUnit_Enumerated,
-                     "should not be inherit/initial within list and "
-                     "should have returned early for real inherit/initial");
-        if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
-            origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
-#if 0
-    // This is commented out for now until we change
-    // -moz-background-clip to background-clip, -moz-background-origin
-    // to background-origin, change their value names to *-box, and add
-    // support for content-box on background-clip.
-          PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
-                           NS_STYLE_BG_ORIGIN_BORDER);
-          PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING == 
-                           NS_STYLE_BG_ORIGIN_PADDING);
-          // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
-          //                  NS_STYLE_BG_ORIGIN_CONTENT);
-          if (clip->mValue != origin->mValue) {
-            aValue.Truncate();
-            return NS_OK;
-          }
-
-          aValue.Append(PRUnichar(' '));
-          AppendCSSValueToString(eCSSProperty__moz_background_clip,
-                                 clip->mValue, aValue);
-#else
-          aValue.Truncate();
-          return NS_OK;
-#endif
-        }
-
-        image = image->mNext;
-        repeat = repeat->mNext;
-        attachment = attachment->mNext;
-        position = position->mNext;
-        clip = clip->mNext;
-        origin = origin->mNext;
-
-        if (!image) {
-          if (repeat || attachment || position || clip || origin) {
-            // Uneven length lists, so can't be serialized as shorthand.
-            aValue.Truncate();
-            return NS_OK;
-          }
-          break;
-        }
-        if (!repeat || !attachment || !position || !clip || !origin) {
-          // Uneven length lists, so can't be serialized as shorthand.
-          aValue.Truncate();
-          return NS_OK;
-        }
-        aValue.Append(PRUnichar(','));
+      // The -moz-background-clip, -moz-background-origin, and
+      // -moz-background-inline-policy properties are reset by this
+      // shorthand property to their initial values, but can't be
+      // represented in its syntax.
+      const nsCSSValue *clipValue = static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty__moz_background_clip));
+      const nsCSSValue *originValue = static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty__moz_background_origin));
+      const nsCSSValue *inlinePolicyValue = static_cast<const nsCSSValue*>(
+        data->StorageFor(eCSSProperty__moz_background_inline_policy));
+      if (*clipValue !=
+            nsCSSValue(NS_STYLE_BG_CLIP_BORDER, eCSSUnit_Enumerated) ||
+          *originValue !=
+            nsCSSValue(NS_STYLE_BG_ORIGIN_PADDING, eCSSUnit_Enumerated) ||
+          *inlinePolicyValue !=
+            nsCSSValue(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS,
+                       eCSSUnit_Enumerated)) {
+        return NS_OK;
+      }
+      
+      PRBool appendedSomething = PR_FALSE;
+      if (AppendValueToString(eCSSProperty_background_color, aValue)) {
+        appendedSomething = PR_TRUE;
         aValue.Append(PRUnichar(' '));
       }
-
-      aValue.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_background_color, aValue);
+      if (AppendValueToString(eCSSProperty_background_image, aValue)) {
+        aValue.Append(PRUnichar(' '));
+        appendedSomething = PR_TRUE;
+      }
+      if (AppendValueToString(eCSSProperty_background_repeat, aValue)) {
+        aValue.Append(PRUnichar(' '));
+        appendedSomething = PR_TRUE;
+      }
+      if (AppendValueToString(eCSSProperty_background_attachment, aValue)) {
+        aValue.Append(PRUnichar(' '));
+        appendedSomething = PR_TRUE;
+      }
+      if (!AppendValueToString(eCSSProperty_background_position, aValue) &&
+          appendedSomething) {
+        NS_ASSERTION(!aValue.IsEmpty() && aValue.Last() == PRUnichar(' '),
+                     "We appended a space before!");
+        // We appended an extra space.  Let's get rid of it
+        aValue.Truncate(aValue.Length() - 1);
+      }
       break;
     }
     case eCSSProperty_cue: {
@@ -1098,8 +1046,8 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       NS_ASSERTION(shorthand != eCSSProperty_font ||
                    *(shorthands + 1) == eCSSProperty_UNKNOWN,
                    "font should always be the only containing shorthand");
-      if (shorthand == eCSSProperty_font) {
-        if (haveSystemFont && !didSystemFont) {
+      if (shorthand == eCSSProperty_font && haveSystemFont) {
+        if (!didSystemFont) {
           // Output the shorthand font declaration that we will
           // partially override later.  But don't add it to
           // |shorthandsUsed|, since we will have to override it.
@@ -1111,17 +1059,15 @@ nsCSSDeclaration::ToString(nsAString& aString) const
         }
 
         // That we output the system font is enough for this property if:
-        //   (1) it's the hidden system font subproperty (which either
-        //       means we output it or we don't have it), or
+        //   (1) it's the hidden system font subproperty, or
         //   (2) its value is the hidden system font value and it matches
-        //       the hidden system font subproperty in importance, and
-        //       we output the system font subproperty.
+        //       the hidden system font subproperty in importance.
         NS_ASSERTION(nsCSSProps::kTypeTable[property] == eCSSType_Value,
                      "not a value typed subproperty");
         const nsCSSValue *val =
           systemFontData->ValueStorageFor(property);
         if (property == eCSSProperty__x_system_font ||
-            (haveSystemFont && val && val->GetUnit() == eCSSUnit_System_Font)) {
+            (val && val->GetUnit() == eCSSUnit_System_Font)) {
           doneProperty = PR_TRUE;
         }
       }
