@@ -518,19 +518,65 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
   return NS_OK;
 }
 
+static PRBool
+EqualImages(imgIRequest *aOldImage, imgIRequest *aNewImage)
+{
+  if (aOldImage == aNewImage)
+    return PR_TRUE;
+
+  if (!aOldImage || !aNewImage)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIURI> oldURI, newURI;
+  aOldImage->GetURI(getter_AddRefs(oldURI));
+  aNewImage->GetURI(getter_AddRefs(newURI));
+  PRBool equal;
+  return NS_SUCCEEDED(oldURI->Equals(newURI, &equal)) && equal;
+}
+
 // Subclass hook for style post processing
 /* virtual */ void
 nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  // We have to start loading the border image before or during reflow,
-  // because the border-image's width overrides only apply once the
-  // image is loaded.  Starting the load of the image means we'll get a
-  // reflow when the image loads.  (Otherwise, if the image loads
-  // between reflow and paint, we never get the notification and our
-  // size ends up wrong.)
-  imgIRequest *borderImage = GetStyleBorder()->GetBorderImage();
-  if (borderImage) {
-    PresContext()->LoadBorderImage(borderImage, this);
+  if (aOldStyleContext) {
+    // If the old context had a background image image and new context
+    // does not have the same image, clear the image load notifier
+    // (which keeps the image loading, if it still is) for the frame.
+    // We want to do this conservatively because some frames paint their
+    // backgrounds from some other frame's style data, and we don't want
+    // to clear those notifiers unless we have to.  (They'll be reset
+    // when we paint, although we could miss a notification in that
+    // interval.)
+    imgIRequest *oldBackgroundImage =
+      aOldStyleContext->GetStyleBackground()->mBackgroundImage;
+    if (oldBackgroundImage &&
+        !EqualImages(oldBackgroundImage,
+                     GetStyleBackground()->mBackgroundImage)) {
+      // stop the image loading for the frame, the image has changed
+      PresContext()->SetImageLoaders(this,
+        nsPresContext::BACKGROUND_IMAGE, nsnull);
+    }
+  }
+
+  imgIRequest *oldBorderImage = aOldStyleContext
+    ? aOldStyleContext->GetStyleBorder()->GetBorderImage()
+    : nsnull;
+  // For border-images, we can't be as conservative (we need to set the
+  // new loaders if there has been any change) since the CalcDifference
+  // call depended on the result of GetActualBorder() and that result
+  // depends on whether the image has loaded, start the image load now
+  // so that we'll get notified when it completes loading and can do a
+  // restyle.  Otherwise, the image might finish loading from the
+  // network before we start listening to its notifications, and then
+  // we'll never know that it's finished loading.  Likewise, we want to
+  // do this for freshly-created frames to prevent a similar race if the
+  // image loads between reflow (which can depend on whether the image
+  // is loaded) and paint.  We also don't really care about any callers
+  // who try to paint borders with a different style context, because
+  // they won't have the correct size for the border either.
+  if (!EqualImages(oldBorderImage, GetStyleBorder()->GetBorderImage())) {
+    // stop and restart the image loading/notification
+    PresContext()->SetupBorderImageLoaders(this, GetStyleBorder());
   }
 }
 
