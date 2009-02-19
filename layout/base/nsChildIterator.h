@@ -58,14 +58,13 @@ protected:
   // anon content too, but in practice that would basically replace our current
   // branch on mNodes with an extra virtual function call in the common case.
 
-  // XXXbz do these really need to be strong pointers?
-  nsCOMPtr<nsIContent> mContent;
+  nsIContent* mContent;
   PRUint32 mIndex;
-  nsCOMPtr<nsINodeList> mNodes;
+  nsINodeList* mNodes;
 
 public:
   ChildIterator()
-    : mIndex(0) {}
+    : mContent(nsnull), mIndex(0), mNodes(nsnull) {}
 
   ChildIterator(const ChildIterator& aOther)
     : mContent(aOther.mContent),
