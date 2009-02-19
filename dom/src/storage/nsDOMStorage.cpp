@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Neil Deakin <enndeakin@sympatico.ca>
  *   Johnny Stenback <jst@mozilla.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,6 +60,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIJSContextStack.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsNetCID.h"
 
 static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
@@ -210,6 +213,11 @@ nsSessionStorageEntry::~nsSessionStorageEntry()
 
 nsDOMStorageManager* nsDOMStorageManager::gStorageManager;
 
+nsDOMStorageManager::nsDOMStorageManager()
+  : mInPrivateBrowsing(PR_FALSE)
+{
+}
+
 NS_IMPL_ISUPPORTS2(nsDOMStorageManager,
                    nsIDOMStorageManager,
                    nsIObserver)
@@ -234,6 +242,12 @@ nsDOMStorageManager::Initialize()
   if (os) {
     os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
     os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
+    os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+
+    nsCOMPtr<nsIPrivateBrowsingService> pbs =
+      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs)
+      pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
   }
 
   return NS_OK;
@@ -332,6 +346,12 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
     return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_FALSE);
 #endif
+  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
+    mStorages.EnumerateEntries(ClearStorage, nsnull);
+    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).get()))
+      mInPrivateBrowsing = PR_TRUE;
+    else if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).get()))
+      mInPrivateBrowsing = PR_FALSE;
   }
 
   return NS_OK;
@@ -1010,6 +1030,7 @@ void
 nsDOMStorage::ClearAll()
 {
   mItems.EnumerateEntries(ClearStorageItem, nsnull);
+  mItemsCached = PR_FALSE;
 }
 
 static PLDHashOperator
