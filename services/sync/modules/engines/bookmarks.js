@@ -479,7 +479,7 @@ BookmarksStore.prototype = {
   },
 
   // Create a record starting from the weave id (places guid)
-  createRecord: function BStore_createRecord(guid) {
+  createRecord: function BStore_createRecord(guid, cryptoMetaURL) {
     let record = this.cache.get(guid);
     if (record)
       return record;
@@ -542,6 +542,7 @@ BookmarksStore.prototype = {
     record.parentid = this._getWeaveParentIdForItem(placeId);
     record.depth = this._itemDepth(placeId);
     record.sortindex = this._bms.getItemIndex(placeId);
+    record.encryption = cryptoMetaURL;
 
     this.cache.put(guid, record);
     return record;

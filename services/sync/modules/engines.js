@@ -214,9 +214,7 @@ SyncEngine.prototype = {
 
   // Create a new record by querying the store, and add the engine metadata
   _createRecord: function SyncEngine__createRecord(id) {
-    let record = this._store.createRecord(id);
-    record.encryption = this.cryptoMetaURL;
-    return record;
+    return this._store.createRecord(id, this.cryptoMetaURL);
   },
 
   // Check if a record is "like" another one, even though the IDs are different,
