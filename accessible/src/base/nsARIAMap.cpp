@@ -92,6 +92,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     nsIAccessibleRole::ROLE_DOCUMENT,
     eNoValue,
     eNoAction,
+    eNoLiveAttr,
     nsIAccessibleStates::STATE_READONLY,
     kEndEntry
   },
@@ -155,6 +156,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     nsIAccessibleRole::ROLE_DOCUMENT,
     eNoValue,
     eNoAction,
+    eNoLiveAttr,
     nsIAccessibleStates::STATE_READONLY,
     kEndEntry
   },
