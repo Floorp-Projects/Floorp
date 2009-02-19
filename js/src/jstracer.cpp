@@ -3205,7 +3205,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 #ifdef DEBUG
         JSObject *obj =
 #endif
-            js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain);
+            js_GetCallObject(cx, &newifp->frame);
         JS_ASSERT(obj);
         JS_TRACE_MONITOR(cx).useReservedObjects = JS_FALSE;
     }

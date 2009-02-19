@@ -204,7 +204,7 @@ extern void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags);
 
 extern JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent);
+js_GetCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JS_FRIEND_API(JSBool)
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
