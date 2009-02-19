@@ -55,6 +55,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
+#include "nsStyleStruct.h"
 
 class nsComputedDOMStyle : public nsIComputedDOMStyle
 {
@@ -115,6 +116,11 @@ private:
                              const nscolor& aDefaultColor,
                              PRBool aIsBoxShadow,
                              nsIDOMCSSValue** aValue);
+
+  nsresult GetBackgroundList(PRUint8 nsStyleBackground::Layer::* aMember,
+                             PRUint32 nsStyleBackground::* aCount,
+                             const PRInt32 aTable[],
+                             nsIDOMCSSValue** aResult);
 
   /* Properties Queryable as CSSValues */
 

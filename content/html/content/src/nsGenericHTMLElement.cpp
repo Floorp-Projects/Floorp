@@ -1941,8 +1941,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
     return;
 
   nsPresContext* presContext = aData->mPresContext;
-  if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null &&
-      presContext->UseDocumentColors()) {
+  if (!aData->mColorData->mBackImage && presContext->UseDocumentColors()) {
     // background
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::background);
     if (value && value->Type() == nsAttrValue::eString) {
@@ -1972,7 +1971,11 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
                                     doc->NodePrincipal(), doc);
             buffer->Release();
             if (NS_LIKELY(img != 0)) {
-              aData->mColorData->mBackImage.SetImageValue(img);
+              // Use nsRuleDataColor's temporary mTempBackImage to
+              // make a value list.
+              aData->mColorData->mTempBackImage.mValue.SetImageValue(img);
+              aData->mColorData->mBackImage =
+                &aData->mColorData->mTempBackImage;
             }
           }
         }
@@ -1980,7 +1983,10 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
       else if (presContext->CompatibilityMode() == eCompatibility_NavQuirks) {
         // in NavQuirks mode, allow the empty string to set the
         // background to empty
-        aData->mColorData->mBackImage.SetNoneValue();
+        // Use nsRuleDataColor's temporary mTempBackImage to make a value list.
+        aData->mColorData->mBackImage = nsnull;
+        aData->mColorData->mTempBackImage.mValue.SetNoneValue();
+        aData->mColorData->mBackImage = &aData->mColorData->mTempBackImage;
       }
     }
   }
@@ -1993,12 +1999,16 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
   if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null &&
+  if (aData->mColorData->mBackColor.mXValue.GetUnit() == eCSSUnit_Null &&
       aData->mPresContext->UseDocumentColors()) {
+    NS_ASSERTION(aData->mColorData->mBackColor.mYValue.GetUnit() ==
+                   eCSSUnit_Null,
+                 "half a property?");
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      aData->mColorData->mBackColor.SetColorValue(color);
+      aData->mColorData->mBackColor.mXValue.SetColorValue(color);
+      aData->mColorData->mBackColor.mYValue.SetColorValue(color);
     }
   }
 }
