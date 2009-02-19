@@ -190,7 +190,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
      * Optimize the cached vword based on our parameters and the current pc's
      * opcode format flags.
      */
-    op = (JSOp) *pc;
+    op = js_GetOpcode(cx, cx->fp->script, pc);
     cs = &js_CodeSpec[op];
 
     do {
@@ -319,7 +319,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
     JS_ASSERT(uintN((cx->fp->imacpc ? cx->fp->imacpc : pc) - cx->fp->script->code)
               < cx->fp->script->length);
 
-    op = (JSOp) *pc;
+    op = js_GetOpcode(cx, cx->fp->script, pc);
     cs = &js_CodeSpec[op];
     if (op == JSOP_LENGTH) {
         atom = cx->runtime->atomState.lengthAtom;
@@ -3078,7 +3078,8 @@ js_Interpret(JSContext *cx)
                 inlineCallCount--;
                 if (JS_LIKELY(ok)) {
                     TRACE_0(LeaveFrame);
-                    JS_ASSERT(js_CodeSpec[*regs.pc].length == JSOP_CALL_LENGTH);
+                    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
+                              == JSOP_CALL_LENGTH);
                     len = JSOP_CALL_LENGTH;
                     DO_NEXT_OP(len);
                 }
@@ -3403,7 +3404,7 @@ js_Interpret(JSContext *cx)
             GET_ATOM_FROM_BYTECODE(script, regs.pc, pcoff, atom_);            \
         else                                                                  \
             atom_ = rt->atomState.lengthAtom;                                 \
-        if (JOF_OPMODE(*regs.pc) == JOF_NAME) {                               \
+        if (JOF_OPMODE(op) == JOF_NAME) {                                     \
             ok = js_FindProperty(cx, ATOM_TO_JSID(atom_), &obj_, &pobj_,      \
                                  &prop_);                                     \
         } else {                                                              \
@@ -5074,7 +5075,7 @@ js_Interpret(JSContext *cx)
             if (!ok)
                 goto error;
             if (!cx->rval2set) {
-                op2 = (JSOp) regs.pc[JSOP_SETCALL_LENGTH];
+                op2 = js_GetOpcode(cx, script, regs.pc + JSOP_SETCALL_LENGTH);
                 if (op2 != JSOP_DELELEM) {
                     JS_ASSERT(!(js_CodeSpec[op2].format & JOF_DEL));
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -5136,7 +5137,7 @@ js_Interpret(JSContext *cx)
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
                 endpc = script->code + script->length;
-                op2 = (JSOp) regs.pc[JSOP_NAME_LENGTH];
+                op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
                 if (op2 == JSOP_TYPEOF) {
                     PUSH_OPND(JSVAL_VOID);
                     len = JSOP_NAME_LENGTH;
@@ -6291,7 +6292,7 @@ js_Interpret(JSContext *cx)
                 JS_ASSERT(OBJ_IS_ARRAY(cx, obj));
                 JS_ASSERT(JSID_IS_INT(id));
                 JS_ASSERT((jsuint) JSID_TO_INT(id) < ARRAY_INIT_LIMIT);
-                if ((JSOp) regs.pc[JSOP_INITELEM_LENGTH] == JSOP_ENDINIT &&
+                if (js_GetOpcode(cx, script, regs.pc + JSOP_INITELEM_LENGTH) == JSOP_ENDINIT &&
                     !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1))) {
                     goto error;
                 }
@@ -7040,7 +7041,7 @@ js_Interpret(JSContext *cx)
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK);
+                JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENTERBLOCK);
 
 #if JS_HAS_GENERATORS
                 /* Catch cannot intercept the closing of a generator. */
@@ -7075,7 +7076,7 @@ js_Interpret(JSContext *cx)
                  * adjustment and regs.sp[1] after, to save and restore the
                  * pending exception.
                  */
-                JS_ASSERT(*regs.pc == JSOP_ENDITER);
+                JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENDITER);
                 regs.sp[-1] = cx->exception;
                 cx->throwing = JS_FALSE;
                 ok = js_CloseIterator(cx, regs.sp[-2]);
