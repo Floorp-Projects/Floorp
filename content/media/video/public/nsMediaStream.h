@@ -88,7 +88,6 @@ public:
   virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes) = 0;
   virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
   virtual PRInt64  Tell() = 0;
-  virtual PRUint32 Available() = 0;
   virtual void     Cancel() { }
   virtual nsIPrincipal* GetCurrentPrincipal() = 0;
   virtual void     Suspend() = 0;
@@ -171,10 +170,6 @@ class nsMediaStream
   // Report the current offset in bytes from the start of the stream.
   // Can be called from any thread.
   PRInt64 Tell();
-
-  // Return the number of bytes available in the stream that can be
-  // read without blocking. Can be called from any thread.
-  PRUint32 Available();
 
   // Cancels any currently blocking request and forces that request to
   // return an error. Call on main thread only.
