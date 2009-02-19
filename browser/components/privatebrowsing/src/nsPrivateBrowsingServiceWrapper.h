@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,19 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Private Browsing Tests.
+ * The Original Code is Private Browsing.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,13 +34,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Test added with bug 460086 to test the behavior of the new API that was added
- * to remove all traces of visiting a site.
- */
+#include "nsCOMPtr.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsIObserver.h"
 
-function run_test() {
-  PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
-  do_import_script("browser/components/privatebrowsing/test/unit/do_test_removeDataFromDomain.js");
-  do_test();
-}
+class nsIJSContextStack;
+
+class nsPrivateBrowsingServiceWrapper : public nsIPrivateBrowsingService,
+                                        public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRIVATEBROWSINGSERVICE
+  NS_DECL_NSIOBSERVER
+
+  nsresult Init();
+
+private:
+  nsresult PrepareCall(nsIJSContextStack ** aJSStack);
+  void FinishCall(nsIJSContextStack * aJSStack);
+
+  nsCOMPtr<nsIPrivateBrowsingService> mPBService;
+};
