@@ -200,6 +200,10 @@ SessionStoreService.prototype = {
     
     // observe prefs changes so we can modify stored data to match
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
+    
+    // this pref is only read at startup, so no need to observe it
+    this._sessionhistory_max_entries =
+      this._prefBranch.getIntPref("sessionhistory.max_entries");
 
     // get file references
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
@@ -1007,8 +1011,11 @@ SessionStoreService.prototype = {
     }
     catch (ex) { } // this could happen if we catch a tab during (de)initialization
     
+    // XXXzeniko anchor navigation doesn't reset __SS_data, so we could reuse
+    //           data even when we shouldn't (e.g. Back, different anchor)
     if (history && browser.parentNode.__SS_data &&
-        browser.parentNode.__SS_data.entries[history.index] && !aFullData) {
+        browser.parentNode.__SS_data.entries[history.index] &&
+        history.index < this._sessionhistory_max_entries - 1 && !aFullData) {
       tabData = browser.parentNode.__SS_data;
       tabData.index = history.index + 1;
     }
