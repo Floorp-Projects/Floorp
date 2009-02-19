@@ -80,7 +80,7 @@ namespace nanojit
 			for (;;) {
 				LInsp i = in->read();
 				if (!i || i->isGuard() || i->isBranch()
-					|| i->isCall() && !i->isCse(functions)
+					|| (i->isCall() && !i->isCse(functions))
 					|| !ignoreInstruction(i))
 					return i;
 			}
@@ -410,8 +410,8 @@ namespace nanojit
 		if (error()) return;
 
 #ifdef NANOJIT_IA32
-        NanoAssert(_allocator.active[FST0] && _fpuStkDepth == -1 ||
-            !_allocator.active[FST0] && _fpuStkDepth == 0);
+        NanoAssert((_allocator.active[FST0] && _fpuStkDepth == -1) ||
+            (!_allocator.active[FST0] && _fpuStkDepth == 0));
 #endif
 		
         AR &ar = _activation;
@@ -576,8 +576,8 @@ namespace nanojit
 
 #ifdef AVMPLUS_IA32
         if (r != UnknownReg && 
-            ((rmask(r)&XmmRegs) && !(allow&XmmRegs) ||
-                 (rmask(r)&x87Regs) && !(allow&x87Regs)))
+            (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
+                 ((rmask(r)&x87Regs) && !(allow&x87Regs))))
         {
             // x87 <-> xmm copy required
             //_nvprof("fpu-evict",1);

@@ -1209,7 +1209,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
                         cx->fp->script->filename,
                         js_FramePCToLineNumber(cx, cx->fp),
                         FramePCOffset(cx->fp));)
-    debug_only_v(printf("globalObj=%p, shape=%d\n", this->globalObj, OBJ_SHAPE(this->globalObj));)
+    debug_only_v(printf("globalObj=%p, shape=%d\n", (void*)this->globalObj, OBJ_SHAPE(this->globalObj));)
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
     debug_only_v(lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
@@ -1469,7 +1469,7 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
       case JSVAL_STRING:
         JS_ASSERT(tag == JSVAL_STRING);
         *(JSString**)slot = JSVAL_TO_STRING(v);
-        debug_only_v(printf("string<%p> ", *(JSString**)slot);)
+        debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
         return;
       case JSVAL_TNULL:
         JS_ASSERT(tag == JSVAL_OBJECT);
@@ -1480,7 +1480,7 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         JS_ASSERT(type == JSVAL_OBJECT);
         JS_ASSERT(tag == JSVAL_OBJECT);
         *(JSObject**)slot = JSVAL_TO_OBJECT(v);
-        debug_only_v(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
+        debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                             JSVAL_IS_NULL(v)
                             ? "null"
                             : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
@@ -1584,24 +1584,24 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING); /* if this fails the pointer was not aligned */
-        debug_only_v(printf("string<%p> ", *(JSString**)slot);)
+        debug_only_v(printf("string<%p> ", (void*)(*(JSString**)slot));)
         break;
       case JSVAL_BOXED:
         v = *(jsval*)slot;
         JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
-        debug_only_v(printf("box<%lx> ", v));
+        debug_only_v(printf("box<%x> ", v));
         break;
       case JSVAL_TNULL:
         JS_ASSERT(*(JSObject**)slot == NULL);
         v = JSVAL_NULL;
-        debug_only_v(printf("null<%p> ", *(JSObject**)slot));
+        debug_only_v(printf("null<%p> ", (void*)(*(JSObject**)slot)));
         break;
       default:
         JS_ASSERT(type == JSVAL_OBJECT);
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_OBJECT); /* if this fails the pointer was not aligned */
         JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
-        debug_only_v(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
+        debug_only_v(printf("object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                             JSVAL_IS_NULL(v)
                             ? "null"
                             : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
@@ -1764,7 +1764,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         "object", "int", "double", "3", "string", "5", "boolean", "any"
     };
     debug_only_v(printf("import vp=%p name=%s type=%s flags=%d\n",
-                        p, name, typestr[t & 7], t >> 3);)
+                        (void*)p, name, typestr[t & 7], t >> 3);)
 #endif
 }
 
@@ -2301,7 +2301,7 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
     stage_count = 0;
     success = false;
 
-    debug_only_v(printf("Checking type stability against self=%p\n", fragment);)
+    debug_only_v(printf("Checking type stability against self=%p\n", (void*)fragment);)
 
     m = typemap = treeInfo->globalTypeMap();
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
@@ -2352,7 +2352,7 @@ checktype_fail_1:
     Fragment* f;
     TreeInfo* ti;
     for (f = root_peer; f != NULL; f = f->peer) {
-        debug_only_v(printf("Checking type stability against peer=%p (code=%p)\n", f, f->code());)
+        debug_only_v(printf("Checking type stability against peer=%p (code=%p)\n", (void*)f, f->code());)
         if (!f->code())
             continue;
         ti = (TreeInfo*)f->vmprivate;
@@ -2586,7 +2586,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         } else {
             JS_ASSERT(peer->code());
             exit->target = peer;
-            debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", peer);)
+            debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", (void*)peer);)
             stable = true;
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
         }
@@ -2632,7 +2632,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, Fragment* peer_root)
                 JS_ASSERT(!remove || fragment != peer);
                 debug_only_v(if (remove) {
                              printf("Joining type-stable trace to target exit %p->%p.\n",
-                                    uexit->fragment, uexit->exit); });
+                                    (void*)uexit->fragment, (void*)uexit->exit); });
                 if (!remove) {
                     /* See if this exit contains mismatch demotions, which imply trashing a tree.
                        This is actually faster than trashing the original tree as soon as the
@@ -3231,16 +3231,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
            script->nfixed;
 }
 
-#ifdef JS_JIT_SPEW
-static void
-js_dumpMap(TypeMap const & tm) {
-    uint8 *data = tm.data();
-    for (unsigned i = 0; i < tm.length(); ++i) {
-        printf("typemap[%d] = %c\n", i, typeChar[data[i]]);
-    }
-}
-#endif
-
 JS_REQUIRES_STACK bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, Fragment* outer,
               uint32 globalShape, SlotList* globalSlots)
@@ -3579,7 +3569,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
         if (!success) {
             AUDIT(noCompatInnerTrees);
-            debug_only_v(printf("No compatible inner tree (%p).\n", f);)
+            debug_only_v(printf("No compatible inner tree (%p).\n", (void*)f);)
 
             Fragment* old = getLoop(tm, tm->recorder->getFragment()->root->ip, ti->globalShape);
             if (old == NULL)
@@ -3661,7 +3651,7 @@ js_IsEntryTypeCompatible(jsval* vp, uint8* m)
             return true;
         if ((tag == JSVAL_DOUBLE) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(*vp), i))
             return true;
-        debug_only_v(printf("int != tag%u(value=%lu) ", tag, *vp);)
+        debug_only_v(printf("int != tag%u(value=%lu) ", tag, (unsigned long)*vp);)
         return false;
       case JSVAL_DOUBLE:
         if (JSVAL_IS_INT(*vp) || tag == JSVAL_DOUBLE)
@@ -3720,7 +3710,7 @@ TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
         unsigned demotes = 0;
         ti = (TreeInfo*)f->vmprivate;
 
-        debug_only_v(printf("checking nested types %p: ", f);)
+        debug_only_v(printf("checking nested types %p: ", (void*)f);)
 
         if (ngslots > ti->nGlobalTypes())
             ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
@@ -3815,7 +3805,7 @@ js_FindVMCompatiblePeer(JSContext* cx, Fragment* f)
     for (; f != NULL; f = f->peer) {
         if (f->vmprivate == NULL)
             continue;
-        debug_only_v(printf("checking vm types %p (ip: %p): ", f, f->ip);)
+        debug_only_v(printf("checking vm types %p (ip: %p): ", (void*)f, f->ip);)
         if (js_CheckEntryTypes(cx, (TreeInfo*)f->vmprivate))
             return f;
     }
@@ -4096,7 +4086,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                         js_FramePCToLineNumber(cx, fp),
                         FramePCOffset(fp),
                         js_CodeName[fp->imacpc ? *fp->imacpc : *fp->regs->pc],
-                        lr,
+                        (void*)lr,
                         lr->exitType,
                         fp->regs->sp - StackBase(fp),
                         calldepth,
@@ -4226,7 +4216,7 @@ monitor_loop:
     debug_only_v(printf("Looking for compat peer %d@%d, from %p (ip: %p, hits=%d)\n",
                         js_FramePCToLineNumber(cx, cx->fp),
                         FramePCOffset(cx->fp),
-                        f, f->ip, oracle.getHits(f->ip));)
+                        (void*)f, f->ip, oracle.getHits(f->ip));)
     Fragment* match = js_FindVMCompatiblePeer(cx, f);
     /* If we didn't find a tree that actually matched, keep monitoring the loop. */
     if (!match)
@@ -4580,7 +4570,7 @@ js_FlushScriptFragments(JSContext* cx, JSScript* script)
 {
     if (!TRACING_ENABLED(cx))
         return;
-    debug_only_v(printf("Flushing fragments for JSScript %p.\n", script);)
+    debug_only_v(printf("Flushing fragments for JSScript %p.\n", (void*)script);)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
@@ -4588,7 +4578,7 @@ js_FlushScriptFragments(JSContext* cx, JSScript* script)
             if (JS_UPTRDIFF((*f)->ip, script->code) < script->length) {
                 debug_only_v(printf("Disconnecting VMFragment %p "
                                     "with ip %p, in range [%p,%p).\n",
-                                    *f, (*f)->ip, script->code,
+                                    (void*)(*f), (*f)->ip, script->code,
                                     script->code + script->length));
                 VMFragment* next = (*f)->next;
                 if (tm->fragmento)
@@ -9410,7 +9400,7 @@ js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, uint32 globalShape)
     for (f = getLoop(tm, ip, globalShape); f != NULL; f = f->peer) {
         if (!f->vmprivate)
             continue;
-        printf("fragment %p:\nENTRY: ", f);
+        printf("fragment %p:\nENTRY: ", (void*)f);
         ti = (TreeInfo*)f->vmprivate;
         if (looped)
             JS_ASSERT(ti->nStackTypes == length);
