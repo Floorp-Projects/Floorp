@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonathan Watt <jonathan.watt@strath.ac.uk> (original author)
+ *   Craig Topper <craig.topper@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -78,6 +78,7 @@ nsSVGViewBox::Init()
 {
   mBaseVal = nsSVGViewBoxRect();
   mAnimVal = nsnull;
+  mHasBaseVal = PR_FALSE;
 }
 
 const nsSVGViewBoxRect&
@@ -94,10 +95,8 @@ nsSVGViewBox::SetBaseValue(float aX, float aY, float aWidth, float aHeight,
                            nsSVGElement *aSVGElement, PRBool aDoSetAttr)
 {
   mAnimVal = nsnull;
-  mBaseVal.x = aX;
-  mBaseVal.y = aY;
-  mBaseVal.width  = aWidth;
-  mBaseVal.height = aHeight;
+  mBaseVal = nsSVGViewBoxRect(aX, aY, aWidth, aHeight);
+  mHasBaseVal = PR_TRUE;
 
   aSVGElement->DidChangeViewBox(aDoSetAttr);
 }
@@ -128,11 +127,7 @@ nsSVGViewBox::SetBaseValueString(const nsAString& aValue,
     // there was a parse error.
     rv = NS_ERROR_FAILURE;
   } else {
-    mAnimVal = nsnull;
-    mBaseVal.x = vals[0];
-    mBaseVal.y = vals[1];
-    mBaseVal.width = vals[2];
-    mBaseVal.height = vals[3];
+    SetBaseValue(vals[0], vals[1], vals[2], vals[3], aSVGElement, aDoSetAttr);
   }
 
   nsMemory::Free(str);
