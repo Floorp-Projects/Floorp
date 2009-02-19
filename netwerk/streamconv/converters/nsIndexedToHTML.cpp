@@ -918,6 +918,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
     }
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);
+    // esc_Directory does not escape the semicolons, so if a filename
+    // contains semicolons we need to manually escape them.
+    // This replacement should be removed in bug #473280
+    escapeBuf.ReplaceSubstring(";", "%3b");
     NS_ConvertUTF8toUTF16 utf16URI(escapeBuf);
     nsString htmlEscapedURL;
     htmlEscapedURL.Adopt(nsEscapeHTML2(utf16URI.get(), utf16URI.Length()));
