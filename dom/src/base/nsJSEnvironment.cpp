@@ -376,7 +376,7 @@ class AutoFreeJSStack {
 public:
   AutoFreeJSStack(JSContext *ctx, void *aPtr) : mContext(ctx), mStack(aPtr) {
   }
-  ~AutoFreeJSStack() {
+  JS_REQUIRES_STACK ~AutoFreeJSStack() {
     if (mContext && mStack)
       js_FreeStack(mContext, mStack);
   }
@@ -2522,6 +2522,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      void **aMarkp)
 {
   nsresult rv = NS_OK;
+
+  js_LeaveTrace(mContext);
 
   // If the array implements nsIJSArgArray, just grab the values directly.
   nsCOMPtr<nsIJSArgArray> fastArray = do_QueryInterface(aArgs);
