@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Ehsan Akhgari.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,59 +35,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This test makes sure that the about:privatebrowsing page is available inside
-// and outside of the private mode.
+// This test makes sure that the private browsing mode is left at application
+// shutdown.
 
-function is_about_privatebrowsing_available() {
-  try {
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    var channel = ios.newChannel("about:privatebrowsing", null, null);
-    var input = channel.open();
-    var sinput = Cc["@mozilla.org/scriptableinputstream;1"].
-                 createInstance(Ci.nsIScriptableInputStream);
-    sinput.init(input);
-    while (true)
-      if (!sinput.read(1024).length)
-        break;
-    sinput.close();
-    input.close();
-    return true;
-  } catch (ex if ("result" in ex && ex.result == Cr.NS_ERROR_MALFORMED_URI)) { // expected
-  }
-
-  return false;
-}
-
-function run_test_on_service() {
+function do_test() {
   // initialization
+  var os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
   var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                    getService(Ci.nsIPrefBranch);
   prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
-  try {
-    // about:privatebrowsing should be available before entering the private mode
-    do_check_true(is_about_privatebrowsing_available());
+  var expectedQuitting;
+  var called = 0;
+  var observer = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic == kPrivateBrowsingNotification &&
+          aData == kExit) {
+        // increment the call counter
+        ++ called;
 
-    // enter the private browsing mode
-    pb.privateBrowsingEnabled = true;
+        do_check_neq(aSubject, null);
+        try {
+          aSubject.QueryInterface(Ci.nsISupportsPRBool);
+        } catch (ex) {
+          do_throw("aSubject was not null, but wasn't an nsISupportsPRBool");
+        }
+        // check the "quitting" argument
+        do_check_eq(aSubject.data, expectedQuitting);
 
-    // about:privatebrowsing should be available inside the private mode
-    do_check_true(is_about_privatebrowsing_available());
+        // finish up the test
+        if (expectedQuitting) {
+          os.removeObserver(this, kPrivateBrowsingNotification);
+          prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+          do_test_finished();
+        }
+      }
+    }
+  };
 
-    // exit the private browsing mode
-    pb.privateBrowsingEnabled = false;
+  // set the observer
+  os.addObserver(observer, kPrivateBrowsingNotification, false);
 
-    // about:privatebrowsing should be available after leaving the private mode
-    do_check_true(is_about_privatebrowsing_available());
-  } finally {
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
-  }
-}
+  // enter the private browsing mode
+  pb.privateBrowsingEnabled = true;
 
-// Support running tests on both the service itself and its wrapper
-function run_test() {
-  run_test_on_all_services();
+  // exit the private browsing mode
+  expectedQuitting = false;
+  pb.privateBrowsingEnabled = false;
+  do_check_eq(called, 1);
+
+  // enter the private browsing mode
+  pb.privateBrowsingEnabled = true;
+
+  // Simulate an exit
+  expectedQuitting = true;
+  do_test_pending();
+  os.notifyObservers(null, "quit-application-granted", null);
 }

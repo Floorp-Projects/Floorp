@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,12 +14,12 @@
  * The Original Code is Private Browsing Tests.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,13 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Test added with bug 460086 to test the behavior of the new API that was added
- * to remove all traces of visiting a site.
- */
+// This test checks the browser.privatebrowsing.autostart preference.
 
-function run_test() {
-  PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
-  do_import_script("browser/components/privatebrowsing/test/unit/do_test_removeDataFromDomain.js");
-  do_test();
+function do_test() {
+  // initialization
+  var prefsService = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+  prefsService.setBoolPref("browser.privatebrowsing.autostart", true);
+  do_check_true(prefsService.getBoolPref("browser.privatebrowsing.autostart"));
+
+  var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
+           getService(Ci.nsIPrivateBrowsingService).
+           QueryInterface(Ci.nsIObserver);
+
+  // private browsing not auto-started yet
+  do_check_false(pb.autoStarted);
+
+  // simulate startup to make the PB service read the prefs
+  pb.observe(null, "profile-after-change", "");
+
+  // the private mode should be entered automatically
+  do_check_true(pb.privateBrowsingEnabled);
+
+  // private browsing is auto-started
+  do_check_true(pb.autoStarted);
+
+  // leave private browsing mode
+  pb.privateBrowsingEnabled = false;
+
+  // private browsing not auto-started
+  do_check_false(pb.autoStarted);
 }
