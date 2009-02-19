@@ -1925,8 +1925,9 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 
     // gLandmarkRoleMap: can use role of accessible class impl
     // gEmptyRoleMap and all others: cannot use role of accessible class impl
-    if (mRoleMapEntry != &nsARIAMap::gLandmarkRoleMap) {
-      // We can now expose ROLE_NOTHING when there is a role map entry, which
+    if (mRoleMapEntry->role != nsIAccessibleRole::ROLE_NOTHING) {
+      // We can now expose ROLE_NOTHING when there is a role map entry or used
+      // role is nothing, which
       // will cause ATK to use ROLE_UNKNOWN and MSAA to use a BSTR role with
       // the ARIA role or element's tag. In either case the AT can also use
       // the object attributes tag and xml-roles to find out more.
@@ -2012,7 +2013,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Expose all ARIA attributes
+  // Expose object attributes from ARIA attributes.
   PRUint32 numAttrs = content->GetAttrCount();
   for (PRUint32 count = 0; count < numAttrs; count ++) {
     const nsAttrName *attr = content->GetAttrNameAt(count);
@@ -2032,6 +2033,17 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
         attributes->SetStringProperty(nsDependentCString(attrStr + 5), value, oldValueUnused);
       }
+    }
+  }
+
+  // If there is no aria-live attribute then expose default value of 'live'
+  // object attribute used for ARIA role of this accessible.
+  if (mRoleMapEntry) {
+    nsAutoString live;
+    nsAccUtils::GetAccAttr(attributes, nsAccessibilityAtoms::live, live);
+    if (live.IsEmpty()) {
+      nsAccUtils::GetLiveAttrValue(mRoleMapEntry->liveAttRule, live);
+      nsAccUtils::SetAccAttr(attributes, nsAccessibilityAtoms::live, live);
     }
   }
 
