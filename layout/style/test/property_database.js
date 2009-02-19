@@ -72,17 +72,12 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"-moz-background-clip": {
-		/*
-		 * When we rename this to 'background-clip', we also
-		 * need to rename the values to match the spec.
-		 */
 		domProp: "MozBackgroundClip",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX Need to add support for "content" -- important for symmetry when handling background shorthand */
 		initial_values: [ "border" ],
-		other_values: [ "padding", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "content", "margin", "border border" ]
+		other_values: [ "padding" ],
+		invalid_values: [ "content", "margin" ]
 	},
 	"-moz-background-inline-policy": {
 		domProp: "MozBackgroundInlinePolicy",
@@ -97,8 +92,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "padding" ],
-		other_values: [ "border", "content", "border, padding", "padding, padding, padding", "border, border" ],
-		invalid_values: [ "margin", "padding padding" ]
+		other_values: [ "border", "content" ],
+		invalid_values: [ "margin" ]
 	},
 	"-moz-binding": {
 		domProp: "MozBinding",
@@ -613,45 +608,14 @@ var gCSSProperties = {
 		domProp: "background",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "-moz-background-clip", "-moz-background-origin" ],
+		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "-moz-background-clip", "-moz-background-inline-policy", "-moz-background-origin" ],
 		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent"],
-		other_values: [
-		        /* without multiple backgrounds */
-		        "green", "none green repeat scroll left top", "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "repeat url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==') transparent left top scroll", "repeat-x", "repeat-y", "no-repeat", "none repeat-y transparent scroll 0% 0%", "fixed", "0% top transparent fixed repeat none", "top", "left", "50% 50%", "center", "bottom right scroll none transparent repeat", "50% transparent", "transparent 50%", "50%",
-		        /* multiple backgrounds */
-		        "url(404.png), url(404.png)",
-		        "url(404.png), url(404.png) transparent",
-		        "url(404.png), url(404.png) transparent red",
-		        "repeat-x, fixed, none",
-		        "0% top url(404.png), url(404.png) 0% top",
-		        "fixed repeat-y top left url(404.png), repeat-x green",
-		        /* test cases with clip+origin in the shorthand */
-    // This is commented out for now until we change
-    // -moz-background-clip to background-clip, -moz-background-origin
-    // to background-origin, change their value names to *-box, and add
-    // support for content-box on background-clip.
-    /*
-		        "url(404.png) green padding-box",
-		        "url(404.png) border-box transparent",
-		        "content-box url(404.png) blue",
-    */
-		],
+		other_values: [ "green", "none green repeat scroll left top", "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "repeat url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==') transparent left top scroll", "repeat-x", "repeat-y", "no-repeat", "none repeat-y transparent scroll 0% 0%", "fixed", "0% top transparent fixed repeat none", "top", "left", "50% 50%", "center", "bottom right scroll none transparent repeat", "50% transparent", "transparent 50%", "50%" ],
  		invalid_values: [
  			/* mixes with keywords have to be in correct order */
  			"50% left", "top 50%",
  			/* bug 258080: don't accept background-position separated */
- 			"left url(404.png) top", "top url(404.png) left",
- 			/* not allowed to have color in non-bottom layer */
- 			"url(404.png) transparent, url(404.png)",
- 			"url(404.png) red, url(404.png)",
- 			"url(404.png) transparent, url(404.png) transparent",
- 			"url(404.png) transparent red, url(404.png) transparent red",
- 			"url(404.png) red, url(404.png) red",
- 			"url(404.png) rgba(0, 0, 0, 0), url(404.png)",
- 			"url(404.png) rgb(255, 0, 0), url(404.png)",
- 			"url(404.png) rgba(0, 0, 0, 0), url(404.png) rgba(0, 0, 0, 0)",
- 			"url(404.png) rgba(0, 0, 0, 0) rgb(255, 0, 0), url(404.png) rgba(0, 0, 0, 0) rgb(255, 0, 0)",
- 			"url(404.png) rgb(255, 0, 0), url(404.png) rgb(255, 0, 0)",
+ 			"left url(404.png) top", "top url(404.png) left"
  		]
 	},
 	"background-attachment": {
@@ -659,15 +623,15 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "scroll" ],
-		other_values: [ "fixed", "scroll,scroll", "fixed, scroll", "scroll, fixed, scroll", "fixed, fixed" ],
+		other_values: [ "fixed" ],
 		invalid_values: []
 	},
 	"background-color": {
 		domProp: "backgroundColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "transparent", "transparent transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
-		other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)", "transparent green", "green transparent", "blue fuchsia", "rgb(3,4,5) hsl(240, 50%, 50%)" ],
+		initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
+		other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "rgb(255.0,0.387,3489)" ]
 	},
 	"background-image": {
@@ -675,22 +639,15 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")',
-			"none, none",
-			"none, none, none, none, none",
-			"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
-			"none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
-			"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)"
-		],
+		other_values: [ "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', ],
 		invalid_values: []
 	},
 	"background-position": {
 		domProp: "backgroundPosition",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* is "0px 0px" an initial value or not? */
 		initial_values: [ "top left", "left top", "0% 0%", "0% top", "left 0%" ],
-		other_values: [ "top", "left", "right", "bottom", "center", "center bottom", "bottom center", "center right", "right center", "center top", "top center", "center left", "left center", "right bottom", "bottom right", "50%", "top left, top left", "top left, top right", "top right, top left", "left top, 0% 0%", "10% 20%, 30%, 40%", "top left, bottom right", "right bottom, left top", "0%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top" ],
+		other_values: [ "top", "left", "right", "bottom", "center", "center bottom", "bottom center", "center right", "right center", "center top", "top center", "center left", "left center", "right bottom", "bottom right", "50%" ],
 		invalid_values: [ "50% left", "top 50%" ]
 	},
 	"background-repeat": {
@@ -698,13 +655,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "repeat" ],
-		other_values: [ "repeat-x", "repeat-y", "no-repeat",
-			"repeat-x, repeat-x",
-			"repeat, no-repeat",
-			"repeat-y, no-repeat, repeat-y",
-			"repeat, repeat, repeat"
-		],
-		invalid_values: [ "repeat repeat" ]
+		other_values: [ "repeat-x", "repeat-y", "no-repeat" ],
+		invalid_values: []
 	},
 	"border": {
 		domProp: "border",
