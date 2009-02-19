@@ -1632,7 +1632,7 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 
     // gLandmarkRoleMap: can use role of accessible class impl
     // gEmptyRoleMap and all others: cannot use role of accessible class impl
-    if (mRoleMapEntry->role != nsIAccessibleRole::ROLE_NOTHING) {
+    if (mRoleMapEntry != &nsARIAMap::gLandmarkRoleMap) {
       // We can now expose ROLE_NOTHING when there is a role map entry or used
       // role is nothing, which
       // will cause ATK to use ROLE_UNKNOWN and MSAA to use a BSTR role with
