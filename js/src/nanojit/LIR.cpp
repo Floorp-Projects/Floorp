@@ -502,7 +502,7 @@ namespace nanojit
 	}
 
 	bool FASTCALL isCmp(LOpcode c) {
-		return c >= LIR_eq && c <= LIR_uge || c >= LIR_feq && c <= LIR_fge;
+		return (c >= LIR_eq && c <= LIR_uge) || (c >= LIR_feq && c <= LIR_fge);
 	}
     
 	bool FASTCALL isCond(LOpcode c) {
@@ -570,7 +570,7 @@ namespace nanojit
 
     bool LIns::isCse(const CallInfo *functions) const
     { 
-		return nanojit::isCse(u.code) || isCall() && callInfo()->_cse;
+		return nanojit::isCse(u.code) || (isCall() && callInfo()->_cse);
     }
 
 	void LIns::setimm16(int32_t x)
@@ -960,7 +960,7 @@ namespace nanojit
 					return insImm(0);
 				}
 			}
-			else if (c == -1 || c == 1 && oprnd1->isCmp()) {
+			else if (c == -1 || (c == 1 && oprnd1->isCmp())) {
 				if (v == LIR_or) {
 					// x | -1 = -1, cmp | 1 = 1
 					return oprnd2;
@@ -986,7 +986,7 @@ namespace nanojit
 	{
 		if (v == LIR_xt || v == LIR_xf) {
 			if (c->isconst()) {
-				if (v == LIR_xt && !c->constval() || v == LIR_xf && c->constval()) {
+				if ((v == LIR_xt && !c->constval()) || (v == LIR_xf && c->constval())) {
 					return 0; // no guard needed
 				}
 				else {

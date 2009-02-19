@@ -215,7 +215,7 @@ GetLine(FILE *file, const char * prompt)
 #endif
     size_t len = 0;
     if (*prompt != '\0') {
-        fprintf(gOutFile, prompt);
+        fprintf(gOutFile, "%s", prompt);
         fflush(gOutFile);
     }
     size = 80;
