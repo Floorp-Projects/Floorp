@@ -1149,6 +1149,7 @@ RENDER_AGAIN:
         ::GetViewportOrgEx(hdc, &vpOrg);
         ::SetBrushOrgEx(hdc, vpOrg.x + widgetRect.left, vpOrg.y + widgetRect.top, NULL);
 
+#ifndef WINCE
         // On vista, choose our own colors and draw an XP style half focus rect
         // for focused checkboxes and a full rect when active.
         if (nsUXThemeData::sIsVistaOrLater && aWidgetType == NS_THEME_CHECKBOX) {
@@ -1175,6 +1176,10 @@ RENDER_AGAIN:
           ::SetTextColor(hdc, 0);
           ::DrawFocusRect(hdc, &widgetRect);
         }
+#else
+        ::SetTextColor(hdc, 0);
+        ::DrawFocusRect(hdc, &widgetRect);
+#endif
         ::RestoreDC(hdc, id);
         if (hPen) {
           ::DeleteObject(hPen);
