@@ -526,8 +526,8 @@ nsBGColorTextAttr::GetColor(nsIFrame *aFrame, nscolor *aColor)
 {
   const nsStyleBackground *styleBackground = aFrame->GetStyleBackground();
 
-  if (NS_GET_A(styleBackground->mFallbackBackgroundColor) > 0) {
-    *aColor = styleBackground->mFallbackBackgroundColor;
+  if (!styleBackground->IsTransparent()) {
+    *aColor = styleBackground->mBackgroundColor;
     return PR_TRUE;
   }
 

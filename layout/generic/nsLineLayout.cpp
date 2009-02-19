@@ -789,6 +789,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   pfd->mFrame = aFrame;
   pfd->mMargin = reflowState.mComputedMargin;
   pfd->mBorderPadding = reflowState.mComputedBorderPadding;
+  pfd->mFrameType = reflowState.mFrameType;
   pfd->SetFlag(PFD_RELATIVEPOS,
                (reflowState.mStyleDisplay->mPosition == NS_STYLE_POSITION_RELATIVE));
   if (pfd->GetFlag(PFD_RELATIVEPOS)) {
@@ -1333,6 +1334,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     pfd->mFrame = aFrame;
     pfd->mMargin.SizeTo(0, 0, 0, 0);
     pfd->mBorderPadding.SizeTo(0, 0, 0, 0);
+    pfd->mFrameType = NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE);
     pfd->mFlags = 0;  // all flags default to false
     pfd->SetFlag(PFD_ISBULLET, PR_TRUE);
     if (aMetrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
@@ -1378,6 +1380,7 @@ nsLineLayout::VerticalAlignLine()
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
   rootPFD.mFrame = mBlockReflowState->frame;
+  rootPFD.mFrameType = mBlockReflowState->mFrameType;
   rootPFD.mAscent = 0;
   mRootSpan->mFrame = &rootPFD;
 

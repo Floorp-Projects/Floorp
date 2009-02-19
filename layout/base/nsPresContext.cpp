@@ -89,7 +89,6 @@
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
 #include "nsIEventListenerManager.h"
-#include "nsStyleStructInlines.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -160,7 +159,7 @@ IsVisualCharset(const nsCString& aCharset)
 
 
 static PLDHashOperator
-destroy_loads(const void * aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
+destroy_loads(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
 {
   aData->Destroy();
   return PL_DHASH_NEXT;
@@ -247,8 +246,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
 nsPresContext::~nsPresContext()
 {
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
-    mImageLoaders[i].Enumerate(destroy_loads, nsnull);
+  mImageLoaders.Enumerate(destroy_loads, nsnull);
+  mBorderImageLoaders.Enumerate(destroy_loads, nsnull);
 
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
@@ -314,7 +313,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
 
 static PLDHashOperator
-TraverseImageLoader(const void * aKey, nsRefPtr<nsImageLoader>& aData,
+TraverseImageLoader(const void * aKey, nsCOMPtr<nsImageLoader>& aData,
                     void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -332,8 +331,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
 
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
-    tmp->mImageLoaders[i].Enumerate(TraverseImageLoader, &cb);
+  tmp->mImageLoaders.Enumerate(TraverseImageLoader, &cb);
+  tmp->mBorderImageLoaders.Enumerate(TraverseImageLoader, &cb);
 
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
@@ -355,10 +354,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   // NS_RELEASE(tmp->mLookAndFeel); // a service
   // NS_RELEASE(tmp->mLangGroup); // an atom
 
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i) {
-    tmp->mImageLoaders[i].Enumerate(destroy_loads, nsnull);
-    tmp->mImageLoaders[i].Clear();
-  }
+  tmp->mImageLoaders.Enumerate(destroy_loads, nsnull);
+  tmp->mImageLoaders.Clear();
+  tmp->mBorderImageLoaders.Enumerate(destroy_loads, nsnull);
+  tmp->mBorderImageLoaders.Clear();
 
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
@@ -838,9 +837,11 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
-    if (!mImageLoaders[i].Init())
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (!mImageLoaders.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  if (!mBorderImageLoaders.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
   
   // Get the look and feel service here; default colors will be initialized
   // from calling GetUserPreferences() when we get a presshell.
@@ -1057,13 +1058,10 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 
  // Enumeration call back for HashTable
 static PLDHashOperator
-set_animation_mode(const void * aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
+set_animation_mode(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
 {
-  for (nsImageLoader *loader = aData; loader;
-       loader = loader->GetNextLoader()) {
-    imgIRequest* imgReq = loader->GetRequest();
-    SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
-  }
+  imgIRequest* imgReq = aData->GetRequest();
+  SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
   return PL_DHASH_NEXT;
 }
 
@@ -1124,8 +1122,8 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
     return;
 
   // Set the mode on the image loaders.
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
-    mImageLoaders[i].Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
+  mImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
+  mBorderImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
 
   // Now walk the content tree and set the animation mode 
   // on all the images.
@@ -1230,53 +1228,66 @@ nsPresContext::SetFullZoom(float aZoom)
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
-void
-nsPresContext::SetImageLoaders(nsIFrame* aTargetFrame,
-                               ImageLoadType aType,
-                               nsImageLoader* aImageLoaders)
+imgIRequest*
+nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
+                           imgIRequest* aImage,
+                           nsIFrame* aTargetFrame,
+                           PRBool aReflowOnLoad)
 {
-  nsRefPtr<nsImageLoader> oldLoaders;
-  mImageLoaders[aType].Get(aTargetFrame, getter_AddRefs(oldLoaders));
+  // look and see if we have a loader for the target frame.
+  nsCOMPtr<nsImageLoader> loader;
+  aTable.Get(aTargetFrame, getter_AddRefs(loader));
 
-  if (aImageLoaders) {
-    mImageLoaders[aType].Put(aTargetFrame, aImageLoaders);
-  } else if (oldLoaders) {
-    mImageLoaders[aType].Remove(aTargetFrame);
+  if (!loader) {
+    loader = new nsImageLoader();
+    if (!loader)
+      return nsnull;
+
+    loader->Init(aTargetFrame, this, aReflowOnLoad);
+    aTable.Put(aTargetFrame, loader);
   }
 
-  if (oldLoaders)
-    oldLoaders->Destroy();
+  loader->Load(aImage);
+
+  imgIRequest *request = loader->GetRequest();
+
+  return request;
 }
 
-void
-nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
-                                     const nsStyleBackground* aStyleBackground)
+imgIRequest*
+nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
 {
-  nsRefPtr<nsImageLoader> loaders;
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
-    imgIRequest *image = aStyleBackground->mLayers[i].mImage.mRequest;
-    loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
-  }
-  SetImageLoaders(aFrame, BACKGROUND_IMAGE, loaders);
+  return DoLoadImage(mImageLoaders, aImage, aTargetFrame, PR_FALSE);
 }
 
-void
-nsPresContext::SetupBorderImageLoaders(nsIFrame* aFrame,
-                                       const nsStyleBorder* aStyleBorder)
+imgIRequest*
+nsPresContext::LoadBorderImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
 {
-  nsRefPtr<nsImageLoader> loader =
-    nsImageLoader::Create(aFrame, aStyleBorder->GetBorderImage(),
-                          aStyleBorder->ImageBorderDiffers(), nsnull);
-  SetImageLoaders(aFrame, BORDER_IMAGE, loader);
+  return DoLoadImage(mBorderImageLoaders, aImage, aTargetFrame,
+                     aTargetFrame->GetStyleBorder()->ImageBorderDiffers());
 }
 
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
-  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
-    SetImageLoaders(aTargetFrame, ImageLoadType(i), nsnull);
+  StopBackgroundImageFor(aTargetFrame);
+  StopBorderImageFor(aTargetFrame);
 }
 
+void
+nsPresContext::DoStopImageFor(nsPresContext::ImageLoaderTable& aTable,
+                              nsIFrame* aTargetFrame)
+{
+  nsCOMPtr<nsImageLoader> loader;
+  aTable.Get(aTargetFrame, getter_AddRefs(loader));
+
+  if (loader) {
+    loader->Destroy();
+
+    aTable.Remove(aTargetFrame);
+  }
+}
+  
 void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
