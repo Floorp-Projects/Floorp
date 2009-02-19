@@ -4909,7 +4909,7 @@ var contentAreaDNDObserver = {
 
       var dragType = aXferData.flavour.contentType;
       var dragData = aXferData.data;
-      if (dragType == "application/x-moz-tabbrowser-tab") {
+      if (dragType == TAB_DROP_TYPE) {
         // If the tab was dragged from some other tab bar, its own dragend
         // handler will take care of detaching the tab
         if (dragData instanceof XULElement && dragData.localName == "tab" &&
@@ -4958,7 +4958,7 @@ var contentAreaDNDObserver = {
   getSupportedFlavours: function ()
     {
       var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("application/x-moz-tabbrowser-tab");
+      flavourSet.appendFlavour(TAB_DROP_TYPE);
       flavourSet.appendFlavour("text/x-moz-url");
       flavourSet.appendFlavour("text/plain");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
