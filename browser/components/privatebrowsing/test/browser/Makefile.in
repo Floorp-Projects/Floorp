@@ -52,6 +52,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_findbar.js \
 		browser_privatebrowsing_zoom.js \
 		browser_privatebrowsing_transition.js \
+		browser_privatebrowsing_import.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
