@@ -903,30 +903,13 @@ NS_METHOD nsWindow::EndResizingChildren(void)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect)
+nsIntPoint nsWindow::WidgetToScreenOffset()
 {
   POINT point;
-  point.x = aOldRect.x;
-  point.y = aOldRect.y;
+  point.x = 0;
+  point.y = 0;
   ::ClientToScreen(mWnd, &point);
-  aNewRect.x = point.x;
-  aNewRect.y = point.y;
-  aNewRect.width = aOldRect.width;
-  aNewRect.height = aOldRect.height;
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect)
-{
-  POINT point;
-  point.x = aOldRect.x;
-  point.y = aOldRect.y;
-  ::ScreenToClient(mWnd, &point);
-  aNewRect.x = point.x;
-  aNewRect.y = point.y;
-  aNewRect.width = aOldRect.width;
-  aNewRect.height = aOldRect.height;
-  return NS_OK;
+  return nsIntPoint(point.x, point.y);
 }
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)
@@ -6307,11 +6290,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
   event.button    = aButton;
 
-  nsIntRect mpWidget;
-  nsIntRect mpScreen;
-  mpWidget.x = eventPoint.x;
-  mpWidget.y = eventPoint.y;
-  WidgetToScreen(mpWidget, mpScreen);
+  nsIntPoint mpScreen = eventPoint + WidgetToScreenOffset();
 
   // Suppress mouse moves caused by widget creation
   if (aEventType == NS_MOUSE_MOVE) 
@@ -7573,10 +7552,10 @@ nsWindow::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
     return;
 
   if (aReferenceWidget)
-    aReferenceWidget->WidgetToScreen(aOutRect, aOutRect);
+    aOutRect.MoveBy(aReferenceWidget->WidgetToScreenOffset());
 
   if (aNewOriginWidget)
-    aNewOriginWidget->ScreenToWidget(aOutRect, aOutRect);
+    aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
 }
 
 //==========================================================================

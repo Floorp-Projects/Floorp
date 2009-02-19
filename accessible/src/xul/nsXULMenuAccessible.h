@@ -61,8 +61,6 @@ public:
 
 protected:
   nsresult ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
-  nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
-    { return NS_OK; }  // Overrides base impl in nsAccessible
 
   // nsIDOMXULMultiSelectControlElement inherits from this, so we'll always have
   // one of these if the widget is valid and not defunct

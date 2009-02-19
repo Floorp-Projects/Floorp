@@ -165,12 +165,15 @@ nsXULLinkAccessible::GetValue(nsAString& aValue)
 nsresult
 nsXULLinkAccessible::GetNameInternal(nsAString& aName)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
   if (!aName.IsEmpty())
     return NS_OK;
 
-  return AppendFlatStringFromSubtree(content, &aName);
+  return nsTextEquivUtils::GetNameFromSubtree(this, aName);
 }
 
 NS_IMETHODIMP

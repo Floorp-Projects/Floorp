@@ -642,9 +642,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   refWindow = refWindow->GetTopLevelWindow(PR_FALSE);
   NS_ENSURE_TRUE(refWindow, E_FAIL);
 
-  nsresult rv = refWindow->WidgetToScreen(event.mReply.mRect,
-                                          event.mReply.mRect);
-  NS_ENSURE_SUCCESS(rv, E_FAIL);
+  event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
 
   // get bounding screen rect to test for clipping
   HRESULT hr = GetScreenExt(vcView, prc);
@@ -686,10 +684,8 @@ nsTextStore::GetScreenExt(TsViewCookie vcView,
 
   // Clip frame rect to window rect
   boundRect.IntersectRect(event.mReply.mRect, boundRect);
-  rv = refWindow->WidgetToScreen(boundRect, boundRect);
-  NS_ENSURE_SUCCESS(rv, E_FAIL);
-
   if (!boundRect.IsEmpty()) {
+    boundRect.MoveBy(refWindow->WidgetToScreenOffset());
     ::SetRect(prc, boundRect.x, boundRect.y,
               boundRect.XMost(), boundRect.YMost());
   } else {
