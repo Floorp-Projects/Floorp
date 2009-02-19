@@ -405,9 +405,10 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             if (ok) {
                 if (OBJ_IS_NATIVE(obj2) &&
                     (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+                    JSScopeProperty *sprop = (JSScopeProperty *) prop;
                     val = JSVAL_NULL;
                     if (attrs & JSPROP_GETTER)
-                        val = (jsval) ((JSScopeProperty*)prop)->getter;
+                        val = js_CastAsObjectJSVal(sprop->getter);
                     if (attrs & JSPROP_SETTER) {
                         if (val != JSVAL_NULL) {
                             /* Mark the getter, then set val to setter. */
@@ -415,7 +416,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                                                    NULL)
                                   != NULL);
                         }
-                        val = (jsval) ((JSScopeProperty*)prop)->setter;
+                        val = js_CastAsObjectJSVal(sprop->setter);
                     }
                 } else {
                     ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
@@ -770,8 +771,9 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             }
             if (OBJ_IS_NATIVE(obj2) &&
                 (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+                JSScopeProperty *sprop = (JSScopeProperty *) prop;
                 if (attrs & JSPROP_GETTER) {
-                    val[valcnt] = (jsval) ((JSScopeProperty *)prop)->getter;
+                    val[valcnt] = js_CastAsObjectJSVal(sprop->getter);
                     gsopold[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
                     gsop[valcnt] =
@@ -780,7 +782,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
-                    val[valcnt] = (jsval) ((JSScopeProperty *)prop)->setter;
+                    val[valcnt] = js_CastAsObjectJSVal(sprop->setter);
                     gsopold[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
                     gsop[valcnt] =
@@ -1821,7 +1823,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
-                               (JSPropertyOp) JSVAL_TO_OBJECT(fval),
+                               js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
                                JS_PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED,
                                NULL);
@@ -1857,7 +1859,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
     *vp = JSVAL_VOID;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                JS_PropertyStub,
-                               (JSPropertyOp) JSVAL_TO_OBJECT(fval),
+                               js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED,
                                NULL);
 }
@@ -1880,7 +1882,7 @@ obj_lookupGetter(JSContext *cx, uintN argc, jsval *vp)
         if (OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *) prop;
             if (sprop->attrs & JSPROP_GETTER)
-                *vp = OBJECT_TO_JSVAL((JSObject *) sprop->getter);
+                *vp = js_CastAsObjectJSVal(sprop->getter);
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
@@ -1905,7 +1907,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, jsval *vp)
         if (OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *) prop;
             if (sprop->attrs & JSPROP_SETTER)
-                *vp = OBJECT_TO_JSVAL((JSObject *) sprop->setter);
+                *vp = js_CastAsObjectJSVal(sprop->setter);
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
@@ -5663,7 +5665,7 @@ dumpValue(jsval val)
         fprintf(stderr, "<%s%s at %p>",
                 cls->name,
                 cls == &js_ObjectClass ? "" : " object",
-                obj);
+                (void *) obj);
     } else if (JSVAL_IS_INT(val)) {
         fprintf(stderr, "%d", JSVAL_TO_INT(val));
     } else if (JSVAL_IS_STRING(val)) {
@@ -5759,7 +5761,7 @@ js_DumpObject(JSObject *obj)
         if (sharesScope) {
             if (proto) {
                 fprintf(stderr, "no own properties - see proto (%s at %p)\n",
-                        STOBJ_GET_CLASS(proto)->name, proto);
+                        STOBJ_GET_CLASS(proto)->name, (void *) proto);
             } else {
                 fprintf(stderr, "no own properties - null proto\n");
             }

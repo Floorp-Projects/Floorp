@@ -2116,7 +2116,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.n.spare = 0;
         if (flags & JSFUN_TRACEABLE) {
 #ifdef JS_TRACER
-            JSTraceableNative *trcinfo = (JSTraceableNative *) native;
+            JSTraceableNative *trcinfo =
+                JS_FUNC_TO_DATA_PTR(JSTraceableNative *, native);
             fun->u.n.native = (JSNative) trcinfo->native;
             FUN_TRCINFO(fun) = trcinfo;
 #else
