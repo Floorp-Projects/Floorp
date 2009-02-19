@@ -497,7 +497,8 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
 
   return (hasBG && NS_GET_A(bg->mBackgroundColor) == 255 &&
-          bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
+          // bottom layer's clip is used for the color
+          bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER &&
           !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->
                                          mBorderRadius));
 }
@@ -513,9 +514,10 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
   if (!hasBG)
     return PR_TRUE;
-  if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) &&
+  if (!bg->BottomLayer().mImage.mRequest &&
+      bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
-      bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
+      bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER)
     return PR_TRUE;
   return PR_FALSE;
 }
