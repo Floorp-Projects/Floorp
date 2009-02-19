@@ -311,7 +311,7 @@ static JSBool
 script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
-    JSObject *scopeobj, *parent;
+    JSObject *scopeobj;
     JSStackFrame *caller;
     JSPrincipals *principals;
     JSScript *script;
@@ -344,9 +344,8 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         /* Called from a lightweight function. */
         JS_ASSERT(caller->fun && !JSFUN_HEAVYWEIGHT_TEST(caller->fun->flags));
 
-        /* Scope chain links from Call object to callee's parent. */
-        parent = OBJ_GET_PARENT(cx, caller->callee);
-        if (!js_GetCallObject(cx, caller, parent))
+        /* Scope chain links from Call object to caller's scope chain. */
+        if (!js_GetCallObject(cx, caller))
             return JS_FALSE;
     }
 
@@ -363,7 +362,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         } else {
             /*
              * Called from native code, so we don't know what scope object to
-             * use.  We could use parent (see above), but Script.prototype.exec
+             * use.  We could use the caller's scope chain (see above), but Script.prototype.exec
              * might be a shared/sealed "superglobal" method.  A more general
              * approach would use cx->globalObject, which will be the same as
              * exec.__parent__ in the non-superglobal case.  In the superglobal

@@ -1280,7 +1280,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * object, then we need to provide one for the compiler to stick any
      * declared (var) variables into.
      */
-    if (caller && !caller->varobj && !js_GetCallObject(cx, caller, NULL))
+    if (caller && !caller->varobj && !js_GetCallObject(cx, caller))
         return JS_FALSE;
 
     /* Accept an optional trailing argument that overrides the scope object. */

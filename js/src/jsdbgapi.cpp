@@ -1109,7 +1109,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
      * XXX ill-defined: null return here means error was reported, unlike a
      *     null returned above or in the #else
      */
-    return js_GetCallObject(cx, fp, NULL);
+    return js_GetCallObject(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)
