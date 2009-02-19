@@ -531,6 +531,11 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       NS_ASSERTION(mNameSpace == kNameSpaceID_Unknown ||
                    CanBeNamespaced(aIsNegated),
                    "How did we end up with this namespace?");
+    } else if (mNameSpace == kNameSpaceID_None) {
+      NS_ASSERTION(CanBeNamespaced(aIsNegated),
+                   "How did we end up with this namespace?");
+      aString.Append(PRUnichar('|'));
+      wroteNamespace = PR_TRUE;
     } else if (mNameSpace != kNameSpaceID_Unknown) {
       NS_ASSERTION(CanBeNamespaced(aIsNegated),
                    "How did we end up with this namespace?");
