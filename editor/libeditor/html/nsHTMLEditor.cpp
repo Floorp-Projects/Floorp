@@ -2365,7 +2365,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
   PRInt32 offset;
   res = GetStartNodeAndOffset(selection, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
-  
+  if (!parent) return NS_ERROR_NULL_POINTER;
+
   // is the selection collapsed?
   PRBool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
@@ -2399,6 +2400,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     nsCOMPtr<nsIDOMNode> blockParent = nodeToExamine;
     if (!isBlock) {
       blockParent = GetBlockNodeParent(nodeToExamine);
+      if (!blockParent)
+        return NS_OK;
     }
 
     // Make sure to not walk off onto the Document node
