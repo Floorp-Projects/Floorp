@@ -1400,7 +1400,7 @@ PCToLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef DEBUG
 
 static void
-UpdateSwitchTableBounds(JSScript *script, uintN offset,
+UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
                         uintN *start, uintN *end)
 {
     jsbytecode *pc;
@@ -1409,7 +1409,7 @@ UpdateSwitchTableBounds(JSScript *script, uintN offset,
     jsint low, high, n;
 
     pc = script->code + offset;
-    op = (JSOp) *pc;
+    op = js_GetOpcode(cx, script, pc);
     switch (op) {
       case JSOP_TABLESWITCHX:
         jmplen = JUMPX_OFFSET_LEN;
@@ -1472,7 +1472,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             if (switchTableStart <= offset && offset < switchTableEnd) {
                 name = "case";
             } else {
-                JS_ASSERT(script->code[offset] == JSOP_NOP);
+                JS_ASSERT(js_GetOpcode(cx, script, script->code + offset) == JSOP_NOP);
             }
         }
         fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
@@ -1530,7 +1530,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 fprintf(gOutFile, " first case offset %u", caseOff);
-            UpdateSwitchTableBounds(script, offset,
+            UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
             break;
           case SRC_CATCH:
