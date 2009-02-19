@@ -72,7 +72,7 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jstracer.h"
-#include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
+#include "jsdbgapi.h"
 
 #if JS_HAS_GENERATORS
 #include "jsiter.h"
@@ -1193,9 +1193,10 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
         return principals->codebase;
     }
 
-    if (caller->regs && *caller->regs->pc == JSOP_EVAL) {
-        JS_ASSERT(caller->regs->pc[JSOP_EVAL_LENGTH] == JSOP_LINENO);
-        *linenop = GET_UINT16(caller->regs->pc + JSOP_EVAL_LENGTH);
+    jsbytecode *pc = caller->regs->pc;
+    if (caller->regs && js_GetOpcode(cx, caller->script, pc) == JSOP_EVAL) {
+        JS_ASSERT(js_GetOpcode(cx, caller->script, pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
     } else {
         *linenop = js_FramePCToLineNumber(cx, caller);
     }
@@ -2017,18 +2018,15 @@ static JS_REQUIRES_STACK JSBool
 Detecting(JSContext *cx, jsbytecode *pc)
 {
     JSScript *script;
-    jsbytecode *endpc;
     JSOp op;
     JSAtom *atom;
 
     if (!cx->fp)
         return JS_FALSE;
     script = cx->fp->script;
-    for (endpc = script->code + script->length;
-         pc < endpc;
-         pc += js_CodeSpec[op].length) {
+    for (;; pc += js_CodeSpec[op].length) {
         /* General case: a branch or equality op follows the access. */
-        op = (JSOp) *pc;
+        op = js_GetOpcode(cx, script, pc);
         if (js_CodeSpec[op].format & JOF_DETECTING)
             return JS_TRUE;
 
@@ -2038,9 +2036,9 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * Special case #1: handle (document.all == null).  Don't sweat
              * about JS1.2's revision of the equality operators here.
              */
-            if (++pc < endpc)
-                return *pc == JSOP_EQ || *pc == JSOP_NE;
-            return JS_FALSE;
+            pc++;
+            op = js_GetOpcode(cx, script, pc);
+            return op == JSOP_EQ || op == JSOP_NE;
 
           case JSOP_NAME:
             /*
@@ -2049,9 +2047,9 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * Edition 3, so is read/write for backward compatibility.
              */
             GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
-            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
-                (pc += js_CodeSpec[op].length) < endpc) {
-                op = (JSOp) *pc;
+            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID]) {
+                pc += js_CodeSpec[op].length;
+                op = js_GetOpcode(cx, script, pc);
                 return op == JSOP_EQ || op == JSOP_NE ||
                        op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
             }
@@ -2067,7 +2065,6 @@ Detecting(JSContext *cx, jsbytecode *pc)
             break;
         }
     }
-    return JS_FALSE;
 }
 
 /*
@@ -2089,7 +2086,7 @@ InferFlags(JSContext *cx, uintN defaultFlags)
     if (!fp || !fp->regs)
         return defaultFlags;
     pc = fp->regs->pc;
-    cs = &js_CodeSpec[*pc];
+    cs = &js_CodeSpec[js_GetOpcode(cx, fp->script, pc)];
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
@@ -3946,8 +3943,11 @@ js_GetCurrentBytecodePC(JSContext* cx)
             pc = fp->regs->pc;
             // FIXME: Set pc to imacpc when recording JSOP_CALL inside the 
             //        JSOP_GETELEM imacro (bug 476559).
-            if (*pc == JSOP_CALL && fp->imacpc && *fp->imacpc == JSOP_GETELEM)
+            if (*pc == JSOP_CALL &&
+                fp->imacpc &&
+                js_GetOpcode(cx, fp->script, fp->imacpc) == JSOP_GETELEM) {
                 pc = fp->imacpc;
+            }
         } else {
             pc = NULL;
         }
@@ -3995,6 +3995,10 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
             uintN flags;
 
             op = (JSOp) *pc;
+            if (op == JSOP_TRAP) {
+                JS_ASSERT_NOT_ON_TRACE(cx);
+                op = JS_GetTrapOpcode(cx, cx->fp->script, pc);
+            }
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {
