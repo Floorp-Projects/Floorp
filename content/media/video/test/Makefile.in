@@ -64,6 +64,7 @@ _TEST_FILES += \
 		file_access_controls.html \
 		test_bug448534.html \
 		test_bug461281.html \
+		test_bug468190.html \
 		test_can_play_type_ogg.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
@@ -89,7 +90,7 @@ _TEST_FILES += \
 		test_videoDocumentTitle.html \
 		320x240.allow-origin.ogv \
 		320x240.allow-origin.ogv^headers^ \
- 		bug461281.ogg \
+		bug461281.ogg \
 		redirect.sjs \
 		contentDuration1.sjs \
 		contentDuration2.sjs \
@@ -125,11 +126,17 @@ _TEST_FILES += \
 		test_audioDocumentTitle.html \
 		big.wav \
 		test_bug463162.xhtml \
+		test_bug465498.html \
+		test_bug468190_wav.html \
 		test_can_play_type_wave.html \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
+		test_wav_ended2.html \
+		test_wav_list.html \
 		test_progress2.html \
 		test_progress4.html \
+		test_wav_onloadedmetadata.html \
+		test_wav_seek1.html \
 		test_wav_seek3.html \
 		test_wav_seek4.html \
 		test_wav_seek5.html \
@@ -138,15 +145,18 @@ _TEST_FILES += \
 		test_wav_seek8.html \
 		test_wav_seek_past_end.html \
 		test_wav_seek_then_play.html \
+		test_wav_standalone.html \
+		test_wav_timeupdate1.html \
+		test_wav_timeupdate2.html \
 		test_wav_trailing.html \
+ 		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
 		r11025_s16_c1.wav \
 		r11025_s16_c1_trailing.wav \
 		r11025_u8_c1.wav \
 		r11025_u8_c1_trunc.wav \
+		r16000_u8_c1_list.wav \
 		$(NULL)
-#XXX: disabled for now, see bug 474754
-# 		test_wav_trunc.html \
 else
 _TEST_FILES += \
 		test_can_play_type_no_wave.html \
