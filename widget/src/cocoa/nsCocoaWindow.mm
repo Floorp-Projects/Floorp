@@ -1221,37 +1221,15 @@ NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect)
+nsIntPoint nsCocoaWindow::WidgetToScreenOffset()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
-  aNewRect.x = r.x + aOldRect.x;
-  aNewRect.y = r.y + aOldRect.y;
-  aNewRect.width = aOldRect.width;
-  aNewRect.height = aOldRect.height;
+  return r.TopLeft();
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-
-NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
-
-  aNewRect.x = aOldRect.x - r.x;
-  aNewRect.y = aOldRect.y - r.y;
-  aNewRect.width = aOldRect.width;
-  aNewRect.height = aOldRect.height;
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
 }
 
 
