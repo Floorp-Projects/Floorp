@@ -1253,8 +1253,10 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // OSX:
-  // Safari download folder or Desktop/Downloads
+  // OSX 10.4:
+  // Desktop
+  // OSX 10.5:
+  // User download directory
   // Vista:
   // Downloads
   // XP/2K:
@@ -1267,34 +1269,10 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
                              getter_Copies(folderName));
 
 #if defined (XP_MACOSX)
-  nsCOMPtr<nsILocalFile> desktopDir;
   rv = dirService->Get(NS_OSX_DEFAULT_DOWNLOAD_DIR,
                        NS_GET_IID(nsILocalFile),
                        getter_AddRefs(downloadDir));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = dirService->Get(NS_OSX_USER_DESKTOP_DIR,
-                       NS_GET_IID(nsILocalFile),
-                       getter_AddRefs(desktopDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check to see if we have the desktop or the Safari downloads folder
-  PRBool equals;
-  rv = downloadDir->Equals(desktopDir, &equals);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (equals) {
-    rv = downloadDir->Append(folderName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This could be the first time we are creating the downloads folder on the
-    // desktop, so make sure it exists.
-    PRBool exists;
-    rv = downloadDir->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = downloadDir->Create(nsIFile::DIRECTORY_TYPE, 0755);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
 #elif defined(XP_WIN) && !defined(WINCE)
   rv = dirService->Get(NS_WIN_DEFAULT_DOWNLOAD_DIR,
                        NS_GET_IID(nsILocalFile),
