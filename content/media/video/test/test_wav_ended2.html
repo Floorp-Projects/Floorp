@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Wave Media test: ended and replaying</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<!-- try with autoplay and no v.play in starttest, also with both -->
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if audio can be replayed after ended.
+var completed = false;
+var playCount = 0;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.play();
+  return false;
+}
+
+function playbackStarted() {
+  if (completed)
+    return false;
+
+  playCount++;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false
+
+  var v = document.getElementById('v');
+  ok(v.currentTime >= 0.9 && v.currentTime <= 1.1,
+     "Checking currentTime at end: " + v.currentTime);
+  ok(v.ended, "Checking playback has ended");
+  if (playCount < 2) {
+    v.play();
+  }
+  else {
+    ok(playCount == 2, "Check playback after ended event");
+    completed = true;
+    SimpleTest.finish();
+  }
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<audio id='v'
+       onloadedmetadata='return startTest();'
+       onplay='return playbackStarted();'
+       onended='return playbackEnded();'>
+  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
+</audio>
+</body>
+</html>
