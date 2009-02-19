@@ -1098,8 +1098,8 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       NS_ASSERTION(shorthand != eCSSProperty_font ||
                    *(shorthands + 1) == eCSSProperty_UNKNOWN,
                    "font should always be the only containing shorthand");
-      if (shorthand == eCSSProperty_font && haveSystemFont) {
-        if (!didSystemFont) {
+      if (shorthand == eCSSProperty_font) {
+        if (haveSystemFont && !didSystemFont) {
           // Output the shorthand font declaration that we will
           // partially override later.  But don't add it to
           // |shorthandsUsed|, since we will have to override it.
@@ -1111,15 +1111,17 @@ nsCSSDeclaration::ToString(nsAString& aString) const
         }
 
         // That we output the system font is enough for this property if:
-        //   (1) it's the hidden system font subproperty, or
+        //   (1) it's the hidden system font subproperty (which either
+        //       means we output it or we don't have it), or
         //   (2) its value is the hidden system font value and it matches
-        //       the hidden system font subproperty in importance.
+        //       the hidden system font subproperty in importance, and
+        //       we output the system font subproperty.
         NS_ASSERTION(nsCSSProps::kTypeTable[property] == eCSSType_Value,
                      "not a value typed subproperty");
         const nsCSSValue *val =
           systemFontData->ValueStorageFor(property);
         if (property == eCSSProperty__x_system_font ||
-            (val && val->GetUnit() == eCSSUnit_System_Font)) {
+            (haveSystemFont && val && val->GetUnit() == eCSSUnit_System_Font)) {
           doneProperty = PR_TRUE;
         }
       }
