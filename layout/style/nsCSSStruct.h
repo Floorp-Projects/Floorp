@@ -307,13 +307,13 @@ struct nsCSSColor : public nsCSSStruct  {
   ~nsCSSColor(void);
 
   nsCSSValue      mColor;
-  nsCSSValuePair  mBackColor;
-  nsCSSValueList* mBackImage;
-  nsCSSValueList* mBackRepeat;
-  nsCSSValueList* mBackAttachment;
-  nsCSSValuePairList* mBackPosition;
-  nsCSSValueList* mBackClip;
-  nsCSSValueList* mBackOrigin;
+  nsCSSValue      mBackColor;
+  nsCSSValue      mBackImage;
+  nsCSSValue      mBackRepeat;
+  nsCSSValue      mBackAttachment;
+  nsCSSValuePair  mBackPosition;
+  nsCSSValue      mBackClip;
+  nsCSSValue      mBackOrigin;
   nsCSSValue      mBackInlinePolicy;
 private:
   nsCSSColor(const nsCSSColor& aOther); // NOT IMPLEMENTED
@@ -321,11 +321,6 @@ private:
 
 struct nsRuleDataColor : public nsCSSColor {
   nsRuleDataColor() {}
-
-  // A little bit of a hack here:  now that background-image is
-  // represented by a value list, attribute mapping code needs a place
-  // to store one item in a value list in order to map a simple value.
-  nsCSSValueList mTempBackImage;
 private:
   nsRuleDataColor(const nsRuleDataColor& aOther); // NOT IMPLEMENTED
 };

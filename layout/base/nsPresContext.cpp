@@ -1252,12 +1252,10 @@ void
 nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
                                      const nsStyleBackground* aStyleBackground)
 {
-  nsRefPtr<nsImageLoader> loaders;
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
-    imgIRequest *image = aStyleBackground->mLayers[i].mImage.mRequest;
-    loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
-  }
-  SetImageLoaders(aFrame, BACKGROUND_IMAGE, loaders);
+  nsRefPtr<nsImageLoader> loader =
+    nsImageLoader::Create(aFrame, aStyleBackground->mBackgroundImage,
+                          PR_FALSE, nsnull);
+  SetImageLoaders(aFrame, BACKGROUND_IMAGE, loader);
 }
 
 void
