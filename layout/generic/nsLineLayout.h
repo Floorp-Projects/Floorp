@@ -443,9 +443,8 @@ protected:
     // pointer to child span data if this is an inline container frame
     PerSpanData* mSpan;
 
-    // The frame and its type
+    // The frame
     nsIFrame* mFrame;
-    nsCSSFrameType mFrameType;
 
     // From metrics
     nscoord mAscent;
