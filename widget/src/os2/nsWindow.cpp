@@ -367,33 +367,15 @@ NS_METHOD nsWindow::EndResizingChildren(void)
    return NS_OK;
 }
 
-NS_METHOD nsWindow::WidgetToScreen(const nsIntRect &aOldRect, nsIntRect &aNewRect)
+nsIntPoint nsWindow::WidgetToScreenOffset()
 {
-  POINTL point = { aOldRect.x, aOldRect.y };
+  POINTL point = { 0, 0 };
   NS2PM( point);
 
   WinMapWindowPoints( mWnd, HWND_DESKTOP, &point, 1);
 
-  aNewRect.x = point.x;
-  aNewRect.y = WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - point.y - 1;
-  aNewRect.width = aOldRect.width;
-  aNewRect.height = aOldRect.height;
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::ScreenToWidget( const nsIntRect &aOldRect, nsIntRect &aNewRect)
-{
-  POINTL point = { aOldRect.x,
-                   WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - aOldRect.y - 1 };
-  WinMapWindowPoints( HWND_DESKTOP, mWnd, &point, 1);
-
-  PM2NS( point);
-
-  aNewRect.x = point.x;
-  aNewRect.y = point.y;
-  aNewRect.width = aOldRect.width;
-  aNewRect.height = aOldRect.height;
-  return NS_OK;
+  return nsIntPoint(point.x,
+                    WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN) - point.y - 1);
 }
 
 //-------------------------------------------------------------------------
