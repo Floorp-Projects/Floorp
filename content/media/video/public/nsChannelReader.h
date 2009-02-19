@@ -67,10 +67,6 @@ public:
   // request to return an error. Call on main thread only.
   void Cancel();
 
-  // Return the number of bytes buffered from the file. This can safely
-  // be read without blocking.
-  PRUint32 Available();
-
   // Suspend any downloads that are in progress.
   void Suspend();
 

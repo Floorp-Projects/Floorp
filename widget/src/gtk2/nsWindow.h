@@ -208,10 +208,7 @@ public:
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
     NS_IMETHOD         SetMenuBar(void * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
-    NS_IMETHOD         WidgetToScreen(const nsIntRect& aOldRect,
-                                      nsIntRect& aNewRect);
-    NS_IMETHOD         ScreenToWidget(const nsIntRect& aOldRect,
-                                      nsIntRect& aNewRect);
+    virtual nsIntPoint WidgetToScreenOffset();
     NS_IMETHOD         BeginResizingChildren(void);
     NS_IMETHOD         EndResizingChildren(void);
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);

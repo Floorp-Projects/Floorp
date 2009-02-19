@@ -196,10 +196,7 @@ public:
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     NS_IMETHOD         SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
-    NS_IMETHOD         WidgetToScreen(const nsIntRect& aOldRect,
-                                      nsIntRect& aNewRect);
-    NS_IMETHOD         ScreenToWidget(const nsIntRect& aOldRect,
-                                      nsIntRect& aNewRect);
+    virtual nsIntPoint WidgetToScreenOffset();
     NS_IMETHOD         BeginResizingChildren(void);
     NS_IMETHOD         EndResizingChildren(void);
     NS_IMETHOD         GetPreferredSize (PRInt32 &aWidth,
