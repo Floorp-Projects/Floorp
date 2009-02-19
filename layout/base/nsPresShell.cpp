@@ -5383,11 +5383,12 @@ PresShell::Paint(nsIView*             aView,
   // background color as recorded in the prescontext is guaranteed to
   // be opaque.
 
+  PRBool needTransparency = PR_FALSE;
   nscolor backgroundColor = mPresContext->DefaultBackgroundColor();
   for (nsIView *view = aView; view; view = view->GetParent()) {
     if (view->HasWidget() &&
         view->GetWidget()->GetTransparencyMode() != eTransparencyOpaque) {
-      backgroundColor = NS_RGBA(0,0,0,0);
+      needTransparency = PR_TRUE;
       break;
     }
   }
@@ -5408,9 +5409,11 @@ PresShell::Paint(nsIView*             aView,
   // backstop colors.
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
   if (!frame) {
-    backgroundColor = NS_ComposeColors(backgroundColor, viewDefaultColor);
-    aRenderingContext->SetColor(backgroundColor);
-    aRenderingContext->FillRect(aDirtyRegion.GetBounds());
+    if (!needTransparency) {
+      backgroundColor = NS_ComposeColors(backgroundColor, viewDefaultColor);
+      aRenderingContext->SetColor(backgroundColor);
+      aRenderingContext->FillRect(aDirtyRegion.GetBounds());
+    }
     return NS_OK;
   }
 
@@ -5434,7 +5437,8 @@ PresShell::Paint(nsIView*             aView,
   }
 
   nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion,
-                            backgroundColor);
+                            needTransparency ? NS_RGBA(0,0,0,0)
+                            : backgroundColor);
   return NS_OK;
 }
 
