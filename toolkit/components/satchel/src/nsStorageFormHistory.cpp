@@ -66,6 +66,8 @@
 #include "nsTArray.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
 
 // The size of the database cache. This is the number of database PAGES that
 // can be cached in memory. Normally, pages are 1K unless the size has been
@@ -266,9 +268,18 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
     do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
   if (pbs) {
     PRBool inPrivateBrowsing = PR_TRUE;
-    rv = pbs->GetPrivateBrowsingEnabled(&inPrivateBrowsing);
-    if (NS_FAILED(rv))
-      inPrivateBrowsing = PR_TRUE; // err on the safe side if we fail
+    // Temporary fix for bug 472396: push a null js context on the context stack
+    // so that calls made through web page scripts succeed.
+    nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (stack && NS_SUCCEEDED(stack->Push(nsnull))) {
+      rv = pbs->GetPrivateBrowsingEnabled(&inPrivateBrowsing);
+      if (NS_FAILED(rv))
+        inPrivateBrowsing = PR_TRUE; // err on the safe side if we fail
+      JSContext *cx;
+      stack->Pop(&cx);
+      NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+    }
     if (inPrivateBrowsing)
       return NS_OK;
   }

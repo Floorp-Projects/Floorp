@@ -68,6 +68,8 @@ REQUIRES =	\
 		pref \
 		storage \
 		loginmgr \
+		js \
+		xpconnect \
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
