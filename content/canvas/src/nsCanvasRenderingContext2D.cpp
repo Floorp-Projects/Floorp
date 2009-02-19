@@ -670,7 +670,8 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull),
-      mSaveCount(0), mIsFrameInvalid(PR_FALSE), mStyleStack(20)
+      mSaveCount(0), mIsFrameInvalid(PR_FALSE), mLastStyle(STYLE_MAX),
+      mStyleStack(20)
 {
 }
 
