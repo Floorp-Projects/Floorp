@@ -1327,12 +1327,10 @@ PRBool nsStyleBackground::Image::operator==(const Image& aOther) const
 
 nsStyleBackground::Layer::Layer()
 {
-  MOZ_COUNT_CTOR(nsStyleBackground::Layer);
 }
 
 nsStyleBackground::Layer::~Layer()
 {
-  MOZ_COUNT_DTOR(nsStyleBackground::Layer);
 }
 
 void
