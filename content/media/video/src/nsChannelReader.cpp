@@ -48,11 +48,6 @@ void nsChannelReader::Cancel()
   mStream.Cancel();
 }
 
-PRUint32 nsChannelReader::Available()
-{
-  return mStream.Available();
-}
-
 OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 {
   return E_OGGPLAY_OK;

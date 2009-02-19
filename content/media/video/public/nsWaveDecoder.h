@@ -200,6 +200,8 @@ class nsWaveDecoder : public nsMediaDecoder
 
   virtual void SetTotalBytes(PRInt64 aBytes);
 
+  void PlaybackPositionChanged();
+
   // Setter for the duration. This is ignored by the wave decoder since it can
   // compute the duration directly from the wave data.
   virtual void SetDuration(PRInt64 aDuration);
@@ -267,6 +269,12 @@ private:
   // SeekStarted event fires to tell it to update its time offset.  The
   // state machine will validate the offset against the current media.
   float mTimeOffset;
+
+  // The current playback position of the media resource in units of
+  // seconds. This is updated every time a block of audio is passed to the
+  // backend (unless an prior update is still pending).  It is read and
+  // written from the main thread only.
+  float mCurrentTime;
 
   // Copy of the current time, duration, and ended state when the state
   // machine was disposed.  Used to respond to time and duration queries
