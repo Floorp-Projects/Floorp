@@ -42,7 +42,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("resource://weave/ext/Preferences.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -70,8 +69,6 @@ ClientEngine.prototype = {
 
   _ClientEngine_init: function ClientEngine__init() {
     this._init();
-    if (!this.getInfo(this.clientID))
-      this.setInfo(this.clientID, {name: "Firefox", type: "desktop"});
   },
 
   // get and set info for clients
@@ -95,24 +92,28 @@ ClientEngine.prototype = {
   // helpers for getting/setting this client's info directly
 
   get clientID() {
-    if (!Preferences.get(PREFS_BRANCH + "client.GUID"))
-      Preferences.set(PREFS_BRANCH + "client.GUID", Utils.makeGUID());
-    return Preferences.get(PREFS_BRANCH + "client.GUID");
+    if (!Svc.Prefs.get("client.GUID"))
+      Svc.Prefs.set("client.GUID", Utils.makeGUID());
+    return Svc.Prefs.get("client.GUID");
   },
 
-  get clientName() { return this.getInfo(this.clientID).name; },
-  set clientName(value) {
-    let info = this.getInfo(this.clientID);
-    info.name = value;
-    this.setInfo(this.clientID, info);
+  get syncID() {
+    if (!Svc.Prefs.get("client.syncID"))
+      Svc.Prefs.set("client.syncID", Utils.makeGUID());
+    return Svc.Prefs.get("client.syncID");
+  },
+  set syncID(value) {
+    Svc.Prefs.set("client.syncID", value);
+  },
+  resetSyncID: function ClientEngine_resetSyncID() {
+    Svc.Prefs.reset("client.syncID");
   },
 
-  get clientType() { return this.getInfo(this.clientID).type; },
-  set clientType(value) {
-    let info = this.getInfo(this.clientID);
-    info.type = value;
-    this.setInfo(this.clientID, info);
-  }
+  get clientName() { return Svc.Prefs.get("client.name", "Firefox"); },
+  set clientName(value) { Svc.Prefs.set("client.name", value); },
+
+  get clientType() { return Svc.Prefs.get("client.type", "desktop"); },
+  set clientType(value) { Svc.Prefs.set("client.type", value); }
 };
 
 function ClientStore() {
@@ -197,6 +198,7 @@ ClientStore.prototype = {
   // methods to query local data: getAllIDs, itemExists, createRecord
 
   getAllIDs: function ClientStore_getAllIDs() {
+    this.clients[Clients.clientID] = this.createRecord(Clients.clientID);
     return this.clients;
   },
 
@@ -206,7 +208,10 @@ ClientStore.prototype = {
 
   createRecord: function ClientStore_createRecord(id) {
     let record = new ClientRecord();
-    record.payload = this.clients[id];
+    if (id == Clients.clientID)
+      record.payload = {name: Clients.clientName, type: Clients.clientType};
+    else
+      record.payload = this.clients[id];
     return record;
   }
 };
