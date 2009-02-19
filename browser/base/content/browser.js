@@ -6868,8 +6868,6 @@ let gPrivateBrowsingUI = {
   onEnterPrivateBrowsing: function PBUI_onEnterPrivateBrowsing() {
     this._setPBMenuTitle("stop");
 
-    document.getElementById("menu_import").setAttribute("disabled", "true");
-
     this._privateBrowsingAutoStarted = this._privateBrowsingService.autoStarted;
 
     if (!this._privateBrowsingAutoStarted) {
@@ -6894,8 +6892,6 @@ let gPrivateBrowsingUI = {
   onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
     if (BrowserSearch.searchBar)
       BrowserSearch.searchBar.textbox.reset();
-
-    document.getElementById("menu_import").removeAttribute("disabled");
 
     gFindBar.getElement("findbar-textbox").reset();
 
