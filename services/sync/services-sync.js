@@ -3,7 +3,7 @@ pref("extensions.weave.serverURL", "https://services.mozilla.com/");
 pref("extensions.weave.encryption", "aes-256-cbc");
 
 pref("extensions.weave.lastversion", "firstrun");
-pref("extensions.weave.lastsync", "0");
+pref("extensions.weave.lastsync", 0);
 
 pref("extensions.weave.ui.syncnow", true);
 pref("extensions.weave.ui.sharebookmarks", false);
