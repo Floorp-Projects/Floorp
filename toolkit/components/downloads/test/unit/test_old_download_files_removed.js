@@ -14,12 +14,11 @@
  * The Original Code is Download Manager Test Code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Edward Lee <edward.lee@engineering.uiuc.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Connor <mconnor@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,38 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This tests the cleanup code to make sure we properly remove old downloads.rdf files
-// when clearing data.
-
-function cleanup()
-{
-  // removing rdf
-  var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
-  if (rdfFile.exists()) rdfFile.remove(true);
-  
-  // removing database
-  var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
-  dbFile.append("downloads.sqlite");
-  if (dbFile.exists())
-    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
-}
-
-cleanup();
-
-importDownloadsFile("bug_381535_downloads.rdf");
-importDownloadsFile("bug_409179_downloads.sqlite");
+// Make sure we remove old, now-unused downloads.rdf (pre-Firefox 3 storage)
+// when starting the download manager.
 
 function run_test()
 {
-  var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
+  // Create the downloads.rdf file
+  importDownloadsFile("empty_downloads.rdf");
+
+  // Make sure it got created
+  let rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
   do_check_true(rdfFile.exists());
 
-  var dm = Cc["@mozilla.org/download-manager;1"].
-           getService(Ci.nsIDownloadManager);
-
-  dm.cleanUp();
-  
+  // Initialize the download manager, which will delete downloads.rdf
+  Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
   do_check_false(rdfFile.exists());
-
-  cleanup();
 }
