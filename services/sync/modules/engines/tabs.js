@@ -87,6 +87,7 @@ TabStore.prototype = {
   _remoteClients: {},
 
   _TabStore_init: function TabStore__init() {
+    // TODO: This gets dumped twice.  Is TabStore initialized twice?
     dump("Initializing TabStore!!\n");
     this._init();
     this._readFromFile();
@@ -181,10 +182,15 @@ TabStore.prototype = {
 	 */
         this._log.debug("Wrapping a tab with title " + currentPage.title);
         let urlHistory = [];
-        let entries = tab.entries.slice(tab.entries.length - 10);
-        for (let entry in entries) {
-          urlHistory.push( entry.url );
-        }
+	// Include URLs in reverse order; max out at 10, and skip nulls.
+	for (let i = tab.entries.length -1; i >= 0; i++) {
+          let entry = tab.entries[i];
+	  if (entry && entry.url)
+	    urlHistory.push(entry.url);
+	  if (urlHistory.length >= 10)
+	    break;
+	}
+	this._log.debug("This tab's url history is " + urlHistory + "\n");
         record.addTab(currentPage.title, urlHistory);
       }
     }
@@ -308,7 +314,6 @@ TabTracker.prototype = {
     // defined differently but should still exist...
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
 	       .getService(Ci.nsIWindowWatcher);
-    dump("Initialized TabTracker\n");
     ww.registerNotification(this);
   },
 
