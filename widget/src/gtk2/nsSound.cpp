@@ -150,6 +150,27 @@ nsSound::Init()
 
     mInited = PR_TRUE;
 
+    if (!libasound) {
+        PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("snd_lib_error_set_handler",
+                                                         &libasound);
+        if (libasound) {
+            PRFuncPtr lib_err = PR_FindFunctionSymbol(libasound, "snd_lib_error");
+            PRFuncPtr err_msg = PR_FindFunctionSymbol(libasound, "snd_err_msg");
+
+            if (lib_err && err_msg) {
+                fprintf(stderr, "asound_hack: 1 lib_err %x, err_msg %x\n", *(intptr_t*)lib_err, *(intptr_t*)err_msg);
+            }
+            snd_lib_error_set_handler_fn snd_lib_error_set_handler =
+                 (snd_lib_error_set_handler_fn) func;
+            snd_lib_error_set_handler(quiet_error_handler);
+            fprintf(stderr, "asound_hack: quiet_error_handler installed");
+            if (lib_err && err_msg) {
+                fprintf(stderr, " 2 lib_err %x, err_msg %x", *(intptr_t*)lib_err, *(intptr_t*)err_msg);
+            }
+            fprintf(stderr, "\n");
+        }
+    }
+
     if (!elib) {
         /* we don't need to do esd_open_sound if we are only going to play files
            but we will if we want to do things like streams, etc */
@@ -171,16 +192,6 @@ nsSound::Init()
         }
     }
 
-    if (!libasound) {
-        PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("snd_lib_error_set_handler",
-                                                         &libasound);
-        if (libasound) {
-            snd_lib_error_set_handler_fn snd_lib_error_set_handler =
-                 (snd_lib_error_set_handler_fn) func;
-            snd_lib_error_set_handler(quiet_error_handler);
-        }
-    }
-
     if (!libcanberra) {
         libcanberra = PR_LoadLibrary("libcanberra.so.0");
         if (libcanberra) {
@@ -193,6 +204,15 @@ nsSound::Init()
                 ca_context_destroy = (ca_context_destroy_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_destroy");
                 ca_context_play = (ca_context_play_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_play");
                 ca_context_change_props = (ca_context_change_props_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_change_props");
+            }
+        }
+
+        if (libasound) {
+            PRFuncPtr lib_err = PR_FindFunctionSymbol(libasound, "snd_lib_error");
+            PRFuncPtr err_msg = PR_FindFunctionSymbol(libasound, "snd_err_msg");
+
+            if (lib_err && err_msg) {
+                fprintf(stderr, "asound_hack: 3 lib_err %x, err_msg %x, can %p\n", *(intptr_t*)lib_err, *(intptr_t*)err_msg, (void*)libcanberra);
             }
         }
     }
@@ -471,10 +491,28 @@ nsresult nsSound::PlaySystemEventSound(const nsAString &aSoundAlias)
     static GStaticPrivate ctx_static_private = G_STATIC_PRIVATE_INIT;
     ctx = (ca_context*) g_static_private_get(&ctx_static_private);
     if (!ctx) {
+        if (libasound) {
+            PRFuncPtr lib_err = PR_FindFunctionSymbol(libasound, "snd_lib_error");
+            PRFuncPtr err_msg = PR_FindFunctionSymbol(libasound, "snd_err_msg");
+
+            if (lib_err && err_msg) {
+                fprintf(stderr, "asound_hack: 4 lib_err %x, err_msg %x\n", *(intptr_t*)lib_err, *(intptr_t*)err_msg);
+            }
+        }
+
         ca_context_create(&ctx);
         if (!ctx) {
             g_free(sound_theme_name);
             return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (libasound) {
+            PRFuncPtr lib_err = PR_FindFunctionSymbol(libasound, "snd_lib_error");
+            PRFuncPtr err_msg = PR_FindFunctionSymbol(libasound, "snd_err_msg");
+
+            if (lib_err && err_msg) {
+                fprintf(stderr, "asound_hack: 5 lib_err %x, err_msg %x\n", *(intptr_t*)lib_err, *(intptr_t*)err_msg);
+            }
         }
 
         g_static_private_set(&ctx_static_private, ctx, (GDestroyNotify) ca_context_destroy);
