@@ -1518,9 +1518,12 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     return;
   }
 
-  // Lookup the image
-  imgIRequest *req = aPresContext->LoadImage(aColor.mBackgroundImage,
-                                             aForFrame);
+  // Ensure we get invalidated for loads of the image.  We need to do
+  // this here because this might be the only code that knows about the
+  // association of the style data with the frame.
+  aPresContext->SetupBackgroundImageLoaders(aForFrame, &aColor);
+
+  imgIRequest *req = aColor.mBackgroundImage;
 
   PRUint32 status = imgIRequest::STATUS_ERROR;
   if (req)
@@ -1725,9 +1728,16 @@ DrawBorderImage(nsPresContext*       aPresContext,
   if (aDirtyRect.IsEmpty())
     return;
 
-  // Clone the image loader and set up animation notifications.
-  imgIRequest *req =
-    aPresContext->LoadBorderImage(aBorderStyle.GetBorderImage(), aForFrame);
+  // Ensure we get invalidated for loads and animations of the image.
+  // We need to do this here because this might be the only code that
+  // knows about the association of the style data with the frame.
+  // XXX We shouldn't really... since if anybody is passing in a
+  // different style, they'll potentially have the wrong size for the
+  // border too.
+  aPresContext->SetupBorderImageLoaders(aForFrame, &aBorderStyle);
+
+  imgIRequest *req = aBorderStyle.GetBorderImage();
+
 #ifdef DEBUG
   {
     PRUint32 status = imgIRequest::STATUS_ERROR;
