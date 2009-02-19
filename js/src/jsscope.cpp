@@ -1560,16 +1560,12 @@ js_TraceScopeProperty(JSTracer *trc, JSScopeProperty *sprop)
 #if JS_HAS_GETTER_SETTER
     if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if (sprop->attrs & JSPROP_GETTER) {
-            JS_ASSERT(JSVAL_IS_OBJECT((jsval) sprop->getter));
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, sprop, 0);
-            JS_CallTracer(trc, JSVAL_TO_OBJECT((jsval) sprop->getter),
-                          JSTRACE_OBJECT);
+            JS_CallTracer(trc, js_CastAsObject(sprop->getter), JSTRACE_OBJECT);
         }
         if (sprop->attrs & JSPROP_SETTER) {
-            JS_ASSERT(JSVAL_IS_OBJECT((jsval) sprop->setter));
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, sprop, 1);
-            JS_CallTracer(trc, JSVAL_TO_OBJECT((jsval) sprop->setter),
-                          JSTRACE_OBJECT);
+            JS_CallTracer(trc, js_CastAsObject(sprop->setter), JSTRACE_OBJECT);
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */

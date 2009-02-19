@@ -4588,7 +4588,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     native =
 #ifdef JS_TRACER
              (fs->flags & JSFUN_TRACEABLE)
-             ? ((JSTraceableNative *) fs->call)->native
+             ? JS_FUNC_TO_DATA_PTR(JSTraceableNative *, fs->call)->native
              :
 #endif
                (JSFastNative) fs->call;

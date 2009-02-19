@@ -211,8 +211,9 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define AUDIT(x) ((void)0)
 #endif /* JS_JIT_SPEW */
 
-#define INS_CONST(c)    addName(lir->insImm(c), #c)
-#define INS_CONSTPTR(p) addName(lir->insImmPtr((void*) (p)), #p)
+#define INS_CONST(c)        addName(lir->insImm(c), #c)
+#define INS_CONSTPTR(p)     addName(lir->insImmPtr((void*) (p)), #p)
+#define INS_CONSTFUNPTR(p)  addName(lir->insImmPtr(JS_FUNC_TO_DATA_PTR(void*, p)), #p)
 
 using namespace avmplus;
 using namespace nanojit;
@@ -5549,7 +5550,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
 #define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
 
     if (OP(map->ops) == OP(&js_ObjectOps)) {
-        guard(true, addName(lir->ins2(LIR_eq, n, INS_CONSTPTR(OP(&js_ObjectOps))),
+        guard(true, addName(lir->ins2(LIR_eq, n, INS_CONSTFUNPTR(OP(&js_ObjectOps))),
                             "guard(native-map)"),
               MISMATCH_EXIT);
         return true;
@@ -9254,10 +9255,12 @@ js_GetBuiltinFunction(JSContext *cx, uintN index)
 
     if (!funobj) {
         /* Use NULL parent and atom. Builtin functions never escape to scripts. */
+        JS_ASSERT(index < JS_ARRAY_LENGTH(builtinFunctionInfo));
+        const BuiltinFunctionInfo *bfi = &builtinFunctionInfo[index];
         JSFunction *fun = js_NewFunction(cx,
                                          NULL,
-                                         (JSNative) builtinFunctionInfo[index].tn,
-                                         builtinFunctionInfo[index].nargs,
+                                         JS_DATA_TO_FUNC_PTR(JSNative, bfi->tn),
+                                         bfi->nargs,
                                          JSFUN_FAST_NATIVE | JSFUN_TRACEABLE,
                                          NULL,
                                          NULL);

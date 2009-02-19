@@ -436,7 +436,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
         if (wp->object == obj) {
             TRACE_SCOPE_PROPERTY(trc, wp->sprop);
             if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter) {
-                JS_CALL_OBJECT_TRACER(trc, (JSObject *)wp->setter,
+                JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
                                       "wp->setter");
             }
             JS_SET_TRACING_NAME(trc, "wp->closure");
@@ -652,7 +652,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 ok = !wp->setter ||
                      ((sprop->attrs & JSPROP_SETTER)
                       ? js_InternalCall(cx, obj,
-                                        OBJECT_TO_JSVAL((JSObject *)wp->setter),
+                                        js_CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
                       : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
                 if (injectFrame) {
@@ -710,11 +710,11 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
         atom = NULL;
     }
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             OBJ_GET_PARENT(cx, (JSObject *)setter),
+                             OBJ_GET_PARENT(cx, js_CastAsObject(setter)),
                              atom);
     if (!wrapper)
         return NULL;
-    return (JSPropertyOp) FUN_OBJECT(wrapper);
+    return js_CastAsPropertyOp(FUN_OBJECT(wrapper));
 }
 
 JS_PUBLIC_API(JSBool)
