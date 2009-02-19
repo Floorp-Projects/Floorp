@@ -65,7 +65,7 @@
 
 #include "nsXPIDLString.h"
 #include "nsString.h"
-#include "nsNetUtil.h"
+
 #include "nsIDOMWindowInternal.h"
 #include "nsReadableUtils.h"
 #include "nsDOMError.h"
@@ -380,9 +380,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     if (multipartChannel)
     {
       rv = multipartChannel->GetContentDisposition(disposition);
-    } else {
-      // Soon-to-be common way to get Disposition: right now only JARChannel
-      rv = NS_GetContentDisposition(request, disposition);
     }
   }
 

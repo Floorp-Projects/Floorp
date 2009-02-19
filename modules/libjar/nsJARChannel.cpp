@@ -46,7 +46,6 @@
 #include "nsEscape.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsChannelProperties.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -219,9 +218,6 @@ nsJARInputThunk::IsNonBlocking(PRBool *nonBlocking)
 }
 
 //-----------------------------------------------------------------------------
-// nsJARChannel
-//-----------------------------------------------------------------------------
-
 
 nsJARChannel::nsJARChannel()
     : mContentLength(-1)
@@ -250,23 +246,18 @@ nsJARChannel::~nsJARChannel()
     NS_RELEASE(handler); // NULL parameter
 }
 
-NS_IMPL_ISUPPORTS_INHERITED6(nsJARChannel,
-                             nsHashPropertyBag,
-                             nsIRequest,
-                             nsIChannel,
-                             nsIStreamListener,
-                             nsIRequestObserver,
-                             nsIDownloadObserver,
-                             nsIJARChannel)
+NS_IMPL_ISUPPORTS6(nsJARChannel,
+                   nsIRequest,
+                   nsIChannel,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsIDownloadObserver,
+                   nsIJARChannel)
 
 nsresult 
 nsJARChannel::Init(nsIURI *uri)
 {
     nsresult rv;
-    rv = nsHashPropertyBag::Init();
-    if (NS_FAILED(rv))
-        return rv;
-
     mJarURI = do_QueryInterface(uri, &rv);
     if (NS_FAILED(rv))
         return rv;
@@ -761,7 +752,6 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
     }
 
     if (NS_SUCCEEDED(status) && channel) {
-        nsCAutoString header;
         // Grab the security info from our base channel
         channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
@@ -770,17 +760,16 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
             // We only want to run scripts if the server really intended to
             // send us a JAR file.  Check the server-supplied content type for
             // a JAR type.
+            nsCAutoString header;
             httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
                                            header);
+
             nsCAutoString contentType;
             nsCAutoString charset;
             NS_ParseContentType(header, contentType, charset);
+
             mIsUnsafe = !contentType.EqualsLiteral("application/java-archive") &&
                         !contentType.EqualsLiteral("application/x-jar");
-            rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Disposition"),
-                                                header);
-            if (NS_SUCCEEDED(rv))
-                SetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION, header);
         } else {
             nsCOMPtr<nsIJARChannel> innerJARChannel(do_QueryInterface(channel));
             if (innerJARChannel) {
@@ -788,10 +777,6 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
                 innerJARChannel->GetIsUnsafe(&unsafe);
                 mIsUnsafe = unsafe;
             }
-            // Soon-to-be common way to get Disposition: right now only nsIJARChannel
-            rv = NS_GetContentDisposition(request, header);
-            if (NS_SUCCEEDED(rv))
-                SetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION, header);
         }
     }
 
