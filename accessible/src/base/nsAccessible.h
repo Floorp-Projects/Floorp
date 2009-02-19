@@ -41,6 +41,10 @@
 
 #include "nsAccessNodeWrap.h"
 
+#include "nsARIAMap.h"
+#include "nsRelUtils.h"
+#include "nsTextEquivUtils.h"
+
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
@@ -50,15 +54,12 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleEvent.h"
 
-#include "nsRelUtils.h"
-
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIDOMDOMStringList.h"
-#include "nsARIAMap.h"
 
 struct nsRect;
 class nsIContent;
@@ -181,18 +182,6 @@ protected:
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsVisible(PRBool *aIsOffscreen); 
 
-  // Relation helpers
-
-  /**
-   * For a given ARIA relation, such as labelledby or describedby, get the collated text
-   * for the subtree that's pointed to.
-   *
-   * @param aIDProperty  The ARIA relationship property to get the text for
-   * @param aName        Where to put the text
-   * @return error or success code
-   */
-  nsresult GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aName);
-
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers.
 
@@ -205,14 +194,6 @@ protected:
    * Compute the name for XUL node.
    */
   nsresult GetXULName(nsAString& aName);
-
-  // For accessibles that are not lists of choices, the name of the subtree should be the 
-  // sum of names in the subtree
-  nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
-  nsresult AppendNameFromAccessibleFor(nsIContent *aContent, nsAString *aFlatString,
-                                       PRBool aFromValue = PR_FALSE);
-  nsresult AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
-  nsresult AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
 
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
