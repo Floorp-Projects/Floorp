@@ -547,14 +547,18 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // to clear those notifiers unless we have to.  (They'll be reset
     // when we paint, although we could miss a notification in that
     // interval.)
-    imgIRequest *oldBackgroundImage =
-      aOldStyleContext->GetStyleBackground()->mBackgroundImage;
-    if (oldBackgroundImage &&
-        !EqualImages(oldBackgroundImage,
-                     GetStyleBackground()->mBackgroundImage)) {
-      // stop the image loading for the frame, the image has changed
-      PresContext()->SetImageLoaders(this,
-        nsPresContext::BACKGROUND_IMAGE, nsnull);
+    const nsStyleBackground *oldBG = aOldStyleContext->GetStyleBackground();
+    const nsStyleBackground *newBG = GetStyleBackground();
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, oldBG) {
+      imgIRequest *oldImage = oldBG->mLayers[i].mImage.mRequest;
+      imgIRequest *newImage =
+        (i < newBG->mImageCount) ? newBG->mLayers[i].mImage.mRequest : nsnull;
+      if (oldImage && !EqualImages(oldImage, newImage)) {
+        // stop the image loading for the frame, the image has changed
+        PresContext()->SetImageLoaders(this,
+          nsPresContext::BACKGROUND_IMAGE, nsnull);
+        break;
+      }
     }
   }
 
@@ -4026,11 +4030,14 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
 
   // Invalidate the old frame background if the frame has a background
   // whose position depends on the size of the frame
-  const nsStyleBackground* background = GetStyleBackground();
-  if (background->mBackgroundFlags &
-      (NS_STYLE_BG_X_POSITION_PERCENT | NS_STYLE_BG_Y_POSITION_PERCENT)) {
-    Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
-    return;
+  const nsStyleBackground *bg = GetStyleBackground();
+  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    const nsStyleBackground::Layer &layer = bg->mLayers[i];
+    if (layer.mImage.mRequest &&
+        (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
+      Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
+      return;
+    }
   }
 }
 
