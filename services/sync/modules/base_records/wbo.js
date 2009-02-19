@@ -209,6 +209,10 @@ RecordManager.prototype = {
     return false;
   },
 
+  clearCache: function recordMgr_clearCache() {
+    this._records = {};
+  },
+
   del: function RegordMgr_del(url) {
     delete this._records[url];
   },
