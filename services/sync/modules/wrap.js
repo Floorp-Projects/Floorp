@@ -165,6 +165,7 @@ let Wrap = {
 
       } catch (e) {
 	this._log.debug("Caught exception: " + Utils.exceptionStr(e));
+	this._log.debug("\n" + Utils.stackTrace(e));
       }
       self.done(ret);
     };
