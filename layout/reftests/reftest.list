@@ -11,9 +11,6 @@ include reftest-sanity/reftest.list
 # images (if libpr0n is busted, could result in weird failures in other tests)
 include ../../modules/libpr0n/test/reftest/reftest.list
 
-# backgrounds/
-include backgrounds/reftest.list
-
 # bidi/
 include bidi/reftest.list
 
