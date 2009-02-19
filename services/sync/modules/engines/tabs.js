@@ -183,7 +183,7 @@ TabStore.prototype = {
         this._log.debug("Wrapping a tab with title " + currentPage.title);
         let urlHistory = [];
 	// Include URLs in reverse order; max out at 10, and skip nulls.
-	for (let i = tab.entries.length -1; i >= 0; i++) {
+	for (let i = tab.entries.length -1; i >= 0; i--) {
           let entry = tab.entries[i];
 	  if (entry && entry.url)
 	    urlHistory.push(entry.url);
