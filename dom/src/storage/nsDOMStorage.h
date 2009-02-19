@@ -22,7 +22,6 @@
  * Contributor(s):
  *   Neil Deakin <enndeakin@sympatico.ca>
  *   Johnny Stenback <jst@mozilla.com>
- *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -97,14 +96,10 @@ public:
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
-  nsDOMStorageManager();
-
   void AddToStoragesHash(nsDOMStorage* aStorage);
   void RemoveFromStoragesHash(nsDOMStorage* aStorage);
 
   nsresult ClearAllStorages();
-
-  PRBool InPrivateBrowsingMode() { return mInPrivateBrowsing; }
 
   static nsresult Initialize();
   static nsDOMStorageManager* GetInstance();
@@ -115,7 +110,6 @@ public:
 protected:
 
   nsTHashtable<nsDOMStorageEntry> mStorages;
-  PRBool mInPrivateBrowsing;
 };
 
 class nsDOMStorage : public nsIDOMStorage,
@@ -146,10 +140,7 @@ public:
   // This call relies on mSessionOnly, and should only be used
   // after a CacheStoragePermissions() call.  See the comments
   // for mSessionOnly below.
-  PRBool UseDB() {
-    return mUseDB && !mSessionOnly &&
-           !nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode();
-  }
+  PRBool UseDB() { return mUseDB && !mSessionOnly; }
 
   // Check whether storage may be used by the caller, and whether it
   // is session only.  Returns true if storage may be used.
