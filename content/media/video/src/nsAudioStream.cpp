@@ -52,11 +52,6 @@ PRLogModuleInfo* gAudioStreamLog = nsnull;
 
 #define FAKE_BUFFER_SIZE 176400
 
-static float CurrentTimeInSeconds()
-{
-  return PR_IntervalToMilliseconds(PR_IntervalNow()) / 1000.0;
-}
-
 void nsAudioStream::InitLibrary()
 {
 #ifdef PR_LOGGING
@@ -73,12 +68,7 @@ nsAudioStream::nsAudioStream() :
   mAudioHandle(0),
   mRate(0),
   mChannels(0),
-  mSavedPauseBytes(0),
-  mPauseBytes(0),
-  mPauseTime(0.0),
-  mSamplesBuffered(0),
-  mFormat(FORMAT_S16_LE),
-  mPaused(PR_FALSE)
+  mFormat(FORMAT_S16_LE)
 {
 }
 
@@ -87,7 +77,6 @@ void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aForm
   mRate = aRate;
   mChannels = aNumChannels;
   mFormat = aFormat;
-  mStartTime = CurrentTimeInSeconds();
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
                            NULL, 
                            SA_MODE_WRONLY, 
@@ -121,7 +110,6 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount)
   NS_ABORT_IF_FALSE(aCount % mChannels == 0,
                     "Buffer size must be divisible by channel count");
 
-  mSamplesBuffered += aCount;
   PRUint32 offset = mBufferOverflow.Length();
   PRInt32 count = aCount + offset;
 
@@ -214,13 +202,8 @@ void nsAudioStream::SetVolume(float aVolume)
 
 void nsAudioStream::Drain()
 {
-  if (!mAudioHandle) {
-    // mSamplesBuffered already accounts for the data in the
-    // mBufferOverflow array.
-    PRUint32 drainTime = (float(mSamplesBuffered) / mRate / mChannels - GetTime()) * 1000.0;
-    PR_Sleep(PR_MillisecondsToInterval(drainTime));
+  if (!mAudioHandle)
     return;
-  }
 
   // Write any remaining unwritten sound data in the overflow buffer
   if (!mBufferOverflow.IsEmpty()) {
@@ -234,70 +217,4 @@ void nsAudioStream::Drain()
         PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
         Shutdown();
   }
-}
-
-void nsAudioStream::Pause()
-{
-  if (mPaused)
-    return;
-
-  // Save the elapsed playback time.  Used to offset the wall-clock time
-  // when resuming.
-  mPauseTime = CurrentTimeInSeconds() - mStartTime;
-
-  mPaused = PR_TRUE;
-
-  if (!mAudioHandle)
-    return;
-
-  int64_t bytes = 0;
-#if !defined(WIN32)
-  sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_SOFTWARE, &bytes);
-#endif
-  mSavedPauseBytes = bytes;
-
-  sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
-}
-
-void nsAudioStream::Resume()
-{
-  if (!mPaused)
-    return;
-
-  // Reset the start time to the current time offset backwards by the
-  // elapsed time saved when the stream paused.
-  mStartTime = CurrentTimeInSeconds() - mPauseTime;
-
-  mPaused = PR_FALSE;
-
-  if (!mAudioHandle)
-    return;
-
-  sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
-
-#if !defined(WIN32)
-  mPauseBytes += mSavedPauseBytes;
-#endif
-}
-
-double nsAudioStream::GetTime()
-{
-  // If the audio backend failed to open, emulate the current playback
-  // position using the system clock.
-  if (!mAudioHandle) {
-    if (mPaused) {
-      return mPauseTime;
-    }
-    float curTime = CurrentTimeInSeconds() - mStartTime;
-    float maxTime = float(mSamplesBuffered) / mRate / mChannels;
-    return NS_MIN(curTime, maxTime);
-  }
-
-  int64_t bytes = 0;
-#if defined(WIN32)
-  sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_HARDWARE, &bytes);
-#else
-  sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_SOFTWARE, &bytes);
-#endif
-  return double(bytes + mPauseBytes) / (sizeof(short) * mChannels * mRate);
 }

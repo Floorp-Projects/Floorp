@@ -1,0 +1,21 @@
+<html>
+<head>
+  <title>Testcase for bug 448329</title>
+<script>
+function go() {
+  test("myFrame", "backcolor");
+}
+function test(id,cmd) {
+  var doc = document.getElementById(id).contentDocument;
+  doc.designMode = "On";
+
+  var s = doc.defaultView.getSelection();
+  s.removeAllRanges();
+  s.addRange(doc.createRange());
+
+  doc.queryCommandIndeterm(cmd);
+}
+</script>
+</head>
+<body onload="go()"><iframe id="myFrame"></iframe></body>
+</html>
