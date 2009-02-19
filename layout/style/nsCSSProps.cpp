@@ -1489,8 +1489,9 @@ static const nsCSSProperty gBackgroundSubpropTable[] = {
   eCSSProperty_background_repeat,
   eCSSProperty_background_attachment,
   eCSSProperty_background_position,
-  eCSSProperty__moz_background_clip,
-  eCSSProperty__moz_background_origin,
+  eCSSProperty__moz_background_clip, // XXX Added LDB.
+  eCSSProperty__moz_background_origin, // XXX Added LDB.
+  eCSSProperty__moz_background_inline_policy, // XXX Added LDB.
   eCSSProperty_UNKNOWN
 };
 
