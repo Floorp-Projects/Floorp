@@ -271,6 +271,12 @@ public:
   static PRUint8 GetAttributeCharacteristics(nsIAtom* aAtom);
 
   /**
+   * Return the 'live' or 'container-live' object attribute value from the given
+   * ELiveAttrRule constant.
+   */
+  static void GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
+
+  /**
    * Query nsAccessNode from the given nsIAccessible.
    */
   static already_AddRefed<nsAccessNode>
