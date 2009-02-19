@@ -210,8 +210,9 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define AUDIT(x) ((void)0)
 #endif /* JS_JIT_SPEW */
 
-#define INS_CONST(c)    addName(lir->insImm(c), #c)
-#define INS_CONSTPTR(p) addName(lir->insImmPtr((void*) (p)), #p)
+#define INS_CONST(c)        addName(lir->insImm(c), #c)
+#define INS_CONSTPTR(p)     addName(lir->insImmPtr((void*) (p)), #p)
+#define INS_CONSTFUNPTR(p)  addName(lir->insImmPtr(JS_FUNC_TO_DATA_PTR(void*, p)), #p)
 
 using namespace avmplus;
 using namespace nanojit;
@@ -850,7 +851,7 @@ public:
     {
     }
 
-    JS_REQUIRES_STACK LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
+    LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
     {
         if (s0 == s1 && v == LIR_feq) {
             if (isPromote(s0)) {
@@ -3204,7 +3205,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 #ifdef DEBUG
         JSObject *obj =
 #endif
-            js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain);
+            js_GetCallObject(cx, &newifp->frame);
         JS_ASSERT(obj);
         JS_TRACE_MONITOR(cx).useReservedObjects = JS_FALSE;
     }
@@ -4637,22 +4638,21 @@ js_FlushJITCache(JSContext* cx)
     oracle.clearHitCounts();
 }
 
-JS_FORCES_STACK JSStackFrame *
-js_GetTopStackFrame(JSContext *cx)
+JS_FORCES_STACK JS_FRIEND_API(void)
+js_DeepBail(JSContext *cx)
 {
-    if (JS_ON_TRACE(cx)) {
-        /* It's a bug if a non-FAIL_STATUS builtin gets here. */
-        JS_ASSERT(cx->bailExit);
+    JS_ASSERT(JS_ON_TRACE(cx));
 
-        JS_TRACE_MONITOR(cx).onTrace = false;
-        JS_TRACE_MONITOR(cx).prohibitRecording = true;
-        LeaveTree(*cx->interpState, cx->bailExit);
+    /* It's a bug if a non-FAIL_STATUS builtin gets here. */
+    JS_ASSERT(cx->bailExit);
+
+    JS_TRACE_MONITOR(cx).onTrace = false;
+    JS_TRACE_MONITOR(cx).prohibitRecording = true;
+    LeaveTree(*cx->interpState, cx->bailExit);
 #ifdef DEBUG
-        cx->bailExit = NULL;
+    cx->bailExit = NULL;
 #endif
-        cx->builtinStatus |= JSBUILTIN_BAILED;
-    }
-    return cx->fp;
+    cx->builtinStatus |= JSBUILTIN_BAILED;
 }
 
 JS_REQUIRES_STACK jsval&
@@ -5547,7 +5547,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
 #define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
 
     if (OP(map->ops) == OP(&js_ObjectOps)) {
-        guard(true, addName(lir->ins2(LIR_eq, n, INS_CONSTPTR(OP(&js_ObjectOps))),
+        guard(true, addName(lir->ins2(LIR_eq, n, INS_CONSTFUNPTR(OP(&js_ObjectOps))),
                             "guard(native-map)"),
               MISMATCH_EXIT);
         return true;
@@ -7060,7 +7060,8 @@ GetProperty(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv;
     jsid id;
 
-    JS_ASSERT(!JS_ON_TRACE(cx) && cx->fp->imacpc && argc == 1);
+    JS_ASSERT_NOT_ON_TRACE(cx);
+    JS_ASSERT(cx->fp->imacpc && argc == 1);
     argv = JS_ARGV(cx, vp);
     JS_ASSERT(JSVAL_IS_STRING(argv[0]));
     if (!js_ValueToStringId(cx, argv[0], &id))
@@ -7091,7 +7092,8 @@ GetElement(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv;
     jsid id;
 
-    JS_ASSERT(!JS_ON_TRACE(cx) && cx->fp->imacpc && argc == 1);
+    JS_ASSERT_NOT_ON_TRACE(cx);
+    JS_ASSERT(cx->fp->imacpc && argc == 1);
     argv = JS_ARGV(cx, vp);
     JS_ASSERT(JSVAL_IS_NUMBER(argv[0]));
     if (!JS_ValueToId(cx, argv[0], &id))
@@ -9250,10 +9252,12 @@ js_GetBuiltinFunction(JSContext *cx, uintN index)
 
     if (!funobj) {
         /* Use NULL parent and atom. Builtin functions never escape to scripts. */
+        JS_ASSERT(index < JS_ARRAY_LENGTH(builtinFunctionInfo));
+        const BuiltinFunctionInfo *bfi = &builtinFunctionInfo[index];
         JSFunction *fun = js_NewFunction(cx,
                                          NULL,
-                                         (JSNative) builtinFunctionInfo[index].tn,
-                                         builtinFunctionInfo[index].nargs,
+                                         JS_DATA_TO_FUNC_PTR(JSNative, bfi->tn),
+                                         bfi->nargs,
                                          JSFUN_FAST_NATIVE | JSFUN_TRACEABLE,
                                          NULL,
                                          NULL);
