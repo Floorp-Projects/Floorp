@@ -84,7 +84,7 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 #define JS_STATIC_ASSERT(condition)
 #else
 #define JS_STATIC_ASSERT(condition)                                           \
-    extern void js_static_assert(int arg[(condition) ? 1 : -1])
+    typedef int js_static_assert[(condition) ? 1 : -1]
 #endif
 
 /*
