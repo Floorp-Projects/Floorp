@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonathan Watt <jonathan.watt@strath.ac.uk> (original author)
+ *   Craig Topper <craig.topper@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -61,6 +61,10 @@ public:
 
   void Init();
 
+  // Used by element to tell if viewbox is defined
+  PRBool IsValid() const
+    { return (mHasBaseVal || mAnimVal); }
+
   const nsSVGViewBoxRect& GetBaseValue() const
     { return mBaseVal; }
   void SetBaseValue(float aX, float aY, float aWidth, float aHeight,
@@ -80,6 +84,7 @@ private:
 
   nsSVGViewBoxRect mBaseVal;
   nsAutoPtr<nsSVGViewBoxRect> mAnimVal;
+  PRPackedBool mHasBaseVal;
 
   struct DOMBaseVal : public nsIDOMSVGRect
   {

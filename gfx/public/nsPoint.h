@@ -111,6 +111,9 @@ struct nsIntPoint {
     y -= aPoint.y;
     return *this;
   }
+  nsIntPoint operator-() const {
+    return nsIntPoint(-x, -y);
+  }
   void MoveTo(PRInt32 aX, PRInt32 aY) {x = aX; y = aY;}
 };
 

@@ -373,10 +373,9 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 
     if (parentWidget && aType == eWindowType_popup &&
         mVis == nsViewVisibility_kShow) {
-      nsIntRect screenRect(0,0,1,1);
-      parentWidget->WidgetToScreen(screenRect, screenRect);
-      viewBounds += nsPoint(NSIntPixelsToAppUnits(screenRect.x, p2a),
-                            NSIntPixelsToAppUnits(screenRect.y, p2a));
+      nsIntPoint screenPoint = parentWidget->WidgetToScreenOffset();
+      viewBounds += nsPoint(NSIntPixelsToAppUnits(screenPoint.x, p2a),
+                            NSIntPixelsToAppUnits(screenPoint.y, p2a));
     }
   }
 
@@ -809,21 +808,19 @@ nsPoint nsIView::GetOffsetTo(const nsIView* aOther) const
 
 nsIntPoint nsIView::GetScreenPosition() const
 {
-  nsIntRect screenRect(0,0,0,0);  
+  nsIntPoint screenPoint(0,0);  
   nsPoint toWidgetOffset(0,0);
   nsIWidget* widget = GetNearestWidget(&toWidgetOffset);
   if (widget) {
     nsCOMPtr<nsIDeviceContext> dx;
     mViewManager->GetDeviceContext(*getter_AddRefs(dx));
     PRInt32 p2a = dx->AppUnitsPerDevPixel();
-    nsIntRect ourRect(NSAppUnitsToIntPixels(toWidgetOffset.x, p2a),
-                      NSAppUnitsToIntPixels(toWidgetOffset.y, p2a),
-                      0,
-                      0);
-    widget->WidgetToScreen(ourRect, screenRect);
+    nsIntPoint ourPoint(NSAppUnitsToIntPixels(toWidgetOffset.x, p2a),
+                        NSAppUnitsToIntPixels(toWidgetOffset.y, p2a));
+    screenPoint = ourPoint + widget->WidgetToScreenOffset();
   }
   
-  return nsIntPoint(screenRect.x, screenRect.y);
+  return screenPoint;
 }
 
 nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const

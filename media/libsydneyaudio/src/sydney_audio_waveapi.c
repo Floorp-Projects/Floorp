@@ -152,7 +152,7 @@ int sa_stream_create_pcm(sa_stream_t **s,
     return SA_ERROR_NOT_SUPPORTED;
   }
 
-  if ((_s = (sa_stream_t*)malloc(sizeof(sa_stream_t))) == NULL) {
+  if ((_s = (sa_stream_t*)calloc(1, sizeof(sa_stream_t))) == NULL) {
     return SA_ERROR_OOM;
   }
    
