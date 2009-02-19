@@ -23,10 +23,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
       testAttrs("atomic", {"atomic" : "true"}, true); 
       testAttrs("autocomplete", {"autocomplete" : "true"}, true); 
       // bug 477876 testAttrs("checked", {"checkable" : "true"}, true); 
-      testAttrs("dropeffect", {"dropeffect" : "copy"}, true); 
+      testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
+
+      // live object attribute
       testAttrs("live", {"live" : "polite"}, true);
-      testAttrs("me", {"container-live" : "polite"}, true);
-      
+      testAttrs("live2", {"live" : "polite"}, true);
+      testAttrs("log", {"live" : "polite"}, true);
+      testAttrs("marquee", {"live" : "off"}, true);
+      testAttrs("status", {"live" : "polite"}, true);
+      testAttrs("timer", {"live" : "off"}, true);
+
+      // container-live object attribute
+      testAttrs("liveChild", {"container-live" : "polite"}, true);
+      testAttrs("live2Child", {"container-live" : "polite"}, true);
+      testAttrs("logChild", {"container-live" : "polite"}, true);
+      testAttrs("marqueeChild", {"container-live" : "off"}, true);
+      testAttrs("statusChild", {"container-live" : "polite"}, true);
+      testAttrs("timerChild", {"container-live" : "off"}, true);
+
       SimpleTest.finish();
     }
 
@@ -50,7 +64,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
   <div id="autocomplete" role="textbox" aria-autocomplete="true"></div>
   <div id="checked" aria-checked="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
-  <div id="live" aria-live="polite">excuse <div id="me">me</div></div>  
+
+  <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
+  <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
+  <div id="log" role="log">excuse <div id="logChild">me</div></div>
+  <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
+  <div id="status" role="status">excuse <div id="statusChild">me</div></div>
+  <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
   
 </body>
 </html>

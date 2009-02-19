@@ -42,6 +42,8 @@
  * for shared application glue for the Communicator suite of applications
  **/
 
+var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
+
 var gBidiUI = false;
 
 function getBrowserURL()
