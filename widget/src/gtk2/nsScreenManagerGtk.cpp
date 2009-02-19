@@ -197,11 +197,11 @@ nsScreenManagerGtk :: Init()
     if (_XnrmIsActive && _XnrmQueryScreens &&
         _XnrmIsActive(GDK_DISPLAY())) {
       screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &numScreens);
+
+      // remember for the destructor, if we are really working with Xinerama
+      mXineramaIsActive = numScreens > 0;
     }
   }
-
-  // remember for the destructor, if we are really working with Xinerama
-  mXineramaIsActive = numScreens > 0;
 
   // screenInfo == NULL if either Xinerama couldn't be loaded or
   // isn't running on the current display
