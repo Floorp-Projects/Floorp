@@ -468,7 +468,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     nsIAccessibleRole::ROLE_STATUSBAR,
     eNoValue,
     eNoAction,
-    eNoLiveAttr,
+    ePoliteLiveAttr,
     kNoReqStates,
     kEndEntry
   },
