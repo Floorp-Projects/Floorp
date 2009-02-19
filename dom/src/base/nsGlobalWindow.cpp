@@ -8449,7 +8449,22 @@ nsGlobalWindow::ResumeTimeouts()
   PRTime now = PR_Now();
   nsresult rv;
 
+#ifdef DEBUG
+  PRBool _seenDummyTimeout = PR_FALSE;
+#endif
+
   for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
+    // There's a chance we're being called with RunTimeout on the stack in which
+    // case we have a dummy timeout in the list that *must not* be resumed. It
+    // can be identified by a null mWindow.
+    if (!t->mWindow) {
+#ifdef DEBUG
+      NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
+      _seenDummyTimeout = PR_TRUE;
+#endif
+      continue;
+    }
+
     // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
     // PRTime to make the division do the right thing on 64-bit
     // platforms whether t->mWhen is positive or negative (which is
