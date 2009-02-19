@@ -178,6 +178,9 @@ function getNode(aNodeOrID)
  */
 function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
 {
+  if (!aAccOrElmOrID)
+    return;
+
   var elm = null;
 
   if (aAccOrElmOrID instanceof nsIAccessible) {
@@ -244,6 +247,27 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
 function isAccessible(aAccOrElmOrID)
 {
   return getAccessible(aAccOrElmOrID, null, null, true) ? true : false;
+}
+
+/**
+ * Run through accessible tree of the given identifier so that we ensure
+ * accessible tree is created.
+ */
+function ensureAccessibleTree(aAccOrElmOrID)
+{
+  var acc = getAccessible(aAccOrElmOrID);
+  if (!acc)
+    return;
+
+  var child = acc.firstChild;
+  while (child) {
+    ensureAccessibleTree(child);
+    try {
+      child = child.nextSibling;
+    } catch (e) {
+      child = null;
+    }
+  }
 }
 
 /**
