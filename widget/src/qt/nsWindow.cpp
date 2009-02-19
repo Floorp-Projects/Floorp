@@ -416,13 +416,8 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     QPoint pos(aX, aY);
     if (mDrawingArea) {
         if (mParent && mDrawingArea->windowType() == Qt::Popup) {
-            nsIntRect oldrect, newrect;
-            oldrect.x = aX;
-            oldrect.y = aY;
-
-            mParent->WidgetToScreen(oldrect, newrect);
-
-            pos = QPoint(newrect.x, newrect.y);
+            if (mParent->mDrawingArea)
+                pos = mParent->mDrawingArea->mapToGlobal(pos);
 #ifdef DEBUG_WIDGETS
             qDebug("pos is [%d,%d]", pos.x(), pos.y());
 #endif
@@ -588,8 +583,7 @@ nsWindow::SetFocus(PRBool aRaise)
 NS_IMETHODIMP
 nsWindow::GetScreenBounds(nsIntRect &aRect)
 {
-    nsIntRect origin(0, 0, mBounds.width, mBounds.height);
-    WidgetToScreen(origin, aRect);
+    aRect = nsIntRect(WidgetToScreenOffset(), mBounds.Size());
     LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,
          mBounds.width, mBounds.height,
@@ -913,38 +907,17 @@ nsWindow::ShowMenuBar(PRBool aShow)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsWindow::WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect)
+nsIntPoint
+nsWindow::WidgetToScreenOffset()
 {
-    NS_ENSURE_TRUE(mDrawingArea, NS_OK);
+    NS_ENSURE_TRUE(mDrawingArea, nsIntPoint(0,0));
 
-    QPoint origin(aOldRect.x, aOldRect.y);
+    QPoint origin(0, 0);
     origin = mDrawingArea->mapToGlobal(origin);
 
-    aNewRect.x = origin.x();
-    aNewRect.y = origin.y();
-    aNewRect.width = aOldRect.width;
-    aNewRect.height = aOldRect.height;
-
-    return NS_OK;
+    return nsIntPoint(origin.x(), origin.y());
 }
-
-NS_IMETHODIMP
-nsWindow::ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect)
-{
-    NS_ENSURE_TRUE(mDrawingArea, NS_OK);
-
-    QPoint origin(aOldRect.x, aOldRect.y);
-    origin = mDrawingArea->mapFromGlobal(origin);
-
-    aNewRect.x = origin.x();
-    aNewRect.y = origin.y();
-    aNewRect.width = aOldRect.width;
-    aNewRect.height = aOldRect.height;
-
-    return NS_OK;
-}
-
+ 
 NS_IMETHODIMP
 nsWindow::BeginResizingChildren(void)
 {
@@ -1225,10 +1198,7 @@ nsWindow::OnMoveEvent(QMoveEvent *aEvent)
     QPoint pos = aEvent->pos();
     if (mIsTopLevel) {
         // Need to translate this into the right coordinates
-        nsIntRect oldrect, newrect;
-        WidgetToScreen(oldrect, newrect);
-        mBounds.x = newrect.x;
-        mBounds.y = newrect.y;
+        mBounds.MoveTo(WidgetToScreenOffset());
     }
 
     nsGUIEvent event(PR_TRUE, NS_MOVE, this);
@@ -1905,13 +1875,8 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     if (mDrawingArea)
     {
         if (mParent && mDrawingArea->windowType() == Qt::Popup) {
-            nsIntRect oldrect, newrect;
-            oldrect.x = aX;
-            oldrect.y = aY;
-
-            mParent->WidgetToScreen(oldrect, newrect);
-
-            pos = QPoint(newrect.x, newrect.y);
+            if (mParent->mDrawingArea)
+                pos = mParent->mDrawingArea->mapToGlobal(pos);
 #ifdef DEBUG_WIDGETS
             qDebug("pos is [%d,%d]", pos.x(), pos.y());
 #endif
@@ -2537,13 +2502,8 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     // XXXvlad what?
 #if 0
     if (mParent && mDrawingArea->windowType() == Qt::Popup) {
-        nsIntRect oldrect, newrect;
-        oldrect.x = aX;
-        oldrect.y = aY;
-
-        mParent->WidgetToScreen(oldrect, newrect);
-
-        pos = QPoint(newrect.x, newrect.y);
+        if (mParent->mDrawingArea)
+            pos = mParent->mDrawingArea->mapToGlobal(pos);
 #ifdef DEBUG_WIDGETS
         qDebug("pos is [%d,%d]", pos.x(), pos.y());
 #endif
