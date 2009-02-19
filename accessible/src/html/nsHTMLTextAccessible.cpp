@@ -169,22 +169,9 @@ nsTextAccessible(aDomNode, aShell)
 }
 
 nsresult
-nsHTMLLabelAccessible::GetNameInternal(nsAString& aReturn)
-{ 
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-
-  nsAutoString name;
-  if (content)
-    rv = AppendFlatStringFromSubtree(content, &name);
-
-  if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAString
-    name.CompressWhitespace();
-    aReturn = name;
-  }
-
-  return rv;
+nsHTMLLabelAccessible::GetNameInternal(nsAString& aName)
+{
+  return nsTextEquivUtils::GetNameFromSubtree(this, aName);
 }
 
 NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
