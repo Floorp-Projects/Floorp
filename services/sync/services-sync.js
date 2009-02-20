@@ -28,15 +28,12 @@ pref("extensions.weave.log.appender.briefLog", "Info");
 pref("extensions.weave.log.appender.debugLog", "Trace");
 
 pref("extensions.weave.log.rootLogger", "Trace");
-pref("extensions.weave.log.logger.async", "Debug");
-pref("extensions.weave.log.logger.service.crypto", "Debug");
-pref("extensions.weave.log.logger.service.dav", "Debug");
-pref("extensions.weave.log.logger.service.engine", "Debug");
 pref("extensions.weave.log.logger.service.main", "Trace");
+pref("extensions.weave.log.logger.async", "Debug");
 pref("extensions.weave.log.logger.network.resources", "Debug");
-
-pref("extensions.weave.xmpp.enabled", false);
-pref("extensions.weave.xmpp.server.url", "https://sm-labs01.mozilla.org:81/xmpp");
-pref("extensions.weave.xmpp.server.realm", "sm-labs01.mozilla.org");
+pref("extensions.weave.log.logger.engine.bookmarks", "Debug");
+pref("extensions.weave.log.logger.engine.history", "Debug");
+pref("extensions.weave.log.logger.engine.tabs", "Debug");
+pref("extensions.weave.log.logger.engine.clients", "Debug");
 
 pref("extensions.weave.network.numRetries", 2);
