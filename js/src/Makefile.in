@@ -324,6 +324,7 @@ ifneq ($(OS_ARCH), WINCE)
 # so we'll have to manually ensure it gets built here if we want to use
 # $(EXPORTS)
 export:: config/nsinstall$(HOST_BIN_SUFFIX)
+$(PUBLIC) $(SDK_PUBLIC): config/nsinstall$(HOST_BIN_SUFFIX)
 
 config/nsinstall$(HOST_BIN_SUFFIX): $(srcdir)/config/nsinstall.c $(srcdir)/config/pathsub.c
 	$(MAKE) -C config/ nsinstall$(HOST_BIN_SUFFIX)
