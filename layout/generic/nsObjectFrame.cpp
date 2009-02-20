@@ -3504,7 +3504,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 #else
 
   if (SendNativeEvents())
-    return DispatchKeyToPlugin(aKeyEvent);
+    DispatchKeyToPlugin(aKeyEvent);
 
   if (mInstance) {
     // If this event is going to the plugin, we want to kill it.
