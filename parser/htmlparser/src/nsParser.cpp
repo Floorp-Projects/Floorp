@@ -2049,6 +2049,15 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
+                        nsISupports* aTargetNode,
+                        nsIAtom* aContextLocalName,
+                        PRInt32 aContextNamespace)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         void* aKey,
                         nsTArray<nsString>& aTagStack,
                         PRBool aXMLMode,
