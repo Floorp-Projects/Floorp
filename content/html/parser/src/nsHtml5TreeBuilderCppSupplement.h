@@ -291,9 +291,13 @@ nsHtml5TreeBuilder::endCoalescing()
 void
 nsHtml5TreeBuilder::start(PRBool fragment)
 {
-  mHasProcessedBase = PR_FALSE;
-  mParser->WillBuildModelImpl();
-  mParser->GetDocument()->BeginLoad(); // XXX fragment?
+  if (fragment) {
+    mHasProcessedBase = PR_TRUE;  
+  } else {
+    mHasProcessedBase = PR_FALSE;
+    mParser->WillBuildModelImpl();
+    mParser->GetDocument()->BeginLoad(); // XXX fragment?
+  }
 }
 
 void
