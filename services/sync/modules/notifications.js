@@ -64,7 +64,7 @@ let Notifications = {
 
   add: function Notifications_add(notification) {
     this.notifications.push(notification);
-    Observers.notify(notification, "weave:notification:added", null);
+    Observers.notify("weave:notification:added", notification, null);
   },
 
   remove: function Notifications_remove(notification) {
@@ -72,7 +72,7 @@ let Notifications = {
 
     if (index != -1) {
       this.notifications.splice(index, 1);
-      Observers.notify(notification, "weave:notification:removed", null);
+      Observers.notify("weave:notification:removed", notification, null);
     }
   },
 
