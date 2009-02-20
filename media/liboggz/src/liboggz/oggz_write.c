@@ -95,7 +95,6 @@ oggz_write_init (OGGZ * oggz)
   writer->next_zpacket = NULL;
 
   writer->packet_queue = oggz_vector_new ();
-  if (writer->packet_queue == NULL) return NULL;
 
 #ifdef ZPACKET_CMP
   /* XXX: comparison function should only kick in when a metric is set */
@@ -210,7 +209,7 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
   oggz_stream_t * stream;
   oggz_writer_packet_t * packet;
   ogg_packet * new_op;
-  unsigned char * new_buf = NULL;
+  unsigned char * new_buf;
   int b_o_s, e_o_s, bos_auto;
   int strict, prefix, suffix;
 
@@ -232,13 +231,13 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
    * ie. that it fits within 32 bits and does not equal the special value -1 */
   if ((long)((ogg_int32_t)serialno) != serialno || serialno == -1) {
 #ifdef DEBUG
-    printf ("oggz_write_feed: serialno %010lu\n", serialno);
+    printf ("oggz_write_feed: serialno %010ld\n", serialno);
 #endif
     return OGGZ_ERR_BAD_SERIALNO;
   }
 
 #ifdef DEBUG
-  printf ("oggz_write_feed: (%010lu) FLUSH: %d\n", serialno, flush);
+  printf ("oggz_write_feed: (%010ld) FLUSH: %d\n", serialno, flush);
 #endif
 
   /* Cache strict, prefix, suffix */
@@ -261,8 +260,6 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
 
     if (b_o_s || !strict || suffix) {
       stream = oggz_add_stream (oggz, serialno);
-      if (stream == NULL)
-        return OGGZ_ERR_OUT_OF_MEMORY;
       oggz_auto_identify_packet (oggz, op, serialno);
     } else {
       return OGGZ_ERR_BAD_SERIALNO;
@@ -278,9 +275,7 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
   if (strict) {
     if (op->bytes < 0) return OGGZ_ERR_BAD_BYTES;
     if (!suffix && b_o_s != stream->b_o_s) return OGGZ_ERR_BAD_B_O_S;
-    if (op->granulepos != -1 && op->granulepos < stream->granulepos &&
-        /* Allow negative granulepos immediately after headers, for Dirac: */
-        !(stream->granulepos == 0 && op->granulepos < 0))
+    if (op->granulepos != -1 && op->granulepos < stream->granulepos)
       return OGGZ_ERR_BAD_GRANULEPOS;
 
     /* Allow packetno == -1 to indicate oggz should fill it in; otherwise:
@@ -299,7 +294,7 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
   /* OK -- Update stream's memory of packet details */
 
   if (!stream->metric && (oggz->flags & OGGZ_AUTO)) {
-    oggz_auto_read_bos_packet (oggz, op, serialno, NULL);
+    oggz_auto_get_granulerate (oggz, op, serialno, NULL);
   }
 
   stream->b_o_s = 0; /* The stream is henceforth no longer at bos */
@@ -313,18 +308,12 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
   /* Now set up the packet and add it to the queue */
   if (guard == NULL) {
     new_buf = oggz_malloc ((size_t)op->bytes);
-    if (new_buf == NULL) return OGGZ_ERR_OUT_OF_MEMORY;
-
     memcpy (new_buf, op->packet, (size_t)op->bytes);
   } else {
     new_buf = op->packet;
   }
 
   packet = oggz_malloc (sizeof (oggz_writer_packet_t));
-  if (packet == NULL) {
-    if (guard == NULL && new_buf != NULL) oggz_free (new_buf);
-    return OGGZ_ERR_OUT_OF_MEMORY;
-  }
 
   new_op = &packet->op;
   new_op->packet = new_buf;
@@ -386,14 +375,13 @@ oggz_write_feed (OGGZ * oggz, ogg_packet * op, long serialno, int flush,
 static long
 oggz_page_init (OGGZ * oggz)
 {
-  OggzWriter * writer;
+  OggzWriter * writer = &oggz->x.writer;
   ogg_stream_state * os;
   ogg_page * og;
   int ret;
 
   if (oggz == NULL) return -1;
 
-  writer = &oggz->x.writer;
   os = writer->current_stream;
   og = &oggz->current_page;
 
@@ -428,14 +416,13 @@ oggz_page_init (OGGZ * oggz)
 static long
 oggz_packet_init (OGGZ * oggz, oggz_writer_packet_t * next_zpacket)
 {
-  OggzWriter * writer;
+  OggzWriter * writer = &oggz->x.writer;
   oggz_stream_t * stream;
   ogg_stream_state * os;
   ogg_packet * op;
 
   if (oggz == NULL) return -1L;
 
-  writer = &oggz->x.writer;
   writer->current_zpacket = next_zpacket;
   op = &next_zpacket->op;
 
@@ -464,13 +451,12 @@ oggz_packet_init (OGGZ * oggz, oggz_writer_packet_t * next_zpacket)
 static long
 oggz_page_copyout (OGGZ * oggz, unsigned char * buf, long n)
 {
-  OggzWriter * writer;
+  OggzWriter * writer = &oggz->x.writer;
   long h, b;
   ogg_page * og;
 
   if (oggz == NULL) return -1L;
 
-  writer = &oggz->x.writer;
   og = &oggz->current_page;
 
   h = MIN (n, og->header_len - writer->page_offset);
@@ -507,7 +493,7 @@ oggz_page_copyout (OGGZ * oggz, unsigned char * buf, long n)
 static long
 oggz_page_writeout (OGGZ * oggz, long n)
 {
-  OggzWriter * writer;
+  OggzWriter * writer = &oggz->x.writer;
   long h, b, nwritten;
   ogg_page * og;
 
@@ -517,7 +503,6 @@ oggz_page_writeout (OGGZ * oggz, long n)
 
   if (oggz == NULL) return -1L;
 
-  writer = &oggz->x.writer;
   og = &oggz->current_page;
 
 #ifdef OGGZ_WRITE_DIRECT
@@ -669,7 +654,7 @@ oggz_writer_make_packet (OGGZ * oggz)
 #ifdef DEBUG
   printf("oggz_writer_make_packet: cb_ret is %d\n", cb_ret);
 #endif
-
+  
   if (cb_ret == 0 && next_zpacket == NULL) return OGGZ_WRITE_EMPTY;
 
   return cb_ret;
@@ -683,7 +668,7 @@ oggz_write_output (OGGZ * oggz, unsigned char * buf, long n)
   int active = 1, cb_ret = 0;
 
   if (oggz == NULL) return OGGZ_ERR_BAD_OGGZ;
-
+ 
   writer = &oggz->x.writer;
 
   if (!(oggz->flags & OGGZ_WRITE)) {
@@ -835,7 +820,7 @@ oggz_write (OGGZ * oggz, long n)
          * if we're out of packets because we're at the end of the file,
          * we can't finish just yet.  Instead we need to force a page flush,
          * and write the page out.  So we set flushing and no_more_packets to
-         * 1.  This causes oggz_page_init to flush the page, then we
+         * 1.  This causes oggz_page_init to flush the page, then we 
          * will switch the state to OGGZ_WRITING_PAGES, which will trigger
          * the writing code below.
          */
@@ -918,12 +903,10 @@ oggz_write (OGGZ * oggz, long n)
 long
 oggz_write_get_next_page_size (OGGZ * oggz)
 {
-  OggzWriter * writer;
+  OggzWriter * writer = &oggz->x.writer;
   ogg_page * og;
 
   if (oggz == NULL) return OGGZ_ERR_BAD_OGGZ;
-
-  writer = &oggz->x.writer;
 
   if (!(oggz->flags & OGGZ_WRITE)) {
     return OGGZ_ERR_INVALID;
