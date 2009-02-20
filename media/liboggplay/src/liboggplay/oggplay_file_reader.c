@@ -59,9 +59,9 @@ oggplay_file_reader_initialise(OggPlayReader * opr, int block) {
     return E_OGGPLAY_BAD_INPUT;
   }
 
-  fseek(me->file, SEEK_END, 0);
+  fseek(me->file, 0L, SEEK_END);
   me->size = ftell(me->file);
-  fseek(me->file, SEEK_SET, 0);
+  fseek(me->file, 0L, SEEK_SET);
 
   me->current_position = 0;
 
@@ -146,6 +146,7 @@ oggplay_file_reader_new(char *file_name) {
   me->functions.available = &oggplay_file_reader_available;
   me->functions.finished_retrieving = &oggplay_file_reader_finished_retrieving;
   me->functions.seek = NULL;
+  me->functions.duration = NULL;
   me->functions.io_read = &oggplay_file_reader_io_read;
   me->functions.io_seek = &oggplay_file_reader_io_seek;
   me->functions.io_tell = &oggplay_file_reader_io_tell;
