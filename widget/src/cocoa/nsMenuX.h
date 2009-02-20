@@ -119,9 +119,11 @@ protected:
   PRUint32                  mVisibleItemsCount; // cache
   nsMenuObjectX*            mParent; // [weak]
   nsMenuBarX*               mMenuBar; // [weak]
+  // The icon object should never outlive its creating nsMenuX object.
   nsRefPtr<nsMenuItemIconX> mIcon;
   GeckoNSMenu*              mNativeMenu; // [strong]
   MenuDelegate*             mMenuDelegate; // [strong]
+  // nsMenuX objects should always have a valid native menu item.
   NSMenuItem*               mNativeMenuItem; // [strong]
   PRPackedBool              mIsEnabled;
   PRPackedBool              mDestroyHandlerCalled;
