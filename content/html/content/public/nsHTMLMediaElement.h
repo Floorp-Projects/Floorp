@@ -337,6 +337,10 @@ protected:
   // is a result of the autoplay attribute.
   PRPackedBool mAutoplaying;
 
+  // Indicates whether |autoplay| will actually autoplay based on the pref 
+  // media.autoplay.enabled
+  PRPackedBool mAutoplayEnabled;
+
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
   PRPackedBool mPaused;
