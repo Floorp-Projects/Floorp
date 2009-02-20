@@ -30,7 +30,7 @@
 #define HAVE_SSIZE_T 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
@@ -131,8 +131,4 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
-
-/* Define for MSVC as <stdint.h> is unavailable there */
-typedef unsigned char uint8_t;
-
-#define inline __inline // MSVC#undef DEBUG
+#undef DEBUG
