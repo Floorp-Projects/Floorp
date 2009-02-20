@@ -133,7 +133,7 @@ Engine.prototype = {
   },
 
   _init: function Engine__init() {
-    let levelPref = "log.logger.service.engine." + this.name;
+    let levelPref = "log.logger.engine." + this.name;
     let level = "Debug";
     try { level = Utils.prefs.getCharPref(levelPref); }
     catch (e) { /* ignore unset prefs */ }
