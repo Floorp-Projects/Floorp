@@ -48,14 +48,30 @@ typedef PRUint16 nsMediaNetworkState;
 typedef PRUint16 nsMediaReadyState;
 
 // Object representing a single execution of the media load algorithm.
-// Used by implicit load events so that they can be cancelled when Load()
-// is executed.
-// Note: When bug 465458 lands, all events are expected to do this, not
-//       just implicit load events.
+// Used by asynchronous events so that they can be cancelled when Load()
+// is executed. Holds the list of candidate resources which the media
+// element attempts to load, and provides iteration over that list.
 class nsMediaLoad : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
+  nsMediaLoad() : mPosition(0) {}
+  ~nsMediaLoad() {}
+
+  // Appends a candidate resource to the candidate list. List is populated
+  // by nsHTMLMediaElement::GenerateCandidates().
+  void AddCandidate(nsIURI *aURI);
+
+  // Returns the next candidate in the list, or null if at the end.
+  already_AddRefed<nsIURI> GetNextCandidate();
+
+  PRBool HasMoreCandidates() { return mPosition < mCandidates.Count(); }
+private:
+  // Candidate resource URIs.
+  nsCOMArray<nsIURI> mCandidates;
+
+  // Index/iterator position in mCandidates.
+  PRInt32 mPosition;
 };
 
 class nsHTMLMediaElement : public nsGenericHTMLElement
@@ -213,22 +229,17 @@ public:
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   /**
-   * Queues an event to call Load().
-   */
-  void QueueLoadTask();
-
-  /**
-   * Returns the current nsMediaLoad object. Implicit load events store a
+   * Returns the current nsMediaLoad object. Asynchronous events store a
    * reference to the nsMediaLoad object that was current when they were
    * enqueued, and if it has changed when they come to fire, they consider
    * themselves cancelled, and don't fire.
-   * Note: When bug 465458 lands, all events are expected to do this, not
-   *       just implicit load events.
    */
   nsMediaLoad* GetCurrentMediaLoad() { return mCurrentLoad; }
 
+
 protected:
-  class nsMediaLoadListener;
+  class MediaLoadListener;
+  class LoadNextCandidateEvent;
 
   /**
    * Figure out which resource to load (either the 'src' attribute or a
@@ -248,10 +259,12 @@ protected:
                                        nsIStreamListener **aListener);
   /**
    * Execute the initial steps of the load algorithm that ensure existing
-   * loads are aborted and the element is emptied.  Returns true if aborted,
-   * false if emptied.
+   * loads are aborted, the element is emptied, and a new load object is
+   * created. Returns true if the current load aborts due to a new load being
+   * started in event handlers triggered during this function call.
    */
   PRBool AbortExistingLoads();
+
   /**
    * Create a URI for the given aURISpec string.
    */
@@ -263,6 +276,25 @@ protected:
    */
   void NoSupportedMediaError();
 
+  // Performs "the candidate loop" step in the load algorithm. Attempts to
+  // load candidates in the candidate media resource list until a channel opens
+  // to a resource, then it returns. If the resource download fails, it will
+  // set a callback to this function. Do not call this directly, call
+  // QueueLoadNextCandidateTask() instead.
+  void LoadNextCandidate();
+
+  // Populates the candidate resource list in mCurrentLoad.
+  void GenerateCandidates();
+
+  // Enqueues an event to call Load() on the main thread. This will begin
+  // the process of attempting to load candidate media resources from the
+  // candidate resource list.
+  void QueueLoadTask();
+
+  // Enqueues an event to resume trying to open resources in the candidate
+  // loop.
+  void QueueLoadNextCandidateTask();
+
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   nsCOMPtr<nsIChannel> mChannel;
@@ -270,7 +302,8 @@ protected:
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
 
-  // The current media load object.
+  // The current media load object. Stores the list of candidate media
+  // resources that we are attempting to load.
   nsRefPtr<nsMediaLoad> mCurrentLoad;
 
   // Media loading flags. See: 
