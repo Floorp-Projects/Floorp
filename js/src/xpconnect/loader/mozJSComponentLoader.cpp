@@ -93,7 +93,7 @@ static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
 /* See bug 318077 for WinCE.                                   */
-#if !defined(XP_BEOS) && !defined(XP_OS2) && !defined(WINCE)
+#if !defined(XP_BEOS) && !defined(XP_OS2)
 #define HAVE_PR_MEMMAP
 #endif
 
