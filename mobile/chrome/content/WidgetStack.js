@@ -264,6 +264,13 @@ wsRect.prototype = {
       (other._b > this._t && other._b < this._b) ||
       (other._t <= this._t && other._t >= this._b);
     return xok && yok;
+  },
+  
+  round: function(scale) {
+    this._l = Math.floor(this._l * scale) / scale;
+    this._t = Math.floor(this._t * scale) / scale;
+    this._r = Math.ceil(this._r * scale) / scale;
+    this._b = Math.ceil(this._b * scale) / scale;
   }
 };
 

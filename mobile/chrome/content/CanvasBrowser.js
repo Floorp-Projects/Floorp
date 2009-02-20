@@ -155,6 +155,8 @@ CanvasBrowser.prototype = {
       let dest = this._drawQ.pop();
       if (!dest)
         continue;
+      // ensure the rect is pixel-aligned once scaled
+      dest.round(this._zoomLevel);
       ctx.translate(dest.x - this._pageBounds.x, dest.y - this._pageBounds.y);
       ctx.drawWindow(this._browser.contentWindow,
                      dest.x, dest.y,
@@ -237,16 +239,17 @@ CanvasBrowser.prototype = {
   viewportHandler: function(bounds, boundsSizeChanged) {
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewportVisibleRect;
-    pageBounds.top = Math.floor(this._screenToPage(bounds.top));
-    pageBounds.left = Math.floor(this._screenToPage(bounds.left));
-    pageBounds.bottom = Math.ceil(this._screenToPage(bounds.bottom));
-    pageBounds.right = Math.ceil(this._screenToPage(bounds.right));
+    // top/left should not get rounded otherwise the blit below would have to use decimals
+    pageBounds.top = this._screenToPage(pageBounds.top);
+    pageBounds.left = this._screenToPage(pageBounds.left);
+    pageBounds.bottom = Math.ceil(this._screenToPage(pageBounds.bottom));
+    pageBounds.right = Math.ceil(this._screenToPage(pageBounds.right));
 
     // viewingRect property returns a new bounds object
-    visibleBounds.top = Math.max(0, Math.floor(this._screenToPage(visibleBounds.top)));
-    visibleBounds.left = Math.max(0, Math.floor(this._screenToPage(visibleBounds.left)));
-    visibleBounds.bottom = Math.ceil(this._screenToPage(visibleBounds.bottom));
-    visibleBounds.right = Math.ceil(this._screenToPage(visibleBounds.right));
+    visibleBounds.top = Math.max(0, this._screenToPage(visibleBounds.top));
+    visibleBounds.left = Math.max(0, this._screenToPage(visibleBounds.left));
+    visibleBounds.bottom = this._screenToPage(visibleBounds.bottom);
+    visibleBounds.right = this._screenToPage(visibleBounds.right);
 
     // if the page is being panned, flush the queue, so things blit correctly
     // this avoids incorrect offsets due to a change in _pageBounds.x/y
@@ -306,15 +309,12 @@ CanvasBrowser.prototype = {
     rgn.subtractRect(dstRect.x, dstRect.y, dstRect.width, dstRect.height);
 
     let outX = {}; let outY = {}; let outW = {}; let outH = {};
-    rgn.getBoundingBox(outX, outY, outW, outH);
-    dstRect = { x: outX.value, y: outY.value, width: outW.value, height: outH.value };
-
-    if (dstRect.width > 0 && dstRect.height > 0) {
+    let rectCount = rgn.numRects
+    for (let i = 0;i < rectCount;i++) {
+      rgn.getRect(i, outX, outY, outW, outH);
+      dstRect = { x: outX.value, y: outY.value, width: outW.value, height: outH.value };      
       dstRect.width += 1;
       dstRect.height += 1;
-
-
-      //dump("redrawing: offset " + dstRect.x + " " + dstRect.y + "\n");
 
       ctx.save();
       ctx.translate(dstRect.x, dstRect.y);
@@ -325,18 +325,11 @@ CanvasBrowser.prototype = {
                          width: this._screenToPage(dstRect.width),
                          height: this._screenToPage(dstRect.height) };
 
-      //dump("            rect " + scaledRect.toSource() + "\n");
-
       ctx.drawWindow(this._browser.contentWindow,
                      scaledRect.x, scaledRect.y,
                      scaledRect.width, scaledRect.height,
                      "white",
                      ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET);
-
-      // for testing
-      //ctx.fillStyle = "rgba(255,0,0,0.5)";
-      //ctx.fillRect(0, 0, scaledRect.width, scaledRect.height);
-
       ctx.restore();
     }
   },
@@ -346,9 +339,9 @@ CanvasBrowser.prototype = {
 
     for (let i = 0; i < aEvent.clientRects.length; i++) {
       let e = aEvent.clientRects.item(i);
-      let r = new wsRect(Math.floor(e.left + cwin.scrollX),
-                         Math.floor(e.top + cwin.scrollY),
-                         Math.ceil(e.width), Math.ceil(e.height));
+      let r = new wsRect(e.left + cwin.scrollX,
+                         e.top + cwin.scrollY,
+                         e.width, e.height);
       this._redrawRect(r);
     }
   },
