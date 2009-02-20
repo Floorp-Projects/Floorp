@@ -150,7 +150,7 @@ Resource.prototype = {
     this._lastChannel = ios.newChannel(this.spec, null, null).
       QueryInterface(Ci.nsIHttpChannel);
     this._lastChannel.notificationCallbacks = new badCertListener();
-    
+
     let headers = this.headers; // avoid calling the authorizer more than once
     for (let key in headers) {
       if (key == 'Authorization')
@@ -338,14 +338,14 @@ JsonFilter.prototype = {
   beforePUT: function JsonFilter_beforePUT(data) {
     let self = yield;
     this._log.trace("Encoding data as JSON");
-    Observers.notify(null, "weave:service:sync:status", "stats.encoding-json");
+    Observers.notify("weave:service:sync:status", null, "stats.encoding-json");
     self.done(this._json.encode(data));
   },
 
   afterGET: function JsonFilter_afterGET(data) {
     let self = yield;
     this._log.trace("Decoding JSON data");
-    Observers.notify(null, "weave:service:sync:status", "stats.decoding-json");
+    Observers.notify("weave:service:sync:status", null, "stats.decoding-json");
     self.done(this._json.decode(data));
   }
 };
@@ -356,16 +356,16 @@ badCertListener.prototype = {
   getInterface: function(aIID) {
     return this.QueryInterface(aIID);
   },
-  
+
   QueryInterface: function(aIID) {
     if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
         aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
         aIID.equals(Components.interfaces.nsISupports))
       return this;
-      
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  
+
   notifyCertProblem: function certProblem(socketInfo, sslStatus, targetHost) {
     // Silently ignore?
     let log = Log4Moz.repository.getLogger("Service.CertListener");
