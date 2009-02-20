@@ -1115,8 +1115,6 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     double timeToDownload =
       (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
     double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
-    LOG(PR_LOG_DEBUG, ("Download rate=%f, playback rate=%f, timeToDownload=%f, timeToPlay=%f",
-        stats.mDownloadRate, stats.mPlaybackRate, timeToDownload, timeToPlay));
     if (timeToDownload <= timeToPlay) {
       ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
       return;
@@ -1190,7 +1188,6 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
         }
         DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
       }
-      LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_ENOUGH_DATA"));
       if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
           IsPotentiallyPlaying()) {
         DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
