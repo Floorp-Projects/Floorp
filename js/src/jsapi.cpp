@@ -5336,6 +5336,17 @@ JS_TriggerOperationCallback(JSContext *cx)
     JS_ATOMIC_SET(&cx->operationCallbackFlag, 1);
 }
 
+JS_PUBLIC_API(void)
+JS_TriggerAllOperationCallbacks(JSRuntime *rt)
+{
+    JSContext *acx, *iter;
+    JS_LOCK_GC(rt);
+    iter = NULL;
+    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)))
+        JS_TriggerOperationCallback(acx);
+    JS_UNLOCK_GC(rt);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
