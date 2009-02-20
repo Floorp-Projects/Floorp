@@ -357,10 +357,9 @@ enum nsPluginEventType {
     nsPluginEventType_AdjustCursorEvent,
     nsPluginEventType_MenuCommandEvent,
     nsPluginEventType_ClippingChangedEvent,
-    nsPluginEventType_ScrollingBeginsEvent,
-    nsPluginEventType_ScrollingEndsEvent,
-#endif /* XP_MACOSX */
-    nsPluginEventType_Idle                 = 0
+    nsPluginEventType_ScrollingBeginsEvent = 1000,
+    nsPluginEventType_ScrollingEndsEvent
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
