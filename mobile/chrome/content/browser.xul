@@ -52,12 +52,19 @@
 ]>
 
 <window id="main-window"
-        sizemode="maximized"
         onload="Browser.startup();"
         windowtype="navigator:browser"
         title="&brandShortName;"
         titlemodifier="&brandShortName;"
         titleseparator="&mainWindow.titleseparator;"
+#ifdef WINCE
+        sizemode="maximized"
+#elifdef MOZ_PLATFORM_HILDON
+        sizemode="maximized"
+#else
+        width="800"
+        height="500"
+#endif
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
