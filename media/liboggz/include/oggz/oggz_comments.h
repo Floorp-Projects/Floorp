@@ -120,6 +120,7 @@ oggz_comment_get_vendor (OGGZ * oggz, long serialno);
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD \a oggz is not a valid OGGZ* handle
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
+ * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  * \note The vendor string should identify the library used to produce
  * the stream, e.g. libvorbis 1.0 used "Xiph.Org libVorbis I 20020717".
  * If copying a bitstream it should be the same as the source.
@@ -190,6 +191,7 @@ oggz_comment_next_byname (OGGZ * oggz, long serialno,
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD \a oggz is not a valid OGGZ* handle
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
+ * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 int
 oggz_comment_add (OGGZ * oggz, long serialno, OggzComment * comment);
@@ -203,6 +205,7 @@ oggz_comment_add (OGGZ * oggz, long serialno, OggzComment * comment);
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD \a oggz is not a valid OGGZ* handle
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
+ * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 int
 oggz_comment_add_byname (OGGZ * oggz, long serialno,

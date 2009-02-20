@@ -1,13 +1,17 @@
 About Oggz
 ----------
 
-Oggz comprises liboggz and the command-line tools oggzinfo, oggzdump,
-oggzdiff, oggzmerge, oggzrip, oggz-comment, oggz-scan and oggz-validate.
+Oggz comprises liboggz and the tool oggz, which provides commands to
+inspect, edit and validate Ogg files. The oggz-chop tool can also be
+used to serve time ranges of Ogg media over HTTP by any web server that
+supports CGI.
 
-liboggz is a C library providing a simple programming interface for reading
-and writing Ogg files and streams. Ogg is an interleaving data container
-developed by Monty at Xiph.Org, originally to support the Ogg Vorbis audio
-format.
+liboggz is a C library for reading and writing Ogg files and streams.
+It offers various improvements over the reference libogg, including
+support for seeking, validation and timestamp interpretation. Ogg is
+an interleaving data container developed by Monty at Xiph.Org,
+originally to support the Ogg Vorbis audio format but now used for
+many free codecs including Dirac, FLAC, Speex and Theora.
 
 Dependencies
 ------------
@@ -16,20 +20,22 @@ Oggz depends only on libogg, available in most free software
 distributions, or in source form at: http://xiph.org/downloads/
 
 Support is built-in for parsing the headers of and seeking to time
-positions in Ogg Speex, Vorbis, FLAC, Theora, PCM and CMML. Oggz is also
+positions in Ogg Dirac, FLAC, Speex, Theora and Vorbis. Oggz is also
 compatible with Annodex streams, and supports seeking on all tracks
 described in an Ogg Skeleton track.
 
 Installation
 ------------
 
-This library can be installed using the conventional commands:
+Release archives can be installed using the conventional commands:
 
     $ ./configure
     $ make check
     $ sudo make install
 
-sequence. Full details in the file INSTALL.
+sequence. Configuration details are in the file INSTALL. If you obtained
+this source by svn, first run "./autogen.sh" to create the configure script,
+then run the above commands.
 
 Read the file README.win32 for installing under MS Windows, and
 README.symbian for information about building for Symbian devices.
@@ -104,25 +110,56 @@ Tools
 The Oggz source tarball also contains the following command-line tools,
 which are useful for debugging and testing Ogg bitstreams:
 
-    * oggzinfo: Display information about one or more Ogg files and
-    their bitstreams.
-
-    * oggzdump: Hexdump packets of an Ogg file, or revert an Ogg file
-    from such a hexdump.
-
-    * oggzdiff: Hexdump the packets of two Ogg files and output
-    differences.
-
-    * oggzmerge: Merge Ogg files together, interleaving pages in order
-    of presentation time.
-
-    * oggzrip: Extract one or more logical bitstreams from an Ogg file.
+    * oggz-chop: Extract the part of an Ogg file between given start
+    and/or end times.
 
     * oggz-comment: List or edit comments in an Ogg file.
 
+    * oggz-diff: Hexdump the packets of two Ogg files and output
+    differences.
+
+    * oggz-dump: Hexdump packets of an Ogg file, or revert an Ogg file
+    from such a hexdump.
+
+    * oggz-info: Display information about one or more Ogg files and
+    their bitstreams.
+
+    * oggz-merge: Merge Ogg files together, interleaving pages in order
+    of presentation time.
+
+    * oggz-rip: Extract one or more logical bitstreams from an Ogg file.
+
     * oggz-scan: Scan an Ogg file and output characteristic landmarks.
 
+    * oggz-sort: Sort the pages of an Ogg file in order of presentation time.
+
     * oggz-validate: Validate the Ogg framing of one or more files.
+
+The script bash-completion/oggz enables completion of tool options and codec
+names when using the bash shell. Source it from your .profile, or install it
+in /etc/bash_completion.d to enable it system-wide.
+
+
+oggz-chop: General usage and CGI installation
+---------------------------------------------
+
+oggz-chop extracts the part of an Ogg file between given start and/or end
+times. The output file contains copies of the headers of the input file, and
+all the codec data required to correctly decode the content between the start
+and end times specified on the commandline. For codecs with data dependencies
+like video keyframes, the keyframe prior to the starting time will be included
+in the output.
+
+An Apache server can be configured to use oggz-chop to handle all Ogg files
+(or, all Ogg files in a particular directory). An example Apache configuration
+is in the liboggz source tree, along with a script for installing it on a
+Debian server.
+
+The oggz-chop binary checks if it is being run as a CGI script (by checking
+some environment variables), and if so acts based on the CGI query parameter
+t=, much like mod_annodex. It accepts all the time specifications that
+mod_annodex accepts (npt and various smpte framerates), and start and end
+times separated by a /.
 
 License
 -------
@@ -137,5 +174,4 @@ enjoy :)
 
 --
 Conrad Parker
-Senior Software Engineer, Continuous Media Web, CSIRO Australia
-http://www.annodex.net/   http://www.ict.csiro.au/cmweb/
+http://www.annodex.net/
