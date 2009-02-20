@@ -38,6 +38,7 @@
 #include <stdlib.h>
 
 #include "oggz_dlist.h"
+#include "oggz_macros.h"
 
 typedef struct OggzDListElem {
   struct OggzDListElem  * next;
@@ -53,11 +54,25 @@ struct _OggzDList {
 OggzDList *
 oggz_dlist_new (void) {
 
-  OggzDList *dlist = malloc(sizeof(OggzDList));
-
-  OggzDListElem * dummy_front = malloc(sizeof(OggzDListElem));
-  OggzDListElem * dummy_back = malloc(sizeof(OggzDListElem));
+  OggzDList *dlist;
+  OggzDListElem *dummy_front, *dummy_back;
   
+  dlist = oggz_malloc(sizeof(OggzDList));
+  if (dlist == NULL) return NULL;
+
+  dummy_front = oggz_malloc(sizeof(OggzDListElem));
+  if (dummy_front == NULL) {
+    oggz_free (dlist);
+    return NULL;
+  }
+
+  dummy_back = oggz_malloc(sizeof(OggzDListElem));
+  if (dummy_back == NULL) {
+    oggz_free (dummy_front);
+    oggz_free (dlist);
+    return NULL;
+  }
+
   dummy_front->next = dummy_back;
   dummy_front->prev = NULL;
 
@@ -68,7 +83,6 @@ oggz_dlist_new (void) {
   dlist->tail = dummy_back;
 
   return dlist;
-
 }
 
 void
@@ -77,11 +91,11 @@ oggz_dlist_delete(OggzDList *dlist) {
   OggzDListElem *p;
 
   for (p = dlist->head->next; p != NULL; p = p->next) {
-    free(p->prev);
+    oggz_free(p->prev);
   }
 
-  free(dlist->tail);
-  free(dlist);
+  oggz_free(dlist->tail);
+  oggz_free(dlist);
 
 }
 
@@ -90,22 +104,34 @@ oggz_dlist_is_empty(OggzDList *dlist) {
   return (dlist->head->next == dlist->tail);
 }
 
-void
+int
 oggz_dlist_append(OggzDList *dlist, void *elem) {
 
-  OggzDListElem *new_elem = malloc(sizeof(OggzDListElem));
+  OggzDListElem *new_elem;
+
+  if (dlist == NULL) return -1;
+
+  new_elem = oggz_malloc(sizeof(OggzDListElem));
+  if (new_elem == NULL) return -1;
 
   new_elem->data = elem;
   new_elem->next = dlist->tail;
   new_elem->prev = dlist->tail->prev;
   new_elem->prev->next = new_elem;
   new_elem->next->prev = new_elem;
+
+  return 0;
 }
 
-void
+int
 oggz_dlist_prepend(OggzDList *dlist, void *elem) {
 
-  OggzDListElem *new_elem = malloc(sizeof(OggzDListElem));
+  OggzDListElem *new_elem;
+
+  if (dlist == NULL) return -1;
+
+  new_elem = oggz_malloc(sizeof(OggzDListElem));
+  if (new_elem == NULL) return -1;
 
   new_elem->data = elem;
   new_elem->prev = dlist->head;
@@ -113,6 +139,7 @@ oggz_dlist_prepend(OggzDList *dlist, void *elem) {
   new_elem->prev->next = new_elem;
   new_elem->next->prev = new_elem;
 
+  return 0;
 }
 
 void
@@ -154,7 +181,7 @@ oggz_dlist_deliter(OggzDList *dlist, OggzDListIterFunc func) {
     p->prev->next = p->next;
     p->next->prev = p->prev;
 
-    free(p);
+    oggz_free(p);
   }
 
 }
@@ -173,7 +200,7 @@ oggz_dlist_reverse_deliter(OggzDList *dlist, OggzDListIterFunc func) {
     p->prev->next = p->next;
     p->next->prev = p->prev;
 
-    free(p);
+    oggz_free(p);
   }
 
 }
