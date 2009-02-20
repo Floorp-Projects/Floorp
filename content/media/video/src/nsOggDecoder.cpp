@@ -675,6 +675,7 @@ void nsOggDecodeStateMachine::PlayFrame() {
         // Reset the play start time.
         mPlayStartTime = PR_IntervalNow();
         mPauseDuration = 0;
+        frame->mState = OGGPLAY_STREAM_INITIALISED;
       }
 
       double time = (PR_IntervalToMilliseconds(PR_IntervalNow()-mPlayStartTime-mPauseDuration)/1000.0);
@@ -1235,6 +1236,7 @@ void nsOggDecodeStateMachine::LoadOggHeaders()
         // and blocks until these are completed.
         mon.Exit();
         PRInt64 d = oggplay_get_duration(mPlayer);
+        oggplay_seek(mPlayer, 0);
         mon.Enter();
         mDuration = d;
         mDecoder->StartProgressUpdates();
@@ -1958,6 +1960,10 @@ void nsOggDecoder::SetDuration(PRInt64 aDuration)
   if (mDecodeStateMachine) {
     nsAutoMonitor mon(mMonitor);
     mDecodeStateMachine->SetDuration(mDuration);
+
+    if (mReader) {
+      mReader->SetDuration(mDuration);
+    }
   }
 }
 
