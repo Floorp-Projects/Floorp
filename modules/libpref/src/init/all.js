@@ -143,6 +143,9 @@ pref("media.ogg.enabled", true);
 pref("media.wave.enabled", true);
 #endif
 
+// Whether to autostart a media element with an |autoplay| attribute
+pref("media.autoplay.enabled", true);
+
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/public/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
