@@ -222,6 +222,15 @@ Logger.prototype = {
     this._appenders.push(appender);
   },
 
+  removeAppender: function Logger_removeAppender(appender) {
+    let newAppenders = [];
+    for (let i = 0; i < this._appenders.length; i++) {
+      if (this._appenders[i] != appender)
+        newAppenders.push(this._appenders[i]);
+    }
+    this._appenders = newAppenders;
+  },
+
   log: function Logger_log(message) {
     if (this.level > message.level)
       return;
