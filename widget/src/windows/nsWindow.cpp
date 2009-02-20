@@ -1404,7 +1404,7 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
       }
     }
   }
-#if defined(WINCE) && defined(WINCE_HAVE_SOFTKB)
+#if defined(WINCE_HAVE_SOFTKB)
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel )
      CreateSoftKeyMenuBar(mWnd);
 #endif
@@ -4810,40 +4810,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
 #endif
 
-#if defined(WINCE) && defined(WINCE_HAVE_SOFTKB)
+#if defined(WINCE_HAVE_SOFTKB)
+      {
       // On Windows CE, we have a window that overlaps
       // the ISP button.  In this case, we should always
       // try to hide it when we are activated
-      if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel) {
-        
-        // This should work on all platforms, but it doesn't...
-        SHFullScreen(mWnd, SHFS_HIDESIPBUTTON);
-        
-        HWND hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
-        if (hWndSIP) 
-        {
-          ShowWindow( hWndSIP, SW_HIDE );
-          SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-        }
-      }
-      {
-        // Get current input context
-        HIMC hC = ImmGetContext(mWnd);
-        // Open the IME 
-        ImmSetOpenStatus(hC, TRUE);
-        // Set "multi-press" input mode
-        ImmEscapeW(NULL, hC, IME_ESC_SET_MODE, (LPVOID)IM_SPELL);
+      
+      // Get current input context
+      HIMC hC = ImmGetContext(mWnd);
+      // Open the IME 
+      ImmSetOpenStatus(hC, TRUE);
       }
 #endif
       break;
 
     case WM_KILLFOCUS:
-#if defined(WINCE) && defined(WINCE_HAVE_SOFTKB)
+#if defined(WINCE_HAVE_SOFTKB)
       {
-        // Get current input context
         HIMC hC = ImmGetContext(mWnd);
-        // Close the IME 
         ImmSetOpenStatus(hC, FALSE);
+        SetIMEEnabled(nsIWidget::IME_STATUS_DISABLED);        
       }
 #endif
       WCHAR className[kMaxClassNameLength];
@@ -4860,6 +4846,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
       }
       result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
+      
       break;
 
     case WM_WINDOWPOSCHANGED:
@@ -7671,12 +7658,29 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
 #ifdef NS_ENABLE_TSF
   nsTextStore::SetIMEEnabled(aState);
 #endif //NS_ENABLE_TSF
-
+#ifdef DEBUG_KBSTATE
+  printf("SetIMEEnabled: %s\n", (aState == nsIWidget::IME_STATUS_ENABLED ||
+                                 aState == nsIWidget::IME_STATUS_PLUGIN)? 
+                                "Enabled": "Disabled");
+#endif 
   if (sIMEIsComposing)
     ResetInputState();
   mIMEEnabled = aState;
   PRBool enable = (aState == nsIWidget::IME_STATUS_ENABLED ||
                    aState == nsIWidget::IME_STATUS_PLUGIN);
+
+#if defined(WINCE_HAVE_SOFTKB)
+  HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
+  if (hWndSIP)
+    ::ShowWindow( hWndSIP, enable? SW_SHOW: SW_HIDE);
+
+  hWndSIP = FindWindowW(L"MS_SIPBUTTON", NULL );  
+  if (hWndSIP)
+    ShowWindow(hWndSIP, enable? SW_SHOW: SW_HIDE); 
+  
+  SHSipPreference(NULL, enable? SIP_UP: SIP_DOWN);
+#endif
+
   if (!enable != !mOldIMC)
     return NS_OK;
   mOldIMC = ::ImmAssociateContext(mWnd, enable ? mOldIMC : NULL);
@@ -7688,6 +7692,9 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
 //==========================================================================
 NS_IMETHODIMP nsWindow::GetIMEEnabled(PRUint32* aState)
 {
+#ifdef DEBUG_KBSTATE
+  printf("GetIMEEnabled: %s\n", mIMEEnabled? "Enabled": "Disabled");
+#endif 
   *aState = mIMEEnabled;
   return NS_OK;
 }
