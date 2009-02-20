@@ -77,6 +77,7 @@ class nsHtml5TreeBuilder
     PRBool fragment;
     nsIAtom* contextName;
     PRInt32 contextNamespace;
+    nsIContent* contextNode;
     jArray<nsHtml5StackNode*,PRInt32> stack;
     PRInt32 currentPtr;
     jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
@@ -187,6 +188,9 @@ class nsHtml5TreeBuilder
     void appendDoctypeToDocument(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier);
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent* node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent* node);
+  public:
+    void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent* node);
+  protected:
     nsIContent* currentNode();
   public:
     PRBool isScriptingEnabled();

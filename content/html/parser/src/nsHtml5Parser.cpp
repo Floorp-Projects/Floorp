@@ -49,6 +49,7 @@
 #include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
 #include "nsICharsetDetector.h"
+#include "nsIScriptElement.h"
 
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5Tokenizer.h"
@@ -436,6 +437,50 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 }
 
 NS_IMETHODIMP
+nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
+                             nsISupports* aTargetNode,
+                             nsIAtom* aContextLocalName,
+                             PRInt32 aContextNamespace)
+{
+  nsCOMPtr<nsIContent> target = do_QueryInterface(aTargetNode);
+  NS_ASSERTION(target, "Target did not QI to nsIContent");
+  mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, target);
+  mFragmentMode = PR_TRUE;
+  NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
+  mTokenizer->start();
+  mLifeCycle = PARSING;
+  mParser = this;
+  mNodeInfoManager = target->GetOwnerDoc()->NodeInfoManager();
+
+  if (!aSourceBuffer.IsEmpty()) {
+    PRBool lastWasCR = PR_FALSE;
+    nsHtml5UTF16Buffer buffer(aSourceBuffer.Length());
+    memcpy(buffer.getBuffer(), aSourceBuffer.BeginReading(), aSourceBuffer.Length() * sizeof(PRUnichar));
+    buffer.setEnd(aSourceBuffer.Length());
+    while (buffer.hasMore()) {
+      buffer.adjust(lastWasCR);
+      lastWasCR = PR_FALSE;
+      if (buffer.hasMore()) {
+        lastWasCR = mTokenizer->tokenizeBuffer(&buffer);
+        if (mScriptElement) {
+          nsCOMPtr<nsIScriptElement> script = do_QueryInterface(mScriptElement);
+          NS_ASSERTION(script, "mScriptElement didn't QI to nsIScriptElement!");
+          script->PreventExecution();
+          mScriptElement = nsnull;
+        }
+      }
+    }
+  }
+
+  NS_ASSERTION((mLifeCycle == STREAM_ENDING), "Bad life cycle.");
+  mTokenizer->eof();
+  mTokenizer->end();
+  mLifeCycle = TERMINATED;
+  DropParserAndPerfHint();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHtml5Parser::BuildModel(void)
 {
   // XXX who calls this? Should this be a no-op?
@@ -463,7 +508,46 @@ nsHtml5Parser::CancelParsingEvents()
 void
 nsHtml5Parser::Reset()
 {
-  NS_NOTREACHED("Can't reset.");
+    mNeedsCharsetSwitch = PR_FALSE;
+    mLastWasCR = PR_FALSE;
+    mTerminated = PR_FALSE;
+    mLayoutStarted = PR_FALSE;
+    mFragmentMode = PR_FALSE;
+    mBlocked = PR_FALSE;
+    mSuspending = PR_FALSE;
+    mLifeCycle = NOT_STARTED;
+    mStreamListenerState = eNone;
+
+    mScriptElement = nsnull;
+    mScriptsExecuting = 0;
+     
+    mRootContextKey = nsnull;
+    mRequest = nsnull; 
+    mObserver = nsnull;
+    mContinueEvent = nsnull;  // weak ref
+ 
+    // tree-related stuff
+    mDocElement = nsnull; // weak ref 
+  
+    // encoding-related stuff
+    mCharsetSource = kCharsetUninitialized;
+    mCharset.Assign("");
+    mPendingCharset.Assign("");
+    mUnicodeDecoder = nsnull;
+    mSniffingBuffer = nsnull;
+    mSniffingLength = 0;
+    mBomState = BOM_SNIFFING_NOT_STARTED;
+
+    delete mMetaScanner;
+    mMetaScanner = nsnull;
+        
+    // Portable parser objects    
+    nsHtml5UTF16Buffer*          mFirstBuffer; // manually managed strong ref
+    nsHtml5UTF16Buffer*          mLastBuffer; // weak ref; always points to 
+                      // a buffer of the size NS_HTML5_PARSER_READ_BUFFER_SIZE
+    nsHtml5TreeBuilder*          mTreeBuilder; // manually managed strong ref
+    nsHtml5Tokenizer*            mTokenizer; // manually managed strong ref
+
 }
     
 /* End nsIParser  */

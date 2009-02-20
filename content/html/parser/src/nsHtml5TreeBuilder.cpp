@@ -74,7 +74,12 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   start(fragment);
   startCoalescing();
   if (fragment) {
-    nsIContent* elt = createHtmlElementSetAsRoot(tokenizer->emptyAttributes());
+    nsIContent* elt;
+    if (!!contextNode) {
+      elt = contextNode;
+    } else {
+      elt = createHtmlElementSetAsRoot(tokenizer->emptyAttributes());
+    }
     nsHtml5StackNode* node = new nsHtml5StackNode(kNameSpaceID_XHTML, nsHtml5ElementName::HTML, elt);
     currentPtr++;
     stack[currentPtr] = node;
@@ -88,6 +93,10 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
     } else {
       tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_DATA, contextName);
     }
+    nsHtml5Portability::releaseLocal(contextName);
+    contextName = nsnull;
+    nsHtml5Portability::releaseElement(contextNode);
+    contextNode = nsnull;
     nsHtml5Portability::releaseElement(elt);
   } else {
     mode = NS_HTML5TREE_BUILDER_INITIAL;
@@ -2717,12 +2726,15 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
   foreignFlag = NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN;
   nsHtml5StackNode* node;
   nsIAtom* name;
+  PRInt32 ns;
   for (PRInt32 i = currentPtr; i >= 0; i--) {
     node = stack[i];
     name = node->name;
+    ns = node->ns;
     if (!i) {
-      if (!(contextName == nsHtml5Atoms::td || contextName == nsHtml5Atoms::th)) {
+      if (!(contextNamespace == kNameSpaceID_XHTML && (contextName == nsHtml5Atoms::td || contextName == nsHtml5Atoms::th))) {
         name = contextName;
+        ns = contextNamespace;
       } else {
         mode = NS_HTML5TREE_BUILDER_IN_BODY;
         return;
@@ -3466,6 +3478,17 @@ void
 nsHtml5TreeBuilder::requestSuspension()
 {
   tokenizer->requestSuspension();
+}
+
+void 
+nsHtml5TreeBuilder::setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent* node)
+{
+  this->contextName = context;
+  nsHtml5Portability::retainLocal(context);
+  this->contextNamespace = ns;
+  this->contextNode = node;
+  nsHtml5Portability::retainElement(node);
+  this->fragment = (!!contextName);
 }
 
 nsIContent* 
