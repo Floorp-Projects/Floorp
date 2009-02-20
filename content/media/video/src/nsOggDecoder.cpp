@@ -328,7 +328,7 @@ protected:
   void HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize);
 
   // These methods can only be called on the decoding thread.
-  void LoadOggHeaders();
+  void LoadOggHeaders(nsChannelReader* aReader);
 
   // Initializes and opens the audio stream. Called from the decode
   // thread only. Must be called with the decode monitor held.
@@ -909,7 +909,7 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_DECODING_METADATA:
       mon.Exit();
-      LoadOggHeaders();
+      LoadOggHeaders(reader);
       mon.Enter();
       
       if (mState == DECODER_STATE_DECODING_METADATA) {
@@ -1170,10 +1170,10 @@ nsresult nsOggDecodeStateMachine::Run()
   return NS_OK;
 }
 
-void nsOggDecodeStateMachine::LoadOggHeaders() 
+void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader) 
 {
   LOG(PR_LOG_DEBUG, ("Loading Ogg Headers"));
-  mPlayer = oggplay_open_with_reader(mDecoder->GetReader());
+  mPlayer = oggplay_open_with_reader(aReader);
   if (mPlayer) {
     LOG(PR_LOG_DEBUG, ("There are %d tracks", oggplay_get_num_tracks(mPlayer)));
 

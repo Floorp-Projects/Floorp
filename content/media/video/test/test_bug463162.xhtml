@@ -13,19 +13,49 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463162
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463162">Mozilla Bug 463162</a>
-<audio id='a1' onerror="event.stopPropagation();"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a2' onerror="event.stopPropagation();"><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a3' onerror="event.stopPropagation();"><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a4' onerror="event.stopPropagation();"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<pre id="test">
+
 <script class="testbody" type="text/javascript">
 <![CDATA[
-ok($("a1").networkState == HTMLMediaElement.NETWORK_EMPTY, "audio a1 with bogus child should not be loading");
-ok($("a2").networkState >= HTMLMediaElement.NETWORK_LOADING, "audio a2 with valid child should be loading");
-ok($("a3").networkState >= HTMLMediaElement.NETWORK_LOADING, "audio a3 with valid child should be loading");
-ok($("a4").networkState == HTMLMediaElement.NETWORK_EMPTY, "audio a4 with bogus child should not be loading");
+
+var gExpectedResult = {
+  'a1' : 'error',
+  'a2' : 'loaded',
+  'a3' : 'loaded',
+  'a4' : 'error',
+};
+
+var gResultCount = 0;
+
+function onError(event, id) {
+  event.stopPropagation();
+  is('error', gExpectedResult[id], 'unexpected error loading ' + id);
+  gResultCount++;
+  dump('error('+id+') expected ' + gExpectedResult[id] + ' gResultCount=' + gResultCount + '\n');
+  if (gResultCount == 4)
+    SimpleTest.finish();
+}
+
+function onMetaData(id) {
+  is('loaded', gExpectedResult[id], 'unexpected loadedmetadata loading ' + id);
+  gResultCount++;
+  dump('onMetaData('+id+') expected ' + gExpectedResult[id] + ' gResultCount=' + gResultCount + '\n');
+  if (gResultCount == 4)
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
 ]]>
 </script>
+
+
+<audio id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a2' onerror="onError(event, 'a2');" onloadedmetadata="onMetaData('a2');"><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a3' onerror="onError(event, 'a3');" onloadedmetadata="onMetaData('a3');"><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+
+<pre id="test">
+
 </pre>
 </body>
 </html>
