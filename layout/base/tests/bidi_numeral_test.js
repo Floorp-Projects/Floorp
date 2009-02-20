@@ -2,13 +2,14 @@
 var RemoteCanvas = function(url, id) {
     this.url = url;
     this.id = id;
+    this.snapshot = null;
 };
 
 RemoteCanvas.CANVAS_WIDTH = 200;
 RemoteCanvas.CANVAS_HEIGHT = 100;
 
-RemoteCanvas.prototype.getCanvas = function() {
-  return document.getElementById(this.id + "-canvas");
+RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
+    return compareSnapshots(this.snapshot, otherCanvas.snapshot, expected)[0];
 }
 
 RemoteCanvas.prototype.load = function(callback) {
@@ -19,37 +20,14 @@ RemoteCanvas.prototype.load = function(callback) {
   iframe.src = this.url;
   var me = this;
   iframe.addEventListener("load", function() {
-      window.setTimeout(function() {
-          me.remotePageLoaded(callback);
-        }, 500);
-    }, true);
+      me.remotePageLoaded(callback);
+    }, false);
   window.document.body.appendChild(iframe);
 };
 
 RemoteCanvas.prototype.remotePageLoaded = function(callback) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserRead');
   var ldrFrame = document.getElementById(this.id + "-iframe");
-  var remoteWindow = ldrFrame.contentWindow;
-
-  var canvas = document.createElement("canvas");
-  canvas.id = this.id + "-canvas";
-  canvas.style.width = RemoteCanvas.CANVAS_WIDTH + "px";
-  canvas.style.height = RemoteCanvas.CANVAS_HEIGHT + "px";
-  canvas.width = RemoteCanvas.CANVAS_WIDTH;
-  canvas.height = RemoteCanvas.CANVAS_HEIGHT;
-
-  var ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0,
-                RemoteCanvas.CANVAS_WIDTH,
-                RemoteCanvas.CANVAS_HEIGHT);
-  ctx.drawWindow(remoteWindow,
-                 0, 0,
-                 RemoteCanvas.CANVAS_WIDTH,
-                 RemoteCanvas.CANVAS_HEIGHT,
-                 "rgb(255,255,255)");
-
-  window.document.body.appendChild(canvas);
-
+  this.snapshot = snapshotWindow(ldrFrame.contentWindow);
   callback(this);
 };
 
@@ -83,13 +61,11 @@ function do_test()
     canvases.push(canvas);
 
     if (canvases.length == 2) { // when both canvases are loaded
-      var img_1 = canvases[0].getCanvas().toDataURL("image/png", "");
-      var img_2 = canvases[1].getCanvas().toDataURL("image/png", "");
       if (passes[currentPass].op == "==") {
-        ok(img_1 == img_2, "Rendering of reftest " + fileprefix + passes[currentPass].file +
+        ok(canvases[0].compare(canvases[1], true), "Rendering of reftest " + fileprefix + passes[currentPass].file +
            " is different with bidi.numeral == " + passes[currentPass].bidiNumeralValue);
       } else if (passes[currentPass].op == "!=") {
-        ok(img_1 != img_2, "Rendering of reftest " + fileprefix + passes[currentPass].file +
+        ok(canvases[0].compare(canvases[1], false), "Rendering of reftest " + fileprefix + passes[currentPass].file +
            " is not different with bidi.numeral == " + passes[currentPass].bidiNumeralValue);
       }
 
