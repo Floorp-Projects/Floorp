@@ -847,7 +847,8 @@ WeaveSvc.prototype = {
     Records.clearCache();
 
     Clients._store.wipe();
-    Engines.get("tabs")._store.wipe();
+    if (Engines.get("tabs"))
+      Engines.get("tabs")._store.wipe();
 
     try {
       let cruft = this._dirSvc.get("ProfD", Ci.nsIFile);
