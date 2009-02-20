@@ -467,6 +467,24 @@
           }
         ]]>
       </handler>
+
+      <handler event="MozSwipeGesture">
+        <![CDATA[
+          // Figure out where to scroll to
+          let targetHeight = 0;
+          let scrollBox = document.getAnonymousElementByAttribute(this, "anonid", "main-box");
+
+          // Only handle swipe gestures up and down
+          switch (event.direction) {
+            case event.DIRECTION_DOWN:
+              targetHeight = scrollBox.scrollHeight;
+              // Fall through for actual action
+            case event.DIRECTION_UP:
+              scrollBox.scrollTop = targetHeight;
+              break;
+          }
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
