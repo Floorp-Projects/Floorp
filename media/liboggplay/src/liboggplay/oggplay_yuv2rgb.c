@@ -76,7 +76,6 @@ void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
   unsigned char   * restrict ptry;
   unsigned char   * restrict ptru;
   unsigned char   * restrict ptrv;
-  unsigned char   * ptro;
 
   register __m64    *y, *o;
   register __m64    zero, ut, vt, imm, imm2;
@@ -85,15 +84,14 @@ void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
 
   zero = _mm_setzero_si64();
 
-  ptro = rgb->ptro;
   ptry = yuv->ptry;
   ptru = yuv->ptru;
   ptrv = yuv->ptrv;
 
   for (i = 0; i < yuv->y_height; i++) {
     int j;
-    o = (__m64*)ptro;
-    ptro += rgb->rgb_width * 4;
+    o = (__m64*)rgb->ptro;
+    rgb->ptro += rgb->rgb_width * 4;
     for (j = 0; j < yuv->y_width; j += 8) {
 
       y = (__m64*)&ptry[j];
@@ -208,7 +206,6 @@ void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
   unsigned char   * restrict ptry;
   unsigned char   * restrict ptru;
   unsigned char   * restrict ptrv;
-  unsigned char   * ptro;
 
   register __m64    *y, *o;
   register __m64    zero, ut, vt, imm, imm2;
@@ -220,12 +217,11 @@ void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
   ptry = yuv->ptry;
   ptru = yuv->ptru;
   ptrv = yuv->ptrv;
-  ptro = rgb->ptro;
 
   for (i = 0; i < yuv->y_height; i++) {
     int j;
-    o = (__m64*)ptro;
-    ptro += rgb->rgb_width * 4;
+    o = (__m64*)rgb->ptro;
+    rgb->ptro += rgb->rgb_width * 4;
     for (j = 0; j < yuv->y_width; j += 8) {
 
       y = (__m64*)&ptry[j];
