@@ -947,7 +947,10 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
 PRBool
 nsFrame::HasBorder() const
 {
-  return GetUsedBorder() != nsMargin(0,0,0,0);
+  // Border images contribute to the background of the content area
+  // even if there's no border proper.
+  return (GetUsedBorder() != nsMargin(0,0,0,0) ||
+          GetStyleBorder()->IsBorderImageLoaded());
 }
 
 nsresult
