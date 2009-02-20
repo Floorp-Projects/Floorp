@@ -43,6 +43,7 @@
  */
 #include "jsstddef.h"
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +99,8 @@
 typedef enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
     EXITCODE_FILE_NOT_FOUND     = 4,
-    EXITCODE_OUT_OF_MEMORY      = 5
+    EXITCODE_OUT_OF_MEMORY      = 5,
+    EXITCODE_TIMEOUT            = 6
 } JSShellExitCode;
 
 size_t gStackChunkSize = 8192;
@@ -109,26 +111,41 @@ static jsuword gStackBase;
 
 static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 
-static uint32 gOperationLimit = 0;
+/*
+ * Limit the timeout to 30 minutes to prevent an overflow on platfoms
+ * that represent the time internally in microseconds using 32-bit int.
+ */
+static jsdouble MAX_TIMEOUT_INTERVAL = 1800.0;
+static jsdouble gTimeoutInterval = -1.0;
+static volatile bool gCanceled = false;
 
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t);
 
-static double
-GetTimeoutValue(JSContext *cx);
+static bool
+InitWatchdog(JSRuntime *rt);
 
 static void
-StopWatchdog(JSRuntime *rt);
+KillWatchdog();
 
-static JSBool
-StartWatchdog(JSRuntime *rt);
+static bool
+ScheduleWatchdog(JSRuntime *rt, jsdouble t);
+
+static void
+CancelExecution(JSRuntime *rt);
 
 /*
  * Watchdog thread state.
  */
 #ifdef JS_THREADSAFE
+
+static PRLock *gWatchdogLock = NULL;
 static PRCondVar *gWatchdogWakeup = NULL;
 static PRThread *gWatchdogThread = NULL;
+static bool gWatchdogHasTimeout = false;
+static PRIntervalTime gWatchdogTimeout = 0;
+
+static PRCondVar *gSleepWakeup = NULL;
 
 /*
  * Holding the gcLock already guarantees that the context list is locked when
@@ -141,20 +158,19 @@ static PRThread *gWatchdogThread = NULL;
     JS_END_MACRO
 
 #else
+
 static JSRuntime *gRuntime = NULL;
 
 /* 
  * Since signal handlers can't block, we must disable them before manipulating
  * the context list.
  */
-
-#define WITH_LOCKED_CONTEXT_LIST(x)             \
-    JS_BEGIN_MACRO                              \
-        StopWatchdog(gRuntime);                 \
-        x;                                      \
-        StartWatchdog(gRuntime);                \
+#define WITH_LOCKED_CONTEXT_LIST(x)                                           \
+    JS_BEGIN_MACRO                                                            \
+        ScheduleWatchdog(gRuntime, -1);                                       \
+        x;                                                                    \
+        ScheduleWatchdog(gRuntime, gTimeoutInterval);                         \
     JS_END_MACRO
-
 #endif
 
 int gExitCode = 0;
@@ -263,6 +279,10 @@ struct JSShellContextData {
 static JSShellContextData *
 NewContextData()
 {
+    /* Prevent creation of new contexts after we have been canceled. */
+    if (gCanceled)
+        return NULL;
+
     JSShellContextData *data = (JSShellContextData *)
                                calloc(sizeof(JSShellContextData), 1);
     if (!data)
@@ -283,12 +303,7 @@ GetContextData(JSContext *cx)
 static JSBool
 ShellOperationCallback(JSContext *cx)
 {
-    JSShellContextData *data;
-    if ((data = GetContextData(cx)) != NULL) {
-        /* If we spent too much time in this script, abort it. */
-        return !gOperationLimit || (uint32(js_IntervalNow() - data->startTime) < gOperationLimit);
-    }
-    return JS_TRUE;
+    return !gCanceled;
 }
 
 static void
@@ -383,8 +398,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     buffer = NULL;
     size = 0;           /* assign here to avoid warnings */
     do {
-        size_t len = 0; /* initialize to avoid warnings */
-
         /*
          * Accumulate lines until we get a 'compilable unit' - one that either
          * generates an error (before running out of source) or that compiles
@@ -392,7 +405,13 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
          * coincides with the end of a line.
          */
         startline = lineno;
+        size_t len = 0; /* initialize to avoid warnings */
         do {
+            ScheduleWatchdog(cx->runtime, -1);
+#ifdef JS_THREADSAFE
+            jsrefcount rc = JS_SuspendRequest(cx);
+#endif
+            gCanceled = false;
             errno = 0;
             char *line = GetLine(file, startline == lineno ? "js> " : "");
             if (!line) {
@@ -432,6 +451,13 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                 free(line);
             }
             lineno++;
+#ifdef JS_THREADSAFE
+            JS_ResumeRequest(cx, rc);
+#endif
+            if (!ScheduleWatchdog(cx->runtime, gTimeoutInterval)) {
+                hitEOF = JS_TRUE;
+                break;
+            }
         } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
 
         if (hitEOF && !buffer)
@@ -693,6 +719,8 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
                 return usage();
 
             Process(cx, obj, argv[i], JS_FALSE);
+            if (gExitCode != 0)
+                return gExitCode;
 
             /*
              * XXX: js -f foo.js should interpret foo.js and then
@@ -2808,27 +2836,59 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_THREADSAFE
 
+/*
+ * Check that t1 comes strictly before t2. The function correctly deals with
+ * PRIntervalTime wrap-around between t2 and t1 assuming that t2 and t1 stays
+ * within INT32_MAX from each other. We use MAX_TIMEOUT_INTERVAL to enforce
+ * this restriction.
+ */
+static bool
+IsBefore(PRIntervalTime t1, PRIntervalTime t2)
+{
+    return int32(t1 - t2) < 0;
+}
+
 static JSBool
 Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsdouble t_secs;
-    PRUint32 t_ticks;
-    jsrefcount rc;
+    PRIntervalTime t_ticks;
 
-    if (!JS_ValueToNumber(cx, argc == 0 ? JSVAL_VOID : vp[2], &t_secs))
-        return JS_FALSE;
+    if (argc == 0) {
+        t_ticks = 0;
+    } else {
+        jsdouble t_secs;
 
-    if (t_secs < 0 || JSDOUBLE_IS_NaN(t_secs))
-        t_secs = 0;
+        if (!JS_ValueToNumber(cx, argc == 0 ? JSVAL_VOID : vp[2], &t_secs))
+            return JS_FALSE;
 
-    rc = JS_SuspendRequest(cx);
-    t_ticks = (PRUint32)(PR_TicksPerSecond() * t_secs);
-    if (PR_Sleep(t_ticks) == PR_SUCCESS)
-        *vp = JSVAL_TRUE;
-    else
-        *vp = JSVAL_FALSE;
-    JS_ResumeRequest(cx, rc);
-    return JS_TRUE;
+        /* NB: The next condition also filter out NaNs. */
+        if (!(t_secs <= MAX_TIMEOUT_INTERVAL)) {
+            JS_ReportError(cx, "Excessive sleep interval");
+            return JS_FALSE;
+        }
+        t_ticks = (t_secs <= 0.0)
+                  ? 0
+                  : PRIntervalTime(PR_TicksPerSecond() * t_secs);
+    }
+    if (t_ticks == 0) {
+        JS_YieldRequest(cx);
+    } else {
+        jsrefcount rc = JS_SuspendRequest(cx);
+        PR_Lock(gWatchdogLock);
+        PRIntervalTime to_wakeup = PR_IntervalNow() + t_ticks;
+        for (;;) {
+            PR_WaitCondVar(gSleepWakeup, t_ticks);
+            if (gCanceled)
+                break;
+            PRIntervalTime now = PR_IntervalNow();
+            if (!IsBefore(now, to_wakeup))
+                break;
+            t_ticks = to_wakeup - now;
+        }
+        PR_Unlock(gWatchdogLock);
+        JS_ResumeRequest(cx, rc);
+    }
+    return !gCanceled;
 }
 
 typedef struct ScatterThreadData ScatterThreadData;
@@ -3065,165 +3125,222 @@ fail:
     goto out;
 }
 
+static bool
+InitWatchdog(JSRuntime *rt)
+{
+    JS_ASSERT(!gWatchdogThread);
+    gWatchdogLock = PR_NewLock();
+    if (gWatchdogLock) {
+        gWatchdogWakeup = PR_NewCondVar(gWatchdogLock);
+        if (gWatchdogWakeup) {
+            gSleepWakeup = PR_NewCondVar(gWatchdogLock);
+            if (gSleepWakeup)
+                return true;
+            PR_DestroyCondVar(gWatchdogWakeup);
+        }
+        PR_DestroyLock(gWatchdogLock);
+    }
+    return false;
+}
+
+static void
+KillWatchdog()
+{
+    PRThread *thread;
+
+    PR_Lock(gWatchdogLock);
+    thread = gWatchdogThread;
+    if (thread) {
+        /*
+         * The watchdog thread is running, tell it to terminate waking it up
+         * if necessary.
+         */
+        gWatchdogThread = NULL;
+        PR_NotifyCondVar(gWatchdogWakeup);
+    }
+    PR_Unlock(gWatchdogLock);
+    if (thread)
+        PR_JoinThread(thread);
+    PR_DestroyCondVar(gSleepWakeup);
+    PR_DestroyCondVar(gWatchdogWakeup);
+    PR_DestroyLock(gWatchdogLock);
+}
+
 static void
 WatchdogMain(void *arg)
 {
     JSRuntime *rt = (JSRuntime *) arg;
 
-    JS_LOCK_GC(rt);
+    PR_Lock(gWatchdogLock);
     while (gWatchdogThread) {
-        JSContext *acx = NULL;
-    
-        while ((acx = js_NextActiveContext(rt, acx)))
-            JS_TriggerOperationCallback(acx);
+        PRIntervalTime now = PR_IntervalNow();
+         if (gWatchdogHasTimeout && !IsBefore(now, gWatchdogTimeout)) {
+            /*
+             * The timeout has just expired. Trigger the operation callback
+             * outside the lock.
+             */
+            gWatchdogHasTimeout = false;
+            PR_Unlock(gWatchdogLock);
+            CancelExecution(rt);
+            PR_Lock(gWatchdogLock);
 
+            /* Wake up any threads doing sleep. */
+            PR_NotifyAllCondVar(gSleepWakeup);
+        } else {
+            PRIntervalTime sleepDuration = gWatchdogHasTimeout
+                                           ? gWatchdogTimeout - now
+                                           : PR_INTERVAL_NO_TIMEOUT;
 #ifdef DEBUG
-        PRStatus status =
+            PRStatus status =
 #endif
-        /* Trigger the operation callbacks every second. */
-        PR_WaitCondVar(gWatchdogWakeup, PR_SecondsToInterval(1));
-        JS_ASSERT(status == PR_SUCCESS);
+                PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
+            JS_ASSERT(status == PR_SUCCESS);
+        }
     }
-    /* Wake up the main thread waiting for the watchdog to terminate. */
-    PR_NotifyCondVar(gWatchdogWakeup);
-    JS_UNLOCK_GC(rt);
+    PR_Unlock(gWatchdogLock);
 }
 
-static JSBool
-StartWatchdog(JSRuntime *rt)
+static bool
+ScheduleWatchdog(JSRuntime *rt, jsdouble t)
 {
-    if (gWatchdogThread || !gOperationLimit)
-        return JS_TRUE;
-    
-    JS_LOCK_GC(rt);
-    gWatchdogThread = PR_CreateThread(PR_USER_THREAD,
-                                      WatchdogMain,
-                                      rt,
-                                      PR_PRIORITY_NORMAL,
-                                      PR_LOCAL_THREAD,
-                                      PR_UNJOINABLE_THREAD,
-                                      0);
+    if (t <= 0) {
+        PR_Lock(gWatchdogLock);
+        gWatchdogHasTimeout = false;
+        PR_Unlock(gWatchdogLock);
+        return true;
+    }
+
+    PRIntervalTime interval = PRIntervalTime(ceil(t * PR_TicksPerSecond()));
+    PRIntervalTime timeout = PR_IntervalNow() + interval;
+    PR_Lock(gWatchdogLock);
     if (!gWatchdogThread) {
-        JS_UNLOCK_GC(rt);
-        return JS_FALSE;
+        JS_ASSERT(!gWatchdogHasTimeout);
+        gWatchdogThread = PR_CreateThread(PR_USER_THREAD,
+                                          WatchdogMain,
+                                          rt,
+                                          PR_PRIORITY_NORMAL,
+                                          PR_LOCAL_THREAD,
+                                          PR_JOINABLE_THREAD,
+                                          0);
+        if (!gWatchdogThread) {
+            PR_Unlock(gWatchdogLock);
+            return false;
+        }
+    } else if (!gWatchdogHasTimeout || IsBefore(timeout, gWatchdogTimeout)) {
+         PR_NotifyCondVar(gWatchdogWakeup);
     }
-    JS_UNLOCK_GC(rt);
-    return JS_TRUE;
+    gWatchdogHasTimeout = true;
+    gWatchdogTimeout = timeout;
+    PR_Unlock(gWatchdogLock);
+    return true;
 }
 
-static void
-StopWatchdog(JSRuntime *rt)
-{
-    JS_LOCK_GC(rt);
-    if (gWatchdogThread) {
-        /*
-         * The watchdog thread is running, tell it to terminate waking it up
-         * if necessary and wait until it signals that it done.
-         */
-        gWatchdogThread = NULL;
-        PR_NotifyCondVar(gWatchdogWakeup);
-        PR_WaitCondVar(gWatchdogWakeup, PR_INTERVAL_NO_TIMEOUT);
-    }
-    JS_UNLOCK_GC(rt);
-    JS_DESTROY_CONDVAR(gWatchdogWakeup);
-}
-
-#else
-
-static void
-WatchdogHandler(int sig)
-{
-    JSRuntime *rt = gRuntime;
-    JSContext *acx = NULL;
-    
-    while ((acx = js_NextActiveContext(rt, acx)))
-        JS_TriggerOperationCallback(acx);
-
-#ifndef XP_WIN
-    alarm(1);
-#endif
-}
+#else /* !JS_THREADSAFE */
 
 #ifdef XP_WIN
 static HANDLE gTimerHandle = 0;
 
-VOID CALLBACK TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
+VOID CALLBACK
+TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
-    WatchdogHandler(0);
+    CancelExecution(rt);
 }
+
+#else
+
+static void
+AlarmHandler(int sig)
+{
+    CancelExecution(gRuntime);
+}
+
 #endif
 
-static JSBool
-StartWatchdog(JSRuntime *rt)
+static bool
+InitWatchdog(JSRuntime *rt)
 {
-    if (!gOperationLimit)
-        return JS_TRUE;
-
-#ifdef XP_WIN
-    JS_ASSERT(gTimerHandle == 0);
-    if (!CreateTimerQueueTimer(&gTimerHandle,
-                               NULL,
-                               (WAITORTIMERCALLBACK)TimerCallback,
-                               NULL,
-                               1000,
-                               1000,
-                               WT_EXECUTEINTIMERTHREAD))
-        return JS_FALSE;
-#else
-    signal(SIGALRM, WatchdogHandler); /* set the Alarm signal capture */
-    alarm(1);
-#endif    
-    
-    return JS_TRUE;
+    gRuntime = rt;
+    return true;
 }
 
 static void
-StopWatchdog(JSRuntime *rt)
+KillWatchdog()
 {
-#ifdef XP_WIN
-    DeleteTimerQueueTimer(NULL, gTimerHandle, NULL);
-    gTimerHandle = 0;
-#else
-    alarm(0);
-    signal(SIGALRM, NULL);
-#endif
+    ScheduleWatchdog(gRuntime, -1);
 }
 
-#endif /* JS_THREADSAFE */
+static bool
+ScheduleWatchdog(JSRuntime *rt, jsdouble t)
+{
+#ifdef XP_WIN
+    if (gTimerHandle) {
+        DeleteTimerQueueTimer(NULL, gTimerHandle, NULL);
+        gTimerHandle = 0;
+    }
+    if (t > 0 &&
+        !CreateTimerQueueTimer(&gTimerHandle,
+                               NULL,
+                               (WAITORTIMERCALLBACK)TimerCallback,
+                               rt,
+                               DWORD(ceil(t * 1000.0)),
+                               0,
+                               WT_EXECUTEINTIMERTHREAD | WT_EXECUTEONLYONCE)) {
+        gTimerHandle = 0;
+        return false;
+    }
+#else
+    /* FIXME: use setitimer when available for sub-second resolution. */
+    if (t <= 0) {
+        alarm(0);
+        signal(SIGALRM, NULL);
+    } else {
+        signal(SIGALRM, AlarmHandler); /* set the Alarm signal capture */
+        alarm(ceil(t));
+    }
+#endif
+    return true;
+}
+
+#endif /* !JS_THREADSAFE */
+
+static void
+CancelExecution(JSRuntime *rt)
+{
+    gCanceled = true;
+    if (gExitCode == 0)
+        gExitCode = EXITCODE_TIMEOUT;
+    JS_TriggerAllOperationCallbacks(rt);
+
+    static const char msg[] = "Script runs for too long, terminating.\n";
+#if defined(XP_UNIX) && !defined(JS_THREADSAFE)
+    /* It is not safe to call fputs from signals. */
+    write(2, msg, sizeof(msg) - 1);
+#else
+    fputs(msg, stderr);
+#endif
+}
 
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t)
 {
     /* NB: The next condition also filter out NaNs. */
-    if (!(t <= 3600.0)) {
+    if (!(t <= MAX_TIMEOUT_INTERVAL)) {
         JS_ReportError(cx, "Excessive timeout value");
         return JS_FALSE;
     }
-
-    gOperationLimit = (t > 0) ? JSInt64(t*1000) : 0;
-
-    if (!StartWatchdog(cx->runtime)) {
-        JS_ReportError(cx, "failed to create the watchdog");
+    gTimeoutInterval = t;
+    if (!ScheduleWatchdog(cx->runtime, t)) {
+        JS_ReportError(cx, "Failed to create the watchdog");
         return JS_FALSE;
     }
-    
     return JS_TRUE;
-}
-
-static double
-GetTimeoutValue(JSContext *cx)
-{
-    if (!gOperationLimit)
-        return -1;
-    
-    return gOperationLimit/PRMJ_USEC_PER_MSEC;
 }
 
 static JSBool
 Timeout(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc == 0)
-        return JS_NewNumberValue(cx, GetTimeoutValue(cx), vp);
+        return JS_NewNumberValue(cx, gTimeoutInterval, vp);
 
     if (argc > 1) {
         JS_ReportError(cx, "Wrong number of arguments");
@@ -4377,13 +4494,8 @@ main(int argc, char **argv, char **envp)
     if (!rt)
         return 1;
 
-#ifdef JS_THREADSAFE
-    gWatchdogWakeup = JS_NEW_CONDVAR(rt->gcLock);
-    if (!gWatchdogWakeup)
+    if (!InitWatchdog(rt))
         return 1;
-#else
-    gRuntime = rt;
-#endif    
 
     JS_SetContextCallback(rt, ContextCallback);
 
@@ -4498,7 +4610,7 @@ main(int argc, char **argv, char **envp)
         JS_DestroyContext(cx)
     );
 
-    StopWatchdog(rt);
+    KillWatchdog();
 
     JS_DestroyRuntime(rt);
     JS_ShutDown();
