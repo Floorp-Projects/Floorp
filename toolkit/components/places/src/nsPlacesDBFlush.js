@@ -131,7 +131,7 @@ nsPlacesDBFlush.prototype = {
           // Close the database connection, this was the last sync and we can't
           // ensure database coherence from now on.
           pip.finalizeInternalStatements();
-          this._self._cachedStatements.forEach(function(stmt) stmt.finalize());
+          this._self._finalizeInternalStatements();
           this._self._db.close();
         }
       }, Ci.nsIThread.DISPATCH_NORMAL);
@@ -242,6 +242,17 @@ nsPlacesDBFlush.prototype = {
   },
 
   /**
+   * Finalizes all of our mozIStorageStatements so we can properly close the
+   * database.
+   */
+  _finalizeInternalStatements: function DBFlush_finalizeInternalStatements()
+  {
+    for each (let stmt in this._cachedStatements)
+      if (stmt instanceof Ci.mozIStorageStatement)
+        stmt.finalize();
+  },
+
+  /**
    * Generate the statement to synchronizes the moz_{aTableName} and
    * moz_{aTableName}_temp by copying all the data from the temporary table
    * into the permanent one.
@@ -250,7 +261,7 @@ nsPlacesDBFlush.prototype = {
    * @param aTableName
    *        name of the table to build statement for, as moz_{TableName}_temp.
    */
-  _cachedStatements: [],
+  _cachedStatements: {},
   _getSyncTableStatement: function DBFlush_getSyncTableStatement(aTableName)
   {
     // Statement creating can be expensive, so always cache if we can.
