@@ -49,7 +49,9 @@ v1.addEventListener('loadeddata', function() { loaded(v1); }, false);
 a1.addEventListener('loadeddata', function() { loaded(a1); }, false);
 
 v1.appendChild(newSource());
+v1.load();
 a1.appendChild(newSource());
+a1.load();
 
 SimpleTest.waitForExplicitFinish();
 </script>
