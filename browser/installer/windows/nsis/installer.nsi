@@ -271,8 +271,8 @@ Section "-Application" APP_IDX
   ClearErrors
   ReadRegStr $R0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
   ${Unless} ${Errors}
-    ${GetLongPath} $R0 "$R0"
-    ${Unless} $R0 == ""
+    ${GetLongPath} "$R0" $R0
+    ${Unless} "$R0" == ""
       ClearErrors
       GetFullPathName $R0 "$R0\Plugins\nsIQTScriptablePlugin.xpt"
       ${Unless} ${Errors}
