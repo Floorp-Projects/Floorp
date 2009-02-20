@@ -4114,7 +4114,9 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
   // See if we have a transparent background or a background image.  
   // If we do, then we cannot blit.
   const nsStyleBackground* background = GetStyleBackground();
-  if (background->mBackgroundImage || background->IsTransparent() || 
+  if (background->BottomLayer().mImage.mRequest ||
+      background->mImageCount > 1 ||
+      NS_GET_A(background->mBackgroundColor) < 255 ||
       PR_ABS(delta)*mRowHeight >= mRect.height) {
     Invalidate();
   } else {
@@ -4149,9 +4151,12 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   PRInt32 delta = aPosition - mHorzPosition;
   mHorzPosition = aPosition;
 
-  // See if we have a background image.  If we do, then we cannot blit.
+  // See if we have a transparent background or a background image.  
+  // If we do, then we cannot blit.
   const nsStyleBackground* background = GetStyleBackground();
-  if (background->mBackgroundImage || background->IsTransparent() || 
+  if (background->BottomLayer().mImage.mRequest ||
+      background->mImageCount > 1 ||
+      NS_GET_A(background->mBackgroundColor) < 255 ||
       PR_ABS(delta) >= mRect.width) {
     Invalidate();
   } else {
