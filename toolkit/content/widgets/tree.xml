@@ -672,6 +672,22 @@
             this.treeBoxObject.scrollByLines(rows);
         ]]>
       </handler>
+      <handler event="MozSwipeGesture">
+        <![CDATA[
+          // Figure out which row to show
+          let targetRow = 0;
+
+          // Only handle swipe gestures up and down
+          switch (event.direction) {
+            case event.DIRECTION_DOWN:
+              targetRow = this.view.rowCount - 1;
+              // Fall through for actual action
+            case event.DIRECTION_UP:
+              this.treeBoxObject.ensureRowIsVisible(targetRow);
+              break;
+          }
+        ]]>
+      </handler>
       <handler event="select" phase="target"
                action="if (event.originalTarget == this) this.stopEditing(true);"/>
       <handler event="focus">
