@@ -125,19 +125,24 @@ ClientStore.prototype = {
 
   _ClientStore_init: function ClientStore__init() {
     this._init.call(this);
-    this.clients = {};
+    this._clients = {};
     this.loadSnapshot();
+  },
+
+  get clients() {
+    this._clients[Clients.clientID] = this.createRecord(Clients.clientID).payload;
+    return this._clients;
   },
 
   // get/set client info; doesn't use records like the methods below
   // NOTE: setInfo will not update tracker.  Use Engine.setInfo for that
 
   getInfo: function ClientStore_getInfo(id) {
-    return this.clients[id];
+    return this._clients[id];
   },
 
   setInfo: function ClientStore_setInfo(id, info) {
-    this.clients[id] = info;
+    this._clients[id] = info;
     this.saveSnapshot();
   },
 
@@ -147,7 +152,7 @@ ClientStore.prototype = {
     this._log.debug("Saving client list to disk");
     let file = Utils.getProfileFile(
       {path: "weave/meta/clients.json", autoCreate: true});
-    let out = Svc.Json.encode(this.clients);
+    let out = Svc.Json.encode(this._clients);
     let [fos] = Utils.open(file, ">");
     fos.writeString(out);
     fos.close();
@@ -162,7 +167,7 @@ ClientStore.prototype = {
       let [is] = Utils.open(file, "<");
       let json = Utils.readStream(is);
       is.close();
-      this.clients = Svc.Json.decode(json);
+      this._clients = Svc.Json.decode(json);
     } catch (e) {
       this._log.debug("Failed to load saved client list" + e);
     }
@@ -170,48 +175,64 @@ ClientStore.prototype = {
 
   // methods to apply changes: create, remove, update, changeItemID, wipe
 
+  applyIncoming: function ClientStore_applyIncoming(onComplete, record) {
+    let fn = function(rec) {
+      let self = yield;
+      if (!rec.payload)
+        this.remove(rec);
+      else if (!this.itemExists(rec.id))
+        this.create(rec);
+      else
+        this.update(rec);
+    };
+    fn.async(this, onComplete, record);
+  },
+
   create: function ClientStore_create(record) {
     this.update(record);
   },
 
   update: function ClientStore_update(record) {
-    this.clients[record.id] = record.payload;
+    this._log.debug("Updating client " + record.id);
+    this._clients[record.id] = record.payload;
     this.saveSnapshot();
   },
 
   remove: function ClientStore_remove(record) {
-    delete this.clients[record.id];
+    this._log.debug("Removing client " + record.id);
+    delete this._clients[record.id];
     this.saveSnapshot();
   },
 
   changeItemID: function ClientStore_changeItemID(oldID, newID) {
-    this.clients[newID] = this.clients[oldID];
-    delete this.clients[oldID];
+    this._clients[newID] = this._clients[oldID];
+    delete this._clients[oldID];
     this.saveSnapshot();
   },
 
   wipe: function ClientStore_wipe() {
-    this.clients = {};
+    this._log.debug("Wiping local clients store");
+    this._clients = {};
     this.saveSnapshot();
   },
 
   // methods to query local data: getAllIDs, itemExists, createRecord
 
   getAllIDs: function ClientStore_getAllIDs() {
-    this.clients[Clients.clientID] = this.createRecord(Clients.clientID);
     return this.clients;
   },
 
   itemExists: function ClientStore_itemExists(id) {
-    return id in this.clients;
+    return id in this._clients;
   },
 
   createRecord: function ClientStore_createRecord(id) {
     let record = new ClientRecord();
+    record.id = id;
     if (id == Clients.clientID)
       record.payload = {name: Clients.clientName, type: Clients.clientType};
     else
-      record.payload = this.clients[id];
+      record.payload = this._clients[id];
     return record;
   }
 };
