@@ -1420,8 +1420,7 @@ nsRuleNode::GetUIResetData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(UIReset), mPresContext, aContext);
   ruleData.mUserInterfaceData = &uiData;
 
-  const void* res = WalkRuleTree(eStyleStruct_UIReset, aContext, &ruleData, &uiData);
-  return res;
+  return WalkRuleTree(eStyleStruct_UIReset, aContext, &ruleData, &uiData);
 }
 
 const void*
@@ -1455,7 +1454,17 @@ nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
   // null in HasAuthorSpecifiedRules (look at mBoxShadow in GetBorderData
   // and HasAuthorSpecifiedRules).
 
-  return WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
+  const void *res = WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
+
+  // We are sharing with some style rule.  It really owns the data.
+  colorData.mBackImage = nsnull;
+  colorData.mBackRepeat = nsnull;
+  colorData.mBackAttachment = nsnull;
+  colorData.mBackPosition = nsnull;
+  colorData.mBackClip = nsnull;
+  colorData.mBackOrigin = nsnull;
+
+  return res;
 }
 
 const void*
@@ -3771,6 +3780,189 @@ nsRuleNode::ComputeColorData(void* aStartStruct,
   COMPUTE_END_INHERITED(Color, color)
 }
 
+// information about how to compute values for background-* properties
+template <class SpecifiedValueItem>
+struct InitialInheritLocationFor {
+};
+
+NS_SPECIALIZE_TEMPLATE
+struct InitialInheritLocationFor<nsCSSValueList> {
+  static nsCSSValue nsCSSValueList::* Location() {
+    return &nsCSSValueList::mValue;
+  }
+};
+
+NS_SPECIALIZE_TEMPLATE
+struct InitialInheritLocationFor<nsCSSValuePairList> {
+  static nsCSSValue nsCSSValuePairList::* Location() {
+    return &nsCSSValuePairList::mXValue;
+  }
+};
+
+template <class SpecifiedValueItem, class ComputedValueItem>
+struct BackgroundItemComputer {
+};
+
+NS_SPECIALIZE_TEMPLATE
+struct BackgroundItemComputer<nsCSSValueList, PRUint8>
+{
+  static void ComputeValue(nsStyleContext* aStyleContext,
+                           const nsCSSValueList* aSpecifiedValue,
+                           PRUint8& aComputedValue,
+                           PRBool& aCanStoreInRuleTree)
+  {
+    SetDiscrete(aSpecifiedValue->mValue, aComputedValue, aCanStoreInRuleTree,
+                SETDSC_ENUMERATED, PRUint8(0), 0, 0, 0, 0, 0);
+  }
+};
+
+NS_SPECIALIZE_TEMPLATE
+struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Image>
+{
+  static void ComputeValue(nsStyleContext* aStyleContext,
+                           const nsCSSValueList* aSpecifiedValue,
+                           nsStyleBackground::Image& aComputedValue,
+                           PRBool& aCanStoreInRuleTree)
+  {
+    const nsCSSValue &value = aSpecifiedValue->mValue;
+    if (eCSSUnit_Image == value.GetUnit()) {
+      aComputedValue.mRequest = value.GetImageValue();
+      aComputedValue.mSpecified = PR_TRUE;
+    }
+    else {
+      NS_ASSERTION(eCSSUnit_None == value.GetUnit(), "unexpected unit");
+      aComputedValue.mRequest = nsnull;
+      aComputedValue.mSpecified = PR_FALSE;
+    }
+  }
+};
+
+struct BackgroundPositionAxis {
+  nsCSSValue nsCSSValuePairList::*specified;
+  nsStyleBackground::Position::PositionCoord
+    nsStyleBackground::Position::*result;
+  PRPackedBool nsStyleBackground::Position::*isPercent;
+};
+
+static const BackgroundPositionAxis gBGPosAxes[] = {
+  { &nsCSSValuePairList::mXValue,
+    &nsStyleBackground::Position::mXPosition,
+    &nsStyleBackground::Position::mXIsPercent },
+  { &nsCSSValuePairList::mYValue,
+    &nsStyleBackground::Position::mYPosition,
+    &nsStyleBackground::Position::mYIsPercent }
+};
+
+NS_SPECIALIZE_TEMPLATE
+struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
+{
+  static void ComputeValue(nsStyleContext* aStyleContext,
+                           const nsCSSValuePairList* aSpecifiedValue,
+                           nsStyleBackground::Position& aComputedValue,
+                           PRBool& aCanStoreInRuleTree)
+  {
+    nsStyleBackground::Position &position = aComputedValue;
+    for (const BackgroundPositionAxis *axis = gBGPosAxes,
+                        *axis_end = gBGPosAxes + NS_ARRAY_LENGTH(gBGPosAxes);
+         axis != axis_end; ++axis) {
+      const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
+      if (eCSSUnit_Percent == specified.GetUnit()) {
+        (position.*(axis->result)).mFloat = specified.GetPercentValue();
+        position.*(axis->isPercent) = PR_TRUE;
+      }
+      else if (specified.IsLengthUnit()) {
+        (position.*(axis->result)).mCoord =
+          CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
+                     aCanStoreInRuleTree);
+        position.*(axis->isPercent) = PR_FALSE;
+      }
+      else if (eCSSUnit_Enumerated == specified.GetUnit()) {
+        (position.*(axis->result)).mFloat =
+          GetFloatFromBoxPosition(specified.GetIntValue());
+        position.*(axis->isPercent) = PR_TRUE;
+      } else {
+        NS_NOTREACHED("unexpected unit");
+      }
+    }
+  }
+};
+
+
+template <class SpecifiedValueItem, class ComputedValueItem>
+static void
+SetBackgroundList(nsStyleContext* aStyleContext,
+                  const SpecifiedValueItem* aValueList,
+                  nsAutoTArray< nsStyleBackground::Layer, 1> &aLayers,
+                  const nsAutoTArray<nsStyleBackground::Layer, 1>
+                                                                 &aParentLayers,
+                  ComputedValueItem nsStyleBackground::Layer::* aResultLocation,
+                  ComputedValueItem aInitialValue,
+                  PRUint32 aParentItemCount,
+                  PRUint32& aItemCount,
+                  PRUint32& aMaxItemCount,
+                  PRBool& aRebuild,
+                  PRBool& aCanStoreInRuleTree)
+{
+  if (aValueList) {
+    aRebuild = PR_TRUE;
+    nsCSSValue SpecifiedValueItem::* initialInherit =
+      InitialInheritLocationFor<SpecifiedValueItem>::Location();
+    if (eCSSUnit_Inherit == (aValueList->*initialInherit).GetUnit()) {
+      NS_ASSERTION(!aValueList->mNext, "should have only one value");
+      aCanStoreInRuleTree = PR_FALSE;
+      if (!aLayers.EnsureLengthAtLeast(aParentItemCount)) {
+        NS_WARNING("out of memory");
+        aParentItemCount = aLayers.Length();
+      }
+      aItemCount = aParentItemCount;
+      for (PRUint32 i = 0; i < aParentItemCount; ++i) {
+        aLayers[i].*aResultLocation = aParentLayers[i].*aResultLocation;
+      }
+    } else if (eCSSUnit_Initial == (aValueList->*initialInherit).GetUnit()) {
+      NS_ASSERTION(!aValueList->mNext, "should have only one value");
+      aItemCount = 1;
+      aLayers[0].*aResultLocation = aInitialValue;
+    } else {
+      const SpecifiedValueItem *item = aValueList;
+      aItemCount = 0;
+      do {
+        NS_ASSERTION((item->*initialInherit).GetUnit() != eCSSUnit_Inherit &&
+                     (item->*initialInherit).GetUnit() != eCSSUnit_Initial,
+                     "unexpected unit");
+        ++aItemCount;
+        if (!aLayers.EnsureLengthAtLeast(aItemCount)) {
+          NS_WARNING("out of memory");
+          --aItemCount;
+          break;
+        }
+        BackgroundItemComputer<SpecifiedValueItem, ComputedValueItem>
+          ::ComputeValue(aStyleContext, item,
+                         aLayers[aItemCount-1].*aResultLocation,
+                         aCanStoreInRuleTree);
+        item = item->mNext;
+      } while (item);
+    }
+  }
+
+  if (aItemCount > aMaxItemCount)
+    aMaxItemCount = aItemCount;
+}
+
+template <class ComputedValueItem>
+static void
+FillBackgroundList(nsAutoTArray< nsStyleBackground::Layer, 1> &aLayers,
+    ComputedValueItem nsStyleBackground::Layer::* aResultLocation,
+    PRUint32 aItemCount, PRUint32 aFillCount)
+{
+  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
+  for (PRUint32 sourceLayer = 0, destLayer = aItemCount;
+       destLayer < aFillCount;
+       ++sourceLayer, ++destLayer) {
+    aLayers[destLayer].*aResultLocation =
+      aLayers[sourceLayer].*aResultLocation;
+  }
+}
+
 const void*
 nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const nsRuleDataStruct& aData, 
@@ -3781,52 +3973,55 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Background, (), bg, parentBG, Color, colorData)
 
-  // save parentFlags in case bg == parentBG and we clobber them later
-  PRUint8 parentFlags = parentBG->mBackgroundFlags;
-
-  // background-color: color, string, inherit
-  if (eCSSUnit_Initial == colorData.mBackColor.GetUnit()) {
+  // background-color: color, string, inherit [pair]
+  if (eCSSUnit_Initial == colorData.mBackColor.mXValue.GetUnit()) {
     bg->mBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else if (!SetColor(colorData.mBackColor, parentBG->mBackgroundColor,
-                       mPresContext, aContext, bg->mBackgroundColor,
-                       canStoreInRuleTree)) {
-    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.GetUnit(),
+  } else if (!SetColor(colorData.mBackColor.mXValue,
+                       parentBG->mBackgroundColor, mPresContext,
+                       aContext, bg->mBackgroundColor, canStoreInRuleTree)) {
+    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.mXValue.GetUnit(),
                  "unexpected color unit");
   }
 
-  // background-image: url (stored as image), none, inherit
-  if (eCSSUnit_Image == colorData.mBackImage.GetUnit()) {
-    bg->mBackgroundImage = colorData.mBackImage.GetImageValue();
-  }
-  else if (eCSSUnit_None == colorData.mBackImage.GetUnit() ||
-           eCSSUnit_Initial == colorData.mBackImage.GetUnit()) {
-    bg->mBackgroundImage = nsnull;
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackImage.GetUnit()) {
-    canStoreInRuleTree = PR_FALSE;
-    bg->mBackgroundImage = parentBG->mBackgroundImage;
+  if (eCSSUnit_Initial == colorData.mBackColor.mYValue.GetUnit()) {
+    bg->mFallbackBackgroundColor = NS_RGBA(0, 0, 0, 0);
+  } else if (!SetColor(colorData.mBackColor.mYValue,
+                       parentBG->mFallbackBackgroundColor, mPresContext,
+                       aContext, bg->mFallbackBackgroundColor,
+                       canStoreInRuleTree)) {
+    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.mYValue.GetUnit(),
+                 "unexpected color unit");
   }
 
-  if (bg->mBackgroundImage) {
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-  } else {
-    bg->mBackgroundFlags |= NS_STYLE_BG_IMAGE_NONE;
-  }
+  PRUint32 maxItemCount = 1;
+  PRBool rebuild = PR_FALSE;
 
-  // background-repeat: enum, inherit, initial
-  SetDiscrete(colorData.mBackRepeat, bg->mBackgroundRepeat, canStoreInRuleTree,
-              SETDSC_ENUMERATED, parentBG->mBackgroundRepeat,
-              NS_STYLE_BG_REPEAT_XY, 0, 0, 0, 0);
+  // background-image: url (stored as image), none, inherit [list]
+  SetBackgroundList(aContext, colorData.mBackImage, bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mImage,
+                    nsStyleBackground::Image(), parentBG->mImageCount,
+                    bg->mImageCount, maxItemCount, rebuild, canStoreInRuleTree);
 
-  // background-attachment: enum, inherit, initial
-  SetDiscrete(colorData.mBackAttachment, bg->mBackgroundAttachment, canStoreInRuleTree,
-              SETDSC_ENUMERATED, parentBG->mBackgroundAttachment,
-              NS_STYLE_BG_ATTACHMENT_SCROLL, 0, 0, 0, 0);
+  // background-repeat: enum, inherit, initial [list]
+  SetBackgroundList(aContext, colorData.mBackRepeat, bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mRepeat,
+                    PRUint8(NS_STYLE_BG_REPEAT_XY), parentBG->mRepeatCount,
+                    bg->mRepeatCount, maxItemCount, rebuild, canStoreInRuleTree);
 
-  // background-clip: enum, inherit, initial
-  SetDiscrete(colorData.mBackClip, bg->mBackgroundClip, canStoreInRuleTree,
-              SETDSC_ENUMERATED, parentBG->mBackgroundClip,
-              NS_STYLE_BG_CLIP_BORDER, 0, 0, 0, 0);
+  // background-attachment: enum, inherit, initial [list]
+  SetBackgroundList(aContext, colorData.mBackAttachment, bg->mLayers,
+                    parentBG->mLayers,
+                    &nsStyleBackground::Layer::mAttachment,
+                    PRUint8(NS_STYLE_BG_ATTACHMENT_SCROLL),
+                    parentBG->mAttachmentCount,
+                    bg->mAttachmentCount, maxItemCount, rebuild,
+                    canStoreInRuleTree);
+
+  // background-clip: enum, inherit, initial [list]
+  SetBackgroundList(aContext, colorData.mBackClip, bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mClip,
+                    PRUint8(NS_STYLE_BG_CLIP_BORDER), parentBG->mClipCount,
+                    bg->mClipCount, maxItemCount, rebuild, canStoreInRuleTree);
 
   // background-inline-policy: enum, inherit, initial
   SetDiscrete(colorData.mBackInlinePolicy, bg->mBackgroundInlinePolicy,
@@ -3834,66 +4029,40 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
               parentBG->mBackgroundInlinePolicy,
               NS_STYLE_BG_INLINE_POLICY_CONTINUOUS, 0, 0, 0, 0);
 
-  // background-origin: enum, inherit, initial
-  SetDiscrete(colorData.mBackOrigin, bg->mBackgroundOrigin, canStoreInRuleTree,
-              SETDSC_ENUMERATED, parentBG->mBackgroundOrigin,
-              NS_STYLE_BG_ORIGIN_PADDING, 0, 0, 0, 0);
+  // background-origin: enum, inherit, initial [list]
+  SetBackgroundList(aContext, colorData.mBackOrigin, bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mOrigin,
+                    PRUint8(NS_STYLE_BG_ORIGIN_PADDING), parentBG->mOriginCount,
+                    bg->mOriginCount, maxItemCount, rebuild,
+                    canStoreInRuleTree);
 
-  // background-position: enum, length, percent (flags), inherit
-  if (eCSSUnit_Percent == colorData.mBackPosition.mXValue.GetUnit()) {
-    bg->mBackgroundXPosition.mFloat = colorData.mBackPosition.mXValue.GetPercentValue();
-    bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
-  }
-  else if (colorData.mBackPosition.mXValue.IsLengthUnit()) {
-    bg->mBackgroundXPosition.mCoord = CalcLength(colorData.mBackPosition.mXValue, 
-                                                 aContext, mPresContext, canStoreInRuleTree);
-    bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_LENGTH;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
-  }
-  else if (eCSSUnit_Enumerated == colorData.mBackPosition.mXValue.GetUnit()) {
-    bg->mBackgroundXPosition.mFloat =
-      GetFloatFromBoxPosition(colorData.mBackPosition.mXValue.GetIntValue());
+  // background-position: enum, length, percent (flags), inherit [pair list]
+  nsStyleBackground::Position initialPosition;
+  initialPosition.SetInitialValues();
+  SetBackgroundList(aContext, colorData.mBackPosition, bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
+                    initialPosition, parentBG->mPositionCount,
+                    bg->mPositionCount, maxItemCount, rebuild,
+                    canStoreInRuleTree);
 
-    bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackPosition.mXValue.GetUnit()) {
-    canStoreInRuleTree = PR_FALSE;
-    bg->mBackgroundXPosition = parentBG->mBackgroundXPosition;
-    bg->mBackgroundFlags &= ~(NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT);
-    bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT));
-  }
-  else if (eCSSUnit_Initial == colorData.mBackPosition.mXValue.GetUnit()) {
-    bg->mBackgroundFlags &= ~(NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT);
-  }
+  if (rebuild) {
+    // Delete any extra items.  We need to keep layers in which any
+    // property was specified.
+    bg->mLayers.TruncateLength(maxItemCount);
 
-  if (eCSSUnit_Percent == colorData.mBackPosition.mYValue.GetUnit()) {
-    bg->mBackgroundYPosition.mFloat = colorData.mBackPosition.mYValue.GetPercentValue();
-    bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
-  }
-  else if (colorData.mBackPosition.mYValue.IsLengthUnit()) {
-    bg->mBackgroundYPosition.mCoord = CalcLength(colorData.mBackPosition.mYValue,
-                                                 aContext, mPresContext, canStoreInRuleTree);
-    bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_LENGTH;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
-  }
-  else if (eCSSUnit_Enumerated == colorData.mBackPosition.mYValue.GetUnit()) {
-    bg->mBackgroundYPosition.mFloat =
-      GetFloatFromBoxPosition(colorData.mBackPosition.mYValue.GetIntValue());
-
-    bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackPosition.mYValue.GetUnit()) {
-    canStoreInRuleTree = PR_FALSE;
-    bg->mBackgroundYPosition = parentBG->mBackgroundYPosition;
-    bg->mBackgroundFlags &= ~(NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT);
-    bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT));
-  }
-  else if (eCSSUnit_Initial == colorData.mBackPosition.mYValue.GetUnit()) {
-    bg->mBackgroundFlags &= ~(NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT);
+    PRUint32 fillCount = bg->mImageCount;
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mImage,
+                       bg->mImageCount, fillCount);
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mRepeat,
+                       bg->mRepeatCount, fillCount);
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mAttachment,
+                       bg->mAttachmentCount, fillCount);
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mClip,
+                       bg->mClipCount, fillCount);
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mOrigin,
+                       bg->mOriginCount, fillCount);
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mPosition,
+                       bg->mPositionCount, fillCount);
   }
 
   COMPUTE_END_RESET(Background, bg)
@@ -5499,6 +5668,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 {
   nsRuleDataColor colorData;
   nsRuleDataMargin marginData;
+  nsCSSValue firstBackgroundImage;
   PRUint32 nValues = 0;
 
   PRUint32 inheritBits = 0;
@@ -5518,8 +5688,9 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   ruleData.mMarginData = &marginData;
 
   nsCSSValue* backgroundValues[] = {
-    &colorData.mBackColor,
-    &colorData.mBackImage
+    &colorData.mBackColor.mXValue,
+    &colorData.mBackColor.mYValue,
+    &firstBackgroundImage
   };
 
   nsCSSValue* borderValues[] = {
@@ -5583,11 +5754,25 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
       if (rule) {
         ruleData.mLevel = ruleNode->GetLevel();
         ruleData.mIsImportantRule = ruleNode->IsImportantRule();
+
         rule->MapRuleInfoInto(&ruleData);
+
+        if ((ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) &&
+            colorData.mBackImage &&
+            firstBackgroundImage.GetUnit() == eCSSUnit_Null) {
+          // Handle background-image being a value list
+          firstBackgroundImage = colorData.mBackImage->mValue;
+        }
         // Do the same nulling out as in GetBorderData, GetBackgroundData
         // or GetPaddingData.
         // We are sharing with some style rule.  It really owns the data.
         marginData.mBoxShadow = nsnull;
+        colorData.mBackImage = nsnull;
+        colorData.mBackRepeat = nsnull;
+        colorData.mBackAttachment = nsnull;
+        colorData.mBackPosition = nsnull;
+        colorData.mBackClip = nsnull;
+        colorData.mBackOrigin = nsnull;
 
         if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
             ruleData.mLevel == nsStyleSet::eUserSheet) {
