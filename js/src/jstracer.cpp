@@ -5929,9 +5929,9 @@ JS_REQUIRES_STACK bool
 TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
                                     LIns* dslots_ins, LIns* idx_ins, ExitType exitType)
 {
-    jsuint length = ARRAY_DENSE_LENGTH(obj);
+    jsuint capacity = js_DenseArrayCapacity(obj);
 
-    bool cond = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < length);
+    bool cond = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < capacity);
     if (cond) {
         /* Guard array length */
         LIns* exit = guard(true,
@@ -7156,7 +7156,7 @@ TraceRecorder::record_JSOP_GETELEM()
         idx = ID_TO_VALUE(id);
         jsuint index;
         if (js_IdIsIndex(idx, &index) && guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
-            v = (index >= ARRAY_DENSE_LENGTH(obj)) ? JSVAL_HOLE : obj->dslots[index];
+            v = (index >= js_DenseArrayCapacity(obj)) ? JSVAL_HOLE : obj->dslots[index];
             if (v == JSVAL_HOLE)
                 ABORT_TRACE("can't see through hole in dense array");
         } else {
