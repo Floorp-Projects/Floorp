@@ -195,34 +195,28 @@ expectedmatch = Array('xb');
 addThis();
 
 
-string = 'hallo\";'
-  status = inSection(22);
+string = 'hallo\";';
+status = inSection(22);
 pattern = /^((\\[^\x00-\x1f]|[^\x00-\x1f"\\])*)"/;
-			      actualmatch = string.match(pattern);
-			      expectedmatch = Array('hallo"', 'hallo', 'o');
-			      addThis();
+actualmatch = string.match(pattern);
+expectedmatch = Array('hallo"', 'hallo', 'o');
+addThis();
 
+//----------------------------------------------------------------------------
+test();
+//----------------------------------------------------------------------------
 
+function addThis()
+{
+  statusmessages[i] = status;
+  patterns[i] = pattern;
+  strings[i] = string;
+  actualmatches[i] = actualmatch;
+  expectedmatches[i] = expectedmatch;
+  i++;
+}
 
-
-//-------------------------------------------------------------------------------------------------
-			      test();
-//-------------------------------------------------------------------------------------------------
-
-
-
-			      function addThis()
-			      {
-				statusmessages[i] = status;
-				patterns[i] = pattern;
-				strings[i] = string;
-				actualmatches[i] = actualmatch;
-				expectedmatches[i] = expectedmatch;
-				i++;
-			      }
-
-
-			      function test()
+function test()
 {
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
