@@ -226,7 +226,10 @@ static void CreateSoftKeyMenuBar(HWND wnd)
 
 #define RDW_NOINTERNALPAINT 0
 
-#define SetWindowLongA SetWindowLongW
+#define SetWindowLongPtrA SetWindowLongW
+#define SetWindowLongPtrW SetWindowLongW
+#define GetWindowLongPtrW GetWindowLongW
+#define GWLP_WNDPROC   GWL_WNDPROC
 #define GetPropW       GetProp
 #define SetPropW       SetProp
 #define RemovePropW    RemoveProp
@@ -635,7 +638,7 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnDialogOrPopup)
     topWnd = curWnd;
 
     if (aStopOnDialogOrPopup) {
-      DWORD style = ::GetWindowLongW(curWnd, GWL_STYLE);
+      DWORD_PTR style = ::GetWindowLongPtrW(curWnd, GWL_STYLE);
 
       VERIFY_WINDOW_STYLE(style);
 
@@ -662,7 +665,7 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnDialogOrPopup)
 
 BOOL CALLBACK nsWindow::BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg)
 {
-  WNDPROC winProc = (WNDPROC)::GetWindowLongW(aWnd, GWL_WNDPROC);
+  WNDPROC winProc = (WNDPROC)::GetWindowLongPtrW(aWnd, GWLP_WNDPROC);
   if (winProc == &nsWindow::WindowProc) {
     // it's one of our windows so go ahead and send a message to it
     ::CallWindowProcW(winProc, aWnd, aMsg, 0, 0);
@@ -1278,14 +1281,14 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   nsToolkit* toolkit = (nsToolkit *)mToolkit;
   if (toolkit && !toolkit->IsGuiThread()) {
-    DWORD args[7];
-    args[0] = (DWORD)aParent;
-    args[1] = (DWORD)&aRect;
-    args[2] = (DWORD)aHandleEventFunction;
-    args[3] = (DWORD)aContext;
-    args[4] = (DWORD)aAppShell;
-    args[5] = (DWORD)aToolkit;
-    args[6] = (DWORD)aInitData;
+    DWORD_PTR args[7];
+    args[0] = (DWORD_PTR)aParent;
+    args[1] = (DWORD_PTR)&aRect;
+    args[2] = (DWORD_PTR)aHandleEventFunction;
+    args[3] = (DWORD_PTR)aContext;
+    args[4] = (DWORD_PTR)aAppShell;
+    args[5] = (DWORD_PTR)aToolkit;
+    args[6] = (DWORD_PTR)aInitData;
 
     if (nsnull != aParent) {
       // nsIWidget parent dispatch
@@ -1690,7 +1693,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
               HWND wndAfter = ::GetForegroundWindow();
               if (!wndAfter)
                 wndAfter = HWND_BOTTOM;
-              else if (GetWindowLong(wndAfter, GWL_EXSTYLE) & WS_EX_TOPMOST)
+              else if (GetWindowLongPtrW(wndAfter, GWL_EXSTYLE) & WS_EX_TOPMOST)
                 wndAfter = HWND_TOP;
               ::SetWindowPos(mWnd, wndAfter, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | 
                              SWP_NOMOVE | SWP_NOACTIVATE);
@@ -1771,7 +1774,7 @@ NS_METHOD nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
     HWND wndAfter = ::GetForegroundWindow();
     if (!wndAfter)
       behind = HWND_BOTTOM;
-    else if (!(GetWindowLong(wndAfter, GWL_EXSTYLE) & WS_EX_TOPMOST))
+    else if (!(GetWindowLongPtrW(wndAfter, GWL_EXSTYLE) & WS_EX_TOPMOST))
       behind = wndAfter;
     flags |= SWP_NOACTIVATE;
   }
@@ -1884,8 +1887,8 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 
       // if not, accept events for any window that hasn't been disabled.
       if (!acceptEvent) {
-        LONG proc = ::GetWindowLongW(msgWindow, GWL_WNDPROC);
-        if (proc == (LONG)&nsWindow::WindowProc) {
+        LONG_PTR proc = ::GetWindowLongPtrW(msgWindow, GWLP_WNDPROC);
+        if (proc == (LONG_PTR)&nsWindow::WindowProc) {
           nsWindow *msgWin = GetNSWindowPtr(msgWindow);
           msgWin->IsEnabled(&acceptEvent);
         }
@@ -2315,7 +2318,7 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
   mBrush = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
 #ifndef WINCE
   if (mWnd != NULL) {
-    SetClassLong(mWnd, GCL_HBRBACKGROUND, (LONG)mBrush);
+    ::SetClassLongPtrW(mWnd, GCLP_HBRBACKGROUND, (LONG_PTR)mBrush);
   }
 #endif
   return NS_OK;
@@ -2685,10 +2688,10 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     return NS_ERROR_FAILURE;
   }
 
-  DWORD style, exStyle;
+  DWORD_PTR style, exStyle;
   if (aShouldHide) {
-    DWORD tempStyle = ::GetWindowLongW(hwnd, GWL_STYLE);
-    DWORD tempExStyle = ::GetWindowLongW(hwnd, GWL_EXSTYLE);
+    DWORD_PTR tempStyle = ::GetWindowLongPtrW(hwnd, GWL_STYLE);
+    DWORD_PTR tempExStyle = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
 
     style = tempStyle & ~(WS_CAPTION | WS_THICKFRAME);
     exStyle = tempExStyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE |
@@ -2699,8 +2702,8 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
   }
   else {
     if (!mOldStyle || !mOldExStyle) {
-      mOldStyle = ::GetWindowLongW(hwnd, GWL_STYLE);
-      mOldExStyle = ::GetWindowLongW(hwnd, GWL_EXSTYLE);
+      mOldStyle = ::GetWindowLongPtrW(hwnd, GWL_STYLE);
+      mOldExStyle = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
     }
 
     style = mOldStyle;
@@ -2708,8 +2711,8 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
   }
 
   VERIFY_WINDOW_STYLE(style);
-  ::SetWindowLongW(hwnd, GWL_STYLE, style);
-  ::SetWindowLongW(hwnd, GWL_EXSTYLE, exStyle);
+  ::SetWindowLongPtrW(hwnd, GWL_STYLE, style);
+  ::SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exStyle);
 
   return NS_OK;
 }
@@ -2929,8 +2932,8 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 // a window created by a plugin.
 BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
 {
-  LONG proc = ::GetWindowLongW(aWnd, GWL_WNDPROC);
-  if (proc != (LONG)&nsWindow::WindowProc) {
+  LONG_PTR proc = ::GetWindowLongPtrW(aWnd, GWLP_WNDPROC);
+  if (proc != (LONG_PTR)&nsWindow::WindowProc) {
     // This window is not one of our windows so invalidate it.
     VERIFY(::InvalidateRect(aWnd, NULL, FALSE));    
   }
@@ -4163,8 +4166,8 @@ static nsresult HeapDump(const char *filename, const char *heading)
 
 BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
 {
-  LONG proc = ::GetWindowLongW(aWnd, GWL_WNDPROC);
-  if (proc == (LONG)&nsWindow::WindowProc) {
+  LONG_PTR proc = ::GetWindowLongPtrW(aWnd, GWLP_WNDPROC);
+  if (proc == (LONG_PTR)&nsWindow::WindowProc) {
     // its one of our windows so check to see if it has a
     // invalidated rect. If it does. Dispatch a synchronous
     // paint.
@@ -5833,20 +5836,20 @@ void nsWindow::SubclassWindow(BOOL bState)
     if (bState) {
       // change the nsWindow proc
       if (mUnicodeWidget)
-        mPrevWndProc = (WNDPROC)::SetWindowLongW(mWnd, GWL_WNDPROC,
-                                                (LONG)nsWindow::WindowProc);
+        mPrevWndProc = (WNDPROC)::SetWindowLongPtrW(mWnd, GWLP_WNDPROC,
+                                                (LONG_PTR)nsWindow::WindowProc);
       else
-        mPrevWndProc = (WNDPROC)::SetWindowLongA(mWnd, GWL_WNDPROC,
-                                                (LONG)nsWindow::WindowProc);
+        mPrevWndProc = (WNDPROC)::SetWindowLongPtrA(mWnd, GWLP_WNDPROC,
+                                                (LONG_PTR)nsWindow::WindowProc);
       NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
       // connect the this pointer to the nsWindow handle
       SetNSWindowPtr(mWnd, this);
     }
     else {
       if (mUnicodeWidget)
-        ::SetWindowLongW(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        ::SetWindowLongPtrW(mWnd, GWLP_WNDPROC, (LONG_PTR)mPrevWndProc);
       else
-        ::SetWindowLongA(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        ::SetWindowLongPtrA(mWnd, GWLP_WNDPROC, (LONG_PTR)mPrevWndProc);
       SetNSWindowPtr(mWnd, NULL);
       mPrevWndProc = NULL;
     }
@@ -8487,7 +8490,7 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
     return;
   }
 
-  LONG style = 0, exStyle = 0;
+  LONG_PTR style = 0, exStyle = 0;
   switch(aMode) {
     case eTransparencyTransparent:
       exStyle |= WS_EX_LAYERED;
@@ -8501,8 +8504,8 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   exStyle |= topWindow->WindowExStyle();
 
   VERIFY_WINDOW_STYLE(style);
-  ::SetWindowLongW(hWnd, GWL_STYLE, style);
-  ::SetWindowLongW(hWnd, GWL_EXSTYLE, exStyle);
+  ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
+  ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);
 
   mTransparencyMode = aMode;
 
