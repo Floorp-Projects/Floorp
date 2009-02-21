@@ -269,6 +269,7 @@ private:
     PRPackedBool        mStorReplyReceived; // FALSE if waiting for STOR
                                             // completion status from server
     nsresult            mInternalError; // represents internal state errors
+    PRPackedBool        mReconnectAndLoginAgain;
 
         // ****** URI vars
     PRInt32                mPort;       // the port to connect to
