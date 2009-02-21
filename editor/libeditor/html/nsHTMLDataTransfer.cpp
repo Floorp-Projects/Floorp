@@ -537,12 +537,13 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
         while (child)
         {
           res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
-          if (NS_SUCCEEDED(res)) 
-          {
-            bDidInsert = PR_TRUE;
-            lastInsertNode = child;
-            offsetOfNewNode++;
-          }
+          if (NS_FAILED(res))
+            break;
+
+          bDidInsert = PR_TRUE;
+          lastInsertNode = child;
+          offsetOfNewNode++;
+
           curNode->GetFirstChild(getter_AddRefs(child));
         }
       }
@@ -579,12 +580,12 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
               }
             } 
             res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
-            if (NS_SUCCEEDED(res)) 
-            {
-              bDidInsert = PR_TRUE;
-              lastInsertNode = child;
-              offsetOfNewNode++;
-            }
+            if (NS_FAILED(res))
+              break;
+
+            bDidInsert = PR_TRUE;
+            lastInsertNode = child;
+            offsetOfNewNode++;
           }
           else
           {
@@ -602,16 +603,18 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
         while (child)
         {
           res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
-          if (NS_SUCCEEDED(res)) 
-          {
-            bDidInsert = PR_TRUE;
-            lastInsertNode = child;
-            offsetOfNewNode++;
-          }
+          if (NS_FAILED(res))
+            break;
+
+          bDidInsert = PR_TRUE;
+          lastInsertNode = child;
+          offsetOfNewNode++;
+
           curNode->GetFirstChild(getter_AddRefs(child));
         }
       }
-      else
+
+      if (!bDidInsert || NS_FAILED(res))
       {
         
         // try to insert
@@ -622,8 +625,8 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
           lastInsertNode = curNode;
         }
           
-        // assume failure means no legal parent in the document heirarchy.
-        // try again with the parent of curNode in the paste heirarchy.
+        // Assume failure means no legal parent in the document hierarchy,
+        // try again with the parent of curNode in the paste hierarchy.
         nsCOMPtr<nsIDOMNode> parent;
         while (NS_FAILED(res) && curNode)
         {
