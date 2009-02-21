@@ -61,9 +61,9 @@ struct MethodInfo {
     nsSwitchToUIThread* target;
     UINT        methodId;
     int         nArgs;
-    DWORD*      args;
+    DWORD_PTR*  args;
 
-    MethodInfo(nsSwitchToUIThread *obj, UINT id, int numArgs=0, DWORD *arguments = 0) {
+    MethodInfo(nsSwitchToUIThread *obj, UINT id, int numArgs=0, DWORD_PTR *arguments = 0) {
         target   = obj;
         methodId = id;
         nArgs    = numArgs;
