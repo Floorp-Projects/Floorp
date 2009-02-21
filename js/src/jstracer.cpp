@@ -1589,7 +1589,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
       case JSVAL_BOXED:
         v = *(jsval*)slot;
         JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
-        debug_only_v(printf("box<%x> ", v));
+        debug_only_v(printf("box<%p> ", (void*)v));
         break;
       case JSVAL_TNULL:
         JS_ASSERT(*(JSObject**)slot == NULL);
