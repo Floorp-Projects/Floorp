@@ -1193,10 +1193,12 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
      * we can tell when only named properties have been added to a dense array
      * to make it slow-but-not-sparse.
      */
-    uint32 length = obj->fslots[JSSLOT_ARRAY_LENGTH];
-    obj->fslots[JSSLOT_ARRAY_COUNT] = INT_FITS_IN_JSVAL(length)
-                                      ? INT_TO_JSVAL(length)
-                                      : JSVAL_VOID;
+    {
+        uint32 length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+        obj->fslots[JSSLOT_ARRAY_COUNT] = INT_FITS_IN_JSVAL(length)
+                                          ? INT_TO_JSVAL(length)
+                                          : JSVAL_VOID;
+    }
 
     /* Make sure we preserve any flags borrowing bits in classword. */
     obj->classword ^= (jsuword) &js_ArrayClass;
