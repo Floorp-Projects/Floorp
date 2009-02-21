@@ -421,7 +421,15 @@ EOF
             hg -R $REPO update -C
 
             hg -R $REPO bisect
+            # save the revision id so we can update to it discarding local
+            # changes in the working directory.
+            rev=`hg -R $REPO id -i`
+
             bisect_log=`eval $TEST_JSDIR/runtests.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype -I $bisect_test -B "build" -c -t -X /dev/null 2>&1 | grep '_js.log $' | sed 's|log: \([^ ]*\) |\1|'`
+            # remove extraneous in-tree changes
+            # nsprpub/configure I'm looking at you!
+            hg -R $REPO update -C -r $rev
+
             if [[ -z "$bisect_log" ]]; then
                 echo "test $bisect_test not run. Skipping changeset"
                 hg -R $REPO bisect --skip
@@ -431,20 +439,32 @@ EOF
                     # the result is considered good when the test does not appear in the failure log
                     if egrep -q "$bisect_test.*$bisect_string" ${bisect_log}-results-failures.log; then 
                         echo "test failure $bisect_test.*$bisect_string found, marking revision bad"
-                        result=`hg -R $REPO bisect --bad 2>&1`
+                        if ! result=`hg -R $REPO bisect --bad 2>&1`; then
+                            echo "bisect bad failed"
+                            error "$result"
+                        fi
                     else 
                         echo "test failure $bisect_test.*$bisect_string not found, marking revision good"
-                        result=`hg -R $REPO bisect --good 2>&1`
+                        if ! result=`hg -R $REPO bisect --good 2>&1`; then
+                            echo "bisect good failed"
+                            error "$result"
+                        fi
                     fi
                 else
                     # searching for a fix
                     # the result is considered good when the test does appear in the failure log
                     if egrep -q "$bisect_test.*$bisect_string" ${bisect_log}-results-failures.log; then 
                         echo "test failure $bisect_test.*$bisect_string found, marking revision good"
-                        result=`hg -R $REPO bisect --good 2>&1`
+                        if ! result=`hg -R $REPO bisect --good 2>&1`; then
+                            echo "bisect good failed"
+                            error "$result"
+                        fi
                     else 
                         echo "test failure $bisect_test.*$bisect_string not found, marking revision bad"
-                        result=`hg -R $REPO bisect --bad 2>&1`
+                        if ! result=`hg -R $REPO bisect --bad 2>&1`; then
+                            echo "bisect bad failed"
+                            error "$result"
+                        fi
                     fi
                 fi
             fi
