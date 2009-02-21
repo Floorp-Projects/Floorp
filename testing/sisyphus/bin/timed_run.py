@@ -145,3 +145,12 @@ except KeyboardInterrupt:
 	flushkill(pid, 9)
 	flushexit(exitInterrupt)
 
+# check that the child process has terminated.
+try:
+    os.getpgid(pid)
+    # process still exists. try to kill it and exit with OSError
+    flushkill(pid, 9)
+    flushexit(exitOSError)
+except OSError:
+    # process doesn't exist. all is well.
+    1
