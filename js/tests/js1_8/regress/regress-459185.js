@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-459185.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 459186;
+var BUGNUMBER = 459185;
 var summary = 'Do not assert: pn->pn_arity == PN_BINARY';
 var actual = 'No Crash';
 var expect = 'No Crash';
