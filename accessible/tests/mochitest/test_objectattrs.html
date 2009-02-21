@@ -20,9 +20,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
   <script type="application/javascript">
     function doTest()
     {
-      testAttrs("atomic", {"atomic" : "true"}, true); 
-      testAttrs("autocomplete", {"autocomplete" : "true"}, true); 
-      // bug 477876 testAttrs("checked", {"checkable" : "true"}, true); 
+      // aria
+      testAttrs("atomic", {"atomic" : "true"}, true);
+      testAttrs("autocomplete", {"autocomplete" : "true"}, true);
+      testAttrs("checkbox", {"checkable" : "true"}, true); 
+      testAttrs("checkedCheckbox", {"checkable" : "true"}, true); 
+      testAttrs("checkedMenuitem", {"checkable" : "true"}, true); 
+      testAttrs("checkedOption", {"checkable" : "true"}, true); 
+      testAttrs("checkedRadio", {"checkable" : "true"}, true); 
+      testAttrs("checkedTreeitem", {"checkable" : "true"}, true); 
       testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
 
       // live object attribute
@@ -40,6 +46,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
       testAttrs("marqueeChild", {"container-live" : "off"}, true);
       testAttrs("statusChild", {"container-live" : "polite"}, true);
       testAttrs("timerChild", {"container-live" : "off"}, true);
+
+      // html
+      testAttrs("radio", {"checkable" : "true"}, true); 
+      testAttrs("checkbox", {"checkable" : "true"}, true); 
 
       SimpleTest.finish();
     }
@@ -60,9 +70,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
   <pre id="test">
   </pre>
 
+  <!-- aria -->
   <div id="atomic" aria-atomic="true"></div>
   <div id="autocomplete" role="textbox" aria-autocomplete="true"></div>
-  <div id="checked" aria-checked="true"></div>
+  <div id="checkbox" role="checkbox"></div>
+  <div id="checkedCheckbox" role="checkbox" aria-checked="true"></div>
+  <div id="checkedMenuitem" role="menuitem" aria-checked="true"></div>
+  <div id="checkedOption" role="option" aria-checked="true"></div>
+  <div id="checkedRadio" role="radio" aria-checked="true"></div>
+  <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
 
   <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
@@ -71,6 +87,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=475006
   <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
   <div id="status" role="status">excuse <div id="statusChild">me</div></div>
   <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
-  
+
+  <!-- html -->
+  <input id="radio" type="radio"/>
+  <input id="checkbox" type="checkbox"/>
 </body>
 </html>
