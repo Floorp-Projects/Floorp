@@ -2747,6 +2747,10 @@ js_GetUnitStringForChar(JSContext *cx, jschar c)
         JS_LOCK_GC(rt);
         if (!rt->unitStrings[c])
             rt->unitStrings[c] = str;
+#ifdef DEBUG
+        else
+            JSFLATSTR_INIT(str, NULL, 0);  /* avoid later assertion (bug 479381) */
+#endif
         JS_UNLOCK_GC(rt);
     }
     return rt->unitStrings[c];
