@@ -208,16 +208,13 @@ void GetAutoCompleteBaseQuery(nsACString& aQuery) {
       "WHERE h.frecency <> 0 "
       "{ADDITIONAL_CONDITIONS} "
       "UNION ALL "
-      "SELECT * FROM ( "
-        "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-          "h.visit_count, h.typed, h.frecency "
-        "FROM moz_places h "
-        "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
-        "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-        "AND h.frecency <> 0 "
-        "{ADDITIONAL_CONDITIONS} "
-        "ORDER BY h.frecency DESC LIMIT (?2 + ?3) "
-      ") "
+      "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
+        "h.visit_count, h.typed, h.frecency "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
+      "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
+      "AND h.frecency <> 0 "
+      "{ADDITIONAL_CONDITIONS} "
       // ORDER BY h.frecency
       "ORDER BY 9 DESC LIMIT ?2 OFFSET ?3");
 }
