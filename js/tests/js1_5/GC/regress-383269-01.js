@@ -60,7 +60,7 @@ function test()
     return root;
     function f(parent, depth) {
       if (depth == 0)
-	return;
+        return;
       --depth;
       f(parent.a = {}, depth);
       f(parent.b = {}, depth);
@@ -86,7 +86,7 @@ function test()
   var time = timed_gc();
 
   if (time > (base_time + 1) * 3)
-    throw "generate_big_object_graph() leaked, base_gc_time="+base_time+", last_gc_time="+time;
+    actual = "generate_big_object_graph() leaked, base_gc_time="+base_time+", last_gc_time="+time;
 
   reportCompare(expect, actual, summary);
 
