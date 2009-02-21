@@ -211,14 +211,14 @@ toolbarseparator {
   height: 24px;
   border: solid transparent;
   border-width: 0 6px;
-  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton.png") 0 6 repeat !important;
+  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton.png") 0 6 repeat stretch !important;
 }
 
 #Console\:clear:active:hover {
-  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-down.png") 0 6 repeat !important;
+  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-down.png") 0 6 repeat stretch !important;
 }
 
 :root:not([active]) #Console\:clear {
   color: #7C7C7C !important; /* remove this when we support click-through */
-  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-inactive.png") 0 6 repeat !important;
+  -moz-border-image: url("chrome://global/skin/toolbar/roundrectbutton-inactive.png") 0 6 repeat stretch !important;
 }
