@@ -36,7 +36,7 @@
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content chromedir="&locale.dir;">
       <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle,label"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle,label,type"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
       <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
