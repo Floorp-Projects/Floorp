@@ -4154,3 +4154,10 @@ nsHTMLDocument::IsEditingOnAfterFlush()
 
   return IsEditingOn();
 }
+
+void
+nsHTMLDocument::RemovedFromDocShell()
+{
+  mEditingState = eOff;
+  nsDocument::RemovedFromDocShell();
+}

@@ -81,6 +81,8 @@ _TEST_FILES = 	test_bug1682.html \
 		bug445004-outer-abs.html \
 		bug445004-outer-write.html \
 		bug445004-inner.html \
+		test_bug446483.html \
+		bug446483-iframe.html \
 		test_bug448564.html \
 		bug448564-iframe-1.html \
 		bug448564-iframe-2.html \
