@@ -103,8 +103,8 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eClickAction,
     eNoLiveAttr,
     kNoReqStates,
-    {&nsAccessibilityAtoms::aria_pressed, kBoolState, nsIAccessibleStates::STATE_PRESSED},
-    {&nsAccessibilityAtoms::aria_pressed, "mixed", nsIAccessibleStates::STATE_MIXED},
+    {&nsAccessibilityAtoms::aria_pressed, kBoolState, nsIAccessibleStates::STATE_PRESSED | nsIAccessibleStates::STATE_CHECKABLE},
+    {&nsAccessibilityAtoms::aria_pressed, "mixed", nsIAccessibleStates::STATE_MIXED | nsIAccessibleStates::STATE_CHECKABLE},
     kEndEntry
   },
   {
@@ -380,7 +380,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eSelectAction,
     eNoLiveAttr,
-    kNoReqStates,
+    nsIAccessibleStates::STATE_CHECKABLE,
     {&nsAccessibilityAtoms::aria_checked, kBoolState, nsIAccessibleStates::STATE_CHECKED},
     kEndEntry
   },
