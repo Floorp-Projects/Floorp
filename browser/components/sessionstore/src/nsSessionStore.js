@@ -335,7 +335,7 @@ SessionStoreService.prototype = {
         openWindows[aWindow.__SSi] = true;
       });
       // also clear all data about closed tabs and windows
-      for (ix in this._windows) {
+      for (let ix in this._windows) {
         if (ix in openWindows)
           this._windows[ix]._closedTabs = [];
         else
@@ -379,8 +379,7 @@ SessionStoreService.prototype = {
       // if the user decreases the max number of closed tabs they want
       // preserved update our internal states to match that max
       case "sessionstore.max_tabs_undo":
-        var ix;
-        for (ix in this._windows) {
+        for (let ix in this._windows) {
           this._windows[ix]._closedTabs.splice(this._prefBranch.getIntPref("sessionstore.max_tabs_undo"));
         }
         break;
