@@ -57,7 +57,7 @@
 // Optimized YUV to RGB conversion routine disabled due to generating
 // incorrect colours. See Annodex trac ticket 421:
 // http://trac.annodex.net/ticket/421
-#if defined(__MMX__) || defined(__SSE__) || defined(__SSE2__) || defined(__SSE3__)
+#if 0 //defined(__MMX__) || defined(__SSE__) || defined(__SSE2__) || defined(__SSE3__)
 
 #if defined(WIN32)
 #define restrict
@@ -111,13 +111,13 @@ void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
       vt = _m_psubw(vt, imm);
 
       /* transfer and multiply into r, g, b registers */
-      imm = _mm_set1_pi16(-50);
+      imm = _mm_set1_pi16(-51);
       g = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(129);
+      imm = _mm_set1_pi16(130);
       b = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(204);
+      imm = _mm_set1_pi16(146);
       r = _m_pmullw(vt, imm);
-      imm = _mm_set1_pi16(-104);
+      imm = _mm_set1_pi16(-74);
       imm = _m_pmullw(vt, imm);
       g = _m_paddsw(g, imm);
 
@@ -134,7 +134,7 @@ void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
       b = _m_psrawi(b, 6);
 
       /* subtract 16 from r, g and b registers */
-      imm = _mm_set1_pi16(18);
+      imm = _mm_set1_pi16(16);
       r = _m_psubsw(r, imm);
       g = _m_psubsw(g, imm);
       b = _m_psubsw(b, imm);
@@ -150,12 +150,10 @@ void oggplay_yuv2rgb(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
        */
       tmp = _m_punpckhwd(r, r);
       imm = _m_punpckhbw(*y, zero);
-      imm = _m_psrlwi(_m_pmullw(imm, _mm_set1_pi16(149)), 7);
       //printf("tmp: %llx imm: %llx\n", tmp, imm);
       tmp = _m_paddsw(tmp, imm);
       tmp2 = _m_punpcklwd(r, r);
       imm2 = _m_punpcklbw(*y, zero);
-      imm2 = _m_psrlwi(_m_pmullw(imm2, _mm_set1_pi16(149)), 7);
       tmp2 = _m_paddsw(tmp2, imm2);
       r = _m_packuswb(tmp2, tmp);
 
@@ -243,13 +241,13 @@ void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
       vt = _m_psubw(vt, imm);
 
       /* transfer and multiply into r, g, b registers */
-      imm = _mm_set1_pi16(-50);
+      imm = _mm_set1_pi16(-51);
       g = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(129);
+      imm = _mm_set1_pi16(130);
       b = _m_pmullw(ut, imm);
-      imm = _mm_set1_pi16(204);
+      imm = _mm_set1_pi16(146);
       r = _m_pmullw(vt, imm);
-      imm = _mm_set1_pi16(-104);
+      imm = _mm_set1_pi16(-74);
       imm = _m_pmullw(vt, imm);
       g = _m_paddsw(g, imm);
 
@@ -266,7 +264,7 @@ void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
       b = _m_psrawi(b, 6);
 
       /* subtract 16 from r, g and b registers */
-      imm = _mm_set1_pi16(18);
+      imm = _mm_set1_pi16(16);
       r = _m_psubsw(r, imm);
       g = _m_psubsw(g, imm);
       b = _m_psubsw(b, imm);
@@ -282,12 +280,10 @@ void oggplay_yuv2bgr(OggPlayYUVChannels * yuv, OggPlayRGBChannels * rgb) {
        */
       tmp = _m_punpckhwd(r, r);
       imm = _m_punpckhbw(*y, zero);
-      imm = _m_psrlwi(_m_pmullw(imm, _mm_set1_pi16(149)), 7);
       //printf("tmp: %llx imm: %llx\n", tmp, imm);
       tmp = _m_paddsw(tmp, imm);
       tmp2 = _m_punpcklwd(r, r);
       imm2 = _m_punpcklbw(*y, zero);
-      imm2 = _m_psrlwi(_m_pmullw(imm2, _mm_set1_pi16(149)), 7);
       tmp2 = _m_paddsw(tmp2, imm2);
       r = _m_packuswb(tmp2, tmp);
 
