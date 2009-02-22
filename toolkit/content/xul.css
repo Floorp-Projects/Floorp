@@ -136,12 +136,18 @@ toolbarbutton {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
 }
 
-toolbarbutton[type="menu"], toolbarbutton[type="panel"] {
+toolbarbutton[type="menu"],
+toolbarbutton[type="panel"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
 }
 
 toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
+}
+
+toolbar[mode="icons"] .toolbarbutton-text,
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
 }
 
 /******** browser, editor, iframe ********/
