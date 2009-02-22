@@ -22,7 +22,15 @@ endif
 endif
 
 _PROFILE_DIR = $(TARGET_DEPTH)/_profile/pgo
-_CERTS_SRC_DIR = $(topsrcdir)/build/pgo/certs
+
+ifneq (,$(filter /%,$(topsrcdir)))
+# $(topsrcdir) is already an absolute pathname.
+ABSOLUTE_TOPSRCDIR = $(topsrcdir)
+else
+# $(topsrcdir) is a relative pathname: prepend the current directory.
+ABSOLUTE_TOPSRCDIR = $(CURDIR)/$(topsrcdir)
+endif
+_CERTS_SRC_DIR = $(ABSOLUTE_TOPSRCDIR)/build/pgo/certs
 
 AUTOMATION_PPARGS = 	\
 			-DBROWSER_PATH=$(browser_path) \
