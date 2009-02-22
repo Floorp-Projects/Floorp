@@ -37,7 +37,6 @@ sed s/\#ifdef\ HAVE_INTTYPES_H/\#if\ HAVE_INTTYPES_H/g $1/src/liboggplay/oggplay
 cd ./src/liboggplay
 patch <../../yuv2rgb-vanilla-fix.patch
 patch <../../yuv_disable_optimized.patch
-patch <../../yuv_fix_mmx.patch
 cd ../..
 patch -p4 <yuv2argb.patch
 patch -p3 <bug464007.patch
