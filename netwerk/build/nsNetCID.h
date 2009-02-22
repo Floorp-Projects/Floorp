@@ -432,7 +432,7 @@
 
 // component implementing nsIPrivateBrowsingService
 #define NS_PRIVATE_BROWSING_SERVICE_CONTRACTID \
-    "@mozilla.org/privatebrowsing;1"
+    "@mozilla.org/privatebrowsing-wrapper;1"
 #define NS_PRIVATE_BROWSING_SERVICE_CID              \
 { /* c31f4883-839b-45f6-82ad-a6a9bc5ad599 */         \
     0xc31f4883,                                      \

@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,12 +14,12 @@
  * The Original Code is Private Browsing Tests.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,13 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Test added with bug 460086 to test the behavior of the new API that was added
- * to remove all traces of visiting a site.
- */
+// This test checks the browser.privatebrowsing.autostart preference.
 
 function run_test() {
-  PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
-  do_import_script("browser/components/privatebrowsing/test/unit/do_test_removeDataFromDomain.js");
+  PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing-wrapper;1";
+  do_import_script("browser/components/privatebrowsing/test/unit/do_test_privatebrowsing_autostart.js");
   do_test();
 }
