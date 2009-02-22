@@ -206,12 +206,40 @@ public:
 };
 
 enum ExitType {
+    /*
+     * An exit at a possible branch-point in the trace at which to attach a
+     * future secondary trace. Therefore the recorder must generate different
+     * code to handle the other outcome of the branch condition from the
+     * primary trace's outcome.
+     */
     BRANCH_EXIT,
-    CASE_EXIT,          // Exit at a tableswitch via a numbered case
-    DEFAULT_EXIT,       // Exit at a tableswitch via default
+
+    /*
+     * Exit at a tableswitch via a numbered case.
+     */
+    CASE_EXIT,
+
+    /*
+     * Exit at a tableswitch via the default case.
+     */
+    DEFAULT_EXIT,
+
     LOOP_EXIT,
     NESTED_EXIT,
+
+    /*
+     * An exit from a trace because a condition relied upon at recording time
+     * no longer holds, where the alternate path of execution is so rare or
+     * difficult to address in native code that it is not traced at all, e.g.
+     * negative array index accesses, which differ from positive indexes in
+     * that they require a string-based property lookup rather than a simple
+     * memory access.
+     */
     MISMATCH_EXIT,
+
+    /*
+     * A specialization of MISMATCH_EXIT to handle allocation failures.
+     */
     OOM_EXIT,
     OVERFLOW_EXIT,
     UNSTABLE_LOOP_EXIT,
