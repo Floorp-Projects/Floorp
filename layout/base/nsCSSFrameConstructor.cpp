@@ -369,7 +369,6 @@ static PRInt32 FFWC_doLoop=0;
 static PRInt32 FFWC_doSibling=0;
 static PRInt32 FFWC_recursions=0;
 static PRInt32 FFWC_nextInFlows=0;
-static PRInt32 FFWC_slowSearchForText=0;
 #endif
 
 static nsresult
@@ -9734,6 +9733,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
                                             nsIContent*      aContent,
                                             nsFindFrameHint* aHint)
 {
+  NS_PRECONDITION(aParentFrame, "Must have a frame");
   
 #ifdef NOISY_FINDFRAME
   FFWC_totalCount++;
@@ -9741,143 +9741,127 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
          aContent, aParentFrame, aParentContent, aHint ? "set" : "NULL");
 #endif
 
-  NS_ENSURE_TRUE(aParentFrame != nsnull, nsnull);
+  // Search for the frame in each child list that aParentFrame supports.
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  PRBool searchAgain;
 
   do {
-    // Search for the frame in each child list that aParentFrame supports
-    nsIAtom* listName = nsnull;
-    PRInt32 listIndex = 0;
-    PRBool searchAgain;
-
-    do {
 #ifdef NOISY_FINDFRAME
-      FFWC_doLoop++;
+    FFWC_doLoop++;
 #endif
-      nsIFrame* kidFrame = nsnull;
+    nsIFrame* kidFrame = nsnull;
 
-      searchAgain = PR_FALSE;
+    searchAgain = PR_FALSE;
 
-      // if we were given an hint, try to use it here to find a good
-      // previous frame to start our search (|kidFrame|).
-      if (aHint) {
+    // if we were given an hint, try to use it here to find a good
+    // previous frame to start our search (|kidFrame|).
+    if (aHint) {
 #ifdef NOISY_FINDFRAME
-        printf("  hint frame is %p\n", aHint->mPrimaryFrameForPrevSibling);
+      printf("  hint frame is %p\n", aHint->mPrimaryFrameForPrevSibling);
 #endif
-        // start with the primary frame for aContent's previous sibling
-        kidFrame = aHint->mPrimaryFrameForPrevSibling;
-        // But if it's out of flow, start from its placeholder.
-        if (kidFrame && (kidFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-          kidFrame = aFrameManager->GetPlaceholderFrameFor(kidFrame);
-        }
-
-        if (kidFrame) {
-          // then use the next sibling frame as our starting point
-          if (kidFrame->GetNextSibling()) {
-            kidFrame = kidFrame->GetNextSibling();
-          }
-          else {
-            // The hint frame had no next sibling. Try the next-in-flow or
-            // special sibling of the parent of the hint frame (or its
-            // associated placeholder).
-            nsIFrame *parentFrame = kidFrame->GetParent();
-            kidFrame = nsnull;
-            if (parentFrame) {
-              parentFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(parentFrame);
-            }
-            if (parentFrame) {
-              // Found it, continue the search with its first child.
-              kidFrame = parentFrame->GetFirstChild(listName);
-              // Leave |aParentFrame| as-is, since the only time we'll
-              // reuse it is if the hint fails.
-            }
-          }
-#ifdef NOISY_FINDFRAME
-          printf("  hint gives us kidFrame=%p with parent frame %p content %p\n", 
-                  kidFrame, aParentFrame, aParentContent);
-#endif
-        }
+      // start with the primary frame for aContent's previous sibling
+      kidFrame = aHint->mPrimaryFrameForPrevSibling;
+      // But if it's out of flow, start from its placeholder.
+      if (kidFrame && (kidFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+        kidFrame = aFrameManager->GetPlaceholderFrameFor(kidFrame);
       }
-      if (!kidFrame) {  // we didn't have enough info to prune, start searching from the beginning
-        kidFrame = aParentFrame->GetFirstChild(listName);
-      }
-      while (kidFrame) {
-        // See if the child frame points to the content object we're
-        // looking for
-        nsIContent* kidContent = kidFrame->GetContent();
-        if (kidContent == aContent) {
 
-          // We found a match.  Return the out-of-flow if it's a placeholder
-          return nsPlaceholderFrame::GetRealFrameFor(kidFrame);
+      if (kidFrame) {
+        // then use the next sibling frame as our starting point
+        if (kidFrame->GetNextSibling()) {
+          kidFrame = kidFrame->GetNextSibling();
         }
-
-        // only do this if there is content
-        if (kidContent) {
-          // We search the immediate children only, but if the child frame has
-          // the same content pointer as its parent then we need to search its
-          // child frames, too.
-          // We also need to search if the child content is anonymous and scoped
-          // to the parent content.
-          // XXXldb What makes us continue the search once we're inside
-          // the anonymous subtree?
-          if (aParentContent == kidContent ||
-              (aParentContent && IsBindingAncestor(kidContent, aParentContent))) 
-          {
-#ifdef NOISY_FINDFRAME
-            FFWC_recursions++;
-            printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
-                   kidFrame, aParentContent);
-#endif
-            nsIFrame* matchingFrame =
-                FindFrameWithContent(aFrameManager,
-                                     nsPlaceholderFrame::GetRealFrameFor(kidFrame),
-                                     aParentContent, aContent, nsnull);
-
-            if (matchingFrame) {
-              return matchingFrame;
-            }
+        else {
+          // The hint frame had no next sibling. Try the next-in-flow or
+          // special sibling of the parent of the hint frame (or its
+          // associated placeholder).
+          nsIFrame *parentFrame = kidFrame->GetParent();
+          kidFrame = nsnull;
+          if (parentFrame) {
+            parentFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(parentFrame);
+          }
+          if (parentFrame) {
+            // Found it, continue the search with its first child.
+            kidFrame = parentFrame->GetFirstChild(listName);
+            // Leave |aParentFrame| as-is, since the only time we'll
+            // reuse it is if the hint fails.
           }
         }
-
-        // Get the next sibling frame
-        kidFrame = kidFrame->GetNextSibling();
 #ifdef NOISY_FINDFRAME
-        FFWC_doSibling++;
-        if (kidFrame) {
-          printf("  searching sibling frame %p\n", kidFrame);
-        }
+        printf("  hint gives us kidFrame=%p with parent frame %p content %p\n", 
+               kidFrame, aParentFrame, aParentContent);
 #endif
       }
-
-      if (aHint) {
-        // If we get here, and we had a hint, then we didn't find a frame.
-        // The hint may have been a frame whose location in the frame tree
-        // doesn't match the location of its corresponding element in the
-        // DOM tree, e.g. a floated or absolutely positioned frame, or e.g.
-        // a <col> frame, in which case we'd be off in the weeds looking
-        // through something other than the primary frame list.
-        // Reboot the search from scratch, without the hint, but using the
-        // null child list again.
-        aHint = nsnull;
-        searchAgain = PR_TRUE;
-      } else {
-        do {
-          listName = aParentFrame->GetAdditionalChildListName(listIndex++);
-        } while (IsOutOfFlowList(listName));
-      }
-    } while(listName || searchAgain);
-
-    // We didn't find a matching frame. If aFrame has a next-in-flow,
-    // then continue looking there
-    aParentFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aParentFrame);
-#ifdef NOISY_FINDFRAME
-    if (aParentFrame) {
-      FFWC_nextInFlows++;
-      printf("  searching NIF frame %p\n", aParentFrame);
     }
-#endif
-  } while (aParentFrame);
+    if (!kidFrame) {  // we didn't have enough info to prune, start searching from the beginning
+      kidFrame = aParentFrame->GetFirstChild(listName);
+    }
+    while (kidFrame) {
+      // See if the child frame points to the content object we're
+      // looking for
+      nsIContent* kidContent = kidFrame->GetContent();
+      if (kidContent == aContent) {
+        // We found a match.  Return the out-of-flow if it's a placeholder.
+        return nsPlaceholderFrame::GetRealFrameFor(kidFrame);
+      }
 
-  // No matching frame
+      // only do this if there is content
+      if (kidContent) {
+        // We search the immediate children only, but if the child frame has
+        // the same content pointer as its parent then we need to search its
+        // child frames, too.
+        // We also need to search if the child content is anonymous and scoped
+        // to the parent content.
+        // XXXldb What makes us continue the search once we're inside
+        // the anonymous subtree?
+        if (aParentContent == kidContent ||
+            (aParentContent && IsBindingAncestor(kidContent, aParentContent))) {
+#ifdef NOISY_FINDFRAME
+          FFWC_recursions++;
+          printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
+                 kidFrame, aParentContent);
+#endif
+          nsIFrame* matchingFrame =
+              FindFrameWithContent(aFrameManager,
+                                   nsPlaceholderFrame::GetRealFrameFor(kidFrame),
+                                   aParentContent, aContent, nsnull);
+
+          if (matchingFrame) {
+            return matchingFrame;
+          }
+        }
+      }
+
+      kidFrame = kidFrame->GetNextSibling();
+
+#ifdef NOISY_FINDFRAME
+      if (kidFrame) {
+        FFWC_doSibling++;
+        printf("  searching sibling frame %p\n", kidFrame);
+      }
+#endif
+    }
+
+    if (aHint) {
+      // If we get here, and we had a hint, then we didn't find a frame.
+      // The hint may have been a frame whose location in the frame tree
+      // doesn't match the location of its corresponding element in the
+      // DOM tree, e.g. a floated or absolutely positioned frame, or e.g.
+      // a <col> frame, in which case we'd be off in the weeds looking
+      // through something other than the primary frame list.
+      // Reboot the search from scratch, without the hint, but using the
+      // null child list again.
+      aHint = nsnull;
+      searchAgain = PR_TRUE;
+    }
+    else {
+      do {
+        listName = aParentFrame->GetAdditionalChildListName(listIndex++);
+      } while (IsOutOfFlowList(listName));
+    }
+  } while (listName || searchAgain);
+
   return nsnull;
 }
 
@@ -9924,8 +9908,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
       // the frame we get by calling FindFrameWithContent *without* the hint.  
       // Assert if they do not match
       // Note that this makes finding frames *slower* than it was before the fix.
-      if (gVerifyFastFindFrame && aHint) 
-      {
+      if (gVerifyFastFindFrame && aHint) {
 #ifdef NOISY_FINDFRAME
         printf("VERIFYING...\n");
 #endif
@@ -9944,37 +9927,25 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
         aFrameManager->SetPrimaryFrameFor(aContent, *aFrame);
         break;
       }
-      else if (IsFrameSpecial(parentFrame)) {
-        // If it's a "special" frame (that is, part of an inline
-        // that's been split because it contained a block), we need to
-        // follow the out-of-flow "special sibling" link, and search
-        // *that* subtree as well.
-        parentFrame = GetSpecialSibling(parentFrame);
-      }
-      else {
-        break;
-      }
-    }
-  }
 
-  if (aHint && !*aFrame)
-  { // if we had a hint, and we didn't get a frame, see if we should try the slow way
-    if (aContent->IsNodeOfType(nsINode::eTEXT)) 
-    {
+      // We didn't find a matching frame. If parentFrame has a next-in-flow
+      // or special sibling, then continue looking there.
+      parentFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(parentFrame);
 #ifdef NOISY_FINDFRAME
-      FFWC_slowSearchForText++;
+      if (parentFrame) {
+        FFWC_nextInFlows++;
+        printf("  searching NIF frame %p\n", parentFrame);
+      }
 #endif
-      // since we're passing in a null hint, we're guaranteed to only recurse once
-      return FindPrimaryFrameFor(aFrameManager, aContent, aFrame, nsnull);
     }
   }
 
 #ifdef NOISY_FINDFRAME
-  printf("%10s %10s %10s %10s %10s \n", 
-         "total", "doLoop", "doSibling", "recur", "nextIF", "slowSearch");
-  printf("%10d %10d %10d %10d %10d \n", 
+  printf("%10s %10s %10s %10s %10s\n", 
+         "total", "doLoop", "doSibling", "recur", "nextIF");
+  printf("%10d %10d %10d %10d %10d\n", 
          FFWC_totalCount, FFWC_doLoop, FFWC_doSibling, FFWC_recursions, 
-         FFWC_nextInFlows, FFWC_slowSearchForText);
+         FFWC_nextInFlows);
 #endif
 
   return NS_OK;
