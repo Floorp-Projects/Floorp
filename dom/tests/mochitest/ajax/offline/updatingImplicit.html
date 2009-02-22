@@ -9,6 +9,20 @@
 
 function manifestUpdated()
 {
+  // Assert that we are properly associated with the application
+  // cache.
+  var req = new XMLHttpRequest;
+  req.open("GET", "namespace2/script3.js", false);
+  try {
+    req.send(null);
+    window.opener.OfflineTest.ok(false, "Able to fetch unlisted resource, not properly associated.");
+  } catch(ex) {
+    window.opener.OfflineTest.ok(true, "Unable to fetch unlisted resource, properly associated.");
+  }
+
+  window.opener.OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html",
+                                       true);
+
   window.opener.implicitLoaded(window, false);
 }
 
