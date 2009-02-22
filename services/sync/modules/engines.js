@@ -43,6 +43,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -99,8 +100,6 @@ EngineManagerSvc.prototype = {
 
 function Engine() { this._init(); }
 Engine.prototype = {
-  _notify: Wrap.notify,
-
   name: "engine",
   displayName: "Boring Engine",
   logName: "Engine",
@@ -138,9 +137,9 @@ Engine.prototype = {
     try { level = Utils.prefs.getCharPref(levelPref); }
     catch (e) { /* ignore unset prefs */ }
 
+    this._notify = Wrap.notify("weave:engine:");
     this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
     this._log.level = Log4Moz.Level[level];
-    this._osPrefix = "weave:" + this.name + "-engine:";
 
     this._tracker; // initialize tracker to load previously changed IDs
     this._log.debug("Engine initialized");
@@ -149,13 +148,13 @@ Engine.prototype = {
   sync: function Engine_sync(onComplete) {
     if (!this._sync)
       throw "engine does not implement _sync method";
-    this._notify("sync", "", this._sync).async(this, onComplete);
+    this._notify("sync", this.name, this._sync).async(this, onComplete);
   },
 
   wipeServer: function Engimne_wipeServer(onComplete) {
     if (!this._wipeServer)
       throw "engine does not implement _wipeServer method";
-    this._notify("wipe-server", "", this._wipeServer).async(this, onComplete);
+    this._notify("wipe-server", this.name, this._wipeServer).async(this, onComplete);
   },
 
   _wipeClient: function Engine__wipeClient() {
@@ -164,7 +163,7 @@ Engine.prototype = {
     this._store.wipe();
   },
   wipeClient: function Engine_wipeClient(onComplete) {
-    this._notify("wipe-client", "", this._wipeClient).async(this, onComplete);
+    this._notify("wipe-client", this.name, this._wipeClient).async(this, onComplete);
   }
 };
 
@@ -470,7 +469,9 @@ SyncEngine.prototype = {
 
     try {
       yield this._syncStartup.async(this, self.cb);
+      Observers.notify("weave:engine:sync:status", "process-incoming");
       yield this._processIncoming.async(this, self.cb);
+      Observers.notify("weave:engine:sync:status", "upload-outgoing");
       yield this._uploadOutgoing.async(this, self.cb);
       yield this._syncFinish.async(this, self.cb);
     }

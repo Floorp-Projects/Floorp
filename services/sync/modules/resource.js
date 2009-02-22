@@ -338,14 +338,12 @@ JsonFilter.prototype = {
   beforePUT: function JsonFilter_beforePUT(data) {
     let self = yield;
     this._log.trace("Encoding data as JSON");
-    Observers.notify("weave:service:sync:status", null, "stats.encoding-json");
     self.done(this._json.encode(data));
   },
 
   afterGET: function JsonFilter_afterGET(data) {
     let self = yield;
     this._log.trace("Decoding JSON data");
-    Observers.notify("weave:service:sync:status", null, "stats.decoding-json");
     self.done(this._json.decode(data));
   }
 };
