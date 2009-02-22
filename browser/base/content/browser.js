@@ -1155,6 +1155,10 @@ function prepareForStartup() {
   // setup our common DOMLinkAdded listener
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 
+  // setup our MozApplicationManifest listener
+  gBrowser.addEventListener("MozApplicationManifest",
+                            OfflineApps, false);
+
   // setup simple gestures support
   gGestureSupport.init(true);
 }
@@ -3875,10 +3879,6 @@ var XULBrowserWindow = {
             this.endDocumentLoad(aRequest, aStatus);
           if (!gBrowser.mTabbedMode && !gBrowser.mCurrentBrowser.mIconURL)
             gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
-
-          if (Components.isSuccessCode(aStatus) &&
-              content.document.documentElement.getAttribute("manifest"))
-            OfflineApps.offlineAppRequested(content);
         }
       }
 
@@ -5334,6 +5334,12 @@ var OfflineApps = {
     obs.removeObserver(this, "offline-cache-update-completed");
   },
 
+  handleEvent: function(event) {
+    if (event.type == "MozApplicationManifest") {
+      this.offlineAppRequested(event.originalTarget.defaultView);
+    }
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   // OfflineApps Implementation Methods
 
@@ -5360,6 +5366,7 @@ var OfflineApps = {
   },
 
   _getManifestURI: function(aWindow) {
+    if (!aWindow.document.documentElement) return null;
     var attr = aWindow.document.documentElement.getAttribute("manifest");
     if (!attr) return null;
 
@@ -5481,7 +5488,7 @@ var OfflineApps = {
     var browser = this._getBrowserForContentWindow(browserWindow,
                                                    aContentWindow);
 
-    var currentURI = browser.webNavigation.currentURI;
+    var currentURI = aContentWindow.document.documentURIObject;
     var pm = Cc["@mozilla.org/permissionmanager;1"].
              getService(Ci.nsIPermissionManager);
 
@@ -5499,19 +5506,32 @@ var OfflineApps = {
       // this pref isn't set by default, ignore failures
     }
 
+    var host = currentURI.asciiHost;
     var notificationBox = gBrowser.getNotificationBox(browser);
-    var notification = notificationBox.getNotificationWithValue("offline-app-requested");
-    if (!notification) {
+    var notificationID = "offline-app-requested-" + host;
+    var notification = notificationBox.getNotificationWithValue(notificationID);
+
+    if (notification) {
+      notification.documents.push(aContentWindow.document);
+    } else {
       var bundle_browser = document.getElementById("bundle_browser");
 
       var buttons = [{
         label: bundle_browser.getString("offlineApps.allow"),
         accessKey: bundle_browser.getString("offlineApps.allowAccessKey"),
-        callback: function() { OfflineApps.allowSite(); }
+        callback: function() {
+          for (var i = 0; i < notification.documents.length; i++) {
+            OfflineApps.allowSite(notification.documents[i]);
+          }
+        }
       },{
         label: bundle_browser.getString("offlineApps.never"),
         accessKey: bundle_browser.getString("offlineApps.neverAccessKey"),
-        callback: function() { OfflineApps.disallowSite(); }
+        callback: function() {
+          for (var i = 0; i < notification.documents.length; i++) {
+            OfflineApps.disallowSite(notification.documents[i]);
+          }
+        }
       },{
         label: bundle_browser.getString("offlineApps.notNow"),
         accessKey: bundle_browser.getString("offlineApps.notNowAccessKey"),
@@ -5520,51 +5540,55 @@ var OfflineApps = {
 
       const priority = notificationBox.PRIORITY_INFO_LOW;
       var message = bundle_browser.getFormattedString("offlineApps.available",
-                                                      [ currentURI.host ]);
-      notificationBox.appendNotification(message, "offline-app-requested",
-                                         "chrome://browser/skin/Info.png",
-                                         priority, buttons);
+                                                      [ host ]);
+      notification =
+        notificationBox.appendNotification(message, notificationID,
+                                           "chrome://browser/skin/Info.png",
+                                           priority, buttons);
+      notification.documents = [ aContentWindow.document ];
     }
   },
 
-  allowSite: function() {
-    var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
+  allowSite: function(aDocument) {
     var pm = Cc["@mozilla.org/permissionmanager;1"].
              getService(Ci.nsIPermissionManager);
-    pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+    pm.add(aDocument.documentURIObject, "offline-app",
+           Ci.nsIPermissionManager.ALLOW_ACTION);
 
-    // When a site is enabled while loading, <link rel="offline-resource">
-    // resources will start fetching immediately.  This one time we need to
-    // do it ourselves.
-    this._startFetching();
+    // When a site is enabled while loading, manifest resources will
+    // start fetching immediately.  This one time we need to do it
+    // ourselves.
+    this._startFetching(aDocument);
   },
 
-  disallowSite: function() {
-    var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
+  disallowSite: function(aDocument) {
     var pm = Cc["@mozilla.org/permissionmanager;1"].
              getService(Ci.nsIPermissionManager);
-    pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
+    pm.add(aDocument.documentURIObject, "offline-app",
+           Ci.nsIPermissionManager.DENY_ACTION);
   },
 
   manage: function() {
     openAdvancedPreferences("networkTab");
   },
 
-  _startFetching: function() {
-    var manifest = content.document.documentElement.getAttribute("manifest");
+  _startFetching: function(aDocument) {
+    if (!aDocument.documentElement)
+      return;
+
+    var manifest = aDocument.documentElement.getAttribute("manifest");
     if (!manifest)
       return;
 
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
 
-    var contentURI = ios.newURI(content.location.href, null, null);
-    var manifestURI = ios.newURI(manifest, content.document.characterSet,
-                                 contentURI);
+    var manifestURI = ios.newURI(manifest, aDocument.characterSet,
+                                 aDocument.documentURIObject);
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, contentURI);
+    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject);
   },
 
   /////////////////////////////////////////////////////////////////////////////

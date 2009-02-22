@@ -50,6 +50,13 @@ _TEST_FILES =	test_feed_discovery.html \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
 		ctxmenu-image.png \
+		test_offlineNotification.html \
+		offlineChild.html \
+		offlineChild.cacheManifest \
+		offlineChild.cacheManifest^headers^ \
+		offlineChild2.html \
+		offlineChild2.cacheManifest \
+		offlineChild2.cacheManifest^headers^ \
 		$(NULL)
 
 # browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
