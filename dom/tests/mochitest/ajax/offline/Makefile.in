@@ -65,6 +65,9 @@ _TEST_FILES	= \
 	test_bug474696.html \
 	test_foreign.html \
 	test_fallback.html \
+	test_overlap.html \
+	overlap.cacheManifest \
+	overlap.cacheManifest^headers^ \
 	test_updatingManifest.html \
 	445544_part1.html \
 	445544_part2.html \
