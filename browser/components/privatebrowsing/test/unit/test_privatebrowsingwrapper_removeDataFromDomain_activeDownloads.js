@@ -16,12 +16,12 @@
  * The Original Code is Private Browsing Tests.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Ehsan Akhgari.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,6 +44,6 @@
 
 function run_test() {
   PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
-  do_import_script("browser/components/privatebrowsing/test/unit/do_test_removeDataFromDomain.js");
+  do_import_script("browser/components/privatebrowsing/test/unit/do_test_removeDataFromDomain_activeDownloads.js");
   do_test();
 }
