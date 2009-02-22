@@ -226,7 +226,7 @@ SessionStoreService.prototype = {
     if (iniString) {
       try {
         // parse the session state into JS objects
-        this._initialState = this._safeEval(iniString);
+        this._initialState = this._safeEval("(" + iniString + ")");
         
         let lastSessionCrashed =
           this._initialState.session && this._initialState.session.state &&
