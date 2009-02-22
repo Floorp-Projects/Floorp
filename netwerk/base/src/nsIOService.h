@@ -134,6 +134,12 @@ private:
     PRPackedBool                         mOffline;
     PRPackedBool                         mOfflineForProfileChange;
     PRPackedBool                         mManageOfflineStatus;
+
+    // Used to handle SetOffline() reentrancy.  See the comment in
+    // SetOffline() for more details.
+    PRPackedBool                         mSettingOffline;
+    PRPackedBool                         mSetOfflineValue;
+
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
     nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
