@@ -5268,28 +5268,39 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
         fp = true;
     } else {
         if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
-            args[0] = l_ins, args[1] = cx_ins;
-            l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-            l = (l == JSVAL_VOID)
-                ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
-                : INT_TO_JSVAL(l == JSVAL_TRUE);
-            return equalityHelper(l, r, l_ins, r_ins, negate,
-                                  tryBranchAfterCond, rval);
+            bool isVoid = JSVAL_IS_VOID(l);
+            guard(isVoid,
+                  lir->ins2(LIR_eq, l_ins, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))),
+                  BRANCH_EXIT);
+            if (!isVoid) {
+                args[0] = l_ins, args[1] = cx_ins;
+                l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
+                l = (l == JSVAL_VOID)
+                    ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
+                    : INT_TO_JSVAL(l == JSVAL_TRUE);
+                return equalityHelper(l, r, l_ins, r_ins, negate,
+                                      tryBranchAfterCond, rval);
+            }
+        } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+            bool isVoid = JSVAL_IS_VOID(r);
+            guard(isVoid,
+                  lir->ins2(LIR_eq, r_ins, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))),
+                  BRANCH_EXIT);
+            if (!isVoid) {
+                args[0] = r_ins, args[1] = cx_ins;
+                r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
+                r = (r == JSVAL_VOID)
+                    ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
+                    : INT_TO_JSVAL(r == JSVAL_TRUE);
+                return equalityHelper(l, r, l_ins, r_ins, negate,
+                                      tryBranchAfterCond, rval);
+            }
+        } else {
+            if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r))
+                return call_imacro(equality_imacros.any_obj);
+            if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r)))
+                return call_imacro(equality_imacros.obj_any);
         }
-        if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
-            args[0] = r_ins, args[1] = cx_ins;
-            r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-            r = (r == JSVAL_VOID)
-                ? DOUBLE_TO_JSVAL(cx->runtime->jsNaN)
-                : INT_TO_JSVAL(r == JSVAL_TRUE);
-            return equalityHelper(l, r, l_ins, r_ins, negate,
-                                  tryBranchAfterCond, rval);
-        }
-
-        if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r))
-            return call_imacro(equality_imacros.any_obj);
-        if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r)))
-            return call_imacro(equality_imacros.obj_any);
 
         l_ins = lir->insImm(0);
         r_ins = lir->insImm(1);
