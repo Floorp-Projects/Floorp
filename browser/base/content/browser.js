@@ -2903,6 +2903,9 @@ const BrowserSearch = {
       return;
 
     var browser = gBrowser.getBrowserForDocument(targetDoc);
+    // ignore search engines from subframes (see bug 479408)
+    if (!browser)
+      return;
 
     // Check to see whether we've already added an engine with this title
     if (browser.engines) {
@@ -2914,8 +2917,8 @@ const BrowserSearch = {
     // Use documentURIObject in the check for shouldLoadFavIcon so that we
     // do the right thing with about:-style error pages.  Bug 453442
     var iconURL = null;
-    if (gBrowser.shouldLoadFavIcon(browser.contentDocument.documentURIObject))
-      iconURL = browser.currentURI.prePath + "/favicon.ico";
+    if (gBrowser.shouldLoadFavIcon(targetDoc.documentURIObject))
+      iconURL = targetDoc.documentURIObject.prePath + "/favicon.ico";
 
     var hidden = false;
     // If this engine (identified by title) is already in the list, add it
@@ -6090,7 +6093,7 @@ var FeedHandler = {
       // find which tab this is for, and set the attribute on the browser
       var browserForLink = gBrowser.getBrowserForDocument(targetDoc);
       if (!browserForLink) {
-        // ??? this really shouldn't happen..
+        // ignore feeds loaded in subframes (see bug 305472)
         return;
       }
 
@@ -6100,7 +6103,7 @@ var FeedHandler = {
 
       feeds.push(feed);
       browserForLink.feeds = feeds;
-      if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser) {
+      if (browserForLink == gBrowser.mCurrentBrowser) {
         var feedButton = document.getElementById("feed-button");
         if (feedButton)
           feedButton.collapsed = false;
