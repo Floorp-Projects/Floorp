@@ -1771,26 +1771,40 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
 
   *out = nsnull;
 
-  if (hasRows)
+  PRBool found = PR_FALSE;
+  nsCString nsSpec;
+  PRInt32 nsType;
+  nsCString nsData;
+
+  while (hasRows)
   {
-    nsCString namespaceSpec;
-    rv = statement->GetUTF8String(0, namespaceSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString data;
-    rv = statement->GetUTF8String(1, data);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRInt32 itemType;
     rv = statement->GetInt32(2, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (!found || itemType > nsType)
+    {
+      nsType = itemType;
+
+      rv = statement->GetUTF8String(0, nsSpec);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = statement->GetUTF8String(1, nsData);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      found = PR_TRUE;
+    }
+
+    rv = statement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (found) {
     nsCOMPtr<nsIApplicationCacheNamespace> ns =
       new nsApplicationCacheNamespace();
     if (!ns)
       return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = ns->Init(itemType, namespaceSpec, data);
+    rv = ns->Init(nsType, nsSpec, nsData);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ns.swap(*out);
