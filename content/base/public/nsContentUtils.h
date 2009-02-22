@@ -884,6 +884,28 @@ public:
                                        PRBool *aDefaultAction = nsnull);
 
   /**
+   * This method creates and dispatches a trusted event to the chrome
+   * event handler.
+   * Works only with events which can be created by calling
+   * nsIDOMDocumentEvent::CreateEvent() with parameter "Events".
+   * @param aDocument      The document which will be used to create the event,
+   *                       and whose window's chrome handler will be used to
+   *                       dispatch the event.
+   * @param aTarget        The target of the event, used for event->SetTarget()
+   * @param aEventName     The name of the event.
+   * @param aCanBubble     Whether the event can bubble.
+   * @param aCancelable    Is the event cancelable.
+   * @param aDefaultAction Set to true if default action should be taken,
+   *                       see nsIDOMEventTarget::DispatchEvent.
+   */
+  static nsresult DispatchChromeEvent(nsIDocument* aDoc,
+                                      nsISupports* aTarget,
+                                      const nsAString& aEventName,
+                                      PRBool aCanBubble,
+                                      PRBool aCancelable,
+                                      PRBool *aDefaultAction = nsnull);
+
+  /**
    * Determines if an event attribute name (such as onclick) is valid for
    * a given element type. Types are from the EventNameType enumeration
    * defined above.
