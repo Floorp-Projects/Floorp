@@ -42,6 +42,28 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = privatebrowsing
+LIBRARY_NAME = privatebrowsing_s
+FORCE_STATIC_LIB = 1
+FORCE_USE_PIC = 1
+ifndef MOZ_MEMORY
+USE_STATIC_LIBS = 1
+endif
+
+REQUIRES = \
+	xpcom \
+	string \
+	necko \
+	js \
+	xpconnect \
+	$(NULL)
+
+CPPSRCS = \
+	nsPrivateBrowsingServiceWrapper.cpp \
+	$(NULL)
+
+LOCAL_INCLUDES = -I$(srcdir)/../../build
+
 EXTRA_PP_COMPONENTS = \
 	nsPrivateBrowsingService.js \
 	aboutPrivateBrowsing.js \
