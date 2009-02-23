@@ -327,10 +327,10 @@ Sanitizer.prototype = {
                             .getService(Components.interfaces.nsISecretDecoderRing);
         sdr.logoutAndTeardown();
 
-        // clear plain HTTP auth sessions
-        var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
-                                .getService(Components.interfaces.nsIHttpAuthManager);
-        authMgr.clearAll();
+        // clear FTP and plain HTTP auth sessions
+        var os = Components.classes["@mozilla.org/observer-service;1"]
+                           .getService(Components.interfaces.nsIObserverService);
+        os.notifyObservers(null, "net:clear-active-logins", null);
       },
       
       get canClear()
