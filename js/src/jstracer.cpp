@@ -7077,13 +7077,11 @@ GetProperty_tn(JSContext *cx, jsbytecode *pc, JSObject *obj, JSString *name)
     JSAutoTempIdRooter idr(cx);
     JSAutoTempValueRooter tvr(cx);
 
-    BEGIN_PC_HINT(pc);
-        if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), idr.addr()) ||
-            !OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
-            cx->builtinStatus |= JSBUILTIN_ERROR;
-            *tvr.addr() = JSVAL_ERROR_COOKIE;
-        }
-    END_PC_HINT();
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), idr.addr()) ||
+        !OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
+        *tvr.addr() = JSVAL_ERROR_COOKIE;
+    }
     return tvr.value();
 }
 
@@ -7113,12 +7111,10 @@ GetElement_tn(JSContext* cx, jsbytecode *pc, JSObject* obj, int32 index)
         cx->builtinStatus |= JSBUILTIN_ERROR;
         return JSVAL_ERROR_COOKIE;
     }
-    BEGIN_PC_HINT(pc);
-        if (!OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
-            cx->builtinStatus |= JSBUILTIN_ERROR;
-            *tvr.addr() = JSVAL_ERROR_COOKIE;
-        }
-    END_PC_HINT();
+    if (!OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
+        cx->builtinStatus |= JSBUILTIN_ERROR;
+        *tvr.addr() = JSVAL_ERROR_COOKIE;
+    }
     return tvr.value();
 }
 
@@ -9194,10 +9190,7 @@ static JSObject* FASTCALL
 ObjectToIterator_tn(JSContext* cx, jsbytecode* pc, JSObject *obj, int32 flags)
 {
     jsval v = OBJECT_TO_JSVAL(obj);
-
-    BEGIN_PC_HINT(pc);
-        bool ok = js_ValueToIterator(cx, flags, &v);
-    END_PC_HINT();
+    bool ok = js_ValueToIterator(cx, flags, &v);
 
     if (!ok) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
@@ -9216,10 +9209,7 @@ static jsval FASTCALL
 CallIteratorNext_tn(JSContext* cx, jsbytecode* pc, JSObject* iterobj)
 {
     JSAutoTempValueRooter tvr(cx);
-
-    BEGIN_PC_HINT(pc);
-        bool ok = js_CallIteratorNext(cx, iterobj, tvr.addr());
-    END_PC_HINT();
+    bool ok = js_CallIteratorNext(cx, iterobj, tvr.addr());
 
     if (!ok) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
