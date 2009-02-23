@@ -48,7 +48,6 @@
 #endif
 #include "gfxPlatform.h"
 
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
