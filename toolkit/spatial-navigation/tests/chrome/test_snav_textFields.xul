@@ -6,14 +6,14 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 -->
 
-<window title="Mozilla Bug 288254"
+<window title="Mozilla Bug 436084"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();">
 
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="SpatialNavUtils.js"></script>
 
 <body id="some-content" xmlns="http://www.w3.org/1999/xhtml">
@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 </p>
 
 <p>
-<textarea id="textarea" name="textarea" cols="30" rows="3" wrap="hard">The Book of Mozilla</textarea>
+<textarea id="textarea" name="textarea" cols="30" rows="3" wrap="hard">Firefox</textarea>
 </p>
 
 <p>
@@ -36,13 +36,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 
 </body>
 
-
 <script class="testbody" type="application/javascript">
 <![CDATA[
 Components.utils.import("resource://gre/modules/SpatialNavigation.js");
 
 var moveTable = [
-["DOWN", "textinput"],
 ["DOWN", "textinput"],
 ["DOWN", "textarea"],
 ["DOWN", "textarea"],
@@ -50,61 +48,44 @@ var moveTable = [
 ["UP", "textarea"],
 ["UP", "textarea"],
 ["UP", "textinput"],
-["UP", "textinput"],
 ["UP", "start"],
 ["DOWN", "textinput"],
 ["LEFT", "textinput"],
-
-
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textinput"],
-["RIGHT", "textarea"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["LEFT", "textinput"],
+["DOWN", "textarea"],
 ["LEFT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "textarea"],
-["RIGHT", "end"],
-["UP", "textarea"],
+["LEFT", "textarea"],
+["LEFT", "textarea"],
+["LEFT", "textarea"],
+["LEFT", "textarea"],
+["LEFT", "textarea"],
+["LEFT", "textarea"],
+["DOWN", "textarea"],
+["DOWN", "end"],
 ["DONE", "DONE"],
 ];
 
@@ -121,7 +102,7 @@ function onLoad()
     // starting the test itself.
     var x = document.getElementById("some-content");
     SpatialNavigation.init(x);
-    
+
     // get to a known place.
     document.getElementById("start").focus();
 
