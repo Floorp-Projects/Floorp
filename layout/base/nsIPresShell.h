@@ -101,10 +101,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 780d34b0-00c3-4bbd-b57d-c600aaf53613
-#define NS_IPRESSHELL_IID \
-{ 0x780d34b0, 0xc3, 0x4bbd, \
-  { 0xb5, 0x7d, 0xc6, 0x0, 0xaa, 0xf5, 0x36, 0x13 } }
+// 445e6184-5e7e-4a9b-97f7-c9391e6773d2
+#define NS_IPRESSHELL_IID     \
+{ 0x445e6184, 0x5e7e, 0x4a9b, \
+  { 0x97, 0xf7, 0xc9, 0x39, 0x1e, 0x67, 0x73, 0xd2 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -776,10 +776,19 @@ public:
    * Stop or restart non synthetic test mouse event handling on *all*
    * presShells.
    *
-   * @param aDisable  If true, disable all non synthetic test mouse events on all
-   * presShells.  Otherwise, enable them.
+   * @param aDisable If true, disable all non synthetic test mouse
+   * events on all presShells.  Otherwise, enable them.
    */
   NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable) = 0;
+
+  /* Record the background color of the most recently loaded canvas.
+   * This color is composited on top of the user's default background
+   * color whenever we need to provide an "ultimate" background color.
+   * See PresShell::Paint, PresShell::PaintDefaultBackground, and
+   * nsDocShell::SetupNewViewer; bug 476557 and other bugs mentioned there.
+   */
+  void SetCanvasBackground(nscolor aColor) { mCanvasBackgroundColor = aColor; }
+  nscolor GetCanvasBackground() { return mCanvasBackgroundColor; }
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
@@ -819,6 +828,9 @@ protected:
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
+
+  // Most recent canvas background color.
+  nscolor                   mCanvasBackgroundColor;
 };
 
 /**
