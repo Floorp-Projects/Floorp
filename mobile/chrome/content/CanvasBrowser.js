@@ -52,12 +52,16 @@ CanvasBrowser.prototype = {
   _screenX: 0,
   _screenY: 0,
   _visibleBounds:new wsRect(0,0,0,0),
-  _drawQ: [],
   // during pageload: controls whether we poll document for size changing
   _maybeZoomToPage: false,
-  // true during page loading(but not panning), restricts paints to visible part of the canvas
-  _clippedPageDrawing: true,
-
+  // suggests to do clipped drawing in flushRegion
+  _pageLoading: true,
+  // 0,0 to contentW, contentH..is a list of dirty rectangles
+  _rgnPage: Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion),
+  // used to force paints to not be delayed during panning, otherwise things
+  // some things seem to get drawn at the wrong offset, not sure why
+  _isPanning: false,
+  
   get canvasDimensions() {
     if (!this._canvasRect) {
       let canvasRect = this._canvas.getBoundingClientRect();
@@ -100,35 +104,26 @@ CanvasBrowser.prototype = {
     }
   },
 
-  /*Heuristic heaven: Either adds things to a queue + starts timer or paints immediately */
-  addToDrawQ: function addToDrawQ(rect) {
-    let q = this._drawQ;
+  /*Heuristic heaven: Either adds things to a queue + starts timer or paints immediately 
+   * rect has to be all integers
+   */
+  addToRegion: function addToRegion(rect) {
+    this._rgnPage.unionRect(rect.x, rect.y, rect.width, rect.height);
+
     function resizeAndPaint(self) {
       if (self._maybeZoomToPage) {
         self.zoomToPage();
       }
-      // flush the whole queue when aren't loading page
-      self.flushDrawQ(self._clippedPageDrawing);
-    }
-    for(let i = q.length - 1;i>=0;i--) {
-      let old = q[i];
-      if (!old)
-        continue;
-      //in the future do an intersect first, then intersect/trim/union
-      if (old.contains(rect)) {
-        //new paint is already in a queue
-        return;
-      } else if(rect.contains(old)) {
-        //new paint is bigger than the one in the queue
-        q[i] = null;
-      }
+      // flush the whole queue while panning or when the page is done loading
+      self.flushRegion(!this._isPanning && self._pageLoading);
     }
 
     /* During pageload:
-     * do the paint immediately if it is something that can be drawn fast(and there aren't things queued up to be painted already */
-    let flushNow = !this._clippedPageDrawing;
+     * do the paint immediately if it is something that can be drawn fast
+     * (and there aren't things queued up to be painted already) */
+    let flushNow = this._isPanning || !this._pageLoading;
 
-    if (this._clippedPageDrawing) {
+    if (this._pageLoading) {
       if (!this._drawInterval) {
         //always flush the first draw
         flushNow = true;
@@ -136,8 +131,6 @@ CanvasBrowser.prototype = {
         this._drawInterval = setInterval(resizeAndPaint, 2000, this);
       }
     }
-
-    q.push(rect);
 
     if (flushNow) {
       resizeAndPaint(this);
@@ -147,105 +140,108 @@ CanvasBrowser.prototype = {
   // Change in zoom or offsets should require a clear
   // or a flush operation on the queue. XXX need tochanged justone to
   // be based on time taken..ie do as many paints as we can <200ms
-  flushDrawQ: function flushDrawQ(justOne) {
+  // returns true if q is cleared
+  flushRegion: function flushRegion(viewingBoundsOnly) {
     var ctx = this._canvas.getContext("2d");
-    ctx.save();
-    ctx.scale(this._zoomLevel, this._zoomLevel);
-    while (this._drawQ.length) {
-      let dest = this._drawQ.pop();
-      if (!dest)
-        continue;
-      // ensure the rect is pixel-aligned once scaled
-      dest.round(this._zoomLevel);
-      ctx.translate(dest.x - this._pageBounds.x, dest.y - this._pageBounds.y);
+    let rgn = this._rgnPage;
+
+    let outX = {}; let outY = {}; let outW = {}; let outH = {};
+    let clearRegion = false;
+    let subls = [];
+    let numRects = rgn.numRects;
+    for (let i=0;i<numRects;i++) {
+      rgn.getRect(i, outX, outY, outW, outH);
+      let rect = new wsRect(outX.value, outY.value,
+                            outW.value, outH.value);
+      if (viewingBoundsOnly) {
+        let oldrect = rect;
+        //only draw the visible area
+        rect = rect.intersect(this._visibleBounds)
+        if (!rect)
+          continue;
+        // clone to avoid errors due to round() below
+        subls.push(rect.clone())
+      } else {
+        clearRegion = true;
+      }
+      ctx.save();
+      ctx.scale(this._zoomLevel, this._zoomLevel);
+      
+      rect.round(this._zoomLevel);
+      ctx.translate(rect.x - this._pageBounds.x, rect.y - this._pageBounds.y);
       ctx.drawWindow(this._browser.contentWindow,
-                     dest.x, dest.y,
-                     dest.width, dest.height,
+                     rect.x, rect.y,
+                     rect.width, rect.height,
                      "white",
-                     ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET);
-      if (justOne)
-        break;
+                     (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
+      ctx.restore();
     }
-    ctx.restore();
+
+    // need to make this conditional on above loop actually doing something
+    if (clearRegion)
+      this.clearRegion();
+    else {
+      // do subtraction separately as it modifies the rect list
+      for each(let rect in subls) {
+        rgn.subtractRect(rect.left, rect.top,
+                         rect.width, rect.height);
+      }
+      //should get a way to figure out when there are no more valid rects left, and clear q
+    }
   },
 
-  clearDrawQ: function clearDrawQ() {
-    this._drawQ = [];
+  clearRegion: function clearRegion() {
+    // once all of the rectangles have been subtracted
+    // region ends up in a funny state unless it's reset
+    this._rgnPage.setToRect(0,0,0,0);
   },
 
-  startLoading: function() {
+  startLoading: function startLoading() {
     // Clear the whole canvas
     // we clear the whole canvas because the browser's width or height
     // could be less than the area we end up actually drawing.
-    this.clearDrawQ();
+    this.clearRegion();
     var ctx = this._canvas.getContext("2d");
     ctx.fillStyle = "rgb(255,255,255)";
     ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
-    this._clippedPageDrawing = true;
+    this._pageLoading = true;
   },
 
   endLoading: function() {
-    this._clippedPageDrawing = false;
+    this._pageLoading = false;
     this._maybeZoomToPage = false;
     this.zoomToPage();
-    this.ensureFullCanvasIsDrawn();
-
+    //might as well just only do this in prepareForPanning
+    this.flushRegion();
+    
     if (this._drawInterval) {
       clearInterval(this._drawInterval);
       this._drawInterval = null;
     }
   },
 
-  // ensure that the canvas outside of the viewport is also drawn
-  ensureFullCanvasIsDrawn: function ensureFullCanvasIsDrawn() {
-    if (this._partiallyDrawn) {
-      let v = this._visibleBounds
-      let r_above = new wsRect(this._pageBounds.x, this._pageBounds.y,
-                               this._pageBounds.width, v.y - this._pageBounds.y)
-      let r_left = new wsRect(this._pageBounds.x, v.y,
-                              v.x - this._pageBounds.x,
-                              v.height)
-      let r_right = new wsRect(v.x + v.width, v.y,
-                               this._pageBounds.width - v.x - v.width,
-                               v.height)
-      let r_below = new wsRect(this._pageBounds.x, v.y+v.height,
-                               this._pageBounds.width,
-                               this._pageBounds.height - v.y - v.height)
-      this._redrawRect(r_above);
-      this._redrawRect(r_left);
-      this._redrawRect(r_right);
-      this._redrawRect(r_below);
-      this._partiallyDrawn = false;
-    }
-    // flush all pending draws
-    this.flushDrawQ()
-  },
-
-
-  // Turn off incremental mode if it is on.
-  // Switch _redrawRect to drawing the full canvas
+  // flush outstanding dirty rects,
+  // switch to unoptimized painting mode during panning
   prepareForPanning: function prepareForPanning() {
-    if (!this._clippedPageDrawing) 
-      return;
-
-    // keep checking page size
-    this._maybeZoomToPage = true;
-
-    // draw the rest of the canvas
-    this._clippedPageDrawing = false;
-    this.ensureFullCanvasIsDrawn();
+    this.flushRegion();
+    
+    // do not delay paints as that causes displaced painting bugs
+    this._isPanning = true;
   },
 
   viewportHandler: function(bounds, boundsSizeChanged) {
+    this._isPanning = false;
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewportVisibleRect;
-    // top/left should not get rounded otherwise the blit below would have to use decimals
+
+    //should add a divide/multiply func to pageBounds
+
+    // do not floor top/left, or the blit below will be off
     pageBounds.top = this._screenToPage(pageBounds.top);
     pageBounds.left = this._screenToPage(pageBounds.left);
     pageBounds.bottom = Math.ceil(this._screenToPage(pageBounds.bottom));
     pageBounds.right = Math.ceil(this._screenToPage(pageBounds.right));
-
-    // viewingRect property returns a new bounds object
+        
     visibleBounds.top = Math.max(0, this._screenToPage(visibleBounds.top));
     visibleBounds.left = Math.max(0, this._screenToPage(visibleBounds.left));
     visibleBounds.bottom = this._screenToPage(visibleBounds.bottom);
@@ -254,9 +250,11 @@ CanvasBrowser.prototype = {
     // if the page is being panned, flush the queue, so things blit correctly
     // this avoids incorrect offsets due to a change in _pageBounds.x/y
     // should probably check that (visibleBounds|pageBounds).(x|y) actually changed
-    if (!boundsSizeChanged)
-      this.flushDrawQ();
-
+    if (boundsSizeChanged)
+      this.clearRegion();
+    else
+      this.flushRegion();
+    
     this._visibleBounds = visibleBounds;
     this._pageBounds = pageBounds;
 
@@ -266,71 +264,47 @@ CanvasBrowser.prototype = {
     this._screenY = bounds.y;
 
     if (boundsSizeChanged) {
-      // we resized the viewport, so redraw everything
-      // In theory this shouldn't be needed since adding a big rect to the draw queue
-      // should remove the prior draws
-      this.clearDrawQ();
-
-      // make sure that ensureFullCanvasIsDrawn doesn't draw after a full redraw due to zoom
-      if (!this._clippedPageDrawing)
-        this._partiallyDrawn = false;
-
       this._redrawRect(pageBounds);
       return;
     }
 
     // deal with repainting
-    let srcRect = { x: 0, y: 0,
-                    width: this._canvas.width, height: this._canvas.height };
-    let dstRect = { x: dx, y: dy,
-                    width: this._canvas.width, height: this._canvas.height };
-
     // we don't need to do anything if the source and destination are the same
-    if (srcRect.x == dstRect.x && srcRect.y == dstRect.y &&
-        srcRect.width == dstRect.width && srcRect.height == dstRect.height) {
-      //dump("avoiding dumb paint\n");
+    if (!dx && !dy) {
+      // avoiding dumb paint
       return;
     }
 
     // blit what we can
     var ctx = this._canvas.getContext("2d");
-
+    let cWidth = this._canvas.width;
+    let cHeight = this._canvas.height;
+    
     ctx.drawImage(this._canvas,
-                  srcRect.x, srcRect.y,
-                  srcRect.width, srcRect.height,
-                  dstRect.x, dstRect.y,
-                  dstRect.width, dstRect.height);
-
-    //dump("blitting " + srcRect.toSource() + " to " + dstRect.toSource() + "\n");
+                  0, 0, cWidth, cHeight,
+                  dx, dy, cWidth, cHeight);
 
     // redraw the rest
-    var rgn = Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion);
-    rgn.setToRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
-    rgn.subtractRect(dstRect.x, dstRect.y, dstRect.width, dstRect.height);
 
+    // reuse rect to avoid overhead of creating a new one
+    let rgn = this._rgnScratch;
+    if (!rgn) {
+      rgn = Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion);
+      this._rgnScratch = rgn;
+    }
+    rgn.setToRect(0, 0, cWidth, cHeight);
+    rgn.subtractRect(dx, dy, cWidth, cHeight);
+    
     let outX = {}; let outY = {}; let outW = {}; let outH = {};
     let rectCount = rgn.numRects
     for (let i = 0;i < rectCount;i++) {
       rgn.getRect(i, outX, outY, outW, outH);
-      dstRect = { x: outX.value, y: outY.value, width: outW.value, height: outH.value };      
-      dstRect.width += 1;
-      dstRect.height += 1;
-
-      ctx.save();
-      ctx.translate(dstRect.x, dstRect.y);
-      ctx.scale(this._zoomLevel, this._zoomLevel);
-
-      let scaledRect = { x: this._pageBounds.x + this._screenToPage(dstRect.x),
-                         y: this._pageBounds.y + this._screenToPage(dstRect.y),
-                         width: this._screenToPage(dstRect.width),
-                         height: this._screenToPage(dstRect.height) };
-
-      ctx.drawWindow(this._browser.contentWindow,
-                     scaledRect.x, scaledRect.y,
-                     scaledRect.width, scaledRect.height,
-                     "white",
-                     ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET);
-      ctx.restore();
+      if (outW.value > 0 && outH.value > 0) {
+        this._redrawRect(new wsRect(Math.floor(this._pageBounds.x +this._screenToPage(outX.value)),
+                                    Math.floor(this._pageBounds.y +this._screenToPage(outY.value)),
+                                    Math.ceil(this._screenToPage(outW.value)),
+                                    Math.ceil(this._screenToPage(outH.value))));
+      }
     }
   },
 
@@ -349,23 +323,20 @@ CanvasBrowser.prototype = {
   _redrawRect: function(rect) {
     // check to see if the input coordinates are inside the visible destination
     // during pageload clip drawing to the visible viewport
-    if (this._clippedPageDrawing)  {
-      r2 = this._visibleBounds;
-      this._partiallyDrawn = true;
-      // heuristic to throttle zoomToPage during page load
-      if (rect.bottom > 0 && rect.right > r2.right)
+    if (this._pageLoading)  {
+      if (rect.bottom > 0 && rect.right > this._visibleBounds.right)
         this._maybeZoomToPage = true;
-    } else {
-      let [canvasW, canvasH] = this._effectiveCanvasDimensions;
-      r2 =  new wsRect(Math.max(this._pageBounds.x,0),
-                       Math.max(this._pageBounds.y,0),
-                       canvasW, canvasH);
-    }
-
+    } 
+    
+    let r2 = this._pageBounds.clone();
+    r2.left = Math.max(r2.left, 0);
+    r2.top = Math.max(r2.top, 0);
     let dest = rect.intersect(r2);
-
-    if (dest)
-      this.addToDrawQ(dest);
+    
+    if (dest) {
+      dest.round(1);
+      this.addToRegion(dest);
+    }
   },
 
   _clampZoomLevel: function(aZoomLevel) {
@@ -406,7 +377,7 @@ CanvasBrowser.prototype = {
       this.zoomLevel = canvasW / contentW;
 
     if (this._clippedPageDrawing)
-      this._maybeZoomToPage = false
+      this._maybeZoomToPage = false;
   },
 
   zoomToElement: function(aElement) {
