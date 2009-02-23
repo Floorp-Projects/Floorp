@@ -47,11 +47,55 @@
 #include "nsSMILFloatType.h"
 #endif // MOZ_SMIL
 
+class DOMSVGLength : public nsIDOMSVGLength
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGLength)
+
+  DOMSVGLength(nsSVGElement *aSVGElement)
+    : mSVGElement(aSVGElement)
+    { mVal.Init(); }
+    
+  NS_IMETHOD GetUnitType(PRUint16* aResult)
+    { *aResult = mVal.mSpecifiedUnitType; return NS_OK; }
+
+  NS_IMETHOD GetValue(float* aResult)
+    { *aResult = mVal.GetBaseValue(mSVGElement); return NS_OK; }
+  NS_IMETHOD SetValue(float aValue)
+    { NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+      mVal.mBaseVal = 
+        aValue * mVal.GetUnitScaleFactor(mSVGElement, mVal.mSpecifiedUnitType);
+      return NS_OK; }
+
+  NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
+    { *aResult = mVal.mBaseVal; return NS_OK; }
+  NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
+    { NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+      mVal.mBaseVal = aValue;
+      return NS_OK; }
+
+  NS_IMETHOD SetValueAsString(const nsAString& aValueAsString);
+  NS_IMETHOD GetValueAsString(nsAString& aValue)
+    { mVal.GetBaseValueString(aValue); return NS_OK; }
+
+  NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
+                                    float valueInSpecifiedUnits);
+
+  NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType);
+
+private:
+  nsSVGLength2 mVal;
+  nsRefPtr<nsSVGElement> mSVGElement;
+};
+
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGLength2::DOMBaseVal, mSVGElement)
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGLength2::DOMAnimVal, mSVGElement)
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGLength2::DOMAnimatedLength, mSVGElement)
+
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGLength, mSVGElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGLength2::DOMBaseVal)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGLength2::DOMBaseVal)
@@ -61,6 +105,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGLength2::DOMAnimVal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGLength2::DOMAnimatedLength)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGLength2::DOMAnimatedLength)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGLength)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLength)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGLength2::DOMBaseVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
@@ -78,6 +125,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGLength2::DOMAnimatedLength)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedLength)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedLength)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGLength)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGLength)
 NS_INTERFACE_MAP_END
 
 static nsIAtom** const unitMap[] =
@@ -173,6 +226,49 @@ GetValueFromString(const nsAString &aValueAsString,
   }
   
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+DOMSVGLength::SetValueAsString(const nsAString& aValueAsString)
+{
+  float value;
+  PRUint16 unitType;
+  
+  nsresult rv = GetValueFromString(aValueAsString, &value, &unitType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  mVal.mBaseVal = value;
+  mVal.mSpecifiedUnitType = PRUint8(unitType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMSVGLength::NewValueSpecifiedUnits(PRUint16 unitType,
+                                     float valueInSpecifiedUnits)
+{
+  NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+  if (!IsValidUnitType(unitType))
+    return NS_OK;
+
+  mVal.mBaseVal = valueInSpecifiedUnits;
+  mVal.mSpecifiedUnitType = PRUint8(unitType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
+{
+  if (!IsValidUnitType(unitType))
+    return NS_OK;
+
+  float valueInUserUnits = 
+    mVal.mBaseVal / mVal.GetUnitScaleFactor(mSVGElement, mVal.mSpecifiedUnitType);
+  mVal.mSpecifiedUnitType = PRUint8(unitType);
+  mVal.mBaseVal = 
+    valueInUserUnits * mVal.GetUnitScaleFactor(mSVGElement, mVal.mSpecifiedUnitType);
+  return NS_OK;
 }
 
 float
@@ -451,6 +547,17 @@ nsSVGLength2::ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
                                   nsSVGElement *aSVGElement)
 {
   *aResult = new DOMAnimatedLength(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+NS_NewDOMSVGLength(nsIDOMSVGLength** aResult, nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMSVGLength(aSVGElement);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 

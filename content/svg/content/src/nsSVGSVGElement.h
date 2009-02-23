@@ -104,6 +104,12 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGSVGElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
 
+  // Gets the element that establishes the rectangular viewport against which
+  // we should resolve percentage lengths (our "coordinate context").
+  virtual nsSVGSVGElement* GetCtx() {
+    return IsOutermostSVGElement() ? this : nsSVGSVGElementBase::GetCtx();
+  }
+
   // helper methods for implementing SVGZoomEvent:
   nsresult GetCurrentScaleNumber(nsIDOMSVGNumber **aResult);
 
@@ -162,6 +168,8 @@ public:
   float GetMMPerPx(PRUint8 mCtxType = 0);
 
   // public helpers:
+  PRBool IsOutermostSVGElement();
+
   nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;

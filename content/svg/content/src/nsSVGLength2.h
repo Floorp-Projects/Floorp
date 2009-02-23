@@ -53,6 +53,7 @@ class nsIFrame;
 
 class nsSVGLength2
 {
+  friend class DOMSVGLength;
 
 public:
   void Init(PRUint8 aCtxType = nsSVGUtils::XY,
@@ -288,5 +289,8 @@ private:
   };
 #endif // MOZ_SMIL
 };
+
+nsresult
+NS_NewDOMSVGLength(nsIDOMSVGLength** result, nsSVGElement *aSVGElement);
 
 #endif //  __NS_SVGLENGTH2_H__

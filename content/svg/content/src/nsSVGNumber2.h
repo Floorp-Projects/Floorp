@@ -44,6 +44,7 @@
 
 class nsSVGNumber2
 {
+  friend class DOMSVGNumber;
 
 public:
   void Init(PRUint8 aAttrEnum = 0xff, float aValue = 0) {
@@ -96,4 +97,8 @@ private:
   };
 
 };
+
+nsresult
+NS_NewDOMSVGNumber(nsIDOMSVGNumber** result);
+
 #endif //__NS_SVGNUMBER2_H__

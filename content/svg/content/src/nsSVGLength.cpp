@@ -59,13 +59,8 @@ class nsSVGLength : public nsISVGLength,
 {
 protected:
   friend nsresult NS_NewSVGLength(nsISVGLength** result,
-                                  float value,
-                                  PRUint16 unit);
-
-  friend nsresult NS_NewSVGLength(nsISVGLength** result,
                                   const nsAString &value);
   
-  nsSVGLength(float value, PRUint16 unit);
   nsSVGLength();
 
 public:
@@ -105,18 +100,6 @@ protected:
 
 nsresult
 NS_NewSVGLength(nsISVGLength** result,
-                float value,
-                PRUint16 unit)
-{
-  *result = new nsSVGLength(value, unit);
-  if (!*result)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*result);
-  return NS_OK;
-}
-
-nsresult
-NS_NewSVGLength(nsISVGLength** result,
                 const nsAString &value)
 {
   *result = nsnull;
@@ -133,14 +116,6 @@ NS_NewSVGLength(nsISVGLength** result,
   return NS_OK;
 }  
 
-
-nsSVGLength::nsSVGLength(float value,
-                         PRUint16 unit)
-    : mValueInSpecifiedUnits(value),
-      mSpecifiedUnitType(unit),
-      mCtxType(0)
-{
-}
 
 nsSVGLength::nsSVGLength()
 {
