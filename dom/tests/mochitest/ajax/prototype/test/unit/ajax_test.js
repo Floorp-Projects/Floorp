@@ -2,7 +2,7 @@ var extendDefault = function(options) {
   return Object.extend({
     asynchronous: false,
     method: 'get',
-    onException: function(e) { throw e }
+    onException: function(request, e) { throw e }
   }, options);
 };
 
@@ -21,11 +21,11 @@ new Test.Unit.Runner({
     this.assertEqual("", $("content").innerHTML);
     
     this.assertEqual(0, Ajax.activeRequestCount);
-    new Ajax.Request("../fixtures/hello.js", {
+    new Ajax.Request("../fixtures/hello.js", extendDefault({
       asynchronous: false,
       method: 'GET',
       evalJS: 'force'
-    });
+    }));
     this.assertEqual(0, Ajax.activeRequestCount);
     
     var h2 = $("content").firstChild;
@@ -35,11 +35,11 @@ new Test.Unit.Runner({
   testAsynchronousRequest: function() {
     this.assertEqual("", $("content").innerHTML);
     
-    new Ajax.Request("../fixtures/hello.js", {
+    new Ajax.Request("../fixtures/hello.js", extendDefault({
       asynchronous: true,
       method: 'get',
       evalJS: 'force'
-    });
+    }));
     this.wait(1000, function() {
       var h2 = $("content").firstChild;
       this.assertEqual("Hello world!", h2.innerHTML);
