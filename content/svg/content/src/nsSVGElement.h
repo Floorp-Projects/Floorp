@@ -134,10 +134,12 @@ public:
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
 
+  nsIContent* GetParentElement();
+
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
-  // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
-  nsSVGSVGElement* GetCtx();
+  // nsnull SVG without an <svg> parent (invalid SVG).
+  virtual nsSVGSVGElement* GetCtx();
 
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
