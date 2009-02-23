@@ -38,12 +38,12 @@
 // This test makes sure the HTTP authenticated sessions are correctly cleared
 // when entering and leaving the private browsing mode.
 
-function run_test() {
+function run_test_on_service() {
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                    getService(Ci.nsIPrefBranch);
   prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
-  var pb = Cc["@mozilla.org/privatebrowsing;1"].
+  var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
 
   var am = Cc["@mozilla.org/network/http-auth-manager;1"].
@@ -111,4 +111,9 @@ function run_test() {
   } finally {
     prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
   }
+}
+
+// Support running tests on both the service itself and its wrapper
+function run_test() {
+  run_test_on_all_services();
 }

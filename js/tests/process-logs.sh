@@ -175,7 +175,6 @@ for testlogfile in `ls $testlogfiles`; do
     debug "arch=$arch"
 
     memory=`grep -m 1 '^environment: TEST_MEMORY=' $worktestlogfile | sed 's|.*TEST_MEMORY=\(.*\)|\1|'`
-    speed=`grep -m 1 '^environment: TEST_CPUSPEED=' $worktestlogfile | sed 's|.*TEST_CPUSPEED=\(.*\)|\1|'`
 
     timezone=`basename $testlogfile | sed 's|^[-0-9]*\([-+]\)\([0-9]\{4,4\}\),.*|\1\2|'`
     debug "timezone=$timezone"
@@ -203,7 +202,6 @@ for testlogfile in `ls $testlogfiles`; do
         -K "$kernel" \
         -A "$arch" \
         -M "$memory" \
-        -S "$speed" \
         -z "$timezone" \
         -J "$jsoptions" \
         -r "$TEST_JSDIR/failures.txt" \

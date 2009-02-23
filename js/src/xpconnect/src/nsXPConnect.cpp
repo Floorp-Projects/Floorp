@@ -44,6 +44,7 @@
 
 #include "xpcprivate.h"
 #include "XPCNativeWrapper.h"
+#include "XPCWrapper.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "jsatom.h"
@@ -2302,6 +2303,99 @@ nsXPConnect::DefineDOMQuickStubs(JSContext * cx,
 {
     return DOM_DefineQuickStubs(cx, proto, flags,
                                 interfaceCount, interfaceArray);
+}
+
+NS_IMETHODIMP
+nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
+                                 JSObject* aObject,
+                                 JSObject* aScope,
+                                 nsIPrincipal* aPrincipal,
+                                 PRUint32 aFilenameFlags,
+                                 jsval* _retval)
+{
+    NS_ASSERTION(aFilenameFlags != JSFILENAME_NULL, "Null filename!");
+    NS_ASSERTION(XPCPerThreadData::IsMainThread(aJSContext),
+                 "Must only be called from the main thread as these wrappers "
+                 "are not threadsafe!");
+
+    JSAutoRequest ar(aJSContext);
+
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aObject);
+    if(!wrapper)
+    {
+        // Couldn't get the wrapped native (maybe a prototype?) so just return
+        // the original object.
+        *_retval = OBJECT_TO_JSVAL(aObject);
+        return NS_OK;
+    }
+
+    XPCWrappedNativeScope *xpcscope =
+        XPCWrappedNativeScope::FindInJSObjectScope(aJSContext, aScope);
+    if(!xpcscope)
+        return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_mrbkap
+    {
+        JSObject *scopeobj = xpcscope->GetGlobalJSObject();
+        JSObject *toInnerize = scopeobj;
+        OBJ_TO_INNER_OBJECT(aJSContext, toInnerize);
+        NS_ASSERTION(toInnerize == scopeobj, "Scope chain ending in outer object?");
+    }
+#endif
+
+    XPCWrappedNativeScope *objectscope = wrapper->GetScope();
+    {
+        JSObject *possibleOuter = objectscope->GetGlobalJSObject();
+        OBJ_TO_INNER_OBJECT(aJSContext, possibleOuter);
+        if(!possibleOuter)
+            return NS_ERROR_FAILURE;
+
+        if(objectscope->GetGlobalJSObject() != possibleOuter)
+        {
+            objectscope =
+                XPCWrappedNativeScope::FindInJSObjectScope(aJSContext,
+                                                           possibleOuter);
+            NS_ASSERTION(objectscope, "Unable to find a scope from an object");
+        }
+    }
+
+    *_retval = OBJECT_TO_JSVAL(aObject);
+
+    JSBool sameScope = objectscope == xpcscope;
+    if(STOBJ_IS_SYSTEM(aObject) ||
+       (sameScope &&
+        (!XPC_XOW_ClassNeedsXOW(STOBJ_GET_CLASS(aObject)->name) ||
+         (aFilenameFlags & JSFILENAME_SYSTEM))))
+        return NS_OK;
+
+    JSObject* wrappedObj = nsnull;
+
+    if(aFilenameFlags & JSFILENAME_PROTECTED)
+    {
+        NS_ASSERTION(!sameScope, "Bad filename flags");
+        wrappedObj = XPCNativeWrapper::GetNewOrUsed(aJSContext, wrapper,
+                                                    aPrincipal);
+    }
+    else if(aFilenameFlags & JSFILENAME_SYSTEM)
+    {
+        NS_ASSERTION(!sameScope, "Bad filename flags");
+        jsval val = OBJECT_TO_JSVAL(aObject);
+        if(XPC_SJOW_Construct(aJSContext, nsnull, 1, &val, &val))
+            wrappedObj = JSVAL_TO_OBJECT(val);
+    }
+    else
+    {
+        jsval val = OBJECT_TO_JSVAL(aObject);
+        if(XPC_XOW_WrapObject(aJSContext, aScope, &val, wrapper))
+            wrappedObj = JSVAL_TO_OBJECT(val);
+    }
+
+    if(!wrappedObj)
+        return NS_ERROR_FAILURE;
+
+    *_retval = OBJECT_TO_JSVAL(wrappedObj);
+    return NS_OK;
 }
 
 /* attribute JSRuntime runtime; */

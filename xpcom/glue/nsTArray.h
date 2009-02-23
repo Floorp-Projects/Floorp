@@ -685,6 +685,20 @@ class nsTArray : public nsTArray_base {
       RemoveElementsAt(newLen, oldLen - newLen);
     }
 
+    // This method ensures that the array has length at least the given
+    // length.  If the current length is shorter than the given length,
+    // then new elements will be constructed using elem_type's default
+    // constructor.
+    // @param minLen  The desired minimum length of this array.
+    // @return        True if the operation succeeded; false otherwise.
+    PRBool EnsureLengthAtLeast(size_type minLen) {
+      size_type oldLen = Length();
+      if (minLen > oldLen) {
+        return InsertElementsAt(oldLen, minLen - oldLen) != nsnull;
+      }
+      return PR_TRUE;
+    }
+
     // This method inserts elements into the array, constructing
     // them using elem_type's default constructor.
     // @param index the place to insert the new elements. This must be no

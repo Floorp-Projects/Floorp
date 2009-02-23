@@ -1002,6 +1002,9 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool
 
             if (mProxyTransparentResolvesHost)
                 proxyFlags |= nsISocketProvider::PROXY_RESOLVES_HOST;
+            
+            if (mConnectionFlags & nsISocketTransport::ANONYMOUS_CONNECT)
+                proxyFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
 
             nsCOMPtr<nsISupports> secinfo;
             if (i == 0) {
@@ -1026,7 +1029,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, PRBool &proxyTransparent, PRBool
                                            proxyFlags, fd,
                                            getter_AddRefs(secinfo));
             }
-            proxyFlags = 0;
+            // proxyFlags = 0; not used below this point...
             if (NS_FAILED(rv))
                 break;
 

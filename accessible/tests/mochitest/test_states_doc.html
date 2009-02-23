@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=454997
+https://bugzilla.mozilla.org/show_bug.cgi?id=467387
+-->
+<head>
+  <title>states of document</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      testStates(document, STATE_READONLY);
+      testStates("document", STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+
+      document.designMode = "on";
+
+      testStates(document, 0, EXT_STATE_EDITABLE);
+      testStates("p", 0, EXT_STATE_EDITABLE);
+      testStates("document", 0, EXT_STATE_EDITABLE);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+
+      document.designMode = "off";
+
+      testStates(document, STATE_READONLY);
+      testStates("document", STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     title="nsIAccessible states tests of editable document"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=454997">Mozilla Bug 454997</a>
+   <a target="_blank"
+     title="nsIAccessible states tests of editable document"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=467387">Mozilla Bug 467387</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="p">hello</p>
+
+  <div id="document" role="document">document</div>
+  <div id="editable_document" role="document" contentEditable="true">editable document</doc>
+</body>
+</html>

@@ -404,7 +404,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key, PRBool *collision)
     *collision = PR_FALSE;
 
     binding = mBindery.FindActiveBinding(hashNumber);
-    if (binding && PL_strcmp(binding->mCacheEntry->Key()->get(), key->get()) != 0) {
+    if (binding && !binding->mCacheEntry->Key()->Equals(*key)) {
         *collision = PR_TRUE;
         return nsnull;
     }
@@ -418,7 +418,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key, PRBool *collision)
     if (!diskEntry) return nsnull;
     
     // compare key to be sure
-    if (strcmp(diskEntry->Key(), key->get()) != 0) {
+    if (!key->Equals(diskEntry->Key())) {
         *collision = PR_TRUE;
         return nsnull;
     }
@@ -492,7 +492,38 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     if (!Initialized())  return  NS_ERROR_NOT_INITIALIZED;
     nsresult rv = NS_OK;
     nsDiskCacheRecord record, oldRecord;
-    
+    nsDiskCacheBinding *binding;
+    PLDHashNumber hashNumber = nsDiskCache::Hash(entry->Key()->get());
+
+    // Find out if there is already an active binding for this hash. If yes it
+    // should have another key since BindEntry() shouldn't be called twice for
+    // the same entry. Doom the old entry, the new one will get another
+    // generation number so files won't collide.
+    binding = mBindery.FindActiveBinding(hashNumber);
+    if (binding) {
+        NS_ASSERTION(!binding->mCacheEntry->Key()->Equals(*entry->Key()),
+                     "BindEntry called for already bound entry!");
+        nsCacheService::DoomEntry(binding->mCacheEntry);
+        binding = nsnull;
+    }
+
+    // Lookup hash number in cache map. There can be a colliding inactive entry.
+    // See bug #321361 comment 21 for the scenario. If there is such entry,
+    // delete it.
+    rv = mCacheMap.FindRecord(hashNumber, &record);
+    if (NS_SUCCEEDED(rv)) {
+        nsDiskCacheEntry * diskEntry = mCacheMap.ReadDiskCacheEntry(&record);
+        if (diskEntry) {
+            // compare key to be sure
+            if (!entry->Key()->Equals(diskEntry->Key())) {
+                mCacheMap.DeleteStorage(&record);
+                rv = mCacheMap.DeleteRecord(&record);
+                if (NS_FAILED(rv))  return rv;
+            }
+        }
+        record = nsDiskCacheRecord();
+    }
+
     // create a new record for this entry
     record.SetHashNumber(nsDiskCache::Hash(entry->Key()->get()));
     record.SetEvictionRank(ULONG_MAX - SecondsFromPRTime(PR_Now()));
@@ -527,7 +558,7 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     }
     
     // Make sure this entry has its associated nsDiskCacheBinding attached.
-    nsDiskCacheBinding *  binding = mBindery.CreateBinding(entry, &record);
+    binding = mBindery.CreateBinding(entry, &record);
     NS_ASSERTION(binding, "nsDiskCacheDevice::BindEntry");
     if (!binding) return NS_ERROR_OUT_OF_MEMORY;
     NS_ASSERTION(binding->mRecord.ValidRecord(), "bad cache map record");

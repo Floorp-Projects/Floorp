@@ -56,7 +56,7 @@
 #include "resource.h"
 #include "prtime.h"
 #include "nsReadableUtils.h"
-#include "nsVoidArray.h"
+#include "nsTPtrArray.h"
 #include "nsIProxyObjectManager.h"
 
 #include <Application.h>
@@ -101,7 +101,7 @@ static BWindow           * gLastActiveWindow = NULL;
 // such as regxpcom, do not create a BApplication object, and therefor fail to run.,
 // since a BCursor requires a vaild BApplication (see Bug#129964).  But, we still want
 // to cache them for performance.  Currently, there are 17 cursors available;
-static nsVoidArray		gCursorArray(21);
+static nsTPtrArray<BCursor> gCursorArray(21);
 // Used in contrain position.  Specifies how much of a window must remain on screen
 #define kWindowPositionSlop 20
 // BeOS does not provide this information, so we must hard-code it
@@ -1259,29 +1259,29 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 			be_app->ShowCursor();
 		
 		// Check to see if the array has been loaded, if not, do it.
-		if (gCursorArray.Count() == 0) 
+		if (gCursorArray.Length() == 0) 
 		{
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorHyperlink),0);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorHorizontalDrag),1);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorVerticalDrag),2);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperLeft),3);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerRight),4);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperRight),5);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerLeft),6);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorCrosshair),7);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorHelp),8);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorGrab),9);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorGrabbing),10);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorCopy),11);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorAlias),12);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorWatch2),13);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorCell),14);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorZoomIn),15);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorZoomOut),16);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorLeft),17);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorRight),18);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorTop),19);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorBottom),20);
+			gCursorArray.InsertElementAt(0 , new BCursor(cursorHyperlink));
+			gCursorArray.InsertElementAt(1 , new BCursor(cursorHorizontalDrag));
+			gCursorArray.InsertElementAt(2 , new BCursor(cursorVerticalDrag));
+			gCursorArray.InsertElementAt(3 , new BCursor(cursorUpperLeft));
+			gCursorArray.InsertElementAt(4 , new BCursor(cursorLowerRight));
+			gCursorArray.InsertElementAt(5 , new BCursor(cursorUpperRight));
+			gCursorArray.InsertElementAt(6 , new BCursor(cursorLowerLeft));
+			gCursorArray.InsertElementAt(7 , new BCursor(cursorCrosshair));
+			gCursorArray.InsertElementAt(8 , new BCursor(cursorHelp));
+			gCursorArray.InsertElementAt(9 , new BCursor(cursorGrab));
+			gCursorArray.InsertElementAt(10, new BCursor(cursorGrabbing));
+			gCursorArray.InsertElementAt(11, new BCursor(cursorCopy));
+			gCursorArray.InsertElementAt(12, new BCursor(cursorAlias));
+			gCursorArray.InsertElementAt(13, new BCursor(cursorWatch2));
+			gCursorArray.InsertElementAt(14, new BCursor(cursorCell));
+			gCursorArray.InsertElementAt(15, new BCursor(cursorZoomIn));
+			gCursorArray.InsertElementAt(16, new BCursor(cursorZoomOut));
+			gCursorArray.InsertElementAt(17, new BCursor(cursorLeft));
+			gCursorArray.InsertElementAt(18, new BCursor(cursorRight));
+			gCursorArray.InsertElementAt(19, new BCursor(cursorTop));
+			gCursorArray.InsertElementAt(20, new BCursor(cursorBottom));
 		}
 
 		switch (aCursor) 
@@ -1296,55 +1296,55 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				break;
 	
 			case eCursor_hyperlink:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(0);
+				newCursor = gCursorArray.SafeElementAt(0);
 				break;
 	
 			case eCursor_n_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(19);
+				newCursor = gCursorArray.SafeElementAt(19);
 				break;
 
 			case eCursor_s_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(20);
+				newCursor = gCursorArray.SafeElementAt(20);
 				break;
 	
 			case eCursor_w_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(17);
+				newCursor = gCursorArray.SafeElementAt(17);
 				break;
 
 			case eCursor_e_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(18);
+				newCursor = gCursorArray.SafeElementAt(18);
 				break;
 	
 			case eCursor_nw_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(3);
+				newCursor = gCursorArray.SafeElementAt(3);
 				break;
 	
 			case eCursor_se_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(4);
+				newCursor = gCursorArray.SafeElementAt(4);
 				break;
 	
 			case eCursor_ne_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(5);
+				newCursor = gCursorArray.SafeElementAt(5);
 				break;
 	
 			case eCursor_sw_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(6);
+				newCursor = gCursorArray.SafeElementAt(6);
 				break;
 	
 			case eCursor_crosshair:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(7);
+				newCursor = gCursorArray.SafeElementAt(7);
 				break;
 	
 			case eCursor_help:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(8);
+				newCursor = gCursorArray.SafeElementAt(8);
 				break;
 	
 			case eCursor_copy:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(11);
+				newCursor = gCursorArray.SafeElementAt(11);
 				break;
 	
 			case eCursor_alias:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(12);
+				newCursor = gCursorArray.SafeElementAt(12);
 				break;
 
 			case eCursor_context_menu:
@@ -1352,28 +1352,28 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				break;
 				
 			case eCursor_cell:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(14);
+				newCursor = gCursorArray.SafeElementAt(14);
 				break;
 
 			case eCursor_grab:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(9);
+				newCursor = gCursorArray.SafeElementAt(9);
 				break;
 	
 			case eCursor_grabbing:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(10);
+				newCursor = gCursorArray.SafeElementAt(10);
 				break;
 	
 			case eCursor_wait:
 			case eCursor_spinning:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(13);
+				newCursor = gCursorArray.SafeElementAt(13);
 				break;
 	
 			case eCursor_zoom_in:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(15);
+				newCursor = gCursorArray.SafeElementAt(15);
 				break;
 
 			case eCursor_zoom_out:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(16);
+				newCursor = gCursorArray.SafeElementAt(16);
 				break;
 
 			case eCursor_not_allowed:
@@ -1383,12 +1383,12 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
 			case eCursor_col_resize:
 				// XXX not 100% appropriate perhaps
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				newCursor = gCursorArray.SafeElementAt(1);
 				break;
 
 			case eCursor_row_resize:
 				// XXX not 100% appropriate perhaps
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(2);
+				newCursor = gCursorArray.SafeElementAt(2);
 				break;
 
 			case eCursor_vertical_text:
@@ -1402,20 +1402,20 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
 			case eCursor_nesw_resize:
 				// XXX not 100% appropriate perhaps
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				newCursor = gCursorArray.SafeElementAt(1);
 				break;
 
 			case eCursor_nwse_resize:
 				// XXX not 100% appropriate perhaps
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				newCursor = gCursorArray.SafeElementAt(1);
 				break;
 
 			case eCursor_ns_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(2);
+				newCursor = gCursorArray.SafeElementAt(2);
 				break;
 
 			case eCursor_ew_resize:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				newCursor = gCursorArray.SafeElementAt(1);
 				break;
 
 			case eCursor_none:

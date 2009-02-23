@@ -40,7 +40,6 @@
 #define GFX_PLATFORM_H
 
 #include "prtypes.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 
 #include "nsIObserver.h"

@@ -54,7 +54,6 @@
 #include "nsIEventListener.h"
 #include "nsString.h"
 
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 
 class nsNativeDragTarget;
@@ -196,8 +195,7 @@ public:
   NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
   NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
   NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; }
-  NS_IMETHOD              WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect);
-  NS_IMETHOD              ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect);
+  virtual nsIntPoint      WidgetToScreenOffset();
   NS_IMETHOD              BeginResizingChildren(void);
   NS_IMETHOD              EndResizingChildren(void);
   NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
@@ -514,8 +512,8 @@ protected:
   PRInt32       mMenuCmdId;
 
   // Window styles used by this window before chrome was hidden
-  DWORD         mOldStyle;
-  DWORD         mOldExStyle;
+  DWORD_PTR     mOldStyle;
+  DWORD_PTR     mOldExStyle;
 
   // To enable/disable IME
   HIMC          mOldIMC;

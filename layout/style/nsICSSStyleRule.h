@@ -173,10 +173,12 @@ private:
   void AddPseudoClassInternal(nsPseudoClassList *aPseudoClass);
   nsCSSSelector* Clone(PRBool aDeepNext, PRBool aDeepNegations) const;
 
-  void AppendNegationToString(nsAString& aString);
-  void ToStringInternal(nsAString& aString, nsICSSStyleSheet* aSheet,
-                        PRBool aIsPseudoElem,
-                        PRBool aIsNegated) const;
+  void AppendToStringWithoutCombinators(nsAString& aString,
+                                        nsICSSStyleSheet* aSheet) const;
+  void AppendToStringWithoutCombinatorsOrNegations(nsAString& aString,
+                                                   nsICSSStyleSheet* aSheet,
+                                                   PRBool aIsNegated)
+                                                        const;
   // Returns true if this selector can have a namespace specified (which
   // happens if and only if the default namespace would apply to this
   // selector).

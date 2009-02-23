@@ -111,7 +111,7 @@ interface nsIApplicationCacheNamespace : nsISupports
  * loads.  Inactive caches will be removed from the cache when they are
  * no longer referenced.
  */
-[scriptable, uuid(1e1a2371-875b-4e57-98ff-a81af1750ca2)]
+[scriptable, uuid(663e2e2e-04a0-47b6-87b3-a122be46cb53)]
 interface nsIApplicationCache : nsISupports
 {
     /**
@@ -160,6 +160,11 @@ interface nsIApplicationCache : nsISupports
      * TRUE if the cache is the active cache for this group.
      */
     readonly attribute boolean active;
+
+    /**
+     * The disk usage of the application cache, in bytes.
+     */
+    readonly attribute unsigned long usage;
 
     /**
      * Makes this cache the active application cache for this group.

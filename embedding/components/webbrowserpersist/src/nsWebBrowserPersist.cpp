@@ -1218,21 +1218,23 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     if (aCacheKey)
     {
         // Test if the cache key is actually a web page descriptor (docshell)
-        nsCOMPtr<nsIWebPageDescriptor> webPageDescriptor = do_QueryInterface(aCacheKey);
-        if (webPageDescriptor)
+        // or session history entry.
+        nsCOMPtr<nsISHEntry> shEntry = do_QueryInterface(aCacheKey);
+        if (!shEntry)
         {
-            nsCOMPtr<nsISupports> currentDescriptor;
-            webPageDescriptor->GetCurrentDescriptor(getter_AddRefs(currentDescriptor));
-            if (currentDescriptor)
+            nsCOMPtr<nsIWebPageDescriptor> webPageDescriptor =
+                do_QueryInterface(aCacheKey);
+            if (webPageDescriptor)
             {
-                // Descriptor is actually a session history entry
-                nsCOMPtr<nsISHEntry> shEntry = do_QueryInterface(currentDescriptor);
-                NS_ASSERTION(shEntry, "The descriptor is meant to be a session history entry");
-                if (shEntry)
-                {
-                    shEntry->GetCacheKey(getter_AddRefs(cacheKey));
-                }
+                nsCOMPtr<nsISupports> currentDescriptor;
+                webPageDescriptor->GetCurrentDescriptor(getter_AddRefs(currentDescriptor));
+                shEntry = do_QueryInterface(currentDescriptor);
             }
+        }
+
+        if (shEntry)
+        {
+            shEntry->GetCacheKey(getter_AddRefs(cacheKey));
         }
         else
         {

@@ -253,6 +253,14 @@ class NS_STACK_CLASS nsWSRunObject
     
     // protected methods ---------------------------------------------------------
     // tons of utility methods.  
+
+    /**
+     * Return the node which we will handle white-space under. This is the
+     * closest block within the DOM subtree we're editing, or if none is
+     * found, the (inline) root of the editable subtree.
+     */
+    already_AddRefed<nsIDOMNode> GetWSBoundingParent();
+
     nsresult GetWSNodes();
     nsresult GetRuns();
     void     ClearRuns();

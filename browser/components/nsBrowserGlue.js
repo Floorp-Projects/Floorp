@@ -24,6 +24,7 @@
 #   Asaf Romano <mano@mozilla.com>
 #   Marco Bonardo <mak77@bonardo.net>
 #   Dietrich Ayala <dietrich@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -323,7 +324,11 @@ BrowserGlue.prototype = {
         showPrompt = this._prefs.getBoolPref("browser.tabs.warnOnClose");
     } catch (ex) {}
 
-    if (!showPrompt)
+    // Never show a prompt inside the private browsing mode
+    var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
+                            getService(Ci.nsIPrivateBrowsingService).
+                            privateBrowsingEnabled;
+    if (!showPrompt || inPrivateBrowsing)
       return false;
 
     var buttonChoice = 0;

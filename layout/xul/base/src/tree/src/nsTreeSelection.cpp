@@ -274,7 +274,7 @@ nsTreeSelection::~nsTreeSelection()
 NS_INTERFACE_MAP_BEGIN(nsTreeSelection)
   NS_INTERFACE_MAP_ENTRY(nsITreeSelection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeSelection)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeSelection)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsTreeSelection)

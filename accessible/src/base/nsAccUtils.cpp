@@ -272,21 +272,38 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
   nsAutoString atomic, live, relevant, busy;
   nsIContent *ancestor = aStartContent;
   while (ancestor) {
+
+    // container-relevant attribute
     if (relevant.IsEmpty() &&
         nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_relevant) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant, relevant))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerRelevant, relevant);
 
-    if (live.IsEmpty() &&
-        nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_live) &&
-        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live, live))
-      SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
+    // container-live attribute
+    if (live.IsEmpty()) {
+      if (nsAccUtils::HasDefinedARIAToken(ancestor,
+                                          nsAccessibilityAtoms::aria_live)) {
+        ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live,
+                          live);
+        SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
+      } else {
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(ancestor));
+        nsRoleMapEntry *role = GetRoleMapEntry(node);
+        if (role) {
+          nsAutoString live;
+          GetLiveAttrValue(role->liveAttRule, live);
+          SetAccAttr(aAttributes, nsAccessibilityAtoms::containerLive, live);
+        }
+      }
+    }
 
+    // container-atomic attribute
     if (atomic.IsEmpty() &&
         nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_atomic) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic, atomic))
       SetAccAttr(aAttributes, nsAccessibilityAtoms::containerAtomic, atomic);
 
+    // container-busy attribute
     if (busy.IsEmpty() &&
         nsAccUtils::HasDefinedARIAToken(ancestor, nsAccessibilityAtoms::aria_busy) &&
         ancestor->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy, busy))
@@ -299,33 +316,6 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
     if (!ancestor)
       ancestor = aTopContent; // Use <body>/<frameset>
   }
-}
-
-PRBool
-nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
-{
-  return aAtom != nsAccessibilityAtoms::aria_activedescendant &&
-    aAtom != nsAccessibilityAtoms::aria_checked &&
-    aAtom != nsAccessibilityAtoms::aria_controls &&
-    aAtom != nsAccessibilityAtoms::aria_describedby &&
-    aAtom != nsAccessibilityAtoms::aria_disabled &&
-    aAtom != nsAccessibilityAtoms::aria_expanded &&
-    aAtom != nsAccessibilityAtoms::aria_flowto &&
-    aAtom != nsAccessibilityAtoms::aria_invalid &&
-    aAtom != nsAccessibilityAtoms::aria_haspopup &&
-    aAtom != nsAccessibilityAtoms::aria_labelledby &&
-    aAtom != nsAccessibilityAtoms::aria_multiline &&
-    aAtom != nsAccessibilityAtoms::aria_multiselectable &&
-    aAtom != nsAccessibilityAtoms::aria_owns &&
-    aAtom != nsAccessibilityAtoms::aria_pressed &&
-    aAtom != nsAccessibilityAtoms::aria_readonly &&
-    aAtom != nsAccessibilityAtoms::aria_relevant &&
-    aAtom != nsAccessibilityAtoms::aria_required &&
-    aAtom != nsAccessibilityAtoms::aria_selected &&
-    aAtom != nsAccessibilityAtoms::aria_valuemax &&
-    aAtom != nsAccessibilityAtoms::aria_valuemin &&
-    aAtom != nsAccessibilityAtoms::aria_valuenow &&
-    aAtom != nsAccessibilityAtoms::aria_valuetext;
 }
 
 PRBool
@@ -686,6 +676,28 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   return &nsARIAMap::gLandmarkRoleMap;
 }
 
+PRUint8
+nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
+{
+    for (PRUint32 i = 0; i < nsARIAMap::gWAIUnivAttrMapLength; i++)
+      if (*nsARIAMap::gWAIUnivAttrMap[i].attributeName == aAtom)
+        return nsARIAMap::gWAIUnivAttrMap[i].characteristics;
+
+    return 0;
+}
+
+void
+nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
+{
+  switch (aRule) {
+    case eOffLiveAttr:
+      aValue = NS_LITERAL_STRING("off");
+      break;
+    case ePoliteLiveAttr:
+      aValue = NS_LITERAL_STRING("polite");
+      break;
+  }
+}
 
 #ifdef DEBUG_A11Y
 

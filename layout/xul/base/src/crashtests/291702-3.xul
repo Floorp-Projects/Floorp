@@ -1,0 +1,137 @@
+﻿<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window title="Negative flex bug #2"
+		orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+  </hbox>
+
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+  </hbox>
+
+
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 2;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 2;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 2;"/>
+  </hbox>
+
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="1"/>
+    <label value="This is another label" style="-moz-box-flex: 1;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="1"/>
+    <label value="This is another label" style="-moz-box-flex: 1;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="1"/>
+    <label value="This is another label" style="-moz-box-flex: 1;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741823"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741823;"/>
+    <button label="Button" flex="2"/>
+    <label value="This is another label" style="-moz-box-flex: 2;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741824"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741824;"/>
+    <button label="Button" flex="2"/>
+    <label value="This is another label" style="-moz-box-flex: 2;"/>
+  </hbox>
+  <hbox>
+    <button label="Button" flex="1073741825"/>
+    <label value="This is another label" style="-moz-box-flex: 1073741825;"/>
+    <button label="Button" flex="2"/>
+    <label value="This is another label" style="-moz-box-flex: 2;"/>
+  </hbox>
+</window>

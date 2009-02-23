@@ -262,21 +262,31 @@ nsPlacesDBUtils.prototype = {
     fixTagsRootTitle.params["title"] =
       this._bundle.GetStringFromName("TagsFolderTitle");
     cleanupStatements.push(fixTagsRootTitle);
-
-    // C.2 fix broken roots
-    //     Roots must be folders and have places root as parent
-    let fixInvalidRoots = this._dbConn.createStatement(
-      "DELETE FROM moz_bookmarks_roots WHERE folder_id IN (" +
-        "SELECT folder_id FROM moz_bookmarks_roots r " +
-        "WHERE folder_id <> :places_root " + //exclude root
-          "AND NOT EXISTS " +
-            "(SELECT id FROM moz_bookmarks WHERE id = r.folder_id " +
-              "AND type = :type_folder AND parent = :places_root LIMIT 1)" +
-      ")");
-    fixInvalidRoots.params["type_folder"] = this._bms.TYPE_FOLDER;
-    fixInvalidRoots.params["places_root"] = this._bms.placesRoot;
-    cleanupStatements.push(fixInvalidRoots);
 */
+
+    // C.2 fix missing Places root
+    //     Bug 477739 shows a case where the root could be wrongly removed
+    //     due to an endianness issue.  We try to fix broken roots here.
+    let selectPlacesRoot = this._dbConn.createStatement(
+      "SELECT id FROM moz_bookmarks WHERE id = :places_root");
+    selectPlacesRoot.params["places_root"] = this._bms.placesRoot;
+    if (!selectPlacesRoot.executeStep()) {
+      // We are missing the root, try to recreate it.
+      let createPlacesRoot = this._dbConn.createStatement(
+        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title) " +
+        "VALUES (:places_root, 2, NULL, 0, 0, NULL)");
+      createPlacesRoot.params["places_root"] = this._bms.placesRoot;
+      cleanupStatements.push(createPlacesRoot);
+
+      // Now ensure that other roots are children of Places root.
+      let fixPlacesRootChildren = this._dbConn.createStatement(
+        "UPDATE moz_bookmarks SET parent = :places_root WHERE id IN " +
+          "(SELECT folder_id FROM moz_bookmarks_roots " +
+            "WHERE folder_id <> :places_root)");
+      fixPlacesRootChildren.params["places_root"] = this._bms.placesRoot;
+      cleanupStatements.push(fixPlacesRootChildren);
+    }
+    selectPlacesRoot.finalize();
 
     // MOZ_BOOKMARKS
     // D.1 remove items without a valid place

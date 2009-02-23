@@ -95,10 +95,12 @@ protected:
   void SetKeyEquiv(PRUint8 aModifiers, const nsString &aText);
 
   EMenuItemType             mType;
+  // nsMenuItemX objects should always have a valid native menu item.
   NSMenuItem*               mNativeMenuItem;      // [strong]
   nsMenuX*                  mMenuParent;          // [weak]
   nsMenuBarX*               mMenuBar;             // [weak]
   nsCOMPtr<nsIContent>      mCommandContent;
+  // The icon object should never outlive its creating nsMenuItemX object.
   nsRefPtr<nsMenuItemIconX> mIcon;
   PRBool                    mIsChecked;
 };

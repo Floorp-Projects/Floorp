@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="text/javascript">
+
+  window.onload = function()
+  {
+    window.setTimeout(function()
+    {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebNavigation)
+        .goBack();
+    }, 100);
+  }
+  
+  </script>
+</head>
+</html>

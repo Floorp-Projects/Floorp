@@ -3980,6 +3980,15 @@ nsDocument::DispatchContentLoadedEvents()
     } while (parent);
   }
 
+  // If the document has a manifest attribute, fire a MozApplicationManifest
+  // event.
+  nsIContent* root = GetRootContent();
+  if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
+    nsContentUtils::DispatchChromeEvent(this, static_cast<nsIDocument*>(this),
+                                        NS_LITERAL_STRING("MozApplicationManifest"),
+                                        PR_TRUE, PR_TRUE);
+  }
+
   UnblockOnload(PR_TRUE);
 }
 

@@ -271,6 +271,9 @@ public:
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
+  // Suspend timeouts in this window and in child windows.
+  virtual void SuspendTimeouts() = 0;
+
   // Resume suspended timeouts in this window and in child windows.
   virtual nsresult ResumeTimeouts() = 0;
   

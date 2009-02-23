@@ -208,10 +208,7 @@ public:
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
     NS_IMETHOD         SetMenuBar(void * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
-    NS_IMETHOD         WidgetToScreen(const nsIntRect& aOldRect,
-                                      nsIntRect& aNewRect);
-    NS_IMETHOD         ScreenToWidget(const nsIntRect& aOldRect,
-                                      nsIntRect& aNewRect);
+    virtual nsIntPoint WidgetToScreenOffset();
     NS_IMETHOD         BeginResizingChildren(void);
     NS_IMETHOD         EndResizingChildren(void);
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
@@ -355,7 +352,6 @@ public:
                                           const PangoAttrList *aFeedback);
     void               IMEComposeEnd     (void);
     GtkIMContext*      IMEGetContext     (void);
-    nsWindow*          IMEGetOwningWindow(void);
     // "Enabled" means the users can use all IMEs.
     // I.e., the focus is in the normal editors.
     PRBool             IMEIsEnabledState (void);
@@ -475,7 +471,7 @@ protected:
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     GtkWidget         *GetMozContainerWidget();
-    void               GetContainerWindow(nsWindow  **aWindow);
+    nsWindow          *GetContainerWindow();
     void               SetUrgencyHint(GtkWidget *top_window, PRBool state);
     void              *SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);

@@ -355,7 +355,6 @@ if [[ -z "$LIBRARYSH" ]]; then
     #leak gauge
     #NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
 
-    TEST_CPUSPEED="`mips.pl`"
     TEST_MEMORY="`memory.pl`"
 
     # debug msg

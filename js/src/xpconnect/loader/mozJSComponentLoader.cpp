@@ -93,7 +93,7 @@ static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
 /* See bug 318077 for WinCE.                                   */
-#if !defined(XP_BEOS) && !defined(XP_OS2) && !defined(WINCE)
+#if !defined(XP_BEOS) && !defined(XP_OS2)
 #define HAVE_PR_MEMMAP
 #endif
 
@@ -300,7 +300,9 @@ class JSCLContextHelper
 {
 public:
     JSCLContextHelper(mozJSComponentLoader* loader);
-    ~JSCLContextHelper();
+    ~JSCLContextHelper() { Pop(); }
+
+    JSContext* Pop();
 
     operator JSContext*() const {return mContext;}
 
@@ -324,6 +326,55 @@ private:
     JSContext* mContext;
     JSErrorReporter mOldReporter;
 };
+
+static nsresult
+OutputError(JSContext *cx,
+            const char *format,
+            va_list ap)
+{
+    char *buf = JS_vsmprintf(format, ap);
+    if (!buf) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JS_ReportError(cx, buf);
+    JS_smprintf_free(buf);
+
+    return NS_OK;
+}
+
+static nsresult
+ReportOnCaller(nsAXPCNativeCallContext *cc,
+               const char *format, ...) {
+    if (!cc) {
+        return NS_ERROR_FAILURE;
+    }
+    
+    va_list ap;
+    va_start(ap, format);
+
+    nsresult rv;
+    JSContext *callerContext;
+    rv = cc->GetJSContext(&callerContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return OutputError(callerContext, format, ap);
+}
+
+static nsresult
+ReportOnCaller(JSCLContextHelper &helper,
+               const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+
+    JSContext *cx = helper.Pop();
+    if (!cx) {
+        return NS_ERROR_FAILURE;
+    }
+
+    return OutputError(cx, format, ap);
+}
 
 NS_IMPL_ISUPPORTS1(nsXPCFastLoadIO, nsIFastLoadFileIO)
 
@@ -1539,11 +1590,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     jsval symbols;
     if (targetObj) {
-        JSAutoRequest ar(mContext);
+        JSCLContextHelper cxhelper(this);
 
         if (!JS_GetProperty(mContext, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {
-            return ReportOnCaller(cc, ERROR_NOT_PRESENT,
+            return ReportOnCaller(cxhelper, ERROR_NOT_PRESENT,
                                   PromiseFlatCString(aLocation).get());
         }
 
@@ -1551,7 +1602,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         if (!JSVAL_IS_OBJECT(symbols) ||
             !(symbolsObj = JSVAL_TO_OBJECT(symbols)) ||
             !JS_IsArrayObject(mContext, symbolsObj)) {
-            return ReportOnCaller(cc, ERROR_NOT_AN_ARRAY,
+            return ReportOnCaller(cxhelper, ERROR_NOT_AN_ARRAY,
                                   PromiseFlatCString(aLocation).get());
         }
 
@@ -1559,7 +1610,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
         jsuint symbolCount = 0;
         if (!JS_GetArrayLength(mContext, symbolsObj, &symbolCount)) {
-            return ReportOnCaller(cc, ERROR_GETTING_ARRAY_LENGTH,
+            return ReportOnCaller(cxhelper, ERROR_GETTING_ARRAY_LENGTH,
                                   PromiseFlatCString(aLocation).get());
         }
 
@@ -1573,21 +1624,21 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
             if (!JS_GetElement(mContext, symbolsObj, i, &val) ||
                 !JSVAL_IS_STRING(val)) {
-                return ReportOnCaller(cc, ERROR_ARRAY_ELEMENT,
+                return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
                                       PromiseFlatCString(aLocation).get(), i);
             }
 
             symbolName = JSVAL_TO_STRING(val);
             if (!JS_GetProperty(mContext, mod->global,
                                 JS_GetStringBytes(symbolName), &val)) {
-                return ReportOnCaller(cc, ERROR_GETTING_SYMBOL,
+                return ReportOnCaller(cxhelper, ERROR_GETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
                                       JS_GetStringBytes(symbolName));
             }
 
             if (!JS_SetProperty(mContext, targetObj,
                                 JS_GetStringBytes(symbolName), &val)) {
-                return ReportOnCaller(cc, ERROR_SETTING_SYMBOL,
+                return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
                                       JS_GetStringBytes(symbolName));
             }
@@ -1612,26 +1663,6 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         newEntry.forget();
     }
     
-    return NS_OK;
-}
-
-nsresult
-mozJSComponentLoader::ReportOnCaller(nsAXPCNativeCallContext *cc,
-                                     const char *format, ...) {
-    if (!cc) {
-        return NS_ERROR_FAILURE;
-    }
-    
-    va_list ap;
-    va_start(ap, format);
-
-    nsresult rv;
-    JSContext *callerContext;
-    rv = cc->GetJSContext(&callerContext);
-    NS_ENSURE_SUCCESS(rv, rv);
-    char* buf = JS_vsmprintf(format, ap);
-    JS_ReportError(callerContext, buf);
-    JS_smprintf_free(buf);
     return NS_OK;
 }
 
@@ -1671,11 +1702,21 @@ JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
     } 
 }
 
-JSCLContextHelper::~JSCLContextHelper()
+// Pops the context that was pushed and then returns the context that is now at
+// the top of the stack.
+JSContext*
+JSCLContextHelper::Pop()
 {
-    JS_ClearNewbornRoots(mContext);
-    if (mContextThread)
-        JS_EndRequest(mContext);
+    JSContext* cx = nsnull;
+    if (mContextStack) {
+        JS_ClearNewbornRoots(mContext);
+        if (mContextThread) {
+            JS_EndRequest(mContext);
+        }
 
-    mContextStack->Pop(nsnull);
-}        
+        mContextStack->Pop(nsnull);
+        mContextStack->Peek(&cx);
+        mContextStack = nsnull;
+    }
+    return cx;
+}

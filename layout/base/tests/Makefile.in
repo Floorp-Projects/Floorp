@@ -76,28 +76,38 @@ _TEST_FILES =	\
 # and test_bug435293-interaction.html are currently disabled due to an
 # excessive number of leaks that they expose see bug 474016 for details.
 
-# Tests for bug 441782 don't pass reliably on Windows, because of bug 469208
+# Tests for bugs 441782 and 467672 don't pass reliably on Windows, because of bug 469208
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += \
-		test_bug441782.html \
+		bidi_numeral_test.js \
+		test_bug441782-1.html \
 		bug441782-1.html \
 		bug441782-1-ref.html \
+		test_bug441782-2.html \
 		bug441782-2.html \
 		bug441782-2-ref.html \
+		test_bug441782-3.html \
 		bug441782-3.html \
 		bug441782-3-ref.html \
+		test_bug441782-4.html \
 		bug441782-4.html \
 		bug441782-4-ref.html \
+		test_bug441782-5.html \
 		bug441782-5.html \
 		bug441782-5-ref.html \
+		test_bug467672-1.html \
 		bug467672-1.html \
 		bug467672-1-ref.html \
+		test_bug467672-2.html \
 		bug467672-2.html \
 		bug467672-2-ref.html \
+		test_bug467672-3.html \
 		bug467672-3.html \
 		bug467672-3-ref.html \
+		test_bug467672-4.html \
 		bug467672-4.html \
 		bug467672-4-ref.html \
+		test_bug467672-5.html \
 		bug467672-5.html \
 		bug467672-5-ref.html \
 		$(NULL)

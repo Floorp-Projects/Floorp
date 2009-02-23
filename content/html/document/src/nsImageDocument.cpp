@@ -68,7 +68,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsContentErrors.h"
-#include "ImageErrors.h"
+#include "nsURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -235,9 +235,9 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     imageLoader->RemoveObserver(imgDoc);
   }
 
-  // |status| is NS_IMAGELIB_ERROR_LOAD_ABORTED if the image was found in
-  // the cache (bug 177747 comment 51).
-  if (status == NS_IMAGELIB_ERROR_LOAD_ABORTED) {
+  // |status| is NS_ERROR_PARSED_DATA_CACHED if the image was found in
+  // the cache (bug 177747 comment 51, bug 475344).
+  if (status == NS_ERROR_PARSED_DATA_CACHED) {
     status = NS_OK;
   }
 

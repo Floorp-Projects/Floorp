@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xbl="http://www.mozilla.org/xbl">
+<head>
+<title>Testcase bug 277208 - appendChild to a hidden box from a binding crashes</title>
+
+<xbl:bindings><xbl:binding id="crash"><xbl:content>
+<span style="display:none"><xbl:children includes="span"/></span>
+</xbl:content></xbl:binding></xbl:bindings>
+
+<style type="text/css">
+#test{-moz-binding:url(#crash);}
+</style>
+</head>
+<body onload="init()">
+<span id="test"></span>
+<script>
+function init(){
+         document.getElementById('test').appendChild(document.createElement('span'));
+}
+</script>
+</body>
+</html>
