@@ -235,6 +235,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual NS_HIDDEN_(void) RemovedFromDocShell();
+
 protected:
   nsresult GetBodySize(PRInt32* aWidth,
                        PRInt32* aHeight);

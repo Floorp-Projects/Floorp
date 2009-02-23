@@ -39,7 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsstddef.h"
 #include <math.h>
 
 #include "jsapi.h"

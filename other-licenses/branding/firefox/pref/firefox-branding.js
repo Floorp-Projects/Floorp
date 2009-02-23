@@ -3,6 +3,9 @@ pref("startup.homepage_welcome_url","http://%LOCALE%.www.mozilla.com/%LOCALE%/%A
 // Interval: Time between checks for a new version (in seconds)
 // nightly=6 hours, official=24 hours
 pref("app.update.interval", 86400);
+// The time interval between the downloading of mar file chunks in the
+// background (in seconds)
+pref("app.update.download.backgroundInterval", 600);
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
 pref("app.update.url.manual", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/");

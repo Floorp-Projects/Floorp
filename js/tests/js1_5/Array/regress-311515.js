@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-311515.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 311583;
+var BUGNUMBER = 311515;
 var summary = 'Array.sort should skip holes and undefined during sort';
 var actual = '';
 var expect = '';

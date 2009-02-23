@@ -40,7 +40,6 @@
 
 #include "nscore.h"
 #include "nsIView.h"
-#include "nsColor.h"
 #include "nsEvent.h"
 #include "nsIRenderingContext.h"
 
@@ -60,10 +59,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// de2a2d24-9753-4488-9fdc-dd0accb484f7
+// fa490965-ebd0-4203-836c-51c42d01fedb
 #define NS_IVIEWMANAGER_IID   \
-{ 0xde2a2d24, 0x9753, 0x4488, \
-  { 0x9f, 0xdc, 0xdd, 0x0a, 0xcc, 0xb4, 0x84, 0xf7 } }
+{ 0xfa490965, 0xebd0, 0x4203, \
+  { 0x83, 0x6c, 0x51, 0xc4, 0x2d, 0x01, 0xfe, 0xdb } }
 
 class nsIViewManager : public nsISupports
 {
@@ -440,22 +439,6 @@ public:
    *                  PR_FALSE otherwise
    */
   NS_IMETHOD IsPainting(PRBool& aIsPainting)=0;
-
-  /**
-   * Set the default background color that the view manager should use
-   * to paint otherwise unowned areas. If the color isn't known, just set
-   * it to zero (which means 'transparent' since the color is RGBA).
-   *
-   * @param aColor the default background color
-   */
-  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor)=0;
-
-  /**
-   * Retrieve the default background color.
-   *
-   * @param aColor the default background color
-   */
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor)=0;
 
   /**
    * Retrieve the time of the last user event. User events

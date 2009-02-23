@@ -53,7 +53,7 @@
       var s2 = snapshotWindow($("f2").contentWindow);
       var s3 = snapshotWindow($("f3").contentWindow);
 
-      ok(!compareSnapshots(s2, s3)[0],
+      ok(!compareSnapshots(s2, s3, true)[0],
          "Should look different due to different sizing");
 
       function getDOM(id) {
@@ -101,7 +101,7 @@
       l4.detach();
 
       var s1_new = snapshotWindow($("f1").contentWindow);
-      var [same, first, second] = compareSnapshots(s1_new, s2);
+      var [same, first, second] = compareSnapshots(s1_new, s2, true);
       ok(same, "Should reflow on swap", "Expected " + second + " but got " + first);
 
       is(strs["f1"], "f1.pagehide f1.pageshow");

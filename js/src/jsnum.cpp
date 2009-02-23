@@ -41,7 +41,6 @@
 /*
  * JS number type and wrapper class.
  */
-#include "jsstddef.h"
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <float.h>
 #endif

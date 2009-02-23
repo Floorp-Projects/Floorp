@@ -701,6 +701,10 @@ function runTextInputTests()
     testKey({layout:"Lithuanian", keyCode:48, ctrl:1, alt:1, chars:"0"},
             "0");
   }
+
+  // XXX We need to move focus for canceling to search the autocomplete
+  // result. If we don't do here, Fx will crash at end of this tests.
+  document.getElementById("button").focus();
 }
 
 function runTest()

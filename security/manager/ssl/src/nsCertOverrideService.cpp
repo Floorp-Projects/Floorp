@@ -417,7 +417,7 @@ GetCertFingerprintByOidTag(CERTCertificate* nsscert,
                            nsCString &fp)
 {
   unsigned int hash_len = HASH_ResultLenByOidTag(aOidTag);
-  nsRefPtr<nsStringBuffer> fingerprint = nsStringBuffer::Alloc(hash_len);
+  nsStringBuffer* fingerprint = nsStringBuffer::Alloc(hash_len);
   if (!fingerprint)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -429,6 +429,7 @@ GetCertFingerprintByOidTag(CERTCertificate* nsscert,
   fpItem.len = hash_len;
 
   fp.Adopt(CERT_Hexify(&fpItem, 1));
+  fingerprint->Release();
   return NS_OK;
 }
 

@@ -1286,6 +1286,9 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   // Set up the user data.
   XML_SetUserData(mExpatParser, this);
 
+  // XML must detect invalid character convertion
+  aParserContext.mScanner->OverrideReplacementCharacter(0xffff);
+
   return aSink->WillBuildModel();
 }
 

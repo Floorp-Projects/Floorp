@@ -1,0 +1,48 @@
+
+/* M+ outline fonts */
+
+/* mplus-1p - http://mplus-fonts.sourceforge.jp/mplus-outline-fonts/index-en.html */
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-thin.ttf);
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-light.ttf);
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-regular.ttf);
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-medium.ttf);
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-bold.ttf);
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-heavy.ttf);
+  font-weight: 800;
+}
+
+@font-face {
+  font-family: mplus1p;
+  src: url(mplus-1p-black.ttf);
+  font-weight: 900;
+}
+
+

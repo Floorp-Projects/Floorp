@@ -1970,11 +1970,6 @@ function ServerHandler(server)
    */
   this._overridePaths = {};
   
-  /** 
-   * Put data overrides, privileged before _overridePaths.
-   */
-  this._putDataOverrides = {};
-
   /**
    * Custom request handlers for the error handlers in the server in which this
    * resides.  Path-handler pairs are stored as property-value pairs in this
@@ -2028,60 +2023,7 @@ ServerHandler.prototype =
     {
       try
       {
-        if (metadata.method == "PUT")
-        {
-          // remotely set path override
-          var avail;
-          var bytes = [];
-          var body = new BinaryInputStream(metadata.bodyInputStream);
-          while ((avail = body.available()) > 0)
-            Array.prototype.push.apply(bytes, body.readByteArray(avail));
-
-          var data = String.fromCharCode.apply(null, bytes);
-          var contentType;
-          try
-          {
-            contentType = metadata.getHeader("Content-Type");
-          }
-          catch (ex)
-          {
-            contentType = "application/octet-stream";
-          }
-
-          dumpn("PUT data \'" + data + "\' for " + path);
-          this._putDataOverrides[path] =
-            function(ametadata, aresponse)
-            {
-              aresponse.setStatusLine(ametadata.httpVersion, 200, "OK");
-              aresponse.setHeader("Content-Type", contentType, false);
-              dumpn("*** writing PUT data=\'" + data + "\'");
-              aresponse.bodyOutputStream.write(data, data.length);
-            };
-
-          response.setStatusLine(metadata.httpVersion, 200, "OK");
-        }
-        else if (metadata.method == "DELETE")
-        {
-          if (path in this._putDataOverrides)
-          {
-            delete this._putDataOverrides[path];
-            dumpn("clearing PUT data for " + path);
-            response.setStatusLine(metadata.httpVersion, 200, "OK");
-          }
-          else
-          {
-            dumpn("no PUT data for " + path + " to delete");
-            response.setStatusLine(metadata.httpVersion, 204, "No Content");
-          }
-        }
-        else if (path in this._putDataOverrides)
-        {
-          // PUT data overrides are priviledged before all
-          // other overrides.
-          dumpn("calling PUT data override for " + path);
-          this._putDataOverrides[path](metadata, response);
-        }
-        else if (path in this._overridePaths)
+        if (path in this._overridePaths)
         {
           // explicit paths first, then files based on existing directory mappings,
           // then (if the file doesn't exist) built-in server default paths

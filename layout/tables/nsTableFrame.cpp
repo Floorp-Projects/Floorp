@@ -92,7 +92,7 @@ struct nsTableReflowState {
   // Running y-offset
   nscoord y;
 
-  nsTableReflowState(nsPresContext&          aPresContext,
+  nsTableReflowState(nsPresContext&           aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsTableFrame&            aTableFrame,
                      nscoord                  aAvailWidth,
@@ -102,7 +102,7 @@ struct nsTableReflowState {
     Init(aPresContext, aTableFrame, aAvailWidth, aAvailHeight);
   }
 
-  void Init(nsPresContext& aPresContext,
+  void Init(nsPresContext&  aPresContext,
             nsTableFrame&   aTableFrame,
             nscoord         aAvailWidth,
             nscoord         aAvailHeight)
@@ -129,7 +129,7 @@ struct nsTableReflowState {
     }
   }
 
-  nsTableReflowState(nsPresContext&          aPresContext,
+  nsTableReflowState(nsPresContext&           aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsTableFrame&            aTableFrame)
     : reflowState(aReflowState)
@@ -159,7 +159,7 @@ struct BCPropertyData
 };
 
 NS_IMETHODIMP 
-nsTableFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
+nsTableFrame::GetParentStyleContextFrame(nsPresContext*  aPresContext,
                                          nsIFrame**      aProviderFrame,
                                          PRBool*         aIsChild)
 {
@@ -1274,11 +1274,8 @@ nsDisplayTableItem::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilde
 /* static */ void
 nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
 {
-  PRBool isCanvas;
   const nsStyleBackground* bg;
-  PRBool hasBG =
-    nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas);
-  if (!hasBG)
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
     return;
   if (!bg->HasFixedBackground())
     return;
@@ -1857,7 +1854,7 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
  ******************************************************************************************/
 
 /* Layout the entire inner table. */
-NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
+NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)

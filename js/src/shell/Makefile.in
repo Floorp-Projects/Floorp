@@ -53,6 +53,12 @@ LIBS      = $(NSPR_LIBS) $(EDITLINE_LIBS) $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_
 
 LOCAL_INCLUDES += -I$(topsrcdir) -I..
 
+ifdef _MSC_VER
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainACRTStartup
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_SHARK

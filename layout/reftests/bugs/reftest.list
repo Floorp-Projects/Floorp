@@ -1,6 +1,8 @@
 # Please keep this list sorted by bug number (but feel free to use a
 # logical order for the tests for each bug).
 
+== 105-1.html 105-1-ref.html
+== 647-1.html 647-1-ref.html
 == 9458-basic-1.html 9458-basic-1-ref.html
 == 9458-valign-1.html 9458-valign-1-ref.html
 == 9458-valign-2.html 9458-valign-2-ref.html
@@ -253,6 +255,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
 == 306660-3.html 306660-3-ref.html
+== 307076-1.html 307076-1-ref.html
 == 307102-1.html 307102-1-ref.html
 == 307102-2.html 307102-2-ref.html
 == 307102-3.html 307102-3-ref.html
@@ -344,6 +347,7 @@ fails == 315920-5.html 315920-5-ref.html # bug 229915 ???
 == 323656-5.svg 323656-5-ref.svg
 == 323656-6.html 323656-6-ref.html
 == 325486-1.html 325486-1-ref.html
+== 328111-1.html 328111-1-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
 == 331809-1.html 331809-1-ref.html
@@ -464,6 +468,8 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # proba
 == 363637-1.html 363637-1-ref.html
 == 363706-1.html 363706-1-ref.html
 != 363706-1.html about:blank
+== 363728-1.html 363728-1-ref.html
+== 363728-2.html 363728-2-ref.html
 == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
 == 363858-3.html 363858-3-ref.html
@@ -819,6 +825,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 409659-1b.html 409659-1-ref.html
 != 409659-1c.html 409659-1-ref.html
 == 409659-1d.html 409659-1-ref.html
+== 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
 == 411585-1.html 411585-1-ref.html
@@ -1078,3 +1085,8 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 476598-1b.html 476598-1-ref.html
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
+== 478377-1.xul 478377-1-ref.xul
+== 478811-1.html 478811-1-ref.html
+== 478811-2.html 478811-2-ref.html
+== 478811-3.html 478811-3-ref.html
+== 478811-4.html 478811-4-ref.html

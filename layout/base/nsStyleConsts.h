@@ -243,20 +243,15 @@
 #define NS_COLOR_CURRENTCOLOR                   -4
 
 // See nsStyleBackground
-// 0x01 was background-color:transparent
-#define NS_STYLE_BG_IMAGE_NONE                  0x02
-#define NS_STYLE_BG_X_POSITION_PERCENT          0x04
-#define NS_STYLE_BG_X_POSITION_LENGTH           0x08
-#define NS_STYLE_BG_Y_POSITION_PERCENT          0x10
-#define NS_STYLE_BG_Y_POSITION_LENGTH           0x20
-
-// See nsStyleBackground
 #define NS_STYLE_BG_ATTACHMENT_SCROLL     0
 #define NS_STYLE_BG_ATTACHMENT_FIXED      1
 
 // See nsStyleBackground
+// Code depends on these constants having the same values as BG_ORIGIN_*
 #define NS_STYLE_BG_CLIP_BORDER           0
 #define NS_STYLE_BG_CLIP_PADDING          1
+// When we add NS_STYLE_BG_CLIP_CONTENT, we should add the PR_STATIC_ASSERTs
+// to the places that assert equality for BORDER and PADDING.
 
 // See nsStyleBackground
 #define NS_STYLE_BG_INLINE_POLICY_EACH_BOX      0
@@ -264,6 +259,7 @@
 #define NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX  2
 
 // See nsStyleBackground
+// Code depends on these constants having the same values as BG_CLIP_*
 #define NS_STYLE_BG_ORIGIN_BORDER         0
 #define NS_STYLE_BG_ORIGIN_PADDING        1
 #define NS_STYLE_BG_ORIGIN_CONTENT        2
@@ -395,6 +391,7 @@
 #define NS_STYLE_DISPLAY_TABLE_CAPTION          17
 #define NS_STYLE_DISPLAY_BOX                    18
 #define NS_STYLE_DISPLAY_INLINE_BOX             19
+#ifdef MOZ_XUL
 #define NS_STYLE_DISPLAY_GRID                   20
 #define NS_STYLE_DISPLAY_INLINE_GRID            21
 #define NS_STYLE_DISPLAY_GRID_GROUP             22
@@ -404,6 +401,7 @@
 #define NS_STYLE_DISPLAY_DECK                   26
 #define NS_STYLE_DISPLAY_POPUP                  27
 #define NS_STYLE_DISPLAY_GROUPBOX               28
+#endif
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0

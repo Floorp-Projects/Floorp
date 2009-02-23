@@ -63,6 +63,28 @@ enum EActionRule
   eSwitchAction
 };
 
+enum ELiveAttrRule
+{
+  eNoLiveAttr,
+  eOffLiveAttr,
+  ePoliteLiveAttr
+};
+
+// ARIA attribute characteristic masks, grow as needed
+
+/**
+ * This mask indicates the attribute should be exposed as an object attribute,
+ * used to expose semantics not traditionally found in a11y APIs.
+ * (See for example usage in nsAccessible::GetAttributes)
+ */
+const PRUint8 ATTR_EXPOSEOBJ  = 0x0001;
+
+/**
+ * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
+ * (See for example usage in nsAccessible::GetAttributes)
+ */
+const PRUint8 ATTR_VALTOKEN   = 0x0010;
+
 // Used for an nsStateMapEntry if a given state attribute supports "true" and "false"
 #define kBoolState 0
 
@@ -76,6 +98,13 @@ struct nsStateMapEntry
   nsIAtom** attributeName;  // nsnull indicates last entry in map
   const char* attributeValue; // magic value of kBoolState (0) means supports "true" and "false"
   PRUint32 state;             // If match, this is the nsIAccessibleStates to map to
+};
+
+// Small footprint storage of persistent aria attribute characteristics
+struct nsAttributeCharacteristics
+{
+  nsIAtom** attributeName;
+  const PRUint8 characteristics;
 };
 
 // For each ARIA role, this maps the nsIAccessible information
@@ -92,6 +121,10 @@ struct nsRoleMapEntry
 
   // Action mapping rule, how to expose nsIAccessible action
   EActionRule actionRule;
+
+  // 'live' and 'container-live' object attributes mapping rule: how to expose
+  // these object attributes if ARIA 'live' attribute is missed.
+  ELiveAttrRule liveAttRule;
 
   // Automatic state mapping rule: always include in nsIAccessibleStates
   PRUint32 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
@@ -142,6 +175,12 @@ struct nsARIAMap
    * the role.
    */
   static nsStateMapEntry gWAIUnivStateMap[];
+  
+  /**
+   * Map of attribute to attribute characteristics.
+   */
+  static nsAttributeCharacteristics gWAIUnivAttrMap[];
+  static PRUint32 gWAIUnivAttrMapLength;
 };
 
 #endif

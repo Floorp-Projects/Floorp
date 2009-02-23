@@ -1174,7 +1174,6 @@ main(int argc, char *argv[])
   */
   
   if (new_dynstr_size >= old_dynstr_size) {
-    fprintf(stderr, "Couldn't GC any strings, exiting.\n");
     return 0;
   }
 

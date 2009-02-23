@@ -44,6 +44,7 @@
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsobj.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -78,12 +79,20 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj);
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
 #define JSSLOT_ARRAY_LOOKUP_HOLDER     (JSSLOT_ARRAY_COUNT + 1)
 
-#define ARRAY_DENSE_LENGTH(obj)                                                \
-    (JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj)),                                   \
-     (obj)->dslots ? (uint32)(obj)->dslots[-1] : 0)
+static JS_INLINE uint32
+js_DenseArrayCapacity(JSObject *obj)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj));
+    return obj->dslots ? (uint32) obj->dslots[-1] : 0;
+}
 
-#define ARRAY_SET_DENSE_LENGTH(obj, max)                                       \
-    (JS_ASSERT((obj)->dslots), (obj)->dslots[-1] = (jsval)(max))
+static JS_INLINE void
+js_SetDenseArrayCapacity(JSObject *obj, uint32 capacity)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj));
+    JS_ASSERT(obj->dslots);
+    obj->dslots[-1] = (jsval) capacity;
+}
 
 #define ARRAY_GROWBY 8
 

@@ -356,8 +356,7 @@ public:
   virtual void*           GetNativeData(PRUint32 aDataType);
   NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
   NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
-  NS_IMETHOD              WidgetToScreen(const nsIntRect& aOldRect, nsIntRect& aNewRect);
-  NS_IMETHOD              ScreenToWidget(const nsIntRect& aOldRect, nsIntRect& aNewRect);
+  virtual nsIntPoint      WidgetToScreenOffset();
   NS_IMETHOD              BeginResizingChildren(void);
   NS_IMETHOD              EndResizingChildren(void);
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);

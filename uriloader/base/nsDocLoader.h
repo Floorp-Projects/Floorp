@@ -202,7 +202,7 @@ protected:
     // handler.
     void ChildDoneWithOnload(nsIDocumentLoader* aChild) {
         mChildrenInOnload.RemoveObject(aChild);
-        DocLoaderIsEmpty();
+        DocLoaderIsEmpty(PR_TRUE);
     }        
 
 protected:
@@ -217,12 +217,6 @@ protected:
     nsDocLoader*               mParent;                // [WEAK]
 
     nsVoidArray                mListenerInfoList;
-    /*
-     * This flag indicates that the loader is loading a document.  It is set
-     * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
-     * notification is fired...
-     */
-    PRBool mIsLoadingDocument;
 
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
     // We hold weak refs to all our kids
@@ -240,8 +234,19 @@ protected:
 
     PLDHashTable mRequestInfoHash;
 
+    /*
+     * This flag indicates that the loader is loading a document.  It is set
+     * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
+     * notification is fired...
+     */
+    PRPackedBool mIsLoadingDocument;
+
     /* Flag to indicate that we're in the process of restoring a document. */
-    PRBool mIsRestoringDocument;
+    PRPackedBool mIsRestoringDocument;
+
+    /* Flag to indicate that we're in the process of flushing layout
+       undere DocLoaderIsEmpty() */
+    PRPackedBool mIsFlushingLayout;
 
 private:
     // A list of kids that are in the middle of their onload calls and will let
@@ -252,8 +257,10 @@ private:
     
     // DocLoaderIsEmpty should be called whenever the docloader may be empty.
     // This method is idempotent and does nothing if the docloader is not in
-    // fact empty.
-    void DocLoaderIsEmpty();
+    // fact empty.  This method _does_ make sure that layout is flushed if our
+    // loadgroup has no active requests before checking for "real" emptiness if
+    // aFlushLayout is true.
+    void DocLoaderIsEmpty(PRBool aFlushLayout);
 
     nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 

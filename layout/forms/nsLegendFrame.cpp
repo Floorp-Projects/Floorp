@@ -35,21 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// YY need to pass isMultiple before create called
-
 #include "nsLegendFrame.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMHTMLLegendElement.h"
-#include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsISupports.h"
 #include "nsIAtom.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsFont.h"
 #include "nsFormControlFrame.h"
 
 nsIFrame*

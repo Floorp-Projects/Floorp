@@ -60,7 +60,7 @@
 #include "nsPropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
-#include "nsInterfaceHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsChangeHint.h"
 // This also pulls in gfxTypes.h, which we cannot include directly.
@@ -68,6 +68,7 @@
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -92,7 +93,7 @@ class nsILookAndFeel;
 class nsICSSPseudoComparator;
 class nsIAtom;
 struct nsStyleBackground;
-template <class T> class nsRunnableMethod;
+struct nsStyleBorder;
 class nsIRunnable;
 class gfxUserFontSet;
 class nsUserFontSet;
@@ -378,41 +379,46 @@ public:
   PRBool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
   PRUint8 GetFocusRingStyle() const { return mFocusRingStyle; }
 
+  /**
+   * The types of image load types that the pres context needs image
+   * loaders to track invalidation for.
+   */
+  enum ImageLoadType {
+    BACKGROUND_IMAGE,
+    BORDER_IMAGE,
+    IMAGE_LOAD_TYPE_COUNT
+  };
 
   /**
-   * Set up observers so that aTargetFrame will be invalidated when
-   * aImage loads, where aImage is its background image.  Only a single
-   * image will be tracked per frame.
+   * Set the list of image loaders that track invalidation for a
+   * specific frame and type of image.  This list will replace any
+   * previous list for that frame and image type (and null will remove
+   * any previous list).
    */
-  NS_HIDDEN_(imgIRequest*) LoadImage(imgIRequest* aImage,
-                                     nsIFrame* aTargetFrame);
+  NS_HIDDEN_(void) SetImageLoaders(nsIFrame* aTargetFrame,
+                                   ImageLoadType aType,
+                                   nsImageLoader* aImageLoaders);
+
   /**
-   * Set up observers so that aTargetFrame will be invalidated or
-   * reflowed (as appropriate) when aImage loads, where aImage is its
-   * *border* image.  Only a single image will be tracked per frame.
+   * Make an appropriate SetImageLoaders call (including potentially
+   * with null aImageLoaders) given that aFrame draws its background
+   * based on aStyleBackground.
    */
-  NS_HIDDEN_(imgIRequest*) LoadBorderImage(imgIRequest* aImage,
-                                           nsIFrame* aTargetFrame);
+  NS_HIDDEN_(void) SetupBackgroundImageLoaders(nsIFrame* aFrame,
+                                               const nsStyleBackground*
+                                                 aStyleBackground);
 
-private:
-  typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsImageLoader> ImageLoaderTable;
+  /**
+   * Make an appropriate SetImageLoaders call (including potentially
+   * with null aImageLoaders) given that aFrame draws its border
+   * based on aStyleBorder.
+   */
+  NS_HIDDEN_(void) SetupBorderImageLoaders(nsIFrame* aFrame,
+                                           const nsStyleBorder* aStyleBorder);
 
-  NS_HIDDEN_(imgIRequest*) DoLoadImage(ImageLoaderTable& aTable,
-                                       imgIRequest* aImage,
-                                       nsIFrame* aTargetFrame,
-                                       PRBool aReflowOnLoad);
-
-  NS_HIDDEN_(void) DoStopImageFor(ImageLoaderTable& aTable,
-                                  nsIFrame* aTargetFrame);
-public:
-
-  NS_HIDDEN_(void) StopBackgroundImageFor(nsIFrame* aTargetFrame)
-  { DoStopImageFor(mImageLoaders, aTargetFrame); }
-  NS_HIDDEN_(void) StopBorderImageFor(nsIFrame* aTargetFrame)
-  { DoStopImageFor(mBorderImageLoaders, aTargetFrame); }
   /**
    * This method is called when a frame is being destroyed to
-   * ensure that the image load gets disassociated from the prescontext
+   * ensure that the image loads get disassociated from the prescontext
    */
   NS_HIDDEN_(void) StopImagesFor(nsIFrame* aTargetFrame);
 
@@ -847,8 +853,9 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsIAtom*              mLangGroup;     // [STRONG]
 
-  ImageLoaderTable      mImageLoaders;
-  ImageLoaderTable      mBorderImageLoaders;
+  nsRefPtrHashtable<nsVoidPtrHashKey, nsImageLoader>
+                        mImageLoaders[IMAGE_LOAD_TYPE_COUNT];
+
   nsWeakPtr             mContainer;
 
   float                 mTextZoom;      // Text zoom, defaults to 1.0

@@ -843,6 +843,9 @@ nsHTMLCSSUtils::GetCSSPropertyAtom(nsCSSEditableProperty aProperty, nsIAtom ** a
       case eCSSEditableProperty_width:
         *aAtom = nsEditProperty::cssWidth;
         break;
+      case eCSSEditableProperty_NONE:
+        // intentionally empty
+        break;
     }
   }
 }
@@ -1406,6 +1409,11 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** a
   nsresult res;
   res = node->GetNodeType(&type);
   if (NS_FAILED(res)) return res;
+
+  if (nsIDOMNode::DOCUMENT_NODE == type) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   // loop until we find an element
   while (node && nsIDOMNode::ELEMENT_NODE != type) {
     parentNode = node;

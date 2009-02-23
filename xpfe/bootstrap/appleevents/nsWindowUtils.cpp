@@ -426,8 +426,9 @@ void nsWindowUtils::GetCleanedWindowName(WindowPtr wind, char* outName, long max
   baseWindow->GetTitle(getter_Copies(title));
   ThrowErrIfNil(title, paramErr);
 
-  // convert to MacRoman, which is what AppleEvents expects
-  CFStringRef windowTitleCFString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, title.get(), kCFStringEncodingUTF16);
+  // Convert window title to MacRoman, which is what AppleEvents expects
+  const char* cTitle = NS_ConvertUTF16toUTF8(title).get();
+  CFStringRef windowTitleCFString = ::CFStringCreateWithCString(kCFAllocatorDefault, (char *)cTitle, kCFStringEncodingUTF8);
   if (windowTitleCFString) {
     ::CFStringGetCString(windowTitleCFString, outName, maxLen, kCFStringEncodingMacRoman);
     outName[maxLen - 1] = '\0'; // in case it didn't get null terminated

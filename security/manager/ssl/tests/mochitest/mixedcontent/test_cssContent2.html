@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>CSS conent styling 2</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  function runTest()
+  {
+    isSecurityState("secure");
+    document.getElementById("para").style.content =
+      "url('http://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg')";
+
+    window.setTimeout(function() {
+      isSecurityState("broken", "insecure content added by styling breaks security");
+      finish();
+    }, 500);
+  }
+
+  function afterNavigationTest()
+  {
+    is(document.getElementById("para").style.content, "");
+    isSecurityState("secure", "security full after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <p id="para"></p>
+</body>
+</html>

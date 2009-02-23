@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin/"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="document.documentElement.firstChild.focus();">
+  <menulist>
+    <menupopup style="-moz-binding: none;">
+      <spacer/>
+    </menupopup>
+  </menulist>
+</window>

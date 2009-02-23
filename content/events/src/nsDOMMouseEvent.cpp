@@ -112,6 +112,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
     {
        static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget = aRelatedTarget;
        static_cast<nsMouseEvent_base*>(mEvent)->button = aButton;
@@ -165,6 +166,7 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
       *aButton = static_cast<nsMouseEvent_base*>(mEvent)->button;
       break;
     default:
@@ -186,6 +188,7 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
       relatedTarget = static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget;
       break;
     default:

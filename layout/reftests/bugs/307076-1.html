@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <head>
+    <script>
+      function doIt() {
+        var d = document.createElement("div");
+        d.setAttribute("style",
+                       "position: absolute; left: 0; right: 0; top: 0; " +
+                       "bottom: 0; background: green");
+        document.getElementById("x").appendChild(d);
+      }
+    </script>
+  </head>
+  <body style="height: 100%" onload="doIt()">
+    <table style="height: 50%; width: 50%">
+      <tr>
+        <td id="x" style="position: relative; top: 25%; left: 25%">
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

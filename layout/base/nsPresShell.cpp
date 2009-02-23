@@ -901,6 +901,9 @@ public:
   NS_IMETHOD Paint(nsIView *aView,
                    nsIRenderingContext* aRenderingContext,
                    const nsRegion& aDirtyRegion);
+  NS_IMETHOD PaintDefaultBackground(nsIView *aView,
+                                    nsIRenderingContext* aRenderingContext,
+                                    const nsRect& aDirtyRect);
   NS_IMETHOD ComputeRepaintRegionForCopy(nsIView*      aRootView,
                                          nsIView*      aMovingView,
                                          nsPoint       aDelta,
@@ -1008,6 +1011,8 @@ public:
 #ifdef PR_LOGGING
   static PRLogModuleInfo* gLog;
 #endif
+
+  NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable);
 
 protected:
   virtual ~PresShell();
@@ -1175,6 +1180,8 @@ protected:
   ReflowCountMgr * mReflowCountMgr;
 #endif
 
+  static PRBool sDisableNonTestMouseEvents;
+
 private:
 
   PRBool InZombieDocument(nsIContent *aContent);
@@ -1249,6 +1256,8 @@ public:
 
   nsRefPtr<PresShell> mPresShell;
 };
+
+PRBool PresShell::sDisableNonTestMouseEvents = PR_FALSE;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* PresShell::gLog;
@@ -5371,36 +5380,64 @@ PresShell::Paint(nsIView*             aView,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aView, "null view");
 
-  // Compute the backstop color for the view.  This color must be
-  // totally transparent if the view is within a glass or transparent
-  // widget; otherwise, use the default in the prescontext, which will
-  // be opaque.
-
-  PRBool needTransparency = PR_FALSE;
-
-  for (nsIView *view = aView; view; view = view->GetParent()) {
-    if (view->HasWidget() &&
-        view->GetWidget()->GetTransparencyMode() != eTransparencyOpaque) {
-      needTransparency = PR_TRUE;
-      break;
-    }
+  // If we have a frame tree and it has style information that
+  // specifies the background color of the canvas, update our local
+  // cache of that color.
+  nsIFrame* rootFrame = FrameConstructor()->GetRootElementStyleFrame();
+  if (rootFrame) {
+    const nsStyleBackground* bgStyle =
+      nsCSSRendering::FindRootFrameBackground(rootFrame);
+    mCanvasBackgroundColor = bgStyle->mBackgroundColor;
   }
 
-  nscolor backgroundColor;
-  if (needTransparency)
-    backgroundColor = NS_RGBA(0,0,0,0);
-  else
-    backgroundColor = mPresContext->DefaultBackgroundColor();
+  // Compute the backstop color for the view.
+  nscolor bgcolor;
+  nsIWidget* widget = aView->GetNearestWidget(nsnull);
+  if (widget && widget->GetTransparencyMode() != eTransparencyOpaque) {
+    // Within a transparent widget, so the backstop color must be
+    // totally transparent.
+    bgcolor = NS_RGBA(0,0,0,0);
+  } else {
+    // Within an opaque widget (or no widget at all), so the backstop
+    // color must be totally opaque.  The cached canvas background
+    // color is not guaranteed to be opaque, but the user's default
+    // background as reported by the prescontext is.  Composing the
+    // former on top of the latter prevents window flashing in between
+    // pages that use the same non-default background.
+    bgcolor = NS_ComposeColors(mPresContext->DefaultBackgroundColor(),
+                               mCanvasBackgroundColor);
+  }
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
   if (frame) {
-    nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion,
-                              backgroundColor);
-  } else if (NS_GET_A(backgroundColor) > 0) {
-    aRenderingContext->SetColor(backgroundColor);
+    nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion, bgcolor);
+  } else {
+    aRenderingContext->SetColor(bgcolor);
     aRenderingContext->FillRect(aDirtyRegion.GetBounds());
   }
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+PresShell::PaintDefaultBackground(nsIView*             aView,
+                                  nsIRenderingContext* aRenderingContext,
+                                  const nsRect&       aDirtyRect)
+{
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Paint);
+
+  NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
+  NS_ASSERTION(aView, "null view");
+
+  // The view manager does not call this function if there is no
+  // widget or it is transparent.  We must not look at the frame tree,
+  // so all we have to use is the canvas default color as set above,
+  // or failing that, the user's default color.
+  
+  nscolor bgcolor = NS_ComposeColors(mPresContext->DefaultBackgroundColor(),
+                                     mCanvasBackgroundColor);
+
+  aRenderingContext->SetColor(bgcolor);
+  aRenderingContext->FillRect(aDirtyRect);
   return NS_OK;
 }
 
@@ -5531,13 +5568,22 @@ nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
 }
 
 NS_IMETHODIMP
+PresShell::DisableNonTestMouseEvents(PRBool aDisable)
+{
+  sDisableNonTestMouseEvents = aDisable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
                        nsEventStatus*  aEventStatus)
 {
   NS_ASSERTION(aView, "null view");
 
-  if (mIsDestroying || !nsContentUtils::IsSafeToRunScript()) {
+  if (mIsDestroying || !nsContentUtils::IsSafeToRunScript() ||
+      (sDisableNonTestMouseEvents && NS_IS_MOUSE_EVENT(aEvent) &&
+       !(aEvent->flags & NS_EVENT_FLAG_SYNTETIC_TEST_EVENT))) {
     return NS_OK;
   }
 
@@ -6000,9 +6046,8 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
 
       nsCOMPtr<nsIWidget> widget = popupFrame->GetWindow();
       aEvent->widget = widget;
-      nsIntRect widgetRect(0, 0, 1, 1);
-      widget->WidgetToScreen(widgetRect, widgetRect);
-      aEvent->refPoint = itemFrame->GetScreenRect().BottomLeft() - widgetRect.TopLeft();
+      nsIntPoint widgetPoint = widget->WidgetToScreenOffset();
+      aEvent->refPoint = itemFrame->GetScreenRect().BottomLeft() - widgetPoint;
 
       mCurrentEventContent = itemFrame->GetContent();
       mCurrentEventFrame = itemFrame;

@@ -73,11 +73,11 @@ radio[pane]:active:hover {
 }
 
 radio[pane][selected="true"] {
-  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-active.png") 0 2 repeat;
+  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-active.png") 0 2 repeat stretch;
 }
 
 #BrowserPreferences:not([active="true"]) radio[pane][selected="true"] {
-  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-inactive.png") 0 2 repeat;
+  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-inactive.png") 0 2 repeat stretch;
 }
 
 .paneButtonLabel {

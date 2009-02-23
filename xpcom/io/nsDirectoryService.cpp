@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4 et
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -916,56 +917,20 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     }
     else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
     {
-        NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
-        nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(localFile));
+        // 10.5 and later, we can use kDownloadsFolderType which is defined in
+        // Folders.h as "down".  However, in order to support 10.4 still, we
+        // cannot use the named constant.  We'll use it's value, and if it
+        // fails, fall back to the desktop.
+#ifndef kDownloadsFolderType
+#define kDownloadsFolderType 'down'
+#endif
 
-        if (localMacFile)
-        {
-            OSErr err;
-            ICInstance icInstance;
-
-            err = ::ICStart(&icInstance, 'XPCM');
-            if (err == noErr)
-            {
-                // ICGetPref() crashes when getting the download directory if the download
-                // directory has never been specified (e.g. a new user account), bug 265903.
-                // To work around this we enumerate through the IC prefs to see if the
-                // download directory has been specified before trying to obtain it.
-                long numPrefs = 0;
-                err = ::ICCountPref(icInstance, &numPrefs);
-                if (err == noErr)
-                {
-                    for ( long i = 0; i < numPrefs; ++i )
-                    {
-                        Str255 key;
-                        err = ::ICGetIndPref(icInstance, i, key);
-                        if ( err == noErr && ( PLstrcmp( key, kICDownloadFolder ) == 0 ) )
-                        {
-                            ICAttr attrs;
-                            ICFileSpec icFileSpec;
-                            long size = kICFileSpecHeaderSize;
-                            err = ::ICGetPref(icInstance, kICDownloadFolder, &attrs, &icFileSpec, &size);
-                            if (err == noErr || (err == icTruncatedErr && size >= kICFileSpecHeaderSize))
-                            {
-                                rv = localMacFile->InitWithFSSpec(&icFileSpec.fss);
-                            }
-                            break;
-                        }
-                    }
-                }
-                ::ICStop(icInstance);
-            }
-            
-            if (NS_FAILED(rv))
-            { 
-                // We got an error getting the DL folder from IC so try finding the user's Desktop folder
-                rv = GetOSXFolderType(kUserDomain, kDesktopFolderType, getter_AddRefs(localFile));
-            }
+        rv = GetOSXFolderType(kUserDomain, kDownloadsFolderType,
+                              getter_AddRefs(localFile));
+        if (NS_FAILED(rv)) {
+            rv = GetOSXFolderType(kUserDomain, kDesktopFolderType,
+                                  getter_AddRefs(localFile));
         }
-        
-        // Don't cache the DL directory as the user may change it while we're running.
-        // Negligible perf hit as this directory is only requested for downloads
-        *persistent = PR_FALSE;
     }
     else if (inAtom == nsDirectoryService::sUserDesktopDirectory ||
              inAtom == nsDirectoryService::sOS_DesktopDirectory)

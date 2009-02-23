@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  xpconnect \
 		  js \
+		  uriloader \
 		  $(NULL)
 
 CPPSRCS		= \

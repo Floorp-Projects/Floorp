@@ -272,7 +272,8 @@ nsresult nsSSLIOLayerNewSocket(PRInt32 family,
                                PRInt32 proxyPort,
                                PRFileDesc **fd,
                                nsISupports **securityInfo,
-                               PRBool forSTARTTLS);
+                               PRBool forSTARTTLS,
+                               PRBool anonymousLoad);
 
 nsresult nsSSLIOLayerAddToSocket(PRInt32 family,
                                  const char *host,
@@ -281,7 +282,8 @@ nsresult nsSSLIOLayerAddToSocket(PRInt32 family,
                                  PRInt32 proxyPort,
                                  PRFileDesc *fd,
                                  nsISupports **securityInfo,
-                                 PRBool forSTARTTLS);
+                                 PRBool forSTARTTLS,
+                                 PRBool anonymousLoad);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);

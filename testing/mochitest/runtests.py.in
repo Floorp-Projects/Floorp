@@ -402,6 +402,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   (status, start) = automation.runApp(testURL, browserEnv, options.app,
                                       PROFILE_DIRECTORY, options.browserArgs,
+                                      runSSLTunnel = True,
                                       utilityPath=options.utilityPath,
                                       xrePath=options.xrePath,
                                       certPath=options.certPath)
