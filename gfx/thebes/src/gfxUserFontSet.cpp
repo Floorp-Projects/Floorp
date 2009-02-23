@@ -44,7 +44,6 @@
 #include "gfxPlatform.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsVoidArray.h"
 #include "prlong.h"
 
 #ifdef PR_LOGGING
