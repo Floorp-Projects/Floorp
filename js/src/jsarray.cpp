@@ -338,14 +338,47 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldsize, uint32 size)
     return JS_TRUE;
 }
 
-static JSBool
-EnsureCapacity(JSContext *cx, JSObject *obj, uint32 len)
-{
-    uint32 oldlen = js_DenseArrayCapacity(obj);
+/*
+ * When a dense array with CAPACITY_DOUBLING_MAX or fewer slots needs to grow,
+ * double its capacity, to push() N elements in amortized O(N) time.
+ *
+ * Above this limit, grow by 12.5% each time. Speed is still amortized O(N),
+ * with a higher constant factor, and we waste less space.
+ */
+#define CAPACITY_DOUBLING_MAX    (1024 * 1024)
 
-    if (len > oldlen) {
-        return ResizeSlots(cx, obj, oldlen,
-                           len + ARRAY_GROWBY - (len % ARRAY_GROWBY));
+/*
+ * Round up all large allocations to a multiple of this (1MB), so as not to
+ * waste space if malloc gives us 1MB-sized chunks (as jemalloc does).
+ */
+#define CAPACITY_CHUNK  (1024 * 1024 / sizeof(jsval))
+
+static JSBool
+EnsureCapacity(JSContext *cx, JSObject *obj, uint32 capacity)
+{
+    uint32 oldsize = js_DenseArrayCapacity(obj);
+
+    if (capacity > oldsize) {
+        /*
+         * If this overflows uint32, capacity is very large. nextsize will end
+         * up being less than capacity, the code below will thus disregard it,
+         * and ResizeSlots will fail.
+         *
+         * The way we use dslots[-1] forces a few +1s and -1s here. For
+         * example, (oldsize * 2 + 1) produces the sequence 7, 15, 31, 63, ...
+         * which makes the total allocation size (with dslots[-1]) a power
+         * of two.
+         */
+        uint32 nextsize = (oldsize <= CAPACITY_DOUBLING_MAX)
+                          ? oldsize * 2 + 1
+                          : oldsize + (oldsize >> 3);
+
+        capacity = JS_MAX(capacity, nextsize);
+        if (capacity >= CAPACITY_CHUNK)
+            capacity = JS_ROUNDUP(capacity + 1, CAPACITY_CHUNK) - 1;  /* -1 for dslots[-1] */
+        else if (capacity < ARRAY_CAPACITY_MIN)
+            capacity = ARRAY_CAPACITY_MIN;
+        return ResizeSlots(cx, obj, oldsize, capacity);
     }
     return JS_TRUE;
 }
@@ -2147,7 +2180,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
             return JS_FALSE;
         }
 
-        if (!ResizeSlots(cx, obj, length, length + ARRAY_GROWBY))
+        if (!EnsureCapacity(cx, obj, length + 1))
             return JS_FALSE;
     }
     obj->fslots[JSSLOT_ARRAY_LENGTH] = length + 1;
@@ -2494,12 +2527,12 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
     aobj = JS_THIS_OBJECT(cx, vp);
     if (OBJ_IS_DENSE_ARRAY(cx, aobj)) {
         /*
-         * Clone aobj but pass the minimum of its length and capacity, to handle
-         * a = [1,2,3]; a.length = 10000 "dense" cases efficiently. In such a
-         * case we'll pass 8 (not 3) due to the ARRAY_GROWBY over-allocation
-         * policy, which will cause nobj to be over-allocated to 16. But in the
-         * normal case where length is <= capacity, nobj and aobj will have the
-         * same capacity.
+         * Clone aobj but pass the minimum of its length and capacity, to
+         * handle a = [1,2,3]; a.length = 10000 "dense" cases efficiently. In
+         * such a case we'll pass 8 (not 3) due to ARRAY_CAPACITY_MIN, which
+         * will cause nobj to be over-allocated to 16. But in the normal case
+         * where length is <= capacity, nobj and aobj will have the same
+         * capacity.
          */
         length = aobj->fslots[JSSLOT_ARRAY_LENGTH];
         jsuint capacity = js_DenseArrayCapacity(aobj);
@@ -3125,7 +3158,7 @@ JSObject* FASTCALL
 js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
 {
     JSObject *obj = js_FastNewArrayWithLength(cx, proto, len);
-    if (!obj || !ResizeSlots(cx, obj, 0, JS_MAX(len, ARRAY_GROWBY)))
+    if (!obj || !ResizeSlots(cx, obj, 0, JS_MAX(len, ARRAY_CAPACITY_MIN)))
         return NULL;
     return obj;
 }
@@ -3134,7 +3167,7 @@ js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
     JS_ASSERT(JS_ON_TRACE(cx));                                               \
     JSObject* obj = js_FastNewArray(cx, proto);                               \
     if (obj) {                                                                \
-        const uint32 len = ARRAY_GROWBY;                                      \
+        const uint32 len = ARRAY_CAPACITY_MIN;                                \
         jsval* newslots = (jsval*) JS_malloc(cx, sizeof (jsval) * (len + 1)); \
         if (newslots) {                                                       \
             obj->dslots = newslots + 1;                                       \
