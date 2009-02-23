@@ -44,12 +44,15 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "prlog.h"
+#include "nsPrintfCString.h"
 
 /******************************************************************/
 /* nsTextStore                                                    */
 /******************************************************************/
 
-ITfThreadMgr* nsTextStore::sTsfThreadMgr = NULL;
+ITfThreadMgr*           nsTextStore::sTsfThreadMgr   = NULL;
+ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = NULL;
+ITfCategoryMgr*         nsTextStore::sCategoryMgr    = NULL;
 DWORD         nsTextStore::sTsfClientId  = 0;
 nsTextStore*  nsTextStore::sTsfTextStore = NULL;
 
@@ -69,10 +72,12 @@ nsTextStore::nsTextStore()
   mLockQueued = 0;
   mTextChange.acpStart = PR_INT32_MAX;
   mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
+  mLastDispatchedTextEvent = nsnull;
 }
 
 nsTextStore::~nsTextStore()
 {
+  SaveTextEvent(nsnull);
 }
 
 PRBool
@@ -330,8 +335,366 @@ nsTextStore::GetSelection(ULONG ulIndex,
   return S_OK;
 }
 
+static HRESULT
+GetRangeExtent(ITfRange* aRange, LONG* aStart, LONG* aLength)
+{
+  nsRefPtr<ITfRangeACP> rangeACP;
+  aRange->QueryInterface(IID_ITfRangeACP, getter_AddRefs(rangeACP));
+  NS_ENSURE_TRUE(rangeACP, E_FAIL);
+  return rangeACP->GetExtent(aStart, aLength);
+}
+
+static PRUint32
+GetGeckoSelectionValue(TF_DISPLAYATTRIBUTE &aDisplayAttr)
+{
+  PRUint32 result;
+  switch (aDisplayAttr.bAttr) {
+    case TF_ATTR_TARGET_CONVERTED:
+      result = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      break;
+    case TF_ATTR_CONVERTED:
+      result = NS_TEXTRANGE_CONVERTEDTEXT;
+      break;
+    case TF_ATTR_TARGET_NOTCONVERTED:
+      result = NS_TEXTRANGE_SELECTEDRAWTEXT;
+      break;
+    default:
+      result = NS_TEXTRANGE_RAWINPUT;
+      break;
+  }
+  return result;
+}
+
+#ifdef PR_LOGGING
+static void
+GetLogTextFor(const TF_DA_COLOR &aColor, nsACString &aText)
+{
+  aText = "type: ";
+  switch (aColor.type) {
+    case TF_CT_NONE:
+      aText += "TF_CT_NONE";
+      break;
+    case TF_CT_SYSCOLOR: {
+      nsPrintfCString tmp("TF_CT_SYSCOLOR, nIndex:0x%08X",
+                          PRInt32(aColor.nIndex));
+      aText += tmp;
+      break;
+    }
+    case TF_CT_COLORREF: {
+      nsPrintfCString tmp("TF_CT_COLORREF, cr:0x%08X", PRInt32(aColor.cr));
+      aText += tmp;
+      break;
+    }
+    default: {
+      nsPrintfCString tmp("Unknown(%08X)", PRInt32(aColor.type));
+      aText += tmp;
+      break;
+    }
+  }
+}
+
+static void
+GetLogTextFor(TF_DA_LINESTYLE aLineStyle, nsACString &aText)
+{
+  switch (aLineStyle) {
+    case TF_LS_NONE:
+      aText = "TF_LS_NONE";
+      break;
+    case TF_LS_SOLID:
+      aText = "TF_LS_SOLID";
+      break;
+    case TF_LS_DOT:
+      aText = "TF_LS_DOT";
+      break;
+    case TF_LS_DASH:
+      aText = "TF_LS_DASH";
+      break;
+    case TF_LS_SQUIGGLE:
+      aText = "TF_LS_SQUIGGLE";
+      break;
+    default: {
+      nsPrintfCString tmp("Unknown(%08X)", PRInt32(aLineStyle));
+      aText = tmp;
+      break;
+    }
+  }
+}
+
+static void
+GetLogTextFor(TF_DA_ATTR_INFO aAttr, nsACString &aText)
+{
+  switch (aAttr) {
+    case TF_ATTR_INPUT:
+      aText = "TF_ATTR_INPUT";
+      break;
+    case TF_ATTR_TARGET_CONVERTED:
+      aText = "TF_ATTR_TARGET_CONVERTED";
+      break;
+    case TF_ATTR_CONVERTED:
+      aText = "TF_ATTR_CONVERTED";
+      break;
+    case TF_ATTR_TARGET_NOTCONVERTED:
+      aText = "TF_ATTR_TARGET_NOTCONVERTED";
+      break;
+    case TF_ATTR_INPUT_ERROR:
+      aText = "TF_ATTR_INPUT_ERROR";
+      break;
+    case TF_ATTR_FIXEDCONVERTED:
+      aText = "TF_ATTR_FIXEDCONVERTED";
+      break;
+    case TF_ATTR_OTHER:
+      aText = "TF_ATTR_OTHER";
+      break;
+    default: {
+      nsPrintfCString tmp("Unknown(%08X)", PRInt32(aAttr));
+      aText = tmp;
+      break;
+    }
+  }
+}
+
+static nsCString
+GetLogTextFor(const TF_DISPLAYATTRIBUTE &aDispAttr)
+{
+  nsCAutoString str, tmp;
+  str = "crText:{ ";
+  GetLogTextFor(aDispAttr.crText, tmp);
+  str += tmp;
+  str += " }, crBk:{ ";
+  GetLogTextFor(aDispAttr.crBk, tmp);
+  str += tmp;
+  str += " }, lsStyle: ";
+  GetLogTextFor(aDispAttr.lsStyle, tmp);
+  str += tmp;
+  str += ", fBoldLine: ";
+  str += aDispAttr.fBoldLine ? "TRUE" : "FALSE";
+  str += ", crLine:{ ";
+  GetLogTextFor(aDispAttr.crLine, tmp);
+  str += tmp;
+  str += " }, bAttr: ";
+  GetLogTextFor(aDispAttr.bAttr, tmp);
+  str += tmp;
+  return str;
+}
+#endif // PR_LOGGING
+
 HRESULT
-nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection)
+nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
+                                 ITfRange* aRange,
+                                 TF_DISPLAYATTRIBUTE* aResult)
+{
+  NS_ENSURE_TRUE(aAttrProperty, E_FAIL);
+  NS_ENSURE_TRUE(aRange, E_FAIL);
+  NS_ENSURE_TRUE(aResult, E_FAIL);
+
+  HRESULT hr;
+
+#ifdef PR_LOGGING
+  LONG start = 0, length = 0;
+  hr = GetRangeExtent(aRange, &start, &length);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: GetDisplayAttribute range=%ld-%ld\n",
+          start - mCompositionStart, start - mCompositionStart + length));
+#endif
+
+  VARIANT propValue;
+  ::VariantInit(&propValue);
+  hr = aAttrProperty->GetValue(TfEditCookie(mEditCookie), aRange, &propValue);
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("        ITfProperty::GetValue Failed\n"));
+    return hr;
+  }
+  if (VT_I4 != propValue.vt) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("        ITfProperty::GetValue returns non-VT_I4 value\n"));
+    ::VariantClear(&propValue);
+    return E_FAIL;
+  }
+
+  NS_ENSURE_TRUE(sCategoryMgr, E_FAIL);
+  GUID guid;
+  hr = sCategoryMgr->GetGUID(DWORD(propValue.lVal), &guid);
+  ::VariantClear(&propValue);
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("        ITfCategoryMgr::GetGUID Failed\n"));
+    return hr;
+  }
+
+  NS_ENSURE_TRUE(sDisplayAttrMgr, E_FAIL);
+  nsRefPtr<ITfDisplayAttributeInfo> info;
+  hr = sDisplayAttrMgr->GetDisplayAttributeInfo(guid, getter_AddRefs(info),
+                                                NULL);
+  if (FAILED(hr) || !info) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("        ITfDisplayAttributeMgr::GetDisplayAttributeInfo Failed\n"));
+    return hr;
+  }
+
+  hr = info->GetAttributeInfo(aResult);
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("        ITfDisplayAttributeInfo::GetAttributeInfo Failed\n"));
+    return hr;
+  }
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: GetDisplayAttribute Result={ %s }\n",
+          GetLogTextFor(*aResult).get()));
+  return S_OK;
+}
+
+HRESULT
+nsTextStore::SaveTextEvent(const nsTextEvent* aEvent)
+{
+  if (mLastDispatchedTextEvent) {
+    if (mLastDispatchedTextEvent->rangeArray)
+      delete [] mLastDispatchedTextEvent->rangeArray;
+    delete mLastDispatchedTextEvent;
+    mLastDispatchedTextEvent = nsnull;
+  }
+  if (!aEvent)
+    return S_OK;
+
+  mLastDispatchedTextEvent = new nsTextEvent(PR_TRUE, NS_TEXT_TEXT, nsnull);
+  if (!mLastDispatchedTextEvent)
+    return E_OUTOFMEMORY;
+  mLastDispatchedTextEvent->rangeCount = aEvent->rangeCount;
+  mLastDispatchedTextEvent->theText = aEvent->theText;
+  mLastDispatchedTextEvent->rangeArray = nsnull;
+
+  if (aEvent->rangeCount == 0)
+    return S_OK;
+
+  NS_ENSURE_TRUE(aEvent->rangeArray, E_FAIL);
+
+  mLastDispatchedTextEvent->rangeArray = new nsTextRange[aEvent->rangeCount];
+  if (!mLastDispatchedTextEvent->rangeArray) {
+    delete mLastDispatchedTextEvent;
+    mLastDispatchedTextEvent = nsnull;
+    return E_OUTOFMEMORY;
+  }
+  memcpy(mLastDispatchedTextEvent->rangeArray, aEvent->rangeArray,
+         sizeof(nsTextRange) * aEvent->rangeCount);
+  return S_OK;
+}
+
+static PRBool
+IsSameTextEvent(const nsTextEvent* aEvent1, const nsTextEvent* aEvent2)
+{
+  NS_PRECONDITION(aEvent1 || aEvent2, "both events are null");
+  NS_PRECONDITION(aEvent2 && (aEvent1 != aEvent2),
+                  "both events are same instance");
+
+  return (aEvent1 && aEvent2 &&
+          aEvent1->rangeCount == aEvent2->rangeCount &&
+          aEvent1->theText == aEvent2->theText &&
+          (aEvent1->rangeCount == 0 ||
+           (aEvent1->rangeArray && aEvent2->rangeArray) &&
+           !memcmp(aEvent1->rangeArray, aEvent2->rangeArray,
+                   sizeof(nsTextRange) * aEvent1->rangeCount)));
+}
+
+HRESULT
+nsTextStore::SendTextEventForCompositionString()
+{
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: SendTextEventForCompositionString\n"));
+
+  NS_ENSURE_TRUE(mCompositionView, E_FAIL);
+
+  // Getting display attributes is *really* complicated!
+  // We first get the context and the property objects to query for
+  // attributes, but since a big range can have a variety of values for
+  // the attribute, we have to find out all the ranges that have distinct
+  // attribute values. Then we query for what the value represents through
+  // the display attribute manager and translate that to nsTextRange to be
+  // sent in NS_TEXT_TEXT
+
+  nsRefPtr<ITfProperty> attrPropetry;
+  HRESULT hr = mContext->GetProperty(GUID_PROP_ATTRIBUTE,
+                                     getter_AddRefs(attrPropetry));
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && attrPropetry, hr);
+
+  // Use NS_TEXT_TEXT to set composition string
+  nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, mWindow);
+  mWindow->InitEvent(event);
+
+  nsRefPtr<ITfRange> composingRange;
+  hr = mCompositionView->GetRange(getter_AddRefs(composingRange));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  nsRefPtr<IEnumTfRanges> enumRanges;
+  hr = attrPropetry->EnumRanges(TfEditCookie(mEditCookie),
+                                getter_AddRefs(enumRanges), composingRange);
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && enumRanges, hr);
+
+  nsAutoTArray<nsTextRange, 4> textRanges;
+  nsTextRange newRange;
+  newRange.mStartOffset =
+    PRUint32(mCompositionSelection.acpStart - mCompositionStart);
+  newRange.mEndOffset =
+    PRUint32(mCompositionSelection.acpEnd - mCompositionStart);
+  newRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+  textRanges.AppendElement(newRange);
+  // No matter if we have display attribute info or not,
+  // we always pass in at least one range to NS_TEXT_TEXT
+  newRange.mStartOffset = 0;
+  newRange.mEndOffset = mCompositionString.Length();
+  newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+  textRanges.AppendElement(newRange);
+
+  nsRefPtr<ITfRange> range;
+  while (S_OK == enumRanges->Next(1, getter_AddRefs(range), NULL) && range) {
+
+    LONG start = 0, length = 0;
+    if (FAILED(GetRangeExtent(range, &start, &length)))
+      continue;
+
+    newRange.mStartOffset = PRUint32(start - mCompositionStart);
+    // The end of the last range in the array is
+    // always kept at the end of composition
+    newRange.mEndOffset = mCompositionString.Length();
+
+    TF_DISPLAYATTRIBUTE attr;
+    hr = GetDisplayAttribute(attrPropetry, range, &attr);
+    newRange.mRangeType =
+      SUCCEEDED(hr) ? GetGeckoSelectionValue(attr) : NS_TEXTRANGE_RAWINPUT;
+
+    nsTextRange& lastRange = textRanges[textRanges.Length() - 1];
+    if (lastRange.mStartOffset == newRange.mStartOffset) {
+      // Replace range if last range is the same as this one
+      // So that ranges don't overlap and confuse the editor
+      lastRange = newRange;
+    } else {
+      lastRange.mEndOffset = newRange.mStartOffset;
+      textRanges.AppendElement(newRange);
+    }
+  }
+
+  event.theText = mCompositionString;
+  event.rangeArray = textRanges.Elements();
+  event.rangeCount = textRanges.Length();
+
+  // If we are already send same text event, we should not resend it.  Because
+  // it can be a cause of flickering.
+  if (IsSameTextEvent(mLastDispatchedTextEvent, &event)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: SendTextEventForCompositionString does not dispatch\n"));
+    return S_OK;
+  }
+
+  mWindow->DispatchWindowEvent(&event);
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: SendTextEventForCompositionString DISPATCHED\n"));
+  return SaveTextEvent(&event);
+}
+
+HRESULT
+nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
+                                  PRBool aDispatchTextEvent)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: SetSelection, sel=%ld-%ld\n",
@@ -342,6 +705,10 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection)
                    pSelection->acpEnd <= mCompositionStart +
                        LONG(mCompositionString.Length()), TS_E_INVALIDPOS);
     mCompositionSelection = *pSelection;
+    if (aDispatchTextEvent) {
+      HRESULT hr = SendTextEventForCompositionString();
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    }
   } else {
     nsSelectionEvent event(PR_TRUE, NS_SELECTION_SET, mWindow);
     event.mOffset = pSelection->acpStart;
@@ -363,7 +730,7 @@ nsTextStore::SetSelection(ULONG ulCount,
   NS_ENSURE_TRUE(TS_LF_READWRITE == (mLock & TS_LF_READWRITE), TS_E_NOLOCK);
   NS_ENSURE_TRUE(1 == ulCount && pSelection, E_INVALIDARG);
 
-  return SetSelectionInternal(pSelection);
+  return SetSelectionInternal(pSelection, PR_TRUE);
 }
 
 STDMETHODIMP
@@ -739,16 +1106,14 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
       // Emulate text insertion during compositions, because during a
       // composition, editor expects the whole composition string to
       // be sent in NS_TEXT_TEXT, not just the inserted part.
-      // The actual NS_TEXT_TEXT is sent in OnUpdateComposition, which
-      // should get called by TSF after this returns
+      // The actual NS_TEXT_TEXT will be sent in SetSelection or
+      // OnUpdateComposition.
       mCompositionString.Replace(PRUint32(sel.acpStart - mCompositionStart),
                                  sel.acpEnd - sel.acpStart, pchText, cch);
 
       mCompositionSelection.acpStart += cch;
       mCompositionSelection.acpEnd = mCompositionSelection.acpStart;
       mCompositionSelection.style.ase = TS_AE_END;
-      // OnUpdateComposition is not called here because it will
-      // result in fun visual artifacts
       PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
              ("TSF: InsertTextAtSelection, replaced=%lu-%lu\n",
               sel.acpStart - mCompositionStart,
@@ -797,15 +1162,6 @@ nsTextStore::InsertEmbeddedAtSelection(DWORD dwFlags,
 {
   // embedded objects are not supported
   return E_NOTIMPL;
-}
-
-static HRESULT
-GetRangeExtent(ITfRange* aRange, LONG* aStart, LONG* aLength)
-{
-  nsRefPtr<ITfRangeACP> rangeACP;
-  aRange->QueryInterface(IID_ITfRangeACP, getter_AddRefs(rangeACP));
-  NS_ENSURE_TRUE(rangeACP, E_FAIL);
-  return rangeACP->GetExtent(aStart, aLength);
 }
 
 HRESULT
@@ -875,13 +1231,6 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
                  mCompositionView == pComposition &&
                  mDocumentMgr && mContext, E_UNEXPECTED);
 
-  // Getting display attributes is *really* complicated!
-  // We first get the context and the property objects to query for
-  // attributes, but since a big range can have a variety of values for
-  // the attribute, we have to find out all the ranges that have distinct
-  // attribute values. Then we query for what the value represents through
-  // the display attribute manager and translate that to nsTextRange to be
-  // sent in NS_TEXT_TEXT
   if (!pRangeNew) // pRangeNew is null when the update is not complete
     return S_OK;
 
@@ -909,97 +1258,7 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
             compStart, compStart + compLength));
   }
 
-  nsRefPtr<ITfProperty> prop;
-  hr = mContext->GetProperty(GUID_PROP_ATTRIBUTE, getter_AddRefs(prop));
-  NS_ENSURE_TRUE(SUCCEEDED(hr) && prop, hr);
-  hr = LoadManagers();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  // Use NS_TEXT_TEXT to set composition string
-  nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, mWindow);
-  mWindow->InitEvent(event);
-
-  VARIANT propValue;
-  ::VariantInit(&propValue);
-  nsRefPtr<ITfRange> range;
-  nsRefPtr<IEnumTfRanges> enumRanges;
-  hr = prop->EnumRanges(TfEditCookie(mEditCookie),
-                        getter_AddRefs(enumRanges), pRangeNew);
-  NS_ENSURE_TRUE(SUCCEEDED(hr) && enumRanges, hr);
-
-  nsAutoTArray<nsTextRange, 4> textRanges;
-  nsTextRange newRange;
-  newRange.mStartOffset = PRUint32(mCompositionSelection.acpStart - compStart);
-  newRange.mEndOffset = PRUint32(mCompositionSelection.acpEnd - compStart);
-  newRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-  textRanges.AppendElement(newRange);
-  // No matter if we have display attribute info or not,
-  // we always pass in at least one range to NS_TEXT_TEXT
-  newRange.mStartOffset = 0;
-  newRange.mEndOffset = mCompositionString.Length();
-  newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
-  textRanges.AppendElement(newRange);
-
-  while (S_OK == enumRanges->Next(1, getter_AddRefs(range), NULL) && range) {
-
-    LONG start = 0, length = 0;
-    if (FAILED(GetRangeExtent(range, &start, &length))) continue;
-
-    newRange.mStartOffset = PRUint32(start - compStart);
-    // The end of the last range in the array is
-    // always kept at the end of composition
-    newRange.mEndOffset = mCompositionString.Length();
-
-    // Who came up with this convoluted way that we have to follow?
-    ::VariantClear(&propValue);
-    hr = prop->GetValue(TfEditCookie(mEditCookie), range, &propValue);
-    if (FAILED(hr) || VT_I4 != propValue.vt) continue;
-
-    GUID guid;
-    hr = mCatMgr->GetGUID(DWORD(propValue.lVal), &guid);
-    if (FAILED(hr)) continue;
-
-    nsRefPtr<ITfDisplayAttributeInfo> info;
-    hr = mDAMgr->GetDisplayAttributeInfo(
-                     guid, getter_AddRefs(info), NULL);
-    if (FAILED(hr) || !info) continue;
-
-    TF_DISPLAYATTRIBUTE attr;
-    hr = info->GetAttributeInfo(&attr);
-    if (FAILED(hr)) continue;
-
-    switch (attr.bAttr) {
-    case TF_ATTR_TARGET_CONVERTED:
-      newRange.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-      break;
-    case TF_ATTR_CONVERTED:
-      newRange.mRangeType = NS_TEXTRANGE_CONVERTEDTEXT;
-      break;
-    case TF_ATTR_TARGET_NOTCONVERTED:
-      newRange.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
-      break;
-    default:
-      newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
-      break;
-    }
-
-    nsTextRange& lastRange = textRanges[textRanges.Length() - 1];
-    if (lastRange.mStartOffset == newRange.mStartOffset) {
-      // Replace range if last range is the same as this one
-      // So that ranges don't overlap and confuse the editor
-      lastRange = newRange;
-    } else {
-      lastRange.mEndOffset = newRange.mStartOffset;
-      textRanges.AppendElement(newRange);
-    }
-  }
-
-  event.theText = mCompositionString;
-  event.rangeArray = textRanges.Elements();
-  event.rangeCount = textRanges.Length();
-  mWindow->DispatchWindowEvent(&event);
-  ::VariantClear(&propValue);
-  return S_OK;
+  return SendTextEventForCompositionString();
 }
 
 STDMETHODIMP
@@ -1009,6 +1268,9 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
                  mCompositionView == pComposition, E_UNEXPECTED);
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: OnEndComposition\n"));
+
+  // Clear the saved text event
+  SaveTextEvent(nsnull);
 
   // Use NS_TEXT_TEXT to commit composition string
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mWindow);
@@ -1200,24 +1462,6 @@ nsTextStore::SetIMEEnabledInternal(PRUint32 aState)
   } while (context != mContext);
 }
 
-HRESULT
-nsTextStore::LoadManagers(void)
-{
-  HRESULT hr;
-  if (!mDAMgr) {
-    hr = ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, NULL,
-                            CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
-                            getter_AddRefs(mDAMgr));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  }
-  if (!mCatMgr) {
-    hr = ::CoCreateInstance(CLSID_TF_CategoryMgr, NULL, CLSCTX_INPROC_SERVER,
-                            IID_ITfCategoryMgr, getter_AddRefs(mCatMgr));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  }
-  return S_OK;
-}
-
 void
 nsTextStore::Initialize(void)
 {
@@ -1253,6 +1497,22 @@ nsTextStore::Initialize(void)
     if (!sTsfTextStore)
       NS_ERROR("failed to create text store\n");
   }
+  if (sTsfThreadMgr && !sDisplayAttrMgr) {
+    HRESULT hr =
+      ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, NULL,
+                         CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
+                         reinterpret_cast<void**>(&sDisplayAttrMgr));
+    if (FAILED(hr) || !sDisplayAttrMgr)
+      NS_ERROR("failed to create display attribute manager");
+  }
+  if (sTsfThreadMgr && !sCategoryMgr) {
+    HRESULT hr =
+      ::CoCreateInstance(CLSID_TF_CategoryMgr, NULL,
+                         CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
+                         reinterpret_cast<void**>(&sCategoryMgr));
+    if (FAILED(hr) || !sCategoryMgr)
+      NS_ERROR("failed to create category manager");
+  }
   if (sTsfThreadMgr && !sFlushTIPInputMessage) {
     sFlushTIPInputMessage = ::RegisterWindowMessageW(
         NS_LITERAL_STRING("Flush TIP Input Message").get());
@@ -1262,6 +1522,8 @@ nsTextStore::Initialize(void)
 void
 nsTextStore::Terminate(void)
 {
+  NS_IF_RELEASE(sDisplayAttrMgr);
+  NS_IF_RELEASE(sCategoryMgr);
   NS_IF_RELEASE(sTsfTextStore);
   if (sTsfThreadMgr) {
     sTsfThreadMgr->Deactivate();

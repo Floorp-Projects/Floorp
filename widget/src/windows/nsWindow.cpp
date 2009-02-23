@@ -2853,8 +2853,12 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 #endif
 
 #ifdef NS_ENABLE_TSF
-    case NS_NATIVE_TSF_POINTER:
-      return nsTextStore::GetNativeData();
+    case NS_NATIVE_TSF_THREAD_MGR:
+      return nsTextStore::GetThreadMgr();
+    case NS_NATIVE_TSF_CATEGORY_MGR:
+      return nsTextStore::GetCategoryMgr();
+    case NS_NATIVE_TSF_DISPLAY_ATTR_MGR:
+      return nsTextStore::GetDisplayAttrMgr();
 #endif //NS_ENABLE_TSF
 
     case NS_NATIVE_COLORMAP:
