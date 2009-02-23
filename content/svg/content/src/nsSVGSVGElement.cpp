@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGkAtoms.h"
-#include "nsSVGLength.h"
+#include "nsSVGNumber2.h"
+#include "nsSVGLength2.h"
 #include "nsSVGAngle.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
@@ -177,6 +178,15 @@ nsSVGSVGElement::Init()
   mDispatchEvent = PR_TRUE;
 
   return rv;
+}
+
+PRBool
+nsSVGSVGElement::IsOutermostSVGElement()
+{
+  nsIContent *parent = GetParentElement();
+
+  return !parent || parent->GetNameSpaceID() != kNameSpaceID_SVG ||
+         parent->Tag() == nsGkAtoms::foreignObject;
 }
 
 //----------------------------------------------------------------------
@@ -623,14 +633,14 @@ nsSVGSVGElement::DeSelectAll()
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGNumber(nsIDOMSVGNumber **_retval)
 {
-  return NS_NewSVGNumber(_retval);
+  return NS_NewDOMSVGNumber(_retval);
 }
 
 /* nsIDOMSVGLength createSVGLength (); */
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 {
-  return NS_NewSVGLength(reinterpret_cast<nsISVGLength**>(_retval));
+  return NS_NewDOMSVGLength(_retval, this);
 }
 
 /* nsIDOMSVGAngle createSVGAngle (); */
@@ -1282,7 +1292,7 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 
   float viewportWidth, viewportHeight;
   nsSVGSVGElement *ctx = GetCtx();
-  if (!ctx) {
+  if (ctx == this) {
     // outer svg
     viewportWidth = mViewportWidth;
     viewportHeight = mViewportHeight;
@@ -1467,12 +1477,13 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     h = viewbox.height;
   } else {
     nsSVGSVGElement *ctx = GetCtx();
-    if (ctx) {
-      w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
-      h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
-    } else {
+    if (ctx == this) {
+      // outer svg
       w = mViewportWidth;
       h = mViewportHeight;
+    } else {
+      w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
+      h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
     }
   }
 
