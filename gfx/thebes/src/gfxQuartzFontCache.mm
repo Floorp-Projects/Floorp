@@ -74,6 +74,8 @@ static const PRUint32 kNumFontsPerSlice = 10; // read in info 10 fonts at a time
 #define INDEX_FONT_TRAITS 3
 
 static const int kAppleMaxWeight = 14;
+static const int kAppleExtraLightWeight = 3;
+static const int kAppleUltraLightWeight = 2;
 
 static const int gAppleWeightToCSSWeight[] = {
     0,
@@ -119,12 +121,12 @@ gfxQuartzFontCache::GenerateFontListKey(const nsAString& aKeyName, nsAString& aR
 #pragma mark-
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, 
-                               PRInt32 aAppleWeight, PRUint32 aTraits,
+                               PRInt32 aWeight, PRUint32 aTraits,
                                PRBool aIsStandardFace)
     : gfxFontEntry(aPostscriptName), mTraits(aTraits), mATSUFontID(0),
       mATSUIDInitialized(0), mStandardFace(aIsStandardFace)
 {
-    mWeight = gfxQuartzFontCache::AppleWeightToCSSWeight(aAppleWeight) * 100;
+    mWeight = aWeight;
 
     mItalic = (mTraits & NSItalicFontMask ? 1 : 0);
     mFixedPitch = (mTraits & NSFixedPitchFontMask ? 1 : 0);
@@ -714,6 +716,12 @@ gfxQuartzFontCache::InitFontList()
     mATSGeneration = currentGeneration;
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) updating to generation: %d", mATSGeneration));                                         
     
+    // Bug 420981 - under 10.5, UltraLight and Light have the same weight value
+    PRBool needToCheckLightFaces = PR_FALSE;
+    if (gfxPlatformMac::GetPlatform()->OSXVersion() >= MAC_OS_X_VERSION_10_5_HEX) {
+        needToCheckLightFaces = PR_TRUE;
+    }
+    
     mFontFamilies.Clear();
     mOtherFamilyNames.Clear();
     mOtherFamilyNamesInitialized = PR_FALSE;
@@ -745,19 +753,29 @@ gfxQuartzFontCache::InitFontList()
         for (faceIndex = 0; faceIndex < faceCount; faceIndex++) {
             NSArray *face = [fontfaces objectAtIndex:faceIndex];
             NSString *psname = [face objectAtIndex:INDEX_FONT_POSTSCRIPT_NAME];
-            PRInt32 weight = [[face objectAtIndex:INDEX_FONT_WEIGHT] unsignedIntValue];
+            PRInt32 appKitWeight = [[face objectAtIndex:INDEX_FONT_WEIGHT] unsignedIntValue];
             PRUint32 traits = [[face objectAtIndex:INDEX_FONT_TRAITS] unsignedIntValue];
             NSString *facename = [face objectAtIndex:INDEX_FONT_FACE_NAME];
             PRBool isStandardFace = PR_FALSE;
 
+            if (needToCheckLightFaces && appKitWeight == kAppleExtraLightWeight) {
+                // if the facename contains UltraLight, set the weight to the ultralight weight value
+                NSRange range = [facename rangeOfString:@"ultralight" options:NSCaseInsensitiveSearch];
+                if (range.location != NSNotFound) {
+                    appKitWeight = kAppleUltraLightWeight;
+                }
+            }
+            
             // 10.5 doesn't set NSUnitalicFontMask and NSUnboldFontMask - manually set these for consistency 
             if (!(traits & NSBoldFontMask))
                 traits |= NSUnboldFontMask;
             if (!(traits & NSItalicFontMask))
                 traits |= NSUnitalicFontMask;
             
+            PRInt32 cssWeight = gfxQuartzFontCache::AppleWeightToCSSWeight(appKitWeight) * 100;
+            
             PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) family: %s, psname: %s, face: %s, apple-weight: %d, css-weight: %d, traits: %8.8x\n", 
-                [availableFamily UTF8String], [psname UTF8String], [facename UTF8String], weight, gfxQuartzFontCache::AppleWeightToCSSWeight(weight), traits));
+                [availableFamily UTF8String], [psname UTF8String], [facename UTF8String], appKitWeight, cssWeight, traits));
 
             // make a nsString
             GetStringForNSString(psname, postscriptFontName);
@@ -773,7 +791,7 @@ gfxQuartzFontCache::InitFontList()
             }
 
             // create a font entry
-            MacOSFontEntry *fontEntry = new MacOSFontEntry(postscriptFontName, weight, traits, isStandardFace);
+            MacOSFontEntry *fontEntry = new MacOSFontEntry(postscriptFontName, cssWeight, traits, isStandardFace);
             if (!fontEntry) break;            
             
             // insert into font entry array of family

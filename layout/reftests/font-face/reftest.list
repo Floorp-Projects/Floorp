@@ -33,6 +33,7 @@ HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
 
 # Postscript name lookup only supported on MacOS currently
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
 # FIXME: The behavior here is neither mandated nor specified by the spec, but
 # it really ought to be.
