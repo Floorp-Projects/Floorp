@@ -853,6 +853,23 @@
           }
         ]]>
       </handler>
+
+      <handler event="MozSwipeGesture">
+        <![CDATA[
+          // Figure out which index to show
+          let targetIndex = 0;
+
+          // Only handle swipe gestures up and down
+          switch (event.direction) {
+            case event.DIRECTION_DOWN:
+              targetIndex = this.itemCount - 1;
+              // Fall through for actual action
+            case event.DIRECTION_UP:
+              this.ensureIndexIsVisible(targetIndex);
+              break;
+          }
+        ]]>
+      </handler>
     </handlers>    
   </binding>
 

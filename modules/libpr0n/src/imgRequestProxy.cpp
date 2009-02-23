@@ -412,6 +412,17 @@ NS_IMETHODIMP imgRequestProxy::GetSecurityInfo(nsISupports** _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(PRBool* hasData)
+{
+  if (mOwner) {
+    *hasData = mOwner->HasTransferredData();
+  } else {
+    // The safe thing to do is to claim we have data
+    *hasData = PR_TRUE;
+  }
+  return NS_OK;
+}
+
 /** imgIContainerObserver methods **/
 
 void imgRequestProxy::FrameChanged(imgIContainer *container, gfxIImageFrame *newframe, nsIntRect * dirtyRect)

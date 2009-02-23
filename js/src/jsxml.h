@@ -39,7 +39,6 @@
 #ifndef jsxml_h___
 #define jsxml_h___
 
-#include "jsstddef.h"
 #include "jspubtd.h"
 
 JS_BEGIN_EXTERN_C

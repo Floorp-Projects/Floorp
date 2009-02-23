@@ -71,7 +71,6 @@
  * js_SlowArrayClass, but have the same performance characteristics as a dense
  * array for slot accesses, at some cost in code complexity.
  */
-#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"

@@ -368,6 +368,7 @@ vbox[typeName="status"][type="header-recommended"] {
   margin: 0;
   padding: 3px;
   list-style-image: url("chrome://mozapps/skin/extensions/viewButtons.png");
+  color: -moz-FieldText;
 }
 
 #viewGroup radio[selected="true"] {

@@ -191,7 +191,13 @@
           if (this.hasAttribute("empty")) {
             this.inputField.value = "";
             try {
-              this.editor.transactionManager.endBatch();
+              var transactionManager = this.editor.transactionManager;
+              transactionManager.endBatch();
+
+              // Clear undo stack if there have been no user edits
+              if (transactionManager.numberOfUndoItems == 1 &&
+                  transactionManager.numberOfRedoItems == 0)
+                transactionManager.clear();
             } catch (e) {}
             this.removeAttribute("empty");
           }

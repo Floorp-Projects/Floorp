@@ -41,7 +41,6 @@
 /*
  * JS script operations.
  */
-#include "jsstddef.h"
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
@@ -452,7 +451,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
     if (xdr->mode == JSXDR_ENCODE) {
         length = script->length;
-        prologLength = PTRDIFF(script->main, script->code, jsbytecode);
+        prologLength = script->main - script->code;
         JS_ASSERT((int16)script->version != JSVERSION_UNKNOWN);
         version = (uint32)script->version | (script->nfixed << 16);
         lineno = (uint32)script->lineno;
@@ -464,7 +463,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         notes = SCRIPT_NOTES(script);
         for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
             continue;
-        nsrcnotes = PTRDIFF(sn, notes, jssrcnote);
+        nsrcnotes = sn - notes;
         nsrcnotes++;            /* room for the terminator */
 
         if (script->objectsOffset != 0)
@@ -1686,7 +1685,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
     uintN nsrcnotes;
 
 
-    target = PTRDIFF(pc, script->code, jsbytecode);
+    target = pc - script->code;
     if ((uint32)target >= script->length)
         return NULL;
 
@@ -1785,7 +1784,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      */
     lineno = script->lineno;
     offset = 0;
-    target = PTRDIFF(pc, script->code, jsbytecode);
+    target = pc - script->code;
     for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);
         type = (JSSrcNoteType) SN_TYPE(sn);

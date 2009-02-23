@@ -414,4 +414,9 @@ cleansrcdir:
 echo-variable-%:
 	@echo $($*)
 
+# This makefile doesn't support parallel execution. It does pass
+# MOZ_MAKE_FLAGS to sub-make processes, so they will correctly execute
+# in parallel.
+.NOTPARALLEL:
+
 .PHONY: checkout real_checkout depend build profiledbuild maybe_clobber_profiledbuild export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all

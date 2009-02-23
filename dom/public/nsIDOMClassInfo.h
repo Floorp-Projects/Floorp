@@ -43,6 +43,9 @@
 #include "nsVoidArray.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMScriptObjectFactory.h"
+#include "nsDOMCID.h"
 
 #define DOM_BASE_SCRIPTABLE_FLAGS                                          \
   (nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                          \
@@ -66,30 +69,13 @@
    nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
 
-typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
-  (const char* aName);
+#ifdef _IMPL_NS_LAYOUT
 
+// See nsDOMClassInfoID.h
 
-/**
- * nsIClassInfo helper macros
- */
+#else
 
-#define NS_CLASSINFO_MAP_BEGIN(_class)
-
-#define NS_CLASSINFO_MAP_BEGIN_EXPORTED(_class)
-
-#define NS_CLASSINFO_MAP_ENTRY(_interface)
-
-#define NS_CLASSINFO_MAP_ENTRY_FUNCTION(_function)
-
-#define NS_CLASSINFO_MAP_END
-
-
-#include "nsIServiceManager.h"
-#include "nsIDOMScriptObjectFactory.h"
-#include "nsDOMCID.h"
-
-#define NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(_class)                       \
+#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                       \
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                             \
     static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);   \
                                                                            \
@@ -104,6 +90,8 @@ typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
     foundInterface =                                                       \
       sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);              \
   } else
+
+#endif /* _IMPL_NS_LAYOUT */
 
 // Looks up the nsIClassInfo for a class name registered with the 
 // nsScriptNamespaceManager. Remember to release NS_CLASSINFO_NAME(_class)

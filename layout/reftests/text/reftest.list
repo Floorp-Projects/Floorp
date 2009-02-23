@@ -27,7 +27,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == wordwrap-03.html wordwrap-03-ref.html #
 != wordwrap-09.html wordwrap-01-ref.html
 == wordwrap-09.html wordwrap-09-ref.html
 == word-spacing-01.html word-spacing-01-ref.html
-== zwnj-01.html zwnj-01-ref.html
+HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml
 HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-01-notref.html # Bad fonts on the tinderbox -- works locally
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cgj-01.html cgj-01-ref.html # bug 455455

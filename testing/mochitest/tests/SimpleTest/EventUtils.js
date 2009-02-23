@@ -264,8 +264,10 @@ function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
     var button = aEvent.button || 0;
     var modifiers = _parseModifiers(aEvent);
 
-    var left = aTarget.boxObject.x;
-    var top = aTarget.boxObject.y;
+    var rect = aTarget.getBoundingClientRect();
+
+    var left = rect.left;
+    var top = rect.top;
 
     var type = aEvent.type || "DOMMouseScroll";
     var axis = aEvent.axis || "vertical";
@@ -515,4 +517,15 @@ function synthesizeDrop(element, dragData, effectAllowed)
   }
 
   return dataTransfer.dropEffect;
+}
+
+function disableNonTestMouseEvents(aDisable)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var utils =
+    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+           getInterface(Components.interfaces.nsIDOMWindowUtils);
+  if (utils)
+    utils.disableNonTestMouseEvents(aDisable);
 }

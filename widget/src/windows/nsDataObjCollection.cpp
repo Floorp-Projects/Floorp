@@ -76,14 +76,14 @@ nsDataObjCollection::~nsDataObjCollection()
 {
   NS_IF_RELEASE(mTransferable);
 
-  PRInt32 i;
+  PRUint32 i;
 
-  for (i = 0; i < mDataFlavors.Count(); ++i) {
-    delete (nsString *)mDataFlavors.ElementAt(i);
+  for (i = 0; i < mDataFlavors.Length(); ++i) {
+    delete mDataFlavors.ElementAt(i);
   }
  
-  for (i = 0; i < mDataObjects.Count(); ++i) {
-    IDataObject * dataObj = (IDataObject *)mDataObjects.ElementAt(i);
+  for (i = 0; i < mDataObjects.Length(); ++i) {
+    IDataObject * dataObj = mDataObjects.ElementAt(i);
     NS_RELEASE(dataObj);
   }
 
@@ -154,8 +154,8 @@ STDMETHODIMP nsDataObjCollection::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   PRNTDEBUG("nsDataObjCollection::GetData\n");
   PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
-  for (PRInt32 i = 0; i < mDataObjects.Count(); ++i) {
-    IDataObject * dataObj = (IDataObject *)mDataObjects.ElementAt(i);
+  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    IDataObject * dataObj = mDataObjects.ElementAt(i);
     if (S_OK == dataObj->GetData(pFE, pSTM)) {
       return S_OK;
     }
@@ -189,8 +189,8 @@ STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
   }
 
 
-  for (PRInt32 i = 0; i < mDataObjects.Count(); ++i) {
-    IDataObject * dataObj = (IDataObject *)mDataObjects.ElementAt(i);
+  for (PRUint32 i = 0; i < mDataObjects.Length(); ++i) {
+    IDataObject * dataObj = mDataObjects.ElementAt(i);
     if (S_OK == dataObj->QueryGetData(pFE)) {
       return S_OK;
     }

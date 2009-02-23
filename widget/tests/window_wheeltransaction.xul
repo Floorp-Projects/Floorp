@@ -1,0 +1,1469 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Wheel scroll tests"
+  width="600" height="600"
+  onload="onload();"
+  onunload="onunload();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<style type="text/css">
+  #rootview {
+    overflow: auto;
+    width: 400px;
+    height: 400px;
+    border: 1px solid;
+  }
+  #container {
+    overflow: auto;
+    width: 600px;
+    height: 600px;
+  }
+  #rootview pre {
+    margin: 20px 0 20px 20px;
+    padding: 0;
+    overflow: auto;
+    display: block;
+    width: 100px;
+    height: 100px;
+    font-size: 16px;
+  }
+</style>
+<div id="rootview" onscroll="onScrollView(event);">
+  <div id="container">
+    <pre id="subview1" onscroll="onScrollView(event);">
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+    </pre>
+    <pre id="subview2" onscroll="onScrollView(event);">
+Text.
+Text.
+Text.
+Text.
+Text.
+Text.
+Text.
+Text.
+Text.
+Text.
+    </pre>
+    <pre id="subview3" onscroll="onScrollView(event);">
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+    </pre>
+  </div>
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function ok(aCondition, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+var gCurrentTestListStatus = { nextListIndex: 0 };
+var gCurrentTest;
+
+const kListenEvent_None                 = 0;
+const kListenEvent_OnScroll             = 1;
+const kListenEvent_OnScrollFailed       = 2;
+const kListenEvent_OnTransactionTimeout = 4;
+const kListenEvent_All = kListenEvent_OnScroll |
+                         kListenEvent_OnScrollFailed |
+                         kListenEvent_OnTransactionTimeout;
+var gLitesnEvents = kListenEvent_None;
+
+/**
+ * At unexpected transaction timeout, we need to stop *all* timers.  But it is
+ * difficult and it can be create more complex testing code.  So, we should use
+ * only one timer at one time.  For that, we must store the timer id to this
+ * variable.  And the functions which may be called via a timer must clear the
+ * current timer by |_clearTimer| function.
+ */
+var gTimer;
+
+var gPrefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+               getService(Components.interfaces.nsIPrefBranch2);
+const kPrefNameTimeout = "mousewheel.transaction.timeout";
+const kPrefNameIgnoreMoveDelay = "mousewheel.transaction.ignoremovedelay";
+
+const kDefaultTimeout = gPrefSvc.getIntPref(kPrefNameTimeout);
+const kDefaultIgnoreMoveDelay = gPrefSvc.getIntPref(kPrefNameIgnoreMoveDelay)
+
+var gTimeout, gIgnoreMoveDelay;
+var gEnoughForTimeout, gEnoughForIgnoreMoveDelay;
+
+function setTimeoutPrefs(aTimeout, aIgnoreMoveDelay)
+{
+  gPrefSvc.setIntPref(kPrefNameTimeout, aTimeout);
+  gPrefSvc.setIntPref(kPrefNameIgnoreMoveDelay, aIgnoreMoveDelay);
+  gTimeout = aTimeout;
+  gIgnoreMoveDelay = aIgnoreMoveDelay;
+  gEnoughForTimeout = gTimeout * 2;
+  gEnoughForIgnoreMoveDelay = gIgnoreMoveDelay * 1.2;
+}
+
+function resetTimeoutPrefs()
+{
+  if (gTimeout == kDefaultTimeout)
+    return;
+  setTimeoutPrefs(kDefaultTimeout, kDefaultIgnoreMoveDelay);
+  initTestList();
+}
+
+function growUpTimeoutPrefs()
+{
+  if (gTimeout != kDefaultTimeout)
+    return;
+  setTimeoutPrefs(5000, 1000);
+  initTestList();
+}
+
+// setting enough time for testing.
+gPrefSvc.setIntPref(kPrefNameTimeout, gTimeout);
+gPrefSvc.setIntPref(kPrefNameIgnoreMoveDelay, gIgnoreMoveDelay);
+
+var gRootView = document.getElementById("rootview");
+var gSubView1 = document.getElementById("subview1");
+var gSubView2 = document.getElementById("subview2");
+var gSubView3 = document.getElementById("subview3");
+
+gRootView.addEventListener("MozMouseScrollFailed", onMouseScrollFailed, false);
+gRootView.addEventListener("MozMouseScrollTransactionTimeout",
+                           onTransactionTimeout, false);
+
+function finish()
+{
+  window.close();
+}
+
+function onload()
+{
+  runNextTestList();
+}
+
+function onunload()
+{
+  resetTimeoutPrefs();
+  disableNonTestMouseEvents(false);
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+const kSubView1Offset = { x: 20, y: 20 };
+const kSubView2Offset = { x: 20, y: 20 + 100 + 20 };
+const kSubView3Offset = { x: 20, y: 20 + (100 + 20) * 2 };
+
+function _getSubViewTestPtForV(aPt)
+{
+  return { x: aPt.x + 10, y: aPt.y + 10 };
+}
+
+const kPtInRootViewForV = { x: kSubView1Offset.x + 10,
+                            y: kSubView1Offset.y - 10 };
+const kPtInSubView1ForV = _getSubViewTestPtForV(kSubView1Offset);
+const kPtInSubView2ForV = _getSubViewTestPtForV(kSubView2Offset);
+const kPtInSubView3ForV = _getSubViewTestPtForV(kSubView3Offset);
+
+function _convertTestPtForH(aPt)
+{
+  return { x: aPt.y, y: aPt.x };
+}
+
+const kPtInRootViewForH = _convertTestPtForH(kPtInRootViewForV);
+const kPtInSubView1ForH = _convertTestPtForH(kPtInSubView1ForV);
+const kPtInSubView2ForH = _convertTestPtForH(kPtInSubView2ForV);
+const kPtInSubView3ForH = _convertTestPtForH(kPtInSubView3ForV);
+
+/**
+ * Define the tests here:
+ *   Scrolls are processed async always.  Therefore, we need to call all tests
+ *   by timer.  gTestLists is array of testing lists. In other words, an item
+ *   of gTestList is a group of one or more testing. Each items has following
+ *   properties:
+ *
+ *     - retryWhenTransactionTimeout
+ *         The testing of wheel transaction might be fialed randomly by
+ *         timeout.  Then, automatically the failed test list will be retested
+ *         automatically only this number of times.
+ *
+ *     - steps
+ *         This property is array of testing.  Each steps must have following
+ *         properties at least.
+ *
+ *         - func
+ *             This property means function which will be called via
+ *             |setTimeout|.  The function cannot have params.  If you need
+ *             some additional parameters, you can specify some original
+ *             properties for the test function.  If you do so, you should
+ *             document it in the testing function.
+ *         - delay
+ *             This property means delay time until the function to be called.
+ *             I.e., the value used for the second param of |setTimeout|.
+ *
+ *         And also you need one more property when you call a testing function.
+ *
+ *         - description
+ *             This property is description of the test.  This is used for
+ *             logging.
+ *
+ *         At testing, you can access to current step via |gCurrentTest|.
+ */
+
+var gTestLists;
+function initTestList()
+{
+  gTestLists = [
+    /**************************************************************************
+     * Continuous scrolling test for |gRootView|
+     *   |gRootView| has both scrollbars and it has three children which are
+     *   |gSubView1|, |gSubView2| and |gSubView3|.  They have scrollbars.  If
+     *   the current transaction targets |gRootView|, other children should not
+     *   be scrolled even if the wheel events are fired on them.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Vertical wheel events should scroll |gRootView| even if the position
+        // of wheel events in a child view which has scrollbar.
+        { func: testContinuousScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Continuous scrolling test for root view (vertical/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Continuous scrolling test for root view (vertical/backward)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Horizontal wheel events should scroll |gRootView| even if the
+        // position of wheel events in a child view which has scrollbar.
+        { func: testContinuousScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Continuous scrolling test for root view (horizontal/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Continuous scrolling test for root view (horizontal/backward)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Continuous scrolling test for |gSubView1|
+     *   |gSubView1| has both scrollbars.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Vertical wheel events should scroll |gSubView1|.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Continuous scrolling test for sub view 1 (vertical/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: false, isVertical: true, expectedView: gSubView1,
+          description: "Continuous scrolling test for sub view 1 (vertical/backward)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Horitontal wheel events should scroll |gSubView1|.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          description: "Continuous scrolling test for sub view 1 (horizontal/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: false, isVertical: false, expectedView: gSubView1,
+          description: "Continuous scrolling test for sub view 1 (horizontal/backward)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Continuous scrolling test for |gSubView2|
+     *   |gSubView2| has only vertical scrollbar.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Vertical wheel events should scroll |gSubView2|.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView2ForV,
+          isForward: true, isVertical: true, expectedView: gSubView2,
+          description: "Continuous scrolling test for sub view 2 (vertical/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView2ForV,
+          isForward: false, isVertical: true, expectedView: gSubView2,
+          description: "Continuous scrolling test for sub view 2 (vertical/backward)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Horizontal wheel events should scroll its nearest scrollable ancestor
+        // view, i.e., it is |gRootView|.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView2ForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Continuous scrolling test for sub view 2 (horizontal/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView2ForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Continuous scrolling test for sub view 2 (horizontal/backward)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Continuous scrolling test for |gSubView3|
+     *   |gSubView3| has only horizontal scrollbar.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Vertical wheel events should scroll its nearest scrollable ancestor
+        // view, i.e., it is |gRootView|.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView3ForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Continuous scrolling test for sub view 3 (vertical/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView3ForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Continuous scrolling test for sub view 3 (vertical/backward)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Horitontal wheel events should scroll |gSubView3|.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView3ForH,
+          isForward: true, isVertical: false, expectedView: gSubView3,
+          description: "Continuous scrolling test for sub view 3 (horizontal/forward)" },
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView3ForH,
+          isForward: false, isVertical: false, expectedView: gSubView3,
+          description: "Continuous scrolling test for sub view 3 (horizontal/backward)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Don't reset transaction by a different direction wheel event
+     *   Even if a wheel event doesn't same direction as last wheel event, the
+     *   current transaction should not be reset.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical -> Horizontal
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView| by a vertical wheel
+        // event.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Don't reset transaction by a different direction wheel event (1-1)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Don't reset transaction by a different direction wheel event (1-2)" },
+        // Send a horizontal wheel event over |gSubView1| but |gRootView| should
+        // be scrolled.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Don't reset transaction by a different direction wheel event (1-3)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal -> Vertical
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView| by a horizontal wheel
+        // event.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Don't reset transaction by a different direction wheel event (2-1)" },
+        // Scroll back to left-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Don't reset transaction by a different direction wheel event (2-2)" },
+        // Send a vertical wheel event over |gSubView1| but |gRootView| should
+        // be scrolled.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Don't reset transaction by a different direction wheel event (2-3)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Don't reset transaction even if a wheel event cannot scroll
+     *   Even if a wheel event cannot scroll to specified direction in the
+     *   current target view, the transaction should not be reset.  E.g., there
+     *   are some devices which can scroll obliquely.  If so, probably, users
+     *   cannot input only intended direction.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // A view only has vertical scrollbar case.
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gSubView2|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView2ForV,
+          isForward: true, isVertical: true, expectedView: gSubView2,
+          description: "Don't reset transaction even if a wheel event cannot scroll (1-1)" },
+        // |gSubView2| doesn't have horizontal scrollbar but should not scroll
+        // any views.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView2ForV,
+          isForward: true, isVertical: false, expectedView: null,
+          description: "Don't reset transaction even if a wheel event cannot scroll (1-2)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // A view only has horizontal scrollbar case.
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gSubView3|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView3ForV,
+          isForward: true, isVertical: false, expectedView: gSubView3,
+          description: "Don't reset transaction even if a wheel event cannot scroll (2-1)" },
+        // |gSubView3| doesn't have vertical scrollbar but should not scroll any
+        // views.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView3ForV,
+          isForward: true, isVertical: true, expectedView: null,
+          description: "Don't reset transaction even if a wheel event cannot scroll (2-2)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Reset transaction by mouse down/mouse up events
+     *   Mouse down and mouse up events should cause resetting the current
+     *   transaction.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by mouse down/mouse up events (v-1)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by mouse down/mouse up events (v-2)" },
+        // Send mouse button events which should reset the current transaction.
+        // So, the next wheel event should scroll |gSubView1|.
+        { func: sendMouseButtonEvents, delay: 0,
+          description: "sendMouseButtonEvents" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Reset transaction by mouse down/mouse up events (v-3)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by mouse down/mouse up events (h-1)" },
+        // Scroll back to left-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by mouse down/mouse up events (h-2)" },
+        // Send mouse button events which should reset the current transaction.
+        // So, the next wheel event should scroll |gSubView1|.
+        { func: sendMouseButtonEvents, delay: 0,
+          description: "sendMouseButtonEvents" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          description: "Reset transaction by mouse down/mouse up events (h-3)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Reset transaction by a key event
+     *   A key event should cause resetting the current transaction.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a key event (v-1)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a key event (v-2)" },
+        // Send a key event which should reset the current transaction.  So, the
+        // next wheel event should scroll |gSubView1|.
+        { func: sendKeyEvents, delay: 0, key: "a",
+          description: "sendKeyEvents" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Reset transaction by a key event (v-3)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a key event (h-1)" },
+        // Scroll back to left-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a key event (h-2)" },
+        // Send a key event which should reset the current transaction.  So, the
+        // next wheel event should scroll |gSubView1|.
+        { func: sendKeyEvents, delay: 0, key: "a",
+          description: "sendKeyEvents" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          description: "Reset transaction by a key event (h-3)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Reset transaction by a mouse move event
+     *   A mouse move event can cause reseting the current transaction even if
+     *   mouse cursor is inside the target view of current transaction. Only
+     *   when a wheel event is fired after |gIgnoreMoveDelay| milliseconds since
+     *   the first mouse move event from last wheel event, the transaction
+     *   should be reset.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-1)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-2)" },
+        // Send a mouse move event immediately after last wheel event, then,
+        // current transaction should be kept.
+        { func: sendMouseMoveEvent, delay: 0, offset: kPtInSubView1ForV,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-3)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-4)" },
+        // Send a mouse move event after |gIgnoreMoveDelay| milliseconds since
+        // last wheel event, then, current transaction should be kept.
+        { func: sendMouseMoveEvent, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForV,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-5)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-6)" },
+        // Send a wheel event after |gIgnoreMoveDelay| milliseconds since last
+        // mouse move event but it is fired immediately after the last wheel
+        // event, then, current transaction should be kept.
+        { func: sendMouseMoveEvent, delay: 0, offset: kPtInSubView1ForV,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-7)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (v-8)" },
+        // Send a wheel event after |gIgnoreMoveDelay| milliseconds have passed
+        // since last mouse move event which is fired after |gIgnoreMoveDelay|
+        // milliseconds since last wheel event, then, current transaction should
+        // be reset.
+        { func: sendMouseMoveEvent, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForV,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Reset transaction by a mouse move event (v-9)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-1)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-2)" },
+        // Send a mouse move event immediately after last wheel event, then,
+        // current transaction should be kept.
+        { func: sendMouseMoveEvent, delay: 0, offset: kPtInSubView1ForH,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-3)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-4)" },
+        // Send a mouse move event after |gIgnoreMoveDelay| milliseconds since
+        // last wheel event, then, current transaction should be kept.
+        { func: sendMouseMoveEvent, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForH,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-5)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-6)" },
+        // Send a wheel event after |gIgnoreMoveDelay| milliseconds since last
+        // mouse move event but it is fired immediately after the last wheel
+        // event, then, current transaction should be kept.
+        { func: sendMouseMoveEvent, delay: 0, offset: kPtInSubView1ForH,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-7)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event (h-8)" },
+        // Send a wheel event after |gIgnoreMoveDelay| milliseconds have passed
+        // since last mouse move event which is fired after |gIgnoreMoveDelay|
+        // milliseconds since last wheel event, then, current transaction should
+        // be reset.
+        { func: sendMouseMoveEvent, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForH,
+          description: "sendMouseMoveEvent" },
+        { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
+          offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          description: "Reset transaction by a mouse move event (h-9)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Reset transaction by a mouse move event on outside of view
+     *   When mouse cursor is moved to outside of the current target view, the
+     *   transaction should be reset immediately.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gSubView1|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Reset transaction by a mouse move event on outside of view (v-1)" },
+        // Send mouse move event over |gRootView|.
+        { func: sendMouseMoveEvent, delay: 0, offset: kPtInRootViewForV,
+          description: "sendMouseMoveEvent" },
+        // Send Wheel event over |gRootView| which should be scrolled.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event on outside of view (v-2)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Create a transaction which targets |gSubView1|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Reset transaction by a mouse move event on outside of view (h-1)" },
+        // Send mouse move event over |gRootView|.
+        { func: sendMouseMoveEvent, delay: 0, offset: kPtInRootViewForH,
+          description: "sendMouseMoveEvent" },
+        // Send Wheel event over |gRootView| which should be scrolled.
+        { func: testOneTimeScroll, delay: 0,  offset: kPtInRootViewForH,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Reset transaction by a mouse move event on outside of view (h-2)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Timeout test
+     *   A view should not be scrolled during another to be transaction for
+     *   another view scrolling. However, a wheel event which is sent after
+     *   timeout, a view which is under the mouse cursor should be scrolled.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // First, create a transaction which should target the |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Timeout test (v-1)" },
+        // Scroll back to top-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Timeout test (v-2)" },
+        // A wheel event over |gSubView1| should not scroll it during current
+        // transaction.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Timeout test (v-3)" },
+        // Scroll back to top-most again.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: false, isVertical: true, expectedView: gRootView,
+          description: "Timeout test (v-4)" },
+        // A wheel event over |gSubView1| after timeout should scroll
+        // |gSubView1|.
+        { func: testOneTimeScroll, delay: gEnoughForTimeout,
+          offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          isTimeoutTesting: true,
+          description: "Timeout test (v-5)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // First, create a transaction which should target the |gRootView|.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Timeout test (h-1)" },
+        // Scroll back to left-most for easy cursor position specifying.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInRootViewForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Timeout test (h-2)" },
+        // A wheel event over |gSubView1| should not scroll it during current
+        // transaction.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Timeout test (h-3)" },
+        // Scroll back to left-most again.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: false, isVertical: false, expectedView: gRootView,
+          description: "Timeout test (h-4)" },
+        // A wheel event over |gSubView1| after timeout should scroll
+        // |gSubView1|.
+        { func: testOneTimeScroll, delay: gEnoughForTimeout,
+          offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          isTimeoutTesting: true,
+          description: "Timeout test (h-5)" }
+      ]
+    },
+
+
+    /**************************************************************************
+     * Timeout test even with many wheel events
+     *   This tests whether timeout is occurred event if wheel events are sent.
+     *   The transaction should not be updated by non-scrollable wheel events.
+     **************************************************************************/
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Vertical case
+        { func: initElements, delay: 0, forVertical: true,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Scroll |gSubView1| to bottom-most.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gSubView1,
+          description: "Timeout test even with many wheel events (v-1)" },
+        // Don't scroll any views before timeout.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: null,
+          description: "Timeout test even with many wheel events (v-2)" },
+        // Recreate a transaction which is scrolling |gRootView| after time out.
+        { func: testRestartScroll, delay: 0, offset: kPtInSubView1ForV,
+          isForward: true, isVertical: true, expectedView: gRootView,
+          description: "Timeout test even with many wheel events (v-3)" }
+      ]
+    },
+
+
+    { retryWhenTransactionTimeout: 5,
+      steps: [
+        // Horizontal case
+        { func: initElements, delay: 0, forVertical: false,
+          description: "initElements" },
+        { func: clearWheelTransaction, delay: 0,
+          description: "clearWheelTransaction" },
+        // Scroll |gSubView1| to right-most.
+        { func: testContinuousScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gSubView1,
+          description: "Timeout test even with many wheel events (h-1)" },
+        // Don't scroll any views before timeout.
+        { func: testOneTimeScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: null,
+          description: "Timeout test even with many wheel events (h-2)" },
+        // Recreate a transaction which is scrolling |gRootView| after time out.
+        { func: testRestartScroll, delay: 0, offset: kPtInSubView1ForH,
+          isForward: true, isVertical: false, expectedView: gRootView,
+          description: "Timeout test even with many wheel events (h-3)" }
+      ]
+    }
+  ];
+}
+
+/******************************************************************************
+ * Actions for preparing tests
+ ******************************************************************************/
+
+function initElements()
+{
+  _clearTimer();
+
+  function resetScrollPosition(aElement)
+  {
+    aElement.scrollTop = 0;
+    aElement.scrollLeft = 0;
+  }
+
+  function initInRootView(aElement, aPt)
+  {
+    aElement.offset =
+      gCurrentTest.forVertical ? aPt : { x: aPt.y, y: aPt.x };
+  }
+
+  const kDisplay = gCurrentTest.forVertical ? "block" : "inline-block";
+  gSubView1.style.display = kDisplay;
+  gSubView2.style.display = kDisplay;
+  gSubView3.style.display = kDisplay;
+
+  resetScrollPosition(gRootView);
+  resetScrollPosition(gSubView1);
+  resetScrollPosition(gSubView2);
+  resetScrollPosition(gSubView3);
+
+  runNextTestStep();
+}
+
+function clearWheelTransaction()
+{
+  _clearTimer();
+  _clearTransaction();
+  runNextTestStep();
+}
+
+function sendKeyEvents()
+{
+  _clearTimer();
+  synthesizeKey(gCurrentTest.key, {}, window);
+  runNextTestStep();
+}
+
+function sendMouseButtonEvents()
+{
+  _clearTimer();
+  synthesizeMouse(gRootView, -1, -1, { type:"mousedown" }, window);
+  synthesizeMouse(gRootView, -1, -1, { type:"mouseup" }, window);
+  runNextTestStep();
+}
+
+function sendMouseMoveEvent()
+{
+  _clearTimer();
+  _fireMouseMoveEvent(gCurrentTest.offset);
+  runNextTestStep();
+}
+
+/******************************************************************************
+ * Utilities for testing functions
+ ******************************************************************************/
+
+function _clearTransaction()
+{
+  synthesizeMouse(gRootView, -1, -1, { type:"mousedown" }, window);
+  synthesizeMouse(gRootView, -1, -1, { type:"mouseup" }, window);
+}
+
+function _saveScrollPositions()
+{
+  function save(aElement)
+  {
+    aElement.prevTop = aElement.scrollTop;
+    aElement.prevLeft = aElement.scrollLeft;
+  }
+  save(gRootView);
+  save(gSubView1);
+  save(gSubView2);
+  save(gSubView3);
+}
+
+function _fireMouseMoveEvent(aOffset)
+{
+  synthesizeMouse(gRootView, aOffset.x, aOffset.y, { type:"mousemove" }, window);
+}
+
+function _fireWheelScrollEvent(aOffset, aIsVertical, aForward)
+{
+  var event = { axis: aIsVertical ? "vertical" : "horizontal",
+                delta: aForward ? 4 : -4, type: "DOMMouseScroll" };
+  synthesizeMouseScroll(gRootView, aOffset.x, aOffset.y, event, window);
+}
+
+function _canScroll(aElement, aIsVertical, aForward)
+{
+  if (aIsVertical) {
+    if (!aForward)
+      return aElement.scrollTop > 0;
+    return aElement.scrollHeight > aElement.scrollTop + aElement.clientHeight;
+  }
+  if (!aForward)
+    return aElement.scrollLeft > 0;
+  return aElement.scrollWidth > aElement.scrollLeft + aElement.clientWidth;
+}
+
+const kNotScrolled      = 0;
+const kScrolledToTop    = 1;
+const kScrolledToBottom = 2;
+const kScrolledToLeft   = 4;
+const kScrolledToRight  = 8;
+
+const kScrolledVertical   = kScrolledToTop | kScrolledToBottom;
+const kScrolledHorizontal = kScrolledToLeft | kScrolledToRight;
+
+function _getScrolledState(aElement)
+{
+  var ret = kNotScrolled;
+  if (aElement.scrollTop != aElement.prevTop) {
+    ret |= aElement.scrollTop < aElement.prevTop ? kScrolledToTop :
+                                                   kScrolledToBottom;
+  }
+  if (aElement.scrollLeft != aElement.prevLeft) {
+    ret |= aElement.scrollLeft < aElement.prevLeft ? kScrolledToLeft :
+                                                     kScrolledToRight;
+  }
+  return ret;
+}
+
+function _getExpectedScrolledState()
+{
+  return gCurrentTest.isVertical ?
+           gCurrentTest.isForward ? kScrolledToBottom : kScrolledToTop :
+           gCurrentTest.isForward ? kScrolledToRight : kScrolledToLeft;
+}
+
+function _getScrolledStateText(aScrolledState)
+{
+  if (aScrolledState == kNotScrolled)
+    return "Not scrolled";
+
+  var s = "scrolled to ";
+  if (aScrolledState & kScrolledVertical) {
+    s += aScrolledState & kScrolledToTop ? "backward" : "forward";
+    s += " (vertical)"
+    if (aScrolledState & kScrolledHorizontal)
+      s += " and to ";
+  }
+  if (aScrolledState & kScrolledHorizontal) {
+    s += aScrolledState & kScrolledToLeft ? "backward" : "forward";
+    s += " (horizontal)"
+  }
+  return s;
+}
+
+function _getCurrentTestList()
+{
+  return gTestLists[gCurrentTestListStatus.nextListIndex - 1];
+}
+
+function _clearTimer()
+{
+  clearTimeout(gTimer);
+  gTimer = 0;
+}
+
+/******************************************************************************
+ * Testing functions
+ ******************************************************************************/
+
+/**
+ * Note that testing functions must set following variables:
+ *
+ *   gCurrentTest.repeatTest:  See comment in |continueTest|.
+ *   gCurrentTest.autoRepeatDelay:  See comment in |continueTest|.
+ *   gListenScrollEvent: When this is not true, the event handlers ignores the
+ *                       events.
+ */
+
+function testContinuousScroll()
+{
+  /**
+   * Testing continuous scrolling.  This function synthesizes a wheel event.  If
+   * the test was success, this function will be recalled automatically.
+   * And when a generating wheel event cannot scroll the expected view, this
+   * function fires the wheel event only one time.
+   *
+   * @param gCurrentTest.offset
+   *          The cursor position of firing wheel event.  The values are offset
+   *          from |gRootView|.
+   * @param gCurrentTest.isVertical
+   *          Whether the wheel event is for virtical scrolling or horizontal.
+   * @param gCurrentTest.isForward
+   *          Whether the wheel event is to forward or to backward.
+   * @param gCurrentTest.expectedView
+   *          The expected view which will be scrolled by wheel event. This
+   *          value must not be null.
+   */
+
+  _clearTimer();
+  _saveScrollPositions();
+  if (!gCurrentTest.expectedView) {
+    runNextTestStep();
+    return;
+  }
+
+  gLitesnEvents = kListenEvent_All;
+  gCurrentTest.repeatTest = true;
+  gCurrentTest.autoRepeatDelay = 0;
+
+  if (!_canScroll(gCurrentTest.expectedView,
+                  gCurrentTest.isVertical, gCurrentTest.isForward)) {
+    gCurrentTest.expectedView = null;
+  }
+  _fireWheelScrollEvent(gCurrentTest.offset,
+                        gCurrentTest.isVertical, gCurrentTest.isForward);
+}
+
+function testOneTimeScroll()
+{
+  /**
+   * Testing one wheel event.  |runNextTestStep| will be called immediately
+   * after this function by |onScrollView| or |onTimeout|.
+   *
+   * @param gCurrentTest.offset
+   *          The cursor position of firing wheel event.  The values are offset
+   *          from |gRootView|.
+   * @param gCurrentTest.isVertical
+   *          Whether the wheel event is for virtical scrolling or horizontal.
+   * @param gCurrentTest.isForward
+   *          Whether the wheel event is to forward or to backward.
+   * @param gCurrentTest.expectedView
+   *          The expected view which will be scrolled by wheel event. This
+   *          value can be null.  It means any views should not be scrolled.
+   */
+
+  _clearTimer();
+  _saveScrollPositions();
+
+  gLitesnEvents = kListenEvent_All;
+  gCurrentTest.repeatTest = false;
+  gCurrentTest.autoRepeatDelay = 0;
+
+  _fireWheelScrollEvent(gCurrentTest.offset,
+                        gCurrentTest.isVertical, gCurrentTest.isForward);
+}
+
+function testRestartScroll()
+{
+  /**
+   * Testing restart to scroll in expected view after timeout from the current
+   * transaction.  This function recall this itself until to success this test
+   * or timeout from this test.
+   *
+   * @param gCurrentTest.offset
+   *          The cursor position of firing wheel event.  The values are offset
+   *          from |gRootView|.
+   * @param gCurrentTest.isVertical
+   *          Whether the wheel event is for virtical scrolling or horizontal.
+   * @param gCurrentTest.isForward
+   *          Whether the wheel event is to forward or to backward.
+   * @param gCurrentTest.expectedView
+   *          The expected view which will be scrolled by wheel event. This
+   *          value must not be null.
+   */
+
+  _clearTimer();
+  _saveScrollPositions();
+
+  if (!gCurrentTest.wasTransactionTimeout) {
+    gCurrentTest.repeatTest = true;
+    gCurrentTest.autoRepeatDelay = gTimeout / 3;
+    gLitesnEvents = kListenEvent_All;
+    gCurrentTest.isTimeoutTesting = true;
+    if (gCurrentTest.expectedView) {
+      gCurrentTest.expectedViewAfterTimeout = gCurrentTest.expectedView;
+      gCurrentTest.expectedView = null;
+    }
+  } else {
+    gCurrentTest.repeatTest = false;
+    gCurrentTest.autoRepeatDelay = 0;
+    gLitesnEvents = kListenEvent_All;
+    gCurrentTest.isTimeoutTesting = false;
+    gCurrentTest.expectedView = gCurrentTest.expectedViewAfterTimeout;
+  }
+
+  _fireWheelScrollEvent(gCurrentTest.offset,
+                        gCurrentTest.isVertical, gCurrentTest.isForward);
+}
+
+/******************************************************************************
+ * Event handlers
+ ******************************************************************************/
+
+function onScrollView(aEvent)
+{
+  /**
+   * Scroll event handler of |gRootView|, |gSubView1|, |gSubView2| and 
+   * |gSubView3|.  If testing is failed, this function cancels all left tests.
+   * For checking the event is expected, the event firer must call
+   * |_saveScrollPositions|.
+   *
+   * @param gCurrentTest.expectedView
+   *          The expected view which should be scrolled by the wheel event.
+   *          This value can be null.  It means any views should not be
+   *          scrolled.
+   * @param gCurrentTest.isVertical
+   *          The expected view should be scrolled vertical or horizontal.
+   * @param gCurrentTest.isForward
+   *          The expected view should be scrolled to forward or backward.
+   */
+
+  if (!(gLitesnEvents & kListenEvent_OnScroll))
+    return;
+
+  // Now testing a timeout, but a view is scrolled before timeout.
+  if (gCurrentTest.isTimeoutTesting && !gCurrentTest.wasTransactionTimeout) {
+    is(aEvent.target.id, "",
+       "The view scrolled before timeout (the expected view after timeout is " +
+         gCurrentTest.expectedView ? gCurrentTest.expectedView.id : "null" +
+         "): " + gCurrentTest.description);
+    runNextTestList();
+    return;
+  }
+
+  // Check whether the scrolled event should be fired or not.
+  if (!gCurrentTest.expectedView) {
+    is(aEvent.target.id, "",
+         "no views should be scrolled (" +
+         _getScrolledStateText(_getScrolledState(aEvent.target)) + "): " +
+         gCurrentTest.description);
+    runNextTestList();
+    return;
+  }
+
+  // Check whether the scrolled view is expected or not.
+  if (aEvent.target != gCurrentTest.expectedView) {
+    is(aEvent.target.id, gCurrentTest.expectedView.id,
+       "wrong view was scrolled: " + gCurrentTest.description);
+    runNextTestList();
+    return;
+  }
+
+  // Check whether the scrolling direction is expected or not.
+  var expectedState = _getExpectedScrolledState();
+  var currentState = _getScrolledState(aEvent.target);
+  if (expectedState != currentState) {
+    is(_getScrolledStateText(currentState),
+       _getScrolledStateText(expectedState),
+       "scrolled to wrong direction: " + gCurrentTest.description);
+    runNextTestList();
+    return;
+  }
+
+  ok(true, "passed: " + gCurrentTest.description);
+  continueTest();
+}
+
+function onMouseScrollFailed()
+{
+  /**
+   * Scroll failed event handler. If testing is failed, this function cancels
+   * all remains of current test-list, and go to next test-list.
+   *
+   * NOTE: This event is fired immediately after |_fireWheelScrollEvent|.
+   *
+   * @param gCurrentTest.expectedView
+   *          The expected view which should be scrolled by the wheel event.
+   *          This value can be null.  It means any views should not be
+   *          scrolled.  When this is not null, this event means the test may
+   *          be failed.
+   */
+
+  if (!(gLitesnEvents & kListenEvent_OnScrollFailed))
+    return;
+
+  ok(!gCurrentTest.expectedView,
+     "failed to scroll on current target: " + gCurrentTest.description);
+  if (gCurrentTest.expectedView) {
+    runNextTestList();
+    return;
+  }
+
+  continueTest();
+}
+
+function onTransactionTimeout()
+{
+  /**
+   * Scroll transaction timeout event handler.  If the timeout is unexpected,
+   * i.e., |gCurrentTest.isTimeoutTesting| is not true, this function retry
+   * the current test-list.  However, if the current test-list failed by timeout
+   * |gCurrentTestListStatus.retryWhenTransactionTimeout| times already, marking
+   * to failed the current test-list, and go to next test-list.
+   *
+   * @param gCurrentTest.expectedView
+   *          The expected view which should be scrolled by the wheel event.
+   *          This value can be null.  It means any views should not be
+   *          scrolled.  When this is not null, this event means the testing may
+   *          be failed.
+   * @param gCurrentTest.isTimeoutTesting
+   *          If this value is true, the current testing have waited this
+   *          event.  Otherwise, the testing may be failed.
+   * @param gCurrentTestListStatus.retryWhenTransactionTimeout
+   *          If |gCurrentTest.isTimeoutTesting| is not true but this event is
+   *          fired, the failure may be randomly.  Then, this event handler
+   *          retry to test the current test-list until this cound will be zero.
+   */
+
+  if (!gCurrentTest.isTimeoutTesting &&
+      gCurrentTestListStatus.retryWhenTransactionTimeout > 0) {
+    gCurrentTestListStatus.retryWhenTransactionTimeout--;
+    // retry current test list
+    retryCurrentTestList();
+    return;
+  }
+
+  gCurrentTest.wasTransactionTimeout = true;
+
+  if (!(gLitesnEvents & kListenEvent_OnTransactionTimeout))
+    return;
+
+  ok(gCurrentTest.isTimeoutTesting,
+     "transaction timeout: " + gCurrentTest.description);
+  if (!gCurrentTest.isTimeoutTesting) {
+    runNextTestList();
+    return;
+  }
+
+  continueTest();
+}
+
+/******************************************************************************
+ * Main function for this tests
+ ******************************************************************************/
+
+function runNextTestStep()
+{
+  // When this is first time or the current test list is finised, load next
+  // test-list.
+  _clearTimer();
+  if (!gCurrentTest)
+    runNextTestList();
+  else
+    runTestStepAt(gCurrentTestListStatus.nextStepIndex);
+}
+
+function runNextTestList()
+{
+  _clearTimer();
+
+  gLitesnEvents = kListenEvent_None;
+  _clearTransaction();
+  resetTimeoutPrefs();
+  if (gCurrentTestListStatus.nextListIndex >= gTestLists.length) {
+    finish();
+    return;
+  }
+
+  gCurrentTestListStatus.nextListIndex++;
+  gCurrentTestListStatus.retryWhenTransactionTimeout =
+    _getCurrentTestList().retryWhenTransactionTimeout;
+  runTestStepAt(0);
+}
+
+function runTestStepAt(aStepIndex)
+{
+  _clearTimer();
+
+  disableNonTestMouseEvents(true);
+
+  // load a step of testing.
+  gCurrentTestListStatus.nextStepIndex = aStepIndex;
+  gCurrentTest =
+    _getCurrentTestList().steps[gCurrentTestListStatus.nextStepIndex++];
+  if (gCurrentTest) {
+    gCurrentTest.wasTransactionTimeout = false;
+    gTimer = setTimeout(gCurrentTest.func, gCurrentTest.delay);
+  } else {
+    // If current test-list doesn't have more testing, go to next test-list
+    // after cleaning up the current transaction.
+    _clearTransaction();
+    runNextTestList();
+  }
+}
+
+function retryCurrentTestList()
+{
+  _clearTimer();
+
+  gLitesnEvents = kListenEvent_None;
+  _clearTransaction();
+  ok(true, "WARNING: retry current test-list...");
+  growUpTimeoutPrefs(); // retry the test with longer timeout settings.
+  runTestStepAt(0);
+}
+
+function continueTest()
+{
+  /**
+   * This function is called from an event handler when a test succeeded.
+   *
+   * @param gCurrentTest.repeatTest
+   *          When this is true, onScrollView calls |gCurrentTest.func|. So,
+   *          same test can repeat.  Otherwise, this calls |runNextTestStep|.
+   * @param gCurrentTest.autoRepeatDelay
+   *          The delay value in milliseconds, this is used to call
+   *          |gCurrentTest.func| via |setTimeout|.
+   */
+
+  _clearTimer();
+  gLitesnEvents = kListenEvent_OnTransactionTimeout;
+
+  // We should call each functions via setTimeout. Because sometimes this test
+  // is broken by stack overflow.
+  if (gCurrentTest.repeatTest) {
+    gTimer = setTimeout(gCurrentTest.func, gCurrentTest.autoRepeatDelay);
+  } else {
+    gTimer = setTimeout(runNextTestStep, 0);
+  }
+}
+
+]]>
+</script>
+
+</window>

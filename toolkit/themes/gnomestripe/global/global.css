@@ -181,6 +181,11 @@ sidebarheader > label {
   -moz-user-focus: ignore !important;
 }
 
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
+}
+
 /* ::::: miscellaneous formatting ::::: */
 
 .inset {

@@ -302,6 +302,13 @@ protected:
   static jsval sOnpaint_id;
   static jsval sOnresize_id;
   static jsval sOnscroll_id;
+  static jsval sOndrag_id;
+  static jsval sOndragend_id;
+  static jsval sOndragenter_id;
+  static jsval sOndragleave_id;
+  static jsval sOndragover_id;
+  static jsval sOndragstart_id;
+  static jsval sOndrop_id;
   static jsval sScrollIntoView_id;
   static jsval sScrollX_id;
   static jsval sScrollY_id;

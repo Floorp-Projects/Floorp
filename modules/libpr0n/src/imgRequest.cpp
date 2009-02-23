@@ -83,8 +83,8 @@ NS_IMPL_ISUPPORTS8(imgRequest, imgILoad,
 
 imgRequest::imgRequest() : 
   mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
-  mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0),
-  mValidator(nsnull), mIsMultiPartChannel(PR_FALSE),
+  mGotData(PR_FALSE), mImageStatus(imgIRequest::STATUS_NONE),
+  mState(0), mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE),
   mImageSniffers("image-sniffing-services") 
 {
   /* member initializers and constructor code */
@@ -92,7 +92,12 @@ imgRequest::imgRequest() :
 
 imgRequest::~imgRequest()
 {
-  /* destructor code */
+  if (mKeyURI) {
+    nsCAutoString spec;
+    mKeyURI->GetSpec(spec);
+    LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()", "keyuri", spec.get());
+  } else
+    LOG_FUNC(gImgLog, "imgRequest::~imgRequest()");
 }
 
 nsresult imgRequest::Init(nsIURI *aURI,
@@ -105,14 +110,16 @@ nsresult imgRequest::Init(nsIURI *aURI,
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
-  NS_ASSERTION(!mImage, "Multiple calls to init");
-  NS_ASSERTION(aURI, "No uri");
-  NS_ASSERTION(aRequest, "No request");
-  NS_ASSERTION(aChannel, "No channel");
+  NS_ABORT_IF_FALSE(!mImage, "Multiple calls to init");
+  NS_ABORT_IF_FALSE(aURI, "No uri");
+  NS_ABORT_IF_FALSE(aKeyURI, "No key uri");
+  NS_ABORT_IF_FALSE(aRequest, "No request");
+  NS_ABORT_IF_FALSE(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
   if (!mProperties)
     return NS_ERROR_OUT_OF_MEMORY;
+
 
   mURI = aURI;
   mKeyURI = aKeyURI;
@@ -141,10 +148,27 @@ nsresult imgRequest::Init(nsIURI *aURI,
   return NS_OK;
 }
 
+void imgRequest::SetCacheEntry(imgCacheEntry *entry)
+{
+  mCacheEntry = entry;
+}
+
+PRBool imgRequest::HasCacheEntry() const
+{
+  return mCacheEntry != nsnull;
+}
+
 nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 {
   NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
+
+  // If we're empty before adding, we have to tell the loader we now have
+  // proxies.
+  if (mObservers.IsEmpty()) {
+    NS_ABORT_IF_FALSE(mKeyURI, "Trying to SetHasProxies without key uri.");
+    imgLoader::SetHasProxies(mKeyURI);
+  }
 
   return mObservers.AppendElementUnlessExists(proxy) ?
     NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -182,6 +206,22 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
   }
 
   if (mObservers.IsEmpty()) {
+    // If we have no observers, there's nothing holding us alive. If we haven't
+    // been cancelled and thus removed from the cache, tell the image loader so
+    // we can be evicted from the cache.
+    if (mCacheEntry) {
+      NS_ABORT_IF_FALSE(mKeyURI, "Removing last observer without key uri.");
+
+      imgLoader::SetHasNoProxies(mKeyURI, mCacheEntry);
+    } 
+#if defined(PR_LOGGING)
+    else {
+      nsCAutoString spec;
+      mKeyURI->GetSpec(spec);
+      LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
+    }
+#endif
+
     /* If |aStatus| is a failure code, then cancel the load if it is still in progress.
        Otherwise, let the load continue, keeping 'this' in the cache with no observers.
        This way, if a proxy is destroyed without calling cancel on it, it won't leak
@@ -314,6 +354,8 @@ void imgRequest::Cancel(nsresult aStatus)
 
 void imgRequest::CancelAndAbort(nsresult aStatus)
 {
+  LOG_SCOPE(gImgLog, "imgRequest::CancelAndAbort");
+
   Cancel(aStatus);
 
   // It's possible for the channel to fail to open after we've set our
@@ -377,10 +419,12 @@ void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
-  if (mCacheEntry) {
-    imgLoader::RemoveFromCache(mURI);
-    mCacheEntry = nsnull;
-  }
+  if (mCacheEntry)
+    imgLoader::RemoveFromCache(mCacheEntry);
+  else
+    imgLoader::RemoveFromCache(mKeyURI);
+
+  mCacheEntry = nsnull;
 }
 
 PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
@@ -833,6 +877,8 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
 
+  mGotData = PR_TRUE;
+
   if (!mProcessing) {
     LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |First time through... finding mimetype|");
 
@@ -1022,11 +1068,24 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
       return rv;
   }
 
+#if defined(PR_LOGGING)
+  nsCAutoString spec;
+  mKeyURI->GetSpec(spec);
+
+  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", spec.get());
+#endif
+
   RemoveFromCache();
 
   mChannel = newChannel;
 
   newChannel->GetOriginalURI(getter_AddRefs(mKeyURI));
+
+#if defined(PR_LOGGING)
+  mKeyURI->GetSpec(spec);
+
+  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", spec.get());
+#endif
 
   // If we don't still have a cache entry, we don't want to refresh the cache.
   if (mKeyURI && mCacheEntry)

@@ -623,7 +623,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull),
-    mPendingStorageEvents(nsnull)
+    mPendingStorageEvents(nsnull),
+    mTimeoutsSuspendDepth(0)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -7438,7 +7439,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   PRTime delta = (PRTime)realInterval * PR_USEC_PER_MSEC;
 
-  if (!IsFrozen()) {
+  if (!IsFrozen() && !mTimeoutsSuspendDepth) {
     // If we're not currently frozen, then we set timeout->mWhen to be the
     // actual firing time of the timer (i.e., now + delta). We also actually
     // create a timer and fire it off.
@@ -7551,7 +7552,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 {
   // If a modal dialog is open for this window, return early. Pending
   // timeouts will run when the modal dialog is dismissed.
-  if (IsInModalState()) {
+  if (IsInModalState() || mTimeoutsSuspendDepth) {
     return;
   }
 
@@ -8368,6 +8369,10 @@ nsGlobalWindow::SuspendTimeouts()
 {
   FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
 
+  if (++mTimeoutsSuspendDepth != 1) {
+    return;
+  }
+
   nsDOMThreadService* dts = nsDOMThreadService::get();
   if (dts) {
     dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
@@ -8428,6 +8433,11 @@ nsGlobalWindow::ResumeTimeouts()
 {
   FORWARD_TO_INNER(ResumeTimeouts, (), NS_ERROR_NOT_INITIALIZED);
 
+  NS_ASSERTION(mTimeoutsSuspendDepth, "Mismatched calls to ResumeTimeouts!");
+  if (--mTimeoutsSuspendDepth != 0) {
+    return NS_OK;
+  }
+
   nsDOMThreadService* dts = nsDOMThreadService::get();
   if (dts) {
     dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
@@ -8439,7 +8449,22 @@ nsGlobalWindow::ResumeTimeouts()
   PRTime now = PR_Now();
   nsresult rv;
 
+#ifdef DEBUG
+  PRBool _seenDummyTimeout = PR_FALSE;
+#endif
+
   for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
+    // There's a chance we're being called with RunTimeout on the stack in which
+    // case we have a dummy timeout in the list that *must not* be resumed. It
+    // can be identified by a null mWindow.
+    if (!t->mWindow) {
+#ifdef DEBUG
+      NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
+      _seenDummyTimeout = PR_TRUE;
+#endif
+      continue;
+    }
+
     // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
     // PRTime to make the division do the right thing on 64-bit
     // platforms whether t->mWhen is positive or negative (which is

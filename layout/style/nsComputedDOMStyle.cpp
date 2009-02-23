@@ -1166,68 +1166,116 @@ nsComputedDOMStyle::GetFontVariant(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetBackgroundList(PRUint8 nsStyleBackground::Layer::* aMember,
+                                      PRUint32 nsStyleBackground::* aCount,
+                                      const PRInt32 aTable[],
+                                      nsIDOMCSSValue** aResult)
+{
+  const nsStyleBackground* bg = GetStyleBackground();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0, i_end = bg->*aCount; i < i_end; ++i) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    if (!val || !valueList->AppendCSSValue(val)) {
+      delete val;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(bg->mLayers[i].*aMember, 
+                                                 aTable));
+  }
+
+  return CallQueryInterface(valueList, aResult);
+}
+
+nsresult
 nsComputedDOMStyle::GetBackgroundAttachment(nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  const nsStyleBackground *background = GetStyleBackground();
-
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(background->mBackgroundAttachment,
-                                   nsCSSProps::kBackgroundAttachmentKTable));
-
-  return CallQueryInterface(val, aValue);
+  return GetBackgroundList(&nsStyleBackground::Layer::mAttachment,
+                           &nsStyleBackground::mAttachmentCount,
+                           nsCSSProps::kBackgroundAttachmentKTable,
+                           aValue);
 }
 
 nsresult
 nsComputedDOMStyle::GetBackgroundClip(nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(GetStyleBackground()->mBackgroundClip,
-                                   nsCSSProps::kBackgroundClipKTable));
-
-  return CallQueryInterface(val, aValue);
+  return GetBackgroundList(&nsStyleBackground::Layer::mClip,
+                           &nsStyleBackground::mClipCount,
+                           nsCSSProps::kBackgroundClipKTable,
+                           aValue);
 }
 
 nsresult
 nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+  const nsStyleBackground* bg = GetStyleBackground();
+  nsresult rv;
 
-  const nsStyleBackground* color = GetStyleBackground();
-  nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
-  if (NS_FAILED(rv)) {
-    delete val;
-    return rv;
+  if (bg->mBackgroundColor == bg->mFallbackBackgroundColor) {
+    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = SetToRGBAColor(val, bg->mBackgroundColor);
+    if (NS_FAILED(rv)) {
+      delete val;
+      return rv;
+    }
+    rv = CallQueryInterface(val, aValue);
+  } else {
+    nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+    NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+    for (PRUint32 i = 0; i < 2; ++i) {
+      nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+      if (!val || !valueList->AppendCSSValue(val)) {
+        delete val;
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      rv = SetToRGBAColor(val, (i == 0) ? bg->mBackgroundColor
+                                        : bg->mFallbackBackgroundColor);
+      if (NS_FAILED(rv)) {
+        delete valueList;
+        return rv;
+      }
+    }
+    rv = CallQueryInterface(valueList, aValue);
   }
 
-  return CallQueryInterface(val, aValue);
+  return rv;
 }
 
 nsresult
 nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+  const nsStyleBackground* bg = GetStyleBackground();
 
-  const nsStyleBackground* color = GetStyleBackground();
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
 
-  if (color->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) {
-    val->SetIdent(eCSSKeyword_none);
-  } else {
-    nsCOMPtr<nsIURI> uri;
-    if (color->mBackgroundImage) {
-      color->mBackgroundImage->GetURI(getter_AddRefs(uri));
+  for (PRUint32 i = 0, i_end = bg->mImageCount; i < i_end; ++i) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    if (!val || !valueList->AppendCSSValue(val)) {
+      delete val;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    val->SetURI(uri);
+
+    imgIRequest *image = bg->mLayers[i].mImage.mRequest;
+    if (!image) {
+      val->SetIdent(eCSSKeyword_none);
+    } else {
+      nsCOMPtr<nsIURI> uri;
+      image->GetURI(getter_AddRefs(uri));
+      val->SetURI(uri);
+    }
   }
 
-  return CallQueryInterface(val, aValue);
+  return CallQueryInterface(valueList, aValue);
 }
 
 nsresult
@@ -1246,56 +1294,55 @@ nsComputedDOMStyle::GetBackgroundInlinePolicy(nsIDOMCSSValue** aValue)
 nsresult
 nsComputedDOMStyle::GetBackgroundOrigin(nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(GetStyleBackground()->mBackgroundOrigin,
-                                   nsCSSProps::kBackgroundOriginKTable));
-
-  return CallQueryInterface(val, aValue);
+  return GetBackgroundList(&nsStyleBackground::Layer::mOrigin,
+                           &nsStyleBackground::mOriginCount,
+                           nsCSSProps::kBackgroundOriginKTable,
+                           aValue);
 }
 
 nsresult
 nsComputedDOMStyle::GetBackgroundPosition(nsIDOMCSSValue** aValue)
 {
-  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  const nsStyleBackground* bg = GetStyleBackground();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
   NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
 
-  nsROCSSPrimitiveValue *valX = GetROCSSPrimitiveValue();
-  if (!valX || !valueList->AppendCSSValue(valX)) {
-    delete valueList;
-    delete valX;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  for (PRUint32 i = 0, i_end = bg->mPositionCount; i < i_end; ++i) {
+    nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
+    if (!itemList || !valueList->AppendCSSValue(itemList)) {
+      delete valueList;
+      delete itemList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
-  if (!valY || !valueList->AppendCSSValue(valY)) {
-    delete valueList;
-    delete valY;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+    nsROCSSPrimitiveValue *valX = GetROCSSPrimitiveValue();
+    if (!valX || !itemList->AppendCSSValue(valX)) {
+      delete valueList;
+      delete valX;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  const nsStyleBackground *bg = GetStyleBackground();
+    nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
+    if (!valY || !itemList->AppendCSSValue(valY)) {
+      delete valueList;
+      delete valY;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  if (NS_STYLE_BG_X_POSITION_LENGTH & bg->mBackgroundFlags) {
-    valX->SetAppUnits(bg->mBackgroundXPosition.mCoord);
-  }
-  else if (NS_STYLE_BG_X_POSITION_PERCENT & bg->mBackgroundFlags) {
-    valX->SetPercent(bg->mBackgroundXPosition.mFloat);
-  }
-  else {
-    valX->SetPercent(0.0f);
-  }
+    const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
 
-  if (NS_STYLE_BG_Y_POSITION_LENGTH & bg->mBackgroundFlags) {
-    valY->SetAppUnits(bg->mBackgroundYPosition.mCoord);
-  }
-  else if (NS_STYLE_BG_Y_POSITION_PERCENT & bg->mBackgroundFlags) {
-    valY->SetPercent(bg->mBackgroundYPosition.mFloat);
-  }
-  else {
-    valY->SetPercent(0.0f);
+    if (pos.mXIsPercent) {
+      valX->SetPercent(pos.mXPosition.mFloat);
+    } else {
+      valX->SetAppUnits(pos.mXPosition.mCoord);
+    }
+
+    if (pos.mYIsPercent) {
+      valY->SetPercent(pos.mYPosition.mFloat);
+    } else {
+      valY->SetAppUnits(pos.mYPosition.mCoord);
+    }
   }
 
   return CallQueryInterface(valueList, aValue);  
@@ -1304,14 +1351,10 @@ nsComputedDOMStyle::GetBackgroundPosition(nsIDOMCSSValue** aValue)
 nsresult
 nsComputedDOMStyle::GetBackgroundRepeat(nsIDOMCSSValue** aValue)
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(GetStyleBackground()->mBackgroundRepeat,
-                                   nsCSSProps::kBackgroundRepeatKTable));
-
-  return CallQueryInterface(val, aValue);
+  return GetBackgroundList(&nsStyleBackground::Layer::mRepeat,
+                           &nsStyleBackground::mRepeatCount,
+                           nsCSSProps::kBackgroundRepeatKTable,
+                           aValue);
 }
 
 nsresult
@@ -1831,7 +1874,7 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
   NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
 
   for (nsCSSShadowItem *item = aArray->ShadowAt(0),
-                    *item_end = item + aArray->Length();
+                   *item_end = item + aArray->Length();
        item < item_end; ++item) {
     nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
     if (!itemList || !valueList->AppendCSSValue(itemList)) {

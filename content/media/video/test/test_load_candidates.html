@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=465458
+-->
+<head>
+  <title>Test for Bug 465458</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=465458">Mozilla Bug 465458</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 465458 **/
+
+var gError = false;
+
+function finish() {
+  is(gError, false, "Shouldn't have thrown an error");
+  SimpleTest.finish();
+}
+
+function errorHandler(e) {
+  e.stopPropagation();
+  gError = true;
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<video onerror="errorHandler(event)" id="v" onloadeddata="finish();">
+  <source src="404.ogv" type="application/ogg"></source>
+  <source src="320x240.ogv" type="application/ogg"></source>
+</video>
+
+
+</body>
+</html>

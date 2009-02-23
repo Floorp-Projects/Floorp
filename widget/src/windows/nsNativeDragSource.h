@@ -37,6 +37,7 @@
 #ifndef _nsNativeDragSource_h_
 #define _nsNativeDragSource_h_
 
+#include "nscore.h"
 #include <ole2.h>
 #include <oleidl.h>
 
@@ -74,11 +75,13 @@ public:
   // to execute the drop, otherwise NOERROR.
   STDMETHODIMP QueryContinueDrag(BOOL fESC, DWORD grfKeyState);
 
+  PRPackedBool UserCancelled() { return mUserCancelled; }
+
 protected:
   ULONG        m_cRef;     // reference count
-  //nsIDragSource *  mDragSource; // adapter
-  //CfDragDrop *  mDragSource; // adapter
 
+  // true if the user cancelled the drag by pressing escape
+  PRPackedBool mUserCancelled;
 };
 
 #endif // _nsNativeDragSource_h_

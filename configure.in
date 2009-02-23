@@ -131,7 +131,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.6.7
+SQLITE_VERSION=3.6.10
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -235,8 +235,23 @@ case "$target" in
 
     MOZ_ARG_WITH_STRING(wince-sdk,
     [  --with-wince-sdk=WINCE_SDK_DIR
-                        The path to the windows mobile sdk],
+                        The path to the Windows CE SDK],
     WINCE_SDK_DIR=$withval)
+
+    dnl Default to Windows Mobile components enabled
+    WINCE_WINDOWS_MOBILE=1
+
+    MOZ_ARG_DISABLE_BOOL(windows-mobile-components,
+    [  --disable-windows-mobile-components
+         Disable Windows Mobile specific components from CE build],
+    WINCE_WINDOWS_MOBILE=,
+    WINCE_WINDOWS_MOBILE=1)
+
+    if test "$WINCE_WINDOWS_MOBILE"; then
+        AC_DEFINE(WINCE_WINDOWS_MOBILE)
+    fi
+
+    AC_SUBST(WINCE_WINDOWS_MOBILE)
 
     export WINCE=1
 
@@ -253,7 +268,8 @@ case "$target" in
 
     CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
     CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
-    CPP="$_pwd/dist/sdk/bin/arm-wince-gcc"
+    CPP="$_pwd/dist/sdk/bin/arm-wince-gcc -E -nologo"
+    CXXCPP="$_pwd/dist/sdk/bin/arm-wince-gcc -TP -E -nologo"
     LD="$_pwd/dist/sdk/bin/arm-wince-link"
     AR="$_pwd/dist/sdk/bin/arm-wince-lib"
     AS="$_pwd/dist/sdk/bin/arm-wince-as"
@@ -589,6 +605,45 @@ case "$target" in
             ;;
         esac
 
+        # Identify which version of the SDK we're building with
+        # Windows Server 2008 and newer SDKs have WinSDKVer.h, get the version
+        # from there
+        AC_CHECK_HEADERS([winsdkver.h])
+        if test "$ac_cv_header_winsdkver_h" = "yes"; then
+            # Get the highest _WIN32_WINNT and NTDDI versions supported
+            # Take the higher of the two
+            # This is done because the Windows 7 beta SDK reports its
+            # NTDDI_MAXVER to be 0x06000100 instead of 0x06010000, as it should
+            AC_CACHE_CHECK(for highest Windows version supported by this SDK,
+                           ac_cv_winsdk_maxver,
+                           [cat > conftest.h <<EOF
+#include <winsdkver.h>
+#include <sdkddkver.h>
+
+#if (NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT_MAXVER) > NTDDI_MAXVER)
+#define WINSDK_MAXVER NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT_MAXVER)
+#else
+#define WINSDK_MAXVER NTDDI_MAXVER
+#endif
+
+WINSDK_MAXVER
+EOF
+                            ac_cv_winsdk_maxver=`$CPP conftest.h 2>/dev/null | tail -n1`
+                            rm -f conftest.h
+                           ])
+            MOZ_WINSDK_MAXVER=${ac_cv_winsdk_maxver}
+        else
+            # The Vista SDK is the only one to have sdkddkver.h but not
+            # WinSDKVer.h
+            AC_CHECK_HEADERS([sdkddkver.h])
+            if test "$ac_cv_header_sdkddkver_h" = "yes"; then
+                MOZ_WINSDK_MAXVER=0x06000000
+            else
+                # Assume the Server 2003 Platform SDK
+                MOZ_WINSDK_MAXVER=0x05020000
+            fi
+        fi
+
         unset _MSVC_VER_FILTER
 
     else
@@ -626,6 +681,9 @@ case "$target" in
         then
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
+
+        # Server 2003 is the highest version supported
+        MOZ_WINSDK_MAXVER=0x05020000
     fi # !GNU_CC
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
@@ -1103,13 +1161,13 @@ solaris*)
     SOLARIS_SUNPRO_CC=
     SOLARIS_SUNPRO_CXX=
     if test -z "$GNU_CC"; then
-        if test "`$_SUBDIR_CC -V 2>&1 | grep -c 'Sun C '`" != "0"; then
+        if test "`$_SUBDIR_CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
             SOLARIS_SUNPRO_CC=1
        fi
     fi
 
     if test -z "$GNU_CXX"; then
-       if test "`$_SUBDIR_CXX -V 2>&1 | grep -c 'Sun C++ '`" != "0"; then
+       if test "`$_SUBDIR_CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
            SOLARIS_SUNPRO_CXX=1
        fi
     fi
@@ -2024,6 +2082,13 @@ case "$target" in
     MOZ_USER_DIR="Mozilla"
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
+
+    # Sanity check for WINCE_WINDOWS_MOBILE
+    # XXX disabled until we can fix the mobile tinderbox
+    ##if test "$WINCE_WINDOWS_MOBILE"; then
+    ##   AC_CHECK_HEADER(tpcshell.h, [],
+    ##        AC_MSG_ERROR([Can't find tpcshell.h in your SDK; are you sure you don't need --disable-windows-mobile-components?]))
+    ##fi
 ;;
 
 

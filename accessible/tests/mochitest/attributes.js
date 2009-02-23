@@ -62,7 +62,10 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel)
  * @param aOffset               [in] the offset inside text accessible to fetch
  *                              text attributes
  * @param aAttrs                [in] the map of expected text attributes
- *                              (name/value pairs)
+ *                              (name/value pairs) exposed at the offset
+ * @param aDefAttrs             [in] the map of expected text attributes
+ *                              (name/value pairs) exposed on hyper text
+ *                              accessible
  * @param aStartOffset          [in] expected start offset where text attributes
  *                              are applied
  * @param aEndOffset            [in] expected end offset where text attribute
@@ -70,8 +73,8 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel)
  * @param aSkipUnexpectedAttrs  [in] points the function doesn't fail if
  *                              unexpected attribute is encountered
  */
-function testTextAttrs(aID, aOffset, aAttrs, aStartOffset, aEndOffset,
-                       aSkipUnexpectedAttrs)
+function testTextAttrs(aID, aOffset, aAttrs, aDefAttrs,
+                       aStartOffset, aEndOffset, aSkipUnexpectedAttrs)
 {
   var accessible = getAccessible(aID, [nsIAccessibleText]);
   if (!accessible)
@@ -79,17 +82,13 @@ function testTextAttrs(aID, aOffset, aAttrs, aStartOffset, aEndOffset,
 
   var startOffset = { value: -1 };
   var endOffset = { value: -1 };
-  var attrs = null;
-  try {
-    attrs = accessible.getTextAttributes(false, aOffset,
-                                         startOffset, endOffset);
-  } catch (e) {
-  }
 
-  if (!attrs) {
-    ok(false, "Can't get text attributes for " + aID);
+  // do not include attributes exposed on hyper text accessbile
+  var attrs = getTextAttributes(aID, accessible, false, aOffset,
+                                startOffset, endOffset);
+
+  if (!attrs)
     return;
-  }
 
   var errorMsg = " for " + aID + " at offset " + aOffset;
 
@@ -97,6 +96,24 @@ function testTextAttrs(aID, aOffset, aAttrs, aStartOffset, aEndOffset,
   is(endOffset.value, aEndOffset, "Wrong end offset" + errorMsg);
 
   compareAttrs(errorMsg, attrs, aAttrs, aSkipUnexpectedAttrs);
+
+  // include attributes exposed on hyper text accessbile
+  var expectedAttrs = {};
+  for (var name in aAttrs)
+    expectedAttrs[name] = aAttrs[name];
+
+  for (var name in aDefAttrs) {
+    if (!(name in expectedAttrs))
+      expectedAttrs[name] = aDefAttrs[name];
+  }
+
+  attrs = getTextAttributes(aID, accessible, true, aOffset,
+                            startOffset, endOffset);
+  
+  if (!attrs)
+    return;
+
+  compareAttrs(errorMsg, attrs, expectedAttrs, aSkipUnexpectedAttrs);
 }
 
 /**
@@ -132,6 +149,25 @@ function testDefaultTextAttrs(aID, aDefAttrs, aSkipUnexpectedAttrs)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private.
+
+function getTextAttributes(aID, aAccessible, aIncludeDefAttrs, aOffset,
+                           aStartOffset, aEndOffset)
+{
+  // This function expects the passed in accessible to already be queried for
+  // nsIAccessibleText.
+  var attrs = null;
+  try {
+    attrs = aAccessible.getTextAttributes(aIncludeDefAttrs, aOffset,
+                                          aStartOffset, aEndOffset);
+  } catch (e) {
+  }
+
+  if (attrs)
+    return attrs;
+
+  ok(false, "Can't get text attributes for " + aID);
+  return null;
+}
 
 function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs)
 {

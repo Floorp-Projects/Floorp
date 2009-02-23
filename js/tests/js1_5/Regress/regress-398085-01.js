@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-398085-01.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 398095;
+var BUGNUMBER = 398085;
 var summary = 'Do not crash with large switch statement';
 var actual = '';
 var expect = 'PASSED';

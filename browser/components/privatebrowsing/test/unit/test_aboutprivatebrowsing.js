@@ -59,9 +59,9 @@ function is_about_privatebrowsing_available() {
   return false;
 }
 
-function run_test() {
+function run_test_on_service() {
   // initialization
-  var pb = Cc["@mozilla.org/privatebrowsing;1"].
+  var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                    getService(Ci.nsIPrefBranch);
@@ -85,4 +85,9 @@ function run_test() {
   } finally {
     prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
   }
+}
+
+// Support running tests on both the service itself and its wrapper
+function run_test() {
+  run_test_on_all_services();
 }

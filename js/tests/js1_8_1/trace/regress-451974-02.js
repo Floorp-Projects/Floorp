@@ -90,7 +90,7 @@ function test()
   print('time: nonjit = ' + timenonjit + ', jit = ' + timejit);
 
   expect = true;
-  actual = timejit < timenonjit;
+  actual = timejit < timenonjit/2;
 
   reportCompare(expect, actual, summary);
 

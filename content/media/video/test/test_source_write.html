@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=462455
+-->
+<head>
+  <title>Test for Bug 462455</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=462455">Mozilla Bug 462455</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<video id="v">
+<source src="320x240.ogv" type="application/ogg"></source>
+<script>
+var loadStarted = false;
+document.write('Pause parsing!');
+var v = document.getElementById('v');
+if (v.networkState != HTMLMediaElement.NETWORK_EMPTY) {
+  loadStarted = true;
+}
+is(loadStarted, false, "We shouldn't start a load until the video tag is closed.");
+</script>
+</video>
+
+</body>
+</html>

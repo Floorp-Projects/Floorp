@@ -48,7 +48,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsVoidArray.h"
 #include "nsSupportsArray.h"
 #include "prprf.h"
 

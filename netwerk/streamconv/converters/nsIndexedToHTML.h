@@ -39,7 +39,6 @@
 #define ____nsindexedtohtml___h___
 
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 #include "nsIFactory.h"
 #include "nsString.h"
 #include "nsIStreamConverter.h"

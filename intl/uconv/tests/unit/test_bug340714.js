@@ -63,7 +63,21 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength)
       outStr += line.value;
   } while (more);
 
-  do_check_eq(outStr, expected);
+  if (outStr != expected) {
+    dump("Failed with BOM = " + withBOM + "; charset = " + charset +
+	 "; charset declaration = " + charsetDec + "; decoder = " + decoder +
+	 "; bufferLength = " + bufferLength + "\n");
+    if (outStr.length == expected.length) {
+      for (i = 0; i < outStr.length; ++i) {
+	if (outStr.charCodeAt(i) != expected.charCodeAt(i)) {
+	  dump(i + ": " + outStr.charCodeAt(i).toString(16) + " != " + expected.charCodeAt(i).toString(16) + "\n");
+	}
+      }
+    }
+  }
+
+  // escape the strings before comparing for better readability
+  do_check_eq(escape(outStr), escape(expected));
 }
 
 function run_test()

@@ -80,6 +80,7 @@ const Cr = Components.results;
 function PrivateBrowsingService() {
   this._obs.addObserver(this, "profile-after-change", true);
   this._obs.addObserver(this, "quit-application-granted", true);
+  this._obs.addObserver(this, "private-browsing", true);
 }
 
 PrivateBrowsingService.prototype = {
@@ -132,22 +133,13 @@ PrivateBrowsingService.prototype = {
       this.privateBrowsingEnabled = false;
   },
 
-  _onPrivateBrowsingModeChanged: function PBS__onPrivateBrowsingModeChanged() {
+  _onBeforePrivateBrowsingModeChange: function PBS__onBeforePrivateBrowsingModeChange() {
     // nothing needs to be done here if we're auto-starting
     if (!this._autoStart) {
-      // clear all auth tokens
-      let sdr = Cc["@mozilla.org/security/sdr;1"].
-                getService(Ci.nsISecretDecoderRing);
-      sdr.logoutAndTeardown();
-
-      // clear plain HTTP auth sessions
-      let authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                    getService(Ci.nsIHttpAuthManager);
-      authMgr.clearAll();
-
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].
                getService(Ci.nsISessionStore);
-      if (this.privateBrowsingEnabled) {
+
+      if (this._inPrivateBrowsing) {
         // whether we should save and close the current session
         this._saveSession = true;
         var prefBranch = Cc["@mozilla.org/preferences-service;1"].
@@ -158,63 +150,67 @@ PrivateBrowsingService.prototype = {
         } catch (ex) {}
 
         // save the whole browser state in order to restore all windows/tabs later
-        if (this._saveSession && !this._savedBrowserState) {
+        if (this._saveSession && !this._savedBrowserState)
           this._savedBrowserState = ss.getBrowserState();
-
-          // Close all windows
-          this._closeAllWindows();
-
-          // Open about:privatebrowsing
-          this._openAboutPrivateBrowsing();
-        }
       }
-      else {
-        // Clear the error console
-        let consoleService = Cc["@mozilla.org/consoleservice;1"].
-                             getService(Ci.nsIConsoleService);
-        consoleService.logStringMessage(null); // trigger the listeners
-        consoleService.reset();
+      if (!this.quitting && this._saveSession) {
+        // dummy session used to transition from/to pb mode, see bug 476463
+        let transitionState = {
+          "windows": [{
+            "tabs": [{
+              "entries": [{
+                "url": "about:blank"
+              }]
+            }],
+            "_closedTabs": []
+          }]
+        };
+        // load dummy session to get a distinct separation between private and
+        // non-private sessions
+        ss.setBrowserState(JSON.stringify(transitionState));
 
-        // restore the windows/tabs which were open before entering the private mode
-        if (this._saveSession && this._savedBrowserState) {
-          if (!this._quitting) { // don't restore when shutting down!
-            ss.setBrowserState(this._savedBrowserState);
-          }
-          this._savedBrowserState = null;
-        }
+        let browser = Cc["@mozilla.org/appshell/window-mediator;1"].
+                      getService(Ci.nsIWindowMediator).
+                      getMostRecentWindow("navigator:browser").gBrowser;
+        // this ensures a clean slate from which to transition into or out of
+        // private browsing
+        browser.addTab();
+        browser.removeTab(browser.tabContainer.firstChild);
       }
     }
     else
       this._saveSession = false;
   },
 
-#ifndef XP_WIN
-#define BROKEN_WM_Z_ORDER
-#endif
-
-  _closeAllWindows: function PBS__closeAllWindows() {
-    let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                         getService(Ci.nsIWindowMediator);
-#ifdef BROKEN_WM_Z_ORDER
-    let windowsEnum = windowMediator.getEnumerator("navigator:browser");
-#else
-    let windowsEnum = windowMediator.getZOrderDOMWindowEnumerator("navigator:browser", false);
-#endif
-
-    while (windowsEnum.hasMoreElements()) {
-      let win = windowsEnum.getNext();
-      win.close();
+  _onAfterPrivateBrowsingModeChange: function PBS__onAfterPrivateBrowsingModeChange() {
+    // nothing to do here if we're auto-starting or the current session is being
+    // used
+    if (!this._autoStart && this._saveSession) {
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+               getService(Ci.nsISessionStore);
+      // if we have transitioned out of private browsing mode and the session is
+      // to be restored, do it now
+      if (!this._inPrivateBrowsing) {
+        ss.setBrowserState(this._savedBrowserState);
+        this._savedBrowserState = null;
+      }
+      else {
+        // otherwise, if we have transitioned into private browsing mode, load
+        // about:privatebrowsing
+        let privateBrowsingState = {
+          "windows": [{
+            "tabs": [{
+              "entries": [{
+                "url": "about:privatebrowsing"
+              }]
+            }],
+            "_closedTabs": []
+          }]
+        };
+        // Transition into private browsing mode
+        ss.setBrowserState(JSON.stringify(privateBrowsingState));
+      }
     }
-  },
-
-  _openAboutPrivateBrowsing: function PBS__openAboutPrivateBrowsing() {
-    let windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                        getService(Ci.nsIWindowWatcher);
-    let url = Cc["@mozilla.org/supports-string;1"].
-              createInstance(Ci.nsISupportsString);
-    url.data = "about:privatebrowsing";
-    windowWatcher.openWindow(null, "chrome://browser/content/browser.xul",
-                             null, "chrome,all,resizable=yes,dialog=no", url);
   },
 
   _canEnterPrivateBrowsingMode: function PBS__canEnterPrivateBrowsingMode() {
@@ -254,6 +250,25 @@ PrivateBrowsingService.prototype = {
         break;
       case "quit-application-granted":
         this._unload();
+        break;
+      case "private-browsing":
+        // clear all auth tokens
+        let sdr = Cc["@mozilla.org/security/sdr;1"].
+                  getService(Ci.nsISecretDecoderRing);
+        sdr.logoutAndTeardown();
+    
+        // clear plain HTTP auth sessions
+        let authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                      getService(Ci.nsIHttpAuthManager);
+        authMgr.clearAll();
+
+        if (!this._inPrivateBrowsing) {
+          // Clear the error console
+          let consoleService = Cc["@mozilla.org/consoleservice;1"].
+                               getService(Ci.nsIConsoleService);
+          consoleService.logStringMessage(null); // trigger the listeners
+          consoleService.reset();
+        }
         break;
     }
   },
@@ -301,9 +316,17 @@ PrivateBrowsingService.prototype = {
         let quitting = Cc["@mozilla.org/supports-PRBool;1"].
                        createInstance(Ci.nsISupportsPRBool);
         quitting.data = this._quitting;
+
+        // notify observers of the pending private browsing mode change
+        this._obs.notifyObservers(quitting, "private-browsing-change-granted", data);
+
+        // destroy the current session and start initial cleanup
+        this._onBeforePrivateBrowsingModeChange();
+
         this._obs.notifyObservers(quitting, "private-browsing", data);
 
-        this._onPrivateBrowsingModeChanged();
+        // load the appropriate session
+        this._onAfterPrivateBrowsingModeChange();
       }
     } catch (ex) {
       Cu.reportError("Exception thrown while processing the " +

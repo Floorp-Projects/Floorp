@@ -966,8 +966,9 @@
         <parameter name="aOtherBrowser"/>
         <body>
         <![CDATA[
-          // We need to swap fields that are tied to our docshell
-          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation" ];
+          // We need to swap fields that are tied to our docshell or related to the loaded page
+          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation",
+                               "mIconURL" ];
 
           var ourTabBrowser = this.getTabBrowser();
 

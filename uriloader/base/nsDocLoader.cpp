@@ -63,6 +63,9 @@
 #include "nsITransport.h"
 #include "nsISocketTransport.h"
 
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 
 #if defined(PR_LOGGING)
@@ -131,18 +134,17 @@ struct nsListenerInfo {
 
 
 nsDocLoader::nsDocLoader()
-  : mListenerInfoList(8)
+  : mParent(nsnull),
+    mListenerInfoList(8),
+    mIsLoadingDocument(PR_FALSE),
+    mIsRestoringDocument(PR_FALSE),
+    mIsFlushingLayout(PR_FALSE)
 {
 #if defined(PR_LOGGING)
   if (nsnull == gDocLoaderLog) {
       gDocLoaderLog = PR_NewLogModule("DocLoader");
   }
 #endif /* PR_LOGGING */
-
-  mParent    = nsnull;
-
-  mIsLoadingDocument = PR_FALSE;
-  mIsRestoringDocument = PR_FALSE;
 
   static PLDHashTableOps hash_table_ops =
   {
@@ -327,7 +329,7 @@ nsDocLoader::Stop(void)
   // we wouldn't need the call here....
 
   NS_ASSERTION(!IsBusy(), "Shouldn't be busy here");
-  DocLoaderIsEmpty();
+  DocLoaderIsEmpty(PR_FALSE);
   
   return rv;
 }       
@@ -345,9 +347,10 @@ nsDocLoader::IsBusy()
   //      the handler may have already removed this child from mChildList!
   //   2. It is currently loading a document and either has parts of it still
   //      loading, or has a busy child docloader.
+  //   3. It's currently flushing layout in DocLoaderIsEmpty().
   //
 
-  if (mChildrenInOnload.Count()) {
+  if (mChildrenInOnload.Count() || mIsFlushingLayout) {
     return PR_TRUE;
   }
 
@@ -572,7 +575,6 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   // has initiated a load...
   //
   if (mIsLoadingDocument) {
-    PRUint32 count;
     PRBool bFireTransferring = PR_FALSE;
 
     //
@@ -667,17 +669,13 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
     //
     // Fire the OnStateChange(...) notification for stop request
     //
+    // XXXbz can we just combine these notifications with the else case?  Or
+    // can it happen that mIsLoadingDocument is false when we enter this method
+    // but becomes true after the doStartURLLoad call, in which case we may not
+    // want to call DocLoaderIsEmpty if we're really empty?
     doStopURLLoad(aRequest, aStatus);
     
-    rv = mLoadGroup->GetActiveCount(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    //
-    // The load group for this DocumentLoader is idle...
-    //
-    if (0 == count) {
-      DocLoaderIsEmpty();
-    }
+    DocLoaderIsEmpty(PR_TRUE);
   }
   else {
     doStopURLLoad(aRequest, aStatus); 
@@ -716,7 +714,7 @@ NS_IMETHODIMP nsDocLoader::GetDocumentChannel(nsIChannel ** aChannel)
 }
 
 
-void nsDocLoader::DocLoaderIsEmpty()
+void nsDocLoader::DocLoaderIsEmpty(PRBool aFlushLayout)
 {
   if (mIsLoadingDocument) {
     /* In the unimagineably rude circumstance that onload event handlers
@@ -725,6 +723,27 @@ void nsDocLoader::DocLoaderIsEmpty()
        alive long enough to survive this function call. */
     nsCOMPtr<nsIDocumentLoader> kungFuDeathGrip(this);
 
+    // Don't flush layout if we're still busy.
+    if (IsBusy()) {
+      return;
+    }
+
+    NS_ASSERTION(!mIsFlushingLayout, "Someone screwed up");
+
+    // The load group for this DocumentLoader is idle.  Flush layout if we need
+    // to.
+    if (aFlushLayout) {
+      nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(GetAsSupports(this));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      if (doc) {
+        mIsFlushingLayout = PR_TRUE;
+        doc->FlushPendingNotifications(Flush_Layout);
+        mIsFlushingLayout = PR_FALSE;
+      }
+    }
+
+    // And now check whether we're really busy; that might have changed with
+    // the layout flush.
     if (!IsBusy()) {
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
              ("DocLoader:%p: Is now idle...\n", this));

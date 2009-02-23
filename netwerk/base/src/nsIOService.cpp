@@ -165,6 +165,8 @@ nsIMemory* nsIOService::gBufferCache = nsnull;
 nsIOService::nsIOService()
     : mOffline(PR_FALSE)
     , mOfflineForProfileChange(PR_FALSE)
+    , mSettingOffline(PR_FALSE)
+    , mSetOfflineValue(PR_FALSE)
     , mManageOfflineStatus(PR_TRUE)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
@@ -221,7 +223,7 @@ nsIOService::Init()
     
     // setup our bad port list stuff
     for(int i=0; gBadPortList[i]; i++)
-        mRestrictedPortList.AppendElement(reinterpret_cast<void *>(gBadPortList[i]));
+        mRestrictedPortList.AppendElement(gBadPortList[i]);
 
     // Further modifications to the port list come from prefs
     nsCOMPtr<nsIPrefBranch2> prefBranch;
@@ -615,61 +617,78 @@ nsIOService::GetOffline(PRBool *offline)
 NS_IMETHODIMP
 nsIOService::SetOffline(PRBool offline)
 {
+    // SetOffline() may re-enter while it's shutting down services.
+    // If that happens, save the most recent value and it will be
+    // processed when the first SetOffline() call is done bringing
+    // down the service.
+    mSetOfflineValue = offline;
+    if (mSettingOffline) {
+        return NS_OK;
+    }
+    mSettingOffline = PR_TRUE;
+
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1");
-    
-    nsresult rv;
-    if (offline && !mOffline) {
-        NS_NAMED_LITERAL_STRING(offlineString, NS_IOSERVICE_OFFLINE);
-        mOffline = PR_TRUE; // indicate we're trying to shutdown
 
-        // don't care if notification fails
-        // this allows users to attempt a little cleanup before dns and socket transport are shut down.
-        if (observerService)
-            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
-                                             NS_IOSERVICE_GOING_OFFLINE_TOPIC,
-                                             offlineString.get());
+    while (mSetOfflineValue != mOffline) {
+        offline = mSetOfflineValue;
 
-        // be sure to try and shutdown both (even if the first fails)...
-        // shutdown dns service first, because it has callbacks for socket transport
-        if (mDNSService) {
-            rv = mDNSService->Shutdown();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service shutdown failed");
+        nsresult rv;
+        if (offline && !mOffline) {
+            NS_NAMED_LITERAL_STRING(offlineString, NS_IOSERVICE_OFFLINE);
+            mOffline = PR_TRUE; // indicate we're trying to shutdown
+
+            // don't care if notification fails
+            // this allows users to attempt a little cleanup before dns and socket transport are shut down.
+            if (observerService)
+                observerService->NotifyObservers(static_cast<nsIIOService *>(this),
+                                                 NS_IOSERVICE_GOING_OFFLINE_TOPIC,
+                                                 offlineString.get());
+
+            // be sure to try and shutdown both (even if the first fails)...
+            // shutdown dns service first, because it has callbacks for socket transport
+            if (mDNSService) {
+                rv = mDNSService->Shutdown();
+                NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service shutdown failed");
+            }
+            if (mSocketTransportService) {
+                rv = mSocketTransportService->Shutdown();
+                NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service shutdown failed");
+            }
+
+            // don't care if notification fails
+            if (observerService)
+                observerService->NotifyObservers(static_cast<nsIIOService *>(this),
+                                                 NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
+                                                 offlineString.get());
         }
-        if (mSocketTransportService) {
-            rv = mSocketTransportService->Shutdown();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service shutdown failed");
-        }
+        else if (!offline && mOffline) {
+            // go online
+            if (mDNSService) {
+                rv = mDNSService->Init();
+                NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
+            }
+            if (mSocketTransportService) {
+                rv = mSocketTransportService->Init();
+                NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service init failed");
+            }
+            mOffline = PR_FALSE;    // indicate success only AFTER we've
+                                    // brought up the services
 
-        // don't care if notification fails
-        if (observerService)
-            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
-                                             NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                             offlineString.get());
+            // trigger a PAC reload when we come back online
+            if (mProxyService)
+                mProxyService->ReloadPAC();
+
+            // don't care if notification fails
+            if (observerService)
+                observerService->NotifyObservers(static_cast<nsIIOService *>(this),
+                                                 NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
+                                                 NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
+        }
     }
-    else if (!offline && mOffline) {
-        // go online
-        if (mDNSService) {
-            rv = mDNSService->Init();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
-        }
-        if (mSocketTransportService) {
-            rv = mSocketTransportService->Init();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service init failed");
-        }
-        mOffline = PR_FALSE;    // indicate success only AFTER we've
-                                // brought up the services
-         
-        // trigger a PAC reload when we come back online
-        if (mProxyService)
-            mProxyService->ReloadPAC();
- 
-        // don't care if notification fails
-        if (observerService)
-            observerService->NotifyObservers(static_cast<nsIIOService *>(this),
-                                             NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                             NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
-    }
+
+    mSettingOffline = PR_FALSE;
+
     return NS_OK;
 }
 
@@ -684,10 +703,10 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, PRBool *_retval)
     }
         
     // first check to see if the port is in our blacklist:
-    PRInt32 badPortListCnt = mRestrictedPortList.Count();
+    PRInt32 badPortListCnt = mRestrictedPortList.Length();
     for (int i=0; i<badPortListCnt; i++)
     {
-        if (port == (PRInt32) NS_PTR_TO_INT32(mRestrictedPortList[i]))
+        if (port == mRestrictedPortList[i])
         {
             *_retval = PR_FALSE;
 
@@ -761,19 +780,19 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
                    PRInt32 curPort;
                    if (remove) {
                         for (curPort=portBegin; curPort <= portEnd; curPort++)
-                            mRestrictedPortList.RemoveElement((void*)curPort);
+                            mRestrictedPortList.RemoveElement(curPort);
                    } else {
                         for (curPort=portBegin; curPort <= portEnd; curPort++)
-                            mRestrictedPortList.AppendElement((void*)curPort);
+                            mRestrictedPortList.AppendElement(curPort);
                    }
                }
             } else {
                PRInt32 port = portListArray[index].ToInteger(&aErrorCode);
                if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
                    if (remove)
-                       mRestrictedPortList.RemoveElement((void*)port);
+                       mRestrictedPortList.RemoveElement(port);
                    else
-                       mRestrictedPortList.AppendElement((void*)port);
+                       mRestrictedPortList.AppendElement(port);
                }
             }
 

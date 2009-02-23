@@ -39,10 +39,96 @@
 #ifdef USE_BFD
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <libgen.h>
 #include <bfd.h>
 
 extern "C" {
   char *cplus_demangle (const char *mangled, int options);
+}
+
+static bfd *try_debug_file(const char *filename, unsigned long crc32)
+{
+  int fd = open(filename, O_RDONLY);
+  if (fd < 0)
+    return NULL;
+
+  unsigned char buf[4*1024];
+  unsigned long crc = 0;
+
+  while (1) {
+    ssize_t count = read(fd, buf, sizeof(buf));
+    if (count <= 0)
+      break;
+
+    crc = bfd_calc_gnu_debuglink_crc32(crc, buf, count);
+  }
+
+  close(fd);
+
+  if (crc != crc32)
+    return NULL;
+
+  bfd *object = bfd_openr(filename, NULL);
+  if (!bfd_check_format(object, bfd_object)) {
+    bfd_close(object);
+    return NULL;
+  }
+
+  return object;
+}
+
+static bfd *find_debug_file(bfd *lib, const char *aFileName)
+{
+  // check for a separate debug file with symbols
+  asection *sect = bfd_get_section_by_name(lib, ".gnu_debuglink");
+
+  if (!sect)
+    return NULL;
+
+  bfd_size_type debuglinkSize = bfd_section_size (objfile->obfd, sect);
+
+  char *debuglink = new char[debuglinkSize];
+  bfd_get_section_contents(lib, sect, debuglink, 0, debuglinkSize);
+
+  // crc checksum is aligned to 4 bytes, and after the NUL.
+  int crc_offset = (int(strlen(debuglink)) & ~3) + 4;
+  unsigned long crc32 = bfd_get_32(lib, debuglink + crc_offset);
+
+  // directory component
+  char *dirbuf = strdup(aFileName);
+  const char *dir = dirname(dirbuf);
+
+  static const char debug_subdir[] = ".debug";
+  // This is gdb's default global debugging info directory, but gdb can
+  // be instructed to use a different directory.
+  static const char global_debug_dir[] = "/usr/lib/debug";
+
+  char *filename =
+    new char[strlen(global_debug_dir) + strlen(dir) + crc_offset + 3];
+
+  // /path/debuglink
+  sprintf(filename, "%s/%s", dir, debuglink);
+  bfd *debugFile = try_debug_file(filename, crc32);
+  if (!debugFile) {
+
+    // /path/.debug/debuglink
+    sprintf(filename, "%s/%s/%s", dir, debug_subdir, debuglink);
+    debugFile = try_debug_file(filename, crc32);
+    if (!debugFile) {
+
+      // /usr/lib/debug/path/debuglink
+      sprintf(filename, "%s/%s/%s", global_debug_dir, dir, debuglink);
+      debugFile = try_debug_file(filename, crc32);
+    }
+  }
+
+  delete[] filename;
+  free(dirbuf);
+  delete[] debuglink;
+
+  return debugFile;
 }
 
 #define NEXT_SYMBOL \
@@ -83,34 +169,48 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   if (NULL == lib) {
     return;
   }
-  char **matching;
-  if (!bfd_check_format_matches(lib, bfd_object, &matching)) {
+  if (!bfd_check_format(lib, bfd_object)) {
     bfd_close(lib);
     return;
   }
 
-  asymbol* store;
-  store = bfd_make_empty_symbol(lib);
+  bfd *symbolFile = find_debug_file(lib, aFileName);
 
   // read mini symbols
   PTR minisyms;
   unsigned int size;
-  long symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
-  if (symcount == 0) {
-    // symtab is empty; try dynamic symbols
-    kDynamic = (bfd_boolean) true;
-    symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
+  long symcount = 0;
+
+  if (symbolFile) {
+    symcount = bfd_read_minisymbols(symbolFile, kDynamic, &minisyms, &size);
+    if (symcount == 0) {
+      bfd_close(symbolFile);
+    } else {
+      bfd_close(lib);
+    }
   }
+  if (symcount == 0) {
+    symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
+    if (symcount == 0) {
+      // symtab is empty; try dynamic symbols
+      kDynamic = (bfd_boolean) true;
+      symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
+    }
+    symbolFile = lib;
+  }
+
+  asymbol* store;
+  store = bfd_make_empty_symbol(symbolFile);
 
   // Scan symbols
   bfd_byte* from = (bfd_byte *) minisyms;
   bfd_byte* fromend = from + symcount * size;
   for (; from < fromend; from += size) {
     asymbol *sym;
-    sym = bfd_minisymbol_to_symbol(lib, kDynamic, (const PTR) from, store);
+    sym = bfd_minisymbol_to_symbol(symbolFile, kDynamic, (const PTR) from, store);
 
     symbol_info syminfo;
-    bfd_get_symbol_info (lib, sym, &syminfo);
+    bfd_get_symbol_info (symbolFile, sym, &syminfo);
 
 //    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
       const char* nm = bfd_asymbol_name(sym);
@@ -125,8 +225,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 //    }
   }
 
-
-  bfd_close(lib);
+  bfd_close(symbolFile);
 
   int interesting = sp - externalSymbols;
   if (!quiet) {

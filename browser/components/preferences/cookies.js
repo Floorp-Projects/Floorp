@@ -553,7 +553,7 @@ var gCookiesWindow = {
                                      date.getMinutes(),
                                      date.getSeconds());
     }
-    return this._bundle.getString("AtEndOfSession");
+    return this._bundle.getString("expireAtEndOfSession");
   },
   
   _updateCookieData: function (aItem)

@@ -62,6 +62,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsChannelProperties.h"
 #include "nsIInputStreamChannel.h"
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
@@ -192,6 +193,19 @@ NS_NewChannel(nsIChannel           **result,
         }
     }
     return rv;
+}
+
+// For now, works only with JARChannel.  Future: with all channels that may
+// have Content-Disposition header (JAR, nsIHttpChannel, and nsIMultiPartChannel).
+inline nsresult
+NS_GetContentDisposition(nsIRequest     *channel,
+                         nsACString     &result)
+{
+    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
+    if (props)
+        return props->GetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION,
+                                            result);
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 // Use this function with CAUTION. It creates a stream that blocks when you

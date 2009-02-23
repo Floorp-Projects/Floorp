@@ -78,6 +78,7 @@ extern PRLogModuleInfo* sCocoaLog;
 extern NSPasteboard* globalDragPboard;
 extern NSView* gLastDragView;
 extern NSEvent* gLastDragEvent;
+extern PRBool gUserCancelledDrag;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
@@ -308,6 +309,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   mNativeDragView = [gLastDragView retain];
   mNativeDragEvent = [gLastDragEvent retain];
 
+  gUserCancelledDrag = PR_FALSE;
   [mNativeDragView dragImage:image
                           at:localPoint
                       offset:NSMakeSize(0,0)
@@ -315,6 +317,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
                   pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
                       source:mNativeDragView
                    slideBack:YES];
+  gUserCancelledDrag = PR_FALSE;
 
   if (mDoingDrag)
     nsBaseDragService::EndDragSession(PR_FALSE);
@@ -586,6 +589,8 @@ nsDragService::EndDragSession(PRBool aDoneDrag)
     [mNativeDragEvent release];
     mNativeDragEvent = nil;
   }
+
+  mUserCancelled = gUserCancelledDrag;
 
   nsresult rv = nsBaseDragService::EndDragSession(aDoneDrag);
   mDataItems = nsnull;

@@ -201,8 +201,9 @@ public:
   // set the position of the popup either relative to the anchor aAnchorFrame
   // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
   // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
-  // will be adjusted so that it is on screen.
-  nsresult SetPopupPosition(nsIFrame* aAnchorFrame);
+  // will be adjusted so that it is on screen. If aIsMove is true, then the popup
+  // is being moved.
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove = PR_FALSE);
 
   PRBool HasGeneratedChildren() { return mGeneratedChildren; }
   void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
@@ -271,9 +272,11 @@ public:
 
   void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
 
-  // This sets 'left' and 'top' attributes.
-  // May kill the frame.
-  void MoveTo(PRInt32 aLeft, PRInt32 aTop);
+  // Move the popup to the screen coordinate (aLeft, aTop). If aUpdateAttrs
+  // is true, and the popup already has left or top attributes, then those
+  // attributes are updated to the new location.
+  // The frame may be destroyed by this method.
+  void MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs);
 
   PRBool GetAutoPosition();
   void SetAutoPosition(PRBool aShouldAutoPosition);
@@ -290,8 +293,6 @@ public:
   void SetPreferredSize(nsSize aSize) { mPrefSize = aSize; }
 
 protected:
-  // Move without updating attributes.                                          
-  void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);                             
 
   // redefine to tell the box system not to move the views.
   virtual void GetLayoutFlags(PRUint32& aFlags);

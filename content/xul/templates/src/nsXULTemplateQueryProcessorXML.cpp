@@ -181,7 +181,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
     PRBool hasHadScriptObject = PR_TRUE;
     nsIScriptGlobalObject* scriptObject =
       doc->GetScriptHandlingObject(hasHadScriptObject);
-    NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+    NS_ENSURE_STATE(scriptObject);
 
     nsIScriptContext *context = scriptObject->GetContext();
     NS_ENSURE_TRUE(context, NS_OK);

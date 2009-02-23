@@ -3279,9 +3279,11 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
     nsRect elementRect(currX, cellRect.y, remainingWidth, cellRect.height);
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
+      PRBool textRTL = cellContext->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
       switch (aColumn->GetType()) {
         case nsITreeColumn::TYPE_TEXT:
-          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX);
+          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX,
+                    textRTL);
           break;
         case nsITreeColumn::TYPE_CHECKBOX:
           PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
@@ -3296,7 +3298,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
               break;
             case nsITreeView::PROGRESS_NONE:
             default:
-              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX);
+              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX,
+                        textRTL);
               break;
           }
           break;
@@ -3540,7 +3543,8 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            nsPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
-                           nscoord&             aCurrX)
+                           nscoord&             aCurrX,
+                           PRBool               aTextRTL)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
 
@@ -3629,8 +3633,11 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_START_TIMER("Render Outline Text");
 #endif
+  PRUint8 direction = aTextRTL ? NS_STYLE_DIRECTION_RTL :
+                                 NS_STYLE_DIRECTION_LTR;
+
   nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),
-                            textRect.TopLeft() + nsPoint(0, baseline));
+                            textRect.TopLeft() + nsPoint(0, baseline), direction);
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_STOP_TIMER("Render Outline Text");
   NS_TIMELINE_MARK_TIMER("Render Outline Text");
@@ -4107,7 +4114,9 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
   // See if we have a transparent background or a background image.  
   // If we do, then we cannot blit.
   const nsStyleBackground* background = GetStyleBackground();
-  if (background->mBackgroundImage || background->IsTransparent() || 
+  if (background->BottomLayer().mImage.mRequest ||
+      background->mImageCount > 1 ||
+      NS_GET_A(background->mBackgroundColor) < 255 ||
       PR_ABS(delta)*mRowHeight >= mRect.height) {
     Invalidate();
   } else {
@@ -4142,9 +4151,12 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   PRInt32 delta = aPosition - mHorzPosition;
   mHorzPosition = aPosition;
 
-  // See if we have a background image.  If we do, then we cannot blit.
+  // See if we have a transparent background or a background image.  
+  // If we do, then we cannot blit.
   const nsStyleBackground* background = GetStyleBackground();
-  if (background->mBackgroundImage || background->IsTransparent() || 
+  if (background->BottomLayer().mImage.mRequest ||
+      background->mImageCount > 1 ||
+      NS_GET_A(background->mBackgroundColor) < 255 ||
       PR_ABS(delta) >= mRect.width) {
     Invalidate();
   } else {

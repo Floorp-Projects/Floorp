@@ -45,11 +45,19 @@ var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
 var gToolboxIconSize = false;
+var gToolboxSheet = false;
 
 function onLoad()
 {
-  InitWithToolbox(window.arguments[0]);
-  repositionDialog();
+  if ("arguments" in window && window.arguments[0]) {
+    InitWithToolbox(window.arguments[0]);
+    repositionDialog();
+  }
+  else if (window.frameElement &&
+           "toolbox" in window.frameElement) {
+    gToolboxSheet = true;
+    InitWithToolbox(window.frameElement.toolbox);
+  }
 }
 
 function InitWithToolbox(aToolbox)
@@ -66,6 +74,20 @@ function InitWithToolbox(aToolbox)
   initDialog();
 
   notifyParentInitialized();
+}
+
+function onClose()
+{
+  if (!gToolboxSheet)
+    window.close();
+  else
+    finishToolbarCustomization();
+}
+
+function onUnload()
+{
+  if (!gToolboxSheet)
+    finishToolbarCustomization();
 }
 
 function finishToolbarCustomization()

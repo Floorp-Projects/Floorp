@@ -39,7 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsstddef.h"           // always first
 #include "jsbit.h"              // low-level (NSPR-based) headers next
 #include "jsprf.h"
 #include <math.h>               // standard headers next
@@ -4319,9 +4318,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
             js_Disassemble1(cx, cx->fp->script, cx->fp->regs->pc,             \
                             (cx->fp->imacpc)                                  \
                             ? 0                                               \
-                            : PTRDIFF(cx->fp->regs->pc,                       \
-                                      cx->fp->script->code,                   \
-                                      jsbytecode),                            \
+                            : cx->fp->regs->pc - cx->fp->script->code,        \
                             !cx->fp->imacpc, stdout);)                        \
         flag = tr->record_##x();                                              \
         if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||        \

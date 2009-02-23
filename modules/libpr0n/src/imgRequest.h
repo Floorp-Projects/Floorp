@@ -120,6 +120,7 @@ private:
   friend class imgRequestProxy;
   friend class imgLoader;
   friend class imgCacheValidator;
+  friend class imgCacheExpirationTracker;
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;
@@ -140,6 +141,14 @@ private:
     return mProperties;
   }
 
+  // Reset the cache entry after we've dropped our reference to it. Used by the
+  // imgLoader when our cache entry is re-requested after we've dropped our
+  // reference to it.
+  void SetCacheEntry(imgCacheEntry *entry);
+
+  // Returns whether we've got a reference to the cache entry.
+  PRBool HasCacheEntry() const;
+
   // Return true if at least one of our proxies, excluding
   // aProxyToIgnore, has an observer.  aProxyToIgnore may be null.
   PRBool HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const;
@@ -151,6 +160,9 @@ private:
   // Adjust the priority of the underlying network request by the given delta
   // on behalf of the given proxy.
   void AdjustPriority(imgRequestProxy *aProxy, PRInt32 aDelta);
+
+  // Return whether we've seen some data at this point
+  PRBool HasTransferredData() const { return mGotData; }
 
 public:
   NS_DECL_IMGILOAD
@@ -180,6 +192,7 @@ private:
   PRPackedBool mLoading;
   PRPackedBool mProcessing;
   PRPackedBool mHadLastPart;
+  PRPackedBool mGotData;
   PRUint32 mImageStatus;
   PRUint32 mState;
   nsCString mContentType;
