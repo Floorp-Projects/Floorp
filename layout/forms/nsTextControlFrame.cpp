@@ -1386,6 +1386,11 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
 void
 nsTextControlFrame::DelayedEditorInit()
 {
+  // Time to mess with our security context... See comments in GetValue()
+  // for why this is needed.
+  nsCxPusher pusher;
+  pusher.PushNull();
+
   InitEditor();
   // Notify the text listener we have focus and setup the caret etc (bug 446663).
   if (IsFocusedContent(PresContext(), GetContent())) {
@@ -2569,17 +2574,12 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
     // XXXbz if we could just get the textContent of our anonymous content (eg
     // if plaintext editor didn't create <br> nodes all over), we wouldn't need
     // this.
-    nsCOMPtr<nsIJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+    { /* Scope for context pusher */
+      nsCxPusher pusher;
+      pusher.PushNull();
       
-    rv = mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
-                                 aValue);
-
-    if (pushed) {
-      JSContext* cx;
-      stack->Pop(&cx);
-      NS_ASSERTION(!cx, "Unexpected JSContext popped!");
+      rv = mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
+                                   aValue);
     }
   }
   else
@@ -2647,77 +2647,69 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_STATE(domDoc);
 
+      PRBool outerTransaction;
       // Time to mess with our security context... See comments in GetValue()
       // for why this is needed.  Note that we have to do this up here, because
       // otherwise SelectAll() will fail.
-      nsCOMPtr<nsIJSContextStack> stack =
-        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-      PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+      { /* Scope for context pusher */
+        nsCxPusher pusher;
+        pusher.PushNull();
 
-      nsCOMPtr<nsISelection> domSel;
-      nsCOMPtr<nsISelectionPrivate> selPriv;
-      mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-      if (domSel)
-      {
-        selPriv = do_QueryInterface(domSel);
-        if (selPriv)
-          selPriv->StartBatchChanges();
-      }
-
-      nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon;
-      mSelCon->SelectAll();
-      nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
-      if (!plaintextEditor || !weakFrame.IsAlive()) {
-        NS_WARNING("Somehow not a plaintext editor?");
-        if (pushed) {
-          JSContext* cx;
-          stack->Pop(&cx);
-          NS_ASSERTION(!cx, "Unexpected JSContext popped!");
+        nsCOMPtr<nsISelection> domSel;
+        nsCOMPtr<nsISelectionPrivate> selPriv;
+        mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                              getter_AddRefs(domSel));
+        if (domSel)
+        {
+          selPriv = do_QueryInterface(domSel);
+          if (selPriv)
+            selPriv->StartBatchChanges();
         }
-        return NS_ERROR_FAILURE;
-      }
 
-      // Since this code does not handle user-generated changes to the text,
-      // make sure we don't fire oninput when the editor notifies us.
-      // (mNotifyOnInput must be reset before we return).
+        nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon;
+        mSelCon->SelectAll();
+        nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
+        if (!plaintextEditor || !weakFrame.IsAlive()) {
+          NS_WARNING("Somehow not a plaintext editor?");
+          return NS_ERROR_FAILURE;
+        }
 
-      // To protect against a reentrant call to SetValue, we check whether
-      // another SetValue is already happening for this frame.  If it is,
-      // we must wait until we unwind to re-enable oninput events.
-      PRBool outerTransaction = mNotifyOnInput;
-      if (outerTransaction)
-        mNotifyOnInput = PR_FALSE;
+        // Since this code does not handle user-generated changes to the text,
+        // make sure we don't fire oninput when the editor notifies us.
+        // (mNotifyOnInput must be reset before we return).
 
-      // get the flags, remove readonly and disabled, set the value,
-      // restore flags
-      PRUint32 flags, savedFlags;
-      editor->GetFlags(&savedFlags);
-      flags = savedFlags;
-      flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
-      flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-      editor->SetFlags(flags);
+        // To protect against a reentrant call to SetValue, we check whether
+        // another SetValue is already happening for this frame.  If it is,
+        // we must wait until we unwind to re-enable oninput events.
+        outerTransaction = mNotifyOnInput;
+        if (outerTransaction)
+          mNotifyOnInput = PR_FALSE;
 
-      // Also don't enforce max-length here
-      PRInt32 savedMaxLength;
-      plaintextEditor->GetMaxTextLength(&savedMaxLength);
-      plaintextEditor->SetMaxTextLength(-1);
+        // get the flags, remove readonly and disabled, set the value,
+        // restore flags
+        PRUint32 flags, savedFlags;
+        editor->GetFlags(&savedFlags);
+        flags = savedFlags;
+        flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
+        flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
+        editor->SetFlags(flags);
 
-      if (currentValue.Length() < 1)
-        editor->DeleteSelection(nsIEditor::eNone);
-      else {
-        if (plaintextEditor)
-          plaintextEditor->InsertText(currentValue);
-      }
+        // Also don't enforce max-length here
+        PRInt32 savedMaxLength;
+        plaintextEditor->GetMaxTextLength(&savedMaxLength);
+        plaintextEditor->SetMaxTextLength(-1);
 
-      plaintextEditor->SetMaxTextLength(savedMaxLength);
-      editor->SetFlags(savedFlags);
-      if (selPriv)
-        selPriv->EndBatchChanges();
+        if (currentValue.Length() < 1)
+          editor->DeleteSelection(nsIEditor::eNone);
+        else {
+          if (plaintextEditor)
+            plaintextEditor->InsertText(currentValue);
+        }
 
-      if (pushed) {
-        JSContext* cx;
-        stack->Pop(&cx);
-        NS_ASSERTION(!cx, "Unexpected JSContext popped!");
+        plaintextEditor->SetMaxTextLength(savedMaxLength);
+        editor->SetFlags(savedFlags);
+        if (selPriv)
+          selPriv->EndBatchChanges();
       }
 
       NS_ENSURE_STATE(weakFrame.IsAlive());

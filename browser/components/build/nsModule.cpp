@@ -77,6 +77,9 @@
 #include "nsAboutFeeds.h"
 #include "nsIAboutModule.h"
 
+#include "nsPrivateBrowsingServiceWrapper.h"
+#include "nsNetCID.h"
+
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlacesImportExportService)
@@ -112,6 +115,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsICabProfileMigrator)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFeedSniffer)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrivateBrowsingServiceWrapper, Init)
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -217,9 +222,14 @@ static const nsModuleComponentInfo components[] =
   { "Seamonkey Profile Migrator",
     NS_SEAMONKEYPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey",
-    nsSeamonkeyProfileMigratorConstructor }
+    nsSeamonkeyProfileMigratorConstructor },
 
 #endif /* WINCE */
+
+  { "PrivateBrowsing Service C++ Wrapper",
+    NS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID,
+    NS_PRIVATE_BROWSING_SERVICE_CONTRACTID,
+    nsPrivateBrowsingServiceWrapperConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components)

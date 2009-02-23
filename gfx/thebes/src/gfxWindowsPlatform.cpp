@@ -192,11 +192,12 @@ gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
     style.langGroup = data->mLangGroup;
     nsRefPtr<FontEntry> aFontEntry = aFontFamily->FindFontEntry(style);
 
+
+#ifndef MOZ_FT2_FONTS
     /* skip symbol fonts */
     if (aFontEntry->mSymbolFont)
         return PL_DHASH_NEXT;
 
-#ifndef MOZ_FT2_FONTS
     if (aFontEntry->SupportsLangGroup(data->mLangGroup) &&
         aFontEntry->MatchesGenericFamily(data->mGenericFamily))
 #endif

@@ -362,15 +362,6 @@ for e in $excludetests; do
     fi
 done
 
-# convert the numeric speed rating to a prose value
-if [[ $TEST_CPUSPEED -lt 4 ]]; then
-    TEST_CPUSPEED=slow
-elif [[ $TEST_CPUSPEED -lt 9 ]]; then
-    TEST_CPUSPEED=medium
-else
-    TEST_CPUSPEED=fast
-fi
-
 if [[ -z "$TEST_MOZILLA_HG" ]]; then
     repo=CVS
 else
@@ -378,7 +369,7 @@ else
 fi
 debug "repo=$repo"
 
-pattern="TEST_BRANCH=($branch|[.][*]), TEST_REPO=($repo|[.][*]), TEST_BUILDTYPE=($buildtype|[.][*]), TEST_TYPE=($testtype|[.][*]), TEST_OS=($OSID|[.][*]), TEST_KERNEL=($TEST_KERNEL|[.][*]), TEST_PROCESSORTYPE=($TEST_PROCESSORTYPE|[.][*]), TEST_MEMORY=($TEST_MEMORY|[.][*]), TEST_CPUSPEED=($TEST_CPUSPEED|[.][*]),"
+pattern="TEST_BRANCH=($branch|[.][*]), TEST_REPO=($repo|[.][*]), TEST_BUILDTYPE=($buildtype|[.][*]), TEST_TYPE=($testtype|[.][*]), TEST_OS=($OSID|[.][*]), TEST_KERNEL=($TEST_KERNEL|[.][*]), TEST_PROCESSORTYPE=($TEST_PROCESSORTYPE|[.][*]), TEST_MEMORY=($TEST_MEMORY|[.][*]),"
 
 if [[ -z "$timeouts" ]]; then
     echo "# exclude tests that time out" >> $excludetestsfile

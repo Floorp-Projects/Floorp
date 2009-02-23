@@ -128,7 +128,8 @@ nsDOMUIEvent::GetScreenPoint()
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-        mEvent->eventStructType != NS_DRAG_EVENT)) {
+        mEvent->eventStructType != NS_DRAG_EVENT &&
+        mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT)) {
     return nsIntPoint(0, 0);
   }
 
@@ -136,9 +137,8 @@ nsDOMUIEvent::GetScreenPoint()
     return mEvent->refPoint;
   }
 
-  nsIntRect bounds(mEvent->refPoint, nsIntSize(1, 1));
-  nsIntRect offset;
-  ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
+  nsIntPoint offset = mEvent->refPoint + 
+    ((nsGUIEvent*)mEvent)->widget->WidgetToScreenOffset();
   nscoord factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
   return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
                     nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
@@ -151,7 +151,8 @@ nsDOMUIEvent::GetClientPoint()
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT) ||
+       mEvent->eventStructType != NS_DRAG_EVENT &&
+       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
       !mPresContext ||
       !((nsGUIEvent*)mEvent)->widget) {
     return mClientPoint;
@@ -317,7 +318,8 @@ nsDOMUIEvent::GetLayerPoint()
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT) ||
+       mEvent->eventStructType != NS_DRAG_EVENT &&
+       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
       !mPresContext ||
       mEventIsInternal) {
     return mLayerPoint;

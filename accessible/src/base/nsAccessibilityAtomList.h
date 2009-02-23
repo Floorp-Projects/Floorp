@@ -188,15 +188,23 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // Alphabetical list of object attributes
+ACCESSIBILITY_ATOM(checkable, "checkable")
 ACCESSIBILITY_ATOM(display, "display")
 ACCESSIBILITY_ATOM(textAlign, "text-align")
 ACCESSIBILITY_ATOM(textIndent, "text-indent")
 
   // Alphabetical list of text attributes (AT API)
+ACCESSIBILITY_ATOM(color, "color")
 ACCESSIBILITY_ATOM(backgroundColor, "background-color")
+ACCESSIBILITY_ATOM(fontFamily, "font-family")
+ACCESSIBILITY_ATOM(fontStyle, "font-style")
+ACCESSIBILITY_ATOM(fontWeight, "font-weight")
 ACCESSIBILITY_ATOM(fontSize, "font-size")
 ACCESSIBILITY_ATOM(invalid, "invalid")
 ACCESSIBILITY_ATOM(language, "language")
+ACCESSIBILITY_ATOM(textLineThroughStyle, "text-line-through-style")
+ACCESSIBILITY_ATOM(textUnderlineStyle, "text-underline-style")
+ACCESSIBILITY_ATOM(textPosition, "text-position")
 
   // ARIA (DHTML accessibility) attributes
   // Also add to nsARIAMap.cpp and nsARIAMap.h
@@ -249,6 +257,7 @@ ACCESSIBILITY_ATOM(containerBusy, "container-busy")
 ACCESSIBILITY_ATOM(containerLive, "container-live")
 ACCESSIBILITY_ATOM(containerRelevant, "container-relevant")
 ACCESSIBILITY_ATOM(level, "level")
+ACCESSIBILITY_ATOM(live, "live")
 ACCESSIBILITY_ATOM(lineNumber, "line-number")
 ACCESSIBILITY_ATOM(posinset, "posinset") 
 ACCESSIBILITY_ATOM(setsize, "setsize")

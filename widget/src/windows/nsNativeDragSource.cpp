@@ -44,7 +44,7 @@
  * class nsNativeDragSource
  */
 nsNativeDragSource::nsNativeDragSource()
-  : m_cRef(0)
+  : m_cRef(0), mUserCancelled(PR_FALSE)
 {
 }
 
@@ -99,6 +99,7 @@ nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 #ifdef DEBUG
     //printf("fEsc\n");
 #endif
+    mUserCancelled = PR_TRUE;
     return ResultFromScode(DRAGDROP_S_CANCEL);
   }
 

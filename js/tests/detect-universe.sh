@@ -101,15 +101,6 @@ fi
 
 source $TEST_DIR/bin/library.sh
 
-# convert the numeric speed rating to a prose value
-if [[ $TEST_CPUSPEED -lt 4 ]]; then
-    TEST_CPUSPEED=slow
-elif [[ $TEST_CPUSPEED -lt 9 ]]; then
-    TEST_CPUSPEED=medium
-else
-    TEST_CPUSPEED=fast
-fi
-
 (for product in $products; do
     for branch in $branches; do
         for repo in $repos; do
@@ -128,7 +119,7 @@ fi
 	            else
 		            testtype=browser
 	            fi
-	            echo "TEST_OS=$OSID, TEST_KERNEL=$TEST_KERNEL, TEST_PROCESSORTYPE=$TEST_PROCESSORTYPE, TEST_MEMORY=$TEST_MEMORY, TEST_CPUSPEED=$TEST_CPUSPEED, TEST_TIMEZONE=$TEST_TIMEZONE, TEST_BRANCH=$branch, TEST_REPO=$repo, TEST_BUILDTYPE=$buildtype, TEST_TYPE=$testtype"
+	            echo "TEST_OS=$OSID, TEST_KERNEL=$TEST_KERNEL, TEST_PROCESSORTYPE=$TEST_PROCESSORTYPE, TEST_MEMORY=$TEST_MEMORY, TEST_TIMEZONE=$TEST_TIMEZONE, TEST_BRANCH=$branch, TEST_REPO=$repo, TEST_BUILDTYPE=$buildtype, TEST_TYPE=$testtype"
 	        done
         done
     done

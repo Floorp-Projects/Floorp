@@ -1136,19 +1136,54 @@ RENDER_AGAIN:
       aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) ||
       aWidgetType == NS_THEME_SCALE_HORIZONTAL ||
       aWidgetType == NS_THEME_SCALE_VERTICAL) {
-      PRInt32 contentState ;
+      PRInt32 contentState;
       contentState = GetContentState(aFrame, aWidgetType);  
-            
+
       if (contentState & NS_EVENT_STATE_FOCUS) {
-        // setup DC to make DrawFocusRect draw correctly
         POINT vpOrg;
+        HPEN hPen = nsnull;
+
+        PRUint8 id = SaveDC(hdc);
+
+        ::SelectClipRgn(hdc, NULL);
         ::GetViewportOrgEx(hdc, &vpOrg);
         ::SetBrushOrgEx(hdc, vpOrg.x + widgetRect.left, vpOrg.y + widgetRect.top, NULL);
-        PRInt32 oldColor;
-        oldColor = ::SetTextColor(hdc, 0);
-        // draw focus rectangle
+
+#ifndef WINCE
+        // On vista, choose our own colors and draw an XP style half focus rect
+        // for focused checkboxes and a full rect when active.
+        if (nsUXThemeData::sIsVistaOrLater && aWidgetType == NS_THEME_CHECKBOX) {
+          LOGBRUSH lb;
+          lb.lbStyle = BS_SOLID;
+          lb.lbColor = RGB(255,255,255);
+          lb.lbHatch = 0;
+
+          hPen = ::ExtCreatePen(PS_COSMETIC|PS_ALTERNATE, 1, &lb, 0, NULL);
+          ::SelectObject(hdc, hPen);
+
+          // If pressed, draw the upper left corner of the dotted rect.
+          if (contentState & NS_EVENT_STATE_ACTIVE) {
+            ::MoveToEx(hdc, widgetRect.left, widgetRect.bottom-1, NULL);
+            ::LineTo(hdc, widgetRect.left, widgetRect.top);
+            ::LineTo(hdc, widgetRect.right-1, widgetRect.top);
+          }
+
+          // Draw the lower right corner of the dotted rect.
+          ::MoveToEx(hdc, widgetRect.right-1, widgetRect.top, NULL);
+          ::LineTo(hdc, widgetRect.right-1, widgetRect.bottom-1);
+          ::LineTo(hdc, widgetRect.left, widgetRect.bottom-1);
+        } else {
+          ::SetTextColor(hdc, 0);
+          ::DrawFocusRect(hdc, &widgetRect);
+        }
+#else
+        ::SetTextColor(hdc, 0);
         ::DrawFocusRect(hdc, &widgetRect);
-        ::SetTextColor(hdc, oldColor);
+#endif
+        ::RestoreDC(hdc, id);
+        if (hPen) {
+          ::DeleteObject(hPen);
+        }
       }
   }
   else if (aWidgetType == NS_THEME_TOOLBAR && state == 0) {
@@ -2771,8 +2806,15 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(PRUint8 aWidgetType)
 ///////////////////////////////////////////
 // Creation Routine
 ///////////////////////////////////////////
+
+// from nsWindow.cpp
+extern PRBool gDisableNativeTheme;
+
 NS_METHOD NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+  if (gDisableNativeTheme)
+    return NS_ERROR_NO_INTERFACE;
+
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
 

@@ -124,7 +124,7 @@
 #include "nsITimelineService.h"
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
-#include "ImageErrors.h"
+#include "nsURILoader.h"
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
@@ -722,12 +722,6 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
 
-  // Setup default view manager background color
-
-  // This may be overridden by the docshell with the background color
-  // for the last document loaded into the docshell
-  mViewManager->SetDefaultBackgroundColor(mPresContext->DefaultBackgroundColor());
-
   if (aDoInitialReflow) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
     if (htmlDoc) {
@@ -971,11 +965,11 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // Now, fire either an OnLoad or OnError event to the document...
   PRBool restoring = PR_FALSE;
   // XXXbz imagelib kills off the document load for a full-page image with
-  // NS_IMAGELIB_ERROR_LOAD_ABORTED if it's in the cache.  So we want to treat
+  // NS_ERROR_PARSED_DATA_CACHED if it's in the cache.  So we want to treat
   // that one as a success code; otherwise whether we fire onload for the image
   // will depend on whether it's cached!
   if(window &&
-     (NS_SUCCEEDED(aStatus) || aStatus == NS_IMAGELIB_ERROR_LOAD_ABORTED)) {
+     (NS_SUCCEEDED(aStatus) || aStatus == NS_ERROR_PARSED_DATA_CACHED)) {
     if (mDocument)
       mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
     nsEventStatus status = nsEventStatus_eIgnore;

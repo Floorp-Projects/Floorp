@@ -844,11 +844,8 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
   if (fromRoot == toRoot) {
     widgetPoint = aPt + fromOffset - toOffset;
   } else {
-    nsIntRect widgetRect(0, 0, 0, 0);
-    nsIntRect screenRect;
-    aWidget->WidgetToScreen(widgetRect, screenRect);
-    viewWidget->ScreenToWidget(screenRect, widgetRect);
-    widgetPoint = aPt + widgetRect.TopLeft();
+    nsIntPoint screenPoint = aWidget->WidgetToScreenOffset();
+    widgetPoint = aPt + screenPoint - viewWidget->WidgetToScreenOffset();
   }
 
   nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
@@ -1071,34 +1068,32 @@ nsresult
 nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackground)
 {
+  nsAutoDisableGetUsedXAssertions disableAssert;
+
   nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
   nsDisplayList list;
   nsRect dirtyRect = aDirtyRegion.GetBounds();
 
   builder.EnterPresShell(aFrame, dirtyRect);
 
-  nsresult rv;
-  {
-    nsAutoDisableGetUsedXAssertions disableAssert;
-    rv =
-      aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+  nsresult rv =
+    aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
     
-    if (NS_SUCCEEDED(rv) && aFrame->GetType() == nsGkAtoms::pageContentFrame) {
-      // We may need to paint out-of-flow frames whose placeholders are
-      // on other pages. Add those pages to our display list. Note that
-      // out-of-flow frames can't be placed after their placeholders so
-      // we don't have to process earlier pages. The display lists for
-      // these extra pages are pruned so that only display items for the
-      // page we currently care about (which we would have reached by
-      // following placeholders to their out-of-flows) end up on the list.
-      nsIFrame* page = aFrame;
-      nscoord y = aFrame->GetSize().height;
-      while ((page = GetNextPage(page)) != nsnull) {
-        rv = BuildDisplayListForExtraPage(&builder, page, y, &list);
-        if (NS_FAILED(rv))
-          break;
-        y += page->GetSize().height;
-      }
+  if (NS_SUCCEEDED(rv) && aFrame->GetType() == nsGkAtoms::pageContentFrame) {
+    // We may need to paint out-of-flow frames whose placeholders are
+    // on other pages. Add those pages to our display list. Note that
+    // out-of-flow frames can't be placed after their placeholders so
+    // we don't have to process earlier pages. The display lists for
+    // these extra pages are pruned so that only display items for the
+    // page we currently care about (which we would have reached by
+    // following placeholders to their out-of-flows) end up on the list.
+    nsIFrame* page = aFrame;
+    nscoord y = aFrame->GetSize().height;
+    while ((page = GetNextPage(page)) != nsnull) {
+      rv = BuildDisplayListForExtraPage(&builder, page, y, &list);
+      if (NS_FAILED(rv))
+        break;
+      y += page->GetSize().height;
     }
   }
 
@@ -2451,7 +2446,8 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
                           nsIRenderingContext* aContext,
                           const PRUnichar*     aString,
                           PRInt32              aLength,
-                          nsPoint              aPoint)
+                          nsPoint              aPoint,
+                          PRUint8              aDirection)
 {
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
@@ -2460,9 +2456,11 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
     nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
     if (bidiUtils) {
-      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+      if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
+        aDirection = aFrame->GetStyleVisibility()->mDirection;
+      }
       nsBidiDirection direction =
-        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+        (NS_STYLE_DIRECTION_RTL == aDirection) ?
         NSBIDI_RTL : NSBIDI_LTR;
       rv = bidiUtils->RenderText(aString, aLength, direction,
                                  presContext, *aContext,
@@ -3065,13 +3063,13 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
     return eTransparencyOpaque;
   }
 
-  PRBool isCanvas;
   const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
     return eTransparencyTransparent;
-  if (NS_GET_A(bg->mBackgroundColor) < 255)
-    return eTransparencyTransparent;
-  if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)
+  if (NS_GET_A(bg->mBackgroundColor) < 255 ||
+      NS_GET_A(bg->mFallbackBackgroundColor) < 255 ||
+      // bottom layer's clip is used for the color
+      bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)
     return eTransparencyTransparent;
   return eTransparencyOpaque;
 }

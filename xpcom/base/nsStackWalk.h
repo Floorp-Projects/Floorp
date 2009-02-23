@@ -61,6 +61,9 @@ typedef void
  *
  * Returns NS_ERROR_NOT_IMPLEMENTED on platforms where it is
  * unimplemented.
+ * Returns NS_ERROR_UNEXPECTED when the stack indicates that the thread
+ * is in a very dangerous situation (e.g., holding sem_pool_lock in 
+ * Mac OS X pthreads code). Callers should then bail out immediately.
  *
  * May skip some stack frames due to compiler optimizations or code
  * generation.

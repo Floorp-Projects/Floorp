@@ -67,6 +67,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nptest_gtk2.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += nptest_qt.cpp
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS  += nptest_windows.cpp
 RCFILE    = nptest.rc

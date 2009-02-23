@@ -950,12 +950,30 @@ nsAccessControlLRUCache::GetEntry(nsIURI* aURI,
       // This will delete 'lruEntry'.
       mTable.Remove(lruEntry->mKey);
 
-      NS_ASSERTION(mTable.Count() >= ACCESS_CONTROL_CACHE_SIZE,
+      NS_ASSERTION(mTable.Count() == ACCESS_CONTROL_CACHE_SIZE,
                    "Somehow tried to remove an entry that was never added!");
     }
   }
   
   return entry;
+}
+
+void
+nsAccessControlLRUCache::RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal)
+{
+  CacheEntry* entry;
+  nsCString key;
+  if (GetCacheKey(aURI, aPrincipal, PR_TRUE, key) &&
+      mTable.Get(key, &entry)) {
+    PR_REMOVE_LINK(entry);
+    mTable.Remove(key);
+  }
+
+  if (GetCacheKey(aURI, aPrincipal, PR_FALSE, key) &&
+      mTable.Get(key, &entry)) {
+    PR_REMOVE_LINK(entry);
+    mTable.Remove(key);
+  }
 }
 
 void
@@ -2763,12 +2781,31 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
+
+    nsCOMPtr<nsIRunnable> resumeTimeoutRunnable;
+    if (mOwner) {
+      nsCOMPtr<nsIDOMWindow> topWindow;
+      if (NS_SUCCEEDED(mOwner->GetTop(getter_AddRefs(topWindow)))) {
+        nsCOMPtr<nsPIDOMWindow> suspendedWindow(do_QueryInterface(topWindow));
+        if (suspendedWindow) {
+          suspendedWindow->SuspendTimeouts();
+          resumeTimeoutRunnable = NS_NEW_RUNNABLE_METHOD(nsPIDOMWindow,
+                                                         suspendedWindow.get(),
+                                                         ResumeTimeouts);
+        }
+      }
+    }
+
     nsIThread *thread = NS_GetCurrentThread();
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       if (!NS_ProcessNextEvent(thread)) {
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
+    }
+
+    if (resumeTimeoutRunnable) {
+      NS_DispatchToCurrentThread(resumeTimeoutRunnable);
     }
   } else {
     if (!mUploadComplete &&

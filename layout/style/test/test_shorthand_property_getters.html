@@ -106,14 +106,24 @@ is(e.style.font, "", "should not have font shorthand");
 e.setAttribute("style", "font: medium serif; font-stretch: condensed");
 is(e.style.font, "", "should not have font shorthand");
 
+// For background, we can only express the value as a shorthand if
+// origin and clip are both their default, or if they're both the same.
+// ... or at least we will once we support them in the shorthand.
 e.setAttribute("style", "background: red");
 isnot(e.style.background, "", "should have background shorthand");
 e.setAttribute("style", "background: red; -moz-background-origin: border");
-is(e.style.background, "", "should not have background shorthand");
+is(e.style.background, "", "should not have background shorthand (origin:border)");
 e.setAttribute("style", "background: red; -moz-background-clip: padding");
-is(e.style.background, "", "should not have background shorthand");
+is(e.style.background, "", "should not have background shorthand (clip:padding)");
+e.setAttribute("style", "background: red; -moz-background-origin: content");
+is(e.style.background, "", "should not have background shorthand (origin:content)");
+// -moz-background-clip:content not yet supported
+//e.setAttribute("style", "background: red; -moz-background-clip: content");
+//is(e.style.background, "", "should not have background shorthand (clip:content)");
+//e.setAttribute("style", "background: red; -moz-background-clip: content; -moz-background-origin: content;");
+//isnot(e.style.background, "", "should have background shorthand (clip:content;origin:content)");
 e.setAttribute("style", "background: red; -moz-background-inline-policy: each-box");
-is(e.style.background, "", "should not have background shorthand");
+isnot(e.style.background, "", "should have background shorthand (-moz-background-inline-policy not relevant)");
 
 </script>
 </pre>

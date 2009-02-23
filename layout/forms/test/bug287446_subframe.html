@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      function doIs(arg1, arg2, arg3) {
+        window.parent.postMessage("t " + encodeURIComponent(arg1) + " " +
+                                  encodeURIComponent(arg2) + " " +
+                                  encodeURIComponent(arg3), "*");
+      }
+
+      function $(arg) { return document.getElementById(arg); }
+
+      window.addEventListener("message",
+        function(evt) {
+          var t = $("target");
+          if (evt.data == "start") {
+            doIs(t.value, "Test", "Shouldn't have lost our initial value");
+            t.focus();
+            sendString("Foo");
+            doIs(t.value, "TestFoo", "Typing should work");
+            window.parent.postMessage("c", "*");
+          } else {
+            doIs(evt.data, "continue", "Unexpected message");
+            doIs(t.value, "TestFoo", "Shouldn't have lost our typed value");
+            sendString("Bar");
+            doIs(t.value, "TestFooBar", "Typing should still work");
+            window.parent.postMessage("f", "*");
+          }
+        },
+        "false");
+      
+    </script>
+  </head>
+  <body>
+    <input id="target" value="Test">
+  </body>
+</html>
+           

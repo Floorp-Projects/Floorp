@@ -2656,7 +2656,8 @@ nsContentUtils::GetEventArgNames(PRInt32 aNameSpaceID,
 }
 
 nsCxPusher::nsCxPusher()
-    : mScriptIsRunning(PR_FALSE)
+    : mScriptIsRunning(PR_FALSE),
+      mPushedSomething(PR_FALSE)
 {
 }
 
@@ -2701,7 +2702,7 @@ IsContextOnStack(nsIJSContextStack *aStack, JSContext *aContext)
 PRBool
 nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
 {
-  if (mScx) {
+  if (mPushedSomething) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
 
     return PR_FALSE;
@@ -2711,6 +2712,13 @@ nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
   nsCOMPtr<nsIScriptContext> scx;
   nsresult rv = aCurrentTarget->GetContextForEventHandlers(getter_AddRefs(scx));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (!scx) {
+    // Nothing to do here, I guess.  Have to return true so that event firing
+    // will still work correctly even if there is no associated JSContext
+    return PR_TRUE;
+  }
+
   JSContext* cx = nsnull;
 
   if (scx) {
@@ -2729,39 +2737,68 @@ nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
 PRBool
 nsCxPusher::Push(JSContext *cx)
 {
-  if (mScx) {
+  if (mPushedSomething) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
 
     return PR_FALSE;
   }
 
-  if (cx) {
-    mScx = GetScriptContextFromJSContext(cx);
-    if (!mScx) {
-      // Should probably return PR_FALSE. See bug 416916.
-      return PR_TRUE;
-    }
-
-    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-    if (stack) {
-      if (IsContextOnStack(stack, cx)) {
-        // If the context is on the stack, that means that a script
-        // is running at the moment in the context.
-        mScriptIsRunning = PR_TRUE;
-      }
-
-      stack->Push(cx);
-    }
+  if (!cx) {
+    return PR_FALSE;
   }
+
+  // Hold a strong ref to the nsIScriptContext, just in case
+  // XXXbz do we really need to?  If we don't get one of these in Pop(), is
+  // that really a problem?  Or do we need to do this to effectively root |cx|?
+  mScx = GetScriptContextFromJSContext(cx);
+  if (!mScx) {
+    // Should probably return PR_FALSE. See bug 416916.
+    return PR_TRUE;
+  }
+
+  return DoPush(cx);
+}
+
+PRBool
+nsCxPusher::DoPush(JSContext* cx)
+{
+  nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+  if (!stack) {
+    return PR_TRUE;
+  }
+
+  if (cx && IsContextOnStack(stack, cx)) {
+    // If the context is on the stack, that means that a script
+    // is running at the moment in the context.
+    mScriptIsRunning = PR_TRUE;
+  }
+
+  if (NS_FAILED(stack->Push(cx))) {
+    mScriptIsRunning = PR_FALSE;
+    mScx = nsnull;
+    return PR_FALSE;
+  }
+
+  mPushedSomething = PR_TRUE;
+#ifdef DEBUG
+  mPushedContext = cx;
+#endif
   return PR_TRUE;
+}
+
+PRBool
+nsCxPusher::PushNull()
+{
+  return DoPush(nsnull);
 }
 
 void
 nsCxPusher::Pop()
 {
   nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
-  if (!mScx || !stack) {
+  if (!mPushedSomething || !stack) {
     mScx = nsnull;
+    mPushedSomething = PR_FALSE;
 
     NS_ASSERTION(!mScriptIsRunning, "Huh, this can't be happening, "
                  "mScriptIsRunning can't be set here!");
@@ -2772,7 +2809,9 @@ nsCxPusher::Pop()
   JSContext *unused;
   stack->Pop(&unused);
 
-  if (!mScriptIsRunning) {
+  NS_ASSERTION(unused == mPushedContext, "Unexpected context popped");
+
+  if (!mScriptIsRunning && mScx) {
     // No JS is running in the context, but executing the event handler might have
     // caused some JS to run. Tell the script context that it's done.
 
@@ -2781,6 +2820,7 @@ nsCxPusher::Pop()
 
   mScx = nsnull;
   mScriptIsRunning = PR_FALSE;
+  mPushedSomething = PR_FALSE;
 }
 
 static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
@@ -3082,6 +3122,51 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
 
   PRBool dummy;
   return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
+}
+
+nsresult
+nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
+                                    nsISupports *aTarget,
+                                    const nsAString& aEventName,
+                                    PRBool aCanBubble, PRBool aCancelable,
+                                    PRBool *aDefaultAction)
+{
+
+  NS_ENSURE_ARG_POINTER(aDoc);
+  NS_ENSURE_ARG_POINTER(aDoc->GetWindow());
+  NS_ENSURE_ARG_POINTER(aDoc->GetWindow()->GetChromeEventHandler());
+
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(aDoc);
+  nsCOMPtr<nsIDOMEventTarget> originalTarget =
+    do_QueryInterface(aTarget);
+  NS_ENSURE_TRUE(docEvent && originalTarget, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv =
+    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
+
+  rv = event->InitEvent(aEventName, aCanBubble, aCancelable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = privateEvent->SetTarget(originalTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = privateEvent->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  rv = aDoc->GetWindow()->GetChromeEventHandler()->DispatchDOMEvent(nsnull,
+                                                                    event,
+                                                                    nsnull,
+                                                                    &status);
+  if (aDefaultAction) {
+    *aDefaultAction = (status != nsEventStatus_eConsumeNoDefault);
+  }
+  return rv;
 }
 
 /* static */

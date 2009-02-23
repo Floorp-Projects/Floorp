@@ -42,13 +42,13 @@
 #include "nsISupports.h"
 
 // Interface ID for our Unicode Decoder interface
-// {B2F178E1-832A-11d2-8A8E-00600811A836}
+// {25359602-FC70-4d13-A9AB-8086D3827C0D}
 //NS_DECLARE_ID(kIUnicodeDecoderIID,
-//  0xb2f178e1, 0x832a, 0x11d2, 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+//  0x25359602, 0xfc70, 0x4d13, 0xa9, 0xab, 0x80, 0x86, 0xd3, 0x82, 0x7c, 0xd);
 
 #define NS_IUNICODEDECODER_IID	\
-	{ 0xb2f178e1, 0x832a, 0x11d2,	\
-		{ 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}
+	{ 0x25359602, 0xfc70, 0x4d13,	\
+		{ 0xa9, 0xab, 0x80, 0x86, 0xd3, 0x82, 0x7c, 0xd }}
 
 // XXX deprecated
 /*---------- BEGIN DEPRECATED */ 
@@ -168,6 +168,20 @@ public:
    * different and urelated buffer of data.
    */
   NS_IMETHOD Reset() = 0;
+
+  /**
+   * Specify what to do when a character cannot be mapped into unicode
+   *
+   * @param aBehavior [IN] the desired behavior
+   * @see kOnError_Recover
+   * @see kOnError_Signal
+   */
+  virtual void SetInputErrorBehavior(PRInt32 aBehavior) = 0;
+
+  /**
+   * return the UNICODE character for unmapped character
+   */
+  virtual PRUnichar GetCharacterForUnMapped() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicodeDecoder, NS_IUNICODEDECODER_IID)

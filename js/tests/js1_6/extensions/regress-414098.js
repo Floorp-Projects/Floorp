@@ -59,14 +59,28 @@ reportCompare("3|54|1|", actual, "forEach");
 actual = a.join(' - ');
 reportCompare("3 - 54 - 1", actual, "join");
 
-actual = String(a.sort());
-reportCompare("1,54,54", actual, "sort");
+try
+{
+  actual = String(a.sort());
+}
+catch(ex)
+{
+  actual = ex + '';
+}
+reportCompare("TypeError: setting a property that has only a getter", actual, "sort");
 
-a[2]=3;
-reportCompare(actual, "1,54,54", "setter");
+try
+{
+  a[2]=3;
+}
+catch(ex)
+{
+  actual = ex + '';
+}
+reportCompare("TypeError: setting a property that has only a getter", actual, "setter");
 
 actual = a.pop();
-reportCompare(actual, 3, "pop");
+reportCompare(3, actual, "pop");
 
 actual = a.pop();
-reportCompare(actual, 54, "pop 2");
+reportCompare(54, actual, "pop 2");

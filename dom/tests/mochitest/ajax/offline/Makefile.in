@@ -61,19 +61,24 @@ _TEST_FILES	= \
 	test_offlineIFrame.html \
 	test_offlineMode.html \
 	test_bug445544.html \
+	test_bug460353.html \
+	test_bug474696.html \
 	test_foreign.html \
 	test_fallback.html \
+	test_overlap.html \
+	overlap.cacheManifest \
+	overlap.cacheManifest^headers^ \
 	test_updatingManifest.html \
 	445544_part1.html \
 	445544_part2.html \
 	445544.cacheManifest \
 	445544.cacheManifest^headers^ \
-	test_bug460353.html \
 	460353_iframe_nomanifest.html \
 	460353_iframe_ownmanifest.html \
 	460353_iframe_samemanifest.html \
 	test_obsolete.html \
 	obsolete.html \
+	obsoletingManifest.sjs \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
 	bypass.cacheManifest \
@@ -92,20 +97,17 @@ _TEST_FILES	= \
 	notonwhitelist.html \
 	onwhitelist.html \
 	onwhitelist.html^headers^ \
-	updatingIFrame.html \
-	updatingIFrame.html^headers^ \
+	updatingIframe.sjs \
 	updatingImplicit.html \
 	missingFile.cacheManifest \
 	missingFile.cacheManifest^headers^ \
 	simpleManifest.cacheManifest \
 	simpleManifest.cacheManifest^headers^ \
-	updating.cacheManifest \
-	updating.cacheManifest^headers^ \
+	updatingManifest.sjs \
 	simpleManifest.notmanifest \
 	changing1Sec.sjs \
 	changing1Hour.sjs \
-	changingManifest.cacheManifest \
-	changingManifest.cacheManifest^headers^ \
+	changingManifest.sjs \
 	offlineChild.html \
 	test_xhtmlManifest.xhtml \
 	test_missingManifest.html \

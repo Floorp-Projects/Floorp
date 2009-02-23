@@ -395,8 +395,8 @@ nsDataObj::~nsDataObj()
 {
   NS_IF_RELEASE(mTransferable);
 
-  for (PRInt32 i = 0; i < mDataFlavors.Count(); ++i) {
-    delete reinterpret_cast<nsCString *>(mDataFlavors.ElementAt(i));
+  for (PRUint32 i = 0; i < mDataFlavors.Length(); ++i) {
+    delete mDataFlavors.ElementAt(i);
   }
 
   m_enumFE->Release();
@@ -498,7 +498,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsCString * df = reinterpret_cast<nsCString*>(mDataFlavors.SafeElementAt(dfInx));
+    nsCString * df = mDataFlavors.SafeElementAt(dfInx);
     if ( df ) {
       if (FormatsMatch(fe, *pFE)) {
         pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
@@ -1373,7 +1373,7 @@ HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   m_enumFE->Reset();
   PRBool found = PR_FALSE;
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsCString * df = reinterpret_cast<nsCString*>(mDataFlavors.SafeElementAt(dfInx));
+    nsCString * df = mDataFlavors.SafeElementAt(dfInx);
     dfInx++;
     if (df && df->EqualsLiteral(kNativeImageMime)) {
       found = PR_TRUE;

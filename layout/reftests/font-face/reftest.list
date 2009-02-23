@@ -7,6 +7,8 @@ HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
+HTTP(..) != download-3-notref.html download-3.html
+HTTP(..) == download-3-ref.html download-3.html
 HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html
@@ -25,6 +27,14 @@ HTTP(..) == src-list-format-6.html src-list-format-3-ref.html
 # assumes AAT fonts are only supported on MacOS
 skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-list-format-7.html src-list-format-2-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full.html src-list-local-full-ref.html # bug 468387 (windows)
+skip-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full-quotes.html src-list-local-full-ref.html # bug 468387 (windows)
+HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
+
+# Postscript name lookup only supported on MacOS currently
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == helveticaneue-ultra.html helveticaneue-ultra-ref.html
+
 # FIXME: The behavior here is neither mandated nor specified by the spec, but
 # it really ought to be.
 HTTP(..) == order-1.html order-1-ref.html
@@ -66,4 +76,4 @@ HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
-fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == local-1.html local-1-ref.html # fails on MS Windows and Mac due to bug 465463
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == local-1.html local-1-ref.html # bug 468387

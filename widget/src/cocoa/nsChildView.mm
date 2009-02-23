@@ -85,6 +85,10 @@
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
 
+// Don't put more than this many rects in the dirty region, just fluff
+// out to the bounding-box if there are more
+#define MAX_RECTS_IN_REGION 100
+
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
@@ -142,6 +146,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 PRUint32 gLastModifierState = 0;
 
+PRBool gUserCancelledDrag = PR_FALSE;
 
 @interface ChildView(Private)
 
@@ -2097,66 +2102,31 @@ PRBool nsChildView::PointInWidget(Point aThePoint)
 #pragma mark -
 
 
-//    Convert the given rect to global coordinates.
-//    @param aLocalRect  -- rect in local coordinates of this widget
-//    @param aGlobalRect -- |aLocalRect| in global coordinates
-NS_IMETHODIMP nsChildView::WidgetToScreen(const nsIntRect& aLocalRect, nsIntRect& aGlobalRect)
+//    Return the offset between this child view and the screen.
+//    @return       -- widget origin in screen coordinates
+nsIntPoint nsChildView::WidgetToScreenOffset()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSRect temp;
-  GeckoRectToNSRect(aLocalRect, temp);
+  NSPoint temp;
+  temp.x = 0;
+  temp.y = 0;
   
-  // 1. First translate this rect into window coords. The returned rect is always in
+  // 1. First translate this point into window coords. The returned point is always in
   //    bottom-left coordinates.
-  //
-  //    NOTE: convertRect:toView:nil doesn't care if |mView| is a flipped view (with
-  //          top-left coords) and so assumes that our passed-in rect's origin is in
-  //          bottom-left coordinates. We adjust this further down, by subtracting
-  //          the final screen rect's origin by the rect's height, to get the origo
-  //          where we want it.
-  temp = [mView convertRect:temp toView:nil];  
+  temp = [mView convertPoint:temp toView:nil];  
   
   // 2. We turn the window-coord rect's origin into screen (still bottom-left) coords.
-  temp.origin = [[mView nativeWindow] convertBaseToScreen:temp.origin];
+  temp = [[mView nativeWindow] convertBaseToScreen:temp];
   
   // 3. Since we're dealing in bottom-left coords, we need to make it top-left coords
   //    before we pass it back to Gecko.
-  FlipCocoaScreenCoordinate(temp.origin);
+  FlipCocoaScreenCoordinate(temp);
   
-  // 4. If this is rect has a size (and is not simply a point), it is important to account 
-  //    for the fact that convertRect:toView:nil thought our passed-in point was in bottom-left 
-  //    coords in step #1. Thus, we subtract the rect's height, to get the top-left rect's origin 
-  //     where we want it.
-  temp.origin.y -= temp.size.height;
-  
-  NSRectToGeckoRect(temp, aGlobalRect);
-  return NS_OK;
+  return nsIntPoint(NSToIntRound(temp.x), NSToIntRound(temp.y));
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
 }
-
-
-//    Convert the given rect to local coordinates.
-//    @param aGlobalRect  -- rect in screen coordinates 
-//    @param aLocalRect -- |aGlobalRect| in coordinates of this widget
-NS_IMETHODIMP nsChildView::ScreenToWidget(const nsIntRect& aGlobalRect, nsIntRect& aLocalRect)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  NSRect temp;
-  GeckoRectToNSRect(aGlobalRect, temp);
-  FlipCocoaScreenCoordinate(temp.origin);
-
-  temp.origin = [[mView nativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
-  temp = [mView convertRect:temp fromView:nil];                     // convert to window coords
-
-  NSRectToGeckoRect(temp, aLocalRect);
-  
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-} 
 
 
 // Convert the coordinates to some device coordinates so GFX can draw.
@@ -3049,25 +3019,30 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   if (rgn)
     rgn->Init();
 
-  const NSRect *rects;
-  int count, i;
-  [self getRectsBeingDrawn:&rects count:&count];
-  for (i = 0; i < count; ++i) {
-    const NSRect& r = rects[i];
-
-    // add to the region
-    if (rgn)
-      rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
-
-    // to the context for clipping
-    targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
-  }
-  targetContext->Clip();
-  
   // bounding box of the dirty area
   nsIntRect fullRect;
   NSRectToGeckoRect(aRect, fullRect);
 
+  const NSRect *rects;
+  int count, i;
+  [self getRectsBeingDrawn:&rects count:&count];
+  if (count < MAX_RECTS_IN_REGION) {
+    for (i = 0; i < count; ++i) {
+      const NSRect& r = rects[i];
+
+      // add to the region
+      if (rgn)
+        rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
+
+      // to the context for clipping
+      targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
+    }
+  } else {
+    rgn->Union(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
+    targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
+  }
+  targetContext->Clip();
+  
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
   paintEvent.renderingContext = rc;
   paintEvent.rect = &fullRect;
@@ -6351,6 +6326,10 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   gDraggedTransferables = nsnull;
+
+  NSEvent *currentEvent = [NSApp currentEvent];
+  gUserCancelledDrag = ([currentEvent type] == NSKeyDown &&
+                        [currentEvent keyCode] == kEscapeKeyCode);
 
   if (!mDragService) {
     CallGetService(kDragServiceContractID, &mDragService);
