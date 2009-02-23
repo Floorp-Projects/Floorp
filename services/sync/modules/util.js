@@ -520,3 +520,5 @@ Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
 Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
 Utils.lazySvc(Svc, 'Crypto', "@labs.mozilla.com/Weave/Crypto;1", Ci.IWeaveCrypto);
 Utils.lazySvc(Svc, 'Memory', "@mozilla.org/xpcom/memory-service;1", Ci.nsIMemory);
+Utils.lazySvc(Svc, 'Version',
+              "@mozilla.org/xpcom/version-comparator;1", Ci.nsIVersionComparator);
