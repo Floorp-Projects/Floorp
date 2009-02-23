@@ -40,7 +40,6 @@
 // OS/2 defines; for user messages & warp4 stuff, plus module-global data
 
 #include "nsIWidget.h"
-#include "nsVoidArray.h"
 
 #define INCL_PM
 #define INCL_NLS
