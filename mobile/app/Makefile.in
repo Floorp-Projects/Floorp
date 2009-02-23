@@ -64,7 +64,7 @@ endif
 # and we want to construct a working URL in buildconfig.html
 # make+shell+sed = awful
 _dollar=$$
-SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+SOURCE_REPO := $(shell cd $(srcdir)/.. && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
 # extra sanity check for old versions of hg
 # that don't support showconfig
 ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
