@@ -262,7 +262,7 @@ wsRect.prototype = {
       (other._l <= this._l && other._r >= this._r);
     let yok = (other._t > this._t && other._t < this._b) ||
       (other._b > this._t && other._b < this._b) ||
-      (other._t <= this._t && other._t >= this._b);
+      (other._t <= this._t && other._b >= this._b);
     return xok && yok;
   },
   
