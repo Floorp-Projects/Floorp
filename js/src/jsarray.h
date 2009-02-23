@@ -48,6 +48,8 @@
 
 JS_BEGIN_EXTERN_C
 
+#define ARRAY_CAPACITY_MIN      7
+
 /* Generous sanity-bound on length (in elements) of array initialiser. */
 #define ARRAY_INIT_LIMIT        JS_BIT(24)
 
@@ -93,8 +95,6 @@ js_SetDenseArrayCapacity(JSObject *obj, uint32 capacity)
     JS_ASSERT(obj->dslots);
     obj->dslots[-1] = (jsval) capacity;
 }
-
-#define ARRAY_GROWBY 8
 
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
