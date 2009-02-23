@@ -3426,7 +3426,7 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
 
     debug_only_v(printf("trying to attach another branch to the tree (hits = %d)\n", c->hits());)
 
-    int32& hits = c->hits();
+    int32_t& hits = c->hits();
     if (hits++ >= HOTEXIT && hits <= HOTEXIT+MAXEXIT) {
         /* start tracing secondary trace from this point */
         c->lirbuf = f->lirbuf;
@@ -4193,7 +4193,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     debug_only_v(printf("Looking for compat peer %d@%d, from %p (ip: %p)\n",
                         js_FramePCToLineNumber(cx, cx->fp),
-                        FramePCOffset(cx->fp), f, f->ip);)
+                        FramePCOffset(cx->fp), (void*)f, f->ip);)
 
     uintN count;
     Fragment* match = js_FindVMCompatiblePeer(cx, f, count);
