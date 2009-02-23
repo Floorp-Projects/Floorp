@@ -3934,30 +3934,30 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     return JS_TRUE;
 }
 
-/*
- * Find out where we currently are in the code. If no hint was supplied,
- * de-optimize and consult the stack frame.
- */
 static jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx)
 {
-    jsbytecode *pc = cx->pcHint;
-    if (!pc || !JS_ON_TRACE(cx)) {
-        JSStackFrame* fp = js_GetTopStackFrame(cx);
-        if (fp && fp->regs) {
-            pc = fp->regs->pc;
-            // FIXME: Set pc to imacpc when recording JSOP_CALL inside the 
-            //        JSOP_GETELEM imacro (bug 476559).
-            if (*pc == JSOP_CALL &&
-                fp->imacpc &&
-                js_GetOpcode(cx, fp->script, fp->imacpc) == JSOP_GETELEM) {
-                pc = fp->imacpc;
-            }
-        } else {
-            pc = NULL;
-        }
+    jsbytecode *pc, *imacpc;
+
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        pc = cx->bailExit->pc;
+        imacpc = cx->bailExit->imacpc;
+    } else
+#endif
+    if (cx->fp && cx->fp->regs) {
+        pc = cx->fp->regs->pc;
+        imacpc = cx->fp->imacpc;
+    } else {
+        return NULL;
     }
-    return pc;
+
+    /*
+     * If we are inside GetProperty_tn or similar, return a pointer to the
+     * current instruction in the script, not the CALL instruction in the
+     * imacro, for the benefit of callers doing bytecode inspection.
+     */
+    return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
 }
 
 JSBool
