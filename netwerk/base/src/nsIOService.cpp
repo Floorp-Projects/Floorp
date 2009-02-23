@@ -223,7 +223,7 @@ nsIOService::Init()
     
     // setup our bad port list stuff
     for(int i=0; gBadPortList[i]; i++)
-        mRestrictedPortList.AppendElement(reinterpret_cast<void *>(gBadPortList[i]));
+        mRestrictedPortList.AppendElement(gBadPortList[i]);
 
     // Further modifications to the port list come from prefs
     nsCOMPtr<nsIPrefBranch2> prefBranch;
@@ -703,10 +703,10 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, PRBool *_retval)
     }
         
     // first check to see if the port is in our blacklist:
-    PRInt32 badPortListCnt = mRestrictedPortList.Count();
+    PRInt32 badPortListCnt = mRestrictedPortList.Length();
     for (int i=0; i<badPortListCnt; i++)
     {
-        if (port == (PRInt32) NS_PTR_TO_INT32(mRestrictedPortList[i]))
+        if (port == mRestrictedPortList[i])
         {
             *_retval = PR_FALSE;
 
@@ -780,19 +780,19 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
                    PRInt32 curPort;
                    if (remove) {
                         for (curPort=portBegin; curPort <= portEnd; curPort++)
-                            mRestrictedPortList.RemoveElement((void*)curPort);
+                            mRestrictedPortList.RemoveElement(curPort);
                    } else {
                         for (curPort=portBegin; curPort <= portEnd; curPort++)
-                            mRestrictedPortList.AppendElement((void*)curPort);
+                            mRestrictedPortList.AppendElement(curPort);
                    }
                }
             } else {
                PRInt32 port = portListArray[index].ToInteger(&aErrorCode);
                if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
                    if (remove)
-                       mRestrictedPortList.RemoveElement((void*)port);
+                       mRestrictedPortList.RemoveElement(port);
                    else
-                       mRestrictedPortList.AppendElement((void*)port);
+                       mRestrictedPortList.AppendElement(port);
                }
             }
 
