@@ -56,11 +56,8 @@ function LOG(aMsg) {
 
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
-var gTestRoot = dirSvc.get("CurProcD", Ci.nsILocalFile);
-gTestRoot = gTestRoot.parent.parent;
-gTestRoot.append("_tests");
-gTestRoot.append("xpcshell-simple");
-gTestRoot.append("test_browser_places");
+// Remove '/unit/*.js'.
+var gTestRoot = __LOCATION__.parent.parent;
 gTestRoot.normalize();
 
 // Need to create and register a profile folder.
