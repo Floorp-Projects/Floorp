@@ -876,16 +876,26 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
+  PRUint32 start = charnum, limit = charnum + 1;
+  while (start > 0 && !mTextRun->IsClusterStart(start)) {
+    --start;
+  }
+  while (limit < mTextRun->GetLength() && !mTextRun->IsClusterStart(limit)) {
+    ++limit;
+  }
+
   CharacterIterator iter(this, PR_FALSE);
-  if (!iter.AdvanceToCharacter(charnum))
+  if (!iter.AdvanceToCharacter(start))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
   gfxTextRun::Metrics metrics =
-    mTextRun->MeasureText(charnum, 1, PR_FALSE, nsnull, nsnull);
+    mTextRun->MeasureText(start, limit - start, PR_FALSE, nsnull, nsnull);
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   iter.SetupForMetrics(tmpCtx);
-  tmpCtx->Rectangle(metrics.mBoundingBox);
+  tmpCtx->Rectangle(gfxRect(0, -metrics.mAscent,
+                            metrics.mAdvanceWidth,
+                            metrics.mAscent + metrics.mDescent));
   tmpCtx->IdentityMatrix();
   return NS_NewSVGRect(_retval, tmpCtx->GetUserPathExtent());
 }
@@ -1108,16 +1118,49 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
   PRInt32 last = -1;
   gfxPoint pt(xPos, yPos);
   while ((i = iter.NextChar()) >= 0) {
+    // iter is the beginning of a cluster (or of the entire run);
+    // look ahead for the next cluster start, then measure the entire cluster
+    PRInt32 limit = i + 1;
+    while (limit < mTextRun->GetLength() && !mTextRun->IsClusterStart(limit)) {
+      ++limit;
+    }
     gfxTextRun::Metrics metrics =
-      mTextRun->MeasureText(i, 1, PR_FALSE, nsnull, nsnull);
-    iter.SetupForMetrics(tmpCtx);
-    tmpCtx->NewPath();
-    tmpCtx->Rectangle(metrics.mBoundingBox);
-    tmpCtx->IdentityMatrix();
-    if (tmpCtx->PointInFill(pt)) {
-      // Can't return now. If there's glyph overlap, the last character
-      // to be rendered wins.
-      last = i;
+      mTextRun->MeasureText(i, limit - i, PR_FALSE, nsnull, nsnull);
+
+    // the SVG spec tells us to divide the width of the cluster equally among
+    // its chars, so we'll step through the chars, allocating a share of the
+    // total advance to each
+    PRInt32 current, end, step;
+    if (mTextRun->IsRightToLeft()) {
+      current = limit - 1;
+      end = i - 1;
+      step = -1;
+    } else {
+      current = i;
+      end = limit;
+      step = 1;
+    }
+    gfxFloat leftEdge = 0.0;
+    gfxFloat width = metrics.mAdvanceWidth / (limit - i);
+    while (current != end) {
+      iter.SetupForMetrics(tmpCtx);
+      tmpCtx->NewPath();
+      tmpCtx->Rectangle(gfxRect(leftEdge, -metrics.mAscent,
+                                width, metrics.mAscent + metrics.mDescent));
+      tmpCtx->IdentityMatrix();
+      if (tmpCtx->PointInFill(pt)) {
+        // Can't return yet; if there's glyph overlap, the last character
+        // to be rendered wins, so we still have to check the rest...
+        last = current;
+        break; // ...but we don't need to check more slices of this cluster
+      }
+      current += step;
+      leftEdge += width;
+    }
+
+    // move iter past any trailing chars of the cluster
+    while (++i < limit) {
+      iter.NextChar();
     }
   }
 

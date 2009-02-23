@@ -158,5 +158,12 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
  */
 #define NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC "http-on-examine-merged-response"
 
+/**
+ * The observer of this topic is notified before data is read from the cache.
+ * The notification is sent if and only if there is no network communication
+ * at all.
+ */
+#define NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC "http-on-examine-cached-response"
+
 
 %}

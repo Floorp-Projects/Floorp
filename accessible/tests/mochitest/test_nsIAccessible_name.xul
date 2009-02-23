@@ -40,6 +40,10 @@
       // of elements. Gets the name from text nodes of those elements.
       testName("btn_labelledby_texts", "text1 text2");
 
+      // Trick cases. Self and recursive referencing.
+      testName("rememberHistoryDays", "Remember 3 days");
+      testName("historyDays", "Remember 3 days");
+      testName("rememberAfter", null); // XUL labels doesn't allow name from subtree
 
       //////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
@@ -101,7 +105,7 @@
       // Get the name from anonymous label element for anonymous textbox
       // (@anonid is used).
       var ID = "box_label_anon1";
-      var box1Acc = testName(ID, "");
+      var box1Acc = testName(ID, null);
       if (box1Acc) {
         var textboxAcc = box1Acc.firstChild;
         is(textboxAcc.name, "Label",
@@ -111,7 +115,7 @@
       // Get the name from anonymous label element for anonymous textbox
       // (@anonid is used). Nested bindings.
       ID = "box_label_anon2";
-      var box2Acc = testName(ID, "");
+      var box2Acc = testName(ID, null);
       if (box2Acc) {
         var textboxAcc = box2Acc.firstChild;
         is(textboxAcc.name, "Label",
@@ -194,6 +198,14 @@
   <description id="labelledby_text2">text2</description>
   <button id="btn_labelledby_texts"
           aria-labelledby="labelledby_text1 labelledby_text2"/>
+
+  <!-- trick aria-labelledby -->
+  <checkbox id="rememberHistoryDays"
+            label="Remember "
+            aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
+  <textbox id="historyDays" type="number" size="3" value="3"
+           aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
+  <label id="rememberAfter">days</label>
 
   <!-- the name from subtree, mixed content -->
   <description id="labelledby_mixed">

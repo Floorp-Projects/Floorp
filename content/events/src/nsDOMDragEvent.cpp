@@ -173,7 +173,7 @@ nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
   nsCOMPtr<nsIDOMNSDataTransfer> initialDataTransferNS =
     do_QueryInterface(initialDataTransfer);
   NS_ENSURE_TRUE(initialDataTransferNS, NS_ERROR_FAILURE);
-  initialDataTransferNS->Clone(mEvent->message,
+  initialDataTransferNS->Clone(mEvent->message, dragEvent->userCancelled,
                                getter_AddRefs(dragEvent->dataTransfer));
   NS_ENSURE_TRUE(dragEvent->dataTransfer, NS_ERROR_OUT_OF_MEMORY);
 

@@ -119,7 +119,7 @@
 
       //Take snapshots
       var manualSnapshot = snapshotWindow(gBrowser.contentWindow);
-      var res = compareSnapshots(findSnapshot, manualSnapshot);
+      var res = compareSnapshots(findSnapshot, manualSnapshot, true);
       ok(res[0], "Matches found in iframe correctly highlighted");
       finish();
     }

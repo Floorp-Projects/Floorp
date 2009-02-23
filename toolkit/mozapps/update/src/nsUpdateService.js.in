@@ -62,6 +62,7 @@ const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
+const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
@@ -118,7 +119,6 @@ const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 
 const UPDATE_WINDOW_NAME      = "Update:Wizard";
-const TOOLKIT_ID              = "toolkit@mozilla.org";
 
 var gApp        = null;
 var gPref       = null;
@@ -2506,8 +2506,9 @@ Downloader.prototype = {
 
     LOG("Downloader", "downloadUpdate - downloading from " + uri.spec + " to " +
         patchFile.path);
-
-    var interval = this.background ? DOWNLOAD_BACKGROUND_INTERVAL
+    var interval = this.background ? getPref("getIntPref",
+                                             PREF_APP_UPDATE_BACKGROUND_INTERVAL,
+                                             DOWNLOAD_BACKGROUND_INTERVAL)
                                    : DOWNLOAD_FOREGROUND_INTERVAL;
     this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);

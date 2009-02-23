@@ -198,15 +198,13 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   mBoundingMetrics.Clear();
-  nsIFrame* childFrame = GetFirstChild(nsnull);
-  while (childFrame) {
+  for (nsIFrame* childFrame = GetFirstChild(nsnull); childFrame;
+       childFrame = childFrame->GetNextSibling()) {
     nsHTMLReflowMetrics childSize;
     GetReflowAndBoundingMetricsFor(childFrame, childSize,
                                    childSize.mBoundingMetrics, nsnull);
     // compute and cache the bounding metrics
     mBoundingMetrics += childSize.mBoundingMetrics;
-
-    childFrame = childFrame->GetNextSibling();
   }
 
   nsCOMPtr<nsIFontMetrics> fm =
@@ -223,8 +221,8 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
-    nsIFrame* childFrame = GetFirstChild(nsnull);
-    while (childFrame) {
+    for (nsIFrame* childFrame = GetFirstChild(nsnull); childFrame;
+         childFrame = childFrame->GetNextSibling()) {
       nsHTMLReflowMetrics childSize;
       GetReflowAndBoundingMetricsFor(childFrame, childSize,
                                      childSize.mBoundingMetrics);
@@ -233,7 +231,6 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
       dy = childSize.height == 0 ? 0 : aDesiredSize.ascent - childSize.ascent;
       FinishReflowChild(childFrame, PresContext(), nsnull, childSize, dx, dy, 0);
       dx += childSize.width;
-      childFrame = childFrame->GetNextSibling();
     }
   }
 

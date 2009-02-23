@@ -89,7 +89,7 @@ if [[ -n "$TEST_MOZILLA_HG" ]]; then
 
     cd mozilla
     hg pull
-    hg update
+    hg update -C
 
     hg update -r $TEST_MOZILLA_HG_REV
 
@@ -192,7 +192,7 @@ case $product in
 
                 cd mobile
                 hg pull
-                hg update
+                hg update -C
 
                 # XXX need to deal with mobile revisions from different repositories
 

@@ -209,7 +209,7 @@ EXTRA_DSO_LDOPTS += \
 ifdef MOZ_SYDNEYAUDIO
 EXTRA_DSO_LDOPTS += \
 	-framework CoreAudio \
- 	-framework AudioToolbox \
+	-framework AudioToolbox \
 	-framework AudioUnit \
 	$(NULL)
 endif
@@ -262,7 +262,10 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32 Ws2)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2)
+ifdef WINCE_WINDOWS_MOBILE
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, cellcore)
+endif
 endif
 
 

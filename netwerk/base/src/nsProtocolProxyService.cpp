@@ -315,7 +315,7 @@ nsProtocolProxyService::nsProtocolProxyService()
 nsProtocolProxyService::~nsProtocolProxyService()
 {
     // These should have been cleaned up in our Observe method.
-    NS_ASSERTION(mHostFiltersArray.Count() == 0 && mFilters == nsnull &&
+    NS_ASSERTION(mHostFiltersArray.Length() == 0 && mFilters == nsnull &&
                  mPACMan == nsnull, "what happened to xpcom-shutdown?");
 }
 
@@ -353,8 +353,7 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
 {
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
         // cleanup
-        if (mHostFiltersArray.Count() > 0) {
-            mHostFiltersArray.EnumerateForwards(CleanupFilterArray, nsnull);
+        if (mHostFiltersArray.Length() > 0) {
             mHostFiltersArray.Clear();
         }
         if (mFilters) {
@@ -505,7 +504,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 PRBool
 nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort) 
 {
-    if (mHostFiltersArray.Count() == 0)
+    if (mHostFiltersArray.Length() == 0)
         return PR_TRUE;
 
     PRInt32 port;
@@ -542,8 +541,8 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
     }
     
     PRInt32 index = -1;
-    while (++index < mHostFiltersArray.Count()) {
-        HostInfo *hinfo = (HostInfo *) mHostFiltersArray[index];
+    while (++index < PRInt32(mHostFiltersArray.Length())) {
+        HostInfo *hinfo = mHostFiltersArray[index];
 
         if (is_ipaddr != hinfo->is_ipaddr)
             continue;
@@ -1040,22 +1039,11 @@ nsProtocolProxyService::UnregisterFilter(nsIProtocolProxyFilter *filter)
     // No need to throw an exception in this case.
     return NS_OK;
 }
-
-PRBool
-nsProtocolProxyService::CleanupFilterArray(void *aElement, void *aData) 
-{
-    if (aElement)
-        delete (HostInfo *) aElement;
-
-    return PR_TRUE;
-}
-
 void
 nsProtocolProxyService::LoadHostFilters(const char *filters)
 {
     // check to see the owners flag? /!?/ TODO
-    if (mHostFiltersArray.Count() > 0) {
-        mHostFiltersArray.EnumerateForwards(CleanupFilterArray, nsnull);
+    if (mHostFiltersArray.Length() > 0) {
         mHostFiltersArray.Clear();
     }
 
@@ -1151,7 +1139,7 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
 
 //#define DEBUG_DUMP_FILTERS
 #ifdef DEBUG_DUMP_FILTERS
-        printf("loaded filter[%u]:\n", mHostFiltersArray.Count());
+        printf("loaded filter[%u]:\n", mHostFiltersArray.Length());
         printf("  is_ipaddr = %u\n", hinfo->is_ipaddr);
         printf("  port = %u\n", hinfo->port);
         if (hinfo->is_ipaddr) {

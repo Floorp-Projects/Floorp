@@ -1416,6 +1416,13 @@ jsval nsDOMClassInfo::sOnerror_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpaint_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnresize_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnscroll_id        = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndrag_id          = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndragend_id       = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndragenter_id     = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndragleave_id     = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndragover_id      = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndragstart_id     = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndrop_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sScrollIntoView_id  = JSVAL_VOID;
 jsval nsDOMClassInfo::sScrollX_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sScrollY_id         = JSVAL_VOID;
@@ -1608,6 +1615,13 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnpaint_id,         cx, "onpaint");
   SET_JSVAL_TO_STRING(sOnresize_id,        cx, "onresize");
   SET_JSVAL_TO_STRING(sOnscroll_id,        cx, "onscroll");
+  SET_JSVAL_TO_STRING(sOndrag_id,          cx, "ondrag");
+  SET_JSVAL_TO_STRING(sOndragend_id,       cx, "ondragend");
+  SET_JSVAL_TO_STRING(sOndragenter_id,     cx, "ondragenter");
+  SET_JSVAL_TO_STRING(sOndragleave_id,     cx, "ondragleave");
+  SET_JSVAL_TO_STRING(sOndragover_id,      cx, "ondragover");
+  SET_JSVAL_TO_STRING(sOndragstart_id,     cx, "ondragstart");
+  SET_JSVAL_TO_STRING(sOndrop_id,          cx, "ondrop");
   SET_JSVAL_TO_STRING(sScrollIntoView_id,  cx, "scrollIntoView");
   SET_JSVAL_TO_STRING(sScrollX_id,         cx, "scrollX");
   SET_JSVAL_TO_STRING(sScrollY_id,         cx, "scrollY");
@@ -2168,6 +2182,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DragEvent, nsIDOMDragEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDragEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSMouseEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -3591,6 +3606,8 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SimpleGestureEvent, nsIDOMSimpleGestureEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSimpleGestureEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSMouseEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -4313,6 +4330,13 @@ nsDOMClassInfo::ShutDown()
   sOnpaint_id         = JSVAL_VOID;
   sOnresize_id        = JSVAL_VOID;
   sOnscroll_id        = JSVAL_VOID;
+  sOndrag_id          = JSVAL_VOID;
+  sOndragend_id       = JSVAL_VOID;
+  sOndragenter_id     = JSVAL_VOID;
+  sOndragleave_id     = JSVAL_VOID;
+  sOndragover_id      = JSVAL_VOID;
+  sOndragstart_id     = JSVAL_VOID;
+  sOndrop_id          = JSVAL_VOID;
   sScrollIntoView_id  = JSVAL_VOID;
   sScrollX_id         = JSVAL_VOID;
   sScrollY_id         = JSVAL_VOID;
@@ -6665,48 +6689,19 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     // never be called when we have no outer. But just in case, return
     // null to prevent leaking an inner window to code in a different
     // window.
-
     *_retval = nsnull;
-
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Return the outer window.
-
-  // FIXME bug 420372: Our window should always have a JS object here. It
-  // doesn't because of nsJSContext::FindXPCNativeWrapperClass.
-  nsresult rv;
-  if (win->IsChromeWindow()) {
-    // Chrome windows don't get XOW wrapping.
-    JSObject *outerObj = win->GetGlobalJSObject();
-    if (!outerObj) {
-      NS_ASSERTION(origWin->IsOuterWindow(), "What window is this?");
-      *_retval = obj;
-    } else {
-      *_retval = outerObj;
-    }
-
-    rv = NS_OK;
-  } else {
-    JSObject *winObj = win->GetGlobalJSObject();
-    if (!winObj) {
-      NS_ASSERTION(origWin->IsOuterWindow(), "What window is this?");
-      *_retval = obj;
-      rv = NS_OK;
-    } else {
-      JSObject *scope = JS_GetScopeChain(cx);
-      if (!scope) {
-        *_retval = nsnull;
-        return NS_ERROR_FAILURE;
-      }
-      scope = ::JS_GetGlobalForObject(cx, scope);
-      jsval v;
-      rv = sXPConnect->GetXOWForObject(cx, scope, winObj, &v);
-      *_retval = NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(v) : nsnull;
-    }
+  JSObject *winObj = win->GetGlobalJSObject();
+  if (!winObj) {
+    NS_ASSERTION(origWin->IsOuterWindow(), "What window is this?");
+    *_retval = obj;
+    return NS_OK;
   }
 
-  return rv;
+  *_retval = winObj;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7129,7 +7124,14 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
             id == sOncopy_id         ||
             id == sOncut_id);
   case 'd' :
-    return id == sOndblclick_id;
+    return (id == sOndblclick_id     || 
+            id == sOndrag_id         ||
+            id == sOndragend_id      ||
+            id == sOndragenter_id    ||
+            id == sOndragleave_id    ||
+            id == sOndragover_id     ||
+            id == sOndragstart_id    ||
+            id == sOndrop_id);
   case 'l' :
     return id == sOnload_id;
   case 'p' :

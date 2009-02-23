@@ -100,29 +100,12 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
 nsIFrame*
 NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-inline nsIFrame*
-NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext);
-}
-
-// This type of BlockFrame is a margin root, but does not shrink wrap
-inline nsIFrame*
-NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext, NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
-}
-
-// This type of BlockFrame shrink wraps
-inline nsIFrame*
-NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext,
-    NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
-}
-
-// This type of BlockFrame doesn't use its own float manager and
-// doesn't shrink wrap.
-inline nsIFrame*
-NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags) {
-  return NS_NewBlockFrame(aPresShell, aContext, aFlags);
+// Create a block formatting context blockframe
+inline nsIFrame* NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
+                                              nsStyleContext* aStyleContext)
+{
+  return NS_NewBlockFrame(aPresShell, aStyleContext,
+                          NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
 }
 
 nsIFrame*

@@ -46,7 +46,6 @@ MODULE		= xpcom
 GRE_MODULE	= 1
 
 DIRS		= \
-		MoreFiles \
 		typelib \
 		string \
 		glue \

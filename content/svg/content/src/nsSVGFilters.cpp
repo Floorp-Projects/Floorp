@@ -3812,8 +3812,8 @@ nsSVGElement::NumberInfo nsSVGFEConvolveMatrixElement::sNumberInfo[4] =
 
 nsSVGElement::IntegerInfo nsSVGFEConvolveMatrixElement::sIntegerInfo[4] =
 {
-  { &nsGkAtoms::order, 0 },
-  { &nsGkAtoms::order, 0 },
+  { &nsGkAtoms::order, 3 },
+  { &nsGkAtoms::order, 3 },
   { &nsGkAtoms::targetX, 0 },
   { &nsGkAtoms::targetY, 0 }
 };

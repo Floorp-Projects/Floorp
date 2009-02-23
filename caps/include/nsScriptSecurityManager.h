@@ -575,7 +575,6 @@ private:
     ScriptSecurityPrefChanged();
 
     static const char sJSEnabledPrefName[];
-    static const char sJSMailEnabledPrefName[];
     static const char sFileOriginPolicyPrefName[];
 
     nsObjectHashtable* mOriginToPolicyMap;
@@ -588,7 +587,6 @@ private:
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
     PRPackedBool mIsJavaScriptEnabled;
-    PRPackedBool mIsMailJavaScriptEnabled;
     PRPackedBool mIsWritingPrefs;
     PRPackedBool mPolicyPrefsChanged;
 #ifdef XPC_IDISPATCH_SUPPORT    

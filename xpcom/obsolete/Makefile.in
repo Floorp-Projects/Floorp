@@ -57,11 +57,6 @@ REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
-# pull in MoreFiles for MacOSX
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-REQUIRES += macmorefiles
-endif
-
 CPPSRCS         = \
 		nsFileSpec.cpp \
 		nsFileStream.cpp \

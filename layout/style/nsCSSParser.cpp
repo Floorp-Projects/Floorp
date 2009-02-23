@@ -84,6 +84,7 @@
 #include "nsDOMError.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "prlog.h"
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
@@ -390,9 +391,30 @@ protected:
   // Property specific parsing routines
   PRBool ParseAzimuth(nsCSSValue& aValue);
   PRBool ParseBackground();
+
+  struct BackgroundItem;
+  friend struct BackgroundItem;
+  struct BackgroundItem {
+    nsCSSValue mImage;
+    nsCSSValue mRepeat;
+    nsCSSValue mAttachment;
+    nsCSSValuePair mPosition;
+    nsCSSValue mClip;
+    nsCSSValue mOrigin;
+    // The background-color is set as a side-effect, and if so, mLastItem
+    // is set to true.
+    PRBool mLastItem;
+  };
+  struct BackgroundItemSimpleValueInfo {
+    nsCSSValue BackgroundItem::*member;
+    nsCSSProperty propID;
+  };
+
+  PRBool ParseBackgroundItem(BackgroundItem& aItem, PRBool aFirstItem);
+
+  PRBool ParseBackgroundList(nsCSSProperty aPropID); // a single value prop-id
+  PRBool ParseBackgroundColor(PRBool aInShorthand);
   PRBool ParseBackgroundPosition();
-  PRBool ParseBackgroundPositionValues();
-  PRBool ParseBoxPosition(nsCSSValuePair& aOut);
   PRBool ParseBoxPositionValues(nsCSSValuePair& aOut);
   PRBool ParseBorderColor();
   PRBool ParseBorderColors(nsCSSValueList** aResult,
@@ -2038,7 +2060,7 @@ PRBool
 CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
 {
   if (!ExpectSymbol('{', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclBlockStart);
+    REPORT_UNEXPECTED_TOKEN(PEBadFontBlockStart);
     return PR_FALSE;
   }
 
@@ -2070,7 +2092,7 @@ CSSParserImpl::ParseFontFaceRule(RuleAppendFunc aAppendFunc, void* aData)
     }
   }
   if (!ExpectSymbol('}', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
+    REPORT_UNEXPECTED_TOKEN(PEBadFontBlockEnd);
     return PR_FALSE;
   }
   (*aAppendFunc)(rule, aData);
@@ -4940,8 +4962,16 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   switch (aPropID) {  // handle shorthand or multiple properties
   case eCSSProperty_background:
     return ParseBackground();
+  case eCSSProperty_background_color:
+    return ParseBackgroundColor(PR_FALSE);
   case eCSSProperty_background_position:
     return ParseBackgroundPosition();
+  case eCSSProperty_background_attachment:
+  case eCSSProperty__moz_background_clip:
+  case eCSSProperty_background_image:
+  case eCSSProperty__moz_background_origin:
+  case eCSSProperty_background_repeat:
+    return ParseBackgroundList(aPropID);
   case eCSSProperty_border:
     return ParseBorderSide(kBorderTopIDs, PR_TRUE);
   case eCSSProperty_border_color:
@@ -5193,6 +5223,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   switch (aPropID) {
   case eCSSProperty_UNKNOWN:
   case eCSSProperty_background:
+  case eCSSProperty_background_color:
   case eCSSProperty_background_position:
   case eCSSProperty_border:
   case eCSSProperty_border_color:
@@ -5305,22 +5336,25 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_azimuth:
     return ParseAzimuth(aValue);
   case eCSSProperty_background_attachment:
+    // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundAttachmentKTable);
   case eCSSProperty__moz_background_clip:
+    // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundClipKTable);
-  case eCSSProperty_background_color:
-    return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
+    // Used only internally.
     return ParseVariant(aValue, VARIANT_HUO, nsnull);
   case eCSSProperty__moz_background_inline_policy:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundInlinePolicyKTable);
   case eCSSProperty__moz_background_origin:
+    // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundOriginKTable);
   case eCSSProperty_background_repeat:
+    // Used only internally.
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundRepeatKTable);
   case eCSSProperty_binding:
@@ -5858,42 +5892,108 @@ CSSParserImpl::ParseBackground()
 {
   nsAutoParseCompoundProperty compound(this);
 
+  // These two are set through side-effects of ParseBackgroundItem.
+  mTempData.SetPropertyBit(eCSSProperty_background_color);
+  mTempData.mColor.mBackColor.mXValue.SetColorValue(NS_RGBA(0, 0, 0, 0));
+  mTempData.mColor.mBackColor.mYValue.SetColorValue(NS_RGBA(0, 0, 0, 0));
+
+  BackgroundItem bgitem;
+  nsCSSValuePairList *positionHead = nsnull, **positionTail = &positionHead;
+  static const BackgroundItemSimpleValueInfo simpleValues[] = {
+    { &BackgroundItem::mImage,      eCSSProperty_background_image },
+    { &BackgroundItem::mRepeat,     eCSSProperty_background_repeat },
+    { &BackgroundItem::mAttachment, eCSSProperty_background_attachment },
+    { &BackgroundItem::mClip,       eCSSProperty__moz_background_clip },
+    { &BackgroundItem::mOrigin,     eCSSProperty__moz_background_origin }
+  };
+  nsCSSValueList *simpleHeads[NS_ARRAY_LENGTH(simpleValues)];
+  nsCSSValueList **simpleTails[NS_ARRAY_LENGTH(simpleValues)];
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
+    simpleHeads[i] = nsnull;
+    simpleTails[i] = &simpleHeads[i];
+  }
+  for (;;) {
+    if (!ParseBackgroundItem(bgitem, !positionHead)) {
+      break;
+    }
+    nsCSSValuePairList *positionItem = new nsCSSValuePairList;
+    if (!positionItem) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+    positionItem->mXValue = bgitem.mPosition.mXValue;
+    positionItem->mYValue = bgitem.mPosition.mYValue;
+    *positionTail = positionItem;
+    positionTail = &positionItem->mNext;
+
+    PRBool fail = PR_FALSE;
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
+      nsCSSValueList *item = new nsCSSValueList;
+      if (!item) {
+        mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+        fail = PR_TRUE;
+        break;
+      }
+      item->mValue = bgitem.*(simpleValues[i].member);
+      *simpleTails[i] = item;
+      simpleTails[i] = &item->mNext;
+    }
+    if (fail) {
+      break;
+    }
+
+    if (!bgitem.mLastItem && ExpectSymbol(',', PR_TRUE)) {
+      continue;
+    }
+    if (!ExpectEndProperty()) {
+      break;
+    }
+
+    mTempData.mColor.mBackPosition = positionHead;
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
+      nsCSSValueList **source = static_cast<nsCSSValueList**>(
+        mTempData.PropertyAt(simpleValues[i].propID));
+      *source = simpleHeads[i];
+    }
+
+    mTempData.SetPropertyBit(eCSSProperty_background_image);
+    mTempData.SetPropertyBit(eCSSProperty_background_repeat);
+    mTempData.SetPropertyBit(eCSSProperty_background_attachment);
+    mTempData.SetPropertyBit(eCSSProperty_background_position);
+    mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
+    mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
+    return PR_TRUE;
+  }
+  delete positionHead;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(simpleValues); ++i) {
+    delete simpleHeads[i];
+  }
+  return PR_FALSE;
+}
+
+// Parse one item of the background shorthand property.
+PRBool
+CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
+                                   PRBool aFirstItem)
+{
   // Fill in the values that the shorthand will set if we don't find
   // other values.
-  mTempData.mColor.mBackColor.SetColorValue(NS_RGBA(0, 0, 0, 0));
-  mTempData.SetPropertyBit(eCSSProperty_background_color);
-  mTempData.mColor.mBackImage.SetNoneValue();
-  mTempData.SetPropertyBit(eCSSProperty_background_image);
-  mTempData.mColor.mBackRepeat.SetIntValue(NS_STYLE_BG_REPEAT_XY,
-                                           eCSSUnit_Enumerated);
-  mTempData.SetPropertyBit(eCSSProperty_background_repeat);
-  mTempData.mColor.mBackAttachment.SetIntValue(NS_STYLE_BG_ATTACHMENT_SCROLL,
-                                               eCSSUnit_Enumerated);
-  mTempData.SetPropertyBit(eCSSProperty_background_attachment);
-  mTempData.mColor.mBackPosition.mXValue.SetPercentValue(0.0f);
-  mTempData.mColor.mBackPosition.mYValue.SetPercentValue(0.0f);
-  mTempData.SetPropertyBit(eCSSProperty_background_position);
-  // including the ones that we can't set from the shorthand.
-  mTempData.mColor.mBackClip.SetIntValue(NS_STYLE_BG_CLIP_BORDER,
-                                         eCSSUnit_Enumerated);
-  mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
-  mTempData.mColor.mBackOrigin.SetIntValue(NS_STYLE_BG_ORIGIN_PADDING,
-                                           eCSSUnit_Enumerated);
-  mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
-  mTempData.mColor.mBackInlinePolicy.SetIntValue(
-    NS_STYLE_BG_INLINE_POLICY_CONTINUOUS, eCSSUnit_Enumerated);
-  mTempData.SetPropertyBit(eCSSProperty__moz_background_inline_policy);
-
-  // XXX If ParseSingleValueProperty were table-driven (bug 376079) and
-  // automatically filled in the right field of mTempData, we could move
-  // ParseBackgroundPosition to it (as a special case) and switch back
-  // to using ParseChoice here.
+  aItem.mImage.SetNoneValue();
+  aItem.mRepeat.SetIntValue(NS_STYLE_BG_REPEAT_XY, eCSSUnit_Enumerated);
+  aItem.mAttachment.SetIntValue(NS_STYLE_BG_ATTACHMENT_SCROLL,
+                                eCSSUnit_Enumerated);
+  aItem.mPosition.mXValue.SetPercentValue(0.0f);
+  aItem.mPosition.mYValue.SetPercentValue(0.0f);
+  aItem.mClip.SetIntValue(NS_STYLE_BG_CLIP_BORDER, eCSSUnit_Enumerated);
+  aItem.mOrigin.SetIntValue(NS_STYLE_BG_ORIGIN_PADDING, eCSSUnit_Enumerated);
+  aItem.mLastItem = PR_FALSE;
 
   PRBool haveColor = PR_FALSE,
          haveImage = PR_FALSE,
          haveRepeat = PR_FALSE,
          haveAttach = PR_FALSE,
-         havePosition = PR_FALSE;
+         havePosition = PR_FALSE,
+         haveSomething = PR_FALSE;
   while (GetToken(PR_TRUE)) {
     nsCSSTokenType tt = mToken.mType;
     UngetToken(); // ...but we'll still cheat and use mToken
@@ -5908,7 +6008,7 @@ CSSParserImpl::ParseBackground()
       PRInt32 dummy;
       if (keyword == eCSSKeyword_inherit ||
           keyword == eCSSKeyword__moz_initial) {
-        if (haveColor || haveImage || haveRepeat || haveAttach || havePosition)
+        if (haveSomething || !aFirstItem)
           return PR_FALSE;
         haveColor = haveImage = haveRepeat = haveAttach = havePosition =
           PR_TRUE;
@@ -5919,24 +6019,21 @@ CSSParserImpl::ParseBackground()
         } else {
           val.SetInitialValue();
         }
-        mTempData.mColor.mBackColor = val;
-        mTempData.mColor.mBackImage = val;
-        mTempData.mColor.mBackRepeat = val;
-        mTempData.mColor.mBackAttachment = val;
-        mTempData.mColor.mBackPosition.mXValue = val;
-        mTempData.mColor.mBackPosition.mYValue = val;
-        // Reset (for 'inherit') the 3 properties that can't be
-        // specified, although it's not entirely clear in the spec:
-        // http://lists.w3.org/Archives/Public/www-style/2007Mar/0110
-        mTempData.mColor.mBackClip = val;
-        mTempData.mColor.mBackOrigin = val;
-        mTempData.mColor.mBackInlinePolicy = val;
+        mTempData.mColor.mBackColor.SetBothValuesTo(val);
+        aItem.mImage = val;
+        aItem.mRepeat = val;
+        aItem.mAttachment = val;
+        aItem.mPosition.SetBothValuesTo(val);
+        aItem.mClip = val;
+        aItem.mOrigin = val;
+        aItem.mLastItem = PR_TRUE;
+        haveSomething = PR_TRUE;
         break;
       } else if (keyword == eCSSKeyword_none) {
         if (haveImage)
           return PR_FALSE;
         haveImage = PR_TRUE;
-        if (!ParseSingleValueProperty(mTempData.mColor.mBackImage,
+        if (!ParseSingleValueProperty(aItem.mImage,
                                       eCSSProperty_background_image)) {
           NS_NOTREACHED("should be able to parse");
           return PR_FALSE;
@@ -5946,7 +6043,7 @@ CSSParserImpl::ParseBackground()
         if (haveAttach)
           return PR_FALSE;
         haveAttach = PR_TRUE;
-        if (!ParseSingleValueProperty(mTempData.mColor.mBackAttachment,
+        if (!ParseSingleValueProperty(aItem.mAttachment,
                                       eCSSProperty_background_attachment)) {
           NS_NOTREACHED("should be able to parse");
           return PR_FALSE;
@@ -5956,7 +6053,7 @@ CSSParserImpl::ParseBackground()
         if (haveRepeat)
           return PR_FALSE;
         haveRepeat = PR_TRUE;
-        if (!ParseSingleValueProperty(mTempData.mColor.mBackRepeat,
+        if (!ParseSingleValueProperty(aItem.mRepeat,
                                       eCSSProperty_background_repeat)) {
           NS_NOTREACHED("should be able to parse");
           return PR_FALSE;
@@ -5966,24 +6063,57 @@ CSSParserImpl::ParseBackground()
         if (havePosition)
           return PR_FALSE;
         havePosition = PR_TRUE;
-        if (!ParseBackgroundPositionValues()) {
+        if (!ParseBoxPositionValues(aItem.mPosition)) {
           return PR_FALSE;
         }
+#if 0
+    // This is commented out for now until we change
+    // -moz-background-clip to background-clip, -moz-background-origin
+    // to background-origin, change their value names to *-box, and add
+    // support for content-box on background-clip.
+      } else if (nsCSSProps::FindKeyword(keyword,
+                   nsCSSProps::kBackgroundClipKTable, dummy)) {
+        // For now, we use the background-clip table, because we don't
+        // support 'content' on background-clip.  But that's dangerous
+        // if we eventually support no-clip.
+        NS_ASSERTION(
+          nsCSSProps::kBackgroundClipKTable[0] == eCSSKeyword_border &&
+          nsCSSProps::kBackgroundClipKTable[2] == eCSSKeyword_padding &&
+          nsCSSProps::kBackgroundClipKTable[4] == eCSSKeyword_UNKNOWN,
+          "need to rewrite this code");
+        if (haveOrigin)
+          return PR_FALSE;
+        haveOrigin = PR_TRUE;
+        if (!ParseSingleValueProperty(aItem.mOrigin,
+                                      eCSSProperty__moz_background_origin)) {
+          NS_NOTREACHED("should be able to parse");
+          return PR_FALSE;
+        }
+        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
+                         NS_STYLE_BG_ORIGIN_BORDER);
+        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
+                         NS_STYLE_BG_ORIGIN_PADDING);
+        // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
+        //                  NS_STYLE_BG_ORIGIN_CONTENT);
+        // When we support 'no-clip', this needs to be conditional on haveClip:
+        aItem.mClip = aItem.mOrigin;
+      // We'd support 'no-clip' as an additional |else| here.
+#endif
       } else {
         if (haveColor)
           return PR_FALSE;
         haveColor = PR_TRUE;
-        if (!ParseSingleValueProperty(mTempData.mColor.mBackColor,
-                                      eCSSProperty_background_color)) {
+        if (!ParseBackgroundColor(PR_TRUE)) {
           return PR_FALSE;
         }
+        aItem.mLastItem = PR_TRUE;
       }
     } else if (eCSSToken_Function == tt &&
                mToken.mIdent.LowerCaseEqualsLiteral("url")) {
       if (haveImage)
         return PR_FALSE;
       haveImage = PR_TRUE;
-      if (!ParseSingleValueProperty(mTempData.mColor.mBackImage,
+      if (!ParseSingleValueProperty(aItem.mImage,
                                     eCSSProperty_background_image)) {
         return PR_FALSE;
       }
@@ -5991,37 +6121,131 @@ CSSParserImpl::ParseBackground()
       if (havePosition)
         return PR_FALSE;
       havePosition = PR_TRUE;
-      if (!ParseBackgroundPositionValues()) {
+      if (!ParseBoxPositionValues(aItem.mPosition)) {
         return PR_FALSE;
       }
     } else {
       if (haveColor)
         return PR_FALSE;
       haveColor = PR_TRUE;
-      if (!ParseSingleValueProperty(mTempData.mColor.mBackColor,
-                                    eCSSProperty_background_color)) {
+      // Note: ParseBackgroundColor parses 'inherit' and 'initial', but
+      // we've already checked for them, so it's ok.
+      if (!ParseBackgroundColor(PR_TRUE)) {
         return PR_FALSE;
       }
+      aItem.mLastItem = PR_TRUE;
     }
+    haveSomething = PR_TRUE;
   }
 
-  return ExpectEndProperty() &&
-         (haveColor || haveImage || haveRepeat || haveAttach || havePosition);
+  return haveSomething;
 }
 
+// This function is very similar to ParseBackgroundPosition.
+PRBool
+CSSParserImpl::ParseBackgroundList(nsCSSProperty aPropID)
+{
+  // aPropID is a single value prop-id
+  nsCSSValue value;
+  nsCSSValueList *head = nsnull, **tail = &head;
+  for (;;) {
+    if (!ParseSingleValueProperty(value, aPropID)) {
+      break;
+    }
+    PRBool inheritOrInitial = value.GetUnit() == eCSSUnit_Inherit ||
+                              value.GetUnit() == eCSSUnit_Initial;
+    if (inheritOrInitial && head) {
+      // inherit and initial are only allowed on their own
+      break;
+    }
+    nsCSSValueList *item = new nsCSSValueList;
+    if (!item) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+    item->mValue = value;
+    *tail = item;
+    tail = &item->mNext;
+    if (!inheritOrInitial && ExpectSymbol(',', PR_TRUE)) {
+      continue;
+    }
+    if (!ExpectEndProperty()) {
+      break;
+    }
+    nsCSSValueList **source =
+      static_cast<nsCSSValueList**>(mTempData.PropertyAt(aPropID));
+    *source = head;
+    mTempData.SetPropertyBit(aPropID);
+    return PR_TRUE;
+  }
+  delete head;
+  return PR_FALSE;
+}
+
+PRBool
+CSSParserImpl::ParseBackgroundColor(PRBool aInShorthand)
+{
+  nsCSSValuePair &backColor = mTempData.mColor.mBackColor;
+  mTempData.SetPropertyBit(eCSSProperty_background_color);
+  if (!ParseVariant(backColor.mXValue,
+                    aInShorthand ? VARIANT_COLOR : VARIANT_HC, nsnull)) {
+    return PR_FALSE;
+  }
+  backColor.mYValue = backColor.mXValue;
+  switch (backColor.mXValue.GetUnit()) {
+    case eCSSUnit_Inherit:
+    case eCSSUnit_Initial:
+      NS_ASSERTION(!aInShorthand,
+                   "should not get inherit or initial in shorthand");
+      return ExpectEndProperty(); // we're done
+    default:
+      break;
+  }
+
+  // Ignore success, since the value is optional.
+  ParseVariant(backColor.mYValue, VARIANT_COLOR, nsnull);
+
+  return aInShorthand || ExpectEndProperty();
+}
+
+// This function is very similar to ParseBackgroundList.
 PRBool
 CSSParserImpl::ParseBackgroundPosition()
 {
-  if (!ParseBoxPosition(mTempData.mColor.mBackPosition))
-    return PR_FALSE;
-  mTempData.SetPropertyBit(eCSSProperty_background_position);
-  return PR_TRUE;
-}
-
-PRBool
-CSSParserImpl::ParseBackgroundPositionValues()
-{
-  return ParseBoxPositionValues(mTempData.mColor.mBackPosition);
+  // aPropID is a single value prop-id
+  nsCSSValuePair valuePair;
+  nsCSSValuePairList *head = nsnull, **tail = &head;
+  for (;;) {
+    if (!ParseBoxPositionValues(valuePair)) {
+      break;
+    }
+    PRBool inheritOrInitial = valuePair.mXValue.GetUnit() == eCSSUnit_Inherit ||
+                              valuePair.mXValue.GetUnit() == eCSSUnit_Initial;
+    if (inheritOrInitial && head) {
+      // inherit and initial are only allowed on their own
+      break;
+    }
+    nsCSSValuePairList *item = new nsCSSValuePairList;
+    if (!item) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+    item->mXValue = valuePair.mXValue;
+    item->mYValue = valuePair.mYValue;
+    *tail = item;
+    tail = &item->mNext;
+    if (!inheritOrInitial && ExpectSymbol(',', PR_TRUE)) {
+      continue;
+    }
+    if (!ExpectEndProperty()) {
+      break;
+    }
+    mTempData.mColor.mBackPosition = head;
+    mTempData.SetPropertyBit(eCSSProperty_background_position);
+    return PR_TRUE;
+  }
+  delete head;
+  return PR_FALSE;
 }
 
 /**
@@ -6032,12 +6256,6 @@ CSSParserImpl::ParseBackgroundPositionValues()
  * @param aOut The nsCSSValuePair where to place the result.
  * @return Whether or not the operation succeeded.
  */
-PRBool CSSParserImpl::ParseBoxPosition(nsCSSValuePair &aOut)
-{
-  // Need to read the box positions and the end of the property.
-  return ParseBoxPositionValues(aOut) && ExpectEndProperty();
-}
-
 PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut)
 {
   // First try a percentage or a length value
@@ -7214,7 +7432,8 @@ PRBool CSSParserImpl::ParseMozTransform()
 PRBool CSSParserImpl::ParseMozTransformOrigin()
 {
   /* Read in a box position, fail if we can't. */
-  if (!ParseBoxPosition(mTempData.mDisplay.mTransformOrigin))
+  if (!ParseBoxPositionValues(mTempData.mDisplay.mTransformOrigin) ||
+      !ExpectEndProperty())
     return PR_FALSE;
 
   /* Set the property bit and return. */

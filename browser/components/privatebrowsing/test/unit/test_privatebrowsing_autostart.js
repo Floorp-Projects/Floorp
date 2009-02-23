@@ -38,31 +38,7 @@
 // This test checks the browser.privatebrowsing.autostart preference.
 
 function run_test() {
-  // initialization
-  var prefsService = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefBranch);
-  prefsService.setBoolPref("browser.privatebrowsing.autostart", true);
-  do_check_true(prefsService.getBoolPref("browser.privatebrowsing.autostart"));
-
-  var pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService).
-           QueryInterface(Ci.nsIObserver);
-
-  // private browsing not auto-started yet
-  do_check_false(pb.autoStarted);
-
-  // simulate startup to make the PB service read the prefs
-  pb.observe(null, "profile-after-change", "");
-
-  // the private mode should be entered automatically
-  do_check_true(pb.privateBrowsingEnabled);
-
-  // private browsing is auto-started
-  do_check_true(pb.autoStarted);
-
-  // leave private browsing mode
-  pb.privateBrowsingEnabled = false;
-
-  // private browsing not auto-started
-  do_check_false(pb.autoStarted);
+  PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
+  do_import_script("browser/components/privatebrowsing/test/unit/do_test_privatebrowsing_autostart.js");
+  do_test();
 }

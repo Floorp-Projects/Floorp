@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Testcase bug 281743</title>
+<style type="text/css">
+#header   { position: fixed; top: 0; left: 0; z-index: 100; }
+#mainmenu { position: fixed; top: 0; left: 0; z-index: 200; }
+</style>
+<script type="text/javascript">
+window.onload = function(e) {
+  var e = document.getElementsByTagName("style")[0];
+  e.disabled = true;
+  e.disabled = false;
+}
+</script>
+</head><body><div id="page"><div id="header"></div><div id="mainmenu"></div></div></body></html>

@@ -388,30 +388,6 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
   return (NS_SUCCEEDED(rv)) ? noErr : errAEEventNotHandled;
 }
 
-OSErr nsMacCommandLine::OpenURL(const char* aURL)
-{
-  nsresult rv;
-  
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-
-  nsXPIDLCString browserURL;
-  if (NS_SUCCEEDED(rv))
-    rv = prefBranch->GetCharPref("browser.chromeURL", getter_Copies(browserURL));
-  
-  if (NS_FAILED(rv)) {
-    NS_WARNING("browser.chromeURL not supplied! How is the app supposed to know what the main window is?");
-    browserURL.Assign("chrome://navigator/content/navigator.xul");
-  }
-     
-  rv = OpenWindow(browserURL.get(), NS_ConvertASCIItoUTF16(aURL).get());
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-    
-  return noErr;
-}
-
-
-
 //----------------------------------------------------------------------------------------
 OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileType)
 //----------------------------------------------------------------------------------------
@@ -429,39 +405,14 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
 }
 
 
-
-//----------------------------------------------------------------------------------------
-nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
-//----------------------------------------------------------------------------------------
-{
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  nsCOMPtr<nsISupportsString> urlWrapper(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-  if (!wwatch || !urlWrapper)
-    return NS_ERROR_FAILURE;
-
-  urlWrapper->SetData(nsDependentString(url));
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  nsresult rv;
-  rv = wwatch->OpenWindow(0, chrome, "_blank",
-               "chrome,dialog=no,all", urlWrapper,
-               getter_AddRefs(newWindow));
-
-  return rv;
-}
-
 //----------------------------------------------------------------------------------------
 OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 //----------------------------------------------------------------------------------------
 {
   OSErr err = errAEEventNotHandled;
-  if (mStartedUp)
-    return OpenURL(url);
-  else {
-    err = AddToCommandLine("-url");
-    if (err == noErr)
-      err = AddToCommandLine(url);
-  }
+  err = AddToCommandLine("-url");
+  if (err == noErr)
+    err = AddToCommandLine(url);
   
   return err;
 }

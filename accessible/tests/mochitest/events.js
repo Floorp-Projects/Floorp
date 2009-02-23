@@ -1,10 +1,48 @@
 ////////////////////////////////////////////////////////////////////////////////
+// Constants
+
+const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
+const EVENT_DOM_DESTROY = nsIAccessibleEvent.EVENT_DOM_DESTROY;
+
+////////////////////////////////////////////////////////////////////////////////
 // General
 
 /**
  * Set up this variable to dump events into DOM.
  */
 var gA11yEventDumpID = "";
+
+/**
+ * Executes the function when requested event is handled.
+ *
+ * @param aEventType  [in] event type
+ * @param aTarget     [in] event target
+ * @param aFunc       [in] function to call when event is handled
+ * @param aContext    [in, optional] object in which context the function is
+ *                    called
+ * @param aArg1       [in, optional] argument passed into the function
+ * @param aArg2       [in, optional] argument passed into the function
+ */
+function waitForEvent(aEventType, aTarget, aFunc, aContext, aArg1, aArg2)
+{
+  var handler = {
+    handleEvent: function handleEvent(aEvent) {
+      if (!aTarget || aTarget == aEvent.DOMNode) {
+        unregisterA11yEventListener(aEventType, this);
+
+        window.setTimeout(
+          function ()
+          {
+            aFunc.call(aContext, aArg1, aArg2);
+          },
+          0
+        );
+      }
+    }
+  };
+
+  registerA11yEventListener(aEventType, handler);
+}
 
 /**
  * Register accessibility event listener.
@@ -386,6 +424,9 @@ function removeA11yEventListener(aEventType, aEventHandler)
 
 function dumpInfoToDOM(aInfo)
 {
+  if (!gA11yEventDumpID)
+    return;
+
   var dumpElm = document.getElementById(gA11yEventDumpID);
   var div = document.createElement("div");      
   div.textContent = aInfo;

@@ -1,0 +1,26 @@
+<html class="reftest-wait"><head><title>Testcase bug 293388 - Overwriting of div innerHTML cause starting of the loading icon(circle) and some times browser can crash [@ nsRange::DeleteContents]</title></head>
+<script>
+function reallyClear()
+{
+  var par = document.getElementById("par");
+  var range = document.createRange();
+  range.selectNodeContents(par);
+  range.deleteContents();
+  document.documentElement.removeAttribute("class");
+}
+
+function clear()
+{
+  document.body.removeEventListener("DOMNodeRemoved", clear, false);
+  reallyClear();
+}
+
+function init()
+{
+  document.body.addEventListener("DOMNodeRemoved", clear, false);
+}
+
+</script>
+<body onload="init(); setTimeout(reallyClear, 10);">
+<div id="par"><span>1</span><span>2</span></div>
+</body></html>

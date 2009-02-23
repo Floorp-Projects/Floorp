@@ -44,31 +44,21 @@
 #ifndef downloadmanager___h___
 #define downloadmanager___h___
 
+#include "nsIDownload.h"
 #include "nsIDownloadManager.h"
 #include "nsIDownloadProgressListener.h"
-#include "nsIDownload.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMEventListener.h"
-#include "nsIWebProgressListener.h"
-#include "nsIWebProgressListener2.h"
-#include "nsIURI.h"
-#include "nsIWebBrowserPersist.h"
 #include "nsILocalFile.h"
-#include "nsIRequest.h"
+#include "nsIMIMEInfo.h"
+#include "nsINavHistoryService.h"
 #include "nsIObserver.h"
-#include "nsString.h"
+#include "nsIObserverService.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIMIMEInfo.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageStatement.h"
-#include "mozStorageHelper.h"
-#include "nsCOMArray.h"
-#include "nsArrayEnumerator.h"
-#include "nsAutoPtr.h"
-#include "nsINavHistoryService.h"
-#include "nsIObserverService.h"
 #include "nsITimer.h"
+
+#include "mozStorageHelper.h"
+#include "nsAutoPtr.h"
+#include "nsCOMArray.h"
 
 typedef PRInt16 DownloadState;
 typedef PRInt16 DownloadType;
@@ -108,13 +98,12 @@ protected:
   };
 
   nsresult InitDB();
-  nsresult InitFileDB(PRBool *aDoImport);
+  nsresult InitFileDB();
   nsresult InitMemoryDB();
   already_AddRefed<mozIStorageConnection> GetFileDBConnection(nsIFile *dbFile) const;
   already_AddRefed<mozIStorageConnection> GetMemoryDBConnection() const;
   nsresult SwitchDatabaseTypeTo(enum DatabaseType aType);
   nsresult CreateTable();
-  nsresult ImportDownloadHistory();
 
   /**
    * Fix up the database after a crash such as dealing with previously-active
@@ -150,7 +139,6 @@ protected:
                           const nsAString &aTempPath,
                           PRInt64 aStartTime,
                           PRInt64 aEndTime,
-                          PRInt32 aState,
                           const nsACString &aMimeType,
                           const nsACString &aPreferredApp,
                           nsHandlerInfoAction aPreferredAction);

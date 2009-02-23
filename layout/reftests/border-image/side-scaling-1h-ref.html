@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head>
+<title>border-image: repeat with zero-height top and bottom
+<style>
+span {
+  display: inline-block;
+  margin: 10px;
+  -moz-box-sizing: border-box;
+  height: 24px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 0 6px;
+  -moz-border-image: url("roundrectbutton.png") 0 6 repeat stretch;
+}
+</style>
+</head><body>
+<p>
+<span style="width:12px"></span>
+<span style="width:13px"></span>
+<span style="width:14px"></span>
+<span style="width:16px"></span>
+<span style="width:18px"></span>
+<span style="width:20px"></span>
+<span style="width:25px"></span>
+<span style="width:30px"></span>
+<span style="width:40px"></span>
+</p>
+</body></html>

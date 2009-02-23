@@ -924,7 +924,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
                                             cellDesiredSize.height);
         
         // if we are in a floated table, our position is not yet established, so we cannot reposition our views
-        // the containing glock will do this for us after positioning the table
+        // the containing block will do this for us after positioning the table
         if (!aTableFrame.GetStyleDisplay()->IsFloating()) {
           // Because we may have moved the frame we need to make sure any views are
           // positioned properly. We have to do this, because any one of our parent

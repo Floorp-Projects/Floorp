@@ -119,6 +119,18 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
 
 #ifdef MOZ_PLATFORM_HILDON
 
+/* static */ PRBool
+nsMIMEInfoUnix::HandlerExists(const char *aProtocolScheme)
+{
+  PRBool isEnabled = PR_FALSE;
+  HildonURIAction *action = hildon_uri_get_default_action(aProtocolScheme, nsnull);
+  if (action) {
+    isEnabled = PR_TRUE;
+    hildon_uri_action_unref(action);
+  }
+  return isEnabled;
+}
+
 NS_IMETHODIMP
 nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHandlers)
 {

@@ -108,7 +108,7 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler()
 {
     LOG(("FTP:destroying handler @%x\n", this));
 
-    NS_ASSERTION(mRootConnectionList.Count() == 0, "why wasn't Observe called?");
+    NS_ASSERTION(mRootConnectionList.Length() == 0, "why wasn't Observe called?");
 
     gFtpHandler = nsnull;
 }
@@ -267,11 +267,11 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
     LOG(("FTP:removing connection for %s\n", spec.get()));
    
     timerStruct* ts = nsnull;
-    PRInt32 i;
+    PRUint32 i;
     PRBool found = PR_FALSE;
     
-    for (i=0;i<mRootConnectionList.Count();++i) {
-        ts = (timerStruct*)mRootConnectionList[i];
+    for (i=0;i<mRootConnectionList.Length();++i) {
+        ts = mRootConnectionList[i];
         if (strcmp(spec.get(), ts->key) == 0) {
             found = PR_TRUE;
             mRootConnectionList.RemoveElementAt(i);
@@ -333,18 +333,18 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
     // eldest connection with matching key.  if none matching, then prune
     // eldest connection.
     //
-    if (mRootConnectionList.Count() == IDLE_CONNECTION_LIMIT) {
-        PRInt32 i;
-        for (i=0;i<mRootConnectionList.Count();++i) {
-            timerStruct *candidate = (timerStruct *) mRootConnectionList[i];
+    if (mRootConnectionList.Length() == IDLE_CONNECTION_LIMIT) {
+        PRUint32 i;
+        for (i=0;i<mRootConnectionList.Length();++i) {
+            timerStruct *candidate = mRootConnectionList[i];
             if (strcmp(candidate->key, ts->key) == 0) {
                 mRootConnectionList.RemoveElementAt(i);
                 delete candidate;
                 break;
             }
         }
-        if (mRootConnectionList.Count() == IDLE_CONNECTION_LIMIT) {
-            timerStruct *eldest = (timerStruct *) mRootConnectionList[0];
+        if (mRootConnectionList.Length() == IDLE_CONNECTION_LIMIT) {
+            timerStruct *eldest = mRootConnectionList[0];
             mRootConnectionList.RemoveElementAt(0);
             delete eldest;
         }
@@ -375,9 +375,9 @@ nsFtpProtocolHandler::Observe(nsISupports *aSubject,
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = timeout;
     } else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
-        PRInt32 i;
-        for (i=0;i<mRootConnectionList.Count();++i)
-            delete (timerStruct*)mRootConnectionList[i];
+        PRUint32 i;
+        for (i=0;i<mRootConnectionList.Length();++i)
+            delete mRootConnectionList[i];
         mRootConnectionList.Clear();
     } else {
         NS_NOTREACHED("unexpected topic");

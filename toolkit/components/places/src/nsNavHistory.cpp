@@ -329,7 +329,7 @@ const PRInt32 nsNavHistory::kAutoCompleteBehaviorTitle = 1 << 3;
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorUrl = 1 << 4;
 const PRInt32 nsNavHistory::kAutoCompleteBehaviorTyped = 1 << 5;
 
-static const char* gQuitApplicationMessage = "quit-application";
+static const char* gQuitApplicationGrantedMessage = "quit-application-granted";
 static const char* gXpcomShutdown = "xpcom-shutdown";
 static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
 static const char* gIdleDaily = "idle-daily";
@@ -521,7 +521,7 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
   }
 
-  observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+  observerService->AddObserver(this, gQuitApplicationGrantedMessage, PR_FALSE);
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
   observerService->AddObserver(this, gAutoCompleteFeedback, PR_FALSE);
   observerService->AddObserver(this, gIdleDaily, PR_FALSE);
@@ -5326,7 +5326,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
-  if (strcmp(aTopic, gQuitApplicationMessage) == 0) {
+  if (strcmp(aTopic, gQuitApplicationGrantedMessage) == 0) {
     if (mIdleTimer) {
       mIdleTimer->Cancel();
       mIdleTimer = nsnull;
@@ -5358,7 +5358,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gIdleDaily);
     observerService->RemoveObserver(this, gAutoCompleteFeedback);
     observerService->RemoveObserver(this, gXpcomShutdown);
-    observerService->RemoveObserver(this, gQuitApplicationMessage);
+    observerService->RemoveObserver(this, gQuitApplicationGrantedMessage);
   }
 #ifdef MOZ_XUL
   else if (strcmp(aTopic, gAutoCompleteFeedback) == 0) {

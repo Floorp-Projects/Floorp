@@ -41,7 +41,6 @@
 /*
  * JS debugging API.
  */
-#include "jsstddef.h"
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
@@ -654,7 +653,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                       ? js_InternalCall(cx, obj,
                                         js_CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
-                      : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
+                      : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
                     /* Evil code can cause us to have an arguments object. */
                     if (frame.callobj)

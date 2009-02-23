@@ -231,5 +231,5 @@ function GetExpiresString(secondsUntilExpires) {
     }
     return expiry;
   }
-  return cookieBundle.getString("atEndOfSession");
+  return cookieBundle.getString("expireAtEndOfSession");
 }

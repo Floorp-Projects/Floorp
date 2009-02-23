@@ -37,11 +37,11 @@
 
 mochitest:: mochitest-plain mochitest-chrome mochitest-a11y
 
-RUN_MOCHITEST = rm -f ./test-output.log && $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done --console-level=INFO  --log-file=./test-output.log --file-level=INFO
+RUN_MOCHITEST = rm -f ./$@.log && $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done --console-level=INFO  --log-file=./$@.log --file-level=INFO
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
-  @errors=`grep "TEST-UNEXPECTED-" test-output.log` ;\
+  @errors=`grep "TEST-UNEXPECTED-" $@.log` ;\
   if test "$$errors" ; then \
 	  echo "$@ failed:"; \
 	  echo "$$errors"; \
@@ -68,6 +68,16 @@ mochitest-chrome:
 
 mochitest-a11y:
 	$(RUN_MOCHITEST) --a11y $(MOCHITEST_PATH)
+	$(CHECK_TEST_ERROR)
+
+RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py $(1) | tee ./$@.log
+
+reftest:
+	$(call RUN_REFTEST,$(topsrcdir)/layout/reftests/reftest.list)
+	$(CHECK_TEST_ERROR)
+
+crashtest:
+	$(call RUN_REFTEST,$(topsrcdir)/testing/crashtest/crashtests.list)
 	$(CHECK_TEST_ERROR)
 
 # Package up the tests and test harnesses

@@ -255,11 +255,19 @@ nsHttpChannel::Init(nsIURI *uri,
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
+nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr,
+                         nsRunnableMethod<nsHttpChannel> **retval)
 {
-    nsCOMPtr<nsIRunnable> event =
+    nsresult rv;
+
+    nsRefPtr<nsRunnableMethod<nsHttpChannel> > event =
             new nsRunnableMethod<nsHttpChannel>(this, funcPtr);
-    return NS_DispatchToCurrentThread(event);
+    rv = NS_DispatchToCurrentThread(event);
+    if (NS_SUCCEEDED(rv) && retval) {
+        *retval = event;
+    }
+
+    return rv;
 }
 
 PRBool
@@ -341,7 +349,15 @@ nsHttpChannel::Connect(PRBool firstTime)
 
         // read straight from the cache if possible...
         if (mCachedContentIsValid) {
-            return ReadFromCache();
+            nsRunnableMethod<nsHttpChannel> *event = nsnull;
+            if (!mCachedContentIsPartial) {
+                AsyncCall(&nsHttpChannel::AsyncOnExamineCachedResponse, &event);
+            }
+            rv = ReadFromCache();
+            if (NS_FAILED(rv) && event) {
+                event->Revoke();
+            }
+            return rv;
         }
         else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
             // the cache contains the requested resource, but it must be 
@@ -656,6 +672,11 @@ nsHttpChannel::SetupTransaction()
     if (!mTransaction)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mTransaction);
+
+    // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
+    if (mLoadFlags & LOAD_ANONYMOUS) {
+        mCaps |= NS_HTTP_LOAD_ANONYMOUS;
+    }
 
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
@@ -2740,6 +2761,21 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = ioService->NewURI(nsDependentCString(location), originCharset.get(), mURI,
                            getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
+
+    if (mApplicationCache) {
+        // if we are redirected to a different origin check if there is a fallback
+        // cache entry to fall back to. we don't care about file strict 
+        // checking, at least mURI is not a file URI.
+        if (!NS_SecurityCompareURIs(mURI, newURI, PR_FALSE)) {
+            PRBool fallingBack;
+            rv = ProcessFallback(&fallingBack);
+            if (NS_SUCCEEDED(rv) && fallingBack) {
+                // do not continue with redirect processing, fallback is in
+                // progress now.
+                return NS_OK;
+            }
+        }
+    }
 
     // Kill the current cache entry if we are redirecting
     // back to ourself.
@@ -5591,3 +5627,8 @@ nsHttpChannel::DetermineStoragePolicy()
     return policy;
 }
 
+void
+nsHttpChannel::AsyncOnExamineCachedResponse()
+{
+    gHttpHandler->OnExamineCachedResponse(this);
+}

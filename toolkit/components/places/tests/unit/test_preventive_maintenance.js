@@ -277,17 +277,35 @@ tests.push({
 });
 
 //------------------------------------------------------------------------------
-//XXX TODO
 tests.push({
   name: "C.2",
-  desc: "Fix broken roots",
+  desc: "fix missing Places root",
 
   setup: function() {
+    // Sanity check: ensure that roots are intact.
+    do_check_eq(bs.getFolderIdForItem(bs.placesRoot), 0);
+    do_check_eq(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
+    do_check_eq(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
+    do_check_eq(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
+    do_check_eq(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
 
+    // Remove the root.
+    mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE parent = 0");
+    try {
+      bs.getFolderIdForItem(bs.placesRoot);
+      do_throw("Places root should not exist now!");
+    } catch(e) {
+      // Root has been removed so this call should throw.
+    }
   },
 
   check: function() {
-
+    // Ensure the roots have been correctly restored.
+    do_check_eq(bs.getFolderIdForItem(bs.placesRoot), 0);
+    do_check_eq(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
+    do_check_eq(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
+    do_check_eq(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
+    do_check_eq(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
   }
 });
 

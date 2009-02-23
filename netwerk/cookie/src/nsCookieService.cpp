@@ -333,39 +333,6 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 
 /******************************************************************************
  * nsCookieService impl:
- * private list sorting callbacks
- *
- * these functions return:
- *   < 0 if the first element should come before the second element,
- *     0 if the first element may come before or after the second element,
- *   > 0 if the first element should come after the second element.
- ******************************************************************************/
-
-// comparison function for sorting cookies before sending to a server.
-static int
-compareCookiesForSending(const void *aElement1,
-                         const void *aElement2,
-                         void       *aData)
-{
-  const nsCookie *cookie1 = static_cast<const nsCookie*>(aElement1);
-  const nsCookie *cookie2 = static_cast<const nsCookie*>(aElement2);
-
-  // compare by cookie path length in accordance with RFC2109
-  int rv = cookie2->Path().Length() - cookie1->Path().Length();
-  if (rv == 0) {
-    // when path lengths match, older cookies should be listed first.  this is
-    // required for backwards compatibility since some websites erroneously
-    // depend on receiving cookies in the order in which they were sent to the
-    // browser!  see bug 236772.
-    // note: CreationID is unique, so two id's can never be equal.
-    // we may have overflow problems returning the result directly, so we need branches
-    rv = (cookie1->CreationID() > cookie2->CreationID() ? 1 : -1);
-  }
-  return rv;
-}
-
-/******************************************************************************
- * nsCookieService impl:
  * singleton instance ctor/dtor methods
  ******************************************************************************/
 
@@ -1184,6 +1151,29 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
 // helper function for GetCookieList
 static inline PRBool ispathdelimiter(char c) { return c == '/' || c == '?' || c == '#' || c == ';'; }
 
+// Comparator class for sorting cookies before sending to a server.
+class CompareCookiesForSendingComparator
+{
+  public:
+  PRBool Equals(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
+    return PR_FALSE; // CreationID is unique, so two id's can never be equal.
+  }
+  PRBool LessThan(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
+    // compare by cookie path length in accordance with RFC2109
+    int rv = aCookie2->Path().Length() - aCookie1->Path().Length();
+    if (rv == 0) {
+      // when path lengths match, older cookies should be listed first.  this is
+      // required for backwards compatibility since some websites erroneously
+      // depend on receiving cookies in the order in which they were sent to the
+      // browser!  see bug 236772.
+      // note: CreationID is unique, so two id's can never be equal.
+      // we may have overflow problems returning the result directly, so we need branches
+      rv = (aCookie1->CreationID() > aCookie2->CreationID() ? 1 : -1);
+    }
+    return rv < 0;
+  }
+};
+
 void
 nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
                                    nsIChannel  *aChannel,
@@ -1230,7 +1220,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   }
 
   nsCookie *cookie;
-  nsAutoVoidArray foundCookieList;
+  nsAutoTArray<nsCookie*, 8> foundCookieList;
   PRInt64 currentTimeInUsec = PR_Now();
   PRInt64 currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
   const char *currentDot = hostFromURI.get();
@@ -1295,7 +1285,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
 
   } while (currentDot);
 
-  PRInt32 count = foundCookieList.Count();
+  PRInt32 count = foundCookieList.Length();
   if (count == 0)
     return;
 
@@ -1307,7 +1297,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
     mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
     for (PRInt32 i = 0; i < count; ++i) {
-      cookie = static_cast<nsCookie*>(foundCookieList.ElementAt(i));
+      cookie = foundCookieList.ElementAt(i);
 
       if (currentTimeInUsec - cookie->LastAccessed() > kCookieStaleThreshold)
         UpdateCookieInList(cookie, currentTimeInUsec);
@@ -1317,11 +1307,11 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   // return cookies in order of path length; longest to shortest.
   // this is required per RFC2109.  if cookies match in length,
   // then sort by creation time (see bug 236772).
-  foundCookieList.Sort(compareCookiesForSending, nsnull);
+  foundCookieList.Sort(CompareCookiesForSendingComparator());
 
   nsCAutoString cookieData;
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie = static_cast<nsCookie*>(foundCookieList.ElementAt(i));
+    cookie = foundCookieList.ElementAt(i);
 
     // check if we have anything to write
     if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {

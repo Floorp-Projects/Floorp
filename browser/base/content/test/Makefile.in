@@ -50,6 +50,13 @@ _TEST_FILES =	test_feed_discovery.html \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
 		ctxmenu-image.png \
+		test_offlineNotification.html \
+		offlineChild.html \
+		offlineChild.cacheManifest \
+		offlineChild.cacheManifest^headers^ \
+		offlineChild2.html \
+		offlineChild2.cacheManifest \
+		offlineChild2.cacheManifest^headers^ \
 		$(NULL)
 
 # browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
@@ -89,6 +96,8 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_sanitize-sitepermissions.js \
                  browser_bug356571.js \
                  browser_sanitize-passwordDisabledHosts.js \
+                 browser_bug479408.js \
+                 browser_bug479408_sample.html \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

@@ -559,18 +559,8 @@ nsNavBookmarks::InitRoots()
 
   // Set titles for special folders
   // We cannot rely on createdPlacesRoot due to Fx3beta->final migration path
-  nsCOMPtr<nsIPrefService> prefService =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch("", getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRUint16 databaseStatus = nsINavHistoryService::DATABASE_STATUS_OK;
   rv = History()->GetDatabaseStatus(&databaseStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (NS_FAILED(rv) ||
       databaseStatus != nsINavHistoryService::DATABASE_STATUS_OK) {
     rv = InitDefaults();
@@ -1223,14 +1213,11 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   rv = UpdateBookmarkHashOnRemove(placeId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX is this too expensive when updating livemarks?
-  // UpdateBookmarkHashOnRemove() does a sanity check using
-  // IsBookmarkedInDatabase(),  so it might not have actually 
-  // removed the bookmark.  should we have a boolean out param
-  // for if we actually removed it, and use that to decide if we call
-  // UpdateFrecency() and the rest of this code?
   if (itemType == TYPE_BOOKMARK) {
-    rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+    // UpdateFrecency needs to know whether placeId is still bookmarked.
+    // Although we removed aItemId, placeId may still be bookmarked elsewhere;
+    // IsRealBookmark will know.
+    rv = History()->UpdateFrecency(placeId, IsRealBookmark(placeId));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1814,13 +1801,17 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
   // Delete items from the database now.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  rv = mDBConn->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageStatement> deleteStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_bookmarks "
-      "WHERE parent IN (") +
-        nsPrintfCString("%d", aFolderId) +
+      "WHERE parent IN (?1") +
         foldersToRemove +
-      NS_LITERAL_CSTRING(")"));
+      NS_LITERAL_CSTRING(")"),
+    getter_AddRefs(deleteStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->BindInt64Parameter(0, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Clean up orphan items annotations.
@@ -1843,13 +1834,10 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
       PRInt64 placeId = child.placeId;
       UpdateBookmarkHashOnRemove(placeId);
 
-      // XXX is this too expensive when updating livemarks?
-      // UpdateBookmarkHashOnRemove() does a sanity check using
-      // IsBookmarkedInDatabase(),  so it might not have actually
-      // removed the bookmark.  should we have a boolean out param
-      // for if we actually removed it, and use that to decide if we call
-      // UpdateFrecency() and the rest of this code?
-      rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+      // UpdateFrecency needs to know whether placeId is still bookmarked.
+      // Although we removed a child of aFolderId that bookmarked it, it may
+      // still be bookmarked elsewhere; IsRealBookmark will know.
+      rv = History()->UpdateFrecency(placeId, IsRealBookmark(placeId));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

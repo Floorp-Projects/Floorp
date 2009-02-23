@@ -967,7 +967,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
     captionAccessNode->GetDOMNode(getter_AddRefs(captionNode));
     nsCOMPtr<nsIContent> captionContent = do_QueryInterface(captionNode);
     if (captionContent) {
-      AppendFlatStringFromSubtree(captionContent, &aDescription);
+      nsTextEquivUtils::
+        AppendTextEquivFromContent(this, captionContent, &aDescription);
     }
   }
 #ifdef SHOW_LAYOUT_HEURISTIC

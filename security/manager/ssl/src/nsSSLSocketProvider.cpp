@@ -68,7 +68,8 @@ nsSSLSocketProvider::NewSocket(PRInt32 family,
                                       proxyPort,
                                       _result,
                                       securityInfo,
-                                      PR_FALSE);
+                                      PR_FALSE,
+                                      flags & ANONYMOUS_CONNECT);
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
 
@@ -90,7 +91,8 @@ nsSSLSocketProvider::AddToSocket(PRInt32 family,
                                         proxyPort,
                                         aSocket,
                                         securityInfo,
-                                        PR_FALSE);
+                                        PR_FALSE,
+                                        flags & ANONYMOUS_CONNECT);
   
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

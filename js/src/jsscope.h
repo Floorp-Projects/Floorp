@@ -360,7 +360,7 @@ SPROP_GET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, 
                                    0, 0, vp);
     }
 
-    return sprop->getter(cx, OBJ_THIS_OBJECT(cx, obj), SPROP_USERID(sprop), vp);
+    return sprop->getter(cx, obj, SPROP_USERID(sprop), vp);
 }
 
 static JS_INLINE JSBool
@@ -381,7 +381,7 @@ SPROP_SET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, 
         return JS_FALSE;
     }
 
-    return sprop->setter(cx, OBJ_THIS_OBJECT(cx, obj), SPROP_USERID(sprop), vp);
+    return sprop->setter(cx, obj, SPROP_USERID(sprop), vp);
 }
 
 /* Macro for common expression to test for shared permanent attributes. */
