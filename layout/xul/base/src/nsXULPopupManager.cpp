@@ -135,6 +135,7 @@ NS_IMPL_ISUPPORTS5(nsXULPopupManager,
 
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),
+  mCachedMousePoint(nsIntPoint(0, 0)),
   mActiveMenuBar(nsnull),
   mPopups(nsnull),
   mNoHidePanels(nsnull),
