@@ -722,12 +722,6 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
 
-  // Setup default view manager background color
-
-  // This may be overridden by the docshell with the background color
-  // for the last document loaded into the docshell
-  mViewManager->SetDefaultBackgroundColor(mPresContext->DefaultBackgroundColor());
-
   if (aDoInitialReflow) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
     if (htmlDoc) {
