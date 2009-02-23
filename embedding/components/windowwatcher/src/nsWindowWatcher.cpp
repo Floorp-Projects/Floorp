@@ -646,12 +646,11 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         nsIWebBrowserChrome::CHROME_DEPENDENT;
     }
 
-    // Make sure to not create dependent windows if our parent is invisible and
+    // Make sure to not create modal windows if our parent is invisible and
     // isn't a chrome window.  Otherwise we can end up in a bizarre situation
     // where we can't shut down because an invisible window is open.  If
     // someone tries to do this, throw.
-    if (!chromeParent &&
-        (chromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)) {
+    if (!chromeParent && (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)) {
       PRBool parentVisible = PR_TRUE;
       nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
       nsCOMPtr<nsIWidget> parentWidget;

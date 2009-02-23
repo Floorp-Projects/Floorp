@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>unsecure XHR test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  function runTest()
+  {
+    isSecurityState("secure");
+    window.setTimeout(function()
+    {
+      try
+      {
+        var req = new XMLHttpRequest();
+        req.open("GET", "http://example.com/tests/security/ssl/mixedcontent/alloworigin.sjs", false);
+        req.send(null);
+
+        // Change should be immediate, the request was sent synchronously
+        todoSecurityState("broken", "security broken after insecure XHR");
+      }
+      catch (ex)
+      {
+        ok(false, ex);
+      }
+
+      finish();
+    }, 0);
+  }
+
+  function afterNavigationTest()
+  {
+    isSecurityState("secure", "security full after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>

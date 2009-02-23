@@ -41,7 +41,6 @@
 /*
  * PR assertion checker.
  */
-#include "jsstddef.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "jstypes.h"

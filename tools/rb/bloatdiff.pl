@@ -27,7 +27,7 @@ $NEWFILE = $ARGV[1];
 if (!$OLDFILE or
     ! -e $OLDFILE or 
     -z $OLDFILE) {
-    print "\nERROR - Previous log file not specified, does not exist, or is empty.\n\n";
+    print "\nError: Previous log file not specified, does not exist, or is empty.\n\n";
     &usage();
     exit 1;
 }
@@ -35,7 +35,7 @@ if (!$OLDFILE or
 if (!$NEWFILE or
     ! -e $NEWFILE or 
     -z $NEWFILE) {
-    print "\nERROR - Current log file not specified, does not exist, or is empty.\n\n";
+    print "\nError: Current log file not specified, does not exist, or is empty.\n\n";
     &usage();
     exit 1;
 }
@@ -183,14 +183,16 @@ print "Previous file: $OLDFILE\n";
 print "----------------------------------------------leaks------leaks%------bloat------bloat%\n";
 
     if (! $newMap{"TOTAL"} or 
-	! $newMap{"TOTAL"}{bloat} or 
-	! $newMap{"TOTAL"}{bloatPercent}) {
-        # it's OK if leaked or leakPercent are 0 (in fact, that would be good)
-	print "\nERROR - unable to calculate bloat/leak data.\n\n";
-	print "HINT - Did your test run complete successfully?\n";
-	print "HINT - Are you pointing at the right log files?\n\n";
-	&usage();
-	exit 1;
+        ! $newMap{"TOTAL"}{bloat}) {
+        # It's OK if leaked or leakPercent are 0 (in fact, that would be good).
+        # If bloatPercent is zero, it is also OK, because we may have just had
+        # two runs exactly the same or with no new bloat.
+        print "\nError: unable to calculate bloat/leak data.\n";
+        print "There is no data present.\n\n";
+        print "HINT - Did your test run complete successfully?\n";
+        print "HINT - Are you pointing at the right log files?\n\n";
+        &usage();
+        exit 1;
     }
 
 printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",

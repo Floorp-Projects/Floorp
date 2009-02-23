@@ -78,7 +78,7 @@ nsTreeColumn::~nsTreeColumn()
 NS_INTERFACE_MAP_BEGIN(nsTreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeColumn)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeColumn)
   if (aIID.Equals(NS_GET_IID(nsTreeColumn))) {
     AddRef();
     *aInstancePtr = this;
@@ -395,7 +395,7 @@ nsTreeColumns::~nsTreeColumns()
 NS_INTERFACE_MAP_BEGIN(nsTreeColumns)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumns)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeColumns)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeColumns)
 NS_INTERFACE_MAP_END
                                                                                 
 NS_IMPL_ADDREF(nsTreeColumns)
@@ -590,8 +590,9 @@ nsTreeColumns::RestoreNaturalOrder()
   boxObject->GetElement(getter_AddRefs(element));
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
 
-  nsCOMPtr<nsIContent> colsContent;
-  nsTreeUtils::GetImmediateChild(content, nsGkAtoms::treecols, getter_AddRefs(colsContent));
+  // Strong ref, since we'll be setting attributes
+  nsCOMPtr<nsIContent> colsContent =
+    nsTreeUtils::GetImmediateChild(content, nsGkAtoms::treecols);
   if (!colsContent)
     return NS_OK;
 
@@ -631,8 +632,8 @@ nsTreeColumns::EnsureColumns()
     boxObject->GetElement(getter_AddRefs(treeElement));
     nsCOMPtr<nsIContent> treeContent = do_QueryInterface(treeElement);
 
-    nsCOMPtr<nsIContent> colsContent;
-    nsTreeUtils::GetDescendantChild(treeContent, nsGkAtoms::treecols, getter_AddRefs(colsContent));
+    nsIContent* colsContent =
+      nsTreeUtils::GetDescendantChild(treeContent, nsGkAtoms::treecols);
     if (!colsContent)
       return;
 
@@ -641,8 +642,8 @@ nsTreeColumns::EnsureColumns()
     if (!shell)
       return;
 
-    nsCOMPtr<nsIContent> colContent;
-    nsTreeUtils::GetDescendantChild(colsContent, nsGkAtoms::treecol, getter_AddRefs(colContent));
+    nsIContent* colContent =
+      nsTreeUtils::GetDescendantChild(colsContent, nsGkAtoms::treecol);
     if (!colContent)
       return;
 

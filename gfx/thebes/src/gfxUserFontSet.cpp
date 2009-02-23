@@ -44,7 +44,6 @@
 #include "gfxPlatform.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsVoidArray.h"
 #include "prlong.h"
 
 #ifdef PR_LOGGING
@@ -262,8 +261,12 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
     LoadStatus status;
 
     status = LoadNext(pe);
-    if (status == STATUS_LOADED)
+    if (status == STATUS_LOADED) {
+        // load may succeed if external font resource followed by
+        // local font, in this case need to bump generation
+        IncrementGeneration();
         return PR_TRUE;
+    }
 
     return PR_FALSE;
 }

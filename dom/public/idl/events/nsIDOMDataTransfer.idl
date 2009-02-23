@@ -154,7 +154,7 @@ interface nsIDOMDataTransfer : nsISupports
   void addElement(in nsIDOMElement element);
 };
 
-[scriptable, uuid(A884E56C-1678-4978-AD20-142EE94108F5)]
+[scriptable, uuid(53C854FC-33F9-4647-B045-46D7AB06A6F1)]
 interface nsIDOMNSDataTransfer : nsISupports
 {
   /*
@@ -169,9 +169,11 @@ interface nsIDOMNSDataTransfer : nsISupports
   [noscript] attribute unsigned long effectAllowedInt;
 
   /**
-   * Creates a copy of the data transfer object
+   * Creates a copy of the data transfer object, for the given event type and
+   * user cancelled flag.
    */
-  [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType);
+  [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType,
+                                      in PRBool aUserCancelled);
 
   /**
    * The number of items being dragged.
@@ -234,4 +236,11 @@ interface nsIDOMNSDataTransfer : nsISupports
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
    */
   nsIVariant mozGetDataAt(in DOMString format, in unsigned long index);
+
+  /**
+   * Will be true if the user cancelled the drag (typically by pressing Escape).
+   * This will be false otherwise, including if a drag failed for any other reason.
+   * This property is only relevant for the dragend event.
+   */
+  readonly attribute boolean mozUserCancelled;
 };

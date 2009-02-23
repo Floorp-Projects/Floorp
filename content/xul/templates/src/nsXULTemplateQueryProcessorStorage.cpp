@@ -144,8 +144,8 @@ nsXULTemplateResultSetStorage::FillColumnValues(nsCOMArray<nsIVariant>& aArray)
         mStatement->GetTypeOfIndex(c, &type);
 
         if (type == mStatement->VALUE_TYPE_INTEGER) {
-            PRInt32 val = mStatement->AsInt32(c);
-            value->SetAsInt32(val);
+            PRInt64 val = mStatement->AsInt64(c);
+            value->SetAsInt64(val);
         }
         else if (type == mStatement->VALUE_TYPE_FLOAT) {
             double val = mStatement->AsDouble(c);

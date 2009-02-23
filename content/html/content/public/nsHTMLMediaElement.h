@@ -39,12 +39,40 @@
 #include "nsGenericHTMLElement.h"
 #include "nsMediaDecoder.h"
 #include "nsIChannel.h"
+#include "nsThreadUtils.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
 
 typedef PRUint16 nsMediaNetworkState;
 typedef PRUint16 nsMediaReadyState;
+
+// Object representing a single execution of the media load algorithm.
+// Used by asynchronous events so that they can be cancelled when Load()
+// is executed. Holds the list of candidate resources which the media
+// element attempts to load, and provides iteration over that list.
+class nsMediaLoad : public nsISupports
+{
+public:
+  NS_DECL_ISUPPORTS
+  nsMediaLoad() : mPosition(0) {}
+  ~nsMediaLoad() {}
+
+  // Appends a candidate resource to the candidate list. List is populated
+  // by nsHTMLMediaElement::GenerateCandidates().
+  void AddCandidate(nsIURI *aURI);
+
+  // Returns the next candidate in the list, or null if at the end.
+  already_AddRefed<nsIURI> GetNextCandidate();
+
+  PRBool HasMoreCandidates() { return mPosition < mCandidates.Count(); }
+private:
+  // Candidate resource URIs.
+  nsCOMArray<nsIURI> mCandidates;
+
+  // Index/iterator position in mCandidates.
+  PRInt32 mPosition;
+};
 
 class nsHTMLMediaElement : public nsGenericHTMLElement
 {
@@ -192,8 +220,26 @@ public:
    */
   static void ShutdownMediaTypes();
 
+  /**
+   * Called when a child source element is added to this media element. This
+   * may queue a load() task if appropriate.
+   */
+  void NotifyAddedSource();
+
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+
+  /**
+   * Returns the current nsMediaLoad object. Asynchronous events store a
+   * reference to the nsMediaLoad object that was current when they were
+   * enqueued, and if it has changed when they come to fire, they consider
+   * themselves cancelled, and don't fire.
+   */
+  nsMediaLoad* GetCurrentMediaLoad() { return mCurrentLoad; }
+
+
 protected:
-  class nsMediaLoadListener;
+  class MediaLoadListener;
+  class LoadNextCandidateEvent;
 
   /**
    * Figure out which resource to load (either the 'src' attribute or a
@@ -213,14 +259,41 @@ protected:
                                        nsIStreamListener **aListener);
   /**
    * Execute the initial steps of the load algorithm that ensure existing
-   * loads are aborted and the element is emptied.  Returns true if aborted,
-   * false if emptied.
+   * loads are aborted, the element is emptied, and a new load object is
+   * created. Returns true if the current load aborts due to a new load being
+   * started in event handlers triggered during this function call.
    */
   PRBool AbortExistingLoads();
+
   /**
    * Create a URI for the given aURISpec string.
    */
   nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
+
+  /**
+   * Does step 12 of the media load() algorithm, sends error/emptied events to
+   * to the media element, and reset network/begun state.
+   */
+  void NoSupportedMediaError();
+
+  // Performs "the candidate loop" step in the load algorithm. Attempts to
+  // load candidates in the candidate media resource list until a channel opens
+  // to a resource, then it returns. If the resource download fails, it will
+  // set a callback to this function. Do not call this directly, call
+  // QueueLoadNextCandidateTask() instead.
+  void LoadNextCandidate();
+
+  // Populates the candidate resource list in mCurrentLoad.
+  void GenerateCandidates();
+
+  // Enqueues an event to call Load() on the main thread. This will begin
+  // the process of attempting to load candidate media resources from the
+  // candidate resource list.
+  void QueueLoadTask();
+
+  // Enqueues an event to resume trying to open resources in the candidate
+  // loop.
+  void QueueLoadNextCandidateTask();
 
   nsRefPtr<nsMediaDecoder> mDecoder;
 
@@ -228,6 +301,10 @@ protected:
 
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
+
+  // The current media load object. Stores the list of candidate media
+  // resources that we are attempting to load.
+  nsRefPtr<nsMediaLoad> mCurrentLoad;
 
   // Media loading flags. See: 
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
@@ -260,6 +337,10 @@ protected:
   // is a result of the autoplay attribute.
   PRPackedBool mAutoplaying;
 
+  // Indicates whether |autoplay| will actually autoplay based on the pref 
+  // media.autoplay.enabled
+  PRPackedBool mAutoplayEnabled;
+
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
   PRPackedBool mPaused;
@@ -285,4 +366,7 @@ protected:
   // PR_TRUE if we've reported a "waiting" event since the last
   // readyState change to HAVE_CURRENT_DATA.
   PRPackedBool mWaitingFired;
+
+  // PR_TRUE if we're in BindToTree().
+  PRPackedBool mIsBindingToTree;
 };

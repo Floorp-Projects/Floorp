@@ -47,7 +47,10 @@
 
 struct ITfThreadMgr;
 struct ITfDocumentMgr;
+struct ITfDisplayAttributeMgr;
+struct ITfCategoryMgr;
 class nsWindow;
+class nsTextEvent;
 
 // It doesn't work well when we notify TSF of text change
 // during a mutation observer call because things get broken.
@@ -146,12 +149,22 @@ public:
     return sTsfTextStore->OnSelectionChangeInternal();
   }
 
-  static void*    GetNativeData(void)
+  // Returns the address of the pointer so that the TSF automatic test can
+  // replace the system object with a custom implementation for testing.
+  static void*    GetThreadMgr(void)
   {
-    // Returns the address of the pointer so that the TSF automatic test can
-    // replace the system object with a custom implementation for testing.
     Initialize(); // Apply any previous changes
     return (void*) & sTsfThreadMgr;
+  }
+
+  static void*    GetCategoryMgr(void)
+  {
+    return (void*) & sCategoryMgr;
+  }
+
+  static void*    GetDisplayAttrMgr(void)
+  {
+    return (void*) & sDisplayAttrMgr;
   }
 
 protected:
@@ -163,19 +176,23 @@ protected:
   PRBool   Focus(void);
   PRBool   Blur(void);
 
-  HRESULT  LoadManagers(void);
-  HRESULT  SetSelectionInternal(const TS_SELECTION_ACP*);
+  // If aDispatchTextEvent is true, this method will dispatch text event if
+  // this is called during IME composing.  aDispatchTextEvent should be true
+  // only when this is called from SetSelection.  Because otherwise, the text
+  // event should not be sent from here.
+  HRESULT  SetSelectionInternal(const TS_SELECTION_ACP*,
+                                PRBool aDispatchTextEvent = PR_FALSE);
   HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, PRBool);
   void     CommitCompositionInternal(PRBool);
   void     SetIMEEnabledInternal(PRUint32 aState);
   nsresult OnTextChangeInternal(PRUint32, PRUint32, PRUint32);
   void     OnTextChangeMsgInternal(void);
   nsresult OnSelectionChangeInternal(void);
-
-  // TSF display attribute manager, loaded by LoadManagers
-  nsRefPtr<ITfDisplayAttributeMgr> mDAMgr;
-  // TSF category manager, loaded by LoadManagers
-  nsRefPtr<ITfCategoryMgr>         mCatMgr;
+  HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
+                               ITfRange* aRange,
+                               TF_DISPLAYATTRIBUTE* aResult);
+  HRESULT  SendTextEventForCompositionString();
+  HRESULT  SaveTextEvent(const nsTextEvent* aEvent);
 
   // Document manager for the currently focused editor
   nsRefPtr<ITfDocumentMgr>     mDocumentMgr;
@@ -212,9 +229,17 @@ protected:
   // The start and length of the current active composition, in ACP offsets
   LONG                         mCompositionStart;
   LONG                         mCompositionLength;
+  // The latest text event which was dispatched for composition string
+  // of the current composing transaction.
+  nsTextEvent*                 mLastDispatchedTextEvent;
 
   // TSF thread manager object for the current application
   static ITfThreadMgr*  sTsfThreadMgr;
+  // TSF display attribute manager
+  static ITfDisplayAttributeMgr* sDisplayAttrMgr;
+  // TSF category manager
+  static ITfCategoryMgr* sCategoryMgr;
+
   // TSF client ID for the current application
   static DWORD          sTsfClientId;
   // Current text store. Currently only ONE nsTextStore instance is ever used,

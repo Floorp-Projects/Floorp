@@ -840,10 +840,6 @@ static PRBool HebrewToText(PRInt32 ordinal, nsString& result)
 
 static PRBool ArmenianToText(PRInt32 ordinal, nsString& result)
 {
-  // XXXbz this system goes out to a lot further than 9999... we should fix
-  // that.  This algorithm seems broken in general.  There's this business of
-  // "7000" being special and then there's the combining accent we're supposed
-  // to be using...
   if (ordinal < 1 || ordinal > 9999) { // zero or reach the limit of Armenian numbering system
     DecimalToText(ordinal, result);
     return PR_FALSE;

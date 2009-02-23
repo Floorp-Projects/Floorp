@@ -120,7 +120,7 @@ SessionStartup.prototype = {
     try {
       // parse the session state into JS objects
       var s = new Components.utils.Sandbox("about:blank");
-      var initialState = Components.utils.evalInSandbox(this._iniString, s);
+      var initialState = Components.utils.evalInSandbox("(" + this._iniString + ")", s);
     }
     catch (ex) { debug("The session file is invalid: " + ex); } 
     

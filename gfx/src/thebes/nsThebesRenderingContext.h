@@ -52,7 +52,6 @@
 #include "nsRect.h"
 #include "nsIRegion.h"
 #include "nsTransform2D.h"
-#include "nsVoidArray.h"
 #include "nsIThebesFontMetrics.h"
 #include "gfxContext.h"
 

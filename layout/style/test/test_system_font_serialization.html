@@ -47,6 +47,10 @@ e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font ! importa
 is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font ! important;", "serialize system font and subproperty that is important");
 is(e.style.font, "", "font getter returns nothing");
 
+e.setAttribute("style", "font: inherit; font-family: Helvetica;");
+is(e.style.cssText, "font-style: inherit; font-variant: inherit; font-weight: inherit; font-size: inherit; line-height: inherit; font-size-adjust: inherit; font-stretch: inherit; font-family: Helvetica;", "don't serialize system font for font:inherit");
+is(e.style.font, "", "font getter returns nothing");
+
 </script>
 </pre>
 </body>

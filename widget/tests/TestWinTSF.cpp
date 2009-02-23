@@ -87,6 +87,7 @@ class nsAFlatCString;
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsISelectionController.h"
 #include "nsIViewManager.h"
+#include "nsTArray.h"
 
 #ifndef MOZILLA_INTERNAL_API
 #undef nsString_h___
@@ -96,6 +97,9 @@ class nsAFlatCString;
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 class TSFImpl;
+class TSFRangeImpl;
+class TSFEnumRangeImpl;
+class TSFAttrPropImpl;
 
 class TestApp : public nsIWebProgressListener, public nsSupportsWeakReference
 {
@@ -187,14 +191,575 @@ TestApp::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+static HRESULT
+GetRegularExtent(ITfRange *aRange, LONG &aStart, LONG &aEnd)
+{
+  NS_ENSURE_TRUE(aRange, E_INVALIDARG);
+  nsRefPtr<ITfRangeACP> rangeACP;
+  HRESULT hr = aRange->QueryInterface(IID_ITfRangeACP,
+                                      getter_AddRefs(rangeACP));
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && rangeACP, E_FAIL);
+
+  LONG start, length;
+  hr = rangeACP->GetExtent(&start, &length);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (length >= 0) {
+    aStart = start;
+    aEnd = start + length;
+  } else {
+    aEnd = start;
+    aStart = start + length;
+  }
+  return S_OK;
+}
+
+// {3B2DFDF5-2485-4858-8185-5C6B4EFD38F5}
+static const GUID GUID_COMPOSING_SELECTION_ATTR = 
+  { 0x3b2dfdf5, 0x2485, 0x4858,
+    { 0x81, 0x85, 0x5c, 0x6b, 0x4e, 0xfd, 0x38, 0xf5 } };
+#define GUID_ATOM_COMPOSING_SELECTION_ATTR \
+  (static_cast<TfGuidAtom>(0x3b2dfdf5))
+
+/******************************************************************************
+ * TSFRangeImpl
+ ******************************************************************************/
+
+class TSFRangeImpl : public ITfRangeACP
+{
+private:
+  ULONG mRefCnt;
+
+public:
+  LONG mStart;
+  LONG mLength;
+
+  TSFRangeImpl(LONG aStart = 0, LONG aLength = 0) :
+      mRefCnt(0), mStart(aStart), mLength(aLength)
+  {
+  }
+
+  ~TSFRangeImpl()
+  {
+  }
+
+public: // IUnknown
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
+  {
+    *ppUnk = NULL;
+    if (IID_IUnknown == riid || IID_ITfRange == riid || IID_ITfRangeACP == riid)
+      *ppUnk = static_cast<ITfRangeACP*>(this);
+    if (*ppUnk)
+      AddRef();
+    return *ppUnk ? S_OK : E_NOINTERFACE;
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void)
+  {
+    return ++mRefCnt;
+  }
+
+  STDMETHODIMP_(ULONG) Release(void)
+  {
+    if (--mRefCnt) return mRefCnt;
+    delete this;
+    return 0;
+  }
+
+public: // ITfRange
+
+  STDMETHODIMP GetText(TfEditCookie ec, DWORD dwFlags, WCHAR *pchText,
+                       ULONG cchMax, ULONG *pcch)
+  {
+    NS_NOTREACHED("ITfRange::GetText");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP SetText(TfEditCookie ec, DWORD dwFlags, const WCHAR *pchText,
+                       LONG cch)
+  {
+    NS_NOTREACHED("ITfRange::SetText");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetFormattedText(TfEditCookie ec, IDataObject **ppDataObject)
+  {
+    NS_NOTREACHED("ITfRange::GetFormattedText");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetEmbedded(TfEditCookie ec, REFGUID rguidService, REFIID riid,
+                           IUnknown **ppunk)
+  {
+    NS_NOTREACHED("ITfRange::GetEmbedded");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP InsertEmbedded(TfEditCookie ec, DWORD dwFlags,
+                              IDataObject *pDataObject)
+  {
+    NS_NOTREACHED("ITfRange::InsertEmbedded");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP ShiftStart(TfEditCookie ec, LONG cchReq, LONG *pcch,
+                          const TF_HALTCOND *pHalt)
+  {
+    NS_NOTREACHED("ITfRange::ShiftStart");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP ShiftEnd(TfEditCookie ec, LONG cchReq, LONG *pcch,
+                        const TF_HALTCOND *pHalt)
+  {
+    NS_NOTREACHED("ITfRange::ShiftEnd");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP ShiftStartToRange(TfEditCookie ec, ITfRange *pRange,
+                                 TfAnchor aPos)
+  {
+    NS_NOTREACHED("ITfRange::ShiftStartToRange");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP ShiftEndToRange(TfEditCookie ec, ITfRange *pRange, TfAnchor aPos)
+  {
+    NS_NOTREACHED("ITfRange::ShiftEndToRange");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP ShiftStartRegion(TfEditCookie ec, TfShiftDir dir,
+                                BOOL *pfNoRegion)
+  {
+    NS_NOTREACHED("ITfRange::ShiftStartRegion");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP ShiftEndRegion(TfEditCookie ec, TfShiftDir dir, BOOL *pfNoRegion)
+  {
+    NS_NOTREACHED("ITfRange::ShiftEndRegion");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP IsEmpty(TfEditCookie ec, BOOL *pfEmpty)
+  {
+    NS_NOTREACHED("ITfRange::IsEmpty");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP Collapse(TfEditCookie ec, TfAnchor aPos)
+  {
+    NS_NOTREACHED("ITfRange::Collapse");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP IsEqualStart(TfEditCookie ec, ITfRange *pWith, TfAnchor aPos,
+                            BOOL *pfEqual)
+  {
+    NS_NOTREACHED("ITfRange::IsEqualStart");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP IsEqualEnd(TfEditCookie ec, ITfRange *pWith, TfAnchor aPos,
+                          BOOL *pfEqual)
+  {
+    NS_NOTREACHED("ITfRange::IsEqualEnd");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP CompareStart(TfEditCookie ec, ITfRange *pWith, TfAnchor aPos,
+                            LONG *plResult)
+  {
+    NS_NOTREACHED("ITfRange::CompareStart");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP CompareEnd(TfEditCookie ec, ITfRange *pWith, TfAnchor aPos,
+                          LONG *plResult)
+  {
+    NS_NOTREACHED("ITfRange::CompareEnd");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP AdjustForInsert(TfEditCookie ec, ULONG cchInsert,
+                               BOOL *pfInsertOk)
+  {
+    NS_NOTREACHED("ITfRange::AdjustForInsert");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGravity(TfGravity *pgStart, TfGravity *pgEnd)
+  {
+    NS_NOTREACHED("ITfRange::GetGravity");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP SetGravity(TfEditCookie ec, TfGravity gStart, TfGravity gEnd)
+  {
+    NS_NOTREACHED("ITfRange::SetGravity");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP Clone(ITfRange **ppClone)
+  {
+    NS_NOTREACHED("ITfRange::Clone");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetContext(ITfContext **ppContext)
+  {
+    NS_NOTREACHED("ITfRange::GetContext");
+    return E_NOTIMPL;
+  }
+
+public: // ITfRangeACP
+
+  STDMETHODIMP GetExtent(LONG *pacpAnchor, LONG *pcch)
+  {
+    NS_ENSURE_TRUE(pacpAnchor, E_FAIL);
+    NS_ENSURE_TRUE(pcch, E_FAIL);
+    *pacpAnchor = mStart;
+    *pcch = mLength;
+    return S_OK;
+  }
+
+  STDMETHODIMP SetExtent(LONG acpAnchor, LONG cch)
+  {
+    mStart = acpAnchor;
+    mLength = cch;
+    return S_OK;
+  }
+};
+
+/******************************************************************************
+ * TSFEnumRangeImpl
+ ******************************************************************************/
+
+class TSFEnumRangeImpl : public IEnumTfRanges
+{
+private:
+  ULONG mRefCnt;
+  PRUint32 mCurrentIndex;
+
+public:
+  nsTArray<nsRefPtr<TSFRangeImpl> > mRanges;
+
+  TSFEnumRangeImpl() :
+      mRefCnt(0), mCurrentIndex(0)
+  {
+  }
+
+  ~TSFEnumRangeImpl()
+  {
+  }
+
+public: // IUnknown
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
+  {
+    *ppUnk = NULL;
+    if (IID_IUnknown == riid || IID_IEnumTfRanges == riid)
+      *ppUnk = static_cast<IEnumTfRanges*>(this);
+    if (*ppUnk)
+      AddRef();
+    return *ppUnk ? S_OK : E_NOINTERFACE;
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void)
+  {
+    return ++mRefCnt;
+  }
+
+  STDMETHODIMP_(ULONG) Release(void)
+  {
+    if (--mRefCnt) return mRefCnt;
+    delete this;
+    return 0;
+  }
+
+public: // IEnumTfRanges
+
+  STDMETHODIMP Clone(IEnumTfRanges **ppEnum)
+  {
+    NS_NOTREACHED("IEnumTfRanges::Clone");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP Next(ULONG ulCount, ITfRange **ppRange, ULONG *pcFetched)
+  {
+    NS_ENSURE_TRUE(ppRange, E_FAIL);
+    if (pcFetched)
+      *pcFetched = 0;
+    if (mCurrentIndex + ulCount - 1 >= mRanges.Length())
+      return E_FAIL;
+    for (PRUint32 i = 0; i < ulCount; i++) {
+      ppRange[i] = mRanges[mCurrentIndex++];
+      ppRange[i]->AddRef();
+      if (pcFetched)
+        (*pcFetched)++;
+    }
+    return S_OK;
+  }
+
+  STDMETHODIMP Reset()
+  {
+    mCurrentIndex = 0;
+    return S_OK;
+  }
+
+  STDMETHODIMP Skip(ULONG ulCount)
+  {
+    mCurrentIndex += ulCount;
+    return S_OK;
+  }
+};
+
+/******************************************************************************
+ * TSFDispAttrInfoImpl
+ ******************************************************************************/
+
+class TSFDispAttrInfoImpl : public ITfDisplayAttributeInfo
+{
+private:
+  ULONG mRefCnt;
+  TF_DISPLAYATTRIBUTE mAttr;
+
+public:
+
+  TSFDispAttrInfoImpl(REFGUID aGUID) :
+      mRefCnt(0)
+  {
+    if (aGUID == GUID_COMPOSING_SELECTION_ATTR) {
+      mAttr.crText.type = TF_CT_NONE;
+      mAttr.crBk.type = TF_CT_NONE;
+      mAttr.lsStyle = TF_LS_SQUIGGLE;
+      mAttr.fBoldLine = FALSE;
+      mAttr.crLine.type = TF_CT_NONE;
+      mAttr.bAttr = TF_ATTR_INPUT;
+    } else {
+      NS_NOTREACHED("TSFDispAttrInfoImpl::TSFDispAttrInfoImpl");
+    }
+  }
+
+  ~TSFDispAttrInfoImpl()
+  {
+  }
+
+public: // IUnknown
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
+  {
+    *ppUnk = NULL;
+    if (IID_IUnknown == riid || IID_ITfDisplayAttributeInfo == riid)
+      *ppUnk = static_cast<ITfDisplayAttributeInfo*>(this);
+    if (*ppUnk)
+      AddRef();
+    return *ppUnk ? S_OK : E_NOINTERFACE;
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void)
+  {
+    return ++mRefCnt;
+  }
+
+  STDMETHODIMP_(ULONG) Release(void)
+  {
+    if (--mRefCnt) return mRefCnt;
+    delete this;
+    return 0;
+  }
+
+public: // ITfDisplayAttributeInfo
+
+  STDMETHODIMP GetGUID(GUID *pguid)
+  {
+    NS_NOTREACHED("ITfDisplayAttributeInfo::GetGUID");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetDescription(BSTR *pbstrDesc)
+  {
+    NS_NOTREACHED("ITfDisplayAttributeInfo::GetDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetAttributeInfo(TF_DISPLAYATTRIBUTE *pda)
+  {
+    NS_ENSURE_TRUE(pda, E_INVALIDARG);
+    *pda = mAttr;
+    return S_OK;
+  }
+
+  STDMETHODIMP SetAttributeInfo(const TF_DISPLAYATTRIBUTE *pda)
+  {
+    NS_NOTREACHED("ITfDisplayAttributeInfo::SetAttributeInfo");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP Reset()
+  {
+    NS_NOTREACHED("ITfDisplayAttributeInfo::Reset");
+    return E_NOTIMPL;
+  }
+};
+
+/******************************************************************************
+ * TSFAttrPropImpl
+ ******************************************************************************/
+
+class TSFAttrPropImpl : public ITfProperty
+{
+private:
+  ULONG mRefCnt;
+
+public:
+  nsTArray<nsRefPtr<TSFRangeImpl> > mRanges;
+
+  TSFAttrPropImpl() :
+      mRefCnt(0)
+  {
+  }
+
+  ~TSFAttrPropImpl()
+  {
+  }
+
+public: // IUnknown
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
+  {
+    *ppUnk = NULL;
+    if (IID_IUnknown == riid || IID_ITfProperty == riid ||
+        IID_ITfReadOnlyProperty == riid)
+      *ppUnk = static_cast<ITfProperty*>(this);
+    if (*ppUnk)
+      AddRef();
+    return *ppUnk ? S_OK : E_NOINTERFACE;
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void)
+  {
+    return ++mRefCnt;
+  }
+
+  STDMETHODIMP_(ULONG) Release(void)
+  {
+    if (--mRefCnt) return mRefCnt;
+    delete this;
+    return 0;
+  }
+
+public: // ITfProperty
+
+  STDMETHODIMP FindRange(TfEditCookie ec, ITfRange *pRange, ITfRange **ppRange,
+                         TfAnchor aPos)
+  {
+    NS_NOTREACHED("ITfProperty::FindRange");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP SetValueStore(TfEditCookie ec, ITfRange *pRange,
+                             ITfPropertyStore *pPropStore)
+  {
+    NS_NOTREACHED("ITfProperty::SetValueStore");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP SetValue(TfEditCookie ec, ITfRange *pRange,
+                        const VARIANT *pvarValue)
+  {
+    NS_NOTREACHED("ITfProperty::SetValue");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP Clear(TfEditCookie ec, ITfRange *pRange)
+  {
+    NS_NOTREACHED("ITfProperty::Clear");
+    return E_NOTIMPL;
+  }
+
+public: // ITfReadOnlyProperty
+
+  STDMETHODIMP GetType(GUID *pguid)
+  {
+    NS_NOTREACHED("ITfReadOnlyProperty::GetType");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumRanges(TfEditCookie ec, IEnumTfRanges **ppEnum,
+                          ITfRange *pTargetRange)
+  {
+    NS_ENSURE_TRUE(ppEnum, E_INVALIDARG);
+    NS_ENSURE_TRUE(pTargetRange, E_INVALIDARG);
+
+    // XXX ec checking is not implemented yet.
+
+    LONG targetStart = 0, targetEnd = 0;
+    if (pTargetRange) {
+      HRESULT hr = GetRegularExtent(pTargetRange, targetStart, targetEnd);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    }
+    nsRefPtr<TSFEnumRangeImpl> er = new TSFEnumRangeImpl();
+    NS_ENSURE_TRUE(er, E_OUTOFMEMORY);
+    for (PRUint32 i = 0; i < mRanges.Length(); i++) {
+      LONG start, end;
+      HRESULT hr = GetRegularExtent(mRanges[i], start, end);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      if (pTargetRange) {
+        // If pTargetRange is not null and the current range is not overlapped
+        // with it, we don't need to add range.
+        if (targetStart > end || targetEnd < start)
+          continue;
+        // Otherwise, shrink to the target range.
+        start = PR_MAX(targetStart, start);
+        end = PR_MIN(targetEnd, end);
+      }
+      nsRefPtr<TSFRangeImpl> range = new TSFRangeImpl(start, end - start);
+      NS_ENSURE_TRUE(range, E_OUTOFMEMORY);
+      er->mRanges.AppendElement(range);
+    }
+    *ppEnum = er;
+    (*ppEnum)->AddRef();
+    return S_OK;
+  }
+
+  STDMETHODIMP GetValue(TfEditCookie ec, ITfRange *pRange, VARIANT *pvarValue)
+  {
+    NS_ENSURE_TRUE(pvarValue, E_INVALIDARG);
+
+    LONG givenStart, givenEnd;
+    HRESULT hr = GetRegularExtent(pRange, givenStart, givenEnd);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    for (PRUint32 i = 0; i < mRanges.Length(); i++) {
+      LONG start, end;
+      HRESULT hr = GetRegularExtent(mRanges[i], start, end);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      // pRange must be same as (or included in) a range of mRanges.
+      if (givenStart > start || givenEnd < end)
+        continue;
+      pvarValue->vt = VT_I4;
+      pvarValue->lVal = static_cast<DWORD>(GUID_ATOM_COMPOSING_SELECTION_ATTR);
+      return S_OK;
+    }
+    return E_FAIL;
+  }
+
+  STDMETHODIMP GetContext(ITfContext **ppContext)
+  {
+    NS_NOTREACHED("ITfReadOnlyProperty::GetContext");
+    return E_NOTIMPL;
+  }
+};
+
 // Simple TSF manager implementation for testing
 // Most methods are not implemented, but the ones used by Mozilla are
 //
 // XXX Implement appropriate methods here as the Mozilla TSF code changes
 //
 class TSFImpl : public ITfThreadMgr, public ITfDocumentMgr, public ITfContext,
-                public ITfRangeACP, public ITfCompositionView,
-                public ITextStoreACPSink
+                public ITfCompositionView, public ITextStoreACPSink,
+                public ITfDisplayAttributeMgr, public ITfCategoryMgr
 {
 private:
   ULONG mRefCnt;
@@ -205,13 +770,12 @@ public:
   TestApp::test_type mOnFocus;
   TestApp::test_type mOnBlur;
   nsRefPtr<ITextStoreACP> mStore;
+  nsRefPtr<TSFAttrPropImpl> mAttrProp;
   PRBool mFocused;
   PRBool mContextPushed;
   PRBool mDeactivated;
   PRUint32 mFocusCount;
   PRUint32 mBlurCount;
-  PRUint32 mRangeStart;
-  PRUint32 mRangeLength;
   PRBool mTextChanged;
   PRBool mSelChanged;
   TS_TEXTCHANGE mTextChangeData;
@@ -219,10 +783,15 @@ public:
 public:
   TSFImpl(TestApp* test) : mTestApp(test), mTest(nsnull),
       mRefCnt(0), mFocused(PR_FALSE), mDeactivated(PR_FALSE),
-      mFocusCount(0), mBlurCount(0), mRangeStart(0), mRangeLength(0),
-      mContextPushed(PR_FALSE), mOnFocus(nsnull), mOnBlur(nsnull),
-      mTextChanged(PR_FALSE), mSelChanged(PR_FALSE)
+      mFocusCount(0), mBlurCount(0), mContextPushed(PR_FALSE),
+      mOnFocus(nsnull), mOnBlur(nsnull), mTextChanged(PR_FALSE),
+      mSelChanged(PR_FALSE)
   {
+    mAttrProp = new TSFAttrPropImpl();
+    if (!mAttrProp) {
+      NS_NOTREACHED("TSFImpl::TSFImpl (OOM)");
+      return;
+    }
   }
 
   ~TSFImpl()
@@ -240,10 +809,12 @@ public: // IUnknown
       *ppUnk = static_cast<ITfDocumentMgr*>(this);
     else if (IID_ITfContext == riid)
       *ppUnk = static_cast<ITfContext*>(this);
-    else if (IID_ITfRange == riid || IID_ITfRangeACP == riid)
-      *ppUnk = static_cast<ITfRangeACP*>(this);
     else if (IID_ITextStoreACPSink == riid)
       *ppUnk = static_cast<ITextStoreACPSink*>(this);
+    else if (IID_ITfDisplayAttributeMgr == riid)
+      *ppUnk = static_cast<ITfDisplayAttributeMgr*>(this);
+    else if (IID_ITfCategoryMgr == riid)
+      *ppUnk = static_cast<ITfCategoryMgr*>(this);
     if (*ppUnk)
       AddRef();
     return *ppUnk ? S_OK : E_NOINTERFACE;
@@ -395,6 +966,128 @@ public: // ITfDocumentMgr
     return E_NOTIMPL;
   }
 
+public: // ITfCategoryMgr
+
+  STDMETHODIMP RegisterCategory(REFCLSID rclsid, REFGUID rcatid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP UnregisterCategory(REFCLSID rclsid, REFGUID rcatid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::UnregisterCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumCategoriesInItem(REFGUID rguid, IEnumGUID **ppEnum)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::EnumCategoriesInItem");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumItemsInCategory(REFGUID rcatid, IEnumGUID **ppEnum)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::EnumItemsInCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP FindClosestCategory(REFGUID rguid, GUID *pcatid,
+                                   const GUID **ppcatidList, ULONG ulCount)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::FindClosestCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP RegisterGUIDDescription(REFCLSID rclsid, REFGUID rguid,
+                                       const WCHAR *pchDesc, ULONG cch)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterGUIDDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP UnregisterGUIDDescription(REFCLSID rclsid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::UnregisterGUIDDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGUIDDescription(REFGUID rguid, BSTR *pbstrDesc)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::GetGUIDDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP RegisterGUIDDWORD(REFCLSID rclsid, REFGUID rguid, DWORD dw)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterGUIDDWORD");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP UnregisterGUIDDWORD(REFCLSID rclsid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::UnregisterGUIDDWORD");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGUIDDWORD(REFGUID rguid, DWORD *pdw)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::GetGUIDDWORD");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP RegisterGUID(REFGUID rguid, TfGuidAtom *pguidatom)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterGUID");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGUID(TfGuidAtom guidatom, GUID *pguid)
+  {
+    if (guidatom == GUID_ATOM_COMPOSING_SELECTION_ATTR) {
+      *pguid = GUID_COMPOSING_SELECTION_ATTR;
+      return S_OK;
+    }
+    NS_NOTREACHED("ITfCategoryMgr::GetGUID");
+    return E_FAIL;
+  }
+
+  STDMETHODIMP IsEqualTfGuidAtom(TfGuidAtom guidatom, REFGUID rguid,
+                                 BOOL *pfEqual)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::IsEqualTfGuidAtom");
+    return E_NOTIMPL;
+  }
+
+public: // ITfDisplayAttributeMgr
+
+  STDMETHODIMP OnUpdateInfo()
+  {
+    NS_NOTREACHED("ITfDisplayAttributeMgr::OnUpdateInfo");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumDisplayAttributeInfo(IEnumTfDisplayAttributeInfo **ppEnum)
+  {
+    NS_NOTREACHED("ITfDisplayAttributeMgr::EnumDisplayAttributeInfo");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetDisplayAttributeInfo(REFGUID guid,
+                                       ITfDisplayAttributeInfo **ppInfo,
+                                       CLSID *pclsidOwner)
+  {
+    NS_ENSURE_TRUE(ppInfo, E_INVALIDARG);
+    NS_ENSURE_TRUE(!pclsidOwner, E_INVALIDARG);
+    if (guid == GUID_COMPOSING_SELECTION_ATTR) {
+      (*ppInfo) = new TSFDispAttrInfoImpl(guid);
+      (*ppInfo)->AddRef();
+      return S_OK;
+    }
+    NS_NOTREACHED("ITfDisplayAttributeMgr::GetDisplayAttributeInfo");
+    return E_FAIL;
+  }
+
 public: // ITfContext
 
   STDMETHODIMP RequestEditSession(TfClientId tid, ITfEditSession *pes,
@@ -456,6 +1149,12 @@ public: // ITfContext
 
   STDMETHODIMP GetProperty(REFGUID guidProp, ITfProperty **ppProp)
   {
+    NS_ENSURE_TRUE(ppProp, E_INVALIDARG);
+    if (guidProp == GUID_PROP_ATTRIBUTE) {
+      (*ppProp) = mAttrProp;
+      (*ppProp)->AddRef();
+      return S_OK;
+    }
     NS_NOTREACHED("ITfContext::GetProperty");
     return E_NOTIMPL;
   }
@@ -493,169 +1192,6 @@ public: // ITfContext
     return E_NOTIMPL;
   }
 
-public: // ITfRangeACP
-
-  STDMETHODIMP GetText(TfEditCookie ec, DWORD dwFlags, WCHAR *pchText,
-                    ULONG cchMax, ULONG *pcch)
-  {
-    NS_NOTREACHED("ITfRangeACP::GetText");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP SetText(TfEditCookie ec, DWORD dwFlags, const WCHAR *pchText,
-                    LONG cch)
-  {
-    NS_NOTREACHED("ITfRangeACP::SetText");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetFormattedText(TfEditCookie ec, IDataObject **ppDataObject)
-  {
-    NS_NOTREACHED("ITfRangeACP::GetFormattedText");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetEmbedded(TfEditCookie ec, REFGUID rguidService, REFIID riid,
-                        IUnknown **ppunk)
-  {
-    NS_NOTREACHED("ITfRangeACP::GetEmbedded");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP InsertEmbedded(TfEditCookie ec, DWORD dwFlags,
-                           IDataObject *pDataObject)
-  {
-    NS_NOTREACHED("ITfRangeACP::InsertEmbedded");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP ShiftStart(TfEditCookie ec, LONG cchReq, LONG *pcch,
-                       const TF_HALTCOND *pHalt)
-  {
-    NS_NOTREACHED("ITfRangeACP::ShiftStart");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP ShiftEnd(TfEditCookie ec, LONG cchReq, LONG *pcch,
-                     const TF_HALTCOND *pHalt)
-  {
-    NS_NOTREACHED("ITfRangeACP::ShiftEnd");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP ShiftStartToRange(TfEditCookie ec, ITfRange *pRange,
-                                 TfAnchor aPos)
-  {
-    NS_NOTREACHED("ITfRangeACP::ShiftStartToRange");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP ShiftEndToRange(TfEditCookie ec, ITfRange *pRange,
-                               TfAnchor aPos)
-  {
-    NS_NOTREACHED("ITfRangeACP::ShiftEndToRange");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP ShiftStartRegion(TfEditCookie ec, TfShiftDir dir,
-                                BOOL *pfNoRegion)
-  {
-    NS_NOTREACHED("ITfRangeACP::ShiftStartRegion");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP ShiftEndRegion(TfEditCookie ec, TfShiftDir dir,
-                              BOOL *pfNoRegion)
-  {
-    NS_NOTREACHED("ITfRangeACP::ShiftEndRegion");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP IsEmpty(TfEditCookie ec, BOOL *pfEmpty)
-  {
-    NS_NOTREACHED("ITfRangeACP::IsEmpty");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP Collapse(TfEditCookie ec, TfAnchor aPos)
-  {
-    NS_NOTREACHED("ITfRangeACP::Collapse");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP IsEqualStart(TfEditCookie ec, ITfRange *pWith,
-                            TfAnchor aPos, BOOL *pfEqual)
-  {
-    NS_NOTREACHED("ITfRangeACP::IsEqualStart");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP IsEqualEnd(TfEditCookie ec, ITfRange *pWith,
-                          TfAnchor aPos, BOOL *pfEqual)
-  {
-    NS_NOTREACHED("ITfRangeACP::IsEqualEnd");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP CompareStart(TfEditCookie ec, ITfRange *pWith,
-                            TfAnchor aPos, LONG *plResult)
-  {
-    NS_NOTREACHED("ITfRangeACP::CompareStart");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP CompareEnd(TfEditCookie ec, ITfRange *pWith,
-                          TfAnchor aPos, LONG *plResult)
-  {
-    NS_NOTREACHED("ITfRangeACP::CompareEnd");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP AdjustForInsert(TfEditCookie ec, ULONG cchInsert,
-                               BOOL *pfInsertOk)
-  {
-    NS_NOTREACHED("ITfRangeACP::AdjustForInsert");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetGravity(TfGravity *pgStart, TfGravity *pgEnd)
-  {
-    NS_NOTREACHED("ITfRangeACP::GetGravity");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP SetGravity(TfEditCookie ec, TfGravity gStart, TfGravity gEnd)
-  {
-    NS_NOTREACHED("ITfRangeACP::SetGravity");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP Clone(ITfRange **ppClone)
-  {
-    NS_NOTREACHED("ITfRangeACP::Clone");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetContext(ITfContext **ppContext)
-  {
-    NS_NOTREACHED("ITfRangeACP::GetContext");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetExtent(LONG *pacpAnchor, LONG *pcch)
-  {
-    *pacpAnchor = LONG(mRangeStart);
-    *pcch = LONG(mRangeLength);
-    return S_OK;
-  }
-
-  STDMETHODIMP SetExtent(LONG acpAnchor, LONG cch)
-  {
-    mRangeStart = PRUint32(acpAnchor);
-    mRangeLength = PRUint32(cch);
-    return S_OK;
-  }
-
 public: // ITfCompositionView
 
   STDMETHODIMP GetOwnerClsid(CLSID* pclsid)
@@ -666,7 +1202,21 @@ public: // ITfCompositionView
 
   STDMETHODIMP GetRange(ITfRange** ppRange)
   {
-    (*ppRange) = this;
+    NS_ENSURE_TRUE(ppRange, E_INVALIDARG);
+    NS_ENSURE_TRUE(mAttrProp->mRanges.Length() > 0, E_FAIL);
+    LONG start = LONG_MAX, end = 0;
+    for (PRUint32 i = 0; i < mAttrProp->mRanges.Length(); i++) {
+      LONG tmpStart, tmpEnd;
+      HRESULT hr = GetRegularExtent(mAttrProp->mRanges[i], tmpStart, tmpEnd);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      start = PR_MIN(start, tmpStart);
+      end = PR_MAX(end, tmpEnd);
+    }
+    nsRefPtr<TSFRangeImpl> range = new TSFRangeImpl();
+    NS_ENSURE_TRUE(range, E_OUTOFMEMORY);
+    HRESULT hr = range->SetExtent(start, end - start);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    (*ppRange) = range;
     (*ppRange)->AddRef();
     return S_OK;
   }
@@ -777,38 +1327,56 @@ TestApp::CheckFailed(void)
 nsresult
 TestApp::Init(void)
 {
-  // Replace TSF manager pointer
+  // Replace TSF manager pointer, category manager pointer and display
+  // attribute manager pointer.
   nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(mWindow));
   NS_ENSURE_TRUE(baseWindow, NS_ERROR_UNEXPECTED);
   nsCOMPtr<nsIWidget> widget;
   nsresult rv = baseWindow->GetMainWidget(getter_AddRefs(widget));
   NS_ENSURE_TRUE(widget, NS_ERROR_UNEXPECTED);
 
-  ITfThreadMgr **mgr = reinterpret_cast<ITfThreadMgr**>(
-      widget->GetNativeData(NS_NATIVE_TSF_POINTER));
-  if (!mgr) {
-    fail("nsIWidget::GetNativeData(NS_NATIVE_TSF_POINTER) not supported");
+  ITfThreadMgr **threadMgr = reinterpret_cast<ITfThreadMgr**>(
+      widget->GetNativeData(NS_NATIVE_TSF_THREAD_MGR));
+  if (!threadMgr) {
+    fail("nsIWidget::GetNativeData(NS_NATIVE_TSF_THREAD_MGR) not supported");
     return NS_ERROR_FAILURE;
   }
-  if (*mgr) {
-    (*mgr)->Deactivate();
-    (*mgr)->Release();
-    (*mgr) = NULL;
+  if (*threadMgr) {
+    (*threadMgr)->Deactivate();
+    (*threadMgr)->Release();
+    (*threadMgr) = NULL;
   } else {
     // This is only for information. The test does not need TSF to run.
     printf("TSF not initialized properly (TSF is not enabled/installed?)\n");
+  }
+
+  ITfCategoryMgr **catMgr = reinterpret_cast<ITfCategoryMgr**>(
+      widget->GetNativeData(NS_NATIVE_TSF_CATEGORY_MGR));
+  if (*catMgr) {
+    (*catMgr)->Release();
+    (*catMgr) = NULL;
+  }
+  ITfDisplayAttributeMgr **daMgr = reinterpret_cast<ITfDisplayAttributeMgr**>(
+      widget->GetNativeData(NS_NATIVE_TSF_DISPLAY_ATTR_MGR));
+  if (*daMgr) {
+    (*daMgr)->Release();
+    (*daMgr) = NULL;
   }
 
   mImpl = new TSFImpl(this);
   if (!mImpl) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  (*mgr) = mImpl;
-  (*mgr)->AddRef();
+  (*threadMgr) = mImpl;
+  (*threadMgr)->AddRef();
+  (*catMgr) = mImpl;
+  (*catMgr)->AddRef();
+  (*daMgr) = mImpl;
+  (*daMgr)->AddRef();
 
   // Apply the change
   reinterpret_cast<ITfThreadMgr**>(
-      widget->GetNativeData(NS_NATIVE_TSF_POINTER));
+      widget->GetNativeData(NS_NATIVE_TSF_THREAD_MGR));
 
   // Create a couple of text boxes for testing
   nsCOMPtr<nsIDOMWindowInternal> win(do_GetInterface(mWindow));
@@ -1553,8 +2121,12 @@ TestApp::TestComposition(void)
   }
   sel.acpEnd = textChange.acpNewEnd;
 
-  mImpl->mRangeStart = textChange.acpStart;
-  mImpl->mRangeLength = textChange.acpNewEnd - textChange.acpOldEnd;
+  mImpl->mAttrProp->mRanges.Clear();
+  nsRefPtr<TSFRangeImpl> range =
+    new TSFRangeImpl(textChange.acpStart,
+                     textChange.acpNewEnd - textChange.acpOldEnd);
+  mImpl->mAttrProp->mRanges.AppendElement(range);
+
   BOOL okay = FALSE;
   hr = sink->OnStartComposition(mImpl, &okay);
   if (!(SUCCEEDED(hr) &&
@@ -1565,8 +2137,8 @@ TestApp::TestComposition(void)
 
 
   NS_NAMED_LITERAL_STRING(insertString2, "Composition2");
-  hr = mImpl->mStore->SetText(0, mImpl->mRangeStart + mImpl->mRangeLength,
-                              mImpl->mRangeStart + mImpl->mRangeLength,
+  hr = mImpl->mStore->SetText(0, range->mStart + range->mLength,
+                              range->mStart + range->mLength,
                               insertString2.get(), insertString2.Length(),
                               &textChange);
   if (!(SUCCEEDED(hr) &&
@@ -1577,14 +2149,13 @@ TestApp::TestComposition(void)
     return PR_FALSE;
   }
   sel.acpEnd = textChange.acpNewEnd;
-  mImpl->mRangeLength += textChange.acpNewEnd - textChange.acpOldEnd;
+  range->mLength += textChange.acpNewEnd - textChange.acpOldEnd;
 
 
   const LONG COMPOSITION3_TEXT_START_OFFSET = -8; // offset 8 from the end
   const LONG COMPOSITION3_TEXT_END_OFFSET   = 4;
 
-  const LONG COMPOSITION3_TEXT_START = mImpl->mRangeStart +
-                                       mImpl->mRangeLength +
+  const LONG COMPOSITION3_TEXT_START = range->mStart + range->mLength +
                                        COMPOSITION3_TEXT_START_OFFSET;
   const LONG COMPOSITION3_TEXT_END   = COMPOSITION3_TEXT_START +
                                        COMPOSITION3_TEXT_END_OFFSET;
@@ -1604,7 +2175,7 @@ TestApp::TestComposition(void)
     return PR_FALSE;
   }
   sel.acpEnd = textChange.acpNewEnd;
-  mImpl->mRangeLength += textChange.acpNewEnd - textChange.acpOldEnd;
+  range->mLength += textChange.acpNewEnd - textChange.acpOldEnd;
 
 
   nsString referenceString;
@@ -1635,6 +2206,8 @@ TestApp::TestComposition(void)
     return PR_FALSE;
   }
 
+  mImpl->mAttrProp->mRanges.Clear();
+
   hr = sink->OnEndComposition(mImpl);
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: OnEndComposition");
@@ -1646,12 +2219,13 @@ TestApp::TestComposition(void)
            referenceString))
     return PR_FALSE;
 
+  const LONG EMPTYCOMPOSITION_START  = range->mStart + 2;
+  const LONG EMPTYCOMPOSITION_LENGTH = range->mLength - 4;
 
-  const LONG EMPTYCOMPOSITION_START  = mImpl->mRangeStart + 2;
-  const LONG EMPTYCOMPOSITION_LENGTH = mImpl->mRangeLength - 4;
+  range->mStart = EMPTYCOMPOSITION_START;
+  range->mLength = EMPTYCOMPOSITION_LENGTH;
+  mImpl->mAttrProp->mRanges.AppendElement(range);
 
-  mImpl->mRangeStart = EMPTYCOMPOSITION_START;
-  mImpl->mRangeLength = EMPTYCOMPOSITION_LENGTH;
   okay = FALSE;
   hr = sink->OnStartComposition(mImpl, &okay);
   if (!(SUCCEEDED(hr) &&
@@ -1660,6 +2234,8 @@ TestApp::TestComposition(void)
     return PR_FALSE;
   }
 
+  mImpl->mAttrProp->mRanges.Clear();
+
   hr = sink->OnEndComposition(mImpl);
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: OnEndComposition (empty composition)");
@@ -1667,8 +2243,7 @@ TestApp::TestComposition(void)
   }
 
   if (!TestCompositionSelectionAndText("empty composition",
-           mImpl->mRangeStart,
-           mImpl->mRangeStart + mImpl->mRangeLength,
+           range->mStart, range->mStart + range->mLength,
            referenceString))
     return PR_FALSE;
 

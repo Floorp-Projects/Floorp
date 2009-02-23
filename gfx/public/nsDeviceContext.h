@@ -43,7 +43,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
@@ -74,9 +74,9 @@ public:
   virtual nsresult CreateFontMetricsInstance(nsIFontMetrics** fm);
   
 protected:
-  nsVoidArray      mFontMetrics;
-  nsIDeviceContext *mContext; // we do not addref this since
-                              // ownership is implied. MMP.
+  nsTArray<nsIFontMetrics*> mFontMetrics;
+  nsIDeviceContext         *mContext; // we do not addref this since
+                                      // ownership is implied. MMP.
 };
 
 // inherit visibility from the NS_GFX class declaration

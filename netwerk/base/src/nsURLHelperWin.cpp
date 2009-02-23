@@ -75,6 +75,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 
     // esc_Directory does not escape the semicolons, so if a filename 
     // contains semicolons we need to manually escape them.
+    // This replacement should be removed in bug #473280
     escPath.ReplaceSubstring(";", "%3b");
 
     // if this file references a directory, then we need to ensure that the

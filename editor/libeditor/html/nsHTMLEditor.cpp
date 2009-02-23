@@ -2365,7 +2365,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
   PRInt32 offset;
   res = GetStartNodeAndOffset(selection, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
-  
+  if (!parent) return NS_ERROR_NULL_POINTER;
+
   // is the selection collapsed?
   PRBool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
@@ -2399,6 +2400,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     nsCOMPtr<nsIDOMNode> blockParent = nodeToExamine;
     if (!isBlock) {
       blockParent = GetBlockNodeParent(nodeToExamine);
+      if (!blockParent)
+        return NS_OK;
     }
 
     // Make sure to not walk off onto the Document node
@@ -3613,12 +3616,6 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // (This checks if already exists)
   ps->AddOverrideStyleSheet(sheet);
 
-  // Save doc pointer to be able to use nsIStyleSheet::SetEnabled()
-  nsIDocument *document = ps->GetDocument();
-  if (!document)
-    return NS_ERROR_NULL_POINTER;
-  sheet->SetOwningDocument(document);
-
   ps->ReconstructStyleData();
 
   // Save as the last-loaded sheet
@@ -3683,10 +3680,14 @@ nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
 
   nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
   NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
+
+  // Ensure the style sheet is owned by our document.
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
+  rv = sheet->SetOwningDocument(doc);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   return domSheet->SetDisabled(!aEnable);
 }
-
 
 PRBool
 nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
@@ -3698,6 +3699,11 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
   // Enable sheet if already loaded.
   if (sheet)
   {
+    // Ensure the style sheet is owned by our document.
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
+    rv = sheet->SetOwningDocument(doc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
     NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
     

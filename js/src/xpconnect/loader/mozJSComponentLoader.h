@@ -121,8 +121,6 @@ class mozJSComponentLoader : public nsIModuleLoader,
                          nsIURI *uri, JSContext *cx);
     static void CloseFastLoad(nsITimer *timer, void *closure);
     void CloseFastLoad();
-    nsresult ReportOnCaller(nsAXPCNativeCallContext *cc,
-                            const char *format, ...);
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;

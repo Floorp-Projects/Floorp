@@ -39,7 +39,7 @@
 gTestfile = 'regress-328249.js';
 
 var summary = "Crash due to infinite recursion in js_IsXMLName";
-var BUGNUMBER = 327897;
+var BUGNUMBER = 328249;
 var actual = 'No Crash';
 var expect = 'No Crash';
 

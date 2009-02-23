@@ -74,7 +74,10 @@ nsMenuItemX::~nsMenuItemX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // autorelease the native menu item so that anything else happening to this
+  // object happens before the native menu item actually dies
   [mNativeMenuItem autorelease];
+
   if (mContent)
     mMenuBar->UnregisterForContentChanges(mContent);
   if (mCommandContent)

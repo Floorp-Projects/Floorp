@@ -97,3 +97,7 @@
 
 #define NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID \
   "@mozilla.org/browser/places/import-export-service;1"
+
+// 136e2c4d-c5a4-477c-b131-d93d7d704f64
+#define NS_PRIVATE_BROWSING_SERVICE_WRAPPER_CID \
+{ 0x136e2c4d, 0xc5a4, 0x477c, { 0xb1, 0x31, 0xd9, 0x3d, 0x7d, 0x70, 0x4f, 0x64 } }

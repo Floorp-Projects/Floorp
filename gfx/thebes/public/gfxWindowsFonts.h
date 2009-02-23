@@ -113,10 +113,10 @@ public:
     FontEntry(const nsAString& aFaceName) : 
         gfxFontEntry(aFaceName), mFontType(GFX_FONT_TYPE_UNKNOWN),
         mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
         mCharset(0), mUnicodeRanges(0)
     {
-        mUnicodeFont = PR_FALSE;
-        mSymbolFont = PR_FALSE;
+
     }
 
     FontEntry(const FontEntry& aFontEntry) :
@@ -126,6 +126,8 @@ public:
         mFontType(aFontEntry.mFontType),
         mForceGDI(aFontEntry.mForceGDI),
         mUnknownCMAP(aFontEntry.mUnknownCMAP),
+        mUnicodeFont(aFontEntry.mUnicodeFont),
+        mSymbolFont(aFontEntry.mSymbolFont),
         mCharset(aFontEntry.mCharset),
         mUnicodeRanges(aFontEntry.mUnicodeRanges)
     {
@@ -270,6 +272,8 @@ public:
     gfxWindowsFontType mFontType;
     PRPackedBool mForceGDI    : 1;
     PRPackedBool mUnknownCMAP : 1;
+    PRPackedBool mUnicodeFont : 1;
+    PRPackedBool mSymbolFont  : 1;
 
     std::bitset<256> mCharset;
     std::bitset<128> mUnicodeRanges;

@@ -3,9 +3,8 @@ function testName(aAccOrElmOrID, aName, aMsg)
   var msg = aMsg ? aMsg : "";
 
   var acc = getAccessible(aAccOrElmOrID);
-  if (!acc) {
-    ok(false, msg + "No accessible for " + aAccOrElmOrID + "!");
-  }
+  if (!acc)
+    return;
 
   try {
     is(acc.name, aName, msg + "Wrong name of the accessible for " + aAccOrElmOrID);
@@ -36,12 +35,66 @@ function testNames()
   gRuleDoc = request.responseXML;
 
   var markupElms = evaluateXPath(gRuleDoc, "//rules/rulesample/markup");
-  for (var idx = 0; idx < markupElms.length; idx++)
-    testNamesForMarkup(markupElms[idx]);
+  gTestIterator.iterateMarkups(markupElms);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private section.
+
+/**
+ * Helper class to interate through name tests.
+ */
+var gTestIterator =
+{
+  iterateMarkups: function gTestIterator_iterateMarkups(aMarkupElms)
+  {
+    this.markupElms = aMarkupElms;
+
+    this.iterateNext();
+  },
+
+  iterateRules: function gTestIterator_iterateRules(aElm, aContainer, aRuleElms)
+  {
+    this.ruleElms = aRuleElms;
+    this.elm = aElm;
+    this.container = aContainer;
+
+    this.iterateNext();
+  },
+
+  iterateNext: function gTestIterator_iterateNext()
+  {
+    if (this.markupIdx == -1) {
+      this.markupIdx++;
+      testNamesForMarkup(this.markupElms[this.markupIdx]);
+      return;
+    }
+
+    this.ruleIdx++;
+    if (this.ruleIdx == this.ruleElms.length) {
+      this.markupIdx++;
+      if (this.markupIdx == this.markupElms.length) {
+        SimpleTest.finish();
+        return;
+      }
+
+      document.body.removeChild(this.container);
+
+      this.ruleIdx = -1;
+      testNamesForMarkup(this.markupElms[this.markupIdx]);
+      return;
+    }
+
+    testNameForRule(this.elm, this.ruleElms[this.ruleIdx]);
+  },
+
+  markupElms: null,
+  markupIdx: -1,
+  ruleElms: null,
+  ruleIdx: -1,
+  elm: null,
+  container: null
+};
 
 /**
  * Process every 'markup' element and test names for it. Used by testNames
@@ -50,7 +103,7 @@ function testNames()
 function testNamesForMarkup(aMarkupElm)
 {
   var div = document.createElement("div");
-  div.setAttribute("test", "test");
+  div.setAttribute("id", "test");
 
   var child = aMarkupElm.firstChild;
   while (child) {
@@ -58,90 +111,114 @@ function testNamesForMarkup(aMarkupElm)
     div.appendChild(newChild);
     child = child.nextSibling;
   }
+
+  waitForEvent(EVENT_REORDER, document, testNamesForMarkupRules,
+                null, aMarkupElm, div);
+
   document.body.appendChild(div);
+}
+
+function testNamesForMarkupRules(aMarkupElm, aContainer)
+{
+  ensureAccessibleTree(aContainer);
 
   var serializer = new XMLSerializer();
 
-  var expr = "//html/body/div[@test='test']/" + aMarkupElm.getAttribute("ref");
+  var expr = "//html/body/div[@id='test']/" + aMarkupElm.getAttribute("ref");
   var elms = evaluateXPath(document, expr, htmlDocResolver);
 
   var ruleId = aMarkupElm.getAttribute("ruleset");
   var ruleElms = getRuleElmsByRulesetId(ruleId);
 
-  for (var idx = 0; idx < ruleElms.length; idx++)
-    testNameForRule(elms[0], ruleElms[idx]);
-
-  document.body.removeChild(div);
+  gTestIterator.iterateRules(elms[0], aContainer, ruleElms);
 }
 
 /**
  * Test name for current rule and current 'markup' element. Used by
  * testNamesForMarkup function.
  */
-function testNameForRule(aElm, aRule)
+function testNameForRule(aElm, aRuleElm)
 {
+  if (aRuleElm.hasAttribute("attr"))
+    testNameForAttrRule(aElm, aRuleElm);
+  else if (aRuleElm.hasAttribute("elm") && aRuleElm.hasAttribute("elmattr"))
+    testNameForElmRule(aElm, aRuleElm);
+  else if (aRuleElm.getAttribute("fromsubtree") == "true")
+    testNameForSubtreeRule(aElm, aRuleElm);
+}
+
+function testNameForAttrRule(aElm, aRule)
+{
+  var name = "";
+
   var attr = aRule.getAttribute("attr");
-  if (attr) {
-    var name = "";
-    var attrValue = aElm.getAttribute(attr);
-  
-    var type = aRule.getAttribute("type");
-    if (type == "string") {
-      name = attrValue;
+  var attrValue = aElm.getAttribute(attr);
 
-    } else if (type == "ref") {
-      var ids = attrValue.split(/\s+/);///\,\s*/);
-      for (var idx = 0; idx < ids.length; idx++) {
-        var labelElm = getNode(ids[idx]);
-        if (name != "")
-          name += " ";
+  var type = aRule.getAttribute("type");
+  if (type == "string") {
+    name = attrValue;
 
-        name += labelElm.getAttribute("a11yname");
-      }
+  } else if (type == "ref") {
+    var ids = attrValue.split(/\s+/);
+    for (var idx = 0; idx < ids.length; idx++) {
+      var labelElm = getNode(ids[idx]);
+      if (name != "")
+        name += " ";
+
+      name += labelElm.getAttribute("a11yname");
     }
-
-    var msg = "Attribute '" + attr + "' test. ";
-    testName(aElm, name, msg);
-    aElm.removeAttribute(attr);
-    return;
   }
 
+  var msg = "Attribute '" + attr + "' test. ";
+  testName(aElm, name, msg);
+  aElm.removeAttribute(attr);
+
+  gTestIterator.iterateNext();
+}
+
+function testNameForElmRule(aElm, aRule)
+{  
   var elm = aRule.getAttribute("elm");
   var elmattr = aRule.getAttribute("elmattr");
-  if (elm && elmattr) {
-    var filter = {
-      acceptNode: function filter_acceptNode(aNode)
-      {
-        if (aNode.localName == this.mLocalName &&
-            aNode.getAttribute(this.mAttrName) == this.mAttrValue)
-          return NodeFilter.FILTER_ACCEPT;
 
-        return NodeFilter.FILTER_SKIP;
-      },
+  var filter = {
+    acceptNode: function filter_acceptNode(aNode)
+    {
+      if (aNode.localName == this.mLocalName &&
+          aNode.getAttribute(this.mAttrName) == this.mAttrValue)
+        return NodeFilter.FILTER_ACCEPT;
 
-      mLocalName: elm,
-      mAttrName: elmattr,
-      mAttrValue: aElm.getAttribute("id")
-    };
+      return NodeFilter.FILTER_SKIP;
+    },
 
-    var treeWalker = document.createTreeWalker(document.body,
-                                               NodeFilter.SHOW_ELEMENT,
-                                               filter, false);
-    var labelElm = treeWalker.nextNode();
-    var msg = "Element '" + elm + "' test.";
-    testName(aElm, labelElm.getAttribute("a11yname"), msg);
-    labelElm.parentNode.removeChild(labelElm);
-    return;
-  }
+    mLocalName: elm,
+    mAttrName: elmattr,
+    mAttrValue: aElm.getAttribute("id")
+  };
 
-  var fromSubtree = aRule.getAttribute("fromsubtree");
-  if (fromSubtree == "true") {
-    var msg = "From subtree test.";
-    testName(aElm, aElm.getAttribute("a11yname"), msg);
-    while (aElm.firstChild)
-      aElm.removeChild(aElm.firstChild);
-    return;
-  }
+  var treeWalker = document.createTreeWalker(document.body,
+                                             NodeFilter.SHOW_ELEMENT,
+                                             filter, false);
+  var labelElm = treeWalker.nextNode();
+  var msg = "Element '" + elm + "' test.";
+  testName(aElm, labelElm.getAttribute("a11yname"), msg);
+
+  var parentNode = labelElm.parentNode;
+  waitForEvent(EVENT_REORDER, parentNode,
+               gTestIterator.iterateNext, gTestIterator);
+
+  parentNode.removeChild(labelElm);
+}
+
+function testNameForSubtreeRule(aElm, aRule)
+{
+  var msg = "From subtree test.";
+  testName(aElm, aElm.getAttribute("a11yname"), msg);
+
+  waitForEvent(EVENT_REORDER, aElm, gTestIterator.iterateNext, gTestIterator);
+
+  while (aElm.firstChild)
+    aElm.removeChild(aElm.firstChild);
 }
 
 /**

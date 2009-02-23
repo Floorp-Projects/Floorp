@@ -1292,7 +1292,7 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
   }
 
   nsSVGViewBoxRect viewbox;
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+  if (mViewBox.IsValid()) {
     viewbox = mViewBox.GetAnimValue();
   } else {
     viewbox.x = viewbox.y = 0.0f;
@@ -1461,7 +1461,7 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
 {
   float h, w;
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+  if (mViewBox.IsValid()) {
     const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue();
     w = viewbox.width;
     h = viewbox.height;

@@ -39,15 +39,6 @@
 #define nsLegendFrame_h___
 
 #include "nsBlockFrame.h"
-#include "nsPresContext.h"
-#include "nsCOMPtr.h"
-
-class  nsIContent;
-class  nsIFrame;
-class  nsPresContext;
-struct nsHTMLReflowMetrics;
-class  nsIRenderingContext;
-struct nsRect;
 
 class nsLegendFrame : public nsBlockFrame {
 public:
@@ -57,7 +48,7 @@ public:
 
   NS_DECL_QUERYFRAME
 
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

@@ -384,7 +384,7 @@
         event.stopPropagation();
       ]]></handler>
 
-      <handler event="underflow"><![CDATA[
+      <handler event="underflow" phase="capturing"><![CDATA[
         // filter underflow events which were dispatched on nested scrollboxes
         if (event.target != this)
           return;
@@ -420,7 +420,7 @@
         }
       ]]></handler>
 
-      <handler event="overflow"><![CDATA[
+      <handler event="overflow" phase="capturing"><![CDATA[
         // filter underflow events which were dispatched on nested scrollboxes
         if (event.target != this)
           return;

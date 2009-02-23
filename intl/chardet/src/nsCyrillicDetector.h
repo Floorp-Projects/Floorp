@@ -80,7 +80,7 @@ static const char * gUkrainian[5] = {
   "windows-1251", 
   "KOI8-U", 
   "ISO-8859-5", 
-  "x-mac-ukrainian",
+  "x-mac-cyrillic",
   "IBM866"
 };
 

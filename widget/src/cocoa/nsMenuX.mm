@@ -124,7 +124,9 @@ nsMenuX::~nsMenuX()
   [mNativeMenu setDelegate:nil];
   [mNativeMenu release];
   [mMenuDelegate release];
-  [mNativeMenuItem release];
+  // autorelease the native menu item so that anything else happening to this
+  // object happens before the native menu item actually dies
+  [mNativeMenuItem autorelease];
 
   // alert the change notifier we don't care no more
   if (mContent)

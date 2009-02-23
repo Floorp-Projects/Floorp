@@ -5145,15 +5145,16 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
 static nsIFrame*
 FindChildContaining(nsBlockFrame* aFrame, nsIFrame* aFindFrame)
 {
+  NS_ASSERTION(aFrame, "must have frame");
   nsIFrame* child;
   while (PR_TRUE) {
     nsIFrame* block = aFrame;
-    while (block) {
+    do {
       child = nsLayoutUtils::FindChildContainingDescendant(block, aFindFrame);
       if (child)
         break;
       block = block->GetNextContinuation();
-    }
+    } while (block);
     if (!child)
       return nsnull;
     if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW))

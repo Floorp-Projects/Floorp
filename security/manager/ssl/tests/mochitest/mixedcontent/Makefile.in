@@ -1,0 +1,106 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Jan Bambas <honzab@firemni.cz>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= security/ssl/mixedcontent
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES = \
+        alloworigin.sjs \
+        backward.html \
+        bug329869.js \
+        bug383369step2.html \
+        bug383369step3.html \
+        download.auto \
+        download.auto^headers^ \
+        emptyimage.sjs \
+        hugebmp.sjs \
+        iframe.html \
+        iframe2.html \
+        iframeMetaRedirect.html \
+        iframesecredirect.sjs \
+        iframeunsecredirect.sjs \
+        imgsecredirect.sjs \
+        imgunsecredirect.sjs \
+        mixedContentTest.js \
+        moonsurface.jpg \
+        redirecttoemptyimage.sjs \
+        somestyle.css \
+        test_bug383369.html \
+        test_bug455367.html \
+        test_bug472986.html \
+        test_cssBefore1.html \
+        test_cssContent1.html \
+        test_cssContent2.html \
+        test_documentWrite1.html \
+        test_documentWrite2.html \
+        test_dynDelayedUnsecurePicture.html \
+        test_dynDelayedUnsecureXHR.html \
+        test_dynUnsecureBackground.html \
+        test_dynUnsecureIframeRedirect.html \
+        test_dynUnsecurePicture.html \
+        test_dynUnsecurePicturePreload.html \
+        test_dynUnsecureRedirect.html \
+        test_innerHtmlDelayedUnsecurePicture.html \
+        test_innerHtmlUnsecurePicture.html \
+        test_secureAll.html \
+        test_securePicture.html \
+        test_unsecureBackground.html \
+        test_unsecureCSS.html \
+        test_unsecureIframe.html \
+        test_unsecureIframe2.html \
+        test_unsecureIframeMetaRedirect.html \
+        test_unsecureIframeRedirect.html \
+        test_unsecurePicture.html \
+        test_unsecurePictureDup.html \
+        test_unsecurePictureInIframe.html \
+        test_unsecureRedirect.html \
+        unsecureIframe.html \
+        unsecurePictureDup.html \
+        $(NULL)
+
+#        test_bug329869.html \  leaks, bug 452401
+
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

@@ -39,18 +39,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Windows only app to show a modal debug dialog - launched by nsDebug.cpp */
-
 #include <windows.h>
 #include <stdlib.h>
-
+#ifdef _MSC_VER
+#include <strsafe.h>
+#endif
 #ifdef __MINGW32__
-
 /* MingW currently does not implement a wide version of the
    startup routines.  Workaround is to implement something like
    it ourselves.  See bug 472063 */
-
+#include <stdio.h>
 #include <shellapi.h>
-
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 
 #undef __argc
@@ -136,14 +135,20 @@ wWinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
         RegCloseKey(hkeyLM);
     if (regValue != (DWORD)-1 && regValue != (DWORD)-2)
         return regValue;
-    static WCHAR msg[4048];
+    static const int size = 4096;
+    static WCHAR msg[size];
 
-    wsprintfW(msg,
+#ifdef _MSC_VER
+    StringCchPrintfW(msg,
+#else
+    snwprintf(msg,
+#endif
+              size,
               L"%s\n\nClick Abort to exit the Application.\n"
               L"Click Retry to Debug the Application.\n"
               L"Click Ignore to continue running the Application.",
               lpszCmdLine);
-
+    msg[size - 1] = L'\0';
     return MessageBoxW(NULL, msg, L"NSGlue_Assertion",
                        MB_ICONSTOP | MB_SYSTEMMODAL |
                        MB_ABORTRETRYIGNORE | MB_DEFBUTTON3);

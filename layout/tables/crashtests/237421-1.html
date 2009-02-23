@@ -1,0 +1,16 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+   <head>
+      <title>bug 237421: test1</title>
+   </head>
+   <body>
+      <table>
+         <tr id="foo"><td></td></tr>
+         <tr><td colspan="2"></td></tr>
+      </table>
+      <script>
+         document.getElementById("foo").style.display="table-row";
+         document.getElementById("foo").style.display="none";
+      </script>
+   </body>
+</html>

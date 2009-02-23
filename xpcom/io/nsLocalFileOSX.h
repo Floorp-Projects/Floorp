@@ -102,9 +102,6 @@ protected:
 
   PRPackedBool mFollowLinks;
   PRPackedBool mFollowLinksDirty;
-
-  static const char      kPathSepChar;
-  static const PRInt64   kJanuaryFirst1970Seconds;    
 };
 
 #endif // nsLocalFileMac_h_

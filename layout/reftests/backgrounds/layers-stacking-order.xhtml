@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>css3-background: stacking order of layers</title>
+		<link rel="author" title="L. David Baron" href="http://dbaron.org/" />
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+		<link rel="help" href="http://dev.w3.org/csswg/css3-background/#layering" />
+		<meta name="flags" content="" />
+		<style type="text/css"><![CDATA[
+
+		div#test {
+			position: relative; height: 100px; width: 100px;
+			background: url(blue-32x32.png) 5px 5px no-repeat,
+			            url(yellow-32x32.png) 15px 15px no-repeat,
+			            url(fuchsia-32x32.png) 10px 10px no-repeat,
+			            url(aqua-32x32.png) 20px 20px no-repeat;
+		}
+
+
+		]]></style>
+	</head>
+	<body>
+
+	<div id="test"></div>
+
+	</body>
+</html>

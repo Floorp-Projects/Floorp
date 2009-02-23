@@ -1259,8 +1259,17 @@ public:
     void RemoveWrappedNativeProtos();
 
     static XPCWrappedNativeScope*
+    FindInJSObjectScope(JSContext* cx, JSObject* obj,
+                        JSBool OKIfNotInitialized = JS_FALSE,
+                        XPCJSRuntime* runtime = nsnull);
+
+    static XPCWrappedNativeScope*
     FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
-                        JSBool OKIfNotInitialized = JS_FALSE);
+                        JSBool OKIfNotInitialized = JS_FALSE)
+    {
+        return FindInJSObjectScope(ccx, obj, OKIfNotInitialized,
+                                   ccx.GetRuntime());
+    }
 
     static void
     SystemIsBeingShutDown(JSContext* cx);
@@ -4076,7 +4085,8 @@ XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
                                     JSObject *aGlobalObject);
 
 JSBool
-XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp);
+XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
+                   XPCWrappedNative *wn = nsnull);
 
 #ifdef XPC_IDISPATCH_SUPPORT
 // IDispatch specific classes

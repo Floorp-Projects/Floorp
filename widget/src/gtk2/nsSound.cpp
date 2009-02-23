@@ -491,6 +491,10 @@ nsresult nsSound::PlaySystemEventSound(const nsAString &aSoundAlias)
         ca_context_play(ctx, 0, "event.id", "dialog-question", NULL);
     else if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
         ca_context_play(ctx, 0, "event.id", "message-new-email", NULL);
+    else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_EXECUTE))
+        ca_context_play(ctx, 0, "event.id", "menu-click", NULL);
+    else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_POPUP))
+        ca_context_play(ctx, 0, "event.id", "menu-popup", NULL);
 
     return NS_OK;
 }
