@@ -48,7 +48,7 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-TESTROOT	= $(shell cd $(DEPTH) && pwd)/_tests/xpcshell-simple/$(MODULE)
+TESTROOT	= $(shell cd $(DEPTH) && pwd)/_tests/xpcshell/$(MODULE)
 
 CPPSRCS = \
   TestAUSReadStrings.cpp \
