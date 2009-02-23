@@ -573,38 +573,35 @@ WeaveSvc.prototype = {
     this._log.debug("Fetching global metadata record");
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
-    if (meta) {
-      // FIXME: version is a string, and we don't have any version
-      // parsing function so we can implement greater-than.  So we
-      // just check for != which is wrong!
-      if (meta.payload.storageVersion != MIN_SERVER_STORAGE_VERSION) {
-	reset = true;
-	yield this._freshStart.async(this, self.cb);
-	this._log.info("Server data wiped to ensure consistency after client upgrade");
 
-      } else if (!meta.payload.syncID) {
-	reset = true;
-	yield this._freshStart.async(this, self.cb);
-	this._log.info("Server data wiped to ensure consistency after client upgrade");
-
-      } else if (meta.payload.syncID != Clients.syncID) {
-	this._wipeClientMetadata();
-	Clients.syncID = meta.payload.syncID;
-	this._log.info("Cleared local caches after server wipe was detected");
-      }
-
-    } else {
-      if (Records.lastResource.lastChannel.responseStatus == 404) {
-	reset = true;
-	yield this._freshStart.async(this, self.cb);
-	this._log.info("Metadata record not found, server wiped to ensure consistency");
-
-      } else {
-	this._log.debug("Unknown error while downloading metadata record.  " +
+    if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
+        Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
+                            meta.payload.storageVersion) > 0) {
+      // make sure the meta record is either not there (404), or that
+      // we got it ok (200), otherwise something went wrong and we abort
+      if (Records.lastResource.lastChannel.responseStatus != 404 ||
+          Records.lastResource.lastChannel.responseStatus != 200) {
+	this._log.warn("Unknown error while downloading metadata record.  " +
 			"Aborting sync.");
 	self.done(false);
 	return;
       }
+      reset = true;
+      yield this._freshStart.async(this, self.cb);
+      this._log.info("Server data wiped to ensure consistency after client " +
+                     "upgrade (or possible first-run)");
+
+    } else if (Svc.Version.compare(meta.payload.storageVersion,
+                                   WEAVE_VERSION) > 0) {
+      this._log.warn("Server data is of a newer Weave version, this client " +
+                     "needs to be upgraded.  Aborting sync.");
+      self.done(false);
+      return;
+
+    } else if (meta.payload.syncID != Clients.syncID) {
+      this._wipeClientMetadata();
+      Clients.syncID = meta.payload.syncID;
+      this._log.info("Cleared local caches after server wipe was detected");
     }
 
     let needKeys = true;
