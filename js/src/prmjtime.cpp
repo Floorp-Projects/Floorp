@@ -440,7 +440,7 @@ PRMJ_Now(void)
 
             /* On some dual processor/core systems, we might get an earlier time
                so we cache the last time that we returned */
-            calibration.last = max(calibration.last,(JSInt64)highresTime);
+            calibration.last = JS_MAX(calibration.last,(JSInt64)highresTime);
             returnedTime = calibration.last;
             MUTEX_UNLOCK(&calibration.data_lock);
 
