@@ -94,6 +94,7 @@ nsFtpProtocolHandler *gFtpHandler = nsnull;
 
 nsFtpProtocolHandler::nsFtpProtocolHandler()
     : mIdleTimeout(-1)
+    , mSessionId(0)
 {
 #if defined(PR_LOGGING)
     if (!gFTPLog)
@@ -138,11 +139,16 @@ nsFtpProtocolHandler::Init()
 
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1");
-    if (observerService)
+    if (observerService) {
         observerService->AddObserver(this,
                                      "network:offline-about-to-go-offline",
                                      PR_TRUE);
-    
+
+        observerService->AddObserver(this,
+                                     "net:clear-active-logins",
+                                     PR_TRUE);
+    }
+
     return NS_OK;
 }
 
@@ -295,7 +301,10 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
 {
     NS_ASSERTION(aConn, "null pointer");
     NS_ASSERTION(aKey, "null pointer");
-    
+
+    if (aConn->mSessionId != mSessionId)
+        return NS_ERROR_FAILURE;
+
     nsCAutoString spec;
     aKey->GetPrePath(spec);
 
@@ -375,13 +384,22 @@ nsFtpProtocolHandler::Observe(nsISupports *aSubject,
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = timeout;
     } else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
-        PRUint32 i;
-        for (i=0;i<mRootConnectionList.Length();++i)
-            delete mRootConnectionList[i];
-        mRootConnectionList.Clear();
+        ClearAllConnections();
+    } else if (!strcmp(aTopic, "net:clear-active-logins")) {
+        ClearAllConnections();
+        mSessionId++;
     } else {
         NS_NOTREACHED("unexpected topic");
     }
 
     return NS_OK;
+}
+
+void
+nsFtpProtocolHandler::ClearAllConnections()
+{
+    PRUint32 i;
+    for (i=0;i<mRootConnectionList.Length();++i)
+        delete mRootConnectionList[i];
+    mRootConnectionList.Clear();
 }

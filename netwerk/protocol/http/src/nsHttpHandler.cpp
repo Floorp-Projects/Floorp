@@ -284,6 +284,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
         mObserverService->AddObserver(this, "profile-change-net-restore", PR_TRUE);
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+        mObserverService->AddObserver(this, "net:clear-active-logins", PR_TRUE);
     }
  
     StartPruneDeadConnectionsTimer();
@@ -1726,6 +1727,9 @@ nsHttpHandler::Observe(nsISupports *subject,
 #endif
         if (mConnMgr)
             mConnMgr->PruneDeadConnections();
+    }
+    else if (strcmp(topic, "net:clear-active-logins") == 0) {
+        mAuthCache.ClearAll();
     }
 
     return NS_OK;
