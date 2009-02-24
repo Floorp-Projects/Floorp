@@ -77,10 +77,19 @@ enum {
   // Whether this node has had any properties set on it
   NODE_HAS_PROPERTIES =          0x00000004U,
 
-  // Whether this node is anonymous
+  // Whether this node is the root of an anonymous subtree.  Note that this
+  // need not be a native anonymous subtree.  Any anonymous subtree, including
+  // XBL-generated ones, will do.  This flag is set-once: once a node has it,
+  // it must not be removed.
   // NOTE: Should only be used on nsIContent nodes
   NODE_IS_ANONYMOUS =            0x00000008U,
-  
+
+  // Whether the node has some ancestor, possibly itself, that is native
+  // anonymous.  This includes ancestors crossing XBL scopes, in cases when an
+  // XBL binding is attached to an element which has a native anonymous
+  // ancestor.  This flag is set-once: once a node has it, it must not be
+  // removed.
+  // NOTE: Should only be used on nsIContent nodes
   NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000010U,
 
   // Whether this node may have a frame
@@ -653,6 +662,9 @@ public:
 
   void UnsetFlags(PtrBits aFlagsToUnset)
   {
+    NS_ASSERTION(!(aFlagsToUnset &
+                   (NODE_IS_ANONYMOUS | NODE_IS_IN_ANONYMOUS_SUBTREE)),
+                 "Trying to unset write-only flags");
     PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
                                   &mFlagsOrSlots;
     *flags &= ~aFlagsToUnset;
