@@ -5662,7 +5662,7 @@ PresShell::HandleEvent(nsIView         *aView,
 #ifdef MOZ_XUL
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
-        nsTArray<nsIFrame*> popups = pm->GetOpenPopups();
+        nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
         PRUint32 i;
         // Search from top to bottom
         for (i = 0; i < popups.Length(); i++) {
