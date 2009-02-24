@@ -3592,8 +3592,9 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         r->prepareTreeCall(f);
         VMSideExit* innermostNestedGuard = NULL;
         VMSideExit* lr = js_ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
-        if (!lr) {
-            js_AbortRecording(cx, "Couldn't call inner tree");
+        if (!lr || r->wasDeepAborted()) {
+            if (!lr)
+                js_AbortRecording(cx, "Couldn't call inner tree");
             return false;
         }
         Fragment* old;
