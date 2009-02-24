@@ -485,7 +485,11 @@ FileAppender.prototype = {
 
   clear: function FApp_clear() {
     this.closeStream();
-    this._file.remove(false);
+    try {
+      this._file.remove(false);
+    } catch (e) {
+      // XXX do something?
+    }
   }
 };
 
