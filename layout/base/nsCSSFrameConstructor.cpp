@@ -5393,8 +5393,10 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 #ifdef MOZ_SVG
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
-    if (!aParent ||
-        !aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
+    if (aParent &&
+        aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG)) {
+      content->SetFlags(NODE_IS_ANONYMOUS);
+    } else
 #endif
     {
       content->SetNativeAnonymous();

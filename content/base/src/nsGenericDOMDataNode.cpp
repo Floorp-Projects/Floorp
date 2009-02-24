@@ -545,8 +545,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                  "Trying to re-bind content from native anonymous subtree to "
                  "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
-    if (IsRootOfNativeAnonymousSubtree() ||
-        aParent->IsInNativeAnonymousSubtree()) {
+    if (aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
     }
   }
