@@ -1596,11 +1596,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
     TextRunMappedFlow* newFlow = &userData->mMappedFlows[i];
     newFlow->mStartFrame = mappedFlow->mStartFrame;
-    if (!mSkipIncompleteTextRuns) {
-      // If mSkipIncompleteTextRuns is set, then we're just going to
-      // throw away the userData.
-      newFlow->mStartFrame->AddStateBits(TEXT_IN_TEXTRUN_USER_DATA);
-    }
     newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() -
       mappedFlow->mStartFrame->GetContentOffset();
     newFlow->mContentLength = contentLength;
@@ -1950,6 +1945,9 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
       f->ClearTextRun();
       f->SetTextRun(aTextRun);
     }
+    // Set this bit now; we can't set it any earlier because
+    // f->ClearTextRun() might clear it out.
+    startFrame->AddStateBits(TEXT_IN_TEXTRUN_USER_DATA);
     // BuildTextRunForFrames mashes together mapped flows for the same element,
     // so we do that here too.
     lastContent = startFrame->GetContent();
