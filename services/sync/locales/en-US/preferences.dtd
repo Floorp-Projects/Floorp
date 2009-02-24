@@ -21,7 +21,7 @@
 <!ENTITY newPassword.label                  "New Password:">
 <!ENTITY newPasswordAgain.label             "Re-enter:">
 <!ENTITY showPasswords.label                "Show Passwords">
-<!ENTITY changePasswordButton.label         "Change">
+<!ENTITY changePasswordButton.label         "Change Password">
 
 <!ENTITY instanceName.description         "Please choose a unique name for this computer so you will be able to distinguish it from your other computers.">
 <!ENTITY instanceName.label               "Computer name:">
