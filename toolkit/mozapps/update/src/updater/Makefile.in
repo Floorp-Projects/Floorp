@@ -126,6 +126,11 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+libs:: updater.png
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app
