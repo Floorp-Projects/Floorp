@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- *
+ * 
  * Import this module through
  *
  * Components.utils.import("resource://gre/modules/SpatialNavigation.js");
@@ -58,7 +58,7 @@ var SpatialNavigation = {
   init: function(browser, callback) {
     browser.addEventListener("keypress", function (event) { _onInputKeyPress(event, callback) }, true);
   },
-
+  
   uninit: function() {
   }
 };
@@ -119,61 +119,33 @@ function _onInputKeyPress (event, callback) {
   if (!PrefObserver['xulContentEnabled'] && doc instanceof Ci.nsIDOMXULDocument)
     return ;
 
-  // Check to see if we are in a textarea or text input element, and if so,
+  // check to see if we are in a textarea or text input element, and if so,
   // ensure that we let the arrow keys work properly.
   if (target instanceof Ci.nsIDOMHTMLHtmlElement) {
       _focusNextUsingCmdDispatcher(key, callback);
       return;
   }
 
-  // If it is a single-line input fields ...
-  if (target instanceof Ci.nsIDOMHTMLInputElement &&
-     (target.type == "text" || target.type == "password")) {
-
-    // Up/Down should not care and just move. However, Right/Left
-    // should check the following before move.
-    if (key != PrefObserver['keyCodeUp'] &&
-        key != PrefObserver['keyCodeDown']) {
-
-      // If there is any selection at all, then do not move.
-      if (target.selectionEnd - target.selectionStart > 0)
-        return;
-
-      // If there is text, check if it is okay to move.
-      if (target.textLength > 0) {
-        // Cursor not at the beginning.
-        if (key == PrefObserver['keyCodeLeft'] &&
-            target.selectionStart != 0)
-          return;
-
-        // Cursor not at the end.
-        if (key == PrefObserver['keyCodeRight'] &&
-            target.textLength != target.selectionEnd)
-          return;
-      }
-    }
-  }
-  // If it is a multi-line input field ...
-  else if (target instanceof Ci.nsIDOMHTMLTextAreaElement) {
-
-    // If there is any selection at all, again just ignore
+  if ((target instanceof Ci.nsIDOMHTMLInputElement && (target.type == "text" || target.type == "password")) ||
+      target instanceof Ci.nsIDOMHTMLTextAreaElement ) {
+    
+    // if there is any selection at all, just ignore
     if (target.selectionEnd - target.selectionStart > 0)
       return;
-
-    // If there is text, there check if it is okay to move.
+    
+    // if there is no text, there is nothing special to do.
     if (target.textLength > 0) {
-      if (key == PrefObserver['keyCodeUp'] ||
-          key == PrefObserver['keyCodeLeft']) {
-        // Cursor not at the beginning.
-        if (target.selectionStart != 0)
+      if (key == PrefObserver['keyCodeRight'] ||
+          key == PrefObserver['keyCodeDown'] ) {
+        // we are moving forward into the document
+        if (target.textLength != target.selectionEnd)
           return;
       }
-      else {
-        if (key == PrefObserver['keyCodeDown'] ||
-            key == PrefObserver['keyCodeRight'])
-          // Cursor not at the end.
-          if (target.selectionEnd != target.textLength)
-            return;
+      else
+      {
+        // we are at the start of the text, okay to move 
+        if (target.selectionStart != 0)
+          return;
       }
     }
   }
@@ -201,7 +173,7 @@ function _onInputKeyPress (event, callback) {
         return Ci.nsIDOMNodeFilter.FILTER_SKIP;
       return  Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
     }
-
+    
     if ((node instanceof Ci.nsIDOMHTMLButtonElement ||
          node instanceof Ci.nsIDOMHTMLInputElement ||
          node instanceof Ci.nsIDOMHTMLLinkElement ||
@@ -210,7 +182,7 @@ function _onInputKeyPress (event, callback) {
          node instanceof Ci.nsIDOMHTMLTextAreaElement) &&
         node.disabled == false)
       return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
-
+    
     return Ci.nsIDOMNodeFilter.FILTER_SKIP;
   }
 
@@ -221,7 +193,7 @@ function _onInputKeyPress (event, callback) {
 
   var treeWalker = doc.createTreeWalker(doc, Ci.nsIDOMNodeFilter.SHOW_ELEMENT, snavfilter, false);
   var nextNode;
-
+  
   while ((nextNode = treeWalker.nextNode())) {
 
     if (nextNode == target)
@@ -236,13 +208,13 @@ function _onInputKeyPress (event, callback) {
     var distance = _spatialDistance(key, focusedRect, nextRect);
 
     //dump("looking at: " + nextNode + " " + distance);
-
+    
     if (distance <= distanceToBestElement && distance > 0) {
       distanceToBestElement = distance;
       bestElementToFocus = nextNode;
     }
   }
-
+  
   if (bestElementToFocus != null) {
     //dump("focusing element  " + bestElementToFocus.nodeName + " " + bestElementToFocus) + "id=" + bestElementToFocus.getAttribute("id");
 
@@ -258,7 +230,7 @@ function _onInputKeyPress (event, callback) {
 
     if (callback != undefined)
       callback(bestElementToFocus);
-
+    
   } else {
     // couldn't find anything.  just advance and hope.
     _focusNextUsingCmdDispatcher(key, callback);
@@ -306,7 +278,7 @@ function _isRectInDirection(key, focusedRect, anotherRect)
 function _inflateRect(rect, value)
 {
   var newRect = new Object();
-
+  
   newRect.left   = rect.left - value;
   newRect.top    = rect.top - value;
   newRect.right  = rect.right  + value;
@@ -338,7 +310,7 @@ function _spatialDistance(key, a, b)
     //  |---|
     //  |---|
     //
-
+    
     if (a.top > b.bottom) {
       // the b rect is above a.
       mx = a.left;
@@ -351,7 +323,7 @@ function _spatialDistance(key, a, b)
       mx = a.left;
       my = a.bottom;
       nx = b.right;
-      ny = b.top;
+      ny = b.top;       
     }
     else {
       mx = a.left;
@@ -370,7 +342,7 @@ function _spatialDistance(key, a, b)
     //         |---|
     //         |---|
     //
-
+    
     if (a.top > b.bottom) {
       // the b rect is above a.
       mx = a.right;
@@ -383,7 +355,7 @@ function _spatialDistance(key, a, b)
       mx = a.right;
       my = a.bottom;
       nx = b.left;
-      ny = b.top;
+      ny = b.top;       
     } else {
       mx = a.right;
       my = 0;
@@ -398,7 +370,7 @@ function _spatialDistance(key, a, b)
     //         |---|
     //         |---|
     //
-
+    
     if (a.left > b.right) {
       // the b rect is to the left of a.
       mx = a.left;
@@ -410,7 +382,7 @@ function _spatialDistance(key, a, b)
       mx = a.right;
       my = a.top;
       nx = b.left;
-      ny = b.bottom;
+      ny = b.bottom;       
     } else {
       // both b and a share some common x's.
       mx = 0;
@@ -426,7 +398,7 @@ function _spatialDistance(key, a, b)
     //  |---|  |---|  |---|
     //  |---|  |---|  |---|
     //
-
+    
     if (a.left > b.right) {
       // the b rect is to the left of a.
       mx = a.left;
@@ -438,7 +410,7 @@ function _spatialDistance(key, a, b)
       mx = a.right;
       my = a.bottom;
       nx = b.left;
-      ny = b.top;
+      ny = b.top;      
     } else {
       // both b and a share some common x's.
       mx = 0;
@@ -447,7 +419,7 @@ function _spatialDistance(key, a, b)
       ny = b.top;
     }
   }
-
+  
   var scopedRect = _inflateRect(a, gRectFudge);
 
   if (key == PrefObserver['keyCodeLeft'] ||
@@ -462,13 +434,13 @@ function _spatialDistance(key, a, b)
     scopedRect.bottom = Infinity;
     inlineNavigation = _containsRect(scopedRect, b);
   }
-
+  
   var d = Math.pow((mx-nx), 2) + Math.pow((my-ny), 2);
-
+  
   // prefer elements directly aligned with the focused element
   if (inlineNavigation)
     d /= gDirectionalBias;
-
+  
   return d;
 }
 
