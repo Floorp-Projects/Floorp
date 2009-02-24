@@ -96,6 +96,12 @@ CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS += \
+	readstrings.cpp \
+	$(NULL)
+endif
+
 ifndef HAVE_PROGRESSUI
 CPPSRCS += progressui_null.cpp
 endif
