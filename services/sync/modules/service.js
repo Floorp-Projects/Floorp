@@ -577,10 +577,9 @@ WeaveSvc.prototype = {
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
         Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
                             meta.payload.storageVersion) > 0) {
-      // make sure the meta record is either not there (404), or that
-      // we got it ok (200), otherwise something went wrong and we abort
-      if (Records.lastResource.lastChannel.responseStatus != 404 ||
-          Records.lastResource.lastChannel.responseStatus != 200) {
+      // abort the server wipe if the GET status was anything other than 404 or 200
+      let status = Records.lastResource.lastChannel.responseStatus;
+      if (status != 200 && status != 404) {
 	this._log.warn("Unknown error while downloading metadata record.  " +
 			"Aborting sync.");
 	self.done(false);
