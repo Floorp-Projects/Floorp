@@ -585,10 +585,17 @@ WeaveSvc.prototype = {
 	self.done(false);
 	return;
       }
+
       reset = true;
       yield this._freshStart.async(this, self.cb);
-      this._log.info("Server data wiped to ensure consistency after client " +
-                     "upgrade (or possible first-run)");
+
+      if (status == 404)
+        this._log.info("Metadata record not found, server wiped to ensure " +
+                       "consistency.");
+      else // 200
+        this._log.info("Server data wiped to ensure consistency after client " +
+                       "upgrade (" + meta.paylaod.storageVersion + " -> " +
+                       WEAVE_VERSION + ")");
 
     } else if (Svc.Version.compare(meta.payload.storageVersion,
                                    WEAVE_VERSION) > 0) {
