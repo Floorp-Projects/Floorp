@@ -554,6 +554,10 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
     return;
   }
   
+  if (widget->GetTransparencyMode() == eTransparencyTransparent) {
+    return;
+  }
+
   for (nsIWidget* childWidget = widget->GetFirstChild();
        childWidget;
        childWidget = childWidget->GetNextSibling()) {
@@ -813,22 +817,24 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
   // accumulate the union of all the child widget areas, or at least
   // some subset of that.
   nsRegion children;
-  for (nsIWidget* childWidget = widget->GetFirstChild();
-       childWidget;
-       childWidget = childWidget->GetNextSibling()) {
-    nsView* view = nsView::GetViewFor(childWidget);
-    NS_ASSERTION(view != aWidgetView, "will recur infinitely");
-    if (view && view->GetVisibility() == nsViewVisibility_kShow) {
-      // Don't mess with views that are in completely different view
-      // manager trees
-      if (view->GetViewManager()->RootViewManager() == RootViewManager()) {
-        // get the damage region into 'view's coordinate system
-        nsRegion damage = intersection;
-        nsPoint offset = view->GetOffsetTo(aWidgetView);
-        damage.MoveBy(-offset);
-        UpdateWidgetArea(view, damage, aIgnoreWidgetView);
-        children.Or(children, view->GetDimensions() + offset);
-        children.SimplifyInward(20);
+  if (widget->GetTransparencyMode() != eTransparencyTransparent) {
+    for (nsIWidget* childWidget = widget->GetFirstChild();
+         childWidget;
+         childWidget = childWidget->GetNextSibling()) {
+      nsView* view = nsView::GetViewFor(childWidget);
+      NS_ASSERTION(view != aWidgetView, "will recur infinitely");
+      if (view && view->GetVisibility() == nsViewVisibility_kShow) {
+        // Don't mess with views that are in completely different view
+        // manager trees
+        if (view->GetViewManager()->RootViewManager() == RootViewManager()) {
+          // get the damage region into 'view's coordinate system
+          nsRegion damage = intersection;
+          nsPoint offset = view->GetOffsetTo(aWidgetView);
+          damage.MoveBy(-offset);
+          UpdateWidgetArea(view, damage, aIgnoreWidgetView);
+          children.Or(children, view->GetDimensions() + offset);
+          children.SimplifyInward(20);
+        }
       }
     }
   }
