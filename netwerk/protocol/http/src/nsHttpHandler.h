@@ -107,6 +107,8 @@ public:
     
     PRBool         CanCacheAllSSLContent()   { return mEnablePersistentHttpsCaching; }
 
+    PRBool         PromptTempRedirect()      { return mPromptTempRedirect; }
+
     nsHttpAuthCache     *AuthCache() { return &mAuthCache; }
     nsHttpConnectionMgr *ConnMgr()   { return mConnMgr; }
 
@@ -299,6 +301,8 @@ private:
     PRPackedBool   mUserAgentIsDirty; // true if mUserAgent should be rebuilt
 
     PRPackedBool   mUseCache;
+
+    PRPackedBool   mPromptTempRedirect;
     // mSendSecureXSiteReferrer: default is false, 
     // if true allow referrer headers between secure non-matching hosts
     PRPackedBool   mSendSecureXSiteReferrer;
