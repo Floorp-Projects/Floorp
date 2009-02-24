@@ -1061,9 +1061,6 @@ nsHttpChannel::ProcessNormal()
 nsresult
 nsHttpChannel::PromptTempRedirect()
 {
-    if (!gHttpHandler->PromptTempRedirect()) {
-        return NS_OK;
-    }
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService =
             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
