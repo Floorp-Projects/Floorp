@@ -39,7 +39,7 @@
  * This binary tests the updater's ReadStrings ini parser and should run in a
  * directory with a Unicode character to test bug 473417.
  */
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef XP_WIN
   #include <windows.h>
   #define NS_main wmain
   #define NS_tstrrchr wcsrchr
@@ -52,7 +52,11 @@
   #define NS_tstrrchr strrchr
   #define NS_tsnprintf snprintf
   #define NS_T(str) str
+#ifdef XP_OS2
+  #define PATH_SEPARATOR_CHAR '\\'
+#else
   #define PATH_SEPARATOR_CHAR '/'
+#endif
 #endif
 
 #include <stdio.h>
