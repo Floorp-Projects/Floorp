@@ -936,20 +936,6 @@ namespace nanojit
 		// to execute junk
 # if defined(UNDER_CE)
 		FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-#elif defined AVMPLUS_SPARC
-        // Clear Instruction Cache
-        for (int i = 0; i < 2; i++) {
-            Page *p = (i == 0) ? _nativePages : _nativeExitPages;
-
-            Page *first = p;
-            while (p) {
-                if (!p->next || p->next != p+1) {
-                    sync_instruction_memory((char *)first, NJ_PAGE_SIZE);
-                    first = p->next;
-                }
-                p = p->next;
-            }
-        }
 # elif defined(AVMPLUS_UNIX)
 		for (int i = 0; i < 2; i++) {
 			Page *p = (i == 0) ? _nativePages : _nativeExitPages;
@@ -964,6 +950,22 @@ namespace nanojit
 			}
 		}
 # endif
+#endif
+
+#ifdef AVMPLUS_SPARC
+        // Clear Instruction Cache
+        for (int i = 0; i < 2; i++) {
+            Page *p = (i == 0) ? _nativePages : _nativeExitPages;
+
+            Page *first = p;
+            while (p) {
+                if (!p->next || p->next != p+1) {
+                    sync_instruction_memory((char *)first, NJ_PAGE_SIZE);
+                    first = p->next;
+                }
+                p = p->next;
+            }
+        }
 #endif
 
 # ifdef AVMPLUS_PORTING_API
