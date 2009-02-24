@@ -201,6 +201,7 @@ SyncEngine.prototype = {
     return Svc.Prefs.get(this.name + ".lastSync", 0);
   },
   set lastSync(value) {
+    Svc.Prefs.reset(this.name + ".lastSync");
     if (typeof(value) == "string")
       value = parseInt(value);
     Svc.Prefs.set(this.name + ".lastSync", value);
