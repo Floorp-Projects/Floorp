@@ -947,6 +947,7 @@ function BrowserStartup() {
     else if (window.arguments.length >= 3) {
       loadURI(uriToLoad, window.arguments[2], window.arguments[3] || null,
               window.arguments[4] || false);
+      content.focus();
     }
     // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
     // Such callers expect that window.arguments[0] is handled as a single URI.
