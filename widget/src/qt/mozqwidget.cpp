@@ -15,6 +15,11 @@ bool MozQWidget::event(QEvent *e)
     nsEventStatus status = nsEventStatus_eIgnore;
     bool handled = true;
 
+    // always handle (delayed) delete requests triggered by
+    // calling deleteLater() on this widget:
+    if (e->type() == QEvent::DeferredDelete)
+        return QObject::event(e);
+
     if (!mReceiver)
         return false;
 

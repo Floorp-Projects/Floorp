@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var v = document.getElementById("v");
+  v.childNodes[1].firstChild.data = "";
+  document.documentElement.offsetHeight;
+  v.appendChild(document.createTextNode("D"));
+  v.removeChild(v.firstChild);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<div id="v"><span>A</span><span>&#x06CC;C</span></div>
+</body>
+</html>

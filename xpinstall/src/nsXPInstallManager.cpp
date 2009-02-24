@@ -1139,6 +1139,9 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
         }
     }
 
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(request, nsnull, NS_BINDING_RETARGETED);
+
     NS_ASSERTION( mItem && mItem->mFile, "XPIMgr::OnStartRequest bad state");
     if ( mItem && mItem->mFile )
     {
