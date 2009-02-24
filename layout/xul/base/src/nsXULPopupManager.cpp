@@ -1169,13 +1169,13 @@ nsXULPopupManager::GetTopPopup(nsPopupType aType)
 }
 
 nsTArray<nsIFrame *>
-nsXULPopupManager::GetOpenPopups()
+nsXULPopupManager::GetVisiblePopups()
 {
   nsTArray<nsIFrame *> popups;
 
   nsMenuChainItem* item = mPopups;
   while (item) {
-    if (item->Frame()->PopupState() != ePopupInvisible)
+    if (item->Frame()->PopupState() == ePopupOpenAndVisible)
       popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
     item = item->GetParent();
   }
