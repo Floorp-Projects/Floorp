@@ -98,7 +98,6 @@ function handleRequest(request, response)
      query.hop = parseInt(query.hop, 10);
      hops = eval(query.hops);
      query.allowOrigin = hops[query.hop-1].allowOrigin;
-     query.allowHeaders = hops[query.hop-1].allowHeaders;
   }
   
   if (query.allowOrigin && (!isPreflight || !query.noAllowPreflight))
@@ -122,7 +121,7 @@ function handleRequest(request, response)
     newURL = hops[query.hop].server +
              "/tests/content/base/test/file_CrossSiteXHR_server.sjs?" +
              "hop=" + (query.hop + 1) + "&hops=" + query.hops;
-    response.setStatusLine(null, 307, "redirect");
+    response.setStatusLine(null, 302, "redirect");
     response.setHeader("Location", newURL);
 
     return;
