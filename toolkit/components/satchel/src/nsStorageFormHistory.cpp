@@ -562,7 +562,7 @@ nsFormHistory::CreateStatements()
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT value FROM moz_formhistory WHERE fieldname=?1 ORDER BY value ASC"),
+        "SELECT value FROM moz_formhistory WHERE fieldname=?1 ORDER BY UPPER(value) ASC"),
         getter_AddRefs(mDBGetMatchingField));
   NS_ENSURE_SUCCESS(rv,rv);
 
