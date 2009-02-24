@@ -174,6 +174,7 @@ nsHttpHandler::nsHttpHandler()
     , mProduct("Gecko")
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
+    , mPromptTempRedirect(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
     , mEnablePersistentHttpsCaching(PR_FALSE)
 {
@@ -1087,6 +1088,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                     }
                 }
             }
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("prompt-temp-redirect"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("prompt-temp-redirect"), &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mPromptTempRedirect = cVar;
         }
     }
 
