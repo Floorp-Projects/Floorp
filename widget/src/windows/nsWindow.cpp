@@ -8507,6 +8507,11 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
   style |= topWindow->WindowStyle();
   exStyle |= topWindow->WindowExStyle();
 
+  if (aMode == eTransparencyTransparent) {
+    style &= ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+    exStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+  }
+
   VERIFY_WINDOW_STYLE(style);
   ::SetWindowLongPtrW(hWnd, GWL_STYLE, style);
   ::SetWindowLongPtrW(hWnd, GWL_EXSTYLE, exStyle);

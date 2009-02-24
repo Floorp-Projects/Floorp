@@ -498,10 +498,10 @@ public:
   nsIFrame* GetTopPopup(nsPopupType aType);
 
   /**
-   * Return an array of all the open popup frames for menus, in order from
-   * top to bottom.
+   * Return an array of all the open and visible popup frames for
+   * menus, in order from top to bottom.
    */
-  nsTArray<nsIFrame *> GetOpenPopups();
+  nsTArray<nsIFrame *> GetVisiblePopups();
 
   /**
    * Return false if a popup may not be opened. This will return false if the
