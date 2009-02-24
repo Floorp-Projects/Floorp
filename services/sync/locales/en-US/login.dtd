@@ -1,7 +1,7 @@
 <!ENTITY dialog.title                 "Sign In to Weave">
 <!ENTITY dialog.login                 "Sign In">
 <!ENTITY dialog.help                  "Help">
-
+<!ENTITY whatsThis.label	"What's this?">
 <!ENTITY username.label               "Username:">
 <!ENTITY password.label               "Password:">
 <!ENTITY encryptionPassphrase.label   "Encryption Passphrase:">
