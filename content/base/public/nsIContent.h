@@ -151,7 +151,7 @@ public:
    */
   PRBool IsRootOfNativeAnonymousSubtree() const
   {
-    return HasFlag(NODE_IS_ANONYMOUS);
+    return HasFlag(NODE_IS_ANONYMOUS) && HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
   }
 
   /**
@@ -202,8 +202,12 @@ public:
                  (GetParent() && GetBindingParent() == GetParent()),
                  "root of native anonymous subtree must have parent equal "
                  "to binding parent");
-    nsIContent *bindingParent = GetBindingParent();
-    return bindingParent && bindingParent == GetParent();
+    NS_ASSERTION(!GetParent() ||
+                 ((GetBindingParent() == GetParent()) ==
+                  HasFlag(NODE_IS_ANONYMOUS)),
+                 "For nodes with parent, flag and GetBindingParent() check "
+                 "should match");
+    return HasFlag(NODE_IS_ANONYMOUS);
   }
 
   /**
