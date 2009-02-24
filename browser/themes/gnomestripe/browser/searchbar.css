@@ -43,11 +43,7 @@
 }
 
 .searchbar-engine-button[addengines="true"] {
-  background-color: Highlight;
-}
-
-.searchbar-engine-button[addengines="true"] > .button-box {
-  background-color: rgba(230, 230, 230, 0.3);
+  -moz-box-shadow: 0 0 5px Highlight inset, 0 0 20px Highlight inset;
 }
 
 .searchbar-dropmarker-image {
