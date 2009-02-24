@@ -57,29 +57,6 @@
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-class nsChannelCanceller
-{
-public:
-  nsChannelCanceller(nsIChannel* aChannel)
-    : mChannel(aChannel)
-  {
-  }
-  ~nsChannelCanceller()
-  {
-    if (mChannel) {
-      mChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-    }
-  }
-
-  void DontCancel()
-  {
-    mChannel = nsnull;
-  }
-
-private:
-  nsIChannel* mChannel;
-};
-
 NS_IMPL_ISUPPORTS4(nsCrossSiteListenerProxy, nsIStreamListener,
                    nsIRequestObserver, nsIChannelEventSink,
                    nsIInterfaceRequestor)
@@ -350,7 +327,6 @@ nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
                                             nsIChannel *aNewChannel,
                                             PRUint32    aFlags)
 {
-  nsChannelCanceller canceller(aOldChannel);
   nsresult rv;
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
     rv = CheckRequestApproved(aOldChannel, PR_TRUE);
@@ -374,12 +350,7 @@ nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = UpdateChannel(aNewChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  canceller.DontCancel();
-  
-  return NS_OK;
+  return UpdateChannel(aNewChannel);
 }
 
 nsresult
