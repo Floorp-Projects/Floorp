@@ -118,16 +118,6 @@ nsXPITriggerItem::~nsXPITriggerItem()
     MOZ_COUNT_DTOR(nsXPITriggerItem);
 }
 
-PRBool nsXPITriggerItem::IsRelativeURL()
-{
-    PRInt32 cpos = mURL.FindChar(':');
-    if (cpos == kNotFound)
-        return PR_TRUE;
-
-    PRInt32 spos = mURL.FindChar('/');
-    return (cpos > spos);
-}
-
 const PRUnichar*
 nsXPITriggerItem::GetSafeURLString()
 {

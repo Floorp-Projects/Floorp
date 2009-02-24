@@ -94,7 +94,6 @@ class nsXPITriggerItem
     void    SetPrincipal(nsIPrincipal* aPrincipal);
 
     PRBool  IsFileURL() { return StringBeginsWith(mURL, NS_LITERAL_STRING("file:/")); }
-    PRBool  IsRelativeURL();
 
     const PRUnichar* GetSafeURLString();
 
