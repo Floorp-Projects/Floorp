@@ -656,9 +656,6 @@ pref("network.http.proxy.pipelining", false);
 // Max number of requests in the pipeline
 pref("network.http.pipelining.maxrequests" , 4);
 
-// Prompt for 307 redirects
-pref("network.http.prompt-temp-redirect", true);
-
 // </http>
 
 // If false, remote JAR files that are served with a content type other than
