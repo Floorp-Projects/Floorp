@@ -1199,7 +1199,16 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
   nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs(do_QueryWrappedNative(wrapper));
 
   if (xpcwrappedjs) {
-    XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
+    JSObject *flat = wrapper->GetFlatJSObject();
+    jsval v = OBJECT_TO_JSVAL(flat);
+
+    XPCCallContext ccx(JS_CALLER, cx);
+
+    // Make sure v doesn't get collected while we're re-wrapping it.
+    AUTO_MARK_JSVAL(ccx, v);
+
+    if (XPC_SJOW_Construct(cx, nsnull, 1, &v, &v))
+        return JSVAL_TO_OBJECT(v);
 
     return nsnull;
   }

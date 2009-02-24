@@ -141,6 +141,11 @@ CertReader::OnStartRequest(nsIRequest *request, nsISupports* context)
   if (!mVerifier)
     return NS_BINDING_ABORTED;
 
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  nsresult rv = request->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (NS_SUCCEEDED(rv) && loadGroup)
+    loadGroup->RemoveRequest(request, nsnull, NS_BINDING_RETARGETED);
+
   mLeftoverBuffer.Truncate();
   return NS_OK;
 }
