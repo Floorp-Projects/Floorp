@@ -101,10 +101,10 @@ extern char *g_Print_Left_Header_String, *g_Print_Right_Header_String, *g_Print_
 static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
-nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
-nsIPref     *EmbedPrivate::sPrefs       = nsnull;
-nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
-nsClipboard *EmbedPrivate::sClipboard   = nsnull;
+nsIAppShell             *EmbedPrivate::sAppShell    = nsnull;
+nsIPref                 *EmbedPrivate::sPrefs       = nsnull;
+nsTArray<EmbedPrivate*> *EmbedPrivate::sWindowList  = nsnull;
+nsClipboard             *EmbedPrivate::sClipboard   = nsnull;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -121,7 +121,7 @@ EmbedPrivate::EmbedPrivate(void)
   mMozWindowWidget  = 0;
 
 	if (!sWindowList) {
-  		sWindowList = new nsVoidArray();
+  		sWindowList = new nsTArray<EmbedPrivate*>();
 	}
 	sWindowList->AppendElement(this);
 	if( !sClipboard ) {
@@ -708,14 +708,13 @@ EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
 	  return nsnull;
 
 	// Get the number of browser windows.
-	PRInt32 count = sWindowList->Count();
+	PRInt32 count = sWindowList->Length();
 	// This function doesn't get called very often at all ( only when
 	// creating a new window ) so it's OK to walk the list of open
 	// windows.
 	for (int i = 0; i < count; i++) 
 	{
-	  EmbedPrivate *tmpPrivate = static_cast<EmbedPrivate *>
-                                         (sWindowList->ElementAt(i));
+	  EmbedPrivate *tmpPrivate = sWindowList->ElementAt(i);
 	  // get the browser object for that window
 	  nsIWebBrowserChrome *chrome = static_cast<nsIWebBrowserChrome *>
                                             (tmpPrivate->mWindow);
