@@ -438,7 +438,7 @@ placelist[ui="manage"] .bookmark-folder-new {
   border: none;
   margin: 0;
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/close-small.png");
+  list-style-image: url("chrome://browser/skin/images/folder_close.png");
 }
 
 #popup_autocomplete {
@@ -575,23 +575,6 @@ findbar {
   border: 2px solid #fff !important;
   -moz-border-radius: 10px;
   padding: 8px;
-}
-
-#bookmark-grid row {
-  -moz-box-align: center;
-}
-
-#bookmark-buttons {
-  margin-top: 8px;
-}
-
-#bookmark-close {
-  -moz-appearance: none;
-  border: none;
-  background-color: transparent;
-  margin: 0;
-  padding: 0;
-  list-style-image: url("chrome://browser/skin/images/close-small.png");
 }
 
 /* Identity popup   -------------------------------------------------------- */
