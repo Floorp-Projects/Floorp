@@ -213,6 +213,19 @@ private:
 };
 
 #ifdef NS_OSSO
+
+static void OssoDisplayCallback(osso_display_state_t state, gpointer data)
+{
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+  if (!os)
+      return;
+ 
+  if (state == OSSO_DISPLAY_ON)
+      os->NotifyObservers(nsnull, "system-display-on", nsnull);
+  else
+      os->NotifyObservers(nsnull, "system-display-dimmed-or-off", nsnull);
+}
+
 static void OssoHardwareCallback(osso_hw_state_t *state, gpointer data)
 {
   NS_ASSERTION(state, "osso_hw_state_t must not be null.");
@@ -307,6 +320,14 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
                        nsnull,
                        OssoHardwareCallback,
                        &m_hw_state);
+
+
+  osso_hw_set_display_event_cb(m_osso_context,
+                               OssoDisplayCallback,
+                               nsnull);
+
+
+
 
 #endif
 
