@@ -100,7 +100,7 @@
 #define MAXSTR   "4294967295"
 
 /* Small arrays are dense, no matter what. */
-#define MIN_SPARSE_INDEX 32
+#define MIN_SPARSE_INDEX 256
 
 #define INDEX_TOO_BIG(index) ((index) > JS_BIT(29) - 1)
 #define INDEX_TOO_SPARSE(array, index)                                         \
