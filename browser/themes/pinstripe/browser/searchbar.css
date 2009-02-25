@@ -27,7 +27,6 @@
   height: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
   -moz-margin-start: 2px;
-  margin-top: 1px;
 }
 
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
@@ -80,7 +79,6 @@
 
 .searchbar-engine-button > .button-box {
   -moz-appearance: none;
-  margin-bottom: 1px;
   padding: 0;
   -moz-padding-end: 3px;
   border: 0;
@@ -93,6 +91,7 @@
 .searchbar-dropmarker-image {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
   -moz-margin-start: 2px;
+  margin-top: 1px;
 }
 
 .search-go-container {
