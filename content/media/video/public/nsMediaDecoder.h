@@ -97,10 +97,6 @@ class nsMediaDecoder : public nsIObserver
   // Pause video playback.
   virtual void Pause() = 0;
 
-  // Return the current audio volume that the video plays at. 
-  // This is a value form 0 through to 1.0.
-  virtual float GetVolume() = 0;
-
   // Set the audio volume. It should be a value from 0 to 1.0.
   virtual void SetVolume(float volume) = 0;
 
