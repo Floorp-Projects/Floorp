@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: paused</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var a = document.createElement('audio');
+a.src = 'r11025_u8_c1.wav';
+a.load();
+is(a.paused, true, "Must be paused at start");
+a.play();
+is(a.paused, false, "Must not be paused after play");
+
+a.addEventListener("ended", function () {
+  is(a.paused, false, "Must not be paused after end");
+  SimpleTest.finish();
+}, false);
+</script>
+</pre>
+</body>
+</html>
