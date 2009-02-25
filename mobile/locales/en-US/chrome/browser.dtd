@@ -32,11 +32,14 @@
 <!ENTITY noSuggestions.label   "(No suggestions)">
 <!ENTITY addToDictionary.label "Add to Dictionary">
 
-<!ENTITY editBookmarkName.label    "Name:">
-<!ENTITY editBookmarkURI.label     "Address:">
-<!ENTITY editBookmarkTags.label    "Tags:">
-<!ENTITY bookmarkRemove.label      "Remove Bookmark">
+<!ENTITY bookmarksHeader.label     "Bookmarks">
+<!ENTITY bookmarksManage.label     "Manage">
+<!ENTITY foldersHeader.label       "Folders">
+
+<!ENTITY editBookmarkEdit.label    "Edit">
+<!ENTITY editBookmarkMove.label    "Move">
 <!ENTITY editBookmarkDone.label    "Done">
+<!ENTITY editBookmarkTags.label    "Add tags here">
 
 <!ENTITY findOnCmd.label     "Find in This Page…">
 <!ENTITY findOnCmd.accesskey "F">

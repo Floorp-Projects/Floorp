@@ -334,9 +334,103 @@ toolbarbutton.panel-button {
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */
-#urllist-container {
+#tool-bookmarks-close {
+  -moz-image-region: rect(48px 48px 96px 0px);
+}
+
+#tool-bookmarks-close:hover:active {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#tool-bookmarks-manage {
+  color: rgb(255,255,255);
+  border: 3px groove gray !important;
+  height: 46px;
+  padding-top: 2px;
+  -moz-border-radius: 6px;
+}
+
+#tool-bookmarks-manage .toolbarbutton-text {
+  display: block !important;
+}
+
+#tool-folders-close {
+  -moz-image-region: rect(48px 48px 96px 0px);
+}
+
+#tool-folders-close:hover:active {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#bookmarklist-container {
   background-color: rgb(123,125,123);
-  padding: 8px;
+  padding: 0px;
+}
+
+#bookmarklist-header, #folder-header {
+  color: rgb(255,255,255);
+  -moz-box-align: center;
+  background: url("chrome://browser/skin/images/toolbar_background.png") repeat-x;
+  padding: 0px 10px;
+}
+
+#bookmark-items, #folder-items {
+  -moz-appearance: none !important;
+  background-color: rgb(255,255,255);
+  padding: 0px;
+}
+
+.place-list-parents {
+  background-color: rgb(207,207,207);
+  padding: 4px;
+}
+
+.place-list-children {
+  -moz-appearance: none;
+  border: none !important;
+  padding: 0px;
+}
+
+.bookmark-folder, .bookmark-item {
+  padding: 5px 2px;
+  border-bottom: 1px solid rgb(207,207,207);
+}
+
+.bookmark-folder textbox[readonly="true"], .bookmark-item textbox[readonly="true"] {
+  -moz-appearance: none !important;
+  background-color: transparent;
+  padding: 0px 9px !important;
+  margin: 0px !important;
+  border: none !important;
+}
+
+placelabel.bookmark-folder {
+  border-bottom: 1px solid rgb(255,255,255);
+}
+
+.bookmark-item-image, .bookmark-folder-image {
+  width: 24px;
+  height: 24px;
+}
+
+/* hack to align with 1st grid/row */
+.bookmark-item-image {
+  margin-top: 8px;
+}
+
+/* folders have a fixed image */
+.bookmark-folder-image {
+  list-style-image: url("chrome://browser/skin/images/folder.png");
+}
+
+/* control the manage controls */
+.bookmark-manage-controls, .bookmark-folder-new {
+  visibility: hidden;
+}
+
+placelist[ui="manage"] .bookmark-manage-controls,
+placelist[ui="manage"] .bookmark-folder-new {
+  visibility: visible;
 }
 
 .close-button {
@@ -345,16 +439,6 @@ toolbarbutton.panel-button {
   margin: 0;
   padding: 0;
   list-style-image: url("chrome://browser/skin/images/close-small.png");
-}
-
-.urllist-item {
-  -moz-appearance: none !important;
-  margin: 8px;
-}
-
-.urllist-image {
-  width: 24px;
-  height: 24px;
 }
 
 #popup_autocomplete {
@@ -378,21 +462,6 @@ toolbarbutton.panel-button {
   font-size: 12pt !important;
 }
 
-/* old rules */
-#urllist-items {
-  -moz-appearance: none !important;
-  background-color: rgb(207,207,207);
-  border: 2px solid #fff !important;
-  -moz-border-radius: 10px;
-}
-
-/* XXX new rules that don't work
-#urllist-items {
-  -moz-appearance: none;
-}
-
-#urllist-items,
-*/
 #autocomplete_navbuttons {
   -moz-border-image: url(images/navigation_search_caps.png) 0 23 0 23;
   border-width: 0 23px;

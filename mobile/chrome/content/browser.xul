@@ -320,18 +320,6 @@
       </deck>
     </hbox>
 
-    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
-      <vbox id="urllist-items-container" flex="1">
-        <richlistbox id="urllist-items" flex="1"
-                     onkeypress="if (event.target == this &amp;&amp; event.keyCode == event.DOM_VK_RETURN)
-                                   BrowserUI.goToBookmark(this)"
-                     onclose="BrowserUI.stopEditBookmark()"/>
-      </vbox>
-      <hbox pack="end">
-        <button class="close-button" oncommand="BrowserUI.closeBookmarks(event)"/>
-      </hbox>
-    </vbox>
-
     <vbox id="popup_autocomplete" style="-moz-stack-sizing: ignore;" top="60" left="0" constraint="ignore-x,vp-relative">
       <hbox id="autocomplete_navbuttons" align="center" flex="1"
             oncommand="BrowserUI.doButtonSearch(event.target);">
@@ -342,9 +330,31 @@
     <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
-        <editbookmark id="bookmark-edit" flex="1" onclose="BookmarkHelper.close()"
-                      onchange="this.save()"/>
+        <placeitem id="bookmark-edit" type="bookmark" flex="1"
+                   onclose="BookmarkHelper.close()"
+                   onchange="this.save()"/>
       </hbox>
+    </vbox>
+
+    <vbox id="bookmarklist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+      <hbox id="bookmarklist-header" style="height: 60px">
+        <description flex="1">&bookmarksHeader.label;</description>
+        <toolbarbutton id="tool-bookmarks-manage" class="text-button" label="&bookmarksManage.label;"
+                       oncommand="BookmarkList.toggleManage();"/>
+        <toolbarbutton id="tool-bookmarks-close" class="urlbar-button"
+                       oncommand="BookmarkList.close();"/>
+      </hbox>
+      <placelist id="bookmark-items" type="bookmarks" flex="1" onfolder="FolderHelper.show(this);"
+                 onopen="BookmarkList.openBookmark();"/>
+    </vbox>
+
+    <vbox id="folder-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+      <hbox id="folder-header" style="height: 60px">
+        <description flex="1">&foldersHeader.label;</description>
+        <toolbarbutton id="tool-folders-close" class="urlbar-button"
+                       oncommand="FolderHelper.close()"/>
+      </hbox>
+      <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onopen="FolderHelper.selectFolder();"/>
     </vbox>
 
   </stack>
