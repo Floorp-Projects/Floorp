@@ -594,7 +594,7 @@ WeaveSvc.prototype = {
                        "consistency.");
       else // 200
         this._log.info("Server data wiped to ensure consistency after client " +
-                       "upgrade (" + meta.paylaod.storageVersion + " -> " +
+                       "upgrade (" + meta.payload.storageVersion + " -> " +
                        WEAVE_VERSION + ")");
 
     } else if (Svc.Version.compare(meta.payload.storageVersion,
