@@ -47,8 +47,8 @@ nsIdleServiceOSSO::nsIdleServiceOSSO()
  : mIdle(PR_FALSE)
 {
   nsCOMPtr<nsIObserverService> obsServ = do_GetService("@mozilla.org/observer-service;1");
-  obsServ->AddObserver(this, "system-idle", PR_FALSE);
-  obsServ->AddObserver(this, "system-active", PR_FALSE);
+  obsServ->AddObserver(this, "system-display-on", PR_FALSE);
+  obsServ->AddObserver(this, "system-display-dimmed-or-off", PR_FALSE);
 }
 
 nsIdleServiceOSSO::~nsIdleServiceOSSO()
@@ -70,11 +70,11 @@ nsIdleServiceOSSO::GetIdleTime(PRUint32 *aTimeDiff)
 NS_IMETHODIMP
 nsIdleServiceOSSO::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  if (!strcmp(aTopic, "system-idle")) {
+  if (!strcmp(aTopic, "system-display-dimmed-or-off") && mIdle == PR_FALSE) {
     mIdle = PR_TRUE;
     mIdleSince = PR_Now();
   }
-  else if (!strcmp(aTopic, "system-active")) {
+  else if (!strcmp(aTopic, "system-display-on")) {
     mIdle = PR_FALSE;
   }
 
