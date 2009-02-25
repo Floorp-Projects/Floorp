@@ -286,7 +286,7 @@ private:
     
     static PRUint32         mSessionStartTime;
 
-    PRNetAddr               mServerAddress;
+    char                    mServerAddress[64];
 
     // ***** control read gvars
     nsresult                mControlStatus;
