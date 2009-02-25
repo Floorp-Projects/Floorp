@@ -963,6 +963,11 @@ nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
           ("Selection: assigning app cache %s to document %s", clientID.get(), docURISpec.get()));
 #endif
 
+      {
+        // XXX: Debugging 471227
+        printf("(Bug 471227): setting application cache to %p for document >%p< from SelectDocAppCacheNoManifest\n",
+               aLoadApplicationCache, applicationCacheDocument.get());
+      }
       rv = applicationCacheDocument->SetApplicationCache(aLoadApplicationCache);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1016,6 +1021,12 @@ nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplication
     SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_CALLS,
         ("Selection, no manifest: assigning app cache %s to document %s", clientID.get(), docURISpec.get()));
 #endif
+
+    {
+      // XXX: Debugging 471227
+      printf("(Bug 471227): setting application cache to %p for document >%p< from SelectDocAppCacheNoManifest\n",
+             aLoadApplicationCache, applicationCacheDocument.get());
+    }
 
     rv = applicationCacheDocument->SetApplicationCache(aLoadApplicationCache);
     NS_ENSURE_SUCCESS(rv, rv);

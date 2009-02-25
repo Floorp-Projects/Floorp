@@ -2359,8 +2359,11 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
         uri->GetSpec(spec);
       }
 
-      printf("(Bug 471227): XHR failed for %s: status: %x, appcache: %p\n",
-             spec.get(), status, appCache.get());
+      nsCOMPtr<nsIApplicationCacheContainer> container;
+      NS_QueryNotificationCallbacks(channel, container);
+
+      printf("(Bug 471227): XHR failed for %s: status: %x, appcache: %p, doc: %p\n",
+             spec.get(), status, appCache.get(), container.get());
     }
 
     // By nulling out channel here we make it so that Send() can test
