@@ -1744,17 +1744,18 @@
 !define RemoveDir "!insertmacro RemoveDir"
 
 /**
- * Checks whether we can write to the install directory. If the install
- * directory already exists this will attempt to create a temporary file in the
- * install directory and then delete it. If it does not exist this will attempt
- * to create the directory and then delete it. If we can write to the install
- * directory this will return true... if not, this will return false.
+ * Checks whether it is possible to create and delete a directory and a file in
+ * the install directory. Creation and deletion of files and directories are
+ * checked since a user may have rights for one and not the other. If creation
+ * and deletion of a file and a directory are successful this macro will return
+ * true... if not, this it return false.
  *
  * @return  _RESULT
- *          true if the install directory can be written to otherwise false.
+ *          true if files and directories can be created and deleted in the
+ *          install directory otherwise false.
  *
- * $R7 = temp filename in installation directory returned from GetTempFileName
- * $R8 = filehandle to temp file used for writing
+ * $R8 = temporary filename in the installation directory returned from
+ *       GetTempFileName.
  * $R9 = _RESULT
  */
 !macro CanWriteToInstallDir
@@ -1767,33 +1768,31 @@
     Function ${_MOZFUNC_UN}CanWriteToInstallDir
       Push $R9
       Push $R8
-      Push $R7
 
       StrCpy $R9 "true"
-      IfFileExists "$INSTDIR" +1 checkCreateDir
-      GetTempFileName $R7 "$INSTDIR"
-      FileOpen $R8 "$R7" w
-      FileWrite $R8 "Write Access Test"
-      FileClose $R8
-      IfFileExists "$R7" +3 +1
+
+      ; IfFileExists returns false for $INSTDIR when $INSTDIR is the root of a
+      ; UNC path so always try to create $INSTDIR
+      CreateDirectory "$INSTDIR\"
+      GetTempFileName $R8 "$INSTDIR\"
+      IfFileExists "$R8" +3 +1 ; Can files be created?
       StrCpy $R9 "false"
-      GoTo end
-
-      Delete $R7
-      GoTo end
-
-      checkCreateDir:
-      CreateDirectory "$INSTDIR"
-      IfFileExists "$INSTDIR" +3 +1
+      Goto +12
+      Delete "$R8"
+      IfFileExists "$R8" +1 +3 ; Can files be deleted?
       StrCpy $R9 "false"
-      GoTo end
+      Goto +8
+      CreateDirectory "$R8"
+      IfFileExists "$R8" +3 +1 ; Can directories be created?
+      StrCpy $R9 "false"
+      GoTo +4
+      RmDir "$R8"
+      IfFileExists "$R8" +1 +2 ; Can directories be deleted?
+      StrCpy $R9 "false"
 
-      RmDir "$INSTDIR"
-
-      end:
+      RmDir "$INSTDIR\" ; Only remove $INSTDIR if it is empty
       ClearErrors
 
-      Pop $R7
       Pop $R8
       Exch $R9
     FunctionEnd
@@ -1834,33 +1833,30 @@
 !macroend
 
 /**
- * Checks whether there is sufficient free space available on the installation
- * directory's drive. If there is sufficient free space this will return true...
- * if not, this will return false. This will only calculate the size of the
- * first three sections.
+ * Checks whether there is sufficient free space available for the installation
+ * directory using GetDiskFreeSpaceExW which respects disk quotas. This macro
+ * will calculate the size of all sections that are selected, compare that with
+ * the free space available, and if there is sufficient free space it will
+ * return true... if not, it will return false. 
  *
  * @return  _RESULT
- *          true if there is sufficient free space otherwise false.
+ *          "true" if there is sufficient free space otherwise "false".
  *
- * $R2 = return value from greater than comparison (0=false 1=true)
- * $R3 = free space for the install directory's drive
- * $R4 = install directory root
  * $R5 = return value from SectionGetSize
- * $R6 = return value from 'and' comparison of SectionGetFlags (1=selected)
- * $R7 = return value from SectionGetFlags
- * $R8 = size in KB required for this installation
+ * $R6 = return value from SectionGetFlags
+ *       return value from an 'and' comparison of SectionGetFlags (1=selected)
+ *       return value for lpFreeBytesAvailable from GetDiskFreeSpaceExW
+ *       return value for System::Int64Op $R6 / 1024
+ *       return value for System::Int64Op $R6 > $R8
+ * $R7 = the counter for enumerating the sections
+ *       the temporary file name for the directory created under $INSTDIR passed
+ *       to GetDiskFreeSpaceExW.
+ * $R8 = sum in KB of all selected sections
  * $R9 = _RESULT
  */
 !macro CheckDiskSpace
 
   !ifndef ${_MOZFUNC_UN}CheckDiskSpace
-    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
-    !insertmacro ${_MOZFUNC_UN_TMP}GetRoot
-    !insertmacro ${_MOZFUNC_UN_TMP}DriveSpace
-    !undef _MOZFUNC_UN
-    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
-    !undef _MOZFUNC_UN_TMP
-
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !define ${_MOZFUNC_UN}CheckDiskSpace "!insertmacro ${_MOZFUNC_UN}CheckDiskSpaceCall"
@@ -1871,40 +1867,53 @@
       Push $R7
       Push $R6
       Push $R5
-      Push $R4
-      Push $R3
-      Push $R2
 
-      StrCpy $R9 "true"
-      SectionGetSize 0 $R8
+      ClearErrors
 
-      SectionGetFlags 1 $R7
-      IntOp $R6 ${SF_SELECTED} & $R7
+      StrCpy $R9 "true" ; default return value
+      StrCpy $R8 "0"    ; sum in KB of all selected sections
+      StrCpy $R7 "0"    ; counter for enumerating sections
+
+      ; Enumerate the sections and sum up the sizes of the sections that are
+      ; selected.
+      SectionGetFlags $R7 $R6
+      IfErrors +7 +1
+      IntOp $R6 ${SF_SELECTED} & $R6
       IntCmp $R6 0 +3 +1 +1
-      SectionGetSize 1 $R5
+      SectionGetSize $R7 $R5
       IntOp $R8 $R8 + $R5
+      IntOp $R7 $R7 + 1
+      GoTo -7
 
-      SectionGetFlags 2 $R7
-      IntOp $R6 ${SF_SELECTED} & $R7
-      IntCmp $R6 0 +3 +1 +1
-      SectionGetSize 2 $R5
-      IntOp $R8 $R8 + $R5
+      ; The directory passed to GetDiskFreeSpaceExW must exist for the call to
+      ; succeed.  Since the CanWriteToInstallDir macro is called prior to this
+      ; macro the call to CreateDirectory will always succeed.
 
-      ${${_MOZFUNC_UN}GetRoot} "$INSTDIR" $R4
-      ${${_MOZFUNC_UN}DriveSpace} "$R4" "/D=F /S=K" $R3
+      ; IfFileExists returns false for $INSTDIR when $INSTDIR is the root of a
+      ; UNC path so always try to create $INSTDIR
+      CreateDirectory "$INSTDIR\"
+      GetTempFileName $R7 "$INSTDIR\"
+      Delete "$R7"
+      CreateDirectory "$R7"
 
-      System::Int64Op $R3 > $R8
-      Pop $R2
+      System::Call 'kernel32::GetDiskFreeSpaceExW(w, *l, *l, *l) i(r17, .r16, ., .) .'
 
-      IntCmp $R2 1 end +1 +1
+      ; Convert to KB for comparison with $R8 which is in KB
+      System::Int64Op $R6 / 1024
+      Pop $R6
+
+      System::Int64Op $R6 > $R8
+      Pop $R6
+
+      IntCmp $R6 1 end +1 +1
       StrCpy $R9 "false"
 
       end:
+      RmDir "$R7"
+      RmDir "$INSTDIR\" ; Only remove $INSTDIR if it is empty
+
       ClearErrors
 
-      Pop $R2
-      Pop $R3
-      Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
@@ -3800,6 +3809,7 @@
 
       copy_file:
       StrCpy $0 "$R1$R3"
+      StrCmp "$0" "$INSTDIR" +2 +1
       IfFileExists "$0" +1 create_dir
 
       ClearErrors
@@ -4813,9 +4823,9 @@
 
       check_install_dir:
       IntCmp $InstallType ${INSTALLTYPE_CUSTOM} end +1 +1
-      ${CheckDiskSpace} $R9
-      StrCmp $R9 "false" end +1
       ${CanWriteToInstallDir} $R9
+      StrCmp $R9 "false" end +1
+      ${CheckDiskSpace} $R9
       StrCmp $R9 "false" end +1
       Abort
 
@@ -4865,14 +4875,14 @@
       Exch $R8
       Push $R7
 
-      ${CheckDiskSpace} $R7
-      StrCmp $R7 "false" +1 +3
-      MessageBox MB_OK "$R8"
-      Abort
-
       ${CanWriteToInstallDir} $R7
       StrCmp $R7 "false" +1 +3
       MessageBox MB_OK "$R9"
+      Abort
+
+      ${CheckDiskSpace} $R7
+      StrCmp $R7 "false" +1 +3
+      MessageBox MB_OK "$R8"
       Abort
 
       Pop $R7
