@@ -78,7 +78,6 @@
 #include "nsITreeView.h"
 #endif
 #include "nsString.h"
-#include "nsVoidArray.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
 #include "nsINavBookmarksService.h"

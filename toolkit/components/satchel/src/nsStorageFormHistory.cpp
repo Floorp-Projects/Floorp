@@ -58,7 +58,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
-#include "nsVoidArray.h"
 #include "nsCOMArray.h"
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
