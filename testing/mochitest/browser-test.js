@@ -1,3 +1,6 @@
+// Test timeout (seconds)
+const TIMEOUT_SECONDS = 30;
+
 if (Cc === undefined) {
   var Cc = Components.classes;
   var Ci = Components.interfaces;
@@ -65,7 +68,7 @@ Tester.prototype = {
     this.step();
 
     // Load the tests into a testscope
-    this.currentTest.scope = new testScope(this.currentTest.tests);
+    this.currentTest.scope = new testScope(this, this.currentTest.tests);
 
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                        getService(Ci.mozIJSSubScriptLoader);
@@ -79,14 +82,18 @@ Tester.prototype = {
       this.currentTest.scope.done = true;
     }
 
-    // If the test ran synchronously, move to the next test,
-    // otherwise start a poller to monitor it's progress.
+    // If the test ran synchronously, move to the next test, otherwise the test
+    // will trigger the next test when it is done.
     if (this.currentTest.scope.done) {
       this.execTest();
-    } else {
+    }
+    else {
       var self = this;
-      this.checker = new resultPoller(this.currentTest, function () { self.execTest(); });
-      this.checker.start();
+      this.currentTest.scope.waitTimer = setTimeout(function() {
+        self.currentTest.tests.push(new testResult(false, "Timed out", "", false));
+        self.currentTest.scope.waitTimer = null;
+        self.execTest();
+      }, TIMEOUT_SECONDS * 1000);;
     }
   }
 };
@@ -112,11 +119,12 @@ function testResult(aCondition, aName, aDiag, aIsTodo) {
   }
 }
 
-function testScope(aTests) {
+function testScope(aTester, aTests) {
   var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
   scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", this.EventUtils);
 
+  this.tester = aTester;
   this.tests = aTests;
 
   var self = this;
@@ -154,48 +162,20 @@ function testScope(aTests) {
   };
   this.finish = function test_finish() {
     self.done = true;
+    if (self.waitTimer) {
+      self.executeSoon(function() {
+        if (self.done && self.waitTimer) {
+          clearTimeout(self.waitTimer);
+          self.waitTimer = null;
+          self.tester.execTest();
+        }
+      });
+    }
   };
 }
 testScope.prototype = {
   done: true,
+  waitTimer: null,
 
   EventUtils: {}
-};
-
-// Check whether the test has completed every 3 seconds
-const CHECK_INTERVAL = 3000;
-// Test timeout (seconds)
-const TIMEOUT_SECONDS = 30;
-
-const MAX_LOOP_COUNT = (TIMEOUT_SECONDS * 1000) / CHECK_INTERVAL;
-
-function resultPoller(aTest, aCallback) {
-  this.test = aTest;
-  this.callback = aCallback;
-}
-resultPoller.prototype = {
-  loopCount: 0,
-  interval: 0,
-
-  start: function resultPoller_start() {
-    var self = this;
-    function checkDone() {
-      self.loopCount++;
-
-      if (self.loopCount > MAX_LOOP_COUNT) {
-        self.test.tests.push(new testResult(false, "Timed out", "", false));
-        self.test.scope.done = true;
-      }
-
-      if (self.test.scope.done) {
-        clearInterval(self.interval);
-
-        // Notify the callback
-        self.callback();
-        self.callback = null;
-        self.test = null;
-      }
-    }
-    this.interval = setInterval(checkDone, CHECK_INTERVAL);
-  }
 };
