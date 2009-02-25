@@ -1003,9 +1003,6 @@ struct JSContext {
 
     /* Stored here to avoid passing it around as a parameter. */
     uintN               resolveFlags;
-    
-    /* Current bytecode location (or NULL if no hint was supplied). */
-    jsbytecode         *pcHint;
 
 #ifdef JS_TRACER
     /*
@@ -1024,9 +1021,6 @@ struct JSContext {
     uint32              builtinStatus;
 #endif
 };
-
-#define BEGIN_PC_HINT(pc)       (cx->pcHint = (pc))
-#define END_PC_HINT()           (cx->pcHint = NULL)
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
