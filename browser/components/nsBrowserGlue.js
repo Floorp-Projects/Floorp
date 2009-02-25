@@ -446,10 +446,10 @@ BrowserGlue.prototype = {
     var brandBundle  = this._bundleService.createBundle("chrome://branding/locale/brand.properties");
     var rightsBundle = this._bundleService.createBundle("chrome://browser/locale/aboutRights.properties");
 
-    var buttonLabel     = rightsBundle.GetStringFromName("buttonLabel");
-    var buttonAccessKey = rightsBundle.GetStringFromName("buttonAccessKey");
-    var productName     = brandBundle.GetStringFromName("brandFullName");
-    var notifyText      = rightsBundle.formatStringFromName("notifyText", [productName], 1);
+    var buttonLabel      = rightsBundle.GetStringFromName("buttonLabel");
+    var buttonAccessKey  = rightsBundle.GetStringFromName("buttonAccessKey");
+    var productName      = brandBundle.GetStringFromName("brandFullName");
+    var notifyRightsText = rightsBundle.formatStringFromName("notifyRightsText", [productName], 1);
     
     var buttons = [
                     {
@@ -466,7 +466,7 @@ BrowserGlue.prototype = {
     var currentVersion = this._prefs.getIntPref("browser.rights.version");
     this._prefs.setBoolPref("browser.rights." + currentVersion + ".shown", true);
 
-    var box = notifyBox.appendNotification(notifyText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
+    var box = notifyBox.appendNotification(notifyRightsText, "about-rights", null, notifyBox.PRIORITY_INFO_LOW, buttons);
     box.persistence = 3; // arbitrary number, just so bar sticks around for a bit
   },
 
