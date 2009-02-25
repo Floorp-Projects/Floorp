@@ -68,7 +68,7 @@
 #include "nsEmbedCID.h"
 #include "nsToolkitCompsCID.h"
 
-#if defined(XP_WIN) && !defined(WINCE) 
+#if defined(XP_WIN) && !defined(WINCE)
 #include <shlobj.h>
 #ifdef DOWNLOAD_SCANNER
 #include "nsDownloadScanner.h"
@@ -229,7 +229,7 @@ nsresult
 nsDownloadManager::RemoveDownloadsForURI(nsIURI *aURI)
 {
   mozStorageStatementScoper scope(mGetIdsForURIStatement);
-  
+
   nsCAutoString source;
   nsresult rv = aURI->GetSpec(source);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -615,7 +615,7 @@ nsDownloadManager::RestoreDatabaseState()
     "SET state = ?1 "
     "WHERE state = ?2"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   PRInt32 i = 0;
   rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_FINISHED);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -923,9 +923,9 @@ nsDownloadManager::GetQuitBehavior()
   PRInt32 val;
   rv = pref->GetIntPref(PREF_BDM_QUITBEHAVIOR, &val);
   NS_ENSURE_SUCCESS(rv, QUIT_AND_RESUME);
-  
+
   switch (val) {
-    case 1: 
+    case 1:
       return QUIT_AND_PAUSE;
     case 2:
       return QUIT_AND_CANCEL;
@@ -1156,6 +1156,16 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
     }
   }
 #elif defined(XP_UNIX)
+#if defined(NS_OSSO)
+    // As maemo does not follow the XDG "standard" (as usually desktop
+    // Linux distros do) neither has a working $HOME/Desktop folder
+    // for us to fallback into, "$HOME/MyDocs/.documents/" is the folder
+    // we found most apropriate to be the default target folder for downloads
+    // on the platform.
+    rv = dirService->Get(NS_UNIX_XDG_DOCUMENTS_DIR,
+                         NS_GET_IID(nsILocalFile),
+                         getter_AddRefs(downloadDir));
+#else
   rv = dirService->Get(NS_UNIX_DEFAULT_DOWNLOAD_DIR,
                        NS_GET_IID(nsILocalFile),
                        getter_AddRefs(downloadDir));
@@ -1168,6 +1178,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
     rv = downloadDir->Append(folderName);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#endif
 #else
   rv = dirService->Get(NS_OS_HOME_DIR,
                        NS_GET_IID(nsILocalFile),
@@ -2175,7 +2186,7 @@ nsDownload::SetState(DownloadState aState)
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
       nsCOMPtr<nsIFile> file;
       nsAutoString path;
-      
+
       if (fileURL &&
           NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) &&
           file &&
@@ -2438,7 +2449,7 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
   } else if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK) &&
              IsFinishable()) {
     // We got both STOP and NETWORK so that means the whole request is done
-    // (and not just a single file if there are multiple files) 
+    // (and not just a single file if there are multiple files)
     if (NS_SUCCEEDED(aStatus)) {
       // We can't completely trust the bytes we've added up because we might be
       // missing on some/all of the progress updates (especially from cache).
