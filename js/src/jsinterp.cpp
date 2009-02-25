@@ -4672,7 +4672,7 @@ js_Interpret(JSContext *cx)
                 if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
                     jsuint length;
 
-                    length = ARRAY_DENSE_LENGTH(obj);
+                    length = js_DenseArrayCapacity(obj);
                     i = JSVAL_TO_INT(rval);
                     if ((jsuint)i < length &&
                         i < obj->fslots[JSSLOT_ARRAY_LENGTH]) {
@@ -4725,7 +4725,7 @@ js_Interpret(JSContext *cx)
                 if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
                     jsuint length;
 
-                    length = ARRAY_DENSE_LENGTH(obj);
+                    length = js_DenseArrayCapacity(obj);
                     i = JSID_TO_INT(id);
                     if ((jsuint)i < length) {
                         if (obj->dslots[i] == JSVAL_HOLE) {
@@ -6924,9 +6924,6 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
   error:
-    // Reset current pc location hinting.
-    cx->pcHint = NULL;
-
     if (fp->imacpc && cx->throwing) {
         // To keep things simple, we hard-code imacro exception handlers here.
         if (*fp->imacpc == JSOP_NEXTITER) {
