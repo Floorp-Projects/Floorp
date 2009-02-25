@@ -209,7 +209,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rt
 == 244135-1.html 244135-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
-== 249141.xul 249141-ref.xul 
+== 249141.xul 249141-ref.xul
 == 249982-1.html 249982-1-ref.html
 == 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
@@ -225,8 +225,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rt
 == 272646-2b.xul 272646-2-ref.xul
 == 272646-2c.xul 272646-2-ref.xul
 == 273681-1.html 273681-1-ref.html
-== 278266-1a.html 278266-1-ref.html 
-== 278266-1b.html 278266-1-ref.html 
+== 278266-1a.html 278266-1-ref.html
+== 278266-1b.html 278266-1-ref.html
 fails == 280708-1a.html 280708-1-ref.html # bug 473824
 == 280708-1b.html 280708-1-ref.html
 == 283686-1.html about:blank
@@ -379,7 +379,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 345267-1b.html 345267-1-ref.html
 == 345267-1c.html 345267-1-ref.html
 == 345267-1d.html 345267-1-ref.html
-!= 345563-sub.xhtml 345563-sup.xhtml 
+!= 345563-sub.xhtml 345563-sup.xhtml
 == 346189-1.xul 346189-1-ref.xul
 == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
@@ -488,7 +488,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # proba
 == 364862-1.html 364862-1-ref.html
 == 364968-1.xul 364968-1-ref.html
 == 365173-1.html 365173-1-ref.html
-== 366207-1.xul 366207-1-ref.xul 
+== 366207-1.xul 366207-1-ref.xul
 == 366616-1.xul 366616-1-ref.xul
 == 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
@@ -560,7 +560,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 3
 == 370692-1.xhtml 370692-1-ref.xhtml
 == 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
-== 371483-1.html about:blank # assertion test 
+== 371483-1.html about:blank # assertion test
 == 371561-1.html 371561-1-ref.html
 != 371681-1.xhtml about:blank
 == 371925-1a.html 371925-1-ref.html
@@ -619,7 +619,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 381130-1.html 381130-1-ref.html
 == 381507-1.html 381507-1-ref.html
 == 382600-1.html 382600-1-ref.html
-== 382916-1.html 382916-1-ref.html 
+== 382916-1.html 382916-1-ref.html
 == 383551-1.html 383551-1-ref.html
 == 383883-1.html 383883-1-ref.html
 == 383883-2.html 383883-2-ref.html
@@ -635,10 +635,10 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 385569-1a.html 385569-1-ref.html
 == 385569-1b.html 385569-1-ref.html
 == 385607-1.html 385607-1-ref.html
-== 385823-1.html 385823-1-ref.html 
-== 385823-2a.html 385823-2-ref.html 
-fails == 385823-2b.html 385823-2-ref.html 
-== 385823-2c.html 385823-2-ref.html 
+== 385823-1.html 385823-1-ref.html
+== 385823-2a.html 385823-2-ref.html
+fails == 385823-2b.html 385823-2-ref.html
+== 385823-2c.html 385823-2-ref.html
 == 385870-1.html 385870-1-ref.html
 == 385870-2.html 385870-2-ref.html
 == 386014-1a.html 386014-1-ref.html
@@ -814,7 +814,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 407937-1.html 407937-1-ref.html
 == 408493-1.html about:blank
 == 408493-2.html 408493-2-ref.html
-== 408656-1a.html 408656-1-ref.html 
+== 408656-1a.html 408656-1-ref.html
 == 408656-1b.html 408656-1-ref.html
 == 408656-1c.html 408656-1-ref.html
 == 408782-1a.html 408782-1-ref.html
@@ -850,11 +850,11 @@ fails == 413027-3.html 413027-3-ref.html
 == 413286-2a.html 413286-2-ref.html
 == 413286-2b.html 413286-2-ref.html
 == 413286-2c.html 413286-2-ref.html
-== 413286-3.html 413286-3-ref.html 
-== 413286-4a.html 413286-4-ref.html 
-== 413286-4b.html 413286-4-ref.html 
-== 413286-5.html 413286-5-ref.html 
-== 413286-6.html 413286-6-ref.html 
+== 413286-3.html 413286-3-ref.html
+== 413286-4a.html 413286-4-ref.html
+== 413286-4b.html 413286-4-ref.html
+== 413286-5.html 413286-5-ref.html
+== 413286-6.html 413286-6-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabling due to failure loading on some mac tinderboxes. See bug 432954
 == 413361-1.html 413361-1-ref.html
 == 413840-background-unchanged.html 413840-background-unchanged-ref.html
@@ -955,7 +955,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 438987-2a.html 438987-2-ref.html
 == 438987-2b.html 438987-2-ref.html
 == 438987-2c.html 438987-2-ref.html
-!= about:blank 438987-2-ref.html # check that backgrounds work at all 
+!= about:blank 438987-2-ref.html # check that backgrounds work at all
 == 439004-1.html 439004-1-ref.html
 == 439639-1.html 439639-1-ref.html
 == 439910.html 439910-ref.html
