@@ -232,13 +232,15 @@
     <implementation>
       <constructor>
         <![CDATA[
-          this._itemId = this.getAttribute("itemid");
-          this.init();
+          let itemId = this.getAttribute("itemid");
+          if (itemId)
+            this.init(itemId);
         ]]>
       </constructor>
 
-      <field name="_itemId"/>
+      <field name="_itemId">null</field>
       <field name="_uri"/>
+      <field name="_control">null</field>
       <field name="_isEditing">false</field>
 
       <field name="_nameField">
@@ -252,10 +254,11 @@
       </field>
       <property name="itemId" onget="return this._itemId"/>
       <property name="type" onget="return this.getAttribute('type');"/>
+
       <property name="name" onget="return this._nameField.value"
                             onset="this._nameField.value = val; return val;"/>
-      <property name="uri" onget="return this._uriField.value"
-                               onset="this._uriField.value = val; return val;"/>
+      <property name="spec" onget="return this._uriField.value"
+                            onset="this._uriField.value = val; return val;"/>
       <property name="tags" onget="return this._tagsField.value"
                             onset="this._tagsField.value = val; return val;"/>
       <property name="tagsAsArray" readonly="true">
@@ -282,10 +285,15 @@
       <property name="control" readonly="true">
         <getter>
           <![CDATA[
+            if (this._control)
+              return this._control;
+
             let parent = this.parentNode;
             while (parent) {
-              if (parent.localName == "placelist")
-                return parent;
+              if (parent.localName == "placelist") {
+                this._control = parent;
+                return this._control;
+              }
               parent = parent.parentNode;
             }
             return null;
@@ -294,8 +302,13 @@
       </property>
 
       <method name="init">
+        <parameter name="aItemId"/>
         <body>
           <![CDATA[
+            this._itemId = aItemId;
+            if (!this._itemId)
+              return;
+
             this.name = PlacesUtils.bookmarks.getItemTitle(this._itemId);
 
             try {
@@ -303,7 +316,7 @@
             } catch (e) {}
 
             if (this._uri) {
-              this.uri = this._uri.spec;
+              this.spec = this._uri.spec;
               let fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
               let icon = document.getAnonymousElementByAttribute(this, "anonid", "favicon");
               icon.src = fis.getFaviconImageForPage(this._uri).spec;
@@ -381,9 +394,9 @@
               }
 
               // If the URI was updated change it in the bookmark
-              if (this._uri.spec != this.uri) {
+              if (this._uri.spec != this.spec) {
                 var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-                uri = ios.newURI(this.uri, null, null);
+                uri = ios.newURI(this.spec, null, null);
 
                 PlacesUtils.bookmarks.changeBookmarkURI(this._itemId, this._uri);
               }
@@ -417,14 +430,14 @@
           ]]>
         </body>
       </method>
-      <method name="selectFolder">
+      <method name="move">
         <body>
           <![CDATA[
             if (this.control)
               this.control.activeItem = this;
 
             let control = this.control || this;
-            let code = control.getAttribute("onfolder");
+            let code = control.getAttribute("onmove");
             if (code) {
               let func = new Function(code);
               func.call(control);
@@ -453,11 +466,11 @@
         <xul:rows>
           <xul:row align="center">
             <xul:textbox anonid="name" readonly="true" xbl:inherits="value=name"/>
-            <xul:hbox anonid="edit-controls" class="bookmark-manage-controls">
-              <xul:button anonid="close-button" class="close-button"
-                          oncommand="document.getBindingParent(this).remove()"/>
+            <xul:hbox align="center" anonid="edit-controls" class="bookmark-manage-controls">
+              <xul:image anonid="close-button" class="close-button"
+                         onmousedown="document.getBindingParent(this).remove()"/>
               <xul:button anonid="folder-button" label="&editBookmarkMove.label;"
-                          oncommand="document.getBindingParent(this).selectFolder()"/>
+                          oncommand="document.getBindingParent(this).move()"/>
               <xul:button anonid="edit-button" label="&editBookmarkEdit.label;"
                           oncommand="document.getBindingParent(this).startEditing()"/>
               <xul:button anonid="done-button" label="&editBookmarkDone.label;" hidden="true"
@@ -500,11 +513,11 @@
         <xul:rows>
           <xul:row align="center">
             <xul:textbox anonid="name" readonly="true" xbl:inherits="value=name"/>
-            <xul:hbox anonid="edit-controls" class="bookmark-manage-controls">
-              <xul:button anonid="close-button" class="close-button"
-                          oncommand="document.getBindingParent(this).remove()"/>
+            <xul:hbox align="center" anonid="edit-controls" class="bookmark-manage-controls">
+              <xul:image anonid="close-button" class="close-button"
+                         onmousedown="document.getBindingParent(this).remove()"/>
               <xul:button anonid="folder-button" label="&editBookmarkMove.label;"
-                          oncommand="document.getBindingParent(this).selectFolder()"/>
+                          oncommand="document.getBindingParent(this).move()"/>
               <xul:button anonid="edit-button" label="&editBookmarkEdit.label;"
                           oncommand="document.getBindingParent(this).startEditing()"/>
               <xul:button anonid="done-button" label="&editBookmarkDone.label;" hidden="true"
@@ -839,6 +852,9 @@
             if (!aLevel) {
               while (items.firstChild)
                 items.removeChild(items.firstChild);
+
+              this.appendItem(aRootFolder, Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, aLevel);
+              aLevel += 24;
             }
 
             let childItems = this._getChildren(aRootFolder);
@@ -867,14 +883,14 @@
 
             // XXX make a <handler> for the mouseup
             var self = this;
-            child.addEventListener("mouseup", function(e) { self._fireOpen(e, child); }, false);
+            child.addEventListener("mouseup", function(e) { self._fireSelect(e, child); }, false);
 
             return child;
           ]]>
         </body>
       </method>
 
-      <method name="_fireOpen">
+      <method name="_fireSelect">
         <parameter name="aEvent"/>
         <parameter name="aItem"/>
         <body>
@@ -882,10 +898,9 @@
             // Force the item to be selected
             this._items.selectedItem = aItem;
 
-            // This is a callback used to forward information to some
-            // external code
-            let func = new Function(this.getAttribute("onopen"));
-            func.call(this);
+            // the richlistbox will fire an onselect event, which will bubble to
+            // the placetree onselect handler. We don't need to explicitly fire
+            // anything here.
           ]]>
         </body>
       </method>

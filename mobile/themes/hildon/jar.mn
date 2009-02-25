@@ -15,7 +15,6 @@ classic.jar:
   browser.css                          (browser.css)
   extensions.css                       (extensions.css)
   notification.css                     (notification.css)
-  images/close-small.png               (images/close-small.png)
   images/tab_close.png                 (images/tab_close.png)
   images/default-favicon.png           (images/default-favicon.png)
   images/identity.png                  (images/identity.png)
@@ -42,3 +41,4 @@ classic.jar:
   images/navigation_magnifier.gif      (images/navigation_magnifier.gif)
   images/page_buttons.png              (images/page_buttons.png)
   images/folder.png                    (images/folder.png)
+  images/folder_close.png              (images/folder_close.png)

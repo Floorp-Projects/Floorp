@@ -44,10 +44,9 @@ const TOOLBARSTATE_LOADED         = 2;
 const UIMODE_NONE              = 0;
 const UIMODE_URLVIEW           = 1;
 const UIMODE_URLEDIT           = 2;
-const UIMODE_BOOKMARK          = 3;
-const UIMODE_TABS              = 4;
-const UIMODE_CONTROLS          = 5;
-const UIMODE_PANEL             = 6;
+const UIMODE_TABS              = 3;
+const UIMODE_CONTROLS          = 4;
+const UIMODE_PANEL             = 5;
 
 const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
@@ -77,7 +76,6 @@ var BrowserUI = {
   _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconLink : null,
-  _editingBookmark : null,
 
   _titleChanged : function(aDocument) {
     var browser = Browser.selectedBrowser;
@@ -400,7 +398,6 @@ var BrowserUI = {
 
     this.mode = aMode;
 
-    let bookmark = document.getElementById("bookmark-container");
     let container = document.getElementById("browser-container");
     let panelUI = document.getElementById("panel-container");
 
@@ -408,26 +405,15 @@ var BrowserUI = {
       this._showToolbar(false);
       this._editToolbar(false);
 
-      bookmark.hidden = true;
       panelUI.hidden = true;
     }
     else if (aMode == UIMODE_URLEDIT) {
       this._showToolbar(true);
       this._editToolbar(true);
 
-      bookmark.hidden = true;
       panelUI.hidden = true;
-    }
-    else if (aMode == UIMODE_BOOKMARK) {
-      this._showToolbar(true);
-      this._editToolbar(false);
-
-      panelUI.hidden = true;
-      bookmark.hidden = false;
-      bookmark.width = container.boxObject.width;
     }
     else if (aMode == UIMODE_PANEL) {
-      bookmark.hidden = true;
       panelUI.hidden = false;
       panelUI.width = container.boxObject.width;
       panelUI.height = container.boxObject.height;
@@ -439,7 +425,6 @@ var BrowserUI = {
     else if (aMode == UIMODE_NONE) {
       this._showToolbar(false);
       this._edit.reallyClosePopup();
-      bookmark.hidden = true;
       panelUI.hidden = true;
     }
   },
@@ -592,7 +577,6 @@ var BrowserUI = {
           this.show(UIMODE_NONE);
         }
         else {
-          this.show(UIMODE_BOOKMARK);
           BookmarkHelper.edit(bookmarkURI);
         }
         break;
@@ -628,22 +612,38 @@ var BrowserUI = {
 };
 
 var BookmarkHelper = {
+  _panel: null,
+  _editor: null,
+
   edit: function(aURI) {
-    var bookmarkEdit = document.getElementById("bookmark-edit");
-    bookmarkEdit.startEditing(aURI);
+    let itemId = PlacesUtils.getMostRecentBookmarkForURI(aURI);
+    if (itemId == -1)
+      return;
+
+    let container = document.getElementById("browser-container");
+    this._panel = document.getElementById("bookmark-container");
+    this._panel.hidden = false;
+    this._panel.width = container.boxObject.width;
+
+    this._editor = document.getElementById("bookmark-edit");
+    this._editor.init(itemId);
+    this._editor.startEditing();
+
     window.addEventListener("keypress", this, true);
   },
 
   close: function() {
-    var bookmarkEdit = document.getElementById("bookmark-edit");
     window.removeEventListener("keypress", this, true);
-    BrowserUI.show(UIMODE_NONE);
     BrowserUI.updateStar();
+
+    if (this._editor.isEditing)
+      this._editor.stopEditing();
+    this._panel.hidden = true;
   },
 
   handleEvent: function(aEvent) {
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
-      document.getElementById("bookmark-edit").stopEditing(true);
+      this.close();
   }
 };
 
@@ -682,9 +682,9 @@ var BookmarkList = {
 
   openBookmark: function() {
     let item = this._bookmarks.activeItem;
-    if (item.uri) {
+    if (item.spec) {
       this._panel.hidden = true;
-      BrowserUI.goToURI(item.uri)
+      BrowserUI.goToURI(item.spec)
     }
   },
 
@@ -694,7 +694,7 @@ var BookmarkList = {
   }
 };
 
-var FolderHelper = {
+var FolderPicker = {
   _control: null,
   _panel: null,
 
@@ -715,12 +715,14 @@ var FolderHelper = {
     this._panel.hidden = true;
   },
 
-  selectFolder: function() {
+  moveItem: function() {
     let folders = document.getElementById("folder-items");
-    let folderId = PlacesUtils.bookmarks.getFolderIdForItem(this._control.activeItem.itemId);
+    let itemId = (this._control.activeItem ? this._control.activeItem.itemId : this._control.itemId);
+    let folderId = PlacesUtils.bookmarks.getFolderIdForItem(itemId);
     if (folders.selectedItem.itemId != folderId) {
-      PlacesUtils.bookmarks.moveItem(this._control.activeItem.itemId, folders.selectedItem.itemId, PlacesUtils.bookmarks.DEFAULT_INDEX);
-      this._control.removeItem(this._control.activeItem);
+      PlacesUtils.bookmarks.moveItem(itemId, folders.selectedItem.itemId, PlacesUtils.bookmarks.DEFAULT_INDEX);
+      if (this._control.removeItem)
+        this._control.removeItem(this._control.activeItem);
     }
     this.close();
   }
