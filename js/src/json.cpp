@@ -336,8 +336,10 @@ stringify(JSContext *cx, jsval *vp, JSObject *replacer,
                 break;
         }
 
-        // elide undefined values
-        if (outputValue == JSVAL_VOID)
+        JSType type = JS_TypeOfValue(cx, outputValue);
+
+        // elide undefined values and functions and XML
+        if (outputValue == JSVAL_VOID || type == JSTYPE_FUNCTION || type == JSTYPE_XML)
             continue;
 
         // output a comma unless this is the first member to write
@@ -349,11 +351,6 @@ stringify(JSContext *cx, jsval *vp, JSObject *replacer,
         }
         memberWritten = JS_TRUE;
 
-        JSType type = JS_TypeOfValue(cx, outputValue);
-
-        // Can't encode these types, so drop them
-        if (type == JSTYPE_FUNCTION || type == JSTYPE_XML)
-            break;
 
         // Be careful below, this string is weakly rooted.
         JSString *s;
