@@ -51,7 +51,7 @@ interface nsIDocument;
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
-   * Let the owner know that an instance has been created
+   * Let the owner know what its instance is
    */
   void setInstance(in nsIPluginInstance aInstance);
 
