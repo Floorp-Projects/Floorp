@@ -165,6 +165,17 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     js_strncpy(s + ln, rs, rn);
     n = ln + rn;
     s[n] = 0;
+
+#ifdef JS_TRACER
+    /*
+     * Lame hack to avoid trying to deep-bail (@js_ReportAllocationOverflow)
+     * when called directly from trace.  Instead, retry from the interpreter.
+     * See bug 477351.
+     */
+    if (n > JSSTRING_LENGTH_MASK && JS_ON_TRACE(cx) && !cx->bailExit)
+        return NULL;
+#endif
+
     str = js_NewString(cx, s, n);
     if (!str) {
         /* Out of memory: clean up any space we (re-)allocated. */

@@ -59,15 +59,15 @@ function test()
   }
   else
   {
-    timeout(3); 
-    // call reportCompare early here to get a result.
-    // the test will fail if the timeout does not terminate
-    // and the test is forced to TIMED OUT.
+    expectExitCode(6);
+    timeout(0.01);
+    // Call reportCompare early here to get a result.  The test will fail if
+    // the timeout doesn't work and the test framework is forced to terminate
+    // the test.
     reportCompare(expect, actual, summary);
 
-    while(1); 
+    while(1);
   }
-
 
   exitFunc ('test');
 }
