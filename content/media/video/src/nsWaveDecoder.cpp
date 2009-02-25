@@ -117,10 +117,6 @@ public:
                      PRUint32 aBufferWaitTime, float aInitialVolume);
   ~nsWaveStateMachine();
 
-  // Return current audio volume from the audio backend.  Result in range
-  // [0.0, 1.0].  Threadsafe.
-  float GetVolume();
-
   // Set specified volume.  aVolume must be in range [0.0, 1.0].
   // Threadsafe.
   void SetVolume(float aVolume);
@@ -410,16 +406,6 @@ nsWaveStateMachine::Play()
   } else {
     ChangeState(STATE_PLAYING);
   }
-}
-
-float
-nsWaveStateMachine::GetVolume()
-{
-  float volume = mInitialVolume;
-  if (mAudioStream) {
-    volume = mAudioStream->GetVolume();
-  }
-  return volume;
 }
 
 void
@@ -1298,15 +1284,6 @@ nsWaveDecoder::Pause()
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Pause();
   }
-}
-
-float
-nsWaveDecoder::GetVolume()
-{
-  if (!mPlaybackStateMachine) {
-    return mInitialVolume;
-  }
-  return mPlaybackStateMachine->GetVolume();
 }
 
 void
