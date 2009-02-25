@@ -77,7 +77,10 @@ public:
   static void Shutdown();
 
 private:
-  void FlushPendingReflows();
+  void AssertFlushedPendingReflows() {
+    NS_ASSERTION(mFlushedPendingReflows,
+                 "property getter should have been marked layout-dependent");
+  }
   
 #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
   const nsStyle##name_ * GetStyle##name_() {                            \
@@ -398,6 +401,7 @@ private:
 
     nsCSSProperty mProperty;
     ComputeMethod mGetter;
+    PRBool mNeedsLayoutFlush;
   };
 
   static const ComputedStyleMapEntry* GetQueryablePropertyMap(PRUint32* aLength);
@@ -437,6 +441,10 @@ private:
   nsIPresShell* mPresShell;
 
   PRInt32 mAppUnitsPerInch; /* For unit conversions */
+
+#ifdef DEBUG
+  PRBool mFlushedPendingReflows;
+#endif
 };
 
 #endif /* nsComputedDOMStyle_h__ */
