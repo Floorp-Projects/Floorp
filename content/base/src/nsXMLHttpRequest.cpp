@@ -92,11 +92,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsCommaSeparatedTokenizer.h"
 
-// XXX: Needed for debugging bug 471227, these two includes should not
-// stick around
-#include <nsIApplicationCache.h>
-#include <nsIApplicationCacheChannel.h>
-
 #define LOAD_STR "load"
 #define ERROR_STR "error"
 #define ABORT_STR "abort"
@@ -2338,33 +2333,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     // This can happen if the server is unreachable. Other possible
     // reasons are that the user leaves the page or hits the ESC key.
     Error(nsnull);
-
-    {
-      // XXX: Some debugging spew for bug 471227, this should not stay
-      // in the tree.
-
-      // verify whether the application cache channel was associated
-      // with a channel.
-      nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-        do_QueryInterface(request);
-      nsCOMPtr<nsIApplicationCache> appCache;
-      if (appCacheChannel) {
-        appCacheChannel->GetApplicationCache(getter_AddRefs(appCache));
-      }
-
-      nsCAutoString spec;
-      nsCOMPtr<nsIURI> uri;
-      channel->GetURI(getter_AddRefs(uri));
-      if (uri) {
-        uri->GetSpec(spec);
-      }
-
-      nsCOMPtr<nsIApplicationCacheContainer> container;
-      NS_QueryNotificationCallbacks(channel, container);
-
-      printf("(Bug 471227): XHR failed for %s: status: %x, appcache: %p, doc: %p\n",
-             spec.get(), status, appCache.get(), container.get());
-    }
 
     // By nulling out channel here we make it so that Send() can test
     // for that and throw. Also calling the various status
