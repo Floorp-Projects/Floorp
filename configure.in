@@ -3165,7 +3165,7 @@ else
 		[MISSING_X="$MISSING_X -lX11"], $XLIBS)
 	AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
 		[MISSING_X="$MISSING_X -lXext"], $XLIBS)
-   
+    echo "green"
      
 	AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
         unset ac_cv_lib_Xt_XtFree
@@ -3256,6 +3256,7 @@ fi # $no_x
 AC_SUBST(XCFLAGS)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
+AC_SUBST(XEXT_LIBS)
 AC_SUBST(XT_LIBS)
 
 AC_MSG_CHECKING(for ARM SIMD support)
@@ -6234,9 +6235,19 @@ PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,
                   MOZ_PLATFORM_HILDON=)
 if test $MOZ_PLATFORM_HILDON; then
    AC_DEFINE(MOZ_PLATFORM_HILDON)
+   X11_COMPOSITED_PLUGINS="yes"
 fi
 AC_SUBST(LIBHILDONMIME_CFLAGS)
 AC_SUBST(LIBHILDONMIME_LIBS)
+
+if test "$X11_COMPOSITED_PLUGINS" = "yes"; then
+    dnl if we have Xcomposite we should also have Xdamage and Xfixes
+    AC_CHECK_HEADERS([X11/extensions/Xdamage.h], [],
+                     [AC_MSG_ERROR([Couldn't find X11/extentsions/Xdamage.h which is required for composited plugins.])])
+    AC_CHECK_LIB(Xcomposite, XCompositeRedirectWindow, [XCOMPOSITE_LIBS="-lXcomposite -lXdamage -lXfixes"],
+                 [MISSING_X="$MISSING_X -lXcomposite"], $XLIBS)
+fi
+AC_SUBST(XCOMPOSITE_LIBS)
 
 PKG_CHECK_MODULES(LIBOSSO,libosso,
                   NS_OSSO=1,
