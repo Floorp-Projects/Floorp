@@ -1178,6 +1178,28 @@ mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clen
     *plength = clength;
 }
 
+/* Specializes a tree to any missing globals, including any dependent trees. */
+static void
+specializeTreesToMissingGlobals(JSContext* cx, TreeInfo* root)
+{
+    TreeInfo* ti = root;
+
+    ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
+    JS_ASSERT(ti->globalSlots->length() == ti->typeMap.length() - ti->nStackTypes);
+   
+    for (unsigned i = 0; i < root->dependentTrees.length(); i++) {
+        ti = (TreeInfo*)root->dependentTrees.data()[i]->vmprivate;
+        /* ti can be NULL if we hit the recording tree in emitTreeCall; this is harmless. */
+        if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
+            specializeTreesToMissingGlobals(cx, ti);
+    }
+    for (unsigned i = 0; i < root->linkedTrees.length(); i++) {
+        ti = (TreeInfo*)root->linkedTrees.data()[i]->vmprivate;
+        if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
+            specializeTreesToMissingGlobals(cx, ti);
+    }
+}
+
 static void
 js_TrashTree(JSContext* cx, Fragment* f);
 
@@ -1232,11 +1254,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     globalObj_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, globalObj)), "globalObj");
 
     /* If we came from exit, we might not have enough global types. */
-    if (ti->globalSlots->length() > ti->nGlobalTypes()) {
-        ti->typeMap.captureMissingGlobalTypes(cx,
-                                              *(ti->globalSlots),
-                                              ti->nStackTypes);
-    }
+    if (ti->globalSlots->length() > ti->nGlobalTypes())
+        specializeTreesToMissingGlobals(cx, ti);
 
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, stackSlots, ngslots, callDepth, typeMap);
@@ -1648,6 +1667,7 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 {
     uint8* mp_base = mp;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        debug_only_v(printf("%s%u=", vpname, vpnum);)
         NativeToValue(cx, *vp, *mp, np + gslots[n]);
         ++mp;
     );
@@ -1828,12 +1848,14 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
         return true; /* we already have it */
     unsigned index = treeInfo->globalSlots->length();
     /* Add the slot to the list of interned global slots. */
+    JS_ASSERT(treeInfo->nGlobalTypes() == treeInfo->globalSlots->length());
     treeInfo->globalSlots->add(slot);
     uint8 type = getCoercedType(*vp);
     if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx, slot))
         type = JSVAL_DOUBLE;
     treeInfo->typeMap.add(type);
     import(gp_ins, slot*sizeof(double), vp, type, "global", index, NULL);
+    specializeTreesToMissingGlobals(cx, treeInfo);
     return true;
 }
 
@@ -2516,6 +2538,7 @@ js_JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stabl
     frago->assm()->patch(exit);
 
     stableTree->dependentTrees.addUnique(exit->from->root);
+    ((TreeInfo*)exit->from->root->vmprivate)->linkedTrees.addUnique(stableFrag);
 
     return true;
 }
@@ -2597,6 +2620,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
             debug_only_v(printf("Joining type-unstable trace to target fragment %p.\n", (void*)peer);)
             stable = true;
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
+            treeInfo->linkedTrees.addUnique(peer);
         }
 
         compile(tm);
@@ -2610,6 +2634,10 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         return false;
 
     joinEdgesToEntry(fragmento, peer_root);
+
+    debug_only_v(printf("updating specializations on dependent and linked trees\n"))
+    if (fragment->root->vmprivate)
+        specializeTreesToMissingGlobals(cx, (TreeInfo*)fragment->root->vmprivate);
 
     debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n",
                         cx->fp->script->filename,
@@ -2718,6 +2746,12 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
 
     joinEdgesToEntry(tm->fragmento, getLoop(tm, fragment->root->ip, treeInfo->globalShape));
 
+    /* Note: this must always be done, in case we added new globals on trace and haven't yet 
+       propagated those to linked and dependent trees. */
+    debug_only_v(printf("updating specializations on dependent and linked trees\n"))
+    if (fragment->root->vmprivate)
+        specializeTreesToMissingGlobals(cx, (TreeInfo*)fragment->root->vmprivate);
+
     debug_only_v(printf("recording completed at %s:%u@%u via endLoop\n",
                         cx->fp->script->filename,
                         js_FramePCToLineNumber(cx, cx->fp),
@@ -2785,6 +2819,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
     guard(true, lir->ins2(LIR_eq, ret, INS_CONSTPTR(exit)), NESTED_EXIT);
     /* Register us as a dependent tree of the inner tree. */
     ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment->root);
+    treeInfo->linkedTrees.addUnique(inner);
 }
 
 /* Add a if/if-else control-flow merge point to the list of known merge points. */
@@ -3391,9 +3426,10 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, Fragment* outer)
             /* Capture missing globals on both trees and link the fragments together. */
             if (from != f) {
                 ti->dependentTrees.addUnique(from);
-                ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
+                from_ti->linkedTrees.addUnique(f);
             }
-            from_ti->typeMap.captureMissingGlobalTypes(cx, *from_ti->globalSlots, from_ti->nStackTypes);
+            if (ti->nGlobalTypes() < ti->globalSlots->length())
+                specializeTreesToMissingGlobals(cx, ti);
             exit->target = f;
             tm->fragmento->assm()->patch(exit);
             /* Now erase this exit from the unstable exit list. */
@@ -3722,7 +3758,7 @@ TraceRecorder::findNestedCompatiblePeer(Fragment* f, Fragment** empty)
         debug_only_v(printf("checking nested types %p: ", (void*)f);)
 
         if (ngslots > ti->nGlobalTypes())
-            ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
+            specializeTreesToMissingGlobals(cx, ti);
 
         uint8* m = ti->typeMap.data();
 
@@ -3777,7 +3813,7 @@ js_CheckEntryTypes(JSContext* cx, TreeInfo* ti)
     JS_ASSERT(ti->nStackTypes == js_NativeStackSlots(cx, 0));
 
     if (ngslots > ti->nGlobalTypes())
-        ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
+        specializeTreesToMissingGlobals(cx, ti);
 
     uint8* m = ti->typeMap.data();
 
@@ -4109,16 +4145,28 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     uint16* gslots = outermostTree->globalSlots->data();
     unsigned ngslots = outermostTree->globalSlots->length();
     JS_ASSERT(ngslots == outermostTree->nGlobalTypes());
-    unsigned exit_gslots = innermost->numGlobalSlots;
-    JS_ASSERT(exit_gslots <= ngslots);
-    uint8* globalTypeMap = getGlobalTypeMap(innermost);
-    if (exit_gslots < ngslots)
-        mergeTypeMaps(&globalTypeMap, &exit_gslots, outermostTree->globalTypeMap(), ngslots,
-                      (uint8*)alloca(sizeof(uint8) * ngslots));
-    JS_ASSERT(exit_gslots == outermostTree->globalSlots->length());
+    uint8* globalTypeMap;
+
+    /* Are there enough globals? This is the ideal fast path. */
+    if (innermost->numGlobalSlots == ngslots) {
+        globalTypeMap = getGlobalTypeMap(innermost);
+    /* Otherwise, merge the typemap of the innermost entry and exit together.  This should always
+       work because it is invalid for nested trees or linked trees to have incompatible types.
+       Thus, whenever a new global type is lazily added into a tree, all dependent and linked
+       trees are immediately specialized (see bug 476653). */
+    } else {
+        TreeInfo* ti = (TreeInfo*)innermost->from->root->vmprivate;
+        JS_ASSERT(ti->nGlobalTypes() == ngslots);
+        JS_ASSERT(ti->nGlobalTypes() > innermost->numGlobalSlots);
+        globalTypeMap = (uint8*)alloca(ngslots * sizeof(uint8));
+        memcpy(globalTypeMap, getGlobalTypeMap(innermost), innermost->numGlobalSlots);
+        memcpy(globalTypeMap + innermost->numGlobalSlots,
+               ti->globalTypeMap() + innermost->numGlobalSlots,
+               ti->nGlobalTypes() - innermost->numGlobalSlots);
+    }
 
     /* write back interned globals */
-    FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, state.global);
+    FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, state.global);
     JS_ASSERT(*(uint64*)&state.global[STOBJ_NSLOTS(state.globalObj)] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */

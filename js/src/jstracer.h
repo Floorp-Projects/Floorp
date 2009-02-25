@@ -308,7 +308,10 @@ public:
     unsigned                nStackTypes;
     uint32                  globalShape;
     SlotList*               globalSlots;
+    /* Dependent trees must be trashed if this tree dies, and updated on missing global types */
     Queue<nanojit::Fragment*> dependentTrees;
+    /* Linked trees must be updated on missing global types, but are not dependent */
+    Queue<nanojit::Fragment*> linkedTrees;
     unsigned                branchCount;
     Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
