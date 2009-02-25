@@ -193,7 +193,7 @@ class MochitestOptions(optparse.OptionParser):
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
                            "than the given number")
-    defaults["leakThreshold"] = INFINITY
+    defaults["leakThreshold"] = 0
 
     self.add_option("--fatal-assertions",
                     action = "store_true", dest = "fatalAssertions",
@@ -295,12 +295,6 @@ def getFullPath(path):
 def main():
   parser = MochitestOptions()
   options, args = parser.parse_args()
-
-  # If the leak threshold wasn't explicitly set, we override the default of
-  # infinity when the set of tests we're running are known to leak only a
-  # particular amount.  If for some reason you don't want a new leak threshold
-  # enforced, just pass an explicit --leak-threshold=N to prevent the override.
-  maybeForceLeakThreshold(options)
 
   options.app = getFullPath(options.app)
   if not os.path.exists(options.app):
@@ -457,11 +451,9 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                     " %d bytes during test execution" % bytesLeaked
         else:
           leakLog = "TEST-PASS | runtests-leaks | no leaks detected!"
-        # Remind the threshold if it is not 0, which is the goal.
+        # Remind the threshold if it is not 0, which is the default/goal.
         if threshold != 0:
-          leakLog += (threshold == INFINITY) \
-                     and (" (no threshold set)") \
-                     or  (" (threshold set at %d bytes)" % threshold)
+          leakLog += " (threshold set at %d bytes)" % threshold
         # Log the information.
         log.info(leakLog)
       else:
@@ -502,26 +494,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 #######################
 # CONFIGURATION SETUP #
 #######################
-
-def maybeForceLeakThreshold(options):
-  """
-  Modifies an unset leak threshold if it is known that a particular leak
-  threshold can be successfully forced for the particular Mochitest type
-  and platform in use.
-  """
-  if options.leakThreshold == INFINITY:
-    if options.chrome:
-      # We don't leak running the --chrome tests.
-      options.leakThreshold = 0
-    elif options.browserChrome:
-      # We don't leak running the --browser-chrome tests.
-      options.leakThreshold = 0
-    elif options.a11y:
-      # We don't leak running the --a11y tests.
-      options.leakThreshold = 0
-    else:
-      # Normal Mochitests: no leaks.
-      options.leakThreshold = 0
 
 def makeTestConfig(options):
   "Creates a test configuration file for customizing test execution."
