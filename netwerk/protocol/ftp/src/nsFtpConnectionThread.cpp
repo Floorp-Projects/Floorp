@@ -1259,34 +1259,18 @@ nsFtpState::S_pasv() {
     if (!mAddressChecked) {
         // Find socket address
         mAddressChecked = PR_TRUE;
-        PR_InitializeNetAddr(PR_IpAddrAny, 0, &mServerAddress);
-
         nsITransport *controlSocket = mControlConnection->Transport();
         if (!controlSocket)
             return FTP_ERROR;
 
         nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(controlSocket);
         if (sTrans) {
-            nsresult rv = sTrans->GetPeerAddr(&mServerAddress);
+            PRNetAddr addr;
+            nsresult rv = sTrans->GetPeerAddr(&addr);
             if (NS_SUCCEEDED(rv)) {
-                if (!PR_IsNetAddrType(&mServerAddress, PR_IpAddrAny))
-                    mServerIsIPv6 = mServerAddress.raw.family == PR_AF_INET6 &&
-                        !PR_IsNetAddrType(&mServerAddress, PR_IpAddrV4Mapped);
-                else {
-                    /*
-                     * In case of SOCKS5 remote DNS resolution, we do
-                     * not know the remote IP address. Still, if it is
-                     * an IPV6 host, then the external address of the
-                     * socks server should also be IPv6, and this is the
-                     * self address of the transport.
-                     */
-                    PRNetAddr selfAddress;
-                    rv = sTrans->GetSelfAddr(&selfAddress);
-                    if (NS_SUCCEEDED(rv))
-                        mServerIsIPv6 = selfAddress.raw.family == PR_AF_INET6
-                            && !PR_IsNetAddrType(&selfAddress,
-                                                 PR_IpAddrV4Mapped);
-                }
+                mServerIsIPv6 = addr.raw.family == PR_AF_INET6 &&
+                                !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped);
+                PR_NetAddrToString(&addr, mServerAddress, sizeof(mServerAddress));
             }
         }
     }
@@ -1409,32 +1393,14 @@ nsFtpState::R_pasv() {
             return FTP_ERROR;
        
         nsCOMPtr<nsISocketTransport> strans;
-
-        nsCAutoString host;
-        if (!PR_IsNetAddrType(&mServerAddress, PR_IpAddrAny)) {
-            char buf[64];
-            PR_NetAddrToString(&mServerAddress, buf, sizeof(buf));
-            host.Assign(buf);
-        } else {
-            /*
-             * In case of SOCKS5 remote DNS resolving, the peer address
-             * fetched previously will be invalid (0.0.0.0): it is unknown
-             * to us. But we can pass on the original hostname to the
-             * connect for the data connection.
-             */
-            rv = mChannel->URI()->GetAsciiHost(host);
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
-        }
-
-        rv =  sts->CreateTransport(nsnull, 0, host,
-                                   port, mChannel->ProxyInfo(),
-                                   getter_AddRefs(strans)); // the data socket
+        rv = sts->CreateTransport(nsnull, 0, nsDependentCString(mServerAddress),
+                                  port, mChannel->ProxyInfo(),
+                                  getter_AddRefs(strans)); // the data socket
         if (NS_FAILED(rv))
             return FTP_ERROR;
         mDataTransport = strans;
         
-        LOG(("FTP:(%x) created DT (%s:%x)\n", this, host.get(), port));
+        LOG(("FTP:(%x) created DT (%s:%x)\n", this, mServerAddress, port));
         
         // hook ourself up as a proxy for status notifications
         rv = mDataTransport->SetEventSink(this, NS_GetCurrentThread());
