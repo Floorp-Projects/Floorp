@@ -1774,7 +1774,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #define POP_STR_PREC(prec)    PopStrPrec(ss, prec)
 
 /*
- * Pop a condition expression for if/for/while. JSOP_IFEQ's precedence forces
+ * Pop a condition expression for if/while. JSOP_IFEQ's precedence forces
  * extra parens around assignment, which avoids a strict-mode warning.
  */
 #define POP_COND_STR()                                                        \
@@ -3965,34 +3965,27 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      *  1. It is the complete expression consumed by a control
                      *     flow bytecode such as JSOP_TABLESWITCH whose syntax
                      *     always parenthesizes the controlling expression.
-                     *  2. It is the condition of a loop other than a for (;;).
-                     *  3. It is the sole argument to a function call.
-                     *  4. It is the condition of an if statement and not of a
-                     *     ?: expression.
+                     *  2. It is the sole argument to a function call.
                      *
-                     * But (first, before anything else) always parenthesize
-                     * if this genexp runs up against endpc and the next op is
-                     * not a loop condition (JSOP_IFNE*) opcode. In such cases,
-                     * this Decompile activation has been recursively called by
-                     * a comma operator, &&, or || bytecode.
+                     * But if this genexp runs up against endpc, parenthesize
+                     * regardless.  (This can happen if we are called from
+                     * DecompileExpression or recursively from case
+                     * JSOP_{NOP,AND,OR}.)
+                     *
+                     * There's no special case for |if (genexp)| because the
+                     * compiler optimizes that to |if (true)|.
                      */
                     pc2 = pc + len;
                     LOCAL_ASSERT(pc2 < endpc ||
                                  endpc < outer->code + outer->length);
                     LOCAL_ASSERT(ss2.top == 1);
                     ss2.opcodes[0] = JSOP_POP;
-                    if (pc2 == endpc &&
-                        (JSOp) *endpc != JSOP_IFNE &&
-                        (JSOp) *endpc != JSOP_IFNEX) {
+                    if (pc2 == endpc) {
                         op = JSOP_SETNAME;
                     } else {
                         op = (JSOp) *pc2;
                         op = ((js_CodeSpec[op].format & JOF_PARENHEAD) ||
-                              ((js_CodeSpec[op].format & JOF_INVOKE) &&
-                               GET_ARGC(pc2) == 1) ||
-                              ((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
-                               (sn2 = js_GetSrcNote(outer, pc2)) &&
-                               SN_TYPE(sn2) != SRC_COND))
+                              ((js_CodeSpec[op].format & JOF_INVOKE) && GET_ARGC(pc2) == 1))
                              ? JSOP_POP
                              : JSOP_SETNAME;
 
