@@ -621,7 +621,7 @@ nsWebBrowserPersist::SerializeNextFile()
 
     return (mURIMap.Count() 
         || mUploadList.Count()
-        || mDocList.Count()
+        || mDocList.Length()
         || mOutputMap.Count());
 }
 
@@ -775,7 +775,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     {
         // if no documents left in mDocList, --> done
         // if we have no files left to serialize and no error result, --> done
-        if (mDocList.Count() == 0
+        if (mDocList.Length() == 0
             || (!SerializeNextFile() && NS_SUCCEEDED(mPersistResult)))
         {
             completed = PR_TRUE;
@@ -1725,10 +1725,10 @@ nsresult nsWebBrowserPersist::SaveDocuments()
     // Iterate through all queued documents, saving them to file and fixing
     // them up on the way.
 
-    PRInt32 i;
-    for (i = 0; i < mDocList.Count(); i++)
+    PRUint32 i;
+    for (i = 0; i < mDocList.Length(); i++)
     {
-        DocData *docData = (DocData *) mDocList.ElementAt(i);
+        DocData *docData = mDocList.ElementAt(i);
         if (!docData)
         {
             rv = NS_ERROR_FAILURE;
@@ -1773,9 +1773,9 @@ nsresult nsWebBrowserPersist::SaveDocuments()
     }
 
     // delete, cleanup regardless of errors (bug 132417)
-    for (i = 0; i < mDocList.Count(); i++)
+    for (i = 0; i < mDocList.Length(); i++)
     {
-        DocData *docData = (DocData *) mDocList.ElementAt(i);
+        DocData *docData = mDocList.ElementAt(i);
         delete docData;
         if (mSerializingOutput)
         {
@@ -1800,16 +1800,16 @@ void nsWebBrowserPersist::Cleanup()
     mOutputMap.Reset();
     mUploadList.Enumerate(EnumCleanupUploadList, this);
     mUploadList.Reset();
-    PRInt32 i;
-    for (i = 0; i < mDocList.Count(); i++)
+    PRUint32 i;
+    for (i = 0; i < mDocList.Length(); i++)
     {
-        DocData *docData = (DocData *) mDocList.ElementAt(i);
+        DocData *docData = mDocList.ElementAt(i);
         delete docData;
     }
     mDocList.Clear();
-    for (i = 0; i < mCleanupList.Count(); i++)
+    for (i = 0; i < mCleanupList.Length(); i++)
     {
-        CleanupData *cleanupData = (CleanupData *) mCleanupList.ElementAt(i);
+        CleanupData *cleanupData = mCleanupList.ElementAt(i);
         delete cleanupData;
     }
     mCleanupList.Clear();
@@ -1825,10 +1825,10 @@ void nsWebBrowserPersist::CleanupLocalFiles()
     int pass;
     for (pass = 0; pass < 2; pass++)
     {
-        PRInt32 i;
-        for (i = 0; i < mCleanupList.Count(); i++)
+        PRUint32 i;
+        for (i = 0; i < mCleanupList.Length(); i++)
         {
-            CleanupData *cleanupData = (CleanupData *) mCleanupList.ElementAt(i);
+            CleanupData *cleanupData = mCleanupList.ElementAt(i);
             nsCOMPtr<nsILocalFile> file = cleanupData->mFile;
 
             // Test if the dir / file exists (something in an earlier loop
