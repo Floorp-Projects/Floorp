@@ -48,6 +48,18 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
+
+#ifdef MOZ_PLATFORM_HILDON
+#define MOZ_COMPOSITED_PLUGINS
+#endif
+
+#ifdef MOZ_COMPOSITED_PLUGINS
+extern "C" {
+#include <X11/extensions/Xdamage.h>
+#include <X11/extensions/Xcomposite.h>
+}
+#endif
+
 #include "gtk2xtbin.h"
 #ifdef OJI
 #include "plstr.h"
@@ -74,6 +86,15 @@ private:
   nsresult  CreateXtWindow();
   void      SetAllocation();
   PRBool    CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
+#ifdef MOZ_COMPOSITED_PLUGINS
+  nsresult  CreateXCompositedWindow();
+  static GdkFilterReturn    plugin_composite_filter_func (GdkXEvent *xevent,
+    GdkEvent *event,
+    gpointer data);
+
+  Damage     mDamage;
+  GtkWidget* mParentWindow;
+#endif
 };
 
 static gboolean plug_removed_cb   (GtkWidget *widget, gpointer data);
@@ -95,6 +116,10 @@ nsPluginNativeWindowGtk2::nsPluginNativeWindowGtk2() : nsPluginNativeWindow()
   mWsInfo.visual = nsnull;
   mWsInfo.colormap = 0;
   mWsInfo.depth = 0;
+#ifdef MOZ_COMPOSITED_PLUGINS
+  mDamage = 0;
+  mParentWindow = 0;
+#endif
 }
 
 nsPluginNativeWindowGtk2::~nsPluginNativeWindowGtk2() 
@@ -102,6 +127,16 @@ nsPluginNativeWindowGtk2::~nsPluginNativeWindowGtk2()
   if(mSocketWidget) {
     gtk_widget_destroy(mSocketWidget);
   }
+
+#ifdef MOZ_COMPOSITED_PLUGINS
+  if (mParentWindow) {
+    gtk_widget_destroy(mParentWindow);
+  }
+
+  if (mDamage) {
+    gdk_window_remove_filter (nsnull, plugin_composite_filter_func, this);
+  }
+#endif
 }
 
 nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
@@ -119,6 +154,49 @@ nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindo
   return NS_OK;
 }
 
+#ifdef MOZ_COMPOSITED_PLUGINS
+/* the base xdamage event number.*/
+static int xdamage_event_base;
+
+GdkFilterReturn
+nsPluginNativeWindowGtk2::plugin_composite_filter_func (GdkXEvent *xevent,
+    GdkEvent *event,
+    gpointer data)
+{
+  nsPluginNativeWindowGtk2 *native_window = (nsPluginNativeWindowGtk2*)data;
+  XDamageNotifyEvent *ev;
+  XserverRegion parts;
+  ev = (XDamageNotifyEvent *) xevent;
+  if (ev->type != xdamage_event_base + XDamageNotify)
+    return GDK_FILTER_CONTINUE;
+
+  //printf("Damage event %d %d %d %d\n",ev->area.x, ev->area.y, ev->area.width, ev->area.height);
+  parts = XFixesCreateRegion (GDK_DISPLAY(), 0, 0);
+  XDamageSubtract (GDK_DISPLAY(), native_window->mDamage, None, parts);
+
+  /* We try to do our area invalidation here */
+  nsPluginRect rect;
+  rect.top = ev->area.x;
+  rect.left = ev->area.y;
+  rect.right = ev->area.x + ev->area.width;
+  rect.bottom = ev->area.y + ev->area.height;
+
+  /* There might be a better way to do this? */
+  if (native_window->mPluginInstance) {
+    nsCOMPtr<nsIPluginInstancePeer> peer;
+    if (NS_SUCCEEDED(native_window->mPluginInstance->GetPeer(getter_AddRefs(peer))) && peer) {
+      nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
+      if (wpeer) {
+        // XXX nsRect & NPRect are structurally equivalent
+        wpeer->InvalidateRect(&rect);
+      }
+    }
+  }
+
+  return GDK_FILTER_REMOVE;
+}
+#endif
+
 nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
 {
   if(aPluginInstance) {
@@ -134,7 +212,11 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aP
 #endif
         }
         if(needXEmbed) {
+#ifdef MOZ_COMPOSITED_PLUGINS
+          CreateXCompositedWindow();
+#else
           CreateXEmbedWindow();
+#endif
         }
         else {
           CreateXtWindow();
@@ -214,6 +296,82 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
 
   return NS_OK;
 }
+
+#ifdef MOZ_COMPOSITED_PLUGINS
+nsresult nsPluginNativeWindowGtk2::CreateXCompositedWindow() {
+  NS_ASSERTION(!mSocketWidget,"Already created a socket widget!");
+
+  mParentWindow = gtk_window_new(GTK_WINDOW_POPUP);
+  mSocketWidget = gtk_socket_new();
+  GdkWindow *parent_win = mParentWindow->window;
+
+  //attach the socket to the container widget
+  gtk_widget_set_parent_window(mSocketWidget, parent_win);
+
+  // Make sure to handle the plug_removed signal.  If we don't the
+  // socket will automatically be destroyed when the plug is
+  // removed, which means we're destroying it more than once.
+  // SYNTAX ERROR.
+  g_signal_connect(mSocketWidget, "plug_removed",
+                   G_CALLBACK(plug_removed_cb), NULL);
+
+  g_signal_connect(mSocketWidget, "destroy",
+                   G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
+
+  /*gpointer user_data = NULL;
+  gdk_window_get_user_data(parent_win, &user_data);
+  */
+  GtkContainer *container = GTK_CONTAINER(mParentWindow);
+  gtk_container_add(container, mSocketWidget);
+  gtk_widget_realize(mSocketWidget);
+
+  // Resize before we show
+  SetAllocation();
+  gtk_widget_set_size_request (mSocketWidget, width, height);
+  /* move offscreen */
+  gtk_window_move (GTK_WINDOW(mParentWindow), width+1000, height+1000);
+
+
+  gtk_widget_show(mSocketWidget);
+  gtk_widget_show_all(mParentWindow);
+
+  /* store away a reference to the socketwidget */
+  mPlugWindow = (mSocketWidget);
+
+  gdk_flush();
+  window = (nsPluginPort *)gtk_socket_get_id(GTK_SOCKET(mSocketWidget));
+
+  /* This is useful if we still have the plugin window inline
+   * i.e. firefox vs. fennec */
+  // gdk_window_set_composited(mSocketWidget->window, TRUE);
+
+  if (!mDamage) {
+    /* we install a general handler instead of one specific to a particular window
+     * because we don't have a GdkWindow for the plugin window */
+    gdk_window_add_filter (parent_win, plugin_composite_filter_func, this);
+
+    int junk;
+    if (!XDamageQueryExtension (GDK_DISPLAY (), &xdamage_event_base, &junk))
+      printf ("This requires the XDamage extension");
+
+    mDamage = XDamageCreate(GDK_DISPLAY(), (Drawable)window, XDamageReportNonEmpty);
+    XCompositeRedirectWindow (GDK_DISPLAY(),
+        (Drawable)window,
+        CompositeRedirectManual);
+  }
+
+  // Fill out the ws_info structure.
+  // (The windowless case is done in nsObjectFrame.cpp.)
+  GdkWindow *gdkWindow = gdk_window_lookup((XID)window);
+  mWsInfo.display = GDK_WINDOW_XDISPLAY(gdkWindow);
+  mWsInfo.colormap = GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(gdkWindow));
+  GdkVisual* gdkVisual = gdk_drawable_get_visual(gdkWindow);
+  mWsInfo.visual = GDK_VISUAL_XVISUAL(gdkVisual);
+  mWsInfo.depth = gdkVisual->depth;
+
+  return NS_OK;
+}
+#endif
 
 void nsPluginNativeWindowGtk2::SetAllocation() {
   if (!mSocketWidget)
