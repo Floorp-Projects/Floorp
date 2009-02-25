@@ -1510,13 +1510,22 @@ js_ReplenishReservedPool(JSContext* cx, JSTraceMonitor* tm)
      */
     JSRuntime* rt = cx->runtime;
     uintN gcNumber = rt->gcNumber;
+    uintN lastgcNumber = gcNumber;
     jsval* ptr = tm->reservedDoublePoolPtr;
     while (ptr < tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) {
         if (!js_NewDoubleInRootedValue(cx, 0.0, ptr))
             goto oom;
-        if (rt->gcNumber != gcNumber) {
+
+        /* Check if the last call to js_NewDoubleInRootedValue GC'd. */
+        if (rt->gcNumber != lastgcNumber) {
+            lastgcNumber = rt->gcNumber;
             JS_ASSERT(tm->reservedDoublePoolPtr == tm->reservedDoublePool);
             ptr = tm->reservedDoublePool;
+
+            /*
+             * Have we GC'd more than once? We're probably running really
+             * low on memory, bail now.
+             */
             if (uintN(rt->gcNumber - gcNumber) > uintN(1))
                 goto oom;
             continue;
