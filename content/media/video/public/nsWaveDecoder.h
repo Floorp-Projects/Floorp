@@ -155,9 +155,6 @@ class nsWaveDecoder : public nsMediaDecoder
   // Return the total playback length of the media in seconds.
   virtual float GetDuration();
 
-  // Get the current audio playback volume; result in range [0.0, 1.0].
-  virtual float GetVolume();
-
   // Set the audio playback volume; must be in range [0.0, 1.0].
   virtual void SetVolume(float aVolume);
 

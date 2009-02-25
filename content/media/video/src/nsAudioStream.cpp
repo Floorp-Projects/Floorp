@@ -189,11 +189,6 @@ PRInt32 nsAudioStream::Available()
   return s / sizeof(short);
 }
 
-float nsAudioStream::GetVolume()
-{
-  return mVolume;
-}
-
 void nsAudioStream::SetVolume(float aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");

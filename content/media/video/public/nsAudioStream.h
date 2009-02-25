@@ -81,10 +81,6 @@ class nsAudioStream
   // without blocking.
   PRInt32 Available();
 
-  // Store in aVolume the value of the volume setting. This is a value from
-  // 0 (meaning muted) to 1 (meaning full volume).
-  float GetVolume();
-
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).
   void SetVolume(float aVolume);
