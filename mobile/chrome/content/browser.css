@@ -43,6 +43,22 @@ notification button {
   -moz-binding: url("chrome://browser/content/bindings.xml#popup_autocomplete");
 }
 
-editbookmark {
-  -moz-binding: url("chrome://browser/content/bindings.xml#editbookmark");
+placeitem {
+  -moz-binding: url("chrome://browser/content/bindings.xml#place-item");
+}
+
+placeitem[type="folder"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#place-folder");
+}
+
+placelist {
+  -moz-binding: url("chrome://browser/content/bindings.xml#place-list");
+}
+
+placetree {
+  -moz-binding: url("chrome://browser/content/bindings.xml#place-tree");
+}
+
+placelabel {
+  -moz-binding: url("chrome://browser/content/bindings.xml#place-label");
 }
