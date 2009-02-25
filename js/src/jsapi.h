@@ -2281,6 +2281,9 @@ JS_GetOperationCallback(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx);
 
+extern JS_PUBLIC_API(void)
+JS_TriggerAllOperationCallbacks(JSRuntime *rt);
+
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
 

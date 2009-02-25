@@ -2019,13 +2019,15 @@ static JS_REQUIRES_STACK JSBool
 Detecting(JSContext *cx, jsbytecode *pc)
 {
     JSScript *script;
+    jsbytecode *endpc;
     JSOp op;
     JSAtom *atom;
 
-    if (!cx->fp)
-        return JS_FALSE;
     script = cx->fp->script;
+    endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
+        JS_ASSERT(pc < endpc);
+
         /* General case: a branch or equality op follows the access. */
         op = js_GetOpcode(cx, script, pc);
         if (js_CodeSpec[op].format & JOF_DETECTING)
@@ -2037,9 +2039,11 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * Special case #1: handle (document.all == null).  Don't sweat
              * about JS1.2's revision of the equality operators here.
              */
-            pc++;
-            op = js_GetOpcode(cx, script, pc);
-            return op == JSOP_EQ || op == JSOP_NE;
+            if (++pc < endpc) {
+                op = js_GetOpcode(cx, script, pc);
+                return *pc == JSOP_EQ || *pc == JSOP_NE;
+            }
+            return JS_FALSE;
 
           case JSOP_NAME:
             /*
@@ -2048,8 +2052,8 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * Edition 3, so is read/write for backward compatibility.
              */
             GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
-            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID]) {
-                pc += js_CodeSpec[op].length;
+            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
+                (pc += js_CodeSpec[op].length) < endpc) {
                 op = js_GetOpcode(cx, script, pc);
                 return op == JSOP_EQ || op == JSOP_NE ||
                        op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
@@ -2096,7 +2100,7 @@ InferFlags(JSContext *cx, uintN defaultFlags)
         flags |= JSRESOLVE_ASSIGNING;
     } else {
         pc += cs->length;
-        if (Detecting(cx, pc))
+        if (pc < cx->fp->script->code + cx->fp->script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
     if (format & JOF_DECLARING)
@@ -3930,30 +3934,30 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     return JS_TRUE;
 }
 
-/*
- * Find out where we currently are in the code. If no hint was supplied,
- * de-optimize and consult the stack frame.
- */
 static jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx)
 {
-    jsbytecode *pc = cx->pcHint;
-    if (!pc || !JS_ON_TRACE(cx)) {
-        JSStackFrame* fp = js_GetTopStackFrame(cx);
-        if (fp && fp->regs) {
-            pc = fp->regs->pc;
-            // FIXME: Set pc to imacpc when recording JSOP_CALL inside the 
-            //        JSOP_GETELEM imacro (bug 476559).
-            if (*pc == JSOP_CALL &&
-                fp->imacpc &&
-                js_GetOpcode(cx, fp->script, fp->imacpc) == JSOP_GETELEM) {
-                pc = fp->imacpc;
-            }
-        } else {
-            pc = NULL;
-        }
+    jsbytecode *pc, *imacpc;
+
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        pc = cx->bailExit->pc;
+        imacpc = cx->bailExit->imacpc;
+    } else
+#endif
+    if (cx->fp && cx->fp->regs) {
+        pc = cx->fp->regs->pc;
+        imacpc = cx->fp->imacpc;
+    } else {
+        return NULL;
     }
-    return pc;
+
+    /*
+     * If we are inside GetProperty_tn or similar, return a pointer to the
+     * current instruction in the script, not the CALL instruction in the
+     * imacro, for the benefit of callers doing bytecode inspection.
+     */
+    return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
 }
 
 JSBool
@@ -5738,7 +5742,7 @@ js_DumpObject(JSObject *obj)
     /* OBJ_IS_DENSE_ARRAY ignores the cx argument. */
     if (OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj)) {
         slots = JS_MIN((jsuint) obj->fslots[JSSLOT_ARRAY_LENGTH],
-                       ARRAY_DENSE_LENGTH(obj));
+                       js_DenseArrayCapacity(obj));
         fprintf(stderr, "elements\n");
         for (i = 0; i < slots; i++) {
             fprintf(stderr, " %3d: ", i);

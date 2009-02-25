@@ -80,7 +80,7 @@ namespace nanojit
 			for (;;) {
 				LInsp i = in->read();
 				if (!i || i->isGuard() || i->isBranch()
-					|| i->isCall() && !i->isCse(functions)
+					|| (i->isCall() && !i->isCse(functions))
 					|| !ignoreInstruction(i))
 					return i;
 			}
@@ -410,8 +410,8 @@ namespace nanojit
 		if (error()) return;
 
 #ifdef NANOJIT_IA32
-        NanoAssert(_allocator.active[FST0] && _fpuStkDepth == -1 ||
-            !_allocator.active[FST0] && _fpuStkDepth == 0);
+        NanoAssert((_allocator.active[FST0] && _fpuStkDepth == -1) ||
+            (!_allocator.active[FST0] && _fpuStkDepth == 0));
 #endif
 		
         AR &ar = _activation;
@@ -576,8 +576,8 @@ namespace nanojit
 
 #ifdef AVMPLUS_IA32
         if (r != UnknownReg && 
-            ((rmask(r)&XmmRegs) && !(allow&XmmRegs) ||
-                 (rmask(r)&x87Regs) && !(allow&x87Regs)))
+            (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
+                 ((rmask(r)&x87Regs) && !(allow&x87Regs))))
         {
             // x87 <-> xmm copy required
             //_nvprof("fpu-evict",1);
@@ -936,20 +936,6 @@ namespace nanojit
 		// to execute junk
 # if defined(UNDER_CE)
 		FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-#elif defined AVMPLUS_SPARC
-        // Clear Instruction Cache
-        for (int i = 0; i < 2; i++) {
-            Page *p = (i == 0) ? _nativePages : _nativeExitPages;
-
-            Page *first = p;
-            while (p) {
-                if (!p->next || p->next != p+1) {
-                    sync_instruction_memory((char *)first, NJ_PAGE_SIZE);
-                    first = p->next;
-                }
-                p = p->next;
-            }
-        }
 # elif defined(AVMPLUS_UNIX)
 		for (int i = 0; i < 2; i++) {
 			Page *p = (i == 0) ? _nativePages : _nativeExitPages;
@@ -964,6 +950,22 @@ namespace nanojit
 			}
 		}
 # endif
+#endif
+
+#ifdef AVMPLUS_SPARC
+        // Clear Instruction Cache
+        for (int i = 0; i < 2; i++) {
+            Page *p = (i == 0) ? _nativePages : _nativeExitPages;
+
+            Page *first = p;
+            while (p) {
+                if (!p->next || p->next != p+1) {
+                    sync_instruction_memory((char *)first, NJ_PAGE_SIZE);
+                    first = p->next;
+                }
+                p = p->next;
+            }
+        }
 #endif
 
 # ifdef AVMPLUS_PORTING_API

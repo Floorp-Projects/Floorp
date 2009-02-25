@@ -4350,6 +4350,59 @@ function testRegexpGet() {
 testRegexpGet.expected = "hi,hi,hi,hi,hi";
 test(testRegexpGet);
 
+function testThrowingObjectEqUndefined()
+{
+  try
+  {
+    var obj = { toString: function() { throw 0; } };
+    for (var i = 0; i < 5; i++)
+      "" + (obj == undefined);
+    return i === 5;
+  }
+  catch (e)
+  {
+    return "" + e;
+  }
+}
+testThrowingObjectEqUndefined.expected = true;
+testThrowingObjectEqUndefined.jitstats = {
+  sideExitIntoInterpreter: 1
+};
+test(testThrowingObjectEqUndefined);
+
+function x4(v) { return "" + v + v + v + v; }
+function testConvertibleObjectEqUndefined()
+{
+  var compares =
+    [
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+    ];
+  var count = 0;
+  var obj = { valueOf: function() { count++; return 1; } };
+  var results = compares.map(function(v) { return "unwritten"; });
+
+  for (var i = 0, sz = compares.length; i < sz; i++)
+    results[i] = compares[i] == obj;
+
+  return results.join("") + count;
+}
+testConvertibleObjectEqUndefined.expected =
+  x4(false) + x4(false) + x4(false) + x4(false) + x4(false) + x4(false) +
+  x4(false) + x4(false) + x4(false) + x4(false) + "20";
+testConvertibleObjectEqUndefined.jitstats = {
+  sideExitIntoInterpreter: 2
+};
+test(testConvertibleObjectEqUndefined);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
