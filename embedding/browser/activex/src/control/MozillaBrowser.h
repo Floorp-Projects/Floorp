@@ -362,7 +362,7 @@ END_OLECOMMAND_TABLE()
 protected:
 
     // List of browsers
-    static nsVoidArray sBrowserList;
+    static nsTArray<CMozillaBrowser*> sBrowserList;
 
     // Name of profile to use
     nsString mProfileName;
