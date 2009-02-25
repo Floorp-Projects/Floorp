@@ -43,7 +43,8 @@ class DOMSVGNumber : public nsIDOMSVGNumber
 public:
   NS_DECL_ISUPPORTS
 
-  DOMSVGNumber() {}
+  DOMSVGNumber() 
+    : mVal(0) {}
     
   NS_IMETHOD GetValue(float* aResult)
     { *aResult = mVal; return NS_OK; }
