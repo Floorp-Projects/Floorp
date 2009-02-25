@@ -1179,9 +1179,6 @@ nsOfflineCacheUpdate::Init(nsIURI *aManifestURI,
     rv = mApplicationCache->GetClientID(mClientID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    printf("(Bug 471227) Initializing cache update %p, created %p\n",
-           this, mApplicationCache.get());
-
     mState = STATE_INITIALIZED;
     return NS_OK;
 }
@@ -1855,10 +1852,6 @@ nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
 
     if (!existingCache) {
         LOG(("Update %p: associating app cache %s to document %p", this, mClientID.get(), aDocument));
-        {
-            printf("(Bug 471227): associating app cache %p with document >%p< from nsOfflineCacheUpdate %p\n",
-                   mApplicationCache.get(), container.get(), this);
-        }
 
         rv = container->SetApplicationCache(mApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);
