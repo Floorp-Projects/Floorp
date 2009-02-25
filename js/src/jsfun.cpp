@@ -822,10 +822,12 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         JS_ASSERT(kind == JSCPK_VAR);
         array = fp->slots;
     }
-    if (setter)
+    if (setter) {
+        GC_POKE(cx, array[i]);
         array[i] = *vp;
-    else
+    } else {
         *vp = array[i];
+    }
     return JS_TRUE;
 }
 
