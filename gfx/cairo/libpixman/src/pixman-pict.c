@@ -37,6 +37,11 @@
 #include "pixman-arm-simd.h"
 #include "pixman-combine32.h"
 
+#if defined(USE_ARM_SIMD) && defined(_MSC_VER)
+/* Needed for EXCEPTION_ILLEGAL_INSTRUCTION */
+#include <windows.h>
+#endif
+
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
 #undef READ
@@ -2017,6 +2022,30 @@ pixman_bool_t pixman_have_vmx (void) {
 }
 #endif /* __APPLE__ */
 #endif /* USE_VMX */
+
+#ifdef USE_ARM_SIMD
+pixman_bool_t
+pixman_have_arm_simd (void)
+{
+#ifdef _MSC_VER
+    static pixman_bool_t initialized = FALSE;
+    static pixman_bool_t have_arm_simd = FALSE;
+
+    if (!initialized) {
+        __try {
+            pixman_msvc_try_armv6_op();
+            have_arm_simd = TRUE;
+        } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+            have_arm_simd = FALSE;
+        }
+    } else {
+        return have_arm_simd;
+    }
+#else
+    return TRUE;
+#endif
+}
+#endif
 
 #ifdef USE_MMX
 /* The CPU detection code needs to be in a file not compiled with
