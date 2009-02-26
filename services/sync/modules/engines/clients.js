@@ -69,6 +69,7 @@ ClientEngine.prototype = {
 
   _ClientEngine_init: function ClientEngine__init() {
     this._init();
+    Utils.prefs.addObserver("", this, false);
   },
 
   // get and set info for clients
@@ -113,7 +114,20 @@ ClientEngine.prototype = {
   set clientName(value) { Svc.Prefs.set("client.name", value); },
 
   get clientType() { return Svc.Prefs.get("client.type", "desktop"); },
-  set clientType(value) { Svc.Prefs.set("client.type", value); }
+  set clientType(value) { Svc.Prefs.set("client.type", value); },
+
+  observe: function ClientEngine_observe() {
+    switch (topic) {
+    case "nsPref:changed":
+      switch (data) {
+      case "client.name":
+      case "client.type":
+        this._tracker.addChangedID(this.clientID);
+        break;
+      }
+      break;
+    }
+  }
 };
 
 function ClientStore() {
