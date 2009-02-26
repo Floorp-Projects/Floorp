@@ -2201,16 +2201,31 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            // Within our browser window, the detach-target is the content area.
-            // That case is handled by contentAreaDNDObserver.
-            if (!this._dragLeftWindow || this.mTabs.length == 1)
+            // Note: while this case is correctly handled here, this event
+            // isn't dispatched when the tab is moved within the tabstript,
+            // see bug 460801.
+
+            // * mozUserCancelled = the user pressed ESC to cancel the drag
+            // * Within our browser window, the detach-target is the content
+            //   area.That case is handled by contentAreaDNDObserver.
+            // * The dragLeftWindow solution is suboptimal, a better solution
+            //   is on bug 466379.
+            // * One-tab-left case: one might argue that this should
+            //   be handled in dragstart (i.e. not include the "detach"
+            //   type), but what if the user wants to "merge" this window
+            //   into another one?
+            if (aEvent.mozUserCancelled ||
+                !this._dragLeftWindow ||
+                this.mTabs.length == 1)
               return;
 
             var dt = aEvent.dataTransfer;
             // The dropEffect == "none" scenarios:
-            // 1. Drop-within-the-tabbae
-            // 2. Drop on some other tabbar
-            // 3. Drop on text fields (even outside our window)
+            // 1. No-op (no postion change) - "catched" by !dragLeftWindow
+            // 2. On the browser chrome (on element which don't handle
+            //    text/plain or the tab type) - ditto.
+            // 2. Drop outside the browser window - the case that is handled
+            //    here.
             if (dt.dropEffect == "none") {
               var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
               this.replaceTabWithWindow(draggedTab);
