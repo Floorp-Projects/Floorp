@@ -1578,6 +1578,11 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
 
       mNSSInitialized = PR_TRUE;
 
+      // Make the old cert validation APIs (CERT_VerifyCert and
+      // CERT_VerifyCertificate) use the new libpkix cert validation engine.
+      // Eventually PSM should switch to the new CERT_PKIXVerifyCert function.
+      CERT_SetUsePKIXForValidation(PR_TRUE);
+
       ::NSS_SetDomesticPolicy();
       //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
       //  SSL_EnableCipher(SSL_RSA_WITH_NULL_SHA, SSL_ALLOWED);
