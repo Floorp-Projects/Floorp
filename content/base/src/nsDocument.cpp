@@ -6892,6 +6892,11 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     return PR_FALSE;
   }
 
+  nsPIDOMWindow* win = GetInnerWindow();
+  if (win && win->TimeoutSuspendCount()) {
+    return PR_FALSE;
+  }
+
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
