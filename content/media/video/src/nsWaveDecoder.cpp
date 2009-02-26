@@ -1357,6 +1357,8 @@ nsWaveDecoder::Load(nsIURI* aURI, nsIChannel* aChannel, nsIStreamListener** aStr
 
   // Reset progress member variables
   mResourceLoaded = PR_FALSE;
+  mResourceLoadedReported = PR_FALSE;
+  mMetadataLoadedReported = PR_FALSE;
 
   if (aStreamListener) {
     *aStreamListener = nsnull;
