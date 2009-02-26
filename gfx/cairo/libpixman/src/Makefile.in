@@ -71,6 +71,9 @@ USE_SSE2=1
 MMX_CFLAGS=
 endif
 endif
+ifeq (arm,$(findstring arm,$(OS_TEST)))
+USE_ARM_SIMD_MSVC=1
+endif
 endif
 
 ifdef GNU_CC
@@ -133,6 +136,12 @@ endif
 ifdef USE_ARM_SIMD
 CSRCS += pixman-arm-simd.c
 DEFINES += -DUSE_ARM_SIMD
+endif
+
+ifdef USE_ARM_SIMD_MSVC
+ASFILES += pixman-arm-detect-win32.asm pixman-wce-arm-simd.asm
+DEFINES += -DUSE_ARM_SIMD
+AS_DASH_C_FLAG = 
 endif
 
 EXPORTS		= pixman.h pixman-version.h
