@@ -100,8 +100,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x29f7a5d7, 0xb217, 0x4ea2, \
-  {0x95, 0x40, 0x46, 0x41, 0xb9, 0xf5, 0x99, 0xd9 } }
+{ 0xdd9bd470, 0x6315, 0x4e67, \
+  { 0xa8, 0x8a, 0x78, 0xbf, 0x92, 0xb4, 0x5a, 0xdf } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1117,6 +1117,20 @@ public:
   virtual nsSMILAnimationController* GetAnimationController() = 0;
 #endif // MOZ_SMIL
 
+  /**
+   * Prevents user initiated events from being dispatched to the document and
+   * subdocuments.
+   */
+  virtual void SuppressEventHandling(PRUint32 aIncrease = 1) = 0;
+
+  virtual void UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents) = 0;
+
+  void UnsuppressEventHandling()
+  {
+    UnsuppressEventHandlingAndFireEvents(PR_TRUE);
+  }
+
+  PRUint32 EventHandlingSuppressed() { return mEventsSuppressed; }
 protected:
   ~nsIDocument()
   {
@@ -1220,6 +1234,8 @@ protected:
   // point to our "display document": the one that all resource lookups should
   // go to.
   nsCOMPtr<nsIDocument> mDisplayDocument;
+
+  PRUint32 mEventsSuppressed;
 
 private:
   // JSObject cache. Only to be used for performance

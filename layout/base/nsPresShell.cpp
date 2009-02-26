@@ -880,6 +880,8 @@ public:
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
   virtual void Thaw();
+  virtual void NeedsBlurAfterSuppression(nsPIDOMEventTarget* aTarget);
+  virtual void FireOrClearDelayedEvents(PRBool aFireEvents);
 
   virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
 
@@ -1151,6 +1153,13 @@ protected:
   nsCOMPtr<nsIDragService>      mDragService;
   
   nsRevocableEventPtr<ReflowEvent> mReflowEvent;
+
+  PRPackedBool                   mNeedsGotFocus;
+  PRPackedBool                   mNeedsLostFocus;
+  PRPackedBool                   mMozTakingFocus;
+  PRPackedBool                   mNeedsActivate;
+  PRPackedBool                   mNeedsDeactivate;
+  nsCOMArray<nsPIDOMEventTarget> mDelayedBlurTargets;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
@@ -5621,6 +5630,37 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
   
+  if (mDocument && mDocument->EventHandlingSuppressed()) {
+    switch (aEvent->message) {
+      case NS_GOTFOCUS:
+        mNeedsGotFocus = PR_TRUE;
+        mNeedsLostFocus = PR_FALSE;
+        mNeedsDeactivate = PR_FALSE;
+        break;
+      case NS_LOSTFOCUS:
+        mNeedsLostFocus = PR_TRUE;
+        mNeedsGotFocus = PR_FALSE;
+        mNeedsActivate = PR_FALSE;
+        mMozTakingFocus =
+          (aEvent->eventStructType == NS_FOCUS_EVENT &&
+           static_cast<nsFocusEvent*>(aEvent)->isMozWindowTakingFocus);
+        break;
+      case NS_ACTIVATE:
+        mNeedsActivate = PR_TRUE;
+        mNeedsDeactivate = PR_FALSE;
+        mNeedsLostFocus = PR_FALSE;
+        break;
+      case NS_DEACTIVATE:
+        mNeedsDeactivate = PR_TRUE;
+        mNeedsActivate = PR_FALSE;
+        mNeedsGotFocus = PR_FALSE;
+        break;
+      default:
+        break;
+    }
+    return NS_OK;
+  }
+
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
 
   PRBool dispatchUsingCoordinates =
@@ -6475,6 +6515,79 @@ PresShell::Freeze()
 
   if (mDocument)
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
+}
+
+void
+PresShell::FireOrClearDelayedEvents(PRBool aFireEvents)
+{
+  if (!aFireEvents) {
+    mDelayedBlurTargets.Clear();
+    mNeedsGotFocus = mNeedsLostFocus = mMozTakingFocus = mNeedsActivate =
+      mNeedsDeactivate = PR_FALSE;
+    return;
+  }
+
+  if (!mIsDestroying && mDocument) {
+    nsCOMPtr<nsIDocument> doc = mDocument;
+    for (PRInt32 i = 0;
+         (i < mDelayedBlurTargets.Count()) &&
+         !doc->EventHandlingSuppressed(); ++i) {
+      nsEvent blurevent(PR_TRUE, NS_BLUR_CONTENT);
+      blurevent.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+      nsEventDispatcher::Dispatch(mDelayedBlurTargets[i], mPresContext, &blurevent);
+    }
+    mDelayedBlurTargets.Clear();
+
+    nsFocusEvent firstEvent(PR_TRUE, NS_EVENT_NULL, nsnull);
+    nsFocusEvent secondEvent(PR_TRUE, NS_EVENT_NULL, nsnull);
+    if (mNeedsGotFocus) {
+      firstEvent.message = NS_GOTFOCUS;
+    } else if (mNeedsDeactivate) {
+      firstEvent.message = NS_DEACTIVATE;
+    }
+    if (mNeedsActivate) {
+      secondEvent.message = NS_ACTIVATE;
+    } else if (mNeedsLostFocus) {
+      secondEvent.message = NS_LOSTFOCUS;
+      secondEvent.isMozWindowTakingFocus = mMozTakingFocus;
+    }
+    mNeedsGotFocus = mNeedsLostFocus = mMozTakingFocus = mNeedsActivate =
+      mNeedsDeactivate = PR_FALSE;
+
+    if (firstEvent.message && !mIsDestroying &&
+        !doc->EventHandlingSuppressed()) {
+      nsIViewManager* vm = GetViewManager();
+      if (vm) {
+        nsIView* view = nsnull;
+        vm->GetRootView(view);
+        if (view) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          HandleEvent(view, &firstEvent, &status);
+        }
+      }
+    }
+    if (secondEvent.message && !mIsDestroying &&
+        !doc->EventHandlingSuppressed()) {
+      nsIViewManager* vm = GetViewManager();
+      if (vm) {
+        nsIView* view = nsnull;
+        vm->GetRootView(view);
+        if (view) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          HandleEvent(view, &secondEvent, &status);
+        }
+      }
+    }
+  }
+}
+
+void
+PresShell::NeedsBlurAfterSuppression(nsPIDOMEventTarget* aTarget)
+{
+  if (mDocument && mDocument->EventHandlingSuppressed()) {
+    mDelayedBlurTargets.RemoveObject(aTarget);
+    mDelayedBlurTargets.AppendObject(aTarget);
+  }
 }
 
 static void
