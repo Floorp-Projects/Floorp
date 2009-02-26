@@ -577,3 +577,5 @@ OPDEF(JSOP_NEWARRAY,      230, "newarray",     NULL,  4, -1,  1, 19,  JOF_UINT24
  * with the JSOP_NEWARRAY and JSOP_NEWINIT opcodes.
  */
 OPDEF(JSOP_HOLE,          231, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
+
+OPDEF(JSOP_LOOP,          232, "loop",         NULL,  1,  0,  0,  0,  JOF_BYTE)

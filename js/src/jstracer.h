@@ -170,26 +170,18 @@ extern bool js_verboseDebug;
 #define ORACLE_SIZE 4096
 
 class Oracle {
-    uint32_t hits[ORACLE_SIZE];
-    uint32_t blacklistLevels[ORACLE_SIZE];
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
 public:
     Oracle();
-    int32_t hit(const void* ip);
-    int32_t getHits(const void* ip);
-    void resetHits(const void* ip);
-    void blacklist(const void* ip);
 
     JS_REQUIRES_STACK void markGlobalSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const;
     JS_REQUIRES_STACK void markStackSlotUndemotable(JSContext* cx, unsigned slot);
     JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot) const;
-    void clearHitCounts();
     void clearDemotability();
     void clear() {
         clearDemotability();
-        clearHitCounts();
     }
 };
 
@@ -315,6 +307,11 @@ public:
     unsigned                branchCount;
     Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
+#ifdef DEBUG
+    const char*             treeFileName;
+    uintN                   treeLineNumber;
+    uintN                   treePCOffset;
+#endif
 
     TreeInfo(nanojit::Fragment* _fragment,
              uint32 _globalShape,
@@ -419,9 +416,9 @@ class TraceRecorder : public avmplus::GCObject {
     bool                    terminate;
     jsbytecode*             terminate_pc;
     jsbytecode*             terminate_imacpc;
-    nanojit::Fragment*      outerToBlacklist;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
+    nanojit::Fragment*      outer;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -559,7 +556,7 @@ public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, uint8* typeMap,
-                  VMSideExit* expectedInnerExit, nanojit::Fragment* outerToBlacklist);
+                  VMSideExit* expectedInnerExit, nanojit::Fragment* outerTree);
     ~TraceRecorder();
 
     static JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);
@@ -567,6 +564,7 @@ public:
     JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp);
     JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
+    TreeInfo* getTreeInfo() const { return treeInfo; }
     JS_REQUIRES_STACK bool isLoopHeader(JSContext* cx) const;
     JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
     JS_REQUIRES_STACK bool closeLoop(JSTraceMonitor* tm, bool& demote);
@@ -591,7 +589,6 @@ public:
     JS_REQUIRES_STACK bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK bool record_FastNativeCallComplete();
 
-    nanojit::Fragment* getOuterToBlacklist() { return outerToBlacklist; }
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
     bool walkedOutOfLoop() { return terminate; }
