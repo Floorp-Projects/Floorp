@@ -271,7 +271,17 @@ LoginManagerStorage_mozStorage.prototype = {
                 throw "User canceled master password entry, login not added.";
         }
 
-        let guid = this._uuidService.generateUUID().toString();
+        // Clone the login, so we don't modify the caller's object.
+        let loginClone = login.clone();
+
+        // Initialize the nsILoginMetaInfo fields, unless the caller gave us values
+        loginClone.QueryInterface(Ci.nsILoginMetaInfo);
+        if (loginClone.guid) {
+            if (!this._isGuidUnique(loginClone.guid))
+                throw "specified GUID already exists";
+        } else {
+            loginClone.guid = this._uuidService.generateUUID().toString();
+        }
 
         let query =
             "INSERT INTO moz_logins " +
@@ -283,14 +293,14 @@ LoginManagerStorage_mozStorage.prototype = {
                     ":guid)";
 
         let params = {
-            hostname:          login.hostname,
-            httpRealm:         login.httpRealm,
-            formSubmitURL:     login.formSubmitURL,
-            usernameField:     login.usernameField,
-            passwordField:     login.passwordField,
+            hostname:          loginClone.hostname,
+            httpRealm:         loginClone.httpRealm,
+            formSubmitURL:     loginClone.formSubmitURL,
+            usernameField:     loginClone.usernameField,
+            passwordField:     loginClone.passwordField,
             encryptedUsername: encUsername,
             encryptedPassword: encPassword,
-            guid:              guid
+            guid:              loginClone.guid
         };
 
         let stmt;
@@ -311,7 +321,7 @@ LoginManagerStorage_mozStorage.prototype = {
      *
      */
     removeLogin : function (login) {
-        let idToDelete = this._getIdForLogin(login);
+        let [idToDelete, storedLogin] = this._getIdForLogin(login);
         if (!idToDelete)
             throw "No matching logins";
 
@@ -335,13 +345,60 @@ LoginManagerStorage_mozStorage.prototype = {
      * modifyLogin
      *
      */
-    modifyLogin : function (oldLogin, newLogin) {
-        // Throws if there are bogus values.
-        this._checkLoginValues(newLogin);
-
-        let idToModify = this._getIdForLogin(oldLogin);
+    modifyLogin : function (oldLogin, newLoginData) {
+        let [idToModify, oldStoredLogin] = this._getIdForLogin(oldLogin);
         if (!idToModify)
             throw "No matching logins";
+        oldStoredLogin.QueryInterface(Ci.nsILoginMetaInfo);
+
+        let newLogin;
+        if (newLoginData instanceof Ci.nsILoginInfo) {
+            // Clone the existing login to get its nsILoginMetaInfo, then init it
+            // with the replacement nsILoginInfo data from the new login.
+            newLogin = oldStoredLogin.clone();
+            newLogin.init(newLoginData.hostname,
+                          newLoginData.formSubmitURL, newLoginData.httpRealm,
+                          newLoginData.username, newLoginData.password,
+                          newLoginData.usernameField, newLoginData.passwordField);
+            newLogin.QueryInterface(Ci.nsILoginMetaInfo);
+        } else if (newLoginData instanceof Ci.nsIPropertyBag) {
+            // Clone the existing login, along with all its properties.
+            newLogin = oldStoredLogin.clone();
+            newLogin.QueryInterface(Ci.nsILoginMetaInfo);
+
+            let propEnum = newLoginData.enumerator;
+            while (propEnum.hasMoreElements()) {
+                let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
+                switch (prop.name) {
+                    // nsILoginInfo properties...
+                    case "hostname":
+                    case "httpRealm":
+                    case "formSubmitURL":
+                    case "username":
+                    case "password":
+                    case "usernameField":
+                    case "passwordField":
+                        newLogin[prop.name] = prop.value;
+                        break;
+
+                    // nsILoginMetaInfo properties...
+                    case "guid":
+                        newLogin.guid = prop.value;
+                        if (!this._isGuidUnique(newLogin.guid))
+                            throw "specified GUID already exists";
+                        break;
+
+                    // Fail if caller requests setting an unknown property.
+                    default:
+                        throw "Unexpected propertybag item: " + prop.name;
+                }
+            }
+        } else {
+            throw "newLoginData needs an expected interface!";
+        }
+
+        // Throws if there are bogus values.
+        this._checkLoginValues(newLogin);
 
         // Get the encrypted value of the username and password.
         let [encUsername, encPassword, userCanceled] = this._encryptLogin(newLogin);
@@ -356,10 +413,12 @@ LoginManagerStorage_mozStorage.prototype = {
                 "usernameField = :usernameField, " +
                 "passwordField = :passwordField, " +
                 "encryptedUsername = :encryptedUsername, " +
-                "encryptedPassword = :encryptedPassword " +
+                "encryptedPassword = :encryptedPassword, " +
+                "guid = :guid " +
             "WHERE id = :id";
 
         let params = {
+            id:                idToModify,
             hostname:          newLogin.hostname,
             httpRealm:         newLogin.httpRealm,
             formSubmitURL:     newLogin.formSubmitURL,
@@ -367,8 +426,7 @@ LoginManagerStorage_mozStorage.prototype = {
             passwordField:     newLogin.passwordField,
             encryptedUsername: encUsername,
             encryptedPassword: encPassword,
-            id:                idToModify
-            // guid not changed
+            guid:              newLogin.guid
         };
 
         let stmt;
@@ -552,13 +610,15 @@ LoginManagerStorage_mozStorage.prototype = {
     /*
      * _getIdForLogin
      *
-     * Returns the |id| for the specified login, or null if the login was not
-     * found.
+     * Returns an array with two items: [id, login]. If the login was not
+     * found, both items will be null. The returned login contains the actual
+     * stored login (useful for looking at the actual nsILoginMetaInfo values).
      */
     _getIdForLogin : function (login) {
         let [logins, ids] =
             this._queryLogins(login.hostname, login.formSubmitURL, login.httpRealm);
         let id = null;
+        let foundLogin = null;
 
         // The specified login isn't encrypted, so we need to ensure
         // the logins we're comparing with are decrypted. We decrypt one entry
@@ -575,11 +635,12 @@ LoginManagerStorage_mozStorage.prototype = {
                 continue;
 
             // We've found a match, set id and break
+            foundLogin = decryptedLogin;
             id = ids[i];
             break;
         }
 
-        return id;
+        return [id, foundLogin];
     },
 
 
@@ -614,6 +675,9 @@ LoginManagerStorage_mozStorage.prototype = {
                            stmt.row.httpRealm, stmt.row.encryptedUsername,
                            stmt.row.encryptedPassword, stmt.row.usernameField,
                            stmt.row.passwordField);
+                // set nsILoginMetaInfo values
+                login.QueryInterface(Ci.nsILoginMetaInfo);
+                login.guid = stmt.row.guid;
                 logins.push(login);
                 ids.push(stmt.row.id);
             }
@@ -755,6 +819,30 @@ LoginManagerStorage_mozStorage.prototype = {
             hostname.indexOf("\n") != -1 ||
             hostname.indexOf("\0") != -1)
             throw "Invalid hostname";
+    },
+
+
+    /*
+     * _isGuidUnique
+     *
+     * Checks to see if the specified GUID already exists.
+     */
+    _isGuidUnique : function (guid) {
+        let query = "SELECT COUNT(1) AS numLogins FROM moz_logins WHERE guid = :guid";
+        let params = { guid: guid };
+
+        let stmt, numLogins;
+        try {
+            stmt = this._dbCreateStatement(query, params);
+            stmt.step();
+            numLogins = stmt.row.numLogins;
+        } catch (e) {
+            this.log("_isGuidUnique failed: " + e.name + " : " + e.message);
+        } finally {
+            stmt.reset();
+        }
+
+        return (numLogins == 0);
     },
 
 
