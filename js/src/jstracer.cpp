@@ -1557,7 +1557,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
            double boxes. */
         if (cx->doubleFreeList) {
 #ifdef DEBUG
-            bool ok =
+            JSBool ok =
 #endif
                 js_NewDoubleInRootedValue(cx, d, &v);
             JS_ASSERT(ok);
@@ -3150,7 +3150,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee;
     newifp->frame.fun = fun;
 
-    bool constructing = fi.s.argc & 0x8000;
+    bool constructing = (fi.s.argc & 0x8000) != 0;
     newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.pc;
     newifp->callerRegs.sp = fp->slots + fi.s.spdist;
@@ -3893,7 +3893,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         return NULL;
 
 #ifdef DEBUG
-    state.jsframe_pop_blocks_set_on_entry = bool(cx->fp->flags & JSFRAME_POP_BLOCKS);
+    state.jsframe_pop_blocks_set_on_entry = ((cx->fp->flags & JSFRAME_POP_BLOCKS) != 0);
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(state.global, 0xCD, (globalFrameSize+1)*sizeof(double));
 #endif
@@ -9211,7 +9211,7 @@ static JSObject* FASTCALL
 ObjectToIterator_tn(JSContext* cx, jsbytecode* pc, JSObject *obj, int32 flags)
 {
     jsval v = OBJECT_TO_JSVAL(obj);
-    bool ok = js_ValueToIterator(cx, flags, &v);
+    JSBool ok = js_ValueToIterator(cx, flags, &v);
 
     if (!ok) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
@@ -9230,7 +9230,7 @@ static jsval FASTCALL
 CallIteratorNext_tn(JSContext* cx, jsbytecode* pc, JSObject* iterobj)
 {
     JSAutoTempValueRooter tvr(cx);
-    bool ok = js_CallIteratorNext(cx, iterobj, tvr.addr());
+    JSBool ok = js_CallIteratorNext(cx, iterobj, tvr.addr());
 
     if (!ok) {
         cx->builtinStatus |= JSBUILTIN_ERROR;
@@ -9389,13 +9389,13 @@ TraceRecorder::record_JSOP_NEWARRAY()
 
     LIns* dslots_ins = NULL;
     for (uint32 i = 0; i < len; i++) {
-        jsval& v = stackval(-len + i);
+        jsval& v = stackval(int(i) - int(len));
         LIns* elt_ins = get(&v);
         box_jsval(v, elt_ins);
         stobj_set_dslot(v_ins, i, dslots_ins, elt_ins, "set_array_elt");
     }
 
-    stack(-len, v_ins);
+    stack(-int(len), v_ins);
     return true;
 }
 

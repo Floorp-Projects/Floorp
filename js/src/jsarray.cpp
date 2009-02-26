@@ -1873,7 +1873,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     jsuint len, newlen, i, undefs;
     JSTempValueRooter tvr;
     JSBool hole;
-    bool ok;
+    JSBool ok;
     size_t elemsize;
     JSString *str;
 
