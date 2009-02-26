@@ -1077,6 +1077,22 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
     return;
   }
 
+  {
+    nsCAutoString spec;
+    if (mDocument->GetDocumentURI()) {
+      mDocument->GetDocumentURI()->GetSpec(spec);
+    }
+    nsCAutoString group;
+    if (applicationCache) {
+      applicationCache->GetGroupID(group);
+    }
+    nsCOMPtr<nsIApplicationCacheContainer> container =
+      do_QueryInterface(mDocument);
+    printf("(Bug 471227) Processing manifest for document >%p< (%s) which was "
+           "loaded from app cache %p (%s)\n",
+           container.get(), spec.get(), applicationCache.get(), group.get());
+  }
+
   CacheSelectionAction action = CACHE_SELECTION_NONE;
   nsCOMPtr<nsIURI> manifestURI;
 
@@ -1099,6 +1115,7 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
     else {
       // Only continue if the document has permission to use offline APIs.
       if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
+        printf("(Bug 471227) No permission.\n");
         return;
       }
 
@@ -1131,8 +1148,10 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
   switch (action)
   {
   case CACHE_SELECTION_NONE:
+    printf("(Bug 471227) Taking no action.\n");
     break;
   case CACHE_SELECTION_UPDATE: {
+    printf("(Bug 471227) Scheduling an update.\n");
     nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
       do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
 
@@ -1143,6 +1162,7 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
     break;
   }
   case CACHE_SELECTION_RELOAD: {
+    printf("(Bug 471227) Reloading.\n");
     // This situation occurs only for toplevel documents, see bottom
     // of SelectDocAppCache method.
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);

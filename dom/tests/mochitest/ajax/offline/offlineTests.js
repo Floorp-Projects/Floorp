@@ -100,6 +100,9 @@ setup: function()
     var uri = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService)
       .newURI(window.location.href, null, null);
+    if (pm.testPermission(uri, "offline-app") != 0) {
+      dump("Previous test failed to clear offline-app permission!  Expect failures.\n");
+    }
     pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
     // Tests must run as toplevel windows.  Open a slave window to run

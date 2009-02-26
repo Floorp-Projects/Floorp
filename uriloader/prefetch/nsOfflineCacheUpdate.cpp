@@ -1337,6 +1337,7 @@ nsOfflineCacheUpdate::LoadCompleted()
             mSucceeded = PR_FALSE;
 
             for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+                printf("(Bug 471227) Associating from noupdate\n");
                 AssociateDocument(mDocuments[i]);
             }
 
@@ -1424,6 +1425,7 @@ nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
     Finish();
 
     if (NS_FAILED(aStatus) && mRescheduleCount < kRescheduleLimit) {
+        printf("(Bug 471227) Rescheduling for manifest failure\n");
         // Reschedule this update.
         nsRefPtr<nsOfflineCacheUpdate> newUpdate =
             new nsOfflineCacheUpdate();
@@ -1853,6 +1855,18 @@ nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
     if (!existingCache) {
         LOG(("Update %p: associating app cache %s to document %p", this, mClientID.get(), aDocument));
 
+        {
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+            nsCAutoString spec;
+            if (doc->GetDocumentURI()) {
+                doc->GetDocumentURI()->GetSpec(spec);
+            }
+
+            printf("(Bug 471227) Associating app cache %p (%s) to document >%p< (%s)\n",
+                   mApplicationCache.get(), mClientID.get(),
+                   container.get(), spec.get());
+        }
+
         rv = container->SetApplicationCache(mApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1890,6 +1904,7 @@ nsOfflineCacheUpdate::Finish()
             }
 
             for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+                printf("(Bug 471227) Associating documents from Finish()\n");
                 AssociateDocument(mDocuments[i]);
             }
         }
