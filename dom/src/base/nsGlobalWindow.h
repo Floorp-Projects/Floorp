@@ -303,8 +303,10 @@ public:
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
-  virtual NS_HIDDEN_(void) SuspendTimeouts();
-  virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
+  virtual NS_HIDDEN_(void) SuspendTimeouts(PRUint32 aIncrease = 1,
+                                           PRBool aFreezeChildren = PR_TRUE);
+  virtual NS_HIDDEN_(nsresult) ResumeTimeouts(PRBool aThawChildren = PR_TRUE);
+  virtual NS_HIDDEN_(PRUint32) TimeoutSuspendCount();
   virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
   virtual NS_HIDDEN_(PRBool) IsFrozen() const
   {

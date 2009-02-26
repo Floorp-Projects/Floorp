@@ -6020,13 +6020,20 @@ nsDocShell::RestoreFromHistory()
     }
 
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+    PRUint32 parentSuspendCount = 0;
     if (document) {
         nsCOMPtr<nsIDocShellTreeItem> parent;
         GetParent(getter_AddRefs(parent));
         nsCOMPtr<nsIDOMDocument> parentDoc = do_GetInterface(parent);
         nsCOMPtr<nsIDocument> d = do_QueryInterface(parentDoc);
-        if (d && d->EventHandlingSuppressed()) {
-            document->SuppressEventHandling(d->EventHandlingSuppressed());
+        if (d) {
+            if (d->EventHandlingSuppressed()) {
+                document->SuppressEventHandling(d->EventHandlingSuppressed());
+            }
+            nsCOMPtr<nsPIDOMWindow> parentWindow = d->GetWindow();
+            if (parentWindow) {
+                parentSuspendCount = parentWindow->TimeoutSuspendCount();
+            }
         }
 
         // Use the uri from the mLSHE we had when we entered this function
@@ -6114,6 +6121,13 @@ nsDocShell::RestoreFromHistory()
             NS_ASSERTION(newRootView->GetNextSibling() == rootViewSibling,
                          "error in InsertChild");
         }
+    }
+
+    // If parent is suspended, increase suspension count.
+    // This can't be done as early as event suppression since this
+    // depends on docshell tree.
+    if (parentSuspendCount) {
+      privWin->SuspendTimeouts(parentSuspendCount, PR_FALSE);
     }
 
     // Now that all of the child docshells have been put into place, we can
