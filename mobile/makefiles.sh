@@ -38,6 +38,7 @@
 add_makefiles "
 mobile/Makefile
 mobile/app/Makefile
+mobile/locales/Makefile
 mobile/chrome/Makefile
 mobile/chrome/branding/Makefile
 mobile/chrome/content/Makefile
