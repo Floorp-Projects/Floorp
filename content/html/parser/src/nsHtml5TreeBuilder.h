@@ -85,6 +85,9 @@ class nsHtml5TreeBuilder
     nsIContent* formPointer;
     nsIContent* headPointer;
     PRBool reportingDoctype;
+  protected:
+    jArray<PRUnichar,PRInt32> charBuffer;
+    PRInt32 charBufferLen;
   public:
     void startTokenization(nsHtml5Tokenizer* self);
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, PRBool forceQuirks);
@@ -140,7 +143,6 @@ class nsHtml5TreeBuilder
     void insertIntoFosterParent(nsIContent* child);
     PRBool isInStack(nsHtml5StackNode* node);
     void pop();
-    void appendCharMayFoster(PRUnichar* buf, PRInt32 i);
     PRBool isTainted();
     void appendHtmlElementToDocumentAndPush(nsHtml5HtmlAttributes* attributes);
     void appendHtmlElementToDocumentAndPush();
@@ -160,7 +162,7 @@ class nsHtml5TreeBuilder
     void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent* form);
   protected:
     void accumulateCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length);
-    void flushCharacters();
+    void accumulateCharacter(PRUnichar c);
     void requestSuspension();
     nsIContent* createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
     nsIContent* createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent* form);
@@ -170,20 +172,13 @@ class nsHtml5TreeBuilder
     nsIContent* shallowClone(nsIContent* element);
     void appendElement(nsIContent* child, nsIContent* newParent);
     void appendChildrenToNewParent(nsIContent* oldParent, nsIContent* newParent);
-    nsIContent* parentElementFor(nsIContent* child);
-    void insertBefore(nsIContent* child, nsIContent* sibling, nsIContent* parent);
-    void insertCharactersBefore(PRUnichar* buf, PRInt32 start, PRInt32 length, nsIContent* sibling, nsIContent* parent);
+    void insertFosterParentedChild(nsIContent* child, nsIContent* table, nsIContent* stackParent);
+    void insertFosterParentedCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length, nsIContent* table, nsIContent* stackParent);
     void appendCharacters(nsIContent* parent, PRUnichar* buf, PRInt32 start, PRInt32 length);
     void appendComment(nsIContent* parent, PRUnichar* buf, PRInt32 start, PRInt32 length);
     void appendCommentToDocument(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void addAttributesToElement(nsIContent* element, nsHtml5HtmlAttributes* attributes);
-  public:
-    void startCoalescing();
-  protected:
     void start(PRBool fragment);
-  public:
-    void endCoalescing();
-  protected:
     void end();
     void appendDoctypeToDocument(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier);
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent* node);
@@ -198,6 +193,9 @@ class nsHtml5TreeBuilder
     void setDocumentModeHandler(nsHtml5Parser* documentModeHandler);
     void setReportingDoctype(PRBool reportingDoctype);
     PRBool inForeign();
+  private:
+    void flushCharacters();
+  public:
     static void initializeStatics();
     static void releaseStatics();
 
@@ -253,14 +251,14 @@ nsIAtom* nsHtml5TreeBuilder::HTML_LOCAL = nsnull;
 #define NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 42
 #define NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET 43
 #define NS_HTML5TREE_BUILDER_PRE_OR_LISTING 44
-#define NS_HTML5TREE_BUILDER_B_OR_BIG_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U 45
+#define NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U 45
 #define NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL 46
 #define NS_HTML5TREE_BUILDER_IFRAME 47
 #define NS_HTML5TREE_BUILDER_EMBED_OR_IMG 48
 #define NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR 49
 #define NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU 50
 #define NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_DIALOG_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION 51
-#define NS_HTML5TREE_BUILDER_CODE_OR_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR 52
+#define NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR 52
 #define NS_HTML5TREE_BUILDER_RT_OR_RP 53
 #define NS_HTML5TREE_BUILDER_COMMAND_OR_EVENT_SOURCE 54
 #define NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE 55
