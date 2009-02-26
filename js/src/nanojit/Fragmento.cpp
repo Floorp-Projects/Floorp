@@ -590,7 +590,6 @@ namespace nanojit
 		GC *gc = _core->gc;
         Fragment *f = NJ_NEW(gc, Fragment)(ip);
 		f->blacklistLevel = 5;
-        f->recordAttempts = 0;
         return f;
     }
 
