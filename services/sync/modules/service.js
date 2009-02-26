@@ -150,7 +150,7 @@ WeaveSvc.prototype = {
   _scheduleTimer: null,
 
   get username() {
-    return Svc.Prefs.get("username");
+    return Svc.Prefs.get("username", "");
   },
   set username(value) {
     if (value)
