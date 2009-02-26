@@ -147,13 +147,6 @@ nsHtml5TreeBuilder::detachFromParent(nsIContent* aElement)
   }
 }
 
-PRBool
-nsHtml5TreeBuilder::hasChildren(nsIContent* aElement)
-{
-  Flush();
-  return !!(aElement->GetChildCount());
-}
-
 nsIContent*
 nsHtml5TreeBuilder::shallowClone(nsIContent* aElement)
 {
