@@ -69,6 +69,7 @@ class nsIViewManager;
 class nsIScriptGlobalObject;
 class nsPIDOMWindow;
 class nsIDOMEvent;
+class nsIDOMEventTarget;
 class nsIDeviceContext;
 class nsIParser;
 class nsIDOMNode;
@@ -852,9 +853,14 @@ public:
    * or to the page's presentation being restored into an existing DOM window.
    * This notification fires applicable DOM events to the content window.  See
    * nsIDOMPageTransitionEvent.idl for a description of the |aPersisted|
-   * parameter.
+   * parameter. If aDispatchStartTarget is null, the pageshow event is
+   * dispatched on the ScriptGlobalObject for this document, otherwise it's
+   * dispatched on aDispatchStartTarget.
+   * Note: if aDispatchStartTarget isn't null, the showing state of the
+   * document won't be altered.
    */
-  virtual void OnPageShow(PRBool aPersisted) = 0;
+  virtual void OnPageShow(PRBool aPersisted,
+                          nsIDOMEventTarget* aDispatchStartTarget) = 0;
 
   /**
    * Notification that the page has been hidden, for documents which are loaded
@@ -862,9 +868,14 @@ public:
    * to the document's presentation being saved but removed from an existing
    * DOM window.  This notification fires applicable DOM events to the content
    * window.  See nsIDOMPageTransitionEvent.idl for a description of the
-   * |aPersisted| parameter.
+   * |aPersisted| parameter. If aDispatchStartTarget is null, the pagehide
+   * event is dispatched on the ScriptGlobalObject for this document,
+   * otherwise it's dispatched on aDispatchStartTarget.
+   * Note: if aDispatchStartTarget isn't null, the showing state of the
+   * document won't be altered.
    */
-  virtual void OnPageHide(PRBool aPersisted) = 0;
+  virtual void OnPageHide(PRBool aPersisted,
+                          nsIDOMEventTarget* aDispatchStartTarget) = 0;
   
   /*
    * We record the set of links in the document that are relevant to
