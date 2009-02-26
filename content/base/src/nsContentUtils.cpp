@@ -3485,17 +3485,13 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     nsCOMPtr<nsIDOMDocumentFragment> frag;
     rv = NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
-    // XXX how does ownership of the fragment work here?
     
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
     NS_ASSERTION(contextAsContent, "Context node did not QI to nsIContent");
     
     parser->ParseFragment(aFragment, frag, contextAsContent->Tag(), contextAsContent->GetNameSpaceID());
-    
-    if (!aWillOwnFragment) {
-      NS_ADDREF(frag);
-    }
-    *aReturn = frag;
+  
+    NS_ADDREF(*aReturn = frag);
     return NS_OK;
   }
 

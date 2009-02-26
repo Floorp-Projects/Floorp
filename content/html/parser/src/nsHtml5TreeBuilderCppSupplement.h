@@ -58,11 +58,11 @@ jArray<PRUnichar,PRInt32> nsHtml5TreeBuilder::ISINDEX_PROMPT = jArray<PRUnichar,
 
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
   : MARKER(new nsHtml5StackNode(0, nsHtml5ElementName::NULL_ELEMENT_NAME, nsnull)),
-    fragment(PR_FALSE),
     documentModeHandler(aParser),
-    mParser(aParser),
+    fragment(PR_FALSE),
     formPointer(nsnull),
-    headPointer(nsnull)
+    headPointer(nsnull),
+    mParser(aParser)
 {
   MOZ_COUNT_CTOR(nsHtml5TreeBuilder);
 }
@@ -186,35 +186,43 @@ nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContent* aOldParent, nsIContent
   }
 }
 
-nsIContent*
-nsHtml5TreeBuilder::parentElementFor(nsIContent* aElement)
-{
-  Flush();
-  return aElement->GetParent();
-}
-
 void
-nsHtml5TreeBuilder::insertBefore(nsIContent* aNewChild, nsIContent* aReferenceSibling, nsIContent* aParent)
+nsHtml5TreeBuilder::insertFosterParentedCharacters(PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength, nsIContent* aTable, nsIContent* aStackParent)
 {
-  PRUint32 pos = aParent->IndexOf(aReferenceSibling);
-  aParent->InsertChildAt(aNewChild, pos, PR_FALSE);
-  // XXX nsresult
-  nsNodeUtils::ContentInserted(aParent, aNewChild, pos);
-}
-
-void
-nsHtml5TreeBuilder::insertCharactersBefore(PRUnichar* aBuffer, PRInt32 aStart, PRInt32 aLength, nsIContent* aReferenceSibling, nsIContent* aParent)
-{
-  // XXX this should probably coalesce
   nsCOMPtr<nsIContent> text;
   NS_NewTextNode(getter_AddRefs(text), mParser->GetNodeInfoManager());
   // XXX nsresult and comment null check?
   text->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
-  PRUint32 pos = aParent->IndexOf(aReferenceSibling);
-  aParent->InsertChildAt(text, pos, PR_FALSE);
-  // XXX nsresult
-  nsNodeUtils::ContentInserted(aParent, text, pos);
+  nsIContent* parent = aTable->GetParent();
+  if (parent && parent->IsNodeOfType(nsINode::eELEMENT)) {
+    PRUint32 pos = parent->IndexOf(aTable);
+    parent->InsertChildAt(text, pos, PR_FALSE);
+    // XXX nsresult
+    nsNodeUtils::ContentInserted(parent, text, pos);
+  } else {
+    PRUint32 childCount = aStackParent->GetChildCount();
+    aStackParent->AppendChildTo(text, PR_FALSE);  
+    // XXX nsresult
+    mParser->NotifyAppend(aStackParent, childCount);    
+  }
+}
+
+void
+nsHtml5TreeBuilder::insertFosterParentedChild(nsIContent* aChild, nsIContent* aTable, nsIContent* aStackParent)
+{
+  nsIContent* parent = aTable->GetParent();
+  if (parent && parent->IsNodeOfType(nsINode::eELEMENT)) {
+    PRUint32 pos = parent->IndexOf(aTable);
+    parent->InsertChildAt(aChild, pos, PR_FALSE);
+    // XXX nsresult
+    nsNodeUtils::ContentInserted(parent, aChild, pos);
+  } else {
+    PRUint32 childCount = aStackParent->GetChildCount();
+    aStackParent->AppendChildTo(aChild, PR_FALSE);  
+    // XXX nsresult
+    mParser->NotifyAppend(aStackParent, childCount);    
+  }  
 }
 
 void
@@ -272,20 +280,6 @@ nsHtml5TreeBuilder::addAttributesToElement(nsIContent* aElement, nsHtml5HtmlAttr
       // XXX should not fire mutation event here
     }
   }  
-}
-
-void
-nsHtml5TreeBuilder::startCoalescing()
-{
-  mCharBufferFillLength = 0;
-  mCharBufferAllocLength = 1024;
-  mCharBuffer = new PRUnichar[mCharBufferAllocLength];
-}
-
-void
-nsHtml5TreeBuilder::endCoalescing()
-{
-  delete[] mCharBuffer;
 }
 
 void
@@ -450,27 +444,16 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
 void
 nsHtml5TreeBuilder::accumulateCharacters(PRUnichar* aBuf, PRInt32 aStart, PRInt32 aLength)
 {
-  PRInt32 newFillLen = mCharBufferFillLength + aLength;
-  if (newFillLen > mCharBufferAllocLength) {
+  PRInt32 newFillLen = charBufferLen + aLength;
+  if (newFillLen > charBuffer.length) {
     PRInt32 newAllocLength = newFillLen + (newFillLen >> 1);
-    PRUnichar* newBuf = new PRUnichar[newAllocLength];
-    memcpy(newBuf, mCharBuffer, sizeof(PRUnichar) * mCharBufferFillLength);
-    delete[] mCharBuffer;
-    mCharBuffer = newBuf;
-    mCharBufferAllocLength = newAllocLength;
+    jArray<PRUnichar,PRInt32> newBuf(newAllocLength);
+    memcpy(newBuf, charBuffer, sizeof(PRUnichar) * charBufferLen);
+    charBuffer.release();
+    charBuffer = newBuf;
   }
-  memcpy(mCharBuffer + mCharBufferFillLength, aBuf + aStart, sizeof(PRUnichar) * aLength);
-  mCharBufferFillLength = newFillLen;
-}
-
-void
-nsHtml5TreeBuilder::flushCharacters()
-{
-  if (mCharBufferFillLength > 0) {
-    appendCharacters(currentNode(), mCharBuffer, 0,
-            mCharBufferFillLength);
-    mCharBufferFillLength = 0;
-  }
+  memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(PRUnichar) * aLength);
+  charBufferLen = newFillLen;
 }
 
 void
