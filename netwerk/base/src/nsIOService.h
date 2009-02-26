@@ -140,6 +140,8 @@ private:
     PRPackedBool                         mSettingOffline;
     PRPackedBool                         mSetOfflineValue;
 
+    PRPackedBool                         mShutdown;
+
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
     nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
