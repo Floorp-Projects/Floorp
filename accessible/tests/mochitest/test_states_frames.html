@@ -27,20 +27,13 @@
       testStates(frameDoc, STATE_READONLY);
       testStates(frameDocArticle, STATE_READONLY);
       testStates(frameDocCheckbox, 0, 0, STATE_READONLY);
-      
-      var works = true;
-      try {
-          testStates(frameDocTextbox, 0, 0, STATE_READONLY);
-      }
-      catch (e) {
-        works = false;
-      }
-      todo(works, "Checking states of a textbox frame doc should not throw (Bug 478810)");
-      
+      testStates(frameDocTextbox, 0, EXT_STATE_EDITABLE);
+
       frameDoc.designMode = "on";
       testStates(frameDoc,  0, EXT_STATE_EDITABLE);
       testStates(frameDocArticle, STATE_READONLY);
       testStates(frameDocCheckbox, 0, 0, STATE_READONLY);
+      testStates(frameDocTextbox,  0, EXT_STATE_EDITABLE);
 
       frameDocArticle.designMode = "on";
       testStates(frameDocArticle, 0, EXT_STATE_EDITABLE);
