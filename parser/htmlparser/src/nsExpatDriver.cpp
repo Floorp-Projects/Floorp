@@ -1202,6 +1202,11 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
                  "Unreachable data left in Expat's buffer");
 
     start.advance(length);
+
+    // It's possible for start to have passed end if we received more data
+    // (e.g. if we spun the event loop in an inline script). Reload end now
+    // to compensate.
+    aScanner.EndReading(end);
   }
 
   aScanner.SetPosition(currentExpatPosition, PR_TRUE);
