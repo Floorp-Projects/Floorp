@@ -81,7 +81,6 @@ var Browser = {
     // initialize the WidgetStack
     let browserContainer = document.getElementById("browser-container");
     ws = new WidgetStack(browserContainer);
-    ws.setViewportBounds({ top: 0, left: 0, right: 800, bottom: 480 });
 
     // XXX this should live elsewhere
     window.gSidebarVisible = false;
