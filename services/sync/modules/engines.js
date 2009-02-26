@@ -112,13 +112,6 @@ Engine.prototype = {
   get enabled() Utils.prefs.getBoolPref("engine." + this.name),
   get score() this._tracker.score,
 
-  get _os() {
-    let os = Cc["@mozilla.org/observer-service;1"].
-      getService(Ci.nsIObserverService);
-    this.__defineGetter__("_os", function() os);
-    return os;
-  },
-
   get _store() {
     let store = new this._storeObj();
     this.__defineGetter__("_store", function() store);
