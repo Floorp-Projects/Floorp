@@ -149,6 +149,8 @@ ah_crap_handler(int signum)
   sleep(_gdb_sleep_duration);
 
   printf("Done sleeping...\n");
+
+  _exit(signum);
 }
 #endif // CRAWL_STACK_ON_SIGSEGV
 

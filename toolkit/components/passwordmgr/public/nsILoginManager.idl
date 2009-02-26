@@ -43,7 +43,7 @@ interface nsIAutoCompleteResult;
 interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 
-[scriptable, uuid(04dbfa30-4238-11dd-ae16-0800200c9a66)]
+[scriptable, uuid(9c78bfc1-422b-4f4f-ba09-f7eb3c4e72b2)]
 
 interface nsILoginManager : nsISupports {
 
@@ -52,6 +52,10 @@ interface nsILoginManager : nsISupports {
      *
      * @param aLogin
      *        The login to be added.
+     *
+     * Default values for the login's nsILoginMetaInfo properties will be
+     * created. However, if the caller specifies non-default values, they will
+     * be used instead.
      */
     void addLogin(in nsILoginInfo aLogin);
 
@@ -61,6 +65,9 @@ interface nsILoginManager : nsISupports {
      *
      * @param aLogin
      *        The login to be removed.
+     *
+     * The specified login must exactly match a stored login. However, the
+     * values of any nsILoginMetaInfo properties are ignored.
      */
     void removeLogin(in nsILoginInfo aLogin);
 
@@ -68,10 +75,20 @@ interface nsILoginManager : nsISupports {
     /**
      * Modify an existing login in the login manager.
      *
-     * @param aLogin
+     * @param oldLogin
      *        The login to be modified.
+     * @param newLoginData
+     *        The new login values (either a nsILoginInfo or nsIProperyBag)
+     *
+     * If newLoginData is a nsILoginInfo, all of the old login's nsILoginInfo
+     * properties are changed to the values from newLoginData (but the old
+     * login's nsILoginMetaInfo properties are unmodified).
+     *
+     * If newLoginData is a nsIPropertyBag, only the specified properties
+     * will be changed. The nsILoginMetaInfo properties of oldLogin can be
+     * changed in this manner.
      */
-    void modifyLogin(in nsILoginInfo oldLogin, in nsILoginInfo newLogin);
+    void modifyLogin(in nsILoginInfo oldLogin, in nsISupports newLoginData);
 
 
     /**
