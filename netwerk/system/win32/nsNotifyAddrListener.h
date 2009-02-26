@@ -39,6 +39,7 @@
 #define NSNOTIFYADDRLISTENER_H_
 
 #include <windows.h>
+#include <winsock2.h>
 #include "nsINetworkLinkService.h"
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
@@ -82,6 +83,7 @@ protected:
     DWORD CheckIPAddrTable(void);
     DWORD CheckAdaptersInfo(void);
     DWORD CheckAdaptersAddresses(void);
+    BOOL  CheckAddressIsGateway(LPSOCKADDR aAddress);
     void  CheckLinkStatus(void);
 
     nsCOMPtr<nsIThread> mThread;
