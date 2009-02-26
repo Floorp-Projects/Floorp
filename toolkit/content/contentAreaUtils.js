@@ -164,7 +164,7 @@ function saveDocument(aDocument, aSkipPrompt)
   try {
     contentDisposition =
       ifreq.getInterface(Components.interfaces.nsIDOMWindowUtils)
-           getDocumentMetadata("content-disposition");
+           .getDocumentMetadata("content-disposition");
   } catch (ex) {
     // Failure to get a content-disposition is ok
   }
