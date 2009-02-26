@@ -1991,7 +1991,7 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (role == nsIAccessibleRole::ROLE_ENTRY ||
       role == nsIAccessibleRole::ROLE_COMBOBOX) {
 
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
     NS_ENSURE_STATE(content);
 
     nsAutoString autocomplete;
