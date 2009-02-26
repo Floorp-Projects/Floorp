@@ -81,3 +81,9 @@ libs-%:
 
 installers-%: clobber-% langpack-% repackage-zip-%
 	@echo "repackaging done"
+
+ident:
+	@echo -n "gecko_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/xulrunner/platform.ini Build SourceStamp
+	@echo -n "fennec_revision "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(STAGEDIST)/application.ini App SourceStamp
