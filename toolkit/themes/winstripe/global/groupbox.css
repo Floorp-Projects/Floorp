@@ -70,7 +70,7 @@ caption {
 }
 
 tabpanels caption {
-  background-color: menu;
+  -moz-appearance: tabpanel;
 }
 
 .caption-text {
