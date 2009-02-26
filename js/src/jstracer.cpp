@@ -6015,6 +6015,9 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
 JS_REQUIRES_STACK bool
 TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offset, jsval* vp)
 {
+    JS_ASSERT(op_offset == offsetof(JSObjectOps, getProperty) ||
+              op_offset == offsetof(JSObjectOps, setProperty));
+
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, op_offset))
