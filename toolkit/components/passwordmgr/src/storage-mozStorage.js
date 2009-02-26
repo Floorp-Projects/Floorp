@@ -109,6 +109,15 @@ LoginManagerStorage_mozStorage.prototype = {
         return this.__uuidService;
     },
 
+    __observerService : null,
+    get _observerService() {
+        if (!this.__observerService)
+            this.__observerService = Cc["@mozilla.org/observer-service;1"].
+                                     getService(Ci.nsIObserverService);
+        return this.__observerService;
+    },
+
+
     // The current database schema
     _dbSchema: {
         tables: {
@@ -313,6 +322,10 @@ LoginManagerStorage_mozStorage.prototype = {
         } finally {
             stmt.reset();
         }
+
+        // Send a notification that a login was added.
+        if (!isEncrypted)
+            this._sendNotification("addLogin", loginClone);
     },
 
 
@@ -338,6 +351,8 @@ LoginManagerStorage_mozStorage.prototype = {
         } finally {
             stmt.reset();
         }
+
+        this._sendNotification("removeLogin", storedLogin);
     },
 
 
@@ -439,6 +454,8 @@ LoginManagerStorage_mozStorage.prototype = {
         } finally {
             stmt.reset();
         }
+
+        this._sendNotification("modifyLogin", [oldStoredLogin, newLogin]);
     },
 
 
@@ -485,6 +502,8 @@ LoginManagerStorage_mozStorage.prototype = {
         } finally {
             stmt.reset();
         }
+
+        this._sendNotification("removeAllLogins", null);
     },
 
 
@@ -516,16 +535,6 @@ LoginManagerStorage_mozStorage.prototype = {
      *
      */
     setLoginSavingEnabled : function (hostname, enabled) {
-        this._setLoginSavingEnabled(hostname, enabled);
-    },
-
-
-    /*
-     * _setLoginSavingEnabled
-     *
-     * Private function wrapping core setLoginSavingEnabled functionality.
-     */
-    _setLoginSavingEnabled : function (hostname, enabled) {
         // Throws if there are bogus values.
         this._checkHostnameValue(hostname);
 
@@ -544,11 +553,13 @@ LoginManagerStorage_mozStorage.prototype = {
             stmt = this._dbCreateStatement(query, params);
             stmt.execute();
         } catch (e) {
-            this.log("_setLoginSavingEnabled failed: " + e.name + " : " + e.message);
+            this.log("setLoginSavingEnabled failed: " + e.name + " : " + e.message);
             throw "Couldn't write to database"
         } finally {
             stmt.reset();
         }
+
+        this._sendNotification(enabled ? "hostSavingEnabled" : "hostSavingDisabled", hostname);
     },
 
 
@@ -604,6 +615,28 @@ LoginManagerStorage_mozStorage.prototype = {
 
         this.log("_countLogins: counted logins: " + numLogins);
         return numLogins;
+    },
+
+
+    /*
+     * _sendNotification
+     *
+     * Send a notification when stored data is changed.
+     */
+    _sendNotification : function (changeType, data) {
+        let dataObject = data;
+        // Can't pass a raw JS string or array though notifyObservers(). :-(
+        if (data instanceof Array) {
+            dataObject = Cc["@mozilla.org/array;1"].
+                         createInstance(Ci.nsIMutableArray);
+            for (let i = 0; i < data.length; i++)
+                dataObject.appendElement(data[i], false);
+        } else if (typeof(data) == "string") {
+            dataObject = Cc["@mozilla.org/supports-string;1"].
+                         createInstance(Ci.nsISupportsString);
+            dataObject.data = data;
+        }
+        this._observerService.notifyObservers(dataObject, "passwordmgr-storage-changed", changeType);
     },
 
 
@@ -872,7 +905,7 @@ LoginManagerStorage_mozStorage.prototype = {
                 this._addLogin(login, true);
             let disabledHosts = legacy.getAllDisabledHosts({});
             for each (let hostname in disabledHosts)
-                this._setLoginSavingEnabled(hostname, false);
+                this.setLoginSavingEnabled(hostname, false);
         } catch (e) {
             this.log("_importLegacySignons failed: " + e.name + " : " + e.message);
             throw "Import failed";
