@@ -330,20 +330,6 @@ nsSize nsVideoFrame::GetIntrinsicSize(nsIRenderingContext *aRenderingContext)
     nsresult rv;
 
     size = element->GetVideoSize(size);
-    if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
-      PRInt32 width = -1;
-      rv = element->GetWidth(&width);
-      if (NS_SUCCEEDED(rv)) {
-        size.width = width;
-      }
-    }
-    if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
-      PRInt32 height = -1;
-      rv = element->GetHeight(&height);
-      if (NS_SUCCEEDED(rv)) {
-        size.height = height;
-      }
-    }
   }
 
   return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width), 
