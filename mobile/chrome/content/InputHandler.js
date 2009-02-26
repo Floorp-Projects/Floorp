@@ -259,7 +259,6 @@ PanningModule.prototype = {
         // start kinetic scrolling here for canvas only
         if (!this._startKinetic(sX, sY))
           this._endKinetic(sX, sY);
-        Browser.canvasBrowser.prepareForPanning();
       }
       else {
         ws.dragStop(sX, sY);
