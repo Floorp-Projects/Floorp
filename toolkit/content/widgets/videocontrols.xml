@@ -114,6 +114,8 @@
             ]]>
         </constructor>
 
+        <field name="randomID">0</field>
+
         <field name="Utils">
             <![CDATA[ ({
                 debug : false,
@@ -128,6 +130,11 @@
                 bufferBar      : null,
                 thumbWidth : 0,
 
+                randomID : 0,
+                videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
+                               "loadstart", "durationchange", "timeupdate", "progress",
+                               "emptied"],
+
                 FADE_TIME_MAX  : 200, // ms
                 FADE_TIME_STEP : 30,  // ms
 
@@ -139,6 +146,41 @@
                 firstFrameShown : false,
                 lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
+
+                /*
+                 * Set the initial state of the controls. The binding is normally created along
+                 * with video element, but could be attached at any point (eg, if the video is
+                 * removed from the document and then reinserted). Thus, some one-time events may
+                 * have already fired, and so we'll need to explicitly check the initial state.
+                 */
+                setupInitialState : function() {
+                    this.randomID = Math.random();
+                    this.videocontrols.randomID = this.randomID;
+
+                    this.playButton.setAttribute("paused", this.video.paused);
+                    this.muteButton.setAttribute("muted", this.video.muted);
+
+                    var duration = Math.round(this.video.duration * 1000); // in ms
+                    var currentTime = Math.round(this.video.currentTime * 1000); // in ms
+                    this.log("Initial playback position is at " + currentTime + " of " + duration);
+                    // It would be nice to retain maxCurrentTimeSeen, but it would be difficult
+                    // to determine if the media source changed while we were detached.
+                    this.maxCurrentTimeSeen = currentTime;
+                    this.durationChange(duration);
+                    this.showPosition(currentTime, duration);
+
+                    if (this.video.readyState >= this.video.HAVE_CURRENT_DATA)
+                        this.firstFrameShown = true;
+
+                    // We can't determine the exact buffering status, but do know if it's
+                    // fully loaded. (If it's still loading, it will fire a progress event
+                    // and we'll figure out the exact state then.)
+                    this.bufferBar.setAttribute("max", 100);
+                    if (this.video.networkState == this.video.NETWORK_LOADED)
+                        this.bufferBar.setAttribute("value", 100);
+                    else
+                        this.bufferBar.setAttribute("value", 0);
+                },
 
                 get dynamicControls() {
                     // Don't fade controls for <audio> elements.
@@ -153,6 +195,12 @@
                 
                 handleEvent : function (aEvent) {
                     this.log("Got " + aEvent.type + " media event");
+
+                    // If the binding is detached (or has been replaced by a
+                    // newer instance of the binding), nuke our event-listeners.
+                    if (this.videocontrols.randomID != this.randomID)
+                        this.terminateEventListeners();
+
                     switch (aEvent.type) {
                         case "play":
                             this.playButton.setAttribute("paused", false);
@@ -203,6 +251,17 @@
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
                     }
+                },
+
+                terminateEventListeners : function () {
+                    for each (var event in this.videoEvents)
+                        this.video.removeEventListener(event, this, false);
+
+                    if (this.fadeTimer) {
+                        clearInterval(this.fadeTimer);
+                        this.fadeTimer = null;
+                    }
+                    this.log("--- videocontrols terminated ---");
                 },
 
                 durationChange : function (duration) {
@@ -391,8 +450,7 @@
             if (thumb)
                 this.Utils.thumbWidth = thumb.clientWidth;
              
-            // Set initial state of play/pause button.
-            this.Utils.playButton.setAttribute("paused", video.paused);
+            this.Utils.setupInitialState();
 
             // videocontrols.css hides the control bar by default, because if script
             // is disabled our binding's script is disabled too (bug 449358). Thus,
@@ -411,17 +469,9 @@
                 this.Utils.fadingIn = true;
             }
 
-            // Use Utils.handleEvent() callback for all media events.
-            video.addEventListener("play",         this.Utils, false);
-            video.addEventListener("pause",        this.Utils, false);
-            video.addEventListener("ended",        this.Utils, false);
-            video.addEventListener("volumechange", this.Utils, false);
-            video.addEventListener("loadeddata",   this.Utils, false);
-            video.addEventListener("loadstart",    this.Utils, false);
-            video.addEventListener("durationchange", this.Utils, false);
-            video.addEventListener("timeupdate",     this.Utils, false);
-            video.addEventListener("progress",       this.Utils, false);
-            video.addEventListener("emptied",        this.Utils, false);
+            // Use the Utils.handleEvent() callback for all media events.
+            for each (var event in this.Utils.videoEvents)
+                video.addEventListener(event, this.Utils, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>
