@@ -3201,7 +3201,9 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       , mXPCDefaultGrantAll(PR_FALSE)
 #endif
 {
-    NS_ASSERTION(sizeof(long) == sizeof(void*), "long and void* have different lengths on this platform. This may cause a security failure.");
+    NS_ASSERTION(sizeof(PRWord) == sizeof(void*),
+                 "PRWord and void* have different lengths on this platform. "
+                 "This may cause a security failure with the SecurityLevel union.");
     mPrincipals.Init(31);
 }
 
