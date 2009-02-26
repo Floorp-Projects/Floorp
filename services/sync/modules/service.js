@@ -697,8 +697,7 @@ WeaveSvc.prototype = {
       }
 
       if (!this._syncError) {
-	Svc.Prefs.reset("lastsync");
-	Svc.Prefs.set("lastsync", new Date().toString());
+	Svc.Prefs.set("lastSync", new Date().toString());
 	this._log.info("Sync completed successfully");
       } else
         this._log.warn("Some engines did not sync correctly");
@@ -775,8 +774,7 @@ WeaveSvc.prototype = {
       }
 
       if (!this._syncError) {
-	Svc.Prefs.reset("lastsync");
-	Svc.Prefs.set("lastsync", Date.now());
+	Svc.Prefs.set("lastSync", new Date().toString());
         this._log.info("Sync completed successfully");
       } else
         this._log.warn("Some engines did not sync correctly");
