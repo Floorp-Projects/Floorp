@@ -114,22 +114,19 @@ CanvasBrowser.prototype = {
       if (self._maybeZoomToPage) {
         self.zoomToPage();
       }
-      // flush the whole queue while panning or when the page is done loading
-      self.flushRegion(!this._isPanning && self._pageLoading);
+      // draw visible area..freeze during pans
+      if (!self._isPanning)
+        self.flushRegion(true);
     }
-
-    /* During pageload:
-     * do the paint immediately if it is something that can be drawn fast
-     * (and there aren't things queued up to be painted already) */
-    let flushNow = this._isPanning || !this._pageLoading;
-
-    if (this._pageLoading) {
-      if (!this._drawInterval) {
-        //always flush the first draw
-        flushNow = true;
-        this._maybeZoomToPage = true;
-        this._drawInterval = setInterval(resizeAndPaint, 2000, this);
-      }
+    
+    let flushNow = !this._pageLoading && rect.intersects(this._visibleBounds);
+    
+    // TODO: only fire timer if there are paints to be done
+    if (this._pageLoading && !this._drawInterval) {
+      //always flush the first draw
+      flushNow = true;
+      this._maybeZoomToPage = true;
+      this._drawInterval = setInterval(resizeAndPaint, 2000, this);
     }
 
     if (flushNow) {
@@ -154,7 +151,6 @@ CanvasBrowser.prototype = {
       let rect = new wsRect(outX.value, outY.value,
                             outW.value, outH.value);
       if (viewingBoundsOnly) {
-        let oldrect = rect;
         //only draw the visible area
         rect = rect.intersect(this._visibleBounds)
         if (!rect)
@@ -211,7 +207,7 @@ CanvasBrowser.prototype = {
     this._pageLoading = false;
     this._maybeZoomToPage = false;
     this.zoomToPage();
-    //might as well just only do this in prepareForPanning
+    // flush the region, to reduce prepareForPanning delay
     this.flushRegion();
     
     if (this._drawInterval) {
@@ -244,8 +240,8 @@ CanvasBrowser.prototype = {
         
     visibleBounds.top = Math.max(0, this._screenToPage(visibleBounds.top));
     visibleBounds.left = Math.max(0, this._screenToPage(visibleBounds.left));
-    visibleBounds.bottom = this._screenToPage(visibleBounds.bottom);
-    visibleBounds.right = this._screenToPage(visibleBounds.right);
+    visibleBounds.bottom = Math.ceil(this._screenToPage(visibleBounds.bottom));
+    visibleBounds.right = Math.ceil(this._screenToPage(visibleBounds.right));
 
     // if the page is being panned, flush the queue, so things blit correctly
     // this avoids incorrect offsets due to a change in _pageBounds.x/y
