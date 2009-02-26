@@ -79,3 +79,14 @@
     min-width: 11px;
     min-height: 20px;
 }
+
+.throbberOverlay {
+    background-color: rgba(0,0,0,0.55);
+}
+
+.throbber {
+    background: url(chrome://global/skin/media/throbber.png) no-repeat center;
+    height: 36px;
+    width: 36px;
+    margin-bottom: 28px; /* same height as .controlBar, to keep throbber centered above it */
+}
