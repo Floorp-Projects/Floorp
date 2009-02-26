@@ -927,7 +927,6 @@ protected:
   unsigned              mDrawColorBackground : 1;
   unsigned              mNeverAnimate : 1;
   unsigned              mIsRenderingOnlySelection : 1;
-  unsigned              mNoTheme : 1;
   unsigned              mPaginated : 1;
   unsigned              mCanPaginatedScroll : 1;
   unsigned              mDoScaledTwips : 1;
