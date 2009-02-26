@@ -828,21 +828,30 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
-    do {
-        jsuint capacity = js_DenseArrayCapacity(obj);
-        if ((jsuint)i < capacity) {
-            if (obj->dslots[i] == JSVAL_HOLE) {
-                if (cx->runtime->anyArrayProtoHasElement)
-                    break;
-                if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
-                    obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
-                obj->fslots[JSSLOT_ARRAY_COUNT]++;
-            }
-            obj->dslots[i] = v;
-            return JS_TRUE;
-        }
-    } while (0);
-    return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v);
+    /*
+     * Let the interpreter worry about negative array indexes.
+     */
+    if (i < 0)
+        return JS_FALSE;
+
+    /*
+     * If needed, grow the array as long it remains dense, otherwise fall off trace.
+     */
+    jsuint u = jsuint(i);
+    jsuint capacity = js_DenseArrayCapacity(obj);
+    if ((u >= capacity) && (INDEX_TOO_SPARSE(obj, u) || !EnsureCapacity(cx, obj, u + 1)))
+        return JS_FALSE;
+
+    if (obj->dslots[u] == JSVAL_HOLE) {
+        if (cx->runtime->anyArrayProtoHasElement)
+            return JS_FALSE;
+        if (u >= jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]))
+            obj->fslots[JSSLOT_ARRAY_LENGTH] = u + 1;
+        ++obj->fslots[JSSLOT_ARRAY_COUNT];
+    }
+
+    obj->dslots[u] = v;
+    return JS_TRUE;
 }
 #endif
 
