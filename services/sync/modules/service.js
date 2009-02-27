@@ -449,7 +449,8 @@ WeaveSvc.prototype = {
         ret = true;
 
       } else if (res.lastChannel.responseStatus == 200) {
-        this.clusterURL = 'https://' + res.data + '/';
+        // XXX Bug 480480 Work around the server sending a trailing newline
+        this.clusterURL = 'https://' + res.data.trim() + '/';
         ret = true;
       }
       self.done(ret);
