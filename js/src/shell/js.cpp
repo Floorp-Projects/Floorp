@@ -1017,6 +1017,48 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 }
 
+static const char *
+ToSource(JSContext *cx, jsval *vp)
+{
+    JSString *str = JS_ValueToSource(cx, *vp);
+    if (str) {
+        *vp = STRING_TO_JSVAL(str);
+        return JS_GetStringBytes(str);
+    }
+    JS_ClearPendingException(cx);
+    return "<<error converting value to string>>";
+}
+
+static JSBool
+AssertEq(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 2) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             (argc > 2) ? JSSMSG_TOO_MANY_ARGS : JSSMSG_NOT_ENOUGH_ARGS,
+                             "assertEq");
+        return JS_FALSE;
+    }
+
+    jsval *argv = JS_ARGV(cx, vp);
+    if (!js_StrictlyEqual(cx, argv[0], argv[1])) {
+        const char *actual = ToSource(cx, &argv[0]);
+        const char *expected = ToSource(cx, &argv[1]);
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_EQ_FAILED,
+                             actual, expected);
+        return JS_FALSE;
+    }
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+#ifdef JS_TRACER
+static jsval JS_FASTCALL
+AssertEq_tn(JSContext *cx, jsval v1, jsval v2)
+{
+    return (js_StrictlyEqual(cx, v1, v2)) ? JSVAL_VOID : JSVAL_ERROR_COOKIE;
+}
+#endif
+
 static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -3362,6 +3404,7 @@ Elapsed(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
 }
 
+JS_DEFINE_TRCINFO_1(AssertEq, (3, (static, JSVAL_RETRY, AssertEq_tn, CONTEXT, JSVAL, JSVAL, 0, 0)))
 JS_DEFINE_TRCINFO_1(Print, (2, (static, JSVAL_FAIL, Print_tn, CONTEXT, STRING, 0, 0)))
 JS_DEFINE_TRCINFO_1(ShapeOf, (1, (static, INT32, ShapeOf_tn, OBJECT, 0, 0)))
 
@@ -3494,6 +3537,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_TN("print",          Print,          0,0, Print_trcinfo),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
+    JS_TN("assertEq",       AssertEq,       2,0, AssertEq_trcinfo),
     JS_FN("gc",             GC,             0,0),
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
@@ -3572,6 +3616,8 @@ static const char *const shell_help_messages[] = {
 "print([exp ...])         Evaluate and print expressions",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
+"assertEq(actual, expected)\n"
+"                         Throw if the two arguments are not ===",
 "gc()                     Run the garbage collector",
 "gcparam(name, value)\n"
 "  Wrapper for JS_SetGCParameter. The name must be either 'maxBytes' or\n"
