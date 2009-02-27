@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008-2009
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,35 +35,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-  private:
-    nsHtml5Parser* mParser; // weak ref
-    PRBool         mHasProcessedBase;
-    nsTArray<nsHtml5TreeOperation> mOpQueue;
-    void           MaybeFlushAndMaybeSuspend();
+#ifndef nsHtml5TreeOperation_h__
+#define nsHtml5TreeOperation_h__
+
+#include "nsIContent.h"
+
+class nsHtml5TreeBuilder;
+
+enum eHtml5TreeOperation {
+  // main HTML5 ops
+  eTreeOpAppend,
+  eTreeOpDetach,
+  eTreeOpAppendChildrenToNewParent,
+  eTreeOpFosterParent,
+  eTreeOpAppendToDocument,
+  eTreeOpAddAttributes,
+  // Gecko-specific on-pop ops
+  eTreeOpScriptEnd,
+  eTreeOpDoneAddingChildren,
+  eTreeOpUpdateStyleSheet,
+  eTreeOpProcessBase,
+  eTreeOpStartLayout
+};
+
+class nsHtml5TreeOperation {
   public:
-    nsHtml5TreeBuilder(nsHtml5Parser* aParser);
-    ~nsHtml5TreeBuilder();
-    void Flush();
-    inline void NotifyAppend(nsIContent* aParent, PRUint32 aChildCount) {
-      mParser->NotifyAppend(aParent, aChildCount);
+    nsHtml5TreeOperation();
+    ~nsHtml5TreeOperation();
+    inline void Init(nsIContent* aNode, nsIContent* aParent) {
+      mNode = aNode;
+      mParent = aParent;
     }
-    inline nsIDocument* GetDocument() {
-      return mParser->GetDocument();
+    inline void Init(eHtml5TreeOperation aOpCode, nsIContent* aNode) {
+      mOpCode = aOpCode;
+      mNode = aNode;
     }
-    inline void SetScriptElement(nsIContent* aScript) {
-      mParser->SetScriptElement(aScript);
+    inline void Init(eHtml5TreeOperation aOpCode, nsIContent* aNode, nsIContent* aParent) {
+      mOpCode = aOpCode;
+      mNode = aNode;
+      mParent = aParent;
     }
-    inline void UpdateStyleSheet(nsIContent* aSheet) {
-      mParser->UpdateStyleSheet(aSheet);
+    inline void Init(eHtml5TreeOperation aOpCode, nsIContent* aNode, nsIContent* aParent, nsIContent* aTable) {
+      mOpCode = aOpCode;
+      mNode = aNode;
+      mParent = aParent;
+      mTable = aTable;
     }
-    inline nsresult ProcessBase(nsIContent* aBase) {
-      if (!mHasProcessedBase) {
-        nsresult rv = mParser->ProcessBASETag(aBase);
-        NS_ENSURE_SUCCESS(rv, rv);
-        mHasProcessedBase = PR_TRUE;
-      }
-      return NS_OK;
-    }
-    inline void StartLayout() {
-      mParser->StartLayout(PR_FALSE);
-    }
+    nsresult Perform(nsHtml5TreeBuilder* aBuilder);
+  private:
+    eHtml5TreeOperation mOpCode;
+    nsCOMPtr<nsIContent> mNode;
+    nsCOMPtr<nsIContent> mParent;
+    nsCOMPtr<nsIContent> mTable;    
+};
+
+#endif // nsHtml5TreeOperation_h__
