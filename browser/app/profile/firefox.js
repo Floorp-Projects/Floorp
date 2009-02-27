@@ -800,3 +800,7 @@ pref("browser.privatebrowsing.autostart", false);
 
 // Whether we should skip prompting before starting the private browsing mode
 pref("browser.privatebrowsing.dont_prompt_on_enter", false);
+
+// Don't try to alter this pref, it'll be reset the next time you use the
+// bookmarking dialog
+pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
