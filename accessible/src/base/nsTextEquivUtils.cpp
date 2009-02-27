@@ -239,15 +239,16 @@ nsTextEquivUtils::AppendFromAccessibleChildren(nsIAccessible *aAccessible,
   nsCOMPtr<nsIAccessible> accChild, accNextChild;
   aAccessible->GetFirstChild(getter_AddRefs(accChild));
 
+  nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;
   while (accChild) {
-    nsresult rv = AppendFromAccessible(accChild, aString);
+    rv = AppendFromAccessible(accChild, aString);
     NS_ENSURE_SUCCESS(rv, rv);
 
     accChild->GetNextSibling(getter_AddRefs(accNextChild));
     accChild.swap(accNextChild);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -271,49 +272,88 @@ nsTextEquivUtils::AppendFromAccessible(nsIAccessible *aAccessible,
   nsresult rv = aAccessible->GetName(text);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AppendString(aString, text);
+  PRBool isEmptyTextEquiv = PR_TRUE;
 
-  PRUint32 role = nsAccUtils::Role(aAccessible);
-  PRUint32 nameRule = gRoleToNameRulesMap[role];
+  // If the name is from tooltip then append it to result string in the end
+  // (see h. step of name computation guide).
+  if (rv != NS_OK_NAME_FROM_TOOLTIP)
+    isEmptyTextEquiv = !AppendString(aString, text);
 
-  if (nameRule == eFromValue) {
-    // Implementation of step f) of text equivalent computation. If the given
-    // accessible is not root accessible (the accessible the text equivalent is
-    // computed for in the end) then append accessible value. Otherwise append
-    // value if and only if the given accessible is in the middle of its parent.
+  // Implementation of f. step.
+  rv = AppendFromValue(aAccessible, aString);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aAccessible != gInitiatorAcc) {
-      rv = aAccessible->GetValue(text);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      AppendString(aString, text);
-    } else {
-      nsCOMPtr<nsIAccessible> nextSibling;
-      aAccessible->GetNextSibling(getter_AddRefs(nextSibling));
-      if (nextSibling) {
-        nsCOMPtr<nsIAccessible> parent;
-        aAccessible->GetParent(getter_AddRefs(parent));
-        if (parent) {
-          nsCOMPtr<nsIAccessible> firstChild;
-          parent->GetFirstChild(getter_AddRefs(firstChild));
-          if (firstChild && firstChild != aAccessible) {
-            rv = aAccessible->GetValue(text);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            AppendString(aString, text);
-          }
-        }
-      }
-    }
-  }
+  if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED)
+    isEmptyTextEquiv = PR_FALSE;
 
   // Implementation of g) step of text equivalent computation guide. Go down
   // into subtree if accessible allows "text equivalent from subtree rule" or
   // it's not root and not control.
-  if (text.IsEmpty() && (nameRule & eFromSubtreeIfRec))
-    return AppendFromAccessibleChildren(aAccessible, aString);
+  if (isEmptyTextEquiv) {
+    PRUint32 role = nsAccUtils::Role(aAccessible);
+    PRUint32 nameRule = gRoleToNameRulesMap[role];
 
-  return NS_OK;
+    if (nameRule & eFromSubtreeIfRec) {
+      rv = AppendFromAccessibleChildren(aAccessible, aString);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED)
+        isEmptyTextEquiv = PR_FALSE;
+    }
+  }
+
+  // Implementation of h. step
+  if (isEmptyTextEquiv && !text.IsEmpty()) {
+    AppendString(aString, text);
+    return NS_OK;
+  }
+
+  return rv;
+}
+
+nsresult
+nsTextEquivUtils::AppendFromValue(nsIAccessible *aAccessible,
+                                  nsAString *aString)
+{
+  PRUint32 role = nsAccUtils::Role(aAccessible);
+  PRUint32 nameRule = gRoleToNameRulesMap[role];
+
+  if (nameRule != eFromValue)
+    return NS_OK_NO_NAME_CLAUSE_HANDLED;
+
+  // Implementation of step f. of text equivalent computation. If the given
+  // accessible is not root accessible (the accessible the text equivalent is
+  // computed for in the end) then append accessible value. Otherwise append
+  // value if and only if the given accessible is in the middle of its parent.
+
+  nsAutoString text;
+  if (aAccessible != gInitiatorAcc) {
+    nsresult rv = aAccessible->GetValue(text);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return AppendString(aString, text) ?
+      NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
+  }
+
+  nsCOMPtr<nsIAccessible> nextSibling;
+  aAccessible->GetNextSibling(getter_AddRefs(nextSibling));
+  if (nextSibling) {
+    nsCOMPtr<nsIAccessible> parent;
+    aAccessible->GetParent(getter_AddRefs(parent));
+    if (parent) {
+      nsCOMPtr<nsIAccessible> firstChild;
+      parent->GetFirstChild(getter_AddRefs(firstChild));
+      if (firstChild && firstChild != aAccessible) {
+        nsresult rv = aAccessible->GetValue(text);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return AppendString(aString, text) ?
+          NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
+      }
+    }
+  }
+
+  return NS_OK_NO_NAME_CLAUSE_HANDLED;
 }
 
 nsresult
@@ -364,18 +404,19 @@ nsTextEquivUtils::AppendFromDOMNode(nsIContent *aContent, nsAString *aString)
   return AppendFromDOMChildren(aContent, aString);
 }
 
-void
+PRBool
 nsTextEquivUtils::AppendString(nsAString *aString,
                                const nsAString& aTextEquivalent)
 {
   // Insert spaces to insure that words from controls aren't jammed together.
   if (aTextEquivalent.IsEmpty())
-    return;
+    return PR_FALSE;
 
   if (!aString->IsEmpty())
     aString->Append(PRUnichar(' '));
 
   aString->Append(aTextEquivalent);
+  return PR_TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
