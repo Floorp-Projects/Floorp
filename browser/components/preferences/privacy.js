@@ -307,17 +307,6 @@ var gPrivacyPane = {
                                            "", null);
   },
 
-  /**
-   * Displays a dialog from which individual parts of private data may be
-   * cleared.
-   */
-  clearPrivateDataNow: function ()
-  {
-    const Cc = Components.classes, Ci = Components.interfaces;
-    var glue = Cc["@mozilla.org/browser/browserglue;1"]
-                 .getService(Ci.nsIBrowserGlue);
-    glue.sanitize(window || null);
-  },
   
   /**
    * Enables or disables the "Settings..." button depending
