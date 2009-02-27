@@ -41,6 +41,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <winsock2.h>
 #include <iprtrmib.h>
 #include <time.h>
 #include "prmem.h"
@@ -151,7 +152,6 @@ nsNotifyAddrListener::Run()
     PRBool shuttingDown = PR_FALSE;
 
     overlapped.hEvent = ev;
-    CheckLinkStatus();
     while (!shuttingDown) {
         HANDLE h;
         DWORD ret = sNotifyAddrChange(&h, &overlapped);
@@ -318,11 +318,7 @@ nsNotifyAddrListener::CheckIPAddrTable(void)
             for (DWORD i = 0; !linkUp && i < table->dwNumEntries; i++) {
                 if (GetOperationalStatus(table->table[i].dwIndex) >=
                         MIB_IF_OPER_STATUS_CONNECTED &&
-                        table->table[i].dwAddr != 0 && 
-                        // Also not 192.168.0.1 - the LAN ICS gateway...
-                        table->table[i].dwAddr != 0x0100A8C0 &&
-                        // ...and nor a loopback
-                        table->table[i].dwAddr != 0x0100007F)
+                        table->table[i].dwAddr != 0)
                     linkUp = PR_TRUE;
             }
             mLinkUp = linkUp;
@@ -372,14 +368,9 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
                     else {
                         PIP_ADDR_STRING ipAddr;
                         for (ipAddr = &ptr->IpAddressList; ipAddr && !linkUp;
-                             ipAddr = ipAddr->Next) {
-                            if (PL_strcmp(ipAddr->IpAddress.String, 
-                                    "0.0.0.0") &&
-                                PL_strcmp(ipAddr->IpAddress.String,
-                                    "192.168.0.1")) {
+                             ipAddr = ipAddr->Next)
+                            if (PL_strcmp(ipAddr->IpAddress.String, "0.0.0.0"))
                                 linkUp = PR_TRUE;
-                            }
-                        }
                     }
                 }
             }
@@ -389,20 +380,6 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
         }
     }
     return ret;
-}
-
-BOOL
-nsNotifyAddrListener::CheckAddressIsGateway(LPSOCKADDR aAddress)
-{
-    if (!aAddress)
-        return FALSE;
-
-    PSOCKADDR_IN in_addr = (PSOCKADDR_IN)aAddress;
-    return aAddress->sa_family == AF_INET && 
-        in_addr->sin_addr.S_un.S_un_b.s_b1 == 192 &&
-        in_addr->sin_addr.S_un.S_un_b.s_b2 == 168 &&
-        in_addr->sin_addr.S_un.S_un_b.s_b3 == 0 &&
-        in_addr->sin_addr.S_un.S_un_b.s_b4 == 1;
 }
 
 DWORD
@@ -428,10 +405,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void)
 
                 for (ptr = addresses; !linkUp && ptr; ptr = ptr->Next) {
                     if (ptr->OperStatus == IfOperStatusUp &&
-                            ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK &&
-                            ptr->FirstUnicastAddress &&
-                            !CheckAddressIsGateway(ptr->FirstUnicastAddress->
-                                Address.lpSockaddr))
+                            ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK)
                         linkUp = TRUE;
                 }
                 mLinkUp = linkUp;
