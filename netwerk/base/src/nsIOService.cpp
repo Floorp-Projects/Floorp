@@ -167,7 +167,6 @@ nsIOService::nsIOService()
     , mOfflineForProfileChange(PR_FALSE)
     , mSettingOffline(PR_FALSE)
     , mSetOfflineValue(PR_FALSE)
-    , mShutdown(PR_FALSE)
     , mManageOfflineStatus(PR_TRUE)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
@@ -618,11 +617,6 @@ nsIOService::GetOffline(PRBool *offline)
 NS_IMETHODIMP
 nsIOService::SetOffline(PRBool offline)
 {
-    // When someone wants to go online (!offline) after we got XPCOM shutdown
-    // throw ERROR_NOT_AVAILABLE to prevent return to online state.
-    if (mShutdown && !offline)
-        return NS_ERROR_NOT_AVAILABLE;
-
     // SetOffline() may re-enter while it's shutting down services.
     // If that happens, save the most recent value and it will be
     // processed when the first SetOffline() call is done bringing
@@ -840,11 +834,6 @@ nsIOService::Observe(nsISupports *subject,
         } 
     }
     else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        // Remember we passed XPCOM shutdown notification to prevent any
-        // changes of the offline status from now. We must not allow going
-        // online after this point.
-        mShutdown = PR_TRUE;
-
         SetOffline(PR_TRUE);
 
         // Break circular reference.
@@ -961,9 +950,6 @@ nsIOService::TrackNetworkLinkStatusForOffline()
                  "Don't call this unless we're managing the offline status");
     if (!mNetworkLinkService)
         return NS_ERROR_FAILURE;
-
-    if (mShutdown)
-        return NS_ERROR_NOT_AVAILABLE;
   
     // check to make sure this won't collide with Autodial
     if (mSocketTransportService) {
