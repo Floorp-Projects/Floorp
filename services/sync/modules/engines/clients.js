@@ -116,7 +116,7 @@ ClientEngine.prototype = {
   get clientType() { return Svc.Prefs.get("client.type", "desktop"); },
   set clientType(value) { Svc.Prefs.set("client.type", value); },
 
-  observe: function ClientEngine_observe() {
+  observe: function ClientEngine_observe(subject, topic, data) {
     switch (topic) {
     case "nsPref:changed":
       switch (data) {
