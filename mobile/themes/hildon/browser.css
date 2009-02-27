@@ -402,6 +402,7 @@ toolbarbutton.panel-button {
   padding: 0px 9px !important;
   margin: 0px !important;
   border: none !important;
+  -moz-user-select: none !important;
 }
 
 placelabel.bookmark-folder {

@@ -577,6 +577,8 @@
         document.getAnonymousElementByAttribute(this, "anonid", "child-items");
       </field>
 
+      <property name="scrollBoxObject" readonly="true" onget="return this._children.scrollBoxObject;"/>
+
       <property name="activeItem">
         <getter>
           <![CDATA[
@@ -799,6 +801,8 @@
       <field name="_items">
         document.getAnonymousElementByAttribute(this, "anonid", "items");
       </field>
+
+      <property name="scrollBoxObject" readonly="true" onget="return this._items.scrollBoxObject;"/>
 
       <property name="selectedItem" readonly="true">
         <getter>
