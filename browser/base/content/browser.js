@@ -6940,7 +6940,8 @@ let gPrivateBrowsingUI = {
 
     document.getElementById("menu_import").removeAttribute("disabled");
 
-    gFindBar.getElement("findbar-textbox").reset();
+    if (gFindBar)
+      gFindBar.getElement("findbar-textbox").reset();
 
     this._setPBMenuTitle("start");
 
