@@ -2042,7 +2042,6 @@ class RegExpNativeCompiler {
     JSRegExp*        re;
     CompilerState*   cs;            /* RegExp to compile */
     Fragment*        fragment;
-    LirBuffer*       lirbuf;
     LirWriter*       lir;
     LirBufWriter*    lirBufWriter;  /* for skip */
 
@@ -2050,7 +2049,7 @@ class RegExpNativeCompiler {
     LIns*            gdata;
     LIns*            cpend;
 
-    JSBool isCaseInsensitive() const { return cs->flags & JSREG_FOLD; }
+    JSBool isCaseInsensitive() const { return (cs->flags & JSREG_FOLD) != 0; }
 
     JSBool targetCurrentPoint(LIns* ins) 
     {
