@@ -79,6 +79,16 @@
       // Gets the name from text nodes. Element br adds space between them.
       testName("btn_labelledby_mixed_br", "text text");
 
+      // Gets the name from label content which allows name from subtree,
+      // ignore @title attribute on label
+      testName("from_label_ignoretitle", "Country:");
+
+      // Gets the name from html:p content, which doesn't allow name from
+      // subtree, ignore @title attribute on label
+      testName("from_p_ignoretitle", "Choose country from.");
+
+      // Gets the name from html:input value, ignore @title attribute on input
+      testName("from_input_ignoretitle", "Custom country");
 
       //////////////////////////////////////////////////////////////////////////
       // label element
@@ -265,6 +275,31 @@
   <button id="btn_labelledby_mixed_br"
           aria-labelledby="labelledby_mixed_br">9</button>
   <br/>
+
+  <!-- the name from subtree, name from label content rather than from its title
+    attribute -->
+  <label  for="from_label_ignoretitle"
+          title="Select your country of origin">Country:</label>
+  <select id="from_label_ignoretitle">
+    <option>Germany</option>
+    <option>Russia</option>
+  </select>
+
+  <!-- the name from subtree, name from html:p content rather than from its
+    title attribute -->
+  <p id="p_ignoretitle"
+     title="Select your country of origin">Choose country from.</p>
+  <select id="from_p_ignoretitle" aria-labelledby="p_ignoretitle">
+    <option>Germany</option>
+    <option>Russia</option>
+  </select>
+
+  <!-- the name from subtree, name from html:input value rather than from its
+    title attribute -->
+  <p id="from_input_ignoretitle" aria-labelledby="input_ignoretitle">Country</p>
+  <input id="input_ignoretitle"
+         value="Custom country"
+         title="Input your country of origin"/ >
 
   <!-- label element, label contains the button -->
   <label>text<button id="btn_label_inside">10</button>text</label>
