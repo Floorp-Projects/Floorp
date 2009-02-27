@@ -152,9 +152,6 @@ SessionStoreService.prototype = {
   // not-"dirty" windows usually don't need to have their data updated
   _dirtyWindows: {},
 
-  // collection of session states yet to be restored
-  _statesToRestore: {},
-
   // counts the number of crashes since the last clean start
   _recentCrashes: 0,
 
@@ -235,14 +232,10 @@ SessionStoreService.prototype = {
           this._recentCrashes = (this._initialState.session &&
                                  this._initialState.session.recentCrashes || 0) + 1;
           
-          if (this._needsRestorePage(this._initialState, this._recentCrashes)) {
+          if (this._needsRestorePage(this._initialState, this._recentCrashes))
             // replace the crashed session with a restore-page-only session
-            let pageData = {
-              url: "about:sessionrestore",
-              formdata: { "#sessionData": iniString }
-            };
-            this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
-          }
+            this._initialState =
+              { windows: [{ tabs: [{ entries: [{ url: "about:sessionrestore" }] }] }] };
         }
         
         // make sure that at least the first window doesn't have anything hidden
@@ -512,6 +505,10 @@ SessionStoreService.prototype = {
       this._loadState = STATE_RUNNING;
       this._lastSaveTime = Date.now();
       
+      // don't save during the first ten seconds
+      // (until most of the pages have been restored)
+      this.saveStateDelayed(aWindow, 10000);
+
       // restore a crashed session resp. resume the last session if requested
       if (this._initialState) {
         // make sure that the restored tabs are first in the window
@@ -526,14 +523,6 @@ SessionStoreService.prototype = {
                               getService(Ci.nsIObserverService);
         observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
       }
-      
-      // mark ourselves as running
-      this.saveState(true);
-    }
-    // this window was opened by _openWindowWithState
-    else if (!this._isWindowLoaded(aWindow)) {
-      let followUp = this._statesToRestore[aWindow.__SS_restoreID].windows.length == 1;
-      this.restoreWindow(aWindow, this._statesToRestore[aWindow.__SS_restoreID], true, followUp);
     }
     
     var tabbrowser = aWindow.getBrowser();
@@ -557,16 +546,6 @@ SessionStoreService.prototype = {
    *        Window reference
    */
   onClose: function sss_onClose(aWindow) {
-    // this window was about to be restored - conserve its original data, if any
-    let isFullyLoaded = this._isWindowLoaded(aWindow);
-    if (!isFullyLoaded) {
-      if (!aWindow.__SSi)
-        aWindow.__SSi = "window" + Date.now();
-      this._window[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
-      delete this._statesToRestore[aWindow.__SS_restoreID];
-      delete aWindow.__SS_restoreID;
-    }
-    
     // ignore windows not tracked by SessionStore
     if (!aWindow.__SSi || !this._windows[aWindow.__SSi]) {
       return;
@@ -583,22 +562,21 @@ SessionStoreService.prototype = {
     tabbrowser.removeEventListener("TabClose", this, true);
     tabbrowser.removeEventListener("TabSelect", this, true);
     
-    let winData = this._windows[aWindow.__SSi];
     if (this._loadState == STATE_RUNNING) { // window not closed during a regular shut-down 
       // update all window data for a last time
       this._collectWindowData(aWindow);
       
       // preserve this window's data (in case it was the last navigator:browser)
+      var winData = this._windows[aWindow.__SSi];
+      winData.title = aWindow.content.document.title;
+
       // if this is a popup window, append it to what we've already got (cf. bug 368677)
       if (!this._lastClosedWindows || !winData.isPopup)
         this._lastClosedWindows = [winData];
       else
         this._lastClosedWindows.push(winData);
-      
-      if (isFullyLoaded) {
-        winData.title = aWindow.content.document.title;
-        this._updateCookies(this._lastClosedWindows);
-      }
+
+      this._updateCookies(this._lastClosedWindows);
       
       // clear this window from the list
       delete this._windows[aWindow.__SSi];
@@ -612,7 +590,7 @@ SessionStoreService.prototype = {
     }
     
     // cache the window state until the window is completely gone
-    aWindow.__SS_dyingCache = winData;
+    aWindow.__SS_dyingCache = this._windows[aWindow.__SSi] || winData;
     
     delete aWindow.__SSi;
   },
@@ -779,16 +757,9 @@ SessionStoreService.prototype = {
   },
 
   setBrowserState: function sss_setBrowserState(aState) {
-    try {
-      var state = this._safeEval("(" + aState + ")");
-    }
-    catch (ex) { /* invalid state object - don't restore anything */ }
-    if (!state || !state.windows)
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    
     var window = this._getMostRecentBrowserWindow();
     if (!window) {
-      this._openWindowWithState(state);
+      this._openWindowWithState("(" + aState + ")");
       return;
     }
 
@@ -800,7 +771,7 @@ SessionStoreService.prototype = {
     });
 
     // restore to the given state
-    this.restoreWindow(window, state, true);
+    this.restoreWindow(window, "(" + aState + ")", true);
   },
 
   getWindowState: function sss_getWindowState(aWindow) {
@@ -1504,8 +1475,6 @@ SessionStoreService.prototype = {
     if (this._loadState == STATE_RUNNING) {
       // update the data for all windows with activities since the last save operation
       this._forEachBrowserWindow(function(aWindow) {
-        if (!this._isWindowLoaded(aWindow)) // window data is still in _statesToRestore
-          return;
         if (aUpdateAll || this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
           this._collectWindowData(aWindow);
         }
@@ -1528,15 +1497,6 @@ SessionStoreService.prototype = {
     }
     this._updateCookies(total);
     
-    // collect the data for all windows yet to be restored
-    for (ix in this._statesToRestore) {
-      for each (let winData in this._statesToRestore[ix].windows) {
-        total.push(winData);
-        if (!winData.isPopup)
-          nonPopupCount++;
-      }
-    }
-    
     // if no non-popup browser window remains open, return the state of the last closed window(s)
     if (nonPopupCount == 0 && this._lastClosedWindows) {
       // prepend the last non-popup browser window, so that if the user loads more tabs
@@ -1558,9 +1518,6 @@ SessionStoreService.prototype = {
    * @returns string
    */
   _getWindowState: function sss_getWindowState(aWindow) {
-    if (!this._isWindowLoaded(aWindow))
-      return this._statesToRestore[aWindow.__SS_restoreID];
-    
     if (this._loadState == STATE_RUNNING) {
       this._collectWindowData(aWindow);
     }
@@ -1572,9 +1529,6 @@ SessionStoreService.prototype = {
   },
 
   _collectWindowData: function sss_collectWindowData(aWindow) {
-    if (!this._isWindowLoaded(aWindow))
-      return;
-    
     // update the internal state data for this window
     this._saveWindowHistory(aWindow);
     this._updateTextAndScrollData(aWindow);
@@ -1762,12 +1716,6 @@ SessionStoreService.prototype = {
         tabbrowser.selectedTab = aTabs[0];
     }
 
-    if (!this._isWindowLoaded(aWindow)) {
-      // from now on, the data will come from the actual window
-      delete this._statesToRestore[aWindow.__SS_restoreID];
-      delete aWindow.__SS_restoreID;
-    }
-    
     // helper hash for ensuring unique frame IDs
     var idMap = { used: {} };
     this.restoreHistory(aWindow, aTabs, aTabData, idMap);
@@ -2367,10 +2315,13 @@ SessionStoreService.prototype = {
                  openWindow(null, this._prefBranch.getCharPref("chromeURL"), "_blank",
                             "chrome,dialog=no,all", argString);
     
-    do {
-      var ID = "window" + Math.random();
-    } while (ID in this._statesToRestore);
-    this._statesToRestore[(window.__SS_restoreID = ID)] = aState;
+    window.__SS_state = aState;
+    var _this = this;
+    window.addEventListener("load", function(aEvent) {
+      aEvent.currentTarget.removeEventListener("load", arguments.callee, true);
+      _this.restoreWindow(aEvent.currentTarget, aEvent.currentTarget.__SS_state, true, true);
+      delete aEvent.currentTarget.__SS_state;
+    }, true);
     
     return window;
   },
@@ -2554,16 +2505,6 @@ SessionStoreService.prototype = {
         observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
       }
     }
-  },
-
-  /**
-   * @param aWindow
-   *        Window reference
-   * @returns whether this window's data is still cached in _statesToRestore
-   *          because it's not fully loaded yet
-   */
-  _isWindowLoaded: function sss_isWindowLoaded(aWindow) {
-    return !aWindow.__SS_restoreID;
   },
 
 /* ........ Storage API .............. */
