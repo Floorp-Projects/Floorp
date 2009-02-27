@@ -7175,6 +7175,8 @@ nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
 
   // See nsIDocument
   if (!aDispatchStartTarget) {
+    // Set mIsShowing before firing events, in case those event handlers
+    // move us around.
     mIsShowing = PR_TRUE;
   }
  
@@ -7217,6 +7219,8 @@ nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
 
   // See nsIDocument
   if (!aDispatchStartTarget) {
+    // Set mIsShowing before firing events, in case those event handlers
+    // move us around.
     mIsShowing = PR_FALSE;
   }
 
