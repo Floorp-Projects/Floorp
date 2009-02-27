@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435293
+-->
+<head>
+  <title>Test for Bug 435293</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <style>
+    #test1 {
+      background: green;
+      height: 100px;
+      width: 100px;
+      -moz-transform: skew(30deg, 60deg) scale(2, 5) rotate(45deg) translate(2%, 50px);
+      -moz-transform-origin: 100% 50%;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435293">Mozilla Bug 435293</a>
+<div id="content">
+  <div id="test1" onclick="testFinish();">
+    test
+  </div>
+  
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+runtests();
+
+function runtests() {
+  function doClick() {
+    sendMouseEvent({type: 'click'}, 'test1');
+  }
+  setTimeout(doClick, 300);
+}
+
+function testFinish(){
+  ok(1, "We can still interact with the item after it is transformed");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
