@@ -1774,7 +1774,40 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
+static const char* kNSURIs[] = {
+  " ([none])",
+  " (xmlns)",
+  " (xml)",
+  " (xhtml)",
+  " (XLink)",
+  " (XSLT)",
+  " (XBL)",
+  " (MathML)",
+  " (RDF)",
+  " (XUL)"
+};
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
+  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+    char name[72];
+    PRUint32 nsid = tmp->GetDefaultNamespaceID();
+    nsCAutoString uri;
+    if (tmp->mDocumentURI)
+      tmp->mDocumentURI->GetSpec(uri);
+    if (nsid < NS_ARRAY_LENGTH(kNSURIs)) {
+      PR_snprintf(name, sizeof(name), "nsDocument%s %s", kNSURIs[nsid],
+                  uri.get());
+    }
+    else {
+      PR_snprintf(name, sizeof(name), "nsDocument %s", uri.get());
+    }
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsDocument), name);
+  }
+  else {
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsDocument),
+                    "nsDocument");
+  }
+
   // Always need to traverse script objects, so do that before we check
   // if we're uncollectable.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS

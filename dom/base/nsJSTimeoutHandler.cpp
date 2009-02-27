@@ -50,6 +50,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsDOMError.h"
 #include "nsGlobalWindow.h"
+#include "jsobj.h"
+#include "jsatom.h"
+#include "jsfun.h"
 #include "nsIContentSecurityPolicy.h"
 
 static const char kSetIntervalStr[] = "setInterval";
@@ -118,7 +121,34 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSScriptTimeoutHandler)
   tmp->ReleaseJSObjects();
 NS_IMPL_CYCLE_COLLECTION_ROOT_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSScriptTimeoutHandler)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
+  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+    nsCAutoString foo("nsJSScriptTimeoutHandler");
+    if (tmp->mExpr) {
+      foo.AppendLiteral(" [");
+      foo.Append(tmp->mFileName);
+      foo.AppendLiteral(":");
+      foo.AppendInt(tmp->mLineNo);
+      foo.AppendLiteral("]");
+    }
+    else if (tmp->mFunObj) {
+      JSFunction* fun = (JSFunction*)tmp->mFunObj->getPrivate();
+      if (fun->atom) {
+        JSString* name = ATOM_TO_STRING(fun->atom);
+        foo.AppendLiteral(" [");
+        foo.Append(JS_GetStringBytes(name));
+        foo.AppendLiteral("]");
+      }
+    }
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
+                    sizeof(nsJSScriptTimeoutHandler), foo.get());
+  }
+  else {
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(),
+                    sizeof(nsJSScriptTimeoutHandler),
+                    "nsJSScriptTimeoutHandler");
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgv)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
