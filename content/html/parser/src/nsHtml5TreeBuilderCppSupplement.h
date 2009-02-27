@@ -125,26 +125,18 @@ nsIContent*
 nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttributes)
 {
   nsIContent* content = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::html, aAttributes);
-  nsIDocument* doc = mParser->GetDocument();
-  PRUint32 childCount = doc->GetChildCount();
-  doc->AppendChildTo(content, PR_FALSE);
-  // XXX nsresult
-  nsNodeUtils::ContentInserted(doc, content, childCount);
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpAppendToDocument, content);
   return content;
 }
 
 void
 nsHtml5TreeBuilder::detachFromParent(nsIContent* aElement)
 {
-  Flush();
-  nsIContent* parent = aElement->GetParent();
-  if (parent) {
-    PRUint32 pos = parent->IndexOf(aElement);
-    NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
-    parent->RemoveChildAt(pos, PR_FALSE);
-    // XXX nsresult
-    nsNodeUtils::ContentRemoved(parent, aElement, pos);
-  }
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpDetach, aElement);
 }
 
 nsIContent*
@@ -159,24 +151,17 @@ nsHtml5TreeBuilder::shallowClone(nsIContent* aElement)
 void
 nsHtml5TreeBuilder::appendElement(nsIContent* aChild, nsIContent* aParent)
 {
-  PRUint32 childCount = aParent->GetChildCount();
-  aParent->AppendChildTo(aChild, PR_FALSE);
-  // XXX nsresult
-  mParser->NotifyAppend(aParent, childCount);
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(aChild, aParent);
 }
 
 void
 nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContent* aOldParent, nsIContent* aNewParent)
 {
-  Flush();
-  while (aOldParent->GetChildCount()) {
-    nsCOMPtr<nsIContent> child = aOldParent->GetChildAt(0);
-    aOldParent->RemoveChildAt(0, PR_FALSE);
-    nsNodeUtils::ContentRemoved(aOldParent, child, 0);
-    PRUint32 childCount = aNewParent->GetChildCount();
-    aNewParent->AppendChildTo(child, PR_FALSE);
-    mParser->NotifyAppend(aNewParent, childCount);
-  }
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpAppendChildrenToNewParent, aOldParent, aNewParent);
 }
 
 void
@@ -187,35 +172,17 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(PRUnichar* aBuffer, PRInt32 a
   // XXX nsresult and comment null check?
   text->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
-  nsIContent* parent = aTable->GetParent();
-  if (parent && parent->IsNodeOfType(nsINode::eELEMENT)) {
-    PRUint32 pos = parent->IndexOf(aTable);
-    parent->InsertChildAt(text, pos, PR_FALSE);
-    // XXX nsresult
-    nsNodeUtils::ContentInserted(parent, text, pos);
-  } else {
-    PRUint32 childCount = aStackParent->GetChildCount();
-    aStackParent->AppendChildTo(text, PR_FALSE);  
-    // XXX nsresult
-    mParser->NotifyAppend(aStackParent, childCount);    
-  }
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpFosterParent, text, aStackParent, aTable);
 }
 
 void
 nsHtml5TreeBuilder::insertFosterParentedChild(nsIContent* aChild, nsIContent* aTable, nsIContent* aStackParent)
 {
-  nsIContent* parent = aTable->GetParent();
-  if (parent && parent->IsNodeOfType(nsINode::eELEMENT)) {
-    PRUint32 pos = parent->IndexOf(aTable);
-    parent->InsertChildAt(aChild, pos, PR_FALSE);
-    // XXX nsresult
-    nsNodeUtils::ContentInserted(parent, aChild, pos);
-  } else {
-    PRUint32 childCount = aStackParent->GetChildCount();
-    aStackParent->AppendChildTo(aChild, PR_FALSE);  
-    // XXX nsresult
-    mParser->NotifyAppend(aStackParent, childCount);    
-  }  
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpFosterParent, aChild, aStackParent, aTable);
 }
 
 void
@@ -226,10 +193,9 @@ nsHtml5TreeBuilder::appendCharacters(nsIContent* aParent, PRUnichar* aBuffer, PR
   // XXX nsresult and comment null check?
   text->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
-  PRUint32 childCount = aParent->GetChildCount();
-  aParent->AppendChildTo(text, PR_FALSE);  
-  // XXX nsresult
-  mParser->NotifyAppend(aParent, childCount);
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(text, aParent);
 }
 
 void
@@ -240,10 +206,9 @@ nsHtml5TreeBuilder::appendComment(nsIContent* aParent, PRUnichar* aBuffer, PRInt
   // XXX nsresult and comment null check?
   comment->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
-  PRUint32 childCount = aParent->GetChildCount();
-  aParent->AppendChildTo(comment, PR_FALSE);  
-  // XXX nsresult
-  mParser->NotifyAppend(aParent, childCount);
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(comment, aParent);
 }
 
 void
@@ -255,24 +220,18 @@ nsHtml5TreeBuilder::appendCommentToDocument(PRUnichar* aBuffer, PRInt32 aStart, 
   // XXX nsresult and comment null check?
   comment->SetText(aBuffer + aStart, aLength, PR_FALSE);
   // XXX nsresult
-  PRUint32 childCount = doc->GetChildCount();
-  doc->AppendChildTo(comment, PR_FALSE);
-  // XXX nsresult
-  nsNodeUtils::ContentInserted(doc, comment, childCount);
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpAppendToDocument, comment);
 }
 
 void
 nsHtml5TreeBuilder::addAttributesToElement(nsIContent* aElement, nsHtml5HtmlAttributes* aAttributes)
 {
-  PRInt32 len = aAttributes->getLength();
-  for (PRInt32 i = 0; i < len; ++i) {
-    nsIAtom* localName = aAttributes->getLocalName(i);
-    PRInt32 nsuri = aAttributes->getURI(i);
-    if (!aElement->HasAttr(nsuri, localName)) {
-      aElement->SetAttr(nsuri, localName, aAttributes->getPrefix(i), *(aAttributes->getValue(i)), PR_TRUE);
-      // XXX should not fire mutation event here
-    }
-  }  
+  nsIContent* holder = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::div, aAttributes);
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpAddAttributes, holder, aElement);
 }
 
 void
@@ -290,6 +249,7 @@ nsHtml5TreeBuilder::start(PRBool fragment)
 void
 nsHtml5TreeBuilder::end()
 {
+  mOpQueue.Clear();
 }
 
 void
@@ -311,8 +271,9 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
   nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
   NS_ASSERTION(content, "doctype isn't content?");
 
-  mParser->GetDocument()->AppendChildTo(content, PR_TRUE);
-  // XXX rv
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  // XXX if null, OOM!
+  treeOp->Init(eTreeOpAppendToDocument, content);
 
   // nsXMLContentSink can flush here, but what's the point?
   // It can also interrupt here, but we can't.
@@ -327,9 +288,13 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   // Give autoloading links a chance to fire
   if (aNamespace == kNameSpaceID_XHTML) {
     if (aName == nsHtml5Atoms::body) {
-      mParser->StartLayout(PR_FALSE);
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      // XXX if null, OOM!
+      treeOp->Init(eTreeOpStartLayout, nsnull);
     }
-  } else {
+  }
+  #if 0
+    else {
     nsIDocShell* docShell = mParser->GetDocShell();
     if (docShell) {
       nsresult rv = aElement->MaybeTriggerAutoLink(docShell);
@@ -341,6 +306,7 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
       }
     }
   }
+  #endif
   MaybeFlushAndMaybeSuspend();  
 }
 
@@ -361,24 +327,30 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   if (aName == nsHtml5Atoms::script) {
 //    mConstrainSize = PR_TRUE; // XXX what is this?
     requestSuspension();
-    mParser->SetScriptElement(aElement);
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpScriptEnd, aElement);
+    Flush();
     return;
   }
   
   if (aName == nsHtml5Atoms::title) {
-    Flush();
-    aElement->DoneAddingChildren(PR_TRUE);
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpDoneAddingChildren, aElement);
     return;
   }
   
   if (aName == nsHtml5Atoms::style || (aNamespace == kNameSpaceID_XHTML && aName == nsHtml5Atoms::link)) {
-    mParser->UpdateStyleSheet(aElement);
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpUpdateStyleSheet, aElement);
     return;
   }
 
 
   if (aNamespace == kNameSpaceID_SVG) {
-#ifdef MOZ_SVG
+#if 0
     if (aElement->HasAttr(kNameSpaceID_None, nsHtml5Atoms::onload)) {
       Flush();
 
@@ -412,16 +384,16 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
 #endif
         aName == nsHtml5Atoms::object ||
         aName == nsHtml5Atoms::applet) {
-    Flush();
-    aElement->DoneAddingChildren(PR_TRUE);
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpDoneAddingChildren, aElement);
     return;
   }
   
-  if (aName == nsHtml5Atoms::base && !mHasProcessedBase) {
-    // The first base wins
-    mParser->ProcessBASETag(aElement);
-    // result?
-    mHasProcessedBase = PR_TRUE;
+  if (aName == nsHtml5Atoms::base) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    // XXX if null, OOM!
+    treeOp->Init(eTreeOpProcessBase, aElement);
     return;
   }
   
@@ -464,5 +436,8 @@ nsHtml5TreeBuilder::MaybeFlushAndMaybeSuspend()
 void
 nsHtml5TreeBuilder::Flush()
 {
-
+  for (PRUint32 i = 0; i < mOpQueue.Length(); ++i) {
+    mOpQueue[i].Perform(this);
+  }
+  mOpQueue.Clear();
 }
