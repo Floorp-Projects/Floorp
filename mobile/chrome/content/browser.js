@@ -71,6 +71,8 @@ var Browser = {
   _canvasBrowser : null,
   _tabs : [],
   _selectedTab : null,
+  _windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils),
 
   startup: function() {
     var self = this;
@@ -84,7 +86,7 @@ var Browser = {
 
     // XXX this should live elsewhere
     window.gSidebarVisible = false;
-    function panHandler(vr) {
+    function panHandler(vr, skipUpdates) {
       var visibleNow = ws.isWidgetVisible("browser-controls") || ws.isWidgetVisible("tabs-container");
 
       // XXX add code here to snap side panels fully out if they start to appear,
@@ -103,8 +105,9 @@ var Browser = {
       stack.style.backgroundPosition =  -vr.left + "px " + -vr.top + "px";
 
       // this is really only necessary for maemo, where we don't
-      // always repaint fast enough
-      window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).processUpdates();
+      // always repaint fast enough.
+      if (!skipUpdates)
+        self._windowUtils.processUpdates();
     }
 
     ws.setPanHandler(panHandler);
