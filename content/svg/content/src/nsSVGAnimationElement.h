@@ -91,6 +91,9 @@ public:
   virtual nsSMILTimeContainer* GetTimeContainer();
 
 protected:
+  // Implementation helpers
+  nsIContent* GetParentElement();
+
   nsSMILTimedElement   mTimedElement;
   nsSMILTimeContainer* mTimedDocumentRoot;
 };
