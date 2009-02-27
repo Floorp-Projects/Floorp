@@ -557,16 +557,6 @@ WeaveSvc.prototype = {
     this._os.notifyObservers(null, "weave:service:logout:finish", "");
   },
 
-  serverWipe: function WeaveSvc_serverWipe(onComplete) {
-    let cb = function WeaveSvc_serverWipeCb() {
-      let self = yield;
-      this._log.error("Server wipe not supported");
-      this.logout();
-    };
-    this._catchAll(
-      this._notify("server-wipe", "", this._localLock(cb))).async(this, onComplete);
-  },
-
   // stuff we need to to after login, before we can really do
   // anything (e.g. key setup)
   _remoteSetup: function WeaveSvc__remoteSetup() {
@@ -823,7 +813,7 @@ WeaveSvc.prototype = {
     yield this.resetClient(self.cb);
     this._log.info("Reset client data from freshStart.");
     this._log.info("Client metadata wiped, deleting server data");
-    yield this._wipeServer.async(this, self.cb);
+    yield this.wipeServer(self.cb);
 
     this._log.debug("Uploading new metadata record");
     meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
@@ -834,22 +824,30 @@ WeaveSvc.prototype = {
     yield res.put(self.cb, meta.serialize());
   },
 
-  // XXX deletes all known collections; we should have a way to delete
-  //     everything on the server by querying it to get all collections
-  _wipeServer: function WeaveSvc__wipeServer() {
-    let self = yield;
+  /**
+   * Wipe all user data from the server.
+   */
+  wipeServer: function WeaveSvc_wipeServer(onComplete) {
+    let fn = function WeaveSvc__wipeServer() {
+      let self = yield;
 
-    let engines = Engines.getAll();
-    engines.push(Clients, {name: "keys"}, {name: "crypto"});
-    for each (let engine in engines) {
-      let url = this.clusterURL + this.username + "/" + engine.name + "/";
-      let res = new Resource(url);
-      try {
-	yield res.delete(self.cb);
-      } catch (e) {
-	this._log.debug("Exception on delete: " + Utils.exceptionStr(e));
+      // Grab all the collections for the user
+      let userURL = this.clusterURL + this.username + "/";
+      let res = new Resource(userURL);
+      yield res.get(self.cb);
+
+      // Get the array of collections and delete each one
+      let allCollections = Svc.Json.decode(res.data);
+      for each (let name in allCollections) {
+        try {
+          yield new Resource(userURL + name).delete(self.cb);
+        }
+        catch(ex) {
+          this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));
+        }
       }
-    }
+    };
+    this._catchAll(this._notify("wipe-server", "", fn)).async(this, onComplete);
   },
 
   /**
