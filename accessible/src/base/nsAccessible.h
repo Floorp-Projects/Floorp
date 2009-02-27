@@ -77,6 +77,10 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
 #define NS_OK_EMPTY_NAME \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x23)
 
+// see nsAccessible::GetNameInternal
+#define NS_OK_NAME_FROM_TOOLTIP \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
+
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet
 enum { eChildCountUninitialized = -1 };
