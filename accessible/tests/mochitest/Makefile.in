@@ -87,7 +87,7 @@ _TEST_FILES =\
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleEditableText.html \
 		test_nsIAccessibleHyperLink.html \
-		$(warning test_nsIAccessibleHyperLink.xul temporarily disabled) \
+		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
 		test_nsIAccessibleTable_1.html \
