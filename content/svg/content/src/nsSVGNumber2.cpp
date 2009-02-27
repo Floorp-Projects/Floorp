@@ -129,13 +129,3 @@ nsSVGNumber2::ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
   return NS_OK;
 }
 
-nsresult
-NS_NewDOMSVGNumber(nsIDOMSVGNumber** aResult)
-{
-  *aResult = new DOMSVGNumber();
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
