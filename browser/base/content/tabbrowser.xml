@@ -2214,12 +2214,12 @@
             //   be handled in dragstart (i.e. not include the "detach"
             //   type), but what if the user wants to "merge" this window
             //   into another one?
-            if (aEvent.mozUserCancelled ||
+            var dt = aEvent.dataTransfer;
+            if (dt.mozUserCancelled ||
                 !this._dragLeftWindow ||
                 this.mTabs.length == 1)
               return;
 
-            var dt = aEvent.dataTransfer;
             // The dropEffect == "none" scenarios:
             // 1. No-op (no postion change) - "catched" by !dragLeftWindow
             // 2. On the browser chrome (on element which don't handle
