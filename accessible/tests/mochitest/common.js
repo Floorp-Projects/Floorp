@@ -37,6 +37,8 @@ const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
 const nsIObserverService = Components.interfaces.nsIObserverService;
 
 const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
+const nsIDOMEvent = Components.interfaces.nsIDOMEvent;
+const nsIDOMHTMLDocument = Components.interfaces.nsIDOMHTMLDocument;
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
 const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
 
@@ -164,6 +166,17 @@ function getNode(aNodeOrID)
 }
 
 /**
+ * Constants indicates getAccessible doesn't fail if there is no accessible.
+ */
+const DONOTFAIL_IF_NO_ACC = 1;
+
+/**
+ * Constants indicates getAccessible won't fail if accessible doesn't implement
+ * the requested interfaces.
+ */
+const DONOTFAIL_IF_NO_INTERFACE = 2;
+
+/**
  * Return accessible for the given identifier (may be ID attribute or DOM
  * element or accessible object).
  *
@@ -173,10 +186,10 @@ function getNode(aNodeOrID)
  *                           to query it/them from obtained accessible
  * @param aElmObj            [out, optional] object to store DOM element which
  *                           accessible is obtained for
- * @param aDoNotFailIfNoAcc  [in, optional] no error if the given identifier is
- *                           not accessible
+ * @param aDoNotFailIf       [in, optional] no error for special cases (see
+ *                            constants above)
  */
-function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
+function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
 {
   if (!aAccOrElmOrID)
     return;
@@ -209,7 +222,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
     }
 
     if (!acc) {
-      if (!aDoNotFailIfNoAcc)
+      if (!(aDoNotFailIf & DONOTFAIL_IF_NO_ACC))
         ok(false, "Can't get accessible for " + aAccOrElmOrID);
 
       return null;
@@ -224,7 +237,9 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
       try {
         acc.QueryInterface(aInterfaces[index]);
       } catch (e) {
-        ok(false, "Can't query " + aInterfaces[index] + " for " + aID);
+        if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
+          ok(false, "Can't query " + aInterfaces[index] + " for " + aID);
+
         return null;
       }
     }
@@ -246,7 +261,8 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIfNoAcc)
  */
 function isAccessible(aAccOrElmOrID)
 {
-  return getAccessible(aAccOrElmOrID, null, null, true) ? true : false;
+  return getAccessible(aAccOrElmOrID, null, null, DONOTFAIL_IF_NO_ACC) ?
+    true : false;
 }
 
 /**
@@ -315,7 +331,8 @@ function prettyName(aIdentifier)
 {
   if (aIdentifier instanceof nsIAccessible) {
     var acc = getAccessible(aIdentifier, [nsIAccessNode]);
-    return getNodePrettyName(acc.DOMNode);
+    return getNodePrettyName(acc.DOMNode) + ", role: " +
+      roleToString(acc.finalRole);
   }
 
   if (aIdentifier instanceof nsIDOMNode)

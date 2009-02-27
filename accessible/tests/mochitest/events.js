@@ -1,8 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
 
-const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 const EVENT_DOM_DESTROY = nsIAccessibleEvent.EVENT_DOM_DESTROY;
+const EVENT_NAME_CHANGE = nsIAccessibleEvent.EVENT_NAME_CHANGE;
+const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 
 ////////////////////////////////////////////////////////////////////////////////
 // General
@@ -91,24 +92,35 @@ function unregisterA11yEventListener(aEventType, aEventHandler)
  *     // Generates accessible event or event sequence.
  *     invoke: function(){},
  *
- *     // Invoker's check of handled event for correctness [optional].
+ *     // [optional] Invoker's check of handled event for correctness.
  *     check: function(aEvent){},
  *
- *     // Is called when event of registered type is handled.
+ *     // [optional] Is called when event of registered type is handled.
  *     debugCheck: function(aEvent){},
  *
- *     // DOM node event is generated for (the case when invoker generates
- *     // single event, see 'eventSeq' property).
- *     DOMNode getter() {},
+ *     // [ignored if 'eventSeq' is defined] DOM node event is generated for
+ *     // (used in the case when invoker expects single event).
+ *     DOMNode getter: function() {},
  *
  *     // Array of items defining events expected (or not expected, see
- *     // 'doNotExpectEvents' property) on invoker's action. Every item is array
- *     // with two elements, first element is event type, second element is
- *     // event target (DOM node).
+ *     // 'doNotExpectEvents' property) on invoker's action.
+ *     //
+ *     // Every array item should be either
+ *     // 1) an array consisted from two elements, the first element is DOM or
+ *     // a11y event type, second element is event target (DOM node or
+ *     // accessible).
+ *     //
+ *     // 2) object (invoker's checker object) like
+ *     // var checker = {
+ *     //   type getter: function() {}, // DOM or a11y event type
+ *     //   target getter: function() {}, // DOM node or accessible
+ *     //   check: function(aEvent) {},
+ *     //   getID: function() {}
+ *     // };
  *     eventSeq getter() {},
  *
- *     // Boolean indicates if events specified by 'eventSeq' property shouldn't
- *     // be triggerd by invoker.
+ *     // [optional, used together with 'eventSeq'] Boolean indicates if events
+ *     // specified by 'eventSeq' property shouldn't be triggerd by invoker.
  *     doNotExpectEvents getter() {},
  *
  *     // The ID of invoker.
@@ -156,17 +168,16 @@ function eventQueue(aEventType)
 
     var invoker = this.getInvoker();
     if (invoker) {
-      var id = invoker.getID();
-
       if (invoker.wasCaught) {
-        for (var jdx = 0; jdx < invoker.wasCaught.length; jdx++) {
-          var seq = this.mEventSeq;
-          var type = seq[jdx][0];
-          var typeStr = gAccRetrieval.getStringEventType(type);
+        for (var idx = 0; idx < invoker.wasCaught.length; idx++) {
+          var id = this.getEventID(idx);
+          var type = this.getEventType(idx);
+          var typeStr = (typeof type == "string") ?
+            type : gAccRetrieval.getStringEventType(type);
 
           var msg = "test with ID = '" + id + "' failed. ";
           if (invoker.doNotExpectEvents) {
-            var wasCaught = invoker.wasCaught[jdx];
+            var wasCaught = invoker.wasCaught[idx];
             if (!testFailed)
               testFailed = wasCaught;
 
@@ -174,7 +185,7 @@ function eventQueue(aEventType)
                msg + "There is unexpected " + typeStr + " event.");
 
           } else {
-            var wasCaught = invoker.wasCaught[jdx];
+            var wasCaught = invoker.wasCaught[idx];
             if (!testFailed)
               testFailed = !wasCaught;
 
@@ -184,8 +195,11 @@ function eventQueue(aEventType)
         }
       } else {
         testFailed = true;
-        ok(false,
-           "test with ID = '" + id + "' failed. No events were registered.");
+        for (var idx = 0; idx < this.mEventSeq.length; idx++) {
+          var id = this.getEventID(idx);
+          ok(false,
+             "test with ID = '" + id + "' failed. No events were registered.");
+        }
       }
     }
 
@@ -237,35 +251,28 @@ function eventQueue(aEventType)
       // Search through event sequence to ensure it doesn't contain handled
       // event.
       for (var idx = 0; idx < this.mEventSeq.length; idx++) {
-        if (aEvent.eventType == this.mEventSeq[idx][0] &&
-            aEvent.DOMNode == this.mEventSeq[idx][1]) {
+        if (this.compareEvents(idx, aEvent))
           invoker.wasCaught[idx] = true;
-        }
       }
     } else {
       // We wait for events in order specified by eventSeq variable.
       var idx = this.mEventSeqIdx + 1;
 
       if (gA11yEventDumpID) { // debug stuff
-        var eventType = this.mEventSeq[idx][0];
-        var target = this.mEventSeq[idx][1];
 
-        var info = "Event queue processing. Event type: ";
-        info += gAccRetrieval.getStringEventType(eventType) + ". Target: ";
-        info += (target.localName ? target.localName : target);
-        if (target.nodeType == nsIDOMNode.ELEMENT_NODE &&
-            target.hasAttribute("id"))
-          info += " '" + target.getAttribute("id") + "'";
+        var currType = this.getEventType(idx);
+        var currTarget = this.getEventTarget(idx);
+
+        var info = "Event queue processing. Expected event type: ";
+        info += (typeof currType == "string") ?
+          currType : eventTypeToString(currType);
+        info += ". Target: " + prettyName(currTarget);
 
         dumpInfoToDOM(info);
       }
 
-      if (aEvent.eventType == this.mEventSeq[idx][0] &&
-          aEvent.DOMNode == this.mEventSeq[idx][1]) {
-
-        if ("check" in invoker)
-          invoker.check(aEvent);
-
+      if (this.compareEvents(idx, aEvent)) {
+        this.checkEvent(idx, aEvent);
         invoker.wasCaught[idx] = true;
 
         if (idx == this.mEventSeq.length - 1) {
@@ -300,19 +307,91 @@ function eventQueue(aEventType)
     if (this.mEventSeq) {
       aInvoker.wasCaught = new Array(this.mEventSeq.length);
 
-      for (var idx = 0; idx < this.mEventSeq.length; idx++)
-        addA11yEventListener(this.mEventSeq[idx][0], this);
+      for (var idx = 0; idx < this.mEventSeq.length; idx++) {
+        var eventType = this.getEventType(idx);
+        if (typeof eventType == "string") // DOM event
+          document.addEventListener(eventType, this, true);
+        else // A11y event
+          addA11yEventListener(eventType, this);
+      }
     }
   }
 
   this.clearEventHandler = function eventQueue_clearEventHandler()
   {
     if (this.mEventSeq) {
-      for (var idx = 0; idx < this.mEventSeq.length; idx++)
-        removeA11yEventListener(this.mEventSeq[idx][0], this);
-      
+      for (var idx = 0; idx < this.mEventSeq.length; idx++) {
+        var eventType = this.getEventType(idx);
+        if (typeof eventType == "string") // DOM event
+          document.removeEventListener(eventType, this, true);
+        else // A11y event
+          removeA11yEventListener(eventType, this);
+      }
+
       this.mEventSeq = null;
     }
+  }
+
+  this.getEventType = function eventQueue_getEventType(aIdx)
+  {
+    var eventItem = this.mEventSeq[aIdx];
+    if ("type" in eventItem)
+      return eventItem.type;
+
+    return eventItem[0];
+  }
+
+  this.getEventTarget = function eventQueue_getEventTarget(aIdx)
+  {
+    var eventItem = this.mEventSeq[aIdx];
+    if ("target" in eventItem)
+      return eventItem.target;
+
+    return eventItem[1];
+  }
+
+  this.compareEvents = function eventQueue_compareEvents(aIdx, aEvent)
+  {
+    var eventType1 = this.getEventType(aIdx);
+
+    var eventType2 = (aEvent instanceof nsIDOMEvent) ?
+      aEvent.type : aEvent.eventType;
+
+    if (eventType1 != eventType2)
+      return false;
+
+    var target1 = this.getEventTarget(aIdx);
+    if (target1 instanceof nsIAccessible) {
+      var target2 = (aEvent instanceof nsIDOMEvent) ?
+        getAccessible(aEvent.target) : aEvent.accessible;
+
+      return target1 == target2;
+    }
+
+    var target2 = (aEvent instanceof nsIDOMEvent) ?
+      aEvent.target : aEvent.DOMNode;
+    return target1 == target2;
+  }
+
+  this.checkEvent = function eventQueue_checkEvent(aIdx, aEvent)
+  {
+    var eventItem = this.mEventSeq[aIdx];
+    if ("check" in eventItem)
+      eventItem.check(aEvent);
+
+    var invoker = this.getInvoker();
+    if ("check" in invoker)
+      invoker.check(aEvent);
+  }
+
+  this.getEventID = function eventQueue_getEventID(aIdx)
+  {
+    var eventItem = this.mEventSeq[aIdx];
+    if ("getID" in eventItem)
+      return eventItem.getID();
+
+    var invoker = this.getInvoker();
+    return invoker.getID();
   }
 
   this.mDefEventType = aEventType;
@@ -356,13 +435,9 @@ var gA11yEventObserver =
         parent = parent.parentNode;
 
       if (parent != dumpElm) {
-        var type = gAccRetrieval.getStringEventType(event.eventType);
-        var info = "Event type: " + type + ". Target: ";
-        info += (target.localName ? target.localName : target);
-
-        if (target.nodeType == nsIDOMNode.ELEMENT_NODE &&
-            target.hasAttribute("id"))
-          info += " '" + target.getAttribute("id") + "'";
+        var type = eventTypeToString(event.eventType);
+        var info = "Event type: " + type;
+        info += ". Target: " + prettyName(event.accessible);
 
         if (listenersArray)
           info += ". Listeners count: " + listenersArray.length;
@@ -428,7 +503,11 @@ function dumpInfoToDOM(aInfo)
     return;
 
   var dumpElm = document.getElementById(gA11yEventDumpID);
-  var div = document.createElement("div");      
-  div.textContent = aInfo;
-  dumpElm.appendChild(div);
+
+  var containerTagName = document instanceof nsIDOMHTMLDocument ?
+    "div" : "description";
+  var container = document.createElement(containerTagName);
+
+  container.textContent = aInfo;
+  dumpElm.appendChild(container);
 }
