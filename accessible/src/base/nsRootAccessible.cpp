@@ -992,7 +992,14 @@ nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
   if (itemType == nsIDocShellTreeItem::typeContent) {
     nsCOMPtr<nsIAccessibleDocument> accDoc =
       GetDocAccessibleFor(aStart, PR_TRUE);
+
+    // Hidden documents don't have accessibles (like SeaMonkey's sidebar),
+    // they are of no interest for a11y.
+    if (!accDoc)
+      return nsnull;
+
     nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(accDoc);
+
     // If ancestor chain of accessibles is not completely visible,
     // don't use this one. This happens for example if it's inside
     // a background tab (tabbed browsing)
