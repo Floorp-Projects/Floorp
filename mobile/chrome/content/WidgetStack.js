@@ -722,6 +722,18 @@ WidgetStack.prototype = {
     this._adjustViewingRect();
   },
 
+  beginUpdateBatch: function startUpdate() {
+    this._skipViewportUpdates = true;
+    this._startViewportBoundsString = this._viewportBounds.toString();
+  },
+  
+  endUpdateBatch: function endUpdate() {
+    this._skipViewportUpdates = false;
+    let boundsSizeChanged =
+      this._startViewportBoundsString != this._viewportBounds.toString();
+    this._callViewportUpdateHandler(boundsSizeChanged);
+  },
+
   //
   // Internal code
   //
@@ -880,7 +892,7 @@ WidgetStack.prototype = {
   },
 
   _callViewportUpdateHandler: function _callViewportUpdateHandler(boundsChanged) {
-    if (!this._viewport || !this._viewportUpdateHandler)
+    if (!this._viewport || !this._viewportUpdateHandler || this._skipViewportUpdates)
       return;
 
     let vwib = this._viewport.viewportInnerBounds.clone();
@@ -1083,9 +1095,8 @@ WidgetStack.prototype = {
       this._commitState(state);
     }
 
-    if (this._panHandler) {
-      this._panHandler.apply(window, [vr.clone()]);
-    }
+    if (this._panHandler)
+      this._panHandler.apply(window, [vr.clone(), this._skipViewportUpdates]);
   },
 
   _dragUpdate: function () {
