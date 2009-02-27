@@ -274,7 +274,7 @@ EventHandlingSuppressed(nsPIDOMEventTarget* aTarget)
     }
   }
 
-  return (doc && doc->EventHandlingSuppressed()) ? doc : nsnull;
+  return (doc && doc->EventHandlingSuppressed()) ? doc.get() : nsnull;
 }
 
 static void
