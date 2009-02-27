@@ -72,8 +72,13 @@ TabEngine.prototype = {
 
   getClientById: function TabEngine_getClientById(id) {
     return this._store._remoteClients[id];
-  }
+  },
 
+  _resetClient: function TabEngine__resetClient() {
+    let self = yield;
+    this.resetLastSync();
+    this._store.wipe();
+  }
 };
 
 

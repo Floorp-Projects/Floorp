@@ -320,9 +320,10 @@ WeaveSvc.prototype = {
     this._initLogs();
     this._log.info("Weave " + WEAVE_VERSION + " initializing");
 
+    // Reset our sync id if we're upgrading, so sync knows to reset local data
     if (WEAVE_VERSION != Svc.Prefs.get("lastversion")) {
-      this._log.warn("Wiping client from _onStartup.");
-      this._wipeClientMetadata();
+      this._log.info("Resetting client syncID from _onStartup.");
+      Clients.resetSyncID();
     }
 
     let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
@@ -619,10 +620,10 @@ WeaveSvc.prototype = {
       return;
 
     } else if (meta.payload.syncID != Clients.syncID) {
-      this._log.info("Resetting client because of syncID mismatch.");
-      this._wipeClientMetadata();
+      yield this.resetClient(self.cb);
+      this._log.info("Reset client because of syncID mismatch.");
       Clients.syncID = meta.payload.syncID;
-      this._log.info("Cleared local caches after server wipe was detected");
+      this._log.info("Reset the client after a server/client sync ID mismatch");
     }
 
     let needKeys = true;
@@ -819,8 +820,8 @@ WeaveSvc.prototype = {
 
   _freshStart: function WeaveSvc__freshStart() {
     let self = yield;
-    this._log.warn("Wiping client data from freshStart.");
-    this._wipeClientMetadata();
+    yield this.resetClient(self.cb);
+    this._log.info("Reset client data from freshStart.");
     this._log.info("Client metadata wiped, deleting server data");
     yield this._wipeServer.async(this, self.cb);
 
@@ -838,8 +839,6 @@ WeaveSvc.prototype = {
   _wipeServer: function WeaveSvc__wipeServer() {
     let self = yield;
 
-    Clients.resetSyncID();
-
     let engines = Engines.getAll();
     engines.push(Clients, {name: "keys"}, {name: "crypto"});
     for each (let engine in engines) {
@@ -850,38 +849,43 @@ WeaveSvc.prototype = {
       } catch (e) {
 	this._log.debug("Exception on delete: " + Utils.exceptionStr(e));
       }
-      if (engine.resetLastSync)
-	engine.resetLastSync();
     }
   },
 
-  _wipeClientMetadata: function WeaveSvc__wipeClientMetadata() {
-    this.clearLogs();
-    this._log.info("Logs reinitialized");
+  /**
+   * Reset the client by getting rid of any local server data and client data.
+   */
+  resetClient: function WeaveSvc_resetClient(onComplete) {
+    let fn = function WeaveSvc__resetClient() {
+      let self = yield;
 
-    PubKeys.clearCache();
-    PrivKeys.clearCache();
-    CryptoMetas.clearCache();
-    Records.clearCache();
+      // First drop old logs to track client resetting behavior
+      this.clearLogs();
+      this._log.info("Logs reinitialized for client reset");
 
-    Clients._store.wipe();
-    if (Engines.get("tabs"))
-      Engines.get("tabs")._store.wipe();
+      // Pretend we've never synced to the server and drop cached data
+      Clients.resetSyncID();
+      Svc.Prefs.reset("lastSync");
+      for each (let cache in [PubKeys, PrivKeys, CryptoMetas, Records])
+        cache.clearCache();
 
-    for each (let engine in Engines.getAll().push(Clients)) {
-      engine.resetLastSync();
+      // Have each engine drop any temporary meta data
+      for each (let engine in [Clients].concat(Engines.getAll()))
+        yield engine.resetClient(self.cb);
+
+      // XXX Bug 480448: Delete any snapshots from old code
+      try {
+        let cruft = this._dirSvc.get("ProfD", Ci.nsIFile);
+        cruft.QueryInterface(Ci.nsILocalFile);
+        cruft.append("weave");
+        cruft.append("snapshots");
+        if (cruft.exists())
+          cruft.remove(true);
+      } catch (e) {
+        this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
+      }
     }
-
-    try {
-      let cruft = this._dirSvc.get("ProfD", Ci.nsIFile);
-      cruft.QueryInterface(Ci.nsILocalFile);
-      cruft.append("weave");
-      cruft.append("snapshots");
-      if (cruft.exists())
-	cruft.remove(true);
-    } catch (e) {
-      this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
-    }
+    this._catchAll(this._notify("reset-client", "", fn)).async(this, onComplete);
   }
 };
 

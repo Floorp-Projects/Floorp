@@ -133,6 +133,12 @@ ClientEngine.prototype = {
       }
       break;
     }
+  },
+
+  _resetClient: function ClientEngine__resetClient() {
+    let self = yield;
+    this.resetLastSync();
+    this._store.wipe();
   }
 };
 
