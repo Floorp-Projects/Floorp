@@ -104,6 +104,15 @@
       testRelation(labelAcc, RELATION_LABEL_FOR, groupboxAcc);
       testRelation(groupboxAcc, RELATION_LABELLED_BY, labelAcc);
 
+      // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
+      // (fixed in bug 366527)
+      testRelation("tabpanel1", RELATION_LABELLED_BY, "tab1");
+      testRelation("tab1", RELATION_LABEL_FOR, "tabpanel1");
+      testRelation("tabpanel2", RELATION_LABELLED_BY, "tab2");
+      testRelation("tab2", RELATION_LABEL_FOR, "tabpanel2");
+      testRelation("tabpanel3", RELATION_LABELLED_BY, "tab3");
+      testRelation("tab3", RELATION_LABEL_FOR, "tabpanel3");
+
       // finish test
       SimpleTest.finish();
     }
@@ -183,6 +192,26 @@
     <groupbox id="groupbox">
       <caption label="caption"/>
     </groupbox>
+
+    <tabbox>
+      <tabs>
+        <tab label="tab1" id="tab1"/>
+        <tab label="tab2" id="tab2" linkedpanel="tabpanel2"/>
+        <tab label="tab3" id="tab3" linkedpanel="tabpanel3"/>
+      </tabs>
+      <tabpanels>
+        <tabpanel id="tabpanel1">
+          <description>tabpanel1</description>
+        </tabpanel>
+        <tabpanel id="tabpanel3">
+          <description>tabpanel3</description>
+        </tabpanel>
+        <tabpanel id="tabpanel2">
+          <description>tabpanel2</description>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+
  </vbox>
 </window>
 
