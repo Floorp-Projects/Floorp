@@ -62,6 +62,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
     fragment(PR_FALSE),
     formPointer(nsnull),
     headPointer(nsnull),
+    mFlushing(PR_FALSE),
     mParser(aParser)
 {
   MOZ_COUNT_CTOR(nsHtml5TreeBuilder);
@@ -71,6 +72,7 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 {
   MOZ_COUNT_DTOR(nsHtml5TreeBuilder);
   delete MARKER;
+  mOpQueue.Clear();
 }
 
 nsIContent*
@@ -244,6 +246,7 @@ nsHtml5TreeBuilder::start(PRBool fragment)
     mParser->WillBuildModelImpl();
     mParser->GetDocument()->BeginLoad(); // XXX fragment?
   }
+  mFlushing = PR_FALSE;
 }
 
 void
@@ -436,8 +439,12 @@ nsHtml5TreeBuilder::MaybeFlushAndMaybeSuspend()
 void
 nsHtml5TreeBuilder::Flush()
 {
-  for (PRUint32 i = 0; i < mOpQueue.Length(); ++i) {
-    mOpQueue[i].Perform(this);
+  if (!mFlushing) {
+    mFlushing = PR_TRUE;
+    for (PRUint32 i = 0; i < mOpQueue.Length(); ++i) {
+      mOpQueue[i].Perform(this);
+    }
+    mOpQueue.Clear();
+    mFlushing = PR_FALSE;
   }
-  mOpQueue.Clear();
 }
