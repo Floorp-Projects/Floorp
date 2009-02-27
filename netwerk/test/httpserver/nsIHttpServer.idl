@@ -349,7 +349,7 @@ interface nsIHttpRequestHandler : nsISupports
 /**
  * A representation of the data included in an HTTP request.
  */
-[scriptable, uuid(ed8bdb6b-83e0-43aB-a412-a9863bd79394)]
+[scriptable, uuid(80cbca71-dc51-4fa0-9010-1cec262dbd4a)]
 interface nsIHttpRequestMetadata : nsIPropertyBag
 {
   /**
@@ -408,10 +408,11 @@ interface nsIHttpRequestMetadata : nsIPropertyBag
    *   header field names are case-insensitive, this method produces equivalent
    *   results for "HeAdER" and "hEADer" as fieldName
    * @returns
-   *   the field value for the given header; note that this value may be
-   *   normalized (e.g., leading/trailing whitespace removed from the value [or
-   *   from the values which make this up, if the header is a comma-separated
-   *   list of values], whitespace runs compressed to single spaces, etc.)
+   *   The result is a string containing the individual values of the header,
+   *   usually separated with a comma.  The headers WWW-Authenticate,
+   *   Proxy-Authenticate, and Set-Cookie violate the HTTP specification,
+   *   however, and for these headers only the separator string is '\n'.
+   *
    * @throws NS_ERROR_INVALID_ARG
    *   if fieldName does not constitute a valid header field name
    * @throws NS_ERROR_NOT_AVAILABLE
