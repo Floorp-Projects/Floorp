@@ -207,12 +207,6 @@ var PlacesOrganizer = {
       return;
 
     var node = this._places.selectedNode;
-    // When we invalidate a container we use suppressSelectionEvent, when it is
-    // unset a select event is fired, in many cases the selection did not really
-    // change, so we should check for it, and return early in such a case.
-    if (node == this._cachedLeftPaneSelectedNode)
-      return;
-    this._cachedLeftPaneSelectedNode = node;
     var queries = asQuery(node).getQueries({});
 
     // Items are only excluded on the left pane
@@ -232,6 +226,17 @@ var PlacesOrganizer = {
 
     // Make sure the search UI is hidden.
     PlacesSearchBox.hideSearchUI();
+
+    // When we invalidate a container we use suppressSelectionEvent, when it is
+    // unset a select event is fired, in many cases the selection did not really
+    // change, so we should check for it, and return early in such a case. Note
+    // that we cannot return any earlier than this point, because when
+    // !resetSearchBox, we need to update location and hide the UI as above,
+    // even though the selection has not changed.
+    if (node == this._cachedLeftPaneSelectedNode)
+      return;
+    this._cachedLeftPaneSelectedNode = node;
+
     if (resetSearchBox)
       PlacesSearchBox.searchFilter.reset();
 
