@@ -171,11 +171,17 @@ PrivateBrowsingService.prototype = {
 
         let browser = Cc["@mozilla.org/appshell/window-mediator;1"].
                       getService(Ci.nsIWindowMediator).
-                      getMostRecentWindow("navigator:browser").gBrowser;
-        // this ensures a clean slate from which to transition into or out of
-        // private browsing
-        browser.addTab();
-        browser.removeTab(browser.tabContainer.firstChild);
+                      getMostRecentWindow("navigator:browser");
+
+        // if all browser windows are closed (i.e. on Mac) we won't have a window here
+        // this is only needed on Mac, but it's just good hygiene
+        if (browser) {
+          // this ensures a clean slate from which to transition into or out of
+          // private browsing
+          browser = browser.gBrowser;
+          browser.addTab();
+          browser.removeTab(browser.tabContainer.firstChild);
+        }
       }
     }
     else
