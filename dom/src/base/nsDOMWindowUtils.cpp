@@ -684,6 +684,16 @@ nsDOMWindowUtils::GetIsMozAfterPaintPending(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::ClearMozAfterPaintEvents()
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_OK;
+  presContext->ClearMozAfterPaintEvents();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
 {
   PRBool hasCap = PR_FALSE;
