@@ -2817,8 +2817,8 @@ ServerHandler.prototype =
                               .QueryInterface(Ci.nsISupportsString)
                               .data;
       var values = head.getHeaderValues(fieldName);
-      for (index in values)
-        preamble += fieldName + ": " + values[index] + "\r\n";
+      for (var i = 0, sz = values.length; i < sz; i++)
+        preamble += fieldName + ": " + values[i] + "\r\n";
     }
 
     // end request-line/headers
