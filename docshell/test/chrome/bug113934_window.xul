@@ -98,7 +98,7 @@
               node.addEventListener("page" + type, listener, false);
 
               listener.detach = function() {
-	node.removeEventListener("page" + type, listener, false);
+                node.removeEventListener("page" + type, listener, false);
               }
               return listener;
             }
