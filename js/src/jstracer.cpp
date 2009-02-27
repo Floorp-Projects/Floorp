@@ -5563,20 +5563,18 @@ JS_STATIC_ASSERT(offsetof(JSObjectOps, newObjectMap) == 0);
 bool
 TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
 {
+#define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
+    if (OP(map->ops) != OP(&js_ObjectOps))
+        return false;
+
     ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSObjectMap, ops)), "ops");
     LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset);
-
-#define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
-
-    if (OP(map->ops) == OP(&js_ObjectOps)) {
-        guard(true, addName(lir->ins2(LIR_eq, n, INS_CONSTFUNPTR(OP(&js_ObjectOps))),
-                            "guard(native-map)"),
-              MISMATCH_EXIT);
-        return true;
-    }
-
+    guard(true,
+          addName(lir->ins2(LIR_eq, n, INS_CONSTFUNPTR(OP(&js_ObjectOps))), "guard(native-map)"),
+          BRANCH_EXIT);
 #undef OP
-    ABORT_TRACE("non-native map");
+
+    return true;
 }
 
 JS_REQUIRES_STACK bool
@@ -5621,7 +5619,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
 
         if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
-            return false;
+            ABORT_TRACE("non-native map");
     }
 
     JSAtom* atom;
@@ -5722,7 +5720,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
         map_ins = lir->insLoad(LIR_ldp, obj2_ins, (int)offsetof(JSObject, map));
         if (!map_is_native(obj2->map, map_ins, ops_ins))
-            return false;
+            ABORT_TRACE("non-native map");
 
         LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                   "shape");
@@ -6021,7 +6019,7 @@ TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offs
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, op_offset))
-        return false;
+        ABORT_TRACE("non-native map");
 
     uint32 shape = OBJ_SHAPE(obj);
     if (JSID_IS_ATOM(id) && shape == treeInfo->globalShape)
@@ -7057,7 +7055,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
-        return false;
+        ABORT_TRACE("non-native map");
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
     guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
@@ -7710,14 +7708,14 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         for (;;) {
             LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
             LIns* ops_ins;
-            if (!map_is_native(obj->map, map_ins, ops_ins))
+            if (map_is_native(obj->map, map_ins, ops_ins)) {
+                LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
+                                          "shape");
+                guard(true,
+                      addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
+                      BRANCH_EXIT);
+            } else if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
                 ABORT_TRACE("non-native object involved in undefined property access");
-
-            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                      "shape");
-            guard(true,
-                  addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
-                  BRANCH_EXIT);
 
             obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO]);
             if (!obj)
