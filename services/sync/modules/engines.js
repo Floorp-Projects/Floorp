@@ -291,22 +291,23 @@ SyncEngine.prototype = {
     let item;
     let count = {applied: 0, reconciled: 0};
     this._lastSyncTmp = 0;
+
     while ((item = yield newitems.iter.next(self.cb))) {
       this._lowMemCheck();
       try {
-      yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+        yield item.decrypt(self.cb, ID.get('WeaveCryptoID').password);
+        if (yield this._reconcile.async(this, self.cb, item)) {
+          count.applied++;
+          yield this._applyIncoming.async(this, self.cb, item);
+        } else {
+          count.reconciled++;
+          this._log.trace("Skipping reconciled incoming item " + item.id);
+          if (this._lastSyncTmp < item.modified)
+            this._lastSyncTmp = item.modified;
+        }
       } catch (e) {
-	this._log.error("Could not decrypt incoming record: " +
+	this._log.error("Could not process incoming record: " +
 			Utils.exceptionStr(e));
-      }
-      if (yield this._reconcile.async(this, self.cb, item)) {
-        count.applied++;
-        yield this._applyIncoming.async(this, self.cb, item);
-      } else {
-        count.reconciled++;
-        this._log.trace("Skipping reconciled incoming item " + item.id);
-        if (this._lastSyncTmp < item.modified)
-          this._lastSyncTmp = item.modified;
       }
     }
     if (this.lastSync < this._lastSyncTmp)
