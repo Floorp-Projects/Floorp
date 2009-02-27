@@ -373,6 +373,6 @@ nsXULTabpanelAccessible::GetRelationByType(PRUint32 aRelationType,
     childAcc.swap(acc);
   }
 
-  return NS_OK;
+  return nsRelUtils::AddTarget(aRelationType, aRelation, foundTabAcc);
 }
 
