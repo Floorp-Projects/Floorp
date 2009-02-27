@@ -46,6 +46,7 @@
 #include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
+#include "nsHtml5TreeOperation.h"
 
 class nsHtml5Parser;
 
