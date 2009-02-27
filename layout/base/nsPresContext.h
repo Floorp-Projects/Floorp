@@ -802,6 +802,11 @@ public:
     return !mSameDocDirtyRegion.IsEmpty() || !mCrossDocDirtyRegion.IsEmpty();
   }
 
+  void ClearMozAfterPaintEvents() {
+    mSameDocDirtyRegion.SetEmpty();
+    mCrossDocDirtyRegion.SetEmpty();
+  }
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
