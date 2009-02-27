@@ -150,11 +150,26 @@ Engine.prototype = {
     this._notify("wipe-server", this.name, this._wipeServer).async(this, onComplete);
   },
 
+  /**
+   * Get rid of any local meta-data
+   */
+  resetClient: function Engine_resetClient(onComplete) {
+    if (!this._resetClient)
+      throw "engine does not implement _resetClient method";
+
+    this._notify("reset-client", this.name, this._resetClient).
+      async(this, onComplete);
+  },
+
   _wipeClient: function Engine__wipeClient() {
     let self = yield;
+
+    yield this.resetClient(this.cb);
+
     this._log.debug("Deleting all local data");
     this._store.wipe();
   },
+
   wipeClient: function Engine_wipeClient(onComplete) {
     this._notify("wipe-client", this.name, this._wipeClient).async(this, onComplete);
   }
@@ -481,5 +496,10 @@ SyncEngine.prototype = {
     yield all.delete(self.cb);
     let crypto = new Resource(this.cryptoMetaURL);
     yield crypto.delete(self.cb);
+  },
+
+  _resetClient: function SyncEngine__resetClient() {
+    let self = yield;
+    this.resetLastSync();
   }
 };
