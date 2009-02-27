@@ -10,13 +10,21 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js" />
+
   <script type="application/javascript">
   <![CDATA[
     function testThis(aID, aAcc, aRole, aAnchorCount, aAnchorName, aURI,
                       aStartIndex, aEndIndex, aValid, aSelectedBefore,
                       aSelectedAfter)
     {
-      is(aAcc.finalRole, aRole, "Wrong role for ID " + aID + "!");
+      testRole(aID, aRole);
       is(aAcc.anchorCount, aAnchorCount, "Wrong number of anchors for ID " 
          + aID + "!");
       is(aAcc.getAnchor(0).name, aAnchorName, "Wrong name for ID " + aID + "!");
@@ -33,96 +41,31 @@
          + aID + "!");
     }
 
-    function testStates(aID, aAcc, aState, aExtraState, aUndesiredState)
-    {
-      var state = {}, extraState = {};
-      aAcc.getState(state, extraState);
-      is(state.value & aState, aState, "Wrong state bits for " + aID + "!");
-      is(extraState.value & aExtraState, aExtraState, 
-         "Wrong extra state bits for " + aID + "!");
-      if (aUndesiredState != 0)
-        is(state.value & aUndesiredState, 0, "Bits should not be set for "
-           + aID +"!");
-    }
-
     function doTest()
     {
-      // Mapping needed state flags for easier handling.
-      const state_focusable = 
-            Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
-      const state_focused = 
-            Components.interfaces.nsIAccessibleStates.STATE_FOCUSED;
-      const state_selectable = 
-            Components.interfaces.nsIAccessibleStates.STATE_SELECTABLE;
-      const state_linked = 
-            Components.interfaces.nsIAccessibleStates.STATE_LINKED;
-      const state_traversed = 
-            Components.interfaces.nsIAccessibleStates.STATE_TRAVERSED;
+      var linkedLabelAcc = getAccessible("linkedLabel",
+                                         [nsIAccessibleHyperLink]);
+      testThis("linkedLabel", linkedLabelAcc, ROLE_LINK, 1,
+               "Mozilla Foundation home", "http://www.mozilla.org/", 1, 2,
+               true, false, true);
+      testStates(linkedLabelAcc,
+                 (STATE_FOCUSABLE | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
 
-      const ext_state_multi_line = 
-            Components.interfaces.nsIAccessibleStates.EXT_STATE_MULTI_LINE;
-      const ext_state_horizontal = 
-            Components.interfaces.nsIAccessibleStates.EXT_STATE_HORIZONTAL;
-      const ext_state_required = 
-            Components.interfaces.nsIAccessibleStates.STATE_REQUIRED;
-      const ext_state_invalid = 
-            Components.interfaces.nsIAccessibleStates.STATE_INVALID;
-
-      // Activate accessibility.
-      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                    getService(Components.interfaces.nsIAccessibleRetrieval);
-
-      var linkLabelElement = document.getElementById("linkedLabel");
-      var linkedLabelAcc;
-      try {
-        linkedLabelAcc = accRetrieval.getAccessibleFor(linkLabelElement).
-          QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(linkedLabelAcc, "no interface for linked label!");
-      }
-      testThis("linkedLabel", linkedLabelAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
-               "Mozilla Foundation home", "http://www.mozilla.org/", 1, 2, true,
-               false, true);
-      testStates("linkedLabel", linkedLabelAcc,
-                 (state_focusable | state_linked),
-                 (ext_state_horizontal), 0);
-
-      var labelElementWithValue = document.getElementById("linkLabelWithValue");
-      var labelWithValueAcc;
-      try {
-        labelWithValueAcc = accRetrieval.getAccessibleFor(labelElementWithValue).
-          QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(labelWithValueAcc, "no interface for linked label with value!");
-      }
-      testThis("linkLabelWithValue", labelWithValueAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+      var labelWithValueAcc = getAccessible("linkLabelWithValue",
+                                            [nsIAccessibleHyperLink]);
+      testThis("linkLabelWithValue", labelWithValueAcc, ROLE_LINK, 1,
                "Mozilla Foundation", "http://www.mozilla.org/", 2, 3, true,
                false, true);
-      testStates("linkLabelWithValue", labelWithValueAcc,
-                 (state_focusable | state_linked),
-                 (ext_state_horizontal), 0);
+      testStates(labelWithValueAcc,
+                 (STATE_FOCUSABLE | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
 
-      var NormalLabelElement = document.getElementById("normalLabel");
-      var normalLabelAcc;
-      try {
-        normalLabelAcc = accRetrieval.getAccessibleFor(NormalLabelElement);
-      } catch(e) {
-      }
-      ok(normalLabelAcc, "no accessible for normalLabel!");
-      if (normalLabelAcc) {
-        is(normalLabelAcc.finalRole,
-           Components.interfaces.nsIAccessibleRole.ROLE_LABEL,
-           "Wrong role!");
-        is(normalLabelAcc.name, "This label should not be a link",
-           "Wrong name for normal label!");
-    
-        var stateNormal = {}, extraStateNormal = {};
-        normalLabelAcc.getState(stateNormal, extraStateNormal);
-        undesiredState = (state_focusable | state_linked);
-        is(stateNormal.value & undesiredState, 0, "Wrong state bits for normal label!");
-      }
+      var normalLabelAcc = getAccessible("normalLabel");
+      testRole(normalLabelAcc, ROLE_LABEL);
+      is(normalLabelAcc.name, "This label should not be a link",
+         "Wrong name for normal label!");
+      testStates(normalLabelAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED);
 
       SimpleTest.finish();
     }

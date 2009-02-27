@@ -7,16 +7,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   <title>nsIHyperLinkAccessible chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
 
   <script type="application/javascript">
-    var gAccRetrieval = null;
-
     function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
                       aEndIndex)
     {
-      is(aAcc.finalRole, aRole, "Wrong role for ID " + aID + "!");
+      testRole(aAcc, aRole);
       is(aAcc.anchorCount, aAnchors, "Wrong number of anchors for ID "
                                       + aID + "!");
       is(aAcc.getAnchor(0).name, aName, "Wrong name for ID "
@@ -38,23 +45,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
          "Wrong seleccted state after focus for ID " + aID + "!");
     }
 
-    function testStates(aID, aAcc, aState, aExtraState, aAbsentState,
-                        aShowStateDebugFlag)
-    {
-      var state = {}, extraState = {};
-      aAcc.getState(state, extraState);
-
-      if (aShowStateDebugFlag)
-        alert(statesToString(state.value, 0));
-
-      is(state.value & aState, aState, "Wrong state bits for ID " + aID + "!");
-      is(extraState.value & aExtraState, aExtraState, 
-         "Wrong extra state bits for ID " + aID + "!");
-      if (aAbsentState != 0)
-        is(state.value & aAbsentState, 0, "state bits should not be present in ID "
-           + aID + "!");
-    }
-
     function testAction(aId, aAcc, aActionName)
     {
       var numActions = aActionName ? 1 : 0;
@@ -73,336 +63,182 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
     function doTest()
     {
-      // Mapping needed state flags for easier handling.
-      const state_focusable = 
-            Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
-      const state_focused = 
-            Components.interfaces.nsIAccessibleStates.STATE_FOCUSED;
-      const state_selectable = 
-            Components.interfaces.nsIAccessibleStates.STATE_SELECTABLE;
-      const state_linked = 
-            Components.interfaces.nsIAccessibleStates.STATE_LINKED;
-      const state_traversed = 
-            Components.interfaces.nsIAccessibleStates.STATE_TRAVERSED;
-
-      const ext_state_multi_line = 
-            Components.interfaces.nsIAccessibleStates.EXT_STATE_MULTI_LINE;
-      const ext_state_horizontal = 
-            Components.interfaces.nsIAccessibleStates.EXT_STATE_HORIZONTAL;
-      const ext_state_required = 
-            Components.interfaces.nsIAccessibleStates.STATE_REQUIRED;
-      const ext_state_invalid = 
-            Components.interfaces.nsIAccessibleStates.STATE_INVALID;
-
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(Components.interfaces.nsIAccessibleRetrieval);
-
       //////////////////////////////////////////////////////////////////////////
       // normal hyperlink
-      var normalHyperlinkElement = document.getElementById("NormalHyperlink");
-      var normalHyperlinkAcc;
-      try {
-        normalHyperlinkAcc = gAccRetrieval.getAccessibleFor(normalHyperlinkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(normalHyperlinkAcc, "no interface for normal hyperlink!");
-      }
-      testThis("NormalHyperlink", normalHyperlinkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+      var normalHyperlinkAcc = getAccessible("NormalHyperlink",
+                                             [nsIAccessibleHyperLink]);
+      testThis("NormalHyperlink", normalHyperlinkAcc, ROLE_LINK, 1,
                "Mozilla Foundation", true, 18, 19);
       is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
          "URI wrong for normalHyperlinkElement!");
-      testStates("NormalHyperlink", normalHyperlinkAcc,
-                 (state_focusable | state_linked),
-                 (ext_state_horizontal), (0));
+      testStates(normalHyperlinkAcc,
+                 (STATE_FOCUSABLE | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testFocus("NormalHyperlink", normalHyperlinkAcc, false, true);
-      testStates("NormalHyperlink", normalHyperlinkAcc,
-                 (state_focusable | state_focused | state_linked),
-                 (ext_state_horizontal), (0));
+      testStates(normalHyperlinkAcc,
+                 (STATE_FOCUSABLE | STATE_FOCUSED | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink
-      var ariaHyperlinkElement = document.getElementById("AriaHyperlink");
-      var ariaHyperlinkAcc;
-      try {
-        ariaHyperlinkAcc = gAccRetrieval.getAccessibleFor(ariaHyperlinkElement).
-            QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(ariaHyperlinkAcc, "no interface for ARIA Hyperlink!");
-      }
-      testThis("AriaHyperlink", ariaHyperlinkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+      var ariaHyperlinkAcc = getAccessible("AriaHyperlink",
+                                           [nsIAccessibleHyperLink]);
+      testThis("AriaHyperlink", ariaHyperlinkAcc, ROLE_LINK, 1,
                "Mozilla Foundation Home", true, 32, 33);
-      testStates("AriaHyperlink", ariaHyperlinkAcc,
-                 (state_focusable | state_linked),
-                 (ext_state_horizontal), (0));
+      testStates(ariaHyperlinkAcc,
+                 (STATE_FOCUSABLE | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testFocus("AriaHyperlink", ariaHyperlinkAcc, false, true);
-      testStates("AriaHyperlink", ariaHyperlinkAcc,
-                 (state_focusable | state_focused | state_linked),
-                 (ext_state_horizontal), (0));
+      testStates(ariaHyperlinkAcc,
+                 (STATE_FOCUSABLE | STATE_FOCUSED | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink with status invalid
-      var invalidAriaHyperlinkElement =
-          document.getElementById("InvalidAriaHyperlink");
-      var invalidAriaHyperlinkAcc;
-      try {
-        invalidAriaHyperlinkAcc =
-               gAccRetrieval.getAccessibleFor(invalidAriaHyperlinkElement).
-               QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(invalidAriaHyperlinkAcc, "no interface for invalid ARIA hyperlink!");
-      }
+      var invalidAriaHyperlinkAcc = getAccessible("InvalidAriaHyperlink",
+                                                  [nsIAccessibleHyperLink]);
       is(invalidAriaHyperlinkAcc.valid, false, "Should not be valid!");
-      testStates("InvalidAriaHyperlink", invalidAriaHyperlinkAcc,
-                 (state_linked),
-                 (ext_state_horizontal), (state_focusable));
+      testStates(invalidAriaHyperlinkAcc,
+                 (STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE));
       testFocus("InvalidAriaHyperlink", invalidAriaHyperlinkAcc,
                 false, false);
 
       //////////////////////////////////////////////////////////////////////////
       // image map and its link children
-      var imageMapHyperlinkElement =
-          document.getElementById("imgmap");
-      var imageMapHyperlinkAcc;
-      try {
-        imageMapHyperlinkAcc =
-             gAccRetrieval.getAccessibleFor(imageMapHyperlinkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(imageMapHyperlinkAcc, "no Image Map interface!");
-      }
-      testThis("imgmap", imageMapHyperlinkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_IMAGE_MAP, 2, 
-               "b", true, 83, 84);
+      var imageMapHyperlinkAcc = getAccessible("imgmap",
+                                               [nsIAccessibleHyperLink]);
+      testThis("imgmap", imageMapHyperlinkAcc, ROLE_IMAGE_MAP, 2, "b", true,
+               83, 84);
       is(imageMapHyperlinkAcc.getURI(0).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
       is(imageMapHyperlinkAcc.getURI(1).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
-      testStates("imgmap", imageMapHyperlinkAcc,
+      testStates(imageMapHyperlinkAcc,
                  (0),
-                 (ext_state_horizontal), (0));
+                 (EXT_STATE_HORIZONTAL));
 
-      var area1 = imageMapHyperlinkAcc.firstChild;
-      ok(area1, "no children in image map acc!");
-      var area1HL;
-      try {
-        area1HL =
-             area1.QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch (e) {
-        ok(area1HL, "no interface for first child of Image Map!");
-      }
-      testThis("Area1", area1HL,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
-               "b", true, 0, 1);
-      is(area1HL.getURI(0).spec,
+      var area1 = getAccessible(imageMapHyperlinkAcc.firstChild,
+                                [nsIAccessibleHyperLink]);
+      testThis("Area1", area1, ROLE_LINK, 1, "b", true, 0, 1);
+      is(area1.getURI(0).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
-      testStates("Area1", area1HL,
-                 (state_linked),
-                 (0), (0));
+      testStates(area1, (STATE_LINKED));
 
-      var area2 = area1.nextSibling;
-      ok(area2, "no next sibling!");
-      var area2HL;
-      try {
-        area2HL =
-             area2.QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch (e) {
-        ok(area2HL, "no interface for second child of Image Map!");
-      }
-      testThis("Area2", area2HL,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
-               "a", true, 1, 2);
-      is(area2HL.getURI(0).spec,
+      var area2 = getAccessible(area1.nextSibling,
+                                [nsIAccessibleHyperLink]);
+      testThis("Area2", area2, ROLE_LINK, 1, "a", true, 1, 2);
+      is(area2.getURI(0).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
-      testStates("Area2", area2HL,
-                 (state_linked),
-                 (0), (0));
+      testStates(area2, (STATE_LINKED));
 
       //////////////////////////////////////////////////////////////////////////
       // empty hyperlink
-      var emptyLinkElement = document.getElementById("emptyLink");
-      var EmptyHLAcc;
-      try {
-        EmptyHLAcc =
-             gAccRetrieval.getAccessibleFor(emptyLinkElement).
-             QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch (e) {
-        ok(EmptyHLAcc, "no interface for empty link!");
-      }
-      testThis("emptyLink", EmptyHLAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
-               null, true, 98, 99);
-      testStates("emptyLink", EmptyHLAcc,
-                 (state_focusable | state_linked),
-                 (ext_state_horizontal), (0));
+      var EmptyHLAcc = getAccessible("emptyLink",
+                                     [nsIAccessibleHyperLink]);
+      testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 98, 99);
+      testStates(EmptyHLAcc,
+                 (STATE_FOCUSABLE | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction("emptyLink", EmptyHLAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // normal hyperlink with embedded span
-      var hyperlinkElementWithSpan = document.getElementById("LinkWithSpan");
-      var hyperlinkWithSpanAcc;
-      try {
-        hyperlinkWithSpanAcc =
-              gAccRetrieval.getAccessibleFor(hyperlinkElementWithSpan).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(hyperlinkWithSpanAcc, "no interface for hyperlink with span!");
-      }
-      testThis("LinkWithSpan", hyperlinkWithSpanAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+      var hyperlinkWithSpanAcc = getAccessible("LinkWithSpan",
+                                               [nsIAccessibleHyperLink]);
+      testThis("LinkWithSpan", hyperlinkWithSpanAcc, ROLE_LINK, 1,
                "Heise Online", true, 124, 125);
       is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
          "URI wrong for hyperlinkElementWithSpan!");
-      testStates("LinkWithSpan", hyperlinkWithSpanAcc,
-                 (state_focusable | state_linked),
-                 (ext_state_horizontal), (0));
+      testStates(hyperlinkWithSpanAcc,
+                 (STATE_FOCUSABLE | STATE_LINKED),
+               (EXT_STATE_HORIZONTAL));
       testFocus("LinkWithSpan", hyperlinkWithSpanAcc, false, true);
-      testStates("LinkWithSpan", hyperlinkWithSpanAcc,
-                 (state_focusable | state_focused | state_linked),
-                 (ext_state_horizontal), (0));
+      testStates(hyperlinkWithSpanAcc,
+                 (STATE_FOCUSABLE | STATE_FOCUSED | STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // Named anchor, should never have state_linked
-      var namedAnchorElement = document.getElementById("namedAnchor");
-      var namedAnchorAcc;
-      try {
-        namedAnchorAcc = gAccRetrieval.getAccessibleFor(namedAnchorElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(namedAnchorAcc, "no interface for named anchor!");
-      }
-      testThis("namedAnchor", namedAnchorAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+      var namedAnchorAcc = getAccessible("namedAnchor",
+                                         [nsIAccessibleHyperLink]);
+      testThis("namedAnchor", namedAnchorAcc, ROLE_LINK, 1,
                "This should never be of state_linked", true, 202, 203);
-      testStates("namedAnchor", namedAnchorAcc,
-                 (state_selectable),
-                 (ext_state_horizontal), (state_focusable | state_linked));
+      testStates(namedAnchorAcc,
+                 (STATE_SELECTABLE),
+                 (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
       testAction("namedAnchor", namedAnchorAcc, "");
 
       //////////////////////////////////////////////////////////////////////////
       // No link (hasn't any attribute), should never have state_linked
-      var noLinkElement = document.getElementById("noLink");
-      var noLinkAcc;
-      try {
-        noLinkAcc = gAccRetrieval.getAccessibleFor(noLinkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(noLinkAcc, "no interface for named anchor!");
-      }
-      testThis("noLink", noLinkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+      var noLinkAcc = getAccessible("noLink",
+                                    [nsIAccessibleHyperLink]);
+      testThis("noLink", noLinkAcc, ROLE_LINK, 1,
                "This should never be of state_linked", true, 262, 263);
-      testStates("noLink", noLinkAcc,
+      testStates(noLinkAcc,
                  0,
-                 (ext_state_horizontal), (state_focusable | state_linked));
+                 (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
       testAction("noLink", noLinkAcc, "");
 
       //////////////////////////////////////////////////////////////////////////
       // Link with registered 'click' event, should have state_linked
-      var linkWithClickElement = document.getElementById("linkWithClick");
-      var linkWithClickAcc;
-      try {
-        linkWithClickAcc = gAccRetrieval.getAccessibleFor(linkWithClickElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(linkWithClickAcc, "no interface for named anchor!");
-      }
-      testThis("linkWithClick", linkWithClickAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+      var linkWithClickAcc = getAccessible("linkWithClick",
+                                           [nsIAccessibleHyperLink]);
+      testThis("linkWithClick", linkWithClickAcc, ROLE_LINK, 1,
                "This should have state_linked", true, 301, 302);
-      testStates("linkWithClick", linkWithClickAcc,
-                 (state_linked),
-                 (ext_state_horizontal), 0);
+      testStates(linkWithClickAcc,
+                 (STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction("linkWithClick", linkWithClickAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
       // Maps to group links (bug 431615).
-      var linksMapElement = document.getElementById("linksmap");
-      var linksMapAcc;
-      try {
-        linksMapAcc = gAccRetrieval.getAccessibleFor(linksMapElement);
-      } catch(e) { }
-
-      ok(linksMapAcc, "no accessible for map grouping links!");
+      var linksMapAcc = getAccessible("linksmap");
 
       //////////////////////////////////////////////////////////////////////////
       // Link with title attribute, no name from the subtree (bug 438325).
       var id = "linkWithTitleNoNameFromSubtree";
-      var linkElement = document.getElementById(id);
-      var linkAcc;
-      try {
-        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(linkAcc, "no interface for link with ID " + id + "!");
-      }
-      testThis(id, linkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
-               "Link with title", true, 354, 355);
-      testStates(id, linkAcc,
-                 (state_linked),
-                 (ext_state_horizontal), 0);
+      var linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 354, 355);
+      testStates(linkAcc,
+                 (STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
-      // Link with title attribute, name from the subtree - onsreen name
+      // Link with title attribute, name from the subtree - onscreen name
       // (bug 438325).
       id = "linkWithTitleNameFromSubtree";
-      linkElement = document.getElementById(id);
-      linkAcc;
-      try {
-        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(linkAcc, "no interface for link with ID " + id + "!");
-      }
-      testThis(id, linkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
-               "the name from subtree", true, 403, 404);
-      testStates(id, linkAcc,
-                 (state_linked),
-                 (ext_state_horizontal), 0);
+      linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 403,
+               404);
+      testStates(linkAcc,
+                 (STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // Link with title attribute, name from the nested html:img (bug 438325).
       id = "linkWithTitleNameFromImg";
-      linkElement = document.getElementById(id);
-      linkAcc;
-      try {
-        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(linkAcc, "no interface for link with ID " + id + "!");
-      }
-      testThis(id, linkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
-               "The title for link", true, 458, 459);
-      testStates(id, linkAcc,
-                 (state_linked),
-                 (ext_state_horizontal), 0);
+      linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 458,
+               459);
+      testStates(linkAcc,
+                 (STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // Link with label, no name from the subtree (bug 438325).
       id = "linkWithLabelNoNameFromSubtree";
-      linkElement = document.getElementById(id);
-      linkAcc;
-      try {
-        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
-              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
-      } catch(e) {
-        ok(linkAcc, "no interface for link with ID " + id + "!");
-      }
-      testThis(id, linkAcc,
-               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
-               "Link with label and nested image:", true, 462, 463);
-      testStates(id, linkAcc,
-                 (state_linked),
-                 (ext_state_horizontal), 0);
+      linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
+      testThis(id, linkAcc, ROLE_LINK, 1, "Link with label and nested image:",
+               true, 462, 463);
+      testStates(linkAcc,
+                 (STATE_LINKED),
+                 (EXT_STATE_HORIZONTAL));
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
