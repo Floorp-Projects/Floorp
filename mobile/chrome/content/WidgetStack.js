@@ -233,19 +233,20 @@ wsRect.prototype = {
   },
 
   intersect: function(r2) {
-    let xmost1 = this.x + this.width;
-    let ymost1 = this.y + this.height;
-    let xmost2 = r2.x + r2.width;
-    let ymost2 = r2.y + r2.height;
+    let xmost1 = this._r;
+    let xmost2 = r2._r;
 
-    let x = Math.max(this.x, r2.x);
-    let y = Math.max(this.y, r2.y);
-
+    let x = Math.max(this._l, r2._l);
+    
     let temp = Math.min(xmost1, xmost2);
     if (temp <= x)
       return null;
 
     let width = temp - x;
+    
+    let ymost1 = this._b;
+    let ymost2 = r2._b;
+    let y = Math.max(this._t, r2._t);
 
     temp = Math.min(ymost1, ymost2);
     if (temp <= y)
