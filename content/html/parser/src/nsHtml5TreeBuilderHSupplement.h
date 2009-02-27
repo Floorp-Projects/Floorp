@@ -38,6 +38,7 @@
   private:
     nsHtml5Parser* mParser; // weak ref
     PRBool         mHasProcessedBase;
+    PRBool         mFlushing;
     nsTArray<nsHtml5TreeOperation> mOpQueue;
     void           MaybeFlushAndMaybeSuspend();
   public:
