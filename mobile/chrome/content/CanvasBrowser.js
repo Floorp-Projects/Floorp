@@ -139,12 +139,11 @@ CanvasBrowser.prototype = {
   // be based on time taken..ie do as many paints as we can <200ms
   // returns true if q is cleared
   flushRegion: function flushRegion(viewingBoundsOnly) {
-    var ctx = this._canvas.getContext("2d");
     let rgn = this._rgnPage;
 
-    let outX = {}; let outY = {}; let outW = {}; let outH = {};
     let clearRegion = false;
-    let subls = [];
+    let drawls = [];
+    let outX = {}; let outY = {}; let outW = {}; let outH = {};
     let numRects = rgn.numRects;
     for (let i=0;i<numRects;i++) {
       rgn.getRect(i, outX, outY, outW, outH);
@@ -155,35 +154,43 @@ CanvasBrowser.prototype = {
         rect = rect.intersect(this._visibleBounds)
         if (!rect)
           continue;
-        // clone to avoid errors due to round() below
-        subls.push(rect.clone())
       } else {
         clearRegion = true;
       }
-      ctx.save();
-      ctx.scale(this._zoomLevel, this._zoomLevel);
-      
+      drawls.push(rect)
+    }
+
+    if (clearRegion)
+      this.clearRegion();
+
+    let oldX = 0;
+    let oldY = 0;
+    var ctx = this._canvas.getContext("2d");
+    ctx.save();
+    ctx.scale(this._zoomLevel, this._zoomLevel);
+
+    // do subtraction separately as it modifies the rect list
+    for each(let rect in drawls) {
+      // avoid subtracting the rect if region was cleared
+      if (!clearRegion)
+        rgn.subtractRect(rect.left, rect.top,
+                         rect.width, rect.height);
+      // ensure that once scaled, the rect has whole pixels
       rect.round(this._zoomLevel);
-      ctx.translate(rect.x - this._pageBounds.x, rect.y - this._pageBounds.y);
+      let x = rect.x - this._pageBounds.x
+      let y = rect.y - this._pageBounds.y
+      // translate is relative, so make up for that
+      ctx.translate(x - oldX, y - oldY);
+      oldX = x;
+      oldY = y;
       ctx.drawWindow(this._browser.contentWindow,
                      rect.x, rect.y,
                      rect.width, rect.height,
                      "white",
                      (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
-      ctx.restore();
     }
-
-    // need to make this conditional on above loop actually doing something
-    if (clearRegion)
-      this.clearRegion();
-    else {
-      // do subtraction separately as it modifies the rect list
-      for each(let rect in subls) {
-        rgn.subtractRect(rect.left, rect.top,
-                         rect.width, rect.height);
-      }
-      //should get a way to figure out when there are no more valid rects left, and clear q
-    }
+    // should get a way to figure out when there are no more valid rects left, and clear q
+    ctx.restore();
   },
 
   clearRegion: function clearRegion() {
