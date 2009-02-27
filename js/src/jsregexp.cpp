@@ -2269,11 +2269,15 @@ class RegExpNativeCompiler {
                        pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
                 }
 #else
-                for (size_t i = 0; i < node->u.flat.length; i++) {
-                    if (fragment->lirbuf->outOMem()) 
-                        return JS_FALSE;
-                    pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
-                    if (!pos) break;
+                if (node->u.flat.length == 1) {
+                    pos = compileFlatSingleChar(node->u.flat.chr, pos, fails);
+                } else {
+                    for (size_t i = 0; i < node->u.flat.length; i++) {
+                        if (fragment->lirbuf->outOMem()) 
+                            return JS_FALSE;
+                        pos = compileFlatSingleChar(((jschar*) node->kid)[i], pos, fails);
+                        if (!pos) break;
+                    }
                 }
 #endif
                 break;
