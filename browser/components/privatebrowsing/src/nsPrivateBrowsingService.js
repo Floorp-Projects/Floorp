@@ -153,7 +153,7 @@ PrivateBrowsingService.prototype = {
         if (this._saveSession && !this._savedBrowserState)
           this._savedBrowserState = ss.getBrowserState();
       }
-      if (!this.quitting && this._saveSession) {
+      if (!this._quitting && this._saveSession) {
         // dummy session used to transition from/to pb mode, see bug 476463
         let transitionState = {
           "windows": [{
