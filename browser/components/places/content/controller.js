@@ -579,7 +579,7 @@ PlacesController.prototype = {
    *     selection attribute. A menu-item would be hidden if at least one of the
    *     given rules apply to one of the selected nodes. The rules should be
    *     separated with the | character.
-   *  5) The "hideifnoinsetionpoint" attribute may be set on a menu-item to
+   *  5) The "hideifnoinsertionpoint" attribute may be set on a menu-item to
    *     true if it should be hidden when there's no insertion point
    *  6) The visibility state of a menu-item is unchanged if none of these
    *     attribute are set.
@@ -600,7 +600,7 @@ PlacesController.prototype = {
     for (var i = 0; i < aPopup.childNodes.length; ++i) {
       var item = aPopup.childNodes[i];
       if (item.localName != "menuseparator") {
-        item.hidden = (item.getAttribute("hideifnoinsetionpoint") == "true" && noIp) ||
+        item.hidden = (item.getAttribute("hideifnoinsertionpoint") == "true" && noIp) ||
                       !this._shouldShowMenuItem(item, metadata);
 
         if (!item.hidden) {
@@ -1055,7 +1055,7 @@ PlacesController.prototype = {
     var oldViewer = result.viewer;
     try {
       result.viewer = null;
-      var nodes = this._view.getDragableSelection();
+      var nodes = this._view.getDraggableSelection();
 
       for (var i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
