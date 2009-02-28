@@ -1165,8 +1165,7 @@
           this._containerPopupShowing(popup);
 
         var parent = popup.parentNode;
-        if (parent.localName == "toolbarbutton" &&
-            !PlacesControllerDragHelper.getSession())
+        if (parent.localName == "toolbarbutton")
           this._openedMenuButton = parent;
       ]]></handler>
 
@@ -1183,8 +1182,7 @@
 
         var parent = popup.parentNode;
         if (parent.localName == "toolbarbutton") {
-          if (!PlacesControllerDragHelper.getSession())
-            this._openedMenuButton = null;
+          this._openedMenuButton = null;
           // Clear the dragover attribute if present, if we are dragging into a
           // folder in the hierachy of current opened popup we don't clear
           // this attribute on clearOverFolder.  See Notify for closeTimer.
