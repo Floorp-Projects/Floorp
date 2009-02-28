@@ -148,7 +148,13 @@ Resource.prototype = {
     let ios = Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService);
     this._lastChannel = ios.newChannel(this.spec, null, null).
-      QueryInterface(Ci.nsIHttpChannel);
+      QueryInterface(Ci.nsIRequest);
+    // Always validate the cache:
+    let loadFlags = this._lastChannel.loadFlags;
+    loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+    this._lastChannel.loadFlags = loadFlags;
+    this._lastChannel = this._lastChannel.QueryInterface(Ci.nsIHttpChannel);
+
     this._lastChannel.notificationCallbacks = new badCertListener();
 
     let headers = this.headers; // avoid calling the authorizer more than once

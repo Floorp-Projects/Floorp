@@ -574,7 +574,9 @@ WeaveSvc.prototype = {
     this._log.debug("Fetching global metadata record");
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
-
+    
+    this._log.debug("Min server storage version is " + MIN_SERVER_STORAGE_VERSION);
+    this._log.debug("payload storage version is " + meta.payload.storageVersion);
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
         Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
                             meta.payload.storageVersion) > 0) {
@@ -811,6 +813,7 @@ WeaveSvc.prototype = {
 
     this._log.debug("Uploading new metadata record");
     meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
+    this._log.debug("Setting meta payload storage version to " + WEAVE_VERSION);
     meta.payload.storageVersion = WEAVE_VERSION;
     meta.payload.syncID = Clients.syncID;
     let res = new Resource(meta.uri);
