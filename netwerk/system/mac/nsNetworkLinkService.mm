@@ -174,8 +174,7 @@ nsNetworkLinkService::UpdateReachability()
     }
 
     SCNetworkConnectionFlags flags;
-    if (!::SCNetworkReachabilityGetFlags(mReachability, &flags) ||
-        flags == 0) {
+    if (!::SCNetworkReachabilityGetFlags(mReachability, &flags)) {
         mStatusKnown = PR_FALSE;
         return;
     }
