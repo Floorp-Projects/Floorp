@@ -2553,7 +2553,7 @@ JS_MaybeGC(JSContext *cx)
      * free cells. Indeed if we still have free cells, then B == Bl since
      * we did not yet allocated any new arenas and the condition means
      *   1 - F > 3/2 (1-Fl) or 3/2Fl > 1/2 + F
-     * That implies 3/2 Fl > 1/2 or Fl > 1/3. That can not be fulfilled
+     * That implies 3/2 Fl > 1/2 or Fl > 1/3. That cannot be fulfilled
      * for the state described by the stats. So we can write the original
      * condition as:
      *   F == 0 && B > 3/2 Bl(1-Fl)
@@ -4285,7 +4285,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
         index = ida->length;
     }
 
-    /* iterobj can not escape to other threads here. */
+    /* iterobj cannot escape to other threads here. */
     STOBJ_SET_SLOT(iterobj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(pdata));
     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(index));
     return iterobj;

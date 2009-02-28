@@ -917,17 +917,23 @@ date_parse(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, result, vp);
 }
 
+static inline jsdouble
+NowAsMillis()
+{
+    return (jsdouble) (PRMJ_Now() / PRMJ_USEC_PER_MSEC);
+}
+
 static JSBool
 date_now(JSContext *cx, uintN argc, jsval *vp)
 {
-    return js_NewDoubleInRootedValue(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC, vp);
+    return js_NewDoubleInRootedValue(cx, NowAsMillis(), vp);
 }
 
 #ifdef JS_TRACER
 static jsdouble FASTCALL
 date_now_tn(JSContext*)
 {
-    return PRMJ_Now() / PRMJ_USEC_PER_MSEC;
+    return NowAsMillis();
 }
 #endif
 
@@ -2108,17 +2114,15 @@ js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble d;
 
     /* Date called as function. */
-    if (!JS_IsConstructing(cx)) {
-        return date_format(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC,
-                           FORMATSPEC_FULL, rval);
-    }
+    if (!JS_IsConstructing(cx))
+        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, rval);
 
     /* Date called as constructor. */
     if (argc == 0) {
         date = date_constructor(cx, obj);
         if (!date)
             return JS_FALSE;
-        *date = PRMJ_Now() / PRMJ_USEC_PER_MSEC;
+        *date = NowAsMillis();
     } else if (argc == 1) {
         if (!JSVAL_IS_STRING(argv[0])) {
             /* the argument is a millisecond number */
