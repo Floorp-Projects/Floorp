@@ -176,7 +176,7 @@ TabStore.prototype = {
 
       for (let j = 0; j < window.tabs.length; j++) {
         let tab = window.tabs[j];
-	this._log.debug( "tab state: " + uneval(tab));//this._sessionStore.getTabState(tab));
+	//this._sessionStore.getTabState(tab));
 	// Skip empty (i.e. just-opened, no history yet) tabs:
 	if (tab.entries.length == 0)
 	  continue;
@@ -214,27 +214,20 @@ TabStore.prototype = {
   },
 
   itemExists: function TabStore_itemExists(id) {
-    this._log.debug("ItemExists called.");
     if (id == this._localClientGUID) {
-      this._log.debug("It's me.");
       return true;
     } else if (this._remoteClients[id]) {
-      this._log.debug("It's somebody else.");
       return true;
     } else {
-      this._log.debug("It doesn't exist!");
       return false;
     }
   },
 
   createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
-    this._log.debug("CreateRecord called for id " + id );
     let record;
     if (id == this._localClientGUID) {
-      this._log.debug("That's Me!");
       record = this._createLocalClientTabSetRecord();
     } else {
-      this._log.debug("That's Somebody Else.");
       record = this._remoteClients[id];
     }
     record.id = id;
@@ -243,7 +236,6 @@ TabStore.prototype = {
   },
 
   changeItemId: function TabStore_changeItemId(oldId, newId) {
-    this._log.debug("changeItemId called.");
     if (this._remoteClients[oldId]) {
       let record = this._remoteClients[oldId];
       record.id = newId;
@@ -253,7 +245,6 @@ TabStore.prototype = {
   },
 
   getAllIDs: function TabStore_getAllIds() {
-    this._log.debug("getAllIds called.");
     let items = {};
     items[ this._localClientGUID ] = true;
     for (let id in this._remoteClients) {
@@ -265,7 +256,6 @@ TabStore.prototype = {
   wipe: function TabStore_wipe() {
     this._log.debug("Wipe called.  Clearing cache of remote client tabs.");
     this._remoteClients = {};
-    this._writeToFile();
   },
 
   create: function TabStore_create(record) {
