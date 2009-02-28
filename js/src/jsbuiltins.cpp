@@ -368,7 +368,7 @@ js_CallGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
     JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
     jsval v;
-    if (!SPROP_GET(cx, sprop, obj, obj, &v))
+    if (!js_GetSprop(cx, sprop, obj, &v))
         return JSVAL_ERROR_COOKIE;
     return v;
 }

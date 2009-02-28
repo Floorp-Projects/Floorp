@@ -350,7 +350,7 @@ struct JSScopeProperty {
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
 static JS_INLINE JSBool
-SPROP_GET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, jsval* vp)
+js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
 {
     JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
 
@@ -364,7 +364,7 @@ SPROP_GET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, 
 }
 
 static JS_INLINE JSBool
-SPROP_SET(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, JSObject* obj2, jsval* vp)
+js_SetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
 {
     JS_ASSERT(!(SPROP_HAS_STUB_SETTER(sprop) &&
                 !(sprop->attrs & JSPROP_GETTER)));

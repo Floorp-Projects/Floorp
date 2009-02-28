@@ -1661,7 +1661,7 @@ testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
     recorderStarted: 5,
     recorderAborted: 2,
-    traceTriggered: 9
+    traceTriggered: 11
 };
 test(testNestedExitStackOuter);
 
@@ -2509,7 +2509,7 @@ function testThinLoopDemote() {
     function f()
     {
         var k = 1;
-        for (var n = 0; n < 2; n++) {
+        for (var n = 0; n < 4; n++) {
             k = (k * 10);
         }
         return k;
@@ -2517,12 +2517,12 @@ function testThinLoopDemote() {
     f();
     return f();
 }
-testThinLoopDemote.expected = 100;
+testThinLoopDemote.expected = 10000;
 testThinLoopDemote.jitstats = {
     recorderStarted: 2,
     recorderAborted: 0,
     traceCompleted: 2,
-    traceTriggered: 1,
+    traceTriggered: 3,
     unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
@@ -2571,7 +2571,7 @@ testWeirdDateParse.jitstats = {
     traceCompleted: 6,
     traceTriggered: 14,
     unstableLoopVariable: 3,
-    noCompatInnerTrees: 0
+    noCompatInnerTrees: 1
 };
 test(testWeirdDateParse);
 
@@ -4399,9 +4399,43 @@ testConvertibleObjectEqUndefined.expected =
   x4(false) + x4(false) + x4(false) + x4(false) + x4(false) + x4(false) +
   x4(false) + x4(false) + x4(false) + x4(false) + "20";
 testConvertibleObjectEqUndefined.jitstats = {
-  sideExitIntoInterpreter: 2
+  sideExitIntoInterpreter: 3
 };
 test(testConvertibleObjectEqUndefined);
+
+var globalProperty;
+function testFunctionToFunctionGlobalPropertyTransition()
+{
+  function g() { return "g" }
+  function h() { return "h"; }
+  var a = [g, g, g, g, h];
+  var results = [];
+  for (i = 0; i < 5; i++)
+  {
+    globalProperty = a[i];
+    results[i] = globalProperty();
+  }
+  return results.join("");
+}
+testFunctionToFunctionGlobalPropertyTransition.expected = "ggggh";
+test(testFunctionToFunctionGlobalPropertyTransition);
+
+function testUndefinedPropertyAccess() {
+    var x = [1,2,3];
+    var y = {};
+    var a = { foo: 1 };
+    y.__proto__ = x;
+    var z = [x, x, x, y, y, y, y, a, a, a];
+    var s = "";
+    for (var i = 0; i < z.length; ++i)
+        s += z[i].foo;
+    return s;
+}
+testUndefinedPropertyAccess.expected = "undefinedundefinedundefinedundefinedundefinedundefinedundefined111";
+testUndefinedPropertyAccess.jitstats = {
+    traceCompleted: 3
+};
+test(testUndefinedPropertyAccess);
 
 /*****************************************************************************
  *                                                                           *

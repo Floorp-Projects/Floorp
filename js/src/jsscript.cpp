@@ -507,8 +507,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             return JS_FALSE;
 
         script->main += prologLength;
-        script->version = (JSVersion) (version & 0xffff);
-        script->nfixed = (uint16) (version >> 16);
+        script->version = JSVersion(version & 0xffff);
+        script->nfixed = uint16(version >> 16);
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = SCRIPT_NOTES(script);
@@ -581,7 +581,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         }
         script->lineno = (uintN)lineno;
         script->nslots = (uint16)nslots;
-        script->staticDepth = nslots >> 16;
+        script->staticDepth = (uint16)(nslots >> 16);
     }
 
     for (i = 0; i != natoms; ++i) {

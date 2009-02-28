@@ -887,4 +887,5 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_LENGTH */
     0,  /* JSOP_NEWARRAY */
     0,  /* JSOP_HOLE */
+    0,  /* JSOP_LOOP */
 };
