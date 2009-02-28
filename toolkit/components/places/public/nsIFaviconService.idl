@@ -40,7 +40,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(fafe10e0-194f-4e89-aab9-a5849e97287c)]
+[scriptable, uuid(66f6b992-e2d3-43da-ba2a-d966e34a7654)]
 interface nsIFaviconService : nsISupports
 {
   /**
@@ -285,6 +285,15 @@ interface nsIFaviconService : nsISupports
   nsIURI getFaviconLinkForIcon(in nsIURI aFaviconURI);
 
   /**
+   * Expire all known favicons from the database.
+   *
+   * @note This is an async method.
+   *       On successful completion a "places-favicons-expired" notification is
+   *       dispatched through observer's service.
+   */
+  void expireAllFavicons();
+
+  /**
    * Adds a given favicon's URI to the failed favicon cache.
    *
    * The lifespan of the favicon cache is up to the caching system. This cache
@@ -315,3 +324,12 @@ interface nsIFaviconService : nsISupports
    */
   readonly attribute nsIURI defaultFavicon;
 };
+
+%{C++
+
+/**
+ * Notification sent when favicons are expired.
+ */
+#define NS_PLACES_FAVICONS_EXPIRED_TOPIC_ID "places-favicons-expired"
+
+%}
