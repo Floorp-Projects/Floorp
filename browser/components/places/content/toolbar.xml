@@ -381,7 +381,7 @@
       </method>
 
       <!-- nsIPlacesView -->
-      <method name="getDragableSelection">
+      <method name="getDraggableSelection">
         <body><![CDATA[
           return [this._draggedNode];
         ]]></body>
