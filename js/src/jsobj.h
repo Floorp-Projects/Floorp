@@ -438,7 +438,9 @@ js_InitEval(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
-/* Select Object.prototype method names shared between jsapi.c and jsobj.c. */
+/*
+ * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.
+ */
 extern const char js_watch_str[];
 extern const char js_unwatch_str[];
 extern const char js_hasOwnProperty_str[];
