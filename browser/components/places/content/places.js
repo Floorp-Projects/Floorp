@@ -86,11 +86,12 @@ var PlacesOrganizer = {
 
     window.addEventListener("AppCommand", this, true);
 #ifdef XP_MACOSX
-    // 1. Map Edit->Find command to the organizer's command
+    // 1. Map Edit->Find command to OrganizerCommand_find:all.  Need to map
+    // both the menuitem and the Find key.
     var findMenuItem = document.getElementById("menu_find");
-    findMenuItem.setAttribute("command", "OrganizerCommand_find:current");
+    findMenuItem.setAttribute("command", "OrganizerCommand_find:all");
     var findKey = document.getElementById("key_find");
-    findKey.setAttribute("command", "OrganizerCommand_find:current");
+    findKey.setAttribute("command", "OrganizerCommand_find:all");
 
     // 2. Disable some keybindings from browser.xul
     var elements = ["cmd_handleBackspace", "cmd_handleShiftBackspace"];
@@ -197,35 +198,37 @@ var PlacesOrganizer = {
   /**
    * Called when a place folder is selected in the left pane.
    * @param   resetSearchBox
-   *          true if the search box should also be reset, false if it should
-   *          be left alone.
+   *          true if the search box should also be reset, false otherwise.
+   *          The search box should be reset when a new folder in the left
+   *          pane is selected; the search scope and text need to be cleared in
+   *          preparation for the new folder.  Note that if the user manually
+   *          resets the search box, either by clicking its reset button or by
+   *          deleting its text, this will be false.
    */
-  _cachedLeftPaneSelectedNode: null,
+  _cachedLeftPaneSelectedURI: null,
   onPlaceSelected: function PO_onPlaceSelected(resetSearchBox) {
-    // Don't change the right-hand pane contents when there's no selection
+    // Don't change the right-hand pane contents when there's no selection.
     if (!this._places.hasSelection)
       return;
 
     var node = this._places.selectedNode;
     var queries = asQuery(node).getQueries({});
 
-    // Items are only excluded on the left pane
+    // Items are only excluded on the left pane.
     var options = node.queryOptions.clone();
     options.excludeItems = false;
-    var placeURI = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
+    var placeURI = PlacesUtils.history.queriesToQueryString(queries,
+                                                            queries.length,
+                                                            options);
 
-    // Update the right-pane contents.
-    // We must update also if the user clears the search box, in that case
-    // we are called with resetSearchBox == false.
+    // If either the place of the content tree in the right pane has changed or
+    // the user cleared the search box, update the place, hide the search UI,
+    // and update the back/forward buttons by setting location.
     if (this._content.place != placeURI || !resetSearchBox) {
       this._content.place = placeURI;
-
-      // Update the back/forward buttons.
+      PlacesSearchBox.hideSearchUI();
       this.location = node.uri;
     }
-
-    // Make sure the search UI is hidden.
-    PlacesSearchBox.hideSearchUI();
 
     // When we invalidate a container we use suppressSelectionEvent, when it is
     // unset a select event is fired, in many cases the selection did not really
@@ -233,70 +236,50 @@ var PlacesOrganizer = {
     // that we cannot return any earlier than this point, because when
     // !resetSearchBox, we need to update location and hide the UI as above,
     // even though the selection has not changed.
-    if (node == this._cachedLeftPaneSelectedNode)
+    if (node.uri == this._cachedLeftPaneSelectedURI)
       return;
-    this._cachedLeftPaneSelectedNode = node;
+    this._cachedLeftPaneSelectedURI = node.uri;
 
-    if (resetSearchBox)
-      PlacesSearchBox.searchFilter.reset();
+    // At this point, resetSearchBox is true, because the left pane selection
+    // has changed; otherwise we would have returned earlier.
 
+    PlacesSearchBox.searchFilter.reset();
     this._setSearchScopeForNode(node);
     if (this._places.treeBoxObject.focused)
       this._fillDetailsPane([node]);
   },
 
   /**
-   * Sets the search scope based on node's properties
+   * Sets the search scope based on aNode's properties.
    * @param   aNode
    *          the node to set up scope from
    */
   _setSearchScopeForNode: function PO__setScopeForNode(aNode) {
-    var scopeBarFolder = document.getElementById("scopeBarFolder");
     var itemId = aNode.itemId;
     if (PlacesUtils.nodeIsHistoryContainer(aNode) ||
         itemId == PlacesUIUtils.leftPaneQueries["History"]) {
-      scopeBarFolder.disabled = true;
-      var folders = [];
-      var filterCollection = "history";
-      var scopeButton = "scopeBarHistory";
+      PlacesQueryBuilder.setScope("history");
     }
-    else if (PlacesUtils.nodeIsFolder(aNode) &&
-             itemId != PlacesUIUtils.leftPaneQueries["AllBookmarks"] &&
-             itemId != PlacesUIUtils.leftPaneQueries["Tags"] &&
-             aNode.parent.itemId != PlacesUIUtils.leftPaneQueries["Tags"]) {
-      // enable folder scope
-      scopeBarFolder.disabled = false;
-      var folders = [PlacesUtils.getConcreteItemId(aNode)];
-      var filterCollection = "collection";
-      var scopeButton = "scopeBarFolder";
-    }
-    else {
-      // default to All Bookmarks
-      scopeBarFolder.disabled = true;
-      var folders = [];
-      var filterCollection = "bookmarks";
-      var scopeButton = "scopeBarAll";
-    }
+    // Default to All Bookmarks for all other nodes, per bug 469437.
+    else
+      PlacesQueryBuilder.setScope("bookmarks");
 
-    // set search scope
-    PlacesSearchBox.folders = folders;
-    PlacesSearchBox.filterCollection = filterCollection;
+    // Enable or disable the folder scope button.
+    var folderButton = document.getElementById("scopeBarFolder");
+    folderButton.disabled = !PlacesUtils.nodeIsFolder(aNode) ||
+                            itemId == PlacesUIUtils.allBookmarksFolderId;
+    if (!folderButton.disabled) {
+      // XXXadw When bug 469436 is fixed, set folder scope button label here
 
-    // update scope bar active child
-    var scopeBar = document.getElementById("organizerScopeBar");
-    var child = scopeBar.firstChild;
-    while (child) {
-      if (child.getAttribute("id") != scopeButton)
-        child.removeAttribute("checked");
-      else
-        child.setAttribute("checked", "true");
-      child = child.nextSibling;
+      // Update the label of the "Find in <current collection>" command.
+      // The label is not currently displayed anywhere, but for consistency
+      // we'll update it anyway.  To be totally thorough we should also listen
+      // for changes in the selected folder's title.
+      var cmd = document.getElementById("OrganizerCommand_find:current");
+      var label = PlacesUIUtils.getFormattedString("findInPrefix",
+                                                   [aNode.title]);
+      cmd.setAttribute("label", label);
     }
-
-    // Update the "Find in <current collection>" command
-    var findCommand = document.getElementById("OrganizerCommand_find:current");
-    var findLabel = PlacesUIUtils.getFormattedString("findInPrefix", [aNode.title]);
-    findCommand.setAttribute("label", findLabel);
   },
 
   /**
@@ -892,6 +875,8 @@ var PlacesSearchBox = {
     var currentOptions = PO.getCurrentOptions();
     var content = PO._content;
 
+    // Search according to the current scope and folders, which were set by
+    // PQB_setScope()
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
       content.applyFilter(filterString, this.folders);
@@ -904,10 +889,7 @@ var PlacesSearchBox = {
       // We do not yet support searching into grouped queries or into
       // tag containers, so we must fall to the default case.
       currentOptions.resultType = currentOptions.RESULT_TYPE_URI;
-      content.applyFilter(filterString,
-                          [PlacesUtils.bookmarksMenuFolderId,
-                           PlacesUtils.toolbarFolderId,
-                           PlacesUtils.unfiledBookmarksFolderId]);
+      content.applyFilter(filterString, this.folders);
       break;
     case "history":
       if (currentOptions.queryType != Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
@@ -920,8 +902,8 @@ var PlacesSearchBox = {
       else
         content.applyFilter(filterString);
       break;
-    case "all":
-      content.applyFilter(filterString);
+    default:
+      throw "Invalid filterCollection on search";
       break;
     }
 
@@ -935,7 +917,7 @@ var PlacesSearchBox = {
    * Finds across all bookmarks
    */
   findAll: function PSB_findAll() {
-    this.filterCollection = "all";
+    PlacesQueryBuilder.setScope("bookmarks");
     this.focus();
   },
 
@@ -943,7 +925,7 @@ var PlacesSearchBox = {
    * Finds in the currently selected Place.
    */
   findCurrent: function PSB_findCurrent() {
-    this.filterCollection = "collection";
+    PlacesQueryBuilder.setScope("collection");
     this.focus();
   },
 
@@ -973,8 +955,6 @@ var PlacesSearchBox = {
       return collectionName;
 
     this.searchFilter.setAttribute("collection", collectionName);
-    if (this.searchFilter.value)
-      return collectionName; // don't overwrite pre-existing search terms
 
     var newGrayText = null;
     if (collectionName == "collection")
@@ -1497,45 +1477,80 @@ var PlacesQueryBuilder = {
   },
 #endif
 
+  /**
+   * Called when a scope button in the scope bar is clicked.
+   * @param   aButton
+   *          the scope button that was selected
+   */
   onScopeSelected: function PQB_onScopeSelected(aButton) {
-    var id = aButton.getAttribute("id");
-    // get scope bar
-    var bar = document.getElementById("organizerScopeBar");
-    var child = bar.firstChild;
-    while (child) {
-      if (child.getAttribute("id") != id)
-        child.removeAttribute("checked");
-      else
-        child.setAttribute("checked", "true");
-      child = child.nextSibling;
+    switch (aButton.id) {
+    case "scopeBarHistory":
+      this.setScope("history");
+      break;
+    case "scopeBarFolder":
+      this.setScope("collection");
+      break;
+    case "scopeBarAll":
+      this.setScope("bookmarks");
+      break;
+    default:
+      throw "Invalid search scope button ID";
+      break;
     }
+  },
 
-    // update collection type and get folders
+  /**
+   * Sets the search scope.  This can be called when no search is active, and
+   * in that case, when the user does begin a search aScope will be used (see
+   * PSB_search()).  If there is an active search, it's performed again to
+   * update the content tree.
+   * @param   aScope
+   *          the search scope, "bookmarks", "collection", or "history"
+   */
+  setScope: function PQB_setScope(aScope) {
+    // Determine filterCollection, folders, and scopeButtonId based on aScope.
+    var filterCollection;
     var folders = [];
-    switch (id) {
-      case "scopeBarHistory":
-        PlacesSearchBox.filterCollection = "history";
+    var scopeButtonId;
+    switch (aScope) {
+    case "history":
+      filterCollection = "history";
+      scopeButtonId = "scopeBarHistory";
+      break;
+    case "collection":
+      // The folder scope button can only become disabled upon selecting a new
+      // folder in the left pane, and the disabled state will remain unchanged
+      // until a new folder is selected.  See PO__setScopeForNode().
+      if (!document.getElementById("scopeBarFolder").disabled) {
+        filterCollection = "collection";
+        scopeButtonId = "scopeBarFolder";
+        folders.push(PlacesUtils.getConcreteItemId(
+                       PlacesOrganizer._places.selectedNode));
         break;
-      case "scopeBarFolder":
-        var selectedFolder = PlacesOrganizer._places.selectedNode.itemId;
-        // note "all bookmarks" isn't the concrete parent of the top-level
-        // bookmark folders
-        if (selectedFolder != PlacesUIUtils.allBookmarksFolderId) {
-          PlacesSearchBox.filterCollection = "collection";
-          folders.push(PlacesUtils.getConcreteItemId(
-                         PlacesOrganizer._places.selectedNode));
-          break;
-        }
-      default: // all bookmarks
-        PlacesSearchBox.filterCollection = "bookmarks";
-        folders.push(PlacesUtils.bookmarksMenuFolderId,
-                     PlacesUtils.toolbarFolderId,
-                     PlacesUtils.unfiledBookmarksFolderId);
+      }
+      // Fall through.  If collection scope doesn't make sense for the
+      // selected node, choose bookmarks scope.
+    case "bookmarks":
+      filterCollection = "bookmarks";
+      scopeButtonId = "scopeBarAll";
+      folders.push(PlacesUtils.bookmarksMenuFolderId,
+                   PlacesUtils.toolbarFolderId,
+                   PlacesUtils.unfiledBookmarksFolderId);
+      break;
+    default:
+      throw "Invalid search scope";
+      break;
     }
 
-    // set scope, and re-search
+    // Check the appropriate scope button in the scope bar.
+    document.getElementById(scopeButtonId).checked = true;
+
+    // Update the search box.  Re-search if there's an active search.
+    PlacesSearchBox.filterCollection = filterCollection;
     PlacesSearchBox.folders = folders;
-    PlacesSearchBox.search(PlacesSearchBox.searchFilter.value);
+    var searchStr = PlacesSearchBox.searchFilter.value;
+    if (searchStr)
+      PlacesSearchBox.search(searchStr);
   }
 };
 
