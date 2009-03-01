@@ -882,13 +882,6 @@ private:
                                   PRBool                   aAllowXBLBase,
                                   PRBool                   aAllowPageBreaks);
 
-  nsresult CreateAnonymousFrames(nsIAtom*                 aTag,
-                                 nsFrameConstructorState& aState,
-                                 nsIContent*              aParent,
-                                 nsIFrame*                aNewFrame,
-                                 nsFrameItems&            aChildItems,
-                                 PRBool                   aIsRoot = PR_FALSE);
-
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aParentFrame,
