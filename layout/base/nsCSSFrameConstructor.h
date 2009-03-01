@@ -539,12 +539,12 @@ private:
                               nsFrameConstructorState& aState, 
                               nsIFrame&                aParentFrameIn);
 
-  nsresult GetParentFrame(PRInt32                  aNameSpaceID,
-                          nsIFrame&                aParentFrameIn, 
-                          nsIAtom*                 aChildFrameType, 
-                          nsFrameConstructorState& aState, 
-                          nsIFrame*&               aParentFrame,
-                          PRBool&                  aIsPseudoParent);
+  nsresult CreateRequiredPseudoFrames(PRInt32                  aNameSpaceID,
+                                      nsIFrame&                aParentFrameIn,
+                                      nsIAtom*                 aChildFrameType,
+                                      nsFrameConstructorState& aState,
+                                      nsIFrame*&               aParentFrame,
+                                      PRBool&                  aIsPseudoParent);
 
 private:
   /* A constructor function that just creates an nsIFrame object.  The caller
