@@ -2165,8 +2165,10 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
   // NS_FRAME_GENERATED_CONTENT.
   aState.mAdditionalStateBits |= NS_FRAME_GENERATED_CONTENT;
 
+  // XXXbz should we actually allow page-break frames here?
   ConstructFrameInternal(aState, container, aParentFrame,
-    elemName, kNameSpaceID_None, pseudoStyleContext, aFrameItems, PR_TRUE);
+                         elemName, kNameSpaceID_None, pseudoStyleContext,
+                         aFrameItems, PR_FALSE, PR_FALSE);
   aState.mAdditionalStateBits = savedStateBits;
 }
 
@@ -2185,23 +2187,9 @@ TextIsOnlyWhitespace(nsIContent* aContent)
 // frame has been used elsewhere to refer to frames that have generated content
 
 // aIncludeSpecial applies to captions, col groups, cols and cells.
-// These do not generate pseudo frame wrappers for foreign children. 
-
-static PRBool
-IsTableRelated(PRUint8 aDisplay)
-{
-  return
-    aDisplay == NS_STYLE_DISPLAY_TABLE              ||
-    aDisplay == NS_STYLE_DISPLAY_INLINE_TABLE       ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP    ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_ROW          ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION      ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN       ||
-    aDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
-}
+// These do not generate pseudo frame wrappers for foreign children.
+// In fact, colgroups never have any children that are not cols and
+// cols never have any children at all.
 
 static PRBool
 IsTableRelated(nsIAtom* aParentType,
@@ -5855,8 +5843,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     return &sInlineData;
   }
 
-  NS_ASSERTION(IsTableRelated(aDisplay->mDisplay), "Unexpected display type");
-
   if (NS_STYLE_DISPLAY_TABLE == aDisplay->mDisplay ||
       NS_STYLE_DISPLAY_INLINE_TABLE == aDisplay->mDisplay) {
     static const FrameConstructionData sTableData =
@@ -6467,15 +6453,13 @@ nsCSSFrameConstructor::PageBreakBefore(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
                                        nsIFrame*                aParentFrame,
                                        nsStyleContext*          aStyleContext,
+                                       const FrameConstructionData* aFCData,
                                        nsFrameItems&            aFrameItems)
 {
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
 
-  if (NS_STYLE_DISPLAY_NONE != display->mDisplay &&
-      NS_STYLE_POSITION_FIXED    != display->mPosition &&
-      NS_STYLE_POSITION_ABSOLUTE != display->mPosition &&
-      (NS_STYLE_DISPLAY_TABLE == display->mDisplay ||
-       !IsTableRelated(display->mDisplay))) {
+  if (!aStyleContext->GetStyleDisplay()->IsAbsolutelyPositioned() &&
+      !(aFCData->mBits & FCDATA_IS_TABLE_PART)) {
     if (display->mBreakBefore) {
       ConstructPageBreakFrame(aState, aContent, aParentFrame, aStyleContext,
                               aFrameItems);
@@ -6537,39 +6521,23 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = ResolveStyleContext(aParentFrame, aContent);
 
-  PRBool pageBreakAfter = PR_FALSE;
-
-  if (aState.mPresContext->IsPaginated()) {
-    // Construct a page break frame for page-break-before, and remember if
-    // we need one for page-break-after.
-    pageBreakAfter = PageBreakBefore(aState, aContent, aParentFrame,
-                                     styleContext, aFrameItems);
-  }
-
   // construct the frame
-  rv = ConstructFrameInternal(aState, aContent, aParentFrame,
-                              aContent->Tag(), aContent->GetNameSpaceID(),
-                              styleContext, aFrameItems, PR_FALSE);
-
-  if (NS_SUCCEEDED(rv) && pageBreakAfter) {
-    // Construct the page break after
-    ConstructPageBreakFrame(aState, aContent, aParentFrame, styleContext,
-                            aFrameItems);
-  }
-  
-  return rv;
+  return ConstructFrameInternal(aState, aContent, aParentFrame,
+                                aContent->Tag(), aContent->GetNameSpaceID(),
+                                styleContext, aFrameItems, PR_TRUE, PR_TRUE);
 }
 
 
 nsresult
-nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsIFrame*                aParentFrame,
-                                               nsIAtom*                 aTag,
-                                               PRInt32                  aNameSpaceID,
-                                               nsStyleContext*          aStyleContext,
-                                               nsFrameItems&            aFrameItems,
-                                               PRBool                   aXBLBaseTag)
+nsCSSFrameConstructor::ConstructFrameInternal(nsFrameConstructorState& aState,
+                                              nsIContent*              aContent,
+                                              nsIFrame*                aParentFrame,
+                                              nsIAtom*                 aTag,
+                                              PRInt32                  aNameSpaceID,
+                                              nsStyleContext*          aStyleContext,
+                                              nsFrameItems&            aFrameItems,
+                                              PRBool                   aAllowXBLBase,
+                                              PRBool                   aAllowPageBreaks)
 {
   // The following code allows the user to specify the base tag
   // of an element using XBL.  XUL and HTML objects (like boxes, menus, etc.)
@@ -6577,49 +6545,31 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   nsRefPtr<nsStyleContext> styleContext(aStyleContext);
   nsAutoEnqueueBinding binding(mDocument);
-  if (!aXBLBaseTag)
+  if (aAllowXBLBase && display->mBinding)
   {
-    
     // Ensure that our XBL bindings are installed.
-    if (display->mBinding) {
-      // Get the XBL loader.
-      nsresult rv;
-      // Load the bindings.
-      PRBool resolveStyle;
-      
-      nsIXBLService * xblService = GetXBLService();
-      if (!xblService)
-        return NS_ERROR_FAILURE;
 
-      rv = xblService->LoadBindings(aContent, display->mBinding->mURI,
-                                    display->mBinding->mOriginPrincipal,
-                                    PR_FALSE, getter_AddRefs(binding.mBinding),
-                                    &resolveStyle);
-      if (NS_FAILED(rv))
-        return NS_OK;
+    nsIXBLService * xblService = GetXBLService();
+    if (!xblService)
+      return NS_ERROR_FAILURE;
 
-      if (resolveStyle) {
-        styleContext = ResolveStyleContext(aParentFrame, aContent);
-        display = styleContext->GetStyleDisplay();
-      }
+    PRBool resolveStyle;
 
-      PRInt32 nameSpaceID;
-      nsCOMPtr<nsIAtom> baseTag =
-        mDocument->BindingManager()->ResolveTag(aContent, &nameSpaceID);
+    nsresult rv = xblService->LoadBindings(aContent, display->mBinding->mURI,
+                                           display->mBinding->mOriginPrincipal,
+                                           PR_FALSE,
+                                           getter_AddRefs(binding.mBinding),
+                                           &resolveStyle);
+    if (NS_FAILED(rv))
+      return NS_OK;
 
-      if (baseTag != aTag || aNameSpaceID != nameSpaceID) {
-        // Construct the frame using the XBL base tag.
-        rv = ConstructFrameInternal(aState,
-                                    aContent,
-                                    aParentFrame,
-                                    baseTag,
-                                    nameSpaceID,
-                                    styleContext,
-                                    aFrameItems,
-                                    PR_TRUE);
-        return rv;
-      }
+    if (resolveStyle) {
+      styleContext = ResolveStyleContext(aParentFrame, aContent);
+      display = styleContext->GetStyleDisplay();
+      aStyleContext = styleContext;
     }
+
+    aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
   }
 
   // Pre-check for display "none" - if we find that, don't create
@@ -6671,7 +6621,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
 
     // Now check for XUL display types
     if (!data) {
-      data = FindXULDisplayData(display, aContent, aStyleContext);
+      data = FindXULDisplayData(display, aContent, styleContext);
     }
 
     // And general display types
@@ -6727,9 +6677,25 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   }
 #endif /* MOZ_XUL */
 
-  return ConstructFrameFromData(data, aState, aContent, adjParentFrame, aTag,
-                                aNameSpaceID, styleContext, *frameItems,
-                                pseudoParent);
+  // Construct a page break frame for page-break-before, if needed, and
+  // remember whether we need one for page-break-after.
+  PRBool pageBreakAfter =
+    aAllowPageBreaks &&
+    aState.mPresContext->IsPaginated() &&
+    PageBreakBefore(aState, aContent, adjParentFrame, styleContext, data,
+                    *frameItems);
+
+  rv = ConstructFrameFromData(data, aState, aContent, adjParentFrame, aTag,
+                              aNameSpaceID, styleContext, *frameItems,
+                              pseudoParent);
+
+  if (NS_SUCCEEDED(rv) && pageBreakAfter) {
+    // Construct the page break after
+    ConstructPageBreakFrame(aState, aContent, adjParentFrame, styleContext,
+                            *frameItems);
+  }
+
+  return rv;
 }
 
 
@@ -11392,10 +11358,9 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
 
     BeginUpdate();
 
-    rv = ConstructFrameInternal(state, aChild,
-                                aParentFrame, aChild->Tag(),
-                                aChild->GetNameSpaceID(),
-                                styleContext, frameItems, PR_FALSE);
+    rv = ConstructFrameInternal(state, aChild, aParentFrame, aChild->Tag(),
+                                aChild->GetNameSpaceID(), styleContext,
+                                frameItems, PR_TRUE, PR_FALSE);
     if (!state.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(state, frameItems); 
     }
