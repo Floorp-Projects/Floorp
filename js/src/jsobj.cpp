@@ -2633,10 +2633,9 @@ js_InitEval(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-    proto = JS_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                         object_props, object_methods, NULL,
-                         object_static_methods);
+    JSObject *proto = JS_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object,
+                                   1, object_props, object_methods, NULL,
+                                   object_static_methods);
 #ifdef JS_TRACER
     if (proto)
         js_SetTraceableNative(cx, proto, js_Object_trcinfo);
