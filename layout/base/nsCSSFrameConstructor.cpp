@@ -4438,8 +4438,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     // if there are any anonymous children create frames for them.  Note that
     // we're doing this using a different parent frame from the one we pass to
     // ProcessChildren!
-    CreateAnonymousFrames(aTag, aState, aContent, buttonFrame,
-                          anonymousChildItems);
+    CreateAnonymousFrames(aState, aContent, buttonFrame, anonymousChildItems);
     if (anonymousChildItems.childList) {
       // the anonymous content is already parented to the area frame
       aState.mFrameManager->AppendFrames(blockFrame, nsnull,
@@ -4548,8 +4547,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       // element (the scrollbars).
 
       nsFrameItems childItems;
-      CreateAnonymousFrames(nsGkAtoms::combobox, aState, aContent,
-                            comboboxFrame, childItems);
+      CreateAnonymousFrames(aState, aContent, comboboxFrame, childItems);
   
       comboboxFrame->SetInitialChildList(nsnull, childItems.childList);
 
@@ -5285,40 +5283,6 @@ nsCSSFrameConstructor::ConstructFrameFromData(const FrameConstructionData* aData
   }
 
   return NS_OK;
-}
-
-nsresult
-nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aParent,
-                                             nsIFrame*                aNewFrame,
-                                             nsFrameItems&            aChildItems,
-                                             PRBool                   aIsRoot)
-{
-  // See if we might have anonymous content
-  // by looking at the tag rather than doing a QueryInterface on
-  // the frame.  Only these tags' frames can have anonymous content
-  // through nsIAnonymousContentCreator.  We do this check for
-  // performance reasons. If we did a QueryInterface on every tag it
-  // would be inefficient.
-  // XXXbz what about just having a virtual method to check this instead?
-  if (!aIsRoot &&
-      aTag != nsGkAtoms::input &&
-      aTag != nsGkAtoms::textarea &&
-      aTag != nsGkAtoms::combobox &&
-      aTag != nsGkAtoms::isindex &&
-      aTag != nsGkAtoms::scrollbar
-#ifdef MOZ_SVG
-      && aTag != nsGkAtoms::use
-#endif
-#ifdef MOZ_MEDIA
-      && aTag != nsGkAtoms::video
-      && aTag != nsGkAtoms::audio
-#endif
-      )
-    return NS_OK;
-
-  return CreateAnonymousFrames(aState, aParent, aNewFrame, aChildItems);
 }
 
 // after the node has been constructed and initialized create any
@@ -10296,8 +10260,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     // Create any anonymous frames the initial containing block frame requires.
     // This must happen before the rest of ProcessChildren to ensure that
     // popups are never constructed before the popupset.
-    CreateAnonymousFrames(nsnull, aState, aContent, aFrame, aFrameItems,
-                          PR_TRUE);
+    CreateAnonymousFrames(aState, aContent, aFrame, aFrameItems);
   }
 
   nsresult rv = NS_OK;
@@ -10336,8 +10299,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   }
 
   if (aFrame != mRootElementFrame) {
-    CreateAnonymousFrames(aContent->Tag(), aState, aContent, aFrame,
-                          aFrameItems);
+    CreateAnonymousFrames(aState, aContent, aFrame, aFrameItems);
   }
 
   // process the current pseudo frame state
@@ -11527,8 +11489,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                       childItems, &kidsAllInline);
   if (kidsAllInline) {
     // Set the inline frame's initial child list
-    CreateAnonymousFrames(aContent->Tag(), aState, aContent, newFrame,
-                          childItems);
+    CreateAnonymousFrames(aState, aContent, newFrame, childItems);
 
     newFrame->SetInitialChildList(nsnull, childItems.childList);
     if (NS_SUCCEEDED(rv)) {
