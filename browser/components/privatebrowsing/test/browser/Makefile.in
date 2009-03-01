@@ -54,6 +54,8 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_transition.js \
 		browser_privatebrowsing_import.js \
 		browser_privatebrowsing_crh.js \
+		browser_privatebrowsing_windowtitle.js \
+		browser_privatebrowsing_windowtitle_page.html \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
