@@ -720,7 +720,12 @@ WidgetStack.prototype = {
     this._viewingRect.width = width;
     this._viewingRect.height = height;
 
+    // Wrap this call in a batch to ensure that we always call the
+    // viewportUpdateHandler, even if _adjustViewingRect doesn't trigger a pan.
+    // If it does, the batch also ensures that we don't call the handler twice.
+    this.beginUpdateBatch();
     this._adjustViewingRect();
+    this.endUpdateBatch();
   },
 
   beginUpdateBatch: function startUpdate() {
