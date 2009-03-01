@@ -6634,6 +6634,14 @@ nsCSSFrameConstructor::ConstructFrameInternal(nsFrameConstructorState& aState,
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
       return NS_OK;
     }
+
+#ifdef MOZ_XUL
+    if ((data->mBits & FCDATA_IS_POPUP) &&
+        aParentFrame->GetType() != nsGkAtoms::menuFrame &&
+        !aState.mPopupItems.containingBlock) {
+      return NS_OK;
+    }
+#endif /* MOZ_XUL */
   }
   
   nsIFrame* adjParentFrame = aParentFrame;
@@ -6668,14 +6676,6 @@ nsCSSFrameConstructor::ConstructFrameInternal(nsFrameConstructorState& aState,
   {
     styleContext->GetStyleBackground();
   }
-
-#ifdef MOZ_XUL
-  if ((data->mBits & FCDATA_IS_POPUP) &&
-      adjParentFrame->GetType() != nsGkAtoms::menuFrame &&
-      !aState.mPopupItems.containingBlock) {
-    return NS_OK;
-  }
-#endif /* MOZ_XUL */
 
   // Construct a page break frame for page-break-before, if needed, and
   // remember whether we need one for page-break-after.
