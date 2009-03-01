@@ -73,10 +73,12 @@ struct JSFunction {
             uint16      extra;    /* number of arg slots for local GC roots */
             uint16      spare;    /* reserved for future use */
             JSNative    native;   /* native method pointer or null */
-            JSClass     *clasp;   /* class of objects constructed
-                                     by this function */
-            JSTraceableNative *trcinfo;  /* tracer metadata; can be first
-                                            element of array */
+            union {
+                JSClass             *clasp;    /* class of objects constructed
+                                                  by this function */
+                JSTraceableNative   *trcinfo;  /* tracer metadata; can be first
+                                                  element of array */
+            } u;
         } n;
         struct {
             uint16      nvars;    /* number of local variables */
@@ -109,10 +111,11 @@ struct JSFunction {
                               ? 0                                             \
                               : (fun)->nargs)
 #define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
-                              fun->u.n.clasp)
+                              JS_ASSERT(!((fun)->flags & JSFUN_TRACEABLE)),   \
+                              fun->u.n.u.clasp)
 #define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               JS_ASSERT((fun)->flags & JSFUN_TRACEABLE),      \
-                              fun->u.n.trcinfo)
+                              fun->u.n.u.trcinfo)
 
 /*
  * Traceable native.  This expands to a JSFunctionSpec initializer (like JS_FN

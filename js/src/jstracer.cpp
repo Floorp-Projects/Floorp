@@ -6642,22 +6642,25 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
     if (FUN_INTERPRETED(fun)) {
         if (constructing) {
             LIns* args[] = { get(&fval), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_Object_tn_ci, args);
+            LIns* tv_ins = lir->insCall(&js_FastNewObject_ci, args);
             guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
             set(&tval, tv_ins);
         }
         return interpretedFunctionCall(fval, fun, argc, constructing);
     }
 
-    if (!(fun->flags & JSFUN_TRACEABLE))
+    if (!constructing && !(fun->flags & JSFUN_TRACEABLE))
         ABORT_TRACE("untraceable native");
 
-    JSTraceableNative* known = FUN_TRCINFO(fun);
-    JS_ASSERT(known && (JSFastNative)fun->u.n.native == known->native);
+    static JSTraceableNative knownNatives[] = {
+        { (JSFastNative)js_Object, &js_FastNewObject_ci,  "fC", "",    FAIL_NULL | JSTN_MORE },
+        { (JSFastNative)js_Date,   &js_FastNewDate_ci,    "pC", "",    FAIL_NULL },
+    };
 
     LIns* args[5];
+    JSTraceableNative* known = constructing ? knownNatives : FUN_TRCINFO(fun);
     do {
-        if (((known->flags & JSTN_CONSTRUCTOR) != 0) != constructing)
+        if (constructing && (JSFastNative)fun->u.n.native != known->native)
             continue;
 
         uintN knownargc = strlen(known->argtypes);
@@ -8061,7 +8064,7 @@ TraceRecorder::record_JSOP_NEWINIT()
         if (JSVAL_IS_PRIMITIVE(v_obj))
             ABORT_TRACE("primitive Object value");
         obj = JSVAL_TO_OBJECT(v_obj);
-        ci = &js_Object_tn_ci;
+        ci = &js_FastNewObject_ci;
     }
     LIns* args[] = { INS_CONSTPTR(obj), cx_ins };
     LIns* v_ins = lir->insCall(ci, args);
