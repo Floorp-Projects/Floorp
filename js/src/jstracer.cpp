@@ -905,19 +905,33 @@ public:
             if (isi2f(s0) || isu2f(s0))
                 return iu2fArg(s0);
             // XXX ARM -- check for qjoin(call(UnboxDouble),call(UnboxDouble))
-            if (s0->isCall() && s0->callInfo() == &js_UnboxDouble_ci) {
-                LIns* args2[] = { callArgN(s0, 0) };
-                return out->insCall(&js_UnboxInt32_ci, args2);
-            }
-            if (s0->isCall() && s0->callInfo() == &js_StringToNumber_ci) {
-                // callArgN's ordering is that as seen by the builtin, not as stored in args here.
-                // True story!
-                LIns* args2[] = { callArgN(s0, 1), callArgN(s0, 0) };
-                return out->insCall(&js_StringToInt32_ci, args2);
+            if (s0->isCall()) {
+                const CallInfo* ci2 = s0->callInfo();
+                if (ci2 == &js_UnboxDouble_ci) {
+                    LIns* args2[] = { callArgN(s0, 0) };
+                    return out->insCall(&js_UnboxInt32_ci, args2);
+                } else if (ci2 == &js_StringToNumber_ci) {
+                    // callArgN's ordering is that as seen by the builtin, not as stored in
+                    // args here. True story!
+                    LIns* args2[] = { callArgN(s0, 1), callArgN(s0, 0) };
+                    return out->insCall(&js_StringToInt32_ci, args2);
+                } else if (ci2 == &js_String_p_charCodeAt0_ci) {
+                    // Use a fast path builtin for a charCodeAt that converts to an int right away.
+                    LIns* args2[] = { callArgN(s0, 0) };
+                    return out->insCall(&js_String_p_charCodeAt0_int_ci, args2);
+                } else if (ci2 == &js_String_p_charCodeAt_ci) {
+                    LIns* idx = callArgN(s0, 1);
+                    // If the index is not already an integer, force it to be an integer.
+                    idx = isPromote(idx)
+                        ? demote(out, idx)
+                        : out->insCall(&js_DoubleToInt32_ci, &idx);
+                    LIns* args2[] = { idx, callArgN(s0, 0) };
+                    return out->insCall(&js_String_p_charCodeAt_int_ci, args2);
+                }
             }
         } else if (ci == &js_BoxDouble_ci) {
             JS_ASSERT(s0->isQuad());
-            if (s0->isop(LIR_i2f)) {
+            if (isi2f(s0)) {
                 LIns* args2[] = { s0->oprnd1(), args[1] };
                 return out->insCall(&js_BoxInt32_ci, args2);
             }
@@ -6741,27 +6755,6 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
                 goto next_specialization;
             }
             argp--;
-        }
-
-        /*
-         * If we got this far, and we have a charCodeAt, check that charCodeAt
-         * isn't going to return a NaN.
-         */
-        if (!constructing && known->builtin == &js_String_p_charCodeAt_ci) {
-            JSString* str = JSVAL_TO_STRING(tval);
-            jsval& arg = stackval(-1);
-
-            JS_ASSERT(JSVAL_IS_STRING(tval));
-            JS_ASSERT(isNumber(arg));
-
-            if (JSVAL_IS_INT(arg)) {
-                if (size_t(JSVAL_TO_INT(arg)) >= JSSTRING_LENGTH(str))
-                    ABORT_TRACE("invalid charCodeAt index");
-            } else {
-                double d = js_DoubleToInteger(*JSVAL_TO_DOUBLE(arg));
-                if (d < 0 || JSSTRING_LENGTH(str) <= d)
-                    ABORT_TRACE("invalid charCodeAt index");
-            }
         }
         goto success;
 
