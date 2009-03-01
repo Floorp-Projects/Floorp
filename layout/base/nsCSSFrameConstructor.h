@@ -826,6 +826,7 @@ private:
                          nsIContent*              aContent,
                          nsIFrame*                aParentFrame,
                          nsStyleContext*          aStyleContext,
+                         const FrameConstructionData* aFCData,
                          nsFrameItems&            aFrameItems);
 
   // Function to find FrameConstructionData for aContent.  Will return
@@ -871,14 +872,15 @@ private:
                                   nsFrameItems& aFrameItems,
                                   PRBool aHasPseudoParent);
 
-  nsresult ConstructFrameInternal( nsFrameConstructorState& aState,
-                                   nsIContent*              aContent,
-                                   nsIFrame*                aParentFrame,
-                                   nsIAtom*                 aTag,
-                                   PRInt32                  aNameSpaceID,
-                                   nsStyleContext*          aStyleContext,
-                                   nsFrameItems&            aFrameItems,
-                                   PRBool                   aXBLBaseTag);
+  nsresult ConstructFrameInternal(nsFrameConstructorState& aState,
+                                  nsIContent*              aContent,
+                                  nsIFrame*                aParentFrame,
+                                  nsIAtom*                 aTag,
+                                  PRInt32                  aNameSpaceID,
+                                  nsStyleContext*          aStyleContext,
+                                  nsFrameItems&            aFrameItems,
+                                  PRBool                   aAllowXBLBase,
+                                  PRBool                   aAllowPageBreaks);
 
   nsresult CreateAnonymousFrames(nsIAtom*                 aTag,
                                  nsFrameConstructorState& aState,
