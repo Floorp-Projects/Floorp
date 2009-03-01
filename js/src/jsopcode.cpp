@@ -241,6 +241,12 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
     return JS_TRUE;
 }
 
+JSBool
+js_DumpScript(JSContext *cx, JSScript *script)
+{
+    return js_Disassemble(cx, script, true, stdout);
+}
+
 const char *
 ToDisassemblySource(JSContext *cx, jsval v)
 {
