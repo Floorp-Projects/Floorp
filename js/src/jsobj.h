@@ -764,9 +764,6 @@ JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 #endif
 
-extern void
-js_SetTraceableNative(JSContext *cx, JSObject *proto, JSTraceableNative* trcinfo);
-
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */
