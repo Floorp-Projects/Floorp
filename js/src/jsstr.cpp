@@ -1071,10 +1071,9 @@ js_String_p_charCodeAt0_int(JSString* str)
 }
 
 /*
- * The FuncFilter replaces the generic double version of charCodeAt with the integer fast path
- * if appriopriate.
+ * The FuncFilter replaces the generic double version of charCodeAt with the
+ * integer fast path if appropriate.
  */
-
 JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING,        1, 1)
 JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int,  STRING, INT32, 1, 1)
 #endif
