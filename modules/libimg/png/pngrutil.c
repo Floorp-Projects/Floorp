@@ -1123,6 +1123,7 @@ png_handle_sPLT(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_sPLT");
 
+
    if (!(png_ptr->mode & PNG_HAVE_IHDR))
       png_error(png_ptr, "Missing IHDR before sPLT");
    else if (png_ptr->mode & PNG_HAVE_IDAT)
@@ -1909,6 +1910,7 @@ png_handle_tEXt(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 
    png_debug(1, "in png_handle_tEXt");
 
+
    if (!(png_ptr->mode & PNG_HAVE_IHDR))
       png_error(png_ptr, "Missing IHDR before tEXt");
 
@@ -1925,6 +1927,7 @@ png_handle_tEXt(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 #endif
 
    png_free(png_ptr, png_ptr->chunkdata);
+
    png_ptr->chunkdata = (png_charp)png_malloc_warn(png_ptr, length + 1);
    if (png_ptr->chunkdata == NULL)
    {
@@ -1942,6 +1945,7 @@ png_handle_tEXt(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    }
 
    key = png_ptr->chunkdata;
+
    key[slength] = 0x00;
 
    for (text = key; *text; text++)
@@ -1991,6 +1995,8 @@ png_handle_zTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    png_size_t slength, prefix_len, data_len;
 
    png_debug(1, "in png_handle_zTXt");
+
+
    if (!(png_ptr->mode & PNG_HAVE_IHDR))
       png_error(png_ptr, "Missing IHDR before zTXt");
 
@@ -2094,6 +2100,7 @@ png_handle_iTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    png_size_t slength, prefix_len, data_len;
 
    png_debug(1, "in png_handle_iTXt");
+
 
    if (!(png_ptr->mode & PNG_HAVE_IHDR))
       png_error(png_ptr, "Missing IHDR before iTXt");
@@ -2382,6 +2389,7 @@ png_handle_unknown(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
    png_uint_32 skip = 0;
 
    png_debug(1, "in png_handle_unknown");
+
 
    if (png_ptr->mode & PNG_HAVE_IDAT)
    {
@@ -3371,9 +3379,9 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
    png_debug1(3, "width = %lu,", png_ptr->width);
    png_debug1(3, "height = %lu,", png_ptr->height);
    png_debug1(3, "iwidth = %lu,", png_ptr->iwidth);
-   png_debug1(3, "num_rows = %lu", png_ptr->num_rows);
+   png_debug1(3, "num_rows = %lu,", png_ptr->num_rows);
    png_debug1(3, "rowbytes = %lu,", png_ptr->rowbytes);
-   png_debug1(3, "irowbytes = %lu,", png_ptr->irowbytes);
+   png_debug1(3, "irowbytes = %lu", png_ptr->irowbytes);
 
    png_ptr->flags |= PNG_FLAG_ROW_INIT;
 }
