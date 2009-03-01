@@ -6560,32 +6560,24 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       computedWidth = PR_MAX(computedWidth, 0);
       reflowState.SetComputedWidth(computedWidth);
     }
-
-    // Most child frames of box frames (e.g. subdocument or scroll frames)
-    // need to be constrained to the provided size and overflow as necessary.
-    // The one exception are block frames, because we need to know their
-    // natural height excluding any overflow area which may be caused by
-    // various CSS effects such as shadow or outline.
-    if (!IsFrameOfType(eBlockFrame)) {
-      if (aHeight != NS_INTRINSICSIZE) {
-        nscoord computedHeight =
-          aHeight - reflowState.mComputedBorderPadding.TopBottom();
-        computedHeight = PR_MAX(computedHeight, 0);
-        reflowState.SetComputedHeight(computedHeight);
-      } else {
-        reflowState.SetComputedHeight(
-          ComputeSize(aRenderingContext, availSize, availSize.width,
-                      nsSize(reflowState.mComputedMargin.LeftRight(),
-                             reflowState.mComputedMargin.TopBottom()),
-                      nsSize(reflowState.mComputedBorderPadding.LeftRight() -
-                               reflowState.mComputedPadding.LeftRight(),
-                             reflowState.mComputedBorderPadding.TopBottom() -
-                               reflowState.mComputedPadding.TopBottom()),
-                      nsSize(reflowState.mComputedPadding.LeftRight(),
-                               reflowState.mComputedPadding.TopBottom()),
-                      PR_FALSE).height
-          );
-      }
+    if (aHeight != NS_INTRINSICSIZE) {
+      nscoord computedHeight =
+        aHeight - reflowState.mComputedBorderPadding.TopBottom();
+      computedHeight = PR_MAX(computedHeight, 0);
+      reflowState.SetComputedHeight(computedHeight);
+    } else {
+      reflowState.SetComputedHeight(
+        ComputeSize(aRenderingContext, availSize, availSize.width,
+                    nsSize(reflowState.mComputedMargin.LeftRight(),
+                           reflowState.mComputedMargin.TopBottom()),
+                    nsSize(reflowState.mComputedBorderPadding.LeftRight() -
+                             reflowState.mComputedPadding.LeftRight(),
+                           reflowState.mComputedBorderPadding.TopBottom() -
+                             reflowState.mComputedPadding.TopBottom()),
+                    nsSize(reflowState.mComputedPadding.LeftRight(),
+                           reflowState.mComputedPadding.TopBottom()),
+                    PR_FALSE).height
+        );
     }
 
     // Box layout calls SetRect before Layout, whereas non-box layout
@@ -6614,6 +6606,52 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     Reflow(aPresContext, aDesiredSize, reflowState, status);
 
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+
+   // printf("width: %d, height: %d\n", aDesiredSize.mCombinedArea.width, aDesiredSize.mCombinedArea.height);
+
+    // see if the overflow option is set. If it is then if our child's bounds overflow then
+    // we will set the child's rect to include the overflow size.
+    if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+      // This kinda sucks. We should be able to handle the case
+      // where there's overflow above or to the left of the
+      // origin. But for now just chop that stuff off.
+      // (note: For RTL mode, replace "to the left of the origin" 
+      // with "to the right of the range [0, aDesiredSize.width]")
+
+      //printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
+
+      if (NS_STYLE_DIRECTION_LTR == GetStyleVisibility()->mDirection) {
+        // LTR mode -- extend for overflow on right side.
+        aDesiredSize.width = PR_MAX(aDesiredSize.width, 
+                                    aDesiredSize.mOverflowArea.XMost());
+      } else {
+        // RTL mode -- extend for overflow on left side.
+        nscoord leftmostValue = PR_MIN(0, aDesiredSize.mOverflowArea.x);
+        // Note: If anything, this increases aDesiredSize.width, because
+        // leftmostValue is non-positive.
+        aDesiredSize.width = aDesiredSize.width - leftmostValue;
+      }
+      if (aDesiredSize.width <= aWidth) {
+        aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
+      } else {
+        nscoord computedWidth = aDesiredSize.width -
+          reflowState.mComputedBorderPadding.LeftRight();
+        computedWidth = PR_MAX(computedWidth, 0);
+        reflowState.SetComputedWidth(computedWidth);
+        reflowState.availableWidth = aDesiredSize.width;
+        DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
+        #ifdef DEBUG_REFLOW
+        nsAdaptorAddIndents();
+        nsAdaptorPrintReason(reflowState);
+        printf("\n");
+        #endif
+        AddStateBits(NS_FRAME_IS_DIRTY);
+        WillReflow(aPresContext);
+        Reflow(aPresContext, aDesiredSize, reflowState, status);
+        if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
+          aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
+      }
+    }
 
     if (redrawAfterReflow) {
        nsRect r = GetRect();
