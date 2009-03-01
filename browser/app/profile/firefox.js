@@ -783,6 +783,9 @@ pref("browser.zoom.full", true);
 // Whether or not to save and restore zoom levels on a per-site basis.
 pref("browser.zoom.siteSpecific", true);
 
+// Whether or not to update background tabs to the current zoom level.
+pref("browser.zoom.updateBackgroundTabs", true);
+
 // replace newlines with spaces when pasting into <input type="text"> fields
 pref("editor.singleLine.pasteNewlines", 2);
 
