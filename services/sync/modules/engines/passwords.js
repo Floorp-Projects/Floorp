@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Justin Dolske <dolske@mozilla.com>
+ *  Anant Narayanan <anant@kix.in>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,13 +38,17 @@
 const EXPORTED_SYMBOLS = ['PasswordEngine'];
 
 const Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
+Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/ext/Observers.js");
+Cu.import("resource://weave/type_records/passwords.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -51,206 +56,206 @@ function PasswordEngine() {
   this._init();
 }
 PasswordEngine.prototype = {
-  __proto__: new SyncEngine(),
-
-  get name() { return "passwords"; },
-  get displayName() { return "Saved Passwords"; },
-  get logName() { return "PasswordEngine"; },
-  get serverPrefix() { return "user-data/passwords/"; },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new PasswordStore();
-    return this.__store;
+  __proto__: SyncEngine.prototype,
+  name: "passwords",
+  displayName: "Passwords",
+  logName: "Passwords",
+  _storeObj: PasswordStore,
+  _trackerObj: PasswordTracker,
+  _recordObj: LoginRec,
+  
+  /* We override syncStartup & syncFinish to populate/reset our local cache
+     of loginInfo items. We can remove this when the interface to query
+     LoginInfo items by GUID is ready
+  */
+  _syncStartup: function PasswordStore__syncStartup() {
+    let self = yield;
+    this._store._cacheLogins();
+    yield SyncEngine.prototype._syncStartup.async(this, self.cb);
   },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new PasswordSyncCore(this._store);
-    return this.__core;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new PasswordTracker();
-    return this.__tracker;
+  
+  _syncFinish: function PasswordStore__syncFinish() {
+    let self = yield;
+    this._store._clearLoginCache();
+    yield SyncEngine.prototype._syncFinish.async(this, self.cb);
   }
 };
-
-function PasswordSyncCore(store) {
-  this._store = store;
-  this._init();
-}
-PasswordSyncCore.prototype = {
-  _logName: "PasswordSync",
-  _store: null,
-
-  _commandLike: function PSC_commandLike(a, b) {
-    // Not used.
-    return false;
-  }
-};
-PasswordSyncCore.prototype.__proto__ = new SyncCore();
 
 function PasswordStore() {
   this._init();
 }
 PasswordStore.prototype = {
+  __proto__: Store.prototype,
   _logName: "PasswordStore",
-  _lookup: null,
 
-  __loginManager: null,
   get _loginManager() {
-    if (!this.__loginManager)
-      this.__loginManager = Utils.getLoginManager();
-    return this.__loginManager;
+    let loginManager = Utils.getLoginManager();
+    this.__defineGetter__("_loginManager", function() loginManager);
+    return loginManager;
   },
 
-  __nsLoginInfo: null,
-  get _nsLoginInfo() {
-    if (!this.__nsLoginInfo)
-      this.__nsLoginInfo = Utils.makeNewLoginInfo();
-    return this.__nsLoginInfo;
-  },
-
-  /*
-   * _hashLoginInfo
-   *
-   * nsILoginInfo objects don't have a unique GUID, so we need to generate one
-   * on the fly. This is done by taking a hash of every field in the object.
-   * Note that the resulting GUID could potentiually reveal passwords via
-   * dictionary attacks or brute force. But GUIDs shouldn't be obtainable by
-   * anyone, so this should generally be safe.
-   */
-   _hashLoginInfo: function PasswordStore__hashLoginInfo(aLogin) {
-    var loginKey = aLogin.hostname      + ":" +
-                   aLogin.formSubmitURL + ":" +
-                   aLogin.httpRealm     + ":" +
-                   aLogin.username      + ":" +
-                   aLogin.password      + ":" +
-                   aLogin.usernameField + ":" +
-                   aLogin.passwordField;
-
-    return Utils.sha1(loginKey);
-  },
-
-  _createCommand: function PasswordStore__createCommand(command) {
-    this._log.info("PasswordStore got createCommand: " + command );
-
-    var login = new this._nsLoginInfo(command.data.hostname,
-                                      command.data.formSubmitURL,
-                                      command.data.httpRealm,
-                                      command.data.username,
-                                      command.data.password,
-                                      command.data.usernameField,
-                                      command.data.passwordField);
-
-    this._loginManager.addLogin(login);
-  },
-
-  _removeCommand: function PasswordStore__removeCommand(command) {
-    this._log.info("PasswordStore got removeCommand: " + command );
-
-    if (command.GUID in this._lookup) {
-      var data  = this._lookup[command.GUID];
-      var login = new this._nsLoginInfo(data.hostname,
-                                        data.formSubmitURL,
-                                        data.httpRealm,
-                                        data.username,
-                                        data.password,
-                                        data.usernameField,
-                                        data.passwordField);
-      this._loginManager.removeLogin(login);
-    } else {
-      this._log.warn("Invalid GUID for remove, ignoring request!");
+  get _loginItems() {
+    let loginItems = {};
+    let logins = this._loginManager.getAllLogins({});
+    for (let i = 0; i < logins.length; i++) {
+      let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
+      loginItems[metaInfo.guid] = logins[i];
     }
+    
+    this.__defineGetter__("_loginItems", function() loginItems);
+    return loginItems;
+  },
+  
+  _nsLoginInfo: null,
+  _init: function PasswordStore_init() {
+    Store.prototype._init.call(this);
+    this._nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
+  },
+  
+  _cacheLogins: function PasswordStore__cacheLogins() {
+    /* Force the getter to populate the property
+       Also, this way, we don't fail if the store is created twice?
+     */
+    return this._loginItems;
+  },
+  
+  _clearLoginCache: function PasswordStore__clearLoginCache() {
+    this.__loginItems = null;
+  },
+  
+  _nsLoginInfoFromRecord: function PasswordStore__nsLoginInfoRec(record) {
+    return new this._nsLoginInfo(record.hostname,
+                                  record.formSubmitURL,
+                                  record.httpRealm,
+                                  record.username,
+                                  record.password,
+                                  record.usernameField,
+                                  record.passwordField);
   },
 
-  _editCommand: function PasswordStore__editCommand(command) {
-    this._log.info("PasswordStore got editCommand: " + command );
-    throw "Password syncs are expected to only be create/remove!";
-  },
-
-  wrap: function PasswordStore_wrap() {
-    /* Return contents of this store, as JSON. */
-    var items = {};
-    var logins = this._loginManager.getAllLogins({});
-
-    for (var i = 0; i < logins.length; i++) {
-      var login = logins[i];
-
-      var key = this._hashLoginInfo(login);
-
-      items[key] = { hostname      : login.hostname,
-                     formSubmitURL : login.formSubmitURL,
-                     httpRealm     : login.httpRealm,
-                     username      : login.username,
-                     password      : login.password,
-                     usernameField : login.usernameField,
-                     passwordField : login.passwordField };
+  getAllIDs: function PasswordStore__getAllIDs() {
+    let items = {};
+    let logins = this._loginManager.getAllLogins({});
+    
+    for (let i = 0; i < logins.length; i++) {
+      let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
+      items[metaInfo.guid] = logins[i].hostname;
     }
-
-    this._lookup = items;
+    
     return items;
+  },
+
+  changeItemID: function PasswordStore__changeItemID(oldID, newID) {
+    if (!(oldID in this._loginItems)) {
+      this._log.warn("Can't change GUID " + oldID + " to " +
+                     newID + ": Item does not exist");
+      return;
+    }
+    let info = this._loginItems[oldID];
+    
+    if (newID in this._loginItems) {
+      this._log.warn("Can't change GUID " + oldID + " to " +
+                     newID + ": new ID already in use");
+      return;
+    }
+    
+    this._log.debug("Changing GUID " + oldID + " to " + newID);
+
+    let prop = Cc["@mozilla.org/hash-property-bag;1"].
+               createInstance(Ci.nsIWritablePropertyBag2);
+    prop.setPropertyAsAUTF8String("guid", newID);
+
+    this._loginManager.modifyLogin(info, prop);
+  },
+
+  itemExists: function PasswordStore__itemExists(id) {
+    return ((id in this._loginItems) == true);
+  },
+
+  createRecord: function PasswordStore__createRecord(guid, cryptoMetaURL) {
+    let record = new LoginRec();
+    record.id = guid;
+    if (guid in this._loginItems) {
+      let login = this._loginItems[guid];
+      record.encryption = cryptoMetaURL;
+      record.hostname = login.hostname;
+      record.formSubmitURL = login.formSubmitURL;
+      record.httpRealm = login.httpRealm;
+      record.username = login.username;
+      record.password = login.password;
+      record.usernameField = login.usernameField;
+      record.passwordField = login.passwordField;
+    } else {
+      /* Deleted item */
+      record.cleartext = null;
+    }
+    return record;
+  },
+
+  create: function PasswordStore__create(record) {
+    this._loginManager.addLogin(this._nsLoginInfoFromRecord(record));
+  },
+
+  remove: function PasswordStore__remove(record) {
+    if (record.id in this._loginItems) {
+      this._loginManager.removeLogin(this._loginItems[record.id]);
+      return;
+    }
+    
+    this._log.debug("Asked to remove record that doesn't exist, ignoring!");
+  },
+
+  update: function PasswordStore__update(record) {
+    if (!(record.id in this._loginItems)) {
+      this._log.debug("Skipping update for unknown item: " + record.id);
+      return;
+    }
+    let login = this._loginItems[record.id];
+    this._log.trace("Updating " + record.id + " (" + itemId + ")");
+
+    let newinfo = this._nsLoginInfoFromRecord(record);
+    this._loginManager.modifyLogin(login, newinfo);
   },
 
   wipe: function PasswordStore_wipe() {
     this._loginManager.removeAllLogins();
-  },
-
-  _resetGUIDs: function PasswordStore__resetGUIDs() {
-    let self = yield;
-    // Not needed.
   }
 };
-PasswordStore.prototype.__proto__ = new Store();
 
 function PasswordTracker() {
   this._init();
 }
 PasswordTracker.prototype = {
+  __proto__: Tracker.prototype,
   _logName: "PasswordTracker",
 
-  __loginManager : null,
-  get _loginManager() {
-    if (!this.__loginManager)
-      this.__loginManager = Cc["@mozilla.org/login-manager;1"].
-                            getService(Ci.nsILoginManager);
-    return this.__loginManager;
+  _init: function PasswordTracker_init() {
+    Tracker.prototype._init.call(this);
+    Observers.add("passwordmgr-storage-changed", this);
   },
 
-  /* We use nsILoginManager's countLogins() method, as it is
-   * the only method that doesn't require the user to enter
-   * a master password, but still gives us an idea of how much
-   * info has changed.
-   *
-   * FIXME: This does not track edits of passwords, so we
-   * artificially add 30 to every score. We should move to
-   * using the LoginManager shim at some point.
-   *
-   * Each addition/removal is worth 15 points.
-   */
-  _loginCount: 0,
-  get score() {
-    var count = this._loginManager.countLogins("", "", "");
-    var score = (Math.abs(this._loginCount - count) * 15) + 30;
+  /* A single add, remove or change is 15 points, all items removed is 50 */
+  observe: function PasswordTracker_observe(aSubject, aTopic, aData) {
+    if (this.ignoreAll)
+      return;
 
-    if (score >= 100)
-      return 100;
-    else
-      return score;
-  },
+    this._log.debug("Received notification " + aData);
 
-  resetScore: function PasswordTracker_resetScore() {
-    this._loginCount = this._loginManager.countLogins("", "", "");
-  },
-
-  _init: function PasswordTracker__init() {
-    this._log = Log4Moz.Service.getLogger("Service."  + this._logName);
-    this._loginCount = this._loginManager.countLogins("", "", "");
+    switch (aData) {
+    case 'addLogin':
+    case 'modifyLogin':
+    case 'removeLogin':
+      let metaInfo = aSubject.QueryInterface(Ci.nsILoginMetaInfo);
+      this._score += 15;
+      this.addChangedID(metaInfo.guid);
+      break;
+    case 'removeAllLogins':
+      this._score += 50;
+      break;
+    }
   }
 };
-PasswordTracker.prototype.__proto__ = new Tracker();
