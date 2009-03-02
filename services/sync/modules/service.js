@@ -320,8 +320,10 @@ WeaveSvc.prototype = {
     this._initLogs();
     this._log.info("Weave " + WEAVE_VERSION + " initializing");
 
-    if (WEAVE_VERSION != Svc.Prefs.get("lastversion"))
+    if (WEAVE_VERSION != Svc.Prefs.get("lastversion")) {
+      this._log.warn("Wiping client from _onStartup.");
       this._wipeClientMetadata();
+    }
 
     let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
       getService(Ci.nsIHttpProtocolHandler).userAgent;
@@ -574,17 +576,26 @@ WeaveSvc.prototype = {
     this._log.debug("Fetching global metadata record");
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
-    
+
+    // DEBUG: Just for now, i'm turning off wiping of server based on version
+    // mismatch.  Don't commit this line:
+    meta.payload.storageVersion = MIN_SERVER_STORAGE_VERSION; // this
     this._log.debug("Min server storage version is " + MIN_SERVER_STORAGE_VERSION);
-    
     if (meta) {
-          this._log.debug("payload storage version is " + 
+          this._log.debug("payload storage version is " +
                           meta.payload.storageVersion);
     }
-    
+
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
         Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
                             meta.payload.storageVersion) > 0) {
+      if (Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
+			     meta.payload.storageVersion) > 0) {
+	this._log.warn("Version " + meta.payload.storageVersion + " does not match version " + MIN_SERVER_STORAGE_VERSION);
+      }
+      if (!meta.payload.syncID) {
+	this._log.warn("No sync id.");
+      }
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.lastResource.lastChannel.responseStatus;
       if (status != 200 && status != 404) {
@@ -595,6 +606,7 @@ WeaveSvc.prototype = {
       }
 
       reset = true;
+      this._log.warn("Calling freshStart from the first case.");
       yield this._freshStart.async(this, self.cb);
 
       if (status == 404)
@@ -613,6 +625,7 @@ WeaveSvc.prototype = {
       return;
 
     } else if (meta.payload.syncID != Clients.syncID) {
+      this._log.warn("Wiping client because of syncID mismatch.");
       this._wipeClientMetadata();
       Clients.syncID = meta.payload.syncID;
       this._log.info("Cleared local caches after server wipe was detected");
@@ -648,6 +661,7 @@ WeaveSvc.prototype = {
       }
 
       if (!reset) {
+	this._log.warn("Calling freshStart from !reset case.");
 	yield this._freshStart.async(this, self.cb);
 	this._log.info("Server data wiped to ensure consistency due to missing keys");
       }
@@ -811,7 +825,7 @@ WeaveSvc.prototype = {
 
   _freshStart: function WeaveSvc__freshStart() {
     let self = yield;
-
+    this._log.warn("Wiping client data from freshStart.");
     this._wipeClientMetadata();
     this._log.info("Client metadata wiped, deleting server data");
     yield this._wipeServer.async(this, self.cb);
