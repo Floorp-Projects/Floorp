@@ -3338,6 +3338,13 @@ PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
     if (!OBJ_IS_DELEGATE(cx, obj))
         return;
 
+    /*
+     * All scope chains end in a global object, so this will change the global
+     * shape. jstracer.cpp assumes that the global shape never changes on
+     * trace, so we must deep-bail here.
+     */
+    js_LeaveTrace(cx);
+
     PurgeProtoChain(cx, OBJ_GET_PROTO(cx, obj), id);
     while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL) {
         if (PurgeProtoChain(cx, obj, id))
