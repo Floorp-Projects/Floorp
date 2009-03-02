@@ -268,14 +268,6 @@ PrivateBrowsingService.prototype = {
                       getService(Ci.nsIHttpAuthManager);
         authMgr.clearAll();
 
-        // Prevent any SSL sockets from remaining open (bug 463256)
-        let ios = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-        if (!ios.offline) {
-          ios.offline = true;
-          ios.offline = false;
-        }
-
         if (!this._inPrivateBrowsing) {
           // Clear the error console
           let consoleService = Cc["@mozilla.org/consoleservice;1"].
