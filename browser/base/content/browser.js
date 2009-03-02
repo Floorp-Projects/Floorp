@@ -4161,7 +4161,8 @@ var XULBrowserWindow = {
 
   // simulate all change notifications after switching tabs
   onUpdateCurrentBrowser: function (aStateFlags, aStatus, aMessage, aTotalProgress) {
-    FullZoom.onLocationChange(gBrowser.currentURI);
+    if (FullZoom.updateBackgroundTabs)
+      FullZoom.onLocationChange(gBrowser.currentURI);
     var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     var loadingDone = aStateFlags & nsIWebProgressListener.STATE_STOP;
     // use a pseudo-object instead of a (potentially non-existing) channel for getting

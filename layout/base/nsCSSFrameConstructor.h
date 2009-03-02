@@ -539,12 +539,12 @@ private:
                               nsFrameConstructorState& aState, 
                               nsIFrame&                aParentFrameIn);
 
-  nsresult GetParentFrame(PRInt32                  aNameSpaceID,
-                          nsIFrame&                aParentFrameIn, 
-                          nsIAtom*                 aChildFrameType, 
-                          nsFrameConstructorState& aState, 
-                          nsIFrame*&               aParentFrame,
-                          PRBool&                  aIsPseudoParent);
+  nsresult CreateRequiredPseudoFrames(PRInt32                  aNameSpaceID,
+                                      nsIFrame&                aParentFrameIn,
+                                      nsIAtom*                 aChildFrameType,
+                                      nsFrameConstructorState& aState,
+                                      nsIFrame*&               aParentFrame,
+                                      PRBool&                  aIsPseudoParent);
 
 private:
   /* A constructor function that just creates an nsIFrame object.  The caller
@@ -826,6 +826,7 @@ private:
                          nsIContent*              aContent,
                          nsIFrame*                aParentFrame,
                          nsStyleContext*          aStyleContext,
+                         const FrameConstructionData* aFCData,
                          nsFrameItems&            aFrameItems);
 
   // Function to find FrameConstructionData for aContent.  Will return
@@ -871,21 +872,15 @@ private:
                                   nsFrameItems& aFrameItems,
                                   PRBool aHasPseudoParent);
 
-  nsresult ConstructFrameInternal( nsFrameConstructorState& aState,
-                                   nsIContent*              aContent,
-                                   nsIFrame*                aParentFrame,
-                                   nsIAtom*                 aTag,
-                                   PRInt32                  aNameSpaceID,
-                                   nsStyleContext*          aStyleContext,
-                                   nsFrameItems&            aFrameItems,
-                                   PRBool                   aXBLBaseTag);
-
-  nsresult CreateAnonymousFrames(nsIAtom*                 aTag,
-                                 nsFrameConstructorState& aState,
-                                 nsIContent*              aParent,
-                                 nsIFrame*                aNewFrame,
-                                 nsFrameItems&            aChildItems,
-                                 PRBool                   aIsRoot = PR_FALSE);
+  nsresult ConstructFrameInternal(nsFrameConstructorState& aState,
+                                  nsIContent*              aContent,
+                                  nsIFrame*                aParentFrame,
+                                  nsIAtom*                 aTag,
+                                  PRInt32                  aNameSpaceID,
+                                  nsStyleContext*          aStyleContext,
+                                  nsFrameItems&            aFrameItems,
+                                  PRBool                   aAllowXBLBase,
+                                  PRBool                   aAllowPageBreaks);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
