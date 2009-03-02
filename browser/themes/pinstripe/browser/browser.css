@@ -1038,6 +1038,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   margin-top: 1px;
   padding-top: 8px;
   color: #ffffff;
+  background-color: transparent;
 }
 
 #editBookmarkPanelTitle {
