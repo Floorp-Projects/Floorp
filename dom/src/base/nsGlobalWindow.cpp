@@ -5611,17 +5611,9 @@ nsGlobalWindow::EnterModalState()
     return;
   }
 
-  nsGlobalWindow* topWin =
-    static_cast<nsGlobalWindow*>(static_cast<nsIDOMWindow *>(top.get()));
-  if (topWin->mModalStateDepth == 0) {
-    NS_ASSERTION(!mSuspendedDoc, "Shouldn't have mSuspendedDoc here!");
-
-    mSuspendedDoc = do_QueryInterface(topWin->GetExtantDocument());
-    if (mSuspendedDoc) {
-      mSuspendedDoc->SuppressEventHandling();
-    }
-  }
-  topWin->mModalStateDepth++;
+  static_cast<nsGlobalWindow *>
+             (static_cast<nsIDOMWindow *>
+                         (top.get()))->mModalStateDepth++;
 }
 
 // static
@@ -5717,22 +5709,6 @@ nsGlobalWindow::LeaveModalState()
     nsCOMPtr<nsIRunnable> runner = new nsPendingTimeoutRunner(topWin);
     if (NS_FAILED(NS_DispatchToCurrentThread(runner)))
       NS_WARNING("failed to dispatch pending timeout runnable");
-
-    if (mSuspendedDoc) {
-      nsCOMPtr<nsIDocument> currentDoc =
-        do_QueryInterface(topWin->GetExtantDocument());
-      if (currentDoc == mSuspendedDoc) {
-        NS_DispatchToCurrentThread(
-          NS_NEW_RUNNABLE_METHOD(nsIDocument, mSuspendedDoc.get(),
-                                 UnsuppressEventHandling));
-      } else {
-        // Somehow the document was changed.
-        // Unsuppress event handling in the document but don't even
-        // try to fire events.
-        mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(PR_FALSE);
-      }
-      mSuspendedDoc = nsnull;
-    }
   }
 }
 
