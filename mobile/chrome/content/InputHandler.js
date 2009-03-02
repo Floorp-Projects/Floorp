@@ -84,6 +84,7 @@ function InputHandler() {
   stack.addEventListener("mousedown", this, true);
   stack.addEventListener("mouseup", this, true);
   stack.addEventListener("mousemove", this, true);
+  stack.addEventListener("click", this, true);
 
   let content = document.getElementById("browser-canvas");
   content.addEventListener("keydown", this, true);
@@ -92,7 +93,7 @@ function InputHandler() {
   let prefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
   let allowKinetic = prefsvc.getBoolPref("browser.ui.panning.kinetic");
 
-  //this._modules.push(new ChromeInputModule(this));
+  this._modules.push(new ChromeInputModule(this));
   this._modules.push(new ContentPanningModule(this, allowKinetic));
   this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this));
@@ -159,6 +160,7 @@ function ChromeInputModule(owner, useKinetic) {
 
 ChromeInputModule.prototype = {
   _owner: null,
+  _ignoreNextClick: false,
 
   _dragData: {
     dragging: false,
@@ -186,9 +188,8 @@ ChromeInputModule.prototype = {
         clearTimeout(this._clickTimeout);
       this._clickTimeout = -1;
       this._events = [];
-    },
+    }
   },
-
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -200,6 +201,13 @@ ChromeInputModule.prototype = {
         break;
       case "mouseup":
         this._onMouseUp(aEvent);
+        break;
+      case "click":
+        if (this._ignoreNextClick) {
+          aEvent.stopPropagation();
+          aEvent.preventDefault();
+          this._ignoreNextClick = false;
+        }
         break;
     }
   },
@@ -300,6 +308,7 @@ ChromeInputModule.prototype = {
       clickData._events.push({event: clickEvent, target: aEvent.target, time: Date.now()});
 
       if (clickData._clickTimeout == -1) {
+        this._ignoreNextClick = true;
         clickData._clickTimeout = setTimeout(function(self) { self._sendSingleClick(); }, 400, this);
       }
       else {
@@ -480,7 +489,7 @@ ContentPanningModule.prototype = {
     ws.dragStart(sX, sY);
 
     Browser.canvasBrowser.prepareForPanning();
-    
+
     // set the kinetic start time
     this._kineticData.lastTime = Date.now();
   },
