@@ -68,13 +68,13 @@ PasswordEngine.prototype = {
      of loginInfo items. We can remove this when the interface to query
      LoginInfo items by GUID is ready
   */
-  _syncStartup: function PasswordStore__syncStartup() {
+  _syncStartup: function PasswordEngine__syncStartup() {
     let self = yield;
     this._store._cacheLogins();
     yield SyncEngine.prototype._syncStartup.async(this, self.cb);
   },
   
-  _syncFinish: function PasswordStore__syncFinish() {
+  _syncFinish: function PasswordEngine__syncFinish() {
     let self = yield;
     this._store._clearLoginCache();
     yield SyncEngine.prototype._syncFinish.async(this, self.cb);
