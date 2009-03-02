@@ -118,6 +118,7 @@
                           anonid="undoCloseTabMenuItem"/>
             <xul:menuseparator/>
             <xul:menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
+                          tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeTab(tabbrowser.mContextTab);"/>
           </xul:menupopup>
@@ -1015,7 +1016,10 @@
             if (event.button != 1 || event.target.localName != 'tab')
               return;
 
-            this.removeTab(event.target);
+            if (this.mTabs.length > 1 ||
+                !this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab"))
+              this.removeTab(event.target);
+
             event.stopPropagation();
           ]]>
         </body>

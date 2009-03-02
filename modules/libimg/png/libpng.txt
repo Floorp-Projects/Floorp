@@ -1,15 +1,15 @@
   libpng.txt - A description on how to use and modify libpng
   
- libpng version 1.2.34 - December 18, 2008
+ libpng version 1.2.35 - February 14, 2009
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2008 Glenn Randers-Pehrson
+ Copyright (c) 1998-2009 Glenn Randers-Pehrson
  For conditions of distribution and use, see copyright
  notice in png.h.
   
  Based on:
   
- libpng versions 0.97, January 1998, through 1.2.34 - December 18, 2008
+ libpng versions 0.97, January 1998, through 1.2.35 - February 14, 2009
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2008 Glenn Randers-Pehrson
 
@@ -471,6 +471,8 @@ row_pointers prior to calling png_read_png() with
          "Image is too wide to process in memory");
    row_pointers = png_malloc(png_ptr,
       height*png_sizeof(png_bytep));
+   for (int i=0; i<height, i++)
+      row_pointers[i]=NULL;  /* security precaution */
    for (int i=0; i<height, i++)
       row_pointers[i]=png_malloc(png_ptr,
          width*pixel_size);
@@ -2851,13 +2853,13 @@ application:
 
 IX. Y2K Compliance in libpng
 
-August 21, 2008
+February 14, 2009
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.2.31 are Y2K compliant.  It is my belief that earlier
+upward through 1.2.35 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

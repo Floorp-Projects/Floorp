@@ -1044,7 +1044,7 @@ png_get_mmx_rowbytes_threshold (png_structp png_ptr)
 #endif /* ?PNG_ASSEMBLER_CODE_SUPPORTED */
 
 #ifdef PNG_SET_USER_LIMITS_SUPPORTED
-/* these functions were added to libpng 1.2.6 */
+/* These functions were added to libpng 1.2.6 */
 png_uint_32 PNGAPI
 png_get_user_width_max (png_structp png_ptr)
 {

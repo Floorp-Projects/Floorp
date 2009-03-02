@@ -82,7 +82,10 @@ var gPermissionManager = {
     cycleHeader: function(column) {},
     getRowProperties: function(row,prop){},
     getColumnProperties: function(column,prop){},
-    getCellProperties: function(row,column,prop){}
+    getCellProperties: function(row,column,prop){
+      if (column.element.getAttribute("id") == "siteCol")
+        prop.AppendElement(this._ltrAtom);
+    }
   },
   
   _getCapabilityString: function (aCapability)
@@ -214,6 +217,10 @@ var gPermissionManager = {
     this._loadPermissions();
     
     urlField.focus();
+
+    this._ltrAtom = Components.classes["@mozilla.org/atom-service;1"]
+                              .getService(Components.interfaces.nsIAtomService)
+                              .getAtom("ltr");
   },
   
   uninit: function ()
