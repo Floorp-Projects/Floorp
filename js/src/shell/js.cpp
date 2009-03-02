@@ -302,7 +302,11 @@ GetContextData(JSContext *cx)
 static JSBool
 ShellOperationCallback(JSContext *cx)
 {
-    return !gCanceled;
+    if (!gCanceled)
+        return JS_TRUE;
+
+    JS_ClearPendingException(cx);
+    return JS_FALSE;
 }
 
 static void

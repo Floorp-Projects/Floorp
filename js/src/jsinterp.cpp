@@ -2882,7 +2882,6 @@ js_Interpret(JSContext *cx)
           ADD_EMPTY_CASE(JSOP_NOP)
           ADD_EMPTY_CASE(JSOP_CONDSWITCH)
           ADD_EMPTY_CASE(JSOP_TRY)
-          ADD_EMPTY_CASE(JSOP_FINALLY)
 #if JS_HAS_XML_SUPPORT
           ADD_EMPTY_CASE(JSOP_STARTXML)
           ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
@@ -2953,7 +2952,6 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_RETURN)
-            CHECK_BRANCH();
             fp->rval = POP_OPND();
             /* FALL THROUGH */
 
@@ -2964,6 +2962,7 @@ js_Interpret(JSContext *cx)
              * will be false after the inline_return label.
              */
             ASSERT_NOT_THROWING(cx);
+            CHECK_BRANCH();
 
             if (fp->imacpc) {
                 /*
@@ -6391,7 +6390,12 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(cx->throwing);
             PUSH(cx->exception);
             cx->throwing = JS_FALSE;
+            CHECK_BRANCH();
           END_CASE(JSOP_EXCEPTION)
+
+          BEGIN_CASE(JSOP_FINALLY)
+            CHECK_BRANCH();
+          END_CASE(JSOP_FINALLY)
 
           BEGIN_CASE(JSOP_THROWING)
             JS_ASSERT(!cx->throwing);
@@ -6401,6 +6405,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_THROW)
             JS_ASSERT(!cx->throwing);
+            CHECK_BRANCH();
             cx->throwing = JS_TRUE;
             cx->exception = POP_OPND();
             /* let the code at error try to catch the exception. */
