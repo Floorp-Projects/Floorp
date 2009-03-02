@@ -61,6 +61,7 @@ const ROLE_GRAPHIC = nsIAccessibleRole.ROLE_GRAPHIC;
 const ROLE_GRID_CELL = nsIAccessibleRole.ROLE_GRID_CELL;
 const ROLE_HEADING = nsIAccessibleRole.ROLE_HEADING;
 const ROLE_IMAGE_MAP = nsIAccessibleRole.ROLE_IMAGE_MAP;
+const ROLE_INTERNAL_FRAME = nsIAccessibleRole.ROLE_INTERNAL_FRAME;
 const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LINK = nsIAccessibleRole.ROLE_LINK;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
