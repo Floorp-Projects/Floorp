@@ -4571,8 +4571,10 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
      * it as if the static was called with one parameter, the explicit |this|
      * object.
      */
-    if (argc != 0)
-        --argc;
+    if (argc != 0) {
+        /* Clear the last parameter in case too few arguments were passed. */
+        vp[2 + --argc] = JSVAL_VOID;
+    }
 
     native =
 #ifdef JS_TRACER
@@ -4636,8 +4638,10 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * it as if the static was called with one parameter, the explicit |this|
      * object.
      */
-    if (argc != 0)
-        --argc;
+    if (argc != 0) {
+        /* Clear the last parameter in case too few arguments were passed. */
+        argv[--argc] = JSVAL_VOID;
+    }
 
     return fs->call(cx, JSVAL_TO_OBJECT(argv[-1]), argc, argv, rval);
 }
