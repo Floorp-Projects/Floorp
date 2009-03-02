@@ -576,7 +576,12 @@ WeaveSvc.prototype = {
 				    this.username + "/meta/global");
     
     this._log.debug("Min server storage version is " + MIN_SERVER_STORAGE_VERSION);
-    this._log.debug("payload storage version is " + meta.payload.storageVersion);
+    
+    if (meta) {
+          this._log.debug("payload storage version is " + 
+                          meta.payload.storageVersion);
+    }
+    
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
         Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
                             meta.payload.storageVersion) > 0) {
