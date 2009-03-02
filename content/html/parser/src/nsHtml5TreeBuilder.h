@@ -47,6 +47,7 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsHtml5TreeOperation.h"
+#include "nsHtml5PendingNotification.h"
 
 class nsHtml5Parser;
 
@@ -58,6 +59,8 @@ class nsHtml5HtmlAttributes;
 class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
 class nsHtml5Portability;
+
+typedef nsIContent* nsIContentPtr;
 
 class nsHtml5TreeBuilder
 {
