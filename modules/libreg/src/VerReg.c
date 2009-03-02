@@ -76,7 +76,7 @@
 #include "NSReg.h"
 #include "VerReg.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #include <Folders.h>
 #endif
 
@@ -158,7 +158,7 @@ static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32
 static REGERR vr_convertPackageName(char *regPackageName, char *convertedPackageName, uint32 convertedDataLength);
 static REGERR vr_unmanglePackageName(char *mangledPackageName, char *regPackageName, uint32 regPackageLength);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 static void vr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
 static char * vr_PathFromMacAlias(const void * alias, uint32 aliasLength);
 #endif
@@ -289,14 +289,7 @@ done:
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #define VR_FILE_SEP '\\'
-#endif
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define VR_FILE_SEP ':'
-#endif
-#ifdef XP_BEOS
-#define VR_FILE_SEP '/'
-#endif
-#ifdef XP_UNIX
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #define VR_FILE_SEP '/'
 #endif
 
@@ -452,7 +445,7 @@ static REGERR vr_GetPathname(HREG reg, RKEY key, char *entry, char *buf, uint32 
     
     info.size = sizeof(REGINFO);
         
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#if !defined(XP_MACOSX)
         err = NR_RegGetEntry( reg, key, entry, (void*)buf, &sizebuf );
         return err;
 #else
@@ -685,10 +678,6 @@ static REGERR vr_FindKey(char *component_path, HREG *hreg, RKEY *key)
  * Interface
  * ---------------------------------------------------------------------
  */
-
-#ifdef XP_MAC
-#pragma export on
-#endif
 
 #ifndef STANDALONE_REGISTRY
 VR_INTERFACE(REGERR) VR_PackRegistry(void *userData, nr_RegPackCallbackFunc fn)
@@ -1159,10 +1148,6 @@ VR_INTERFACE(REGERR) VR_GetRefCount(char *component_path, int *result)
 
 }   /* GetRefCount */
 
-#ifdef XP_MAC
-#pragma export reset
-#endif
-
 static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32 regbuflen)
 {
     XP_Bool bSharedUninstall = FALSE;
@@ -1338,10 +1323,6 @@ static REGERR vr_unmanglePackageName(char *mangledPackageName, char *regPackageN
         return REGERR_BUFTOOSMALL;
     return REGERR_OK;
 }
-
-#ifdef XP_MAC
-#pragma export on
-#endif
 
 VR_INTERFACE(REGERR) VR_UninstallCreateNode(char *regPackageName, char *userPackageName)
 {
@@ -1852,9 +1833,5 @@ VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
     return err;
 
 }   /* EnumUninstall */
-
-#ifdef XP_MAC
-#pragma export reset
-#endif
 
 /* EOF: VerReg.c */
