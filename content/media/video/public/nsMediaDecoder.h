@@ -343,8 +343,9 @@ protected:
   PRIntervalTime mProgressTime;
 
   // Time that data was last read from the media resource. Used for
-  // computing if the download has stalled. A value of 0 indicates that
-  // a stall event has already fired and not to fire another one until
+  // computing if the download has stalled and to rate limit progress events
+  // when data is arriving slower than PROGRESS_MS. A value of 0 indicates
+  // that a stall event has already fired and not to fire another one until
   // more data is received. Read/Write from the main thread only.
   PRIntervalTime mDataTime;
 
