@@ -155,8 +155,12 @@ else
 FWDSLASH_TOPSRCDIR := $(topsrcdir)
 ifeq ($(HOST_OS_ARCH),WINNT)
 NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
-else 
+else
+ifeq ($(HOST_OS_ARCH),os2-emx)
+NATIVE_TOPSRCDIR   := $(subst /,\\,$(topsrcdir))
+else
 NATIVE_TOPSRCDIR   := $(topsrcdir)
+endif
 endif
 endif # CYGWIN_WRAPPER
 
