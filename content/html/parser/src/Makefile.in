@@ -85,6 +85,7 @@ CPPSRCS		= \
     nsHtml5ReleasableElementName.cpp \
     nsHtml5MetaScanner.cpp \
     nsHtml5TreeOperation.cpp \
+    nsHtml5PendingNotification.cpp \
     $(NULL)
 
 FORCE_STATIC_LIB = 1

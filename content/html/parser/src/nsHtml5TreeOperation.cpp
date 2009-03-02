@@ -60,14 +60,12 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
   nsresult rv = NS_OK;
   switch(mOpCode) {
     case eTreeOpAppend: {
-      PRUint32 childCount = mParent->GetChildCount();
+      aBuilder->PostPendingAppendNotification(mParent, mNode);
       rv = mParent->AppendChildTo(mNode, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-      // XXX move notify away
-      aBuilder->NotifyAppend(mParent, childCount);
       return rv;
     }
     case eTreeOpDetach: {
+      aBuilder->FlushPendingAppendNotifications();
       nsIContent* parent = mNode->GetParent();
       if (parent) {
         PRUint32 pos = parent->IndexOf(mNode);
@@ -79,14 +77,19 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       return rv;
     }
     case eTreeOpAppendChildrenToNewParent: {
+      aBuilder->FlushPendingAppendNotifications();
+      PRUint32 childCount = mParent->GetChildCount();
+      PRBool didAppend = PR_FALSE;
       while (mNode->GetChildCount()) {
         nsCOMPtr<nsIContent> child = mNode->GetChildAt(0);
         rv = mNode->RemoveChildAt(0, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
         nsNodeUtils::ContentRemoved(mNode, child, 0);
-        PRUint32 childCount = mParent->GetChildCount();
         rv = mParent->AppendChildTo(child, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
+        didAppend = PR_TRUE;
+      }
+      if (didAppend) {
         aBuilder->NotifyAppend(mParent, childCount);
       }
       return rv;
@@ -94,19 +97,19 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
     case eTreeOpFosterParent: {
       nsIContent* parent = mTable->GetParent();
       if (parent && parent->IsNodeOfType(nsINode::eELEMENT)) {
+        aBuilder->FlushPendingAppendNotifications();
         PRUint32 pos = parent->IndexOf(mTable);
         rv = parent->InsertChildAt(mNode, pos, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
         nsNodeUtils::ContentInserted(parent, mNode, pos);
       } else {
-        PRUint32 childCount = mParent->GetChildCount();
+        aBuilder->PostPendingAppendNotification(mParent, mNode);
         rv = mParent->AppendChildTo(mNode, PR_FALSE);  
-        NS_ENSURE_SUCCESS(rv, rv);
-        aBuilder->NotifyAppend(mParent, childCount);    
       }
       return rv;
     }
     case eTreeOpAppendToDocument: {
+      aBuilder->FlushPendingAppendNotifications();
       nsIDocument* doc = aBuilder->GetDocument();
       PRUint32 childCount = doc->GetChildCount();
       rv = doc->AppendChildTo(mNode, PR_FALSE);
@@ -135,18 +138,22 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       return rv;
     }
     case eTreeOpDoneAddingChildren: {
-      mNode->DoneAddingChildren(PR_TRUE);
+      // aBuilder->FlushPendingAppendNotifications();
+      mNode->DoneAddingChildren(PR_FALSE);
       return rv;
     }
     case eTreeOpUpdateStyleSheet: {
+      // aBuilder->FlushPendingAppendNotifications();
       aBuilder->UpdateStyleSheet(mNode);
       return rv;
     }
     case eTreeOpProcessBase: {
+      // aBuilder->FlushPendingAppendNotifications();
       rv = aBuilder->ProcessBase(mNode);
       return rv;
     }
     case eTreeOpStartLayout: {
+      aBuilder->FlushPendingAppendNotifications();
       aBuilder->StartLayout();
       return rv;
     }

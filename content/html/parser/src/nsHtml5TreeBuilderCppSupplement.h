@@ -252,7 +252,7 @@ nsHtml5TreeBuilder::start(PRBool fragment)
 void
 nsHtml5TreeBuilder::end()
 {
-  mOpQueue.Clear();
+  Flush();
 }
 
 void
@@ -441,9 +441,12 @@ nsHtml5TreeBuilder::Flush()
 {
   if (!mFlushing) {
     mFlushing = PR_TRUE;
-    for (PRUint32 i = 0; i < mOpQueue.Length(); ++i) {
-      mOpQueue[i].Perform(this);
+    const nsHtml5TreeOperation* start = mOpQueue.Elements();
+    const nsHtml5TreeOperation* end = start + mOpQueue.Length();
+    for (nsHtml5TreeOperation* iter = (nsHtml5TreeOperation*)start; iter < end; ++iter) {
+      iter->Perform(this);
     }
+    FlushPendingAppendNotifications();
     mOpQueue.Clear();
     mFlushing = PR_FALSE;
   }
