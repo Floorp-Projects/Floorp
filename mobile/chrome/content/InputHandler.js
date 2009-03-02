@@ -64,18 +64,6 @@ function getScrollboxFromElement(elem) {
   return scrollbox;
 }
 
-function dumpEvent(aEvent) {
-  dump("{ ");
-
-  for(var item in aEvent) {
-    var value = aEvent[item];
-	  dump(item + ": ");
-    dump(value);
-    dump(", ");
-	}
-  dump("}\n");
-}
-
 /**
  * Everything that is registed in _modules gets called with each event that the
  * InputHandler is registered to listen for.
@@ -104,7 +92,7 @@ function InputHandler() {
   let prefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
   let allowKinetic = prefsvc.getBoolPref("browser.ui.panning.kinetic");
 
-  this._modules.push(new ChromeInputModule(this));
+  //this._modules.push(new ChromeInputModule(this));
   this._modules.push(new ContentPanningModule(this, allowKinetic));
   this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this));
@@ -810,7 +798,7 @@ ContentClickingModule.prototype = {
     let cb = Browser.canvasBrowser;
     var [x, y] = cb._clientToContentCoords(aEvent.clientX, aEvent.clientY);
     var cwu = cb.contentDOMWindowUtils;
-    
+
     // Redispatch the mouse event, ignoring the root scroll frame
     cwu.sendMouseEvent(aType || aEvent.type,
                        x, y,
