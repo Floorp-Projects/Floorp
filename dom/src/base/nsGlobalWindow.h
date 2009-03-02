@@ -744,8 +744,6 @@ protected:
 
   nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
 
-  nsCOMPtr<nsIDocument> mSuspendedDoc;
-
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
