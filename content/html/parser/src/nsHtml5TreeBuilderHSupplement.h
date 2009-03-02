@@ -39,24 +39,76 @@
     nsHtml5Parser* mParser; // weak ref
     PRBool         mHasProcessedBase;
     PRBool         mFlushing;
-    nsTArray<nsHtml5TreeOperation> mOpQueue;
+    nsTArray<nsHtml5TreeOperation>       mOpQueue;
+    nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
+    nsTArray<nsHtml5PendingNotification> mPendingNotifications;
     void           MaybeFlushAndMaybeSuspend();
   public:
     nsHtml5TreeBuilder(nsHtml5Parser* aParser);
     ~nsHtml5TreeBuilder();
     void Flush();
+    
+    inline void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
+      nsIContent* parent = aParent; // this gets nulled when found
+      nsIContent* child = aChild->IsNodeOfType(nsINode::eELEMENT) ? aChild : nsnull; // this gets nulled when found
+      const nsIContentPtr* start = mElementsSeenInThisAppendBatch.Elements();
+      const nsIContentPtr* end = start + mElementsSeenInThisAppendBatch.Length();
+      // XXX backwards iterate
+      for (const nsIContentPtr* iter = start; iter < end; ++iter) {
+        if (*iter == parent) {
+          parent = nsnull;
+        }
+        if (*iter == child) {
+          child = nsnull;
+        }
+        if (!(parent || child)) {
+          break;
+        } 
+      }
+      if (child) {
+        mElementsSeenInThisAppendBatch.AppendElement(child);
+      }
+      if (parent) {
+        // parents that are in mPendingNotifications don't need to be added to
+        // mElementsSeenInThisAppendBatch
+        const nsHtml5PendingNotification* startNotifications = mPendingNotifications.Elements();
+        const nsHtml5PendingNotification* endNotifications = startNotifications + mPendingNotifications.Length();
+        // XXX backwards iterate
+        for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)startNotifications; iter < endNotifications; ++iter) {
+          if (iter->Contains(parent)) {
+            return;
+          }
+        }
+        mPendingNotifications.AppendElement(parent);
+      }
+    }
+    
+    inline void FlushPendingAppendNotifications() {
+      const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
+      const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
+      for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
+        iter->Fire(this);
+      }
+      mPendingNotifications.Clear();
+      mElementsSeenInThisAppendBatch.Clear();
+    }
+    
     inline void NotifyAppend(nsIContent* aParent, PRUint32 aChildCount) {
       mParser->NotifyAppend(aParent, aChildCount);
     }
+    
     inline nsIDocument* GetDocument() {
       return mParser->GetDocument();
     }
+    
     inline void SetScriptElement(nsIContent* aScript) {
       mParser->SetScriptElement(aScript);
     }
+    
     inline void UpdateStyleSheet(nsIContent* aSheet) {
       mParser->UpdateStyleSheet(aSheet);
     }
+    
     inline nsresult ProcessBase(nsIContent* aBase) {
       if (!mHasProcessedBase) {
         nsresult rv = mParser->ProcessBASETag(aBase);
@@ -65,6 +117,7 @@
       }
       return NS_OK;
     }
+    
     inline void StartLayout() {
       mParser->StartLayout(PR_FALSE);
     }
