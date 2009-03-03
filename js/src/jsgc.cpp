@@ -3205,6 +3205,7 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
 
     /* Finally, do the deed. */
     STOBJ_SET_SLOT(obj, slot, OBJECT_TO_JSVAL(pobj));
+    STOBJ_SET_DELEGATE(pobj);
 }
 
 static void

@@ -529,7 +529,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSBool ok = JS_FinishJSONParse(mCx, mJSONParser);
+  JSBool ok = JS_FinishJSONParse(mCx, mJSONParser, JSVAL_NULL);
   mJSONParser = nsnull;
 
   if (!ok)
@@ -651,7 +651,7 @@ nsJSONListener::ConsumeConverted(const char* aBuffer, PRUint32 aByteLength)
 void nsJSONListener::Cleanup()
 {
   if (mJSONParser)
-    JS_FinishJSONParse(mCx, mJSONParser);
+    JS_FinishJSONParse(mCx, mJSONParser, JSVAL_NULL);
   mJSONParser = nsnull;
 }
 

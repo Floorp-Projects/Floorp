@@ -1035,13 +1035,47 @@ out_of_range:
 }
 
 #ifdef JS_TRACER
+extern jsdouble js_NaN;
+
+jsdouble FASTCALL
+js_String_p_charCodeAt(JSString* str, jsdouble d)
+{
+    d = js_DoubleToInteger(d);
+    if (d < 0 || (int32)JSSTRING_LENGTH(str) <= d)
+        return js_NaN;
+    return jsdouble(JSSTRING_CHARS(str)[jsuint(d)]);
+}
+
 int32 FASTCALL
-js_String_p_charCodeAt(JSString* str, int32 i)
+js_String_p_charCodeAt_int(JSString* str, jsint i)
 {
     if (i < 0 || (int32)JSSTRING_LENGTH(str) <= i)
-        return -1;
+        return 0;
     return JSSTRING_CHARS(str)[i];
 }
+
+jsdouble FASTCALL
+js_String_p_charCodeAt0(JSString* str)
+{
+    if ((int32)JSSTRING_LENGTH(str) == 0)
+        return js_NaN;
+    return jsdouble(JSSTRING_CHARS(str)[0]);
+}
+
+int32 FASTCALL
+js_String_p_charCodeAt0_int(JSString* str)
+{
+    if ((int32)JSSTRING_LENGTH(str) == 0)
+        return 0;
+    return JSSTRING_CHARS(str)[0];
+}
+
+/*
+ * The FuncFilter replaces the generic double version of charCodeAt with the
+ * integer fast path if appropriate.
+ */
+JS_DEFINE_CALLINFO_1(extern, INT32, js_String_p_charCodeAt0_int, STRING,        1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int,  STRING, INT32, 1, 1)
 #endif
 
 jsint
@@ -2506,8 +2540,9 @@ JS_DEFINE_TRCINFO_2(str_substring,
     (3, (static, STRING_RETRY,      String_p_substring_1, CONTEXT, THIS_STRING, INT32,        1, 1)))
 JS_DEFINE_TRCINFO_1(str_charAt,
     (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
-JS_DEFINE_TRCINFO_1(str_charCodeAt,
-    (2, (extern, INT32_RETRY,       js_String_p_charCodeAt, THIS_STRING, INT32,               1, 1)))
+JS_DEFINE_TRCINFO_2(str_charCodeAt,
+    (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,                     1, 1)),
+    (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,              1, 1)))
 JS_DEFINE_TRCINFO_4(str_concat,
     (3, (static, STRING_RETRY,      String_p_concat_1int, CONTEXT, THIS_STRING, INT32,        1, 1)),
     (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)),

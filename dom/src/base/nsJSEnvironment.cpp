@@ -915,8 +915,10 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // Check to see if we are running OOM
   nsCOMPtr<nsIMemory> mem;
   NS_GetMemoryManager(getter_AddRefs(mem));
-  if (!mem)
+  if (!mem) {
+    JS_ClearPendingException(cx);
     return JS_FALSE;
+  }
 
   PRBool lowMemory;
   mem->IsLowMemory(&lowMemory);
@@ -931,8 +933,10 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
       mem->IsLowMemory(&lowMemory);
       if (lowMemory) {
 
-        if (nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE))
+        if (nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE)) {
+          JS_ClearPendingException(cx);
           return JS_FALSE;
+        }
         
         nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
         
@@ -948,10 +952,12 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
         //GetStringFromName can return NS_OK and still give NULL string
         if (NS_FAILED(rv) || !title || !msg) {
           NS_ERROR("Failed to get localized strings.");
+          JS_ClearPendingException(cx);
           return JS_FALSE;
         }
         
         prompt->Alert(title, msg);
+        JS_ClearPendingException(cx);
         return JS_FALSE;
       }
     }
@@ -1143,6 +1149,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     }
   }
 
+  JS_ClearPendingException(cx);
   return JS_FALSE;
 }
 

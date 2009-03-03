@@ -2513,7 +2513,7 @@ JS_PUBLIC_API(JSBool)
 JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
 
 JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp);
+JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 
 /************************************************************************/
 
