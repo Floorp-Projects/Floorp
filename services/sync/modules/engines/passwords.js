@@ -116,13 +116,16 @@ PasswordStore.prototype = {
   },
 
   _nsLoginInfoFromRecord: function PasswordStore__nsLoginInfoRec(record) {
-    return new this._nsLoginInfo(record.hostname,
-                                  record.formSubmitURL,
-                                  record.httpRealm,
-                                  record.username,
-                                  record.password,
-                                  record.usernameField,
-                                  record.passwordField);
+    let info = new this._nsLoginInfo(record.hostname,
+                                     record.formSubmitURL,
+                                     record.httpRealm,
+                                     record.username,
+                                     record.password,
+                                     record.usernameField,
+                                     record.passwordField);
+    info.QueryInterface(Ci.nsILoginMetaInfo);
+    info.guid = record.id;
+    return info;
   },
 
   cacheLogins: function PasswordStore_cacheLogins() {
