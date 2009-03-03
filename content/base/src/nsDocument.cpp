@@ -1725,7 +1725,7 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   if (nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration())) {
-    return NS_OK;
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
   tmp->mIdentifierMap.EnumerateEntries(IdentifierMapEntryTraverse, &cb);
