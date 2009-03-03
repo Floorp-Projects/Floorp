@@ -63,11 +63,17 @@ PasswordEngine.prototype = {
   _storeObj: PasswordStore,
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
-  
+
+  _syncStartup: function PasswordEngine__syncStartup() {
+    let self = yield;
+    this._store.cacheLogins();
+    yield SyncEngine.prototype._syncStartup.async(this, self.cb);
+  },
+
   /* Wipe cache when sync finishes */
   _syncFinish: function PasswordEngine__syncFinish() {
     let self = yield;
-    this._store._clearLoginCache();
+    this._store.clearLoginCache();
     yield SyncEngine.prototype._syncFinish.async(this, self.cb);
   }
 };
@@ -84,21 +90,7 @@ PasswordStore.prototype = {
     this.__defineGetter__("_loginManager", function() loginManager);
     return loginManager;
   },
-  
-  __loginItems: null,
-  get _loginItems() {
-    if (!this.__loginItems) {
-      this.__loginItems = {};
-      let logins = this._loginManager.getAllLogins({});
-      for (let i = 0; i < logins.length; i++) {
-        let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
-        this.__loginItems[metaInfo.guid] = logins[i];
-      }
-    }
 
-    return this.__loginItems;
-  },
-  
   _nsLoginInfo: null,
   _init: function PasswordStore_init() {
     Store.prototype._init.call(this);
@@ -106,13 +98,9 @@ PasswordStore.prototype = {
       "@mozilla.org/login-manager/loginInfo;1",
       Ci.nsILoginInfo,
       "init"
-    );   
+    );
   },
-  
-  _clearLoginCache: function PasswordStore__clearLoginCache() {
-    this.__loginItems = null;
-  },
-  
+
   _nsLoginInfoFromRecord: function PasswordStore__nsLoginInfoRec(record) {
     return new this._nsLoginInfo(record.hostname,
                                   record.formSubmitURL,
@@ -123,15 +111,23 @@ PasswordStore.prototype = {
                                   record.passwordField);
   },
 
+  cacheLogins: function PasswordStore_cacheLogins() {
+    this._loginItems = this.getAllIDs();
+  },
+
+  clearLoginCache: function PasswordStore_clearLoginCache() {
+    this._loginItems = null;
+  },
+
   getAllIDs: function PasswordStore__getAllIDs() {
     let items = {};
     let logins = this._loginManager.getAllLogins({});
-    
+
     for (let i = 0; i < logins.length; i++) {
       let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
       items[metaInfo.guid] = logins[i].hostname;
     }
-    
+
     return items;
   },
 
@@ -142,13 +138,13 @@ PasswordStore.prototype = {
       return;
     }
     let info = this._loginItems[oldID];
-    
+
     if (newID in this._loginItems) {
       this._log.warn("Can't change GUID " + oldID + " to " +
                      newID + ": new ID already in use");
       return;
     }
-    
+
     this._log.debug("Changing GUID " + oldID + " to " + newID);
 
     let prop = Cc["@mozilla.org/hash-property-bag;1"].
@@ -191,7 +187,7 @@ PasswordStore.prototype = {
       this._loginManager.removeLogin(this._loginItems[record.id]);
       return;
     }
-    
+
     this._log.debug("Asked to remove record that doesn't exist, ignoring!");
   },
 
