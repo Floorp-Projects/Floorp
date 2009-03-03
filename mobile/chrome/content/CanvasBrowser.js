@@ -399,18 +399,24 @@ CanvasBrowser.prototype = {
   zoomToElement: function(aElement) {
     const margin = 15;
 
-    // scale to the element's width
-    let [canvasW, ] = this.canvasDimensions;
-
     let elRect = this._getPagePosition(aElement);
-    let zoomLevel = canvasW / (elRect.width + (2 * margin));
-
+    let elWidth = elRect.width;
+    let visibleViewportWidth = this._pageToScreen(this._visibleBounds.width);
+    /* Try to set zoom-level such that once zoomed element is as wide
+     *  as the visible viewport */
+    let zoomLevel = visibleViewportWidth / (elWidth + (2 * margin));
     ws.beginUpdateBatch();
 
-    this.zoomLevel = Math.min(zoomLevel, 10);
+    this.zoomLevel = zoomLevel;
+    
+    /* If zoomLevel ends up clamped to less than asked for, calculate
+     * how many more screen pixels will fit horizontally in addition to
+     * element's width. This ensures that more of the webpage is
+     * showing instead of the navbar. Bug 480595. */
+    let xpadding = Math.max(margin, visibleViewportWidth - this._pageToScreen(elWidth));
 
     // pan to the element
-    ws.panTo(Math.floor(Math.max(this._pageToScreen(elRect.x) - margin, 0)),
+    ws.panTo(Math.floor(Math.max(this._pageToScreen(elRect.x) - xpadding, 0)),
              Math.floor(Math.max(this._pageToScreen(elRect.y) - margin, 0)));
 
     ws.endUpdateBatch();
