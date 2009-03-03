@@ -52,7 +52,8 @@
 #include <limits.h>
 
 #include "nanojit/nanojit.h"
-#include "jsarray.h"            // higher-level library and API headers
+#include "jsapi.h"              // higher-level library and API headers
+#include "jsarray.h"
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"

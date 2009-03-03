@@ -68,15 +68,17 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *s = NULL;
     jsval *argv = vp + 2;
-
-    if (!JS_ConvertArguments(cx, argc, argv, "S", &s))
+    jsval reviver = JSVAL_VOID;
+    JSAutoTempValueRooter(cx, 1, &reviver);
+    
+    if (!JS_ConvertArguments(cx, argc, argv, "S / v", &s, &reviver))
         return JS_FALSE;
 
     JSONParser *jp = js_BeginJSONParse(cx, vp);
     JSBool ok = jp != NULL;
     if (ok) {
         ok = js_ConsumeJSONText(cx, jp, JS_GetStringChars(s), JS_GetStringLength(s));
-        ok &= js_FinishJSONParse(cx, jp);
+        ok &= js_FinishJSONParse(cx, jp, reviver);
     }
 
     return ok;
@@ -279,7 +281,10 @@ stringify(JSContext *cx, jsval *vp, JSObject *replacer,
         if (isArray) {
             if ((jsuint)i >= length)
                 break;
-            ok = OBJ_GET_PROPERTY(cx, obj, INT_TO_JSID(i), &outputValue);
+            jsid index;
+            if (!js_IndexToId(cx, i, &index))
+                return JS_FALSE;
+            ok = OBJ_GET_PROPERTY(cx, obj, index, &outputValue);
             if (!ok)
                 break;
             i++;
@@ -413,6 +418,107 @@ static JSBool IsNumChar(jschar c)
 static JSBool HandleData(JSContext *cx, JSONParser *jp, JSONDataType type);
 static JSBool PopState(JSContext *cx, JSONParser *jp);
 
+static JSBool
+DestroyIdArrayOnError(JSContext *cx, JSIdArray *ida) {
+    JS_DestroyIdArray(cx, ida);
+    return JS_FALSE;
+}
+
+static JSBool
+Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
+{
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    
+    if (!OBJ_GET_PROPERTY(cx, holder, id, vp))
+        return JS_FALSE;
+
+    JSObject *obj;
+
+    if (!JSVAL_IS_PRIMITIVE(*vp) && !JS_ObjectIsFunction(cx, obj = JSVAL_TO_OBJECT(*vp)) &&
+        !js_IsCallable(cx, obj)) {
+        jsval propValue = JSVAL_VOID;
+        JSAutoTempValueRooter tvr(cx, 1, &propValue);
+        
+        if(OBJ_IS_ARRAY(cx, obj)) {
+            jsuint length = 0;
+            if (!js_GetLengthProperty(cx, obj, &length))
+                return JS_FALSE;
+
+            for (jsuint i = 0; i < length; i++) {
+                jsid index;
+                if (!js_IndexToId(cx, i, &index))
+                    return JS_FALSE;
+
+                if (!Walk(cx, index, obj, reviver, &propValue))
+                    return JS_FALSE;
+
+                if (!OBJ_DEFINE_PROPERTY(cx, obj, index, propValue,
+                                         NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+                    return JS_FALSE;
+                }
+            }
+        } else {
+            JSIdArray *ida = JS_Enumerate(cx, obj);
+            if (!ida)
+                return JS_FALSE;
+
+            JSAutoTempValueRooter idaroot(cx, JS_ARRAY_LENGTH(ida), (jsval*)ida);
+
+            for(jsint i = 0; i < ida->length; i++) {
+                jsid idName = ida->vector[i];
+                if (!Walk(cx, idName, obj, reviver, &propValue))
+                    return DestroyIdArrayOnError(cx, ida);
+                if (propValue == JSVAL_VOID) {
+                    if (!js_DeleteProperty(cx, obj, idName, &propValue))
+                        return DestroyIdArrayOnError(cx, ida);
+                } else {
+                    if (!OBJ_DEFINE_PROPERTY(cx, obj, idName, propValue,
+                                             NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+                        return DestroyIdArrayOnError(cx, ida);
+                    }
+                }
+            }
+
+            JS_DestroyIdArray(cx, ida);
+        }
+    }
+
+    // return reviver.call(holder, key, value);
+    jsval value = *vp;
+    JSString *key = js_ValueToString(cx, ID_TO_VALUE(id));
+    if (!key)
+        return JS_FALSE;
+
+    jsval vec[2] = {STRING_TO_JSVAL(key), value};
+    jsval reviverResult;
+    if (!JS_CallFunctionValue(cx, holder, reviver, 2, vec, &reviverResult))
+        return JS_FALSE;
+
+    *vp = reviverResult;
+
+    return JS_TRUE;
+}
+
+static JSBool
+Revive(JSContext *cx, jsval reviver, jsval *vp)
+{
+    
+    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+    if (!obj)
+        return JS_FALSE;
+
+    jsval v = OBJECT_TO_JSVAL(obj);
+    JSAutoTempValueRooter tvr(cx, 1, &v);
+    if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
+                             *vp, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+        return JS_FALSE;
+    }
+
+    return Walk(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), obj, reviver, vp);
+}
+
+
+
 JSONParser *
 js_BeginJSONParse(JSContext *cx, jsval *rootVal)
 {
@@ -456,7 +562,7 @@ bad:
 }
 
 JSBool
-js_FinishJSONParse(JSContext *cx, JSONParser *jp)
+js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 {
     if (!jp)
         return JS_TRUE;
@@ -490,6 +596,11 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp)
 
     if (!ok)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
+
+    if (reviver && !JSVAL_IS_PRIMITIVE(reviver) &&
+        (JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(reviver)) || js_IsCallable(cx, JSVAL_TO_OBJECT(reviver)))) {
+        ok = Revive(cx, reviver, jp->rootVal);
+    }
 
     return ok;
 }
@@ -539,7 +650,10 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
         jsuint len;
         ok = js_GetLengthProperty(cx, parent, &len);
         if (ok) {
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, INT_TO_JSID(len), value,
+            jsid index;
+            if (!js_IndexToId(cx, len, &index))
+                return JS_FALSE;
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, index, value,
                                      NULL, NULL, JSPROP_ENUMERATE, NULL);
         }
     } else {

@@ -755,6 +755,14 @@ extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
 
+/* TODO: bug 481218. This returns false for functions */
+static JS_INLINE JSBool
+js_IsCallable(JSContext *cx, JSObject *obj)
+{
+   return (obj && ((obj->map->ops == &js_ObjectOps) ? OBJ_GET_CLASS(cx, obj)->call
+                                                    : obj->map->ops->call));
+}
+
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);
 JS_FRIEND_API(void) js_DumpString(JSString *str);
