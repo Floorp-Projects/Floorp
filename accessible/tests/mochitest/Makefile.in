@@ -112,7 +112,6 @@ _TEST_FILES =\
 		test_textboxes.xul \
 		testTextboxes.js \
 		treeview.js \
-		test_bug429285.html \
 		test_bug434464.html \
 		z_states_frame.html \
 		z_states_framearticle.html \
