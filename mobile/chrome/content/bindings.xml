@@ -615,7 +615,7 @@
                 this.setAttribute("ui", "manage");
               }
               else {
-                if (this._activeItem)
+                if (this._activeItem && this._activeItem.isEditing)
                   this._activeItem.stopEditing();
                 this.removeAttribute("ui");
               }
