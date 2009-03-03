@@ -116,13 +116,17 @@ var Browser = {
       if (e.target != window)
         return;
 
+      let w = window.innerWidth;
+      let h = window.innerHeight;
+      let maximize = (document.documentElement.getAttribute("sizemode") == "maximized");
+      if (maximize && window.innerWidth > screen.availWidth)
+        return;
+
       // tell the UI to resize the browser controls before calling
       // updateSize
       BrowserUI.sizeControls();
 
       // resize our container...
-      let w = window.innerWidth;
-      let h = window.innerHeight;
       let containerStyle = browserContainer.style;
       containerStyle.width = containerStyle.maxWidth = w + "px";
       containerStyle.height = containerStyle.maxHeight = h + "px";
