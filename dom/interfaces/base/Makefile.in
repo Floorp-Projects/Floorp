@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -43,35 +43,40 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
+XPIDL_MODULE	= dom_base
 GRE_MODULE	= 1
 
-DIRS		= coreEvents base
+SDK_XPIDLSRCS =                                 \
+	domstubs.idl				\
+	nsIDOMBarProp.idl			\
+	nsIDOMWindow.idl			\
+	nsIDOMWindow2.idl			\
+	nsIDOMWindowCollection.idl		\
+	nsIDOMWindowUtils.idl			\
+	$(NULL)
 
-XPIDLSRCS	= nsIEntropyCollector.idl \
-		  nsIScriptChannel.idl \
-		  $(NULL)
-
-EXPORTS=nsIScriptContext.h		\
-	nsIJSNativeInitializer.h	\
-	nsIScriptRuntime.h		\
-	nsIScriptObjectOwner.h		\
-	nsIScriptObjectPrincipal.h	\
-	nsIScriptGlobalObject.h		\
-	nsIScriptGlobalObjectOwner.h	\
-	nsIScriptTimeoutHandler.h	\
-	nsIDOMScriptObjectFactory.h	\
-	nsDOMCID.h			\
-	nsIScriptExternalNameSet.h	\
-	nsIScriptNameSpaceManager.h	\
-	nsDOMError.h			\
-	nsIJSEventListener.h		\
-	nsIDOMClassInfo.h		\
-	nsDOMClassInfoID.h		\
-	nsIBaseDOMException.h		\
-	nsDOMString.h			\
-	nsDOMJSUtils.h			\
-	nsDOMScriptObjectHolder.h	\
-	nsWrapperCache.h	\
+XPIDLSRCS =					\
+	nsIBrowserDOMWindow.idl			\
+	nsIDOMClientInformation.idl		\
+	nsIDOMConstructor.idl			\
+	nsIDOMCRMFObject.idl			\
+	nsIDOMCrypto.idl			\
+	nsIDOMHistory.idl			\
+	nsIDOMLocation.idl			\
+	nsIDOMMimeType.idl			\
+	nsIDOMMimeTypeArray.idl			\
+	nsIDOMNavigator.idl			\
+	nsIDOMPkcs11.idl			\
+	nsIDOMPlugin.idl			\
+	nsIDOMPluginArray.idl			\
+	nsIDOMScreen.idl			\
+	nsIDOMWindowInternal.idl		\
+	nsIDOMJSWindow.idl			\
+	nsIDOMModalContentWindow.idl		\
+	nsIDOMChromeWindow.idl			\
+	nsIDOMNSFeatureFactory.idl		\
+        nsIDOMClientRect.idl			\
+        nsIDOMClientRectList.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
