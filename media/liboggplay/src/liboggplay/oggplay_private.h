@@ -39,11 +39,14 @@
 #ifndef __OGGPLAY_PRIVATE_H__
 #define __OGGPLAY_PRIVATE_H__
 
+#ifdef HAVE_CONFIG_H 
 #ifdef WIN32
 #include "config_win32.h"
 #else
 #include <config.h>
 #endif
+#endif
+
 #include <oggplay/oggplay.h>
 
 #include <oggz/oggz.h>
@@ -220,6 +223,7 @@ struct _OggPlay {
   OggPlaySeekTrash        * trash;
   int                       shutdown;
   int                       pt_update_valid;
+  ogg_int64_t               duration;	 /**< The value of the duration the last time it was retrieved.*/
 };
 
 void

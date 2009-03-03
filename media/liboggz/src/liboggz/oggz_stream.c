@@ -90,3 +90,30 @@ oggz_stream_get_numheaders (OGGZ * oggz, long serialno)
   return stream->numheaders;
 }
 
+int
+oggz_set_preroll (OGGZ * oggz, long serialno, int preroll)
+{
+  oggz_stream_t * stream;
+
+  if (oggz == NULL) return OGGZ_ERR_BAD_OGGZ;
+
+  stream = oggz_get_stream (oggz, serialno);
+  if (stream == NULL) return OGGZ_ERR_BAD_SERIALNO;
+
+  stream->preroll = preroll;
+
+  return 0;
+}
+
+int
+oggz_get_preroll (OGGZ * oggz, long serialno)
+{
+  oggz_stream_t * stream;
+
+  if (oggz == NULL) return OGGZ_ERR_BAD_OGGZ;
+
+  stream = oggz_get_stream (oggz, serialno);
+  if (stream == NULL) return OGGZ_ERR_BAD_SERIALNO;
+
+  return stream->preroll;
+}
