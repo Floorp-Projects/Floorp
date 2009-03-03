@@ -102,10 +102,10 @@ class nsPIDOMEventTarget;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 8355e7a9-4118-47dc-97e3-a3c251332e86
+// fa7f090d-b19a-4ef8-9552-82992a3b4a83
 #define NS_IPRESSHELL_IID \
-{ 0x8355e7a9, 0x4118, 0x47dc, \
-  { 0x97, 0xe3, 0xa3, 0xc2, 0x51, 0x33, 0x2e, 0x86 } }
+{ 0xfa7f090d, 0xb19a, 0x4ef8, \
+  { 0x95, 0x52, 0x82, 0x99, 0x2a, 0x3b, 0x4a, 0x83 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -693,7 +693,7 @@ public:
    */
   virtual void Thaw() = 0;
 
-  virtual void NeedsBlurAfterSuppression(nsPIDOMEventTarget* aTarget) = 0;
+  virtual void NeedsFocusOrBlurAfterSuppression(nsPIDOMEventTarget* aTarget, PRUint32 aEventType) = 0;
   virtual void FireOrClearDelayedEvents(PRBool aFireEvents) = 0;
 
   /**
