@@ -242,7 +242,7 @@ CanvasBrowser.prototype = {
     this._isPanning = true;
   },
 
-  viewportHandler: function(bounds, boundsSizeChanged) {
+  viewportHandler: function viewportHandler(bounds, boundsSizeChanged) {
     this._isPanning = false;
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewportVisibleRect;

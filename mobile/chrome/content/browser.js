@@ -73,6 +73,8 @@ var Browser = {
   _selectedTab : null,
   _windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils),
+  _isStartup: true,
+
 
   startup: function() {
     var self = this;
@@ -83,7 +85,8 @@ var Browser = {
     // initialize the WidgetStack
     let browserContainer = document.getElementById("browser-container");
     ws = new WidgetStack(browserContainer);
-
+    // during startup a lot of viewportHandler calls happen due to content and window resizes
+    ws.beginUpdateBatch();
     // XXX this should live elsewhere
     window.gSidebarVisible = false;
     function panHandler(vr, skipUpdates) {
@@ -119,7 +122,7 @@ var Browser = {
       let w = window.innerWidth;
       let h = window.innerHeight;
       let maximize = (document.documentElement.getAttribute("sizemode") == "maximized");
-      if (maximize && window.innerWidth > screen.availWidth)
+      if (maximize && window.innerWidth > screen.width)
         return;
 
       // tell the UI to resize the browser controls before calling
@@ -132,6 +135,11 @@ var Browser = {
       containerStyle.height = containerStyle.maxHeight = h + "px";
 
       ws.updateSize(w, h);
+      
+      if (Browser._isStartup) {
+        ws.endUpdateBatch();
+        Browser._isStartup = false;
+      }
     }
     window.addEventListener("resize", resizeHandler, false);
 
