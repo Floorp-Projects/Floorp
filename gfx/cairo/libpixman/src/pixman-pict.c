@@ -2039,9 +2039,9 @@ pixman_have_arm_simd (void)
             have_arm_simd = FALSE;
         }
 	initialized = TRUE;
-    } else {
-        return have_arm_simd;
     }
+
+    return have_arm_simd;
 #else
     return TRUE;
 #endif
