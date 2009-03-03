@@ -75,6 +75,20 @@ PasswordEngine.prototype = {
     let self = yield;
     this._store.clearLoginCache();
     yield SyncEngine.prototype._syncFinish.async(this, self.cb);
+  },
+
+  _recordLike: function SyncEngine__recordLike(a, b) {
+    if (a.cleartext == null || b.cleartext == null)
+      return false;
+    if (a.cleartext.hostname == b.cleartext.hostname) {
+    }
+    if (a.cleartext.hostname != b.cleartext.hostname ||
+        a.cleartext.httpRealm != b.cleartext.httpRealm ||
+        a.cleartext.username != b.cleartext.username)
+      return false;
+    if (!a.cleartext.formSubmitURL || !b.cleartext.formSubmitURL)
+      return true;
+    return a.cleartext.formSubmitURL == b.cleartext.formSubmitURL;
   }
 };
 
@@ -112,10 +126,12 @@ PasswordStore.prototype = {
   },
 
   cacheLogins: function PasswordStore_cacheLogins() {
+    this._log.debug("Caching all logins");
     this._loginItems = this.getAllIDs();
   },
 
   clearLoginCache: function PasswordStore_clearLoginCache() {
+    this._log.debug("Clearing login cache");
     this._loginItems = null;
   },
 
@@ -125,37 +141,33 @@ PasswordStore.prototype = {
 
     for (let i = 0; i < logins.length; i++) {
       let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
-      items[metaInfo.guid] = logins[i].hostname;
+      items[metaInfo.guid] = metaInfo;
     }
 
     return items;
   },
 
   changeItemID: function PasswordStore__changeItemID(oldID, newID) {
+    this._log.debug("Changing item ID: " + oldID + " to " + newID);
+
     if (!(oldID in this._loginItems)) {
-      this._log.warn("Can't change GUID " + oldID + " to " +
-                     newID + ": Item does not exist");
+      this._log.warn("Can't change item ID: item doesn't exist");
       return;
     }
-    let info = this._loginItems[oldID];
-
     if (newID in this._loginItems) {
-      this._log.warn("Can't change GUID " + oldID + " to " +
-                     newID + ": new ID already in use");
+      this._log.warn("Can't change item ID: new ID already in use");
       return;
     }
-
-    this._log.debug("Changing GUID " + oldID + " to " + newID);
 
     let prop = Cc["@mozilla.org/hash-property-bag;1"].
-               createInstance(Ci.nsIWritablePropertyBag2);
+      createInstance(Ci.nsIWritablePropertyBag2);
     prop.setPropertyAsAUTF8String("guid", newID);
 
-    this._loginManager.modifyLogin(info, prop);
+    this._loginManager.modifyLogin(this._loginItems[oldID], prop);
   },
 
   itemExists: function PasswordStore__itemExists(id) {
-    return ((id in this._loginItems) == true);
+    return (id in this._loginItems);
   },
 
   createRecord: function PasswordStore__createRecord(guid, cryptoMetaURL) {
@@ -179,10 +191,12 @@ PasswordStore.prototype = {
   },
 
   create: function PasswordStore__create(record) {
+    this._log.debug("Adding login for " + record.hostname);
     this._loginManager.addLogin(this._nsLoginInfoFromRecord(record));
   },
 
   remove: function PasswordStore__remove(record) {
+    this._log.debug("Removing login " + record.id);
     if (record.id in this._loginItems) {
       this._loginManager.removeLogin(this._loginItems[record.id]);
       return;
@@ -192,6 +206,8 @@ PasswordStore.prototype = {
   },
 
   update: function PasswordStore__update(record) {
+    this._log.debug("Updating login for " + record.hostname);
+
     if (!(record.id in this._loginItems)) {
       this._log.debug("Skipping update for unknown item: " + record.id);
       return;
@@ -225,17 +241,17 @@ PasswordTracker.prototype = {
     if (this.ignoreAll)
       return;
 
-    this._log.debug("Received notification " + aData);
-
     switch (aData) {
     case 'addLogin':
     case 'modifyLogin':
     case 'removeLogin':
       let metaInfo = aSubject.QueryInterface(Ci.nsILoginMetaInfo);
       this._score += 15;
+      this._log.debug(aData + ": " + metaInfo.guid);
       this.addChangedID(metaInfo.guid);
       break;
     case 'removeAllLogins':
+      this._log.debug(aData);
       this._score += 50;
       break;
     }
