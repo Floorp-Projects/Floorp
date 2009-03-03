@@ -65,7 +65,8 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsI
     scoping(scoping),
     special(special),
     fosterParenting(fosterParenting),
-    tainted(PR_FALSE)
+    tainted(PR_FALSE),
+    refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
@@ -83,7 +84,8 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     scoping(elementName->scoping),
     special(elementName->special),
     fosterParenting(elementName->fosterParenting),
-    tainted(PR_FALSE)
+    tainted(PR_FALSE),
+    refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
@@ -101,7 +103,8 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     scoping(elementName->scoping),
     special(elementName->special),
     fosterParenting(elementName->fosterParenting),
-    tainted(PR_FALSE)
+    tainted(PR_FALSE),
+    refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
@@ -119,7 +122,8 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
     scoping(scoping),
     special(PR_FALSE),
     fosterParenting(PR_FALSE),
-    tainted(PR_FALSE)
+    tainted(PR_FALSE),
+    refcount(1)
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
   nsHtml5Portability::retainLocal(name);
