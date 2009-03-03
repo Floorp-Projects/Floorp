@@ -45,6 +45,8 @@
 #include "nsHtml5StringLiterals.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
+#include "nsHtml5TreeOperation.h"
+#include "nsHtml5PendingNotification.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"
@@ -118,9 +120,9 @@ nsHtml5TreeBuilder::doctype(nsIAtom* name, nsString* publicIdentifier, nsString*
       default: {
         switch(mode) {
           case NS_HTML5TREE_BUILDER_INITIAL: {
-            if (reportingDoctype) {
-              appendDoctypeToDocument(!name ? nsHtml5Atoms::emptystring : name, !publicIdentifier ? nsHtml5Portability::newEmptyString() : publicIdentifier, !systemIdentifier ? nsHtml5Portability::newEmptyString() : systemIdentifier);
-            }
+            nsString* emptyString = nsHtml5Portability::newEmptyString();
+            appendDoctypeToDocument(!name ? nsHtml5Atoms::emptystring : name, !publicIdentifier ? emptyString : publicIdentifier, !systemIdentifier ? emptyString : systemIdentifier);
+            nsHtml5Portability::releaseString(emptyString);
             if (isQuirky(name, publicIdentifier, systemIdentifier, forceQuirks)) {
 
               documentModeInternal(QUIRKS_MODE, publicIdentifier, systemIdentifier, PR_FALSE);
@@ -3497,12 +3499,6 @@ void
 nsHtml5TreeBuilder::setDocumentModeHandler(nsHtml5Parser* documentModeHandler)
 {
   this->documentModeHandler = documentModeHandler;
-}
-
-void 
-nsHtml5TreeBuilder::setReportingDoctype(PRBool reportingDoctype)
-{
-  this->reportingDoctype = reportingDoctype;
 }
 
 PRBool 

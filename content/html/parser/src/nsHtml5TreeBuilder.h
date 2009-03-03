@@ -88,7 +88,6 @@ class nsHtml5TreeBuilder
     PRInt32 listPtr;
     nsIContent* formPointer;
     nsIContent* headPointer;
-    PRBool reportingDoctype;
   protected:
     jArray<PRUnichar,PRInt32> charBuffer;
     PRInt32 charBufferLen;
@@ -195,7 +194,6 @@ class nsHtml5TreeBuilder
     PRBool isScriptingEnabled();
     void setScriptingEnabled(PRBool scriptingEnabled);
     void setDocumentModeHandler(nsHtml5Parser* documentModeHandler);
-    void setReportingDoctype(PRBool reportingDoctype);
     PRBool inForeign();
   private:
     void flushCharacters();
