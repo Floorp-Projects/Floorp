@@ -5625,8 +5625,10 @@ nsGlobalWindow::EnterModalState()
     NS_ASSERTION(!mSuspendedDoc, "Shouldn't have mSuspendedDoc here!");
 
     mSuspendedDoc = do_QueryInterface(topWin->GetExtantDocument());
-    if (mSuspendedDoc) {
+    if (mSuspendedDoc && mSuspendedDoc->EventHandlingSuppressed()) {
       mSuspendedDoc->SuppressEventHandling();
+    } else {
+      mSuspendedDoc = nsnull;
     }
   }
   topWin->mModalStateDepth++;
