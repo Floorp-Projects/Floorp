@@ -5948,7 +5948,7 @@ TraceRecorder::getThis(LIns*& this_ins)
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, ExitType exitType)
+TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, LIns* exit)
 {
     bool cond = STOBJ_GET_CLASS(obj) == clasp;
 
@@ -5957,14 +5957,14 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, ExitType
 
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
-    guard(cond, addName(lir->ins2(LIR_eq, class_ins, INS_CONSTPTR(clasp)), namebuf), exitType);
+    guard(cond, addName(lir->ins2(LIR_eq, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
     return cond;
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
 {
-    return guardClass(obj, obj_ins, &js_ArrayClass, exitType);
+    return guardClass(obj, obj_ins, &js_ArrayClass, snapshot(exitType));
 }
 
 JS_REQUIRES_STACK bool
@@ -7013,7 +7013,30 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
             ABORT_TRACE("lazy import of global slot failed");
 
         LIns* r_ins = get(&r);
-        set(&STOBJ_GET_SLOT(obj, slot), r_ins);
+
+        if (JSVAL_IS_OBJECT(r)) {
+            LIns* exit = snapshot(MISMATCH_EXIT);
+            if (VALUE_IS_FUNCTION(cx, r)) {
+                /*
+                 * If we are recording a function being set into the slot, we must write the
+                 * same function that's already in the slot, otherwise we would have to re-brand.
+                 * In that case we simply fall off trace. Since we guard that the value is
+                 * already in the slot, we don't actually write anything into the slot in this
+                 * case.
+                 */
+                guard(true, lir->ins2(LIR_eq, get(&STOBJ_GET_SLOT(obj, slot)), r_ins), exit);
+            } else {
+                /*
+                 * If a regular object was written, we have to guard that it's not a function
+                 * at execution time either. FIXME: We should split function and object into
+                 * separate types when on trace (bug 481273).
+                 */
+                guardClass(obj, obj_ins, &js_FunctionClass, exit);
+                set(&STOBJ_GET_SLOT(obj, slot), r_ins);
+            }
+        } else {
+            set(&STOBJ_GET_SLOT(obj, slot), r_ins);
+        }
 
         JS_ASSERT(*pc != JSOP_INITPROP);
         if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
@@ -8164,8 +8187,10 @@ TraceRecorder::record_JSOP_NEXTITER()
         ABORT_TRACE("for-in on a primitive value");
 
     LIns* iterobj_ins = get(&iterobj_val);
-    if (guardClass(JSVAL_TO_OBJECT(iterobj_val), iterobj_ins, &js_IteratorClass, BRANCH_EXIT))
+    if (guardClass(JSVAL_TO_OBJECT(iterobj_val), iterobj_ins, &js_IteratorClass,
+                   snapshot(BRANCH_EXIT))) {
         return call_imacro(nextiter_imacros.native_iter_next);
+    }
     return call_imacro(nextiter_imacros.custom_iter_next);
 }
 

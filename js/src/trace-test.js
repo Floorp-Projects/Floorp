@@ -4420,6 +4420,23 @@ testUndefinedPropertyAccess.jitstats = {
 };
 test(testUndefinedPropertyAccess);
 
+q = "";
+function g() { q += "g"; }
+function h() { q += "h"; }
+a = [g, g, g, g, h];
+for (i=0; i<5; i++) { f = a[i];  f(); }
+
+function testRebranding() {
+    return q;
+}
+testRebranding.expected = "ggggh";
+test(testRebranding);
+delete q;
+delete g;
+delete h;
+delete a;
+delete f;
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
