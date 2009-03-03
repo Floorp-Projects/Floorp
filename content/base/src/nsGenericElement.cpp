@@ -4038,7 +4038,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
   nsIDocument* currentDoc = tmp->GetCurrentDoc();
   if (currentDoc && nsCCUncollectableMarker::InGeneration(
                       currentDoc->GetMarkedCCGeneration())) {
-    return NS_OK;
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
   nsIDocument* ownerDoc = tmp->GetOwnerDoc();
