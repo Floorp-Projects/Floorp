@@ -325,6 +325,7 @@
         </body>
       </method>
       <method name="startEditing">
+        <parameter name="autoSelect"/>
         <body>
           <![CDATA[
             if (this._itemId == -1)
@@ -342,6 +343,8 @@
             }
 
             this._nameField.focus();
+            if (autoSelect)
+              this._nameField.select();
           ]]>
         </body>
       </method>
@@ -690,6 +693,8 @@
             while (children.firstChild)
               children.removeChild(children.firstChild);
 
+            children.scrollBoxObject.scrollTo(0, 0);
+
             let childItems = this._getChildren(aRootFolder);
             for (let i=0; i<childItems.length; i++) {
               let node = childItems[i];
@@ -717,7 +722,7 @@
               let children = this._children;
               let newId = PlacesUtils.bookmarks.createFolder(parent.itemId, this._bundle.GetStringFromName("editBookmarkNewFolder"), PlacesUtils.bookmarks.DEFAULT_INDEX);
               let child = this.appendItem(newId, Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, children.lastChild);
-              child.startEditing();
+              child.startEditing(true);
             }
           ]]>
         </body>
