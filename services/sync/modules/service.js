@@ -878,7 +878,82 @@ WeaveSvc.prototype = {
       }
     }
     this._catchAll(this._notify("reset-client", "", fn)).async(this, onComplete);
-  }
+  },
+
+  /**
+   * A hash of valid commands that the client knows about. The key is a command
+   * and the value is a hash containing information about the command such as
+   * number of arguments and description.
+   */
+  _commands: [
+    ["resetAll", 0, "Clear temporary local data for all engines"],
+    ["resetEngine", 1, "Clear temporary local data for engine"],
+    ["wipeAll", 0, "Delete all client data for all engines"],
+    ["wipeEngine", 1, "Delete all client data for engine"],
+  ].reduce(function WeaveSvc__commands(commands, entry) {
+    commands[entry[0]] = {};
+    for (let [i, attr] in Iterator(["args", "desc"]))
+      commands[entry[0]][attr] = entry[i + 1];
+    return commands;
+  }, {}),
+
+  /**
+   * Prepare to send a command to each remote client. Calling this doesn't
+   * actually sync the command data to the server. If the client already has
+   * the command/args pair, it won't get a duplicate action.
+   *
+   * @param command
+   *        Command to invoke on remote clients
+   * @param args
+   *        Array of arguments to give to the command
+   */
+  prepCommand: function WeaveSvc_prepCommand(command, args) {
+    let commandData = this._commands[command];
+    // Don't send commands that we don't know about
+    if (commandData == null) {
+      this._log.error("Unknown command to send: " + command);
+      return;
+    }
+    // Don't send a command with the wrong number of arguments
+    else if (args == null || args.length != commandData.args) {
+      this._log.error("Expected " + commandData.args + " args for '" +
+                      command + "', but got " + args);
+      return;
+    }
+
+    // Package the command/args pair into an object
+    let action = {
+      command: command,
+      args: args,
+    };
+    let actionStr = command + "(" + args + ")";
+
+    // Convert args into a string to simplify array comparisons
+    let jsonArgs = Svc.Json.encode(args);
+    let notDupe = function(action) action.command != command ||
+      Svc.Json.encode(action.args) != jsonArgs;
+
+    this._log.info("Sending clients: " + actionStr + "; " + commandData.desc);
+
+    // Add the action to each remote client
+    for (let guid in Clients.getClients()) {
+      // Don't send commands to the local client
+      if (guid == Clients.clientID)
+        continue;
+
+      let info = Clients.getInfo(guid);
+      // Set the action to be a new commands array if none exists
+      if (info.commands == null)
+        info.commands = [action];
+      // Add the new action if there are no duplicates
+      else if (info.commands.every(notDupe))
+        info.commands.push(action);
+      // Must have been a dupe.. skip!
+      else
+        continue;
+
+      Clients.setInfo(guid, info);
+      this._log.trace("Client " + guid + " got a new action: " + actionStr);
+    }
+  },
 };
-
-
