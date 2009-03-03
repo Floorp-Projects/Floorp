@@ -112,10 +112,11 @@ Engine.prototype = {
   get enabled() Utils.prefs.getBoolPref("engine." + this.name),
   get score() this._tracker.score,
 
+  __store: null,
   get _store() {
-    let store = new this._storeObj();
-    this.__defineGetter__("_store", function() store);
-    return store;
+    if (!this.__store)
+      this.__store = new this._storeObj();
+    return this.__store;
   },
 
   get _tracker() {
