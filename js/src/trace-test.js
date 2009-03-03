@@ -4403,24 +4403,6 @@ testConvertibleObjectEqUndefined.jitstats = {
 };
 test(testConvertibleObjectEqUndefined);
 
-var globalProperty;
-function testFunctionToFunctionGlobalPropertyTransition()
-{
-  function g() { return "g" }
-  function h() { return "h"; }
-  var a = [g, g, g, g, h];
-  var results = [];
-  for (i = 0; i < 5; i++)
-  {
-    globalProperty = a[i];
-    results[i] = globalProperty();
-  }
-  return results.join("");
-}
-testFunctionToFunctionGlobalPropertyTransition.expected = "ggggh";
-test(testFunctionToFunctionGlobalPropertyTransition);
-
-
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
