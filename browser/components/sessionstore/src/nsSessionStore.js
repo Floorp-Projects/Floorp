@@ -1496,13 +1496,16 @@ SessionStoreService.prototype = {
         nonPopupCount++;
     }
     this._updateCookies(total);
-    
+
+#ifndef XP_MACOSX
     // if no non-popup browser window remains open, return the state of the last closed window(s)
     if (nonPopupCount == 0 && this._lastClosedWindows) {
       // prepend the last non-popup browser window, so that if the user loads more tabs
       // at startup we don't accidentally add them to a popup window
       total = this._lastClosedWindows.concat(total);
     }
+#endif
+
     if (activeWindow) {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     }
