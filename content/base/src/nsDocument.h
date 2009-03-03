@@ -986,6 +986,12 @@ public:
   nsSMILAnimationController* GetAnimationController();
 #endif // MOZ_SMIL
 
+  virtual void SuppressEventHandling(PRUint32 aIncrease);
+
+  virtual void UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents);
+  
+  void DecreaseEventSuppression() { --mEventsSuppressed; }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
 
   /**
