@@ -255,10 +255,14 @@ ClientStore.prototype = {
   createRecord: function ClientStore_createRecord(id) {
     let record = new ClientRecord();
     record.id = id;
-    if (id == Clients.clientID)
-      record.payload = {name: Clients.clientName, type: Clients.clientType};
-    else
-      record.payload = this._clients[id];
+    record.payload = this._clients[id] || {};
+
+    // For the local client, update the name and type with the current value
+    if (id == Clients.clientID) {
+      record.payload.name = Clients.clientName;
+      record.payload.type = Clients.clientType;
+    }
+
     return record;
   }
 };
