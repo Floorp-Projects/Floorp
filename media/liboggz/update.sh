@@ -40,9 +40,9 @@ sed s/\#include\ \"config.h\"/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\
 sed s/\#include\ \"config.h\"/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\#else\\n\#include\ \"config.h\"\\n\#endif/g $1/src/liboggz/oggz_seek.c >./src/liboggz/oggz_seek.c
 cp $1/src/liboggz/oggz_dlist.h ./src/liboggz/oggz_dlist.h
 sed s/\#include\ \"config.h\"/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\#else\\n\#include\ \"config.h\"\\n\#endif/g $1/src/liboggz/metric_internal.c >./src/liboggz/metric_internal.c
+cp $1/src/liboggz/dirac.h ./src/liboggz/dirac.h
+sed s/\#include\ \"config.h\"/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\#else\\n\#include\ \"config.h\"\\n\#endif/g $1/src/liboggz/dirac.c >./src/liboggz/dirac.c
 cp $1/AUTHORS ./AUTHORS
-patch -p4 <seek.patch
-patch -p4 <warning.patch
-patch -p3 <oggz_off_t.patch
 patch -p3 <wince.patch
-patch -p4 <endian.patch
+patch -p3 <endian.patch
+patch -p4 <seek.patch

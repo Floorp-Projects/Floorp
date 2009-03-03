@@ -41,6 +41,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DEFINES += -DHAVE_CONFIG_H
+
 MODULE		= oggplay
 LIBRARY_NAME	= oggplay
 FORCE_STATIC_LIB= 1

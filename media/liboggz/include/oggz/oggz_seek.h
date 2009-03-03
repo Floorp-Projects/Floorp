@@ -259,6 +259,30 @@ long oggz_seek_packets (OGGZ * oggz, long serialno, long packets, int whence);
  */
 
 /**
+ * Retrieve the preroll of a logical bitstream.
+ * \param oggz An OGGZ handle
+ * \param serialno Identify the logical bitstream in \a oggz
+ * \returns The preroll of the specified logical bitstream.
+ * \retval OGGZ_ERR_BAD_SERIALNO \a serialno does not identify an existing
+ * logical bitstream in \a oggz.
+ * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
+ */
+int oggz_get_preroll (OGGZ * oggz, long serialno);
+
+/**
+ * Specify the preroll of a logical bitstream.
+ * \param oggz An OGGZ handle
+ * \param serialno Identify the logical bitstream in \a oggz to attach
+ * this preroll to.
+ * \param preroll The preroll
+ * \returns 0 Success
+ * \retval OGGZ_ERR_BAD_SERIALNO \a serialno does not identify an existing
+ * logical bitstream in \a oggz.
+ * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
+ */
+int oggz_set_preroll (OGGZ * oggz, long serialno, int preroll);
+
+/**
  * Retrieve the granuleshift of a logical bitstream.
  * \param oggz An OGGZ handle
  * \param serialno Identify the logical bitstream in \a oggz
@@ -424,6 +448,8 @@ typedef int (*OggzOrder) (OGGZ * oggz, ogg_packet * op, void * target,
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
+ * \retval OGGZ_ERR_BAD_SERIALNO \a serialno does not identify an existing
+ *                               logical bitstream in \a oggz, and is not -1
  */
 int oggz_set_order (OGGZ * oggz, long serialno, OggzOrder order,
 		    void * user_data);
