@@ -429,7 +429,7 @@ This was the Theora header for theora-alpha2:
  */
 
 /**
- * Kate bitstream version 0.1
+ * Kate bitstream version 0.x
  *
  * Default field type: LITTLE ENDIAN unsigned integer
 
@@ -445,7 +445,7 @@ This was the Theora header for theora-alpha2:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | text encoding | directionality| reserved - 0  | granule shift | 12-15
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| reserved - 0                                                  | 16-19
+| cw sh |  canvas width         | ch sh | canvcas height        | 16-19
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | reserved - 0                                                  | 20-23
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -469,6 +469,8 @@ This was the Theora header for theora-alpha2:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | category (continued)                                          | 60-63
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+ since bitstream 0.3: cw sh, canvas width, ch sh, canvas height
 
  */
 
