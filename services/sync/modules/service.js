@@ -576,34 +576,33 @@ WeaveSvc.prototype = {
     this._log.debug("Fetching global metadata record");
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
+    let remoteVersion = (meta && meta.payload.storageVersion)?
+      meta.payload.storageVersion : "";
 
-    this._log.debug("Min server storage version is " + MIN_SERVER_STORAGE_VERSION);
-    if (meta) {
-          this._log.debug("payload storage version is " +
-                          meta.payload.storageVersion);
-    }
+    this._log.debug("Min supported storage version is " + MIN_SERVER_STORAGE_VERSION);
+    this._log.debug("Remote storage version is " + remoteVersion);
 
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
-        Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
-                            meta.payload.storageVersion) > 0) {
-      if (Svc.Version.compare(MIN_SERVER_STORAGE_VERSION,
-			     meta.payload.storageVersion) > 0) {
-	this._log.warn("Version " + meta.payload.storageVersion + " does not match version " + MIN_SERVER_STORAGE_VERSION);
-      }
-      if (!meta.payload.syncID) {
-	this._log.warn("No sync id.");
-      }
+        Svc.Version.compare(MIN_SERVER_STORAGE_VERSION, remoteVersion) > 0) {
+
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.lastResource.lastChannel.responseStatus;
       if (status != 200 && status != 404) {
-	this._log.warn("Unknown error while downloading metadata record.  " +
-			"Aborting sync.");
+	this._log.warn("Unknown error while downloading metadata record. " +
+                       "Aborting sync.");
 	self.done(false);
 	return;
       }
 
+      if (!meta)
+	this._log.info("No metadata record, server wipe needed");
+      if (meta && !meta.payload.syncID)
+	this._log.warn("No sync id, server wipe needed");
+      if (Svc.Version.compare(MIN_SERVER_STORAGE_VERSION, remoteVersion) > 0)
+	this._log.info("Server storage version no longer supported, server wipe needed");
+
       reset = true;
-      this._log.warn("Calling freshStart from the first case.");
+      this._log.info("Wiping server data");
       yield this._freshStart.async(this, self.cb);
 
       if (status == 404)
@@ -611,18 +610,16 @@ WeaveSvc.prototype = {
                        "consistency.");
       else // 200
         this._log.info("Server data wiped to ensure consistency after client " +
-                       "upgrade (" + meta.payload.storageVersion + " -> " +
-                       WEAVE_VERSION + ")");
+                       "upgrade (" + remoteVersion + " -> " + WEAVE_VERSION + ")");
 
-    } else if (Svc.Version.compare(meta.payload.storageVersion,
-                                   WEAVE_VERSION) > 0) {
+    } else if (Svc.Version.compare(remoteVersion, WEAVE_VERSION) > 0) {
       this._log.warn("Server data is of a newer Weave version, this client " +
                      "needs to be upgraded.  Aborting sync.");
       self.done(false);
       return;
 
     } else if (meta.payload.syncID != Clients.syncID) {
-      this._log.warn("Wiping client because of syncID mismatch.");
+      this._log.info("Resetting client because of syncID mismatch.");
       this._wipeClientMetadata();
       Clients.syncID = meta.payload.syncID;
       this._log.info("Cleared local caches after server wipe was detected");
@@ -870,6 +867,10 @@ WeaveSvc.prototype = {
     Clients._store.wipe();
     if (Engines.get("tabs"))
       Engines.get("tabs")._store.wipe();
+
+    for each (let engine in Engines.getAll().push(Clients)) {
+      engine.resetLastSync();
+    }
 
     try {
       let cruft = this._dirSvc.get("ProfD", Ci.nsIFile);
