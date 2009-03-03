@@ -392,7 +392,6 @@ JSBool
 js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
              JSONWriteCallback callback, void *data, uint32 depth)
 {
-    printf("calling js_Stringify\n");
     JSBool ok;
     JSType type = JS_TypeOfValue(cx, *vp);
 
@@ -417,7 +416,6 @@ static JSBool PopState(JSContext *cx, JSONParser *jp);
 JSONParser *
 js_BeginJSONParse(JSContext *cx, jsval *rootVal)
 {
-    printf("calling js_BeginJSONParse\n");
     if (!cx)
         return NULL;
 
@@ -460,7 +458,6 @@ bad:
 JSBool
 js_FinishJSONParse(JSContext *cx, JSONParser *jp)
 {
-    printf("calling js_FinishJSONParse\n");
     if (!jp)
         return JS_TRUE;
 
