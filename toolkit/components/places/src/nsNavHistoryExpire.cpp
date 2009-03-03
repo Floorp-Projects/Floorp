@@ -204,19 +204,10 @@ nsNavHistoryExpire::OnQuit()
   if (sanitizeHistory && sanitizeOnShutdown)
     return;
 
-  // vacuum up dangling items
-  rv = ExpireHistoryParanoid(connection, EXPIRATION_CAP_PLACES);
+  // Get rid of all records orphaned due to expiration.
+  rv = ExpireOrphans(EXPIRATION_CAP_PLACES);
   if (NS_FAILED(rv))
-    NS_WARNING("ExpireHistoryParanoid failed.");
-  rv = ExpireFaviconsParanoid(connection);
-  if (NS_FAILED(rv))
-    NS_WARNING("ExpireFaviconsParanoid failed.");
-  rv = ExpireAnnotationsParanoid(connection);
-  if (NS_FAILED(rv))
-    NS_WARNING("ExpireAnnotationsParanoid failed.");
-  rv = ExpireInputHistoryParanoid(connection);
-  if (NS_FAILED(rv))
-    NS_WARNING("ExpireInputHistoryParanoid failed.");
+    NS_WARNING("ExpireOrphans failed.");
 }
 
 
@@ -417,6 +408,37 @@ nsNavHistoryExpire::ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing)
   return NS_OK;
 }
 
+// nsNavHistoryExpire::ExpireOrphans
+//
+//    Try to expire aNumToExpire items that are orphans.  aNumToExpire only
+//    limits how many moz_places we worry about.  Everything else (favicons,
+//    annotations, and input history) is completely expired.
+
+nsresult
+nsNavHistoryExpire::ExpireOrphans(PRUint32 aNumToExpire)
+{
+  mozIStorageConnection* connection = mHistory->GetStorageConnection();
+  NS_ENSURE_TRUE(connection, NS_ERROR_OUT_OF_MEMORY);
+
+  mozStorageTransaction transaction(connection, PR_FALSE);
+
+  nsresult rv = ExpireHistoryParanoid(connection, aNumToExpire);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ExpireFaviconsParanoid(connection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ExpireAnnotationsParanoid(connection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ExpireInputHistoryParanoid(connection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 // nsNavHistoryExpireRecord::nsNavHistoryExpireRecord
 //
