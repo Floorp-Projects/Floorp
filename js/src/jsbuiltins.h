@@ -401,7 +401,10 @@ JS_DECLARE_CALLINFO(js_NumberToString)
 /* Defined in jsstr.cpp */
 JS_DECLARE_CALLINFO(js_ConcatStrings)
 JS_DECLARE_CALLINFO(js_String_getelem)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt0)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt0_int)
 JS_DECLARE_CALLINFO(js_String_p_charCodeAt)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt_int)
 JS_DECLARE_CALLINFO(js_EqualStrings)
 JS_DECLARE_CALLINFO(js_CompareStrings)
 

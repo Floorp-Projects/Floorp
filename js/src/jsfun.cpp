@@ -2235,17 +2235,14 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
 JSObject *
 js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 {
-    JSObject *callable;
+    JSObject *callable = JSVAL_IS_PRIMITIVE(*vp) ? NULL : JSVAL_TO_OBJECT(*vp);
 
-    callable = JSVAL_IS_PRIMITIVE(*vp) ? NULL : JSVAL_TO_OBJECT(*vp);
-    if (callable &&
-        ((callable->map->ops == &js_ObjectOps)
-         ? OBJ_GET_CLASS(cx, callable)->call
-         : callable->map->ops->call)) {
+    if (js_IsCallable(cx, callable)) {
         *vp = OBJECT_TO_JSVAL(callable);
     } else {
         callable = js_ValueToFunctionObject(cx, vp, flags);
     }
+
     return callable;
 }
 

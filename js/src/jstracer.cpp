@@ -52,7 +52,8 @@
 #include <limits.h>
 
 #include "nanojit/nanojit.h"
-#include "jsarray.h"            // higher-level library and API headers
+#include "jsapi.h"              // higher-level library and API headers
+#include "jsarray.h"
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
@@ -905,19 +906,33 @@ public:
             if (isi2f(s0) || isu2f(s0))
                 return iu2fArg(s0);
             // XXX ARM -- check for qjoin(call(UnboxDouble),call(UnboxDouble))
-            if (s0->isCall() && s0->callInfo() == &js_UnboxDouble_ci) {
-                LIns* args2[] = { callArgN(s0, 0) };
-                return out->insCall(&js_UnboxInt32_ci, args2);
-            }
-            if (s0->isCall() && s0->callInfo() == &js_StringToNumber_ci) {
-                // callArgN's ordering is that as seen by the builtin, not as stored in args here.
-                // True story!
-                LIns* args2[] = { callArgN(s0, 1), callArgN(s0, 0) };
-                return out->insCall(&js_StringToInt32_ci, args2);
+            if (s0->isCall()) {
+                const CallInfo* ci2 = s0->callInfo();
+                if (ci2 == &js_UnboxDouble_ci) {
+                    LIns* args2[] = { callArgN(s0, 0) };
+                    return out->insCall(&js_UnboxInt32_ci, args2);
+                } else if (ci2 == &js_StringToNumber_ci) {
+                    // callArgN's ordering is that as seen by the builtin, not as stored in
+                    // args here. True story!
+                    LIns* args2[] = { callArgN(s0, 1), callArgN(s0, 0) };
+                    return out->insCall(&js_StringToInt32_ci, args2);
+                } else if (ci2 == &js_String_p_charCodeAt0_ci) {
+                    // Use a fast path builtin for a charCodeAt that converts to an int right away.
+                    LIns* args2[] = { callArgN(s0, 0) };
+                    return out->insCall(&js_String_p_charCodeAt0_int_ci, args2);
+                } else if (ci2 == &js_String_p_charCodeAt_ci) {
+                    LIns* idx = callArgN(s0, 1);
+                    // If the index is not already an integer, force it to be an integer.
+                    idx = isPromote(idx)
+                        ? demote(out, idx)
+                        : out->insCall(&js_DoubleToInt32_ci, &idx);
+                    LIns* args2[] = { idx, callArgN(s0, 0) };
+                    return out->insCall(&js_String_p_charCodeAt_int_ci, args2);
+                }
             }
         } else if (ci == &js_BoxDouble_ci) {
             JS_ASSERT(s0->isQuad());
-            if (s0->isop(LIR_i2f)) {
+            if (isi2f(s0)) {
                 LIns* args2[] = { s0->oprnd1(), args[1] };
                 return out->insCall(&js_BoxInt32_ci, args2);
             }
@@ -6742,27 +6757,6 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
             }
             argp--;
         }
-
-        /*
-         * If we got this far, and we have a charCodeAt, check that charCodeAt
-         * isn't going to return a NaN.
-         */
-        if (!constructing && known->builtin == &js_String_p_charCodeAt_ci) {
-            JSString* str = JSVAL_TO_STRING(tval);
-            jsval& arg = stackval(-1);
-
-            JS_ASSERT(JSVAL_IS_STRING(tval));
-            JS_ASSERT(isNumber(arg));
-
-            if (JSVAL_IS_INT(arg)) {
-                if (size_t(JSVAL_TO_INT(arg)) >= JSSTRING_LENGTH(str))
-                    ABORT_TRACE("invalid charCodeAt index");
-            } else {
-                double d = js_DoubleToInteger(*JSVAL_TO_DOUBLE(arg));
-                if (d < 0 || JSSTRING_LENGTH(str) <= d)
-                    ABORT_TRACE("invalid charCodeAt index");
-            }
-        }
         goto success;
 
 next_specialization:;
@@ -7019,30 +7013,6 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
             ABORT_TRACE("lazy import of global slot failed");
 
         LIns* r_ins = get(&r);
-
-        /*
-         * Scope shape is determined by the ordered list of property names and
-         * other attributes (flags, getter/setter, etc.) but not value or type
-         * -- except for function-valued properties.  This function-based
-         * distinction enables various function-call optimizations.
-         *
-         * This shape requirement is addressed in the interpreter by branding
-         * the scope and updating any branded scope's shape every time the
-         * value changes to or from a function or when one function value is
-         * modified to a different function value; see GC_WRITE_BARRIER.
-         *
-         * On trace the shape requirement is mostly handled by normal shape
-         * guarding.  However, the global object's shape is required to be
-         * invariant at trace recording time, and since a function-to-function
-         * transition can change shape, we must handle this edge case
-         * separately with the following guard.  See also bug 473256.
-         */
-        if (VALUE_IS_FUNCTION(cx, r)) {
-            guard(true,
-                  lir->ins2(LIR_eq, r_ins, INS_CONSTPTR(JSVAL_TO_OBJECT(r))),
-                  MISMATCH_EXIT);
-        }
-
         set(&STOBJ_GET_SLOT(obj, slot), r_ins);
 
         JS_ASSERT(*pc != JSOP_INITPROP);
