@@ -728,6 +728,22 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                               JS_IsSystemObject(cx, parent));
 }
 
+inline JSBool
+xpc_SameOrigin(XPCWrappedNativeScope *objectscope, XPCWrappedNativeScope *xpcscope)
+{
+    PRBool sameOrigin;
+    nsIPrincipal *objectprincipal = objectscope->GetPrincipal();
+    nsIPrincipal *xpcprincipal = xpcscope->GetPrincipal();
+    if((!objectprincipal || !xpcprincipal) &&
+       (!(sameOrigin = objectscope == xpcscope) ||
+        NS_FAILED(objectprincipal->Equals(xpcprincipal, &sameOrigin))))
+    {
+        return JS_FALSE;
+    }
+
+    return sameOrigin;
+}
+
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index)
 {
