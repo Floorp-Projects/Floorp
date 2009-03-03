@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(8C6263C9-F3EF-419d-80EF-D5D716635FAA)]
+[scriptable, uuid(6e3510b9-806d-4a2a-be79-73d2a495b4b8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -297,6 +297,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * fired.
    */
   readonly attribute boolean isMozAfterPaintPending;
+
+  /**
+   * Suppresses/unsuppresses user initiated event handling in window's document
+   * and subdocuments.
+   *
+   * @throw NS_ERROR_DOM_SECURITY_ERR if called without UniversalXPConnect
+   *        privileges and NS_ERROR_FAILURE if window doesn't have a document.
+   */
+  void suppressEventHandling(in boolean aSuppress);
 
   void clearMozAfterPaintEvents();
 

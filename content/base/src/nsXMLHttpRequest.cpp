@@ -145,6 +145,21 @@
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
 
+class nsResumeTimeoutsEvent : public nsRunnable
+{
+public:
+  nsResumeTimeoutsEvent(nsPIDOMWindow* aWindow) : mWindow(aWindow) {}
+
+  NS_IMETHOD Run()
+  {
+    mWindow->ResumeTimeouts(PR_FALSE);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+};
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
@@ -2160,7 +2175,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   request->GetStatus(&status);
   mErrorLoad = mErrorLoad || NS_FAILED(status);
 
-  if (mUpload && !mUploadComplete && !mErrorLoad) {
+  if (mUpload && !mUploadComplete && !mErrorLoad &&
+      (mState & XML_HTTP_REQUEST_ASYNC)) {
     mUploadComplete = PR_TRUE;
     DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOAD_STR),
                           PR_TRUE, mUploadTotal, mUploadTotal);
@@ -2786,16 +2802,20 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
 
+    nsCOMPtr<nsIDocument> suspendedDoc;
     nsCOMPtr<nsIRunnable> resumeTimeoutRunnable;
     if (mOwner) {
       nsCOMPtr<nsIDOMWindow> topWindow;
       if (NS_SUCCEEDED(mOwner->GetTop(getter_AddRefs(topWindow)))) {
         nsCOMPtr<nsPIDOMWindow> suspendedWindow(do_QueryInterface(topWindow));
-        if (suspendedWindow) {
-          suspendedWindow->SuspendTimeouts();
-          resumeTimeoutRunnable = NS_NEW_RUNNABLE_METHOD(nsPIDOMWindow,
-                                                         suspendedWindow.get(),
-                                                         ResumeTimeouts);
+        if (suspendedWindow &&
+            (suspendedWindow = suspendedWindow->GetCurrentInnerWindow())) {
+          suspendedDoc = do_QueryInterface(suspendedWindow->GetExtantDocument());
+          if (suspendedDoc) {
+            suspendedDoc->SuppressEventHandling();
+          }
+          suspendedWindow->SuspendTimeouts(1, PR_FALSE);
+          resumeTimeoutRunnable = new nsResumeTimeoutsEvent(suspendedWindow);
         }
       }
     }
@@ -2806,6 +2826,12 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
+    }
+
+    if (suspendedDoc) {
+      NS_DispatchToCurrentThread(
+        NS_NEW_RUNNABLE_METHOD(nsIDocument, suspendedDoc.get(),
+                               UnsuppressEventHandling));
     }
 
     if (resumeTimeoutRunnable) {
@@ -3222,7 +3248,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
     return NS_OK;
   }
 
-  if (!mErrorLoad) {
+  if (!mErrorLoad && (mState & XML_HTTP_REQUEST_ASYNC)) {
     StartProgressEventTimer();
     NS_NAMED_LITERAL_STRING(progress, PROGRESS_STR);
     NS_NAMED_LITERAL_STRING(uploadprogress, UPLOADPROGRESS_STR);
@@ -3348,7 +3374,8 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Notify(nsITimer* aTimer)
 {
   mTimerIsActive = PR_FALSE;
-  if (NS_SUCCEEDED(CheckInnerWindowCorrectness()) && !mErrorLoad) {
+  if (NS_SUCCEEDED(CheckInnerWindowCorrectness()) && !mErrorLoad &&
+      (mState & XML_HTTP_REQUEST_ASYNC)) {
     if (mProgressEventWasDelayed) {
       mProgressEventWasDelayed = PR_FALSE;
       if (!(XML_HTTP_REQUEST_MPART_HEADERS & mState)) {
