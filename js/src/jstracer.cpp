@@ -7012,30 +7012,6 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
             ABORT_TRACE("lazy import of global slot failed");
 
         LIns* r_ins = get(&r);
-
-        /*
-         * Scope shape is determined by the ordered list of property names and
-         * other attributes (flags, getter/setter, etc.) but not value or type
-         * -- except for function-valued properties.  This function-based
-         * distinction enables various function-call optimizations.
-         *
-         * This shape requirement is addressed in the interpreter by branding
-         * the scope and updating any branded scope's shape every time the
-         * value changes to or from a function or when one function value is
-         * modified to a different function value; see GC_WRITE_BARRIER.
-         *
-         * On trace the shape requirement is mostly handled by normal shape
-         * guarding.  However, the global object's shape is required to be
-         * invariant at trace recording time, and since a function-to-function
-         * transition can change shape, we must handle this edge case
-         * separately with the following guard.  See also bug 473256.
-         */
-        if (VALUE_IS_FUNCTION(cx, r)) {
-            guard(true,
-                  lir->ins2(LIR_eq, r_ins, INS_CONSTPTR(JSVAL_TO_OBJECT(r))),
-                  MISMATCH_EXIT);
-        }
-
         set(&STOBJ_GET_SLOT(obj, slot), r_ins);
 
         JS_ASSERT(*pc != JSOP_INITPROP);
