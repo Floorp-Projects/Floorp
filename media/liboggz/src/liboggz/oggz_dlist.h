@@ -49,10 +49,10 @@ oggz_dlist_delete(OggzDList *dlist);
 int
 oggz_dlist_is_empty(OggzDList *dlist);
 
-int
+void
 oggz_dlist_append(OggzDList *dlist, void *elem);
 
-int
+void
 oggz_dlist_prepend(OggzDList *dlist, void *elem);
 
 void
