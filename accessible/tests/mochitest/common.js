@@ -59,6 +59,7 @@ const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
 const ROLE_FORM = nsIAccessibleRole.ROLE_FORM;
 const ROLE_GRAPHIC = nsIAccessibleRole.ROLE_GRAPHIC;
 const ROLE_GRID_CELL = nsIAccessibleRole.ROLE_GRID_CELL;
+const ROLE_GROUPING = nsIAccessibleRole.ROLE_GROUPING;
 const ROLE_HEADING = nsIAccessibleRole.ROLE_HEADING;
 const ROLE_IMAGE_MAP = nsIAccessibleRole.ROLE_IMAGE_MAP;
 const ROLE_INTERNAL_FRAME = nsIAccessibleRole.ROLE_INTERNAL_FRAME;
@@ -93,6 +94,7 @@ const STATE_READONLY = nsIAccessibleStates.STATE_READONLY;
 const STATE_SELECTABLE = nsIAccessibleStates.STATE_SELECTABLE;
 const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
 const STATE_TRAVERSED = nsIAccessibleStates.STATE_TRAVERSED;
+const STATE_UNAVAILABLE = nsIAccessibleStates.STATE_UNAVAILABLE;
 
 const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
 const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
