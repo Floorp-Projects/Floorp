@@ -64,16 +64,7 @@ PasswordEngine.prototype = {
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
   
-  /* We override syncStartup & syncFinish to populate/reset our local cache
-     of loginInfo items. We can remove this when the interface to query
-     LoginInfo items by GUID is ready
-  */
-  _syncStartup: function PasswordEngine__syncStartup() {
-    let self = yield;
-    this._store._cacheLogins();
-    yield SyncEngine.prototype._syncStartup.async(this, self.cb);
-  },
-  
+  /* Wipe cache when sync finishes */
   _syncFinish: function PasswordEngine__syncFinish() {
     let self = yield;
     this._store._clearLoginCache();
@@ -93,17 +84,19 @@ PasswordStore.prototype = {
     this.__defineGetter__("_loginManager", function() loginManager);
     return loginManager;
   },
-
+  
+  __loginItems: null,
   get _loginItems() {
-    let loginItems = {};
-    let logins = this._loginManager.getAllLogins({});
-    for (let i = 0; i < logins.length; i++) {
-      let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
-      loginItems[metaInfo.guid] = logins[i];
+    if (!this.__loginItems) {
+      this.__loginItems = {};
+      let logins = this._loginManager.getAllLogins({});
+      for (let i = 0; i < logins.length; i++) {
+        let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
+        this.__loginItems[metaInfo.guid] = logins[i];
+      }
     }
-    
-    this.__defineGetter__("_loginItems", function() loginItems);
-    return loginItems;
+
+    return this.__loginItems;
   },
   
   _nsLoginInfo: null,
@@ -113,14 +106,7 @@ PasswordStore.prototype = {
       "@mozilla.org/login-manager/loginInfo;1",
       Ci.nsILoginInfo,
       "init"
-    );
-  },
-  
-  _cacheLogins: function PasswordStore__cacheLogins() {
-    /* Force the getter to populate the property
-       Also, this way, we don't fail if the store is created twice?
-     */
-    return this._loginItems;
+    );   
   },
   
   _clearLoginCache: function PasswordStore__clearLoginCache() {
