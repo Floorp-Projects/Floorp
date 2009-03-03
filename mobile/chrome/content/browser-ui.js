@@ -562,7 +562,7 @@ var BrowserUI = {
       case "cmd_star":
       {
         var bookmarkURI = browser.currentURI;
-        var bookmarkTitle = browser.contentDocument.title;
+        var bookmarkTitle = browser.contentDocument.title || bookmarkURI.spec;
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
           var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
