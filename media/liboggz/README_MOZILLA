@@ -1,21 +1,12 @@
-The source from this directory was copied from the liboggz-0.9.7
-source distribution using the update.sh script. The only changes made
-were those applied by update.sh, which applies a patch from
-seek.patch, and the addition/upate of Makefile.in files for the
+The source from this directory was copied from the liboggz svn 
+source repository using the update.sh script. The only changes made
+were those applied by update.sh, which applies patches described
+below, and the addition/upate of Makefile.in files for the
 Mozilla build system.
 
-The seek.patch address a bug in liboggz when a seek call returns an
-error. It also addresses an issue where the guess for the seek
-position can exceed the file size. These will be upstreamed to liboggz.
+The svn revision number used was r3867.
 
-The warning.patch addresses a printf in liboggz that is not wrapped
-in a DEBUG #ifdef. See Mozilla bug 450891 and Annodex ticket 431:
-
-http://trac.annodex.net/ticket/431
-
-The oggz_off_t.patch fixes a compile error on Solaris see bug 449754
-for details
-
-The wince.patch addresses the lack of posix file IO suppor on windows ce see bug 461844 for details.
+The wince.patch addresses the lack of posix file IO support on windows ce,
+see bug 461844 for details.
 
 endian.patch is applied to fix bug 452698.

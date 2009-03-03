@@ -35,11 +35,15 @@
 
 typedef struct _oggz_stream_t oggz_stream_t;
 
+typedef int (*OggzReadBOS) (OGGZ * oggz, long serialno,
+                            unsigned char * data, long length,
+			    void * user_data);
+
 typedef struct {
   const char      *bos_str;
   int             bos_str_len;
   const char      *content_type;
-  OggzReadPacket  reader;
+  OggzReadBOS     reader;
   ogg_int64_t     (*calculator)(ogg_int64_t now, oggz_stream_t *stream, 
                   ogg_packet *op);
   ogg_int64_t     (*r_calculator)(ogg_int64_t next_packet_gp, 

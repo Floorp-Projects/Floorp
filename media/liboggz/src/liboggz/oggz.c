@@ -96,6 +96,10 @@ oggz_new (int flags)
   oggz->cb_next = 0;
 
   oggz->streams = oggz_vector_new ();
+  if (oggz->streams == NULL) {
+    goto err_oggz_new;
+  }
+  
   oggz->all_at_eos = 0;
 
   oggz->metric = NULL;
@@ -106,14 +110,26 @@ oggz_new (int flags)
   oggz->order_user_data = NULL;
 
   oggz->packet_buffer = oggz_dlist_new ();
+  if (oggz->packet_buffer == NULL) {
+    goto err_streams_new;
+  }
 
   if (OGGZ_CONFIG_WRITE && (oggz->flags & OGGZ_WRITE)) {
-    oggz_write_init (oggz);
+    if (oggz_write_init (oggz) == NULL)
+      goto err_packet_buffer_new;
   } else if (OGGZ_CONFIG_READ) {
     oggz_read_init (oggz);
   }
 
   return oggz;
+
+err_packet_buffer_new:
+  oggz_free (oggz->packet_buffer);
+err_streams_new:
+  oggz_free (oggz->streams);
+err_oggz_new:
+  oggz_free (oggz);
+  return NULL;
 }
 
 OGGZ *
@@ -325,7 +341,10 @@ oggz_add_stream (OGGZ * oggz, long serialno)
 
   ogg_stream_init (&stream->ogg_stream, (int)serialno);
 
-  oggz_comments_init (stream);
+  if (oggz_comments_init (stream) == -1) {
+    oggz_free (stream);
+    return NULL;
+  }
 
   stream->content = OGGZ_CONTENT_UNKNOWN;
   stream->numheaders = 3; /* Default to 3 headers for Ogg logical bitstreams */
@@ -598,6 +617,8 @@ oggz_set_order (OGGZ * oggz, long serialno,
     oggz->order_user_data = user_data;
   } else {
     stream = oggz_get_stream (oggz, serialno);
+    if (stream == NULL) return OGGZ_ERR_BAD_SERIALNO;
+
     stream->order = order;
     stream->order_user_data = user_data;
   }
@@ -621,3 +642,28 @@ oggz_map_return_value_to_error (int cb_ret)
   }
 }
 
+const char *
+oggz_content_type (OggzStreamContent content)
+{
+  /* 20080805:
+   * Re: http://lists.xiph.org/pipermail/ogg-dev/2008-July/001108.html
+   *
+   * "The ISO C standard, in section 6.7.2.2 "enumeration specifiers",
+   * paragraph 4, says
+   *
+   *   Each enumerated type shall be compatible with *char*, a signed
+   *   integer type, or an unsigned integer type.  The choice of type is
+   *   implementation-defined, but shall be capable of representing the
+   *   values of all the members of the declaration."
+   *
+   * -- http://gcc.gnu.org/ml/gcc-bugs/2000-09/msg00271.html
+   *
+   *  Hence, we cannot remove the (content < 0) guard, even though current
+   *  GCC gives a warning for it -- other compilers (including earlier GCC
+   *  versions) may use a signed type for enum OggzStreamContent.
+   */
+  if (content < 0 || content >= OGGZ_CONTENT_UNKNOWN)
+    return NULL;
+
+  return oggz_auto_codec_ident[content].content_type;
+}
