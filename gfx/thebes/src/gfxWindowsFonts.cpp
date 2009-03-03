@@ -280,6 +280,14 @@ FontFamily::FindStyleVariations()
     faspd.ff = this;
 
     EnumFontFamiliesExW(hdc, &logFont, (FONTENUMPROCW)FontFamily::FamilyAddStylesProc, (LPARAM)&faspd, 0);
+#ifdef DEBUG
+    if (mVariations.Length() == 0) {
+        char msgBuf[256];
+        (void)sprintf(msgBuf, "no styles available in family \"%s\"",
+                      NS_ConvertUTF16toUTF8(mName).get());
+        NS_ASSERTION(mVariations.Length() != 0, msgBuf);
+    }
+#endif
 
     ReleaseDC(nsnull, hdc);
 
