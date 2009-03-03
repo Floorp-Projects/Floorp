@@ -7624,7 +7624,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   mTimeoutInsertionPoint = &dummy_timeout;
 
   for (timeout = FirstTimeout();
-       timeout != &dummy_timeout && !IsFrozen();
+       timeout != &dummy_timeout && !IsFrozen() && !mTimeoutsSuspendDepth;
        timeout = nextTimeout) {
     nextTimeout = timeout->Next();
 
@@ -7820,7 +7820,9 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
           timeout->Release();
         }
       } else {
-        NS_ASSERTION(IsFrozen(), "How'd our timer end up null if we're not frozen?");
+        NS_ASSERTION(IsFrozen() || mTimeoutsSuspendDepth,
+                     "How'd our timer end up null if we're not frozen or "
+                     "suspended?");
 
         timeout->mWhen = delay;
         isInterval = PR_TRUE;
