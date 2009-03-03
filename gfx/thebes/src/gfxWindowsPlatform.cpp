@@ -191,6 +191,9 @@ gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
     gfxFontStyle style;
     style.langGroup = data->mLangGroup;
     nsRefPtr<FontEntry> aFontEntry = aFontFamily->FindFontEntry(style);
+    NS_ASSERTION(aFontEntry, "couldn't find any font entry in family");
+    if (!aFontEntry)
+        return PL_DHASH_NEXT;
 
 
 #ifndef MOZ_FT2_FONTS
@@ -549,6 +552,10 @@ gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
     const PRUint32 ch = data->ch;
 
     nsRefPtr<FontEntry> fe = aFontFamily->FindFontEntry(*data->fontToMatch->GetStyle());
+    NS_ASSERTION(fe, "couldn't find any font entry in family");
+    if (!fe)
+        return PL_DHASH_NEXT;
+
     PRInt32 rank = 0;
 
 #ifndef MOZ_FT2_FONTS
