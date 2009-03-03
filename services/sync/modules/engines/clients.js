@@ -72,6 +72,12 @@ ClientEngine.prototype = {
     Utils.prefs.addObserver("", this, false);
   },
 
+  // We never want to change one client id to another, even if
+  // they look exactly the same
+  _recordLike: function SyncEngine__recordLike(a, b) {
+    return false;
+  },
+
   // get and set info for clients
 
   // FIXME: callers must use the setInfo interface or changes won't get synced,
