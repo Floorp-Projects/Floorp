@@ -126,6 +126,12 @@ __defineGetter__("gPrefService", function() {
                              getService(Ci.nsIPrefBranch2);
 });
 
+let gInitialPages = [
+  "about:blank",
+  "about:privatebrowsing",
+  "about:sessionrestore"
+];
+
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -2077,10 +2083,10 @@ function URLBarSetURI(aURI, aValid) {
   if (!value) {
     let uri = aURI || getWebNavigation().currentURI;
 
-    // Replace "about:blank" with an empty string
+    // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
-    if (uri.spec == "about:blank")
-      value = content.opener ? "about:blank" : "";
+    if (gInitialPages.indexOf(uri.spec) != -1)
+      value = content.opener ? uri.spec : "";
     else
       value = losslessDecodeURI(uri);
 
