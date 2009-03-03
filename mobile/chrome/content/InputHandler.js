@@ -181,12 +181,8 @@ ChromeInputModule.prototype = {
   },
 
   _clickData: {
-    _clickTimeout : -1,
     _events : [],
     reset: function reset() {
-      if (this._clickTimeout != -1)
-        clearTimeout(this._clickTimeout);
-      this._clickTimeout = -1;
       this._events = [];
     }
   },
@@ -277,13 +273,6 @@ ChromeInputModule.prototype = {
                               aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
                               aEvent.button, aEvent.relatedTarget);
     clickData._events.push({event: clickEvent, target: aEvent.target, time: Date.now()});
-
-    // we're waiting for a click
-    if (clickData._clickTimeout != -1) {
-      // if we just got another mousedown, don't send anything until we get another mousedown
-      clearTimeout(clickData._clickTimeout);
-      clickData.clickTimeout = -1;
-    }
   },
 
   _onMouseUp: function _onMouseUp(aEvent) {
@@ -307,14 +296,8 @@ ChromeInputModule.prototype = {
                                 aEvent.button, aEvent.relatedTarget);
       clickData._events.push({event: clickEvent, target: aEvent.target, time: Date.now()});
 
-      if (clickData._clickTimeout == -1) {
-        this._ignoreNextClick = true;
-        clickData._clickTimeout = setTimeout(function(self) { self._sendSingleClick(); }, 400, this);
-      }
-      else {
-        clearTimeout(clickData._clickTimeout);
-        // this._sendDoubleClick();
-      }
+      this._ignoreNextClick = true;
+      this._sendSingleClick();
     }
 
     aEvent.stopPropagation();
