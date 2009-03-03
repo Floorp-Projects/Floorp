@@ -94,7 +94,6 @@ typedef int (*OggzReadPacket) (OGGZ * oggz, ogg_packet * op, long serialno,
  * logical bitstream in \a oggz.
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  *
  * \note Values of \a serialno other than -1 allows you to specify different
  * callback functions for each logical bitstream.
@@ -132,7 +131,6 @@ typedef int (*OggzReadPage) (OGGZ * oggz, const ogg_page * og,
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  *
  * \note Values of \a serialno other than -1 allows you to specify different
  * callback functions for each logical bitstream.
@@ -158,7 +156,6 @@ int oggz_set_read_page (OGGZ * oggz, long serialno,
  * returning OGGZ_STOP_OK
  * \retval OGGZ_ERR_STOP_ERR Reading was stopped by a user callback
  * returning OGGZ_STOP_ERR
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 long oggz_read (OGGZ * oggz, long n);
 

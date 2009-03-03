@@ -69,11 +69,6 @@ void nsChannelReader::Resume()
   mStream.Resume();
 }
 
-void nsChannelReader::SetDuration(PRInt64 aDuration)
-{
-  mDuration = aDuration;
-}
-
 size_t nsChannelReader::io_read(char* aBuffer, size_t aCount)
 {
   PRUint32 bytes = 0;
@@ -96,11 +91,6 @@ int nsChannelReader::io_seek(long aOffset, int aWhence)
 long nsChannelReader::io_tell()
 {
   return mStream.Tell();
-}
-
-ogg_int64_t nsChannelReader::duration()
-{
-  return mDuration;
 }
 
 static OggPlayErrorCode oggplay_channel_reader_initialise(OggPlayReader* aReader, int aBlock) 
@@ -137,12 +127,6 @@ static long oggplay_channel_reader_io_tell(void* aReader)
   return me->io_tell();
 }
 
-static ogg_int64_t oggplay_channel_reader_duration(struct _OggPlayReader *aReader)
-{
-  nsChannelReader* me = static_cast<nsChannelReader*>(aReader);
-  return me->duration();
-}
-
 nsresult nsChannelReader::Init(nsMediaDecoder* aDecoder, nsIURI* aURI,
                                nsIChannel* aChannel,
                                nsIStreamListener** aStreamListener)
@@ -155,8 +139,7 @@ nsChannelReader::~nsChannelReader()
   MOZ_COUNT_DTOR(nsChannelReader);
 }
 
-nsChannelReader::nsChannelReader() :
-  mDuration(-1)
+nsChannelReader::nsChannelReader() 
 {
   MOZ_COUNT_CTOR(nsChannelReader);
   OggPlayReader* reader = this;
@@ -166,7 +149,7 @@ nsChannelReader::nsChannelReader() :
   reader->io_read  = &oggplay_channel_reader_io_read;
   reader->io_seek  = &oggplay_channel_reader_io_seek;
   reader->io_tell  = &oggplay_channel_reader_io_tell;
-  reader->duration = &oggplay_channel_reader_duration;
+  reader->duration = nsnull;
 }
 
 nsIPrincipal*

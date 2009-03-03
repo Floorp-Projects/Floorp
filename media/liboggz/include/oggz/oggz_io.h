@@ -125,7 +125,6 @@ typedef int (*OggzIOFlush) (void * user_handle);
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ; \a oggz not
  * open for reading.
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 int oggz_io_set_read (OGGZ * oggz, OggzIORead read, void * user_handle);
 
@@ -148,7 +147,6 @@ void * oggz_io_get_read_user_handle (OGGZ * oggz);
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ; \a oggz not
  * open for writing.
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 int oggz_io_set_write (OGGZ * oggz, OggzIOWrite write, void * user_handle);
 
@@ -170,7 +168,6 @@ void * oggz_io_get_write_user_handle (OGGZ * oggz);
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  *
  * \note If you provide an OggzIOSeek function, you MUST also provide
  * an OggzIOTell function, or else all your seeks will fail.
@@ -196,7 +193,6 @@ void * oggz_io_get_seek_user_handle (OGGZ * oggz);
  * \retval 0 Success
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 int oggz_io_set_tell (OGGZ * oggz, OggzIOTell tell, void * user_handle);
 
@@ -220,7 +216,6 @@ void * oggz_io_get_tell_user_handle (OGGZ * oggz);
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ; \a oggz not
  * open for writing.
- * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 int oggz_io_set_flush (OGGZ * oggz, OggzIOFlush flush, void * user_handle);
 
