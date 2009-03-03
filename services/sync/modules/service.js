@@ -577,9 +577,6 @@ WeaveSvc.prototype = {
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
 
-    // DEBUG: Just for now, i'm turning off wiping of server based on version
-    // mismatch.  Don't commit this line:
-    meta.payload.storageVersion = MIN_SERVER_STORAGE_VERSION; // this
     this._log.debug("Min server storage version is " + MIN_SERVER_STORAGE_VERSION);
     if (meta) {
           this._log.debug("payload storage version is " +
