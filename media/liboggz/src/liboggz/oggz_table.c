@@ -53,8 +53,6 @@ oggz_table_new (void)
   OggzTable * table;
 
   table = oggz_malloc (sizeof (OggzTable));
-  if (table == NULL) return NULL;
-
   table->keys = oggz_vector_new ();
   table->data = oggz_vector_new ();
 
@@ -75,8 +73,6 @@ void *
 oggz_table_lookup (OggzTable * table, long key)
 {
   int i, size;
-
-  if (table == NULL) return NULL;
 
   size = oggz_vector_size (table->keys);
   for (i = 0; i < size; i++) {

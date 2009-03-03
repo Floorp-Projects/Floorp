@@ -59,11 +59,7 @@
 #include <unistd.h>
 #endif
 
-#if HAVE_ASSERT
 #include <assert.h>
-#else
-#define assert(x)
-#endif
 
 #define PRINT_BUFFER(s,m) \
     printf("%s: in_mem: %d size: %d pos: %d stored: %d\n", \
