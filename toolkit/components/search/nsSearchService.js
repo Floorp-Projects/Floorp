@@ -2417,8 +2417,8 @@ SearchService.prototype = {
     // Now that all engines are loaded, build the sorted engine list
     this._buildSortedEngineList();
 
-    selectedEngineName = getLocalizedPref(BROWSER_SEARCH_PREF +
-                                          "selectedEngine");
+    let selectedEngineName = getLocalizedPref(BROWSER_SEARCH_PREF +
+                                              "selectedEngine");
     this._currentEngine = this.getEngineByName(selectedEngineName) ||
                           this.defaultEngine;
   },
@@ -2444,14 +2444,14 @@ SearchService.prototype = {
     cache.locale = locale;
 
     for each (let engine in this._engines) {
-      let parent = engine._file.parent.path;
-      if (!cache[parent]) {
+      let parent = engine._file.parent;
+      if (!cache[parent.path]) {
         let cacheEntry = {};
         cacheEntry.lastModifiedTime = parent.lastModifiedTime;
         cacheEntry.engines = [];
-        cache[parent] = cacheEntry;
+        cache[parent.path] = cacheEntry;
       }
-      cache[parent].engines.push(engine._serializeToJSON(true));
+      cache[parent.path].engines.push(engine._serializeToJSON(true));
     }
 
     let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
