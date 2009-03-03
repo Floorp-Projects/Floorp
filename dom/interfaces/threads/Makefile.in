@@ -14,12 +14,13 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Initial Developer of the Original Code is Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Vladimir Vukicevic <vladimir@pobox.com> (Original Author)
+#   Ben Turner <bent.mozilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,43 +36,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH        = ../../..
+topsrcdir    = @top_srcdir@
+srcdir       = @srcdir@
+VPATH        = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= dom
-GRE_MODULE	= 1
+MODULE       = dom
+XPIDL_MODULE = dom_threads
+GRE_MODULE   = 1
 
-DIRS		= coreEvents base
-
-XPIDLSRCS	= nsIEntropyCollector.idl \
-		  nsIScriptChannel.idl \
-		  $(NULL)
-
-EXPORTS=nsIScriptContext.h		\
-	nsIJSNativeInitializer.h	\
-	nsIScriptRuntime.h		\
-	nsIScriptObjectOwner.h		\
-	nsIScriptObjectPrincipal.h	\
-	nsIScriptGlobalObject.h		\
-	nsIScriptGlobalObjectOwner.h	\
-	nsIScriptTimeoutHandler.h	\
-	nsIDOMScriptObjectFactory.h	\
-	nsDOMCID.h			\
-	nsIScriptExternalNameSet.h	\
-	nsIScriptNameSpaceManager.h	\
-	nsDOMError.h			\
-	nsIJSEventListener.h		\
-	nsIDOMClassInfo.h		\
-	nsDOMClassInfoID.h		\
-	nsIBaseDOMException.h		\
-	nsDOMString.h			\
-	nsDOMJSUtils.h			\
-	nsDOMScriptObjectHolder.h	\
-	nsWrapperCache.h	\
-	$(NULL)
+XPIDLSRCS    =  nsIDOMWorkers.idl
 
 include $(topsrcdir)/config/rules.mk
