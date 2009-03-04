@@ -4731,7 +4731,7 @@ js_Interpret(JSContext *cx)
                     i = JSID_TO_INT(id);
                     if ((jsuint)i < length) {
                         if (obj->dslots[i] == JSVAL_HOLE) {
-                            if (js_ObjectHasNumericPropertiesInAnyPrototype(cx, obj))
+                            if (js_PrototypeHasIndexedProperties(cx, obj))
                                 break;
                             if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
                                 obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
