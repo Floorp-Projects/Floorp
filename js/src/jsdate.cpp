@@ -2170,6 +2170,7 @@ JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_UTC_TIME);
 JS_STATIC_ASSERT(JSSLOT_UTC_TIME + 1 == JSSLOT_LOCAL_TIME);
 
 #ifdef JS_TRACER
+
 static JSObject* FASTCALL
 Date_tn(JSContext* cx, JSObject* proto)
 {
@@ -2203,7 +2204,11 @@ Date_tn(JSContext* cx, JSObject* proto)
 JS_DEFINE_TRCINFO_1(js_Date,
     (2, (static, CONSTRUCTOR_RETRY, Date_tn, CONTEXT, CALLEE_PROTOTYPE, 0, 0)))
 
-#endif
+#else  /* !JS_TRACER */
+
+# define js_Date_trcinfo NULL
+
+#endif /* !JS_TRACER */
 
 JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj)
