@@ -253,6 +253,10 @@ void
 nsHtml5TreeBuilder::end()
 {
   Flush();
+#ifdef DEBUG_hsivonen
+  printf("MAX INSERTION BATCH LEN: %d\n", sInsertionBatchMaxLength);
+  printf("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize);
+#endif
 }
 
 void
@@ -430,8 +434,8 @@ nsHtml5TreeBuilder::MaybeFlushAndMaybeSuspend()
   if (mParser->DidProcessATokenImpl() == NS_ERROR_HTMLPARSER_INTERRUPTED) {
     mParser->Suspend();
     requestSuspension();
-  }
-  if (mParser->IsTimeToNotify()) {
+    Flush();
+  } else if (mParser->IsTimeToNotify()) {
     Flush();
   }
 }
@@ -447,7 +451,18 @@ nsHtml5TreeBuilder::Flush()
       iter->Perform(this);
     }
     FlushPendingAppendNotifications();
+#ifdef DEBUG_hsivonen
+    if (mOpQueue.Length() > sInsertionBatchMaxLength) {
+      sInsertionBatchMaxLength = mOpQueue.Length();
+    }
+#endif
     mOpQueue.Clear();
     mFlushing = PR_FALSE;
   }
 }
+
+#ifdef DEBUG_hsivonen
+PRUint32 nsHtml5TreeBuilder::sInsertionBatchMaxLength = 0;
+PRUint32 nsHtml5TreeBuilder::sAppendBatchMaxSize = 0;
+#endif
+
