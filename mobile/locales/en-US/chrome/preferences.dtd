@@ -1,8 +1,10 @@
 <!ENTITY content.title                             "Content">
-<!ENTITY permissions.default.image.title           "Load images">
+<!ENTITY permissions.default.image.title           "Load images automatically">
 <!ENTITY permissions.default.image.description     "Makes websites pretty">
-<!ENTITY javascript.enabled.title                  "Enable Javascript">
+<!ENTITY javascript.enabled.title                  "Enable JavaScript">
 <!ENTITY javascript.enabled.description            "Makes websites flashy">
+<!ENTITY javascript.options.jit.content.title      "Enable JavaScript tracing">
+<!ENTITY javascript.options.jit.content.description "Use native‐code compilation in JavaScript">
 <!ENTITY plugins.enabled.title                     "Enable Plugins">
 <!ENTITY plugins.enabled.description               "Makes websites annoying">
 <!ENTITY privacy.title                             "Privacy &amp; Security">
