@@ -2364,10 +2364,18 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     JSBool sameOrigin;
     JSBool sameScope = xpc_SameScope(objectscope, xpcscope, &sameOrigin);
+    JSBool forceXOW = XPC_XOW_ClassNeedsXOW(STOBJ_GET_CLASS(aObject)->name);
+
+    // We can do nothing if:
+    // - We're wrapping a system object
+    // or
+    //   - We're from the same *scope* AND
+    //   - We're not about to force a XOW (e.g. for "window") OR
+    //   - We're not actually going to create a XOW (we're wrapping for
+    //     chrome).
     if(STOBJ_IS_SYSTEM(aObject) ||
        (sameScope &&
-        (!XPC_XOW_ClassNeedsXOW(STOBJ_GET_CLASS(aObject)->name) ||
-         (aFilenameFlags & JSFILENAME_SYSTEM))))
+        (!forceXOW || (aFilenameFlags & JSFILENAME_SYSTEM))))
         return NS_OK;
 
     JSObject* wrappedObj = nsnull;
@@ -2383,16 +2391,16 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         if(XPC_SJOW_Construct(aJSContext, nsnull, 1, &val, &val))
             wrappedObj = JSVAL_TO_OBJECT(val);
     }
-    else if (!sameOrigin)
+    else
     {
+        // We don't wrap anything same origin unless the class name requires
+        // it.
+        if(sameOrigin && !forceXOW)
+            return NS_OK;
+
         jsval val = OBJECT_TO_JSVAL(aObject);
         if(XPC_XOW_WrapObject(aJSContext, aScope, &val, wrapper))
             wrappedObj = JSVAL_TO_OBJECT(val);
-    }
-    else
-    {
-        // Different scopes, but same origin, return the original object.
-        return NS_OK;
     }
 
     if(!wrappedObj)
