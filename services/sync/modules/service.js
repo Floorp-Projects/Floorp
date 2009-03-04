@@ -118,6 +118,7 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   _syncInProgress: false,
   _keyGenEnabled: true,
+  _mostRecentError: null,
 
   __os: null,
   get _os() {
@@ -222,6 +223,8 @@ WeaveSvc.prototype = {
 
   get enabled() { return Svc.Prefs.get("enabled"); },
   set enabled(value) { Svc.Prefs.set("enabled", value); },
+
+  get mostRecentError() { return this._mostRecentError; },
 
   get schedule() {
     if (!this.enabled)
@@ -524,15 +527,23 @@ WeaveSvc.prototype = {
 	if (typeof(passp) != 'undefined')
           ID.get('WeaveCryptoID').setTempPassword(passp);
 
-	if (!this.username)
-          throw "No username set, login failed";
-	if (!this.password)
-          throw "No password given or found in password manager";
+	if (!this.username) {
+	  this._mostRecentError = "No username set.";
+	  throw "No username set, login failed";
+	}
+
+	if (!this.password) {
+	  this._mostRecentError = "No password set.";
+	  throw "No password given or found in password manager";
+	}
 
 	this._log.debug("Logging in user " + this.username);
 
-	if (!(yield this.verifyLogin(self.cb, this.username, this.password, true)))
+	if (!(yield this.verifyLogin(self.cb, this.username, this.password, true))) {
+	  this._mostRecentError = "Login failed. Check your username/password/phrase.";
 	  throw "Login failed";
+	}
+
 	this._loggedIn = true;
 	this._setSchedule(this.schedule);
 	self.done(true);
@@ -579,6 +590,7 @@ WeaveSvc.prototype = {
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.lastResource.lastChannel.responseStatus;
       if (status != 200 && status != 404) {
+	this._mostRecentError = "Unknown error when downloading metadata.";
 	this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
 	self.done(false);
@@ -604,6 +616,7 @@ WeaveSvc.prototype = {
                        "upgrade (" + remoteVersion + " -> " + WEAVE_VERSION + ")");
 
     } else if (Svc.Version.compare(remoteVersion, WEAVE_VERSION) > 0) {
+      this._mostRecentError = "Client needs to be upgraded.";
       this._log.warn("Server data is of a newer Weave version, this client " +
                      "needs to be upgraded.  Aborting sync.");
       self.done(false);
@@ -634,6 +647,7 @@ WeaveSvc.prototype = {
 			PubKeys.lastResource.lastChannel.responseStatus);
 	this._log.debug("PrivKey HTTP response status: " +
 			PrivKeys.lastResource.lastChannel.responseStatus);
+	this._mostRecentError = "Can't download keys from server.";
 	self.done(false);
 	return;
       }
@@ -641,6 +655,7 @@ WeaveSvc.prototype = {
       if (!this._keyGenEnabled) {
 	this._log.warn("Couldn't download keys from server, and key generation" +
 		       "is disabled.  Aborting sync");
+	this._mostRecentError = "No keys. Try syncing from desktop first.";
 	self.done(false);
 	return;
       }
@@ -659,11 +674,13 @@ WeaveSvc.prototype = {
 	  yield PubKeys.uploadKeypair(self.cb, keys);
           ret = true;
         } catch (e) {
+	  this._mostRecentError = "Could not upload keys.";
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
 	  // FIXME no lastRequest anymore
           //this._log.error(keys.pubkey.lastRequest.responseText);
         }
       } else {
+	this._mostRecentError = "Could not get encryption passphrase.";
         this._log.warn("Could not get encryption passphrase");
       }
     }
@@ -681,6 +698,7 @@ WeaveSvc.prototype = {
 
     if (!this._loggedIn) {
       this._disableSchedule();
+      this._mostRecentError = "Can't sync, not logged in.";
       throw "aborting sync, not logged in";
     }
 
@@ -698,6 +716,7 @@ WeaveSvc.prototype = {
           continue;
 
 	if (!(yield this._syncEngine.async(this, self.cb, engine))) {
+	  this._mostRecentError = "Failure in " + engine.displayName;
 	  this._log.info("Aborting sync");
 	  break;
 	}
@@ -752,6 +771,7 @@ WeaveSvc.prototype = {
                           " reaches threshold " +
                           this._syncThresholds[engine.name] + "; syncing");
           if (!(yield this._syncEngine.async(this, self.cb, engine))) {
+	    this._mostRecentError = "Failure in " + engine.displayName;
 	    this._log.info("Aborting sync");
 	    break;
 	  }
