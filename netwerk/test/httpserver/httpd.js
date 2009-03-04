@@ -2816,7 +2816,9 @@ ServerHandler.prototype =
       var fieldName = headEnum.getNext()
                               .QueryInterface(Ci.nsISupportsString)
                               .data;
-      preamble += fieldName + ": " + head.getHeader(fieldName) + "\r\n";
+      var values = head.getHeaderValues(fieldName);
+      for (var i = 0, sz = values.length; i < sz; i++)
+        preamble += fieldName + ": " + values[i] + "\r\n";
     }
 
     // end request-line/headers
@@ -3668,10 +3670,28 @@ nsHttpHeaders.prototype =
     var name = headerUtils.normalizeFieldName(fieldName);
     var value = headerUtils.normalizeFieldValue(fieldValue);
 
+    // The following three headers are stored as arrays because their real-world
+    // syntax prevents joining individual headers into a single header using 
+    // ",".  See also <http://hg.mozilla.org/mozilla-central/diff/9b2a99adc05e/netwerk/protocol/http/src/nsHttpHeaderArray.cpp#l77>
     if (merge && name in this._headers)
-      this._headers[name] = this._headers[name] + "," + value;
+    {
+      if (name === "www-authenticate" ||
+          name === "proxy-authenticate" ||
+          name === "set-cookie") 
+      {
+        this._headers[name].push(value);
+      }
+      else 
+      {
+        this._headers[name][0] += "," + value;
+        NS_ASSERT(this._headers[name].length === 1,
+            "how'd a non-special header have multiple values?")
+      }
+    }
     else
-      this._headers[name] = value;
+    {
+      this._headers[name] = [value];
+    }
   },
 
   /**
@@ -3684,9 +3704,33 @@ nsHttpHeaders.prototype =
    * @returns string
    *   the field value for the given header, possibly with non-semantic changes
    *   (i.e., leading/trailing whitespace stripped, whitespace runs replaced
-   *   with spaces, etc.) at the option of the implementation
+   *   with spaces, etc.) at the option of the implementation; multiple 
+   *   instances of the header will be combined with a comma, except for 
+   *   the three headers noted in the description of getHeaderValues
    */
   getHeader: function(fieldName)
+  {
+    return this.getHeaderValues(fieldName).join("\n");
+  },
+
+  /**
+   * Returns the value for the header specified by fieldName as an array.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   if fieldName does not constitute a valid header field name
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if the given header does not exist in this
+   * @returns [string]
+   *   an array of all the header values in this for the given
+   *   header name.  Header values will generally be collapsed
+   *   into a single header by joining all header values together
+   *   with commas, but certain headers (Proxy-Authenticate,
+   *   WWW-Authenticate, and Set-Cookie) violate the HTTP spec
+   *   and cannot be collapsed in this manner.  For these headers
+   *   only, the returned array may contain multiple elements if
+   *   that header has been added more than once.
+   */
+  getHeaderValues: function(fieldName)
   {
     var name = headerUtils.normalizeFieldName(fieldName);
 

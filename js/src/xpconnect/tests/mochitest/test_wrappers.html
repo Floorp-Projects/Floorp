@@ -44,6 +44,10 @@
        expected.sort().toString(),
        'enumeration over SJOWs walks the prototype chain and works over XOWs');
 
+    for (let i in XPCSafeJSObjectWrapper({ 0: 0, "hi": "there" })) {
+        is(typeof i, "string", "enumeration on wrappers only returns strings");
+    }
+
     ok(!(new XPCSafeJSObjectWrapper({}) == new XPCSafeJSObjectWrapper({})),
        'SJOWs equality hook returns false correctly');
 

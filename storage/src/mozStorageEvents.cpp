@@ -495,6 +495,14 @@ private:
     NS_ASSERTION(mState != PENDING,
                  "Still in a pending state when calling Complete!");
 
+    // Finalize our statements before we try to commit or rollback.  If we are
+    // canceling and have statements that think they have pending work, the
+    // rollback will fail.
+    for (PRUint32 i = 0; i < mStatements.Length(); i++) {
+      (void)sqlite3_finalize(mStatements[i]);
+      mStatements[i] = NULL;
+    }
+
     // Handle our transaction, if we have one
     if (mTransactionManager) {
       if (mState == COMPLETED) {
@@ -510,12 +518,6 @@ private:
       }
       delete mTransactionManager;
       mTransactionManager = nsnull;
-    }
-
-    // Finalize our statements
-    for (PRUint32 i = 0; i < mStatements.Length(); i++) {
-      (void)sqlite3_finalize(mStatements[i]);
-      mStatements[i] = NULL;
     }
 
     // Notify about completion iff we have a callback.

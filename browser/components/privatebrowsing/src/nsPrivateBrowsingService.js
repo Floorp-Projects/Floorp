@@ -153,29 +153,36 @@ PrivateBrowsingService.prototype = {
         if (this._saveSession && !this._savedBrowserState)
           this._savedBrowserState = ss.getBrowserState();
       }
-      if (!this.quitting && this._saveSession) {
-        // dummy session used to transition from/to pb mode, see bug 476463
-        let transitionState = {
-          "windows": [{
-            "tabs": [{
-              "entries": [{
-                "url": "about:blank"
-              }]
-            }],
-            "_closedTabs": []
-          }]
-        };
-        // load dummy session to get a distinct separation between private and
-        // non-private sessions
-        ss.setBrowserState(JSON.stringify(transitionState));
+      if (!this._quitting && this._saveSession) {
+        let browserWindow = this._getBrowserWindow();
 
-        let browser = Cc["@mozilla.org/appshell/window-mediator;1"].
-                      getService(Ci.nsIWindowMediator).
-                      getMostRecentWindow("navigator:browser").gBrowser;
-        // this ensures a clean slate from which to transition into or out of
-        // private browsing
-        browser.addTab();
-        browser.removeTab(browser.tabContainer.firstChild);
+        // if there are open browser windows, load a dummy session to get a distinct 
+        // separation between private and non-private sessions
+        if (browserWindow) {
+          // dummy session used to transition from/to pb mode, see bug 476463
+          let transitionState = {
+            "windows": [{
+              "tabs": [{
+                "entries": [{
+                  "url": "about:blank"
+                }]
+              }],
+              "_closedTabs": []
+            }]
+          };
+
+          ss.setBrowserState(JSON.stringify(transitionState));
+
+          // just in case the only remaining window after setBrowserState is different.
+          // it probably shouldn't be with the current sessionstore impl, but we shouldn't
+          // rely on behaviour the API doesn't guarantee
+          let browser = this._getBrowserWindow().gBrowser;
+
+          // this ensures a clean slate from which to transition into or out of
+          // private browsing
+          browser.addTab();
+          browser.removeTab(browser.tabContainer.firstChild);
+        }
       }
     }
     else
@@ -227,6 +234,12 @@ PrivateBrowsingService.prototype = {
     cancelLeave.data = false;
     this._obs.notifyObservers(cancelLeave, "private-browsing-cancel-vote", "exit");
     return !cancelLeave.data;
+  },
+
+  _getBrowserWindow: function PBS__getBrowserWindow() {
+    return Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(Ci.nsIWindowMediator).
+           getMostRecentWindow("navigator:browser");
   },
 
   // nsIObserver

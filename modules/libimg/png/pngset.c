@@ -1,9 +1,9 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.2.34 [December 18, 2008]
+ * Last changed in libpng 1.2.35 [February 14, 2009]
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2008 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2009 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -61,7 +61,8 @@ png_set_cHRM(png_structp png_ptr, png_infop info_ptr,
 #endif
    info_ptr->valid |= PNG_INFO_cHRM;
 }
-#endif
+#endif /* PNG_FLOATING_POINT_SUPPORTED */
+
 #ifdef PNG_FIXED_POINT_SUPPORTED
 void PNGAPI
 png_set_cHRM_fixed(png_structp png_ptr, png_infop info_ptr,
@@ -387,7 +388,11 @@ png_set_pCAL(png_structp png_ptr, png_infop info_ptr,
       return;
    }
 
-   info_ptr->pcal_params[nparams] = NULL;
+#ifdef PNG_FREE_ME_SUPPORTED
+   info_ptr->free_me |= PNG_FREE_PCAL;
+#endif
+
+   png_memset(info_ptr->pcal_params, 0, (nparams + 1) * png_sizeof(png_charp));
 
    for (i = 0; i < nparams; i++)
    {
@@ -404,9 +409,6 @@ png_set_pCAL(png_structp png_ptr, png_infop info_ptr,
    }
 
    info_ptr->valid |= PNG_INFO_pCAL;
-#ifdef PNG_FREE_ME_SUPPORTED
-   info_ptr->free_me |= PNG_FREE_PCAL;
-#endif
 }
 #endif
 
@@ -640,7 +642,7 @@ png_set_sRGB_gAMA_and_cHRM(png_structp png_ptr, png_infop info_ptr,
    }
 #endif /* cHRM */
 }
-#endif
+#endif /* sRGB */
 
 
 #if defined(PNG_iCCP_SUPPORTED)
@@ -964,6 +966,7 @@ png_set_sPLT(png_structp png_ptr,
 
     png_memcpy(np, info_ptr->splt_palettes,
            info_ptr->splt_palettes_num * png_sizeof(png_sPLT_t));
+
     png_free(png_ptr, info_ptr->splt_palettes);
     info_ptr->splt_palettes=NULL;
 

@@ -93,7 +93,10 @@ var signonsTreeView = {
   cycleHeader : function(column) {},
   getRowProperties : function(row,prop) {},
   getColumnProperties : function(column,prop) {},
-  getCellProperties : function(row,column,prop) {}
+  getCellProperties : function(row,column,prop) {
+    if (column.element.getAttribute("id") == "siteCol")
+      prop.AppendElement(kLTRAtom);
+  }
  };
 
 

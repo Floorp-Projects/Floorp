@@ -312,11 +312,8 @@ function createAppInfo(id, name, version, platformVersion)
 // Use a custom profile dir to keep the bin dir clean... not necessary but nice
 var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"].
              getService(AUS_Ci.nsIProperties);
-var gTestRoot = gDirSvc.get("CurProcD", AUS_Ci.nsILocalFile);
-gTestRoot = gTestRoot.parent.parent;
-gTestRoot.append("_tests");
-gTestRoot.append("xpcshell-simple");
-gTestRoot.append("test_update");
+// Remove '/unit/*.js'.
+var gTestRoot = __LOCATION__.parent.parent;
 gTestRoot.normalize();
 
 // Create and register a profile directory.

@@ -50,6 +50,7 @@ _BROWSER_TEST_FILES = \
 	browser_sort_in_library.js \
 	browser_library_open_leak.js \
 	browser_library_panel_leak.js \
+	browser_library_search.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

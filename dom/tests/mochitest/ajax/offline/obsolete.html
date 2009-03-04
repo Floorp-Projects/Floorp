@@ -44,6 +44,8 @@ applicationCache.oncached = function() {
   // Now delete the manifest and refresh, we should get an "obsolete" message.
   applicationCache.oncached = fail;
   applicationCache.onupdateready = fail;
+  applicationCache.onnoupdate = fail;
+  applicationCache.onerror = fail;
   applicationCache.onobsolete = obsolete;
 
   // Make the obsoleting.sjs return 404 NOT FOUND code

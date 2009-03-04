@@ -177,6 +177,7 @@ int oggz_write_set_hungry_callback (OGGZ * oggz,
  *         32 bits, ie. within the range (-(2^31), (2^31)-1)
  * \retval OGGZ_ERR_BAD_OGGZ \a oggz does not refer to an existing OGGZ
  * \retval OGGZ_ERR_INVALID Operation not suitable for this OGGZ
+ * \retval OGGZ_ERR_OUT_OF_MEMORY Unable to allocate memory to queue packet
  *
  * \note If \a op->b_o_s is initialized to \a -1 before calling
  *       oggz_write_feed(), Oggz will fill it in with the appropriate

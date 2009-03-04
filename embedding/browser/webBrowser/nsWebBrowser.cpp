@@ -123,12 +123,6 @@ nsWebBrowser::~nsWebBrowser()
    InternalDestroy();
 }
 
-PRBool deleteListener(void *aElement, void *aData) {
-    nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)aElement;
-    NS_DELETEXPCOM(state);
-    return PR_TRUE;
-}
-
 NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 {
 
@@ -152,7 +146,10 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       }
 
    if (mListenerArray) {
-      (void)mListenerArray->EnumerateForwards(deleteListener, nsnull);
+      for (PRUint32 i = 0, end = mListenerArray->Length(); i < end; i++) {
+         nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
+         NS_DELETEXPCOM(state);
+      }
       delete mListenerArray;
       mListenerArray = nsnull;
    }
@@ -242,7 +239,7 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIWeakReference *aListener, c
         state->mID = aIID;
 
         if (!mListenerArray) {
-            NS_NEWXPCOM(mListenerArray, nsVoidArray);
+            NS_NEWXPCOM(mListenerArray, nsTArray<nsWebBrowserListenerState*>);
             if (!mListenerArray) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
@@ -295,9 +292,9 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
         if (!mListenerArray) return NS_ERROR_FAILURE;
 
         // iterate the array and remove the queued listener
-        PRInt32 count = mListenerArray->Count();
+        PRInt32 count = mListenerArray->Length();
         while (count > 0) {
-            nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)mListenerArray->ElementAt(count);
+            nsWebBrowserListenerState *state = mListenerArray->ElementAt(count);
             NS_ASSERTION(state, "list construction problem");
 
             if (state->Equals(aListener, aIID)) {
@@ -309,8 +306,11 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
         }
 
         // if we've emptied the array, get rid of it.
-        if (0 >= mListenerArray->Count()) {
-            (void)mListenerArray->EnumerateForwards(deleteListener, nsnull);
+        if (0 >= mListenerArray->Length()) {
+            for (PRUint32 i = 0, end = mListenerArray->Length(); i < end; i++) {
+               nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
+               NS_DELETEXPCOM(state);
+            }
             NS_DELETEXPCOM(mListenerArray);
             mListenerArray = nsnull;
         }
@@ -1148,18 +1148,21 @@ NS_IMETHODIMP nsWebBrowser::Create()
    // the docshell has been set so we now have our listener registrars.
    if (mListenerArray) {
       // we had queued up some listeners, let's register them now.
-      PRInt32 count = mListenerArray->Count();
-      PRInt32 i = 0;
+      PRUint32 count = mListenerArray->Length();
+      PRUint32 i = 0;
       NS_ASSERTION(count > 0, "array construction problem");
       while (i < count) {
-          nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)mListenerArray->ElementAt(i);
+          nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
           NS_ASSERTION(state, "array construction problem");
           nsCOMPtr<nsISupports> listener = do_QueryReferent(state->mWeakPtr);
           NS_ASSERTION(listener, "bad listener");
           (void)BindListener(listener, state->mID);
           i++;
       }
-      (void)mListenerArray->EnumerateForwards(deleteListener, nsnull);
+      for (PRUint32 i = 0, end = mListenerArray->Length(); i < end; i++) {
+         nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
+         NS_DELETEXPCOM(state);
+      }
       NS_DELETEXPCOM(mListenerArray);
       mListenerArray = nsnull;
    }

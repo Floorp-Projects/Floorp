@@ -48,6 +48,7 @@ typedef void OggzTable;
 /**
  * Instantiate a new OggzTable
  * \returns A new OggzTable
+ * \retval NULL Could not allocate memory for table
  */
 OggzTable *
 oggz_table_new (void);

@@ -90,6 +90,31 @@ protected:
         PRBool       mFound;
     };
 
+    /**
+     * Describes a certain primitive type in the database.
+     *
+     * Possible Values Are:
+     *  INDEX - To check for the existence of an index
+     *  TABLE - To check for the existence of a table
+     */
+    enum DatabaseElementType {
+        INDEX,
+        TABLE
+    };
+
+    /**
+     * Determines if the specified primitive exists.
+     *
+     * @param aElementType
+     *        The type of element to check the existence of
+     * @param aElementName
+     *        The name of the element to check for
+     * @returns true if element exists, false otherwise
+     */
+    nsresult DatabaseElementExists(enum DatabaseElementType aElementType,
+                                   const nsACString& aElementName,
+                                   PRBool *_exists);
+
     void HandleSqliteError(const char *aSqlStatement);
     static PLDHashOperator s_FindFuncEnum(const nsACString &aKey,
                                           nsISupports* aData, void* userArg);

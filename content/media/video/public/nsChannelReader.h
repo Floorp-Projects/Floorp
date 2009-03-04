@@ -73,6 +73,11 @@ public:
   // Resume any downloads that have been suspended.
   void Resume();
 
+  // Set the duration of the media resource. Call with decoder lock
+  // obtained so that the decoder thread does not request the duration
+  // while it is changing.
+  void SetDuration(PRInt64 aDuration);
+
   nsIPrincipal* GetCurrentPrincipal();
   
   // Implementation of OggPlay Reader API.
@@ -81,9 +86,13 @@ public:
   size_t io_read(char* aBuffer, size_t aCount);
   int io_seek(long aOffset, int aWhence);
   long io_tell();  
+  ogg_int64_t duration();
   
 public:
   nsMediaStream mStream;
+
+  // Duration of the media resource. -1 if not known.
+  PRInt64 mDuration;
 };
 
 #endif

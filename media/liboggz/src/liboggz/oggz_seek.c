@@ -234,14 +234,6 @@ oggz_get_next_page (OGGZ * oggz, ogg_page * og)
 	printf ("get_next_page: bytes == 0, returning -2\n");
 #endif
 	return -2;
-#if 0
-      } else if (oggz->file && feof (oggz->file)) {
-#ifdef DEBUG_VERBOSE
-	printf ("get_next_page: feof (oggz->file), returning -2\n");
-#endif
-	clearerr (oggz->file);
-	return -2;
-#endif
       }
 
       ogg_sync_wrote(&reader->ogg_sync, bytes);
@@ -632,7 +624,7 @@ oggz_offset_end (OGGZ * oggz)
 static ogg_int64_t
 oggz_seek_set (OGGZ * oggz, ogg_int64_t unit_target)
 {
-  OggzReader * reader = &oggz->x.reader;
+  OggzReader * reader;
   oggz_off_t offset_orig, offset_at, offset_guess;
   oggz_off_t offset_begin, offset_end = -1, offset_next;
   ogg_int64_t granule_at;
@@ -658,6 +650,8 @@ oggz_seek_set (OGGZ * oggz, ogg_int64_t unit_target)
 #endif
     return -1;
   }
+
+  reader = &oggz->x.reader;
 
   if (unit_target == reader->current_unit) {
 #ifdef DEBUG
@@ -843,7 +837,7 @@ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)
 off_t
 oggz_seek (OGGZ * oggz, oggz_off_t offset, int whence)
 {
-  OggzReader * reader = &oggz->x.reader;
+  OggzReader * reader;
   ogg_int64_t units = -1;
 
   if (oggz == NULL) return -1;
@@ -853,7 +847,9 @@ oggz_seek (OGGZ * oggz, oggz_off_t offset, int whence)
   }
 
   if (offset == 0 && whence == SEEK_SET) units = 0;
-  
+
+  reader = &oggz->x.reader;
+
   if (!(offset == 0 && whence == SEEK_CUR)) {
     /* Invalidate current_unit */
     reader->current_unit = -1;
@@ -865,7 +861,7 @@ oggz_seek (OGGZ * oggz, oggz_off_t offset, int whence)
 ogg_int64_t
 oggz_seek_units (OGGZ * oggz, ogg_int64_t units, int whence)
 {
-  OggzReader * reader = &oggz->x.reader;
+  OggzReader * reader;
 
   ogg_int64_t r;
 
@@ -889,6 +885,8 @@ oggz_seek_units (OGGZ * oggz, ogg_int64_t units, int whence)
 #endif
     return -1;
   }
+
+  reader = &oggz->x.reader;
 
   switch (whence) {
   case SEEK_SET:

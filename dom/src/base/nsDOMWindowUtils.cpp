@@ -684,6 +684,16 @@ nsDOMWindowUtils::GetIsMozAfterPaintPending(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::ClearMozAfterPaintEvents()
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_OK;
+  presContext->ClearMozAfterPaintEvents();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
 {
   PRBool hasCap = PR_FALSE;
@@ -700,3 +710,22 @@ nsDOMWindowUtils::DisableNonTestMouseEvents(PRBool aDisable)
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
   return presShell->DisableNonTestMouseEvents(aDisable);
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SuppressEventHandling(PRBool aSuppress)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  if (aSuppress) {
+    doc->SuppressEventHandling();
+  } else {
+    doc->UnsuppressEventHandling();
+  }
+  return NS_OK;
+}
+

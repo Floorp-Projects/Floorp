@@ -1,4 +1,4 @@
-# 
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -138,10 +138,18 @@ EXTRA_DSO_LDOPTS += \
                 $(MOZ_STARTUP_NOTIFICATION_LIBS) \
 		$(XLDFLAGS) \
 		$(XLIBS) \
+		$(XEXT_LIBS) \
+		$(XCOMPOSITE_LIBS) \
 		$(MOZ_GTK2_LIBS) \
 		-lthebes \
 		$(LCMS_LIBS) \
 		$(NULL)
+
+ifdef MOZ_PLATFORM_HILDON
+ifdef MOZ_ENABLE_GCONF
+EXTRA_DSO_LDOPTS += $(MOZ_GCONF_LIBS)
+endif
+endif
 
 ifdef MOZ_X11
 EXTRA_DSO_LDOPTS += -lgtkxtbin -lXrender
@@ -165,6 +173,12 @@ include $(topsrcdir)/config/rules.mk
 CFLAGS          += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 CXXFLAGS        += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 
+ifdef MOZ_PLATFORM_HILDON
+ifdef MOZ_ENABLE_GCONF
+CXXFLAGS += $(MOZ_GCONF_CFLAGS)
+endif
+endif
+
 DEFINES         += -DUSE_XIM
 DEFINES		+= -DCAIRO_GFX
 
@@ -174,7 +188,7 @@ EXTRA_DSO_LDOPTS += -lgfxpsshar
 endif
 
 
-DEFINES		+= 
+DEFINES		+=
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(topsrcdir)/other-licenses/atk-1.0 \

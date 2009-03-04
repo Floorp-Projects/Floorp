@@ -77,6 +77,10 @@ nsTextStore::nsTextStore()
 
 nsTextStore::~nsTextStore()
 {
+  if (mCompositionTimer) {
+    mCompositionTimer->Cancel();
+    mCompositionTimer = nsnull;
+  }
   SaveTextEvent(nsnull);
 }
 
@@ -1204,6 +1208,29 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   return S_OK;
 }
 
+static PRUint32
+GetLayoutChangeIntervalTime()
+{
+  static PRInt32 sTime = -1;
+  if (sTime > 0)
+    return PRUint32(sTime);
+
+  sTime = 100;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs)
+    return PRUint32(sTime);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  if (!prefBranch)
+    return PRUint32(sTime);
+  nsresult rv =
+    prefBranch->GetIntPref("intl.tsf.on_layout_change_interval", &sTime);
+  if (NS_FAILED(rv))
+    return PRUint32(sTime);
+  sTime = PR_MAX(10, sTime);
+  return PRUint32(sTime);
+}
+
 STDMETHODIMP
 nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
                                 BOOL* pfOk)
@@ -1218,9 +1245,18 @@ nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
   HRESULT hr = pComposition->GetRange(getter_AddRefs(range));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   hr = OnStartCompositionInternal(pComposition, range, PR_FALSE);
-  if (SUCCEEDED(hr))
-    *pfOk = TRUE;
-  return hr;
+  if (FAILED(hr))
+    return hr;
+
+  NS_ASSERTION(!mCompositionTimer, "The timer is alive!");
+  mCompositionTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  if (mCompositionTimer) {
+    mCompositionTimer->InitWithFuncCallback(CompositionTimerCallbackFunc, this,
+                                            GetLayoutChangeIntervalTime(),
+                                            nsITimer::TYPE_REPEATING_SLACK);
+  }
+  *pfOk = TRUE;
+  return S_OK;
 }
 
 STDMETHODIMP
@@ -1271,6 +1307,11 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
 
   // Clear the saved text event
   SaveTextEvent(nsnull);
+
+  if (mCompositionTimer) {
+    mCompositionTimer->Cancel();
+    mCompositionTimer = nsnull;
+  }
 
   // Use NS_TEXT_TEXT to commit composition string
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mWindow);
@@ -1350,6 +1391,22 @@ nsTextStore::OnSelectionChangeInternal(void)
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_SEL_CHANGE)) {
     mSink->OnSelectionChange();
   }
+  return NS_OK;
+}
+
+nsresult
+nsTextStore::OnCompositionTimer()
+{
+  NS_ENSURE_TRUE(mContext, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mSink, NS_ERROR_FAILURE);
+
+  // XXXmnakano We always call OnLayoutChange for now, but this might use CPU
+  // power when the focused editor has very long text. Ideally, we should call
+  // this only when the composition string screen position is changed by window
+  // moving, resizing. And also reflowing and scrolling the contents.
+  HRESULT hr = mSink->OnLayoutChange(TS_LC_CHANGE, TEXTSTORE_DEFAULT_VIEW);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
   return NS_OK;
 }
 

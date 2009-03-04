@@ -804,8 +804,8 @@ public:
                                  nsAString& Standalone);
   virtual PRBool IsScriptEnabled();
 
-  virtual void OnPageShow(PRBool aPersisted);
-  virtual void OnPageHide(PRBool aPersisted);
+  virtual void OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget);
+  virtual void OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget);
   
   virtual void WillDispatchMutationEvent(nsINode* aTarget);
   virtual void MutationEventDispatched(nsINode* aTarget);
@@ -985,6 +985,12 @@ public:
 #ifdef MOZ_SMIL
   nsSMILAnimationController* GetAnimationController();
 #endif // MOZ_SMIL
+
+  virtual void SuppressEventHandling(PRUint32 aIncrease);
+
+  virtual void UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents);
+  
+  void DecreaseEventSuppression() { --mEventsSuppressed; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
 
