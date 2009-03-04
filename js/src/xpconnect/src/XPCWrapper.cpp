@@ -55,6 +55,11 @@ XPCWrapper::sNumSlots = 2;
 JSNative
 XPCWrapper::sEvalNative = nsnull;
 
+const PRUint32
+XPCWrapper::sSecMgrSetProp = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
+const PRUint32
+XPCWrapper::sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
+
 static void
 IteratorFinalize(JSContext *cx, JSObject *obj)
 {
@@ -551,6 +556,12 @@ XPCWrapper::ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
                       isNativeWrapper)) {
       return JS_FALSE;
     }
+
+    // Since the XPC_*_NewResolve functions ensure that the method's property
+    // name is accessible, we set the eAllAccessSlot bit, which indicates to
+    // XPC_NW_FunctionWrapper that the method is safe to unwrap and call, even
+    // if XPCNativeWrapper::GetWrappedNative disagrees.
+    JS_SetReservedSlot(cx, JSVAL_TO_OBJECT(v), eAllAccessSlot, JSVAL_TRUE);
   }
 
   // Make sure v doesn't go away while we mess with it.
