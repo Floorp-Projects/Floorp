@@ -13,6 +13,7 @@ function run_test() {
   if (isWindows) {
     root.initWithPath("\\\\.");
   } else {
+    return; // XXX disabled, since this causes intermittent failures on Mac (bug 481369).
     root.initWithPath("/");
   }
   var drives = root.directoryEntries;
