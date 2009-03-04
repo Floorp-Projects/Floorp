@@ -385,7 +385,6 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 #endif /* !JS_TRACER */
 
 /* Defined in jsarray.cpp */
-JS_DECLARE_CALLINFO(js_ObjectHasNumericPropertiesInAnyPrototype)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem)
 JS_DECLARE_CALLINFO(js_FastNewArray)
 JS_DECLARE_CALLINFO(js_NewUninitializedArray)
