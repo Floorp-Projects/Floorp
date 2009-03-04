@@ -23,6 +23,16 @@
 
     var gComputedStyle = null;
 
+    function equalsToNormal(aWeight)
+    {
+      return aWeight <= 400;
+    }
+
+    function equalsToBold(aWeight)
+    {
+      return aWeight > 400;
+    }
+
     var gTextAttrChangedEventHandler = {
       handleEvent: function gTextAttrChangedEventHandler_handleEvent(aEvent)
       {
@@ -54,7 +64,7 @@
             "font-style": gComputedStyle.fontStyle,
             "font-size": (MAC) ? "8pt" : "10pt",
             "background-color": gComputedStyle.backgroundColor,
-            "font-weight": gComputedStyle.fontWeight,
+            "font-weight": equalsToNormal,
             "color": gComputedStyle.color,
             "font-family": gComputedStyle.fontFamily,
             "text-position": gComputedStyle.verticalAlign
@@ -92,7 +102,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "10pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -105,7 +115,7 @@
 
       tempElem = tempElem.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"font-weight": gComputedStyle.fontWeight};
+      attrs = { "font-weight": equalsToBold };
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 11);
 
       attrs = {};
@@ -120,7 +130,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "14pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -133,18 +143,18 @@
 
       tempElem = tempElem.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"font-weight": gComputedStyle.fontWeight};
+      attrs = { "font-weight": equalsToBold };
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 12);
 
       tempElem = tempElem.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"font-style": gComputedStyle.fontStyle,
-               "font-weight": gComputedStyle.fontWeight};
+               "font-weight": equalsToBold };
       testTextAttrs(ID, 13, attrs, defAttrs, 12, 19);
 
       tempElem = tempElem.parentNode;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"font-weight": "401"};
+      attrs = { "font-weight": equalsToBold };
       testTextAttrs(ID, 20, attrs, defAttrs, 19, 23);
 
       attrs = {};
@@ -159,7 +169,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "12pt",
         "background-color": gComputedStyle.backgroundColor,
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -197,7 +207,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -229,7 +239,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -262,7 +272,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -314,7 +324,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -352,7 +362,7 @@
 
       tempElem = tempElem.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"font-weight": gComputedStyle.fontWeight,
+      attrs = {"font-weight": equalsToBold,
                "color": gComputedStyle.color};
       testTextAttrs(ID, 57, attrs, defAttrs, 57, 61);
 
@@ -370,7 +380,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "10pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -434,7 +444,7 @@
         "font-style": gComputedStyle.fontStyle,
         "font-size": "12pt",
         "background-color": "rgb(255, 255, 255)",
-        "font-weight": gComputedStyle.fontWeight,
+        "font-weight": equalsToNormal,
         "color": gComputedStyle.color,
         "font-family": gComputedStyle.fontFamily,
         "text-position": gComputedStyle.verticalAlign
@@ -489,6 +499,44 @@
 
       attrs = {};
       testTextAttrs(ID, 124, attrs, defAttrs, 123, 131);
+
+      // area11, "font-weight" tests
+      ID = "area11";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+
+      defAttrs = {
+        "font-style": gComputedStyle.fontStyle,
+        "font-size": "12pt",
+        "background-color": "rgb(255, 255, 255)",
+        "font-weight": equalsToBold,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
+      };
+
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = { };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 13);
+
+      attrs = { "font-weight": equalsToNormal };
+      testTextAttrs(ID, 13, attrs, defAttrs, 13, 20);
+
+      attrs = { };
+      testTextAttrs(ID, 20, attrs, defAttrs, 20, 27);
+
+      attrs = { "font-weight": equalsToNormal };
+      testTextAttrs(ID, 27, attrs, defAttrs, 27, 33);
+
+      attrs = { };
+      testTextAttrs(ID, 33, attrs, defAttrs, 33, 51);
+
+      attrs = { "font-weight": equalsToNormal };
+      testTextAttrs(ID, 51, attrs, defAttrs, 51, 57);
+
+      attrs = { };
+      testTextAttrs(ID, 57, attrs, defAttrs, 57, 97);
 
       //////////////////////////////////////////////////////////////////////////
       // test spelling text attributes
@@ -570,6 +618,17 @@
     <span style="font-family: tahoma;">Different font</span> normal
     <span style="text-decoration: underline;">underlined</span> normal
     <span style="text-decoration: line-through;">strikethrough</span> normal
+  </p>
+
+  <p id="area11" style="font-weight: bolder;">
+    <span style="font-weight: bolder;">bolder</span>bolder
+    <span style="font-weight: lighter;">lighter</span>bolder
+    <span style="font-weight: normal;">normal</span>bolder
+    <b>bold</b>bolder
+    <span style="font-weight: 400;">normal</span>bolder
+    <span style="font-weight: 700;">bold</span>bolder
+    <span style="font-weight: bold;">bold</span>bolder
+    <span style="font-weight: 900;">bold</span>bolder
   </p>
 </body>
 </html>
