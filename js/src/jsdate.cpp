@@ -2022,8 +2022,6 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
     return date_toString(cx, argc, vp);
 }
 
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_FastNewDate, CONTEXT, OBJECT, 0, 0)
-
 // Don't really need an argument here, but we don't support arg-less builtins
 JS_DEFINE_TRCINFO_1(date_now,
     (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, 0)))
@@ -2172,8 +2170,8 @@ JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_UTC_TIME);
 JS_STATIC_ASSERT(JSSLOT_UTC_TIME + 1 == JSSLOT_LOCAL_TIME);
 
 #ifdef JS_TRACER
-JSObject* FASTCALL
-js_FastNewDate(JSContext* cx, JSObject* proto)
+static JSObject* FASTCALL
+Date_tn(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
@@ -2201,6 +2199,10 @@ js_FastNewDate(JSContext* cx, JSObject* proto)
     obj->dslots = NULL;
     return obj;    
 }
+
+JS_DEFINE_TRCINFO_1(js_Date,
+    (2, (static, CONSTRUCTOR_RETRY, Date_tn, CONTEXT, CALLEE_PROTOTYPE, 0, 0)))
+
 #endif
 
 JSObject *
@@ -2211,8 +2213,9 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    proto = JS_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
-                         NULL, date_methods, NULL, date_static_methods);
+    proto = JS_InitTraceableClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
+                                  NULL, date_methods, NULL, date_static_methods,
+                                  js_Date_trcinfo);
     if (!proto)
         return NULL;
 
