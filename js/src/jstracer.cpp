@@ -6585,6 +6585,14 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     }
     if (JSVAL_TAG(pval) != JSVAL_OBJECT)
         ABORT_TRACE("got primitive prototype from constructor");
+#ifdef DEBUG
+    JSBool ok, found;
+    uintN attrs;
+    ok = JS_GetPropertyAttributes(cx, ctor, js_class_prototype_str, &attrs, &found);
+    JS_ASSERT(ok);
+    JS_ASSERT(found);
+    JS_ASSERT((~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)) == 0);
+#endif
     proto_ins = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));
     return true;
 }
@@ -6665,25 +6673,22 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
     if (FUN_INTERPRETED(fun)) {
         if (constructing) {
             LIns* args[] = { get(&fval), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_FastNewObject_ci, args);
+            LIns* tv_ins = lir->insCall(&js_NewInstance_ci, args);
             guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
             set(&tval, tv_ins);
         }
         return interpretedFunctionCall(fval, fun, argc, constructing);
     }
 
-    if (!constructing && !(fun->flags & JSFUN_TRACEABLE))
+    if (!(fun->flags & JSFUN_TRACEABLE))
         ABORT_TRACE("untraceable native");
 
-    static JSTraceableNative knownNatives[] = {
-        { (JSFastNative)js_Object, &js_FastNewObject_ci,  "fC", "",    FAIL_NULL | JSTN_MORE },
-        { (JSFastNative)js_Date,   &js_FastNewDate_ci,    "pC", "",    FAIL_NULL },
-    };
+    JSTraceableNative* known = FUN_TRCINFO(fun);
+    JS_ASSERT(known && (JSFastNative)fun->u.n.native == known->native);
 
     LIns* args[5];
-    JSTraceableNative* known = constructing ? knownNatives : FUN_TRCINFO(fun);
     do {
-        if (constructing && (JSFastNative)fun->u.n.native != known->native)
+        if (((known->flags & JSTN_CONSTRUCTOR) != 0) != constructing)
             continue;
 
         uintN knownargc = strlen(known->argtypes);
@@ -8083,7 +8088,7 @@ TraceRecorder::record_JSOP_NEWINIT()
         if (JSVAL_IS_PRIMITIVE(v_obj))
             ABORT_TRACE("primitive Object value");
         obj = JSVAL_TO_OBJECT(v_obj);
-        ci = &js_FastNewObject_ci;
+        ci = &js_Object_tn_ci;
     }
     LIns* args[] = { INS_CONSTPTR(obj), cx_ins };
     LIns* v_ins = lir->insCall(ci, args);

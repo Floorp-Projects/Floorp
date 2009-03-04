@@ -150,6 +150,7 @@ typedef struct JSRuntime         JSTaskState;   /* XXX deprecated name */
 typedef struct JSScript          JSScript;
 typedef struct JSStackFrame      JSStackFrame;
 typedef struct JSString          JSString;
+typedef struct JSTraceableNative JSTraceableNative;
 typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;

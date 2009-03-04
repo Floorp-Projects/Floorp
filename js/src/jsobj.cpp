@@ -1993,6 +1993,85 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#ifdef JS_TRACER
+
+static inline JSObject*
+NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    if (!obj)
+        return NULL;
+
+    obj->classword = jsuword(&js_ObjectClass);
+    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
+    obj->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
+    for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
+        obj->fslots[i] = JSVAL_VOID;
+
+    obj->map = js_HoldObjectMap(cx, proto->map);
+    obj->dslots = NULL;
+    return obj;
+}
+
+JSObject* FASTCALL
+js_Object_tn(JSContext* cx, JSObject* proto)
+{
+    return NewNativeObject(cx, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
+}
+
+JS_DEFINE_TRCINFO_1(js_Object,
+    (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0, 0)))
+
+JSObject* FASTCALL
+js_NewInstance(JSContext* cx, JSObject *ctor)
+{
+    JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
+#ifdef DEBUG
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
+    JS_ASSERT(FUN_INTERPRETED(fun));
+#endif
+
+    JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
+
+    JS_LOCK_OBJ(cx, ctor);
+    JSScope *scope = OBJ_SCOPE(ctor);
+    if (scope->object != ctor) {
+        scope = js_GetMutableScope(cx, ctor);
+        if (!scope)
+            return NULL;
+    }
+
+    JSScopeProperty* sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    jsval pval = sprop ? LOCKED_OBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
+    JS_UNLOCK_SCOPE(cx, scope);
+
+    JSObject* proto;
+    if (!JSVAL_IS_PRIMITIVE(pval)) {
+        /* An object in ctor.prototype, let's use it as the new instance's proto. */
+        proto = JSVAL_TO_OBJECT(pval);
+    } else if (pval == JSVAL_HOLE) {
+        /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
+        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, ctor), 0);
+        if (!proto)
+            return NULL;
+        if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
+            return NULL;
+    } else {
+        /* Primitive value in .prototype means we use Object.prototype for proto. */
+        if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]),
+                                  INT_TO_JSID(JSProto_Object), &proto)) {
+            return NULL;
+        }
+    }
+
+    return NewNativeObject(cx, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
+}
+
+JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CALLEE_PROTOTYPE, 0, 0)
+
+#endif /* JS_TRACER */
+
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
  * access is "object-detecting" in the sense used by web scripts, e.g., when
@@ -2565,9 +2644,9 @@ js_InitEval(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
-    return JS_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                        object_props, object_methods, NULL,
-                        object_static_methods);
+    return JS_InitTraceableClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
+                                 object_props, object_methods, NULL, object_static_methods,
+                                 js_Object_trcinfo);
 }
 
 void
