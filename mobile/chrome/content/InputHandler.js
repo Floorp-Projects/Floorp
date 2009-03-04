@@ -76,11 +76,14 @@ function getScrollboxFromElement(elem) {
  */
 
 function InputHandler() {
+  /* used to stop everything if mouse leaves window on desktop */
+  window.addEventListener("mouseout", this, true);
+
   let stack = document.getElementById("browser-container");
   stack.addEventListener("DOMMouseScroll", this, true);
 
   /* these handle dragging of both chrome elements and content */
-  stack.addEventListener("mouseout", this, true);
+  //stack.addEventListener("mouseout", this, true);
   stack.addEventListener("mousedown", this, true);
   stack.addEventListener("mouseup", this, true);
   stack.addEventListener("mousemove", this, true);
@@ -117,8 +120,6 @@ InputHandler.prototype = {
 
   ungrab: function ungrab(obj) {
     this._grabbed = null;
-    // only send events to this object
-    // call cancel on all modules
   },
 
   startListening: function startListening() {
@@ -132,6 +133,15 @@ InputHandler.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
+
+    // relatedTarget should only be NULL if we move out of window
+    // if so, ungrab and reset everything.  We don't always get
+    // mouseout events if the mouse movement causes other window
+    // activity, but this catches many of the cases
+    if (aEvent.type == "mouseout" && !aEvent.relatedTarget) {
+      this.grab(null);
+      return;
+    }
 
     if (this._grabbed) {
       this._grabbed.handleEvent(aEvent);
@@ -707,9 +717,6 @@ ContentClickingModule.prototype = {
           clearTimeout(this._clickTimeout);
           this._sendDoubleClick();
         }
-        break;
-      case "mouseout":
-        this._reset();
         break;
     }
   },
