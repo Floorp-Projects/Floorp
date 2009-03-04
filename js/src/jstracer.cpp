@@ -4529,7 +4529,7 @@ extern void
 js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef JS_JIT_SPEW
-    if (jitstats.recorderStarted) {
+    if (js_verboseDebug && jitstats.recorderStarted) {
         printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
                "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
                "breaks(%llu), returns(%llu), unstableInnerCalls(%llu)\n",
