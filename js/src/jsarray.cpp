@@ -822,7 +822,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return JS_TRUE;
 }
 
-JSBool FASTCALL
+JSBool JS_FASTCALL
 js_ObjectHasNumericPropertiesInAnyPrototype(JSContext *cx, JSObject *obj)
 {
     JSObject *pobj = obj;
