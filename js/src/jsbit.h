@@ -217,7 +217,6 @@ JS_STATIC_ASSERT(sizeof(unsigned) == sizeof(JSUword));
 #elif JS_BYTES_PER_WORD == 8
 
 # ifdef JS_HAS_BUILTIN_BITSCAN64
-JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(JSUword));
 #  define js_FloorLog2wImpl(n)                                                \
     ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
 # else
