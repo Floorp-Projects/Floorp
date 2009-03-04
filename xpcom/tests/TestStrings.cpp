@@ -552,17 +552,18 @@ PRBool test_concat_2()
     return PR_FALSE;
   }
 
-#if 0
 PRBool test_concat_3()
   {
-    nsCString a("a"), b("b");
+    nsCString result;
+    nsCString ab("ab"), c("c");
 
-    // THIS DOES NOT COMPILE
-    const nsACString& r = a + b;
+    result = ab + result + c;
+    if (strcmp(result.get(), "abc") == 0)
+      return PR_TRUE;
 
-    return PR_TRUE;
+    printf("[result=%s]\n", result.get());
+    return PR_FALSE;
   }
-#endif
 
 PRBool test_xpidl_string()
   {
@@ -997,6 +998,7 @@ tests[] =
     { "test_fixed_string", test_fixed_string },
     { "test_concat", test_concat },
     { "test_concat_2", test_concat_2 },
+    { "test_concat_3", test_concat_3 },
     { "test_xpidl_string", test_xpidl_string },
     { "test_empty_assign", test_empty_assign },
     { "test_set_length", test_set_length },

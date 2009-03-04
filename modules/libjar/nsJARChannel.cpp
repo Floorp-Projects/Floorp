@@ -90,11 +90,15 @@ public:
                     nsIZipReaderCache *jarCache)
         : mJarCache(jarCache)
         , mJarFile(jarFile)
-        , mFullJarURI(fullJarURI)
         , mJarEntry(jarEntry)
         , mContentLength(-1)
     {
         NS_ASSERTION(mJarFile, "no jar file");
+
+        if (fullJarURI) {
+            nsresult rv = fullJarURI->GetAsciiSpec(mJarDirSpec);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "this shouldn't fail");
+        }
     }
 
     virtual ~nsJARInputThunk()
@@ -120,7 +124,7 @@ private:
     nsCOMPtr<nsIZipReaderCache> mJarCache;
     nsCOMPtr<nsIZipReader>      mJarReader;
     nsCOMPtr<nsIFile>           mJarFile;
-    nsCOMPtr<nsIURI>            mFullJarURI;
+    nsCString                   mJarDirSpec;
     nsCOMPtr<nsIInputStream>    mJarStream;
     nsCString                   mJarEntry;
     PRInt32                     mContentLength;
@@ -150,11 +154,9 @@ nsJARInputThunk::EnsureJarStream()
         // A directory stream also needs the Spec of the FullJarURI
         // because is included in the stream data itself.
 
-        nsCAutoString jarDirSpec;
-        rv = mFullJarURI->GetAsciiSpec(jarDirSpec);
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_STATE(!mJarDirSpec.IsEmpty());
 
-        rv = mJarReader->GetInputStreamWithSpec(jarDirSpec,
+        rv = mJarReader->GetInputStreamWithSpec(mJarDirSpec,
                                                 mJarEntry.get(),
                                                 getter_AddRefs(mJarStream));
     }

@@ -82,6 +82,7 @@ oggz_vector_new (void)
   OggzVector * vector;
 
   vector = oggz_malloc (sizeof (OggzVector));
+  if (vector == NULL) return NULL;
 
   vector->max_elements = 0;
   vector->nr_elements = 0;
@@ -270,7 +271,6 @@ oggz_vector_grow (OggzVector * vector)
 
     if (new_elements == NULL) {
       vector->nr_elements--;
-      vector->data = NULL;
       return NULL;
     }
 
@@ -363,8 +363,7 @@ oggz_vector_remove_nth (OggzVector * vector, int n)
         oggz_realloc (vector->data,
         (size_t)new_max_elements * sizeof (oggz_data_t));
 
-      if (new_elements == NULL)
-      {
+      if (new_elements == NULL) {
         vector->data = NULL;
         return NULL;
       }
@@ -409,51 +408,12 @@ void *
 oggz_vector_pop (OggzVector * vector)
 {
   void * data;
-#if 0
-  void * new_elements;
-  int new_max_elements;
-#endif
 
-  if (!vector || vector->data == NULL) return NULL;
+  if (vector == NULL || vector->data == NULL) return NULL;
 
   data = vector->data[0].p;
 
-#if 0
-  vector->nr_elements--;
-
-  if (vector->nr_elements == 0) {
-    oggz_vector_clear (vector);
-  } else {
-#if 0
-    memmove (vector->data, &vector->data[1],
-	     vector->nr_elements * sizeof (void *));
-#else
-    {
-      int i;
-      for (i = 0; i < vector->nr_elements; i++) {
-	vector->data[i].p = vector->data[i+1].p;
-      }
-    }
-#endif
-    if (vector->nr_elements < vector->max_elements/2) {
-      new_max_elements = vector->max_elements/2;
-
-      new_elements =
-        oggz_realloc (vector->data,
-        (size_t)new_max_elements * sizeof (oggz_data_t));
-
-      if (new_elements != NULL) {
-        vector->max_elements = new_max_elements;
-        vector->data = new_elements;
-      }
-    }
-
-  }
-#else
-
   oggz_vector_remove_nth (vector, 0);
-
-#endif
 
   return data;
 

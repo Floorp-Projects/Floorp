@@ -507,6 +507,33 @@ protected:
 public:
     virtual ~gfxFont();
 
+    // options for the kind of bounding box to return from measurement
+    typedef enum {
+        LOOSE_INK_EXTENTS,
+            // A box that encloses all the painted pixels, and may
+            // include sidebearings and/or additional ascent/descent
+            // within the glyph cell even if the ink is smaller.
+        TIGHT_INK_EXTENTS,
+            // A box that tightly encloses all the painted pixels
+            // (although actually on Windows, at least, it may be
+            // slightly larger than strictly necessary because
+            // we can't get precise extents with ClearType).
+        TIGHT_HINTED_OUTLINE_EXTENTS
+            // A box that tightly encloses the glyph outline,
+            // ignoring possible antialiasing pixels that extend
+            // beyond this.
+            // NOTE: The default implementation of gfxFont::Measure(),
+            // which works with the glyph extents cache, does not
+            // differentiate between this and TIGHT_INK_EXTENTS.
+            // Whether the distinction is important depends on the
+            // antialiasing behavior of the platform; currently the
+            // distinction is only implemented in the gfxWindowsFont
+            // subclass, because of ClearType's tendency to paint
+            // outside the hinted outline.
+            // Also NOTE: it is relatively expensive to request this,
+            // as it does not use cached glyph extents in the font.
+    } BoundingBoxType;
+
     const nsString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
@@ -576,7 +603,7 @@ public:
         gfxFloat mDescent; // always non-negative
         
         // Bounding box that is guaranteed to include everything drawn.
-        // If aTightBoundingBox was set to true when these metrics were
+        // If a tight boundingBox was requested when these metrics were
         // generated, this will tightly wrap the glyphs, otherwise it is
         // "loose" and may be larger than the true bounding box.
         // Coordinates are relative to the baseline left origin, so typically
@@ -633,7 +660,7 @@ public:
      */
     virtual RunMetrics Measure(gfxTextRun *aTextRun,
                                PRUint32 aStart, PRUint32 aEnd,
-                               PRBool aTightBoundingBox,
+                               BoundingBoxType aBoundingBoxType,
                                gfxContext *aContextForTightBoundingBox,
                                Spacing *aSpacing);
     /**
@@ -950,10 +977,10 @@ public:
     /**
      * Computes the ReflowMetrics for a substring.
      * Uses GetSpacing from aBreakProvider.
-     * @param aTightBoundingBox if true, we make the bounding box tight
+     * @param aBoundingBoxType which kind of bounding box (loose/tight)
      */
     Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
-                        PRBool aTightBoundingBox,
+                        gfxFont::BoundingBoxType aBoundingBoxType,
                         gfxContext *aRefContextForTightBoundingBox,
                         PropertyProvider *aProvider);
 
@@ -1032,9 +1059,9 @@ public:
      * Trimmed spaces are still counted in the "characters fit" result.
      * @param aMetrics if non-null, we fill this in for the returned substring.
      * If a hyphenation break was used, the hyphen is NOT included in the returned metrics.
-     * @param aTightBoundingBox if true, we make the bounding box in aMetrics tight
+     * @param aBoundingBoxType whether to make the bounding box in aMetrics tight
      * @param aRefContextForTightBoundingBox a reference context to get the
-     * tight bounding box, if aTightBoundingBox is true
+     * tight bounding box, if requested
      * @param aUsedHyphenation if non-null, records if we selected a hyphenation break
      * @param aLastBreak if non-null and result is aMaxLength, we set this to
      * the maximal N such that
@@ -1059,7 +1086,8 @@ public:
                                  PropertyProvider *aProvider,
                                  PRBool aSuppressInitialBreak,
                                  gfxFloat *aTrimWhitespace,
-                                 Metrics *aMetrics, PRBool aTightBoundingBox,
+                                 Metrics *aMetrics,
+                                 gfxFont::BoundingBoxType aBoundingBoxType,
                                  gfxContext *aRefContextForTightBoundingBox,
                                  PRBool *aUsedHyphenation,
                                  PRUint32 *aLastBreak,
@@ -1363,7 +1391,7 @@ public:
     
     /**
      * Prefetch all the glyph extents needed to ensure that Measure calls
-     * on this textrun with aTightBoundingBox false will succeed. Note
+     * on this textrun not requesting tight boundingBoxes will succeed. Note
      * that some glyph extents might not be fetched due to OOM or other
      * errors.
      */
@@ -1473,14 +1501,15 @@ private:
     // result in appunits
     gfxFloat GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd, PropertyProvider *aProvider);
     void AccumulatePartialLigatureMetrics(gfxFont *aFont,
-                                          PRUint32 aStart, PRUint32 aEnd, PRBool aTight,
+                                          PRUint32 aStart, PRUint32 aEnd,
+                                          gfxFont::BoundingBoxType aBoundingBoxType,
                                           gfxContext *aRefContext,
                                           PropertyProvider *aProvider,
                                           Metrics *aMetrics);
 
     // **** measurement helper ****
-    void AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
-                                 PRUint32 aEnd, PRBool aTight,
+    void AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart, PRUint32 aEnd,
+                                 gfxFont::BoundingBoxType aBoundingBoxType,
                                  gfxContext *aRefContext,
                                  PropertyProvider *aProvider,
                                  PRUint32 aSpacingStart, PRUint32 aSpacingEnd,

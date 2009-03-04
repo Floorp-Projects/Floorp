@@ -99,7 +99,7 @@
     <stringbundle id="bundlePreferences"
                   src="chrome://browser/locale/preferences/preferences.properties"/>
 
-    <prefpane id="paneMain" label="&paneMain.title;"
+    <prefpane id="paneMain" label="&paneGeneral.title;"
               src="chrome://browser/content/preferences/main.xul"/>
     <prefpane id="paneTabs" label="&paneTabs.title;"
               src="chrome://browser/content/preferences/tabs.xul"/>

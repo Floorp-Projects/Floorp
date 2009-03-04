@@ -61,6 +61,7 @@
 #   include <stdio.h>
 #   include <stdlib.h>
 #   include <unistd.h>
+#   include <limits.h>
 #   define FILESEPARATOR        '/'
 #   define FILESEPARATOR2       '\0'
 #   define CURRENT_DIR          "/"
@@ -104,7 +105,11 @@
 #define utfstring               "binary"
 #define unicodestring           "unicode"
 
+#ifdef PATH_MAX
+#define MAX_PATH_LENGTH         PATH_MAX
+#else
 #define MAX_PATH_LENGTH         1024
+#endif
 #define MODE_SIZE               256
 #define NUMBER_SIZE             32
 #define MAX_LINE_LENGTH         256

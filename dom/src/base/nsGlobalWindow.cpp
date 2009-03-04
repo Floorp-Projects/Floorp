@@ -1004,7 +1004,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   if (tmp->mDoc && nsCCUncollectableMarker::InGeneration(
                      tmp->mDoc->GetMarkedCCGeneration())) {
-    return NS_OK;
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
@@ -1885,6 +1885,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         if (st_id == nsIProgrammingLanguage::JAVASCRIPT)
             JS_EndRequest((JSContext *)this_ctx->GetNativeContext());
       }
+
+      nsCOMPtr<nsIContent> frame = do_QueryInterface(GetFrameElementInternal());
+      if (frame && frame->GetOwnerDoc()) {
+        nsPIDOMWindow* parentWindow = frame->GetOwnerDoc()->GetWindow();
+        if (parentWindow && parentWindow->TimeoutSuspendCount()) {
+          SuspendTimeouts(parentWindow->TimeoutSuspendCount());
+        }
+      }
     }
     // Tell the contexts we have completed setting up the doc.
     NS_STID_FOR_ID(st_id) {
@@ -2054,7 +2062,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     // Call FreeInnerObjects on all inner windows, not just the current
     // one, since some could be held by WindowStateHolder objects that
     // are GC-owned.
-    for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
+    for (nsRefPtr<nsGlobalWindow> inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
          inner != this;
          inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
       NS_ASSERTION(inner->mOuterWindow == this, "bad outer window pointer");
@@ -5611,9 +5619,19 @@ nsGlobalWindow::EnterModalState()
     return;
   }
 
-  static_cast<nsGlobalWindow *>
-             (static_cast<nsIDOMWindow *>
-                         (top.get()))->mModalStateDepth++;
+  nsGlobalWindow* topWin =
+    static_cast<nsGlobalWindow*>(static_cast<nsIDOMWindow *>(top.get()));
+  if (topWin->mModalStateDepth == 0) {
+    NS_ASSERTION(!mSuspendedDoc, "Shouldn't have mSuspendedDoc here!");
+
+    mSuspendedDoc = do_QueryInterface(topWin->GetExtantDocument());
+    if (mSuspendedDoc && mSuspendedDoc->EventHandlingSuppressed()) {
+      mSuspendedDoc->SuppressEventHandling();
+    } else {
+      mSuspendedDoc = nsnull;
+    }
+  }
+  topWin->mModalStateDepth++;
 }
 
 // static
@@ -5709,6 +5727,22 @@ nsGlobalWindow::LeaveModalState()
     nsCOMPtr<nsIRunnable> runner = new nsPendingTimeoutRunner(topWin);
     if (NS_FAILED(NS_DispatchToCurrentThread(runner)))
       NS_WARNING("failed to dispatch pending timeout runnable");
+
+    if (mSuspendedDoc) {
+      nsCOMPtr<nsIDocument> currentDoc =
+        do_QueryInterface(topWin->GetExtantDocument());
+      if (currentDoc == mSuspendedDoc) {
+        NS_DispatchToCurrentThread(
+          NS_NEW_RUNNABLE_METHOD(nsIDocument, mSuspendedDoc.get(),
+                                 UnsuppressEventHandling));
+      } else {
+        // Somehow the document was changed.
+        // Unsuppress event handling in the document but don't even
+        // try to fire events.
+        mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(PR_FALSE);
+      }
+      mSuspendedDoc = nsnull;
+    }
   }
 }
 
@@ -7624,7 +7658,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   mTimeoutInsertionPoint = &dummy_timeout;
 
   for (timeout = FirstTimeout();
-       timeout != &dummy_timeout && !IsFrozen();
+       timeout != &dummy_timeout && !IsFrozen() && !mTimeoutsSuspendDepth;
        timeout = nextTimeout) {
     nextTimeout = timeout->Next();
 
@@ -7820,7 +7854,9 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
           timeout->Release();
         }
       } else {
-        NS_ASSERTION(IsFrozen(), "How'd our timer end up null if we're not frozen?");
+        NS_ASSERTION(IsFrozen() || mTimeoutsSuspendDepth,
+                     "How'd our timer end up null if we're not frozen or "
+                     "suspended?");
 
         timeout->mWhen = delay;
         isInterval = PR_TRUE;
@@ -8365,37 +8401,39 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 }
 
 void
-nsGlobalWindow::SuspendTimeouts()
+nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
+                                PRBool aFreezeChildren)
 {
-  FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
+  FORWARD_TO_INNER_VOID(SuspendTimeouts, (aIncrease, aFreezeChildren));
 
-  if (++mTimeoutsSuspendDepth != 1) {
-    return;
-  }
+  PRBool suspended = (mTimeoutsSuspendDepth != 0);
+  mTimeoutsSuspendDepth += aIncrease;
 
-  nsDOMThreadService* dts = nsDOMThreadService::get();
-  if (dts) {
-    dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
-  }
-
-  PRTime now = PR_Now();
-  for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
-    // Change mWhen to be the time remaining for this timer.    
-    if (t->mWhen > now)
-      t->mWhen -= now;
-    else
-      t->mWhen = 0;
-
-    // Drop the XPCOM timer; we'll reschedule when restoring the state.
-    if (t->mTimer) {
-      t->mTimer->Cancel();
-      t->mTimer = nsnull;
-
-      // Drop the reference that the timer's closure had on this timeout, we'll
-      // add it back in ResumeTimeouts. Note that it shouldn't matter that we're
-      // passing null for the context, since this shouldn't actually release this
-      // timeout.
-      t->Release();
+  if (!suspended) {
+    nsDOMThreadService* dts = nsDOMThreadService::get();
+    if (dts) {
+      dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+    }
+  
+    PRTime now = PR_Now();
+    for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
+      // Change mWhen to be the time remaining for this timer.    
+      if (t->mWhen > now)
+        t->mWhen -= now;
+      else
+        t->mWhen = 0;
+  
+      // Drop the XPCOM timer; we'll reschedule when restoring the state.
+      if (t->mTimer) {
+        t->mTimer->Cancel();
+        t->mTimer = nsnull;
+  
+        // Drop the reference that the timer's closure had on this timeout, we'll
+        // add it back in ResumeTimeouts. Note that it shouldn't matter that we're
+        // passing null for the context, since this shouldn't actually release this
+        // timeout.
+        t->Release();
+      }
     }
   }
 
@@ -8415,12 +8453,11 @@ nsGlobalWindow::SuspendTimeouts()
         nsGlobalWindow *win =
           static_cast<nsGlobalWindow*>
                      (static_cast<nsPIDOMWindow*>(pWin));
-
-        win->SuspendTimeouts();
+        win->SuspendTimeouts(aIncrease, aFreezeChildren);
 
         NS_ASSERTION(win->IsOuterWindow(), "Expected outer window");
         nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
-        if (inner) {
+        if (inner && aFreezeChildren) {
           inner->Freeze();
         }
       }
@@ -8429,67 +8466,68 @@ nsGlobalWindow::SuspendTimeouts()
 }
 
 nsresult
-nsGlobalWindow::ResumeTimeouts()
+nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
 {
   FORWARD_TO_INNER(ResumeTimeouts, (), NS_ERROR_NOT_INITIALIZED);
 
   NS_ASSERTION(mTimeoutsSuspendDepth, "Mismatched calls to ResumeTimeouts!");
-  if (--mTimeoutsSuspendDepth != 0) {
-    return NS_OK;
-  }
-
-  nsDOMThreadService* dts = nsDOMThreadService::get();
-  if (dts) {
-    dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
-  }
-
-  // Restore all of the timeouts, using the stored time remaining
-  // (stored in timeout->mWhen).
-
-  PRTime now = PR_Now();
+  --mTimeoutsSuspendDepth;
+  PRBool shouldResume = (mTimeoutsSuspendDepth == 0);
   nsresult rv;
 
-#ifdef DEBUG
-  PRBool _seenDummyTimeout = PR_FALSE;
-#endif
-
-  for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
-    // There's a chance we're being called with RunTimeout on the stack in which
-    // case we have a dummy timeout in the list that *must not* be resumed. It
-    // can be identified by a null mWindow.
-    if (!t->mWindow) {
-#ifdef DEBUG
-      NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
-      _seenDummyTimeout = PR_TRUE;
-#endif
-      continue;
+  if (shouldResume) {
+    nsDOMThreadService* dts = nsDOMThreadService::get();
+    if (dts) {
+      dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
     }
 
-    // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
-    // PRTime to make the division do the right thing on 64-bit
-    // platforms whether t->mWhen is positive or negative (which is
-    // likely to always be positive here, but cast anyways for
-    // consistency).
-    PRUint32 delay =
-      PR_MAX(((PRUint32)(t->mWhen / (PRTime)PR_USEC_PER_MSEC)),
-              DOM_MIN_TIMEOUT_VALUE);
+    // Restore all of the timeouts, using the stored time remaining
+    // (stored in timeout->mWhen).
 
-    // Set mWhen back to the time when the timer is supposed to
-    // fire.
-    t->mWhen += now;
+    PRTime now = PR_Now();
 
-    t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
-    NS_ENSURE_TRUE(t->mTimer, NS_ERROR_OUT_OF_MEMORY);
+#ifdef DEBUG
+    PRBool _seenDummyTimeout = PR_FALSE;
+#endif
 
-    rv = t->mTimer->InitWithFuncCallback(TimerCallback, t, delay,
-                                         nsITimer::TYPE_ONE_SHOT);
-    if (NS_FAILED(rv)) {
-      t->mTimer = nsnull;
-      return rv;
+    for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
+      // There's a chance we're being called with RunTimeout on the stack in which
+      // case we have a dummy timeout in the list that *must not* be resumed. It
+      // can be identified by a null mWindow.
+      if (!t->mWindow) {
+#ifdef DEBUG
+        NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
+        _seenDummyTimeout = PR_TRUE;
+#endif
+        continue;
+      }
+
+      // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
+      // PRTime to make the division do the right thing on 64-bit
+      // platforms whether t->mWhen is positive or negative (which is
+      // likely to always be positive here, but cast anyways for
+      // consistency).
+      PRUint32 delay =
+        PR_MAX(((PRUint32)(t->mWhen / (PRTime)PR_USEC_PER_MSEC)),
+                DOM_MIN_TIMEOUT_VALUE);
+
+      // Set mWhen back to the time when the timer is supposed to
+      // fire.
+      t->mWhen += now;
+
+      t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+      NS_ENSURE_TRUE(t->mTimer, NS_ERROR_OUT_OF_MEMORY);
+
+      rv = t->mTimer->InitWithFuncCallback(TimerCallback, t, delay,
+                                           nsITimer::TYPE_ONE_SHOT);
+      if (NS_FAILED(rv)) {
+        t->mTimer = nsnull;
+        return rv;
+      }
+
+      // Add a reference for the new timer's closure.
+      t->AddRef();
     }
-
-    // Add a reference for the new timer's closure.
-    t->AddRef();
   }
 
   // Resume our children as well.
@@ -8512,17 +8550,24 @@ nsGlobalWindow::ResumeTimeouts()
 
         NS_ASSERTION(win->IsOuterWindow(), "Expected outer window");
         nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
-        if (inner) {
+        if (inner && aThawChildren) {
           inner->Thaw();
         }
 
-        rv = win->ResumeTimeouts();
+        rv = win->ResumeTimeouts(aThawChildren);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
   }
 
   return NS_OK;
+}
+
+PRUint32
+nsGlobalWindow::TimeoutSuspendCount()
+{
+  FORWARD_TO_INNER(TimeoutSuspendCount, (), 0);
+  return mTimeoutsSuspendDepth;
 }
 
 NS_IMETHODIMP

@@ -1725,7 +1725,7 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   if (nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration())) {
-    return NS_OK;
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
   tmp->mIdentifierMap.EnumerateEntries(IdentifierMapEntryTraverse, &cb);
@@ -6888,6 +6888,15 @@ CanCacheSubDocument(PLDHashTable *table, PLDHashEntryHdr *hdr,
 PRBool
 nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
 {
+  if (EventHandlingSuppressed()) {
+    return PR_FALSE;
+  }
+
+  nsPIDOMWindow* win = GetInnerWindow();
+  if (win && win->TimeoutSuspendCount()) {
+    return PR_FALSE;
+  }
+
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
@@ -7141,7 +7150,7 @@ nsDocument::DispatchEventToWindow(nsEvent *aEvent)
 }
 
 void
-nsDocument::OnPageShow(PRBool aPersisted)
+nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
 {
   mVisible = PR_TRUE;
   UpdateLinkMap();
@@ -7164,10 +7173,13 @@ nsDocument::OnPageShow(PRBool aPersisted)
     }
   }
 
-  // Set mIsShowing before firing events, in case those event handlers
-  // move us around.
-  mIsShowing = PR_TRUE;
-
+  // See nsIDocument
+  if (!aDispatchStartTarget) {
+    // Set mIsShowing before firing events, in case those event handlers
+    // move us around.
+    mIsShowing = PR_TRUE;
+  }
+ 
 #ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->OnPageShow();
@@ -7175,11 +7187,16 @@ nsDocument::OnPageShow(PRBool aPersisted)
 #endif
   
   nsPageTransitionEvent event(PR_TRUE, NS_PAGE_SHOW, aPersisted);
-  DispatchEventToWindow(&event);
+  if (aDispatchStartTarget) {
+    event.target = static_cast<nsIDocument*>(this);
+    nsEventDispatcher::Dispatch(aDispatchStartTarget, nsnull, &event);
+  } else {
+    DispatchEventToWindow(&event);
+  }
 }
 
 void
-nsDocument::OnPageHide(PRBool aPersisted)
+nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
@@ -7200,9 +7217,12 @@ nsDocument::OnPageHide(PRBool aPersisted)
     }
   }
 
-  // Set mIsShowing before firing events, in case those event handlers
-  // move us around.
-  mIsShowing = PR_FALSE;
+  // See nsIDocument
+  if (!aDispatchStartTarget) {
+    // Set mIsShowing before firing events, in case those event handlers
+    // move us around.
+    mIsShowing = PR_FALSE;
+  }
 
 #ifdef MOZ_SMIL
   if (mAnimationController) {
@@ -7212,7 +7232,12 @@ nsDocument::OnPageHide(PRBool aPersisted)
   
   // Now send out a PageHide event.
   nsPageTransitionEvent event(PR_TRUE, NS_PAGE_HIDE, aPersisted);
-  DispatchEventToWindow(&event);
+  if (aDispatchStartTarget) {
+    event.target = static_cast<nsIDocument*>(this);
+    nsEventDispatcher::Dispatch(aDispatchStartTarget, nsnull, &event);
+  } else {
+    DispatchEventToWindow(&event);
+  }
 
   mVisible = PR_FALSE;
 }
@@ -7496,3 +7521,51 @@ nsDocument::GetReadyState(nsAString& aReadyState)
   }
   return NS_OK;
 }
+
+static PRBool
+SuppressEventHandlingInDocument(nsIDocument* aDocument, void* aData)
+{
+  aDocument->SuppressEventHandling(*static_cast<PRUint32*>(aData));
+  return PR_TRUE;
+}
+
+void
+nsDocument::SuppressEventHandling(PRUint32 aIncrease)
+{
+  mEventsSuppressed += aIncrease;
+  EnumerateSubDocuments(SuppressEventHandlingInDocument, &aIncrease);
+}
+
+static PRBool
+GetAndUnsuppressSubDocuments(nsIDocument* aDocument, void* aData)
+{
+  PRUint32 suppression = aDocument->EventHandlingSuppressed();
+  if (suppression > 0) {
+    static_cast<nsDocument*>(aDocument)->DecreaseEventSuppression();
+  }
+  nsCOMArray<nsIDocument>* docs = static_cast<nsCOMArray<nsIDocument>* >(aData);
+  docs->AppendObject(aDocument);
+  aDocument->EnumerateSubDocuments(GetAndUnsuppressSubDocuments, docs);
+  return PR_TRUE;
+}
+
+void
+nsDocument::UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents)
+{
+  if (mEventsSuppressed > 0) {
+    --mEventsSuppressed;
+  }
+  nsCOMArray<nsIDocument> documents;
+  documents.AppendObject(this);
+  EnumerateSubDocuments(GetAndUnsuppressSubDocuments, &documents);
+  for (PRInt32 i = 0; i < documents.Count(); ++i) {
+    if (!documents[i]->EventHandlingSuppressed()) {
+      nsPresShellIterator iter(documents[i]);
+      nsCOMPtr<nsIPresShell> shell;
+      while ((shell = iter.GetNextShell())) {
+        shell->FireOrClearDelayedEvents(aFireEvents);
+      }
+    }
+  }
+}
+

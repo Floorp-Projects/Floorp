@@ -64,6 +64,7 @@ oggplay_new_with_reader(OggPlayReader *reader) {
   me->trash = NULL;
   me->oggz = NULL;
   me->pt_update_valid = 1;
+  me->duration = -1;
 
   return me;
 
@@ -210,7 +211,7 @@ oggplay_set_offset(OggPlay *me, int track, ogg_int64_t offset) {
     return E_OGGPLAY_BAD_TRACK;
   }
 
-  me->decode_data[track]->offset = (offset << 32);
+  me->decode_data[track]->offset = (offset << 32) / 1000;
 
   return E_OGGPLAY_OK;
 
@@ -509,7 +510,7 @@ read_more_data:
     if (r == 0) {
       num_records = oggplay_callback_info_prepare(me, &info);
      /*
-       * set all of the tracks to active
+       * set all of the tracks to inactive
        */
       for (i = 0; i < me->num_tracks; i++) {
         me->decode_data[i]->active = 0;
@@ -574,8 +575,11 @@ oggplay_start_decoding(OggPlay *me) {
   int r;
 
   while (1) {
-    if ((r = oggplay_step_decoding(me)) != E_OGGPLAY_CONTINUE)
-      return (OggPlayErrorCode)r;
+    r = oggplay_step_decoding(me);
+    if (r == E_OGGPLAY_CONTINUE || r == E_OGGPLAY_TIMEOUT) {
+      continue;
+    }
+    return (OggPlayErrorCode)r;
   }
 }
 
@@ -643,17 +647,30 @@ oggplay_get_duration(OggPlay *me) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
 
-  if (me->reader->duration) 
-    return me->reader->duration(me->reader);
-  else {
+  /* If the reader has a duration function we always call that
+   * function to find the duration. We never cache the result
+   * of that function.
+   *
+   * If there is no reader duration function we use our cached
+   * duration value, or do a liboggz seek to find it and cache
+   * that.
+   */
+  if (me->reader->duration) {
+      ogg_int64_t d = me->reader->duration(me->reader);
+      if (d >= 0) {
+        me->duration = d;
+      }
+  }
+
+  if (me->duration < 0) {
     ogg_int64_t pos;
-    ogg_int64_t duration;
     pos = oggz_tell_units(me->oggz);
-    duration = oggz_seek_units(me->oggz, 0, SEEK_END);
+    me->duration = oggz_seek_units(me->oggz, 0, SEEK_END);
     oggz_seek_units(me->oggz, pos, SEEK_SET);
     oggplay_seek_cleanup(me, pos);
-    return duration;
   }
+
+  return me->duration;
 }
 
 int

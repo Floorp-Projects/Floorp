@@ -41,6 +41,10 @@
 #include "nsAccessNode.h"
 #include "nsHyperTextAccessibleWrap.h"
 
+#include "gfxFont.h"
+#include "gfxUserFontSet.h"
+#include "nsIThebesFontMetrics.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Constants and structures
 
@@ -67,7 +71,6 @@ static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
   { "color",             kAnyValue,       &nsAccessibilityAtoms::color,                 kCopyValue },
   { "font-family",       kAnyValue,       &nsAccessibilityAtoms::fontFamily,            kCopyValue },
   { "font-style",        kAnyValue,       &nsAccessibilityAtoms::fontStyle,             kCopyValue },
-  { "font-weight",       kAnyValue,       &nsAccessibilityAtoms::fontWeight,            kCopyValue },
   { "text-decoration",   "line-through",  &nsAccessibilityAtoms::textLineThroughStyle,  "solid" },
   { "text-decoration",   "underline",     &nsAccessibilityAtoms::textUnderlineStyle,    "solid" },
   { "vertical-align",    kAnyValue,       &nsAccessibilityAtoms::textPosition,          kCopyValue }
@@ -131,20 +134,16 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
   nsCSSTextAttr fontStyleTextAttr(2, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontStyleTextAttr));
 
-  // "font-weight" text attribute
-  nsCSSTextAttr fontWeightTextAttr(3, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontWeightTextAttr));
-
   // "text-line-through-style" text attribute
-  nsCSSTextAttr lineThroughTextAttr(4, hyperTextElm, offsetElm);
+  nsCSSTextAttr lineThroughTextAttr(3, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&lineThroughTextAttr));
 
   // "text-underline-style" text attribute
-  nsCSSTextAttr underlineTextAttr(5, hyperTextElm, offsetElm);
+  nsCSSTextAttr underlineTextAttr(4, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&underlineTextAttr));
 
   // "text-position" text attribute
-  nsCSSTextAttr posTextAttr(6, hyperTextElm, offsetElm);
+  nsCSSTextAttr posTextAttr(5, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&posTextAttr));
 
   // "background-color" text attribute
@@ -154,6 +153,10 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
   // "font-size" text attribute
   nsFontSizeTextAttr fontSizeTextAttr(rootFrame, frame);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontSizeTextAttr));
+
+  // "font-weight" text attribute
+  nsFontWeightTextAttr fontWeightTextAttr(rootFrame, frame);
+  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontWeightTextAttr));
 
   // Expose text attributes if applicable.
   if (aAttributes) {
@@ -602,4 +605,84 @@ nsFontSizeTextAttr::GetFontSize(nsIFrame *aFrame)
     (nsStyleFont*)(aFrame->GetStyleDataExternal(eStyleStruct_Font));
 
   return styleFont->mSize;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsFontWeightTextAttr
+
+nsFontWeightTextAttr::nsFontWeightTextAttr(nsIFrame *aRootFrame,
+                                           nsIFrame *aFrame) :
+  nsTextAttr<PRInt32>(aFrame == nsnull)
+{
+  mRootNativeValue = GetFontWeight(aRootFrame);
+  mIsRootDefined = PR_TRUE;
+
+  if (aFrame) {
+    mNativeValue = GetFontWeight(aFrame);
+    mIsDefined = PR_TRUE;
+  }
+}
+
+PRBool
+nsFontWeightTextAttr::GetValueFor(nsIDOMElement *aElm, PRInt32 *aValue)
+{
+  nsIFrame *frame = nsCoreUtils::GetFrameFor(aElm);
+  if (!frame)
+    return PR_FALSE;
+
+  *aValue = GetFontWeight(frame);
+  return PR_TRUE;
+}
+
+void
+nsFontWeightTextAttr::Format(const PRInt32& aValue, nsAString& aFormattedValue)
+{
+  nsAutoString value;
+  value.AppendInt(aValue);
+  aFormattedValue = value;
+}
+
+PRInt32
+nsFontWeightTextAttr::GetFontWeight(nsIFrame *aFrame)
+{
+  // nsFont::width isn't suitable here because it's necessary to expose real
+  // value of font weight (used font might not have some font weight values).
+  nsStyleFont* styleFont =
+    (nsStyleFont*)(aFrame->GetStyleDataExternal(eStyleStruct_Font));
+
+  gfxUserFontSet *fs = aFrame->PresContext()->GetUserFontSet();
+
+  nsCOMPtr<nsIFontMetrics> fm;
+  aFrame->PresContext()->DeviceContext()->
+    GetMetricsFor(styleFont->mFont, aFrame->GetStyleVisibility()->mLangGroup,
+                  fs, *getter_AddRefs(fm));
+
+  nsCOMPtr<nsIThebesFontMetrics> tfm = do_QueryInterface(fm);
+  gfxFontGroup *fontGroup = tfm->GetThebesFontGroup();
+  gfxFont *font = fontGroup->GetFontAt(0);
+
+  // When there doesn't exist a bold font in the family and so the rendering of
+  // a non-bold font face is changed so that the user sees what looks like a
+  // bold font, i.e. synthetic bolding is used. IsSyntheticBold method is only
+  // needed on Mac, but it is "safe" to use on all platforms.  (For non-Mac
+  // platforms it always return false.)
+  if (font->IsSyntheticBold())
+    return 700;
+
+#ifdef MOZ_PANGO
+  // On Linux, font->GetStyle()->weight will give the absolute weight requested
+  // of the font face. The Linux code uses the gfxFontEntry constructor which
+  // doesn't initialize the weight field.
+  return font->GetStyle()->weight;
+#else
+  // On Windows, font->GetStyle()->weight will give the same weight as
+  // fontEntry->Weight(), the weight of the first font in the font group, which
+  // may not be the weight of the font face used to render the characters.
+  // On Mac, font->GetStyle()->weight will just give the same number as
+  // getComputedStyle(). fontEntry->Weight() will give the weight of the font
+  // face used.
+  gfxFontEntry *fontEntry = font->GetFontEntry();
+  return fontEntry->Weight();
+#endif
 }

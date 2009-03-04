@@ -49,7 +49,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIAuthPromptAdapterFactory.h"
 #include "nsPIWindowWatcher.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 class  nsIURI;
 class  nsIDocShellTreeItem;
@@ -144,7 +144,7 @@ private:
   static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,
                                        nsIDocShellTreeOwner **outTreeOwner);
 
-  nsVoidArray           mEnumeratorList;
+  nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
   nsWatcherWindowEntry *mOldestWindow;
   nsIDOMWindow         *mActiveWindow;
   PRLock               *mListLock;

@@ -23,7 +23,17 @@ function test() {
 }
 
 function download_progress(addon, value, maxValue) {
-  BrowserOffline.toggleOfflineStatus();
+  var prefs = Components.classes["@mozilla.org/preferences;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService2);
+
+  try {
+    ioService.manageOfflineStatus = false;
+    prefs.setBoolPref("browser.offline", true);
+    ioService.offline = true;
+  } catch (ex) {
+  }
 }
 
 function check_xpi_install(addon, status) {
@@ -31,7 +41,15 @@ function check_xpi_install(addon, status) {
 }
 
 function finish_test() {
-  BrowserOffline.toggleOfflineStatus();
+  var prefs = Components.classes["@mozilla.org/preferences;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService2);
+  try {
+    prefs.setBoolPref("browser.offline", false);
+    ioService.offline = false;
+  } catch (ex) {
+  }
 
   var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                      .getService(Components.interfaces.nsIPermissionManager);

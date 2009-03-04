@@ -148,7 +148,7 @@ private:
 // Property Policy
 union SecurityLevel
 {
-    PRInt32  level;
+    PRWord   level;
     char*    capability;
 };
 

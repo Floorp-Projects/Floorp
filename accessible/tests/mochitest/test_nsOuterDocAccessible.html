@@ -6,53 +6,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
   <title>nsOuterDocAccessible chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-    const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
-
-    // needed state flag
-    const state_focusable =
-          Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
-
     // needed error return value
     const ns_error_invalid_arg = Components.results.NS_ERROR_INVALID_ARG;
 
-    var gAccRetrieval = null;
-
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
       // Get accessible for body tag.
-      var docAcc = null;
-      try {
-        docAcc = gAccRetrieval.getAccessibleFor(document);
-      } catch(e) {}
-      ok(docAcc, "No accessible for document!");
+      var docAcc = getAccessible(document);
 
       if (docAcc) {
-        var outerDocAcc = null;
-        try {
-          outerDocAcc = docAcc.parent;
-        } catch(e) {}
-        ok(outerDocAcc, "No internal frame parent for document!");
+        var outerDocAcc = getAccessible(docAcc.parent);
 
         if (outerDocAcc) {
-          is(outerDocAcc.role, nsIAccessibleRole.ROLE_INTERNAL_FRAME,
-             "Wrong role for internal frame!");
+          testRole(outerDocAcc, ROLE_INTERNAL_FRAME);
 
           // check if it is focusable, not desired.
-          var state = {}, extraState = {}
-          outerDocAcc.getState(state, extraState);
-          is(state.value & state_focusable, 0,
-             "Wrong focusable state bit for internal frame!");
+          testStates(outerDocAcc, 0, 0, STATE_FOCUSABLE);
 
           // see bug 428954: No name wanted for internal frame
-// xxx see bug 454636          is(outerDocAcc.name, "", "Wrong name for internal frame!");
+          is(outerDocAcc.name, null, "Wrong name for internal frame!");
 
           // see bug 440770, no actions wanted on outer doc
           is(outerDocAcc.numActions, 0,

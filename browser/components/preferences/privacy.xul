@@ -209,13 +209,6 @@
                 accesskey="&clearDataSettings.accesskey;"
                 oncommand="gPrivacyPane.showClearPrivateDataSettings();"/>
       </hbox>
-      <hbox id="askClearBox">
-        <spacer flex="1"/>
-        <button id="clearDataNow" icon="clear"
-                label="&clearDataNow.label;"
-                accesskey="&clearDataNow.accesskey;"
-                oncommand="gPrivacyPane.clearPrivateDataNow();"/>
-      </hbox>
     </groupbox>
 
   </prefpane>

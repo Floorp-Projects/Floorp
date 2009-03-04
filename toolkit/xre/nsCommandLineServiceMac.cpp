@@ -65,9 +65,6 @@
 #include "nsICommandLineRunner.h"
 #include "nsDirectoryServiceDefs.h"
 
-#include "nsAEEventHandling.h"
-#include "nsXPFEComponentsCID.h"
-
 // NSPR
 #include "prmem.h"
 #include "plstr.h"
@@ -104,32 +101,6 @@ static PRInt32 ReadLine(FILE* inStream, char* buf, PRInt32 bufSize)
   return (c == EOF && !charsRead) ? -1 : charsRead; 
 }
 
-static PRUint32
-ProcessAppleEvents()
-{
-  // Dispatch all of the Apple Events waiting in the event queue.
-
-  PRUint32 processed = 0;
-
-  const EventTypeSpec kAppleEventList[] = {
-    { kEventClassAppleEvent, kEventAppleEvent },
-  };
-
-  EventRef carbonEvent;
-  while (::ReceiveNextEvent(GetEventTypeCount(kAppleEventList),
-                            kAppleEventList,
-                            kEventDurationNoWait,
-                            PR_TRUE,
-                            &carbonEvent) == noErr) {
-    EventRecord eventRecord;
-    ::ConvertEventRefToEventRecord(carbonEvent, &eventRecord);
-    ::AEProcessAppleEvent(&eventRecord);
-    ::ReleaseEvent(carbonEvent);
-    processed++;
-  }
-
-  return processed;
-}
 
 //----------------------------------------------------------------------------------------
 nsMacCommandLine::nsMacCommandLine()
@@ -146,7 +117,6 @@ nsMacCommandLine::nsMacCommandLine()
 nsMacCommandLine::~nsMacCommandLine()
 //----------------------------------------------------------------------------------------
 {
-  ShutdownAEHandlerClasses();
   if (mArgs) {
     for (PRUint32 i = 0; i < mArgsUsed; i++)
       free(mArgs[i]);
@@ -174,22 +144,6 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
     if (strncmp(flag, "-psn_", 5) != 0)
       AddToCommandLine(flag);
   }
-
-  // Set up AppleEvent handling.
-  OSErr err = CreateAEHandlerClasses(false);
-  if (err != noErr) return NS_ERROR_FAILURE;
-
-  // Snarf all the odoc and pdoc apple-events.
-  //
-  // 1. If they are odoc for 'CMDL' documents, read them into the buffer ready for
-  //    parsing (concatenating multiple files).
-  //
-  // 2. If they are any other kind of document, convert them into -url command-line
-  //    parameters or -print parameters, with file URLs.
-
-  // Spin a native event loop to allow AE handlers for waiting events to be
-  // called
-  ProcessAppleEvents();
 
   // we've started up now
   mStartedUp = PR_TRUE;
@@ -415,43 +369,6 @@ OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
     err = AddToCommandLine(url);
   
   return err;
-}
-
-//----------------------------------------------------------------------------------------
-OSErr nsMacCommandLine::Quit(TAskSave askSave)
-//----------------------------------------------------------------------------------------
-{
-  nsresult rv;
-  
-  nsCOMPtr<nsIObserverService> obsServ =
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-
-  nsCOMPtr<nsISupportsPRBool> cancelQuit =
-           do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-
-  cancelQuit->SetData(PR_FALSE);
-  if (askSave != eSaveNo) {
-    rv = obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
-    if (NS_FAILED(rv))
-      return errAEEventNotHandled;
-  }
-
-  PRBool abortQuit;
-  cancelQuit->GetData(&abortQuit);
-  if (abortQuit)
-    return userCanceledErr;
-
-  nsCOMPtr<nsIAppStartup> appStartup =
-           do_GetService(NS_APPSTARTUP_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-
-  appStartup->Quit(nsIAppStartup::eAttemptQuit);
-  return noErr;
 }
 
 #pragma mark -

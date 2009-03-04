@@ -251,7 +251,7 @@ mozStorageConnection::Close()
     while (stmt = sqlite3_next_stmt(mDBConn, stmt)) {
         char *msg = PR_smprintf("SQL statement '%s' was not finalized",
                                 sqlite3_sql(stmt));
-        NS_ERROR(msg);
+        NS_WARNING(msg);
         PR_smprintf_free(msg);
     }
 #endif
@@ -447,14 +447,25 @@ mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
     return rv;
 }
 
-NS_IMETHODIMP
-mozStorageConnection::TableExists(const nsACString& aSQLStatement, PRBool *_retval)
+nsresult
+mozStorageConnection::DatabaseElementExists(enum DatabaseElementType aElementType,
+                                            const nsACString& aElementName,
+                                            PRBool *_exists)
 {
     if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-    nsCString query("SELECT name FROM sqlite_master WHERE type = 'table' AND name ='");
-    query.Append(aSQLStatement);
-    query.AppendLiteral("'");
+    nsCAutoString query("SELECT name FROM sqlite_master WHERE type = '");
+    switch (aElementType) {
+        case INDEX:
+            query.Append("index");
+            break;
+        case TABLE:
+            query.Append("table");
+            break;
+    }
+    query.Append("' AND name ='");
+    query.Append(aElementName);
+    query.Append("'");
 
     sqlite3_stmt *stmt = nsnull;
     int srv = sqlite3_prepare_v2(mDBConn, query.get(), -1, &stmt, NULL);
@@ -462,52 +473,35 @@ mozStorageConnection::TableExists(const nsACString& aSQLStatement, PRBool *_retv
         HandleSqliteError(query.get());
         return ConvertResultCode(srv);
     }
-
-    PRBool exists = PR_FALSE;
 
     srv = sqlite3_step(stmt);
     // we just care about the return value from step
     sqlite3_finalize(stmt);
 
     if (srv == SQLITE_ROW) {
-        exists = PR_TRUE;
-    } else if (srv == SQLITE_DONE) {
-        exists = PR_FALSE;
-    } else {
-        HandleSqliteError("TableExists finalize");
-        return ConvertResultCode(srv);
+        *_exists = PR_TRUE;
+        return NS_OK;
     }
-
-    *_retval = exists;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-mozStorageConnection::IndexExists(const nsACString& aIndexName, PRBool* _retval)
-{
-    if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
-
-    nsCString query("SELECT name FROM sqlite_master WHERE type = 'index' AND name ='");
-    query.Append(aIndexName);
-    query.AppendLiteral("'");
-
-    sqlite3_stmt *stmt = nsnull;
-    int srv = sqlite3_prepare_v2(mDBConn, query.get(), -1, &stmt, NULL);
-    if (srv != SQLITE_OK) {
-        HandleSqliteError(query.get());
-        return ConvertResultCode(srv);
-    }
-
-    *_retval = PR_FALSE;
-
-    srv = sqlite3_step(stmt);
-    (void)sqlite3_finalize(stmt);
-
-    if (srv == SQLITE_ROW) {
-        *_retval = PR_TRUE;
+    if (srv == SQLITE_DONE) {
+        *_exists = PR_FALSE;
+        return NS_OK;
     }
 
     return ConvertResultCode(srv);
+}
+
+NS_IMETHODIMP
+mozStorageConnection::TableExists(const nsACString& aTableName,
+                                  PRBool *_exists)
+{
+    return DatabaseElementExists(TABLE, aTableName, _exists);
+}
+
+NS_IMETHODIMP
+mozStorageConnection::IndexExists(const nsACString& aIndexName,
+                                  PRBool* _exists)
+{
+    return DatabaseElementExists(INDEX, aIndexName, _exists);
 }
 
 

@@ -47,7 +47,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIAppShell.h"
 #include "nsPIDOMEventTarget.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 // app component registration
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
@@ -153,7 +153,7 @@ class EmbedPrivate {
   // the appshell we have created
   static nsIAppShell            *sAppShell;
   // the list of all open windows
-  static nsVoidArray            *sWindowList;
+  static nsTArray<EmbedPrivate*> *sWindowList;
   // what is our profile path?
   static nsILocalFile           *sProfileDir;
   static nsISupports            *sProfileLock;

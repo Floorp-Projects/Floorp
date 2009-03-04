@@ -629,6 +629,9 @@ DocumentViewerImpl::SyncParentSubDocMap()
       nsCOMPtr<nsIDocument> parent_doc(do_QueryInterface(dom_doc));
 
       if (parent_doc) {
+        if (mDocument && parent_doc->GetSubDocumentFor(content) != mDocument) {
+          mDocument->SuppressEventHandling(parent_doc->EventHandlingSuppressed());
+        }
         return parent_doc->SetSubDocumentFor(content, mDocument);
       }
     }
@@ -1016,7 +1019,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // it was just loaded). Note: mDocument may be null now if the above
   // firing of onload caused the document to unload.
   if (mDocument)
-    mDocument->OnPageShow(restoring);
+    mDocument->OnPageShow(restoring, nsnull);
 
   // Now that the document has loaded, we can tell the presshell
   // to unsuppress painting.
@@ -1166,7 +1169,7 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
     return NS_ERROR_NULL_POINTER;
   }
 
-  mDocument->OnPageHide(!aIsUnload);
+  mDocument->OnPageHide(!aIsUnload, nsnull);
   if (aIsUnload) {
     // if Destroy() was called during OnPageHide(), mDocument is nsnull.
     NS_ENSURE_STATE(mDocument);
@@ -2226,7 +2229,7 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize)
       if (container) {
         container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
       }
-      if (!sameTypeParent) {
+      if (!sameTypeParent && mParentWidget->GetTransparencyMode() != eTransparencyTransparent) {
         containerView = nsnull;
       }
     }

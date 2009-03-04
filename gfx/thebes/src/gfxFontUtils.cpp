@@ -1168,6 +1168,10 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     //    matching platform/encoding/etc. and store offset/lengths
     NameRecordData names[EOTFixedHeader::EOT_NUM_NAMES] = {0};
     const NameRecord *nameRecord = reinterpret_cast<const NameRecord*>(aFontData + nameOffset + sizeof(NameHeader));
+    PRUint32 needNames = (1 << EOTFixedHeader::EOT_FAMILY_NAME_INDEX) | 
+                         (1 << EOTFixedHeader::EOT_STYLE_NAME_INDEX) | 
+                         (1 << EOTFixedHeader::EOT_FULL_NAME_INDEX) | 
+                         (1 << EOTFixedHeader::EOT_VERSION_NAME_INDEX);
 
     for (i = 0; i < nameCount; i++, nameRecord++) {
 
@@ -1182,38 +1186,36 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
         case NameRecord::NAME_ID_FAMILY:
             names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length = nameRecord->length;
+            needNames &= ~(1 << EOTFixedHeader::EOT_FAMILY_NAME_INDEX);
             break;
 
         case NameRecord::NAME_ID_STYLE:
             names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length = nameRecord->length;
+            needNames &= ~(1 << EOTFixedHeader::EOT_STYLE_NAME_INDEX);
             break;
 
         case NameRecord::NAME_ID_FULL:
             names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length = nameRecord->length;
+            needNames &= ~(1 << EOTFixedHeader::EOT_FULL_NAME_INDEX);
             break;
 
         case NameRecord::NAME_ID_VERSION:
             names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].offset = nameRecord->offset;
             names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length = nameRecord->length;
+            needNames &= ~(1 << EOTFixedHeader::EOT_VERSION_NAME_INDEX);
             break;
 
         default:
             break;
         }
 
-        if (names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length &&
-            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length &&
-            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length &&
-            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length)
+        if (needNames == 0)
             break;
     }
 
-    if (!(names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length &&
-          names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length &&
-          names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length &&
-          names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length)) 
+    if (needNames != 0) 
     {
         return NS_ERROR_FAILURE;
     }        

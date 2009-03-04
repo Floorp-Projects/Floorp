@@ -59,10 +59,11 @@ _TEST_FILES =	test_feed_discovery.html \
 		offlineChild2.cacheManifest^headers^ \
 		$(NULL)
 
-# browser_bug423833.js disabled temporarily since it's unreliable: bug 428712
-# browser_sanitize-download-history.js disabled temporarily since it's unreliable: bug 432425
-_BROWSER_FILES = browser_bug321000.js \
-                 browser_sanitize-timespans.js \
+# The following tests are disabled because they are unreliable:
+#   browser_bug321000.js is bug 474081
+#   browser_bug423833.js is bug 428712
+#   browser_sanitize-download-history.js is bug 432425
+_BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \

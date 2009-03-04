@@ -563,6 +563,15 @@ int oggz_get_numtracks (OGGZ * oggz);
  */
 long oggz_serialno_new (OGGZ * oggz);
 
+/**
+ * Return human-readable string representation of a content type
+ *
+ * \retval string the name of the content type
+ * \retval NULL \a content invalid
+ */
+const char *
+oggz_content_type (OggzStreamContent content);
+
 #include <oggz/oggz_off_t.h>
 #include <oggz/oggz_read.h>
 #include <oggz/oggz_stream.h>

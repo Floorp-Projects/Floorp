@@ -96,6 +96,12 @@ CMMSRCS += progressui_osx.mm launchchild_osx.mm
 OS_LIBS += -framework Cocoa
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS += \
+	readstrings.cpp \
+	$(NULL)
+endif
+
 ifndef HAVE_PROGRESSUI
 CPPSRCS += progressui_null.cpp
 endif
@@ -118,6 +124,11 @@ WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
 else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+libs:: updater.png
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

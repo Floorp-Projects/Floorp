@@ -56,7 +56,7 @@ CSRCS		= \
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) $(XT_LIBS) $(XLIBS)
 endif
 
-EXPORTS         = gtkxtbin.h gtk2xtbin.h 
+EXPORTS         = gtk2xtbin.h 
 
 REQUIRES	= xpcom
 

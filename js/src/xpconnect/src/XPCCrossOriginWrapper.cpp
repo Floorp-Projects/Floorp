@@ -1013,15 +1013,12 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  JSObject *callee = JSVAL_TO_OBJECT(argv[-2]);
-  NS_ASSERTION(GetWrappedObject(cx, callee), "How'd we get here?");
-  callee = GetWrappedObject(cx, callee);
-  if (!JS_CallFunctionValue(cx, obj, OBJECT_TO_JSVAL(callee), argc, argv,
+  if (!JS_CallFunctionValue(cx, obj, OBJECT_TO_JSVAL(wrappedObj), argc, argv,
                             rval)) {
     return JS_FALSE;
   }
 
-  return XPC_XOW_RewrapIfNeeded(cx, callee, rval);
+  return XPC_XOW_RewrapIfNeeded(cx, wrappedObj, rval);
 }
 
 static JSBool

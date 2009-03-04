@@ -51,6 +51,7 @@
 #include "nsDataHashtable.h"
 #include "nsINavHistoryService.h"
 #include "nsPIPlacesDatabase.h"
+#include "nsPIPlacesHistoryListenersNotifier.h"
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteController.h"
 #include "nsIAutoCompleteInput.h"
@@ -78,7 +79,6 @@
 #include "nsITreeView.h"
 #endif
 #include "nsString.h"
-#include "nsVoidArray.h"
 #include "nsWeakReference.h"
 #include "nsTArray.h"
 #include "nsINavBookmarksService.h"
@@ -136,17 +136,18 @@ class PlacesSQLQueryBuilder;
 
 // nsNavHistory
 
-class nsNavHistory : public nsSupportsWeakReference,
-                     public nsINavHistoryService,
-                     public nsIObserver,
-                     public nsIBrowserHistory,
-                     public nsIGlobalHistory3,
-                     public nsIDownloadHistory,
-                     public nsICharsetResolver
+class nsNavHistory : public nsSupportsWeakReference
+                   , public nsINavHistoryService
+                   , public nsIObserver
+                   , public nsIBrowserHistory
+                   , public nsIGlobalHistory3
+                   , public nsIDownloadHistory
+                   , public nsICharsetResolver
                    , public nsPIPlacesDatabase
+                   , public nsPIPlacesHistoryListenersNotifier
 #ifdef MOZ_XUL
-                     , public nsIAutoCompleteSearch,
-                     public nsIAutoCompleteSimpleResultListener
+                   , public nsIAutoCompleteSearch
+                   , public nsIAutoCompleteSimpleResultListener
 #endif
 {
   friend class AutoCompleteIntermediateResultSet;
@@ -165,6 +166,7 @@ public:
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLACESDATABASE
+  NS_DECL_NSPIPLACESHISTORYLISTENERSNOTIFIER
 #ifdef MOZ_XUL
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER

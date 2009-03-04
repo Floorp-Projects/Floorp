@@ -880,6 +880,9 @@ public:
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
   virtual void Thaw();
+  virtual void NeedsFocusOrBlurAfterSuppression(nsPIDOMEventTarget* aTarget,
+                                                PRUint32 aEventType);
+  virtual void FireOrClearDelayedEvents(PRBool aFireEvents);
 
   virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
 
@@ -1151,6 +1154,19 @@ protected:
   nsCOMPtr<nsIDragService>      mDragService;
   
   nsRevocableEventPtr<ReflowEvent> mReflowEvent;
+
+  struct nsBlurOrFocusTarget
+  {
+    nsBlurOrFocusTarget(nsPIDOMEventTarget* aTarget, PRUint32 aEventType)
+    : mTarget(aTarget), mEventType(aEventType) {}
+    nsBlurOrFocusTarget(const nsBlurOrFocusTarget& aOther)
+    : mTarget(aOther.mTarget), mEventType(aOther.mEventType) {}
+
+    nsCOMPtr<nsPIDOMEventTarget> mTarget;
+    PRUint32                     mEventType;
+  };
+
+  nsTArray<nsBlurOrFocusTarget> mDelayedBlurFocusTargets;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
@@ -5620,7 +5636,20 @@ PresShell::HandleEvent(nsIView         *aView,
     }
     return NS_OK;
   }
-  
+
+  PRBool widgetHandlingEvent =
+    (aEvent->message == NS_GOTFOCUS ||
+     aEvent->message == NS_LOSTFOCUS ||
+     aEvent->message == NS_ACTIVATE ||
+     aEvent->message == NS_DEACTIVATE);
+  if (mDocument && mDocument->EventHandlingSuppressed()) {
+    if (!widgetHandlingEvent) {
+      return NS_OK;
+    }
+  } else if (widgetHandlingEvent) {
+    mDelayedBlurFocusTargets.Clear();
+  }
+
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
 
   PRBool dispatchUsingCoordinates =
@@ -5662,7 +5691,7 @@ PresShell::HandleEvent(nsIView         *aView,
 #ifdef MOZ_XUL
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
-        nsTArray<nsIFrame*> popups = pm->GetOpenPopups();
+        nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
         PRUint32 i;
         // Search from top to bottom
         for (i = 0; i < popups.Length(); i++) {
@@ -6475,6 +6504,45 @@ PresShell::Freeze()
 
   if (mDocument)
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
+}
+
+void
+PresShell::FireOrClearDelayedEvents(PRBool aFireEvents)
+{
+  if (!aFireEvents) {
+    mDelayedBlurFocusTargets.Clear();
+    return;
+  }
+
+  if (!mIsDestroying && mDocument) {
+    nsCOMPtr<nsIDocument> doc = mDocument;
+    while (mDelayedBlurFocusTargets.Length() && !doc->EventHandlingSuppressed()) {
+      nsEvent event(PR_TRUE, mDelayedBlurFocusTargets[0].mEventType);
+      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+      nsEventDispatcher::Dispatch(mDelayedBlurFocusTargets[0].mTarget,
+                                  mPresContext, &event);
+      mDelayedBlurFocusTargets.RemoveElementAt(0);
+    }
+    if (!doc->EventHandlingSuppressed()) {
+      mDelayedBlurFocusTargets.Clear();
+    }
+  }
+}
+
+void
+PresShell::NeedsFocusOrBlurAfterSuppression(nsPIDOMEventTarget* aTarget,
+                                            PRUint32 aEventType)
+{
+  if (mDocument && mDocument->EventHandlingSuppressed()) {
+    for (PRUint32 i = mDelayedBlurFocusTargets.Length(); i > 0; --i) {
+      if (mDelayedBlurFocusTargets[i - 1].mTarget == aTarget &&
+          mDelayedBlurFocusTargets[i - 1].mEventType == aEventType) {
+        mDelayedBlurFocusTargets.RemoveElementAt(i - 1);
+      }
+    }
+
+    mDelayedBlurFocusTargets.AppendElement(nsBlurOrFocusTarget(aTarget, aEventType));
+  }
 }
 
 static void

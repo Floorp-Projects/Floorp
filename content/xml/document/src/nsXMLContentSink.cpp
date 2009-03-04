@@ -1510,6 +1510,10 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   mContentStack.Clear();
   mNotifyLevel = 0;
 
+  rv = HandleProcessingInstruction(NS_LITERAL_STRING("xml-stylesheet").get(),
+                                   NS_LITERAL_STRING("href=\"chrome://global/locale/intl.css\" type=\"text/css\"").get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   const PRUnichar* noAtts[] = { 0, 0 };
 
   NS_NAMED_LITERAL_STRING(errorNs,

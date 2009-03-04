@@ -81,13 +81,11 @@
         <xul:button class="searchbar-engine-button"
                     type="menu"
                     anonid="searchbar-engine-button"
-                    popup="_child"
                     chromedir="&locale.dir;">
           <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
           <xul:image class="searchbar-dropmarker-image"/>
           <xul:menupopup class="searchbar-popup"
-                         anonid="searchbar-popup"
-                         position="after_start">
+                         anonid="searchbar-popup">
             <xul:menuseparator/>
             <xul:menuitem class="open-engine-manager"
                           anonid="open-engine-manager"

@@ -876,6 +876,10 @@ PlacesTreeView.prototype = {
     else
       var columnType = aColumn.id;
 
+    // Set the "ltr" property on url cells
+    if (columnType == "url")
+      aProperties.AppendElement(this._getAtomFor("ltr"));
+
     if (columnType != "title")
       return;
 

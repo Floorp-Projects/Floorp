@@ -117,10 +117,6 @@ public:
                      PRUint32 aBufferWaitTime, float aInitialVolume);
   ~nsWaveStateMachine();
 
-  // Return current audio volume from the audio backend.  Result in range
-  // [0.0, 1.0].  Threadsafe.
-  float GetVolume();
-
   // Set specified volume.  aVolume must be in range [0.0, 1.0].
   // Threadsafe.
   void SetVolume(float aVolume);
@@ -354,6 +350,9 @@ private:
   // run.  This allows coalescing of these events as they can be produced
   // many times per second.
   PRPackedBool mPositionChangeQueued;
+
+  // True if paused.  Tracks only the play/paused state.
+  PRPackedBool mPaused;
 };
 
 nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder, nsMediaStream* aStream,
@@ -379,7 +378,8 @@ nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder, nsMediaStream* a
     mTimeOffset(0),
     mSeekTime(0.0),
     mMetadataValid(PR_FALSE),
-    mPositionChangeQueued(PR_FALSE)
+    mPositionChangeQueued(PR_FALSE),
+    mPaused(mNextState == STATE_PAUSED)
 {
   mMonitor = nsAutoMonitor::NewMonitor("nsWaveStateMachine");
   mDownloadStatistics.Start(PR_IntervalNow());
@@ -400,21 +400,12 @@ void
 nsWaveStateMachine::Play()
 {
   nsAutoMonitor monitor(mMonitor);
+  mPaused = PR_FALSE;
   if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING) {
     mNextState = STATE_PLAYING;
   } else {
     ChangeState(STATE_PLAYING);
   }
-}
-
-float
-nsWaveStateMachine::GetVolume()
-{
-  float volume = mInitialVolume;
-  if (mAudioStream) {
-    volume = mAudioStream->GetVolume();
-  }
-  return volume;
 }
 
 void
@@ -431,6 +422,7 @@ void
 nsWaveStateMachine::Pause()
 {
   nsAutoMonitor monitor(mMonitor);
+  mPaused = PR_TRUE;
   if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING) {
     mNextState = STATE_PAUSED;
   } else {
@@ -722,14 +714,21 @@ nsWaveStateMachine::Run()
         }
 
         if (mState == STATE_SEEKING && mSeekTime == seekTime) {
-          // Special case: if a seek was requested during metadata load,
+          // Special case #1: if a seek was requested during metadata load,
           // mNextState will have been clobbered.  This can only happen when
           // we're instantiating a decoder to service a seek request after
           // playback has ended, so we know that the clobbered mNextState
           // was PAUSED.
+          // Special case #2: if a seek is requested after the state machine
+          // entered STATE_ENDED but before the user has seen the ended
+          // event, playback has not ended as far as the user's
+          // concerned--the state machine needs to return to the last
+          // playback state.
           State nextState = mNextState;
           if (nextState == STATE_SEEKING) {
             nextState = STATE_PAUSED;
+          } else if (nextState == STATE_ENDED) {
+            nextState = mPaused ? STATE_PAUSED : STATE_PLAYING;
           }
           ChangeState(nextState);
         }
@@ -757,14 +756,14 @@ nsWaveStateMachine::Run()
         monitor.Enter();
       }
 
-      if (mState != STATE_SHUTDOWN) {
+      if (mState == STATE_ENDED) {
         nsCOMPtr<nsIRunnable> event =
           NS_NEW_RUNNABLE_METHOD(nsWaveDecoder, mDecoder, PlaybackEnded);
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-      }
 
-      while (mState != STATE_SHUTDOWN) {
-        monitor.Wait();
+        do {
+          monitor.Wait();
+        } while (mState == STATE_ENDED);
       }
       break;
 
@@ -823,6 +822,9 @@ IsValidStateTransition(State aStartState, State aEndState)
       return PR_TRUE;
     break;
   case STATE_ENDED:
+    if (aEndState == STATE_SEEKING)
+      return PR_TRUE;
+    /* fallthrough */
   case STATE_ERROR:
   case STATE_SHUTDOWN:
     break;
@@ -1284,15 +1286,6 @@ nsWaveDecoder::Pause()
   }
 }
 
-float
-nsWaveDecoder::GetVolume()
-{
-  if (!mPlaybackStateMachine) {
-    return mInitialVolume;
-  }
-  return mPlaybackStateMachine->GetVolume();
-}
-
 void
 nsWaveDecoder::SetVolume(float aVolume)
 {
@@ -1425,6 +1418,10 @@ void
 nsWaveDecoder::PlaybackEnded()
 {
   if (mShuttingDown) {
+    return;
+  }
+
+  if (!mPlaybackStateMachine->IsEnded()) {
     return;
   }
 

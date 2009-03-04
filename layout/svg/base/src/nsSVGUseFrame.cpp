@@ -79,6 +79,8 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
+  virtual PRBool IsLeaf() const;
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
@@ -155,6 +157,11 @@ nsSVGUseFrame::Destroy()
   use->DestroyAnonymousContent();
 }
 
+PRBool
+nsSVGUseFrame::IsLeaf() const
+{
+  return PR_TRUE;
+}
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:

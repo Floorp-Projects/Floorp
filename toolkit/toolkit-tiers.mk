@@ -195,10 +195,6 @@ ifdef MOZ_JPROF
 tier_toolkit_dirs        += tools/jprof
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-tier_toolkit_dirs       += xpfe/bootstrap/appleevents
-endif
-
 tier_toolkit_dirs	+= \
 	xpfe \
 	toolkit/components \

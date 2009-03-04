@@ -66,6 +66,8 @@ _TEST_FILES	= \
 	test_foreign.html \
 	test_fallback.html \
 	test_overlap.html \
+	test_redirectManifest.html \
+	test_redirectUpdateItem.html \
 	overlap.cacheManifest \
 	overlap.cacheManifest^headers^ \
 	test_updatingManifest.html \
@@ -84,6 +86,8 @@ _TEST_FILES	= \
 	bypass.cacheManifest \
 	bypass.cacheManifest^headers^ \
 	bypass.html \
+	dynamicRedirect.sjs \
+	explicitRedirect.sjs \
 	fallback.html \
 	fallback2.html \
 	fallbackTop.html \
@@ -99,8 +103,10 @@ _TEST_FILES	= \
 	onwhitelist.html^headers^ \
 	updatingIframe.sjs \
 	updatingImplicit.html \
+	manifestRedirect.sjs \
 	missingFile.cacheManifest \
 	missingFile.cacheManifest^headers^ \
+	redirects.sjs \
 	simpleManifest.cacheManifest \
 	simpleManifest.cacheManifest^headers^ \
 	updatingManifest.sjs \

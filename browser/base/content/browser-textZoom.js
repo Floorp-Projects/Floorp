@@ -86,6 +86,9 @@ var FullZoom = {
   // browser.zoom.siteSpecific preference cache
   _siteSpecificPref: undefined,
 
+  // browser.zoom.updateBackgroundTabs preference cache
+  updateBackgroundTabs: undefined,
+
   // whether we are in private browsing mode
   _inPrivateBrowsing: false,
 
@@ -131,18 +134,20 @@ var FullZoom = {
                               getService(Ci.nsIPrivateBrowsingService).
                               privateBrowsingEnabled;
 
-    // Listen for changes to the browser.zoom.siteSpecific preference so we can
-    // enable/disable per-site saving and restoring of zoom levels accordingly.
     this._siteSpecificPref =
       this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
-    this._prefBranch.addObserver("browser.zoom.siteSpecific", this, true);
+    this.updateBackgroundTabs = 
+      this._prefBranch.getBoolPref("browser.zoom.updateBackgroundTabs");
+    // Listen for changes to the browser.zoom branch so we can enable/disable
+    // updating background tabs and per-site saving and restoring of zoom levels.
+    this._prefBranch.addObserver("browser.zoom.", this, true);
   },
 
   destroy: function FullZoom_destroy() {
     let os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
     os.removeObserver(this, "private-browsing");
-    this._prefBranch.removeObserver("browser.zoom.siteSpecific", this);
+    this._prefBranch.removeObserver("browser.zoom.", this);
     this._cps.removeObserver(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
     delete this._cps;
@@ -209,6 +214,10 @@ var FullZoom = {
           case "browser.zoom.siteSpecific":
             this._siteSpecificPref =
               this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+            break;
+          case "browser.zoom.updateBackgroundTabs":
+            this.updateBackgroundTabs =
+              this._prefBranch.getBoolPref("browser.zoom.updateBackgroundTabs");
             break;
         }
         break;

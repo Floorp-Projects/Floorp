@@ -41,7 +41,7 @@
 
 #define MAX_TEXT_LEN 200
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef XP_WIN
 # include <windows.h>
   typedef WCHAR NS_tchar;
 #else

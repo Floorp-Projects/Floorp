@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=342513
+-->
+<head>
+  <title>Test SVG Length conversions</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=342513">Mozilla Bug 342513</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div">
+  </div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="1" id="svg">
+  </svg>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var svgDoc = document.getElementById('svg');
+  var divElem = document.getElementById('div');
+  var expectedWidth = divElem.clientWidth;
+  // test for the pixel width of the svg
+  is(svgDoc.width.baseVal.value, expectedWidth, 'svgDoc.width.baseVal.value');
+
+  // set the SVG width to ~50% in pixels
+  svgDoc.width.baseVal.newValueSpecifiedUnits(svgDoc.width.baseVal.SVG_LENGTHTYPE_PX, Math.floor(expectedWidth/2));
+  svgDoc.width.baseVal.convertToSpecifiedUnits(svgDoc.width.baseVal.SVG_LENGTHTYPE_PERCENTAGE);
+  // the valueInSpecifiedUnits should now be 50%
+  is(Math.round(svgDoc.width.baseVal.valueInSpecifiedUnits), 50, 'valueInSpecifiedUnits after convertToSpecifiedUnits');
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
