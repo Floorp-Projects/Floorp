@@ -69,6 +69,10 @@
 #include <Carbon/Carbon.h>
 #endif
 
+#ifdef XP_UNIX
+#include <limits.h>
+#endif
+
 #ifdef STANDALONE_REGISTRY
 #include <stdlib.h>
 #include <assert.h>
@@ -91,7 +95,11 @@
 #define MAX_PATH PATH_MAX
 #elif defined(XP_UNIX)
 #ifndef MAX_PATH
+#ifdef PATH_MAX
+#define MAX_PATH PATH_MAX
+#else
 #define MAX_PATH 1024
+#endif
 #endif
 #elif defined(XP_OS2)
 #ifndef MAX_PATH

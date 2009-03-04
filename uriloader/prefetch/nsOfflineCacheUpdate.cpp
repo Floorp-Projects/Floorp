@@ -494,6 +494,13 @@ nsOfflineCacheUpdateItem::OnChannelRedirect(nsIChannel *aOldChannel,
                                             nsIChannel *aNewChannel,
                                             PRUint32 aFlags)
 {
+    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
+        // Don't allow redirect in case of non-internal redirect and cancel
+        // the channel to clean the cache entry.
+        aOldChannel->Cancel(NS_ERROR_ABORT);
+        return NS_ERROR_ABORT;
+    }
+
     nsCOMPtr<nsIURI> newURI;
     nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
     if (NS_FAILED(rv))
@@ -502,7 +509,7 @@ nsOfflineCacheUpdateItem::OnChannelRedirect(nsIChannel *aOldChannel,
     nsCOMPtr<nsICachingChannel> oldCachingChannel =
         do_QueryInterface(aOldChannel);
     nsCOMPtr<nsICachingChannel> newCachingChannel =
-      do_QueryInterface(aOldChannel);
+        do_QueryInterface(aNewChannel);
     if (newCachingChannel) {
         rv = newCachingChannel->SetCacheForOfflineUse(PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -581,6 +588,42 @@ nsOfflineCacheUpdateItem::GetReadyState(PRUint16 *aReadyState)
     return NS_OK;
 }
 
+nsresult
+nsOfflineCacheUpdateItem::GetRequestSucceeded(PRBool * succeeded)
+{
+    *succeeded = PR_FALSE;
+
+    if (!mChannel)
+        return NS_OK;
+
+    nsresult rv;
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool reqSucceeded;
+    rv = httpChannel->GetRequestSucceeded(&reqSucceeded);
+    if (NS_ERROR_NOT_AVAILABLE == rv)
+        return NS_OK;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!reqSucceeded) {
+        LOG(("Request failed"));
+        return NS_OK;
+    }
+
+    nsresult channelStatus;
+    rv = httpChannel->GetStatus(&channelStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (NS_FAILED(channelStatus)) {
+        LOG(("Channel status=0x%08x", channelStatus));
+        return NS_OK;
+    }
+
+    *succeeded = PR_TRUE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::GetStatus(PRUint16 *aStatus)
 {
@@ -596,15 +639,6 @@ nsOfflineCacheUpdateItem::GetStatus(PRUint16 *aStatus)
     PRUint32 httpStatus;
     rv = httpChannel->GetResponseStatus(&httpStatus);
     if (rv == NS_ERROR_NOT_AVAILABLE) {
-        // Someone's calling this before we got a response... Check our
-        // ReadyState.  If we're at RECEIVING or LOADED, then this means the
-        // connection errored before we got any data; return a somewhat
-        // sensible error code in that case.
-        if (mState >= nsIDOMLoadStatus::RECEIVING) {
-            *aStatus = NS_ERROR_NOT_AVAILABLE;
-            return NS_OK;
-        }
-
         *aStatus = 0;
         return NS_OK;
     }
@@ -1241,11 +1275,11 @@ nsOfflineCacheUpdate::HandleManifest(PRBool *aDoUpdate)
     // Be pessimistic
     *aDoUpdate = PR_FALSE;
 
-    PRUint16 status;
-    nsresult rv = mManifestItem->GetStatus(&status);
+    PRBool succeeded;
+    nsresult rv = mManifestItem->GetRequestSucceeded(&succeeded);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (status == 0 || status >= 400 || !mManifestItem->ParseSucceeded()) {
+    if (!succeeded || !mManifestItem->ParseSucceeded()) {
         return NS_ERROR_FAILURE;
     }
 
@@ -1337,6 +1371,7 @@ nsOfflineCacheUpdate::LoadCompleted()
             mSucceeded = PR_FALSE;
 
             for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+                printf("(Bug 471227) Associating from noupdate\n");
                 AssociateDocument(mDocuments[i]);
             }
 
@@ -1374,12 +1409,12 @@ nsOfflineCacheUpdate::LoadCompleted()
     nsRefPtr<nsOfflineCacheUpdateItem> item = mItems[mCurrentItem];
     mCurrentItem++;
 
-    PRUint16 status;
-    rv = item->GetStatus(&status);
+    PRBool succeeded;
+    rv = item->GetRequestSucceeded(&succeeded);
 
-    // Check for failures.  4XX and 5XX errors on items explicitly
+    // Check for failures.  3XX, 4XX and 5XX errors on items explicitly
     // listed in the manifest will cause the update to fail.
-    if (NS_FAILED(rv) || status == 0 || status >= 400) {
+    if (NS_FAILED(rv) || !succeeded) {
         if (item->mItemType &
             (nsIApplicationCache::ITEM_EXPLICIT |
              nsIApplicationCache::ITEM_FALLBACK)) {
@@ -1424,6 +1459,7 @@ nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
     Finish();
 
     if (NS_FAILED(aStatus) && mRescheduleCount < kRescheduleLimit) {
+        printf("(Bug 471227) Rescheduling for manifest failure\n");
         // Reschedule this update.
         nsRefPtr<nsOfflineCacheUpdate> newUpdate =
             new nsOfflineCacheUpdate();
@@ -1853,6 +1889,18 @@ nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
     if (!existingCache) {
         LOG(("Update %p: associating app cache %s to document %p", this, mClientID.get(), aDocument));
 
+        {
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+            nsCAutoString spec;
+            if (doc->GetDocumentURI()) {
+                doc->GetDocumentURI()->GetSpec(spec);
+            }
+
+            printf("(Bug 471227) Associating app cache %p (%s) to document >%p< (%s)\n",
+                   mApplicationCache.get(), mClientID.get(),
+                   container.get(), spec.get());
+        }
+
         rv = container->SetApplicationCache(mApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1890,6 +1938,7 @@ nsOfflineCacheUpdate::Finish()
             }
 
             for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
+                printf("(Bug 471227) Associating documents from Finish()\n");
                 AssociateDocument(mDocuments[i]);
             }
         }

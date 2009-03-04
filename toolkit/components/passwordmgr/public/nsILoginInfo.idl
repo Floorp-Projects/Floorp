@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(9c87a9bd-bf8b-4fae-bdb8-70513b2877df)]
+[scriptable, uuid(c41b7dff-6b9b-42fe-b78d-113051facb05)]
 
 /**
  * An object containing information for a login stored by the
@@ -134,6 +134,15 @@ interface nsILoginInfo : nsISupports {
      *        If true, ignore the password when checking for match.
      */
     boolean matches(in nsILoginInfo aLoginInfo, in boolean ignorePassword);
+
+    /**
+     * Create an identical copy of the login, duplicating all of the login's
+     * nsILoginInfo and nsILoginMetaInfo properties.
+     *
+     * This allows code to be forwards-compatible, when additional properties
+     * are added to nsILoginMetaInfo (or nsILoginInfo) in the future.
+     */
+    nsILoginInfo clone();
 };
 
 %{C++

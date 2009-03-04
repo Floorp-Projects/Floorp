@@ -1015,7 +1015,7 @@ PRBool nsCaret::IsMenuPopupHidingCaret()
 #ifdef MOZ_XUL
   // Check if there are open popups.
   nsXULPopupManager *popMgr = nsXULPopupManager::GetInstance();
-  nsTArray<nsIFrame*> popups = popMgr->GetOpenPopups();
+  nsTArray<nsIFrame*> popups = popMgr->GetVisiblePopups();
 
   if (popups.Length() == 0)
     return PR_FALSE; // No popups, so caret can't be hidden by them.

@@ -1139,7 +1139,7 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
                                        aAppUnitsPerDevUnit);
             }
             details->mYOffset = !aBaselineDeltas ? 0.0f
-                : FixedToFloat(aBaselineDeltas[i])*aAppUnitsPerDevUnit;
+                : - FixedToFloat(aBaselineDeltas[i])*aAppUnitsPerDevUnit;
         }
     }
     if (detailedGlyphs.Length() == 0) {

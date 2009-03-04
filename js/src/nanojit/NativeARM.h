@@ -793,6 +793,13 @@ typedef enum {
         asm_output("fmrrd %s,%s,%s", gpn(_Rd), gpn(_Rn), gpn(_Dm));    \
     } while (0)
 
+#define FMRDH(_Rd,_Dn) do {                                             \
+        underrunProtect(4);                                             \
+        NanoAssert(IsGpReg(_Rd) && IsFpReg(_Dm));                       \
+        *(--_nIns) = (NIns)( COND_AL | (0xE3<<20) | (FpRegNum(_Dn)<<16) | ((_Rd)<<12) | (0xB<<8) | (1<<4) ); \
+        asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
+    } while (0)
+
 #define FSTD(_Dd,_Rn,_offs) do {                                        \
         underrunProtect(4);                                             \
         NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2));         \

@@ -113,3 +113,48 @@ nsIntSize nsHTMLVideoElement::GetVideoSize(nsIntSize aDefaultSize)
 {
   return mMediaSize.width == -1 && mMediaSize.height == -1 ? aDefaultSize : mMediaSize;
 }
+
+PRBool
+nsHTMLVideoElement::ParseAttribute(PRInt32 aNamespaceID,
+                                   nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
+{
+   if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
+     return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
+   }
+
+   return nsHTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                             aResult);
+}
+
+static void
+MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                      nsRuleData* aData)
+{
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLVideoElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+{
+  static const MappedAttributeEntry attributes[] = {
+    { &nsGkAtoms::width },
+    { &nsGkAtoms::height },
+    { nsnull }
+  };
+
+  static const MappedAttributeEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap
+  };
+
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+}
+
+nsMapRuleToAttributesFunc
+nsHTMLVideoElement::GetAttributeMappingFunction() const
+{
+  return &MapAttributesIntoRule;
+}

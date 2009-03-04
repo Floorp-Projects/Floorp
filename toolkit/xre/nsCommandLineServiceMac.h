@@ -40,13 +40,11 @@
 #ifndef nsCommandLineServiceMac_h_
 #define nsCommandLineServiceMac_h_
 
-#include <Files.h>
+#include <Carbon/Carbon.h>
 
 #include "nscore.h"
 #include "nsError.h"
 #include "nsString.h"
-
-#include "nsAEDefs.h"
 
 #ifdef __cplusplus
 
@@ -74,9 +72,7 @@ public:
   OSErr           HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileType);
 
 	OSErr						DispatchURLToNewBrowser(const char* url);
-	  
-  OSErr						Quit(TAskSave askSave);
-  
+
 protected:
 
   OSErr           OpenURL(const char* aURL);

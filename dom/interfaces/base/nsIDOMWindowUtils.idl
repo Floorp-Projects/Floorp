@@ -1,0 +1,323 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIDOMWindowUtils is intended for infrequently-used methods related
+ * to the current nsIDOMWindow.  Some of the methods may require
+ * elevated privileges; the method implementations should contain the
+ * necessary security checks.  Access this interface by calling
+ * getInterface on a DOMWindow.
+ */
+
+interface nsIDOMElement;
+interface nsIDOMHTMLCanvasElement;
+
+[scriptable, uuid(6e3510b9-806d-4a2a-be79-73d2a495b4b8)]
+interface nsIDOMWindowUtils : nsISupports {
+
+  /**
+   * Image animation mode of the window. When this attribute's value
+   * is changed, the implementation should set all images in the window
+   * to the given value. That is, when set to kDontAnimMode, all images
+   * will stop animating. The attribute's value must be one of the
+   * animationMode values from imgIContainer.
+   * @note Images may individually override the window's setting after
+   *       the window's mode is set. Therefore images given different modes
+   *       since the last setting of the window's mode may behave
+   *       out of line with the window's overall mode.
+   * @note The attribute's value is the window's overall mode. It may
+   *       for example continue to report kDontAnimMode after all images
+   *       have subsequently been individually animated.
+   * @note Only images immediately in this window are affected;
+   *       this is not recursive to subwindows.
+   * @see imgIContainer
+   */
+  attribute unsigned short imageAnimationMode;
+
+  /**
+   * Whether the charset of the window's current document has been forced by
+   * the user.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   */
+  readonly attribute boolean docCharsetIsForced;
+
+  /**
+   * Function to get metadata associated with the window's current document
+   * @param aName the name of the metadata.  This should be all lowercase.
+   * @return the value of the metadata, or the empty string if it's not set
+   *
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  AString getDocumentMetadata(in AString aName);
+
+  /**
+   * Force an immediate redraw of this window.  The parameter specifies
+   * the number of times to redraw, and the return value is the length,
+   * in milliseconds, that the redraws took.  If aCount is not specified
+   * or is 0, it is taken to be 1.
+   */
+  unsigned long redraw([optional] in unsigned long aCount);
+
+  /** Synthesize a mouse event for a window. The event types supported
+   *  are: 
+   *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Note that additional events may be fired as a result of this call. For
+   * instance, typically a click event will be fired as a result of a
+   * mousedown and mouseup in sequence.
+   *
+   * Normally at this level of events, the mouseover and mouseout events are
+   * only fired when the window is entered or exited. For inter-element
+   * mouseover and mouseout events, a movemove event fired on the new element
+   * should be sufficient to generate the correct over and out events as well.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aType event type
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
+   * @param aButton button to synthesize
+   * @param aClickCount number of clicks that have been performed
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
+   *                           during dispatch
+   */
+  void sendMouseEvent(in AString aType,
+                      in float aX,
+                      in float aY,
+                      in long aButton,
+                      in long aClickCount,
+                      in long aModifiers,
+                      [optional] in boolean aIgnoreRootScrollFrame);
+
+  /** Synthesize a mouse scroll event for a window. The event types supported
+   *  are: 
+   *    DOMMouseScroll
+   *    MozMousePixelScroll
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aType event type
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
+   * @param aButton button to synthesize
+   * @param aScrollFlags flag bits --- see nsMouseScrollFlags in nsGUIEvent.h
+   * @param aDelta the direction and amount to scroll (in lines or pixels,
+   * depending on the event type)
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendMouseScrollEvent(in AString aType,
+                            in float aX,
+                            in float aY,
+                            in long aButton,
+                            in long aScrollFlags,
+                            in long aDelta,
+                            in long aModifiers);
+
+  /**
+   * Synthesize a key event to the window. The event types supported are:
+   *   keydown, keyup, keypress
+   *
+   * Key events generally end up being sent to the focused node.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aType event type
+   * @param aKeyCode key code
+   * @param aCharCode character code
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aPreventDefault if true, preventDefault() the event before dispatch
+   *
+   * @return false if the event had preventDefault() called on it,
+   *               true otherwise.  In other words, true if and only if the
+   *               default action was taken.
+   */
+  boolean sendKeyEvent(in AString aType,
+                       in long aKeyCode,
+                       in long aCharCode,
+                       in long aModifiers,
+                       [optional] in boolean aPreventDefault);
+
+  /**
+   * See nsIWidget::SynthesizeNativeKeyEvent
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void sendNativeKeyEvent(in long aNativeKeyboardLayout,
+                          in long aNativeKeyCode,
+                          in long aModifierFlags,
+                          in AString aCharacters,
+                          in AString aUnmodifiedCharacters);
+
+  /**
+   * See nsIWidget::ActivateNativeMenuItemAt
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void activateNativeMenuItemAt(in AString indexString);
+
+  /**
+   * See nsIWidget::ForceUpdateNativeMenuAt
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void forceUpdateNativeMenuAt(in AString indexString);
+
+  /**
+   * Focus the element aElement. The element should be in the same document
+   * that the window is displaying. Pass null to blur the element, if any,
+   * that currently has focus, and focus the document.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aElement the element to focus
+   */
+  void focus(in nsIDOMElement aElement);
+
+  /**
+   * Force a garbage collection. This will run the cycle-collector twice to
+   * make sure all garbage is collected.
+   *
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges in non-debug builds. Available to all callers in debug builds.
+   */
+  void garbageCollect();
+
+  /**
+   * Force processing of any queued paints
+   */
+
+  void processUpdates();
+
+  /** Synthesize a simple gesture event for a window. The event types
+   *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
+   *  MozMagnifyGestureUpdate, MozMagnifyGesture,
+   *  MozRotateGestureStart, MozRotateGestureUpdate, and
+   *  MozRotateGesture.
+   *
+   * Cannot be accessed from unprivileged context (not
+   * content-accessible) Will throw a DOM security error if called
+   * without UniversalXPConnect privileges.
+   *
+   * @param aType event type
+   * @param aX x offset in CSS pixels
+   * @param aY y offset in CSS pixels
+   * @param aDirection direction, using constants defined in nsIDOMSimpleGestureEvent
+   * @param aDelta  amount of magnification or rotation for magnify and rotation events
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendSimpleGestureEvent(in AString aType,
+                              in float aX,
+                              in float aY,
+                              in unsigned long aDirection,
+                              in double aDelta,
+                              in long aModifiers);
+
+  /**
+   * Retrieve the element at point aX, aY in the window's document.
+   *
+   * @param aIgnoreRootScrollFrame whether or not to ignore the root scroll
+   *        frame when retrieving the element. If false, this method returns
+   *        null for coordinates outside of the viewport.
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   */
+  nsIDOMElement elementFromPoint(in long aX,
+                                 in long aY,
+                                 in boolean aIgnoreRootScrollFrame,
+                                 in boolean aFlushLayout);
+
+  /**
+   * Compare the two canvases, returning the number of differing pixels and
+   * the maximum difference in a channel.  This will throw an error if
+   * the dimensions of the two canvases are different.
+   *
+   * This method requires UniversalXPConnect privileges.
+   */
+  PRUint32 compareCanvases(in nsIDOMHTMLCanvasElement aCanvas1,
+                           in nsIDOMHTMLCanvasElement aCanvas2,
+                           out unsigned long aMaxDifference);
+
+  /**
+   * Returns true if a MozAfterPaint event has been queued but not yet
+   * fired.
+   */
+  readonly attribute boolean isMozAfterPaintPending;
+
+  /**
+   * Suppresses/unsuppresses user initiated event handling in window's document
+   * and subdocuments.
+   *
+   * @throw NS_ERROR_DOM_SECURITY_ERR if called without UniversalXPConnect
+   *        privileges and NS_ERROR_FAILURE if window doesn't have a document.
+   */
+  void suppressEventHandling(in boolean aSuppress);
+
+  void clearMozAfterPaintEvents();
+
+  /**
+   * Disable or enable non synthetic test mouse events on *all* windows.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible).
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aDisable  If true, disable all non synthetic test mouse events
+   *               on all windows.  Otherwise, enable them.
+   */
+  void disableNonTestMouseEvents(in boolean aDisable);
+};

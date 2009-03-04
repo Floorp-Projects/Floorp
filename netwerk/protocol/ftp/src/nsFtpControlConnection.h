@@ -102,6 +102,7 @@ public:
     nsString         mPassword;
     PRInt32          mSuspendedWrite;
     nsCString        mPwd;
+    PRUint32         mSessionId;
 
 private:
     nsCString mHost;

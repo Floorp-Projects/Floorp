@@ -65,11 +65,11 @@ _TEST_FILES =\
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
 		test_aria_token_attrs.html \
-		$(warning test_bug368835.xul temporarily disabled) \
 		test_bug420863.html \
 		test_cssattrs.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
+		test_events_tree.xul \
 		test_groupattrs.xul \
 		test_groupattrs.html \
 		test_name_markup.html \
@@ -87,7 +87,7 @@ _TEST_FILES =\
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleEditableText.html \
 		test_nsIAccessibleHyperLink.html \
-		$(warning test_nsIAccessibleHyperLink.xul temporarily disabled) \
+		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
 		test_nsIAccessibleTable_1.html \
@@ -111,7 +111,7 @@ _TEST_FILES =\
 		test_textboxes.html \
 		test_textboxes.xul \
 		testTextboxes.js \
-		test_bug429285.html \
+		treeview.js \
 		test_bug434464.html \
 		z_states_frame.html \
 		z_states_framearticle.html \

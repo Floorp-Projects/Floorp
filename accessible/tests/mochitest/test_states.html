@@ -14,6 +14,8 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
 
   <script type="application/javascript">
@@ -31,6 +33,10 @@
         testStates(checkboxElem, STATE_MIXED, 0, STATE_CHECKED);
       }
 
+      // test disabled group and all its descendants to see if they are
+      // disabled, too. See bug 429285.
+      testStatesInSubtree("group", STATE_UNAVAILABLE);
+
       SimpleTest.finish();
     }
 
@@ -45,6 +51,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=457219"
      title="nsIAccessible states testing">
     Mozilla Bug 457219
+  </a><br />
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429285"
+     title="Propagate aria-disabled to descendants">
+    Mozilla Bug 429285
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -57,5 +68,17 @@
        aria-expanded="true">combobox</div>
 
   <input type="checkbox" id="check1" value="I agree" checked="true"/>
+
+  <!-- Test that aria-disabled state gets propagated to all descendants -->
+  <div id="group" role="group" aria-disabled="true">
+    <button>hi</button>
+    <div tabindex="0" role="listbox" aria-activedescendant="item1">
+      <div role="option" id="item1">Item 1</div>
+      <div role="option" id="item2">Item 2</div>
+      <div role="option" id="item3">Item 3</div>
+      <div role="option" id="item4">Item 4</div>
+    </div>
+    <div role="slider" tabindex="0">A slider</div>
+  </div>
 </body>
 </html>

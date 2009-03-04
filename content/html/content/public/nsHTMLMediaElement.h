@@ -311,8 +311,8 @@ protected:
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
 
-  // Value of the volume before it was muted
-  float mMutedVolume;
+  // Current audio volume
+  float mVolume;
 
   // Size of the media. Updated by the decoder on the main thread if
   // it changes. Defaults to a width and height of -1 if not set.

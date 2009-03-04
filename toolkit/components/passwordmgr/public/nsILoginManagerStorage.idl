@@ -40,7 +40,7 @@
 interface nsIFile;
 interface nsILoginInfo;
 
-[scriptable, uuid(dec624d1-18ea-40ea-8ca5-69002153c8b8)]
+[scriptable, uuid(199ebbff-4656-4a18-8da9-9401c64619f9)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
@@ -71,30 +71,47 @@ interface nsILoginManagerStorage : nsISupports {
 
 
     /**
-     * Store a new login.
+     * Store a new login in the storage module.
      *
      * @param aLogin
      *        The login to be added.
+     *
+     * Default values for the login's nsILoginMetaInfo properties will be
+     * created. However, if the caller specifies non-default values, they will
+     * be used instead.
      */
     void addLogin(in nsILoginInfo aLogin);
 
 
     /**
-     * Remove a login from the login manager.
+     * Remove a login from the storage module.
      *
      * @param aLogin
      *        The login to be removed.
+     *
+     * The specified login must exactly match a stored login. However, the
+     * values of any nsILoginMetaInfo properties are ignored.
      */
     void removeLogin(in nsILoginInfo aLogin);
 
 
     /**
-     * Modify an existing login in the login manager.
+     * Modify an existing login in the storage module.
      *
-     * @param aLogin
+     * @param oldLogin
      *        The login to be modified.
+     * @param newLoginData
+     *        The new login values (either a nsILoginInfo or nsIProperyBag)
+     *
+     * If newLoginData is a nsILoginInfo, all of the old login's nsILoginInfo
+     * properties are changed to the values from newLoginData (but the old
+     * login's nsILoginMetaInfo properties are unmodified).
+     *
+     * If newLoginData is a nsIPropertyBag, only the specified properties
+     * will be changed. The nsILoginMetaInfo properties of oldLogin can be
+     * changed in this manner.
      */
-    void modifyLogin(in nsILoginInfo oldLogin, in nsILoginInfo newLogin);
+    void modifyLogin(in nsILoginInfo oldLogin, in nsISupports newLoginData);
 
 
     /**

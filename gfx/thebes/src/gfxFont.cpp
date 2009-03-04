@@ -502,7 +502,7 @@ NeedsGlyphExtents(gfxTextRun *aTextRun)
 gfxFont::RunMetrics
 gfxFont::Measure(gfxTextRun *aTextRun,
                  PRUint32 aStart, PRUint32 aEnd,
-                 PRBool aTightBoundingBox, gfxContext *aRefContext,
+                 BoundingBoxType aBoundingBoxType, gfxContext *aRefContext,
                  Spacing *aSpacing)
 {
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
@@ -523,7 +523,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     PRBool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
     gfxGlyphExtents *extents =
-        (!aTightBoundingBox && !NeedsGlyphExtents(aTextRun) && !aTextRun->HasDetailedGlyphs()) ? nsnull
+        (aBoundingBoxType == LOOSE_INK_EXTENTS &&
+            !NeedsGlyphExtents(aTextRun) &&
+            !aTextRun->HasDetailedGlyphs()) ? nsnull
         : GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
     double x = 0;
     if (aSpacing) {
@@ -536,10 +538,12 @@ gfxFont::Measure(gfxTextRun *aTextRun,
             double advance = glyphData->GetSimpleAdvance();
             // Only get the real glyph horizontal extent if we were asked
             // for the tight bounding box or we're in quality mode
-            if ((aTightBoundingBox || NeedsGlyphExtents(aTextRun)) && extents) {
+            if ((aBoundingBoxType != LOOSE_INK_EXTENTS ||
+                 NeedsGlyphExtents(aTextRun)) && extents) {
                 PRUint32 glyphIndex = glyphData->GetSimpleGlyph();
                 PRUint16 extentsWidth = extents->GetContainedGlyphWidthAppUnits(glyphIndex);
-                if (extentsWidth != gfxGlyphExtents::INVALID_WIDTH && !aTightBoundingBox) {
+                if (extentsWidth != gfxGlyphExtents::INVALID_WIDTH &&
+                    aBoundingBoxType == LOOSE_INK_EXTENTS) {
                     UnionRange(x, &advanceMin, &advanceMax);
                     UnionRange(x + direction*extentsWidth, &advanceMin, &advanceMax);
                 } else {
@@ -592,7 +596,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
         }
     }
 
-    if (!aTightBoundingBox) {
+    if (aBoundingBoxType == LOOSE_INK_EXTENTS) {
         UnionRange(x, &advanceMin, &advanceMax);
         gfxRect fontBox(advanceMin, -metrics.mAscent,
                         advanceMax - advanceMin, metrics.mAscent + metrics.mDescent);
@@ -1791,7 +1795,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
     if (HasNonOpaqueColor(aContext, currentColor) && HasSyntheticBold(this, aStart, aLength)) {
         needToRestore = PR_TRUE;
         // measure text, use the bounding box
-        gfxTextRun::Metrics metrics = MeasureText(aStart, aLength, PR_FALSE, aContext, aProvider);
+        gfxTextRun::Metrics metrics = MeasureText(aStart, aLength, gfxFont::LOOSE_INK_EXTENTS,
+                                                  aContext, aProvider);
         metrics.mBoundingBox.MoveBy(aPt);
         syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor, GetAppUnitsPerDevUnit());
     }
@@ -1856,7 +1861,8 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
 void
 gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont,
                                     PRUint32 aStart, PRUint32 aEnd,
-                                    PRBool aTight, gfxContext *aRefContext,
+                                    gfxFont::BoundingBoxType aBoundingBoxType,
+                                    gfxContext *aRefContext,
                                     PropertyProvider *aProvider,
                                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                     Metrics *aMetrics)
@@ -1864,14 +1870,15 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont,
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
         aSpacingStart, aSpacingEnd, &spacingBuffer);
-    Metrics metrics = aFont->Measure(this, aStart, aEnd, aTight, aRefContext,
+    Metrics metrics = aFont->Measure(this, aStart, aEnd, aBoundingBoxType, aRefContext,
                                      haveSpacing ? spacingBuffer.Elements() : nsnull);
     aMetrics->CombineWith(metrics, IsRightToLeft());
 }
 
 void
 gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
-    PRUint32 aStart, PRUint32 aEnd, PRBool aTight, gfxContext *aRefContext,
+    PRUint32 aStart, PRUint32 aEnd,
+    gfxFont::BoundingBoxType aBoundingBoxType, gfxContext *aRefContext,
     PropertyProvider *aProvider, Metrics *aMetrics)
 {
     if (aStart >= aEnd)
@@ -1884,7 +1891,8 @@ gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
     // First measure the complete ligature
     Metrics metrics;
     AccumulateMetricsForRun(aFont, data.mLigatureStart, data.mLigatureEnd,
-                            aTight, aRefContext, aProvider, aStart, aEnd, &metrics);
+                            aBoundingBoxType, aRefContext,
+                            aProvider, aStart, aEnd, &metrics);
 
     // Clip the bounding box to the ligature part
     gfxFloat bboxLeft = metrics.mBoundingBox.X();
@@ -1907,7 +1915,8 @@ gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
 
 gfxTextRun::Metrics
 gfxTextRun::MeasureText(PRUint32 aStart, PRUint32 aLength,
-                        PRBool aTightBoundingBox, gfxContext *aRefContext,
+                        gfxFont::BoundingBoxType aBoundingBoxType,
+                        gfxContext *aRefContext,
                         PropertyProvider *aProvider)
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
@@ -1923,20 +1932,20 @@ gfxTextRun::MeasureText(PRUint32 aStart, PRUint32 aLength,
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
         AccumulatePartialLigatureMetrics(font, start, ligatureRunStart,
-            aTightBoundingBox, aRefContext, aProvider, &accumulatedMetrics);
+            aBoundingBoxType, aRefContext, aProvider, &accumulatedMetrics);
 
         // XXX This sucks. We have to get glyph extents just so we can detect
-        // glyphs outside the font box, even when aTightBoundingBox is false,
+        // glyphs outside the font box, even when aBoundingBoxType is LOOSE,
         // even though in almost all cases we could get correct results just
         // by getting some ascent/descent from the font and using our stored
         // advance widths.
         AccumulateMetricsForRun(font,
-            ligatureRunStart, ligatureRunEnd, aTightBoundingBox,
+            ligatureRunStart, ligatureRunEnd, aBoundingBoxType,
             aRefContext, aProvider, ligatureRunStart, ligatureRunEnd,
             &accumulatedMetrics);
 
         AccumulatePartialLigatureMetrics(font, ligatureRunEnd, end,
-            aTightBoundingBox, aRefContext, aProvider, &accumulatedMetrics);
+            aBoundingBoxType, aRefContext, aProvider, &accumulatedMetrics);
     }
 
     return accumulatedMetrics;
@@ -1950,7 +1959,8 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                 PropertyProvider *aProvider,
                                 PRBool aSuppressInitialBreak,
                                 gfxFloat *aTrimWhitespace,
-                                Metrics *aMetrics, PRBool aTightBoundingBox,
+                                Metrics *aMetrics,
+                                gfxFont::BoundingBoxType aBoundingBoxType,
                                 gfxContext *aRefContext,
                                 PRBool *aUsedHyphenation,
                                 PRUint32 *aLastBreak,
@@ -2090,7 +2100,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
 
     if (aMetrics) {
         *aMetrics = MeasureText(aStart, charsFit - trimmableChars,
-            aTightBoundingBox, aRefContext, aProvider);
+            aBoundingBoxType, aRefContext, aProvider);
     }
     if (aTrimWhitespace) {
         *aTrimWhitespace = trimmableAdvance;

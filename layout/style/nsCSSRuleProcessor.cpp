@@ -335,11 +335,6 @@ static const PLDHashTableOps RuleHash_NameSpaceTable_Ops = {
 #undef RULE_HASH_STATS
 #undef PRINT_UNIVERSAL_RULES
 
-#ifdef DEBUG_dbaron
-#define RULE_HASH_STATS
-#define PRINT_UNIVERSAL_RULES
-#endif
-
 #ifdef RULE_HASH_STATS
 #define RULE_HASH_STAT_INCREMENT(var_) PR_BEGIN_MACRO ++(var_); PR_END_MACRO
 #else

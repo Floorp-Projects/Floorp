@@ -178,6 +178,19 @@ Assembler::genEpilogue()
     return _nIns;
 }
 
+/* ARM EABI (used by gcc/linux) calling conventions differ from Windows CE; use these
+ * as the default.
+ *
+ * - double arg following an initial dword arg use r0 for the int arg
+ *   and r2/r3 for the double; r1 is skipped
+ * - 3 dword args followed by a double arg cause r3 to be skipped,
+ *   and the double to be stuck on the stack.
+ *
+ * Under Windows CE, the arguments are placed in r0-r3 and then the stack,
+ * one dword at a time, with the high order dword of a quad/double coming
+ * first.  No registers are skipped as they are in the EABI case.
+ */
+
 void
 Assembler::asm_call(LInsp ins)
 {
@@ -193,11 +206,12 @@ Assembler::asm_call(LInsp ins)
 #endif
     atypes >>= 2;
 
+    bool arg0IsInt32FollowedByFloat = false;
+#ifndef UNDER_CE
     // we need to detect if we have arg0 as LO followed by arg1 as F;
     // in that case, we need to skip using r1 -- the F needs to be
     // loaded in r2/r3, at least according to the ARM EABI and gcc 4.2's
     // generated code.
-    bool arg0IsInt32FollowedByFloat = false;
     while ((atypes & 3) != ARGSIZE_NONE) {
         if (((atypes >> 2) & 3) == ARGSIZE_LO &&
             ((atypes >> 0) & 3) == ARGSIZE_F &&
@@ -208,6 +222,7 @@ Assembler::asm_call(LInsp ins)
         }
         atypes >>= 2;
     }
+#endif
 
 #ifdef NJ_ARM_VFP
     if (rsize == ARGSIZE_F) {
@@ -244,6 +259,21 @@ Assembler::asm_call(LInsp ins)
         Register r = (i + roffset) < 4 ? argRegs[i+roffset] : UnknownReg;
 #ifdef NJ_ARM_VFP
         if (sz == ARGSIZE_F) {
+#ifdef UNDER_CE
+            if (r >= R0 && r <= R2) {
+                // we can use up r0/r1, r1/r2, r2/r3 without anything special
+                roffset++;
+                FMRRD(r, nextreg(r), sr);
+            } else if (r == R3) {
+                // to use R3 gets complicated; we need to move the high dword
+                // into R3, and the low dword on the stack.
+                STR_preindex(Scratch, SP, -4);
+                FMRDL(Scratch, sr);
+                FMRDH(r, sr);
+            } else {
+                asm_pusharg(arg);
+            }
+#else
             if (r == R0 || r == R2) {
                 roffset++;
             } else if (r == R1) {
@@ -263,6 +293,7 @@ Assembler::asm_call(LInsp ins)
             } else {
                 asm_pusharg(arg);
             }
+#endif
         } else {
             asm_arg(sz, arg, r);
         }
@@ -271,6 +302,7 @@ Assembler::asm_call(LInsp ins)
         asm_arg(sz, arg, r);
 #endif
 
+        // Under CE, arg0IsInt32FollowedByFloat will always be false
         if (i == 0 && arg0IsInt32FollowedByFloat)
             roffset = 1;
     }
@@ -1373,14 +1405,24 @@ Assembler::asm_ld(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     int d = disp->constval();
     Register ra = getBaseReg(base, d, GpRegs);
-    if (op == LIR_ld || op == LIR_ldc)
+
+    // these will always be 4-byte aligned
+    if (op == LIR_ld || op == LIR_ldc) {
         LD(rr, d, ra);
-    else if (op == LIR_ldcb)
-        LDRB(rr, d, ra);
-    else if (op == LIR_ldcs)
+        return;
+    }
+
+    // these will be 2 or 4-byte aligned
+    if (op == LIR_ldcs) {
         LDRH(rr, d, ra);
-    else
-        NanoAssertMsg(0, "Unsupported instruction in asm_ld");
+    }
+
+    // aaand this is just any byte.
+    if (op == LIR_ldcb) {
+        LDRB(rr, d, ra);
+    }
+
+    NanoAssertMsg(0, "Unsupported instruction in asm_ld");
 }
 
 void

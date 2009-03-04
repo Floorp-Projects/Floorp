@@ -860,6 +860,10 @@ ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif
 
+ifeq ($(OS_ARCH),OS2)
+RUN_TEST_PROGRAM = $(topsrcdir)/testing/xpcshell/test_os2.cmd "$(DIST)"
+endif
+
 #
 # Java macros
 #

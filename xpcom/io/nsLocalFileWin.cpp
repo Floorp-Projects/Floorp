@@ -108,13 +108,14 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
     nsresult Init();
 private:
-    /* mDrives and mLetter share data
+    /* mDrives stores the null-separated drive names.
      * Init sets them.
-     * HasMoreElements reads mLetter.
-     * GetNext advances mLetter.
+     * HasMoreElements checks mStartOfCurrentDrive.
+     * GetNext advances mStartOfCurrentDrive.
      */
     nsString mDrives;
-    const PRUnichar *mLetter;
+    nsAString::const_iterator mStartOfCurrentDrive;
+    nsAString::const_iterator mEndOfDrivesString;
 };
 
 //----------------------------------------------------------------------------
@@ -899,40 +900,21 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
 
     // just do a sanity check.  if it has any forward slashes, it is not a Native path
     // on windows.  Also, it must have a colon at after the first char.
-
-    PRUnichar *path = nsnull;
-    PRInt32 pathLen = 0;
-
-    if (( 
-         !FindCharInReadable(L'/', begin, end) )   //normal path
-#ifndef WINCE
-        && (secondChar == L':') ||  // additional normal path condition
-        (secondChar == L'\\') &&    // addtional network path condition 
-#else
-        ||
-#endif 
-        (firstChar == L'\\')    // wince absolute path or network path
-
-         )
-    {
-        // This is a native path
-        path = ToNewUnicode(filePath);
-        pathLen = filePath.Length();
-    }
-
-    if (path == nsnull) {
+    if (FindCharInReadable(L'/', begin, end))
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
 
+#ifdef WINCE
+    if (firstChar != L'\\')
+#else
+    if (secondChar != L':' && (secondChar != L'\\' || firstChar != L'\\'))
+#endif
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+
+    mWorkingPath = filePath;
     // kill any trailing '\'
-    PRInt32 len = pathLen - 1;
-    if (path[len] == L'\\')
-    {
-        path[len] = L'\0';
-        pathLen = len;
-    }
+    if (mWorkingPath.Last() == L'\\')
+        mWorkingPath.Truncate(mWorkingPath.Length() - 1);
 
-    mWorkingPath.Adopt(path, pathLen);
     return NS_OK;
 
 }
@@ -3033,7 +3015,6 @@ nsLocalFile::GlobalShutdown()
 NS_IMPL_ISUPPORTS1(nsDriveEnumerator, nsISimpleEnumerator)
 
 nsDriveEnumerator::nsDriveEnumerator()
- : mLetter(0)
 {
 }
 
@@ -3046,32 +3027,39 @@ nsresult nsDriveEnumerator::Init()
     /* If the length passed to GetLogicalDriveStrings is smaller
      * than the length of the string it would return, it returns
      * the length required for the string. */
-    DWORD length = GetLogicalDriveStrings(0, 0);
+    DWORD length = GetLogicalDriveStringsW(0, 0);
     /* The string is null terminated */
     if (!EnsureStringLength(mDrives, length+1))
         return NS_ERROR_OUT_OF_MEMORY;
     if (!GetLogicalDriveStringsW(length, mDrives.BeginWriting()))
         return NS_ERROR_FAILURE;
-    mLetter = mDrives.get();
+    mDrives.BeginReading(mStartOfCurrentDrive);
+    mDrives.EndReading(mEndOfDrivesString);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDriveEnumerator::HasMoreElements(PRBool *aHasMore)
 {
-    *aHasMore = *mLetter != '\0';
+    *aHasMore = *mStartOfCurrentDrive != L'\0';
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
 {
-    /* GetLogicalDrives stored in mLetter is a concatenation
-     * of null terminated strings, followed by a null terminator. */
-    if (!*mLetter) {
+    /* GetLogicalDrives stored in mDrives is a concatenation
+     * of null terminated strings, followed by a null terminator.
+     * mStartOfCurrentDrive is an iterator pointing at the first
+     * character of the current drive. */
+    if (*mStartOfCurrentDrive == L'\0') {
         *aNext = nsnull;
         return NS_OK;
     }
-    nsString drive(mDrives);
-    mLetter += drive.Length() + 1;
+
+    nsAString::const_iterator driveEnd = mStartOfCurrentDrive;
+    FindCharInReadable(L'\0', driveEnd, mEndOfDrivesString);
+    nsString drive(Substring(mStartOfCurrentDrive, driveEnd));
+    mStartOfCurrentDrive = ++driveEnd;
+
     nsILocalFile *file;
     nsresult rv = NS_NewLocalFile(drive, PR_FALSE, &file);
 

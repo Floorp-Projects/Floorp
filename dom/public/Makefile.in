@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 GRE_MODULE	= 1
 
-DIRS		= idl coreEvents base
+DIRS		= coreEvents base
 
 XPIDLSRCS	= nsIEntropyCollector.idl \
 		  nsIScriptChannel.idl \

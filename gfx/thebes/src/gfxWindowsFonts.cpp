@@ -280,6 +280,14 @@ FontFamily::FindStyleVariations()
     faspd.ff = this;
 
     EnumFontFamiliesExW(hdc, &logFont, (FONTENUMPROCW)FontFamily::FamilyAddStylesProc, (LPARAM)&faspd, 0);
+#ifdef DEBUG
+    if (mVariations.Length() == 0) {
+        char msgBuf[256];
+        (void)sprintf(msgBuf, "no styles available in family \"%s\"",
+                      NS_ConvertUTF16toUTF8(mName).get());
+        NS_ASSERTION(mVariations.Length() != 0, msgBuf);
+    }
+#endif
 
     ReleaseDC(nsnull, hdc);
 
@@ -738,11 +746,12 @@ FontEntry::TestCharacterMap(PRUint32 aCh)
  *
  **********************************************************************/
 
-gfxWindowsFont::gfxWindowsFont(FontEntry *aFontEntry, const gfxFontStyle *aFontStyle)
+gfxWindowsFont::gfxWindowsFont(FontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+                               cairo_antialias_t anAntialiasOption)
     : gfxFont(aFontEntry, aFontStyle),
       mFont(nsnull), mAdjustedSize(0.0), mScriptCache(nsnull),
       mFontFace(nsnull), mScaledFont(nsnull),
-      mMetrics(nsnull)
+      mMetrics(nsnull), mAntialiasOption(anAntialiasOption)
 {
     mFontEntry = aFontEntry;
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
@@ -798,6 +807,9 @@ gfxWindowsFont::CairoScaledFont()
         cairo_matrix_init_identity(&identityMatrix);
 
         cairo_font_options_t *fontOptions = cairo_font_options_create();
+        if (mAntialiasOption != CAIRO_ANTIALIAS_DEFAULT) {
+            cairo_font_options_set_antialias(fontOptions, mAntialiasOption);
+        }
         mScaledFont = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
                                                &identityMatrix, fontOptions);
         cairo_font_options_destroy(fontOptions);
@@ -997,6 +1009,31 @@ gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     // XXX stuart may want us to do something faster here
     gfxFont::Draw(aTextRun, aStart, aEnd, aContext, aDrawToPath, aBaselineOrigin,
                   aSpacing);
+}
+
+gfxFont::RunMetrics
+gfxWindowsFont::Measure(gfxTextRun *aTextRun,
+                        PRUint32 aStart, PRUint32 aEnd,
+                        BoundingBoxType aBoundingBoxType,
+                        gfxContext *aRefContext,
+                        Spacing *aSpacing)
+{
+    // if aBoundingBoxType is TIGHT_HINTED_OUTLINE_EXTENTS
+    // and the underlying cairo font may be antialiased,
+    // we need to create a copy in order to avoid getting cached extents
+    if (aBoundingBoxType == TIGHT_HINTED_OUTLINE_EXTENTS &&
+        mAntialiasOption != CAIRO_ANTIALIAS_NONE) {
+        nsRefPtr<gfxWindowsFont> tempFont =
+            new gfxWindowsFont(GetFontEntry(), GetStyle(), CAIRO_ANTIALIAS_NONE);
+        if (tempFont) {
+            return tempFont->Measure(aTextRun, aStart, aEnd,
+                                     TIGHT_HINTED_OUTLINE_EXTENTS,
+                                     aRefContext, aSpacing);
+        }
+    }
+
+    return gfxFont::Measure(aTextRun, aStart, aEnd,
+                            aBoundingBoxType, aRefContext, aSpacing);
 }
 
 FontEntry*

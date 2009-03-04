@@ -434,8 +434,17 @@ nsTSubstring_CharT::Assign( const substring_tuple_type& tuple )
 
     size_type length = tuple.Length();
 
-    if (ReplacePrep(0, mLength, length) && length)
+    // don't use ReplacePrep here because it changes the length
+    char_type* oldData;
+    PRUint32 oldFlags;
+    if (MutatePrep(length, &oldData, &oldFlags)) {
+      if (oldData)
+        ::ReleaseData(oldData, oldFlags);
+
       tuple.WriteTo(mData, length);
+      mData[length] = 0;
+      mLength = length;
+    }
   }
 
 void

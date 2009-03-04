@@ -136,6 +136,11 @@ private:
                                        nsAString *aString);
 
   /**
+   * Calculates text equivalent from the value of given accessible.
+   */
+  static nsresult AppendFromValue(nsIAccessible *aAccessible,
+                                  nsAString *aString);
+  /**
    * Iterates DOM children and calculates text equivalent from each child node.
    */
   static nsresult AppendFromDOMChildren(nsIContent *aContent,
@@ -148,9 +153,11 @@ private:
   static nsresult AppendFromDOMNode(nsIContent *aContent, nsAString *aString);
 
   /**
-   * Concatenates strings and appends space between them.
+   * Concatenates strings and appends space between them. Returns true if
+   * text equivalent string was appended.
    */
-  static void AppendString(nsAString *aString, const nsAString& aTextEquivalent);
+  static PRBool AppendString(nsAString *aString,
+                             const nsAString& aTextEquivalent);
 
   /**
    * Map array from roles to name rules (constants of ETextEquivRule).

@@ -287,7 +287,8 @@ public:
 
 class gfxWindowsFont : public gfxFont {
 public:
-    gfxWindowsFont(FontEntry *aFontEntry, const gfxFontStyle *aFontStyle);
+    gfxWindowsFont(FontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+                   cairo_antialias_t anAntialiasOption = CAIRO_ANTIALIAS_DEFAULT);
     virtual ~gfxWindowsFont();
 
     virtual const gfxFont::Metrics& GetMetrics();
@@ -303,6 +304,12 @@ public:
     virtual void Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                       gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
                       Spacing *aSpacing);
+
+    virtual RunMetrics Measure(gfxTextRun *aTextRun,
+                               PRUint32 aStart, PRUint32 aEnd,
+                               BoundingBoxType aBoundingBoxType,
+                               gfxContext *aContextForTightBoundingBox,
+                               Spacing *aSpacing);
 
     virtual PRUint32 GetSpaceGlyph() {
         GetMetrics(); // ensure that the metrics are computed but don't recompute them
@@ -334,6 +341,8 @@ private:
     gfxFont::Metrics *mMetrics;
 
     LOGFONTW mLogFont;
+
+    cairo_antialias_t mAntialiasOption;
 
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 };

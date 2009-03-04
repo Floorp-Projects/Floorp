@@ -2362,7 +2362,8 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     *_retval = OBJECT_TO_JSVAL(aObject);
 
-    JSBool sameScope = objectscope == xpcscope;
+    JSBool sameOrigin;
+    JSBool sameScope = xpc_SameScope(objectscope, xpcscope, &sameOrigin);
     if(STOBJ_IS_SYSTEM(aObject) ||
        (sameScope &&
         (!XPC_XOW_ClassNeedsXOW(STOBJ_GET_CLASS(aObject)->name) ||
@@ -2373,22 +2374,25 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     if(aFilenameFlags & JSFILENAME_PROTECTED)
     {
-        NS_ASSERTION(!sameScope, "Bad filename flags");
         wrappedObj = XPCNativeWrapper::GetNewOrUsed(aJSContext, wrapper,
                                                     aPrincipal);
     }
     else if(aFilenameFlags & JSFILENAME_SYSTEM)
     {
-        NS_ASSERTION(!sameScope, "Bad filename flags");
         jsval val = OBJECT_TO_JSVAL(aObject);
         if(XPC_SJOW_Construct(aJSContext, nsnull, 1, &val, &val))
             wrappedObj = JSVAL_TO_OBJECT(val);
     }
-    else
+    else if (!sameOrigin)
     {
         jsval val = OBJECT_TO_JSVAL(aObject);
         if(XPC_XOW_WrapObject(aJSContext, aScope, &val, wrapper))
             wrappedObj = JSVAL_TO_OBJECT(val);
+    }
+    else
+    {
+        // Different scopes, but same origin, return the original object.
+        return NS_OK;
     }
 
     if(!wrappedObj)
@@ -2558,7 +2562,7 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    printf("Dumping 0x%lx. Value tag is %lu.\n", val, JSVAL_TAG(val));
+    printf("Dumping 0x%p. Value tag is %u.\n", (void *) val, (PRUint32) JSVAL_TAG(val));
     if(JSVAL_IS_NULL(val)) {
         printf("Value is null\n");
     }

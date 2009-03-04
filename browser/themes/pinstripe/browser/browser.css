@@ -897,11 +897,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 
-#identity-box:active > #page-proxy-stack,
-#identity-box[open="true"] > #page-proxy-stack {
-  opacity: 0.75;
-}
-
 statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
 }
@@ -1038,6 +1033,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   margin-top: 1px;
   padding-top: 8px;
   color: #ffffff;
+  background-color: transparent;
 }
 
 #editBookmarkPanelTitle {
@@ -1903,16 +1899,19 @@ tabpanels.plain {
 }
 
 /* - Active state */
+#identity-box.verifiedDomain[open="true"],
 #identity-box.verifiedDomain:hover:active {
   background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-active.png");
 }
 
+#identity-box.verifiedDomain[open="true"] > hbox,
 #identity-box.verifiedDomain:hover:active > hbox {
   padding: 0;
   background: url("chrome://browser/skin/urlbar/startcap-secure-mid-active.png") repeat-x center center;
   -moz-box-pack: center;
 }
 
+#identity-box.verifiedDomain[open="true"] > hbox > #identity-icon-label,
 #identity-box.verifiedDomain:hover:active > hbox > #identity-icon-label {
   background: url("chrome://browser/skin/urlbar/startcap-secure-end-active.png") no-repeat center right;
 }
@@ -1954,14 +1953,17 @@ tabpanels.plain {
 }
 
 /* - Active state */
+#identity-box.verifiedIdentity[open="true"],
 #identity-box.verifiedIdentity:hover:active {
   background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-active.png");
 }
 
+#identity-box.verifiedIdentity[open="true"] > hbox,
 #identity-box.verifiedIdentity:hover:active > hbox {
   background: url("chrome://browser/skin/urlbar/startcap-verified-mid-active.png") repeat-x center center;
 }
 
+#identity-box.verifiedIdentity[open="true"] > hbox > #identity-icon-label,
 #identity-box.verifiedIdentity:hover:active > hbox > #identity-icon-label {
   background: url("chrome://browser/skin/urlbar/startcap-verified-end-active.png") no-repeat center right;
 }

@@ -333,6 +333,12 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
   case SEC_OID_AVA_STATE_OR_PROVINCE:
     bundlekey = "CertDumpAVAState";
     break;
+  case SEC_OID_AVA_SURNAME:
+    bundlekey = "CertDumpSurname";
+    break;
+  case SEC_OID_AVA_GIVEN_NAME:
+    bundlekey = "CertDumpGivenName";
+    break;
   case SEC_OID_X509_SUBJECT_DIRECTORY_ATTR:
     bundlekey = "CertDumpSubjectDirectoryAttr";
     break;

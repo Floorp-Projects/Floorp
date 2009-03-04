@@ -202,21 +202,15 @@ void GetAutoCompleteBaseQuery(nsACString& aQuery) {
 // not be read later and we don't have an associated kAutoCompleteIndex_
   aQuery = NS_LITERAL_CSTRING(
       "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-        "h.visit_count, h.typed, h.frecency "
-      "FROM moz_places_temp h "
+        "h.visit_count, h.typed "
+      "FROM ("
+        "SELECT * FROM moz_places_temp "
+        "UNION ALL "
+        "SELECT * FROM moz_places "
+        "ORDER BY frecency DESC LIMIT ?2 OFFSET ?3) h "
       "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
       "WHERE h.frecency <> 0 "
-      "{ADDITIONAL_CONDITIONS} "
-      "UNION ALL "
-      "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-        "h.visit_count, h.typed, h.frecency "
-      "FROM moz_places h "
-      "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
-      "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-      "AND h.frecency <> 0 "
-      "{ADDITIONAL_CONDITIONS} "
-      // ORDER BY h.frecency
-      "ORDER BY 9 DESC LIMIT ?2 OFFSET ?3");
+      "{ADDITIONAL_CONDITIONS}");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

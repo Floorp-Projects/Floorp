@@ -771,7 +771,7 @@ pref("browser.ssl_override_behavior", 2);
 // 0 - do not show domain
 // 1 - show effectiveTLD + 1 (e.g. mozilla.org)
 // 2 - show full domain (e.g. bugzilla.mozilla.org)
-pref("browser.identity.ssl_domain_display", 0);
+pref("browser.identity.ssl_domain_display", 1);
 
 // True if the user should be prompted when a web application supports
 // offline apps.
@@ -782,6 +782,9 @@ pref("browser.zoom.full", true);
 
 // Whether or not to save and restore zoom levels on a per-site basis.
 pref("browser.zoom.siteSpecific", true);
+
+// Whether or not to update background tabs to the current zoom level.
+pref("browser.zoom.updateBackgroundTabs", true);
 
 // replace newlines with spaces when pasting into <input type="text"> fields
 pref("editor.singleLine.pasteNewlines", 2);
@@ -800,3 +803,7 @@ pref("browser.privatebrowsing.autostart", false);
 
 // Whether we should skip prompting before starting the private browsing mode
 pref("browser.privatebrowsing.dont_prompt_on_enter", false);
+
+// Don't try to alter this pref, it'll be reset the next time you use the
+// bookmarking dialog
+pref("browser.bookmarks.editDialog.firstEditField", "namePicker");

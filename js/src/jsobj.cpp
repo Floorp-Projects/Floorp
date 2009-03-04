@@ -169,7 +169,6 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
     JSObject *pobj;
     JSClass *clasp;
-    JSExtendedClass *xclasp;
 
     slot = (uint32) JSVAL_TO_INT(id);
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
@@ -190,14 +189,11 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (clasp == &js_CallClass || clasp == &js_BlockClass) {
             /* Censor activations and lexical scopes per ECMA-262. */
             *vp = JSVAL_NULL;
-        } else if (clasp->flags & JSCLASS_IS_EXTENDED) {
-            xclasp = (JSExtendedClass *) clasp;
-            if (xclasp->outerObject) {
-                pobj = xclasp->outerObject(cx, pobj);
-                if (!pobj)
-                    return JS_FALSE;
-                *vp = OBJECT_TO_JSVAL(pobj);
-            }
+        } else if (pobj->map->ops->thisObject) {
+            pobj = pobj->map->ops->thisObject(cx, pobj);
+            if (!pobj)
+                return JS_FALSE;
+            *vp = OBJECT_TO_JSVAL(pobj);
         }
     }
     return JS_TRUE;

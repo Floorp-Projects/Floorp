@@ -41,7 +41,7 @@
  * Flags to oggz_new(), oggz_open(), and oggz_openfd().
  * Can be or'ed together in the following combinations:
  * - OGGZ_READ | OGGZ_AUTO
- * - OGGZ_WRITE | OGGZ_NONSTRICT
+ * - OGGZ_WRITE | OGGZ_NONSTRICT | OGGZ_PREFIX | OGGZ_SUFFIX
  */
 enum OggzFlags {
   /** Read only */
@@ -63,12 +63,16 @@ enum OggzFlags {
   OGGZ_AUTO         = 0x20,
 
   /**
-   * Prefix
+   * Write Prefix: Assume that we are only writing the prefix of an
+   * Ogg stream, ie. disable checking for conformance with end-of-stream
+   * constraints.
    */
   OGGZ_PREFIX       = 0x40,
 
   /**
-   * Suffix
+   * Write Suffix: Assume that we are only writing the suffix of an
+   * Ogg stream, ie. disable checking for conformance with
+   * beginning-of-stream constraints.
    */
   OGGZ_SUFFIX       = 0x80
 
@@ -112,6 +116,7 @@ typedef enum OggzStreamContent {
   OGGZ_CONTENT_ANXDATA,
   OGGZ_CONTENT_CELT,
   OGGZ_CONTENT_KATE,
+  OGGZ_CONTENT_DIRAC,
   OGGZ_CONTENT_UNKNOWN
 } OggzStreamContent;
 
@@ -164,6 +169,12 @@ enum OggzError {
 
   /** no data available from IO, try again */
   OGGZ_ERR_IO_AGAIN                     = -16,
+
+  /** Hole (sequence number gap) detected in input data */
+  OGGZ_ERR_HOLE_IN_DATA                 = -17,
+
+  /** Out of memory */
+  OGGZ_ERR_OUT_OF_MEMORY                = -18,
 
   /** The requested serialno does not exist in this OGGZ */
   OGGZ_ERR_BAD_SERIALNO                 = -20,

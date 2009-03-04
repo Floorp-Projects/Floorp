@@ -131,8 +131,7 @@ nsSound::nsSound()
 
 nsSound::~nsSound()
 {
-    /* see above comment */
-    if (esdref != -1) {
+    if (esdref >= 0) {
         EsdCloseType EsdClose = (EsdCloseType) PR_FindFunctionSymbol(elib, "esd_close");
         if (EsdClose)
             (*EsdClose)(esdref);
@@ -151,19 +150,16 @@ nsSound::Init()
     mInited = PR_TRUE;
 
     if (!elib) {
-        /* we don't need to do esd_open_sound if we are only going to play files
-           but we will if we want to do things like streams, etc */
-        EsdOpenSoundType EsdOpenSound;
-
         elib = PR_LoadLibrary("libesd.so.0");
         if (elib) {
-            EsdOpenSound = (EsdOpenSoundType) PR_FindFunctionSymbol(elib, "esd_open_sound");
+            EsdOpenSoundType EsdOpenSound =
+                (EsdOpenSoundType) PR_FindFunctionSymbol(elib, "esd_open_sound");
             if (!EsdOpenSound) {
                 PR_UnloadLibrary(elib);
                 elib = nsnull;
             } else {
                 esdref = (*EsdOpenSound)("localhost");
-                if (!esdref) {
+                if (esdref < 0) {
                     PR_UnloadLibrary(elib);
                     elib = nsnull;
                 }
@@ -380,7 +376,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
             buf[j + 1] = audio[j];
         }
 
-	audio = buf;
+        audio = buf;
     }
 #endif
 

@@ -1060,6 +1060,7 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
 
   HIThemeTabDrawInfo tdi;
   tdi.version = 1;
+  tdi.kind = kHIThemeTabKindNormal;
 
   PRBool isSelected = IsSelectedTab(aFrame);
   PRBool isDisabled = IsDisabled(aFrame);

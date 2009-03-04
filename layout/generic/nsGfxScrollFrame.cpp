@@ -1323,6 +1323,19 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, newDirty, aLists);
   }
 
+  // Now display the scrollbars and scrollcorner. These parts are drawn
+  // in the border-background layer, on top of our own background and
+  // borders and underneath borders and backgrounds of later elements
+  // in the tree.
+  nsIFrame* kid = mOuter->GetFirstChild(nsnull);
+  while (kid) {
+    if (kid != mScrolledFrame) {
+      rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    kid = kid->GetNextSibling();
+  }
+
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
   // non-moving frames.
@@ -1347,18 +1360,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, PR_TRUE, mIsRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now display the scrollbars and scrollcorner
-  nsIFrame* kid = mOuter->GetFirstChild(nsnull);
-  // Put each child's background directly onto the content list
-  nsDisplayListSet scrollbarSet(aLists, aLists.Content());
-  while (kid) {
-    if (kid != mScrolledFrame) {
-      rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, scrollbarSet,
-                                            nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    kid = kid->GetNextSibling();
-  }
   return NS_OK;
 }
 

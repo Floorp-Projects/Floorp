@@ -829,9 +829,16 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   if (!aFrame->IsFrameOfType(nsIFrame::eSVG))
     return nsSVGIntegrationUtils::GetInitialMatrix(aFrame);
 
-  if (!aFrame->IsLeaf()) {
+  nsIAtom* type = aFrame->GetType();
+  if (!aFrame->IsLeaf() || type == nsGkAtoms::svgUseFrame) {
     // foreignObject is the one non-leaf svg frame that isn't a SVGContainer
-    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+    // XXXbz no, no, and once again NO.  If you're going to call virtual
+    // methods on frames you best make VERY sure you have the right classes.
+    // How about... an actual interface with GetCanvasTM hanging off it, and an
+    // actual QI to that here?  Otherwise any time someone happens to touch an
+    // IsLeaf() implementation we'll end up calling virtual methods on an
+    // object via the wrong vtable.  See bug 481100.
+    if (type == nsGkAtoms::svgForeignObjectFrame) {
       nsSVGForeignObjectFrame *foreignFrame =
         static_cast<nsSVGForeignObjectFrame*>(aFrame);
       return foreignFrame->GetCanvasTM();

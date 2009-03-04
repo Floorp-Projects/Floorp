@@ -87,6 +87,9 @@
  * Unescaping URI segments is unadvised unless there is intimate
  * knowledge of the underlying charset or there is no plan to display (or
  * otherwise enforce a charset on) the resulting URI substring.
+ *
+ * The correct way to create an nsIURI from a string is via
+ * nsIIOService.newURI.
  * 
  * @status FROZEN
  */
@@ -99,7 +102,13 @@ interface nsIURI : nsISupports
 
     /**
      * Returns a string representation of the URI. Setting the spec causes
-     * the new spec to be parsed, initializing the URI.
+     * the new spec to be parsed per the rules for the scheme the URI
+     * currently has.  In particular, setting the spec to a URI string with a
+     * different scheme will generally produce incorrect results; no one
+     * outside of a protocol handler implementation should be doing that.  If
+     * the URI stores information from the nsIIOService.newURI call used to
+     * create it other than just the parsed string, then behavior of this
+     * information on setting the spec attribute is undefined.
      *
      * Some characters may be escaped.
      */
@@ -115,7 +124,9 @@ interface nsIURI : nsISupports
 
     /**
      * The Scheme is the protocol to which this URI refers.  The scheme is
-     * restricted to the US-ASCII charset per RFC2396.
+     * restricted to the US-ASCII charset per RFC2396.  Setting this is
+     * highly discouraged outside of a protocol handler implementation, since
+     * that will generally lead to incorrect results.
      */
     attribute ACString scheme;
 
