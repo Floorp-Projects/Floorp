@@ -439,11 +439,13 @@ XPC_XOW_WrapFunction(JSContext *cx, JSObject *outerObj, JSObject *funobj,
   }
 
   JSObject *funWrapperObj = JS_GetFunctionObject(funWrapper);
-  if (!JS_SetReservedSlot(cx, funWrapperObj, 0, funobjVal)) {
+  *rval = OBJECT_TO_JSVAL(funWrapperObj);
+
+  if (!JS_SetReservedSlot(cx, funWrapperObj, XPCWrapper::eXOWWrappedFunctionSlot, funobjVal) ||
+      !JS_SetReservedSlot(cx, funWrapperObj, XPCWrapper::eAllAccessSlot, JSVAL_FALSE)) {
     return JS_FALSE;
   }
 
-  *rval = OBJECT_TO_JSVAL(funWrapperObj);
   return JS_TRUE;
 }
 
@@ -676,13 +678,10 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       if (!ssm) {
         return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
       }
-
-      PRUint32 check = isSet
-                       ? (PRUint32)nsIXPCSecurityManager::ACCESS_SET_PROPERTY
-                       : (PRUint32)nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
       rv = ssm->CheckPropertyAccess(cx, wrappedObj,
                                     STOBJ_GET_CLASS(wrappedObj)->name,
-                                    id, check);
+                                    id, isSet ? XPCWrapper::sSecMgrSetProp
+                                              : XPCWrapper::sSecMgrGetProp);
       if (NS_FAILED(rv)) {
         // The security manager threw an exception for us.
         return JS_FALSE;

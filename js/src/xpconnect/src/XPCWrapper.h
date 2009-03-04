@@ -142,6 +142,14 @@ public:
    */
   static JSNative sEvalNative;
 
+  typedef enum FunctionObjectSlot {
+    eXOWWrappedFunctionSlot = 0,
+    eAllAccessSlot = 1
+  };
+
+  // Helpful for keeping lines short:
+  static const PRUint32 sSecMgrSetProp, sSecMgrGetProp;
+
   /**
    * Given a context and a global object, fill our eval native.
    */
