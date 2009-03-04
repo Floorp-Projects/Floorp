@@ -41,7 +41,7 @@
 /*
  * JS array class.
  *
- * Array objects begin as "dense" arrays, optimized for numeric-only property
+ * Array objects begin as "dense" arrays, optimized for index-only property
  * access over a vector of slots (obj->dslots) with high load factor.  Array
  * methods optimize for denseness by testing that the object's class is
  * &js_ArrayClass, and can then directly manipulate the slots for efficiency.
@@ -60,7 +60,7 @@
  * are met:
  *  - the load factor (COUNT / capacity) is less than 0.25, and there are
  *    more than MIN_SPARSE_INDEX slots total
- *  - a property is set that is non-numeric (and not "length"); or
+ *  - a property is set that is not indexed (and not "length"); or
  *  - a property is defined that has non-default property attributes.
  *
  * Dense arrays do not track property creation order, so unlike other native
@@ -825,22 +825,20 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 {
-    /* Walk up the prototype chain and see if this indexed element already exists. */
-    for (;;) {
-        obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO]);
-
+    /*
+     * Walk up the prototype chain and see if this indexed element already
+     * exists. If we hit the end of the prototype chain, it's safe to set the
+     * element on the original object.
+     */
+   while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
         /*
-         * If we hit the end of the prototype chain, its safe to set the element on the
-         * original object.
+         * If the prototype is a non-native object (possibly a dense array), or
+         * a native object (possibly a slow array) that has indexed properties,
+         * return true.
          */
-        if (!obj)
-            break;
-
-        /*
-         * If the prototype is a dense array, or a non-dense array that has numeric
-         * properties, return true.
-         */
-        if (OBJ_IS_DENSE_ARRAY(cx, obj) || (SCOPE_HAS_INDEXED_PROPERTIES(OBJ_SCOPE(obj))))
+        if (!OBJ_IS_NATIVE(obj))
+            return JS_TRUE;
+        if (SCOPE_HAS_INDEXED_PROPERTIES(OBJ_SCOPE(obj)))
             return JS_TRUE;
     }
     return JS_FALSE;
