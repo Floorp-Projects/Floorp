@@ -240,10 +240,13 @@ JS_STATIC_ASSERT(offsetof(JSScope, title) == sizeof(JSObjectMap));
 #define SCOPE_MIDDLE_DELETE             0x0001
 #define SCOPE_SEALED                    0x0002
 #define SCOPE_BRANDED                   0x0004
+#define SCOPE_INDEXED_PROPERTIES        0x0008
 
 #define SCOPE_HAD_MIDDLE_DELETE(scope)  ((scope)->flags & SCOPE_MIDDLE_DELETE)
 #define SCOPE_SET_MIDDLE_DELETE(scope)  ((scope)->flags |= SCOPE_MIDDLE_DELETE)
 #define SCOPE_CLR_MIDDLE_DELETE(scope)  ((scope)->flags &= ~SCOPE_MIDDLE_DELETE)
+#define SCOPE_HAS_INDEXED_PROPERTIES(scope)  ((scope)->flags & SCOPE_INDEXED_PROPERTIES)
+#define SCOPE_SET_INDEXED_PROPERTIES(scope)  ((scope)->flags |= SCOPE_INDEXED_PROPERTIES)
 
 #define SCOPE_IS_SEALED(scope)          ((scope)->flags & SCOPE_SEALED)
 #define SCOPE_SET_SEALED(scope)         ((scope)->flags |= SCOPE_SEALED)

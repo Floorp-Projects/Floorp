@@ -325,23 +325,6 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         }
         return JS_FALSE;
     }
-
-    /*
-     * Maintain the "any Array prototype has indexed properties hazard" flag by
-     * conservatively setting it. We simply don't know what pobj has in the way
-     * of indexed properties, either directly or along its prototype chain, and
-     * we won't expend effort here to find out. We do know that if obj is not
-     * an array or a prototype (delegate), then we're ok. And, of course, pobj
-     * must be non-null.
-     *
-     * This pessimistic approach could be improved, but setting __proto__ is
-     * quite rare and arguably deserving of deoptimization.
-     */
-    if (slot == JSSLOT_PROTO &&
-        pobj &&
-        (OBJ_IS_ARRAY(cx, obj) || OBJ_IS_DELEGATE(cx, obj))) {
-        rt->anyArrayProtoHasElement = JS_TRUE;
-    }
     return JS_TRUE;
 }
 
@@ -3430,8 +3413,6 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                     LOCKED_OBJ_WRITE_BARRIER(cx, obj, (sprop)->slot, *(vp));  \
             }                                                                 \
         }                                                                     \
-        if (STOBJ_IS_DELEGATE(obj) && JSID_IS_INT(sprop->id))                 \
-            cx->runtime->anyArrayProtoHasElement = JS_TRUE;                   \
     JS_END_MACRO
 
 JSBool
