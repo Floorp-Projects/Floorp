@@ -256,6 +256,9 @@ nsHtml5TreeBuilder::end()
 #ifdef DEBUG_hsivonen
   printf("MAX INSERTION BATCH LEN: %d\n", sInsertionBatchMaxLength);
   printf("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize);
+  if (sAppendBatchExaminations != 0) {
+    printf("AVERAGE SLOTS EXAMINED: %d\n", sAppendBatchSlotsExamined / sAppendBatchExaminations);
+  }
 #endif
 }
 
@@ -445,15 +448,18 @@ nsHtml5TreeBuilder::Flush()
 {
   if (!mFlushing) {
     mFlushing = PR_TRUE;
+    PRUint32 opQueueLength = mOpQueue.Length();
+    mElementsSeenInThisAppendBatch.SetCapacity(opQueueLength * 2);
+    // XXX alloc failure
     const nsHtml5TreeOperation* start = mOpQueue.Elements();
-    const nsHtml5TreeOperation* end = start + mOpQueue.Length();
+    const nsHtml5TreeOperation* end = start + opQueueLength;
     for (nsHtml5TreeOperation* iter = (nsHtml5TreeOperation*)start; iter < end; ++iter) {
       iter->Perform(this);
     }
     FlushPendingAppendNotifications();
 #ifdef DEBUG_hsivonen
     if (mOpQueue.Length() > sInsertionBatchMaxLength) {
-      sInsertionBatchMaxLength = mOpQueue.Length();
+      sInsertionBatchMaxLength = opQueueLength;
     }
 #endif
     mOpQueue.Clear();
@@ -464,5 +470,7 @@ nsHtml5TreeBuilder::Flush()
 #ifdef DEBUG_hsivonen
 PRUint32 nsHtml5TreeBuilder::sInsertionBatchMaxLength = 0;
 PRUint32 nsHtml5TreeBuilder::sAppendBatchMaxSize = 0;
+PRUint32 nsHtml5TreeBuilder::sAppendBatchSlotsExamined = 0;
+PRUint32 nsHtml5TreeBuilder::sAppendBatchExaminations = 0;
 #endif
 
