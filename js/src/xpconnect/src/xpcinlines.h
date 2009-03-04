@@ -729,21 +729,24 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 }
 
 inline JSBool
-xpc_SameOrigin(XPCWrappedNativeScope *objectscope, XPCWrappedNativeScope *xpcscope)
+xpc_SameScope(XPCWrappedNativeScope *objectscope, XPCWrappedNativeScope *xpcscope,
+              JSBool *sameOrigin)
 {
-    if(objectscope == xpcscope)
+    if (objectscope == xpcscope)
+    {
+        *sameOrigin = JS_TRUE;
         return JS_TRUE;
+    }
 
     nsIPrincipal *objectprincipal = objectscope->GetPrincipal();
     nsIPrincipal *xpcprincipal = xpcscope->GetPrincipal();
-    PRBool sameOrigin;
     if(!objectprincipal || !xpcprincipal ||
-       NS_FAILED(objectprincipal->Equals(xpcprincipal, &sameOrigin)))
+       NS_FAILED(objectprincipal->Equals(xpcprincipal, sameOrigin)))
     {
-        return JS_FALSE;
+        *sameOrigin = JS_FALSE;
     }
 
-    return sameOrigin;
+    return JS_FALSE;
 }
 
 inline jsval
