@@ -1179,31 +1179,21 @@ private:
 
   /**
    * Move an already-constructed framelist into the inline frame at
-   * the tail end of an {ib} split.  Creates said inline if it doesn't
-   * already exist.
+   * the tail end of an {ib} split.
    *
    * @param aState the frame construction state we're using right now.
-   * @param aExistingEndFrame if non-null, the already-existing end frame.
-   * @param aIsPositioned Whether the end frame should be positioned.
-   * @param aContent the content node for this {ib} split.
-   * @param aStyleContext the style context to use for the new frame
+   * @param aExistingEndFrame the already-existing end frame.
    * @param aFramesToMove The frame list to move over
    * @param aBlockPart the block part of the {ib} split.
    * @param aTargetState if non-null, the target state to pass to
    *        MoveChildrenTo for float reparenting.
    * XXXbz test float reparenting?
-   *
-   * @note aIsPositioned, aContent, aStyleContext, are
-   *       only used if aExistingEndFrame is null.
    */
-  nsIFrame* MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
-                                     nsIFrame* aExistingEndFrame,
-                                     PRBool aIsPositioned,
-                                     nsIContent* aContent,
-                                     nsStyleContext* aStyleContext,
-                                     nsIFrame* aFramesToMove,
-                                     nsIFrame* aBlockPart,
-                                     nsFrameConstructorState* aTargetState);
+  void MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
+                                nsIFrame* aExistingEndFrame,
+                                nsIFrame* aFramesToMove,
+                                nsIFrame* aBlockPart,
+                                nsFrameConstructorState* aTargetState);
 
   nsresult ProcessInlineChildren(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,

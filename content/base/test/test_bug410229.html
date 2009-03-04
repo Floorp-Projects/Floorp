@@ -83,8 +83,8 @@ is(s.getBoundingClientRect().top, block.getBoundingClientRect().top,
    "'"+s.id+"' "+"IB-split span should start where its first line starts");
 is(s.getBoundingClientRect().bottom, block.getBoundingClientRect().bottom,
    "'"+s.id+"' "+"IB-split span should end where its last line ends");
-is(s.getClientRects().length, 2,
-   "'"+s.id+"' "+"IB-split span should have two CSS boxes");
+is(s.getClientRects().length, 3,
+   "'"+s.id+"' "+"IB-split span should have three CSS boxes");
 is(rects[0].left, rects[0].right,
    "'"+s.id+"' "+"IB-split span should have a zero width first rect");
 is(s.getBoundingClientRect().bottom, rects[1].bottom,
