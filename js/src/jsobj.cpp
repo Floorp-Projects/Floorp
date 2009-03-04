@@ -2070,7 +2070,11 @@ js_NewInstance(JSContext* cx, JSObject *ctor)
 
 JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CALLEE_PROTOTYPE, 0, 0)
 
-#endif /* JS_TRACER */
+#else  /* !JS_TRACER */
+
+# define js_Object_trcinfo NULL
+
+#endif /* !JS_TRACER */
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
