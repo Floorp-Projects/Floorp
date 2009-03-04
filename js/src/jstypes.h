@@ -451,6 +451,31 @@ typedef uintptr_t JSUword;
 #define JS_BITS_PER_WORD (JS_BITS_PER_BYTE * JS_BYTES_PER_WORD)
 #define JS_BITS_PER_DOUBLE (JS_BITS_PER_BYTE * JS_BYTES_PER_DOUBLE)
 
+/***********************************************************************
+** MACROS:      JS_FUNC_TO_DATA_PTR
+**              JS_DATA_TO_FUNC_PTR
+** DESCRIPTION:
+**      Macros to convert between function and data pointers assuming that
+**      they have the same size. Use them like this:
+**
+**      JSPropertyOp nativeGetter;
+**      JSObject *scriptedGetter;
+**      ...
+**      scriptedGetter = JS_FUNC_TO_DATA_PTR(JSObject *, nativeGetter);
+**      ...
+**      nativeGetter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, scriptedGetter);
+**
+***********************************************************************/
+
+#ifdef __GNUC__
+# define JS_FUNC_TO_DATA_PTR(type, fun) (__extension__ (type) (fun))
+# define JS_DATA_TO_FUNC_PTR(type, ptr) (__extension__ (type) (ptr))
+#else
+/* Use an extra (void *) cast for MSVC. */
+# define JS_FUNC_TO_DATA_PTR(type, fun) ((type) (void *) (fun))
+# define JS_DATA_TO_FUNC_PTR(type, ptr) ((type) (void *) (ptr))
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jstypes_h___ */
