@@ -221,52 +221,6 @@ js_CallTree(InterpState* state, Fragment* f)
     return lr;
 }
 
-JSObject* FASTCALL
-js_FastNewObject(JSContext* cx, JSObject* ctor)
-{
-    JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
-    JSClass* clasp = (FUN_INTERPRETED(fun) || (fun->flags & JSFUN_TRACEABLE))
-                     ? &js_ObjectClass
-                     : FUN_CLASP(fun);
-    JS_ASSERT(clasp != &js_ArrayClass);
-
-    JS_LOCK_OBJ(cx, ctor);
-    JSScope *scope = OBJ_SCOPE(ctor);
-    JS_ASSERT(scope->object == ctor);
-    JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
-
-    JSScopeProperty *sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
-    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
-    jsval v = LOCKED_OBJ_GET_SLOT(ctor, sprop->slot);
-    JS_UNLOCK_SCOPE(cx, scope);
-
-    JSObject* proto;
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]), 
-                                  INT_TO_JSID(JSProto_Object), &proto)) {
-            return NULL;
-        }
-    } else {
-        proto = JSVAL_TO_OBJECT(v);
-    }
-
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
-    if (!obj)
-        return NULL;
-
-    obj->classword = jsuword(clasp);
-    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    obj->fslots[JSSLOT_PARENT] = ctor->fslots[JSSLOT_PARENT];
-    for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
-        obj->fslots[i] = JSVAL_VOID;
-
-    obj->map = js_HoldObjectMap(cx, proto->map);
-    obj->dslots = NULL;
-    return obj;
-}
-
 JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {

@@ -79,7 +79,6 @@ BUILTIN2(extern, DOUBLE,    js_StringToNumber, CONTEXT, STRING,                 
 BUILTIN2(extern, INT32,     js_StringToInt32, CONTEXT, STRING,                  1, 1)
 BUILTIN2(FRIEND, BOOL,      js_CloseIterator, CONTEXT, JSVAL,                   0, 0)
 BUILTIN2(extern, SIDEEXIT,  js_CallTree, INTERPSTATE, FRAGMENT,                 0, 0)
-BUILTIN2(extern, OBJECT,    js_FastNewObject, CONTEXT, OBJECT,                  0, 0)
 BUILTIN3(extern, BOOL,      js_AddProperty, CONTEXT, OBJECT, SCOPEPROP,         0, 0)
 BUILTIN3(extern, BOOL,      js_HasNamedProperty, CONTEXT, OBJECT, STRING,       0, 0)
 BUILTIN3(extern, BOOL,      js_HasNamedPropertyInt32, CONTEXT, OBJECT, INT32,   0, 0)

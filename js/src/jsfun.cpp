@@ -2115,18 +2115,19 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     } else {
         fun->u.n.extra = 0;
         fun->u.n.spare = 0;
+        fun->u.n.clasp = NULL;
         if (flags & JSFUN_TRACEABLE) {
 #ifdef JS_TRACER
             JSTraceableNative *trcinfo =
                 JS_FUNC_TO_DATA_PTR(JSTraceableNative *, native);
             fun->u.n.native = (JSNative) trcinfo->native;
-            FUN_TRCINFO(fun) = trcinfo;
+            fun->u.n.trcinfo = trcinfo;
 #else
-            JS_ASSERT(0);
+            fun->u.n.trcinfo = NULL;
 #endif
         } else {
             fun->u.n.native = native;
-            FUN_CLASP(fun) = NULL;
+            fun->u.n.trcinfo = NULL;
         }
     }
     fun->atom = atom;
