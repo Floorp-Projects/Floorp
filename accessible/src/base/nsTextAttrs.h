@@ -368,4 +368,34 @@ private:
   nsIDeviceContext *mDC;
 };
 
+
+/**
+ * Class is used for the work with "font-weight" text attribute in
+ * nsTextAttrsMgr class.
+ */
+class nsFontWeightTextAttr : public nsTextAttr<PRInt32>
+{
+public:
+  nsFontWeightTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame);
+
+  // nsITextAttr
+  virtual nsIAtom *GetName() { return nsAccessibilityAtoms::fontWeight; }
+
+protected:
+
+  // nsTextAttr
+  virtual PRBool GetValueFor(nsIDOMElement *aElm, PRInt32 *aValue);
+  virtual void Format(const PRInt32& aValue, nsAString& aFormattedValue);
+
+private:
+
+  /**
+   * Return font weight for the given frame.
+   *
+   * @param aFrame      [in] the given frame to query font weight
+   * @return            font weight
+   */
+  PRInt32 GetFontWeight(nsIFrame *aFrame);
+};
+
 #endif
