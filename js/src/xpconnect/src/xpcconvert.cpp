@@ -1156,8 +1156,9 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             JSObject *flat = wrapper->GetFlatJSObject();
             jsval v = OBJECT_TO_JSVAL(flat);
 
+            JSBool sameOrigin;
             if (allowNativeWrapper &&
-                !xpc_SameOrigin(wrapper->GetScope(), xpcscope))
+                !xpc_SameScope(wrapper->GetScope(), xpcscope, &sameOrigin))
             {
                 // Cross scope access detected. Check if chrome code
                 // is accessing non-chrome objects, and if so, wrap
@@ -1218,6 +1219,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                         strongWrapper = wrapper;
 
                     JSObject *destObj = nsnull;
+                    JSBool triedWrapping = JS_FALSE;
                     if(flags & JSFILENAME_PROTECTED)
                     {
 #ifdef DEBUG_XPCNativeWrapper
@@ -1256,6 +1258,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                         destObj =
                             XPCNativeWrapper::GetNewOrUsed(ccx, wrapper,
                                                            objPrincipal);
+                        triedWrapping = JS_TRUE;
                     }
                     else if (flags & JSFILENAME_SYSTEM)
                     {
@@ -1266,17 +1269,20 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
                         if(XPC_SJOW_Construct(ccx, nsnull, 1, &v, &v))
                             destObj = JSVAL_TO_OBJECT(v);
+                        triedWrapping = JS_TRUE;
                     }
-                    else
+                    else if (!sameOrigin)
                     {
                         // Reaching across scopes from content code. Wrap
                         // the new object in a XOW.
                         if (XPC_XOW_WrapObject(ccx, scope, &v))
                             destObj = JSVAL_TO_OBJECT(v);
+                        triedWrapping = JS_TRUE;
                     }
 
-                    return destObj &&
-                           CreateHolderIfNeeded(ccx, destObj, d, dest);
+                    if(triedWrapping)
+                        return destObj &&
+                               CreateHolderIfNeeded(ccx, destObj, d, dest);
                 }
             }
 

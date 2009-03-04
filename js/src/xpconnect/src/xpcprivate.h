@@ -4068,7 +4068,9 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                                 JSObject *parent);
 
 inline JSBool
-xpc_SameOrigin(XPCWrappedNativeScope *objectscope, XPCWrappedNativeScope *xpcscope);
+xpc_SameScope(XPCWrappedNativeScope *objectscope,
+              XPCWrappedNativeScope *xpcscope,
+              JSBool *sameOrigin);
 
 nsISupports *
 XPC_GetIdentityObject(JSContext *cx, JSObject *obj);
