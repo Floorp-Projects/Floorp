@@ -2458,7 +2458,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     Fragmento* fragmento = tm->fragmento;
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only_v(printf("Blacklist: excessive stack use.\n"));
-        js_Blacklist(fragment);
+        js_Blacklist(fragment->root);
         return;
     }
     if (anchor && anchor->exitType != CASE_EXIT)
@@ -2472,7 +2472,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return;
     if (fragmento->assm()->error() != nanojit::None) {
         debug_only_v(printf("Blacklisted: error during compilation\n");)
-        js_Blacklist(fragment);
+        js_Blacklist(fragment->root);
         return;
     }
     if (anchor) {
@@ -2536,7 +2536,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
 
     if (callDepth != 0) {
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
-        js_Blacklist(fragment);
+        js_Blacklist(fragment->root);
         trashSelf = true;
         return false;
     }
@@ -2717,7 +2717,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
 
     if (callDepth != 0) {
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
-        js_Blacklist(fragment);
+        js_Blacklist(fragment->root);
         trashSelf = true;
         return;
     }
@@ -4270,7 +4270,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         /* If we hit the max peers ceiling, don't try to lookup fragments all the time. Thats
            expensive. This must be a rather type-unstable loop. */
         debug_only_v(printf("Blacklisted: too many peer trees.\n");)
-        js_Blacklist(f);
+        js_Blacklist(f->root);
         return false;
     }
 
