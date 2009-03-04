@@ -7802,11 +7802,18 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
 
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
     if (!guardDenseArrayIndex(obj, i, obj_ins, dslots_ins, idx_ins, BRANCH_EXIT)) {
-        LIns* rt_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime));
-        guard(true,
-              lir->ins_eq0(lir->insLoad(LIR_ldp, rt_ins,
-                                        offsetof(JSRuntime, anyArrayProtoHasElement))),
+        /*
+         * If we read a hole, make sure at recording time and at runtime that nothing along
+         * the prototype has numeric properties.
+         */
+        if (js_ObjectHasNumericPropertiesInAnyPrototype(cx, obj))
+            return false;
+
+        LIns* args[] = { obj_ins, cx_ins }; /* reverse order */
+        guard(false,
+              lir->ins_eq0(lir->insCall(&js_ObjectHasNumericPropertiesInAnyPrototype_ci, args)),
               MISMATCH_EXIT);
+
         // Return undefined and indicate that we didn't actually read this (addr_ins).
         v_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
         addr_ins = NULL;
@@ -9427,13 +9434,6 @@ TraceRecorder::record_JSOP_NEWARRAY()
     LIns* args[] = { lir->insImm(len), INS_CONSTPTR(proto), cx_ins };
     LIns* v_ins = lir->insCall(ci, args);
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
-
-    // De-optimize when we might have setters on Array.prototype.
-    LIns* rt_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime));
-    guard(true,
-          lir->ins_eq0(lir->insLoad(LIR_ldp, rt_ins,
-                                    offsetof(JSRuntime, anyArrayProtoHasElement))),
-          MISMATCH_EXIT);
 
     LIns* dslots_ins = NULL;
     for (uint32 i = 0; i < len; i++) {

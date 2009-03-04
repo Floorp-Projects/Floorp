@@ -577,15 +577,6 @@ struct JSRuntime {
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
     /*
-     * Runtime-wide flag set to true when any Array prototype has an indexed
-     * property defined on it, creating a hazard for code reading or writing
-     * over a hole from a dense Array instance that is not prepared to look up
-     * the proto chain (the writing case must involve a check for a read-only
-     * element, which cannot be shadowed).
-     */
-    JSBool              anyArrayProtoHasElement;
-
-    /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other
      * fields of JSRuntime after enabling the corresponding metering macro.
