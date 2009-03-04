@@ -900,40 +900,21 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
 
     // just do a sanity check.  if it has any forward slashes, it is not a Native path
     // on windows.  Also, it must have a colon at after the first char.
-
-    PRUnichar *path = nsnull;
-    PRInt32 pathLen = 0;
-
-    if (( 
-         !FindCharInReadable(L'/', begin, end) )   //normal path
-#ifndef WINCE
-        && (secondChar == L':') ||  // additional normal path condition
-        (secondChar == L'\\') &&    // addtional network path condition 
-#else
-        ||
-#endif 
-        (firstChar == L'\\')    // wince absolute path or network path
-
-         )
-    {
-        // This is a native path
-        path = ToNewUnicode(filePath);
-        pathLen = filePath.Length();
-    }
-
-    if (path == nsnull) {
+    if (FindCharInReadable(L'/', begin, end))
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
 
+#ifdef WINCE
+    if (firstChar != L'\\')
+#else
+    if (secondChar != L':' && (secondChar != L'\\' || firstChar != L'\\'))
+#endif
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+
+    mWorkingPath = filePath;
     // kill any trailing '\'
-    PRInt32 len = pathLen - 1;
-    if (path[len] == L'\\')
-    {
-        path[len] = L'\0';
-        pathLen = len;
-    }
+    if (mWorkingPath.Last() == L'\\')
+        mWorkingPath.Truncate(mWorkingPath.Length() - 1);
 
-    mWorkingPath.Adopt(path, pathLen);
     return NS_OK;
 
 }
