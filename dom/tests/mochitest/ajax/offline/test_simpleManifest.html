@@ -97,11 +97,17 @@ if (OfflineTest.setup()) {
   applicationCache.onerror = OfflineTest.failEvent;
 
   applicationCache.addEventListener("checking", function() {
-    OfflineTest.is(applicationCache.status, 2, "CHECKING state while checking");
+    // We should get the "checking" event during an initial update,
+    // but until we are associated it will not affect applicationCache.status
+    OfflineTest.is(applicationCache.status, applicationCache.UNCACHED,
+                   "CHECKING state during initial update");
     gGotChecking = true;
     }, true);
   applicationCache.ondownloading = function() {
-    OfflineTest.is(applicationCache.status, 3, "DOWNLOADING state while checking")
+    // We should get the "downloading" event during an initial update,
+    // but until we are associated it will not affect applicationCache.status
+    OfflineTest.is(applicationCache.status, applicationCache.UNCACHED,
+                   "DOWNLOADING state during initial update")
     gGotDownloading = true; };
   applicationCache.oncached = OfflineTest.priv(manifestUpdated);
 }

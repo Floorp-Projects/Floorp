@@ -308,15 +308,13 @@ private:
 };
 
 class nsOfflineCacheUpdateService : public nsIOfflineCacheUpdateService
-                                  , public nsIWebProgressListener
                                   , public nsIObserver
-                                  , public nsSupportsWeakReference
                                   , public nsOfflineCacheUpdateOwner
+                                  , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATESERVICE
-    NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIOBSERVER
 
     nsOfflineCacheUpdateService();
@@ -345,12 +343,6 @@ private:
     nsresult ProcessNextUpdate();
 
     nsTArray<nsRefPtr<nsOfflineCacheUpdate> > mUpdates;
-
-    struct PendingUpdate {
-        nsCOMPtr<nsIURI> mManifestURI;
-        nsCOMPtr<nsIURI> mDocumentURI;
-    };
-    nsClassHashtable<nsVoidPtrHashKey, PendingUpdate> mDocUpdates;
 
     PRBool mDisabled;
     PRBool mUpdateRunning;
