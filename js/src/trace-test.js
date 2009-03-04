@@ -19,6 +19,12 @@ if ("gSkipSlowTests" in this && gSkipSlowTests) {
     gDoMandelbrotTest = false;
 }
 
+if (!('gSrcdir' in this))
+    gSrcdir = '.';
+
+if (!('gReportSummary' in this))
+    gReportSummary = true;
+
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
@@ -139,7 +145,7 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
                    });
     if (pass) {
       passes.push(desc);
-      return print(desc, ": passed");
+      return print("TEST-PASS | trace-test.js |", desc);
     }
   }
   fails.push(desc);
@@ -164,7 +170,7 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
                        }
                      });
   }
-  print(desc, ": FAILED: expected", typeof(expected),
+  print("TEST-UNEXPECTED-FAIL | trace-test.js |", desc, ": expected", typeof(expected),
         "(", uneval(expected), ")",
         (expectedStats ? " [" + expectedStats + "] " : ""),
         "!= actual",
@@ -4481,14 +4487,14 @@ test(testLambdaCtor);
  *                                                                           *
  *****************************************************************************/
 
-load("math-trace-tests.js");
+load(gSrcdir + "/math-trace-tests.js");
 
 // BEGIN MANDELBROT STUFF
 // XXXbz I would dearly like to wrap it up into a function to avoid polluting
 // the global scope, but the function ends up heavyweight, and then we lose on
 // the jit.
 if (gDoMandelbrotTest) {
-load("mandelbrot-results.js");
+load(gSrcdir + "/mandelbrot-results.js");
 //function testMandelbrotAll() {
   // Configuration options that affect which codepaths we follow.
   var doImageData = true;
@@ -4763,5 +4769,7 @@ testGlobalProtoAccess.expected = "ok";
 test(testGlobalProtoAccess);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
-print("\npassed:", passes.length && passes.join(","));
-print("\nFAILED:", fails.length && fails.join(","));
+if (gReportSummary) {
+    print("\npassed:", passes.length && passes.join(","));
+    print("\nFAILED:", fails.length && fails.join(","));
+ }
