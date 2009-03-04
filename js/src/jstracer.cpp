@@ -3571,6 +3571,13 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     Fragment* f = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc, ti->globalShape);
     if (nesting_enabled && f) {
 
+        /* Cannot handle treecalls with callDepth > 0 and argc > nargs, see bug 480244. */
+        if (r->getCallDepth() > 0 && 
+            cx->fp->argc > cx->fp->fun->nargs) {
+            js_AbortRecording(cx, "Can't call inner tree with extra args in pending frame");
+            return false;
+        }
+
         /* Make sure inner tree call will not run into an out-of-memory condition. */
         if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
             !js_ReplenishReservedPool(cx, tm)) {
