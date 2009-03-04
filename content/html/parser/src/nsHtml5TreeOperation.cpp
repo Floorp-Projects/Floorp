@@ -153,8 +153,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       return rv;
     }
     case eTreeOpStartLayout: {
-      aBuilder->FlushPendingAppendNotifications();
-      aBuilder->StartLayout();
+      aBuilder->StartLayout(); // this causes a flush anyway
       return rv;
     }
     default: {
