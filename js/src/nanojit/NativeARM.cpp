@@ -1415,11 +1415,13 @@ Assembler::asm_ld(LInsp ins)
     // these will be 2 or 4-byte aligned
     if (op == LIR_ldcs) {
         LDRH(rr, d, ra);
+        return;
     }
 
     // aaand this is just any byte.
     if (op == LIR_ldcb) {
         LDRB(rr, d, ra);
+        return;
     }
 
     NanoAssertMsg(0, "Unsupported instruction in asm_ld");
