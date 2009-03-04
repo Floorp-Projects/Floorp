@@ -198,8 +198,8 @@ JS_FRIEND_API(JSBool)
 js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          jsdouble *dest);
 
-JSBool JS_FASTCALL
-js_ObjectHasNumericPropertiesInAnyPrototype(JSContext *cx, JSObject *obj);
+JSBool
+js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
 
 JS_END_EXTERN_C
 

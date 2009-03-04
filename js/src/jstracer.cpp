@@ -7706,6 +7706,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
          * This trace will be valid as long as neither the object nor any object
          * on its prototype chain change shape.
          */
+        LIns* exit = snapshot(BRANCH_EXIT);
         for (;;) {
             LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
             LIns* ops_ins;
@@ -7714,7 +7715,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                                           "shape");
                 guard(true,
                       addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
-                      BRANCH_EXIT);
+                      exit);
             } else if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
                 ABORT_TRACE("non-native object involved in undefined property access");
 
@@ -7814,13 +7815,23 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
          * If we read a hole, make sure at recording time and at runtime that nothing along
          * the prototype has numeric properties.
          */
-        if (js_ObjectHasNumericPropertiesInAnyPrototype(cx, obj))
+        if (js_PrototypeHasIndexedProperties(cx, obj))
             return false;
 
-        LIns* args[] = { obj_ins, cx_ins }; /* reverse order */
-        guard(false,
-              lir->ins_eq0(lir->insCall(&js_ObjectHasNumericPropertiesInAnyPrototype_ci, args)),
-              MISMATCH_EXIT);
+        LIns* exit = snapshot(BRANCH_EXIT);
+        while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
+            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+            LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+            LIns* ops_ins;
+            if (!map_is_native(obj->map, map_ins, ops_ins))
+                ABORT_TRACE("non-native object involved along prototype chain");
+
+            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
+                                      "shape");
+            guard(true,
+                  addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard(shape)"),
+                  exit);
+        }
 
         // Return undefined and indicate that we didn't actually read this (addr_ins).
         v_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
