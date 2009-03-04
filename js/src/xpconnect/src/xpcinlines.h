@@ -731,12 +731,14 @@ xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 inline JSBool
 xpc_SameOrigin(XPCWrappedNativeScope *objectscope, XPCWrappedNativeScope *xpcscope)
 {
-    PRBool sameOrigin;
+    if(objectscope == xpcscope)
+        return JS_TRUE;
+
     nsIPrincipal *objectprincipal = objectscope->GetPrincipal();
     nsIPrincipal *xpcprincipal = xpcscope->GetPrincipal();
-    if((!objectprincipal || !xpcprincipal) &&
-       (!(sameOrigin = objectscope == xpcscope) ||
-        NS_FAILED(objectprincipal->Equals(xpcprincipal, &sameOrigin))))
+    PRBool sameOrigin;
+    if(!objectprincipal || !xpcprincipal ||
+       NS_FAILED(objectprincipal->Equals(xpcprincipal, &sameOrigin)))
     {
         return JS_FALSE;
     }
