@@ -1531,8 +1531,7 @@ tabbrowser > tabbox {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
 }
 
-.tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image,
-.tabbrowser-arrowscrollbox > .tabs-newtab-button:not(:hover) > .toolbarbutton-icon {
+.tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image {
   opacity: .6;
 }
 
@@ -1562,6 +1561,11 @@ tabbrowser > tabbox {
   text-align: center;
   height: 24px;
   background-image: url(chrome://browser/skin/tabbrowser/tab-bkgnd.png);
+}
+
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  width: 34px;
+  padding-top: 1px;
 }
 
 .tabbrowser-tab[selected="true"] {
