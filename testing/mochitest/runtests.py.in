@@ -394,12 +394,12 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if options.fatalAssertions:
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
-  (status, start) = automation.runApp(testURL, browserEnv, options.app,
-                                      PROFILE_DIRECTORY, options.browserArgs,
-                                      runSSLTunnel = True,
-                                      utilityPath=options.utilityPath,
-                                      xrePath=options.xrePath,
-                                      certPath=options.certPath)
+  status = automation.runApp(testURL, browserEnv, options.app,
+                             PROFILE_DIRECTORY, options.browserArgs,
+                             runSSLTunnel = True,
+                             utilityPath = options.utilityPath,
+                             xrePath = options.xrePath,
+                             certPath = options.certPath)
 
   # Server's no longer needed, and perhaps more importantly, anything it might
   # spew to console shouldn't disrupt the leak information table we print next.
@@ -475,12 +475,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     if not seenTotal:
       log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | missing output line for total leaks!")
     leaks.close()
-
-
-  # print test run times
-  finish = datetime.now()
-  log.info(" started: %s", str(start))
-  log.info("finished: %s", str(finish))
 
   # delete the profile and manifest
   os.remove(manifest)
