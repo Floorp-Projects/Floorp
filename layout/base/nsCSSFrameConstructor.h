@@ -322,10 +322,12 @@ private:
                           nsIFrame*                aParentFrame,
                           nsFrameItems&            aFrameItems);
 
-  void AddFrameConstructionItem(nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aParentFrame,
-                                nsTArray<FrameConstructionItem>& aItems);
+  // Add the frame construction items for the given aContent and aParentFrame
+  // to the list.  This might add more than one item in some rare cases.
+  void AddFrameConstructionItems(nsFrameConstructorState& aState,
+                                 nsIContent*              aContent,
+                                 nsIFrame*                aParentFrame,
+                                 nsTArray<FrameConstructionItem>& aItems);
 
   nsresult ConstructDocElementFrame(nsFrameConstructorState& aState,
                                     nsIContent*              aDocElement,
@@ -738,8 +740,6 @@ private:
     PRInt32 mNameSpaceID;
     // The style context to use for creating the new frame.
     nsRefPtr<nsStyleContext> mStyleContext;
-    // Whether to allow page-break stuff around this frame.
-    PRPackedBool mAllowPageBreaks;
     // Whether this is a text content item.
     PRPackedBool mIsText;
     // Whether this is generated content.  If it is, mContent is a strong
@@ -834,21 +834,9 @@ private:
                               nsFrameItems&            aFrameItems,
                               PRBool                   aPseudoParent);
 
-  nsresult ConstructPageBreakFrame(nsFrameConstructorState& aState,
-                                   nsIContent*              aContent,
-                                   nsIFrame*                aParentFrame,
-                                   nsStyleContext*          aStyleContext,
-                                   nsFrameItems&            aFrameItems);
-
-  // Construct a page break frame if page-break-before:always is set in aStyleContext
-  // and add it to aFrameItems. Return true if page-break-after:always is set on aStyleContext.
-  // Don't do this for row groups, rows or cell, because tables handle those internally.
-  PRBool PageBreakBefore(nsFrameConstructorState& aState,
-                         nsIContent*              aContent,
-                         nsIFrame*                aParentFrame,
-                         nsStyleContext*          aStyleContext,
-                         const FrameConstructionData* aFCData,
-                         nsFrameItems&            aFrameItems);
+  void AddPageBreakItem(nsIContent* aContent,
+                        nsStyleContext* aMainStyleContext,
+                        nsTArray<FrameConstructionItem>& aItems);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not HTML.
@@ -893,14 +881,15 @@ private:
 #define ITEM_ALLOW_PAGE_BREAK 0x2
   /* The item is a generated content item. */
 #define ITEM_IS_GENERATED_CONTENT 0x4
-  void AddFrameConstructionItemInternal(nsFrameConstructorState& aState,
-                                        nsIContent*              aContent,
-                                        nsIFrame*                aParentFrame,
-                                        nsIAtom*                 aTag,
-                                        PRInt32                  aNameSpaceID,
-                                        nsStyleContext*          aStyleContext,
-                                        PRUint32                 aFlags,
-                                        nsTArray<FrameConstructionItem>& aItems);
+  // The guts of AddFrameConstructionItems
+  void AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
+                                         nsIContent*              aContent,
+                                         nsIFrame*                aParentFrame,
+                                         nsIAtom*                 aTag,
+                                         PRInt32                  aNameSpaceID,
+                                         nsStyleContext*          aStyleContext,
+                                         PRUint32                 aFlags,
+                                         nsTArray<FrameConstructionItem>& aItems);
 
   // On success, always puts something in aChildItems
   nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
