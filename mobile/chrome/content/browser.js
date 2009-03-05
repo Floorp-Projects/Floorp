@@ -138,6 +138,8 @@ var Browser = {
       
       if (Browser._isStartup) {
         ws.endUpdateBatch();
+        Browser.canvasBrowser.endLoading();
+        Browser._selectedTab.updateThumbnail();
         Browser._isStartup = false;
       }
     }
@@ -1142,10 +1144,12 @@ ProgressController.prototype = {
       // focus the dom window
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
-
-      Browser.canvasBrowser.endLoading();
+      
+      if (!this._isStartup)
+        Browser.canvasBrowser.endLoading();
     }
-    this._tab.updateThumbnail();
+    if (!this._isStartup)
+      this._tab.updateThumbnail();
   },
 
  // Properties used to cache security state used to update the UI

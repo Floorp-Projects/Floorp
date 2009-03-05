@@ -38,7 +38,7 @@
             let ctx = canvas.getContext("2d");
 
             if (srcCanvas) {
-              ctx.drawImage(srcCanvas, 0, 0, tabWidth, tabHeight)
+              ctx.drawImage(srcCanvas, 0, -tabHeight, tabWidth, tabHeight*3)
             }
             else {
               let width = domWin.innerWidth;

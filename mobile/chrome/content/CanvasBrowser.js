@@ -225,6 +225,7 @@ CanvasBrowser.prototype = {
     this._maybeZoomToPage = false;
     this.zoomToPage();
     // flush the region, to reduce prepareForPanning delay
+    // and to avoid getting a black border in tab thumbnail
     this.flushRegion();
     
     if (this._drawInterval) {
