@@ -51,6 +51,7 @@ _TEST_FILES =\
 		attributes.js \
 		common.js \
 		events.js \
+		layout.js \
 		namerules.xml \
 		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
@@ -66,6 +67,7 @@ _TEST_FILES =\
 		test_aria_role_equation.html \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
+		test_childAtPoint.xul \
 		test_cssattrs.html \
 		test_events_caretmove.html \
 		test_events_mutation.html \
