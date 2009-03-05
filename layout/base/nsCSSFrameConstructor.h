@@ -768,8 +768,6 @@ private:
    *        pointer to point to the list the child frame should go into.
    * @param aSaveState the nsFrameConstructorSaveState we can use for pushing a
    *        float containing block if we have to do it.
-   * @param aSuppressFrame whether we should not create a frame below this
-   *        parent
    * @param aCreatedPseudo whether we had to create a pseudo-parent
    * @return NS_OK on success, NS_ERROR_OUT_OF_MEMORY and such as needed.
    */
@@ -785,7 +783,6 @@ private:
                              nsStyleContext*              aStyleContext,
                              nsFrameItems* &              aFrameItems,
                              nsFrameConstructorSaveState& aSaveState,
-                             PRBool&                      aSuppressFrame,
                              PRBool&                      aCreatedPseudo);
 
   // END TABLE SECTION
@@ -905,6 +902,7 @@ private:
                                         PRUint32                 aFlags,
                                         nsTArray<FrameConstructionItem>& aItems);
 
+  // On success, always puts something in aChildItems
   nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
                                    FrameConstructionItem& aItem,
                                    nsIFrame* aParentFrame,
