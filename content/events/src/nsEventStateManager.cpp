@@ -3455,22 +3455,6 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
       hotspotY = framecursor.mHotspotY;
   }
 
-  // Check whether or not to show the busy cursor
-  nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
-  if (!docShell) return;
-  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-  docShell->GetBusyFlags(&busyFlags);
-
-  // Show busy cursor everywhere before page loads
-  // and just replace the arrow cursor after page starts loading
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY &&
-        (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT))
-  {
-    cursor = NS_STYLE_CURSOR_SPINNING;
-    container = nsnull;
-  }
-
   if (aTargetFrame) {
     SetCursor(cursor, container, haveHotspot, hotspotX, hotspotY,
               aTargetFrame->GetWindow(), PR_FALSE);
