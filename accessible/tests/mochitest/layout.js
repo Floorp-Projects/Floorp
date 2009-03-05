@@ -16,8 +16,11 @@ function testChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild,
     return;
 
   var actualChildAcc = getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild);
-  is(childAcc, actualChildAcc,
-     "Wrong child accessible at the point (" + aX + ", " + aY + ") of accessible '" + prettyName(aIdentifier)) + "'";  
+  var msg = "Wrong " + (aFindDeepestChild ? "deepest" : "direct");
+  msg += " child accessible [" + prettyName(actualChildAcc);
+  msg += "] at the point (" + aX + ", " + aY + ") of accessible [";
+  msg += prettyName(aIdentifier) + "]";
+  is(childAcc, actualChildAcc, msg);
 }
 
 /**
