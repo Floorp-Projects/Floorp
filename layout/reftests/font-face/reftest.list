@@ -29,7 +29,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-list-format-7.html src-list
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
 skip-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full.html src-list-local-full-ref.html # bug 468387 (windows)
 skip-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full-quotes.html src-list-local-full-ref.html # bug 468387 (windows)
-HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
+skip HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html # bug 481729
 
 # Postscript name lookup only supported on MacOS currently
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
