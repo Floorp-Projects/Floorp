@@ -694,21 +694,30 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     nsresult rv = EnsureJarInput(PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
+    // These variables must only be set if we're going to trigger an
+    // OnStartRequest, either from AsyncRead or OnDownloadComplete.
+    mListener = listener;
+    mListenerContext = ctx;
+    mIsPending = PR_TRUE;
     if (mJarInput) {
-        // create input stream pump
+        // create input stream pump and call AsyncRead as a block
         rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mJarInput);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_SUCCEEDED(rv))
+            rv = mPump->AsyncRead(this, nsnull);
 
-        rv = mPump->AsyncRead(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
+        // If we failed to create the pump or initiate the AsyncRead,
+        // then we need to clear these variables.
+        if (NS_FAILED(rv)) {
+            mIsPending = PR_FALSE;
+            mListenerContext = nsnull;
+            mListener = nsnull;
+            return rv;
+        }
     }
 
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nsnull);
 
-    mListener = listener;
-    mListenerContext = ctx;
-    mIsPending = PR_TRUE;
     return NS_OK;
 }
 
