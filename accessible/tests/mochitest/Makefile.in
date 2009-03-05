@@ -92,10 +92,6 @@ _TEST_FILES =\
 		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
-		test_nsIAccessibleTable_1.html \
-		test_nsIAccessibleTable_2.html \
-		test_nsIAccessibleTable_3.html \
-		test_nsIAccessibleTable_4.html \
 		$(warning test_nsIAccessibleTable_listboxes.xul temporarily disabled) \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
@@ -109,6 +105,10 @@ _TEST_FILES =\
 		test_states_doc.html \
 		test_states_docarticle.html \
 		test_states_frames.html \
+		test_table_1.html \
+		test_table_2.html \
+		test_table_3.html \
+		test_table_4.html \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \
