@@ -45,6 +45,17 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
 void
 oggplay_process_leftover_packet(OggPlay *me);
 
+/**
+ * Create and initialise an OggPlayDecode handle.
+ *
+ *  
+ *
+ * @param me OggPlay 
+ * @param content_type 
+ * @param serialno
+ * @return A new OggPlayDecode handle
+ * @retval NULL in case of error.
+ */
 OggPlayDecode *
 oggplay_initialise_decoder(OggPlay *me, int content_type, int serialno);
 
