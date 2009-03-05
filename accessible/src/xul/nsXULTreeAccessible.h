@@ -70,8 +70,6 @@ public:
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
 
-  NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                             nsIAccessible **aAccessible);
   NS_IMETHOD GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
                                     nsIAccessible **aAccessible);
 
