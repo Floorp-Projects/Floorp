@@ -438,6 +438,13 @@ js_InitEval(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
+extern JSObject *
+js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+             JSClass *clasp, JSNative constructor, uintN nargs,
+             JSPropertySpec *ps, JSFunctionSpec *fs,
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             JSTraceableNative *trcinfo);
+
 /*
  * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.
  */
@@ -484,6 +491,19 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
 extern JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            JSObject *parent, uintN objectSize);
+
+/*
+ * Allocate a new native object and initialize all fslots with JSVAL_VOID
+ * starting with the specified slot. The parent slot is set to the value of
+ * proto's parent slot.
+ *
+ * Note that this is the correct global object for native class instances, but
+ * not for user-defined functions called as constructors.  Functions used as
+ * constructors must create instances parented by the parent of the function
+ * object, not by the parent of its .prototype object value.
+ */
+extern JSObject*
+js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
