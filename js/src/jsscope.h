@@ -211,10 +211,6 @@ struct JSScope {
     JSScopeProperty *lastProp;          /* pointer to last property added */
 };
 
-#ifdef JS_THREADSAFE
-JS_STATIC_ASSERT(offsetof(JSScope, title) == sizeof(JSObjectMap));
-#endif
-
 #define JS_IS_SCOPE_LOCKED(cx, scope)   JS_IS_TITLE_LOCKED(cx, &(scope)->title)
 
 #define OBJ_SCOPE(obj)                  ((JSScope *)(obj)->map)

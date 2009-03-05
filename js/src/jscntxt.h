@@ -769,12 +769,7 @@ typedef struct JSLocalRootStack {
  * bits. This is how, for example, js_GetGCThingTraceKind uses its |thing|
  * parameter -- it consults GC-thing flags stored separately from the thing to
  * decide the kind of thing.
- *
- * The following checks that this type-punning is possible.
  */
-JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(jsval));
-JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
-
 #define JS_PUSH_TEMP_ROOT_COMMON(cx,x,tvr,cnt,kind)                           \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT((cx)->tempValueRooters != (tvr));                           \

@@ -93,6 +93,8 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 #endif
 #endif
 
+#define JS_STATIC_ASSERT_IF(cond, expr) JS_STATIC_ASSERT(!(cond) || (expr))
+
 /*
  * Abort the process in a non-graceful manner. This will cause a core file,
  * call to the debugger or other moral equivalent as well as causing the
