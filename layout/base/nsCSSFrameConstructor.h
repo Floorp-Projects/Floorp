@@ -282,6 +282,7 @@ public:
   PRBool IsDestroyingFrameTree() { return mIsDestroyingFrameTree; }
 
 private:
+  struct FrameConstructionItem;
 
   nsresult ReconstructDocElementHierarchyInternal();
 
@@ -320,6 +321,11 @@ private:
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
                           nsFrameItems&            aFrameItems);
+
+  void AddFrameConstructionItem(nsFrameConstructorState& aState,
+                                nsIContent*              aContent,
+                                nsIFrame*                aParentFrame,
+                                nsTArray<FrameConstructionItem>& aItems);
 
   nsresult ConstructDocElementFrame(nsFrameConstructorState& aState,
                                     nsIContent*              aDocElement,
@@ -375,12 +381,12 @@ private:
                                                       nsStyleContext* aStyleContext,
                                                       PRUint32        aContentIndex);
 
-  void CreateGeneratedContentFrame(nsFrameConstructorState& aState,
-                                   nsIFrame*                aFrame,
-                                   nsIContent*              aContent,
-                                   nsStyleContext*          aStyleContext,
-                                   nsIAtom*                 aPseudoElement,
-                                   nsFrameItems&            aFrameItems);
+  void CreateGeneratedContentItem(nsFrameConstructorState& aState,
+                                  nsIFrame*                aFrame,
+                                  nsIContent*              aContent,
+                                  nsStyleContext*          aStyleContext,
+                                  nsIAtom*                 aPseudoElement,
+                                  nsTArray<FrameConstructionItem>& aItems);
 
   // This method can change aFrameList: it can chop off the end and
   // put it in a special sibling of aParentFrame.  It can also change
@@ -719,6 +725,42 @@ private:
                   const FrameConstructionDataByTag* aDataPtr,
                   PRUint32 aDataLength);
 
+  /* A struct representing an item for which frames might need to be
+   * constructed.  This contains all the information needed to construct the
+   * frame other than the parent frame and whatever would be stored in the
+   * frame constructor state. */
+  struct FrameConstructionItem {
+    FrameConstructionItem() :
+      mIsGeneratedContent(PR_FALSE) {}
+    ~FrameConstructionItem() {
+      if (mIsGeneratedContent) {
+        mContent->UnbindFromTree();
+        NS_RELEASE(mContent);
+      }
+    }
+
+    // The FrameConstructionData to use.
+    const FrameConstructionData* mFCData;
+    // The nsIContent node to use when initializing the new frame.
+    nsIContent* mContent;
+    // The XBL-resolved tag name to use for frame construction.
+    nsIAtom* mTag;
+    // The XBL-resolved namespace to use for frame construction.
+    PRInt32 mNameSpaceID;
+    // The style context to use for creating the new frame.
+    nsRefPtr<nsStyleContext> mStyleContext;
+    // Whether to allow page-break stuff around this frame.
+    PRPackedBool mAllowPageBreaks;
+    // Whether this is a text content item.
+    PRPackedBool mIsText;
+    // Whether this is generated content.  If it is, mContent is a strong
+    // pointer.
+    PRPackedBool mIsGeneratedContent;
+
+  private:
+    FrameConstructionItem(const FrameConstructionItem& aOther); /* not implemented */
+  };
+
   /**
    * Function to adjust aParentFrame and aFrameItems to deal with table
    * pseudo-frames that may have to be inserted.
@@ -729,7 +771,7 @@ private:
    * @param aFCData the FrameConstructionData that would be used for frame
    *        construction.
    * @param aNameSpaceID namespace that will be used for frame construction
-   * @param aDisplay the display style struct for aChildContent
+   * @param aStyleContext the style context for aChildContent
    * @param aFrameItems the framelist we think we need to put the child frame
    *        into.  If we have to construct pseudo-frames, we'll modify the
    *        pointer to point to the list the child frame should go into.
@@ -749,7 +791,7 @@ private:
                              nsIFrame* &                  aParentFrame,
                              const FrameConstructionData* aFCData,
                              PRInt32                      aNameSpaceID,
-                             const nsStyleDisplay*        aDisplay,
+                             nsStyleContext*              aStyleContext,
                              nsFrameItems* &              aFrameItems,
                              nsFrameConstructorSaveState& aSaveState,
                              PRBool&                      aSuppressFrame,
@@ -872,20 +914,36 @@ private:
                                   nsFrameItems& aFrameItems,
                                   PRBool aHasPseudoParent);
 
-  nsresult ConstructFrameInternal(nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParentFrame,
-                                  nsIAtom*                 aTag,
-                                  PRInt32                  aNameSpaceID,
-                                  nsStyleContext*          aStyleContext,
-                                  nsFrameItems&            aFrameItems,
-                                  PRBool                   aAllowXBLBase,
-                                  PRBool                   aAllowPageBreaks);
+  // possible flags for AddFrameConstructionItemInternal's aFlags argument
+  /* Allow xbl:base to affect the tag/namespace used. */
+#define ITEM_ALLOW_XBL_BASE 0x1
+  /* Allow page-break before and after items to be created if the
+     style asks for them. */
+#define ITEM_ALLOW_PAGE_BREAK 0x2
+  /* The item is a generated content item. */
+#define ITEM_IS_GENERATED_CONTENT 0x4
+  void AddFrameConstructionItemInternal(nsFrameConstructorState& aState,
+                                        nsIContent*              aContent,
+                                        nsIFrame*                aParentFrame,
+                                        nsIAtom*                 aTag,
+                                        PRInt32                  aNameSpaceID,
+                                        nsStyleContext*          aStyleContext,
+                                        PRUint32                 aFlags,
+                                        nsTArray<FrameConstructionItem>& aItems);
+
+  nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
+                                   FrameConstructionItem& aItem,
+                                   nsIFrame* aParentFrame,
+                                   nsFrameItems& aFrameItems);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aParentFrame,
                                  nsFrameItems&            aChildItems);
+
+  nsresult GetAnonymousContent(nsIContent* aParent,
+                               nsIFrame* aParentFrame,
+                               nsTArray<nsIContent*>& aAnonContent);
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
@@ -1027,9 +1085,9 @@ private:
                            nsIContent*              aContent,
                            nsStyleContext*          aStyleContext,
                            nsIFrame*                aFrame,
-                           PRBool                   aCanHaveGeneratedContent,
+                           const PRBool             aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
-                           PRBool                   aAllowBlockStyles);
+                           const PRBool             aAllowBlockStyles);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
