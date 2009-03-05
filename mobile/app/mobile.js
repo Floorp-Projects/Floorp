@@ -266,3 +266,8 @@ pref("plugins.enabled", true);
 pref("layout.css.dpi", 96);
 pref("javascript.options.jit.content", false);
 #endif
+
+// content sink control -- controls responsiveness during page load
+pref("content.max.deflected.tokens", 10);
+pref("content.max.tokenizing.time", 50000);
+
