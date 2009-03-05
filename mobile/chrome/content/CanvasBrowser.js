@@ -224,7 +224,7 @@ CanvasBrowser.prototype = {
     this._pageLoading = false;
     this._maybeZoomToPage = false;
     this.zoomToPage();
-    // flush the region, to reduce prepareForPanning delay
+    // flush the region, to reduce startPanning delay
     // and to avoid getting a black border in tab thumbnail
     this.flushRegion();
     
@@ -236,11 +236,17 @@ CanvasBrowser.prototype = {
 
   // flush outstanding dirty rects,
   // switch to unoptimized painting mode during panning
-  prepareForPanning: function prepareForPanning() {
+  startPanning: function startPanning() {
     this.flushRegion();
     
     // do not delay paints as that causes displaced painting bugs
     this._isPanning = true;
+  },
+
+  endPanning: function endPanning() {
+    this.flushRegion();
+
+    this._isPanning = false;
   },
 
   viewportHandler: function viewportHandler(bounds, boundsSizeChanged) {
