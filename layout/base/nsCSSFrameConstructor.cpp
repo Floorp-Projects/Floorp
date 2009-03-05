@@ -423,6 +423,19 @@ AnyKidsNeedBlockParent(nsIFrame *aFrameList)
   return nsnull;
 }
 
+/* static */
+PRBool
+nsCSSFrameConstructor::AnyItemsNeedBlockParent(const nsTArray<FrameConstructionItem>& aItems)
+{
+  for (PRUint32 i = 0, count = aItems.Length(); i < count; ++i) {
+    if (aItems[i].mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 // Reparent a frame into a wrapper frame that is a child of its old parent.
 static void
 ReparentFrame(nsFrameManager* aFrameManager,
@@ -4785,7 +4798,8 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
   }
 #endif
 
-  static const FrameConstructionData sTextData = SIMPLE_FCDATA(NS_NewTextFrame);
+  static const FrameConstructionData sTextData =
+    FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewTextFrame);
   return &sTextData;
 }
 
@@ -4945,7 +4959,9 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
     SIMPLE_TAG_CHAIN(img, nsCSSFrameConstructor::FindImgData),
     SIMPLE_TAG_CHAIN(mozgeneratedcontentimage,
                      nsCSSFrameConstructor::FindImgData),
-    { &nsGkAtoms::br, FCDATA_DECL(FCDATA_SKIP_FRAMEMAP, NS_NewBRFrame) },
+    { &nsGkAtoms::br,
+      FCDATA_DECL(FCDATA_SKIP_FRAMEMAP | FCDATA_IS_LINE_PARTICIPANT,
+                  NS_NewBRFrame) },
     SIMPLE_TAG_CREATE(wbr, NS_NewWBRFrame),
     SIMPLE_TAG_CHAIN(input, nsCSSFrameConstructor::FindInputData),
     SIMPLE_TAG_CREATE(textarea, NS_NewTextControlFrame),
@@ -5246,6 +5262,10 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     // childItems.childList is null!
     newFrame->SetInitialChildList(nsnull, childItems.childList);
   }
+
+  NS_ASSERTION(newFrame->IsFrameOfType(nsIFrame::eLineParticipant) ==
+               ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
+               "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
   if (!(bits & FCDATA_SKIP_FRAMEMAP)) {
     aState.mFrameManager->SetPrimaryFrameFor(aItem.mContent, newFrame);
@@ -5790,7 +5810,8 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     // find them if we need to.
     // XXXbz the "quickly" part is a bald-faced lie!
     static const FrameConstructionData sInlineData =
-      FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMEMAP | FCDATA_IS_INLINE,
+      FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMEMAP | FCDATA_IS_INLINE |
+                       FCDATA_IS_LINE_PARTICIPANT,
                        &nsCSSFrameConstructor::ConstructInline);
     return &sInlineData;
   }
@@ -6112,6 +6133,27 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
   if (aNameSpaceID != kNameSpaceID_MathML) 
     return nsnull;
 
+  // Handle <math> specially, because it sometimes produces inlines
+  if (aTag == nsGkAtoms::math) {
+    if (aStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+      static const FrameConstructionData sBlockMathData =
+        FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
+                    FCDATA_WRAP_KIDS_IN_BLOCKS |
+                    FCDATA_SKIP_FRAMEMAP,
+                    NS_CreateNewMathMLmathBlockFrame);
+      return &sBlockMathData;
+    }
+
+    static const FrameConstructionData sInlineMathData =
+      FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
+                  FCDATA_WRAP_KIDS_IN_BLOCKS |
+                  FCDATA_SKIP_FRAMEMAP |
+                  FCDATA_IS_LINE_PARTICIPANT,
+                  NS_NewMathMLmathInlineFrame);
+    return &sInlineMathData;
+  }
+      
+
   static const FrameConstructionDataByTag sMathMLData[] = {
     SIMPLE_MATHML_CREATE(mi_, NS_NewMathMLTokenFrame),
     SIMPLE_MATHML_CREATE(mn_, NS_NewMathMLTokenFrame),
@@ -6137,12 +6179,7 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
     SIMPLE_MATHML_CREATE(mroot_, NS_NewMathMLmrootFrame),
     SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
     SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
-    { &nsGkAtoms::math,
-      FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
-                  FCDATA_WRAP_KIDS_IN_BLOCKS |
-                  FCDATA_SKIP_FRAMEMAP,
-                  NS_NewMathMLmathFrame) }
+    SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame)
   };
 
   return FindDataByTag(aTag, aContent, aStyleContext, sMathMLData,
@@ -6434,7 +6471,7 @@ nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
   item->mIsText = PR_FALSE;
   item->mIsGeneratedContent = PR_FALSE;
   item->mIsRootPopupgroup = PR_FALSE;
-  item->mIsAllInline = PR_FALSE;
+  item->mIsAllInline = item->mHasInlineEnds = PR_FALSE;
   item->mIsPopup = PR_FALSE;
 }
 
@@ -6662,8 +6699,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     // To correctly set item->mIsAllInline we need to build up our child items
     // right now.
     BuildInlineChildItems(aState, *item);
+    item->mHasInlineEnds = PR_TRUE;
   } else {
-    item->mIsAllInline =
+    item->mIsAllInline = item->mHasInlineEnds =
       // Table-internal things are inline-outside if they're kids of
       // inlines, since they'll trigger construction of inline-table
       // pseudos.
@@ -7461,8 +7499,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                         &parentAfterFrame);
   
   // Create some new frames
-  PRUint32                count;
-  nsFrameItems            frameItems;
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame));
@@ -7483,26 +7519,41 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                        state.mFrameManager, containingBlock);
   }
 
+  nsAutoTArray<FrameConstructionItem, 16> items;
+  for (PRUint32 i = aNewIndexInContainer, count = aContainer->GetChildCount();
+       i < count;
+       ++i) {
+    AddFrameConstructionItems(state, aContainer->GetChildAt(i), parentFrame,
+                              items);
+  }
+
+  // Perform special check for diddling around with the frames in
+  // a special inline frame.
+  // If we're appending before :after content, then we're not really
+  // appending, so let WipeContainingBlock know that.
+  if (WipeContainingBlock(state, containingBlock, parentFrame, items,
+                          !parentAfterFrame, nsnull)) {
+    return NS_OK;
+  }
+
   // if the container is a table and a caption was appended, it needs to be put in
   // the outer table frame's additional child list. 
+  nsFrameItems frameItems;
   nsFrameItems captionItems;
 
-  // The last frame that we added to the list.
-  nsIFrame* oldNewFrame = nsnull;
-
-  PRUint32 i;
-  count = aContainer->GetChildCount();
-  for (i = aNewIndexInContainer; i < count; i++) {
-    nsIFrame* newFrame = nsnull;
-    nsIContent *childContent = aContainer->GetChildAt(i);
-
-    ConstructFrame(state, childContent, parentFrame, frameItems);
-    newFrame = frameItems.lastChild;
-
-    if (newFrame && newFrame != oldNewFrame) {
-      InvalidateCanvasIfNeeded(newFrame);
-      oldNewFrame = newFrame;
+  for (PRUint32 i = 0, count = items.Length(); i < count; i++) {
+    nsresult rv =
+      ConstructFramesFromItem(state, items[i], parentFrame, frameItems);
+    if (NS_FAILED(rv)) {
+      break;
     }
+
+    // ConstructFramesFromItem will always create at least one frame if it
+    // succeeds.
+    // FIXME: But due to bug 480880, we might not have a frameItems.lastChild
+    // anyway.
+    if (frameItems.lastChild)
+      InvalidateCanvasIfNeeded(frameItems.lastChild);
   }
 
   if (nsGkAtoms::tableFrame == frameType) {
@@ -7531,16 +7582,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // Notify the parent frame passing it the list of new frames
   if (NS_SUCCEEDED(result) &&
       (frameItems.childList || captionItems.childList)) {
-    // Perform special check for diddling around with the frames in
-    // a special inline frame.
-
-    // If we're appending before :after content, then we're not really
-    // appending, so let WipeContainingBlock know that.
-    if (WipeContainingBlock(state, containingBlock, parentFrame, frameItems,
-                            !parentAfterFrame, nsnull)) {
-      return NS_OK;
-    }
-
     // Append the flowed frames to the principal child list, tables need special treatment
     if (nsGkAtoms::tableFrame == frameType) {
       if (captionItems.childList) { // append the caption to the outer table
@@ -7903,12 +7944,25 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
   }
 
+  nsAutoTArray<FrameConstructionItem, 1> items;
+  AddFrameConstructionItems(state, aChild, parentFrame, items);
+
+  // Perform special check for diddling around with the frames in
+  // a special inline frame.
+  // If we're appending before :after content, then we're not really
+  // appending, so let WipeContainingBlock know that.
+  if (WipeContainingBlock(state, containingBlock, parentFrame, items,
+                          isAppend && !appendAfterFrame, prevSibling))
+    return NS_OK;
+
+
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
   
   nsFrameItems frameItems, captionItems;
-
-  ConstructFrame(state, aChild, parentFrame, frameItems);
+  for (PRUint32 i = 0; i < items.Length(); ++i) {
+    ConstructFramesFromItem(state, items[i], parentFrame, frameItems);
+  }
   if (frameItems.childList) {
     InvalidateCanvasIfNeeded(frameItems.childList);
     
@@ -7928,8 +7982,30 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // actually use as the parent, then the calculated insertion point is now
   // invalid and as it is unknown where to insert correctly we append instead
   // (bug 341858).
+  // This can affect our appendAfterFrame, but should not have any effect on
+  // the WipeContainingBlock above, since this should only happen when neither
+  // parent is a special frame (and in fact, only when one is an outer table
+  // and one is an inner table or when the parent is a fieldset or fieldset
+  // content frame).
+  // XXXbz we should push our frame construction item code up higher, so we
+  // know what our items are by the time we start figuring out previous
+  // siblings
   if (prevSibling && frameItems.childList &&
       frameItems.childList->GetParent() != prevSibling->GetParent()) {
+#ifdef DEBUG
+    nsIFrame* frame1 = frameItems.childList->GetParent();
+    nsIFrame* frame2 = prevSibling->GetParent();
+    NS_ASSERTION(!IsFrameSpecial(frame1) && !IsFrameSpecial(frame2),
+                 "Neither should be special");
+    NS_ASSERTION((frame1->GetType() == nsGkAtoms::tableFrame &&
+                  frame2->GetType() == nsGkAtoms::tableOuterFrame) ||
+                 (frame1->GetType() == nsGkAtoms::tableOuterFrame &&
+                  frame2->GetType() == nsGkAtoms::tableFrame) ||
+                 frame1->GetType() == nsGkAtoms::fieldSetFrame ||
+                 (frame1->GetParent() &&
+                  frame1->GetParent()->GetType() == nsGkAtoms::fieldSetFrame),
+                 "Unexpected frame types");
+#endif
     prevSibling = nsnull;
     isAppend = PR_TRUE;
     parentFrame =
@@ -7938,15 +8014,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                           frameItems.childList->GetParent(),
                                           &appendAfterFrame);
   }
-
-  // Perform special check for diddling around with the frames in
-  // a special inline frame.
-
-  // If we're appending before :after content, then we're not really
-  // appending, so let WipeContainingBlock know that.
-  if (WipeContainingBlock(state, containingBlock, parentFrame, frameItems,
-                          isAppend && !appendAfterFrame, prevSibling))
-    return NS_OK;
 
   if (haveFirstLineStyle && parentFrame == containingBlock) {
     // It's possible that the new frame goes into a first-line
@@ -11497,15 +11564,14 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   return rv;
 }
 
-static PRBool
-AreAllKidsInline(nsIFrame* aFrameList)
+/* static*/
+PRBool
+nsCSSFrameConstructor::AreAllItemsInline(const nsTArray<FrameConstructionItem>& aItems)
 {
-  nsIFrame* kid = aFrameList;
-  while (kid) {
-    if (!IsInlineOutside(kid)) {
+  for (PRUint32 i = 0, count = aItems.Length(); i < count; ++i) {
+    if (!aItems[i].mIsAllInline) {
       return PR_FALSE;
     }
-    kid = kid->GetNextSibling();
   }
   return PR_TRUE;
 }
@@ -11795,64 +11861,16 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   }
 }
 
-static void
-DestroyNewlyCreatedFrames(nsFrameConstructorState& aState,
-                          nsIFrame* aParentFrame,
-                          const nsFrameItems& aFrameList)
-{
-  // Ok, reverse tracks: wipe out the frames we just created
-  nsFrameManager *frameManager = aState.mFrameManager;
-
-  // Destroy the frames. As we do make sure any content to frame mappings
-  // or entries in the undisplayed content map are removed
-  frameManager->ClearAllUndisplayedContentIn(aParentFrame->GetContent());
-
-  CleanupFrameReferences(frameManager, aFrameList.childList);
-  if (aState.mAbsoluteItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mAbsoluteItems.childList);
-  }
-  if (aState.mFixedItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mFixedItems.childList);
-  }
-  if (aState.mFloatedItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mFloatedItems.childList);
-  }
-#ifdef MOZ_XUL
-  if (aState.mPopupItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mPopupItems.childList);
-  }
-#endif
-  nsFrameList tmp(aFrameList.childList);
-  tmp.DestroyFrames();
-
-  tmp.SetFrames(aState.mAbsoluteItems.childList);
-  tmp.DestroyFrames();
-  aState.mAbsoluteItems.childList = nsnull;
-
-  tmp.SetFrames(aState.mFixedItems.childList);
-  tmp.DestroyFrames();
-  aState.mFixedItems.childList = nsnull;
-
-  tmp.SetFrames(aState.mFloatedItems.childList);
-  tmp.DestroyFrames();
-  aState.mFloatedItems.childList = nsnull;
-
-#ifdef MOZ_XUL
-  tmp.SetFrames(aState.mPopupItems.childList);
-  tmp.DestroyFrames();
-  aState.mPopupItems.childList = nsnull;
-#endif
-}
-
 PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            nsIFrame* aContainingBlock,
                                            nsIFrame* aFrame,
-                                           const nsFrameItems& aFrameList,
+                                           const nsTArray<FrameConstructionItem>& aItems,
                                            PRBool aIsAppend,
                                            nsIFrame* aPrevSibling)
 {
-  if (!aFrameList.childList) {
+  PRUint32 count = aItems.Length();
+  if (!count) {
     return PR_FALSE;
   }
   
@@ -11863,8 +11881,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // to be wrapped in blocks.
   if (aFrame->IsBoxFrame() &&
       !(aFrame->GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) &&
-      AnyKidsNeedBlockParent(aFrameList.childList)) {
-    DestroyNewlyCreatedFrames(aState, aFrame, aFrameList);
+      AnyItemsNeedBlockParent(aItems)) {
     RecreateFramesForContent(aFrame->GetContent());
     return PR_TRUE;
   }
@@ -11873,7 +11890,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // frames. This is a no-no and the frame construction logic knows
   // how to fix this.  See defition of IsInlineFrame() for what "an
   // inline" is.  Whether we have "a block" is tested for by
-  // AreAllKidsInline.
+  // AreAllItemsInline.
 
   // We also need to check for an append of content ending in an
   // inline to the block in an {ib} split or an insert of content
@@ -11883,7 +11900,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
   if (IsInlineFrame(aFrame)) {
     // Nothing to do if all kids are inline
-    if (AreAllKidsInline(aFrameList.childList)) {
+    if (AreAllItemsInline(aItems)) {
       return PR_FALSE;
     }
   } else if (!IsFrameSpecial(aFrame)) {
@@ -11892,16 +11909,17 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // aFrame is the block in an {ib} split.  Check that we're not
     // messing up either end of it.
     if (aIsAppend) {
-      // Will be handled in AppendFrames(), unless we have floats that we can't
-      // move out because there might be no float containing block to move them
-      // into.
-      if (!aState.mFloatedItems.childList) {
-        return PR_FALSE;
-      }
+      // Will be handled in AppendFrames(), except the case when we might have
+      // floats that we won't be able to move out because there is no float
+      // containing block to move them into.
 
       // Walk up until we get a float containing block that's not part of an
       // {ib} split, since otherwise we might have to ship floats out of it
       // too.
+      // XXXbz we could keep track of whether we have any descendants with
+      // float style in the FrameConstructionItem if we really want, but it's
+      // not clear to me that we need to.  In any case, the right solution here
+      // is to construct with the right parents to start with.
       nsIFrame* floatContainer = aFrame;
       do {
         floatContainer = GetFloatContainingBlock(
@@ -11917,21 +11935,18 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     
     if (aPrevSibling && !aPrevSibling->GetNextSibling()) {
       // This is an append that won't go through AppendFrames.  We can bail out
-      // if the last frame we're appending is not inline
-      if (!aFrameList.lastChild->GetStyleDisplay()->IsInlineOutside()) {
+      // if the last frame we're appending is not inline.
+      if (!aItems[count-1].mHasInlineEnds) {
         return PR_FALSE;
       }
     } else {
       // We can bail out if we're not inserting at the beginning or if
       // the first frame we're inserting is not inline.
-      if (aPrevSibling ||
-          !aFrameList.childList->GetStyleDisplay()->IsInlineOutside()) {
+      if (aPrevSibling || !aItems[0].mHasInlineEnds) {
         return PR_FALSE;
       }
     }
   }
-
-  DestroyNewlyCreatedFrames(aState, aFrame, aFrameList);
 
   // If we don't have a containing block, start with aFrame and look for one.
   if (!aContainingBlock) {

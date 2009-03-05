@@ -663,6 +663,9 @@ private:
   /* If FCDATA_IS_INLINE is set, then the frame is a non-replaced CSS
      inline box. */
 #define FCDATA_IS_INLINE 0x2000
+  /* If FCDATA_IS_LINE_PARTICIPANT is set, the the frame is something that will
+     return true for IsFrameOfType(nsIFrame::eLineParticipant) */
+#define FCDATA_IS_LINE_PARTICIPANT 0x4000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -758,6 +761,11 @@ private:
     // Whether construction from this item will create only frames that are
     // IsInlineOutside() in the principal child list.
     PRPackedBool mIsAllInline;
+    // Whether construction from this item will give leading and trailing
+    // inline frames.  This is equal to mIsAllInline, except for inline frame
+    // items, where it's always true, whereas mIsAllInline might be false due
+    // to {ib} splits.
+    PRPackedBool mHasInlineEnds;
     // Whether construction from this item will create a popup that needs to
     // go into the global popup items.
     PRPackedBool mIsPopup;
@@ -1252,13 +1260,15 @@ private:
   // because we're doing something like adding block kids to an inline frame
   // (and therefore need an {ib} split).  If aIsAppend is true, aPrevSibling is
   // ignored.  Otherwise it may be used to determine whether to reframe when
-  // inserting into the block of an {ib} split.
+  // inserting into the block of an {ib} split.  Passing a null aPrevSibling in
+  // the non-append case is ok in terms of correctness.  It might reframe when
+  // we don't really need to, but that's it.
   // @return PR_TRUE if we reconstructed the containing block, PR_FALSE
   // otherwise
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
                              nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             const nsFrameItems&      aFrameList,
+                             const nsTArray<FrameConstructionItem>& aItems,
                              PRBool                   aIsAppend,
                              nsIFrame*                aPrevSibling);
 
@@ -1408,6 +1418,16 @@ private:
     NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
     mCountersDirty = PR_TRUE;
   }
+
+  /**
+   * Return whether any of the given items requires a block parent
+   */
+  static PRBool AnyItemsNeedBlockParent(const nsTArray<FrameConstructionItem>& aItems);
+
+  /**
+   * Return whether all of the given items are inline
+   */
+  static PRBool AreAllItemsInline(const nsTArray<FrameConstructionItem>& aItems);
 
 public:
   struct RestyleData;
