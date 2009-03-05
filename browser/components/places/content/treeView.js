@@ -407,10 +407,15 @@ PlacesTreeView.prototype = {
 
     // Date is calculated starting from midnight, so the modulo with a day are
     // milliseconds from today's midnight.
-    var now = Date.now();
-    var midnight = now - (now % (24 * 60 * 60 * 1000));
+    // getTimezoneOffset corrects that based on local time.
+    // 86400000 = 24 * 60 * 60 * 1000 = 1 day
+    // 60000 = 60 * 1000 = 1 minute
+    var dateObj = new Date();
+    var now = dateObj.getTime();
+    var midnight = now - (now % (86400000)) +
+                   (dateObj.getTimezoneOffset() * 60000);
 
-    var dateFormat = timeInMilliseconds > midnight ?
+    var dateFormat = timeInMilliseconds >= midnight ?
                       Ci.nsIScriptableDateFormat.dateFormatNone :
                       Ci.nsIScriptableDateFormat.dateFormatShort;
 
