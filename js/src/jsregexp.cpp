@@ -4950,6 +4950,8 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return regexp_compile_sub(cx, obj, argc, argv, rval);
 }
 
+#ifdef JS_TRACER
+
 static JSObject* FASTCALL
 RegExp_tn1(JSContext *cx, JSObject *proto, JSString *str)
 {
@@ -4987,6 +4989,12 @@ RegExp_tn2(JSContext *cx, JSObject *proto, JSString *str, JSString *opt)
 JS_DEFINE_TRCINFO_2(RegExp,
     (3, (extern, CONSTRUCTOR_RETRY, RegExp_tn1, CONTEXT, CALLEE_PROTOTYPE, STRING,         0, 0)),
     (4, (extern, CONSTRUCTOR_RETRY, RegExp_tn2, CONTEXT, CALLEE_PROTOTYPE, STRING, STRING, 0, 0)))
+
+#else  /* !JS_TRACER */
+
+# define RegExp_trcinfo NULL
+
+#endif /* !JS_TRACER */
 
 JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
