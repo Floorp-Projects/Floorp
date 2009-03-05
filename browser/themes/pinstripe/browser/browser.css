@@ -797,12 +797,12 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   direction: ltr !important;
   border: none;
   background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
-  margin: 0px 4px 1px 4px;
-  -moz-padding-end: 10px;
+  margin: 0 3px 1px;
+  -moz-padding-end: 11px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
-  height: 26px;
+  height: 28px;
 }
 
 #urlbar[focused="true"] {
@@ -830,7 +830,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 #urlbar-icons {
   -moz-box-align: center;
-  min-height: 26px;
 }
 
 #urlbar-search-splitter {
@@ -877,7 +876,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #page-proxy-stack {
-  -moz-margin-start: 9px;
+  -moz-margin-start: 10px;
   width: 24px;
   height: 20px;
   padding: 2px 4px;
@@ -1856,7 +1855,7 @@ tabpanels.plain {
 
 #identity-box {
   background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
-  min-width: 44px;
+  min-width: 45px;
 }
 
 #urlbar[focused="true"] > #identity-box {
@@ -1876,7 +1875,7 @@ tabpanels.plain {
 #identity-icon-label {
   margin: 0;
   color: black;
-  padding: 2px 6px 3px;
+  padding: 4px 6px 3px;
   -moz-padding-end: 14px;
 }
 
@@ -1889,7 +1888,7 @@ tabpanels.plain {
 /* - Normal state */
 #identity-box.verifiedDomain {
   background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png");
-  -moz-padding-start: 12px;
+  -moz-padding-start: 13px;
 }
 
 #identity-box.verifiedDomain > hbox {
@@ -1943,7 +1942,7 @@ tabpanels.plain {
 /* - Normal state */
 #identity-box.verifiedIdentity {
   background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png");
-  -moz-padding-start: 12px;
+  -moz-padding-start: 13px;
 }
 
 #identity-box.verifiedIdentity > hbox {
