@@ -35,6 +35,11 @@ tab {
   -moz-appearance: tab;
 }
 
+tab:focus {
+  /* Tab focus rings need to overlay adjacent tabs. */
+  position: relative;
+}
+
 tab:first-of-type {
   -moz-padding-start: 2px;
 }
