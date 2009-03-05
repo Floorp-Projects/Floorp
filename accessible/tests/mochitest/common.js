@@ -47,6 +47,7 @@ const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 ////////////////////////////////////////////////////////////////////////////////
 // Roles
 
+const ROLE_ALERT = nsIAccessibleRole.ROLE_ALERT;
 const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
 const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
 const ROLE_CHROME_WINDOW = nsIAccessibleRole.ROLE_CHROME_WINDOW;
@@ -71,6 +72,7 @@ const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
 const ROLE_PARAGRAPH = nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
 const ROLE_SECTION = nsIAccessibleRole.ROLE_SECTION;
+const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
@@ -265,11 +267,13 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
 }
 
 /**
- * Return true if the given identifier has an accessible.
+ * Return true if the given identifier has an accessible, or exposes the wanted
+ * interfaces.
  */
-function isAccessible(aAccOrElmOrID)
+function isAccessible(aAccOrElmOrID, aInterfaces)
 {
-  return getAccessible(aAccOrElmOrID, null, null, DONOTFAIL_IF_NO_ACC) ?
+  return getAccessible(aAccOrElmOrID, aInterfaces, null,
+                       DONOTFAIL_IF_NO_ACC | DONOTFAIL_IF_NO_INTERFACE) ?
     true : false;
 }
 

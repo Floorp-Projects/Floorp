@@ -4,31 +4,28 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title> nsIAccessibleTable Interface Test Case </title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+
   <script type="text/javascript">
 
 function doTest()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var table = document.getElementById("table");
-  var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                   getService(Components.interfaces.nsIAccessibleRetrieval);
-
-  var accTable = accService.getAccessibleFor(table).
-                 QueryInterface(Components.interfaces.nsIAccessibleTable);
+  var accTable = getAccessible("table", [nsIAccessibleTable]);
     
   is(accTable.getSelectedCells({}).length, 0, "no cell selected");
   for (var i = 0; i < 4; i++) {
     accTable.selectRow(i);
-    for (var j = 0; j < 4; j++) {
-      if (i == j) {
+    for (var j = 0; j < 4; j++)
+      if (i == j)
         ok(accTable.isRowSelected(i),"row not selected");
-      }
-      else {
+      else
         todo(!accTable.isRowSelected(i),"row selected");
-      }
-    }
   }
   todo_is(accTable.selectedRowsCount, 1, "only one row should be selected");
   todo_is(accTable.getSelectedRows({}).length, 1,
@@ -48,14 +45,11 @@ function doTest()
   is(accTable.selectedCellsCount, 0, "no cell selected");
   for (var i = 0; i < 8; i++) {
     accTable.selectColumn(i);
-    for (var j = 0; j < 8; j++) {
-      if (i ==j) {
+    for (var j = 0; j < 8; j++)
+      if (i ==j)
         ok(accTable.isColumnSelected(i),"column not selected");
-      }
-      else {
+      else
         todo(!accTable.isColumnSelected(i),"column is selected");
-      }
-    }
   }
   todo_is(accTable.selectedColumnsCount, 1,
           "only one column should be selected");
