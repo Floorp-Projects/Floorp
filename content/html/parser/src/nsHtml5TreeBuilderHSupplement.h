@@ -37,22 +37,48 @@
 
   private:
 #ifdef DEBUG_hsivonen
-    static PRUint32 sInsertionBatchMaxLength;
-    static PRUint32 sAppendBatchMaxSize;
-    static PRUint32 sAppendBatchSlotsExamined;
-    static PRUint32 sAppendBatchExaminations;
+    static PRUint32    sInsertionBatchMaxLength;
+    static PRUint32    sAppendBatchMaxSize;
+    static PRUint32    sAppendBatchSlotsExamined;
+    static PRUint32    sAppendBatchExaminations;
 #endif
-    nsHtml5Parser* mParser; // weak ref
-    PRBool         mHasProcessedBase;
-    PRBool         mFlushing;
+    static PRUint32    sTreeOpQueueMaxLength;
+    PRBool             mNeedsFlush;
+    nsCOMPtr<nsITimer> mFlushTimer;
+    nsHtml5Parser*     mParser; // weak ref
+    PRBool             mHasProcessedBase;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
     nsTArray<nsHtml5PendingNotification> mPendingNotifications;
-    void           MaybeFlushAndMaybeSuspend();
+    
+    inline void    MaybeSuspend() {
+      if (!mNeedsFlush) {
+        mNeedsFlush = !!(mOpQueue.Length() >= sTreeOpQueueMaxLength);
+      }
+      if (mParser->DidProcessATokenImpl() == NS_ERROR_HTMLPARSER_INTERRUPTED || mNeedsFlush) {
+        // We've been in the parser for too long and/or the op queue is becoming too
+        // long to flush in one go it it grows further.
+        mParser->Suspend();
+        requestSuspension();
+      }
+    }
+    
   public:
     nsHtml5TreeBuilder(nsHtml5Parser* aParser);
     ~nsHtml5TreeBuilder();
     void Flush();
+    
+    inline void MaybeFlush() {
+      if (mNeedsFlush) {
+        Flush();
+      }
+    }
+    
+    inline void DeferredTimerFlush() {
+      if (!mOpQueue.IsEmpty()) {
+        mNeedsFlush = PR_TRUE;
+      }
+    }
     
     inline void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
       PRBool newParent = PR_TRUE;
