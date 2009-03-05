@@ -120,7 +120,7 @@ class Process(subprocess.Popen):
         try:
           subprocess.Popen(["kill", "-f", pid]).wait()
         except:
-          log.info("TEST-UNEXPECTED-FAIL | Missing 'kill' utility to kill process with pid=%s. Kill it manually!", pid)
+          log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Missing 'kill' utility to kill process with pid=%s. Kill it manually!", pid)
       else:
         # Windows XP and later.
         subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
@@ -408,22 +408,19 @@ def environment(env = None, xrePath = DIST_BIN):
 ###############
 
 def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utilityPath = DIST_BIN, xrePath = DIST_BIN, certPath = CERTS_SRC_DIR):
-  "Run the app, returning a tuple containing the status code and the time at which it was started."
+  "Run the app, log the duration it took to execute, return the status code."
+
   if IS_TEST_BUILD and runSSLTunnel:
     # create certificate database for the profile
     certificateStatus = fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
     if certificateStatus != 0:
-      log.info("TEST-UNEXPECTED FAIL | Certificate integration failed")
+      log.info("TEST-UNEXPECTED FAIL | (automation.py) | Certificate integration failed")
       return certificateStatus
-  
+
     # start ssltunnel to provide https:// URLs capability
     ssltunnel = os.path.join(utilityPath, "ssltunnel" + BIN_SUFFIX)
     ssltunnelProcess = Process([ssltunnel, os.path.join(profileDir, "ssltunnel.cfg")], env = environment(xrePath = xrePath))
-    log.info("SSL tunnel pid: %d", ssltunnelProcess.pid)
-  
-  "Run the app, returning the time at which it was started."
-  # mark the start
-  start = datetime.now()
+    log.info("INFO | (automation.py) | SSL tunnel pid: %d", ssltunnelProcess.pid)
 
   # now run with the profile we created
   cmd = app
@@ -447,17 +444,20 @@ def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utili
     else:
       args.append((testURL))
   args.extend(extraArgs)
+
+  startTime = datetime.now()
   proc = Process([cmd] + args, env = environment(env), stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-  log.info("Application pid: %d", proc.pid)
+  log.info("INFO | (automation.py) | Application pid: %d", proc.pid)
   line = proc.stdout.readline()
   while line != "":
     log.info(line.rstrip())
     line = proc.stdout.readline()
   status = proc.wait()
   if status != 0:
-    log.info("TEST-UNEXPECTED-FAIL | Exited with code %d during test run", status)
+    log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Exited with code %d during test run", status)
+  log.info("INFO | (automation.py) | Application ran for: %s", str(datetime.now() - startTime))
 
   if IS_TEST_BUILD and runSSLTunnel:
     ssltunnelProcess.kill()
-  
-  return (status, start)
+
+  return status
