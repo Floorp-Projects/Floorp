@@ -109,6 +109,9 @@
       midnight.setSeconds(0);
       midnight.setMilliseconds(0);
 
+      // Cleanup.
+      bh.removeAllPages();
+
       // Add a visit 1ms before midnight.
       hs.addVisit(uri("http://before.midnight.com/"),
                   (midnight.getTime() - 1) * 1000,
@@ -166,7 +169,13 @@
               if (node.uri == "http://at.midnight.com/" ||
                   node.uri == "http://after.midnight.com/")
                 dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
-
+              else if (node.uri == "http://before.midnight.com/")
+                dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+              else {
+                // Avoid to test spurious uris, due to how the test works
+                // a redirecting uri could be put in the tree while we test.
+                break;
+              }
               var timeStr = ds.FormatDateTime("", dateFormat,
                     Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
                     timeObj.getFullYear(), timeObj.getMonth() + 1,
