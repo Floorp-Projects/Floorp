@@ -52,3 +52,6 @@ asserts-if(true,0) load about:blank
 asserts-if(false,7) load about:blank
 asserts-if(true,0-4) load about:blank
 asserts-if(false,6-8) load about:blank
+
+# test that <div> is display:block
+== div.html div-ref.html

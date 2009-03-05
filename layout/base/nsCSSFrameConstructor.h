@@ -316,6 +316,9 @@ private:
   already_AddRefed<nsStyleContext>
   ResolveStyleContext(nsIFrame*         aParentFrame,
                       nsIContent*       aContent);
+  already_AddRefed<nsStyleContext>
+  ResolveStyleContext(nsStyleContext* aParentStyleContext,
+                      nsIContent* aContent);
 
   nsresult ConstructFrame(nsFrameConstructorState& aState,
                           nsIContent*              aContent,
@@ -383,6 +386,7 @@ private:
                                                       nsStyleContext* aStyleContext,
                                                       PRUint32        aContentIndex);
 
+  // aFrame may be null; this method doesn't use it directly in any case.
   void CreateGeneratedContentItem(nsFrameConstructorState& aState,
                                   nsIFrame*                aFrame,
                                   nsIContent*              aContent,
@@ -611,8 +615,9 @@ private:
      mFunc */
 #define FCDATA_FUNC_IS_FULL_CTOR 0x4
   /* If FCDATA_DISALLOW_OUT_OF_FLOW is set, do not allow the frame to
-     float or be absolutely positioned.  This cannot be used with
-     FCDATA_FUNC_IS_FULL_CTOR */
+     float or be absolutely positioned.  This can also be used with
+     FCDATA_FUNC_IS_FULL_CTOR to indicate what the full-constructor
+     function will do. */
 #define FCDATA_DISALLOW_OUT_OF_FLOW 0x8
   /* If FCDATA_FORCE_NULL_ABSPOS_CONTAINER is set, make sure to push a
      null absolute containing block before processing children for this
@@ -655,6 +660,9 @@ private:
      table-related thing and we should not attempt to fetch a table-cell parent
      for it if it's inside another table-related frame. */
 #define FCDATA_IS_TABLE_PART 0x1000
+  /* If FCDATA_IS_INLINE is set, then the frame is a non-replaced CSS
+     inline box. */
+#define FCDATA_IS_INLINE 0x2000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -747,6 +755,18 @@ private:
     PRPackedBool mIsGeneratedContent;
     // Whether this is an item for the root popupgroup.
     PRPackedBool mIsRootPopupgroup;
+    // Whether construction from this item will create only frames that are
+    // IsInlineOutside() in the principal child list.
+    PRPackedBool mIsAllInline;
+    // Whether construction from this item will create a popup that needs to
+    // go into the global popup items.
+    PRPackedBool mIsPopup;
+
+    // Child frame construction items.
+    // Can't be an auto array, since we don't know our size yet, and
+    // in any case it would be bad if someone tried to do that...
+    // Only used for inline frame items.
+    nsTArray<FrameConstructionItem> mChildItems;
 
   private:
     FrameConstructionItem(const FrameConstructionItem& aOther); /* not implemented */
@@ -824,6 +844,8 @@ private:
                                   nsFrameItems&            aFrameItems,
                                   nsIFrame**               aNewFrame);
 
+  // aParentFrame might be null.  If it is, that means it was an
+  // inline frame.
   static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame);
 
   nsresult ConstructTextFrame(const FrameConstructionData* aData,
@@ -840,6 +862,8 @@ private:
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not HTML.
+  // aParentFrame might be null.  If it is, that means it was an
+  // inline frame.
   static const FrameConstructionData* FindHTMLData(nsIContent* aContent,
                                                    nsIAtom* aTag,
                                                    PRInt32 aNameSpaceID,
@@ -882,6 +906,8 @@ private:
   /* The item is a generated content item. */
 #define ITEM_IS_GENERATED_CONTENT 0x4
   // The guts of AddFrameConstructionItems
+  // aParentFrame might be null.  If it is, that means it was an
+  // inline frame.
   void AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                          nsIContent*              aContent,
                                          nsIFrame*                aParentFrame,
@@ -1202,12 +1228,25 @@ private:
                                 nsIFrame* aBlockPart,
                                 nsFrameConstructorState* aTargetState);
 
-  nsresult ProcessInlineChildren(nsFrameConstructorState& aState,
-                                 nsIContent*              aContent,
-                                 nsIFrame*                aFrame,
-                                 PRBool                   aCanHaveGeneratedContent,
-                                 nsFrameItems&            aFrameItems,
-                                 PRBool*                  aKidsAllInline);
+  /**
+   * For an inline aParentItem, construct its list of child
+   * FrameConstructionItems and set its mIsAllInline flag appropriately.
+   */
+  void BuildInlineChildItems(nsFrameConstructorState& aState,
+                             FrameConstructionItem& aParentItem);
+
+  /**
+   * Construct frames for the indicated range of aItems (half-open; closed on
+   * the aStart end, open on the aEnd end), and put the resulting frames in
+   * aFrameItems.  This function will save pseudoframes on entry and restore on
+   * exit.
+   */
+  nsresult ConstructFramesFromItemSublist(nsFrameConstructorState& aState,
+                                          nsTArray<FrameConstructionItem>& aItems,
+                                          PRUint32 aStart,
+                                          PRUint32 aEnd,
+                                          nsIFrame* aParentFrame,
+                                          nsFrameItems& aFrameItems);
 
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
