@@ -354,12 +354,13 @@ check::
 	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
 endif
 
-ifdef ENABLE_JIT
-check::
-	$(wildcard $(RUN_TEST_PROGRAM)) ./js$(BIN_SUFFIX) -j -e \
-		"var gSrcdir='$(srcdir)'; var gSkipSlowTests=true; var gReportSummary=false;" \
-		$(srcdir)/trace-test.js
-endif
+# Temporarily disable - backout of bug 473989.
+#ifdef ENABLE_JIT
+#check::
+#	$(wildcard $(RUN_TEST_PROGRAM)) ./js$(BIN_SUFFIX) -j -e \
+#		"var gSrcdir='$(srcdir)'; var gSkipSlowTests=true; var gReportSummary=false;" \
+#		$(srcdir)/trace-test.js
+#endif
 
 # our build system doesn't handle subdir srcs very gracefully today
 export::
