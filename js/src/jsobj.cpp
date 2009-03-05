@@ -2002,9 +2002,11 @@ NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
     obj->classword = jsuword(&js_ObjectClass);
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
-    for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
+    for (unsigned i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
+    JS_ASSERT(!OBJ_GET_CLASS(cx, proto)->getObjectOps);
+    JS_ASSERT(proto->map->ops == &js_ObjectOps);
     obj->map = js_HoldObjectMap(cx, proto->map);
     obj->dslots = NULL;
     return obj;
@@ -2644,9 +2646,157 @@ js_InitEval(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
-    return JS_InitTraceableClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
-                                 object_props, object_methods, NULL, object_static_methods,
-                                 js_Object_trcinfo);
+    return js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
+                        object_props, object_methods, NULL, object_static_methods,
+                        js_Object_trcinfo);
+}
+
+JSObject *
+js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+             JSClass *clasp, JSNative constructor, uintN nargs,
+             JSPropertySpec *ps, JSFunctionSpec *fs,
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             JSTraceableNative *trcinfo)
+{
+    JSAtom *atom;
+    JSProtoKey key;
+    JSObject *proto, *ctor;
+    JSTempValueRooter tvr;
+    jsval cval, rval;
+    JSBool named;
+    JSFunction *fun;
+
+    atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+    if (!atom)
+        return NULL;
+
+    /*
+     * When initializing a standard class, if no parent_proto (grand-proto of
+     * instances of the class, parent-proto of the class's prototype object)
+     * is given, we must use Object.prototype if it is available.  Otherwise,
+     * we could look up the wrong binding for a class name in obj.  Example:
+     *
+     *   String = Array;
+     *   print("hi there".join);
+     *
+     * should print undefined, not Array.prototype.join.  This is required by
+     * ECMA-262, alas.  It might have been better to make String readonly and
+     * permanent in the global object, instead -- but that's too big a change
+     * to swallow at this point.
+     */
+    key = JSCLASS_CACHED_PROTO_KEY(clasp);
+    if (key != JSProto_Null &&
+        !parent_proto &&
+        !js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Object),
+                              &parent_proto)) {
+        return NULL;
+    }
+
+    /* Create a prototype object for this class. */
+    proto = js_NewObject(cx, clasp, parent_proto, obj, 0);
+    if (!proto)
+        return NULL;
+
+    /* After this point, control must exit via label bad or out. */
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, proto, &tvr);
+
+    if (!constructor) {
+        JS_ASSERT(!trcinfo);
+
+        /*
+         * Lacking a constructor, name the prototype (e.g., Math) unless this
+         * class (a) is anonymous, i.e. for internal use only; (b) the class
+         * of obj (the global object) is has a reserved slot indexed by key;
+         * and (c) key is not the null key.
+         */
+        if ((clasp->flags & JSCLASS_IS_ANONYMOUS) &&
+            (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) &&
+            key != JSProto_Null) {
+            named = JS_FALSE;
+        } else {
+            named = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
+                                        OBJECT_TO_JSVAL(proto),
+                                        JS_PropertyStub, JS_PropertyStub,
+                                        (clasp->flags & JSCLASS_IS_ANONYMOUS)
+                                        ? JSPROP_READONLY | JSPROP_PERMANENT
+                                        : 0,
+                                        NULL);
+            if (!named)
+                goto bad;
+        }
+
+        ctor = proto;
+    } else {
+        /* Define the constructor function in obj's scope. */
+        fun = js_DefineFunction(cx, obj, atom, constructor, nargs,
+                                JSFUN_STUB_GSOPS);
+        named = (fun != NULL);
+        if (!fun)
+            goto bad;
+
+        /*
+         * Remember the class this function is a constructor for so that
+         * we know to create an object of this class when we call the
+         * constructor.
+         */
+        FUN_CLASP(fun) = clasp;
+
+        /*
+         * If we have a traceable native constructor, update the function to
+         * point at the given trcinfo and flag it.
+         */
+        if (trcinfo) {
+            fun->u.n.trcinfo = trcinfo;
+            fun->flags |= JSFUN_TRACEABLE;
+        }
+
+        /*
+         * Optionally construct the prototype object, before the class has
+         * been fully initialized.  Allow the ctor to replace proto with a
+         * different object, as is done for operator new -- and as at least
+         * XML support requires.
+         */
+        ctor = FUN_OBJECT(fun);
+        if (clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) {
+            cval = OBJECT_TO_JSVAL(ctor);
+            if (!js_InternalConstruct(cx, proto, cval, 0, NULL, &rval))
+                goto bad;
+            if (!JSVAL_IS_PRIMITIVE(rval) && JSVAL_TO_OBJECT(rval) != proto)
+                proto = JSVAL_TO_OBJECT(rval);
+        }
+
+        /* Connect constructor and prototype by named properties. */
+        if (!js_SetClassPrototype(cx, ctor, proto,
+                                  JSPROP_READONLY | JSPROP_PERMANENT)) {
+            goto bad;
+        }
+
+        /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
+        if (OBJ_GET_CLASS(cx, ctor) == clasp)
+            OBJ_SET_PROTO(cx, ctor, proto);
+    }
+
+    /* Add properties and methods to the prototype and the constructor. */
+    if ((ps && !JS_DefineProperties(cx, proto, ps)) ||
+        (fs && !JS_DefineFunctions(cx, proto, fs)) ||
+        (static_ps && !JS_DefineProperties(cx, ctor, static_ps)) ||
+        (static_fs && !JS_DefineFunctions(cx, ctor, static_fs))) {
+        goto bad;
+    }
+
+    /* If this is a standard class, cache its prototype. */
+    if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor))
+        goto bad;
+
+out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return proto;
+
+bad:
+    if (named)
+        (void) OBJ_DELETE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &rval);
+    proto = NULL;
+    goto out;
 }
 
 void
@@ -2928,7 +3078,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     STOBJ_SET_PARENT(obj, parent);
 
     /* Initialize the remaining fixed slots. */
-    for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
+    for (i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
 #ifdef DEBUG
@@ -3020,6 +3170,28 @@ earlybad:
         jsdtrace_object_create_done(cx->fp, clasp);
 #endif
     return NULL;
+}
+
+JSObject*
+js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot)
+{
+    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    if (!obj)
+        return NULL;
+
+    obj->classword = jsuword(clasp);
+    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
+    obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
+
+    JS_ASSERT(slot > JSSLOT_PARENT);
+    while (slot < JS_INITIAL_NSLOTS)
+        obj->fslots[slot++] = JSVAL_VOID;
+
+    JS_ASSERT(!clasp->getObjectOps);
+    JS_ASSERT(proto->map->ops == &js_ObjectOps);
+    obj->map = js_HoldObjectMap(cx, proto->map);
+    obj->dslots = NULL;
+    return obj;
 }
 
 JS_BEGIN_EXTERN_C
