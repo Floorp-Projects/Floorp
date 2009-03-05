@@ -2175,29 +2175,17 @@ static JSObject* FASTCALL
 Date_tn(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    JSObject* obj = js_NewNativeObject(cx, &js_DateClass, proto, JSSLOT_LOCAL_TIME + 1);
     if (!obj)
         return NULL;
-
-    JSClass* clasp = &js_DateClass;
-    obj->classword = jsuword(clasp);
-
-    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
 
     jsdouble* date = js_NewWeaklyRootedDouble(cx, 0.0);
     if (!date)
         return NULL;
     *date = date_now_tn(cx);
+
     obj->fslots[JSSLOT_UTC_TIME] = DOUBLE_TO_JSVAL(date);
     obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-    for (unsigned i = JSSLOT_LOCAL_TIME + 1; i != JS_INITIAL_NSLOTS; ++i)
-        obj->fslots[i] = JSVAL_VOID;
-    
-    JS_ASSERT(!clasp->getObjectOps);
-    JS_ASSERT(proto->map->ops == &js_ObjectOps);
-    obj->map = js_HoldObjectMap(cx, proto->map);
-    obj->dslots = NULL;
     return obj;    
 }
 
@@ -2218,9 +2206,9 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    proto = JS_InitTraceableClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
-                                  NULL, date_methods, NULL, date_static_methods,
-                                  js_Date_trcinfo);
+    proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
+                         NULL, date_methods, NULL, date_static_methods,
+                         js_Date_trcinfo);
     if (!proto)
         return NULL;
 

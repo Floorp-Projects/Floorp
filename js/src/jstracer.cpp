@@ -3002,7 +3002,7 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
             AUDIT(globalShapeMismatchAtEntry);
             debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
                                 globalShape, ti->globalShape);)
-                return false;
+            return false;
         }
         if (shape)
             *shape = globalShape;
@@ -3013,7 +3013,6 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
 
     /* No recorder, search for a tracked global-state (or allocate one). */
     for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
-
         GlobalState &state = tm->globalStates[i];
 
         if (state.globalShape == (uint32) -1) {
