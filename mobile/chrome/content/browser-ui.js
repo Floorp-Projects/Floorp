@@ -52,22 +52,26 @@ const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
 [
-  ["gContentBox",            "content"],
-].forEach(function (elementGlobal) {
-  var [name, id] = elementGlobal;
+  [
+    "gHistSvc",
+    "@mozilla.org/browser/nav-history-service;1",
+    [Ci.nsINavHistoryService, Ci.nsIBrowserHistory]
+  ],
+  [
+    "gURIFixup",
+    "@mozilla.org/docshell/urifixup;1",
+    [Ci.nsIURIFixup]
+  ]
+].forEach(function (service) {
+  let [name, contract, ifaces] = service;
   window.__defineGetter__(name, function () {
-    var element = document.getElementById(id);
-    if (!element)
-      return null;
     delete window[name];
-    return window[name] = element;
-  });
-  window.__defineSetter__(name, function (val) {
-    delete window[name];
-    return window[name] = val;
+    window[name] = Cc[contract].getService(ifaces.splice(0, 1)[0]);
+    if (ifaces.length)
+      ifaces.forEach(function (i) window[name].QueryInterface(i));
+    return window[name];
   });
 });
-
 
 var BrowserUI = {
   _panel : null,
@@ -340,6 +344,9 @@ var BrowserUI = {
 
     var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     getBrowser().loadURIWithFlags(aURI, flags, null, null);
+
+    gHistSvc.markPageAsTyped(gURIFixup.createFixupURI(aURI, 0));
+
     this.show(UIMODE_URLVIEW);
   },
 
