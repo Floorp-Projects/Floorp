@@ -55,9 +55,7 @@
 #include "nsILineInputStream.h"
 #include "nsIEffectiveTLDService.h"
 
-#include "nsTArray.h"
 #include "nsCOMArray.h"
-#include "nsIMutableArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
@@ -88,7 +86,6 @@ static const char kCookieFileName[] = "cookies.sqlite";
 #define COOKIES_SCHEMA_VERSION 2
 
 static const PRInt64 kCookieStaleThreshold = 60 * PR_USEC_PER_SEC; // 1 minute in microseconds
-static const PRInt64 kCookiePurgeAge = 30 * 24 * 60 * 60 * PR_USEC_PER_SEC; // 30 days in microseconds
 
 static const char kOldCookieFileName[] = "cookies.txt";
 
@@ -120,7 +117,6 @@ static const PRUint32 BEHAVIOR_REJECT        = 2;
 static const char kPrefCookiesPermissions[] = "network.cookie.cookieBehavior";
 static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
 static const char kPrefMaxCookiesPerHost[]  = "network.cookie.maxPerHost";
-static const char kPrefCookiePurgeAge[]     = "network.cookie.purgeAge";
 
 // struct for temporarily storing cookie attributes during header parsing
 struct nsCookieAttributes
@@ -210,13 +206,7 @@ static PRLogModuleInfo *sCookieLog = PR_NewLogModule("cookie");
 
 #define COOKIE_LOGFAILURE(a, b, c, d)    LogFailure(a, b, c, d)
 #define COOKIE_LOGSUCCESS(a, b, c, d, e) LogSuccess(a, b, c, d, e)
-
-#define COOKIE_LOGEVICTED(a)                   \
-  PR_BEGIN_MACRO                               \
-    if (PR_LOG_TEST(sCookieLog, PR_LOG_DEBUG)) \
-      LogEvicted(a);                           \
-  PR_END_MACRO
-
+#define COOKIE_LOGEVICTED(a)             LogEvicted(a)
 #define COOKIE_LOGSTRING(lvl, fmt)   \
   PR_BEGIN_MACRO                     \
     PR_LOG(sCookieLog, lvl, fmt);    \
@@ -309,6 +299,11 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCoo
 static void
 LogEvicted(nsCookie *aCookie)
 {
+  // if logging isn't enabled, return now to save cycles
+  if (!PR_LOG_TEST(sCookieLog, PR_LOG_DEBUG)) {
+    return;
+  }
+
   PR_LOG(sCookieLog, PR_LOG_DEBUG,("===== COOKIE EVICTED =====\n"));
 
   LogCookie(aCookie);
@@ -382,12 +377,10 @@ NS_IMPL_ISUPPORTS5(nsCookieService,
 
 nsCookieService::nsCookieService()
  : mHostTable(&mDefaultHostTable)
- , mCookieOldestTime(LL_MAXINT)
  , mCookieCount(0)
  , mCookiesPermissions(BEHAVIOR_ACCEPT)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
  , mMaxCookiesPerHost(kMaxCookiesPerHost)
- , mCookiePurgeAge(kCookiePurgeAge)
 {
 }
 
@@ -408,7 +401,6 @@ nsCookieService::Init()
     prefBranch->AddObserver(kPrefCookiesPermissions, this, PR_TRUE);
     prefBranch->AddObserver(kPrefMaxNumberOfCookies, this, PR_TRUE);
     prefBranch->AddObserver(kPrefMaxCookiesPerHost,  this, PR_TRUE);
-    prefBranch->AddObserver(kPrefCookiePurgeAge,     this, PR_TRUE);
     PrefChanged(prefBranch);
   }
 
@@ -782,19 +774,18 @@ nsCookieService::NotifyRejected(nsIURI *aHostURI)
     mObserverService->NotifyObservers(aHostURI, "cookie-rejected", nsnull);
 }
 
-// notify observers that the cookie list changed. there are five possible
+// notify observers that the cookie list changed. there are four possible
 // values for aData:
-// "deleted" means a cookie was deleted. aSubject is the deleted cookie.
-// "added"   means a cookie was added. aSubject is the added cookie.
-// "changed" means a cookie was altered. aSubject is the new cookie.
-// "cleared" means the entire cookie list was cleared. aSubject is null.
-// "batch-deleted" means multiple cookies were deleted. aSubject is the list of cookies.
+// "deleted" means a cookie was deleted. aCookie is the deleted cookie.
+// "added"   means a cookie was added. aCookie is the added cookie.
+// "changed" means a cookie was altered. aCookie is the new cookie.
+// "cleared" means the entire cookie list was cleared. aCookie is null.
 void
-nsCookieService::NotifyChanged(nsISupports     *aSubject,
+nsCookieService::NotifyChanged(nsICookie2      *aCookie,
                                const PRUnichar *aData)
 {
   if (mObserverService)
-    mObserverService->NotifyObservers(aSubject, "cookie-changed", aData);
+    mObserverService->NotifyObservers(aCookie, "cookie-changed", aData);
 }
 
 /******************************************************************************
@@ -814,9 +805,6 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxCookiesPerHost, &val)))
     mMaxCookiesPerHost = (PRUint16) LIMIT(val, 0, 0xFFFF, 0xFFFF);
-
-  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val)))
-    mCookiePurgeAge = val * PR_USEC_PER_SEC; // convert seconds to microseconds
 }
 
 /******************************************************************************
@@ -907,7 +895,7 @@ nsCookieService::Add(const nsACString &aDomain,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  AddInternal(cookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
+  AddInternal(cookie, currentTimeInUsec / PR_USEC_PER_SEC, nsnull, nsnull, PR_TRUE);
   return NS_OK;
 }
 
@@ -1147,7 +1135,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     if (originalCookieCount == 0)
       AddCookieToList(newCookie);
     else
-      AddInternal(newCookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
+      AddInternal(newCookie, currentTime, nsnull, nsnull, PR_TRUE);
   }
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mCookieCount));
@@ -1442,7 +1430,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
 
   // add the cookie to the list. AddInternal() takes care of logging.
   // we get the current time again here, since it may have changed during prompting
-  AddInternal(cookie, PR_Now(), aHostURI, savedCookieHeader.get(), aFromHttp);
+  AddInternal(cookie, PR_Now() / PR_USEC_PER_SEC, aHostURI, savedCookieHeader.get(), aFromHttp);
   return newCookie;
 }
 
@@ -1453,13 +1441,11 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
 // reached). also performs list maintenance by removing expired cookies.
 void
 nsCookieService::AddInternal(nsCookie   *aCookie,
-                             PRInt64     aCurrentTimeInUsec,
+                             PRInt64     aCurrentTime,
                              nsIURI     *aHostURI,
                              const char *aCookieHeader,
                              PRBool      aFromHttp)
 {
-  PRInt64 currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
-
   // if the new cookie is httponly, make sure we're not coming from script
   if (!aFromHttp && aCookie->IsHttpOnly()) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
@@ -1473,7 +1459,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 
   nsListIter matchIter;
   PRBool foundCookie = FindCookie(aCookie->Host(), aCookie->Name(), aCookie->Path(),
-                                  matchIter, currentTime);
+                                  matchIter, aCurrentTime);
 
   nsRefPtr<nsCookie> oldCookie;
   if (foundCookie) {
@@ -1488,7 +1474,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
     RemoveCookieFromList(matchIter);
 
     // check if the cookie has expired
-    if (aCookie->Expiry() <= currentTime) {
+    if (aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
       NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
       return;
@@ -1500,30 +1486,36 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 
   } else {
     // check if cookie has already expired
-    if (aCookie->Expiry() <= currentTime) {
+    if (aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
       return;
     }
 
     // check if we have to delete an old cookie.
-    nsEnumerationData data(currentTime, LL_MAXINT);
+    nsEnumerationData data(aCurrentTime, LL_MAXINT);
     if (CountCookiesFromHostInternal(aCookie->RawHost(), data) >= mMaxCookiesPerHost) {
       // remove the oldest cookie from host
       oldCookie = data.iter.current;
-      COOKIE_LOGEVICTED(oldCookie);
       RemoveCookieFromList(data.iter);
 
-      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+    } else if (mCookieCount >= mMaxNumberOfCookies) {
+      // try to make room, by removing expired cookies
+      RemoveExpiredCookies(aCurrentTime);
 
-    } else if (mCookieCount >= 1.1 * mMaxNumberOfCookies &&
-               aCurrentTimeInUsec - mCookieOldestTime >= 1.1 * mCookiePurgeAge) {
-      // we're over both size and age limits by 10%; time to purge the table!
-      // do this by:
-      // 1) removing expired cookies;
-      // 2) evicting the balance of old cookies, until we reach the size limit.
-      // note that the mCookieOldestTime indicator can be pessimistic - if it's
-      // older than the actual oldest cookie, we'll just purge more eagerly.
-      PurgeCookies(aCurrentTimeInUsec);
+      // check if we still have to get rid of something
+      if (mCookieCount >= mMaxNumberOfCookies) {
+        // find the position of the oldest cookie, and remove it
+        data.oldestTime = LL_MAXINT;
+        FindOldestCookie(data);
+        oldCookie = data.iter.current;
+        RemoveCookieFromList(data.iter);
+      }
+    }
+
+    // if we deleted an old cookie, notify consumers
+    if (oldCookie) {
+      COOKIE_LOGEVICTED(oldCookie);
+      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
     }
   }
 
@@ -2077,151 +2069,32 @@ nsCookieService::RemoveAllFromMemory()
   // which releases all their respective children.
   mHostTable->Clear();
   mCookieCount = 0;
-  mCookieOldestTime = LL_MAXINT;
 }
 
-// stores temporary data for enumerating over the hash entries,
-// since enumeration is done using callback functions
-struct nsPurgeData
-{
-  nsPurgeData(PRInt64 aCurrentTime,
-              PRInt64 aPurgeTime,
-              nsTArray<nsListIter> &aPurgeList,
-              nsIMutableArray *aRemovedList)
-   : currentTime(aCurrentTime)
-   , purgeTime(aPurgeTime)
-   , oldestTime(LL_MAXINT)
-   , purgeList(aPurgeList)
-   , removedList(aRemovedList) {}
-
-  // the current time, in seconds
-  PRInt64 currentTime;
-
-  // lastAccessed time older than which cookies are eligible for purge
-  PRInt64 purgeTime;
-
-  // lastAccessed time of the oldest cookie found during purge, to update our indicator
-  PRInt64 oldestTime;
-
-  // list of cookies over the age limit, for purging
-  nsTArray<nsListIter> &purgeList;
-
-  // list of all cookies we've removed, for notification
-  nsIMutableArray *removedList;
-};
-
-// comparator class for lastaccessed times of cookies.
-class CompareCookiesByAge {
-  public:
-    // returns true if (a == b); false otherwise.
-    PRBool Equals(const nsListIter &a, const nsListIter &b) const
-    {
-      return a.current->LastAccessed() == b.current->LastAccessed();
-    }
-
-    // returns true if (a < b); false otherwise.
-    PRBool LessThan(const nsListIter &a, const nsListIter &b) const
-    {
-      return a.current->LastAccessed() < b.current->LastAccessed();
-    }
-};
-
 PLDHashOperator
-purgeCookiesCallback(nsCookieEntry *aEntry,
-                     void          *aArg)
+removeExpiredCallback(nsCookieEntry *aEntry,
+                      void          *aArg)
 {
-  nsPurgeData &data = *static_cast<nsPurgeData*>(aArg);
+  const PRInt64 &currentTime = *static_cast<PRInt64*>(aArg);
   for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ) {
-    // check if the cookie has expired
-    if (iter.current->Expiry() <= data.currentTime) {
-      nsCookie *cookie = iter.current;
-      data.removedList->AppendElement(cookie, PR_FALSE);
-      COOKIE_LOGEVICTED(cookie);
-
+    if (iter.current->Expiry() <= currentTime)
       // remove from list. this takes care of updating the iterator for us
       nsCookieService::gCookieService->RemoveCookieFromList(iter);
-
-    } else {
-      // check if the cookie is over the age limit
-      if (iter.current->LastAccessed() <= data.purgeTime) {
-        data.purgeList.AppendElement(iter);
-
-      } else if (iter.current->LastAccessed() < data.oldestTime) {
-        // reset our indicator
-        data.oldestTime = iter.current->LastAccessed();
-      }
-
+    else
       ++iter;
-    }
   }
   return PL_DHASH_NEXT;
 }
 
-// purges expired and old cookies in a batch operation.
+// removes any expired cookies from memory
 void
-nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
+nsCookieService::RemoveExpiredCookies(PRInt64 aCurrentTime)
 {
 #ifdef PR_LOGGING
   PRUint32 initialCookieCount = mCookieCount;
-  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("PurgeCookies(): beginning purge with %ld cookies and %lld age",
-                                  mCookieCount, aCurrentTimeInUsec - mCookieOldestTime));
 #endif
-
-  nsAutoTArray<nsListIter, kMaxNumberOfCookies> purgeList;
-
-  nsCOMPtr<nsIMutableArray> removedList = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!removedList)
-    return;
-
-  nsPurgeData data(aCurrentTimeInUsec / PR_USEC_PER_SEC, aCurrentTimeInUsec - mCookiePurgeAge, purgeList, removedList);
-  mHostTable->EnumerateEntries(purgeCookiesCallback, &data);
-
-#ifdef PR_LOGGING
-  PRUint32 postExpiryCookieCount = mCookieCount;
-#endif
-
-  // now we have a list of iterators for cookies over the age limit.
-  // sort them by age, and then we'll see how many to remove...
-  purgeList.Sort(CompareCookiesByAge());
-
-  // only remove old cookies until we reach the max cookie limit, no more.
-  PRUint32 excess = mCookieCount - mMaxNumberOfCookies;
-  //printf("count %u, maxnum %u, listlen %u, excess %d\n", mCookieCount, mMaxNumberOfCookies, list.Length(), excess);
-  if (purgeList.Length() > excess) {
-    // we're not purging everything in the list, so update our indicator
-    data.oldestTime = purgeList[excess].current->LastAccessed();
-
-    purgeList.SetLength(excess);
-  }
-
-  // traverse the list and remove cookies. the iterators we've stored
-  // in the list aren't stable under list mutation, so we need to do a
-  // fresh linked list traversal from the hash entryclass for each cookie.
-  for (PRUint32 i = 0; i < purgeList.Length(); ++i) {
-    for (nsListIter iter(purgeList[i].entry, nsnull, purgeList[i].entry->Head()); iter.current; ++iter) {
-      if (iter.current == purgeList[i].current) {
-        // remove from list. this takes care of updating the iterator for us
-        nsCookie *cookie = iter.current;
-        removedList->AppendElement(cookie, PR_FALSE);
-        COOKIE_LOGEVICTED(cookie);
-
-        RemoveCookieFromList(iter);
-        break;
-      }
-    }
-  }
-
-  // take all the cookies in the removed list, and notify about them in one batch
-  NotifyChanged(removedList, NS_LITERAL_STRING("batch-deleted").get());
-
-  // reset the oldest time indicator
-  mCookieOldestTime = data.oldestTime;
-
-  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("PurgeCookies(): %ld expired; %ld purged; %ld remain; %lld oldest age",
-                                  initialCookieCount - postExpiryCookieCount,
-                                  mCookieCount - postExpiryCookieCount,
-                                  mCookieCount,
-                                  aCurrentTimeInUsec - mCookieOldestTime));
+  mHostTable->EnumerateEntries(removeExpiredCallback, &aCurrentTime);
+  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("RemoveExpiredCookies(): %ld purged; %ld remain", initialCookieCount - mCookieCount, mCookieCount));
 }
 
 // find whether a given cookie has been previously set. this is provided by the
@@ -2409,10 +2282,6 @@ nsCookieService::AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB)
   entry->Head() = aCookie;
   ++mCookieCount;
 
-  // keep track of the oldest cookie, for when it comes time to purge
-  if (aCookie->LastAccessed() < mCookieOldestTime)
-    mCookieOldestTime = aCookie->LastAccessed();
-
   // if it's a non-session cookie and hasn't just been read from the db, write it out.
   if (aWriteToDB && !aCookie->IsSession() && mStmtInsert) {
     // use our cached sqlite "insert" statement
@@ -2460,3 +2329,23 @@ nsCookieService::UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed)
   }
 }
 
+static PLDHashOperator
+findOldestCallback(nsCookieEntry *aEntry,
+                   void          *aArg)
+{
+  nsEnumerationData *data = static_cast<nsEnumerationData*>(aArg);
+  for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ++iter) {
+    // check if we've found the oldest cookie so far
+    if (data->oldestTime > iter.current->LastAccessed()) {
+      data->oldestTime = iter.current->LastAccessed();
+      data->iter = iter;
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsCookieService::FindOldestCookie(nsEnumerationData &aData)
+{
+  mHostTable->EnumerateEntries(findOldestCallback, &aData);
+}
