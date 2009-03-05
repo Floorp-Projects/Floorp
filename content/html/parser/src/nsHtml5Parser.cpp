@@ -246,6 +246,7 @@ nsHtml5Parser::ContinueInterruptedParsing()
 
   // XXX Stop speculative script thread but why?
   
+  mTreeBuilder->MaybeFlush();
   ParseUntilSuspend();
 
   return NS_OK;
@@ -598,6 +599,7 @@ nsresult
 nsHtml5Parser::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                         nsresult status)
 {
+  mTreeBuilder->MaybeFlush();
   NS_ASSERTION((mRequest == aRequest), "Got Stop on wrong stream.");
   nsresult rv = NS_OK;
   
@@ -675,6 +677,7 @@ nsHtml5Parser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
+  mTreeBuilder->MaybeFlush();
   NS_PRECONDITION((eOnStart == mStreamListenerState ||
                    eOnDataAvail == mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");
@@ -1249,9 +1252,11 @@ nsHtml5Parser::MaybePostContinueEvent()
   if (mContinueEvent) {
     return; // we already have a pending event
   }
-  if (mStreamListenerState == eOnStart || mStreamListenerState == eOnDataAvail) {
-    return; // we are expecting stream events
+#if 0
+  if ((!mTreeBuilder->NeedsFlush()) && (mStreamListenerState == eOnStart || mStreamListenerState == eOnDataAvail)) {
+    return; // we are expecting stream events and we don't need a quick flush for the tree builder
   }
+#endif
   
   // This creates a reference cycle between this and the event that is
   // broken when the event fires.
@@ -1356,7 +1361,6 @@ nsHtml5Parser::UpdateChildCounts()
 nsresult
 nsHtml5Parser::FlushTags()
 {
-    mTreeBuilder->Flush(); 
     return NS_OK; 
 }
 
