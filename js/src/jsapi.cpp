@@ -104,6 +104,14 @@
 #define CHECK_REQUEST(cx)       ((void)0)
 #endif
 
+/* Check that we can cast JSObject* as jsval without tag bit manipulations. */
+JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
+
+/* Check that JSVAL_TRACE_KIND works. */
+JS_STATIC_ASSERT(JSVAL_TRACE_KIND(JSVAL_OBJECT) == JSTRACE_OBJECT);
+JS_STATIC_ASSERT(JSVAL_TRACE_KIND(JSVAL_DOUBLE) == JSTRACE_DOUBLE);
+JS_STATIC_ASSERT(JSVAL_TRACE_KIND(JSVAL_STRING) == JSTRACE_STRING);
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
