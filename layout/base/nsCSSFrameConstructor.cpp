@@ -3053,14 +3053,12 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
                                          nsStyleContext*              aStyleContext,
                                          nsFrameItems* &              aFrameItems,
                                          nsFrameConstructorSaveState& aSaveState,
-                                         PRBool&                      aSuppressFrame,
                                          PRBool&                      aCreatedPseudo)
 {
   NS_PRECONDITION(aStyleContext, "Must have child's style context");
   NS_PRECONDITION(aFrameItems, "Must have frame items to work with");
   NS_PRECONDITION(aFCData, "Must have frame construction data");
 
-  aSuppressFrame = PR_FALSE;
   aCreatedPseudo = PR_FALSE;
   if (!aParentFrame) {
     // Nothing to do here
@@ -3069,25 +3067,14 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
 
   PRBool tablePart = ((aFCData->mBits & FCDATA_IS_TABLE_PART) != 0);
 
-  // Only use the outer table frame as parent if the child is going to use a
-  // tableCaptionFrame, otherwise the inner table frame is the parent
-  // (bug 341858).
   nsIAtom* parentType = aParentFrame->GetType();
   NS_ASSERTION(parentType != nsGkAtoms::tableOuterFrame,
                "Shouldn't be happening");
-  if (parentType == nsGkAtoms::tableColGroupFrame) {
-    if (!tablePart ||
-        aStyleContext->GetStyleDisplay()->mDisplay !=
-          NS_STYLE_DISPLAY_TABLE_COLUMN) {
-      aSuppressFrame = PR_TRUE;
-      return NS_OK;
-    }
-  }
  
   // If our parent is a table, table-row-group, or table-row, and
   // we're not table-related in any way, we have to create table
   // pseudo-frames so that we have a table cell to live in.
-  if (IsTableRelated(aParentFrame->GetType(), PR_FALSE) && !tablePart) {
+  if (IsTableRelated(parentType, PR_FALSE) && !tablePart) {
     nsFrameState savedStateBits  = aState.mAdditionalStateBits;
     aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
     nsresult rv = GetPseudoCellFrame(aNameSpaceID, aState, *aParentFrame);
@@ -6627,6 +6614,14 @@ nsCSSFrameConstructor::AddFrameConstructionItemInternal(nsFrameConstructorState&
 #endif /* MOZ_XUL */
   }
 
+  // Inside colgroups, suppress everything except columns.
+  if (aParentFrame &&
+      aParentFrame->GetType() == nsGkAtoms::tableColGroupFrame &&
+      (!(data->mBits & FCDATA_IS_TABLE_PART) ||
+       display->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)) {
+    return;
+  }
+
   PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
 
   FrameConstructionItem* item = aItems.AppendElement();
@@ -6675,14 +6670,13 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
   nsIFrame* adjParentFrame = aParentFrame;
   nsFrameItems* frameItems = &aFrameItems;
   PRBool pseudoParent = PR_FALSE;
-  PRBool suppressFrame = PR_FALSE;
   nsStyleContext* styleContext = aItem.mStyleContext;
   nsFrameConstructorSaveState pseudoSaveState;
   nsresult rv = AdjustParentFrame(aState, aItem.mContent, adjParentFrame,
                                   aItem.mFCData, aItem.mNameSpaceID,
                                   styleContext, frameItems, pseudoSaveState,
-                                  suppressFrame, pseudoParent);
-  if (NS_FAILED(rv) || suppressFrame) {
+                                  pseudoParent);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
