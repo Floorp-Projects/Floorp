@@ -1227,7 +1227,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
-    JSObject *scopeobj;
     uint32 tcflags;
     JSPrincipals *principals;
     const char *file;
@@ -1247,23 +1246,32 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     indirectCall = (caller && caller->regs && *caller->regs->pc != JSOP_EVAL);
 
     /*
+     * This call to js_GetWrappedObject is safe because of the security checks
+     * we do below. However, the control flow below is confusing, so we double
+     * check. There are two cases:
+     * - Direct call: This object is never used. So unwrapping can't hurt.
+     * - Indirect call: If this object isn't already the scope chain (which
+     *   we're guaranteed to be allowed to access) then we do a security
+     *   check.
+     */
+    obj = js_GetWrappedObject(cx, obj);
+
+    /*
      * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
      * calls that attempt to use a non-global object as the "with" object in
      * the former indirect case.
      */
-    scopeobj = OBJ_GET_PARENT(cx, obj);
-    if (scopeobj) {
-        scopeobj = js_GetWrappedObject(cx, obj);
-        scopeobj = OBJ_GET_PARENT(cx, scopeobj);
-    }
-    if (indirectCall || scopeobj) {
-        uintN flags = scopeobj
-                      ? JSREPORT_ERROR
-                      : JSREPORT_STRICT | JSREPORT_WARNING;
-        if (!JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage, NULL,
-                                          JSMSG_BAD_INDIRECT_CALL,
-                                          js_eval_str)) {
-            return JS_FALSE;
+    {
+        JSObject *parent = OBJ_GET_PARENT(cx, obj);
+        if (indirectCall || parent) {
+            uintN flags = parent
+                          ? JSREPORT_ERROR
+                          : JSREPORT_STRICT | JSREPORT_WARNING;
+            if (!JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage, NULL,
+                                              JSMSG_BAD_INDIRECT_CALL,
+                                              js_eval_str)) {
+                return JS_FALSE;
+            }
         }
     }
 
@@ -1281,6 +1289,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     /* Accept an optional trailing argument that overrides the scope object. */
+    JSObject *scopeobj = NULL;
     if (argc >= 2) {
         if (!js_ValueToObject(cx, argv[1], &scopeobj))
             return JS_FALSE;
@@ -1346,6 +1355,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
         }
     } else {
+        scopeobj = js_GetWrappedObject(cx, scopeobj);
+        OBJ_TO_INNER_OBJECT(cx, scopeobj);
+        if (!scopeobj) {
+            ok = JS_FALSE;
+            goto out;
+        }
         ok = js_CheckPrincipalsAccess(cx, scopeobj,
                                       JS_StackFramePrincipals(cx, caller),
                                       cx->runtime->atomState.evalAtom);
