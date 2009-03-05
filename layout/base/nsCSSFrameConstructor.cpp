@@ -2156,9 +2156,9 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     }
   }
 
-  AddFrameConstructionItemInternal(aState, container, aParentFrame, elemName,
-                                   kNameSpaceID_None, pseudoStyleContext,
-                                   ITEM_IS_GENERATED_CONTENT, aItems);
+  AddFrameConstructionItemsInternal(aState, container, aParentFrame, elemName,
+                                    kNameSpaceID_None, pseudoStyleContext,
+                                    ITEM_IS_GENERATED_CONTENT, aItems);
 }
 
 static PRBool
@@ -6394,62 +6394,38 @@ nsCSSFrameConstructor::ConstructSVGForeignObjectFrame(nsFrameConstructorState& a
 
 #endif // MOZ_SVG
 
-// If page-break-before is set, this function constructs a page break frame,
-// EXCEPT for on these types of elements:
-//  * row groups, rows, cells (these are handled internally by tables)
-//  * fixed- and absolutely-positioned elements (currently, our positioning
-//    code doesn't expect positioned frames to have nsPageBreakFrame siblings)
-//
-// Returns true iff we should construct a page break frame after this element.
-// aStyleContext is the style context of the frame for which we're
-// constructing the page break
-PRBool
-nsCSSFrameConstructor::PageBreakBefore(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       nsIFrame*                aParentFrame,
-                                       nsStyleContext*          aStyleContext,
-                                       const FrameConstructionData* aFCData,
-                                       nsFrameItems&            aFrameItems)
-{
-  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
-
-  if (!aStyleContext->GetStyleDisplay()->IsAbsolutelyPositioned() &&
-      !(aFCData->mBits & FCDATA_IS_TABLE_PART)) {
-    if (display->mBreakBefore) {
-      ConstructPageBreakFrame(aState, aContent, aParentFrame, aStyleContext,
-                              aFrameItems);
-    }
-    return display->mBreakAfter;
-  }
-  return PR_FALSE;
-}
-
-// aStyleContext is the style context of the frame for which we're
-// constructing the page break
-nsresult
-nsCSSFrameConstructor::ConstructPageBreakFrame(nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsIFrame*                aParentFrame,
-                                               nsStyleContext*          aStyleContext,
-                                               nsFrameItems&            aFrameItems)
+void
+nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
+                                        nsStyleContext* aMainStyleContext,
+                                        nsTArray<FrameConstructionItem>& aItems)
 {
   nsRefPtr<nsStyleContext> pseudoStyle;
-  // Use the same parent style context that |aStyleContext| has, since
+  // Use the same parent style context that |aMainStyleContext| has, since
   // that's easier to re-resolve and it doesn't matter in practice.
   // (Getting different parents can result in framechange hints, e.g.,
   // for user-modify.)
-  pseudoStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(nsnull,
-                   nsCSSAnonBoxes::pageBreak, aStyleContext->GetParent());
-  nsIFrame* pageBreakFrame = NS_NewPageBreakFrame(mPresShell, pseudoStyle);
-  if (pageBreakFrame) {
-    InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, pageBreakFrame);
-    aFrameItems.AddChild(pageBreakFrame);
+  pseudoStyle =
+    mPresShell->StyleSet()->
+      ResolvePseudoStyleFor(nsnull, nsCSSAnonBoxes::pageBreak,
+                            aMainStyleContext->GetParent());
+  FrameConstructionItem* item = aItems.AppendElement();
+  if (!item) {
+    return;
+  }
 
-    return NS_OK;
-  }
-  else {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  static const FrameConstructionData sPageBreakData =
+    FCDATA_DECL(FCDATA_SKIP_FRAMEMAP, NS_NewPageBreakFrame);
+
+  item->mFCData = &sPageBreakData;
+  item->mContent = aContent;
+  // Lie about the tag and namespace so we don't trigger anything
+  // interesting during frame construction.
+  item->mTag = nsCSSAnonBoxes::pageBreak;
+  item->mNameSpaceID = kNameSpaceID_None;
+  item->mStyleContext.swap(pseudoStyle);
+  item->mIsText = PR_FALSE;
+  item->mIsGeneratedContent = PR_FALSE;
+  item->mIsRootPopupgroup = PR_FALSE;
 }
 
 nsresult
@@ -6461,21 +6437,22 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
 {
   NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
   nsAutoTArray<FrameConstructionItem, 1> items;
-  AddFrameConstructionItem(aState, aContent, aParentFrame, items);
+  AddFrameConstructionItems(aState, aContent, aParentFrame, items);
 
-  NS_ASSERTION(items.Length() <= 1, "Unexpected number of items");
-  if (items.Length() == 0) {
-    return NS_OK;
+  for (PRUint32 i = 0; i < items.Length(); ++i) {
+    nsresult rv =
+      ConstructFramesFromItem(aState, items[i], aParentFrame, aFrameItems);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return ConstructFramesFromItem(aState, items[0], aParentFrame, aFrameItems);
+  return NS_OK;
 }
 
 void
-nsCSSFrameConstructor::AddFrameConstructionItem(nsFrameConstructorState& aState,
-                                                nsIContent* aContent,
-                                                nsIFrame* aParentFrame,
-                                                nsTArray<FrameConstructionItem>& aItems)
+nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState,
+                                                 nsIContent* aContent,
+                                                 nsIFrame* aParentFrame,
+                                                 nsTArray<FrameConstructionItem>& aItems)
 {
   // don't create a whitespace frame if aParent doesn't want it
   if (!NeedFrameFor(aParentFrame, aContent)) {
@@ -6490,23 +6467,23 @@ nsCSSFrameConstructor::AddFrameConstructionItem(nsFrameConstructorState& aState,
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = ResolveStyleContext(aParentFrame, aContent);
 
-  AddFrameConstructionItemInternal(aState, aContent, aParentFrame,
-                                   aContent->Tag(), aContent->GetNameSpaceID(),
-                                   styleContext,
-                                   ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK,
-                                   aItems);
+  AddFrameConstructionItemsInternal(aState, aContent, aParentFrame,
+                                    aContent->Tag(), aContent->GetNameSpaceID(),
+                                    styleContext,
+                                    ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK,
+                                    aItems);
 }
 
 
 void
-nsCSSFrameConstructor::AddFrameConstructionItemInternal(nsFrameConstructorState& aState,
-                                                        nsIContent* aContent,
-                                                        nsIFrame* aParentFrame,
-                                                        nsIAtom* aTag,
-                                                        PRInt32 aNameSpaceID,
-                                                        nsStyleContext* aStyleContext,
-                                                        PRUint32 aFlags,
-                                                        nsTArray<FrameConstructionItem>& aItems)
+nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
+                                                         nsIContent* aContent,
+                                                         nsIFrame* aParentFrame,
+                                                         nsIAtom* aTag,
+                                                         PRInt32 aNameSpaceID,
+                                                         nsStyleContext* aStyleContext,
+                                                         PRUint32 aFlags,
+                                                         nsTArray<FrameConstructionItem>& aItems)
 {
   // The following code allows the user to specify the base tag
   // of an element using XBL.  XUL and HTML objects (like boxes, menus, etc.)
@@ -6622,6 +6599,16 @@ nsCSSFrameConstructor::AddFrameConstructionItemInternal(nsFrameConstructorState&
     return;
   }
 
+  PRBool canHavePageBreak =
+    (aFlags & ITEM_ALLOW_PAGE_BREAK) &&
+    aState.mPresContext->IsPaginated() &&
+    !display->IsAbsolutelyPositioned() &&
+    !(data->mBits & FCDATA_IS_TABLE_PART);
+
+  if (canHavePageBreak && display->mBreakBefore) {
+    AddPageBreakItem(aContent, aStyleContext, aItems);
+  }
+
   PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
 
   FrameConstructionItem* item = aItems.AppendElement();
@@ -6637,7 +6624,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemInternal(nsFrameConstructorState&
   item->mTag = aTag;
   item->mNameSpaceID = aNameSpaceID;
   item->mStyleContext.swap(styleContext);
-  item->mAllowPageBreaks = ((aFlags & ITEM_ALLOW_PAGE_BREAK) != 0);
   item->mIsText = isText;
   item->mIsGeneratedContent = isGeneratedContent;
   if (isGeneratedContent) {
@@ -6648,6 +6634,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemInternal(nsFrameConstructorState&
     aContent->IsRootOfNativeAnonymousSubtree();
   if (item->mIsRootPopupgroup) {
     aState.mHavePendingPopupgroup = PR_TRUE;
+  }
+
+  if (canHavePageBreak && display->mBreakAfter) {
+    AddPageBreakItem(aContent, aStyleContext, aItems);
   }
 }
 
@@ -6716,23 +6706,9 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     aItem.mIsGeneratedContent = PR_FALSE;
   }
 
-  // Construct a page break frame for page-break-before, if needed, and
-  // remember whether we need one for page-break-after.
-  PRBool pageBreakAfter =
-    aItem.mAllowPageBreaks &&
-    aState.mPresContext->IsPaginated() &&
-    PageBreakBefore(aState, aItem.mContent, adjParentFrame,
-                    styleContext, aItem.mFCData, *frameItems);
-
   // XXXbz maybe just inline ConstructFrameFromItemInternal here or something?
   rv = ConstructFrameFromItemInternal(aItem, aState, adjParentFrame,
                                       *frameItems, pseudoParent);
-
-  if (NS_SUCCEEDED(rv) && pageBreakAfter) {
-    // Construct the page break after
-    ConstructPageBreakFrame(aState, aItem.mContent, adjParentFrame,
-                            styleContext, *frameItems);
-  }
 
   aState.mAdditionalStateBits = savedStateBits;
 
@@ -10257,8 +10233,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                    "CreateAnonymousFrames manually and not follow the standard "
                    "ProcessChildren() codepath for this frame");
 #endif
-      AddFrameConstructionItem(aState, anonymousItems[i], aFrame,
-                               itemsToConstruct);
+      AddFrameConstructionItems(aState, anonymousItems[i], aFrame,
+                                itemsToConstruct);
     }
   }
 
@@ -10284,7 +10260,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     for (ChildIterator::Init(aContent, &iter, &last);
          iter != last;
          ++iter) {
-      AddFrameConstructionItem(aState, *iter, aFrame, itemsToConstruct);
+      AddFrameConstructionItems(aState, *iter, aFrame, itemsToConstruct);
     }
 
     if (aCanHaveGeneratedContent) {
@@ -10306,8 +10282,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                    "CreateAnonymousFrames manually and not follow the standard "
                    "ProcessChildren() codepath for this frame");
 #endif
-      AddFrameConstructionItem(aState, anonymousItems[i], aFrame,
-                               itemsToConstruct);
+      AddFrameConstructionItems(aState, anonymousItems[i], aFrame,
+                                itemsToConstruct);
     }
   }
 
@@ -11339,12 +11315,12 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
     BeginUpdate();
 
     nsAutoTArray<FrameConstructionItem, 1> items;
-    AddFrameConstructionItemInternal(state, aChild, aParentFrame, aChild->Tag(),
-                                     aChild->GetNameSpaceID(), styleContext,
-                                     ITEM_ALLOW_XBL_BASE, items);
-    if (items.Length() > 0) {
-      NS_ASSERTION(items.Length() == 1, "Unexpected count");
-      ConstructFramesFromItem(state, items[0], aParentFrame, frameItems);
+    AddFrameConstructionItemsInternal(state, aChild, aParentFrame,
+                                      aChild->Tag(), aChild->GetNameSpaceID(),
+                                      styleContext, ITEM_ALLOW_XBL_BASE,
+                                      items);
+    for (PRUint32 i = 0; i < items.Length(); ++i) {
+      ConstructFramesFromItem(state, items[i], aParentFrame, frameItems);
     }
 
     if (!state.mPseudoFrames.IsEmpty()) {
@@ -11721,7 +11697,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsFrameConstructorState& aState,
        iter != last;
        ++iter) {
     // Construct a child frame
-    AddFrameConstructionItem(aState, *iter, aFrame, itemsToConstruct);
+    AddFrameConstructionItems(aState, *iter, aFrame, itemsToConstruct);
   }
 
   if (aCanHaveGeneratedContent) {
