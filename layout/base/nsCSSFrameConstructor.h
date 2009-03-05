@@ -283,6 +283,7 @@ public:
 
 private:
   struct FrameConstructionItem;
+  class FrameConstructionItemList;
 
   nsresult ReconstructDocElementHierarchyInternal();
 
@@ -330,7 +331,7 @@ private:
   void AddFrameConstructionItems(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aParentFrame,
-                                 nsTArray<FrameConstructionItem>& aItems);
+                                 FrameConstructionItemList& aItems);
 
   nsresult ConstructDocElementFrame(nsFrameConstructorState& aState,
                                     nsIContent*              aDocElement,
@@ -392,7 +393,7 @@ private:
                                   nsIContent*              aContent,
                                   nsStyleContext*          aStyleContext,
                                   nsIAtom*                 aPseudoElement,
-                                  nsTArray<FrameConstructionItem>& aItems);
+                                  FrameConstructionItemList& aItems);
 
   // This method can change aFrameList: it can chop off the end and
   // put it in a special sibling of aParentFrame.  It can also change
@@ -727,6 +728,63 @@ private:
                   const FrameConstructionDataByTag* aDataPtr,
                   PRUint32 aDataLength);
 
+  /* A class representing a list of FrameConstructionItems */
+  class FrameConstructionItemList {
+  public:
+    FrameConstructionItemList() :
+      mInlineCount(0),
+      mLineParticipantCount(0)
+    {}
+
+    PRBool IsEmpty() const { return mItems.Length() == 0; }
+    PRBool AnyItemsNeedBlockParent() const { return mLineParticipantCount != 0; }
+    PRBool AreAllItemsInline() const { return mInlineCount == mItems.Length(); }
+    PRBool IsStartInline() const {
+      NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
+      return mItems[0].mHasInlineEnds;
+    }
+    PRBool IsEndInline() const {
+      NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
+      return mItems[mItems.Length() - 1].mHasInlineEnds;
+    }
+
+    FrameConstructionItem* AppendItem() {
+      return mItems.AppendElement();
+    }
+
+    void InlineItemAdded() { ++mInlineCount; }
+    void LineParticipantItemAdded() { ++mLineParticipantCount; }
+
+    class Iterator;
+    friend class Iterator;
+    class Iterator {
+    public:
+      Iterator(FrameConstructionItemList& list) :
+        mList(list.mItems),
+        mPosition(0),
+        mLimit(mList.Length())
+      {}
+
+      operator FrameConstructionItem& () { return mList[mPosition]; }
+      PRBool IsDone() const { return mPosition == mLimit; }
+      void Next() {
+        NS_ASSERTION(mPosition < mLimit, "Should have checked IsDone()!");
+        ++mPosition;
+      }
+    private:
+      nsTArray<FrameConstructionItem> & mList;
+      PRUint32 mPosition;
+      PRUint32 mLimit;
+    };
+
+  private:
+    nsTArray<FrameConstructionItem> mItems;
+    PRUint32 mInlineCount;
+    PRUint32 mLineParticipantCount;
+  };
+
+  typedef FrameConstructionItemList::Iterator FCItemIterator;
+
   /* A struct representing an item for which frames might need to be
    * constructed.  This contains all the information needed to construct the
    * frame other than the parent frame and whatever would be stored in the
@@ -771,10 +829,8 @@ private:
     PRPackedBool mIsPopup;
 
     // Child frame construction items.
-    // Can't be an auto array, since we don't know our size yet, and
-    // in any case it would be bad if someone tried to do that...
-    // Only used for inline frame items.
-    nsTArray<FrameConstructionItem> mChildItems;
+    // Only used for inline frame items for now.
+    FrameConstructionItemList mChildItems;
 
   private:
     FrameConstructionItem(const FrameConstructionItem& aOther); /* not implemented */
@@ -866,7 +922,7 @@ private:
 
   void AddPageBreakItem(nsIContent* aContent,
                         nsStyleContext* aMainStyleContext,
-                        nsTArray<FrameConstructionItem>& aItems);
+                        FrameConstructionItemList& aItems);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not HTML.
@@ -923,7 +979,7 @@ private:
                                          PRInt32                  aNameSpaceID,
                                          nsStyleContext*          aStyleContext,
                                          PRUint32                 aFlags,
-                                         nsTArray<FrameConstructionItem>& aItems);
+                                         FrameConstructionItemList& aItems);
 
   // On success, always puts something in aChildItems
   nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
@@ -1244,17 +1300,14 @@ private:
                              FrameConstructionItem& aParentItem);
 
   /**
-   * Construct frames for the indicated range of aItems (half-open; closed on
-   * the aStart end, open on the aEnd end), and put the resulting frames in
+   * Construct frames for the given item list and put the resulting frames in
    * aFrameItems.  This function will save pseudoframes on entry and restore on
    * exit.
    */
-  nsresult ConstructFramesFromItemSublist(nsFrameConstructorState& aState,
-                                          nsTArray<FrameConstructionItem>& aItems,
-                                          PRUint32 aStart,
-                                          PRUint32 aEnd,
-                                          nsIFrame* aParentFrame,
-                                          nsFrameItems& aFrameItems);
+  nsresult ConstructFramesFromItemList(nsFrameConstructorState& aState,
+                                       FrameConstructionItemList& aItems,
+                                       nsIFrame* aParentFrame,
+                                       nsFrameItems& aFrameItems);
 
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
@@ -1268,7 +1321,7 @@ private:
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
                              nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             const nsTArray<FrameConstructionItem>& aItems,
+                             const FrameConstructionItemList& aItems,
                              PRBool                   aIsAppend,
                              nsIFrame*                aPrevSibling);
 
@@ -1418,16 +1471,6 @@ private:
     NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
     mCountersDirty = PR_TRUE;
   }
-
-  /**
-   * Return whether any of the given items requires a block parent
-   */
-  static PRBool AnyItemsNeedBlockParent(const nsTArray<FrameConstructionItem>& aItems);
-
-  /**
-   * Return whether all of the given items are inline
-   */
-  static PRBool AreAllItemsInline(const nsTArray<FrameConstructionItem>& aItems);
 
 public:
   struct RestyleData;
