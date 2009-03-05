@@ -9,8 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478438
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript;version=1.8">
-    function fail(s) { ok(false, s) }
-    function pass(s) { ok(true, s) }
+    function fail(s, e) { ok(false, s + e) }
+    function pass(s, e) { ok(true, s) }
     (pass.opposite = fail).opposite = pass;
 
     function test() {
@@ -21,8 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478438
       var iwin = (new XPCNativeWrapper(document)).getElementById("f").contentWindow;
 
       function testOne(fn, onAllow, infinitive) {
-        try { fn(); onAllow("able " + infinitive) }
-        catch (e) { onAllow.opposite("unable " + infinitive + ": " + e) }
+        try { fn(); onAllow("able " + infinitive, "") }
+        catch (e) { onAllow.opposite("unable " + infinitive, ": " + e) }
       }
 
       testOne(function() iwin.focus, pass,
