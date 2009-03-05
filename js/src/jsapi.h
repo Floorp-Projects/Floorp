@@ -115,7 +115,6 @@ JSVAL_TO_STRING(jsval v)
 static JS_ALWAYS_INLINE jsval
 OBJECT_TO_JSVAL(JSObject *obj)
 {
-    JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
     JS_ASSERT(((jsval) obj & JSVAL_TAGMASK) == JSVAL_OBJECT);
     return (jsval) obj;
 }
@@ -1015,10 +1014,6 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
 #define JSVAL_IS_TRACEABLE(v)   (JSVAL_IS_GCTHING(v) && !JSVAL_IS_NULL(v))
 #define JSVAL_TO_TRACEABLE(v)   (JSVAL_TO_GCTHING(v))
 #define JSVAL_TRACE_KIND(v)     (JSVAL_TAG(v) >> 1)
-
-JS_STATIC_ASSERT(JSVAL_TRACE_KIND(JSVAL_OBJECT) == JSTRACE_OBJECT);
-JS_STATIC_ASSERT(JSVAL_TRACE_KIND(JSVAL_DOUBLE) == JSTRACE_DOUBLE);
-JS_STATIC_ASSERT(JSVAL_TRACE_KIND(JSVAL_STRING) == JSTRACE_STRING);
 
 struct JSTracer {
     JSContext           *context;

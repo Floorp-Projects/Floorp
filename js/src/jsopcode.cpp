@@ -75,6 +75,11 @@
 
 #include "jsautooplen.h"
 
+/*
+ * Index limit must stay within 32 bits.
+ */
+JS_STATIC_ASSERT(sizeof(uint32) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
+
 /* Verify JSOP_XXX_LENGTH constant definitions. */
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     JS_STATIC_ASSERT(op##_LENGTH == length);
