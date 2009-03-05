@@ -1193,7 +1193,9 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
     return NS_OK;
 
   // Get direct child containing the deepest child at the given point.
-  nsCOMPtr<nsIAccessible> parent, accessible(*aAccessible);
+  nsCOMPtr<nsIAccessible> parent, accessible;
+  accessible.swap(*aAccessible);
+
   while (PR_TRUE) {
     accessible->GetParent(getter_AddRefs(parent));
     if (!parent) {
