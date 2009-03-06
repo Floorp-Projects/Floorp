@@ -1732,7 +1732,7 @@ testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
 recorderStarted: 5,
 recorderAborted: 2,
-traceTriggered: 9
+traceTriggered: 11
 };
 test(testNestedExitStackOuter);
 
@@ -2580,7 +2580,7 @@ function testThinLoopDemote() {
   function f()
   {
     var k = 1;
-    for (var n = 0; n < 2; n++) {
+    for (var n = 0; n < 4; n++) {
       k = (k * 10);
     }
     return k;
@@ -2588,12 +2588,12 @@ function testThinLoopDemote() {
   f();
   return f();
 }
-testThinLoopDemote.expected = 100;
+testThinLoopDemote.expected = 10000;
 testThinLoopDemote.jitstats = {
 recorderStarted: 2,
 recorderAborted: 0,
 traceCompleted: 2,
-traceTriggered: 1,
+traceTriggered: 3,
 unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
@@ -2642,7 +2642,7 @@ recorderAborted: 1,
 traceCompleted: 6,
 traceTriggered: 14,
 unstableLoopVariable: 3,
-noCompatInnerTrees: 0
+noCompatInnerTrees: 1
 };
 test(testWeirdDateParse);
 
@@ -4410,6 +4410,120 @@ function testGeneratorDeepBail() {
 }
 testGeneratorDeepBail.expected = 3;
 test(testGeneratorDeepBail);
+
+function testRegexpGet() {
+    var re = /hi/;
+    var a = [];
+    for (let i = 0; i < 5; ++i)
+        a.push(re.source);
+    return a.toString();
+}
+testRegexpGet.expected = "hi,hi,hi,hi,hi";
+test(testRegexpGet);
+
+function testThrowingObjectEqUndefined()
+{
+  try
+  {
+    var obj = { toString: function() { throw 0; } };
+    for (var i = 0; i < 5; i++)
+      "" + (obj == undefined);
+    return i === 5;
+  }
+  catch (e)
+  {
+    return "" + e;
+  }
+}
+testThrowingObjectEqUndefined.expected = true;
+testThrowingObjectEqUndefined.jitstats = {
+  sideExitIntoInterpreter: 1
+};
+test(testThrowingObjectEqUndefined);
+
+function x4(v) { return "" + v + v + v + v; }
+function testConvertibleObjectEqUndefined()
+{
+  var compares =
+    [
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+     false, false, false, false,
+     undefined, undefined, undefined, undefined,
+    ];
+  var count = 0;
+  var obj = { valueOf: function() { count++; return 1; } };
+  var results = compares.map(function(v) { return "unwritten"; });
+
+  for (var i = 0, sz = compares.length; i < sz; i++)
+    results[i] = compares[i] == obj;
+
+  return results.join("") + count;
+}
+testConvertibleObjectEqUndefined.expected =
+  x4(false) + x4(false) + x4(false) + x4(false) + x4(false) + x4(false) +
+  x4(false) + x4(false) + x4(false) + x4(false) + "20";
+testConvertibleObjectEqUndefined.jitstats = {
+  sideExitIntoInterpreter: 3
+};
+test(testConvertibleObjectEqUndefined);
+
+function testUndefinedPropertyAccess() {
+    var x = [1,2,3];
+    var y = {};
+    var a = { foo: 1 };
+    y.__proto__ = x;
+    var z = [x, x, x, y, y, y, y, a, a, a];
+    var s = "";
+    for (var i = 0; i < z.length; ++i)
+        s += z[i].foo;
+    return s;
+}
+testUndefinedPropertyAccess.expected = "undefinedundefinedundefinedundefinedundefinedundefinedundefined111";
+testUndefinedPropertyAccess.jitstats = {
+    traceCompleted: 3
+};
+test(testUndefinedPropertyAccess);
+
+q = "";
+function g() { q += "g"; }
+function h() { q += "h"; }
+a = [g, g, g, g, h];
+for (i=0; i<5; i++) { f = a[i];  f(); }
+
+function testRebranding() {
+    return q;
+}
+testRebranding.expected = "ggggh";
+test(testRebranding);
+delete q;
+delete g;
+delete h;
+delete a;
+delete f;
+
+function testLambdaCtor() {
+    var a = [];
+    for (var x = 0; x < RUNLOOP; ++x) {
+        var f = function(){};
+        a[a.length] = new f;
+    }
+
+    // This prints false until the upvar2 bug is fixed:
+    // print(a[HOTLOOP].__proto__ !== a[HOTLOOP-1].__proto__);
+
+    // Assert that the last f was properly constructed.
+    return a[RUNLOOP-1].__proto__ === f.prototype;
+}
+
+testLambdaCtor.expected = true;
+test(testLambdaCtor);
 
 /*****************************************************************************
  *                                                                           *
