@@ -212,16 +212,10 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 
 
 //----------------------------------------------------------------------------------------
-nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec)
+nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FSRef* inFSRef)
 //----------------------------------------------------------------------------------------
 {
-  // Convert the filespec to a URL.  Avoid using xpcom because this may be
-  // called before xpcom startup.
-  FSRef fsRef;
-  if (::FSpMakeFSRef(&inFileSpec, &fsRef) != noErr)
-    return NS_ERROR_FAILURE;
-
-  CFURLRef url = ::CFURLCreateFromFSRef(nsnull, &fsRef);
+  CFURLRef url = ::CFURLCreateFromFSRef(nsnull, inFSRef);
   if (!url)
     return NS_ERROR_FAILURE;
 
@@ -264,11 +258,11 @@ nsresult nsMacCommandLine::AddToEnvironmentVars(const char* inArgText)
 
 
 //----------------------------------------------------------------------------------------
-OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFileType)
+OSErr nsMacCommandLine::HandleOpenOneDoc(const FSRef* inFSRef, OSType inFileType)
 //----------------------------------------------------------------------------------------
 {
   nsCOMPtr<nsILocalFileMac> inFile;
-  nsresult rv = NS_NewLocalFileWithFSSpec(&inFileSpec, PR_TRUE, getter_AddRefs(inFile));
+  nsresult rv = NS_NewLocalFileWithFSRef(inFSRef, PR_TRUE, getter_AddRefs(inFile));
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
 
@@ -313,7 +307,7 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
     // add a command-line "-url" argument to the global list. This means that if
     // the app is opened with documents on the mac, they'll be handled the same
     // way as if they had been typed on the command line in Unix or DOS.
-    rv = AddToCommandLine("-url", inFileSpec);
+    rv = AddToCommandLine("-url", inFSRef);
     return (NS_SUCCEEDED(rv)) ? noErr : errAEEventNotHandled;
   }
 
@@ -343,7 +337,7 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
 }
 
 //----------------------------------------------------------------------------------------
-OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileType)
+OSErr nsMacCommandLine::HandlePrintOneDoc(const FSRef* inFSRef, OSType fileType)
 //----------------------------------------------------------------------------------------
 {
   // If  we are starting up the application,
@@ -351,7 +345,7 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
   // the app is opened with documents on the mac, they'll be handled the same
   // way as if they had been typed on the command line in Unix or DOS.
   if (!mStartedUp)
-    return AddToCommandLine("-print", inFileSpec);
+    return AddToCommandLine("-print", inFSRef);
   
   // Final case: we're not just starting up. How do we handle this?
   NS_NOTYETIMPLEMENTED("Write Me");
