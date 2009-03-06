@@ -1504,19 +1504,15 @@ SerializeFontSrc(const nsCSSValue& src, nsAString & aResult NS_OUTPARAM)
     nsAutoString formats;
 
     if (sources[i].GetUnit() == eCSSUnit_URL) {
+      aResult.AppendLiteral("url(");
       nsDependentString url(sources[i].GetOriginalURLValue());
-      nsAutoString escapedUrl;
-      nsStyleUtil::EscapeCSSString(url, escapedUrl);
-      aResult.AppendLiteral("url(\"");
-      aResult.Append(escapedUrl);
-      aResult.AppendLiteral("\")");
+      nsStyleUtil::AppendEscapedCSSString(url, aResult);
+      aResult.AppendLiteral(")");
     } else if (sources[i].GetUnit() == eCSSUnit_Local_Font) {
+      aResult.AppendLiteral("local(");
       nsDependentString local(sources[i].GetStringBufferValue());
-      nsAutoString escapedLocal;
-      nsStyleUtil::EscapeCSSString(local, escapedLocal);
-      aResult.AppendLiteral("local(\"");
-      aResult.Append(escapedLocal);
-      aResult.AppendLiteral("\")");
+      nsStyleUtil::AppendEscapedCSSString(local, aResult);
+      aResult.AppendLiteral(")");
     } else {
       NS_NOTREACHED("entry in src: descriptor with improper unit");
       i++;
@@ -1585,11 +1581,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
       // canonicalize the way we want, and anyway it's overkill when
       // we know we have eCSSUnit_String
       nsDependentString family(val.GetStringBufferValue());
-      nsAutoString escapedFamily;
-      nsStyleUtil::EscapeCSSString(family, escapedFamily);
-      aResult.Append('"');
-      aResult.Append(escapedFamily);
-      aResult.Append('"');
+      nsStyleUtil::AppendEscapedCSSString(family, aResult);
       return NS_OK;
     }
 
