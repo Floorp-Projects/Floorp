@@ -76,7 +76,7 @@ oggplay_file_reader_destroy(OggPlayReader * opr) {
   me = (OggPlayFileReader *)opr;
 
   fclose(me->file);
-  oggplay_free(me);
+  free(me);
 
   return E_OGGPLAY_OK;
 }
@@ -135,10 +135,7 @@ oggplay_file_reader_io_tell(void * user_handle) {
 OggPlayReader *
 oggplay_file_reader_new(char *file_name) {
 
-  OggPlayFileReader * me = oggplay_malloc (sizeof (OggPlayFileReader));
-
-  if (me == NULL)
-    return NULL;
+  OggPlayFileReader * me = malloc (sizeof (OggPlayFileReader));
 
   me->current_position = 0;
   me->file_name = file_name;

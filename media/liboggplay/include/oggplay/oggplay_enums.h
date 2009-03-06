@@ -62,7 +62,6 @@ typedef enum OggPlayErrorCode {
   E_OGGPLAY_TIMEOUT           = -17,
   E_OGGPLAY_CANT_SEEK         = -18,
   E_OGGPLAY_NO_KATE_SUPPORT   = -19,
-  E_OGGPLAY_OUT_OF_MEMORY     = -20,
   E_OGGPLAY_NOTCHICKENPAYBACK = -777
 } OggPlayErrorCode;
 
