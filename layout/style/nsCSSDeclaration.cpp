@@ -241,7 +241,11 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
     nsAutoString  buffer;
     aValue.GetStringValue(buffer);
-    aResult.Append(buffer);
+    if (unit == eCSSUnit_String) {
+      nsStyleUtil::AppendEscapedCSSString(buffer, aResult);
+    } else {
+      aResult.Append(buffer);
+    }
   }
   else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Counters) {
     switch (unit) {
@@ -423,6 +427,8 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
       break;
 
     case eCSSUnit_String:       break;
+    case eCSSUnit_Ident:        break;
+    case eCSSUnit_Families:     break;
     case eCSSUnit_URL:          break;
     case eCSSUnit_Image:        break;
     case eCSSUnit_Array:        break;

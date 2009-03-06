@@ -1678,7 +1678,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
-                                                eCSSUnit_String);
+                                                eCSSUnit_Ident);
     }
   }
 }

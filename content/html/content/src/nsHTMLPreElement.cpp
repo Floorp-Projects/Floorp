@@ -139,7 +139,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // variable
     if (aAttributes->GetAttr(nsGkAtoms::variable))
       aData->mFontData->mFamily.SetStringValue(NS_LITERAL_STRING("serif"),
-                                               eCSSUnit_String);
+                                               eCSSUnit_Families);
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
