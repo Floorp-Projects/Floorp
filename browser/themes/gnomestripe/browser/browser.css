@@ -880,6 +880,15 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   outline: 1px dotted -moz-DialogText;
 }
 
+#identity-box:hover > hbox {
+  background-color: rgba(255, 255, 255, .2);
+}
+
+#identity-box:hover:active > hbox,
+#identity-box[open="true"] > hbox {
+  background-color: rgba(0, 0, 0, .1);
+}
+
 #identity-icon-label {
   padding: 0 2px;
   margin: 0;
@@ -889,12 +898,12 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   display: none;
 }
 
-#identity-box.verifiedDomain > hbox {
+#identity-box.verifiedDomain {
   background-color: rgba(30, 80, 170, 0.7);
   color: white;
 }
 
-#identity-box.verifiedIdentity > hbox {
+#identity-box.verifiedIdentity {
   background-color: rgba(50, 150, 50, 0.8);
   color: white;
 }
