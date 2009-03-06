@@ -69,6 +69,7 @@ css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_
 GARBAGE += css_properties.js
 
 _TEST_FILES =	test_acid3_test46.html \
+		test_at_rule_parse_serialize.html \
 		test_bug73586.html \
 		test_bug74880.html \
 		test_bug98997.html \

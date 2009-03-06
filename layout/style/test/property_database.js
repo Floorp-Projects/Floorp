@@ -1194,7 +1194,16 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")' ],
+		other_values: [ 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")',
+			// Add some tests for interesting url() values here to test serialization, etc.
+			"url(\'data:text/plain,\"\')",
+			"url(\"data:text/plain,\'\")",
+			"url(\'data:text/plain,\\\'\')",
+			"url(\"data:text/plain,\\\"\")",
+			"url(\'data:text/plain,\\\"\')",
+			"url(\"data:text/plain,\\\'\")",
+			"url(data:text/plain,\\\\)",
+		],
 		invalid_values: []
 	},
 	"list-style-position": {
