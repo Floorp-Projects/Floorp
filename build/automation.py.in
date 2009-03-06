@@ -407,7 +407,7 @@ def environment(env = None, xrePath = DIST_BIN):
 # RUN THE APP #
 ###############
 
-def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utilityPath = DIST_BIN, xrePath = DIST_BIN, certPath = CERTS_SRC_DIR):
+def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utilityPath = DIST_BIN, xrePath = DIST_BIN, certPath = CERTS_SRC_DIR, debuggerInfo = None):
   "Run the app, log the duration it took to execute, return the status code."
 
   if IS_TEST_BUILD and runSSLTunnel:
@@ -429,6 +429,12 @@ def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utili
   cmd = os.path.abspath(cmd)
 
   args = []
+
+  if debuggerInfo:
+    args.extend(debuggerInfo["args"])
+    args.append(cmd)
+    cmd = os.path.abspath(debuggerInfo["path"])
+
   if IS_MAC:
     args.append("-foreground")
 
@@ -446,12 +452,24 @@ def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utili
   args.extend(extraArgs)
 
   startTime = datetime.now()
-  proc = Process([cmd] + args, env = environment(env), stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+  # Don't redirect stdout and stderr if an interactive debugger is attached
+  if debuggerInfo and debuggerInfo["interactive"]:
+    outputPipe = None
+  else:
+    outputPipe = subprocess.PIPE
+
+  proc = Process([cmd] + args, env = environment(env), stdout = outputPipe, stderr = subprocess.STDOUT)
   log.info("INFO | (automation.py) | Application pid: %d", proc.pid)
-  line = proc.stdout.readline()
-  while line != "":
-    log.info(line.rstrip())
+
+  if outputPipe is None:
+    log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
+  else:
     line = proc.stdout.readline()
+    while line != "":
+      log.info(line.rstrip())
+      line = proc.stdout.readline()
+
   status = proc.wait()
   if status != 0:
     log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Exited with code %d during test run", status)
