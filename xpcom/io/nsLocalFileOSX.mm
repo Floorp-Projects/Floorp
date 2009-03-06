@@ -933,7 +933,11 @@ NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
   if (NS_FAILED(rv))
     return rv;
   
-  FSIORefNum refNum;    
+#ifdef __LP64__
+  FSIORefNum refNum;
+#else
+  SInt16 refNum;
+#endif
   OSErr err = ::FSOpenFork(&fsRef, 0, nsnull, fsWrPerm, &refNum);
   if (err != noErr)
     return MacErrorMapper(err);
