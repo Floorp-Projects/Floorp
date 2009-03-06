@@ -196,8 +196,8 @@ struct PLDHashTable {
     const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     PRInt16             hashShift;      /* multiplicative hash shift */
-    uint8               maxAlphaFrac;   /* 8-bit fixed point max alpha */
-    uint8               minAlphaFrac;   /* 8-bit fixed point min alpha */
+    PRUint8             maxAlphaFrac;   /* 8-bit fixed point max alpha */
+    PRUint8             minAlphaFrac;   /* 8-bit fixed point min alpha */
     PRUint32            entrySize;      /* number of bytes in an entry */
     PRUint32            entryCount;     /* number of entries in table */
     PRUint32            removedCount;   /* removed entry sentinels in table */
@@ -457,7 +457,7 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
 
 #define PL_DHASH_CAPACITY(entryCount, maxAlpha)                               \
     (PL_DHASH_CAP(entryCount, maxAlpha) +                                     \
-     (((PL_DHASH_CAP(entryCount, maxAlpha) * (uint8)(0x100 * (maxAlpha)))     \
+     (((PL_DHASH_CAP(entryCount, maxAlpha) * (PRUint8)(0x100 * (maxAlpha)))     \
        >> 8) < (entryCount)))
 
 #define PL_DHASH_DEFAULT_CAPACITY(entryCount)                                 \
