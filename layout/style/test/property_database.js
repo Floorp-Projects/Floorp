@@ -1668,7 +1668,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink" ],
+		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
 		invalid_values: [ "underline none", "none underline", "line-through blink line-through" ]
 	},
 	"text-indent": {

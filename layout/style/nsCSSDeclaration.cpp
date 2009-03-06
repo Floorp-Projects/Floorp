@@ -315,7 +315,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
                         "none should be parsed as eCSSUnit_None");
       PRInt32 mask;
       for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
-           mask <= NS_STYLE_TEXT_DECORATION_BLINK; 
+           mask <= NS_STYLE_TEXT_DECORATION_PREF_ANCHORS; 
            mask <<= 1) {
         if ((mask & intValue) == mask) {
           AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
