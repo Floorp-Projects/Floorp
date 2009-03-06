@@ -69,7 +69,7 @@ public:
   /**
    * |ValueAppended| must be called to maintain this declaration's
    * |mOrder| whenever a property is parsed into an expanded data block
-   * for this declaration.
+   * for this declaration.  aProperty must not be a shorthand.
    */
   nsresult ValueAppended(nsCSSProperty aProperty);
 

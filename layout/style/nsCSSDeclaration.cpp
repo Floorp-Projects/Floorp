@@ -94,16 +94,11 @@ nsCSSDeclaration::~nsCSSDeclaration(void)
 nsresult
 nsCSSDeclaration::ValueAppended(nsCSSProperty aProperty)
 {
+  NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
+                    "shorthands forbidden");
   // order IS important for CSS, so remove and add to the end
-  if (nsCSSProps::IsShorthand(aProperty)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-      mOrder.RemoveElement(*p);
-      mOrder.AppendElement(*p);
-    }
-  } else {
-    mOrder.RemoveElement(aProperty);
-    mOrder.AppendElement(aProperty);
-  }
+  mOrder.RemoveElement(aProperty);
+  mOrder.AppendElement(aProperty);
   return NS_OK;
 }
 
