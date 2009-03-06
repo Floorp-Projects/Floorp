@@ -10355,23 +10355,21 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   FrameConstructionItemList itemsToConstruct;
   nsresult rv = NS_OK;
 
-  if (aFrame == mRootElementFrame) {
-    // Create any anonymous frames the initial containing block frame requires.
-    // This must happen before the rest of ProcessChildren to ensure that
-    // popups are never constructed before the popupset.
-    nsAutoTArray<nsIContent*, 4> anonymousItems;
-    GetAnonymousContent(aContent, aFrame, anonymousItems);
-    for (PRUint32 i = 0; i < anonymousItems.Length(); ++i) {
+  // Create any anonymous frames we need here.  This must happen before the
+  // non-anonymous children are processed to ensure that popups are never
+  // constructed before the popupset.
+  nsAutoTArray<nsIContent*, 4> anonymousItems;
+  GetAnonymousContent(aContent, aFrame, anonymousItems);
+  for (PRUint32 i = 0; i < anonymousItems.Length(); ++i) {
 #ifdef DEBUG
-      nsIAnonymousContentCreator* creator = do_QueryFrame(aFrame);
-      NS_ASSERTION(!creator || !creator->CreateFrameFor(anonymousItems[i]),
-                   "If you need to use CreateFrameFor, you need to call "
-                   "CreateAnonymousFrames manually and not follow the standard "
-                   "ProcessChildren() codepath for this frame");
+    nsIAnonymousContentCreator* creator = do_QueryFrame(aFrame);
+    NS_ASSERTION(!creator || !creator->CreateFrameFor(anonymousItems[i]),
+                 "If you need to use CreateFrameFor, you need to call "
+                 "CreateAnonymousFrames manually and not follow the standard "
+                 "ProcessChildren() codepath for this frame");
 #endif
-      AddFrameConstructionItems(aState, anonymousItems[i], aFrame,
-                                itemsToConstruct);
-    }
+    AddFrameConstructionItems(aState, anonymousItems[i], aFrame,
+                              itemsToConstruct);
   }
 
   if (!aFrame->IsLeaf() &&
@@ -10404,22 +10402,6 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       CreateGeneratedContentItem(aState, aFrame, aContent,
                                  styleContext, nsCSSPseudoElements::after,
                                  itemsToConstruct);
-    }
-  }
-
-  if (aFrame != mRootElementFrame) {
-    nsAutoTArray<nsIContent*, 4> anonymousItems;
-    GetAnonymousContent(aContent, aFrame, anonymousItems);
-    for (PRUint32 i = 0; i < anonymousItems.Length(); ++i) {
-#ifdef DEBUG
-      nsIAnonymousContentCreator* creator = do_QueryFrame(aFrame);
-      NS_ASSERTION(!creator || !creator->CreateFrameFor(anonymousItems[i]),
-                   "If you need to use CreateFrameFor, you need to call "
-                   "CreateAnonymousFrames manually and not follow the standard "
-                   "ProcessChildren() codepath for this frame");
-#endif
-      AddFrameConstructionItems(aState, anonymousItems[i], aFrame,
-                                itemsToConstruct);
     }
   }
 
