@@ -20,14 +20,16 @@
   </vbox>
   <hbox align="start">
     <vbox id="scrollbox" style="overflow: scroll; padding: 2px; margin: 3px; border: 4px solid green;"
-          maxwidth="60" maxheight="50">
+          maxwidth="66" maxheight="56">
       <label value="One" style="margin: 0"/>
       <label id="scrollchild" value="Two"/>
       <label value="Three"/>
       <label id="lastline" value="This fourth label is much longer than the others"
              style="margin: 0; padding: 0; border: 0;"/>
     </vbox>
-    <scrollbar id="scrollbox-test" orient="vertical" style="margin: 0; border: 0; padding: 0"/>
+    <vbox id="scrollbox-test">
+       <scrollbar orient="vertical" style="margin: 0; border: 0; padding: 0;"/>
+    </vbox>
   </hbox>
 </vbox>
 
