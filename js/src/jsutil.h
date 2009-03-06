@@ -46,10 +46,14 @@
 
 JS_BEGIN_EXTERN_C
 
-#ifdef DEBUG
-
+/*
+ * JS_Assert is present even in release builds, for the benefit of applications
+ * that build DEBUG and link against a non-DEBUG SpiderMonkey library.
+ */
 extern JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, JSIntn ln);
+
+#ifdef DEBUG
 
 #define JS_ASSERT(expr)                                                       \
     ((expr) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
