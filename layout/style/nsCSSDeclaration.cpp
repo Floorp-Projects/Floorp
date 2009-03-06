@@ -397,9 +397,10 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
-    aResult.Append(NS_LITERAL_STRING("url(") +
-                   nsDependentString(aValue.GetOriginalURLValue()) +
-                   NS_LITERAL_STRING(")"));
+    aResult.Append(NS_LITERAL_STRING("url("));
+    nsStyleUtil::AppendEscapedCSSString(
+      nsDependentString(aValue.GetOriginalURLValue()), aResult);
+    aResult.Append(NS_LITERAL_STRING(")"));
   }
   else if (eCSSUnit_Percent == unit) {
     nsAutoString tmpStr;
