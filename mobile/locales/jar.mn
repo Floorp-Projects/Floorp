@@ -1,9 +1,5 @@
 #filter substitution
 
-firstrun.jar:
-% locale firstrun @AB_CD@ %locale/@AB_CD@/firstrun/
-  locale/@AB_CD@/firstrun/firstrun.dtd             (%chrome/firstrun/firstrun.dtd)
-
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
   locale/@AB_CD@/browser/browser.dtd              (%chrome/browser.dtd)

@@ -2,12 +2,9 @@
 
 firstrun.jar:
 % content firstrun %content/ contentaccessible=yes
-  content/firstrun_splash.png           (firstrun/firstrun_splash.png)
-  content/firstrun_arrow_r.png          (firstrun/firstrun_arrow_r.png)
-  content/firstrun_arrow_l.png          (firstrun/firstrun_arrow_l.png)
-  content/firstrun_background.jpg       (firstrun/firstrun_background.jpg)
-  content/firstrun.css                  (firstrun/firstrun.css)
-  content/firstrun.xhtml                (firstrun/firstrun.xhtml)
+  content/firstrun_splash.gif           (firstrun/firstrun_splash.gif)
+  content/firstrun_background.gif       (firstrun/firstrun_background.gif)
+  content/firstrun.html                 (firstrun/firstrun.html)
 
 classic.jar:
 % skin browser classic/1.0 %

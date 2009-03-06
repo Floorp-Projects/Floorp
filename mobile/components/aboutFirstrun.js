@@ -59,7 +59,7 @@ AboutFirstRun.prototype = {
     var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
                  getService(Ci.nsIScriptSecurityManager);
 
-    var channel = ios.newChannel("chrome://firstrun/content/firstrun.xhtml",
+    var channel = ios.newChannel("chrome://firstrun/content/firstrun.html",
                                  null, null);
     var principal = secMan.getCodebasePrincipal(aURI);
 
