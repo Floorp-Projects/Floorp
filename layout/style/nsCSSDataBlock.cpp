@@ -276,7 +276,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                             if ((u == eCSSUnit_Color &&
                                  NS_GET_A(colorVal.GetColorValue())
                                  > 0) ||
-                                (u == eCSSUnit_String &&
+                                (u == eCSSUnit_Ident &&
                                  !nsGkAtoms::transparent->
                                  Equals(colorVal.GetStringValue(buf))) ||
                                 (u == eCSSUnit_EnumColor)) {
