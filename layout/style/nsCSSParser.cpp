@@ -4548,7 +4548,11 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
     }
   }
   PRInt32 typeItem = eCSSUnit_Counters == unit ? 2 : 1;
-  val->Item(typeItem).SetIntValue(type, eCSSUnit_Enumerated);
+  if (type == NS_STYLE_LIST_STYLE_NONE) {
+    val->Item(typeItem).SetNoneValue();
+  } else {
+    val->Item(typeItem).SetIntValue(type, eCSSUnit_Enumerated);
+  }
 
   if (!ExpectSymbol(')', PR_TRUE)) {
     SkipUntil(')');

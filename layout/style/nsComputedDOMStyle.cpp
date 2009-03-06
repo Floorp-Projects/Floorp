@@ -751,12 +751,12 @@ nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
             nsStyleUtil::AppendEscapedCSSString(
               nsDependentString(a->Item(1).GetStringBufferValue()), str);
           }
-          PRInt32 type = a->Item(typeItem).GetIntValue();
-          if (type != NS_STYLE_LIST_STYLE_DECIMAL) {
-            str.AppendLiteral(", ");
-            if (type == NS_STYLE_LIST_STYLE_NONE) {
-              str.AppendLiteral("none");
-            } else {
+          if (a->Item(typeItem).GetUnit() == eCSSUnit_None) {
+            str.AppendLiteral(", none");
+          } else {
+            PRInt32 type = a->Item(typeItem).GetIntValue();
+            if (type != NS_STYLE_LIST_STYLE_DECIMAL) {
+              str.AppendLiteral(", ");
               AppendASCIItoUTF16(
                 nsCSSProps::ValueToKeyword(type, nsCSSProps::kListStyleKTable),
                 str);
