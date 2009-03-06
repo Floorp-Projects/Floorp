@@ -157,7 +157,7 @@ oggplay_data_add_to_list (OggPlayDecode *decode, OggPlayDataHeader *data) {
       if (untimed->presentation_time >= decode->player->presentation_time) {
         oggplay_data_add_to_list_front(decode, untimed);
       } else {
-        oggplay_free(untimed);
+        free(untimed);
       }
 
     }
@@ -188,7 +188,7 @@ oggplay_data_free_list(OggPlayDataHeader *list) {
   while (list != NULL) {
     p = list;
     list = list->next;
-    oggplay_free(p);
+    free(p);
   }
 }
 
@@ -236,13 +236,13 @@ oggplay_data_clean_list (OggPlayDecode *decode) {
         decode->data_list = decode->data_list->next;
         if (decode->data_list == NULL)
           decode->end_of_data_list = NULL;
-        oggplay_free (header);
+        free (header);
         header = decode->data_list;
       } else {
         if (header->next == NULL)
           decode->end_of_data_list = p;
         p->next = header->next;
-        oggplay_free (header);
+        free (header);
         header = p->next;
       }
     } else {
@@ -271,14 +271,11 @@ oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data,
       int samples, int samplesize) {
 
   int                   num_channels;
-  OggPlayAudioRecord  * record = NULL;
+  OggPlayAudioRecord  * record;
 
   num_channels = ((OggPlayAudioDecode *)decode)->sound_info.channels;
-  record = (OggPlayAudioRecord*)oggplay_calloc(sizeof(OggPlayAudioRecord) +
+  record = (OggPlayAudioRecord*)calloc(sizeof(OggPlayAudioRecord) +
                   samples * samplesize * num_channels, 1);
-
-  if (record == NULL)
-    return;
 
   oggplay_data_initialise_header(decode, &(record->header));
 
@@ -298,14 +295,10 @@ void
 oggplay_data_handle_cmml_data(OggPlayDecode *decode, unsigned char *data,
                 int size) {
 
-  OggPlayTextRecord * record = NULL;
+  OggPlayTextRecord * record;
 
   record =
-      (OggPlayTextRecord*)oggplay_calloc (sizeof(OggPlayTextRecord) + size + 1, 1);
-
-  if (record == NULL)
-    return;
-
+      (OggPlayTextRecord*)calloc (sizeof(OggPlayTextRecord) + size + 1, 1);
   oggplay_data_initialise_header(decode, &(record->header));
 
   record->header.samples_in_record = 1;
@@ -343,11 +336,7 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
    * we need to set the output strides to the input widths because we are
    * trying not to pass negative output stride issues on to the poor user.
    */
-  record = (OggPlayVideoRecord*)oggplay_malloc (size);
-
-  if (record == NULL)
-    return;
-
+  record = (OggPlayVideoRecord*)malloc (size);
   record->header.samples_in_record = 1;
   data = &(record->data);
   oggplay_data_initialise_header((OggPlayDecode *)decode, &(record->header));
@@ -390,13 +379,9 @@ oggplay_data_handle_kate_data(OggPlayKateDecode *decode, const kate_event *ev) {
 
   // TODO: should be able to send the data rendered as YUV data, but just text for now
 
-  OggPlayTextRecord * record = NULL;
+  OggPlayTextRecord * record;
 
-  record = (OggPlayTextRecord*)oggplay_calloc (sizeof(OggPlayTextRecord) + ev->len0, 1);
-  
-  if (record = NULL)
-    return;
-
+  record = (OggPlayTextRecord*)calloc (sizeof(OggPlayTextRecord) + ev->len0, 1);
   oggplay_data_initialise_header(&decode->decoder, &(record->header));
 
   //record->header.presentation_time = (ogg_int64_t)(ev->start_time*1000);

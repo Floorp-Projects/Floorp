@@ -39,13 +39,6 @@
 #ifndef __OGGPLAY_BUFFER_H__
 #define __OGGPLAY_BUFFER_H__
 
-/**
- * Creates a new buffer with the given size. 
- *
- * @param size The number of frames the buffer can store. 
- * @return A new OggPlayBuffer.
- * @retval NULL in case of error. 
- */
 OggPlayBuffer *
 oggplay_buffer_new_buffer(int size);
 

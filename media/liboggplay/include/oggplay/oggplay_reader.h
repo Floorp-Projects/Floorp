@@ -63,25 +63,9 @@ typedef struct _OggPlayReader {
   long              (*io_tell)(void *user_handle);
 } OggPlayReader;
 
-/**
- * Create and initialise an OggPlayReader for a given Ogg file.
- * 
- * @param filename The file to open
- * @return A new OggPlayReader handle
- * @retval NULL on error.
- */
 OggPlayReader *
 oggplay_file_reader_new(char *filename);
 
-/**
- * Create and initialise an OggPlayReader for an Ogg content at a given URI. 
- *
- * @param uri The URI to the Ogg file.
- * @param proxy Proxy 
- * @param proxy_port Proxy port.
- * @return A new OggPlayReader handle
- * @retval NULL on error.
- */
 OggPlayReader *
 oggplay_tcp_reader_new(char *uri, char *proxy, int proxy_port);
 
