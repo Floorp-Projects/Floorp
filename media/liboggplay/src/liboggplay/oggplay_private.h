@@ -244,15 +244,47 @@ typedef struct {
   int size;
 } OggPlayCallbackFunctions;
 
-/* Allocate and free dynamic memory used by ogg.
- * By default they are the ones from stdlib */
-#define oggplay_malloc _ogg_malloc
-#define oggplay_calloc _ogg_calloc
-#define oggplay_realloc _ogg_realloc
-#define oggplay_free _ogg_free
-
 #include "oggplay_callback.h"
 #include "oggplay_data.h"
 #include "oggplay_buffer.h"
+
+#if 0
+static inline void _free(void *x) {
+  printf("%p\n", x);
+  free(x);
+}
+
+static inline void *_malloc(int s) {
+  void *x;
+  printf("%d ", s);
+  x = malloc(s);
+  printf("%p\n", x);
+  return x;
+}
+
+static inline void *_realloc(void *x, int s) {
+  void *y;
+  printf("%p %d ", x, s);
+  y = realloc(x, s);
+  printf("%p\n", y);
+  return y;
+}
+
+static inline void *_calloc(int n, int s) {
+  void *x;
+  printf("%d %d ", n, s);
+  x = calloc(n, s);
+  printf("%p\n", x);
+  return x;
+}
+
+#define free(x) {printf("FREE %s %d ", __FILE__, __LINE__); _free(x);}
+#define malloc(s) (printf("MALLOC %s %d ", __FILE__, __LINE__), \
+    _malloc(s))
+#define realloc(x, s) (printf("REALLOC %s %d ", __FILE__, __LINE__), \
+    _realloc(x, s))
+#define calloc(n, s) (printf("CALLOC %s %d ", __FILE__, __LINE__),  \
+    _calloc(n, s))
+#endif
 
 #endif
