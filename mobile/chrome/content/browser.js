@@ -129,8 +129,8 @@ var Browser = {
       ws.updateSize(w, h);
 
       if (Browser._isStartup) {
+        // now we can set the viewport to a real size and draw the page
         ws.endUpdateBatch();
-        Browser.canvasBrowser.endLoading();
         Browser._selectedTab.updateThumbnail();
         Browser._isStartup = false;
       }
@@ -1136,8 +1136,7 @@ ProgressController.prototype = {
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
 
-      if (!this._isStartup)
-        Browser.canvasBrowser.endLoading();
+      Browser.canvasBrowser.endLoading();
     }
     if (!this._isStartup)
       this._tab.updateThumbnail();
