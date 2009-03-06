@@ -754,7 +754,13 @@ nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
           PRInt32 type = a->Item(typeItem).GetIntValue();
           if (type != NS_STYLE_LIST_STYLE_DECIMAL) {
             str.AppendLiteral(", ");
-            str.AppendInt(type);
+            if (type == NS_STYLE_LIST_STYLE_NONE) {
+              str.AppendLiteral("none");
+            } else {
+              AppendASCIItoUTF16(
+                nsCSSProps::ValueToKeyword(type, nsCSSProps::kListStyleKTable),
+                str);
+            }
           }
 
           str.Append(PRUnichar(')'));
