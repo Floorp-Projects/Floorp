@@ -111,7 +111,7 @@
       const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
       const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
       for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
-        iter->Fire(this);
+        iter->Fire();
       }
       mPendingNotifications.Clear();
 #ifdef DEBUG_hsivonen
@@ -120,10 +120,6 @@
       }
 #endif
       mElementsSeenInThisAppendBatch.Clear();
-    }
-    
-    inline void NotifyAppend(nsIContent* aParent, PRUint32 aChildCount) {
-      mParser->NotifyAppend(aParent, aChildCount);
     }
     
     inline nsIDocument* GetDocument() {

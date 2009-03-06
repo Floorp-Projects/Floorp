@@ -38,6 +38,8 @@
 #ifndef nsHtml5PendingNotification_h__
 #define nsHtml5PendingNotification_h__
 
+#include "nsNodeUtils.h"
+
 class nsHtml5TreeBuilder;
 
 class nsHtml5PendingNotification {
@@ -51,7 +53,9 @@ class nsHtml5PendingNotification {
     ~nsHtml5PendingNotification() {
       MOZ_COUNT_DTOR(nsHtml5PendingNotification);
     }
-    void Fire(nsHtml5TreeBuilder* aBuilder);
+    inline void Fire() {
+      nsNodeUtils::ContentAppended(mParent, mChildCount);
+    }
     inline PRBool Contains(nsIContent* aNode) {
       return !!(mParent == aNode);
     }

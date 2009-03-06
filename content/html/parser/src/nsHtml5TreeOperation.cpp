@@ -70,9 +70,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       if (parent) {
         PRUint32 pos = parent->IndexOf(mNode);
         NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
-        rv = parent->RemoveChildAt(pos, PR_FALSE);
+        rv = parent->RemoveChildAt(pos, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
-        nsNodeUtils::ContentRemoved(parent, mNode, pos);
+//        nsNodeUtils::ContentRemoved(parent, mNode, pos);
       }
       return rv;
     }
@@ -82,15 +82,15 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
       PRBool didAppend = PR_FALSE;
       while (mNode->GetChildCount()) {
         nsCOMPtr<nsIContent> child = mNode->GetChildAt(0);
-        rv = mNode->RemoveChildAt(0, PR_FALSE);
+        rv = mNode->RemoveChildAt(0, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
-        nsNodeUtils::ContentRemoved(mNode, child, 0);
+//        nsNodeUtils::ContentRemoved(mNode, child, 0);
         rv = mParent->AppendChildTo(child, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
         didAppend = PR_TRUE;
       }
       if (didAppend) {
-        aBuilder->NotifyAppend(mParent, childCount);
+        nsNodeUtils::ContentAppended(mParent, childCount);
       }
       return rv;
     }
