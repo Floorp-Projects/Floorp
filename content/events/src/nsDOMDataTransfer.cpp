@@ -76,7 +76,8 @@ nsDOMDataTransfer::nsDOMDataTransfer()
     mIsExternal(PR_FALSE),
     mUserCancelled(PR_FALSE),
     mDragImageX(0),
-    mDragImageY(0)
+    mDragImageY(0),
+    mCursorState(PR_FALSE)
 {
 }
 
@@ -294,6 +295,25 @@ NS_IMETHODIMP
 nsDOMDataTransfer::GetMozItemCount(PRUint32* aCount)
 {
   *aCount = mItems.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDataTransfer::GetMozCursor(nsAString& aCursorState)
+{
+  if (mCursorState)
+    aCursorState.AssignASCII("default");
+  else
+    aCursorState.AssignASCII("auto");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDataTransfer::SetMozCursor(const nsAString& aCursorState)
+{
+  // Lock the cursor to an arrow during the drag.
+  mCursorState = aCursorState.EqualsASCII("default");
+
   return NS_OK;
 }
 
