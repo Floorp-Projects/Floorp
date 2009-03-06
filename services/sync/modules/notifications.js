@@ -93,10 +93,21 @@ let Notifications = {
     // XXX Should we notify observers about weave:notification:replaced?
   },
 
+  /**
+   * Remove all notifications that match a title. If no title is provided, all
+   * notifications are removed.
+   *
+   * @param title [optional]
+   *        Title of notifications to remove; falsy value means remove all
+   */
+  removeAll: function Notifications_removeAll(title) {
+    this.notifications.filter(function(old) old.title == title || !title).
+      forEach(function(old) this.remove(old), this);
+  },
+
   // replaces all existing notifications with the same title as the new one
   replaceTitle: function Notifications_replaceTitle(notification) {
-    this.notifications.filter(function(old) old.title == notification.title)
-      .forEach(function(old) this.remove(old), this);
+    this.removeAll(notification.title);
     this.add(notification);
   }
 };
