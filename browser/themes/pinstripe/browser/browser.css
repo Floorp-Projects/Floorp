@@ -1579,9 +1579,11 @@ tabbrowser > tabbox {
 }
 
 .tabbrowser-tab[selected="true"]:focus > .tab-text {
-  outline: 2px solid #4F8EC9;
-  outline-offset: -2px;
-  -moz-outline-radius: 3px;
+  -moz-box-shadow: 0 0 4px -moz-mac-focusring,
+                   0 0 4px -moz-mac-focusring,
+                   0 0 3px -moz-mac-focusring,
+                   0 0 2px -moz-mac-focusring inset,
+                   0 0 3px -moz-mac-focusring inset;
 }
 
 .tabbrowser-tab[selected="true"],
