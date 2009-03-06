@@ -571,7 +571,7 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@import url(");
-  aCssText.Append(mURLSpec);
+  nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
   aCssText.Append(NS_LITERAL_STRING(")"));
   if (mMedia) {
     nsAutoString mediaText;
@@ -1162,19 +1162,18 @@ nsCSSDocumentRule::GetCssText(nsAString& aCssText)
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {
       case eURL:
-        aCssText.AppendLiteral("url(\"");
+        aCssText.AppendLiteral("url(");
         break;
       case eURLPrefix:
-        aCssText.AppendLiteral("url-prefix(\"");
+        aCssText.AppendLiteral("url-prefix(");
         break;
       case eDomain:
-        aCssText.AppendLiteral("domain(\"");
+        aCssText.AppendLiteral("domain(");
         break;
     }
-    nsCAutoString escapedURL(url->url);
-    escapedURL.ReplaceSubstring("\"", "\\\""); // escape quotes
-    AppendUTF8toUTF16(escapedURL, aCssText);
-    aCssText.AppendLiteral("\"), ");
+    nsStyleUtil::AppendEscapedCSSString(NS_ConvertUTF8toUTF16(url->url),
+                                        aCssText);
+    aCssText.AppendLiteral("), ");
   }
   aCssText.Cut(aCssText.Length() - 2, 1); // remove last ,
 
@@ -1447,7 +1446,7 @@ CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
     aCssText.AppendLiteral(" ");
   }
   aCssText.AppendLiteral("url(");
-  aCssText.Append(mURLSpec);
+  nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
   aCssText.Append(NS_LITERAL_STRING(");"));
   return NS_OK;
 }
