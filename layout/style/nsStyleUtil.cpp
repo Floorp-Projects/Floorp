@@ -538,9 +538,10 @@ PRBool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
   return result;
 }
 
-void nsStyleUtil::EscapeCSSString(const nsString& aString, nsAString& aReturn)
+void nsStyleUtil::AppendEscapedCSSString(const nsString& aString,
+                                         nsAString& aReturn)
 {
-  aReturn.Truncate();
+  aReturn.Append(PRUnichar('"'));
 
   const nsString::char_type* in = aString.get();
   const nsString::char_type* const end = in + aString.Length();
@@ -570,6 +571,8 @@ void nsStyleUtil::EscapeCSSString(const nsString& aString, nsAString& aReturn)
        aReturn.Append(PRUnichar(*in));
     }
   }
+
+  aReturn.Append(PRUnichar('"'));
 }
 
 /* static */ float
