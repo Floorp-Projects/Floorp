@@ -61,6 +61,11 @@ const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
     "gURIFixup",
     "@mozilla.org/docshell/urifixup;1",
     [Ci.nsIURIFixup]
+  ],
+  [
+    "gPrefService",
+    "@mozilla.org/preferences-service;1",
+    [Ci.nsIPrefBranch2]
   ]
 ].forEach(function (service) {
   let [name, contract, ifaces] = service;
