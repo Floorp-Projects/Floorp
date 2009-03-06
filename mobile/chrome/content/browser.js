@@ -51,15 +51,6 @@ const FINDSTATE_FIND_PREVIOUS = 2;
 
 Cu.import("resource://gre/modules/SpatialNavigation.js");
 
-// create a lazy-initialized handle for the pref service on the global object
-// in the style of bug 385809
-__defineGetter__("gPrefService", function () {
-  delete gPrefService;
-  var gPrefService;
-  return gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                  .getService(Components.interfaces.nsIPrefBranch2);
-});
-
 function getBrowser() {
   return Browser.selectedBrowser;
 }
@@ -241,14 +232,12 @@ var Browser = {
         this.addTab(whereURI, true);
     }
 
-    var disablePlugins = true;
-    try { disablePlugins = gPrefService.getBoolPref("temporary.disablePlugins"); } catch (ex) { }
-    if (disablePlugins)
-    {
-      document.getElementById("plugins.enabled").pref.value = false;
-      this.setPluginState(false);
+    // Re-enable plugins if we had previously disabled them. We should get rid of
+    // this code eventually...
+    if (gPrefService.prefHasUserValue("temporary.disablePlugins")) {
+      gPrefService.clearUserPref("temporary.disablePlugins");
+      this.setPluginState(true);
     }
-    gPrefService.setBoolPref("temporary.disablePlugins", false);
   },
 
   updateViewportSize: function() {

@@ -260,7 +260,7 @@ pref("privacy.item.downloads", true);
 pref("privacy.item.passwords", true);
 pref("privacy.item.sessions", true);
 
-pref("plugins.enabled", false);
+pref("plugins.enabled", true);
 
 #ifdef WINCE
 pref("layout.css.dpi", 96);
