@@ -366,7 +366,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value && value->Type() == nsAttrValue::eString &&
         aData->mFontData->mFamily.GetUnit() == eCSSUnit_Null) {
       aData->mFontData->mFamily.SetStringValue(value->GetStringValue(),
-                                               eCSSUnit_String);
+                                               eCSSUnit_Families);
       aData->mFontData->mFamilyFromHTML = PR_FALSE;
     }
   }

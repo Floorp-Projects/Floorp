@@ -90,7 +90,7 @@
 #define VARIANT_KEYWORD         0x000001  // K
 #define VARIANT_LENGTH          0x000002  // L
 #define VARIANT_PERCENT         0x000004  // P
-#define VARIANT_COLOR           0x000008  // C eCSSUnit_Color, eCSSUnit_String (e.g.  "red")
+#define VARIANT_COLOR           0x000008  // C eCSSUnit_Color, eCSSUnit_Ident (e.g.  "red")
 #define VARIANT_URL             0x000010  // U
 #define VARIANT_NUMBER          0x000020  // N
 #define VARIANT_INTEGER         0x000040  // I
@@ -1170,7 +1170,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
     return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
   }
 
-  if (value.GetUnit() == eCSSUnit_String) {
+  if (value.GetUnit() == eCSSUnit_Ident) {
     nscolor rgba;
     if (NS_ColorNameToRGB(nsDependentString(value.GetStringBufferValue()), &rgba)) {
       (*aColor) = rgba;
@@ -3541,7 +3541,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
 
     case eCSSToken_Ident:
       if (NS_ColorNameToRGB(tk->mIdent, &rgba)) {
-        aValue.SetStringValue(tk->mIdent, eCSSUnit_String);
+        aValue.SetStringValue(tk->mIdent, eCSSUnit_Ident);
         return PR_TRUE;
       }
       else {
@@ -4465,15 +4465,13 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   if (((aVariantMask & VARIANT_STRING) != 0) &&
       (eCSSToken_String == tk->mType)) {
     nsAutoString  buffer;
-    buffer.Append(tk->mSymbol);
     buffer.Append(tk->mIdent);
-    buffer.Append(tk->mSymbol);
     aValue.SetStringValue(buffer, eCSSUnit_String);
     return PR_TRUE;
   }
   if (((aVariantMask & VARIANT_IDENTIFIER) != 0) &&
       (eCSSToken_Ident == tk->mType)) {
-    aValue.SetStringValue(tk->mIdent, eCSSUnit_String);
+    aValue.SetStringValue(tk->mIdent, eCSSUnit_Ident);
     return PR_TRUE;
   }
   if (((aVariantMask & VARIANT_COUNTER) != 0) &&
@@ -4515,7 +4513,7 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
     return PR_FALSE;
   }
 
-  val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_String);
+  val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_Ident);
 
   if (eCSSUnit_Counters == unit) {
     // get mandatory separator string
@@ -5768,7 +5766,7 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
     // possibly with more restrictions on the values they can take.
   case eCSSFontDesc_Family: {
     if (!ParseFamily(aValue) ||
-        aValue.GetUnit() != eCSSUnit_String)
+        aValue.GetUnit() != eCSSUnit_Families)
       return PR_FALSE;
 
     // the style parameters to the nsFont constructor are ignored,
@@ -6808,7 +6806,7 @@ CSSParserImpl::ParseCounterData(nsCSSValuePairList** aResult,
       break;
     }
     next = &data->mNext;
-    data->mXValue.SetStringValue(mToken.mIdent, eCSSUnit_String);
+    data->mXValue.SetStringValue(mToken.mIdent, eCSSUnit_Ident);
     if (GetToken(PR_TRUE)) {
       if (eCSSToken_Number == mToken.mType && mToken.mIntegerValid) {
         data->mYValue.SetIntValue(mToken.mInteger, eCSSUnit_Integer);
@@ -7170,7 +7168,7 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
   }
   
   /* Copy things over. */
-  convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_String);
+  convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_Ident);
   for (PRUint16 index = 0; index + 1 < numElements; ++index)
     convertedArray->Item(index + 1) = foundValues[static_cast<arrlen_t>(index)];
   
@@ -7480,7 +7478,7 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
   if (family.IsEmpty()) {
     return PR_FALSE;
   }
-  aValue.SetStringValue(family, eCSSUnit_String);
+  aValue.SetStringValue(family, eCSSUnit_Families);
   return PR_TRUE;
 }
 
@@ -7959,7 +7957,7 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
         val->Item(IndexX) = cur->mValue;
       } else {
         // Must be a color (as string or color value)
-        NS_ASSERTION(unit == eCSSUnit_String || unit == eCSSUnit_Color ||
+        NS_ASSERTION(unit == eCSSUnit_Ident || unit == eCSSUnit_Color ||
                      unit == eCSSUnit_EnumColor,
                      "Must be a color value (named color, numeric color, "
                      "or system color)");

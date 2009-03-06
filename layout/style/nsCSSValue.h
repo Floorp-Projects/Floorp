@@ -99,9 +99,11 @@ enum nsCSSUnit {
                                   //       only in temporary values
   eCSSUnit_RectIsAuto   = 9,      // (n/a) 'auto' for an entire rect()
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
-  eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
-  eCSSUnit_Local_Font   = 12,     // (PRUnichar*) a local font name
-  eCSSUnit_Font_Format  = 13,     // (PRUnichar*) a font format name
+  eCSSUnit_Ident        = 11,     // (PRUnichar*) a string value
+  eCSSUnit_Families     = 12,     // (PRUnichar*) a string value
+  eCSSUnit_Attr         = 13,     // (PRUnichar*) a attr(string) value
+  eCSSUnit_Local_Font   = 14,     // (PRUnichar*) a local font name
+  eCSSUnit_Font_Format  = 15,     // (PRUnichar*) a font format name
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
