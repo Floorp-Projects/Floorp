@@ -6679,6 +6679,9 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
         return interpretedFunctionCall(fval, fun, argc, constructing);
     }
 
+    if (FUN_SLOW_NATIVE(fun) && fun->u.n.native == js_Array)
+        return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
+
     if (!(fun->flags & JSFUN_TRACEABLE))
         ABORT_TRACE("untraceable native");
 
@@ -6773,9 +6776,6 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
 
 next_specialization:;
     } while ((known++)->flags & JSTN_MORE);
-
-    if (FUN_SLOW_NATIVE(fun) && fun->u.n.native == js_Array)
-        return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
 
     if (!constructing)
         ABORT_TRACE("unknown native");
