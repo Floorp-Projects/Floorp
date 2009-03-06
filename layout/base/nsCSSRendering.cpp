@@ -119,9 +119,12 @@ struct InlineBackgroundData
                            NS_STYLE_DIRECTION_RTL);      
       nscoord curOffset = aFrame->GetOffsetTo(mBlockFrame).x;
 
+      // No need to use our GetPrevContinuation/GetNextContinuation methods
+      // here, since ib special siblings are certainly not on the same line.
+      
       nsIFrame* inlineFrame = aFrame->GetPrevContinuation();
       // If the continuation is fluid we know inlineFrame is not on the same line.
-      // If it's not fluid, we need to test furhter to be sure.
+      // If it's not fluid, we need to test further to be sure.
       while (inlineFrame && !inlineFrame->GetNextInFlow() &&
              AreOnSameLine(aFrame, inlineFrame)) {
         nscoord frameXOffset = inlineFrame->GetOffsetTo(mBlockFrame).x;
@@ -188,7 +191,7 @@ protected:
   {
     NS_PRECONDITION(aFrame, "Need a frame");
 
-    nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
+    nsIFrame *prevContinuation = GetPrevContinuation(aFrame);
 
     if (!prevContinuation || mFrame != prevContinuation) {
       // Ok, we've got the wrong frame.  We have to start from scratch.
@@ -210,18 +213,56 @@ protected:
     mFrame = aFrame;
   }
 
+  nsIFrame* GetPrevContinuation(nsIFrame* aFrame)
+  {
+    nsIFrame* prevCont = aFrame->GetPrevContinuation();
+    if (!prevCont && (aFrame->GetStateBits() && NS_FRAME_IS_SPECIAL)) {
+      nsIFrame* block =
+        static_cast<nsIFrame*>
+                   (aFrame->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+      if (block) {
+        // The {ib} properties are only stored on first continuations
+        block = block->GetFirstContinuation();
+        prevCont =
+          static_cast<nsIFrame*>
+                     (block->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+        NS_ASSERTION(prevCont, "How did that happen?");
+      }
+    }
+    return prevCont;
+  }
+
+  nsIFrame* GetNextContinuation(nsIFrame* aFrame)
+  {
+    nsIFrame* nextCont = aFrame->GetNextContinuation();
+    if (!nextCont && (aFrame->GetStateBits() && NS_FRAME_IS_SPECIAL)) {
+      // The {ib} properties are only stored on first continuations
+      aFrame = aFrame->GetFirstContinuation();
+      nsIFrame* block =
+        static_cast<nsIFrame*>
+                   (aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+      if (block) {
+        nextCont =
+          static_cast<nsIFrame*>
+                     (block->GetProperty(nsGkAtoms::IBSplitSpecialSibling));
+        NS_ASSERTION(nextCont, "How did that happen?");
+      }
+    }
+    return nextCont;
+  }
+
   void Init(nsIFrame* aFrame)
   {    
     // Start with the previous flow frame as our continuation point
     // is the total of the widths of the previous frames.
-    nsIFrame* inlineFrame = aFrame->GetPrevContinuation();
+    nsIFrame* inlineFrame = GetPrevContinuation(aFrame);
 
     while (inlineFrame) {
       nsRect rect = inlineFrame->GetRect();
       mContinuationPoint += rect.width;
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
-      inlineFrame = inlineFrame->GetPrevContinuation();
+      inlineFrame = GetPrevContinuation(inlineFrame);
     }
 
     // Next add this frame and subsequent frames to the bounding box and
@@ -231,7 +272,7 @@ protected:
       nsRect rect = inlineFrame->GetRect();
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
-      inlineFrame = inlineFrame->GetNextContinuation();
+      inlineFrame = GetNextContinuation(inlineFrame);
     }
 
     mFrame = aFrame;
