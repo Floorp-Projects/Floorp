@@ -152,29 +152,6 @@ var BrowserUI = {
     this._favicon.src = faviconURI.spec;
   },
 
-  _getHistory : function(aCount) {
-    var items = [];
-
-    var hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-    var options = hs.getNewQueryOptions();
-    options.queryType = options.QUERY_TYPE_HISTORY;
-    //options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
-    options.maxResults = aCount;
-    //options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_URI;
-    var query = hs.getNewQuery();
-    var result = hs.executeQuery(query, options);
-    var rootNode = result.root;
-    rootNode.containerOpen = true;
-    var cc = rootNode.childCount;
-    for (var i=0; i<cc; ++i) {
-      var node = rootNode.getChild(i);
-      items.push(node);
-    }
-    rootNode.containerOpen = false;
-
-    return items;
-  },
-
   _showToolbar : function(aShow) {
     if (aShow) {
       ws.freeze("toolbar-main");
