@@ -56,27 +56,20 @@ typedef int (OggPlayDataCallback)(OggPlay *player, int num_records,
 #include <oggplay/oggplay_callback_info.h>
 #include <oggplay/oggplay_tools.h>
 #include <oggplay/oggplay_seek.h>
+/*
+#include <oggplay/oggplay_retrieve.h>
+#include <oggplay/oggplay_cmml.h>
+*/
 
-/**
- * Create an OggPlay handle associated with the given reader.
- * The functions creates a new OggPlay handle and associates with
- * the given OggPlayReader and initialises the buffer.
- * 
- *
- * @param reader an OggPlayReader handle associated with the Ogg content
- * @return A new OggPlay handle
- * @retval NULL in case of error.
- */
+OggPlay *
+oggplay_init(void);
+
+OggPlayErrorCode
+oggplay_set_reader(OggPlay *OS, OggPlayReader *OSR);
+
 OggPlay *
 oggplay_open_with_reader(OggPlayReader *reader);
 
-/**
- * Create a new OggPlay handle associated with the given reader.
- *
- * \param reader OggPlayReader handle associated with the Ogg content
- * \return A new OggPlay handle
- * \retval NULL in case of error.
- */
 OggPlay *
 oggplay_new_with_reader(OggPlayReader *reader);
 
@@ -135,13 +128,6 @@ oggplay_buffer_release(OggPlay *player, OggPlayCallbackInfo **track_info);
 void
 oggplay_prepare_for_close(OggPlay *me);
 
-/**
- * @brief Destroys the OggPlay handle along with the associated OggPlayReader
- * and clears out the buffer and shuts down the callback function. 
- *
- * @param player an OggPlay handle
- * @retval E_OGGPLAY_OK on success 
- */
 OggPlayErrorCode
 oggplay_close(OggPlay *player);
 

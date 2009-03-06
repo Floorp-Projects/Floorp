@@ -148,21 +148,13 @@ oggplay_create_socket() {
   return sock;
 }
 
-/**
- * This function guarantees it will return malloced versions of host and
+/*
+ * this function guarantees it will return malloced versions of host and
  * path
- *
- * @param location Location of the Ogg content
- * @param proxy The proxy if there's any.
- * @param proxy_port The port of the proxy if there's any.
- * @param host The host to connect to; using proxy if set. 
- * @param port The port to connect to;
- * @param path The path where the content resides on the server.  
- * @retval -1 in case of error, 0 otherwise. 
  */
-int
+void
 oggplay_hostname_and_path(char *location, char *proxy, int proxy_port,
-                          char **host, int *port, char **path) {
+                                  char **host, int *port, char **path) {
 
 
   char  * colon;
@@ -171,15 +163,10 @@ oggplay_hostname_and_path(char *location, char *proxy, int proxy_port,
 
   /* if we have a proxy installed this is all dead simple */
   if (proxy != NULL) {
-    if ((*host = strdup(proxy)) == NULL)
-      goto error;
-
+    *host = strdup(proxy);
     *port = proxy_port;
-
-    if ((*path = strdup(location)) == NULL)
-      goto error;
-
-    return 0;
+    *path = strdup(location);
+    return;
   }
 
   /* find start_pos */
@@ -194,15 +181,10 @@ oggplay_hostname_and_path(char *location, char *proxy, int proxy_port,
    * if both are null, then just set the simple defaults and return
    */
   if (colon == NULL && slash == NULL) {
-    if ((*host = strdup(location)) == NULL)
-      goto error;
-
+    *host = strdup(location);
     *port = 80;
-
-    if ((*path = strdup("/")) == NULL)
-      goto error;
-
-    return 0;
+    *path = strdup("/");
+    return;
   }
 
   /*
@@ -226,29 +208,16 @@ oggplay_hostname_and_path(char *location, char *proxy, int proxy_port,
     end_of_host = slash;
   }
 
-  if ((*host = strdup(location)) == NULL)
-    goto error;
-  
+  *host = strdup(location);
   (*host)[end_of_host - location] = '\0';
 
   if (slash == NULL) {
-    if ((*path = strdup("/")) == NULL)
-      goto error;
-
-    return 0;
+    *path = strdup("/");
+    return;
   }
 
-  if ((*path = strdup(slash)) == NULL)
-    goto error;
+  *path = strdup(slash);
 
-  return 0;
-
-error:
-  /* there has been an error while copying strings... */
-  if (*host != NULL)
-    oggplay_free(*host);
-
-  return -1;
 }
 
 OggPlayErrorCode
@@ -334,9 +303,8 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
   /*
    * Extract the host name and the path from the location.
    */
-  if (oggplay_hostname_and_path(me->location, me->proxy, me->proxy_port,
-                              &host, &port, &path) != 0)
-    return E_OGGPLAY_OUT_OF_MEMORY;
+  oggplay_hostname_and_path(me->location, me->proxy, me->proxy_port,
+                              &host, &port, &path);
 
 
   /*
@@ -352,8 +320,8 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
 
   he = gethostbyname(host);
 
-  oggplay_free(host);
-  oggplay_free(path);
+  free(host);
+  free(path);
 
   if (he == NULL) {
     printf("Host not found\n");
@@ -406,10 +374,7 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
     int found_http_response = 0;
 
     if (me->buffer == NULL) {
-      me->buffer = (unsigned char*)oggplay_malloc(TCP_READER_MAX_IN_MEMORY);
-      if (me->buffer == NULL)
-        return E_OGGPLAY_OUT_OF_MEMORY;
-
+      me->buffer = (unsigned char*)malloc(TCP_READER_MAX_IN_MEMORY);
       me->buffer_size = TCP_READER_MAX_IN_MEMORY;
       me->amount_in_memory = 0;
     }
@@ -549,12 +514,12 @@ oggplay_tcp_reader_destroy(OggPlayReader * opr) {
 #endif
   }
 
-  if (me->buffer != NULL) oggplay_free(me->buffer);
-  if (me->location != NULL) oggplay_free(me->location);
+  free(me->buffer);
+  free(me->location);
   if (me->backing_store != NULL) {
     fclose(me->backing_store);
   }
-  oggplay_free(me);
+  free(me);
   return E_OGGPLAY_OK;
 }
 
@@ -696,22 +661,14 @@ oggplay_tcp_reader_io_tell(void * user_handle) {
 OggPlayReader *
 oggplay_tcp_reader_new(char *location, char *proxy, int proxy_port) {
 
-  OggPlayTCPReader * me = (OggPlayTCPReader *)oggplay_malloc (sizeof (OggPlayTCPReader));
-
-  if (me == NULL)
-    return NULL;
+  OggPlayTCPReader * me = (OggPlayTCPReader *)malloc (sizeof (OggPlayTCPReader));
 
   me->state = OTRS_UNINITIALISED;
   me->socket = INVALID_SOCKET;
   me->buffer = NULL;
   me->buffer_size = 0;
   me->current_position = 0;
-  /* if there's not enough memory to copy the URI cancel the initialisation */
-  if ( (me->location = strdup(location)) == NULL)
-  {
-    oggplay_tcp_reader_destroy ((OggPlayReader*)me);
-    return NULL;
-  }
+  me->location = strdup(location);
   me->amount_in_memory = 0;
   me->backing_store = NULL;
   me->stored_offset = 0;
