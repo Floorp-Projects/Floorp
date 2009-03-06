@@ -3095,12 +3095,12 @@ nsContentUtils::GetEventId(nsIAtom* aName)
   return NS_USER_DEFINED_EVENT;
 }
 
-// static
-nsresult
-nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
-                                     const nsAString& aEventName,
-                                     PRBool aCanBubble, PRBool aCancelable,
-                                     PRBool *aDefaultAction)
+static
+nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
+                           const nsAString& aEventName,
+                           PRBool aCanBubble, PRBool aCancelable,
+                           nsIDOMEvent** aEvent,
+                           nsIDOMEventTarget** aTargetOut)
 {
   nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(aTarget));
@@ -3120,6 +3120,28 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
   rv = privateEvent->SetTrusted(PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = privateEvent->SetTarget(target);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  event.forget(aEvent);
+  target.forget(aTargetOut);
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
+                                     const nsAString& aEventName,
+                                     PRBool aCanBubble, PRBool aCancelable,
+                                     PRBool *aDefaultAction)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
+                                  aCancelable, getter_AddRefs(event),
+                                  getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRBool dummy;
   return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
 }
@@ -3132,31 +3154,16 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
                                     PRBool *aDefaultAction)
 {
 
-  NS_ENSURE_ARG_POINTER(aDoc);
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
+                                  aCancelable, getter_AddRefs(event),
+                                  getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(aDoc, "GetEventAndTarget lied?");
   NS_ENSURE_ARG_POINTER(aDoc->GetWindow());
   NS_ENSURE_ARG_POINTER(aDoc->GetWindow()->GetChromeEventHandler());
-
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(aDoc);
-  nsCOMPtr<nsIDOMEventTarget> originalTarget =
-    do_QueryInterface(aTarget);
-  NS_ENSURE_TRUE(docEvent && originalTarget, NS_ERROR_INVALID_ARG);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv =
-    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
-
-  rv = event->InitEvent(aEventName, aCanBubble, aCancelable);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = privateEvent->SetTarget(originalTarget);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = privateEvent->SetTrusted(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsEventStatus status = nsEventStatus_eIgnore;
   rv = aDoc->GetWindow()->GetChromeEventHandler()->DispatchDOMEvent(nsnull,
