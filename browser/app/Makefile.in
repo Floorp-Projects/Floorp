@@ -77,7 +77,7 @@ ifdef SOURCE_STAMP
 DEFINES += -DMOZ_SOURCE_STAMP="$(SOURCE_STAMP)"
 endif
 
-SOURCE_REPO := $(shell hg -R $(topsrcdir) showconfig paths.default 2>/dev/null | sed s/^ssh:/http:/)
+SOURCE_REPO := $(shell hg -R $(topsrcdir) showconfig paths.default 2>/dev/null | sed -e "s/^ssh:/http:/")
 ifdef SOURCE_REPO
 DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
