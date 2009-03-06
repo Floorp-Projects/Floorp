@@ -1924,6 +1924,9 @@
             // the tab by dropping it on the desktop would result in an
             // "internet shortcut"
             dt.mozSetDataAt("text/plain", spec, 0);
+            
+            // Set the cursor to an arrow during tab drags.
+            dt.mozCursor = "default";
 
             var canvas = tabPreviews.capture(target, false);
             dt.setDragImage(canvas, 0, 0);
