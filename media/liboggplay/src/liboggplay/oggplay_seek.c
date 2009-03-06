@@ -87,19 +87,13 @@ oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
   OggPlayDataHeader  ** end_of_list_p;
   int                   i;
 
-  if (me  == NULL)
-    return;
-
   /*
    * first, create a trash object to store the context that we want to
    * delete but can't until the presentation thread is no longer using it -
    * this will occur as soon as the thread calls oggplay_buffer_release_next
    */
 
-  trash = oggplay_calloc(1, sizeof(OggPlaySeekTrash));
-
-  if (trash == NULL)
-    return;
+  trash = calloc(sizeof(OggPlaySeekTrash), 1);
 
   /*
    * store the old buffer in it next.
@@ -111,11 +105,6 @@ oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
    * will start using this buffer instead.
    */
   me->buffer = oggplay_buffer_new_buffer(me->buffer->buffer_size);
-
-  if (me->buffer == NULL)
-  {
-    return;
-  }
 
   /*
    * strip all of the data packets out of the streams and put them into the
@@ -163,12 +152,12 @@ oggplay_take_out_trash(OggPlay *me, OggPlaySeekTrash *trash) {
     oggplay_buffer_shutdown(me, trash->old_buffer);
     oggplay_data_free_list(trash->old_data);
     if (p != NULL) {
-      oggplay_free(p);
+      free(p);
     }
     p = trash;
   }
 
   if (p != NULL) {
-    oggplay_free(p);
+    free(p);
   }
 }

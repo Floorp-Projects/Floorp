@@ -53,43 +53,26 @@
 OggPlayBuffer *
 oggplay_buffer_new_buffer(int size) {
 
-  OggPlayBuffer *buffer = NULL;
+  OggPlayBuffer *buffer = 0;
   if (size < 0) {
     size = OGGPLAY_DEFAULT_BUFFER_SIZE;
   }
 
-  buffer = (OggPlayBuffer*)oggplay_malloc(sizeof (OggPlayBuffer));
+  buffer = (OggPlayBuffer*)malloc(sizeof (OggPlayBuffer));
 
-  if (buffer == NULL)
-    return NULL;
-
-  buffer->buffer_list = oggplay_calloc(size, sizeof (void *));
-  if (buffer->buffer_list == NULL)
-    goto error;
-
-  buffer->buffer_mirror = oggplay_calloc(size, sizeof (void *));
-  if (buffer->buffer_mirror == NULL)
-    goto error;
+  buffer->buffer_list = malloc(sizeof (void *) * size);
+  memset(buffer->buffer_list, 0, sizeof (void *) * size);
+  buffer->buffer_mirror = malloc(sizeof (void *) * size);
+  memset(buffer->buffer_mirror, 0, sizeof (void *) * size);
 
   buffer->buffer_size = size;
   buffer->last_filled = -1;
   buffer->last_emptied = -1;
 
-  if (SEM_CREATE(buffer->frame_sem, size) != 0)
-    goto error;
+  SEM_CREATE(buffer->frame_sem, size);
 
   return buffer;
 
-error:
-  if (buffer->buffer_list != NULL)
-    oggplay_free (buffer->buffer_list);
-
-  if (buffer->buffer_mirror != NULL)
-    oggplay_free (buffer->buffer_mirror);
-
-  oggplay_free (buffer);
-
-  return NULL;
 }
 
 void
@@ -104,16 +87,16 @@ oggplay_buffer_shutdown(OggPlay *me, volatile OggPlayBuffer *vbuffer) {
     if (buffer->buffer_mirror[i] != NULL) {
       OggPlayCallbackInfo *ti = (OggPlayCallbackInfo *)buffer->buffer_mirror[i];
       for (j = 0; j < me->num_tracks; j++) {
-        oggplay_free((ti + j)->records);
+        free((ti + j)->records);
       }
-      oggplay_free(ti);
+      free(ti);
     }
   }
 
-  oggplay_free(buffer->buffer_list);
-  oggplay_free(buffer->buffer_mirror);
+  free(buffer->buffer_list);
+  free(buffer->buffer_mirror);
   SEM_CLOSE(buffer->frame_sem);
-  oggplay_free(buffer);
+  free(buffer);
 }
 
 int
@@ -164,9 +147,6 @@ oggplay_buffer_callback(OggPlay *me, int tracks,
   OggPlayCallbackInfo * ptr = track_info[0];
   int                   required;
 
-  if (me == NULL)
-    return -1;
-
   buffer = (OggPlayBuffer *)me->buffer;
 
   if (buffer == NULL) {
@@ -210,9 +190,9 @@ oggplay_buffer_callback(OggPlay *me, int tracks,
         /* free these here, because we couldn't free them in
          * oggplay_callback_info_destroy for buffer mode
          */
-        oggplay_free((ti + i)->records);
+        free((ti + i)->records);
       }
-      oggplay_free(ti);
+      free(ti);
       buffer->buffer_mirror[k] = NULL;
     }
   }
@@ -220,10 +200,7 @@ oggplay_buffer_callback(OggPlay *me, int tracks,
   /*
    * replace the decode_data buffer for the next callback
    */
-  me->callback_info = 
-    (OggPlayCallbackInfo *)oggplay_calloc(me->num_tracks, sizeof (OggPlayCallbackInfo));
-  if (me->callback_info == NULL)
-    return -1;
+  me->callback_info = (OggPlayCallbackInfo *)calloc(me->num_tracks, sizeof (OggPlayCallbackInfo));
 
   /*
    * fill both mirror and list, mirror first to avoid getting inconsistencies
@@ -279,9 +256,7 @@ oggplay_buffer_retrieve_next(OggPlay *me) {
   next_item = (OggPlayCallbackInfo*)buffer->buffer_list[next_loc];
   buffer->last_emptied = next_loc;
 
-  return_val = oggplay_calloc(me->num_tracks, sizeof (OggPlayCallbackInfo *));
-  if (return_val == NULL)
-    return NULL;
+  return_val = malloc(sizeof (OggPlayCallbackInfo *) * me->num_tracks);
 
   for (i = 0; i < me->num_tracks; i++) {
     return_val[i] = next_item + i;
@@ -314,7 +289,7 @@ oggplay_buffer_release(OggPlay *me, OggPlayCallbackInfo **track_info) {
     return E_OGGPLAY_UNINITIALISED;
   }
 
-  oggplay_free(track_info);
+  free(track_info);
 
   buffer->buffer_list[buffer->last_emptied] = NULL;
 
@@ -342,8 +317,7 @@ oggplay_use_buffer(OggPlay *me, int size) {
     return E_OGGPLAY_OK;
   }
 
-  if( (me->buffer = oggplay_buffer_new_buffer(size)) == NULL)
-    return E_OGGPLAY_OUT_OF_MEMORY;
+  me->buffer = oggplay_buffer_new_buffer(size);
 
   /*
    * if oggplay is already initialised, then prepare the buffer now
@@ -359,9 +333,6 @@ void
 oggplay_buffer_prepare(OggPlay *me) {
 
   int i;
-
-  if (me == NULL)
-    return;
 
   oggplay_set_data_callback_force(me, &oggplay_buffer_callback, NULL);
 
