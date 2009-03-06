@@ -39,7 +39,7 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(B5947DD0-8E86-4B9C-AA65-C86303EFCF94)]
+[scriptable, uuid(E4970BA1-9567-455C-8B4E-4607D7E741BB)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -179,6 +179,16 @@ interface nsIDOMNSDataTransfer : nsISupports
    * The number of items being dragged.
    */
   readonly attribute unsigned long mozItemCount;
+
+  /**
+   * Sets the drag cursor state. Primarily used to control the cursor during
+   * tab drags, but could be expanded to other uses.
+   *
+   * Possible values:
+   *  auto - use default system behavior.
+   *  default - set the cursor to an arrow during the drag operation.
+   */
+  attribute DOMString mozCursor;
 
   /**
    * Holds a list of the format types of the data that is stored for an item
