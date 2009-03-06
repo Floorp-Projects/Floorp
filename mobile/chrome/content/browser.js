@@ -55,6 +55,8 @@ function getBrowser() {
   return Browser.selectedBrowser;
 }
 
+const kDefaultTextZoom = 1.2;
+
 var ws = null;
 var ih = null;
 
@@ -64,8 +66,7 @@ var Browser = {
   _selectedTab : null,
   _windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils),
-  _isStartup: true,
-
+  _isStartup : true,
 
   startup: function() {
     var self = this;
@@ -126,7 +127,7 @@ var Browser = {
       containerStyle.height = containerStyle.maxHeight = h + "px";
 
       ws.updateSize(w, h);
-      
+
       if (Browser._isStartup) {
         ws.endUpdateBatch();
         Browser.canvasBrowser.endLoading();
@@ -1042,9 +1043,8 @@ ProgressController.prototype = {
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         this._networkStop();
     } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         this._documentStop();
-      }
     }
   },
 
@@ -1106,11 +1106,15 @@ ProgressController.prototype = {
 
   _networkStart: function() {
     this._tab.setLoading(true);
-    //dump("started loading network\n");
 
     if (Browser.selectedBrowser == this.browser) {
       Browser.canvasBrowser.startLoading();
       BrowserUI.update(TOOLBARSTATE_LOADING);
+
+      // We increase the default text size to make the text more readable when
+      // the page is zoomed out
+      if (this.browser.markupDocumentViewer.textZoom != kDefaultTextZoom)
+        this.browser.markupDocumentViewer.textZoom = kDefaultTextZoom;
     }
   },
 
@@ -1124,8 +1128,6 @@ ProgressController.prototype = {
   },
 
   _documentStop: function() {
-    //dump("stop, hammer time\n");
-
     // translate any phone numbers
     Browser.translatePhoneNumbers();
 
@@ -1133,7 +1135,7 @@ ProgressController.prototype = {
       // focus the dom window
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
-      
+
       if (!this._isStartup)
         Browser.canvasBrowser.endLoading();
     }
