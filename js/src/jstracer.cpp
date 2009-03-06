@@ -7027,25 +7027,20 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
         LIns* r_ins = get(&r);
 
         if (JSVAL_IS_OBJECT(r)) {
-            LIns* exit = snapshot(MISMATCH_EXIT);
-            if (VALUE_IS_FUNCTION(cx, r)) {
-                /*
-                 * If we are recording a function being set into the slot, we must write the
-                 * same function that's already in the slot, otherwise we would have to re-brand.
-                 * In that case we simply fall off trace. Since we guard that the value is
-                 * already in the slot, we don't actually write anything into the slot in this
-                 * case.
-                 */
-                guard(true, lir->ins2(LIR_eq, get(&STOBJ_GET_SLOT(obj, slot)), r_ins), exit);
-            } else {
-                /*
-                 * If a regular object was written, we have to guard that it's not a function
-                 * at execution time either. FIXME: We should split function and object into
-                 * separate types when on trace (bug 481273).
-                 */
-                guardClass(obj, obj_ins, &js_FunctionClass, exit);
-                set(&STOBJ_GET_SLOT(obj, slot), r_ins);
-            }
+            /*
+             * Writing a function into the global object might rebrand it. We don't trace
+             * that case.
+             */
+            if (VALUE_IS_FUNCTION(cx, r))
+                ABORT_TRACE("potential rebranding of the global object");
+
+            /*
+             * If a regular object was written, we have to guard that it's not a function
+             * at execution time either. FIXME: We should split function and object into
+             * separate types when on trace (bug 481273).
+             */
+            guardClass(obj, obj_ins, &js_FunctionClass, snapshot(MISMATCH_EXIT));
+            set(&STOBJ_GET_SLOT(obj, slot), r_ins);
         } else {
             set(&STOBJ_GET_SLOT(obj, slot), r_ins);
         }
