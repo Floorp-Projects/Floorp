@@ -56,6 +56,7 @@
 #define WINDOW_IS_MAPPED(window) ((window) && GDK_IS_WINDOW(window) && gdk_window_is_visible(window))
 
 static GtkWidget* gProtoWindow;
+static GtkWidget* gProtoLayout;
 static GtkWidget* gButtonWidget;
 static GtkWidget* gToggleButtonWidget;
 static GtkWidget* gButtonArrowWidget;
@@ -133,14 +134,13 @@ ensure_window_widget()
 static gint
 setup_widget_prototype(GtkWidget* widget)
 {
-    static GtkWidget* protoLayout;
     ensure_window_widget();
-    if (!protoLayout) {
-        protoLayout = gtk_fixed_new();
-        gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
+    if (!gProtoLayout) {
+        gProtoLayout = gtk_fixed_new();
+        gtk_container_add(GTK_CONTAINER(gProtoWindow), gProtoLayout);
     }
 
-    gtk_container_add(GTK_CONTAINER(protoLayout), widget);
+    gtk_container_add(GTK_CONTAINER(gProtoLayout), widget);
     gtk_widget_realize(widget);
     g_object_set_data(G_OBJECT(widget), "transparent-bg-hint", GINT_TO_POINTER(TRUE));
     return MOZ_GTK_SUCCESS;
@@ -3255,6 +3255,7 @@ moz_gtk_shutdown()
         gtk_widget_destroy(gProtoWindow);
 
     gProtoWindow = NULL;
+    gProtoLayout = NULL;
     gButtonWidget = NULL;
     gToggleButtonWidget = NULL;
     gButtonArrowWidget = NULL;
