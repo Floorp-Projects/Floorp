@@ -40,17 +40,10 @@
 #ifndef _nsPROCESSWIN_H_
 #define _nsPROCESSWIN_H_
 
-#if defined(XP_WIN) && !defined (WINCE) /* wince uses nspr */
-#define PROCESSMODEL_WINAPI
-#endif
-
 #include "nsIProcess.h"
 #include "nsIFile.h"
 #include "nsString.h"
 #include "prproces.h"
-#if defined(PROCESSMODEL_WINAPI) 
-#include <windows.h>
-#endif
 
 #define NS_PROCESS_CID \
 {0x7b4eeb20, 0xd781, 0x11d4, \
@@ -66,16 +59,13 @@ public:
   nsProcess();
 
 private:
-  ~nsProcess();
+  ~nsProcess() {}
 
   nsCOMPtr<nsIFile> mExecutable;
   PRInt32 mExitValue;
   nsCString mTargetPath;
   PRProcess *mProcess;
 
-#if defined(PROCESSMODEL_WINAPI) 
-  PROCESS_INFORMATION procInfo;
-#endif
 };
 
 #endif

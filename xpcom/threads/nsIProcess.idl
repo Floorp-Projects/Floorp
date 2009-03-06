@@ -1,7 +1,7 @@
 #include "nsIFile.idl"
 #include "nsISupports.idl"
 
-[scriptable, uuid(d573f1f3-fcdd-4dbe-980b-4ba79e6718dc)]
+[scriptable, uuid(9da0b650-d07e-4617-a18a-250035572ac8)]
 
 interface nsIProcess : nsISupports
 {
@@ -23,7 +23,6 @@ interface nsIProcess : nsISupports
 	readonly attribute string processName;
 	readonly attribute unsigned long processSignature;
 	readonly attribute long exitValue;
-	readonly attribute unsigned long isRunning;
 };
 
 %{C++
