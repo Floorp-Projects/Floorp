@@ -51,7 +51,7 @@
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[scriptable, uuid(748f3ffe-27d9-4402-9de9-494badbeebf4)]
+[scriptable, uuid(7224E826-3F6C-4BB2-9C6E-02DA44575743)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
@@ -78,17 +78,6 @@ interface nsILocalFileMac : nsILocalFile
     *
     */
   [noscript] void initWithFSRef([const] in FSRefPtr aFSRef);
-
-   /**
-    * initWithFSSpec
-    *
-    * Init this object with an FSSpec
-    * Legacy method - leaving in place for now
-    *
-    * @param   aFileSpec       the native file spec
-    *
-    */
-  [noscript] void initWithFSSpec([const] in FSSpecPtr aFileSpec);
 
    /**
     * initToAppWithCreatorCode
@@ -249,14 +238,6 @@ interface nsILocalFileMac : nsILocalFile
 %{C++
 extern "C"
 {
-
-#ifndef XP_MACOSX
-NS_EXPORT const char* NS_TruncNodeName(const char *aNode, char *outBuf);
-#endif
-
-NS_EXPORT nsresult NS_NewLocalFileWithFSSpec(const FSSpec* inSpec, PRBool followSymlinks, nsILocalFileMac* *result);
-
-// NS_NewLocalFileWithFSRef is available since Mozilla 1.8.1.
 NS_EXPORT nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, PRBool aFollowSymlinks, nsILocalFileMac** result);
 }
 %}

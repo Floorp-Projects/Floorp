@@ -258,8 +258,8 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     if (capacity >= PL_DHASH_SIZE_LIMIT)
         return PR_FALSE;
     table->hashShift = PL_DHASH_BITS - log2;
-    table->maxAlphaFrac = (uint8)(0x100 * PL_DHASH_DEFAULT_MAX_ALPHA);
-    table->minAlphaFrac = (uint8)(0x100 * PL_DHASH_DEFAULT_MIN_ALPHA);
+    table->maxAlphaFrac = (PRUint8)(0x100 * PL_DHASH_DEFAULT_MAX_ALPHA);
+    table->minAlphaFrac = (PRUint8)(0x100 * PL_DHASH_DEFAULT_MIN_ALPHA);
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
     table->generation = 0;
@@ -326,8 +326,8 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
         minAlpha = (size * maxAlpha - PR_MAX(size / 256, 1)) / (2 * size);
     }
 
-    table->maxAlphaFrac = (uint8)(maxAlpha * 256);
-    table->minAlphaFrac = (uint8)(minAlpha * 256);
+    table->maxAlphaFrac = (PRUint8)(maxAlpha * 256);
+    table->minAlphaFrac = (PRUint8)(minAlpha * 256);
 }
 
 /*
