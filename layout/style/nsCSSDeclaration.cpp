@@ -311,22 +311,19 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      if (NS_STYLE_TEXT_DECORATION_NONE != intValue) {
-        PRInt32 mask;
-        for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
-             mask <= NS_STYLE_TEXT_DECORATION_BLINK; 
-             mask <<= 1) {
-          if ((mask & intValue) == mask) {
-            AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
-            intValue &= ~mask;
-            if (0 != intValue) { // more left
-              aResult.Append(PRUnichar(' '));
-            }
+      NS_ABORT_IF_FALSE(NS_STYLE_TEXT_DECORATION_NONE != intValue,
+                        "none should be parsed as eCSSUnit_None");
+      PRInt32 mask;
+      for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
+           mask <= NS_STYLE_TEXT_DECORATION_BLINK; 
+           mask <<= 1) {
+        if ((mask & intValue) == mask) {
+          AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
+          intValue &= ~mask;
+          if (0 != intValue) { // more left
+            aResult.Append(PRUnichar(' '));
           }
         }
-      }
-      else {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_TEXT_DECORATION_NONE), aResult);
       }
     }
     else if (eCSSProperty_azimuth == aProperty) {
