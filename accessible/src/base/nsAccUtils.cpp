@@ -681,8 +681,10 @@ nsAccUtils::RoleInternal(nsIAccessible *aAcc)
     nsAccessible* accessible = nsnull;
     CallQueryInterface(aAcc, &accessible);
 
-    if (accessible)
+    if (accessible) {
       accessible->GetRoleInternal(&role);
+      NS_RELEASE(accessible);
+    }
   }
 
   return role;
