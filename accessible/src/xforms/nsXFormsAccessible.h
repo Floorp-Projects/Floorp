@@ -127,12 +127,12 @@ class nsXFormsContainerAccessible : public nsXFormsAccessible
 public:
   nsXFormsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  // Returns ROLE_GROUP.
-  NS_IMETHOD GetRole(PRUint32 *aRole);
-
   // Allows accessible nodes in anonymous content of xforms element by
   // always returning PR_TRUE value.
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
 };
 
 

@@ -238,7 +238,8 @@ nsXULTreeAccessible::Shutdown()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsXULTreeAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   NS_ASSERTION(mTree, "No tree view");
   PRInt32 colCount = 0;
@@ -826,7 +827,8 @@ nsXULTreeitemAccessible::Init()
   return GetName(mCachedName);
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsXULTreeitemAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   PRInt32 colCount = 0;
   if (NS_SUCCEEDED(nsXULTreeAccessible::GetColumnCount(mTree, &colCount)) && colCount > 1)

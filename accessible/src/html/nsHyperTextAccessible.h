@@ -82,11 +82,9 @@ public:
   NS_DECL_NSIACCESSIBLEEDITABLETEXT
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HYPERTEXTACCESSIBLE_IMPL_CID)
 
-  // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *aRole);
-
   // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   void CacheChildren();
 

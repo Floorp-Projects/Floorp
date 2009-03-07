@@ -122,8 +122,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
         nsCOMPtr<nsIAccessible> parentAccessible;
         accWrap->GetParent(getter_AddRefs(parentAccessible));
         if (parentAccessible) {
-            PRUint32 role;
-            parentAccessible->GetRole(&role);
+          PRUint32 role = nsAccUtils::RoleInternal(parentAccessible);
 
             if (role == ATK_ROLE_MENU_BAR) {
                 //it is topmenu, change from "Alt+f" to "f;<Alt>f"
@@ -149,8 +148,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
 
                     nsCOMPtr<nsIAccessible> tempAcc = grandParentAcc;
                     tempAcc->GetParent(getter_AddRefs(grandParentAcc));
-                    if (grandParentAcc)
-                        grandParentAcc->GetRole(&role);
+                  role = nsAccUtils::RoleInternal(grandParentAcc);
                 }
                 allKeyBinding = accessKey + NS_LITERAL_STRING(";<Alt>") +
                                 allKey;

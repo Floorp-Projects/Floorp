@@ -130,17 +130,17 @@ nsApplicationAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsApplicationAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_APP_ROOT;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsApplicationAccessible::GetFinalRole(PRUint32 *aFinalRole)
+nsApplicationAccessible::GetRole(PRUint32 *aRole)
 {
-  return GetRole(aFinalRole);
+  return GetRoleInternal(aRole);
 }
 
 nsresult

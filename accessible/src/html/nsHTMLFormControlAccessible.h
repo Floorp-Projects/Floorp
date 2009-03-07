@@ -51,12 +51,12 @@ public:
   nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
@@ -80,13 +80,13 @@ public:
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
@@ -99,12 +99,12 @@ public:
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
@@ -119,7 +119,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetValue(nsAString& _retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -130,6 +129,7 @@ public:
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
@@ -139,12 +139,12 @@ public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *aRole); 
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
                                nsIAccessibleRelation **aRelation);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
 
 protected:
   nsIContent* GetLegend();
@@ -156,10 +156,11 @@ public:
   nsHTMLLegendAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LABEL; return NS_OK; }
-
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
                                nsIAccessibleRelation **aRelation);
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
 };
 
 #endif  
