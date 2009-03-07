@@ -4589,6 +4589,15 @@ js_Interpret(JSContext *cx)
                                                  rval);
                                 LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                                 JS_UNLOCK_SCOPE(cx, scope);
+
+                                /*
+                                 * Purge the property cache of the id we may
+                                 * have just shadowed in obj's scope and proto
+                                 * chains. We do this after unlocking obj's
+                                 * scope to avoid lock nesting.
+                                 */
+                                js_PurgeScopeChain(cx, obj, sprop->id);
+
                                 TRACE_2(SetPropHit, entry, sprop);
                                 break;
                             }
