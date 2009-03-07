@@ -47,7 +47,8 @@ nsXULAlertAccessible::nsXULAlertAccessible(nsIDOMNode* aNode, nsIWeakReference* 
 {
 }
 
-NS_IMETHODIMP nsXULAlertAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsXULAlertAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_ALERT;
   return NS_OK;

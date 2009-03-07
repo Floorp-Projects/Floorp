@@ -387,19 +387,17 @@ __try {
       // use the ARIA owns property to calculate that if it's present.
       PRInt32 numChildren = 0;
 
-      PRUint32 currentRole = 0;
-      rv = xpAccessible->GetFinalRole(&currentRole);
-      if (NS_SUCCEEDED(rv) &&
-          currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+      PRUint32 currentRole = nsAccUtils::Role(xpAccessible);
+      if (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
         nsCOMPtr<nsIAccessible> child;
         xpAccessible->GetFirstChild(getter_AddRefs(child));
         while (child) {
-          child->GetFinalRole(&currentRole);
+          currentRole = nsAccUtils::Role(child);
           if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
             nsCOMPtr<nsIAccessible> groupChild;
             child->GetFirstChild(getter_AddRefs(groupChild));
             while (groupChild) {
-              groupChild->GetFinalRole(&currentRole);
+              currentRole = nsAccUtils::Role(groupChild);
               numChildren +=
                 (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
               nsCOMPtr<nsIAccessible> nextGroupChild;
@@ -476,7 +474,7 @@ __try {
 #endif
 
   PRUint32 xpRole = 0, msaaRole = 0;
-  if (NS_FAILED(xpAccessible->GetFinalRole(&xpRole)))
+  if (NS_FAILED(xpAccessible->GetRole(&xpRole)))
     return E_FAIL;
 
   msaaRole = gWindowsRoleMap[xpRole].msaaRole;
@@ -1277,7 +1275,7 @@ __try {
   *aRole = 0;
 
   PRUint32 xpRole = 0;
-  nsresult rv = GetFinalRole(&xpRole);
+  nsresult rv = GetRole(&xpRole);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
