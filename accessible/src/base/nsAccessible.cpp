@@ -1588,7 +1588,8 @@ nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   return obsService->NotifyObservers(aEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 
-NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
+NS_IMETHODIMP
+nsAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
@@ -1645,7 +1646,10 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
       return NS_OK;
     }
   }
-  return mDOMNode ? GetRole(aRole) : NS_ERROR_FAILURE;  // Node already shut down
+
+  return mDOMNode ?
+    GetRoleInternal(aRole) :
+    NS_ERROR_FAILURE;  // Node already shut down
 }
 
 NS_IMETHODIMP
@@ -1989,7 +1993,7 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
 
   PRUint32 role;
-  rv = GetFinalRole(&role);
+  rv = GetRole(&role);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (role == nsIAccessibleRole::ROLE_ENTRY ||
@@ -2246,9 +2250,9 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
 }
 
 /* unsigned long getRole (); */
-NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
 
   if (IsDefunct())

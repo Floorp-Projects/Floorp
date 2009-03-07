@@ -147,11 +147,11 @@ nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-/* wstring getRole (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetRole(PRUint32 *_retval)
+nsresult
+nsHTMLImageAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  *_retval = mMapElement ? nsIAccessibleRole::ROLE_IMAGE_MAP :
-                           nsIAccessibleRole::ROLE_GRAPHIC;
+  *aRole = mMapElement ? nsIAccessibleRole::ROLE_IMAGE_MAP :
+                         nsIAccessibleRole::ROLE_GRAPHIC;
   return NS_OK;
 }
 
