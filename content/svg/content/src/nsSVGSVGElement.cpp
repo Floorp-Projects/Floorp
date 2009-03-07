@@ -1321,15 +1321,26 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
                             nsIContent* aBindingParent,
                             PRBool aCompileEventHandlers)
 {
-  PRBool outermost = WillBeOutermostSVG(aParent, aBindingParent);
+  nsSMILAnimationController* smilController = nsnull;
 
-  if (!mTimedDocumentRoot && outermost) {
-    // We will now be the outermost SVG element
-    mTimedDocumentRoot = new nsSMILTimeContainer();
-    NS_ENSURE_TRUE(mTimedDocumentRoot, NS_ERROR_OUT_OF_MEMORY);
-  } else if (!outermost) {
-    mTimedDocumentRoot = nsnull;
-    mStartAnimationOnBindToTree = PR_TRUE;
+  if (aDocument) {
+    smilController = aDocument->GetAnimationController();
+    if (smilController) {
+      // SMIL is enabled in this document
+      if (WillBeOutermostSVG(aParent, aBindingParent)) {
+        // We'll be the outermost <svg> element.  We'll need a time container.
+        if (!mTimedDocumentRoot) {
+          mTimedDocumentRoot = new nsSMILTimeContainer();
+          NS_ENSURE_TRUE(mTimedDocumentRoot, NS_ERROR_OUT_OF_MEMORY);
+        }
+      } else {
+        // We're a child of some other <svg> element, so we don't need our own
+        // time container. However, we need to make sure that we'll get a
+        // kick-start if we get promoted to be outermost later on.
+        mTimedDocumentRoot = nsnull;
+        mStartAnimationOnBindToTree = PR_TRUE;
+      }
+    }
   }
 
   nsresult rv = nsSVGSVGElementBase::BindToTree(aDocument, aParent,
@@ -1337,14 +1348,8 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
                                                 aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (mTimedDocumentRoot) {
-    if (aDocument) {
-      nsSMILAnimationController* smilController = 
-        aDocument->GetAnimationController();
-      if (smilController) {
-        rv = mTimedDocumentRoot->SetParent(smilController);
-      }
-    }
+  if (mTimedDocumentRoot && smilController) {
+    rv = mTimedDocumentRoot->SetParent(smilController);
     if (mStartAnimationOnBindToTree) {
       mTimedDocumentRoot->Begin();
     }
@@ -1362,7 +1367,6 @@ nsSVGSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
   nsSVGSVGElementBase::UnbindFromTree(aDeep, aNullParent);
 }
-
 #endif // MOZ_SMIL
 
 //----------------------------------------------------------------------
