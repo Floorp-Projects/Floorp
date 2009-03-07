@@ -418,7 +418,7 @@ class TraceRecorder : public avmplus::GCObject {
     jsbytecode*             terminate_imacpc;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
-    nanojit::Fragment*      outer;
+    jsbytecode*             outer;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -556,7 +556,7 @@ public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, uint8* typeMap,
-                  VMSideExit* expectedInnerExit, nanojit::Fragment* outerTree);
+                  VMSideExit* expectedInnerExit, jsbytecode* outerTree);
     ~TraceRecorder();
 
     static JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);
