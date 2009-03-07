@@ -5812,6 +5812,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         scope->map.freeslot = slot + 1;
 
     STOBJ_SET_SLOT(obj, slot, v);
+    GC_POKE(cx, JS_NULL);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
