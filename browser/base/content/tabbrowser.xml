@@ -2214,17 +2214,11 @@
 
             // * mozUserCancelled = the user pressed ESC to cancel the drag
             // * Within our browser window, the detach-target is the content
-            //   area.That case is handled by contentAreaDNDObserver.
+            //   area. That case is handled by contentAreaDNDObserver.
             // * The dragLeftWindow solution is suboptimal, a better solution
             //   is on bug 466379.
-            // * One-tab-left case: one might argue that this should
-            //   be handled in dragstart (i.e. not include the "detach"
-            //   type), but what if the user wants to "merge" this window
-            //   into another one?
             var dt = aEvent.dataTransfer;
-            if (dt.mozUserCancelled ||
-                !this._dragLeftWindow ||
-                this.mTabs.length == 1)
+            if (dt.mozUserCancelled || !this._dragLeftWindow)
               return;
 
             // The dropEffect == "none" scenarios:
@@ -2264,10 +2258,15 @@
         </body>
       </method>
 
+      <!-- Moves a tab to a new browser window, unless it's already the only tab
+           in the current window, in which case this will do nothing. -->
       <method name="replaceTabWithWindow">
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            if (this.mTabs.length == 1)
+              return;
+
             // tell a new window to take the "dropped" tab
             var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                       getService(Ci.nsIWindowWatcher);
