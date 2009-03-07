@@ -561,6 +561,22 @@ js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
                        JSBool negative);
 
 /*
+ * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent
+ * scope, else it reshapes the scope and prototype chains it links. It calls
+ * js_PurgeScopeChainHelper, which asserts that obj is flagged as a delegate
+ * (i.e., obj has ever been on a prototype or parent chain).
+ */
+extern void
+js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
+
+static JS_INLINE void
+js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
+{
+    if (OBJ_IS_DELEGATE(cx, obj))
+        js_PurgeScopeChainHelper(cx, obj, id);
+}
+
+/*
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
  */

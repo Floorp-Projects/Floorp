@@ -3566,11 +3566,10 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
     return JS_FALSE;
 }
 
-static void
-PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
+void
+js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
 {
-    if (!OBJ_IS_DELEGATE(cx, obj))
-        return;
+    JS_ASSERT(OBJ_IS_DELEGATE(cx, obj));
 
     /*
      * All scope chains end in a global object, so this will change the global
@@ -3599,7 +3598,7 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
      * this optimistically (assuming no failure below) before locking obj, so
      * we can lock the shadowed scope.
      */
-    PurgeScopeChain(cx, obj, id);
+    js_PurgeScopeChain(cx, obj, id);
 
     JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
@@ -3731,7 +3730,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
      * Purge the property cache of now-shadowed id in obj's scope chain.
      * Do this early, before locking obj to avoid nesting locks.
      */
-    PurgeScopeChain(cx, obj, id);
+    js_PurgeScopeChain(cx, obj, id);
 
     /* Lock if object locking is required by this implementation. */
     JS_LOCK_OBJ(cx, obj);
@@ -4462,7 +4461,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
          * Purge the property cache of now-shadowed id in obj's scope chain.
          * Do this early, before locking obj to avoid nesting locks.
          */
-        PurgeScopeChain(cx, obj, id);
+        js_PurgeScopeChain(cx, obj, id);
 
         /* Find or make a property descriptor with the right heritage. */
         JS_LOCK_OBJ(cx, obj);
