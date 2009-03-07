@@ -117,7 +117,7 @@ PrivKey.prototype = {
   set iv(value) {
     this.payload.iv = value;
   },
-  get keyData() this.payload.key_data,
+  get keyData() { return this.payload.key_data; },
   set keyData(value) {
     this.payload.key_data = value;
   },

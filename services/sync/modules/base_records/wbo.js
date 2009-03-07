@@ -183,10 +183,16 @@ RecordManager.prototype = {
       let self = yield;
 
       let record = null;
+      let spec = url.spec? url.spec : url;
+      /* Note: using url object directly as key for this._records cache
+       * does not work because different url objects (even pointing to the
+       * same place) are different objects and therefore not equal.  So
+       * always use the string, not the object, as a key.  TODO: use the
+       * string as key for this._aliases as well?  (Don't know) */
       if (url in this._aliases)
 	url = this._aliases[url];
-      if (url in this._records)
-	record = this._records[url];
+      if (spec in this._records)
+	record = this._records[spec];
 
       if (!record)
 	record = yield this.import(self.cb, url);
@@ -197,7 +203,8 @@ RecordManager.prototype = {
   },
 
   set: function RegordMgr_set(url, record) {
-    this._records[url] = record;
+    let spec = url.spec ? url.spec : url;
+    this._records[spec] = record;
   },
 
   contains: function RegordMgr_contains(url) {
