@@ -1825,6 +1825,27 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
     );
 }
 
+JS_REQUIRES_STACK bool
+TraceRecorder::isValidSlot(JSScope* scope, JSScopeProperty* sprop)
+{
+    uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
+
+    if (setflags) {
+        if (!SPROP_HAS_STUB_SETTER(sprop))
+            ABORT_TRACE("non-stub setter");
+        if (sprop->attrs & JSPROP_READONLY)
+            ABORT_TRACE("writing to a read-only property");
+    }
+    /* This check applies even when setflags == 0. */
+    if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
+        ABORT_TRACE("non-stub getter");
+
+    if (!SPROP_HAS_VALID_SLOT(sprop, scope))
+        ABORT_TRACE("slotless obj property");
+
+    return true;
+}
+
 /* Lazily import a global slot if we don't already have it in the tracker. */
 JS_REQUIRES_STACK bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
@@ -4757,24 +4778,21 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
     if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0 || !prop)
         ABORT_TRACE("failed to find name in non-global scope chain");
 
-    uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
-
     if (obj == globalObj) {
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
-        if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
-            ABORT_TRACE("non-stub setter");
-        if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
-            ABORT_TRACE("non-stub getter");
-        if (setflags && (sprop->attrs & JSPROP_READONLY))
-            ABORT_TRACE("writing to a readonly property");
-        if (obj2 != obj || !SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj))) {
+        if (obj2 != obj) {
             OBJ_DROP_PROPERTY(cx, obj2, prop);
-            ABORT_TRACE("prototype or slotless globalObj property");
+            ABORT_TRACE("prototype property");
         }
-
-        if (!lazilyImportGlobalSlot(sprop->slot))
-             ABORT_TRACE("lazy import of global slot failed");
+        if (!isValidSlot(OBJ_SCOPE(obj), sprop)) {
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            return false;
+        }
+        if (!lazilyImportGlobalSlot(sprop->slot)) {
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            ABORT_TRACE("lazy import of global slot failed");
+        }
         vp = &STOBJ_GET_SLOT(obj, sprop->slot);
         OBJ_DROP_PROPERTY(cx, obj2, prop);
         return true;
@@ -4788,9 +4806,6 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
         if (cfp && FrameInRange(cx->fp, cfp, callDepth)) {
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
             uintN slot = sprop->shortid;
-
-            if (setflags && (sprop->attrs & JSPROP_READONLY))
-                ABORT_TRACE("writing to a readonly property");
 
             vp = NULL;
             if (sprop->getter == js_GetCallArg) {
@@ -5793,15 +5808,9 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
     if (PCVAL_IS_SPROP(pcval)) {
         JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
 
-        uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
-        if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
-            ABORT_TRACE("non-stub setter");
-        if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
-            ABORT_TRACE("non-stub getter");
-        if (setflags && (sprop->attrs & JSPROP_READONLY))
-            ABORT_TRACE("writing to a readonly property");
-        if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
-            ABORT_TRACE("no valid slot");
+        if (!isValidSlot(OBJ_SCOPE(obj), sprop))
+            return false;
+
         slot = sprop->slot;
     } else {
         if (!PCVAL_IS_SLOT(pcval))
@@ -7015,9 +7024,6 @@ TraceRecorder::record_JSOP_SETPROP()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
 {
-    JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
-
     jsbytecode* pc = cx->fp->regs->pc;
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
@@ -7025,6 +7031,9 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
+
+    if (!isValidSlot(OBJ_SCOPE(obj), sprop))
+        return false;
 
     if (obj == globalObj) {
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)));
