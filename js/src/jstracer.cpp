@@ -4516,7 +4516,7 @@ js_CheckForSSE2()
 }
 #endif
 
-extern void
+void
 js_InitJIT(JSTraceMonitor *tm)
 {
 #if defined NANOJIT_IA32
@@ -4554,7 +4554,7 @@ js_InitJIT(JSTraceMonitor *tm)
 #endif
 }
 
-extern void
+void
 js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef JS_JIT_SPEW
@@ -4627,7 +4627,7 @@ TraceRecorder::popAbortStack()
     nextRecorderToAbort = NULL;
 }
 
-extern void
+void
 js_FlushJITOracle(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
@@ -4635,7 +4635,7 @@ js_FlushJITOracle(JSContext* cx)
     oracle.clear();
 }
 
-extern JS_REQUIRES_STACK void
+JS_REQUIRES_STACK void
 js_FlushScriptFragments(JSContext* cx, JSScript* script)
 {
     if (!TRACING_ENABLED(cx))
@@ -4661,7 +4661,7 @@ js_FlushScriptFragments(JSContext* cx, JSScript* script)
     }
 }
 
-extern JS_REQUIRES_STACK void
+JS_REQUIRES_STACK void
 js_FlushJITCache(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
