@@ -429,6 +429,7 @@ class TraceRecorder : public avmplus::GCObject {
                                   unsigned callDepth, unsigned ngslots, uint8* typeMap);
     void trackNativeStackUse(unsigned slots);
 
+    JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
 
     JS_REQUIRES_STACK nanojit::LIns* guard(bool expected, nanojit::LIns* cond,
