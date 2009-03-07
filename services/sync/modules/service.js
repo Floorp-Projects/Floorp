@@ -578,6 +578,7 @@ WeaveSvc.prototype = {
     this._log.debug("Fetching global metadata record");
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
+
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
 
@@ -623,6 +624,8 @@ WeaveSvc.prototype = {
       return;
 
     } else if (meta.payload.syncID != Clients.syncID) {
+      this._log.warn("Meta.payload.syncID is " + meta.payload.syncID);
+      this._log.warn(", Clients.syncID is " + Clients.syncID);
       yield this.resetClient(self.cb);
       this._log.info("Reset client because of syncID mismatch.");
       Clients.syncID = meta.payload.syncID;
