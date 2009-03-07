@@ -36,3 +36,4 @@ pref("extensions.weave.log.logger.engine.tabs", "Debug");
 pref("extensions.weave.log.logger.engine.clients", "Debug");
 
 pref("extensions.weave.network.numRetries", 2);
+pref("extensions.weave.client.syncID", "YOUR MOM");
