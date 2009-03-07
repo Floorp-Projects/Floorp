@@ -10,15 +10,16 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
   <script type="application/javascript">
   <![CDATA[
-    var gAccService = null;
-    var Ci = Components.interfaces;
-
     function doTest()
     {
-      gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                    getService(Components.interfaces.nsIAccessibleRetrieval);
       var id = "";
       var listbox = null, acc = null;
 
@@ -26,12 +27,11 @@
       // Simple listbox. There is no nsIAccessibleTable interface.
 
       id = "listbox1";
-      listbox = document.getElementById(id);
-      acc = gAccService.getAccessibleFor(listbox);
+      acc = getAccessible(id);
 
       // query nsIAccessibleTable
       try {
-        acc.QueryInterface(Ci.nsIAccessibleTable);
+        acc.QueryInterface(nsIAccessibleTable);
         ok(false,
            id + " shouldn't implement nsIAccessibleTable interface.");
       } catch(e) {
@@ -39,28 +39,16 @@
       }
 
       // role
-      is(acc.role, Ci.nsIAccessibleRole.ROLE_LISTBOX,
-         id + " has wrong role.");
+      testRole(id, ROLE_LISTBOX);
 
       //////////////////////////////////////////////////////////////////////////
       // Multicolumn listbox.
 
       id = "listbox2";
-      listbox = document.getElementById(id);
-      acc = gAccService.getAccessibleFor(listbox);
+      acc = getAccessible(id, [nsIAccessibleTable]);
 
       // role
-      is(acc.role, Ci.nsIAccessibleRole.ROLE_TABLE,
-         id + " has wrong role.");
-
-      // query nsIAccessibleTable
-      try {
-        acc.QueryInterface(Ci.nsIAccessibleTable);
-        ok(true,
-           id + " implements nsIAccessibleTable interface.");
-      } catch(e) {
-        ok(false, id + " doesn't implement nsIAccessibleTable interface.");
-      }
+      testRole(acc, ROLE_TABLE);
 
       // rows count
       var rowsCount = acc.rows;
@@ -74,21 +62,10 @@
       // Multicolumn listbox with header.
 
       id = "listbox3";
-      listbox = document.getElementById(id);
-      acc = gAccService.getAccessibleFor(listbox);
+      acc = getAccessible(id, [nsIAccessibleTable]);
 
       // role
-      is(acc.role, Ci.nsIAccessibleRole.ROLE_TABLE,
-         id + " has wrong role.");
-
-      // query nsIAccessibleTable
-      try {
-        acc.QueryInterface(Ci.nsIAccessibleTable);
-        ok(true,
-           id + " implements nsIAccessibleTable interface.");
-      } catch(e) {
-        ok(false, id + " doesn't implement nsIAccessibleTable interface.");
-      }
+      testRole(acc, ROLE_TABLE);
 
       // rows count
       var rowsCount = acc.rows;
