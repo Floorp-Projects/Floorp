@@ -73,7 +73,7 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
   if (!acc)
     return;
 
-  if (acc.finalRole != ROLE_TEXT_LEAF)
+  if (getRole(acc) != ROLE_TEXT_LEAF)
     // Right now, text leafs don't get tested because the states are not being
     // propagated.
     testStates(acc, aState, aExtraState, aAbsentState);
