@@ -773,7 +773,7 @@
           <![CDATA[
             const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             var popup = document.createElementNS(XUL_NS, "popup");
-            popup.id = "autoscroller";
+            popup.className = "autoscroller";
             return popup;
           ]]>
         </body>

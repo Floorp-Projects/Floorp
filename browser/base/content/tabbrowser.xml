@@ -2769,6 +2769,7 @@
 
           // set up the shared autoscroll popup
           this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
+          this._autoScrollPopup.id = "autoscroller";
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
         ]]>
