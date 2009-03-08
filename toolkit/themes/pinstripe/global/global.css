@@ -311,27 +311,9 @@ notification > button:hover:active {
   background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
 }
 
-/* ::::: XXX - stuff that should live elsewhere ::::: */
-
-/* embedding/components/ui/progressDlg/nsProgressDialog.xul */
-#ok, #cancel, #launch, #reveal, #pauseResume {
-	font: menu !important;
-}
-
-/* toolkit/content/widgets/optionsDialog.xml */
-#panelFrame {
-  margin-top: 2px;
-  -moz-padding-start: 10px;
-}
-
-/* toolkit/mozapps/preferences/ocsp.xul */
-#OCSPDialog {
-  font: message-box;
-}
-
 /* :::::: autoscroll popup ::::: */
 
-#autoscroller {
+.autoscroller {
   height: 28px;
   width: 28px;
   border: none;
@@ -344,10 +326,10 @@ notification > button:hover:active {
   -moz-window-shadow: none;
 }
 
-#autoscroller[scrolldir="NS"] {
+.autoscroller[scrolldir="NS"] {
   background-position: right center;
 }
 
-#autoscroller[scrolldir="EW"] {
+.autoscroller[scrolldir="EW"] {
   background-position: right bottom;
 }
