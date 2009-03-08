@@ -72,6 +72,7 @@ _TEST_FILES += \
 		test_contentDuration4.html \
 		test_contentDuration5.html \
 		test_contentDuration6.html \
+		test_delay_load.html \
 		test_duration1.html \
 		test_ended1.html \
 		test_ended2.html \
