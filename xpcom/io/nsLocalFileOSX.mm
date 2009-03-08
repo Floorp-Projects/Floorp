@@ -44,6 +44,7 @@
 #include "nsDirectoryServiceDefs.h"
 
 #include "nsObjCExceptions.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIDirectoryEnumerator.h"
@@ -191,7 +192,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
             }
 
             if (mArrayIndex < mArrayCnt) {
-              nsLocalFile *newFile = new nsLocalFile;
+              nsRefPtr<nsLocalFile> newFile = new nsLocalFile;
               if (!newFile)
                 return NS_ERROR_OUT_OF_MEMORY;
               FSRef fsRef = mFSRefsArray[mArrayIndex];
@@ -1301,8 +1302,6 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
   // Check we are correctly initialized.
   CHECK_mBaseRef();
 
-  nsLocalFile *newFile = nsnull;
-
   // If it can be determined without error that a file does not
   // have a parent, return nsnull for the parent and NS_OK as the result.
   // See bug 133617.
@@ -1317,7 +1316,7 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
     CFStringRef newPath = ::CFURLGetString(parentURLRef);
     if (::CFStringGetLength(newPath) < ::CFStringGetLength(path)) {
       rv = NS_ERROR_FAILURE;
-      newFile = new nsLocalFile;
+      nsRefPtr<nsLocalFile> newFile = new nsLocalFile;
       if (newFile) {
         rv = newFile->InitWithCFURL(parentURLRef);
         if (NS_SUCCEEDED(rv)) {
@@ -2142,9 +2141,45 @@ nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSRef)
   if (::CFURLGetFSRef(whichURLRef, &aFSRef))
     return NS_OK;
 
-  // We have to make an assumption about why CFURLGetFSRef failed as it only
-  // returns a bool. This is the most likely reason for failure.
-  return NS_ERROR_FILE_NOT_FOUND;
+  // See if we are a symlink, and construct an FSRef for that
+  nsCAutoString path;
+  nsresult rv = GetNativePath(path); // XXXjag inline and use whichURLRef?
+  if (NS_FAILED(rv))
+    return rv;
+
+  struct stat symStat;
+  if (lstat(path.get(), &symStat) < 0)
+    return NSRESULT_FOR_ERRNO();
+
+  rv = NS_ERROR_FILE_NOT_FOUND; // best guess if all else fails
+
+  if (S_ISLNK(symStat.st_mode)) {
+    CFURLRef parentURLRef = ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, whichURLRef);
+    if (parentURLRef) {
+      FSRef parentFSRef;
+      if (::CFURLGetFSRef(parentURLRef, &parentFSRef)) {
+        CFStringRef leafRef = ::CFURLCopyLastPathComponent(whichURLRef);
+        if (leafRef) {
+          CFRange range = { 0, ::CFStringGetLength(leafRef) };
+          if (range.length > 0) {
+            UniChar* leaf = new UniChar[range.length];
+            if (leaf) {
+              ::CFStringGetCharacters(leafRef, range, leaf);
+              if (::FSMakeFSRefUnicode(&parentFSRef, range.length, leaf,
+                                       kTextEncodingUnknown, &aFSRef) == noErr)
+                rv = NS_OK;
+
+              delete[] leaf;
+            }
+          }
+          ::CFRelease(leafRef);
+        }
+      }
+      ::CFRelease(parentURLRef);
+    }
+  }
+
+  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
