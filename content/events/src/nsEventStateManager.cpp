@@ -2817,28 +2817,6 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   }
 
   if (!passToParent && scrollView) {
-    if (aScrollQuantity == eScrollByLine) {
-      // Limit scrolling to be at most one page, but if possible, try to
-      // just adjust the number of scrolled lines.
-      nscoord lineHeight = 0;
-      scrollView->GetLineHeight(&lineHeight);
-      if (lineHeight) {
-        nsSize pageScrollDistances(0, 0);
-        scrollView->GetPageScrollDistances(&pageScrollDistances);
-        nscoord pageScroll = aScrollHorizontal ?
-          pageScrollDistances.width : pageScrollDistances.height;
-
-        if (PR_ABS(aNumLines) * lineHeight > pageScroll) {
-          nscoord maxLines = (pageScroll / lineHeight);
-          if (maxLines >= 1) {
-            aNumLines = ((aNumLines < 0) ? -1 : 1) * maxLines;
-          } else {
-            aScrollQuantity = eScrollByPage;
-          }
-        }
-      }
-    }
-
     PRInt32 scrollX = 0;
     PRInt32 scrollY = aNumLines;
 
