@@ -415,7 +415,9 @@ SessionStoreService.prototype = {
       case "exit":
         aSubject.QueryInterface(Ci.nsISupportsPRBool);
         let quitting = aSubject.data;
-        if (quitting) {
+        let pbs = Cc["@mozilla.org/privatebrowsing;1"].
+                  getService(Ci.nsIPrivateBrowsingService);
+        if (quitting && !pbs.autoStarted) {
           // save the backed up state with session set to stopped,
           // otherwise resuming next time would look like a crash
           if ("_stateBackup" in this) {
