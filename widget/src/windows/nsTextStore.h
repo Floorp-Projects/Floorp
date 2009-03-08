@@ -199,6 +199,7 @@ protected:
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
                                TF_DISPLAYATTRIBUTE* aResult);
+  HRESULT  UpdateCompositionExtent(ITfRange* pRangeNew);
   HRESULT  SendTextEventForCompositionString();
   HRESULT  SaveTextEvent(const nsTextEvent* aEvent);
   nsresult OnCompositionTimer();
