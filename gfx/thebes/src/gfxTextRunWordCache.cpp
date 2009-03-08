@@ -613,7 +613,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                 // bidi.numerals setting, so we must not use the cache for this word;
                 // instead, we'll create a new textRun and a DeferredWord entry pointing to it
                 PRUint32 length = i - wordStart;
-                nsAutoPtr<PRUnichar> numString;
+                nsAutoArrayPtr<PRUnichar> numString;
                 numString = new PRUnichar[length];
                 for (PRUint32 j = 0; j < length; ++j) {
                     numString[j] = HandleNumberInChar(aText[wordStart+j],
@@ -733,7 +733,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
             if (seenDigitToModify) {
                 // see parallel code in the 16-bit method above
                 PRUint32 length = i - wordStart;
-                nsAutoPtr<PRUnichar> numString;
+                nsAutoArrayPtr<PRUnichar> numString;
                 numString = new PRUnichar[length];
                 for (PRUint32 j = 0; j < length; ++j) {
                     numString[j] = HandleNumberInChar(aText[wordStart+j],
