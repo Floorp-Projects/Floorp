@@ -77,6 +77,7 @@ _TEST_FILES += \
 		test_ended1.html \
 		test_ended2.html \
 		test_error_on_404.html \
+		test_info_leak.html \
 		test_onloadedmetadata.html \
 		test_load_candidates.html \
 		test_play.html \
