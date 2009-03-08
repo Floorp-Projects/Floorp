@@ -456,6 +456,8 @@ protected:
   unsigned      mClosingWhilePrinting : 1;
 
 #if NS_PRINT_PREVIEW
+  unsigned                         mPrintPreviewZoomed : 1;
+
   // These data members support delayed printing when the document is loading
   unsigned                         mPrintIsPending : 1;
   unsigned                         mPrintDocIsFullyLoaded : 1;
@@ -463,6 +465,8 @@ protected:
   nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
 
   nsCOMPtr<nsPrintEngine>          mPrintEngine;
+  float                            mOriginalPrintPreviewScale;
+  float                            mPrintPreviewZoom;
 #endif // NS_PRINT_PREVIEW
 
 #ifdef NS_DEBUG
@@ -536,6 +540,9 @@ void DocumentViewerImpl::PrepareToStartLoad()
 DocumentViewerImpl::DocumentViewerImpl()
   : mTextZoom(1.0), mPageZoom(1.0),
     mIsSticky(PR_TRUE),
+#ifdef NS_PRINT_PREVIEW
+    mPrintPreviewZoom(1.0),
+#endif
     mHintCharsetSource(kCharsetUninitialized)
 {
   PrepareToStartLoad();
@@ -2722,9 +2729,11 @@ SetExtResourceFullZoom(nsIDocument* aDocument, void* aClosure)
 NS_IMETHODIMP
 DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
-  if (!GetIsPrintPreview()) {
-    mTextZoom = aTextZoom;
+  if (GetIsPrintPreview()) {
+    return NS_OK;
   }
+
+  mTextZoom = aTextZoom;
 
   nsIViewManager::UpdateViewBatch batch(GetViewManager());
       
@@ -2761,9 +2770,39 @@ DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 NS_IMETHODIMP
 DocumentViewerImpl::SetFullZoom(float aFullZoom)
 {
-  if (!GetIsPrintPreview()) {
-    mPageZoom = aFullZoom;
+#ifdef NS_PRINT_PREVIEW
+  if (GetIsPrintPreview()) {
+    nsPresContext* pc = GetPresContext();
+    NS_ENSURE_TRUE(pc, NS_OK);
+    nsCOMPtr<nsIPresShell> shell = pc->GetPresShell();
+    NS_ENSURE_TRUE(shell, NS_OK);
+
+    nsIViewManager::UpdateViewBatch batch(pc->GetViewManager());
+    if (!mPrintPreviewZoomed) {
+      mOriginalPrintPreviewScale = pc->GetPrintPreviewScale();
+      mPrintPreviewZoomed = PR_TRUE;
+    }
+
+    mPrintPreviewZoom = aFullZoom;
+    pc->SetPrintPreviewScale(aFullZoom * mOriginalPrintPreviewScale);
+    nsIPageSequenceFrame* pf = nsnull;
+    shell->GetPageSequenceFrame(&pf);
+    if (pf) {
+      nsIFrame* f = do_QueryFrame(pf);
+      shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    }
+
+    nsIFrame* rootFrame = shell->GetRootFrame();
+    if (rootFrame) {
+      nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
+      rootFrame->Invalidate(rect);
+    }
+    batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+    return NS_OK;
   }
+#endif
+
+  mPageZoom = aFullZoom;
 
   nsIViewManager::UpdateViewBatch batch(GetViewManager());
 
@@ -2787,6 +2826,12 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetFullZoom(float* aFullZoom)
 {
   NS_ENSURE_ARG_POINTER(aFullZoom);
+#ifdef NS_PRINT_PREVIEW
+  if (GetIsPrintPreview()) {
+    *aFullZoom = mPrintPreviewZoom;
+    return NS_OK;
+  }
+#endif
   // Check the prescontext first because it might have a temporary
   // setting for print-preview
   nsPresContext* pc = GetPresContext();
@@ -3622,6 +3667,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 
   rv = mPrintEngine->PrintPreview(aPrintSettings, aChildDOMWin, aWebProgressListener);
+  mPrintPreviewZoomed = PR_FALSE;
   if (NS_FAILED(rv)) {
     OnDonePrinting();
   }
