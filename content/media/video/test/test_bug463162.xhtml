@@ -49,10 +49,10 @@ SimpleTest.waitForExplicitFinish();
 </script>
 
 
-<audio id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/><source type="bad" src="404"/></audio>
 <audio id='a2' onerror="onError(event, 'a2');" onloadedmetadata="onMetaData('a2');"><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
 <audio id='a3' onerror="onError(event, 'a3');" onloadedmetadata="onMetaData('a3');"><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
-<audio id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/><source type="bad" src="404"/></audio>
 
 <pre id="test">
 
