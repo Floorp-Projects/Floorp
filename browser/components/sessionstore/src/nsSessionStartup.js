@@ -43,7 +43,8 @@
 # * Overview
 # * This service reads user's session file at startup, and makes a determination 
 # * as to whether the session should be restored. It will restore the session 
-# * under the circumstances described below.
+# * under the circumstances described below.  If the auto-start Private Browsing
+# * mode is active, however, the session is never restored.
 # * 
 # * Crash Detection
 # * The session file stores a session.state property, that 
@@ -95,6 +96,12 @@ SessionStartup.prototype = {
    * Initialize the component
    */
   init: function sss_init() {
+    // do not need to initialize anything in auto-started private browsing sessions
+    let pbs = Cc["@mozilla.org/privatebrowsing;1"].
+              getService(Ci.nsIPrivateBrowsingService);
+    if (pbs.autoStarted)
+      return;
+
     let prefBranch = Cc["@mozilla.org/preferences-service;1"].
                      getService(Ci.nsIPrefService).getBranch("browser.");
 
