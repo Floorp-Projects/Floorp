@@ -1,4 +1,5 @@
 var gTestPage = "http://example.org/browser/browser/base/content/test/dummy_page.html";
+var gTestImage = "http://example.org/browser/browser/base/content/test/moz.png";
 var gTab1, gTab2, gTab3;
 var gLevel;
 
@@ -44,13 +45,23 @@ function thirdPageLoaded() {
   zoomTest(gTab2, gLevel, "Tab 2 should be zoomed now");
   zoomTest(gTab3, gLevel, "Tab 3 should still be zoomed");
 
+  load(gTab1, gTestImage, imageLoaded);
+}
+
+function imageLoaded() {
+  zoomTest(gTab1, 1, "Zoom should be 1 when image was loaded in the background");
+  gBrowser.selectedTab = gTab1;
+  zoomTest(gTab1, 1, "Zoom should still be 1 when tab with image is selected");
+
   finishTest();
 }
 
 function finishTest() {
   FullZoom.reset();
   gBrowser.removeTab(gTab1);
+  FullZoom.reset();
   gBrowser.removeTab(gTab2);
+  FullZoom.reset();
   gBrowser.removeTab(gTab3);
   finish();
 }
