@@ -41,7 +41,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsIDOMWindow.h"
@@ -151,9 +151,11 @@ nsresult
 nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
 {
   // Inform the iterators
-  PRInt32 index = -1;
-  while (++index < mEnumeratorList.Count()) 
-    ((nsAppShellWindowEnumerator*)mEnumeratorList[index])->WindowRemoved(inInfo);
+  PRUint32 index = 0;
+  while (index < mEnumeratorList.Length()) {
+    mEnumeratorList[index]->WindowRemoved(inInfo);
+    index++;
+  }
   
   if (mListeners) {
     WindowTitleData winData = { inInfo->mWindow.get(), nsnull };
@@ -291,7 +293,7 @@ nsWindowMediator::GetZOrderXULWindowEnumerator(
 PRInt32
 nsWindowMediator::AddEnumerator(nsAppShellWindowEnumerator * inEnumerator)
 {
-  return mEnumeratorList.AppendElement(inEnumerator);
+  return mEnumeratorList.AppendElement(inEnumerator) != nsnull;
 }
 
 PRInt32
