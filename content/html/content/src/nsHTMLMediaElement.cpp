@@ -144,20 +144,30 @@ public:
   SelectResourceEvent(nsHTMLMediaElement *aElement)
     : nsMediaEvent(aElement) {}
   NS_IMETHOD Run() {
-    if (!IsCancelled())
+    if (!IsCancelled()) {
+      NS_ASSERTION(mElement->mIsRunningSelectResource,
+                   "Should have flagged that we're running SelectResource()");
       mElement->SelectResource();
+      mElement->mIsRunningSelectResource = PR_FALSE;
+    }
     return NS_OK;
   }
 };
 
 void nsHTMLMediaElement::QueueSelectResourceTask()
 {
+  // Don't allow multiple async select resource calls to be queued.
+  if (mIsRunningSelectResource)
+    return;
+  mIsRunningSelectResource = PR_TRUE;
+  ChangeDelayLoadStatus(PR_TRUE);
   nsCOMPtr<nsIRunnable> event = new SelectResourceEvent(this);
   NS_DispatchToMainThread(event);
 }
 
 void nsHTMLMediaElement::QueueLoadFromSourceTask()
 {
+  ChangeDelayLoadStatus(PR_TRUE);
   nsCOMPtr<nsIRunnable> event = new LoadNextSourceEvent(this);
   NS_DispatchToMainThread(event);
 }
@@ -237,6 +247,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLMediaElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSourcePointer)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLoadBlockedDoc)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLMediaElement, nsGenericHTMLElement)
@@ -337,6 +348,8 @@ void nsHTMLMediaElement::AbortExistingLoads()
     // TODO: The current playback position must be set to 0.
     DispatchSimpleEvent(NS_LITERAL_STRING("emptied"));
   }
+
+  mIsRunningSelectResource = PR_FALSE;
 }
 
 void nsHTMLMediaElement::NoSupportedMediaError()
@@ -344,6 +357,7 @@ void nsHTMLMediaElement::NoSupportedMediaError()
   mError = new nsHTMLMediaError(nsIDOMHTMLMediaError::MEDIA_ERR_NONE_SUPPORTED);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
   DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
+  ChangeDelayLoadStatus(PR_FALSE);
 }
 
 /* void load (); */
@@ -390,6 +404,7 @@ void nsHTMLMediaElement::SelectResource()
     // element children, wait. (This steps might wait forever.) 
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
     mLoadWaitStatus = WAITING_FOR_SRC_OR_SOURCE;
+    ChangeDelayLoadStatus(PR_FALSE);
     return;
   }
 
@@ -426,6 +441,8 @@ void nsHTMLMediaElement::NotifyLoadError()
 
 void nsHTMLMediaElement::LoadFromSourceChildren()
 {
+  NS_ASSERTION(!IsInDoc() || mDelayingLoadEvent,
+               "Should delay load event while loading in document");
   while (PR_TRUE) {
     nsresult rv;
     nsCOMPtr<nsIURI> uri = GetNextSource();
@@ -450,6 +467,8 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
 
 nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
 {
+  NS_ASSERTION(!IsInDoc() || mDelayingLoadEvent,
+               "Should delay load event while loading in document");
   nsresult rv;
 
   if (mChannel) {
@@ -539,6 +558,8 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
   *aListener = nsnull;
 
   AbortExistingLoads();
+
+  ChangeDelayLoadStatus(PR_TRUE);
 
   nsresult rv = InitializeDecoderForChannel(aChannel, aListener);
   if (NS_FAILED(rv)) {
@@ -699,7 +720,9 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
     mIsBindingToTree(PR_FALSE),
     mLoadWaitStatus(NOT_WAITING),
     mIsLoadingFromSrcAttribute(PR_FALSE),
-    mIsRunningLoadMethod(PR_FALSE)
+    mIsRunningLoadMethod(PR_FALSE),
+    mDelayingLoadEvent(PR_FALSE),
+    mIsRunningSelectResource(PR_FALSE)
 {
 }
 
@@ -831,7 +854,6 @@ void nsHTMLMediaElement::UnbindFromTree(PRBool aDeep,
 {
   if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY)
     Pause();
-
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -1138,6 +1160,7 @@ void nsHTMLMediaElement::MetadataLoaded()
 void nsHTMLMediaElement::FirstFrameLoaded()
 {
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+  ChangeDelayLoadStatus(PR_FALSE);
 }
 
 void nsHTMLMediaElement::ResourceLoaded()
@@ -1155,6 +1178,7 @@ void nsHTMLMediaElement::NetworkError()
   DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("emptied"));
+  ChangeDelayLoadStatus(PR_FALSE);
 }
 
 void nsHTMLMediaElement::PlaybackEnded()
@@ -1527,4 +1551,21 @@ already_AddRefed<nsIURI> nsHTMLMediaElement::GetNextSource()
   }
   NS_NOTREACHED("Execution should not reach here!");
   return nsnull;
+}
+
+void nsHTMLMediaElement::ChangeDelayLoadStatus(PRBool aDelay) {
+  if (mDelayingLoadEvent == aDelay)
+    return;
+
+  LOG(PR_LOG_DEBUG, ("ChangeDelayLoadStatus(%d) doc=0x%p", aDelay, mLoadBlockedDoc.get()));
+  mDelayingLoadEvent = aDelay;
+
+  if (aDelay) {
+    mLoadBlockedDoc = GetOwnerDoc();
+    mLoadBlockedDoc->BlockOnload();
+  } else {
+    NS_ASSERTION(mLoadBlockedDoc, "Need a doc to block on");
+    mLoadBlockedDoc->UnblockOnload(PR_FALSE);
+    mLoadBlockedDoc = nsnull;
+  }
 }
