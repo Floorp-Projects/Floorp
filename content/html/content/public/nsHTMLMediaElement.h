@@ -292,6 +292,12 @@ protected:
    */
   already_AddRefed<nsIURI> GetNextSource();
 
+  /**
+   * Changes mDelayingLoadEvent, and will call BlockOnLoad()/UnblockOnLoad()
+   * on the owning document, so it can delay the load event firing.
+   */
+  void ChangeDelayLoadStatus(PRBool aDelay);
+
   nsRefPtr<nsMediaDecoder> mDecoder;
 
   nsCOMPtr<nsIChannel> mChannel;
@@ -307,6 +313,10 @@ protected:
   // Points to the child source elements, used to iterate through the children
   // when selecting a resource to load.
   nsCOMPtr<nsIDOMRange> mSourcePointer;
+
+  // Points to the document whose load we're blocking. This is the document
+  // we're bound to when loading starts.
+  nsCOMPtr<nsIDocument> mLoadBlockedDoc;
 
   // Media loading flags. See: 
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
@@ -392,4 +402,12 @@ protected:
 
   // PR_TRUE if we're loading exclusively from the src attribute's resource.
   PRPackedBool mIsLoadingFromSrcAttribute;
+
+  // PR_TRUE if we're delaying the "load" event. They are delayed until either
+  // an error occurs, or the first frame is loaded.
+  PRPackedBool mDelayingLoadEvent;
+
+  // PR_TRUE when we've got a task queued to call SelectResource(),
+  // or while we're running SelectResource().
+  PRPackedBool mIsRunningSelectResource;
 };
