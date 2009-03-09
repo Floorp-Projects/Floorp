@@ -122,22 +122,14 @@ enum nsCSSUnit {
   // Length units - fixed
   // US English
   eCSSUnit_Inch         = 100,    // (float) 0.0254 meters
-  eCSSUnit_Foot         = 101,    // (float) 12 inches
-  eCSSUnit_Mile         = 102,    // (float) 5280 feet
 
   // Metric
   eCSSUnit_Millimeter   = 207,    // (float) 1/1000 meter
   eCSSUnit_Centimeter   = 208,    // (float) 1/100 meter
-  eCSSUnit_Meter        = 210,    // (float) Standard length
-  eCSSUnit_Kilometer    = 213,    // (float) 1000 meters
 
   // US Typographic
   eCSSUnit_Point        = 300,    // (float) 1/72 inch
   eCSSUnit_Pica         = 301,    // (float) 12 points == 1/6 inch
-
-  // European Typographic
-  eCSSUnit_Didot        = 400,    // (float) 15 didots == 16 points
-  eCSSUnit_Cicero       = 401,    // (float) 12 didots
 
   // Length units - relative
   // Font relative measure
@@ -203,7 +195,7 @@ public:
   PRBool    IsLengthUnit() const
     { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pixel; }
   PRBool    IsFixedLengthUnit() const  
-    { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Cicero; }
+    { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pica; }
   PRBool    IsRelativeLengthUnit() const  
     { return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_Pixel; }
   PRBool    IsAngularUnit() const  
