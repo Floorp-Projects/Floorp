@@ -367,7 +367,7 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
 
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
-    AC_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
+    MOZ_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
     AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", :)
     AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", :)
     AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", :)
@@ -376,7 +376,7 @@ else
     AC_PROG_CC
     AC_PROG_CXX
     AC_PROG_RANLIB
-    AC_PATH_PROGS(AS, $AS as, $CC)
+    MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(AR, ar, :)
     AC_CHECK_PROGS(LD, ld, :)
     AC_CHECK_PROGS(STRIP, strip, :)
@@ -743,7 +743,7 @@ dnl Checks for programs.
 dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PATH_PROGS(PERL, $PERL perl5 perl )
+MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
@@ -769,12 +769,12 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-AC_PATH_PROGS(PYTHON, $PYTHON python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
-AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
+MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
 if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
@@ -782,16 +782,16 @@ fi
 fi
 AC_SUBST(NSINSTALL_BIN)
 
-AC_PATH_PROG(DOXYGEN, doxygen, :)
-AC_PATH_PROG(WHOAMI, whoami, :)
-AC_PATH_PROG(AUTOCONF, autoconf, :)
-AC_PATH_PROG(UNZIP, unzip, :)
-AC_PATH_PROGS(ZIP, zip)
+MOZ_PATH_PROG(DOXYGEN, doxygen, :)
+MOZ_PATH_PROG(WHOAMI, whoami, :)
+MOZ_PATH_PROG(AUTOCONF, autoconf, :)
+MOZ_PATH_PROG(UNZIP, unzip, :)
+MOZ_PATH_PROGS(ZIP, zip)
 if test -z "$ZIP" || test "$ZIP" = ":"; then
     AC_MSG_ERROR([zip not found in \$PATH])
 fi
-AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
-AC_PATH_PROG(XARGS, xargs)
+MOZ_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
+MOZ_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
@@ -828,7 +828,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
     dnl xcodebuild needs GCC_VERSION defined in the environment, since it
     dnl doesn't respect the CC/CXX setting.  With GCC_VERSION set, it will use
     dnl /usr/bin/g(cc|++)-$GCC_VERSION.
-    AC_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
+    MOZ_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
 
     case "$PBBUILD" in
       *xcodebuild*)
@@ -843,7 +843,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
 
     dnl sdp was formerly in /Developer/Tools.  As of Mac OS X 10.4 (Darwin 8),
     dnl it has moved into /usr/bin.
-    AC_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
+    MOZ_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
     ;;
 esac
 
@@ -976,10 +976,10 @@ dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
 case "$host_os" in
 cygwin*|mingw*|mks*|msvc*)
-    AC_PATH_PROGS(MAKE, $MAKE make gmake, :)
+    MOZ_PATH_PROGS(MAKE, $MAKE make gmake, :)
     ;;
 *)
-    AC_PATH_PROGS(MAKE, $MAKE gmake make, :)
+    MOZ_PATH_PROGS(MAKE, $MAKE gmake make, :)
     ;;
 esac
 _make_try=`$MAKE --version 2>/dev/null | grep GNU`
@@ -2225,17 +2225,18 @@ case "$target" in
         AC_MSG_ERROR([MOZ_TOOLS is not set])
     fi
 
-    MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd`
+    MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
     if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
         AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
     fi
-    if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_DIR/bin:"` = 0; then
+    MOZ_TOOLS_BIN_DIR="$(cd "$MOZ_TOOLS_DIR/bin" && pwd)"
+    if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_BINDIR:"` = 0; then
         AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
     fi
     MOZ_TOOLS_DIR=`$CYGPATH_W $MOZ_TOOLS_DIR | $CYGPATH_S`
 
     if test -n "$GLIB_PREFIX"; then
-        _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd`
+        _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd -W`
         if test "$?" = "0"; then
             if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
                 AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
@@ -2260,7 +2261,7 @@ case "$target" in
     fi
 
     if test -n "$LIBIDL_PREFIX"; then
-        _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd`
+        _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd -W`
         if test "$?" = "0"; then
             if test `echo ${PATH}: | grep -ic "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
                 AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
@@ -5608,9 +5609,9 @@ if test -n "${MOZ_JAVAXPCOM}"; then
     JAVA_PATH="$JAVA_HOME/bin:$PATH"
   fi
 
-  AC_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
-  AC_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
-  AC_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
+  MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
+  MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
+  MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
   if test -z "$JAVA" || test "$JAVA" = ":" || test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
     AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
   fi
@@ -5907,13 +5908,13 @@ MOZ_ARG_DISABLE_BOOL(installer,
 if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     # Disable installer for Windows builds that use the new toolkit if NSIS
     # isn't in the path.
-    AC_PATH_PROGS(MAKENSIS, makensis)
+    MOZ_PATH_PROGS(MAKENSIS, makensis)
     if test -z "$MAKENSIS" || test "$MAKENSIS" = ":"; then
         AC_MSG_ERROR([To build the installer makensis is required in your path. To build without the installer reconfigure using --disable-installer.])
     fi
     # The Windows build for NSIS requires the iconv command line utility to
     # convert the charset of the locale files.
-    AC_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
+    MOZ_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
     if test -z "$HOST_ICONV"; then
         AC_MSG_ERROR([To build the installer iconv is required in your path. To build without the installer reconfigure using --disable-installer.])
     fi
@@ -7428,7 +7429,7 @@ then
     dnl     look for orbit-config instead.
     dnl
     if test -z "$_LIBIDL_FOUND" && test -z "$CROSS_COMPILE"; then
-        AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
+        MOZ_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
         if test -n "$ORBIT_CONFIG"; then
             AC_MSG_CHECKING([for ORBit libIDL usability])
         	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`

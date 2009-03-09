@@ -81,8 +81,7 @@ endif
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-PWD := $(shell pwd)
-_VPATH_SRCS = $(if $(filter /%,$<),$<,$(PWD)/$<)
+_VPATH_SRCS = $(if $(filter /%,$<),$<,$(CURDIR)/$<)
 else
 _VPATH_SRCS = $<
 endif
