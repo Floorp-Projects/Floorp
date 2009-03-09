@@ -5690,7 +5690,7 @@ DWORD nsWindow::WindowStyle()
 
     case eWindowType_dialog:
       style = WS_BORDER | WS_POPUP;
-#ifndef WINCE_WINDOWS_MOBILE
+#if !defined(WINCE_WINDOWS_MOBILE)
       style |= WS_SYSMENU;
       if (mBorderStyle != eBorderStyle_default)
         style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
@@ -5698,7 +5698,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_popup:
-      style = WS_POPUP;
+      style = WS_POPUP | WS_BORDER;
       break;
 
     default:
@@ -5708,8 +5708,8 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_toplevel:
     case eWindowType_invisible:
       style = WS_BORDER;
-#ifndef WINCE_WINDOWS_MOBILE
-      style |= WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+#if !defined(WINCE_WINDOWS_MOBILE)
+      style |= WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 #endif
       break;
   }
@@ -5803,7 +5803,11 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
 
     case eWindowType_popup:
-      return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
+      return
+#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
+        WS_EX_NOACTIVATE |
+#endif
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
 
     default:
       NS_ASSERTION(0, "unknown border style");
