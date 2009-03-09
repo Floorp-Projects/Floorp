@@ -96,7 +96,9 @@ class nsAFlatCString;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-class TSFImpl;
+class TSFMgrImpl;
+class TSFDocumentMgrImpl;
+class TSFContextImpl;
 class TSFRangeImpl;
 class TSFEnumRangeImpl;
 class TSFAttrPropImpl;
@@ -146,7 +148,7 @@ protected:
 
   PRBool mFailed;
   nsString mTestString;
-  nsRefPtr<TSFImpl> mImpl;
+  nsRefPtr<TSFMgrImpl> mMgr;
   nsCOMPtr<nsIAppShell> mAppShell;
   nsCOMPtr<nsIXULWindow> mWindow;
   nsCOMPtr<nsIDOMNode> mCurrentNode;
@@ -752,49 +754,36 @@ public: // ITfReadOnlyProperty
   }
 };
 
-// Simple TSF manager implementation for testing
-// Most methods are not implemented, but the ones used by Mozilla are
-//
-// XXX Implement appropriate methods here as the Mozilla TSF code changes
-//
-class TSFImpl : public ITfThreadMgr, public ITfDocumentMgr, public ITfContext,
-                public ITfCompositionView, public ITextStoreACPSink,
-                public ITfDisplayAttributeMgr, public ITfCategoryMgr
+/******************************************************************************
+ * TSFContextImpl
+ ******************************************************************************/
+
+class TSFContextImpl : public ITfContext,
+                       public ITfCompositionView, public ITextStoreACPSink
 {
 private:
   ULONG mRefCnt;
-  nsRefPtr<TestApp> mTestApp;
 
 public:
-  TestApp::test_type mTest;
-  TestApp::test_type mOnFocus;
-  TestApp::test_type mOnBlur;
-  nsRefPtr<ITextStoreACP> mStore;
   nsRefPtr<TSFAttrPropImpl> mAttrProp;
-  PRBool mFocused;
-  PRBool mContextPushed;
-  PRBool mDeactivated;
-  PRUint32 mFocusCount;
-  PRUint32 mBlurCount;
+  nsRefPtr<TSFDocumentMgrImpl> mDocMgr;
   PRBool mTextChanged;
   PRBool mSelChanged;
   TS_TEXTCHANGE mTextChangeData;
 
 public:
-  TSFImpl(TestApp* test) : mTestApp(test), mTest(nsnull),
-      mRefCnt(0), mFocused(PR_FALSE), mDeactivated(PR_FALSE),
-      mFocusCount(0), mBlurCount(0), mContextPushed(PR_FALSE),
-      mOnFocus(nsnull), mOnBlur(nsnull), mTextChanged(PR_FALSE),
+  TSFContextImpl(TSFDocumentMgrImpl* aDocMgr) :
+      mDocMgr(aDocMgr), mRefCnt(0), mTextChanged(PR_FALSE),
       mSelChanged(PR_FALSE)
   {
     mAttrProp = new TSFAttrPropImpl();
     if (!mAttrProp) {
-      NS_NOTREACHED("TSFImpl::TSFImpl (OOM)");
+      NS_NOTREACHED("TSFContextImpl::TSFContextImpl (OOM)");
       return;
     }
   }
 
-  ~TSFImpl()
+  ~TSFContextImpl()
   {
   }
 
@@ -803,18 +792,10 @@ public: // IUnknown
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
     *ppUnk = NULL;
-    if (IID_IUnknown == riid || IID_ITfThreadMgr == riid)
-      *ppUnk = static_cast<ITfThreadMgr*>(this);
-    else if (IID_ITfDocumentMgr == riid)
-      *ppUnk = static_cast<ITfDocumentMgr*>(this);
-    else if (IID_ITfContext == riid)
+    if (IID_IUnknown == riid || IID_ITfContext == riid)
       *ppUnk = static_cast<ITfContext*>(this);
     else if (IID_ITextStoreACPSink == riid)
       *ppUnk = static_cast<ITextStoreACPSink*>(this);
-    else if (IID_ITfDisplayAttributeMgr == riid)
-      *ppUnk = static_cast<ITfDisplayAttributeMgr*>(this);
-    else if (IID_ITfCategoryMgr == riid)
-      *ppUnk = static_cast<ITfCategoryMgr*>(this);
     if (*ppUnk)
       AddRef();
     return *ppUnk ? S_OK : E_NOINTERFACE;
@@ -830,262 +811,6 @@ public: // IUnknown
     if (--mRefCnt) return mRefCnt;
     delete this;
     return 0;
-  }
-
-public: // ITfThreadMgr
-
-  STDMETHODIMP Activate(TfClientId *ptid)
-  {
-    *ptid = 1;
-    return S_OK;
-  }
-
-  STDMETHODIMP Deactivate(void)
-  {
-    SetFocus(NULL);
-    mDeactivated = PR_TRUE;
-    return S_OK;
-  }
-
-  STDMETHODIMP CreateDocumentMgr(ITfDocumentMgr **ppdim)
-  {
-    (*ppdim) = this;
-    (*ppdim)->AddRef();
-    return S_OK;
-  }
-
-  STDMETHODIMP EnumDocumentMgrs(IEnumTfDocumentMgrs **ppEnum)
-  {
-    NS_NOTREACHED("ITfThreadMgr::EnumDocumentMgrs");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetFocus(ITfDocumentMgr **ppdimFocus)
-  {
-    (*ppdimFocus) = mFocused ? this : NULL;
-    if (*ppdimFocus) (*ppdimFocus)->AddRef();
-    return S_OK;
-  }
-
-  STDMETHODIMP SetFocus(ITfDocumentMgr *pdimFocus)
-  {
-    mFocused = pdimFocus != NULL;
-    if (mFocused) {
-      ++mFocusCount;
-      if (mOnFocus) (mTestApp->*mOnFocus)();
-    } else {
-      ++mBlurCount;
-      if (mOnBlur) (mTestApp->*mOnBlur)();
-    }
-    return S_OK;
-  }
-
-  STDMETHODIMP AssociateFocus(HWND hwnd, ITfDocumentMgr *pdimNew,
-                           ITfDocumentMgr **ppdimPrev)
-  {
-    NS_NOTREACHED("ITfThreadMgr::AssociateFocus");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP IsThreadFocus(BOOL *pfThreadFocus)
-  {
-    *pfThreadFocus = TRUE;
-    return S_OK;
-  }
-
-  STDMETHODIMP GetFunctionProvider(REFCLSID clsid,
-                                ITfFunctionProvider **ppFuncProv)
-  {
-    NS_NOTREACHED("ITfThreadMgr::GetFunctionProvider");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP EnumFunctionProviders(IEnumTfFunctionProviders **ppEnum)
-  {
-    NS_NOTREACHED("ITfThreadMgr::EnumFunctionProviders");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetGlobalCompartment(ITfCompartmentMgr **ppCompMgr)
-  {
-    NS_NOTREACHED("ITfThreadMgr::GetGlobalCompartment");
-    return E_NOTIMPL;
-  }
-
-public: // ITfDocumentMgr
-
-  STDMETHODIMP CreateContext(TfClientId tidOwner, DWORD dwFlags,
-                             IUnknown *punk, ITfContext **ppic,
-                             TfEditCookie *pecTextStore)
-  {
-    punk->QueryInterface(IID_ITextStoreACP, getter_AddRefs(mStore));
-    NS_ENSURE_TRUE(mStore, E_FAIL);
-    HRESULT hr = mStore->AdviseSink(IID_ITextStoreACPSink,
-                                    static_cast<ITextStoreACPSink*>(this),
-                                    TS_AS_ALL_SINKS);
-    if (FAILED(hr)) mStore = NULL;
-    NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
-    (*ppic) = this;
-    (*ppic)->AddRef();
-    *pecTextStore = 1;
-    return S_OK;
-  }
-
-  STDMETHODIMP Push(ITfContext *pic)
-  {
-    mContextPushed = PR_TRUE;
-    return S_OK;
-  }
-
-  STDMETHODIMP Pop(DWORD dwFlags)
-  {
-    if (!mStore || dwFlags != TF_POPF_ALL) return E_FAIL;
-    mStore->UnadviseSink(static_cast<ITextStoreACPSink*>(this));
-    mStore = NULL;
-    mContextPushed = PR_FALSE;
-    return S_OK;
-  }
-
-  STDMETHODIMP GetTop(ITfContext **ppic)
-  {
-    (*ppic) = mContextPushed ? this : NULL;
-    if (*ppic) (*ppic)->AddRef();
-    return S_OK;
-  }
-
-  STDMETHODIMP GetBase(ITfContext **ppic)
-  {
-    (*ppic) = mContextPushed ? this : NULL;
-    if (*ppic) (*ppic)->AddRef();
-    return S_OK;
-  }
-
-  STDMETHODIMP EnumContexts(IEnumTfContexts **ppEnum)
-  {
-    NS_NOTREACHED("ITfDocumentMgr::EnumContexts");
-    return E_NOTIMPL;
-  }
-
-public: // ITfCategoryMgr
-
-  STDMETHODIMP RegisterCategory(REFCLSID rclsid, REFGUID rcatid, REFGUID rguid)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::RegisterCategory");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP UnregisterCategory(REFCLSID rclsid, REFGUID rcatid, REFGUID rguid)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::UnregisterCategory");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP EnumCategoriesInItem(REFGUID rguid, IEnumGUID **ppEnum)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::EnumCategoriesInItem");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP EnumItemsInCategory(REFGUID rcatid, IEnumGUID **ppEnum)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::EnumItemsInCategory");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP FindClosestCategory(REFGUID rguid, GUID *pcatid,
-                                   const GUID **ppcatidList, ULONG ulCount)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::FindClosestCategory");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP RegisterGUIDDescription(REFCLSID rclsid, REFGUID rguid,
-                                       const WCHAR *pchDesc, ULONG cch)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::RegisterGUIDDescription");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP UnregisterGUIDDescription(REFCLSID rclsid, REFGUID rguid)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::UnregisterGUIDDescription");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetGUIDDescription(REFGUID rguid, BSTR *pbstrDesc)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::GetGUIDDescription");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP RegisterGUIDDWORD(REFCLSID rclsid, REFGUID rguid, DWORD dw)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::RegisterGUIDDWORD");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP UnregisterGUIDDWORD(REFCLSID rclsid, REFGUID rguid)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::UnregisterGUIDDWORD");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetGUIDDWORD(REFGUID rguid, DWORD *pdw)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::GetGUIDDWORD");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP RegisterGUID(REFGUID rguid, TfGuidAtom *pguidatom)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::RegisterGUID");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetGUID(TfGuidAtom guidatom, GUID *pguid)
-  {
-    if (guidatom == GUID_ATOM_COMPOSING_SELECTION_ATTR) {
-      *pguid = GUID_COMPOSING_SELECTION_ATTR;
-      return S_OK;
-    }
-    NS_NOTREACHED("ITfCategoryMgr::GetGUID");
-    return E_FAIL;
-  }
-
-  STDMETHODIMP IsEqualTfGuidAtom(TfGuidAtom guidatom, REFGUID rguid,
-                                 BOOL *pfEqual)
-  {
-    NS_NOTREACHED("ITfCategoryMgr::IsEqualTfGuidAtom");
-    return E_NOTIMPL;
-  }
-
-public: // ITfDisplayAttributeMgr
-
-  STDMETHODIMP OnUpdateInfo()
-  {
-    NS_NOTREACHED("ITfDisplayAttributeMgr::OnUpdateInfo");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP EnumDisplayAttributeInfo(IEnumTfDisplayAttributeInfo **ppEnum)
-  {
-    NS_NOTREACHED("ITfDisplayAttributeMgr::EnumDisplayAttributeInfo");
-    return E_NOTIMPL;
-  }
-
-  STDMETHODIMP GetDisplayAttributeInfo(REFGUID guid,
-                                       ITfDisplayAttributeInfo **ppInfo,
-                                       CLSID *pclsidOwner)
-  {
-    NS_ENSURE_TRUE(ppInfo, E_INVALIDARG);
-    NS_ENSURE_TRUE(!pclsidOwner, E_INVALIDARG);
-    if (guid == GUID_COMPOSING_SELECTION_ATTR) {
-      (*ppInfo) = new TSFDispAttrInfoImpl(guid);
-      (*ppInfo)->AddRef();
-      return S_OK;
-    }
-    NS_NOTREACHED("ITfDisplayAttributeMgr::GetDisplayAttributeInfo");
-    return E_FAIL;
   }
 
 public: // ITfContext
@@ -1252,13 +977,7 @@ public: // ITextStoreACPSink
     return S_OK;
   }
 
-  STDMETHODIMP OnLockGranted(DWORD dwLockFlags)
-  {
-    // If we have a test, run it
-    if (mTest && !(mTestApp->*mTest)())
-      return S_FALSE;
-    return S_OK;
-  }
+  STDMETHODIMP OnLockGranted(DWORD dwLockFlags);
 
   STDMETHODIMP OnStartEditTransaction(void)
   {
@@ -1270,6 +989,442 @@ public: // ITextStoreACPSink
     return S_OK;
   }
 };
+
+/******************************************************************************
+ * TSFDocumentMgrImpl
+ ******************************************************************************/
+
+class TSFDocumentMgrImpl : public ITfDocumentMgr
+{
+private:
+  ULONG mRefCnt;
+
+public:
+  nsRefPtr<TSFMgrImpl> mMgr;
+  nsRefPtr<ITextStoreACP> mStore;
+  nsRefPtr<TSFContextImpl> mContextBase;
+  nsRefPtr<TSFContextImpl> mContextTop; // XXX currently, we don't support this.
+
+public:
+  TSFDocumentMgrImpl(TSFMgrImpl* aMgr) :
+      mRefCnt(0), mMgr(aMgr)
+  {
+  }
+
+  ~TSFDocumentMgrImpl()
+  {
+  }
+
+public: // IUnknown
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
+  {
+    *ppUnk = NULL;
+    if (IID_IUnknown == riid || IID_ITfDocumentMgr == riid)
+      *ppUnk = static_cast<ITfDocumentMgr*>(this);
+    if (*ppUnk)
+      AddRef();
+    return *ppUnk ? S_OK : E_NOINTERFACE;
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void)
+  {
+    return ++mRefCnt;
+  }
+
+  STDMETHODIMP_(ULONG) Release(void);
+
+public: // ITfDocumentMgr
+
+  STDMETHODIMP CreateContext(TfClientId tidOwner, DWORD dwFlags,
+                             IUnknown *punk, ITfContext **ppic,
+                             TfEditCookie *pecTextStore)
+  {
+    nsRefPtr<TSFContextImpl> context = new TSFContextImpl(this);
+    punk->QueryInterface(IID_ITextStoreACP, getter_AddRefs(mStore));
+    NS_ENSURE_TRUE(mStore, E_FAIL);
+    HRESULT hr =
+      mStore->AdviseSink(IID_ITextStoreACPSink,
+                         static_cast<ITextStoreACPSink*>(context.get()),
+                         TS_AS_ALL_SINKS);
+    if (FAILED(hr)) mStore = NULL;
+    NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
+    (*ppic) = context;
+    (*ppic)->AddRef();
+    *pecTextStore = 1;
+    return S_OK;
+  }
+
+  STDMETHODIMP Push(ITfContext *pic)
+  {
+    if (mContextTop) {
+      NS_NOTREACHED("TSFDocumentMgrImpl::Push stack is already full");
+      return E_FAIL;
+    }
+    if (mContextBase) {
+      NS_WARNING("TSFDocumentMgrImpl::Push additional context is pushed, but we don't support that yet.");
+      if (mContextBase == pic) {
+        NS_NOTREACHED("TSFDocumentMgrImpl::Push same context is pused again");
+        return E_FAIL;
+      }
+      mContextTop = static_cast<TSFContextImpl*>(pic);
+      return S_OK;
+    }
+    mContextBase = static_cast<TSFContextImpl*>(pic);
+    return S_OK;
+  }
+
+  STDMETHODIMP Pop(DWORD dwFlags)
+  {
+    if (!mStore)
+      return E_FAIL;
+    if (dwFlags == TF_POPF_ALL) {
+      NS_ENSURE_TRUE(mContextBase, E_FAIL);
+      mStore->UnadviseSink(static_cast<ITextStoreACPSink*>(mContextBase.get()));
+      mStore = NULL;
+      mContextBase = nsnull;
+      mContextTop = nsnull;
+      return S_OK;
+    }
+    if (dwFlags == 0) {
+      if (!mContextTop) {
+        NS_NOTREACHED("TSFDocumentMgrImpl::Pop there is non-base context");
+        return E_FAIL;
+      }
+      mContextTop = nsnull;
+      return S_OK;
+    }
+    NS_NOTREACHED("TSFDocumentMgrImpl::Pop invalid flag");
+    return E_FAIL;
+  }
+
+  STDMETHODIMP GetTop(ITfContext **ppic)
+  {
+    (*ppic) = mContextTop ? mContextTop : mContextBase;
+    if (*ppic) (*ppic)->AddRef();
+    return S_OK;
+  }
+
+  STDMETHODIMP GetBase(ITfContext **ppic)
+  {
+    (*ppic) = mContextBase;
+    if (*ppic) (*ppic)->AddRef();
+    return S_OK;
+  }
+
+  STDMETHODIMP EnumContexts(IEnumTfContexts **ppEnum)
+  {
+    NS_NOTREACHED("ITfDocumentMgr::EnumContexts");
+    return E_NOTIMPL;
+  }
+
+};
+
+/******************************************************************************
+ * TSFMgrImpl
+ ******************************************************************************/
+
+class TSFMgrImpl : public ITfThreadMgr,
+                   public ITfDisplayAttributeMgr, public ITfCategoryMgr
+{
+private:
+  ULONG mRefCnt;
+
+public:
+  nsRefPtr<TestApp> mTestApp;
+  TestApp::test_type mTest;
+  PRBool mDeactivated;
+  TSFDocumentMgrImpl* mFocusedDocument; // Must be raw pointer, but strong.
+  PRInt32 mFocusCount;
+
+  TSFMgrImpl(TestApp* test) : mTestApp(test), mTest(nsnull), mRefCnt(0),
+    mDeactivated(PR_FALSE), mFocusCount(0)
+  {
+  }
+
+  ~TSFMgrImpl()
+  {
+  }
+
+public: // IUnknown
+
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
+  {
+    *ppUnk = NULL;
+    if (IID_IUnknown == riid || IID_ITfThreadMgr == riid)
+      *ppUnk = static_cast<ITfThreadMgr*>(this);
+    else if (IID_ITfDisplayAttributeMgr == riid)
+      *ppUnk = static_cast<ITfDisplayAttributeMgr*>(this);
+    else if (IID_ITfCategoryMgr == riid)
+      *ppUnk = static_cast<ITfCategoryMgr*>(this);
+    if (*ppUnk)
+      AddRef();
+    return *ppUnk ? S_OK : E_NOINTERFACE;
+  }
+
+  STDMETHODIMP_(ULONG) AddRef(void)
+  {
+    return ++mRefCnt;
+  }
+
+  STDMETHODIMP_(ULONG) Release(void)
+  {
+    if (--mRefCnt) return mRefCnt;
+    delete this;
+    return 0;
+  }
+
+public: // ITfThreadMgr
+
+  STDMETHODIMP Activate(TfClientId *ptid)
+  {
+    *ptid = 1;
+    return S_OK;
+  }
+
+  STDMETHODIMP Deactivate(void)
+  {
+    mDeactivated = PR_TRUE;
+    return S_OK;
+  }
+
+  STDMETHODIMP CreateDocumentMgr(ITfDocumentMgr **ppdim)
+  {
+    nsRefPtr<TSFDocumentMgrImpl> docMgr = new TSFDocumentMgrImpl(this);
+    if (!docMgr) {
+      NS_NOTREACHED("TSFMgrImpl::CreateDocumentMgr (OOM)");
+      return E_OUTOFMEMORY;
+    }
+    (*ppdim) = docMgr;
+    (*ppdim)->AddRef();
+    return S_OK;
+  }
+
+  STDMETHODIMP EnumDocumentMgrs(IEnumTfDocumentMgrs **ppEnum)
+  {
+    NS_NOTREACHED("ITfThreadMgr::EnumDocumentMgrs");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetFocus(ITfDocumentMgr **ppdimFocus)
+  {
+    (*ppdimFocus) = mFocusedDocument;
+    if (*ppdimFocus) (*ppdimFocus)->AddRef();
+    return S_OK;
+  }
+
+  STDMETHODIMP SetFocus(ITfDocumentMgr *pdimFocus)
+  {
+    if (!pdimFocus) {
+      NS_NOTREACHED("ITfThreadMgr::SetFocus must not be called with NULL");
+      return E_FAIL;
+    }
+    mFocusCount++;
+    if (mFocusedDocument == pdimFocus) {
+      return S_OK;
+    }
+    mFocusedDocument = static_cast<TSFDocumentMgrImpl*>(pdimFocus);
+    mFocusedDocument->AddRef();
+    return S_OK;
+  }
+
+  STDMETHODIMP AssociateFocus(HWND hwnd, ITfDocumentMgr *pdimNew,
+                           ITfDocumentMgr **ppdimPrev)
+  {
+    NS_NOTREACHED("ITfThreadMgr::AssociateFocus");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP IsThreadFocus(BOOL *pfThreadFocus)
+  {
+    *pfThreadFocus = TRUE;
+    return S_OK;
+  }
+
+  STDMETHODIMP GetFunctionProvider(REFCLSID clsid,
+                                ITfFunctionProvider **ppFuncProv)
+  {
+    NS_NOTREACHED("ITfThreadMgr::GetFunctionProvider");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumFunctionProviders(IEnumTfFunctionProviders **ppEnum)
+  {
+    NS_NOTREACHED("ITfThreadMgr::EnumFunctionProviders");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGlobalCompartment(ITfCompartmentMgr **ppCompMgr)
+  {
+    NS_NOTREACHED("ITfThreadMgr::GetGlobalCompartment");
+    return E_NOTIMPL;
+  }
+
+public: // ITfCategoryMgr
+
+  STDMETHODIMP RegisterCategory(REFCLSID rclsid, REFGUID rcatid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP UnregisterCategory(REFCLSID rclsid, REFGUID rcatid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::UnregisterCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumCategoriesInItem(REFGUID rguid, IEnumGUID **ppEnum)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::EnumCategoriesInItem");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumItemsInCategory(REFGUID rcatid, IEnumGUID **ppEnum)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::EnumItemsInCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP FindClosestCategory(REFGUID rguid, GUID *pcatid,
+                                   const GUID **ppcatidList, ULONG ulCount)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::FindClosestCategory");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP RegisterGUIDDescription(REFCLSID rclsid, REFGUID rguid,
+                                       const WCHAR *pchDesc, ULONG cch)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterGUIDDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP UnregisterGUIDDescription(REFCLSID rclsid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::UnregisterGUIDDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGUIDDescription(REFGUID rguid, BSTR *pbstrDesc)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::GetGUIDDescription");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP RegisterGUIDDWORD(REFCLSID rclsid, REFGUID rguid, DWORD dw)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterGUIDDWORD");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP UnregisterGUIDDWORD(REFCLSID rclsid, REFGUID rguid)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::UnregisterGUIDDWORD");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGUIDDWORD(REFGUID rguid, DWORD *pdw)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::GetGUIDDWORD");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP RegisterGUID(REFGUID rguid, TfGuidAtom *pguidatom)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::RegisterGUID");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetGUID(TfGuidAtom guidatom, GUID *pguid)
+  {
+    if (guidatom == GUID_ATOM_COMPOSING_SELECTION_ATTR) {
+      *pguid = GUID_COMPOSING_SELECTION_ATTR;
+      return S_OK;
+    }
+    NS_NOTREACHED("ITfCategoryMgr::GetGUID");
+    return E_FAIL;
+  }
+
+  STDMETHODIMP IsEqualTfGuidAtom(TfGuidAtom guidatom, REFGUID rguid,
+                                 BOOL *pfEqual)
+  {
+    NS_NOTREACHED("ITfCategoryMgr::IsEqualTfGuidAtom");
+    return E_NOTIMPL;
+  }
+
+public: // ITfDisplayAttributeMgr
+
+  STDMETHODIMP OnUpdateInfo()
+  {
+    NS_NOTREACHED("ITfDisplayAttributeMgr::OnUpdateInfo");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP EnumDisplayAttributeInfo(IEnumTfDisplayAttributeInfo **ppEnum)
+  {
+    NS_NOTREACHED("ITfDisplayAttributeMgr::EnumDisplayAttributeInfo");
+    return E_NOTIMPL;
+  }
+
+  STDMETHODIMP GetDisplayAttributeInfo(REFGUID guid,
+                                       ITfDisplayAttributeInfo **ppInfo,
+                                       CLSID *pclsidOwner)
+  {
+    NS_ENSURE_TRUE(ppInfo, E_INVALIDARG);
+    NS_ENSURE_TRUE(!pclsidOwner, E_INVALIDARG);
+    if (guid == GUID_COMPOSING_SELECTION_ATTR) {
+      (*ppInfo) = new TSFDispAttrInfoImpl(guid);
+      (*ppInfo)->AddRef();
+      return S_OK;
+    }
+    NS_NOTREACHED("ITfDisplayAttributeMgr::GetDisplayAttributeInfo");
+    return E_FAIL;
+  }
+
+public:
+
+  ITextStoreACP* GetFocusedStore()
+  {
+    return mFocusedDocument ? mFocusedDocument->mStore : nsnull;
+  }
+
+  TSFContextImpl* GetFocusedContext()
+  {
+    return mFocusedDocument ? mFocusedDocument->mContextBase : nsnull;
+  }
+
+  TSFAttrPropImpl* GetFocusedAttrProp()
+  {
+    TSFContextImpl* context = GetFocusedContext();
+    return context ? context->mAttrProp : nsnull;
+  }
+
+};
+
+STDMETHODIMP
+TSFContextImpl::OnLockGranted(DWORD dwLockFlags)
+{
+  // If we have a test, run it
+  if (mDocMgr->mMgr->mTest &&
+     !(mDocMgr->mMgr->mTestApp->*(mDocMgr->mMgr->mTest))())
+    return S_FALSE;
+  return S_OK;
+}
+
+
+STDMETHODIMP_(ULONG)
+TSFDocumentMgrImpl::Release(void)
+{
+  --mRefCnt;
+  if (mRefCnt == 1 && mMgr->mFocusedDocument == this) {
+    mMgr->mFocusedDocument = nsnull;
+    --mRefCnt;
+  }
+  if (mRefCnt) return mRefCnt;
+  delete this;
+  return 0;
+}
 
 NS_IMPL_ISUPPORTS2(TestApp, nsIWebProgressListener,
                             nsISupportsWeakReference)
@@ -1316,11 +1471,11 @@ PRBool
 TestApp::CheckFailed(void)
 {
   // All windows should be closed by now
-  if (mImpl && !mImpl->mDeactivated) {
+  if (mMgr && !mMgr->mDeactivated) {
     fail("TSF not terminated properly");
     mFailed = PR_TRUE;
   }
-  mImpl = nsnull;
+  mMgr = nsnull;
   return mFailed;
 }
 
@@ -1363,15 +1518,15 @@ TestApp::Init(void)
     (*daMgr) = NULL;
   }
 
-  mImpl = new TSFImpl(this);
-  if (!mImpl) {
+  mMgr = new TSFMgrImpl(this);
+  if (!mMgr) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  (*threadMgr) = mImpl;
+  (*threadMgr) = mMgr;
   (*threadMgr)->AddRef();
-  (*catMgr) = mImpl;
+  (*catMgr) = mMgr;
   (*catMgr)->AddRef();
-  (*daMgr) = mImpl;
+  (*daMgr) = mMgr;
   (*daMgr)->AddRef();
 
   // Apply the change
@@ -1466,10 +1621,10 @@ PRBool
 TestApp::RunTest(test_type aTest, PRBool aLock)
 {
   PRBool succeeded;
-  if (aLock && mImpl->mStore) {
-    mImpl->mTest = aTest;
+  if (aLock && mMgr && mMgr->GetFocusedStore()) {
+    mMgr->mTest = aTest;
     HRESULT hr = E_FAIL;
-    mImpl->mStore->RequestLock(TS_LF_READWRITE | TS_LF_SYNC, &hr);
+    mMgr->GetFocusedStore()->RequestLock(TS_LF_READWRITE | TS_LF_SYNC, &hr);
     succeeded = hr == S_OK;
   } else {
     succeeded = (this->*aTest)();
@@ -1492,7 +1647,7 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
 
     mCurrentNode = mInput;
     mInput->Focus();
-    if (mImpl->mStore) {
+    if (mMgr->GetFocusedStore()) {
       if (RunTest(&TestApp::TestClustering))
         passed("TestClustering");
     } else {
@@ -1506,7 +1661,7 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
       "This is a test of the Text Services Framework implementation.");
     mInput->SetValue(mTestString);
     mInput->Focus();
-    if (mImpl->mStore) {
+    if (mMgr->GetFocusedStore()) {
       if (RunTest(&TestApp::TestSelection))
         passed("TestSelection (input)");
       if (RunTest(&TestApp::TestText))
@@ -1528,7 +1683,7 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
       "This is a test of the\r\nText Services Framework\r\nimplementation.");
     mTextArea->SetValue(mTestString);
     mTextArea->Focus();
-    if (mImpl->mStore) {
+    if (mMgr->GetFocusedStore()) {
       if (RunTest(&TestApp::TestSelection))
         passed("TestSelection (textarea)");
       if (RunTest(&TestApp::TestText))
@@ -1554,7 +1709,7 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
 PRBool
 TestApp::TestFocus(void)
 {
-  PRUint32 focus = mImpl->mFocusCount, blur = mImpl->mBlurCount;
+  PRUint32 focus = mMgr->mFocusCount;
   nsresult rv;
 
   /* If these fail the cause is probably one or more of:
@@ -1568,34 +1723,28 @@ TestApp::TestFocus(void)
 
   rv = mInput->Focus();
   if (!(NS_SUCCEEDED(rv) &&
-        mImpl->mFocused &&
-        mImpl->mStore &&
-        mImpl->mFocusCount - focus == 1 &&
-        mImpl->mBlurCount - blur == 0 &&
-        mImpl->mStore)) {
+        mMgr->mFocusedDocument &&
+        mMgr->mFocusCount - focus == 1 &&
+        mMgr->GetFocusedStore())) {
     fail("TestFocus: document focus was not set");
     return PR_FALSE;
   }
 
   rv = mTextArea->Focus();
   if (!(NS_SUCCEEDED(rv) &&
-        mImpl->mFocused &&
-        mImpl->mStore &&
-        mImpl->mFocusCount - focus == 2 &&
-        mImpl->mBlurCount - blur == 1 &&
-        mImpl->mStore)) {
+        mMgr->mFocusedDocument &&
+        mMgr->mFocusCount - focus == 2 &&
+        mMgr->GetFocusedStore())) {
     fail("TestFocus: document focus was not changed");
     return PR_FALSE;
   }
 
   rv = mButton->Focus();
   if (!(NS_SUCCEEDED(rv) &&
-        !mImpl->mFocused &&
-        !mImpl->mStore &&
-        mImpl->mFocusCount - focus == 2 &&
-        mImpl->mBlurCount - blur == 2 &&
-        !mImpl->mStore)) {
-    fail("TestFocus: document was not blurred");
+        !mMgr->mFocusedDocument &&
+        mMgr->mFocusCount - focus == 2 &&
+        !mMgr->GetFocusedStore())) {
+    fail("TestFocus: document focus was changed");
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -1611,10 +1760,16 @@ TestApp::TestClustering(void)
   string[1] = 0x0301; // U+0301 'acute accent'
   string[2] = nsnull;
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestClustering: GetFocusedStore returns null #1");
+    return PR_FALSE;
+  }
+
   // Replace entire string with our string
   TS_TEXTCHANGE textChange;
-  HRESULT hr = mImpl->mStore->SetText(0, 0, -1, string, STRING_LENGTH,
-                                      &textChange);
+  HRESULT hr =
+    mMgr->GetFocusedStore()->SetText(0, 0, -1, string, STRING_LENGTH,
+                                     &textChange);
   if (!(SUCCEEDED(hr) &&
         0 == textChange.acpStart &&
         STRING_LENGTH == textChange.acpNewEnd)) {
@@ -1626,31 +1781,52 @@ TestApp::TestClustering(void)
   RECT rectLetter, rectAccent, rectWhole, rectCombined;
   BOOL clipped, nonEmpty;
 
-  hr = mImpl->mStore->GetActiveView(&view);
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestClustering: GetFocusedStore returns null #2");
+    return PR_FALSE;
+  }
+
+  hr = mMgr->GetFocusedStore()->GetActiveView(&view);
   if (!(SUCCEEDED(hr))) {
     fail("TestClustering: GetActiveView");
     return PR_FALSE;
   }
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestClustering: GetFocusedStore returns null #3");
+    return PR_FALSE;
+  }
+
   // Get rect of first char (the letter)
-  hr = mImpl->mStore->GetTextExt(view, 0, STRING_LENGTH / 2,
-                                 &rectLetter, &clipped);
+  hr = mMgr->GetFocusedStore()->GetTextExt(view, 0, STRING_LENGTH / 2,
+                                           &rectLetter, &clipped);
   if (!(SUCCEEDED(hr))) {
     fail("TestClustering: GetTextExt (letter)");
     return PR_FALSE;
   }
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestClustering: GetFocusedStore returns null #4");
+    return PR_FALSE;
+  }
+
   // Get rect of second char (the accent)
-  hr = mImpl->mStore->GetTextExt(view, STRING_LENGTH / 2, STRING_LENGTH,
-                                 &rectAccent, &clipped);
+  hr = mMgr->GetFocusedStore()->GetTextExt(view, STRING_LENGTH / 2,
+                                           STRING_LENGTH,
+                                           &rectAccent, &clipped);
   if (!(SUCCEEDED(hr))) {
     fail("TestClustering: GetTextExt (accent)");
     return PR_FALSE;
   }
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestClustering: GetFocusedStore returns null #5");
+    return PR_FALSE;
+  }
+
   // Get rect of combined char
-  hr = mImpl->mStore->GetTextExt(view, 0, STRING_LENGTH,
-                                 &rectWhole, &clipped);
+  hr = mMgr->GetFocusedStore()->GetTextExt(view, 0, STRING_LENGTH,
+                                           &rectWhole, &clipped);
   if (!(SUCCEEDED(hr))) {
     fail("TestClustering: GetTextExt (whole)");
     return PR_FALSE;
@@ -1675,19 +1851,29 @@ TestApp::TestSelectionInternal(char* aTestName,
   TS_SELECTION_ACP sel, testSel;
   ULONG selFetched;
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestSelectionInternal: GetFocusedStore returns null #1");
+    return PR_FALSE;
+  }
+
   sel.acpStart = aStart;
   sel.acpEnd = aEnd;
   sel.style.ase = aSelEnd;
   sel.style.fInterimChar = FALSE;
-  HRESULT hr = mImpl->mStore->SetSelection(1, &sel);
+  HRESULT hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
   if (!(SUCCEEDED(hr))) {
     fail("TestSelection: SetSelection (%s)", aTestName);
     continueTest = succeeded = PR_FALSE;
   }
 
   if (continueTest) {
-    hr = mImpl->mStore->GetSelection(TS_DEFAULT_SELECTION, 1,
-                                     &testSel, &selFetched);
+    if (!mMgr->GetFocusedStore()) {
+      fail("TestSelectionInternal: GetFocusedStore returns null #2");
+      return PR_FALSE;
+    }
+
+    hr = mMgr->GetFocusedStore()->GetSelection(TS_DEFAULT_SELECTION, 1,
+                                               &testSel, &selFetched);
     if (!(SUCCEEDED(hr) &&
           selFetched == 1 &&
           !memcmp(&sel, &testSel, sizeof(sel)))) {
@@ -1715,7 +1901,13 @@ TestApp::TestSelection(void)
   TS_SELECTION_ACP testSel;
   ULONG selFetched;
 
-  HRESULT hr = mImpl->mStore->GetSelection(0, 1, &testSel, &selFetched);
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestSelection: GetFocusedStore returns null");
+    return PR_FALSE;
+  }
+
+  HRESULT hr =
+    mMgr->GetFocusedStore()->GetSelection(0, 1, &testSel, &selFetched);
   if (!(SUCCEEDED(hr) &&
         selFetched == 1)) {
     fail("TestSelection: GetSelection");
@@ -1780,9 +1972,15 @@ TestApp::TestText(void)
    *  NS_SELECTION_SET bug or NS_COMPOSITION_* / NS_TEXT_TEXT bug
    */
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestText: GetFocusedStore returns null #1");
+    return PR_FALSE;
+  }
+
   // Get all text
-  hr = mImpl->mStore->GetText(0, -1, buffer, BUFFER_SIZE, &bufferRet,
-      runInfo, RUNINFO_SIZE, &runInfoRet, &acpRet);
+  hr = mMgr->GetFocusedStore()->GetText(0, -1, buffer, BUFFER_SIZE, &bufferRet,
+                                        runInfo, RUNINFO_SIZE, &runInfoRet,
+                                        &acpRet);
   if (!(SUCCEEDED(hr) &&
         bufferRet <= mTestString.Length() &&
         !wcsncmp(mTestString.get(), buffer, bufferRet) &&
@@ -1793,14 +1991,20 @@ TestApp::TestText(void)
   }
 
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestText: GetFocusedStore returns null #2");
+    return PR_FALSE;
+  }
+
   // Get text from GETTEXT2_START to GETTEXT2_END
   const PRUint32 GETTEXT2_START       = (18);
   const PRUint32 GETTEXT2_END         = (mTestString.Length() - 16);
   const PRUint32 GETTEXT2_BUFFER_SIZE = (0x10);
 
-  hr = mImpl->mStore->GetText(GETTEXT2_START, GETTEXT2_END,
-      buffer, GETTEXT2_BUFFER_SIZE, &bufferRet,
-      runInfo, RUNINFO_SIZE, &runInfoRet, &acpRet);
+  hr = mMgr->GetFocusedStore()->GetText(GETTEXT2_START, GETTEXT2_END,
+                                        buffer, GETTEXT2_BUFFER_SIZE,
+                                        &bufferRet, runInfo, RUNINFO_SIZE,
+                                        &runInfoRet, &acpRet);
   if (!(SUCCEEDED(hr) &&
         bufferRet <= GETTEXT2_BUFFER_SIZE &&
         !wcsncmp(mTestString.get() + GETTEXT2_START, buffer, bufferRet) &&
@@ -1811,6 +2015,11 @@ TestApp::TestText(void)
   }
 
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestText: GetFocusedStore returns null #3");
+    return PR_FALSE;
+  }
+
   // Replace text from SETTEXT1_START to SETTEXT1_END with insertString
   const PRUint32 SETTEXT1_START        = (8);
   const PRUint32 SETTEXT1_TAIL_LENGTH  = (40);
@@ -1819,8 +2028,9 @@ TestApp::TestText(void)
   NS_NAMED_LITERAL_STRING(insertString, "(Inserted string)");
 
   continueTest = PR_TRUE;
-  hr = mImpl->mStore->SetText(0, SETTEXT1_START, SETTEXT1_END,
-      insertString.get(), insertString.Length(), &textChange);
+  hr = mMgr->GetFocusedStore()->SetText(0, SETTEXT1_START, SETTEXT1_END,
+                                        insertString.get(),
+                                        insertString.Length(), &textChange);
   if (!(SUCCEEDED(hr) &&
         textChange.acpStart == SETTEXT1_START &&
         textChange.acpOldEnd == LONG(SETTEXT1_END) &&
@@ -1837,9 +2047,14 @@ TestApp::TestText(void)
   if (continueTest) {
     acpCurrent = 0;
     while (acpCurrent < LONG(SETTEXT1_FINAL_LENGTH)) {
-      hr = mImpl->mStore->GetText(acpCurrent, -1, &buffer[acpCurrent],
-                                  BUFFER_SIZE, &bufferRet, runInfo,
-                                  RUNINFO_SIZE, &runInfoRet, &acpRet);
+      if (!mMgr->GetFocusedStore()) {
+        fail("TestText: GetFocusedStore returns null #4");
+        return PR_FALSE;
+      }
+
+      hr = mMgr->GetFocusedStore()->GetText(acpCurrent, -1, &buffer[acpCurrent],
+                                            BUFFER_SIZE, &bufferRet, runInfo,
+                                            RUNINFO_SIZE, &runInfoRet, &acpRet);
       if (!(SUCCEEDED(hr) &&
             acpRet > acpCurrent &&
             bufferRet <= SETTEXT1_FINAL_LENGTH &&
@@ -1865,10 +2080,15 @@ TestApp::TestText(void)
   }
 
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestText: GetFocusedStore returns null #5");
+    return PR_FALSE;
+  }
+
   // Restore entire text to original text (mTestString)
   continueTest = PR_TRUE;
-  hr = mImpl->mStore->SetText(0, 0, -1, mTestString.get(),
-      mTestString.Length(), &textChange);
+  hr = mMgr->GetFocusedStore()->SetText(0, 0, -1, mTestString.get(),
+                                        mTestString.Length(), &textChange);
   if (!(SUCCEEDED(hr) &&
         textChange.acpStart == 0 &&
         textChange.acpOldEnd == LONG(SETTEXT1_FINAL_LENGTH) &&
@@ -1880,8 +2100,14 @@ TestApp::TestText(void)
   if (continueTest) {
     acpCurrent = 0;
     while (acpCurrent < LONG(mTestString.Length())) {
-      hr = mImpl->mStore->GetText(acpCurrent, -1, &buffer[acpCurrent],
-          BUFFER_SIZE, &bufferRet, runInfo, RUNINFO_SIZE, &runInfoRet, &acpRet);
+      if (!mMgr->GetFocusedStore()) {
+        fail("TestText: GetFocusedStore returns null #6");
+        return PR_FALSE;
+      }
+
+      hr = mMgr->GetFocusedStore()->GetText(acpCurrent, -1, &buffer[acpCurrent],
+                                            BUFFER_SIZE, &bufferRet, runInfo,
+                                            RUNINFO_SIZE, &runInfoRet, &acpRet);
       if (!(SUCCEEDED(hr) &&
             acpRet > acpCurrent &&
             bufferRet <= mTestString.Length() &&
@@ -1907,12 +2133,17 @@ TestApp::TestText(void)
 PRBool
 TestApp::TestExtents(void)
 {
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #1");
+    return PR_FALSE;
+  }
+
   TS_SELECTION_ACP sel;
   sel.acpStart = 0;
   sel.acpEnd = 0;
   sel.style.ase = TS_AE_END;
   sel.style.fInterimChar = FALSE;
-  mImpl->mStore->SetSelection(1, &sel);
+  mMgr->GetFocusedStore()->SetSelection(1, &sel);
 
   nsCOMPtr<nsISelectionController> selCon;
   if (!(NS_SUCCEEDED(GetSelCon(getter_AddRefs(selCon))) && selCon)) {
@@ -1946,15 +2177,25 @@ TestApp::TestExtents(void)
     return PR_FALSE;
   }
 
-  hr = mImpl->mStore->GetActiveView(&view);
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #2");
+    return PR_FALSE;
+  }
+
+  hr = mMgr->GetFocusedStore()->GetActiveView(&view);
   if (!(SUCCEEDED(hr))) {
     fail("TestExtents: GetActiveView");
     return PR_FALSE;
   }
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #3");
+    return PR_FALSE;
+  }
+
   PRBool succeeded = PR_TRUE;
   HWND hwnd;
-  hr = mImpl->mStore->GetWnd(view, &hwnd);
+  hr = mMgr->GetFocusedStore()->GetWnd(view, &hwnd);
   if (!(SUCCEEDED(hr) &&
         ::IsWindow(hwnd))) {
     fail("TestExtents: GetWnd");
@@ -1962,7 +2203,13 @@ TestApp::TestExtents(void)
   }
 
   ::SetRectEmpty(&screenRect);
-  hr = mImpl->mStore->GetScreenExt(view, &screenRect);
+
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #4");
+    return PR_FALSE;
+  }
+
+  hr = mMgr->GetFocusedStore()->GetScreenExt(view, &screenRect);
   if (!(SUCCEEDED(hr) &&
         screenRect.left > windowRect.left &&
         screenRect.top > windowRect.top &&
@@ -1978,8 +2225,15 @@ TestApp::TestExtents(void)
   const LONG GETTEXTEXT1_END   = 0;
 
   ::SetRectEmpty(&textRect1);
-  hr = mImpl->mStore->GetTextExt(view, GETTEXTEXT1_START, GETTEXTEXT1_END,
-      &textRect1, &clipped);
+
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #5");
+    return PR_FALSE;
+  }
+
+  hr = mMgr->GetFocusedStore()->GetTextExt(view, GETTEXTEXT1_START,
+                                           GETTEXTEXT1_END, &textRect1,
+                                           &clipped);
   if (!(SUCCEEDED(hr) &&
         textRect1.left >= screenRect.left &&
         textRect1.top >= screenRect.top &&
@@ -1996,8 +2250,15 @@ TestApp::TestExtents(void)
   const LONG GETTEXTEXT2_END   = 25;
 
   ::SetRectEmpty(&textRect2);
-  hr = mImpl->mStore->GetTextExt(view, GETTEXTEXT2_START, GETTEXTEXT2_END,
-      &textRect2, &clipped);
+
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #6");
+    return PR_FALSE;
+  }
+
+  hr = mMgr->GetFocusedStore()->GetTextExt(view, GETTEXTEXT2_START,
+                                           GETTEXTEXT2_END, &textRect2,
+                                           &clipped);
   if (!(SUCCEEDED(hr) &&
         textRect2.left >= screenRect.left &&
         textRect2.top >= screenRect.top &&
@@ -2015,8 +2276,15 @@ TestApp::TestExtents(void)
   const LONG GETTEXTEXT3_END   = 23;
 
   ::SetRectEmpty(&textRect1);
-  hr = mImpl->mStore->GetTextExt(view, GETTEXTEXT3_START, GETTEXTEXT3_END,
-        &textRect1, &clipped);
+
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestExtents: GetFocusedStore returns null #7");
+    return PR_FALSE;
+  }
+
+  hr = mMgr->GetFocusedStore()->GetTextExt(view, GETTEXTEXT3_START,
+                                           GETTEXTEXT3_END, &textRect1,
+                                           &clipped);
   // Rectangle must be entirely inside the previous rectangle,
   // since GETTEXTEXT3_START and GETTEXTEXT3_END are between
   // GETTEXTEXT2_START and GETTEXTEXT2_START
@@ -2040,10 +2308,15 @@ TestApp::TestCompositionSelectionAndText(char* aTestName,
                                          LONG aExpectedSelEnd,
                                          nsString& aReferenceString)
 {
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestCompositionSelectionAndText: GetFocusedStore returns null #1");
+    return PR_FALSE;
+  }
+
   TS_SELECTION_ACP currentSel;
   ULONG selFetched = 0;
-  HRESULT hr = mImpl->mStore->GetSelection(TF_DEFAULT_SELECTION, 1,
-                                           &currentSel, &selFetched);
+  HRESULT hr = mMgr->GetFocusedStore()->GetSelection(TF_DEFAULT_SELECTION, 1,
+                                                     &currentSel, &selFetched);
   if (!(SUCCEEDED(hr) &&
         1 == selFetched &&
         currentSel.acpStart == aExpectedSelStart &&
@@ -2058,9 +2331,15 @@ TestApp::TestCompositionSelectionAndText(char* aTestName,
   ULONG bufferRet, runInfoRet;
   LONG acpRet, acpCurrent = 0;
   while (acpCurrent < LONG(aReferenceString.Length())) {
-    hr = mImpl->mStore->GetText(acpCurrent, aReferenceString.Length(),
-          &buffer[acpCurrent], bufferSize, &bufferRet, runInfo, runInfoSize,
-          &runInfoRet, &acpRet);
+    if (!mMgr->GetFocusedStore()) {
+      fail("TestCompositionSelectionAndText: GetFocusedStore returns null #2");
+      return PR_FALSE;
+    }
+
+    hr = mMgr->GetFocusedStore()->GetText(acpCurrent, aReferenceString.Length(),
+                                          &buffer[acpCurrent], bufferSize,
+                                          &bufferRet, runInfo, runInfoSize,
+                                          &runInfoRet, &acpRet);
     if (!(SUCCEEDED(hr) &&
           acpRet > acpCurrent &&
           bufferRet <= aReferenceString.Length() &&
@@ -2081,10 +2360,15 @@ TestApp::TestCompositionSelectionAndText(char* aTestName,
 PRBool
 TestApp::TestComposition(void)
 {
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestComposition: GetFocusedStore returns null #1");
+    return PR_FALSE;
+  }
+
   nsRefPtr<ITfContextOwnerCompositionSink> sink;
-  HRESULT hr = mImpl->mStore->QueryInterface(
-                                  IID_ITfContextOwnerCompositionSink,
-                                  getter_AddRefs(sink));
+  HRESULT hr =
+    mMgr->GetFocusedStore()->QueryInterface(IID_ITfContextOwnerCompositionSink,
+                                            getter_AddRefs(sink));
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: QueryInterface");
     return PR_FALSE;
@@ -2099,19 +2383,23 @@ TestApp::TestComposition(void)
   sel.acpEnd = PRECOMPOSITION_SEL_END;
   sel.style.ase = PRECOMPOSITION_SEL_SELEND;
   sel.style.fInterimChar = FALSE;
-  hr = mImpl->mStore->SetSelection(1, &sel);
+  hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: SetSelection (pre-composition)");
     return PR_FALSE;
   }
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestComposition: GetFocusedStore returns null #2");
+    return PR_FALSE;
+  }
 
   TS_TEXTCHANGE textChange;
   NS_NAMED_LITERAL_STRING(insertString1, "Compo1");
-  hr = mImpl->mStore->InsertTextAtSelection(TF_IAS_NOQUERY,
-                                            insertString1.get(),
-                                            insertString1.Length(),
-                                            NULL, NULL, &textChange);
+  hr = mMgr->GetFocusedStore()->InsertTextAtSelection(TF_IAS_NOQUERY,
+                                                      insertString1.get(),
+                                                      insertString1.Length(),
+                                                      NULL, NULL, &textChange);
   if (!(SUCCEEDED(hr) &&
         sel.acpEnd == textChange.acpStart &&
         sel.acpEnd == textChange.acpOldEnd &&
@@ -2121,14 +2409,22 @@ TestApp::TestComposition(void)
   }
   sel.acpEnd = textChange.acpNewEnd;
 
-  mImpl->mAttrProp->mRanges.Clear();
+  if (!mMgr->GetFocusedAttrProp()) {
+    fail("TestComposition: GetFocusedAttrProp returns null #1");
+    return PR_FALSE;
+  }
+  mMgr->GetFocusedAttrProp()->mRanges.Clear();
   nsRefPtr<TSFRangeImpl> range =
     new TSFRangeImpl(textChange.acpStart,
                      textChange.acpNewEnd - textChange.acpOldEnd);
-  mImpl->mAttrProp->mRanges.AppendElement(range);
+  if (!mMgr->GetFocusedAttrProp()) {
+    fail("TestComposition: GetFocusedAttrProp returns null #2");
+    return PR_FALSE;
+  }
+  mMgr->GetFocusedAttrProp()->mRanges.AppendElement(range);
 
   BOOL okay = FALSE;
-  hr = sink->OnStartComposition(mImpl, &okay);
+  hr = sink->OnStartComposition(mMgr->GetFocusedContext(), &okay);
   if (!(SUCCEEDED(hr) &&
         okay)) {
     fail("TestComposition: OnStartComposition");
@@ -2136,11 +2432,17 @@ TestApp::TestComposition(void)
   }
 
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestComposition: GetFocusedStore returns null #3");
+    return PR_FALSE;
+  }
+
   NS_NAMED_LITERAL_STRING(insertString2, "Composition2");
-  hr = mImpl->mStore->SetText(0, range->mStart + range->mLength,
-                              range->mStart + range->mLength,
-                              insertString2.get(), insertString2.Length(),
-                              &textChange);
+  hr = mMgr->GetFocusedStore()->SetText(0, range->mStart + range->mLength,
+                                        range->mStart + range->mLength,
+                                        insertString2.get(),
+                                        insertString2.Length(),
+                                        &textChange);
   if (!(SUCCEEDED(hr) &&
         sel.acpEnd == textChange.acpStart &&
         sel.acpEnd == textChange.acpOldEnd &&
@@ -2152,6 +2454,11 @@ TestApp::TestComposition(void)
   range->mLength += textChange.acpNewEnd - textChange.acpOldEnd;
 
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestComposition: GetFocusedStore returns null #4");
+    return PR_FALSE;
+  }
+
   const LONG COMPOSITION3_TEXT_START_OFFSET = -8; // offset 8 from the end
   const LONG COMPOSITION3_TEXT_END_OFFSET   = 4;
 
@@ -2161,10 +2468,11 @@ TestApp::TestComposition(void)
                                        COMPOSITION3_TEXT_END_OFFSET;
 
   NS_NAMED_LITERAL_STRING(insertString3, "Compo3");
-  hr = mImpl->mStore->SetText(0, COMPOSITION3_TEXT_START,
-                              COMPOSITION3_TEXT_END,
-                              insertString3.get(), insertString3.Length(),
-                              &textChange);
+  hr = mMgr->GetFocusedStore()->SetText(0, COMPOSITION3_TEXT_START,
+                                        COMPOSITION3_TEXT_END,
+                                        insertString3.get(),
+                                        insertString3.Length(),
+                                        &textChange);
   if (!(SUCCEEDED(hr) &&
         sel.acpEnd + COMPOSITION3_TEXT_START_OFFSET == textChange.acpStart &&
         sel.acpEnd + COMPOSITION3_TEXT_START_OFFSET +
@@ -2195,20 +2503,29 @@ TestApp::TestComposition(void)
     return PR_FALSE;
 
 
+  if (!mMgr->GetFocusedStore()) {
+    fail("TestComposition: GetFocusedStore returns null #5");
+    return PR_FALSE;
+  }
+
   const LONG POSTCOMPOSITION_SEL_START = sel.acpEnd - 8;
   const LONG POSTCOMPOSITION_SEL_END   = POSTCOMPOSITION_SEL_START + 2;
 
   sel.acpStart = POSTCOMPOSITION_SEL_START;
   sel.acpEnd = POSTCOMPOSITION_SEL_END;
-  hr = mImpl->mStore->SetSelection(1, &sel);
+  hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: SetSelection (composition)");
     return PR_FALSE;
   }
 
-  mImpl->mAttrProp->mRanges.Clear();
+  if (!mMgr->GetFocusedAttrProp()) {
+    fail("TestComposition: GetFocusedAttrProp returns null #3");
+    return PR_FALSE;
+  }
+  mMgr->GetFocusedAttrProp()->mRanges.Clear();
 
-  hr = sink->OnEndComposition(mImpl);
+  hr = sink->OnEndComposition(mMgr->GetFocusedContext());
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: OnEndComposition");
     return PR_FALSE;
@@ -2224,19 +2541,27 @@ TestApp::TestComposition(void)
 
   range->mStart = EMPTYCOMPOSITION_START;
   range->mLength = EMPTYCOMPOSITION_LENGTH;
-  mImpl->mAttrProp->mRanges.AppendElement(range);
+  if (!mMgr->GetFocusedAttrProp()) {
+    fail("TestComposition: GetFocusedAttrProp returns null #4");
+    return PR_FALSE;
+  }
+  mMgr->GetFocusedAttrProp()->mRanges.AppendElement(range);
 
   okay = FALSE;
-  hr = sink->OnStartComposition(mImpl, &okay);
+  hr = sink->OnStartComposition(mMgr->GetFocusedContext(), &okay);
   if (!(SUCCEEDED(hr) &&
         okay)) {
     fail("TestComposition: OnStartComposition (empty composition)");
     return PR_FALSE;
   }
 
-  mImpl->mAttrProp->mRanges.Clear();
+  if (!mMgr->GetFocusedAttrProp()) {
+    fail("TestComposition: GetFocusedAttrProp returns null #5");
+    return PR_FALSE;
+  }
+  mMgr->GetFocusedAttrProp()->mRanges.Clear();
 
-  hr = sink->OnEndComposition(mImpl);
+  hr = sink->OnEndComposition(mMgr->GetFocusedContext());
   if (!(SUCCEEDED(hr))) {
     fail("TestComposition: OnEndComposition (empty composition)");
     return PR_FALSE;
@@ -2262,17 +2587,21 @@ TestApp::TestNotificationTextChange(nsIWidget* aWidget,
   if (::PeekMessageW(&msg, NULL, WM_USER_TSF_TEXTCHANGE,
                      WM_USER_TSF_TEXTCHANGE, PM_REMOVE))
     ::DispatchMessageW(&msg);
-  mImpl->mTextChanged = PR_FALSE;
+  if (!mMgr->GetFocusedContext()) {
+    fail("TestNotificationTextChange: GetFocusedContext returns null");
+    return PR_FALSE;
+  }
+  mMgr->GetFocusedContext()->mTextChanged = PR_FALSE;
   nsresult nsr = aWidget->SynthesizeNativeKeyEvent(0, aCode, 0,
                               aCharacter, aCharacter);
   if (::PeekMessageW(&msg, NULL, WM_USER_TSF_TEXTCHANGE,
                      WM_USER_TSF_TEXTCHANGE, PM_REMOVE))
     ::DispatchMessageW(&msg);
   return NS_SUCCEEDED(nsr) &&
-         mImpl->mTextChanged &&
-         aStart == mImpl->mTextChangeData.acpStart &&
-         aOldEnd == mImpl->mTextChangeData.acpOldEnd &&
-         aNewEnd == mImpl->mTextChangeData.acpNewEnd;
+         mMgr->GetFocusedContext()->mTextChanged &&
+         aStart == mMgr->GetFocusedContext()->mTextChangeData.acpStart &&
+         aOldEnd == mMgr->GetFocusedContext()->mTextChangeData.acpOldEnd &&
+         aNewEnd == mMgr->GetFocusedContext()->mTextChangeData.acpNewEnd;
 }
 
 PRBool
@@ -2292,18 +2621,28 @@ TestApp::TestNotification(void)
     return PR_FALSE;
   }
 
-  mImpl->mSelChanged = PR_FALSE;
+  if (!mMgr->GetFocusedContext()) {
+    fail("TestNotification: GetFocusedContext returns null #1");
+    return PR_FALSE;
+  }
+
+  mMgr->GetFocusedContext()->mSelChanged = PR_FALSE;
   nsr = selCon->CharacterMove(PR_TRUE, PR_FALSE);
   if (!(NS_SUCCEEDED(nsr) &&
-        mImpl->mSelChanged)) {
+        mMgr->GetFocusedContext()->mSelChanged)) {
     fail("TestNotification: CharacterMove");
     return PR_FALSE;
   }
 
-  mImpl->mSelChanged = PR_FALSE;
+  if (!mMgr->GetFocusedContext()) {
+    fail("TestNotification: GetFocusedContext returns null #2");
+    return PR_FALSE;
+  }
+
+  mMgr->GetFocusedContext()->mSelChanged = PR_FALSE;
   nsr = selCon->CharacterMove(PR_TRUE, PR_TRUE);
   if (!(NS_SUCCEEDED(nsr) &&
-        mImpl->mSelChanged)) {
+        mMgr->GetFocusedContext()->mSelChanged)) {
     fail("TestNotification: CharacterMove (extend)");
     return PR_FALSE;
   }
