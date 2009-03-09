@@ -42,7 +42,8 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Textbox with emptyText test" width="500" height="600"
-        onload="doTest();"
+        onload="window.focus();"
+        onfocus="if (doTest) setTimeout(doTest, 0); doTest = null;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
@@ -68,6 +69,8 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
     function doTest() {
       var t1 = $("t1");
       var t2 = $("t2");
@@ -90,6 +93,8 @@
       t2.editor.canUndo(t2Enabled, t2CanUndo);
       is(t2CanUndo.value, true,
          "undo correctly enabled when emptyText explicitly changed through property");
+
+      SimpleTest.finish();
    }
 
   ]]></script>
