@@ -262,22 +262,8 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
        aName == nsGkAtoms::requiredExtensions ||
        aName == nsGkAtoms::systemLanguage)) {
 
-    nsIContent* parent = nsnull;
+    nsIContent* parent = nsSVGUtils::GetParentElement(this);
   
-    nsIContent* bindingParent = GetBindingParent();
-    if (bindingParent) {
-      nsIDocument* doc = bindingParent->GetOwnerDoc();
-      if (doc) {
-        parent = doc->BindingManager()->GetInsertionParent(bindingParent);
-      }
-    }
-
-    if (!parent) {
-      // if we didn't find an anonymous parent, use the explicit one,
-      // whether it's null or not...
-      parent = GetParent();
-    }
-
     if (parent &&
         parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
       static_cast<nsSVGSwitchElement*>(parent)->MaybeInvalidate();
@@ -913,29 +899,8 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 {
   *aOwnerSVGElement = nsnull;
 
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the binding that gives us our anonymous parent.
-  // That's the binding manager for the document we actually belong to, which
-  // is our owner doc.
-  nsIDocument* ownerDoc = GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
-  nsIContent* parent = nsnull;
+  nsIContent* parent = nsSVGUtils::GetParentElement(this);
   
-  if (bindingManager) {
-    // we have a binding manager -- do we have an anonymous parent?
-    parent = bindingManager->GetInsertionParent(this);
-  }
-
-  if (!parent) {
-    // if we didn't find an anonymous parent, use the explicit one,
-    // whether it's null or not...
-    parent = GetParent();
-  }
-
   while (parent && parent->GetNameSpaceID() == kNameSpaceID_SVG) {
     nsIAtom* tag = parent->Tag();
     if (tag == nsGkAtoms::foreignObject) {
@@ -948,16 +913,7 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
       NS_ADDREF(*aOwnerSVGElement);
       return NS_OK;
     }
-    nsIContent* next = nsnull;
-
-    if (bindingManager) {
-      next = bindingManager->GetInsertionParent(parent);
-    }
-    if (!next) {
-      // no anonymous parent, so use explicit one
-      next = parent->GetParent();
-    }
-    
+    nsIContent* next = nsSVGUtils::GetParentElement(parent);
     parent = next;
   }
 
