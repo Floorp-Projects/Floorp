@@ -3783,7 +3783,7 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   // legacy plugin
   if (NS_FAILED(result)) {
     if (plugin) {
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
       static BOOL firstJavaPlugin = FALSE;
       BOOL restoreOrigDir = FALSE;
       char origDir[_MAX_PATH];
@@ -3803,7 +3803,7 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 #endif
       result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)getter_AddRefs(instance));
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
       if (!firstJavaPlugin && restoreOrigDir) {
         BOOL bCheck = ::SetCurrentDirectory(origDir);
         NS_ASSERTION(bCheck, " Error restoring driectoy");
