@@ -185,6 +185,11 @@ class nsSVGUtils
 {
 public:
   /*
+   * Get the parent element of an nsIContent
+   */
+  static nsIContent *GetParentElement(nsIContent *aContent);
+
+  /*
    * Get a font-size (em) of an nsIContent
    */
   static float GetFontSize(nsIContent *aContent);
