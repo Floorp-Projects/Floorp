@@ -116,7 +116,6 @@ nsTextStore::Create(nsWindow* aWindow,
 PRBool
 nsTextStore::Destroy(void)
 {
-  Blur();
   if (mWindow) {
     // When blurred, Tablet Input Panel posts "blur" messages
     // and try to insert text when the message is retrieved later.
@@ -138,25 +137,6 @@ nsTextStore::Destroy(void)
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: Destroyed, window=%08x\n", mWindow));
   mWindow = NULL;
-  return PR_TRUE;
-}
-
-PRBool
-nsTextStore::Focus(void)
-{
-  HRESULT hr = sTsfThreadMgr->SetFocus(mDocumentMgr);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), PR_FALSE);
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: Focused\n"));
-  return PR_TRUE;
-}
-
-PRBool
-nsTextStore::Blur(void)
-{
-  sTsfThreadMgr->SetFocus(NULL);
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: Blurred\n"));
   return PR_TRUE;
 }
 
@@ -1374,8 +1354,11 @@ nsTextStore::OnFocusChange(PRBool aFocus,
     return NS_ERROR_NOT_AVAILABLE;
 
   if (aFocus) {
-    if (sTsfTextStore->Create(aWindow, aIMEEnabled))
-      sTsfTextStore->Focus();
+    PRBool bRet = sTsfTextStore->Create(aWindow, aIMEEnabled);
+    NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(sTsfTextStore->mDocumentMgr, NS_ERROR_FAILURE);
+    HRESULT hr = sTsfThreadMgr->SetFocus(sTsfTextStore->mDocumentMgr);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   } else {
     sTsfTextStore->Destroy();
   }

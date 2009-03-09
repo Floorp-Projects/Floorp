@@ -181,8 +181,6 @@ protected:
 
   PRBool   Create(nsWindow*, PRUint32);
   PRBool   Destroy(void);
-  PRBool   Focus(void);
-  PRBool   Blur(void);
 
   // If aDispatchTextEvent is true, this method will dispatch text event if
   // this is called during IME composing.  aDispatchTextEvent should be true
