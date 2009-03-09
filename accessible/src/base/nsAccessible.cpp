@@ -2308,7 +2308,9 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
      return NS_OK;
 
    case eCheckUncheckAction:
-     if (states & nsIAccessibleStates::STATE_CHECKED)
+     if (states & nsIAccessibleStates::STATE_MIXED)
+       aName.AssignLiteral("cycle");
+     else if (states & nsIAccessibleStates::STATE_CHECKED)
        aName.AssignLiteral("uncheck");
      else
        aName.AssignLiteral("check");
