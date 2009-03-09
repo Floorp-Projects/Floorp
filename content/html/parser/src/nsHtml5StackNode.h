@@ -56,6 +56,7 @@ class nsHtml5HtmlAttributes;
 class nsHtml5UTF16Buffer;
 class nsHtml5Portability;
 
+
 class nsHtml5StackNode
 {
   public:
