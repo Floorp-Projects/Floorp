@@ -1658,9 +1658,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
         switch (mSizeMode) {
 #ifdef WINCE
           case nsSizeMode_Maximized :
-#ifdef WINCE_WINDOWS_MOBILE
             ::SetForegroundWindow(mWnd);
-#endif
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
           // use default for nsSizeMode_Minimized on Windows CE
@@ -1674,7 +1672,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
 #endif
           default:
             if (CanTakeFocus()) {
-#ifdef WINCE_WINDOWS_MOBILE
+#ifdef WINCE
               ::SetForegroundWindow(mWnd);
 #endif
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
