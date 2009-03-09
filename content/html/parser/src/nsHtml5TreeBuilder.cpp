@@ -543,7 +543,9 @@ nsHtml5TreeBuilder::endTokenization()
   delete[] stack;
   stack = nsnull;
   while (listPtr > -1) {
-    listOfActiveFormattingElements[listPtr]->release();
+    if (!!listOfActiveFormattingElements[listPtr]) {
+      listOfActiveFormattingElements[listPtr]->release();
+    }
     listPtr--;
   }
   delete[] listOfActiveFormattingElements;
@@ -2907,16 +2909,19 @@ nsHtml5TreeBuilder::append(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::insertMarker()
 {
-  append(MARKER);
+  append(nsnull);
 }
 
 void 
 nsHtml5TreeBuilder::clearTheListOfActiveFormattingElementsUpToTheLastMarker()
 {
   while (listPtr > -1) {
-    if (listOfActiveFormattingElements[listPtr--] == MARKER) {
+    if (!listOfActiveFormattingElements[listPtr]) {
+      --listPtr;
       return;
     }
+    listOfActiveFormattingElements[listPtr]->release();
+    --listPtr;
   }
 }
 
@@ -2963,6 +2968,7 @@ nsHtml5TreeBuilder::removeFromStack(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(PRInt32 pos)
 {
+
   listOfActiveFormattingElements[pos]->release();
   if (pos == listPtr) {
 
@@ -2982,11 +2988,11 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
   for (; ; ) {
     PRInt32 formattingEltListPos = listPtr;
     while (formattingEltListPos > -1) {
-      nsIAtom* listName = listOfActiveFormattingElements[formattingEltListPos]->name;
-      if (listName == name) {
-        break;
-      } else if (!listName) {
+      nsHtml5StackNode* listNode = listOfActiveFormattingElements[formattingEltListPos];
+      if (!listNode) {
         formattingEltListPos = -1;
+        break;
+      } else if (listNode->name == name) {
         break;
       }
       formattingEltListPos--;
@@ -3136,7 +3142,7 @@ nsHtml5TreeBuilder::findInListOfActiveFormattingElementsContainsBetweenEndAndLas
 {
   for (PRInt32 i = listPtr; i >= 0; i--) {
     nsHtml5StackNode* node = listOfActiveFormattingElements[i];
-    if (node == MARKER) {
+    if (!node) {
       return -1;
     } else if (node->name == name) {
       return i;
@@ -3198,7 +3204,7 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
     return;
   }
   nsHtml5StackNode* mostRecent = listOfActiveFormattingElements[listPtr];
-  if (mostRecent == MARKER || isInStack(mostRecent)) {
+  if (!mostRecent || isInStack(mostRecent)) {
     return;
   }
   PRInt32 entryPos = listPtr;
@@ -3207,7 +3213,7 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
     if (entryPos == -1) {
       break;
     }
-    if (listOfActiveFormattingElements[entryPos] == MARKER) {
+    if (!listOfActiveFormattingElements[entryPos]) {
       break;
     }
     if (isInStack(listOfActiveFormattingElements[entryPos])) {

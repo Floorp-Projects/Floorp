@@ -63,8 +63,7 @@
 jArray<PRUnichar,PRInt32> nsHtml5TreeBuilder::ISINDEX_PROMPT = jArray<PRUnichar,PRInt32>();
 
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
-  : MARKER(new nsHtml5StackNode(0, nsHtml5ElementName::NULL_ELEMENT_NAME, nsnull)),
-    documentModeHandler(aParser),
+  : documentModeHandler(aParser),
     fragment(PR_FALSE),
     formPointer(nsnull),
     headPointer(nsnull),
@@ -78,7 +77,6 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
 nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 {
   MOZ_COUNT_DTOR(nsHtml5TreeBuilder);
-  delete MARKER;
   mOpQueue.Clear();
 }
 

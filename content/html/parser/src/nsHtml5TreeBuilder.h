@@ -67,7 +67,6 @@ class nsHtml5TreeBuilder
   private:
     static jArray<PRUnichar,PRInt32> ISINDEX_PROMPT;
     static jArray<nsString*,PRInt32> QUIRKY_PUBLIC_IDS;
-    nsHtml5StackNode* MARKER;
     static nsIAtom* HTML_LOCAL;
     PRInt32 mode;
     PRInt32 originalMode;
