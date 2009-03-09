@@ -285,7 +285,7 @@ if test "$target" != "$host"; then
 
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
-    AC_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
+    MOZ_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
     AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", :)
     AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", :)
     AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", :)
@@ -300,7 +300,7 @@ else
     AC_PROG_CC
     AC_PROG_CXX
     AC_PROG_RANLIB
-    AC_PATH_PROGS(AS, $AS as, $CC)
+    MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(AR, ar, :)
     AC_CHECK_PROGS(LD, ld, :)
     AC_CHECK_PROGS(STRIP, strip, :)
@@ -616,7 +616,7 @@ dnl Checks for programs.
 dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PATH_PROGS(PERL, $PERL perl5 perl )
+MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
@@ -642,12 +642,12 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-AC_PATH_PROGS(PYTHON, $PYTHON python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
-AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
+MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
 if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
@@ -655,16 +655,16 @@ fi
 fi
 AC_SUBST(NSINSTALL_BIN)
 
-AC_PATH_PROG(DOXYGEN, doxygen, :)
-AC_PATH_PROG(WHOAMI, whoami, :)
-AC_PATH_PROG(AUTOCONF, autoconf, :)
-AC_PATH_PROG(UNZIP, unzip, :)
-AC_PATH_PROGS(ZIP, zip)
+MOZ_PATH_PROG(DOXYGEN, doxygen, :)
+MOZ_PATH_PROG(WHOAMI, whoami, :)
+MOZ_PATH_PROG(AUTOCONF, autoconf, :)
+MOZ_PATH_PROG(UNZIP, unzip, :)
+MOZ_PATH_PROGS(ZIP, zip)
 if test -z "$ZIP" || test "$ZIP" = ":"; then
     AC_MSG_ERROR([zip not found in \$PATH])
 fi
-AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
-AC_PATH_PROG(XARGS, xargs)
+MOZ_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
+MOZ_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
@@ -701,7 +701,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
     dnl xcodebuild needs GCC_VERSION defined in the environment, since it
     dnl doesn't respect the CC/CXX setting.  With GCC_VERSION set, it will use
     dnl /usr/bin/g(cc|++)-$GCC_VERSION.
-    AC_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
+    MOZ_PATH_PROGS(PBBUILD, pbbuild xcodebuild pbxbuild)
 
     case "$PBBUILD" in
       *xcodebuild*)
@@ -716,7 +716,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
 
     dnl sdp was formerly in /Developer/Tools.  As of Mac OS X 10.4 (Darwin 8),
     dnl it has moved into /usr/bin.
-    AC_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
+    MOZ_PATH_PROG(SDP, sdp, :, [$PATH:/usr/bin:/Developer/Tools])
     ;;
 esac
 
@@ -849,10 +849,10 @@ dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
 case "$host_os" in
 cygwin*|mingw*|mks*|msvc*)
-    AC_PATH_PROGS(MAKE, $MAKE make gmake, :)
+    MOZ_PATH_PROGS(MAKE, $MAKE make gmake, :)
     ;;
 *)
-    AC_PATH_PROGS(MAKE, $MAKE gmake make, :)
+    MOZ_PATH_PROGS(MAKE, $MAKE gmake make, :)
     ;;
 esac
 _make_try=`$MAKE --version 2>/dev/null | grep GNU`
