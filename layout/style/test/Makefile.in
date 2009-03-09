@@ -127,6 +127,10 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_shorthand_property_getters.html \
 		test_style_struct_copy_constructors.html \
 		test_system_font_serialization.html \
+		test_units_angle.html \
+		test_units_frequency.html \
+		test_units_length.html \
+		test_units_time.html \
 		test_value_computation.html \
 		test_value_storage.html \
 		test_visited_pref.html \
