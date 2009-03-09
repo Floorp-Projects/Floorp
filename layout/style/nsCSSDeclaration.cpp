@@ -443,16 +443,10 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Number:       break;
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
-    case eCSSUnit_Foot:         aResult.AppendLiteral("ft");   break;
-    case eCSSUnit_Mile:         aResult.AppendLiteral("mi");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
     case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
-    case eCSSUnit_Meter:        aResult.AppendLiteral("m");    break;
-    case eCSSUnit_Kilometer:    aResult.AppendLiteral("km");   break;
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
-    case eCSSUnit_Didot:        aResult.AppendLiteral("dt");   break;
-    case eCSSUnit_Cicero:       aResult.AppendLiteral("cc");   break;
 
     case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
     case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;
