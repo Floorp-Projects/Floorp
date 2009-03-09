@@ -753,7 +753,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
   /* get the ref row at aIndex
      if there is one, 
-       get it's parent
+       get its parent
        insert the new row just before the ref row
      else
        get the first row group

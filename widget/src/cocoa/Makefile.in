@@ -145,8 +145,6 @@ $(NIB_DEST):
 $(NIB_DEST)/%: $(srcdir)/resources/MainMenu.nib/% $(NIB_DEST)
 	$(INSTALL) $< $(NIB_DEST)
 
-RESOURCE = libwidget.rsrc
-
 # for objdir builds, symlink the cursors dir
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
@@ -156,14 +154,6 @@ endif
 
 export::
 	$(INSTALL) $(srcdir)/cursors $(DIST)/bin/res
-
-$(RESOURCE): nsMacWidget.r
-	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $< -o $@
-
-GARBAGE += $(RESOURCE)
-
-libs:: $(RESOURCE)
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \

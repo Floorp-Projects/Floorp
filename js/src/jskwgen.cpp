@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsstddef.h"
+#include <stddef.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

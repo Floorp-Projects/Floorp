@@ -45,14 +45,13 @@
 #include <shellapi.h>
 #include "nsWindow.h"
 
+#ifndef WINCE
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 
-#ifndef WINCE
 typedef UINT (CALLBACK *SHAppBarMessagePtr)(DWORD, PAPPBARDATA);
 SHAppBarMessagePtr gSHAppBarMessage = NULL;
 static HINSTANCE gShell32DLLInst = NULL;
-#endif
 
 static nsresult GetColorFromTheme(nsUXThemeClass cls,
                            PRInt32 aPart,
@@ -69,15 +68,12 @@ static nsresult GetColorFromTheme(nsUXThemeClass cls,
   }
   return NS_ERROR_FAILURE;
 }
+#endif
 
 static PRInt32 GetSystemParam(long flag, PRInt32 def)
 {
-#ifdef WINCE
-    return def;
-#else
     DWORD value; 
     return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
-#endif
 }
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
@@ -208,13 +204,13 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_menubarhovertext:
 #ifndef WINCE
       if (!nsUXThemeData::sIsVistaOrLater || !nsUXThemeData::isAppThemed())
-#endif
       {
         idx = nsUXThemeData::sFlatMenus ?
                 COLOR_HIGHLIGHTTEXT :
                 COLOR_MENUTEXT;
         break;
       }
+#endif
       // Fall through
     case eColor__moz_menuhovertext:
 #ifndef WINCE
@@ -282,9 +278,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_eventreerow:
     case eColor__moz_oddtreerow:
     case eColor__moz_field:
+    case eColor__moz_combobox:
       idx = COLOR_WINDOW;
       break;
     case eColor__moz_fieldtext:
+    case eColor__moz_comboboxtext:
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dialog:
@@ -299,8 +297,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         if (NS_SUCCEEDED(res))
           return res;
       }
-      // if we've gotten here just return -moz-dialogtext instead
 #endif
+      // if we've gotten here just return -moz-dialogtext instead
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_win_communicationstext:
@@ -312,8 +310,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         if (NS_SUCCEEDED(res))
           return res;
       }
-      // if we've gotten here just return -moz-dialogtext instead
 #endif
+      // if we've gotten here just return -moz-dialogtext instead
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dialogtext:
@@ -425,7 +423,11 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_SubmenuDelay:
         // This will default to the Windows' default
         // (400ms) on error.
+#ifndef WINCE
         aMetric = GetSystemParam(SPI_GETMENUSHOWDELAY, 400);
+#else
+        aMetric = 400;
+#endif
         break;
     case eMetric_MenusCanOverlapOSBar:
         // we want XUL popups to be able to overlap the task bar.
@@ -434,8 +436,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_DragFullWindow:
         // This will default to the Windows' default
         // (on by default) on error.
+#ifndef WINCE
         aMetric = GetSystemParam(SPI_GETDRAGFULLWINDOWS, 1);
+#else
+        aMetric = 1;
+#endif
         break;
+
 #ifndef WINCE
     case eMetric_DragThresholdX:
         // The system metric is the number of pixels at which a drag should
@@ -485,7 +492,11 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 3;
         break;
     case eMetric_WindowsClassic:
+#ifndef WINCE
         aMetric = !nsUXThemeData::IsAppThemed();
+#else
+        aMetric = 0;
+#endif
         break;
     case eMetric_WindowsDefaultTheme:
         aMetric = 0;
@@ -501,7 +512,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           // users a handful of clock cycles by skipping checks for the
           // 5.x themes (or vice-versa), we can use a single loop for all
           // the different Windows versions.
-          if (hresult == S_OK && GetWindowsVersion() <= VISTA_VERSION) {
+          if (hresult == S_OK && GetWindowsVersion() <= WIN7_VERSION) {
             LPCWSTR defThemes[] = {
               L"luna.msstyles",
               L"royale.msstyles",
@@ -520,8 +531,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           } else {
             res = NS_ERROR_NOT_IMPLEMENTED;
           }
-        } else
-#endif
+        }
+        else
+#endif /* WINCE */
         {
           res = NS_ERROR_NOT_IMPLEMENTED;
         }
@@ -530,12 +542,16 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
-#ifndef WINCE
     case eMetric_DWMCompositor:
+#ifndef WINCE
         aMetric = nsUXThemeData::sHaveCompositor;
+#else
+        aMetric = 0;
+#endif
         break;
     case eMetric_AlertNotificationOrigin:
         aMetric = 0;
+#ifndef WINCE
         if (gSHAppBarMessage)
         {
           // Get task bar window handle
@@ -573,9 +589,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             }
           }
         }
+#endif // WINCE
         break;
-#endif
-
     case eMetric_IMERawInputUnderlineStyle:
     case eMetric_IMEConvertedTextUnderlineStyle:
         aMetric = NS_UNDERLINE_STYLE_DASHED;

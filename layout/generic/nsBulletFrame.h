@@ -82,13 +82,13 @@ public:
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   NS_IMETHOD OnDataAvailable(imgIRequest *aRequest,
                              gfxIImageFrame *aFrame,
-                             const nsRect * rect);
+                             const nsIntRect *aRect);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
                           nsresult aStatus,
                           const PRUnichar *aStatusArg);
   NS_IMETHOD FrameChanged(imgIContainer *aContainer,
                           gfxIImageFrame *aNewframe,
-                          nsRect *aDirtyRect);
+                          nsIntRect *aDirtyRect);
 
   /* get list item text, without '.' */
   static PRBool AppendCounterText(PRInt32 aListStyleType,

@@ -65,7 +65,7 @@ var EXPORTED_SYMBOLS = [ "DownloadUtils" ];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const Cu = Components.utils
+const Cu = Components.utils;
 Cu.import("resource://gre/modules/PluralForm.jsm");
 
 const kDownloadProperties =

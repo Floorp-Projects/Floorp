@@ -46,7 +46,7 @@
 
 class nsPresContext;
 class nsIRenderingContext;
-class nsSpaceManager;
+class nsFloatManager;
 class nsLineLayout;
 class nsIPercentHeightObserver;
 
@@ -244,8 +244,8 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // initialized by the Init method below.
   nsCSSFrameType   mFrameType;
 
-  // pointer to the space manager associated with this area
-  nsSpaceManager* mSpaceManager;
+  // pointer to the float manager associated with this area
+  nsFloatManager* mFloatManager;
 
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the
@@ -444,6 +444,14 @@ public:
   nscoord ComputedHeight() const { return mComputedHeight; }
   // This method doesn't apply min/max computed heights to the value passed in.
   void SetComputedHeight(nscoord aComputedHeight);
+
+  void SetComputedHeightWithoutResettingResizeFlags(nscoord aComputedHeight) {
+    // Viewport frames reset the computed height on a copy of their reflow
+    // state when reflowing fixed-pos kids.  In that case we actually don't
+    // want to mess with the resize flags, because comparing the frame's rect
+    // to the munged computed width is pointless.
+    mComputedHeight = aComputedHeight;
+  }
 
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
 

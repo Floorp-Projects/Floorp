@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=463162
+-->
+<head>
+  <title>Test for Bug 463162</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463162">Mozilla Bug 463162</a>
+
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+var gExpectedResult = {
+  'a1' : 'error',
+  'a2' : 'loaded',
+  'a3' : 'loaded',
+  'a4' : 'error',
+};
+
+var gResultCount = 0;
+
+function onError(event, id) {
+  event.stopPropagation();
+  is('error', gExpectedResult[id], 'unexpected error loading ' + id);
+  gResultCount++;
+  dump('error('+id+') expected ' + gExpectedResult[id] + ' gResultCount=' + gResultCount + '\n');
+  if (gResultCount == 4)
+    SimpleTest.finish();
+}
+
+function onMetaData(id) {
+  is('loaded', gExpectedResult[id], 'unexpected loadedmetadata loading ' + id);
+  gResultCount++;
+  dump('onMetaData('+id+') expected ' + gExpectedResult[id] + ' gResultCount=' + gResultCount + '\n');
+  if (gResultCount == 4)
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+
+<audio id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce type="audio/x-wav" src="r11025_s16_c1.wav"/><source type="bad" src="404"/></audio>
+<audio id='a2' onerror="onError(event, 'a2');" onloadedmetadata="onMetaData('a2');"><source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a3' onerror="onError(event, 'a3');" onloadedmetadata="onMetaData('a3');"><html:source type="audio/x-wav" src="r11025_s16_c1.wav"/></audio>
+<audio id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source type="audio/x-wav" src="r11025_s16_c1.wav"/><source type="bad" src="404"/></audio>
+
+<pre id="test">
+
+</pre>
+</body>
+</html>

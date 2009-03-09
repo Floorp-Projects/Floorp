@@ -52,14 +52,6 @@ RequestExecutionLevel user
 
 !addplugindir ./
 
-; empty files - except for the comment line - for generating custom pages.
-!system 'echo ; > options.ini'
-!system 'echo ; > shortcuts.ini'
-!system 'echo ; > summary.ini'
-
-; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
-!define USE_UAC_PLUGIN
-
 Var TmpVal
 Var StartMenuDir
 Var InstallType
@@ -72,7 +64,6 @@ Var AddDesktopSC
 !include FileFunc.nsh
 !include LogicLib.nsh
 !include MUI.nsh
-!include TextFunc.nsh
 !include WinMessages.nsh
 !include WinVer.nsh
 !include WordFunc.nsh
@@ -82,11 +73,6 @@ Var AddDesktopSC
 !insertmacro GetSize
 !insertmacro StrFilter
 !insertmacro WordReplace
-
-; NSIS provided macros that we have overridden
-!include overrides.nsh
-!insertmacro LocateNoDetails
-!insertmacro TextCompareNoDetails
 
 ; The following includes are custom.
 !include branding.nsi
@@ -101,13 +87,16 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 ; Must be inserted before other macros that use logging
 !insertmacro _LoggingCommon
 
+; Most commonly used macros for managing shortcuts
+!insertmacro _LoggingShortcutsCommon
+
 !insertmacro AddDDEHandlerValues
 !insertmacro ChangeMUIHeaderImage
 !insertmacro CheckForFilesInUse
 !insertmacro CleanUpdatesDir
-!insertmacro CloseApp
 !insertmacro CopyFilesFromDir
 !insertmacro CreateRegKey
+!insertmacro FindSMProgramsDir
 !insertmacro GetPathFromString
 !insertmacro GetParent
 !insertmacro IsHandlerForInstallDir
@@ -136,10 +125,6 @@ OutFile "setup.exe"
 InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
 InstallDir "$PROGRAMFILES\${BrandFullName}\"
 ShowInstDetails nevershow
-
-ReserveFile options.ini
-ReserveFile shortcuts.ini
-ReserveFile summary.ini
 
 ################################################################################
 # Modern User Interface - MUI
@@ -182,9 +167,6 @@ Page custom preShortcuts leaveShortcuts
 !define MUI_PAGE_CUSTOMFUNCTION_PRE preStartMenu
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE leaveStartMenu
 !define MUI_STARTMENUPAGE_NODISABLE
-!define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKLM"
-!define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main"
-!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
 !insertmacro MUI_PAGE_STARTMENU Application $StartMenuDir
 
 ; Custom Summary Page
@@ -261,7 +243,7 @@ Section "-Application" APP_IDX
     ${LogMsg} "Registered: $INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
 
-  ; Write extra files created by the application to the uninstall.log so they
+  ; Write extra files created by the application to the uninstall log so they
   ; will be removed when the application is uninstalled. To remove an empty
   ; directory write a bogus filename to the deepest directory and all empty
   ; parent directories will be removed.
@@ -289,10 +271,9 @@ Section "-Application" APP_IDX
   ClearErrors
   ReadRegStr $R0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
   ${Unless} ${Errors}
-    Push $R0
-    ${GetPathFromRegStr}
-    Pop $R0
-    ${Unless} ${Errors}
+    ${GetLongPath} "$R0" $R0
+    ${Unless} "$R0" == ""
+      ClearErrors
       GetFullPathName $R0 "$R0\Plugins\nsIQTScriptablePlugin.xpt"
       ${Unless} ${Errors}
         ${LogHeader} "Copying QuickTime Scriptable Component"
@@ -331,12 +312,12 @@ Section "-Application" APP_IDX
   ${UpdateProtocolHandlers}
 
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
+  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
   ${If} ${Errors}
     StrCpy $TmpVal "HKCU" ; used primarily for logging
   ${Else}
     SetShellVarContext all  ; Set SHCTX to HKLM
-    DeleteRegKey HKLM "Software\Mozilla\InstallerTest"
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
     StrCpy $TmpVal "HKLM" ; used primarily for logging
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
@@ -360,16 +341,15 @@ Section "-Application" APP_IDX
   ; specify that only empty keys will be deleted.
   ${SetAppKeys}
 
-  ; XXXrstrong - this should be set in shared.nsh along with "Create Quick
-  ; Launch Shortcut" and Create Desktop Shortcut.
-  StrCpy $0 "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Uninstall"
-  ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
-
   ${FixClassKeys}
 
   ; On install always add the FirefoxHTML and FirefoxURL keys.
-  ; An empty string is used for the 5th param because FirefoxHTML is not a
-  ; protocol handler.
+  ; An empty string is used for the 5th param because FirefoxHTML and FirefoxURL
+  ; are not protocol handlers.
+  ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
+  StrCpy $2 "$\"$8$\" -requestPending -osint -url $\"%1$\""
+  StrCpy $3 "$\"%1$\",,0,0,,,,"
+
   ${AddDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" "${AppRegName} Document" "" \
                          "${DDEApplication}" "$3" "WWW_OpenURL"
 
@@ -409,31 +389,37 @@ Section "-Application" APP_IDX
 
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
-  ; Create Start Menu shortcuts
+  ; Create shortcuts
   ${LogHeader} "Adding Shortcuts"
+
+  ; Always add the relative path to the application's Start Menu directory and
+  ; the application's shortcuts to the shortcuts log ini file. The
+  ; DeleteShortcuts macro will do the right thing on uninstall if they don't
+  ; exist.
+  ${LogSMProgramsDirRelPath} "$StartMenuDir"
+  ${LogSMProgramsShortcut} "${BrandFullName}.lnk"
+  ${LogSMProgramsShortcut} "${BrandFullName} ($(SAFE_MODE)).lnk"
+  ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
+  ${LogDesktopShortcut} "${BrandFullName}.lnk"
+
   ${If} $AddStartMenuSC == 1
     ${Unless} ${FileExists} "$SMPROGRAMS\$StartMenuDir"
       CreateDirectory "$SMPROGRAMS\$StartMenuDir"
       ${LogMsg} "Added Start Menu Directory: $SMPROGRAMS\$StartMenuDir"
     ${EndUnless}
-    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk"
-    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk"
-    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
-    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk"
-    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk"
+    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
+    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
+    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
   ${EndIf}
 
-  ; perhaps use the uninstall keys
   ${If} $AddQuickLaunchSC == 1
     CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ${LogUninstall} "File: $QUICKLAUNCH\${BrandFullName}.lnk"
     ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
   ${EndIf}
 
   ${If} $AddDesktopSC == 1
     CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ${LogUninstall} "File: $DESKTOP\${BrandFullName}.lnk"
     ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
   ${EndIf}
 
@@ -651,6 +637,32 @@ Function leaveShortcuts
 FunctionEnd
 
 Function preStartMenu
+  ; With the Unicode installer the path to the application's Start Menu
+  ; directory relative to the Start Menu's Programs directory is written to the
+  ; shortcuts log ini file and is used to set the default Start Menu directory.
+  ${GetSMProgramsDirRelPath} $0
+  ${If} "$0" != ""
+    StrCpy $StartMenuDir "$0"
+  ${Else}
+    ; Prior to the Unicode installer the path to the application's Start Menu
+    ; directory relative to the Start Menu's Programs directory was written to
+    ; the registry and use this value to set the default Start Menu directory.
+    ClearErrors
+    ReadRegStr $0 HKLM "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main" "Start Menu Folder"
+    ${If} ${Errors}
+      ; Use the FindSMProgramsDir macro to find a previously used path to the
+      ; application's Start Menu directory relative to the Start Menu's Programs
+      ; directory in the uninstall log and use this value to set the default
+      ; Start Menu directory.
+      ${FindSMProgramsDir} $0
+      ${If} "$0" != ""
+        StrCpy $StartMenuDir "$0"
+      ${EndIf}
+    ${Else}
+      StrCpy $StartMenuDir "$0"
+    ${EndUnless}
+  ${EndIf}
+
   ${CheckCustomCommon}
   ${If} $AddStartMenuSC != 1
     Abort
@@ -763,11 +775,11 @@ Function .onInit
   StrCpy $LANGUAGE 0
   ${SetBrandNameVars} "$EXEDIR\localized\distribution\setup.ini"
 
-  ${InstallOnInitCommon} "$(WARN_UNSUPPORTED_MSG)"
+  ${InstallOnInitCommon} "$(WARN_MIN_SUPPORTED_OS_MSG)"
 
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "summary.ini"
+  !insertmacro InitInstallOptionsFile "options.ini"
+  !insertmacro InitInstallOptionsFile "shortcuts.ini"
+  !insertmacro InitInstallOptionsFile "summary.ini"
 
   ; Setup the options.ini file for the Custom Options Page
   WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "6"

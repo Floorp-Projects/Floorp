@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2003                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: mmxfrag.c 14345 2008-01-04 18:02:21Z tterribe $
+    last mod: $Id: mmxfrag.c 15400 2008-10-15 12:10:58Z tterribe $
 
  ********************************************************************/
 
@@ -21,6 +21,7 @@
   Note: Loops are unrolled for best performance.
   The iteration each instruction belongs to is marked in the comments as #i.*/
 #include "x86int.h"
+#include <stddef.h>
 
 #if defined(USE_ASM)
 
@@ -133,8 +134,8 @@ void oc_frag_recon_intra_mmx(unsigned char *_dst,int _dst_ystride,
     :[residue]"r"(_residue),
      [dst]"r"(_dst),
      [dst4]"r"(_dst+(_dst_ystride<<2)),
-     [dst_ystride]"r"((long)_dst_ystride),
-     [dst_ystride3]"r"((long)_dst_ystride*3)
+     [dst_ystride]"r"((ptrdiff_t)_dst_ystride),
+     [dst_ystride3]"r"((ptrdiff_t)_dst_ystride*3)
     :"memory"
   );
 }
@@ -185,8 +186,8 @@ void oc_frag_recon_inter_mmx(unsigned char *_dst,int _dst_ystride,
       /*Advance dst.*/
       "lea (%[dst],%[dst_ystride],2),%[dst]\n\t"
       :[residue]"+r"(_residue),[dst]"+r"(_dst),[src]"+r"(_src)
-      :[dst_ystride]"r"((long)_dst_ystride),
-       [src_ystride]"r"((long)_src_ystride)
+      :[dst_ystride]"r"((ptrdiff_t)_dst_ystride),
+       [src_ystride]"r"((ptrdiff_t)_src_ystride)
       :"memory"
     );
   }
@@ -278,7 +279,7 @@ void oc_frag_recon_inter2_mmx(unsigned char *_dst,int _dst_ystride,
       "lea (%[dst],%[ystride],2),%[dst]\n\t"
      :[dst]"+r"(_dst),[residue]"+r"(_residue),
       [src1]"+r"(_src1),[src2]"+r"(_src2)
-     :[ystride]"r"((long)_dst_ystride)
+     :[ystride]"r"((ptrdiff_t)_dst_ystride)
      :"memory"
     );
   }

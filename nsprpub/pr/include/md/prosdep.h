@@ -51,7 +51,7 @@ PR_BEGIN_EXTERN_C
 #ifdef WINNT
 #include "md/_winnt.h"
 #include "md/_win32_errors.h"
-#elif defined(WIN95)
+#elif defined(WIN95) || defined(WINCE)
 #include "md/_win95.h"
 #include "md/_win32_errors.h"
 #elif defined(WIN16)
@@ -62,10 +62,6 @@ PR_BEGIN_EXTERN_C
 #else
 #error unknown Windows platform
 #endif
-
-#elif defined XP_MAC
-
-#include "_macos.h"
 
 #elif defined(XP_UNIX)
 

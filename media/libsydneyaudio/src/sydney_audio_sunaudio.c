@@ -293,10 +293,11 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes)
   */
   result = SA_SUCCESS;
   buf = new_buffer(nbytes);
-  memcpy(buf->data,data, nbytes);
 
-  if ( buf == NULL)
+  if (buf == NULL)
     return SA_ERROR_OOM;
+
+  memcpy(buf->data,data, nbytes);
 
   pthread_mutex_lock(&s->mutex);
   if (!s->bl_head)

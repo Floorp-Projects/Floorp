@@ -39,102 +39,6 @@
 // exercise nsIHttpResponse.setStatusLine, ensure its atomicity, and ensure the
 // specified behavior occurs if it's not called
 
-var paths =
-  [
-   "http://localhost:4444/no/setstatusline",
-   "http://localhost:4444/http1_0",
-   "http://localhost:4444/http1_1",
-   "http://localhost:4444/invalidVersion",
-   "http://localhost:4444/invalidStatus",
-   "http://localhost:4444/invalidDescription",
-   "http://localhost:4444/crazyCode",
-   "http://localhost:4444/nullVersion"
-  ];
-var currPathIndex = 0;
-
-var listener =
-  {
-    // NSISTREAMLISTENER
-    onDataAvailable: function(request, cx, inputStream, offset, count)
-    {
-      makeBIS(inputStream).readByteArray(count); // required by API
-    },
-    // NSIREQUESTOBSERVER
-    onStartRequest: function(request, cx)
-    {
-      var ch = request.QueryInterface(Ci.nsIHttpChannel)
-                      .QueryInterface(Ci.nsIHttpChannelInternal);
-
-      switch (currPathIndex)
-      {
-        case 0:
-          checkStatusLine(ch, 1, 1, 200, "OK");
-          break;
-
-        case 1:
-          checkStatusLine(ch, 1, 0, 200, "OK");
-          break;
-
-        case 2:
-          checkStatusLine(ch, 1, 1, 200, "OK");
-          break;
-
-        case 3:
-        case 4:
-        case 5:
-          checkStatusLine(ch, 1, 1, 200, "OK");
-          do_check_eq(ch.getResponseHeader("Passed"), "true");
-          break;
-
-        case 6:
-          checkStatusLine(ch, 1, 1, 617, "Crazy");
-          break;
-
-        case 7:
-          // currently, this server implementation defaults to 1.1
-          checkStatusLine(ch, 1, 1, 255, "NULL");
-          break;
-      }
-    },
-    onStopRequest: function(request, cx, status)
-    {
-      do_check_true(Components.isSuccessCode(status));
-      if (++currPathIndex == paths.length)
-        srv.stop();
-      else
-        performNextTest();
-      do_test_finished();
-    },
-    // NSISUPPORTS
-    QueryInterface: function(aIID)
-    {
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
-{
-  do_check_eq(channel.responseStatus, httpCode);
-  do_check_eq(channel.responseStatusText, statusText);
-
-  var respMaj = {}, respMin = {};
-  channel.getResponseVersion(respMaj, respMin);
-  do_check_eq(respMaj.value, httpMaxVer);
-  do_check_eq(respMin.value, httpMinVer);
-}
-
-function performNextTest()
-{
-  do_test_pending();
-
-  var ch = makeChannel(paths[currPathIndex]);
-  ch.asyncOpen(listener, null);
-}
-
 var srv;
 
 function run_test()
@@ -152,27 +56,77 @@ function run_test()
 
   srv.start(4444);
 
-  performNextTest();
+  runHttpTests(tests, function() { srv.stop() });
 }
 
-// PATH HANDLERS
+
+/*************
+ * UTILITIES *
+ *************/
+
+function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
+{
+  do_check_eq(channel.responseStatus, httpCode);
+  do_check_eq(channel.responseStatusText, statusText);
+
+  var respMaj = {}, respMin = {};
+  channel.getResponseVersion(respMaj, respMin);
+  do_check_eq(respMaj.value, httpMaxVer);
+  do_check_eq(respMin.value, httpMinVer);
+}
+
+
+/*********
+ * TESTS *
+ *********/
+
+var tests = [];
+var test;
 
 // /no/setstatusline
 function noSetstatusline(metadata, response)
 {
 }
+test = new Test("http://localhost:4444/no/setstatusline",
+                null, startNoSetStatusLine, stop);
+tests.push(test);
+function startNoSetStatusLine(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 200, "OK");
+}
+function stop(ch, cx, status, data)
+{
+  do_check_true(Components.isSuccessCode(status));
+}
+
 
 // /http1_0
 function http1_0(metadata, response)
 {
   response.setStatusLine("1.0", 200, "OK");
 }
+test = new Test("http://localhost:4444/http1_0",
+                null, startHttp1_0, stop);
+tests.push(test);
+function startHttp1_0(ch, cx)
+{
+  checkStatusLine(ch, 1, 0, 200, "OK");
+}
+
 
 // /http1_1
 function http1_1(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
 }
+test = new Test("http://localhost:4444/http1_1",
+                null, startHttp1_1, stop);
+tests.push(test);
+function startHttp1_1(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 200, "OK");
+}
+
 
 // /invalidVersion
 function invalidVersion(metadata, response)
@@ -186,6 +140,15 @@ function invalidVersion(metadata, response)
     response.setHeader("Passed", "true", false);
   }
 }
+test = new Test("http://localhost:4444/invalidVersion",
+                null, startPassedTrue, stop);
+tests.push(test);
+function startPassedTrue(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 200, "OK");
+  do_check_eq(ch.getResponseHeader("Passed"), "true");
+}
+
 
 // /invalidStatus
 function invalidStatus(metadata, response)
@@ -199,6 +162,11 @@ function invalidStatus(metadata, response)
     response.setHeader("Passed", "true", false);
   }
 }
+test = new Test("http://localhost:4444/invalidStatus",
+                null, startPassedTrue, stop);
+tests.push(test);
+
+
 // /invalidDescription
 function invalidDescription(metadata, response)
 {
@@ -211,15 +179,35 @@ function invalidDescription(metadata, response)
     response.setHeader("Passed", "true", false);
   }
 }
+test = new Test("http://localhost:4444/invalidDescription",
+                null, startPassedTrue, stop);
+tests.push(test);
+
 
 // /crazyCode
 function crazyCode(metadata, response)
 {
   response.setStatusLine("1.1", 617, "Crazy");
 }
+test = new Test("http://localhost:4444/crazyCode",
+                null, startCrazy, stop);
+tests.push(test);
+function startCrazy(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 617, "Crazy");
+}
+
 
 // /nullVersion
 function nullVersion(metadata, response)
 {
   response.setStatusLine(null, 255, "NULL");
+}
+test = new Test("http://localhost:4444/nullVersion",
+                null, startNullVersion, stop);
+tests.push(test);
+function startNullVersion(ch, cx)
+{
+  // currently, this server implementation defaults to 1.1
+  checkStatusLine(ch, 1, 1, 255, "NULL");
 }

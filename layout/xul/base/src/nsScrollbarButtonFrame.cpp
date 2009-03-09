@@ -71,6 +71,11 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
                                     nsGUIEvent* aEvent,
                                     nsEventStatus* aEventStatus)
 {  
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   // XXX hack until handle release is actually called in nsframe.
   if (aEvent->message == NS_MOUSE_EXIT_SYNTH ||
       aEvent->message == NS_MOUSE_BUTTON_UP)
@@ -230,8 +235,7 @@ nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll)
   else if (curpos > maxpos)
     curpos = maxpos;
 
-  nsIScrollbarFrame* sb;
-  CallQueryInterface(scrollbar, &sb);
+  nsIScrollbarFrame* sb = do_QueryFrame(scrollbar);
   if (sb) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     if (m) {

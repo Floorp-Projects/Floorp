@@ -76,12 +76,12 @@ function testElement(element)
     checkClientState(element, borderLeft, borderTop, clientWidth, clientHeight, element.id);
 
   var boundingrect = element.getBoundingClientRect();
-  is(Math.round(boundingrect.width), borderLeft + paddingLeft + width + paddingRight + borderLeft,
+  is(Math.round(boundingrect.width), borderLeft + paddingLeft + width + paddingRight + borderRight,
      element.id + " bounding rect width");
   is(Math.round(boundingrect.height), borderTop + paddingTop + height + paddingBottom + borderBottom,
      element.id + " bounding rect height");
   is(Math.round(boundingrect.right - boundingrect.left),
-     borderLeft + paddingLeft + width + paddingRight + borderLeft,
+     borderLeft + paddingLeft + width + paddingRight + borderRight,
      element.id + " bounding rect right");
   is(Math.round(boundingrect.bottom - boundingrect.top),
      borderTop + paddingTop + height + paddingBottom + borderBottom,

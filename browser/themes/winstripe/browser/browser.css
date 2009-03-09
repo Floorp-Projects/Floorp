@@ -632,6 +632,24 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[chromedir="rtl"
   -moz-image-region: rect(96px 216px 120px 192px);
 }
 
+/* toolbar new tab button */
+
+toolbar:not([iconsize="small"]) #new-tab-button > .toolbarbutton-icon {
+  padding-left: 1px;
+}
+#new-tab-button {
+  -moz-image-region: rect(0px 240px 24px 216px);
+}
+#new-tab-button:not([disabled="true"]):hover {
+  -moz-image-region: rect(24px 240px 48px 216px);
+}
+#new-tab-button[disabled="true"] {
+  -moz-image-region: rect(48px 240px 72px 216px);
+}
+#new-tab-button:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(96px 240px 120px 216px);
+}
+
 /* new window button */
 
 toolbar:not([iconsize="small"]) #new-window-button > .toolbarbutton-icon {
@@ -918,6 +936,24 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 144px 80px 128px);
+}
+
+/* toolbar new tab button */
+
+toolbar[iconsize="small"] #new-tab-button > .toolbarbutton-icon {
+  padding-left: 1px;
+}
+toolbar[iconsize="small"] #new-tab-button {
+  -moz-image-region: rect(0px 160px 16px 144px);
+}
+toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover {
+  -moz-image-region: rect(16px 160px 32px 144px);
+}
+toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
+  -moz-image-region: rect(32px 160px 48px 144px);
+}
+toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(64px 160px 80px 144px);
 }
 
 /* new window button */
@@ -1227,6 +1263,11 @@ statusbarpanel#statusbar-display {
   font-size: 130%;
 }
 
+/* Implements editBookmarkPanel resizing on folderTree un-collapse. */
+#editBMPanel_folderTree {
+  min-width: 27em;
+}
+
 /* ::::: content area ::::: */
 
 #sidebar {
@@ -1261,14 +1302,8 @@ statusbarpanel#statusbar-display {
 }
 
 #page-report-button {
-  list-style-image: none;
   width: 20px;
-  display: none;
-}
-
-#page-report-button[blocked] {
   list-style-image: url("chrome://browser/skin/Info.png");
-  display: -moz-box;
 }
 
 /* ::::: throbber ::::: */
@@ -1422,7 +1457,7 @@ tabpanels {
   outline: none !important;
 }
 
-/* Tab scrollbox arrow, new tab and all-tabs buttons */
+/* Tab scrollbox arrow, tabstrip new tab and all-tabs buttons */
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
 .tabs-newtab-button,
@@ -1487,7 +1522,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
-.tabs-newtab-button,
+.tabs-container > .tabs-newtab-button,
 .tabs-alltabs-button {
   border-right-style: none;
   -moz-border-radius-topleft: 2px;
@@ -1498,7 +1533,7 @@ tabpanels {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"],
-.tabs-newtab-button[chromedir="rtl"],
+.tabs-container > .tabs-newtab-button[chromedir="rtl"],
 .tabs-container > stack[chromedir="rtl"] > .tabs-alltabs-button {
   border-left-style: none;
   border-right-style: solid;
@@ -1516,13 +1551,21 @@ tabpanels {
   -moz-margin-end: 2px;
 }
 
+.tabs-newtab-button {
+  opacity: .8;
+}
+
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  width: 32px;
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-topleft: 2px;
+}
+
 .tabs-newtab-button > .toolbarbutton-icon {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
   margin: 3px 0 0;
-  -moz-margin-end: 2px;
 }
 
-.tabs-newtab-button > .toolbarbutton-text,
 .tabs-alltabs-button > .toolbarbutton-text {
   display: none;
 }
@@ -1600,12 +1643,13 @@ toolbarbutton.chevron[chromedir="rtl"] {
   list-style-image: url("chrome://global/skin/toolbar/chevron-rtl.gif") !important;
 }
 
-toolbarbutton.chevron > .toolbarbutton-text {
-  display: none; /* hide chevron label */
-}
-
+toolbarbutton.chevron > .toolbarbutton-text,
 toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
+}
+
+toolbarbutton.chevron > .toolbarbutton-icon {
+  margin: 0;
 }
 
 toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
@@ -1654,7 +1698,8 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 /* Feed icon */
-#feed-button, #feed-button > .button-box,
+#feed-button,
+#feed-button > .button-box,
 #feed-button:hover:active > .button-box {
   padding: 0px;
   margin: 0px;
@@ -1662,34 +1707,21 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   background-color: transparent;
 }
 
-#feed-button > hbox > .button-menu-dropmarker,
-#feed-button > hbox > .button-text {
-  display: none;
-}
-
 #feed-button {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
   -moz-appearance: none; 
   min-width: 0px; 
   padding: 0 2px !important;
-}
-
-#feed-button[feeds] {
   list-style-image: url("chrome://browser/skin/feeds/feed-icons-16.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#feed-button[feeds]:hover {
+#feed-button:hover {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-#feed-button[feeds][open="true"],
-#feed-button[feeds]:hover:active {
+#feed-button[open="true"],
+#feed-button:hover:active {
   -moz-image-region: rect(0px 48px 16px 32px);
-}
-
-#feed-button:not([feeds]) {
-  visibility: collapse;
 }
 
 /* ::::: About Popup Blocking dialog ::::: */

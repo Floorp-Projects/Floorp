@@ -46,6 +46,14 @@
 
 #include "jstypes.h"
 
+#if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
+#ifdef IS_BIG_ENDIAN
+#define AVMPLUS_BIG_ENDIAN
+#else
+#define AVMPLUS_LITTLE_ENDIAN
+#endif
+#endif
+
 #define FASTCALL JS_FASTCALL
 
 #if defined(JS_NO_FASTCALL)
@@ -81,23 +89,6 @@ void NanoAssertFail();
 #define AvmAssert(x) assert(x)
 #define AvmAssertMsg(x, y) 
 #define AvmDebugLog(x) printf x
-
-#ifdef _MSC_VER
-/*
- * Can we just take a moment to think about what it means that MSVC doesn't have stdint.h in 2008?
- * Thanks for your time.
- */
-typedef JSUint8  uint8_t;
-typedef JSInt8   int8_t;
-typedef JSUint16 uint16_t;
-typedef JSInt16  int16_t;
-typedef JSUint32 uint32_t;
-typedef JSInt32  int32_t;
-typedef JSUint64 uint64_t;
-typedef JSInt64  int64_t;
-#else
-#include <stdint.h>
-#endif
 
 #if defined(AVMPLUS_IA32)
 #if defined(_MSC_VER)
@@ -174,7 +165,7 @@ namespace avmplus {
         {
             return calloc(1, size);
         }
-    
+        
         static void operator delete (void *gcObject)
         {
             free(gcObject); 

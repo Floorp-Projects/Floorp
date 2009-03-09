@@ -46,3 +46,11 @@ fails == default-box-sizing-collapse-standards.html default-box-sizing-collapse-
 fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks-ref.html # bug 371180
 == colspan-percent-distribution-1.html colspan-percent-distribution-1-ref.html
 == colspan-percent-distribution-2.html colspan-percent-distribution-2-ref.html
+== spanning-cell-sort-1-small.html spanning-cell-sort-1-ref.html
+== spanning-cell-sort-1-large.html spanning-cell-sort-1-ref.html
+== spanning-cell-sort-1-small-fixed.html spanning-cell-sort-1-fixed-ref.html
+== spanning-cell-sort-1-large-fixed.html spanning-cell-sort-1-fixed-ref.html
+== spanning-cell-sort-2-small.html spanning-cell-sort-2-ref.html
+== spanning-cell-sort-2-large.html spanning-cell-sort-2-ref.html
+== spanning-cell-sort-2-small-fixed.html spanning-cell-sort-2-fixed-ref.html
+== spanning-cell-sort-2-large-fixed.html spanning-cell-sort-2-fixed-ref.html

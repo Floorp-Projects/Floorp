@@ -468,18 +468,6 @@ nsISupportsKey::Write(nsIObjectOutputStream* aStream) const
     return rv;
 }
 
-nsIDKey::nsIDKey(nsIObjectInputStream* aStream, nsresult *aResult)
-{
-    *aResult = aStream->ReadID(&mID);
-}
-
-nsresult nsIDKey::Write(nsIObjectOutputStream* aStream) const
-{
-    return aStream->WriteID(mID);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 // Copy Constructor
 // We need to free mStr if the object is passed with mOwnership as OWN. As the 
 // destructor here is freeing mStr in that case, mStr is NOT getting leaked here.

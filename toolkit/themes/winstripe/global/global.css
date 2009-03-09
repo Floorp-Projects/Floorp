@@ -157,11 +157,6 @@ statusbarpanel {
   padding: 0 1px;
 }
 
-resizer[dir="bottomright"] {
-  -moz-appearance: resizer;
-  cursor: se-resize;
-}
-
 %ifdef XP_WIN
 window:not([active="true"]) menubar > menu {
   color: ThreeDShadow;
@@ -184,6 +179,11 @@ sidebarheader > label {
 
 .toolbar-focustarget {
   -moz-user-focus: ignore !important;
+}
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
 }
 
 /* ::::: miscellaneous formatting ::::: */
@@ -313,7 +313,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
 
 /* :::::: autoscroll popup ::::: */
 
-#autoscroller {
+.autoscroller {
   height: 28px;
   width: 28px;
   border: none;
@@ -327,7 +327,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   -moz-appearance: none;
 }
 
-#autoscroller[scrolldir="NS"] {
+.autoscroller[scrolldir="NS"] {
 %ifdef XP_WIN
   background-position: right center;
 %else
@@ -335,7 +335,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
 %endif
 }
 
-#autoscroller[scrolldir="EW"] {
+.autoscroller[scrolldir="EW"] {
 %ifdef XP_WIN
   background-position: right bottom;
 %else

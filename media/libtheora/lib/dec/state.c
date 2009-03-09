@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: state.c 14714 2008-04-12 01:04:43Z giles $
+    last mod: $Id: state.c 15469 2008-10-30 12:49:42Z tterribe $
 
  ********************************************************************/
 
@@ -831,37 +831,11 @@ void oc_state_frag_recon_c(oc_theora_state *_state,oc_fragment *_frag,
     ogg_int16_t p;
     /*Why is the iquant product rounded in this case and no others?
       Who knows.*/
-
     p=(ogg_int16_t)((ogg_int32_t)_frag->dc*_dc_iquant+15>>5);
     /*LOOP VECTORIZES.*/
     for(ci=0;ci<64;ci++)res_buf[ci]=p;
-
-#ifdef _TH_DEBUG_
-    {
-      int i;
-      _frag->freq[0] = _frag->dc*_dc_iquant;
-      _frag->time[0] = p;
-      for(i=1;i<64;i++){
-	_frag->quant[i] = 0;
-	_frag->freq[i] = 0;
-	_frag->time[i] = p;
-      }
-    }
-#endif
-
   }
   else{
-
-#ifdef _TH_DEBUG_
-    {
-      int i;
-      for(i=1;i<_ncoefs;i++)
-	_frag->quant[i] = _dct_coeffs[i];
-      for(;i<64;i++)
-	_frag->quant[i] = 0;
-    }
-#endif
-
     /*First, dequantize the coefficients.*/
     dct_buf[0]=(ogg_int16_t)((ogg_int32_t)_frag->dc*_dc_iquant);
     for(zzi=1;zzi<_ncoefs;zzi++){
@@ -869,21 +843,6 @@ void oc_state_frag_recon_c(oc_theora_state *_state,oc_fragment *_frag,
       ci=OC_FZIG_ZAG[zzi];
       dct_buf[ci]=(ogg_int16_t)((ogg_int32_t)_dct_coeffs[zzi]*_ac_iquant[ci]);
     }
-
-#ifdef _TH_DEBUG_
-    for(;zzi<64;zzi++){
-      int ci;
-      ci=OC_FZIG_ZAG[zzi];
-      dct_buf[ci]=0;
-    }
-
-    {
-      int i;
-      for(i=0;i<64;i++)
-	_frag->freq[i] = dct_buf[i];
-    }
-#endif
-
     /*Then, fill in the remainder of the coefficients with 0's, and perform
        the iDCT.*/
     if(_last_zzi<10){
@@ -894,15 +853,6 @@ void oc_state_frag_recon_c(oc_theora_state *_state,oc_fragment *_frag,
       for(;zzi<64;zzi++)dct_buf[OC_FZIG_ZAG[zzi]]=0;
       oc_idct8x8_c(res_buf,dct_buf);
     }
-
-#ifdef _TH_DEBUG_
-    {
-      int i;
-      for(i=0;i<64;i++)
-	_frag->time[i] = res_buf[i];
-    }
-#endif
-
   }
   /*Fill in the target buffer.*/
   dst_framei=_state->ref_frame_idx[OC_FRAME_SELF];
@@ -1038,7 +988,7 @@ void oc_state_loop_filter_frag_rows(oc_theora_state *_state,int *_bv,
 }
 
 void oc_state_loop_filter_frag_rows_c(oc_theora_state *_state,int *_bv,
- int _refi,int _pli,int _fragy0,int _fragy_end){  
+ int _refi,int _pli,int _fragy0,int _fragy_end){
   th_img_plane      *iplane;
   oc_fragment_plane *fplane;
   oc_fragment       *frag_top;
@@ -1050,7 +1000,6 @@ void oc_state_loop_filter_frag_rows_c(oc_theora_state *_state,int *_bv,
   _bv+=127;
   iplane=_state->ref_frame_bufs[_refi]+_pli;
   fplane=_state->fplanes+_pli;
-
   /*The following loops are constructed somewhat non-intuitively on purpose.
     The main idea is: if a block boundary has at least one coded fragment on
      it, the filter is applied to it.
@@ -1079,46 +1028,6 @@ void oc_state_loop_filter_frag_rows_c(oc_theora_state *_state,int *_bv,
            iplane->stride,_bv);
         }
       }
-
-
-#ifdef _TH_DEBUG_
-      {
-	int i,j,k,l;
-	unsigned char *src;
-	
-	for(l=0;l<5;l++){
-	  oc_fragment *f;
-	  switch(l){
-	  case 0: 
-	    f = frag;
-	    break;
-	  case 1: /* left */
-	    if(frag == frag0)continue;
-	    f = frag-1;
-	    break;
-	  case 2: /* bottom (top once flipped) */
-	    if(frag0 == frag_top)continue;
-	    f = frag - fplane->nhfrags;
-	    break;
-	  case 3: /* right */
-	    if(frag+1 >= frag_end) continue;
-	    f = frag + 1;
-	    break;
-	  case 4: /* top (bottom once flipped) */
-	    if(frag+fplane->nhfrags >= frag_bot)continue;
-	    f = frag + fplane->nhfrags;
-	    break;
-	  }
-	  
-	  src = f->buffer[_refi];
-	  for(i=0,j=0;j<8;j++){
-	    for(k=0;k<8;k++,i++)
-	      f->loop[i] = src[k];
-	    src+=iplane->stride;
-	  }
-	}
-      }
-#endif
       frag++;
     }
     frag0+=fplane->nhfrags;

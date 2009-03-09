@@ -1037,23 +1037,43 @@ private:
 };
 
 /**
- * The standard display item to paint the CSS box-shadow of a frame.
+ * The standard display item to paint the outer CSS box-shadows of a frame.
  */
-class nsDisplayBoxShadow : public nsDisplayItem {
+class nsDisplayBoxShadowOuter : public nsDisplayItem {
 public:
-  nsDisplayBoxShadow(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayBoxShadow);
+  nsDisplayBoxShadowOuter(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayBoxShadow() {
-    MOZ_COUNT_DTOR(nsDisplayBoxShadow);
+  virtual ~nsDisplayBoxShadowOuter() {
+    MOZ_COUNT_DTOR(nsDisplayBoxShadowOuter);
   }
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  NS_DISPLAY_DECL_NAME("BoxShadow")
+  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder, nsRegion* aVisibleRegion);
+  NS_DISPLAY_DECL_NAME("BoxShadowOuter")
+};
+
+/**
+ * The standard display item to paint the inner CSS box-shadows of a frame.
+ */
+class nsDisplayBoxShadowInner : public nsDisplayItem {
+public:
+  nsDisplayBoxShadowInner(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayBoxShadowInner);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayBoxShadowInner() {
+    MOZ_COUNT_DTOR(nsDisplayBoxShadowInner);
+  }
+#endif
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("BoxShadowInner")
 };
 
 /**

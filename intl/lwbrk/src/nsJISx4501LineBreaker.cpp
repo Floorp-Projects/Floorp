@@ -786,7 +786,7 @@ nsJISx4051LineBreaker::Next(const PRUnichar* aText, PRUint32 aLen,
                             PRUint32 aPos) 
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
-  NS_ASSERTION(aLen > aPos, "Illegal value (length > position)");
+  NS_ASSERTION(aLen > aPos, "Bad position passed to nsJISx4051LineBreaker::Next");
 
   PRInt32 nextPos = WordMove(aText, aLen, aPos, 1);
   return nextPos < PRInt32(aLen) ? nextPos : NS_LINEBREAKER_NEED_MORE_TEXT;
@@ -797,7 +797,8 @@ nsJISx4051LineBreaker::Prev(const PRUnichar* aText, PRUint32 aLen,
                             PRUint32 aPos) 
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
-  NS_ASSERTION(aLen >= aPos, "Illegal value (length >= position)");
+  NS_ASSERTION(aLen >= aPos && aPos > 0,
+               "Bad position passed to nsJISx4051LineBreaker::Prev");
 
   PRInt32 prevPos = WordMove(aText, aLen, aPos, -1);
   return prevPos > 0 ? prevPos : NS_LINEBREAKER_NEED_MORE_TEXT;

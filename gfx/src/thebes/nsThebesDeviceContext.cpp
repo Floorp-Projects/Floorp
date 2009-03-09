@@ -148,6 +148,12 @@ nsThebesDeviceContext::Shutdown()
     gSystemFonts = nsnull;
 }
 
+PRBool
+nsThebesDeviceContext::IsPrinterSurface()
+{
+  return(mPrintingSurface != NULL);
+}
+
 nsresult
 nsThebesDeviceContext::SetDPI()
 {
@@ -234,7 +240,7 @@ nsThebesDeviceContext::SetDPI()
         dpi = 96;
 
 #elif defined(MOZ_WIDGET_QT)
-		// TODO: get real DPI here with Qt methods
+        // TODO: get real DPI here with Qt methods
         dpi = 96;
 #else
 #error undefined platform dpi
@@ -422,6 +428,7 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     aFont->variant = NS_FONT_VARIANT_NORMAL;
     aFont->familyNameQuirks = fontStyle.familyNameQuirks;
     aFont->weight = fontStyle.weight;
+    aFont->stretch = fontStyle.stretch;
     aFont->decorations = NS_FONT_DECORATION_NONE;
     aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, UnscaledAppUnitsPerDevPixel());
     //aFont->langGroup = fontStyle.langGroup;
@@ -439,8 +446,8 @@ nsThebesDeviceContext::CheckFontExistence(const nsString& aFaceName)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetDepth(PRUint32& aDepth)
 {
-    nsCOMPtr<nsIScreen> primaryScreen;
     if (mDepth == 0) {
+        nsCOMPtr<nsIScreen> primaryScreen;
         mScreenManager->GetPrimaryScreen(getter_AddRefs(primaryScreen));
         primaryScreen->GetColorDepth(reinterpret_cast<PRInt32 *>(&mDepth));
     }

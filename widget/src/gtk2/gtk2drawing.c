@@ -56,6 +56,7 @@
 #define WINDOW_IS_MAPPED(window) ((window) && GDK_IS_WINDOW(window) && gdk_window_is_visible(window))
 
 static GtkWidget* gProtoWindow;
+static GtkWidget* gProtoLayout;
 static GtkWidget* gButtonWidget;
 static GtkWidget* gToggleButtonWidget;
 static GtkWidget* gButtonArrowWidget;
@@ -133,14 +134,13 @@ ensure_window_widget()
 static gint
 setup_widget_prototype(GtkWidget* widget)
 {
-    static GtkWidget* protoLayout;
     ensure_window_widget();
-    if (!protoLayout) {
-        protoLayout = gtk_fixed_new();
-        gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
+    if (!gProtoLayout) {
+        gProtoLayout = gtk_fixed_new();
+        gtk_container_add(GTK_CONTAINER(gProtoWindow), gProtoLayout);
     }
 
-    gtk_container_add(GTK_CONTAINER(protoLayout), widget);
+    gtk_container_add(GTK_CONTAINER(gProtoLayout), widget);
     gtk_widget_realize(widget);
     g_object_set_data(G_OBJECT(widget), "transparent-bg-hint", GINT_TO_POINTER(TRUE));
     return MOZ_GTK_SUCCESS;
@@ -964,8 +964,8 @@ moz_gtk_button_get_inner_border(GtkWidget* widget, GtkBorder* inner_border)
 static gint
 moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
                      GdkRectangle* cliprect, GtkWidgetState* state,
-                     gboolean selected, gboolean isradio,
-                     GtkTextDirection direction)
+                     gboolean selected, gboolean inconsistent,
+                     gboolean isradio, GtkTextDirection direction)
 {
     GtkStateType state_type = ConvertGtkState(state);
     GtkShadowType shadow_type = (selected)?GTK_SHADOW_IN:GTK_SHADOW_OUT;
@@ -1017,6 +1017,17 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
         }
     }
     else {
+       /*
+        * 'indeterminate' type on checkboxes. In GTK, the shadow type
+        * must also be changed for the state to be drawn.
+        */
+        if (inconsistent) {
+            gtk_toggle_button_set_inconsistent(GTK_TOGGLE_BUTTON(gCheckboxWidget), TRUE);
+            shadow_type = GTK_SHADOW_ETCHED_IN;
+        } else {
+            gtk_toggle_button_set_inconsistent(GTK_TOGGLE_BUTTON(gCheckboxWidget), FALSE);
+        }
+
         gtk_paint_check(style, drawable, state_type, shadow_type, cliprect, 
                         gCheckboxWidget, "checkbutton", x, y, width, height);
         if (state->focused) {
@@ -3042,7 +3053,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
         return moz_gtk_toggle_paint(drawable, rect, cliprect, state,
-                                    (gboolean) flags,
+                                    !!(flags & MOZ_GTK_WIDGET_CHECKED),
+                                    !!(flags & MOZ_GTK_WIDGET_INCONSISTENT),
                                     (widget == MOZ_GTK_RADIOBUTTON),
                                     direction);
         break;
@@ -3243,6 +3255,7 @@ moz_gtk_shutdown()
         gtk_widget_destroy(gProtoWindow);
 
     gProtoWindow = NULL;
+    gProtoLayout = NULL;
     gButtonWidget = NULL;
     gToggleButtonWidget = NULL;
     gButtonArrowWidget = NULL;

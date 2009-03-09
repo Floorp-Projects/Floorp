@@ -48,16 +48,19 @@
 #include "nsBoxLayoutState.h"
 #include "nsGridLayout2.h"
 
-nsIFrame*
-NS_NewGridRowGroupFrame (nsIPresShell* aPresShell,
-                         nsStyleContext* aContext,
-                         PRBool aIsRoot,
-                         nsIBoxLayout* aLayoutManager)
-{
-  return
-    new (aPresShell) nsGridRowGroupFrame (aPresShell, aContext, aIsRoot, aLayoutManager);
-} 
+already_AddRefed<nsIBoxLayout> NS_NewGridRowGroupLayout();
 
+nsIFrame*
+NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
+                        nsStyleContext* aContext)
+{
+  nsCOMPtr<nsIBoxLayout> layout = NS_NewGridRowGroupLayout();
+  if (!layout) {
+    return nsnull;
+  }
+
+  return new (aPresShell) nsGridRowGroupFrame(aPresShell, aContext, layout);
+} 
 
 
 /**

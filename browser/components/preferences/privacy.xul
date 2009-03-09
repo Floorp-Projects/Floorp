@@ -24,6 +24,8 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Roberto Estrada <roberto.estrada@yahoo.es>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +65,15 @@
                   name="pref.privacy.disable_button.view_cookies"
                   type="bool"/>
 
+      <!-- Location Bar -->
+      <preference id="browser.urlbar.autocomplete.enabled"
+                  name="browser.urlbar.autocomplete.enabled"
+                  type="bool"/>
+      <preference id="browser.urlbar.default.behavior"
+                  name="browser.urlbar.default.behavior"
+                  type="int"
+                  onchange="document.getElementById('browser.urlbar.autocomplete.enabled').updateElements();"/>
+
       <!-- History -->
       <preference id="browser.history_expire_days"
                   name="browser.history_expire_days"
@@ -88,11 +99,8 @@
       <!-- Clear Private Data -->
       <preference id="privacy.sanitize.sanitizeOnShutdown"
                   name="privacy.sanitize.sanitizeOnShutdown"
+                  onchange="gPrivacyPane._updateSanitizeSettingsButton();"
                   type="bool"/>
-      <preference id="privacy.sanitize.promptOnSanitize"
-                  name="privacy.sanitize.promptOnSanitize"
-                  type="bool"
-                  onchange="gPrivacyPane.updateClearNowButtonLabel();"/>
 
     </preferences>
     
@@ -103,6 +111,24 @@
     <!-- History -->
     <groupbox id="historyGroup">
       <caption label="&history.label;"/>
+
+      <hbox align="center">
+        <label id="locationBarSuggestionLabel"
+               control="locationBarSuggestion"
+               accesskey="&locbar.pre.accessKey;">&locbar.pre.label;</label>
+        <menulist id="locationBarSuggestion"
+                  preference="browser.urlbar.autocomplete.enabled"
+                  onsyncfrompreference="return gPrivacyPane.readSuggestionPref();"
+                  onsynctopreference="return gPrivacyPane.writeSuggestionPref();">
+          <menupopup>
+            <menuitem label="&locbar.both.label;" value="0"/>
+            <menuitem label="&locbar.history.label;" value="1"/>
+            <menuitem label="&locbar.bookmarks.label;" value="2"/>
+            <menuitem label="&locbar.nothing.label;" value="-1"/>
+          </menupopup>
+        </menulist>
+        <label>&locbar.post.label;</label>
+      </hbox>
 
       <hbox align="center">
         <checkbox id="rememberHistoryDays"
@@ -182,17 +208,6 @@
         <button id="clearDataSettings" label="&clearDataSettings.label;"
                 accesskey="&clearDataSettings.accesskey;"
                 oncommand="gPrivacyPane.showClearPrivateDataSettings();"/>
-      </hbox>
-      <hbox id="askClearBox">
-        <checkbox id="askBeforeClear" flex="1"
-                  preference="privacy.sanitize.promptOnSanitize"
-                  label="&askBeforeClear.label;"
-                  accesskey="&askBeforeClear.accesskey;"/>
-        <button id="clearDataNow" icon="clear"
-                label1="&clearDataNow.label;"
-                label2="&clearDataNow.label2;"
-                accesskey="&clearDataNow.accesskey;"
-                oncommand="gPrivacyPane.clearPrivateDataNow();"/>
       </hbox>
     </groupbox>
 

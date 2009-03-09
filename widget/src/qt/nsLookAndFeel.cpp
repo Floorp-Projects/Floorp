@@ -258,10 +258,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor__moz_field:
+    case eColor__moz_combobox:
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Base));
       break;
 
     case eColor__moz_fieldtext:
+    case eColor__moz_comboboxtext:
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Text));
       break;
 

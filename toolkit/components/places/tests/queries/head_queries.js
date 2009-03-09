@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const NS_APP_HISTORY_50_FILE = "UHist";
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
@@ -69,6 +71,11 @@ if (!profileDir) {
      persistent.value = true;
      if (prop == NS_APP_USER_PROFILE_50_DIR) {
        return dirSvc.get("CurProcD", Ci.nsIFile);
+     }
+     if (prop == NS_APP_HISTORY_50_FILE) {
+       var histFile = dirSvc.get("CurProcD", Ci.nsIFile);
+       histFile.append("history.dat");
+       return histFile;
      }
      throw Cr.NS_ERROR_FAILURE;
    },
@@ -163,10 +170,10 @@ function populateDB(aArray) {
       if (qdata.isVisit) {
         // Then we should add a visit for this node
         var referrer = qdata.referrer ? uri(qdata.referrer) : null;
-        var placeID = histsvc.addVisit(uri(qdata.uri), qdata.lastVisit,
+        var visitId = histsvc.addVisit(uri(qdata.uri), qdata.lastVisit,
                                        referrer, qdata.transType,
                                        qdata.isRedirect, qdata.sessionID);
-        do_check_true(placeID > 0);
+        do_check_true(visitId > 0);
       }
 
       if (qdata.isDetails) {
@@ -231,8 +238,15 @@ function populateDB(aArray) {
       }
 
       if (qdata.isBookmark) {
-        bmsvc.insertBookmark(qdata.parentFolder, uri(qdata.uri), qdata.index,
-                               qdata.title);
+        let itemId = bmsvc.insertBookmark(qdata.parentFolder, uri(qdata.uri),
+                                          qdata.index, qdata.title);
+        if (qdata.keyword)
+          bmsvc.setKeywordForBookmark(itemId, qdata.keyword);
+        if (qdata.dateAdded)
+          bmsvc.setItemDateAdded(itemId, qdata.dateAdded);
+        if (qdata.lastModified)
+          bmsvc.setItemLastModified(itemId, qdata.lastModified);
+
         LOG("added bookmark");
       }
 
@@ -297,9 +311,12 @@ function queryData(obj) {
   this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
   this.parentFolder = obj.parentFolder ? obj.parentFolder : bmsvc.placesRoot;
   this.feedURI = obj.feedURI ? obj.feedURI : "";
-  this.bmIndex = obj.bmIndex ? obj.bmIndex : bmsvc.DEFAULT_INDEX;
+  this.index = obj.index ? obj.index : bmsvc.DEFAULT_INDEX;
   this.isFolder = obj.isFolder ? obj.isFolder : false;
   this.contractId = obj.contractId ? obj.contractId : "";
+  this.lastModified = obj.lastModified ? obj.lastModified : today;
+  this.dateAdded = obj.dateAdded ? obj.dateAdded : today;
+  this.keyword = obj.keyword ? obj.keyword : "";
 
   // And now, the attribute for whether or not this object should appear in the
   // resulting query
@@ -310,15 +327,16 @@ function queryData(obj) {
 queryData.prototype = { }
 
 /**
- * Helper function to compare an array of query objects with a result set
- * NOTE: It assumes the array of query objects contains the SAME SORT as the
- *       result set and only checks the URI and title of the results.
- *       For deeper checks, you'll need to write your own method.
+ * Helper function to compare an array of query objects with a result set.
+ * It assumes the array of query objects contains the SAME SORT as the result
+ * set.  It checks the the uri, title, time, and bookmarkIndex properties of
+ * the results, where appropriate.
  */
 function compareArrayToResult(aArray, aRoot) {
   LOG("Comparing Array to Results");
 
-  if (!aRoot.containerOpen)
+  var wasOpen = aRoot.containerOpen;
+  if (!wasOpen)
     aRoot.containerOpen = true;
 
   // check expected number of results against actual
@@ -326,16 +344,26 @@ function compareArrayToResult(aArray, aRoot) {
   do_check_eq(expectedResultCount, aRoot.childCount);
 
   var inQueryIndex = 0;
-  for (var i=0; i < aArray.length; i++) {
+  for (var i = 0; i < aArray.length; i++) {
     if (aArray[i].isInQuery) {
       var child = aRoot.getChild(inQueryIndex);
       LOG("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
       LOG("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
-      //do_check_eq(aArray[i].uri, child.uri);
-      //do_check_eq(aArray[i].title, child.title);
+      if (!aArray[i].isFolder)
+        do_check_eq(aArray[i].uri, child.uri);
+      do_check_eq(aArray[i].title, child.title);
+      if (aArray[i].hasOwnProperty("lastVisit"))
+        do_check_eq(aArray[i].lastVisit, child.time);
+      if (aArray[i].hasOwnProperty("index") &&
+          aArray[i].index != bmsvc.DEFAULT_INDEX)
+        do_check_eq(aArray[i].index, child.bookmarkIndex);
+
       inQueryIndex++;
     }
   }
+
+  if (!wasOpen)
+    aRoot.containerOpen = false;
   LOG("Comparing Array to Results passes");
 }
 
@@ -390,4 +418,31 @@ function displayResultSet(aRoot) {
     LOG("Result Set URI: " + aRoot.getChild(i).uri + " Title: " +
         aRoot.getChild(i).title);
   }
+}
+
+/*
+ * Removes all bookmarks and checks for correct cleanup
+ */
+function remove_all_bookmarks() {
+  // Clear all bookmarks
+  bmsvc.removeFolderChildren(bmsvc.bookmarksMenuFolder);
+  bmsvc.removeFolderChildren(bmsvc.toolbarFolder);
+  bmsvc.removeFolderChildren(bmsvc.unfiledBookmarksFolder);
+  // Check for correct cleanup
+  check_no_bookmarks()
+}
+
+/*
+ * Checks that we don't have any bookmark
+ */
+function check_no_bookmarks() {
+  var query = histsvc.getNewQuery();
+  query.setFolders([bmsvc.toolbarFolder, bmsvc.bookmarksMenuFolder, bmsvc.unfiledBookmarksFolder], 3);
+  var options = histsvc.getNewQueryOptions();
+  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  do_check_eq(root.childCount, 0);
+  root.containerOpen = false;
 }

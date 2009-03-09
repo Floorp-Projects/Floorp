@@ -46,7 +46,7 @@
 
 // Helper classes
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsCOMArray.h"
@@ -75,6 +75,8 @@
      0x44ad,                                          \
    { 0xa7, 0x85, 0xb5, 0xa8, 0x63, 0xcf, 0x55, 0x88 } \
 }
+
+class nsContentShellInfo;
 
 class nsXULWindow : public nsIBaseWindow,
                     public nsIInterfaceRequestor,
@@ -160,7 +162,7 @@ protected:
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
    nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
    nsCOMPtr<nsIDocShellTreeItem> mPrimaryContentShell;
-   nsVoidArray             mContentShells; // array of doc shells by id
+   nsTArray<nsContentShellInfo*> mContentShells; // array of doc shells by id
    nsresult                mModalStatus;
    PRPackedBool            mContinueModalLoop;
    PRPackedBool            mDebuting;       // being made visible right now
@@ -183,7 +185,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
 
 // nsContentShellInfo
-// Used (in an nsVoidArray) to map shell IDs to nsIDocShellTreeItems.
+// Used to map shell IDs to nsIDocShellTreeItems.
 
 class nsContentShellInfo
 {

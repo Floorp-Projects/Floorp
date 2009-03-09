@@ -6,13 +6,13 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: decode.c 14385 2008-01-09 19:53:18Z giles $
-  
+    last mod: $Id: decode.c 15403 2008-10-16 12:44:05Z tterribe $
+
  ********************************************************************/
 
 #include <stdlib.h>
@@ -170,7 +170,7 @@ static int oc_dec_init(oc_dec_ctx *_dec,const th_info *_info,
      _dec->state.dequant_table_data[qti][pli];
   }
   oc_dequant_tables_init(_dec->state.dequant_tables,_dec->pp_dc_scale,
-			 &_setup->qinfo);
+   &_setup->qinfo);
   for(qi=0;qi<64;qi++){
     int qsum;
     qsum=0;
@@ -210,38 +210,28 @@ static void oc_dec_clear(oc_dec_ctx *_dec){
 
 static int oc_dec_frame_header_unpack(oc_dec_ctx *_dec){
   long val;
-
-  TH_DEBUG("\n>>>> beginning frame %ld\n\n",dframe);
-
   /*Check to make sure this is a data packet.*/
   theorapackB_read1(&_dec->opb,&val);
-  TH_DEBUG("frame type = %s, ",val==0?"video":"unknown");
   if(val!=0)return TH_EBADPACKET;
   /*Read in the frame type (I or P).*/
   theorapackB_read1(&_dec->opb,&val);
   _dec->state.frame_type=(int)val;
-  TH_DEBUG("%s\n",val?"predicted":"key");
   /*Read in the current qi.*/
   theorapackB_read(&_dec->opb,6,&val);
   _dec->state.qis[0]=(int)val;
-  TH_DEBUG("frame quality = { %ld ",val);
   theorapackB_read1(&_dec->opb,&val);
   if(!val)_dec->state.nqis=1;
   else{
     theorapackB_read(&_dec->opb,6,&val);
     _dec->state.qis[1]=(int)val;
-    TH_DEBUG("%ld ",val);
     theorapackB_read1(&_dec->opb,&val);
     if(!val)_dec->state.nqis=2;
     else{
       theorapackB_read(&_dec->opb,6,&val);
-      TH_DEBUG("%ld ",val);
       _dec->state.qis[2]=(int)val;
       _dec->state.nqis=3;
     }
   }
-  TH_DEBUG("}\n");
-
   if(_dec->state.frame_type==OC_INTRA_FRAME){
     /*Keyframes have 3 unused configuration bits, holdovers from VP3 days.
       Most of the other unused bits in the VP3 headers were eliminated.
@@ -305,7 +295,6 @@ static int oc_dec_partial_sb_flags_unpack(oc_dec_ctx *_dec){
   int    run_count;
   theorapackB_read1(&_dec->opb,&val);
   flag=(int)val;
-
   sb=_dec->state.sbs;
   sb_end=sb+_dec->state.nsbs;
   run_count=npartial=0;
@@ -319,7 +308,6 @@ static int oc_dec_partial_sb_flags_unpack(oc_dec_ctx *_dec){
       npartial+=flag;
       sb++;
     }
-
     while(--run_count>0&&sb<sb_end);
     if(full_run&&sb<sb_end){
       theorapackB_read1(&_dec->opb,&val);
@@ -349,7 +337,6 @@ static void oc_dec_coded_sb_flags_unpack(oc_dec_ctx *_dec){
   for(;sb->coded_partially;sb++);
   theorapackB_read1(&_dec->opb,&val);
   flag=(int)val;
-
   while(sb<sb_end){
     int full_run;
     run_count=oc_sb_run_unpack(&_dec->opb);
@@ -428,71 +415,6 @@ static void oc_dec_coded_flags_unpack(oc_dec_ctx *_dec){
   }
   /*TODO: run_count should be 0 here.
     If it's not, we should issue a warning of some kind.*/
-
-
-#ifdef _TH_DEBUG_
-  // assuming 4:2:0 right now; THIS IS WRONG but only an issue if dumping debug info
-  TH_DEBUG("predicted (partially coded frame)\n");
-  TH_DEBUG("superblock coded flags = {");
-  int x,y,i;
-  int w = _dec->state.info.frame_width;
-  int h = _dec->state.info.frame_height;
-
-  i=0;
-  for(y=0;y< (h+31)/32;y++){
-    TH_DEBUG("\n   ");
-    for(x=0;x< (w+31)/32;x++,i++)
-      TH_DEBUG("%x", (_dec->state.sbs[i].coded_partially!=0)|
-	       (_dec->state.sbs[i].coded_fully));
-  }
-
-  TH_DEBUG("\n   ");
-  for(y=0;y< (h+63)/64;y++){
-    TH_DEBUG("\n   ");
-    for(x=0;x< (w+63)/64;x++,i++)
-      TH_DEBUG("%x", (_dec->state.sbs[i].coded_partially!=0)|
-	       (_dec->state.sbs[i].coded_fully));
-  }
-  TH_DEBUG("\n   ");
-  for(y=0;y< (h+63)/64;y++){
-    TH_DEBUG("\n   ");
-    for(x=0;x< (w+63)/64;x++,i++)
-      TH_DEBUG("%x", (_dec->state.sbs[i].coded_partially!=0)|
-	       (_dec->state.sbs[i].coded_fully));
-  }
-  TH_DEBUG("\n}\n");
-
-  if(i!=_dec->state.nsbs)
-    TH_DEBUG("WARNING!  superblock count, raster %d != flat %d\n",
-	     i,_dec->state.nsbs);
-  
-  TH_DEBUG("block coded flags = {");
-
-  i=0;
-  for(y=0;y< (h+7)/8;y++){
-    TH_DEBUG("\n   ");
-    for(x=0;x< (w+7)/8;x++,i++)
-      TH_DEBUG("%x", (_dec->state.frags[i].coded!=0));
-  }
-  TH_DEBUG("\n   ");
-  for(y=0;y< (h+15)/16;y++){
-    TH_DEBUG("\n   ");
-    for(x=0;x< (w+15)/16;x++,i++)
-      TH_DEBUG("%x", (_dec->state.frags[i].coded!=0));
-  }
-  TH_DEBUG("\n   ");
-  for(y=0;y< (h+15)/16;y++){
-    TH_DEBUG("\n   ");
-    for(x=0;x< (w+15)/16;x++,i++)
-      TH_DEBUG("%x", (_dec->state.frags[i].coded!=0));
-  }
-  TH_DEBUG("\n}\n");
-  
-  if(i!=_dec->state.nfrags)
-    TH_DEBUG("WARNING!  block count, raster %d != flat %d\n",
-	     i,_dec->state.nfrags);
-#endif	      
-
 }
 
 
@@ -521,62 +443,42 @@ static void oc_dec_mb_modes_unpack(oc_dec_ctx *_dec){
   oc_mb               *mb;
   oc_mb               *mb_end;
   const int           *alphabet;
-  long                 val,j;
+  long                 val;
   int                  scheme0_alphabet[8];
   int                  mode_scheme;
   theorapackB_read(&_dec->opb,3,&val);
   mode_scheme=(int)val;
-  TH_DEBUG("mode encode scheme = %d\n",(int)val);
-
   if(mode_scheme==0){
     int mi;
     /*Just in case, initialize the modes to something.
       If the bitstream doesn't contain each index exactly once, it's likely
        corrupt and the rest of the packet is garbage anyway, but this way we
        won't crash, and we'll decode SOMETHING.*/
-    TH_DEBUG("mode scheme list = { ");
     /*LOOP VECTORIZES.*/
     for(mi=0;mi<OC_NMODES;mi++)scheme0_alphabet[mi]=OC_MODE_INTER_NOMV;
     for(mi=0;mi<OC_NMODES;mi++){
       theorapackB_read(&_dec->opb,3,&val);
       scheme0_alphabet[val]=OC_MODE_ALPHABETS[6][mi];
-      TH_DEBUG("%d ",(int)val);
     }
-    TH_DEBUG("}\n");
     alphabet=scheme0_alphabet;
-  }else 
-    alphabet=OC_MODE_ALPHABETS[mode_scheme-1];
-  if(mode_scheme==7)
-    mode_unpack=oc_clc_mode_unpack;
-  else 
-    mode_unpack=oc_vlc_mode_unpack;
+  }
+  else alphabet=OC_MODE_ALPHABETS[mode_scheme-1];
+  if(mode_scheme==7)mode_unpack=oc_clc_mode_unpack;
+  else mode_unpack=oc_vlc_mode_unpack;
   mb=_dec->state.mbs;
   mb_end=mb+_dec->state.nmbs;
-
-  TH_DEBUG("mode list = { ");
-  for(j=0;mb<mb_end;mb++){
+  for(;mb<mb_end;mb++){
     if(mb->mode!=OC_MODE_INVALID){
       int bi;
       for(bi=0;bi<4;bi++){
-	int fragi;
-	fragi=mb->map[0][bi];
-	if(fragi>=0&&_dec->state.frags[fragi].coded)break;
+        int fragi;
+        fragi=mb->map[0][bi];
+        if(fragi>=0&&_dec->state.frags[fragi].coded)break;
       }
-      if(bi<4){
-	mb->mode=alphabet[(*mode_unpack)(&_dec->opb)];
-	
-#ifdef _TH_DEBUG_
-	if((j&0x1f)==0)
-	  TH_DEBUG("\n   ");
-	TH_DEBUG("%d ",mb->mode);
-	j++;
-#endif
-
-      }else 
-	mb->mode=OC_MODE_INTER_NOMV;
+      if(bi<4)mb->mode=alphabet[(*mode_unpack)(&_dec->opb)];
+      else mb->mode=OC_MODE_INTER_NOMV;
     }
   }
-  TH_DEBUG("\n}\n");
 }
 
 
@@ -629,23 +531,16 @@ static void oc_dec_mv_unpack_and_frag_modes_fill(oc_dec_ctx *_dec){
   const int              *map_idxs;
   long                    val;
   int                     map_nidxs;
-#ifdef _TH_DEBUG_
-  int                     j=0;
-#endif
   oc_mv                   last_mv[2];
   oc_mv                   cbmvs[4];
   set_chroma_mvs=OC_SET_CHROMA_MVS_TABLE[_dec->state.info.pixel_fmt];
   theorapackB_read1(&_dec->opb,&val);
-  TH_DEBUG("motion vector table = %d\n",(int)val);
   mv_comp_unpack=val?oc_clc_mv_comp_unpack:oc_vlc_mv_comp_unpack;
   map_idxs=OC_MB_MAP_IDXS[_dec->state.info.pixel_fmt];
   map_nidxs=OC_MB_MAP_NIDXS[_dec->state.info.pixel_fmt];
   memset(last_mv,0,sizeof(last_mv));
   mb=_dec->state.mbs;
   mb_end=mb+_dec->state.nmbs;
-
-  TH_DEBUG("motion vectors = {");
-
   for(;mb<mb_end;mb++)if(mb->mode!=OC_MODE_INVALID){
     oc_fragment *frag;
     oc_mv        mbmv;
@@ -667,98 +562,62 @@ static void oc_dec_mv_unpack_and_frag_modes_fill(oc_dec_ctx *_dec){
     if(ncoded<=0)continue;
     mb_mode=mb->mode;
     switch(mb_mode){
-    case OC_MODE_INTER_MV_FOUR:
-      {
-	oc_mv       lbmvs[4];
-	int         bi;
-	/*Mark the tail of the list, so we don't accidentally go past it.*/
-	coded[ncoded]=-1;
-	for(bi=codedi=0;bi<4;bi++){
-	  if(coded[codedi]==bi){
-	    codedi++;
-	    frag=_dec->state.frags+mb->map[0][bi];
-	    frag->mbmode=mb_mode;
-	    frag->mv[0]=lbmvs[bi][0]=(signed char)(*mv_comp_unpack)(&_dec->opb);
-	    frag->mv[1]=lbmvs[bi][1]=(signed char)(*mv_comp_unpack)(&_dec->opb);
-
-#ifdef _TH_DEBUG_
-	    if((j&0x7)==0)
-	      TH_DEBUG("\n   ");
-	    TH_DEBUG("%+03d,%+03d ",frag->mv[0],frag->mv[1]);
-	    j++;
-#endif
-
-	  }
-	  else lbmvs[bi][0]=lbmvs[bi][1]=0;
-	}
-	if(codedi>0){
-	  last_mv[1][0]=last_mv[0][0];
-	  last_mv[1][1]=last_mv[0][1];
-	  last_mv[0][0]=lbmvs[coded[codedi-1]][0];
-	  last_mv[0][1]=lbmvs[coded[codedi-1]][1];
-	}
-	if(codedi<ncoded){
-	  (*set_chroma_mvs)(cbmvs,(const oc_mv *)lbmvs);
-	  for(;codedi<ncoded;codedi++){
-	    mapi=coded[codedi];
-	    bi=mapi&3;
-	    frag=_dec->state.frags+mb->map[mapi>>2][bi];
-	    frag->mbmode=mb_mode;
-	    frag->mv[0]=cbmvs[bi][0];
-	    frag->mv[1]=cbmvs[bi][1];
-	  }
-	}
-      }
-      break;
-    case OC_MODE_INTER_MV:
-      {
-	last_mv[1][0]=last_mv[0][0];
-	last_mv[1][1]=last_mv[0][1];
-	mbmv[0]=last_mv[0][0]=(signed char)(*mv_comp_unpack)(&_dec->opb);
-	mbmv[1]=last_mv[0][1]=(signed char)(*mv_comp_unpack)(&_dec->opb);
-
-#ifdef _TH_DEBUG_
-	if((j&0x7)==0)
-	  TH_DEBUG("\n   ");
-	TH_DEBUG("%+03d,%+03d ",mbmv[0],mbmv[1]);
-	j++;
-#endif
-
-      }
-      break;
-    case OC_MODE_INTER_MV_LAST:
-      {
+      case OC_MODE_INTER_MV_FOUR:{
+        oc_mv       lbmvs[4];
+        int         bi;
+        /*Mark the tail of the list, so we don't accidentally go past it.*/
+        coded[ncoded]=-1;
+        for(bi=codedi=0;bi<4;bi++){
+          if(coded[codedi]==bi){
+            codedi++;
+            frag=_dec->state.frags+mb->map[0][bi];
+            frag->mbmode=mb_mode;
+            frag->mv[0]=lbmvs[bi][0]=(signed char)(*mv_comp_unpack)(&_dec->opb);
+            frag->mv[1]=lbmvs[bi][1]=(signed char)(*mv_comp_unpack)(&_dec->opb);
+          }
+          else lbmvs[bi][0]=lbmvs[bi][1]=0;
+        }
+        if(codedi>0){
+          last_mv[1][0]=last_mv[0][0];
+          last_mv[1][1]=last_mv[0][1];
+          last_mv[0][0]=lbmvs[coded[codedi-1]][0];
+          last_mv[0][1]=lbmvs[coded[codedi-1]][1];
+        }
+        if(codedi<ncoded){
+          (*set_chroma_mvs)(cbmvs,(const oc_mv *)lbmvs);
+          for(;codedi<ncoded;codedi++){
+            mapi=coded[codedi];
+            bi=mapi&3;
+            frag=_dec->state.frags+mb->map[mapi>>2][bi];
+            frag->mbmode=mb_mode;
+            frag->mv[0]=cbmvs[bi][0];
+            frag->mv[1]=cbmvs[bi][1];
+          }
+        }
+      }break;
+      case OC_MODE_INTER_MV:{
+        last_mv[1][0]=last_mv[0][0];
+        last_mv[1][1]=last_mv[0][1];
+        mbmv[0]=last_mv[0][0]=(signed char)(*mv_comp_unpack)(&_dec->opb);
+        mbmv[1]=last_mv[0][1]=(signed char)(*mv_comp_unpack)(&_dec->opb);
+      }break;
+      case OC_MODE_INTER_MV_LAST:{
         mbmv[0]=last_mv[0][0];
         mbmv[1]=last_mv[0][1];
-      }
-      break;
-    case OC_MODE_INTER_MV_LAST2:
-      {
+      }break;
+      case OC_MODE_INTER_MV_LAST2:{
         mbmv[0]=last_mv[1][0];
         mbmv[1]=last_mv[1][1];
         last_mv[1][0]=last_mv[0][0];
         last_mv[1][1]=last_mv[0][1];
         last_mv[0][0]=mbmv[0];
         last_mv[0][1]=mbmv[1];
-      }
-      break;
-    case OC_MODE_GOLDEN_MV:
-      {
+      }break;
+      case OC_MODE_GOLDEN_MV:{
         mbmv[0]=(signed char)(*mv_comp_unpack)(&_dec->opb);
         mbmv[1]=(signed char)(*mv_comp_unpack)(&_dec->opb);
-
-#ifdef _TH_DEBUG_
-	if((j&0x7)==0)
-	  TH_DEBUG("\n   ");
-	TH_DEBUG("%+03d,%+03d ",mbmv[0],mbmv[1]);
-	j++;
-#endif
-
-      }
-      break;
-    default:
-      mbmv[0]=mbmv[1]=0;
-      break;
+      }break;
+      default:mbmv[0]=mbmv[1]=0;break;
     }
     /*4MV mode fills in the fragments itself.
       For all other modes we can use this common code.*/
@@ -773,9 +632,6 @@ static void oc_dec_mv_unpack_and_frag_modes_fill(oc_dec_ctx *_dec){
       }
     }
   }
-
-  TH_DEBUG("\n}\n");
-
 }
 
 static void oc_dec_block_qis_unpack(oc_dec_ctx *_dec){
@@ -798,7 +654,7 @@ static void oc_dec_block_qis_unpack(oc_dec_ctx *_dec){
   else{
     long val;
     int  flag;
-    int  nqi0;
+    int  nqi1;
     int  run_count;
     /*Otherwise, we decode a qi index for each fragment, using two passes of
       the same binary RLE scheme used for super-block coded bits.
@@ -810,14 +666,14 @@ static void oc_dec_block_qis_unpack(oc_dec_ctx *_dec){
       with the corresponding qi's for this frame.*/
     theorapackB_read1(&_dec->opb,&val);
     flag=(int)val;
-    run_count=nqi0=0;
+    run_count=nqi1=0;
     while(coded_fragi<coded_fragi_end){
       int full_run;
       run_count=oc_sb_run_unpack(&_dec->opb);
       full_run=run_count>=4129;
       do{
         _dec->state.frags[*coded_fragi++].qi=flag;
-        nqi0+=!flag;
+        nqi1+=flag;
       }
       while(--run_count>0&&coded_fragi<coded_fragi_end);
       if(full_run&&coded_fragi<coded_fragi_end){
@@ -830,7 +686,7 @@ static void oc_dec_block_qis_unpack(oc_dec_ctx *_dec){
       If it's not, we should issue a warning of some kind.*/
     /*If we have 3 different qi's for this frame, and there was at least one
        fragment with a non-zero qi, make the second pass.*/
-    if(_dec->state.nqis==3&&nqi0<ncoded_fragis){
+    if(_dec->state.nqis==3&&nqi1>0){
       /*Skip qii==0 fragments.*/
       for(coded_fragi=_dec->state.coded_fragis;
        _dec->state.frags[*coded_fragi].qi==0;coded_fragi++);
@@ -1362,7 +1218,7 @@ static int oc_dec_postprocess_init(oc_dec_ctx *_dec){
     if(_dec->pp_level<OC_PP_LEVEL_DEBLOCKC){
       _dec->variances=(int *)_ogg_realloc(_dec->variances,
        _dec->state.fplanes[0].nfrags*sizeof(_dec->variances[0]));
-      _dec->pp_frame_data=(unsigned char *)_ogg_realloc( 
+      _dec->pp_frame_data=(unsigned char *)_ogg_realloc(
        _dec->pp_frame_data,frame_sz*sizeof(_dec->pp_frame_data[0]));
       _dec->pp_frame_buf[0].width=_dec->state.info.frame_width;
       _dec->pp_frame_buf[0].height=_dec->state.info.frame_height;
@@ -1382,7 +1238,7 @@ static int oc_dec_postprocess_init(oc_dec_ctx *_dec){
       c_h=_dec->state.info.frame_height>>!(_dec->state.info.pixel_fmt&2);
       c_sz=c_w*c_h;
       frame_sz+=c_sz<<1;
-      _dec->pp_frame_data=(unsigned char *)_ogg_realloc( 
+      _dec->pp_frame_data=(unsigned char *)_ogg_realloc(
        _dec->pp_frame_data,frame_sz*sizeof(_dec->pp_frame_data[0]));
       _dec->pp_frame_buf[0].width=_dec->state.info.frame_width;
       _dec->pp_frame_buf[0].height=_dec->state.info.frame_height;
@@ -1503,9 +1359,6 @@ static void oc_dec_dc_unpredict_mcu_plane(oc_dec_ctx *_dec,
   for(fragy=fragy0;fragy<fragy_end;fragy++){
     for(fragx=0;fragx<fplane->nhfrags;fragx++,frag++){
       if(!frag->coded)continue;
-#ifdef _TH_DEBUG_
-      frag->quant[0] = frag->dc; /* stash un-predicted dc for debug output */
-#endif
       pred_last[OC_FRAME_FOR_MODE[frag->mbmode]]=frag->dc+=
        oc_frag_pred_dc(frag,fplane,fragx,fragy,pred_last);
       ncoded_fragis++;
@@ -1597,40 +1450,6 @@ static void oc_dec_frags_recon_mcu_plane(oc_dec_ctx *_dec,
   _pipe->uncoded_fragis[_pli]-=_pipe->nuncoded_fragis[_pli];
   oc_state_frag_copy(&_dec->state,_pipe->uncoded_fragis[_pli],
    _pipe->nuncoded_fragis[_pli],OC_FRAME_SELF,OC_FRAME_PREV,_pli);
-
-#ifdef _TH_DEBUG_
-  {
-    int i,j,k;
-    int framei=_dec->state.ref_frame_idx[OC_FRAME_SELF];
-    int ystride=_dec->state.ref_frame_bufs[framei][_pli].stride;
-    int *fragi_end = _pipe->coded_fragis[_pli];
-    int *fragi = fragi_end-_pipe->ncoded_fragis[_pli];
-
-    for(;fragi<fragi_end;fragi++){
-      oc_fragment   *frag=_dec->state.frags+*fragi;
-      unsigned char *src=frag->buffer[framei];
-      for(i=0,j=0;j<8;j++){
-	for(k=0;k<8;k++,i++)
-	  frag->recon[i] = src[k];
-	src+=ystride;
-      }
-    }
-
-    fragi = _pipe->uncoded_fragis[_pli];
-    fragi_end = fragi+_pipe->nuncoded_fragis[_pli];
-
-    for(;fragi<fragi_end;fragi++){
-      oc_fragment   *frag=_dec->state.frags+*fragi;
-      unsigned char *src=frag->buffer[framei];
-      for(i=0,j=0;j<8;j++){
-	for(k=0;k<8;k++,i++)
-	  frag->recon[i] = src[k];
-	src+=ystride;
-      }
-    }
-  }
-#endif
-    
 }
 
 /*Filter a horizontal block edge.*/
@@ -1909,7 +1728,7 @@ static void oc_dering_block(unsigned char *_idata,int _ystride,int _b,
 
 static void oc_dec_dering_frag_rows(oc_dec_ctx *_dec,th_img_plane *_img,
  int _pli,int _fragy0,int _fragy_end){
-  th_img_plane  *iplane;
+  th_img_plane      *iplane;
   oc_fragment_plane *fplane;
   oc_fragment       *frag;
   int               *variance;
@@ -1941,10 +1760,10 @@ static void oc_dec_dering_frag_rows(oc_dec_ctx *_dec,th_img_plane *_img,
       if(strong&&var>sthresh){
         oc_dering_block(idata+x,iplane->stride,b,
          _dec->pp_dc_scale[qi],_dec->pp_sharp_mod[qi],1);
-        if(_pli||(b&1)&&*(variance-1)>OC_DERING_THRESH4||
-         (b&2)&&variance[1]>OC_DERING_THRESH4||
-         (b&4)&&*(variance-fplane->nvfrags)>OC_DERING_THRESH4||
-         (b&8)&&variance[fplane->nvfrags]>OC_DERING_THRESH4){
+        if(_pli||!(b&1)&&*(variance-1)>OC_DERING_THRESH4||
+         !(b&2)&&variance[1]>OC_DERING_THRESH4||
+         !(b&4)&&*(variance-fplane->nvfrags)>OC_DERING_THRESH4||
+         !(b&8)&&variance[fplane->nvfrags]>OC_DERING_THRESH4){
           oc_dering_block(idata+x,iplane->stride,b,
            _dec->pp_dc_scale[qi],_dec->pp_sharp_mod[qi],1);
           oc_dering_block(idata+x,iplane->stride,b,
@@ -2039,7 +1858,6 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
   /*A completely empty packet indicates a dropped frame and is treated exactly
      like an inter frame with no coded blocks.
     Only proceed if we have a non-empty packet.*/
-
   if(_op->bytes!=0){
     oc_dec_pipeline_state pipe;
     th_ycbcr_buffer       stripe_buf;
@@ -2093,7 +1911,6 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
     }
     oc_dec_block_qis_unpack(_dec);
     oc_dec_residual_tokens_unpack(_dec);
-
     /*Update granule position.
       This must be done before the striped decode callbacks so that the
        application knows what to do with the frame data.*/
@@ -2203,91 +2020,6 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
       }
       notstart=1;
     }
-
-#ifdef _TH_DEBUG_
-    {
-      int x,y,i,j,k,xn,yn;
-      int plane;
-      int buf;
-
-      /* dump fragment DCT components */
-      for(plane=0;plane<3;plane++){
-	char *plstr;
-	int offset;
-	switch(plane){
-	case 0:
-	  plstr="Y";
-	  xn = _dec->state.info.frame_width>>3;
-	  yn = _dec->state.info.frame_height>>3;
-	  offset = 0; 
-	  break;
-	case 1:
-	  plstr="U";
-	  xn = _dec->state.info.frame_width>>4;
-	  yn = _dec->state.info.frame_height>>4;
-	  offset = xn*yn*4;
-	  break;
-	case 2:
-	  plstr="V";
-	  xn = _dec->state.info.frame_width>>4;
-	  yn = _dec->state.info.frame_height>>4;
-	  offset = xn*yn*5;
-	  break;
-	}
-	for(y=0;y<yn;y++){
-	  for(x=0;x<xn;x++,i++){
-	    
-	    for(buf=0;buf<4;buf++){
-	      int *ptr;
-	      char *bufn;
-	      int codecheck=0;
-
-	      i = offset + y*xn + x;
-
-	      switch(buf){
-	      case 0:
-		codecheck=1;
-		bufn = "coded";
-		ptr = _dec->state.frags[i].quant;
-		break;
-	      case 1:
-		codecheck=1;
-		bufn = "coeff";
-		ptr = _dec->state.frags[i].freq;
-		break;
-	      case 2:
-		codecheck=1;
-		bufn = "idct";
-		ptr = _dec->state.frags[i].time;
-		break;
-	      case 3:
-		bufn = "recon";
-		ptr = _dec->state.frags[i].loop;
-		break;
-	      }
-	      
-	      
-	      TH_DEBUG("%s %s [%d][%d] = {",bufn,plstr,x,y);
-	      if(codecheck && !_dec->state.frags[i].coded)
-		TH_DEBUG(" not coded }\n");
-	      else{
-		int l=0;
-		for(j=0;j<8;j++){
-		  TH_DEBUG("\n   ");
-		  for(k=0;k<8;k++,l++){
-		    TH_DEBUG("%d ",ptr[l]);
-		  }
-		}
-		TH_DEBUG(" }\n");
-	      }
-	    }
-	    TH_DEBUG("\n");
-	  }
-	}
-      }
-    }
-#endif
-
     /*Finish filling in the reference frame borders.*/
     for(pli=0;pli<3;pli++)oc_state_borders_fill_caps(&_dec->state,refi,pli);
     /*Update the reference frame indices.*/

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xbl="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  >
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="serverpost_base">
+    <implementation>
+      <method name="getSuccessfulControls">
+        <parameter name="aNode"/>
+        <body><![CDATA[
+          dump("<html:input type="file"/> has not been tested yet!  This may not work!!!\n");
+        ]]></body>
+      </method>
+
+      <method name='finalizeAndSubmit'>
+        <body>
+	  return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>
+
+  <html:style type="text/css"><![CDATA[
+  @namespace xbl url("http://www.mozilla.org/xbl");
+  @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+  xbl|bindings {
+    display: none;
+  }
+
+  xul|serverpost {
+    -moz-binding: url("#serverpost_base");
+  }
+
+  ]]></html:style>
+
+  <serverpost/>
+  <serverpost/>
+</window>

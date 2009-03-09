@@ -55,9 +55,6 @@
   #include "windows.h"
 #endif /* _WIN32 */
 
-#ifdef MOZ_SECURITY
-#include "sechash.h"
-#endif
 #include "plstr.h"
 #include "pldhash.h"
 #include "plbase64.h"

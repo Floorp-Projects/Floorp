@@ -61,7 +61,7 @@ typedef short EDirection;
 
 [ptr] native nsIPresShellPtr(nsIPresShell);
 
-[scriptable, uuid(2f76d0bb-d90d-4454-905e-9b0cc39a701c)]
+[scriptable, uuid(96b60ba0-634a-41e4-928e-78ab0b3c4b46)]
 
 interface nsIEditor  : nsISupports
 {
@@ -115,8 +115,11 @@ interface nsIEditor  : nsISupports
   /**
    * preDestroy is called before the editor goes away, and gives the editor a
    * chance to tell its documentStateObservers that the document is going away.
+   * @param aDestroyingFrames set to true when the frames being edited
+   * are being destroyed (so there is no need to modify any nsISelections,
+   * nor is it safe to do so)
    */
-  void preDestroy();
+  void preDestroy(in boolean aDestroyingFrames);
 
   /** edit flags for this editor.  May be set at any time. */
   attribute unsigned long flags;

@@ -1,0 +1,44 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=466751
+-->
+<head>
+  <title>Test for Bug 466751</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=466751">Mozilla Bug 466751</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="test" />
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript"><![CDATA[
+
+/** Test for Bug 466751 **/
+
+var el = $("test");
+var result, message;
+
+try {
+  el.innerHTML = '<div ">bla</div>';
+} catch (ex) {
+  // ex.toString() == [Exception... "Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMNSHTMLElement.innerHTML]"  nsresult: "0x80004003 (NS_ERROR_INVALID_POINTER)"  location: "JS frame :: file:///Users/gavin/mobile/mozilla/content/base/test/test_bug466751.xhtml :: <TOP_LEVEL> :: line 30"  data: no]
+  // ex.result == NS_ERROR_DOM_SYNTAX_ERR
+  // ex.message == Component returned failure code: 0x80004003 (NS_ERROR_INVALID_POINTER) [nsIDOMNSHTMLElement.innerHTML]
+  result = ex.result;
+  message = ex.message;
+}
+
+const NS_ERROR_DOM_SYNTAX_ERR = 0x8053000C;
+ok(/An invalid or illegal string was specified/.test(message), "threw NS_ERROR_DOM_SYNTAX_ERR message");
+is(result, NS_ERROR_DOM_SYNTAX_ERR, "threw NS_ERROR_DOM_SYNTAX_ERR result");
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,34 @@
+<html> <head>
+<title></title>
+</head>
+
+<script type="text/javascript">
+var scriptItem = "untouched";
+
+function checkLoads() {
+  // Make sure the javascript did not load.
+  window.parent.is(scriptItem, "untouched", "Should not load bad javascript");
+
+  // Make sure the css did not load.
+  var elt = document.getElementById("styleCheck");
+  var style = document.defaultView.getComputedStyle(elt, "");
+  window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
+
+  window.parent.SimpleTest.finish();
+}
+
+</script>
+
+<!-- Try loading from a malware javascript URI -->
+<script type="text/javascript" src="http://malware.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
+
+<!-- Try loading from a malware css URI
+<link rel="stylesheet" type="text/css" href="http://malware.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+
+<!-- Try loading a marked-as-malware css through an @import from a clean URI -->
+<link rel="stylesheet" type="text/css" href="import.css"></link>
+
+<body onload="checkLoads()">
+The following should not be hidden:
+<div id="styleCheck">STYLE TEST</div>
+</body> </html>

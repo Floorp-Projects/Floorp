@@ -56,7 +56,25 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include ../platlibs.mk
+ifeq ($(OS_ARCH), WINNT)
+
+EXTRA_LIBS += \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.$(LIB_SUFFIX) \
+	$(NULL)
+
+else
+
+EXTRA_SHARED_LIBS += \
+	-L$(NSPR_LIB_DIR) \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+
+endif
+
 
 # sign any and all shared libraries that contain the word freebl
 

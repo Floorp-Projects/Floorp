@@ -38,7 +38,7 @@
 #define nsTableFrame_h__
 
 #include "nscore.h"
-#include "nsVoidArray.h"
+#include "nsTPtrArray.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
@@ -140,8 +140,7 @@ class nsTableFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_QUERYFRAME
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
@@ -214,9 +213,6 @@ public:
   // Get the offset from the border box to the area where the row groups fit
   nsMargin GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const;
 
-  // Get the offset from the border box to the area where the content fits
-  nsMargin GetContentAreaOffset(const nsHTMLReflowState* aReflowState) const;
-
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
                                  
@@ -285,26 +281,26 @@ public:
                                   const nsRect& aDirtyRect,
                                   nsPoint aPt);
 
-  // Get the outer half (i.e., the part outside the height and width of
-  // the table) of the largest segment (?) of border-collapsed border on
-  // the table on each side, or 0 for non border-collapsed tables.
+  /** Get the outer half (i.e., the part outside the height and width of
+   *  the table) of the largest segment (?) of border-collapsed border on
+   *  the table on each side, or 0 for non border-collapsed tables.
+   */
   nsMargin GetOuterBCBorder() const;
 
-  // Same as above, but only if it's included from the border-box width
-  // of the table (nonzero only in quirks mode).
+  /** Same as above, but only if it's included from the border-box width
+   *  of the table.
+   */
   nsMargin GetIncludedOuterBCBorder() const;
 
-  // Same as above, but only if it's excluded from the border-box width
-  // of the table (nonzero only in standards mode).  This is the area
-  // that leaks out into the margin (or potentially past it, if there is
-  // no margin).
+  /** Same as above, but only if it's excluded from the border-box width
+   *  of the table.  This is the area that leaks out into the margin
+   *  (or potentially past it, if there is no margin).
+   */
   nsMargin GetExcludedOuterBCBorder() const;
 
   /** Get width of table + colgroup + col collapse: elements that
    *  continue along the length of the whole left side.
    *  see nsTablePainter about continuous borders
-   *  @param aPixelsToTwips - conversion factor
-   *  @param aGetInner - get only inner half of border width
    */
   nscoord GetContinuousLeftBCBorderWidth() const;
   friend class nsDelayedCalcBCBorders;
@@ -485,26 +481,26 @@ public:
   virtual void AppendCell(nsTableCellFrame& aCellFrame,
                           PRInt32           aRowIndex);
 
-  virtual void InsertCells(nsVoidArray&    aCellFrames, 
-                           PRInt32         aRowIndex, 
-                           PRInt32         aColIndexBefore);
+  virtual void InsertCells(nsTArray<nsTableCellFrame*>& aCellFrames,
+                           PRInt32                      aRowIndex,
+                           PRInt32                      aColIndexBefore);
 
   virtual void RemoveCell(nsTableCellFrame* aCellFrame,
                           PRInt32           aRowIndex);
 
-  void AppendRows(nsTableRowGroupFrame& aRowGroupFrame,
-                  PRInt32               aRowIndex,
-                  nsVoidArray&          aRowFrames);
+  void AppendRows(nsTableRowGroupFrame&       aRowGroupFrame,
+                  PRInt32                     aRowIndex,
+                  nsTArray<nsTableRowFrame*>& aRowFrames);
 
   PRInt32 InsertRow(nsTableRowGroupFrame& aRowGroupFrame,
                     nsIFrame&             aFrame,
                     PRInt32               aRowIndex,
                     PRBool                aConsiderSpans);
 
-  PRInt32 InsertRows(nsTableRowGroupFrame& aRowGroupFrame,
-                     nsVoidArray&          aFrames,
-                     PRInt32               aRowIndex,
-                     PRBool                aConsiderSpans);
+  PRInt32 InsertRows(nsTableRowGroupFrame&       aRowGroupFrame,
+                     nsTArray<nsTableRowFrame*>& aFrames,
+                     PRInt32                     aRowIndex,
+                     PRBool                      aConsiderSpans);
 
   virtual void RemoveRows(nsTableRowFrame& aFirstRowFrame,
                           PRInt32          aNumRowsToRemove,
@@ -768,7 +764,7 @@ public:
   void ResetRowIndices(nsIFrame* aFirstRowGroupFrame = nsnull,
                        nsIFrame* aLastRowGroupFrame = nsnull);
 
-  nsVoidArray& GetColCache();
+  nsTArray<nsTableColFrame*>& GetColCache();
 
   /** Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
     */
@@ -786,8 +782,8 @@ protected:
   void SetColumnDimensions(nscoord         aHeight,
                            const nsMargin& aReflowState);
 
-  PRInt32 CollectRows(nsIFrame*       aFrame,
-                      nsVoidArray&    aCollection);
+  PRInt32 CollectRows(nsIFrame*                   aFrame,
+                      nsTArray<nsTableRowFrame*>& aCollection);
 
 public: /* ----- Cell Map public methods ----- */
 
@@ -840,7 +836,6 @@ public:
   void Dump(PRBool          aDumpRows,
             PRBool          aDumpCols, 
             PRBool          aDumpCellMap);
-  static void DumpTableFrames(nsIFrame* aFrame);
 #endif
 
 protected:
@@ -848,7 +843,7 @@ protected:
   void DumpRowGroup(nsIFrame* aChildFrame);
 #endif
   // DATA MEMBERS
-  nsAutoVoidArray mColFrames;  
+  nsAutoTPtrArray<nsTableColFrame, 8> mColFrames;
 
   struct TableBits {
     PRUint32 mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow
@@ -954,7 +949,7 @@ inline nsFrameList& nsTableFrame::GetColGroups()
   return static_cast<nsTableFrame*>(GetFirstInFlow())->mColGroups;
 }
 
-inline nsVoidArray& nsTableFrame::GetColCache()
+inline nsTArray<nsTableColFrame*>& nsTableFrame::GetColCache()
 {
   return mColFrames;
 }

@@ -74,7 +74,7 @@ html|*.textbox-textarea {
   font: inherit;
 }
 
-.textbox-input-box menupopup {
+.textbox-contextmenu {
   cursor: default;
 }
 
@@ -125,10 +125,6 @@ textbox.plain {
 
 .textbox-search-clear:not([disabled]) {
   cursor: default;
-}
-
-.textbox-search-clear[chromedir="rtl"] {
-  list-style-image: url(chrome://global/skin/icons/Search-close-rtl.png);
 }
 
 .textbox-search-clear:not([disabled]):hover ,

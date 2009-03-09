@@ -90,6 +90,31 @@ protected:
         PRBool       mFound;
     };
 
+    /**
+     * Describes a certain primitive type in the database.
+     *
+     * Possible Values Are:
+     *  INDEX - To check for the existence of an index
+     *  TABLE - To check for the existence of a table
+     */
+    enum DatabaseElementType {
+        INDEX,
+        TABLE
+    };
+
+    /**
+     * Determines if the specified primitive exists.
+     *
+     * @param aElementType
+     *        The type of element to check the existence of
+     * @param aElementName
+     *        The name of the element to check for
+     * @returns true if element exists, false otherwise
+     */
+    nsresult DatabaseElementExists(enum DatabaseElementType aElementType,
+                                   const nsACString& aElementName,
+                                   PRBool *_exists);
+
     void HandleSqliteError(const char *aSqlStatement);
     static PLDHashOperator s_FindFuncEnum(const nsACString &aKey,
                                           nsISupports* aData, void* userArg);
@@ -115,6 +140,13 @@ protected:
      * field.
      */
     nsCOMPtr<nsIThread> mAsyncExecutionThread;
+    /**
+     * Set to true by Close() prior to actually shutting down the thread.  This
+     * lets getAsyncExecutionTarget() know not to hand out any more thread
+     * references (or to create the thread in the first place).  This variable
+     * should be accessed while holding the mAsyncExecutionMutex.
+     */
+    PRBool mAsyncExecutionThreadShuttingDown;
 
     PRLock *mTransactionMutex;
     PRBool mTransactionInProgress;

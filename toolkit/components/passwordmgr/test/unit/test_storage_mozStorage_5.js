@@ -32,10 +32,10 @@ LoginTest.deleteFile(OUTDIR, "signons.sqlite");
 
 /*
  * ---------------------- Initialization ----------------------
- * Pass in a legacy file that has problems (bad header). On call to
- * getAllLogins should throw "Initialization failed". We replace the bad file
- * with a good one, and call getAllLogins again, which will attempt to import
- * again and should succeed because it has a good file now.
+ * Pass in a legacy file that has problems (bad header). Initialization should
+ * throw "Initialization failed". We replace the bad file with a good one,
+ * and call getAllLogins again, which will attempt to import again and should
+ * succeed because it has a good file now.
  */
 
 /* ========== 2 ========== */
@@ -43,14 +43,7 @@ testnum++;
 var testdesc = "Initialization, reinitialization, & importing"
 
 var storage;
-// signons-00.txt has bad header; use signons.sqlite
-storage = LoginTest.initStorage(INDIR, "signons-00.txt");
-try {
-    storage.getAllLogins({});
-} catch (e) {
-    var error = e;
-}
-LoginTest.checkExpectedError(/Initialization failed/, error);
+storage = LoginTest.initStorage(INDIR, "signons-00.txt", null, null, /Initialization failed/);
 
 // Since initWithFile will not replace the DB if not passed one, we can just
 // call LoginTest.initStorage with with signons-06.txt (1 disabled, 1 login).
@@ -87,20 +80,20 @@ corruptDB.copyTo(PROFDIR, filename)
 // sanity check that the file copy worked
 do_check_true(cfile.exists());
 
-// will init mozStorage module with default filename.
-storage = LoginTest.reloadStorage(OUTDIR, filename);
-try {
-    storage.getAllLogins({});
-} catch (e) {
-    var error = e;
-}
-LoginTest.checkExpectedError(/Initialization failed/, error);
+// will init mozStorage module with corrupt database, init should fail
+storage = LoginTest.reloadStorage(OUTDIR, filename, /Initialization failed/);
 
 // check that the backup file exists
 var buFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
 buFile.initWithPath(OUTDIR);
 buFile.append(filename + ".corrupt");
 do_check_true(buFile.exists());
+
+// check that the original corrupt file has been deleted
+do_check_false(cfile.exists());
+
+// initialize the storage module again
+storage = LoginTest.reloadStorage(OUTDIR, filename);
 
 // use the storage module again, should work now
 storage.addLogin(testuser1);

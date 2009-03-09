@@ -5,10 +5,12 @@ function url(spec) {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   return ios.newURI(spec, null, null);
 }
-
 var gPageA = null;
 var gPageB = null;
 
+// cached data from events
+var gTabOpenPageA = null;
+var gTabOpenPageB = null;
 var gTabOpenCount = 0;
 var gTabCloseCount = 0;
 var gTabMoveCount = 0;
@@ -33,24 +35,30 @@ function test() {
 
   function onPageAFirstLoad(event) {
     gPageA.events.removeListener("load", onPageAFirstLoad);
+    is(gPageA.uri.spec, event.data.uri.spec, "Checking event browser tab is equal to page A");
 
     gPageB = activeWin.open(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
-    gPageB.events.addListener("load", function() {
-      executeSoon(afterOpen);
-    });
+    gPageB.events.addListener("load", delayAfterOpen);
     gPageB.focus();
 
     is(activeWin.tabs.length, 3, "Checking length of 'Browser.tabs' after opening a second additional tab");
     is(activeWin.activeTab.index, gPageB.index, "Checking 'Browser.activeTab' after setting focus");
   }
 
+  function delayAfterOpen() {
+    executeSoon(afterOpen);
+  }
+
   // need to wait for the url's to be refreshed during the load
   function afterOpen(event) {
-    gPageB.events.removeListener("load", afterOpen);
-
+    gPageB.events.removeListener("load", delayAfterOpen);
+    // check actuals
     is(gPageA.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentA.html", "Checking 'BrowserTab.uri' after opening");
     is(gPageB.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentB.html", "Checking 'BrowserTab.uri' after opening");
 
+    // check cached values from TabOpen event
+    is(gPageA.uri.spec, gTabOpenPageA.uri.spec, "Checking first browser tab open is equal to page A");
+    is(gPageB.uri.spec, gTabOpenPageB.uri.spec, "Checking second browser tab open is equal to page B");
     // check event
     is(gTabOpenCount, 2, "Checking event handler for tab open");
 
@@ -60,6 +68,9 @@ function test() {
     is(test1.innerHTML, "A", "Checking content of element in content DOM");
 
     // test moving tab
+    is(gTabMoveCount, 0, "Checking initial tab move count");
+
+    // move the tab
     gPageA.moveToEnd();
     is(gPageA.index, 2, "Checking index after moving tab");
 
@@ -78,6 +89,10 @@ function test() {
         }
       },
 
+      onLocationChange: function() { return 0; },
+      onProgressChange: function() { return 0; },
+      onStatusChange: function() { return 0; },
+      onSecurityChange: function() { return 0; },
       QueryInterface: function(iid) {
         if (iid.equals(Ci.nsISupportsWeakReference) ||
            iid.equals(Ci.nsIWebProgressListener) ||
@@ -89,7 +104,7 @@ function test() {
     });
 
     // test loading new content with a frame into a tab
-    // the event will be checked in afterClose
+    // the event will be checked in onPageBLoadComplete
     gPageB.events.addListener("load", onPageBLoadWithFrames);
     gPageB.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentWithFrames.html"));
   }
@@ -104,7 +119,7 @@ function test() {
     is(gPageLoadCount, 1, "Checking load count after loading new content with a frame");
 
     // test loading new content into a tab
-    // the event will be checked in onPageLoad
+    // the event will be checked in onPageASecondLoad
     gPageA.events.addListener("load", onPageASecondLoad);
     gPageA.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
   }
@@ -125,11 +140,16 @@ function test() {
     finish();
   }
 }
-
 function onTabOpen(event) {
   gTabOpenCount++;
-}
 
+  // cache these values so we can check them later (after loading completes)
+  if (gTabOpenCount == 1)
+    gTabOpenPageA = event.data;
+
+  if (gTabOpenCount == 2)
+    gTabOpenPageB = event.data;
+}
 function onTabClose(event) {
   gTabCloseCount++;
 }

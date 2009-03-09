@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: internal.h 14714 2008-04-12 01:04:43Z giles $
+    last mod: $Id: internal.h 15469 2008-10-30 12:49:42Z tterribe $
 
  ********************************************************************/
 
@@ -27,19 +27,6 @@
 # include "dec/huffman.h"
 # include "dec/quant.h"
 
-/* debug macros */
-#if defined(_MSC_VER) && _MSC_VER < 1400
-static const dframe = 0;
-static void TH_DEBUG(const char *fmt, ...) {}
-#elif defined(_TH_DEBUG_)
-#include <stdio.h>
-extern long dframe;
-extern FILE *debugout;
-#define TH_DEBUG(...) fprintf(debugout, __VA_ARGS__)
-#else
-#define TH_DEBUG(...)
-#endif
-
 /*Thank you Microsoft, I know the order of operations.*/
 # if defined(_MSC_VER)
 #  pragma warning(disable:4554) /* order of operations */
@@ -47,7 +34,7 @@ extern FILE *debugout;
 # endif
 
 /*This library's version.*/
-# define OC_VENDOR_STRING "Xiph.Org libTheora I 20071025 3 2 1"
+# define OC_VENDOR_STRING "Xiph.Org libTheora I 20081020 3 2 1"
 
 /*Theora bitstream version.*/
 # define TH_VERSION_MAJOR (3)
@@ -224,10 +211,14 @@ typedef struct{
   unsigned        invalid:1;
   /*The quality index used for this fragment's AC coefficients.*/
   unsigned        qi:6;
-  /*The mode of the macroblock this fragment belongs to.*/
-  int             mbmode:8;
-  /*The prediction-corrected DC component.*/
-  int             dc:16;
+  /*The mode of the macroblock this fragment belongs to.
+    Note that the C standard requires an explicit signed keyword for bitfield
+     types, since some compilers may treat them as unsigned without it.*/
+  signed int      mbmode:8;
+  /*The prediction-corrected DC component.
+    Note that the C standard requires an explicit signed keyword for bitfield
+     types, since some compilers may treat them as unsigned without it.*/
+  signed int      dc:16;
   /*A pointer to the portion of an image covered by this fragment in several
      images.
     The first three are reconstructed frame buffers, while the last is the
@@ -241,14 +232,6 @@ typedef struct{
   oc_border_info *border;
   /*The motion vector used for this fragment.*/
   oc_mv           mv;
-
-#ifdef _TH_DEBUG_
-  int quant[64];
-  int freq[64];
-  int time[64];
-  int recon[64];
-  int loop[64];
-#endif
 }oc_fragment;
 
 
@@ -299,77 +282,77 @@ typedef struct{
 /*Common state information between the encoder and decoder.*/
 struct oc_theora_state{
   /*The stream information.*/
-  th_info           info;
+  th_info             info;
   /*Table for shared accelerated functions.*/
-  oc_base_opt_vtable    opt_vtable;
+  oc_base_opt_vtable  opt_vtable;
   /*CPU flags to detect the presence of extended instruction sets.*/
-  ogg_uint32_t          cpu_flags;
+  ogg_uint32_t        cpu_flags;
   /*The fragment plane descriptions.*/
-  oc_fragment_plane     fplanes[3];
+  oc_fragment_plane   fplanes[3];
   /*The total number of fragments in a single frame.*/
-  int                   nfrags;
+  int                 nfrags;
   /*The list of fragments, indexed in image order.*/
-  oc_fragment          *frags;
+  oc_fragment        *frags;
   /*The total number of super blocks in a single frame.*/
-  int                   nsbs;
+  int                 nsbs;
   /*The list of super blocks, indexed in image order.*/
-  oc_sb                *sbs;
+  oc_sb              *sbs;
   /*The number of macro blocks in the X direction.*/
-  int                   nhmbs;
+  int                 nhmbs;
   /*The number of macro blocks in the Y direction.*/
-  int                   nvmbs;
+  int                 nvmbs;
   /*The total number of macro blocks.*/
-  int                   nmbs;
+  int                 nmbs;
   /*The list of macro blocks, indexed in super block order.
     That is, the macro block corresponding to the macro block mbi in (luma
      plane) super block sbi is (sbi<<2|mbi).*/
-  oc_mb                *mbs;
+  oc_mb              *mbs;
   /*The list of coded fragments, in coded order.*/
-  int                  *coded_fragis;
+  int                *coded_fragis;
   /*The number of coded fragments in each plane.*/
-  int                   ncoded_fragis[3];
+  int                 ncoded_fragis[3];
   /*The list of uncoded fragments.
     This just past the end of the list, which is in reverse order, and
      uses the same block of allocated storage as the coded_fragis list.*/
-  int                  *uncoded_fragis;
+  int                *uncoded_fragis;
   /*The number of uncoded fragments in each plane.*/
-  int                   nuncoded_fragis[3];
+  int                 nuncoded_fragis[3];
   /*The list of coded macro blocks in the Y plane, in coded order.*/
-  int                  *coded_mbis;
+  int                *coded_mbis;
   /*The number of coded macro blocks in the Y plane.*/
-  int                   ncoded_mbis;
+  int                 ncoded_mbis;
   /*A copy of the image data used to fill the input pointers in each fragment.
     If the data pointers or strides change, these input pointers must be
      re-populated.*/
-  th_ycbcr_buffer   input;
+  th_ycbcr_buffer     input;
   /*The number of unique border patterns.*/
-  int                   nborders;
+  int                 nborders;
   /*The storage for the border info for all border fragments.
     This data is pointed to from the appropriate fragments.*/
-  oc_border_info        borders[16];
+  oc_border_info      borders[16];
   /*The index of the buffers being used for each OC_FRAME_* reference frame.*/
-  int                   ref_frame_idx[3];
+  int                 ref_frame_idx[3];
   /*The actual buffers used for the previously decoded frames.*/
-  th_ycbcr_buffer   ref_frame_bufs[3];
+  th_ycbcr_buffer     ref_frame_bufs[3];
   /*The storage for the reference frame buffers.*/
-  unsigned char        *ref_frame_data;
+  unsigned char      *ref_frame_data;
   /*The frame number of the last keyframe.*/
-  ogg_int64_t           keyframe_num;
+  ogg_int64_t         keyframe_num;
   /*The frame number of the current frame.*/
-  ogg_int64_t           curframe_num;
+  ogg_int64_t         curframe_num;
   /*The granpos of the current frame.*/
-  ogg_int64_t           granpos;
+  ogg_int64_t         granpos;
   /*The type of the current frame.*/
-  int                   frame_type;
+  int                 frame_type;
   /*The quality indices of the current frame.*/
-  int                   qis[3];
+  int                 qis[3];
   /*The number of quality indices used in the current frame.*/
-  int                   nqis;
+  int                 nqis;
   /*The dequantization tables.*/
-  oc_quant_table       *dequant_tables[2][3];
-  oc_quant_tables       dequant_table_data[2][3];
+  oc_quant_table     *dequant_tables[2][3];
+  oc_quant_tables     dequant_table_data[2][3];
   /*Loop filter strength parameters.*/
-  unsigned char         loop_filter_limits[64];
+  unsigned char       loop_filter_limits[64];
 };
 
 

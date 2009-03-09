@@ -78,19 +78,6 @@ toolbar:first-child, menubar:first-child {
   border-top: none !important;
 }
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
-}
-
 /* ::::: toolbar decorations ::::: */
 
 toolbarseparator {
@@ -148,7 +135,7 @@ toolbarpaletteitem[place="toolbar"] > toolbarspacer {
 }
 
 .toolbarpaletteitem-box[type="spring"][place="palette"] {
-  background: url("chrome://global/skin/toolbar/spring.gif") no-repeat center;
+  background: url("chrome://global/skin/toolbar/spring.png") no-repeat center;
 }
 
 /* ..... drag and drop feedback ..... */

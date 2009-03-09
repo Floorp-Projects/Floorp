@@ -315,6 +315,20 @@ typedef struct theora_comment{
  */
 #define TH_DECCTL_SET_PPLEVEL (3)
 
+/**Sets the maximum distance between key frames.
+ * This can be changed during an encode, but will be bounded by
+ *  <tt>1<<th_info#keyframe_granule_shift</tt>.
+ * If it is set before encoding begins, th_info#keyframe_granule_shift will
+ *  be enlarged appropriately.
+ *
+ * \param[in]  buf <tt>ogg_uint32_t</tt>: The maximum distance between key
+ *                   frames.
+ * \param[out] buf <tt>ogg_uint32_t</tt>: The actual maximum distance set.
+ * \retval TH_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
+ * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(ogg_uint32_t)</tt>.
+ * \retval TH_IMPL   Not supported by this implementation.*/
+#define TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE (4)
+
 /**Set the granule position.
  * Call this after a seek, to update the internal granulepos
  * in the decoder, to insure that subsequent frames are marked
@@ -332,20 +346,6 @@ typedef struct theora_comment{
  *  \ref decctlcodes "decoder control codes".
  * Keep any experimental or vendor-specific values above \c 0x8000.*/
 /*@{*/
-/**Sets the Huffman tables to use.
- * The tables are copied, not stored by reference, so they can be freed after
- *  this call.
- * <tt>NULL</tt> may be specified to revert to the default tables.
- *
- * \param[in] buf <tt>#th_huff_code[#TH_NHUFFMAN_TABLES][#TH_NDCT_TOKENS]</tt>
- * \retval TH_FAULT  \a theora_state is <tt>NULL</tt>.
- * \retval TH_EINVAL Encoding has already begun or one or more of the given
- *                     tables is not full or prefix-free, \a buf is
- *                     <tt>NULL</tt> and \a buf_sz is not zero, or \a buf is
- *                     non-<tt>NULL</tt> and \a buf_sz is not
- *                     <tt>sizeof(#th_huff_code)*#TH_NHUFFMAN_TABLES*#TH_NDCT_TOKENS</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
-#define TH_ENCCTL_SET_HUFFMAN_CODES (0)
 /**Sets the quantization parameters to use.
  * The parameters are copied, not stored by reference, so they can be freed
  *  after this call.
@@ -365,19 +365,6 @@ typedef struct theora_comment{
  *                    <tt>sizeof(#th_quant_info)</tt>.
  * \retval TH_IMPL   Not supported by this implementation.*/
 #define TH_ENCCTL_SET_QUANT_PARAMS (2)
-/**Sets the maximum distance between key frames.
- * This can be changed during an encode, but will be bounded by
- *  <tt>1<<th_info#keyframe_granule_shift</tt>.
- * If it is set before encoding begins, th_info#keyframe_granule_shift will
- *  be enlarged appropriately.
- *
- * \param[in]  buf <tt>ogg_uint32_t</tt>: The maximum distance between key
- *                   frames.
- * \param[out] buf <tt>ogg_uint32_t</tt>: The actual maximum distance set.
- * \retval TH_FAULT  \a theora_state or \a buf is <tt>NULL</tt>.
- * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(ogg_uint32_t)</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
-#define TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE (4)
 /**Disables any encoder features that would prevent lossless transcoding back
  *  to VP3.
  * This primarily means disabling block-level QI values and not using 4MV mode
@@ -434,41 +421,6 @@ typedef struct theora_comment{
  * \retval TH_IMPL   Not supported by this implementation in the current
  *                    encoding mode.*/
 #define TH_ENCCTL_SET_SPLEVEL (14)
-/**Puts the encoder in VBR mode.
- * This can be done at any time during the encoding process, with different
- *  configuration parameters, to encode different regions of the video segment
- *  with different qualities.
- * See the #th_info struct documentation for details on how the default
- *  encoding mode is chosen.
- *
- * \param[in] buf <tt>#th_vbr_cfg</tt>: the configuration parameters.
- *                 This may be <tt>NULL</tt>, in which case the current VBR
- *                  configuration is unchanged.
- *                 The default is to use the QI setting passed in via the
- *                  #th_info struct when the encoder was initialized, with a
- *                  full range of admissible quantizers.
- * \retval OC_EFAULT \a theora_state is <tt>NULL</tt>.
- * \retval TH_EINVAL The configuration parameters do not meet one of their
- *                    stated requirements, \a buf is <tt>NULL</tt> and
- *                    \a buf_sz is not zero, or \a buf is non-<tt>NULL</tt>
- *                    and \a buf_sz is not <tt>sizeof(#th_vbr_cfg)</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
-#define TH_ENCCTL_SETUP_VBR (16)
-/**Puts the encoder in CQI mode.
- * This can be done at any time during the encoding process, with different QI
- *  values.
- * See the #th_info struct documentation for details on how the default
- *  encoding mode is chosen.
- *
- * \param[in] buf <tt>#th_cqi_cfg</tt>: the configuration parameters.
- *                 This may be <tt>NULL</tt>, in which case the current CQI
- *                  configuration is unchanged.
- *                 The default is to use the QI setting passed in via the
- *                  #th_info struct when the encoder was initialized.
- * \retval OC_EFAULT \a theora_state is <tt>NULL</tt>.
- * \retval TH_EINVAL \a buf_sz is not <tt>sizeof(#th_cqi_cfg)</tt>.
- * \retval TH_IMPL   Not supported by this implementation.*/
-#define TH_ENCCTL_SETUP_CQI (18)
 /*@}*/
 
 #define OC_FAULT       -1       /**< General failure */

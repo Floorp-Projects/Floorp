@@ -105,14 +105,12 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
     format = CF_TEXT;
   else if (strcmp(aMimeStr, kUnicodeMime) == 0)
     format = CF_UNICODETEXT;
-#ifndef WINCE
   else if (strcmp(aMimeStr, kJPEGImageMime) == 0 ||
            strcmp(aMimeStr, kPNGImageMime) == 0)
     format = CF_DIB;
   else if (strcmp(aMimeStr, kFileMime) == 0 || 
            strcmp(aMimeStr, kFilePromiseMime) == 0)
     format = CF_HDROP;
-#endif
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
   else
@@ -210,10 +208,8 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
-#ifndef WINCE
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);  
-#endif
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
@@ -226,7 +222,6 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(flavorStr, &imageFE);      
       }
-#ifndef WINCE
       else if ( strcmp(flavorStr, kFilePromiseMime) == 0 ) {
          // if we're a file promise flavor, also register the 
          // CFSTR_PREFERREDDROPEFFECT format.  The data object
@@ -245,7 +240,6 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kFilePromiseMime, &shortcutFE);
       }
-#endif
     }
   }
 
@@ -432,9 +426,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   if (S_OK == hres) {
     static CLIPFORMAT fileDescriptorFlavorA = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORA ); 
     static CLIPFORMAT fileDescriptorFlavorW = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORW ); 
-#ifndef WINCE
     static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
-#endif
     switch (stm.tymed) {
      case TYMED_HGLOBAL: 
         {
@@ -469,7 +461,6 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 }
               } break;
 
-#ifndef WINCE
             case CF_DIB :
               if (aMIMEImageFormat)
               {
@@ -515,14 +506,11 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
               } break;
 
-#endif
             default: {
-#ifndef WINCE
               if ( fe.cfFormat == fileDescriptorFlavorA || fe.cfFormat == fileDescriptorFlavorW || fe.cfFormat == fileFlavor ) {
                 NS_WARNING ( "Mozilla doesn't yet understand how to read this type of file flavor" );
               } 
               else
-#endif
               {
                 // Get the data out of the global data handle. The size we return
                 // should not include the null because the other platforms don't

@@ -1,3 +1,4 @@
+#filter substitution
 <?xml version="1.0"?>
 # -*- Mode: HTML -*-
 #
@@ -31,6 +32,7 @@
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Dão Gottwald <dao@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,10 +50,7 @@
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
-
-<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-
-<?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
@@ -66,19 +65,21 @@
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
-        title="&mainWindow.title;"
-        title_normal="&mainWindow.title;"
+        ondragleave="gBrowser.browserWindowOnDragLeave(event);"
+        ondragenter="gBrowser.browserWindowOnDragEnter(event);"
+        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title_normal="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
 #ifdef XP_MACOSX
-        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
-        titledefault="&mainWindow.title;"
+        title_privatebrowsing="&mainWindow.title;@PRE_RELEASE_SUFFIX@&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
 #else
-        title_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
-        titlemodifier="&mainWindow.titlemodifier;"
-        titlemodifier_normal="&mainWindow.titlemodifier;"
-        titlemodifier_privatebrowsing="&mainWindow.titlemodifierPrivateBrowsing;"
+        title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
+        titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
+        titlemodifier_normal="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
@@ -205,7 +206,7 @@
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
-           onpopuphidden="focusAndSelectUrlBar();" norestorefocus="true" level="top"
+           level="top"
            chromedir="&locale.dir;">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
@@ -279,9 +280,6 @@
   </tooltip>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
-           ondragover="gBrowser._onDragOver(event);"
-           ondrop="gBrowser._onDrop(event);"
-           ondragleave="gBrowser._onDragLeave(event);"
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
@@ -397,6 +395,8 @@
                     class="plain urlbar-icon"
                     id="feed-button"
                     chromedir="&locale.dir;"
+                    collapsed="true"
+                    tooltiptext="&feedButton.tooltip;"
                     onclick="return FeedHandler.onFeedButtonClick(event);">
               <menupopup position="after_end"
                          onpopupshowing="return FeedHandler.buildFeedList(this);"
@@ -418,8 +418,7 @@
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100" persist="width">
-        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"
-                   newlines="replacewithspaces"/>
+        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -461,6 +460,14 @@
                        ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
                        ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
+
+        <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&tabCmd.label;"
+                       command="cmd_newNavigatorTab"
+                       tooltiptext="&newTabButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, newTabButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, newTabButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, newTabButtonObserver);"/>
 
         <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&newNavigatorCmd.label;"
@@ -573,6 +580,7 @@
                       ondblclick="if (event.button == 0) displaySecurityInfo();"/>
       <statusbarpanel id="page-report-button" type="menu"
                       class="statusbarpanel-menu-iconic"
+                      hidden="true"
                       tooltiptext="&pageReportIcon.tooltip;">
         <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
           <menuitem observes="blockedPopupAllowSite"/>

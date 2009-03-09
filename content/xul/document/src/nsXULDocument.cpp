@@ -125,6 +125,7 @@
 #include "nsIXULWindow.h"
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsURILoader.h"
 
 //----------------------------------------------------------------------
 //
@@ -334,9 +335,8 @@ TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
-    if (nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration())) {
-        return NS_OK;
-    }
+    NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration()),
+                 "Shouldn't traverse nsXULDocument!");
     // XXX tmp->mForwardReferences?
     // XXX tmp->mContextStack?
 
@@ -696,10 +696,11 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                             nsIDOMElement   *aListener,
                                             const nsAString &aAttr)
 {
-    if (mUpdateNestLevel > 0) {
+    if (!nsContentUtils::IsSafeToRunScript()) {
         nsDelayedBroadcastUpdate delayedUpdate(aBroadcaster, aListener,
                                                aAttr);
         mDelayedBroadcasters.AppendElement(delayedUpdate);
+        MaybeBroadcast();
         return;
     }
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
@@ -1019,13 +1020,38 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
                     (bl->mAttribute == nsGkAtoms::_asterix)) {
                     nsCOMPtr<nsIDOMElement> listenerEl
                         = do_QueryReferent(bl->mListener);
-                    if (listenerEl) {
-                      nsDelayedBroadcastUpdate delayedUpdate(domele,
-                                                             listenerEl,
-                                                             aAttribute,
-                                                             value,
-                                                             attrSet);
-                      mDelayedAttrChangeBroadcasts.AppendElement(delayedUpdate);
+                    nsCOMPtr<nsIContent> l = do_QueryInterface(listenerEl);
+                    if (l) {
+                        PRBool possibleCycle = PR_FALSE;
+                        for (PRUint32 j = 0; j < mDelayedAttrChangeBroadcasts.Length(); ++j) {
+                            if (mDelayedAttrChangeBroadcasts[j].mListener == listenerEl &&
+                                mDelayedAttrChangeBroadcasts[j].mAttrName == aAttribute) {
+                                possibleCycle = PR_TRUE;
+                                break;
+                            }
+                        }
+
+                        if (possibleCycle) {
+                            NS_WARNING("Broadcasting loop!");
+                        } else {
+                            nsAutoString currentValue;
+                            PRBool hasAttr = l->GetAttr(kNameSpaceID_None,
+                                                        aAttribute,
+                                                        currentValue);
+                            // We need to update listener only if we're
+                            // (1) removing an existing attribute,
+                            // (2) adding a new attribute or
+                            // (3) changing the value of an attribute.
+                            PRBool needsAttrChange =
+                                attrSet != hasAttr || !value.Equals(currentValue);
+                            nsDelayedBroadcastUpdate delayedUpdate(domele,
+                                                                   listenerEl,
+                                                                   aAttribute,
+                                                                   value,
+                                                                   attrSet,
+                                                                   needsAttrChange);
+                            mDelayedAttrChangeBroadcasts.AppendElement(delayedUpdate);
+                        }
                     }
                 }
             }
@@ -2006,8 +2032,6 @@ nsXULDocument::StartLayout(void)
         if (! docShell)
             return NS_ERROR_UNEXPECTED;
 
-        nsRect r = cx->GetVisibleArea();
-
         // Trigger a refresh before the call to InitialReflow(),
         // because the view manager's UpdateView() function is
         // dropping dirty rects if refresh is disabled rather than
@@ -2029,7 +2053,11 @@ nsXULDocument::StartLayout(void)
         }
 
         mMayStartLayout = PR_TRUE;
-        
+
+        // Don't try to call GetVisibleArea earlier than this --- the EnableRefresh call
+        // above can flush reflows, which can cause a parent document to be flushed,
+        // calling ResizeReflow on our document which does SetVisibleArea.
+        nsRect r = cx->GetVisibleArea();
         // Make sure we're holding a strong ref to |shell| before we call
         // InitialReflow()
         nsCOMPtr<nsIPresShell> shellGrip = shell;
@@ -3188,7 +3216,7 @@ nsXULDocument::DoneWalking()
         NS_WARN_IF_FALSE(mUpdateNestLevel == 0,
                          "Constructing XUL document in middle of an update?");
         if (mUpdateNestLevel == 0) {
-            InitializeFinalizeFrameLoaders();
+            MaybeInitializeFinalizeFrameLoaders();
         }
 
         NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
@@ -3271,37 +3299,46 @@ nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
 }
 
 void
-nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
+nsXULDocument::MaybeBroadcast()
 {
-    nsXMLDocument::EndUpdate(aUpdateType);
-    if (mUpdateNestLevel == 0) {
-        PRUint32 length = mDelayedAttrChangeBroadcasts.Length();
-        if (length) {
-          nsTArray<nsDelayedBroadcastUpdate> delayedAttrChangeBroadcasts;
-            mDelayedAttrChangeBroadcasts.SwapElements(
-                                             delayedAttrChangeBroadcasts);
-            for (PRUint32 i = 0; i < length; ++i) {
-                nsCOMPtr<nsIContent> listener =
-                    do_QueryInterface(delayedAttrChangeBroadcasts[i].mListener);
-                nsIAtom* attrName = delayedAttrChangeBroadcasts[i].mAttrName;
-                nsString value = delayedAttrChangeBroadcasts[i].mAttr;
-                if (delayedAttrChangeBroadcasts[i].mSetAttr) {
-                    listener->SetAttr(kNameSpaceID_None, attrName, value,
-                                      PR_TRUE);
-                }
-                else {
-                    listener->UnsetAttr(kNameSpaceID_None, attrName,
-                                        PR_TRUE);
+    // Only broadcast when not in an update and when safe to run scripts.
+    if (mUpdateNestLevel == 0 &&
+        (mDelayedAttrChangeBroadcasts.Length() ||
+         mDelayedBroadcasters.Length())) {
+        if (!nsContentUtils::IsSafeToRunScript()) {
+            if (!mInDestructor) {
+                nsContentUtils::AddScriptRunner(
+                  NS_NEW_RUNNABLE_METHOD(nsXULDocument, this, MaybeBroadcast));
+            }
+            return;
+        }
+        if (!mHandlingDelayedAttrChange) {
+            mHandlingDelayedAttrChange = PR_TRUE;
+            for (PRUint32 i = 0; i < mDelayedAttrChangeBroadcasts.Length(); ++i) {
+                nsIAtom* attrName = mDelayedAttrChangeBroadcasts[i].mAttrName;
+                if (mDelayedAttrChangeBroadcasts[i].mNeedsAttrChange) {
+                    nsCOMPtr<nsIContent> listener =
+                        do_QueryInterface(mDelayedAttrChangeBroadcasts[i].mListener);
+                    nsString value = mDelayedAttrChangeBroadcasts[i].mAttr;
+                    if (mDelayedAttrChangeBroadcasts[i].mSetAttr) {
+                        listener->SetAttr(kNameSpaceID_None, attrName, value,
+                                          PR_TRUE);
+                    } else {
+                        listener->UnsetAttr(kNameSpaceID_None, attrName,
+                                            PR_TRUE);
+                    }
                 }
                 nsCOMPtr<nsIContent> broadcaster =
-                    do_QueryInterface(delayedAttrChangeBroadcasts[i].mBroadcaster);
+                    do_QueryInterface(mDelayedAttrChangeBroadcasts[i].mBroadcaster);
                 ExecuteOnBroadcastHandlerFor(broadcaster,
-                                             delayedAttrChangeBroadcasts[i].mListener,
+                                             mDelayedAttrChangeBroadcasts[i].mListener,
                                              attrName);
             }
+            mDelayedAttrChangeBroadcasts.Clear();
+            mHandlingDelayedAttrChange = PR_FALSE;
         }
 
-        length = mDelayedBroadcasters.Length();
+        PRUint32 length = mDelayedBroadcasters.Length();
         if (length) {
             nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters;
             mDelayedBroadcasters.SwapElements(delayedBroadcasters);
@@ -3312,6 +3349,14 @@ nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
             }
         }
     }
+}
+
+void
+nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+    nsXMLDocument::EndUpdate(aUpdateType);
+
+    MaybeBroadcast();
 }
 
 void
@@ -3873,10 +3918,8 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsresult rv;
     nsCOMPtr<nsIContent> target;
 
-    PRBool notify = PR_FALSE;
     nsIPresShell *shell = mDocument->GetPrimaryShell();
-    if (shell)
-        shell->GetDidInitialReflow(&notify);
+    PRBool notify = shell && shell->DidInitialReflow();
 
     nsAutoString id;
     mOverlay->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
@@ -4367,6 +4410,8 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
     if (!posStr.IsEmpty()) {
         nsCOMPtr<nsIDOMDocument> domDocument(
                do_QueryInterface(aParent->GetDocument()));
+        if (!domDocument) return NS_ERROR_FAILURE;
+
         nsCOMPtr<nsIDOMElement> domElement;
 
         char* str = ToNewCString(posStr);
@@ -4468,7 +4513,7 @@ NS_IMETHODIMP
 nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest *request,
                                                           nsISupports* acontext)
 {
-    return NS_OK;
+    return NS_ERROR_PARSED_DATA_CACHED;
 }
 
 

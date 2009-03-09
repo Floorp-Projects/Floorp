@@ -5,10 +5,19 @@ the Mozilla build system.
 
 http://svn.annodex.net/liboggplay/trunk/
 
-The svn revision number used was r3774.
-
-The patch from Annodex trac ticket 421 is applied to fix bug 459938:
-  http://trac.annodex.net/ticket/421
+The svn revision number used was r3848.
 
 The patch from Bug 468327 (yuv_disable_optimized.patch) is applied
 to disable optimized yuv to rgb routines.
+
+The patch from Bug 452698 (yuv2argb.patch) is applied to fix
+yuv to rgb conversion on PPC Mac OS X.
+
+Apply patch from bug 468281 to get liboggplay svn r3863 changeset.
+The patch for this is in bug468281_r3863.patch.
+
+Apply patch from bug 468281 to get liboggplay svn r3864 changeset.
+The patch for this is in bug468281_r3864.patch.
+
+Apply patch from bug 468281 to get liboggplay svn r3871 changeset.
+The patch for this is in bug468281_r3871.patch.

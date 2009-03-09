@@ -44,8 +44,11 @@
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsobj.h"
 
 JS_BEGIN_EXTERN_C
+
+#define ARRAY_CAPACITY_MIN      7
 
 /* Generous sanity-bound on length (in elements) of array initialiser. */
 #define ARRAY_INIT_LIMIT        JS_BIT(24)
@@ -78,14 +81,20 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj);
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
 #define JSSLOT_ARRAY_LOOKUP_HOLDER     (JSSLOT_ARRAY_COUNT + 1)
 
-#define ARRAY_DENSE_LENGTH(obj)                                                \
-    (JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj)),                                   \
-     (obj)->dslots ? (uint32)(obj)->dslots[-1] : 0)
+static JS_INLINE uint32
+js_DenseArrayCapacity(JSObject *obj)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj));
+    return obj->dslots ? (uint32) obj->dslots[-1] : 0;
+}
 
-#define ARRAY_SET_DENSE_LENGTH(obj, max)                                       \
-    (JS_ASSERT((obj)->dslots), (obj)->dslots[-1] = (jsval)(max))
-
-#define ARRAY_GROWBY 8
+static JS_INLINE void
+js_SetDenseArrayCapacity(JSObject *obj, uint32 capacity)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj));
+    JS_ASSERT(obj->dslots);
+    obj->dslots[-1] = (jsval) capacity;
+}
 
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
@@ -122,7 +131,7 @@ typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
  * comparator function cmp returns an error inside a comparison, so remember
  * to check the return value of this function.
  */
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
              void *arg, void *tmp);
 
@@ -130,6 +139,9 @@ js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
 extern JSBool
 js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 #endif
+
+extern JSBool JS_FASTCALL
+js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v);
 
 /*
  * Fast dense-array-to-buffer conversions.

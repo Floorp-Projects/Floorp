@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for property priority preservation</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test that priorities are preserved correctly when setProperty is
+ * called, and during declaration block expansion/compression when other
+ * properties are manipulated.
+ */
+
+var div = document.getElementById("content");
+var s = div.style;
+
+s.setProperty("text-decoration", "underline", "");
+is(s.getPropertyValue("text-decoration"), "underline",
+   "text-decoration stored");
+is(s.getPropertyPriority("text-decoration"), "",
+   "text-decoration priority stored");
+s.setProperty("z-index", "7", "important");
+is(s.getPropertyValue("z-index"), "7",
+   "z-index stored");
+is(s.getPropertyPriority("z-index"), "important",
+   "z-index priority stored");
+s.setProperty("z-index", "3", "");
+is(s.getPropertyValue("z-index"), "7",
+   "z-index not overridden by setting non-important");
+is(s.getPropertyPriority("z-index"), "important",
+   "z-index priority not overridden by setting non-important");
+is(s.getPropertyValue("text-decoration"), "underline",
+   "text-decoration still stored");
+is(s.getPropertyPriority("text-decoration"), "",
+   "text-decoration priority still stored");
+s.setProperty("text-decoration", "overline", "");
+is(s.getPropertyValue("text-decoration"), "overline",
+   "text-decoration stored");
+is(s.getPropertyPriority("text-decoration"), "",
+   "text-decoration priority stored");
+is(s.getPropertyValue("z-index"), "7",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "important",
+   "z-index priority still stored");
+s.setProperty("text-decoration", "line-through", "important");
+is(s.getPropertyValue("text-decoration"), "line-through",
+   "text-decoration stored at new priority");
+is(s.getPropertyPriority("text-decoration"), "important",
+   "text-decoration priority overridden");
+is(s.getPropertyValue("z-index"), "7",
+   "z-index still stored");
+is(s.getPropertyPriority("z-index"), "important",
+   "z-index priority still stored");
+
+
+</script>
+</pre>
+</body>
+</html>

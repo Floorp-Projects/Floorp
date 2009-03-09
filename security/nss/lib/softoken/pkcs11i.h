@@ -584,6 +584,7 @@ SEC_BEGIN_PROTOS
 extern PRBool nsf_init;
 extern CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
+extern PRBool sftk_ForkReset(CK_VOID_PTR pReserved, CK_RV* crv);
 extern CK_RV nsc_CommonGetSlotList(CK_BBOOL tokPresent, 
 	CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount, int moduleIndex);
 

@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,6 +44,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsFrameManager.h"
 
 NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 
@@ -65,7 +67,8 @@ nsSVGRenderingObserver::~nsSVGRenderingObserver()
   if (mElement.get()) {
     mElement.get()->RemoveMutationObserver(this);
   }
-  if (mReferencedFrame && !mReferencedFramePresShell->IsDestroying()) {
+  if (mReferencedFrame &&
+      !mReferencedFramePresShell->FrameConstructor()->IsDestroyingFrameTree()) {
     nsSVGEffects::RemoveRenderingObserver(mReferencedFrame, this);
   }
 }
@@ -73,21 +76,30 @@ nsSVGRenderingObserver::~nsSVGRenderingObserver()
 nsIFrame*
 nsSVGRenderingObserver::GetReferencedFrame()
 {
-  if (mReferencedFrame && !mReferencedFramePresShell->IsDestroying()) {
+  if (mReferencedFrame &&
+      !mReferencedFramePresShell->FrameConstructor()->IsDestroyingFrameTree()) {
+    // We may be destroying frames in mReferencedFramePresShell, which
+    // means we can't call GetPrimaryFrame there. But that's OK, since
+    // mReferencedFrame cannot have been destroyed yet (or we would have
+    // lost our reference to it).
     NS_ASSERTION(mElement.get() &&
+                 !mReferencedFramePresShell->FrameManager()->IsDestroyingFrames() &&
                  static_cast<nsGenericElement*>(mElement.get())->GetPrimaryFrame() == mReferencedFrame,
                  "Cached frame is incorrect!");
     return mReferencedFrame;
   }
 
   if (mElement.get()) {
-    nsIFrame *frame =
-      static_cast<nsGenericElement*>(mElement.get())->GetPrimaryFrame();
-    if (frame) {
-      mReferencedFrame = frame;
-      mReferencedFramePresShell = mReferencedFrame->PresContext()->PresShell();
-      nsSVGEffects::AddRenderingObserver(mReferencedFrame, this);
-      return frame;
+    nsIDocument* doc = mElement.get()->GetCurrentDoc();
+    nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;
+    if (shell && !shell->FrameManager()->IsDestroyingFrames()) {
+      nsIFrame* frame = shell->GetPrimaryFrameFor(mElement.get());
+      if (frame) {
+        mReferencedFrame = frame;
+        mReferencedFramePresShell = shell;
+        nsSVGEffects::AddRenderingObserver(mReferencedFrame, this);
+        return frame;
+      }
     }
   }
   return nsnull;
@@ -108,7 +120,7 @@ nsSVGRenderingObserver::GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK)
 void
 nsSVGRenderingObserver::DoUpdate()
 {
-  if (mFramePresShell->IsDestroying()) {
+  if (mFramePresShell->FrameConstructor()->IsDestroyingFrameTree()) {
     // mFrame is no longer valid. Bail out.
     mFrame = nsnull;
     return;
@@ -216,17 +228,14 @@ nsSVGMarkerProperty::DoUpdate()
   if (!mFrame)
     return;
 
-  if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    if (!(mFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-      nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-      if (outerSVGFrame) {
-        // marker changes can change the covered region
-        outerSVGFrame->UpdateAndInvalidateCoveredRegion(mFrame);
-      }
-    }
-  } else {
-    InvalidateAllContinuations(mFrame);
-  }
+  NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+
+  // Repaint asynchronously
+  nsChangeHint changeHint =
+    nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
+
+  mFramePresShell->FrameConstructor()->PostRestyleEvent(
+    mFrame->GetContent(), nsReStyleHint(0), changeHint);
 }
 
 void
@@ -363,9 +372,18 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   // Ensure that the filter is repainted correctly
   // We can't do that in DoUpdate as the referenced frame may not be valid
-  const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
-  if (style->mFilter) {
-    GetEffectProperty(style->mFilter, aFrame, nsGkAtoms::filter, CreateFilterProperty);
+  GetEffectProperty(aFrame->GetStyleSVGReset()->mFilter,
+                    aFrame, nsGkAtoms::filter, CreateFilterProperty);
+
+  if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    // Set marker properties here to avoid reference loops
+    const nsStyleSVG *style = aFrame->GetStyleSVG();
+    GetEffectProperty(style->mMarkerStart, aFrame, nsGkAtoms::marker_start,
+                      CreateMarkerProperty);
+    GetEffectProperty(style->mMarkerMid, aFrame, nsGkAtoms::marker_mid,
+                      CreateMarkerProperty);
+    GetEffectProperty(style->mMarkerEnd, aFrame, nsGkAtoms::marker_end,
+                      CreateMarkerProperty);
   }
 }
 

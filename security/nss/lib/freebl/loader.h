@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.21 2007/11/13 03:12:48 wtc%google.com Exp $ */
+/* $Id: loader.h,v 1.23 2009/02/03 05:34:40 julien.pierre.boogz%sun.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
@@ -491,6 +491,37 @@ struct FREEBLVectorStr {
  void (* p_PQG_DestroyVerify)(PQGVerify *vfy);
 
   /* Version 3.010 came to here */
+
+ SECStatus (* p_SEED_InitContext)(SEEDContext *cx,
+                                 const unsigned char *key,
+                                 unsigned int keylen,
+                                 const unsigned char *iv,
+                                 int mode,
+                                 unsigned int encrypt,
+                                 unsigned int );
+
+ SEEDContext *(*p_SEED_AllocateContext)(void);
+
+ SEEDContext *(* p_SEED_CreateContext)(const unsigned char *key,
+                                     const unsigned char *iv,
+                                     int mode, PRBool encrypt);
+
+ void (* p_SEED_DestroyContext)(SEEDContext *cx, PRBool freeit);
+
+ SECStatus (* p_SEED_Encrypt)(SEEDContext *cx, unsigned char *output,
+                            unsigned int *outputLen, unsigned int maxOutputLen,
+                            const unsigned char *input, unsigned int inputLen);
+
+ SECStatus (* p_SEED_Decrypt)(SEEDContext *cx, unsigned char *output,
+                            unsigned int *outputLen, unsigned int maxOutputLen,
+                            const unsigned char *input, unsigned int inputLen);
+
+   /* Version 3.011 came to here */
+
+ SECStatus (* p_BL_Init)(void);
+ void ( * p_BL_SetForkState)(PRBool);
+
+   /* Version 3.012 came to here */
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

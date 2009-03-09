@@ -1,0 +1,19 @@
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft Visual Studio 6.0">
+<script>
+var xmlDoc;
+
+function createDoc()
+{
+	var xmlDoc = document.implementation.createDocument("", "", null);
+	var xmlElem = xmlDoc.firstChild;
+	xmlElem.appendChild(document.createTextNode("blabla"));
+	xmlElem.firstChild.nodeValue;
+}
+</script>
+
+</HEAD>
+<BODY onload="createDoc();">
+</BODY>
+</HTML>

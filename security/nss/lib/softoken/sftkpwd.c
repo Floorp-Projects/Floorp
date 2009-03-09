@@ -66,7 +66,7 @@
 #include "prsystem.h"
 #include "lgglue.h"
 #include "secerr.h"
-
+#include "softoken.h"
   
 /******************************************************************
  * 
@@ -540,14 +540,14 @@ sftkdb_switchKeys(SFTKDBHandle *keydb, SECItem *passKey)
     }
 
     /* an atomic pointer set would be nice */
-    PZ_Lock(keydb->passwordLock);
+    SKIP_AFTER_FORK(PZ_Lock(keydb->passwordLock));
     data = keydb->passwordKey.data;
     len = keydb->passwordKey.len;
     keydb->passwordKey.data = passKey->data;
     keydb->passwordKey.len = passKey->len;
     passKey->data = data;
     passKey->len = len;
-    PZ_Unlock(keydb->passwordLock);
+    SKIP_AFTER_FORK(PZ_Unlock(keydb->passwordLock));
 }
 
 /*

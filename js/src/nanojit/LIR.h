@@ -139,8 +139,21 @@ namespace nanojit
 		// fargs = args - iargs
 	};
 
+	/*
+	 * Record for extra data used to compile switches as jump tables.
+	 */
+	struct SwitchInfo
+	{
+		NIns**      table;       // Jump table; a jump address is NIns*
+		uint32_t    count;       // Number of table entries
+		// Index value at last execution of the switch. The index value
+		// is the offset into the jump table. Thus it is computed as 
+		// (switch expression) - (lowest case value).
+		uint32_t    index;
+	};
+
     inline bool isGuard(LOpcode op) {
-        return op==LIR_x || op==LIR_xf || op==LIR_xt || op==LIR_loop;
+        return op == LIR_x || op == LIR_xf || op == LIR_xt || op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
     }
 
     inline bool isCall(LOpcode op) {
@@ -165,9 +178,9 @@ namespace nanojit
 
 	// Sun Studio requires explicitly declaring signed int bit-field
 	#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-	#define _sign_ signed 
+	#define _sign_int signed int
 	#else
-	#define _sign_
+	#define _sign_int int32_t
 	#endif
 
 	// Low-level Instruction 4B
@@ -187,7 +200,7 @@ namespace nanojit
         struct sti_type
         {
 			LOpcode			code:8;
-			_sign_ int32_t	disp:8;
+			_sign_int		disp:8;
 			uint32_t		oprnd_1:8;  // 256 ins window and since they only point backwards this is sufficient.
 			uint32_t		oprnd_2:8;  
         };
@@ -205,7 +218,7 @@ namespace nanojit
         struct t_type
         {
             LOpcode         code:8;
-            _sign_ int32_t  imm24:24;
+            _sign_int       imm24:24;
         };
 
 		// imm16 form
@@ -213,7 +226,7 @@ namespace nanojit
 		{
 			LOpcode			code:8;
 			uint32_t		resv:8;  // cobberred during assembly
-			_sign_ int32_t  imm16:16;
+			_sign_int		imm16:16;
 		};
 
 		// overlay used during code generation ( note that last byte is reserved for allocation )
@@ -441,6 +454,9 @@ namespace nanojit
 		virtual LInsp insAlloc(int32_t size) {
 			return out->insAlloc(size);
 		}
+		virtual LInsp skip(size_t size) {
+			return out->skip(size);
+		}
 
 		// convenience
 	    LIns*		insLoadi(LIns *base, int disp);
@@ -490,6 +506,7 @@ namespace nanojit
 		const char *dup(const char *);
 		const char *format(const void *p);
 		void promoteAll(const void *newbase);
+		void clear();
     };
 
 	class LirNameMap MMGC_SUBCLASS_DECL
@@ -689,12 +706,11 @@ namespace nanojit
 	class LirBuffer : public avmplus::GCFinalizedObject
 	{
 		public:
-			static const uint32_t LIR_BUF_THRESHOLD = 1024/sizeof(LIns);  // 1KB prior to running out of space we'll allocate a new page
-
 			DWB(Fragmento*)		_frago;
 			LirBuffer(Fragmento* frago, const CallInfo* functions);
 			virtual ~LirBuffer();
 			void        clear();
+            void        rewind();
 			LInsp		next();
 			bool		outOMem() { return _noMem != 0; }
 			
@@ -724,7 +740,7 @@ namespace nanojit
 			Page*		pageAlloc();
 
 			PageList	_pages;
-			Page*		_thresholdPage; // allocated in preperation of a needing to growing the buffer
+			Page*		_nextPage; // allocated in preperation of a needing to growing the buffer
 			LInsp		_unused;	// next unused instruction slot
 			int			_noMem;		// set if ran out of memory when writing to buffer
 	};	

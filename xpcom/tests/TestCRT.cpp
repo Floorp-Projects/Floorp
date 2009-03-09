@@ -63,8 +63,6 @@ static void Check(const char* s1, const char* s2, PRIntn n)
 {
   PRIntn clib = PL_strcmp(s1, s2);
   PRIntn clib_n = PL_strncmp(s1, s2, n);
-  PRIntn clib_case = PL_strcasecmp(s1, s2);
-  PRIntn clib_case_n = PL_strncasecmp(s1, s2, n);
 
   nsAutoString t1,t2; 
   t1.AssignWithConversion(s1);

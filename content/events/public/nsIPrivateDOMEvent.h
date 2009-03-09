@@ -46,9 +46,8 @@ class nsPresContext;
  * Event listener manager interface.
  */
 #define NS_IPRIVATEDOMEVENT_IID \
-{ /* 25e6626c-8e54-409b-87b5-2beceaac399e */ \
-0x25e6626c, 0x8e54, 0x409b, \
-{0x87, 0xb5, 0x2b, 0xec, 0xea, 0xac, 0x39, 0x9e} }
+{0x5b3543d3, 0x84ed, 0x4b59, \
+{0x95, 0xca, 0xa4, 0x21, 0xf2, 0x59, 0x22, 0x22}}
 
 class nsIDOMEventTarget;
 class nsIDOMEvent;
@@ -87,7 +86,7 @@ NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext
 nsresult
 NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsKeyEvent *aEvent);
 nsresult
-NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsMutationEvent* aEvent);
+NS_NewDOMMutationEvent(nsIDOMEvent** aResult NS_OUTPARAM, nsPresContext* aPresContext, class nsMutationEvent* aEvent);
 nsresult
 NS_NewDOMPopupBlockedEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsPopupBlockedEvent* aEvent);
 nsresult

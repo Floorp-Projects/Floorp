@@ -35,6 +35,10 @@
       // of elements. Gets the name from text nodes of those elements.
       testName("btn_labelledby_texts", "text1 text2");
 
+      //////////////////////////////////////////////////////////////////////////
+      // Name from named accessible
+
+      testName("input_labelledby_namedacc", "Data");
 
       //////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
@@ -75,6 +79,16 @@
       // Gets the name from text nodes. Element br adds space between them.
       testName("btn_labelledby_mixed_br", "text text");
 
+      // Gets the name from label content which allows name from subtree,
+      // ignore @title attribute on label
+      testName("from_label_ignoretitle", "Country:");
+
+      // Gets the name from html:p content, which doesn't allow name from
+      // subtree, ignore @title attribute on label
+      testName("from_p_ignoretitle", "Choose country from.");
+
+      // Gets the name from html:input value, ignore @title attribute on input
+      testName("from_input_ignoretitle", "Custom country");
 
       //////////////////////////////////////////////////////////////////////////
       // label element
@@ -129,10 +143,21 @@
       testName("textareawithchild", "Story: Bar");
 
       /////////////////////////////////////////////////////////////////////////
-      // label with nested combobox
+      // label with nested combobox (test for 'f' item of name computation guide)
+
+      testName("comboinstart", "One day(s).");
+      testName("combo3", "day(s).");
 
       testName("comboinmiddle", "Subscribe to ATOM feed.");
-	   
+      testName("combo4", "Subscribe to ATOM feed.");
+
+      testName("comboinmiddle2", "Play the Haliluya sound when new mail arrives");
+      testName("combo5", "Play the Haliluya sound when new mail arrives");
+      testName("checkbox", "Play the Haliluya sound when new mail arrives");
+
+      testName("comboinend", "This day was sunny");
+      testName("combo6", "This day was");
+
       SimpleTest.finish();
     }
 
@@ -174,6 +199,12 @@
   <button id="btn_labelledby_texts"
           aria-labelledby="labelledby_text1 labelledby_text2">2</button>
   <br/>
+
+  <!-- name from named accessible -->
+  <input id="labelledby_namedacc" type="checkbox"
+         aria-label="Data" />
+  <input id="input_labelledby_namedacc"
+          aria-labelledby="labelledby_namedacc" />
 
   <!-- the name from subtree, mixed content -->
   <span id="labelledby_mixed">no<span>more text</span></span>
@@ -245,6 +276,31 @@
           aria-labelledby="labelledby_mixed_br">9</button>
   <br/>
 
+  <!-- the name from subtree, name from label content rather than from its title
+    attribute -->
+  <label  for="from_label_ignoretitle"
+          title="Select your country of origin">Country:</label>
+  <select id="from_label_ignoretitle">
+    <option>Germany</option>
+    <option>Russia</option>
+  </select>
+
+  <!-- the name from subtree, name from html:p content rather than from its
+    title attribute -->
+  <p id="p_ignoretitle"
+     title="Select your country of origin">Choose country from.</p>
+  <select id="from_p_ignoretitle" aria-labelledby="p_ignoretitle">
+    <option>Germany</option>
+    <option>Russia</option>
+  </select>
+
+  <!-- the name from subtree, name from html:input value rather than from its
+    title attribute -->
+  <p id="from_input_ignoretitle" aria-labelledby="input_ignoretitle">Country</p>
+  <input id="input_ignoretitle"
+         value="Custom country"
+         title="Input your country of origin"/ >
+
   <!-- label element, label contains the button -->
   <label>text<button id="btn_label_inside">10</button>text</label>
   <br/>
@@ -286,16 +342,39 @@
     </label>
   </form>
 
-  <!-- A label with a nested control in the middle -->
+  <!-- a label with a nested control in the start, middle and end -->
   <form>
+    <label id="comboinstart"><select id="combo3">
+        <option>One</option>
+        <option>Two</option>
+      </select>
+      day(s).
+    </label>
+
     <label id="comboinmiddle">
       Subscribe to
-      <select id="combo3" name="occupation">
+      <select id="combo4" name="occupation">
         <option>ATOM</option>
         <option>RSS</option>
       </select>
       feed.
     </label>
+
+    <label id="comboinmiddle2" for="checkbox">Play the
+      <select id="combo5">
+        <option>Haliluya</option>
+        <option>Hurra</option>
+      </select>
+      sound when new mail arrives
+    </label>
+    <input id="checkbox" type="checkbox" />
+
+    <label id="comboinend">
+      This day was
+      <select id="combo6" name="occupation">
+        <option>sunny</option>
+        <option>rainy</option>
+      </select></label>
   </form>
 
 </body>

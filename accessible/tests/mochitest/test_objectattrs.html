@@ -1,0 +1,95 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=475006
+-->
+<head>
+  <title>Group attributes tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // aria
+      testAttrs("atomic", {"atomic" : "true"}, true);
+      testAttrs("autocomplete", {"autocomplete" : "true"}, true);
+      testAttrs("checkbox", {"checkable" : "true"}, true); 
+      testAttrs("checkedCheckbox", {"checkable" : "true"}, true); 
+      testAttrs("checkedMenuitem", {"checkable" : "true"}, true); 
+      testAttrs("checkedOption", {"checkable" : "true"}, true); 
+      testAttrs("checkedRadio", {"checkable" : "true"}, true); 
+      testAttrs("checkedTreeitem", {"checkable" : "true"}, true); 
+      testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
+
+      // live object attribute
+      testAttrs("live", {"live" : "polite"}, true);
+      testAttrs("live2", {"live" : "polite"}, true);
+      testAttrs("log", {"live" : "polite"}, true);
+      testAttrs("marquee", {"live" : "off"}, true);
+      testAttrs("status", {"live" : "polite"}, true);
+      testAttrs("timer", {"live" : "off"}, true);
+
+      // container-live object attribute
+      testAttrs("liveChild", {"container-live" : "polite"}, true);
+      testAttrs("live2Child", {"container-live" : "polite"}, true);
+      testAttrs("logChild", {"container-live" : "polite"}, true);
+      testAttrs("marqueeChild", {"container-live" : "off"}, true);
+      testAttrs("statusChild", {"container-live" : "polite"}, true);
+      testAttrs("timerChild", {"container-live" : "off"}, true);
+
+      // html
+      testAttrs("radio", {"checkable" : "true"}, true); 
+      testAttrs("checkbox", {"checkable" : "true"}, true); 
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=475006"
+     title="Extend nsARIAMap to capture ARIA attribute characteristics">
+    Mozilla Bug 475006
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- aria -->
+  <div id="atomic" aria-atomic="true"></div>
+  <div id="autocomplete" role="textbox" aria-autocomplete="true"></div>
+  <div id="checkbox" role="checkbox"></div>
+  <div id="checkedCheckbox" role="checkbox" aria-checked="true"></div>
+  <div id="checkedMenuitem" role="menuitem" aria-checked="true"></div>
+  <div id="checkedOption" role="option" aria-checked="true"></div>
+  <div id="checkedRadio" role="radio" aria-checked="true"></div>
+  <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
+  <div id="dropeffect" aria-dropeffect="copy"></div>
+
+  <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
+  <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
+  <div id="log" role="log">excuse <div id="logChild">me</div></div>
+  <div id="marquee" role="marquee">excuse <div id="marqueeChild">me</div></div>
+  <div id="status" role="status">excuse <div id="statusChild">me</div></div>
+  <div id="timer" role="timer">excuse <div id="timerChild">me</div></div>
+
+  <!-- html -->
+  <input id="radio" type="radio"/>
+  <input id="checkbox" type="checkbox"/>
+</body>
+</html>

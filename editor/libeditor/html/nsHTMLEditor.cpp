@@ -214,14 +214,9 @@ nsHTMLEditor::~nsHTMLEditor()
   // free any default style propItems
   RemoveAllDefaultProperties();
 
-  while (mStyleSheetURLs.Count())
+  while (mStyleSheetURLs.Length())
   {
-    nsAString* strp = mStyleSheetURLs.StringAt(0);
-
-    if (strp)
-    {
-      RemoveOverrideStyleSheet(*strp);
-    }
+    RemoveOverrideStyleSheet(mStyleSheetURLs[0]);
   }
 
   if (mLinkHandler && mPresShellWeak)
@@ -2184,10 +2179,8 @@ nsHTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat)
 // XXX: ERROR_HANDLING -- this method needs a little work to ensure all error codes are 
 //                        checked properly, all null pointers are checked, and no memory leaks occur
 NS_IMETHODIMP 
-nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
+nsHTMLEditor::GetParentBlockTags(nsTArray<nsString> *aTagList, PRBool aGetLists)
 {
-  if (!aTagList) { return NS_ERROR_NULL_POINTER; }
-
   nsresult res;
   nsCOMPtr<nsISelection>selection;
   res = GetSelection(getter_AddRefs(selection));
@@ -2227,7 +2220,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
     {
       nsAutoString blockParentTag;
       blockParentElem->GetTagName(blockParentTag);
-      aTagList->AppendString(blockParentTag);
+      aTagList->AppendElement(blockParentTag);
     }
     
     return res;
@@ -2276,8 +2269,8 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
             blockParent->GetTagName(blockParentTag);
             PRBool isRoot;
             IsRootTag(blockParentTag, isRoot);
-            if ((!isRoot) && (-1==aTagList->IndexOf(blockParentTag))) {
-              aTagList->AppendString(blockParentTag);
+            if ((!isRoot) && !aTagList->Contains(blockParentTag)) {
+              aTagList->AppendElement(blockParentTag);
             }
           }
         }
@@ -2372,7 +2365,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
   PRInt32 offset;
   res = GetStartNodeAndOffset(selection, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
-  
+  if (!parent) return NS_ERROR_NULL_POINTER;
+
   // is the selection collapsed?
   PRBool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
@@ -2406,6 +2400,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     nsCOMPtr<nsIDOMNode> blockParent = nodeToExamine;
     if (!isBlock) {
       blockParent = GetBlockNodeParent(nodeToExamine);
+      if (!blockParent)
+        return NS_OK;
     }
 
     // Make sure to not walk off onto the Document node
@@ -3620,12 +3616,6 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // (This checks if already exists)
   ps->AddOverrideStyleSheet(sheet);
 
-  // Save doc pointer to be able to use nsIStyleSheet::SetEnabled()
-  nsIDocument *document = ps->GetDocument();
-  if (!document)
-    return NS_ERROR_NULL_POINTER;
-  sheet->SetOwningDocument(document);
-
   ps->ReconstructStyleData();
 
   // Save as the last-loaded sheet
@@ -3690,10 +3680,14 @@ nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
 
   nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
   NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
+
+  // Ensure the style sheet is owned by our document.
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
+  rv = sheet->SetOwningDocument(doc);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   return domSheet->SetDisabled(!aEnable);
 }
-
 
 PRBool
 nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
@@ -3705,6 +3699,11 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
   // Enable sheet if already loaded.
   if (sheet)
   {
+    // Ensure the style sheet is owned by our document.
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
+    rv = sheet->SetOwningDocument(doc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
     NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
     
@@ -3719,12 +3718,12 @@ nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
                                      nsICSSStyleSheet *aStyleSheet)
 {
   PRInt32 countSS = mStyleSheets.Count();
-  PRInt32 countU = mStyleSheetURLs.Count();
+  PRUint32 countU = mStyleSheetURLs.Length();
 
   if (countU < 0 || countSS != countU)
     return NS_ERROR_UNEXPECTED;
 
-  if (!mStyleSheetURLs.AppendString(aURL))
+  if (!mStyleSheetURLs.AppendElement(aURL))
     return NS_ERROR_UNEXPECTED;
 
   return mStyleSheets.AppendObject(aStyleSheet) ? NS_OK : NS_ERROR_UNEXPECTED;
@@ -3734,17 +3733,16 @@ nsresult
 nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
 {
   // is it already in the list?
-  PRInt32 foundIndex;
+  PRUint32 foundIndex;
   foundIndex = mStyleSheetURLs.IndexOf(aURL);
-  if (foundIndex < 0)
+  if (foundIndex == mStyleSheetURLs.NoIndex)
     return NS_ERROR_FAILURE;
 
   // Attempt both removals; if one fails there's not much we can do.
   nsresult rv = NS_OK;
   if (!mStyleSheets.RemoveObjectAt(foundIndex))
     rv = NS_ERROR_FAILURE;
-  if (!mStyleSheetURLs.RemoveStringAt(foundIndex))
-    rv = NS_ERROR_FAILURE;
+  mStyleSheetURLs.RemoveElementAt(foundIndex);
 
   return rv;
 }
@@ -3757,9 +3755,9 @@ nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
   *aStyleSheet = 0;
 
   // is it already in the list?
-  PRInt32 foundIndex;
+  PRUint32 foundIndex;
   foundIndex = mStyleSheetURLs.IndexOf(aURL);
-  if (foundIndex < 0)
+  if (foundIndex == mStyleSheetURLs.NoIndex)
     return NS_OK; //No sheet -- don't fail!
 
   *aStyleSheet = mStyleSheets[foundIndex];
@@ -3779,14 +3777,13 @@ nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
   PRInt32 foundIndex = mStyleSheets.IndexOf(aStyleSheet);
 
   // Don't fail if we don't find it in our list
+  // Note: mStyleSheets is nsCOMArray, so its IndexOf() method
+  // returns -1 on failure.
   if (foundIndex == -1)
     return NS_OK;
 
   // Found it in the list!
-  nsAString* strp = mStyleSheetURLs.StringAt(foundIndex);
-  if (!strp)
-    return NS_ERROR_UNEXPECTED;
-  aURL = *strp;
+  aURL = mStyleSheetURLs[foundIndex];
   return NS_OK;
 }
 

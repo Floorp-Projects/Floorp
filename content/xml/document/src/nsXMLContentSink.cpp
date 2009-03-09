@@ -383,6 +383,12 @@ nsXMLContentSink::DidBuildModel()
   return NS_OK;
 }
 
+PRBool
+nsXMLContentSink::ReadyToCallDidBuildModel(PRBool aTerminated)
+{
+  return ReadyToCallDidBuildModelImpl(aTerminated);
+}
+
 NS_IMETHODIMP
 nsXMLContentSink::OnDocumentCreated(nsIDocument* aResultDocument)
 {
@@ -994,6 +1000,12 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
     // find a parent content node to append to, which is fine.
     return PR_FALSE;
   }
+
+  if (aTagName == nsGkAtoms::html &&
+      aNameSpaceID == kNameSpaceID_XHTML) {
+    ProcessOfflineManifest(aContent);
+  }
+
   return PR_TRUE;
 }
 
@@ -1179,7 +1191,11 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
 #ifdef MOZ_SVG
   if (mDocument &&
       content->GetNameSpaceID() == kNameSpaceID_SVG &&
-      content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
+      (
+#ifdef MOZ_SMIL
+       content->Tag() == nsGkAtoms::svg ||
+#endif
+       content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload))) {
     FlushTags();
 
     nsEvent event(PR_TRUE, NS_SVG_LOAD);
@@ -1466,6 +1482,10 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   // release the nodes on stack
   mContentStack.Clear();
   mNotifyLevel = 0;
+
+  rv = HandleProcessingInstruction(NS_LITERAL_STRING("xml-stylesheet").get(),
+                                   NS_LITERAL_STRING("href=\"chrome://global/locale/intl.css\" type=\"text/css\"").get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   const PRUnichar* noAtts[] = { 0, 0 };
 

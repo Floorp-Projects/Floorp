@@ -84,7 +84,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
   nsIDocument* currentDoc = tmp->GetCurrentDoc();
   if (currentDoc && nsCCUncollectableMarker::InGeneration(
                       currentDoc->GetMarkedCCGeneration())) {
-    return NS_OK;
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
@@ -143,77 +143,6 @@ nsGenericDOMDataNode::SetNodeValue(const nsAString& aNodeValue)
 {
   return SetTextInternal(0, mText.GetLength(), aNodeValue.BeginReading(),
                          aNodeValue.Length(), PR_TRUE);
-}
-
-nsresult
-nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
-{
-  *aParentNode = nsnull;
-  nsINode *parent = GetNodeParent();
-
-  return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
-{
-  *aPrevSibling = nsnull;
-
-  nsINode *parent = GetNodeParent();
-  if (!parent) {
-    return NS_OK;
-  }
-
-  PRInt32 pos = parent->IndexOf(this);
-  nsIContent *sibling = parent->GetChildAt(pos - 1);
-
-  return sibling ? CallQueryInterface(sibling, aPrevSibling) : NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  *aNextSibling = nsnull;
-
-  nsINode *parent = GetNodeParent();
-  if (!parent) {
-    return NS_OK;
-  }
-
-  PRInt32 pos = parent->IndexOf(this);
-  nsIContent *sibling = parent->GetChildAt(pos + 1);
-
-  return sibling ? CallQueryInterface(sibling, aNextSibling) : NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  *aChildNodes = nsnull;
-  nsDataSlots *slots = GetDataSlots();
-  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(slots->mChildNodes);
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  nsIDocument *document = GetOwnerDoc();
-  if (document) {
-    return CallQueryInterface(document, aOwnerDocument);
-  }
-
-  *aOwnerDocument = nsnull;
-
-  return NS_OK;
 }
 
 nsresult
@@ -616,8 +545,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                  "Trying to re-bind content from native anonymous subtree to "
                  "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
-    if (IsRootOfNativeAnonymousSubtree() ||
-        aParent->IsInNativeAnonymousSubtree()) {
+    if (aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
     }
   }

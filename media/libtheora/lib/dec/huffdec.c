@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: huffdec.c 14493 2008-02-13 09:25:37Z tterribe $
+    last mod: $Id: huffdec.c 15431 2008-10-21 05:04:02Z giles $
 
  ********************************************************************/
 
@@ -24,6 +24,52 @@
 /*The ANSI offsetof macro is broken on some platforms (e.g., older DECs).*/
 #define _ogg_offsetof(_type,_field)\
  ((size_t)((char *)&((_type *)0)->_field-(char *)0))
+
+/*These two functions are really part of the bitpack.c module, but
+  they are only used here. Declaring local static versions so they
+  can be inlined saves considerable function call overhead.*/
+
+/*Read in bits without advancing the bitptr.
+  Here we assume 0<=_bits&&_bits<=32.*/
+static int theorapackB_look(oggpack_buffer *_b,int _bits,long *_ret){
+  long ret;
+  long m;
+  long d;
+  m=32-_bits;
+  _bits+=_b->endbit;
+  d=_b->storage-_b->endbyte;
+  if(d<=4){
+    /*Not the main path.*/
+    if(d<=0){
+      *_ret=0L;
+      return -(_bits>d*8);
+    }
+    /*If we have some bits left, but not enough, return the ones we have.*/
+    if(d*8<_bits)_bits=d*8;
+  }
+  ret=_b->ptr[0]<<24+_b->endbit;
+  if(_bits>8){
+    ret|=_b->ptr[1]<<16+_b->endbit;
+    if(_bits>16){
+      ret|=_b->ptr[2]<<8+_b->endbit;
+      if(_bits>24){
+        ret|=_b->ptr[3]<<_b->endbit;
+        if(_bits>32)ret|=_b->ptr[4]>>8-_b->endbit;
+      }
+    }
+  }
+  *_ret=((ret&0xFFFFFFFF)>>(m>>1))>>(m+1>>1);
+  return 0;
+}
+
+/*advance the bitptr*/
+static void theorapackB_adv(oggpack_buffer *_b,int _bits){
+  _bits+=_b->endbit;
+  _b->ptr+=_bits>>3;
+  _b->endbyte+=_bits>>3;
+  _b->endbit=_bits&7;
+}
+
 
 /*The log_2 of the size of a lookup table is allowed to grow to relative to
    the number of unique nodes it contains.

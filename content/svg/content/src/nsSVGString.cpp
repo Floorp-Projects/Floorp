@@ -36,10 +36,12 @@
 
 #include "nsSVGString.h"
 
-NS_IMPL_ADDREF(nsSVGString::DOMAnimatedString)
-NS_IMPL_RELEASE(nsSVGString::DOMAnimatedString)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGString::DOMAnimatedString, mSVGElement)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGString::DOMAnimatedString)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGString::DOMAnimatedString)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGString::DOMAnimatedString)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGString::DOMAnimatedString)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedString)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedString)
@@ -52,8 +54,24 @@ nsSVGString::SetBaseValue(const nsAString& aValue,
                           nsSVGElement *aSVGElement,
                           PRBool aDoSetAttr)
 {
-  mAnimVal = mBaseVal = aValue;
-  aSVGElement->DidChangeString(mAttrEnum, aDoSetAttr);
+  NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
+
+  mAnimVal = nsnull;
+
+  if (aDoSetAttr) {
+    aSVGElement->SetStringBaseValue(mAttrEnum, aValue);
+  }
+
+  aSVGElement->DidChangeString(mAttrEnum);
+}
+
+void
+nsSVGString::GetAnimValue(nsAString& aResult, const nsSVGElement* aSVGElement) const
+{
+  if (mAnimVal)
+    aResult = *mAnimVal;
+
+  aSVGElement->GetStringBaseValue(mAttrEnum, aResult);
 }
 
 nsresult

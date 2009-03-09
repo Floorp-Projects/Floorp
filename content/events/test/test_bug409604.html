@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   var modifier = Components.interfaces.nsIDOMNSEvent.ALT_MASK |
                  Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
-  var expectedFocus = "d,g,h,k,l,m";
+  var expectedFocus = "d,g,h,k,l,m,n";
   // XXX the "map" test is causing trouble, see bug 433089
   // var expectedClick = "a,b,c,e,f,i,j";
   var expectedClick = "a,c,e,f,i,j";
@@ -115,9 +115,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   function handleFocus(e) {
     ok("accessKey" in e, "(focus) accesskey property not found on element");
     var expected = focusArray.shift();
-    // "k" is a special case because the element receiving the focus is not
-    // the element which has the accesskey.
-    if (expected == "k") {
+    // "k" and "n" are a special cases because the element receiving the focus
+    // is not the element which has the accesskey.
+    if (expected == "k" || expected == "n") {
       ok(e.value == "test for label", "(focus) unexpected element: " + e.value +
          " expected: " + "test for label");
     // "l" is a special case because the element receiving the focus is not
@@ -312,7 +312,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       </tr>
       <tr>
         <td>label (label invisible)</td><td><label for="txt1" accesskey="n" style="display:none">test label</label>
-                          <input type="text" id="txt1" value="test for label" onfocus="handleInvalid(event.target);"></td>
+                          <input type="text" id="txt1" value="test for label" onfocus="handleFocus(event.target);"></td>
       </tr>
       <tr>
         <td>label (control invisible)</td><td><label for="txt2" accesskey="o">test label</label>

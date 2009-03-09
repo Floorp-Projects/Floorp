@@ -64,6 +64,7 @@
   <hbox align="center">
     <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
     <textbox id="search-box" flex="1" type="search" cocoa-size="small"
+             aria-controls="bookmarks-view"
              oncommand="searchBookmarks(this.value);"/>
   </hbox>
 

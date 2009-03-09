@@ -62,7 +62,7 @@ public:
     nsXPathEvaluatorParseContext(nsXPathEvaluator &aEvaluator,
                                  nsIDOMXPathNSResolver* aResolver,
                                  nsTArray<PRInt32> *aNamespaceIDs,
-                                 nsCStringArray *aContractIDs,
+                                 nsTArray<nsCString> *aContractIDs,
                                  nsCOMArray<nsISupports> *aState,
                                  PRBool aIsCaseSensitive)
         : mEvaluator(aEvaluator),
@@ -93,7 +93,7 @@ private:
     nsXPathEvaluator &mEvaluator;
     nsIDOMXPathNSResolver* mResolver;
     nsTArray<PRInt32> *mNamespaceIDs;
-    nsCStringArray *mContractIDs;
+    nsTArray<nsCString> *mContractIDs;
     nsCOMArray<nsISupports> *mState;
     nsresult mLastError;
     PRBool mIsCaseSensitive;
@@ -170,16 +170,16 @@ nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 NS_IMETHODIMP
 nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
-                                   nsStringArray *aNamespaceURIs,
-                                   nsCStringArray *aContractIDs,
+                                   nsTArray<nsString> *aNamespaceURIs,
+                                   nsTArray<nsCString> *aContractIDs,
                                    nsCOMArray<nsISupports> *aState,
                                    nsIDOMXPathExpression **aResult)
 {
     nsTArray<PRInt32> namespaceIDs;
     if (aNamespaceURIs) {
-        PRInt32 count = aNamespaceURIs->Count();
+        PRUint32 count = aNamespaceURIs->Length();
 
-        if (!aContractIDs || aContractIDs->Count() != count) {
+        if (!aContractIDs || aContractIDs->Length() != count) {
             return NS_ERROR_FAILURE;
         }
 
@@ -187,13 +187,13 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        PRInt32 i;
+        PRUint32 i;
         for (i = 0; i < count; ++i) {
-            if (aContractIDs->CStringAt(i)->IsEmpty()) {
+            if (aContractIDs->ElementAt(i).IsEmpty()) {
                 return NS_ERROR_FAILURE;
             }
 
-            nsContentUtils::NameSpaceManager()->RegisterNameSpace(*aNamespaceURIs->StringAt(i), namespaceIDs[i]);
+            nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURIs->ElementAt(i), namespaceIDs[i]);
         }
     }
 
@@ -206,7 +206,7 @@ nsresult
 nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsTArray<PRInt32> *aNamespaceIDs,
-                                   nsCStringArray *aContractIDs,
+                                   nsTArray<nsCString> *aContractIDs,
                                    nsCOMArray<nsISupports> *aState,
                                    nsIDOMXPathExpression **aResult)
 {
@@ -301,7 +301,7 @@ nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
     for (i = 0; i < count; ++i) {
         if (mNamespaceIDs->ElementAt(i) == aID) {
             nsISupports *state = mState ? mState->SafeObjectAt(i) : nsnull;
-            rv = TX_ResolveFunctionCallXPCOM(*mContractIDs->CStringAt(i), aID,
+            rv = TX_ResolveFunctionCallXPCOM(mContractIDs->ElementAt(i), aID,
                                              aName, state, aFn);
             if (NS_SUCCEEDED(rv)) {
                 break;

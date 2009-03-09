@@ -49,7 +49,7 @@
 /**
  * Native types
  */
-  [ref] native nsNativeMarginRef(nsMargin);
+  [ref] native nsNativeIntMarginRef(nsIntMargin);
   
 interface nsIPrintSession;
 
@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(5af07661-6477-4235-8814-4a45215855b8)]
+[scriptable, uuid(343700dd-078b-42b6-a809-b9c1d7e951d0)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -304,11 +304,11 @@ interface nsIPrintSettings : nsISupports
   attribute boolean isInitializedFromPrefs;
 
   /* C++ Helper Functions */
-  [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
-  [noscript] void SetEdgeInTwips(in nsNativeMarginRef aEdge);
+  [noscript] void SetMarginInTwips(in nsNativeIntMarginRef aMargin);
+  [noscript] void SetEdgeInTwips(in nsNativeIntMarginRef aEdge);
   /* Purposely made this an "in" arg */
-  [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
-  [noscript] void GetEdgeInTwips(in nsNativeMarginRef aEdge);
+  [noscript] void GetMarginInTwips(in nsNativeIntMarginRef aMargin);
+  [noscript] void GetEdgeInTwips(in nsNativeIntMarginRef aEdge);
 
   /**
    * We call this function so that anything that requires a run of the event loop
@@ -329,6 +329,6 @@ interface nsIPrintSettings : nsISupports
    * negative margin values by falling back on the system default for
    * that margin.
    */
-  [noscript] void SetUnwriteableMarginInTwips(in nsNativeMarginRef aEdge);
-  [noscript] void GetUnwriteableMarginInTwips(in nsNativeMarginRef aEdge);
+  [noscript] void SetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
+  [noscript] void GetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
 };

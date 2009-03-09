@@ -135,6 +135,9 @@ function run_test() {
   LOG("begin live-update test");
   compareArrayToResult(testData, root);
   LOG("end live-update test");
+/*
+  // we are actually not updating during a batch.
+  // see bug 432706 for details.
 
   // Here's a batch update
   var updateBatch = {
@@ -153,7 +156,7 @@ function run_test() {
   LOG("begin batched test");
   compareArrayToResult(testData, root);
   LOG("end batched test");
-
+*/
   // Close the container when finished
   root.containerOpen = false;
 }

@@ -1,9 +1,8 @@
-product=thunderbird
-branch=1.8.0
-profilename=thunderbird-1.8.0-test-profile
-profiledirectory=/tmp/thunderbird-1.8.0-test-profile
-executablepath=${BUILDDIR}/1.8.0-test/mozilla/thunderbird-debug/dist
-userpreferences=${TEST_DIR}/prefs/test-user.js
-extensiondir=${TEST_DIR}/xpi
-profiletemplate=${TEST_DIR}/profiles/imap
-buildtype=debug
+product=${product:-thunderbird}
+branch=${branch:-1.8.0}
+buildtype=${buildtype:-debug}
+profilename=${profilename:-thunderbird-1.8.0-test-profile}
+profiledirectory=${profiledirectory:-/tmp/thunderbird-1.8.0-test-profile}
+executablepath=${executablepath:-/work/mozilla/builds/1.8.0-test/mozilla/thunderbird-debug/dist}
+userpreferences=${userpreferences:-/work/mozilla/builds/hg.mozilla.org/mozilla-central-test/testing/sisyphus/prefs/test-user.js}
+extensiondir=${extensiondir:-/work/mozilla/builds/hg.mozilla.org/mozilla-central-test/testing/sisyphus/xpi}

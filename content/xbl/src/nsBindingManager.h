@@ -48,6 +48,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsXBLBinding.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 class nsIContent;
 class nsIXPConnectWrappedJS;
@@ -61,7 +62,6 @@ class nsStyleSet;
 class nsXBLBinding;
 template<class E> class nsRefPtr;
 typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
-template<class T> class nsRunnableMethod;
 class nsIPrincipal;
 
 class nsBindingManager : public nsStubMutationObserver
@@ -122,7 +122,10 @@ public:
   PRBool HasContentListFor(nsIContent* aContent);
 
   /**
-   * For a given element, retrieve the anonymous child content.
+   * Return the nodelist of "anonymous" kids for this node.  This might
+   * actually include some of the nodes actual DOM kids, if there are
+   * <children> tags directly as kids of <content>.  This will only end up
+   * returning a non-null list for nodes which have a binding attached.
    */
   nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
@@ -142,11 +145,22 @@ public:
   nsresult GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
   /**
+   * Non-COMy version of GetXBLChildNodesFor
+   */
+  nsINodeList* GetXBLChildNodesFor(nsIContent* aContent);
+
+  /**
    * Given a parent element and a child content, determine where the
    * child content should be inserted in the parent element's
    * anonymous content tree. Specifically, aChild should be inserted
    * beneath aResult at the index specified by aIndex.
    */
+  // XXXbz That's false.  The aIndex doesn't seem to accurately reflect
+  // anything resembling reality in terms of inserting content.  It's really
+  // only used to tell apart two different insertion points with the same
+  // insertion parent when managing our internal data structures.  We really
+  // shouldn't be handing it out in our public API, since it's not useful to
+  // anyone.
   nsIContent* GetInsertionPoint(nsIContent* aParent,
                                 nsIContent* aChild, PRUint32* aIndex);
 
@@ -212,12 +226,10 @@ protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
   nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
 
-  nsresult GetXBLChildNodesInternal(nsIContent* aContent,
-                                    nsIDOMNodeList** aResult,
-                                    PRBool* aIsAnonymousContentList);
-  nsresult GetAnonymousNodesInternal(nsIContent* aContent,
-                                     nsIDOMNodeList** aResult,
-                                     PRBool* aIsAnonymousContentList);
+  nsINodeList* GetXBLChildNodesInternal(nsIContent* aContent,
+                                        PRBool* aIsAnonymousContentList);
+  nsINodeList* GetAnonymousNodesInternal(nsIContent* aContent,
+                                         PRBool* aIsAnonymousContentList);
 
   nsIContent* GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild);
   nsIContent* GetNestedSingleInsertionPoint(nsIContent* aParent,
@@ -244,24 +256,22 @@ protected:
   // installed on that element.
   nsRefPtrHashtable<nsISupportsHashKey,nsXBLBinding> mBindingTable;
 
-  // A mapping from nsIContent* to an nsIDOMNodeList*
-  // (nsAnonymousContentList*).  This list contains an accurate
-  // reflection of our *explicit* children (once intermingled with
-  // insertion points) in the altered DOM.  There is an entry for a
-  // content node in this table only if that content node has some
-  // <children> kids.
+  // A mapping from nsIContent* to an nsAnonymousContentList*.  This
+  // list contains an accurate reflection of our *explicit* children
+  // (once intermingled with insertion points) in the altered DOM.
+  // There is an entry for a content node in this table only if that
+  // content node has some <children> kids.
   PLDHashTable mContentListTable;
 
-  // A mapping from nsIContent* to an nsIDOMNodeList*
-  // (nsAnonymousContentList*).  This list contains an accurate
-  // reflection of our *anonymous* children (if and only if they are
-  // intermingled with insertion points) in the altered DOM.  This
-  // table is not used if no insertion points were defined directly
-  // underneath a <content> tag in a binding.  The NodeList from the
-  // <content> is used instead as a performance optimization.  There
-  // is an entry for a content node in this table only if that content
-  // node has a binding with a <content> attached and this <content>
-  // contains <children> elements directly.
+  // A mapping from nsIContent* to an nsAnonymousContentList*.  This
+  // list contains an accurate reflection of our *anonymous* children
+  // (if and only if they are intermingled with insertion points) in
+  // the altered DOM.  This table is not used if no insertion points
+  // were defined directly underneath a <content> tag in a binding.
+  // The NodeList from the <content> is used instead as a performance
+  // optimization.  There is an entry for a content node in this table
+  // only if that content node has a binding with a <content> attached
+  // and this <content> contains <children> elements directly.
   PLDHashTable mAnonymousNodesTable;
 
   // A mapping from nsIContent* to nsIContent*.  The insertion parent
@@ -296,7 +306,7 @@ protected:
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;
-  nsCOMPtr<nsIRunnable> mProcessAttachedQueueEvent;
+  nsRefPtr< nsRunnableMethod<nsBindingManager> > mProcessAttachedQueueEvent;
 
   // Our document.  This is a weak ref; the document owns us
   nsIDocument* mDocument; 

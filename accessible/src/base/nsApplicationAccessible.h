@@ -72,7 +72,6 @@ public:
   // nsIAccessible
   NS_IMETHOD GetName(nsAString & aName);
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetFinalRole(PRUint32 *aFinalRole);
   NS_IMETHOD GetParent(nsIAccessible * *aParent);
   NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
@@ -80,6 +79,7 @@ public:
   NS_IMETHOD GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild);
 
   // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
   // nsApplicationAccessible

@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,15 @@
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
+const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
+const TRANSITION_BOOKMARK = Ci.nsINavHistoryService.TRANSITION_BOOKMARK;
+const TRANSITION_EMBED = Ci.nsINavHistoryService.TRANSITION_EMBED;
+const TRANSITION_REDIRECT_PERMANENT = Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT;
+const TRANSITION_REDIRECT_TEMPORARY = Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY;
+const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
+
 let current_test = 0;
 
 function AutoCompleteInput(aSearches) {
@@ -155,6 +165,8 @@ try {
               getService(Ci.nsIIOService);
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
+  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
 } catch(ex) {
   do_throw("Could not get services\n");
 }
@@ -164,7 +176,122 @@ let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 // Store the page info for each uri
 let gPages = [];
 
-function addPageBook(aURI, aTitle, aBook, aTags, aKey)
+/**
+ * Sets the page title synchronously.  The page must already be in the database.
+ *
+ * @param aURI
+ *        An nsIURI to set the title for.
+ * @param aTitle
+ *        The title to set the page to.
+ */
+function setPageTitle(aURI, aTitle)
+{
+  // XXX this function only exists because we have no API to do this. It should
+  //     be added in bug 421897.
+  let db = histsvc.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+  let stmt = db.createStatement(
+    "UPDATE moz_places_view " +
+    "SET title = :title " +
+    "WHERE url = :uri"
+  );
+  stmt.params.title = aTitle;
+  stmt.params.uri = aURI.spec;
+  stmt.execute();
+  stmt.finalize();
+}
+
+/**
+ * Adds a livemark container with a single child, and creates various properties
+ * for it depending on the parameters passed in.
+ *
+ * @param aContainerSiteURI
+ *        An index into kURIs that holds the string for the URI of site of the
+ *        livemark container we are to add.
+ * @param aContainerFeedURI
+ *        An index into kURIs that holds the string for the URI of feed of the
+ *        livemark container we are to add.
+ * @param aContainerTitle
+ *        An index into kTitles that holds the string for the title we are to
+ *        associate with the livemark container.
+ * @param aChildURI
+ *        An index into kURIs that holds the string for the URI of single
+ *        livemark child we are to add.
+ * @param aChildTitle
+ *        An index into kTitles that holds the string for the title we are to
+ *        associate with the single livemark child.
+ * @param aTransitionType [optional]
+ *        The transition type to use when adding the visit.  The default is
+ *        nsINavHistoryService::TRANSITION_LINK.
+ * @param aNoChildVisit [optional]
+ *        If true, no visit is added for the child's URI.  If false or
+ *        undefined, a visit is added.
+ */
+function addLivemark(aContainerSiteURI, aContainerFeedURI, aContainerTitle,
+                     aChildURI, aChildTitle, aTransitionType, aNoChildVisit)
+{
+  // Add a page entry for the child uri
+  gPages[aChildURI] = [aChildURI, aChildTitle, /* no tags */];
+
+  let out = [aChildURI, aChildTitle];
+  out.push("\nchild uri=" + kURIs[aChildURI]);
+  out.push("\nchild title=" + kTitles[aChildTitle]);
+
+  // Create the container
+  let containerSiteURI = toURI(kURIs[aContainerSiteURI]);
+  let containerFeedURI = toURI(kURIs[aContainerFeedURI]);
+  let containerTitle = kTitles[aContainerTitle];
+  let containerId = lmsvc.createLivemarkFolderOnly(bmsvc.unfiledBookmarksFolder,
+                                                   containerTitle,
+                                                   containerSiteURI,
+                                                   containerFeedURI,
+                                                   bmsvc.DEFAULT_INDEX);
+  // Insert the child
+  let childURI = toURI(kURIs[aChildURI]);
+  let childTitle = kTitles[aChildTitle];
+  bmsvc.insertBookmark(containerId, childURI, bmsvc.DEFAULT_INDEX, childTitle);
+
+  // Add a visit to the child if we need to
+  if (!aNoChildVisit) {
+    let tt = aTransitionType || TRANSITION_LINK;
+    let isRedirect = tt == TRANSITION_REDIRECT_PERMANENT ||
+                     tt == TRANSITION_REDIRECT_TEMPORARY;
+    histsvc.addVisit(childURI, gDate, null, tt, isRedirect, 0);
+    out.push("\nwith visit");
+  }
+
+  print("\nAdding livemark: " + out.join(", "));
+}
+
+/**
+ * Adds a page, and creates various properties for it depending on the
+ * parameters passed in.  This function will also add one visit, unless
+ * aNoVisit is true.
+ *
+ * @param aURI
+ *        An index into kURIs that holds the string for the URI we are to add a
+ *        page for.
+ * @param aTitle
+ *        An index into kTitles that holds the string for the title we are to
+ *        associate with the specified URI.
+ * @param aBook [optional]
+ *        An index into kTitles that holds the string for the title we are to
+ *        associate with the bookmark.  If this is undefined, no bookmark is
+ *        created.
+ * @param aTags [optional]
+ *        An array of indexes into kTitles that hold the strings for the tags we
+ *        are to associate with the URI.  If this is undefined (or aBook is), no
+ *        tags are added.
+ * @param aKey [optional]
+ *        A string to associate as the keyword for this bookmark.  aBook must be
+ *        a valid index into kTitles for this to be checked and used.
+ * @param aTransitionType [optional]
+ *        The transition type to use when adding the visit.  The default is
+ *        nsINavHistoryService::TRANSITION_LINK.
+ * @param aNoVisit [optional]
+ *        If true, no visit is added for the URI.  If false or undefined, a
+ *        visit is added.
+ */
+function addPageBook(aURI, aTitle, aBook, aTags, aKey, aTransitionType, aNoVisit)
 {
   // Add a page entry for the current uri
   gPages[aURI] = [aURI, aBook != undefined ? aBook : aTitle, aTags];
@@ -176,8 +303,15 @@ function addPageBook(aURI, aTitle, aBook, aTags, aKey)
   out.push("\nuri=" + kURIs[aURI]);
   out.push("\ntitle=" + title);
 
-  // Add the page and a visit for good measure
-  bhist.addPageWithDetails(uri, title, gDate);
+  // Add the page and a visit if we need to
+  if (!aNoVisit) {
+    let tt = aTransitionType || TRANSITION_LINK;
+    let isRedirect = tt == TRANSITION_REDIRECT_PERMANENT ||
+                     tt == TRANSITION_REDIRECT_TEMPORARY;
+    histsvc.addVisit(uri, gDate, null, tt, isRedirect, 0);
+    setPageTitle(uri, title);
+    out.push("\nwith visit");
+  }
 
   // Add a bookmark if we need to
   if (aBook != undefined) {
@@ -206,6 +340,7 @@ function run_test() {
   print("\n");
   // always search in history + bookmarks, no matter what the default is
   prefs.setIntPref("browser.urlbar.search.sources", 3);
+  prefs.setIntPref("browser.urlbar.default.behavior", 0);
 
   // Search is asynchronous, so don't let the test finish immediately
   do_test_pending();
@@ -219,4 +354,19 @@ function run_test() {
     func();
 
   ensure_results(search, expected);
+}
+
+// Utility function to remove history pages
+function removePages(aURIs)
+{
+  for each (let uri in aURIs)
+    histsvc.removePage(toURI(kURIs[uri]));
+}
+
+// Utility function to mark pages as typed
+function markTyped(aURIs)
+{
+  for each (let uri in aURIs)
+    histsvc.addVisit(toURI(kURIs[uri]), Date.now() * 1000, null,
+      histsvc.TRANSITION_TYPED, false, 0);
 }

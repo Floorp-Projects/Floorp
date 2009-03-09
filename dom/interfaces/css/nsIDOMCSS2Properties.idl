@@ -1,0 +1,419 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2000
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ *   Johnny Stenback <jst@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "domstubs.idl"
+
+/**
+ * The nsIDOMCSS2Properties interface is a datatype for additional
+ * reflection of data already provided in nsIDOMCSSStyleDeclaration in
+ * the Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Style
+ *
+ * This interface matches what is specified in the DOM Level 2
+ * specification; new properties are added to nsIDOMNSCSS2Properties.
+ */
+
+[scriptable, uuid(529b987a-cb21-4d58-99d7-9586e7662801)]
+interface nsIDOMCSS2Properties : nsISupports
+{
+           attribute DOMString        azimuth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        background;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        backgroundAttachment;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        backgroundColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        backgroundImage;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        backgroundPosition;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        backgroundRepeat;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        border;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderCollapse;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderSpacing;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderTop;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderRight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderBottom;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderLeft;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderTopColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderRightColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderBottomColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderLeftColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderTopStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderRightStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderBottomStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderLeftStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderTopWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderRightWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderBottomWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderLeftWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        bottom;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        captionSide;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        clear;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        clip;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        color;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        content;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        counterIncrement;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        counterReset;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        cue;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        cueAfter;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        cueBefore;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        cursor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        direction;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        display;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        elevation;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        emptyCells;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        cssFloat;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        font;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontFamily;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontSize;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontSizeAdjust;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontStretch;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontVariant;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        fontWeight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        height;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        left;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        letterSpacing;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        lineHeight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        listStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        listStyleImage;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        listStylePosition;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        listStyleType;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        margin;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        marginTop;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        marginRight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        marginBottom;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        marginLeft;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        markerOffset;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        marks;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        maxHeight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        maxWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        minHeight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        minWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        orphans;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        outline;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        outlineColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        outlineStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        outlineWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        overflow;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        padding;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        paddingTop;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        paddingRight;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        paddingBottom;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        paddingLeft;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        page;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pageBreakAfter;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pageBreakBefore;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pageBreakInside;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pause;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pauseAfter;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pauseBefore;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pitch;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        pitchRange;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        position;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        quotes;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        richness;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        right;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        size;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        speak;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        speakHeader;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        speakNumeral;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        speakPunctuation;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        speechRate;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        stress;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        tableLayout;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        textAlign;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        textDecoration;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        textIndent;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        textShadow;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        textTransform;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        top;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        unicodeBidi;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        verticalAlign;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        visibility;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        voiceFamily;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        volume;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        whiteSpace;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        widows;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        width;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        wordSpacing;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        zIndex;
+                                        // raises(DOMException) on setting
+};

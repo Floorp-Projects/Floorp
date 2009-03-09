@@ -1,0 +1,120 @@
+<html>
+
+<head>
+  <title>Group attributes tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // HTML select
+      testGroupAttrs("opt1", 1, 2);
+      testGroupAttrs("opt2", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML ul/ol
+      testGroupAttrs("li1", 1, 3);
+      testGroupAttrs("li2", 2, 3);
+      testGroupAttrs("li3", 3, 3);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML ul/ol (nested lists)
+
+      testGroupAttrs("li4", 1, 3, 1);
+      testGroupAttrs("li5", 2, 3, 1);
+      testGroupAttrs("li6", 3, 3, 1);
+
+      testGroupAttrs("n_li4", 1, 3, 2);
+      testGroupAttrs("n_li5", 2, 3, 2);
+      testGroupAttrs("n_li6", 3, 3, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA list
+      testGroupAttrs("li7", 1, 3);
+      testGroupAttrs("li8", 2, 3);
+      testGroupAttrs("li9", 3, 3);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA list (nested lists)
+      testGroupAttrs("li10", 1, 3, 1);
+      testGroupAttrs("li11", 2, 3, 1);
+      testGroupAttrs("li12", 3, 3, 1);
+
+      testGroupAttrs("n_li10", 1, 3, 2);
+      testGroupAttrs("n_li11", 2, 3, 2);
+      testGroupAttrs("n_li12", 3, 3, 2);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=468418"
+     title="Expose level for nested lists in HTML">
+    Mozilla Bug 468418
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select size="4">
+    <option id="opt1">option1</option>
+    <option id="opt2">option2</option>
+  </select>
+
+  <ul>
+    <li id="li1">Oranges</li>
+    <li id="li2">Apples</li>
+    <li id="li3">Bananas</li>
+  </ul>
+
+  <ol>
+    <li id="li4">Oranges</li>
+    <li id="li5">Apples</li>
+    <li id="li6">Bananas
+      <ul>
+        <li id="n_li4">Oranges</li>
+        <li id="n_li5">Apples</li>
+        <li id="n_li6">Bananas</li>
+      </ul>
+    </li>
+  </ol>
+
+  <span role="list">
+    <span role="listitem" id="li7">Oranges</span>
+    <span role="listitem" id="li8">Apples</span>
+    <span role="listitem" id="li9">Bananas</span>
+  </span>
+
+  <span role="list">
+    <span role="listitem" id="li10">Oranges</span>
+    <span role="listitem" id="li11">Apples</span>
+    <span role="listitem" id="li12">Bananas
+      <span role="list">
+        <span role="listitem" id="n_li10">Oranges</span>
+        <span role="listitem" id="n_li11">Apples</span>
+        <span role="listitem" id="n_li12">Bananas</span>
+      </span>
+    </span>
+  </span>
+</body>
+</html>

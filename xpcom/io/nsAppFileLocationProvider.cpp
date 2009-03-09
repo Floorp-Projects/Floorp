@@ -94,7 +94,6 @@
 #ifdef XP_MACOSX
 #define NS_MACOSX_USER_PLUGIN_DIR   "OSXUserPlugins"
 #define NS_MACOSX_LOCAL_PLUGIN_DIR  "OSXLocalPlugins"
-#define NS_MAC_CLASSIC_PLUGIN_DIR   "MacSysPlugins"
 #elif XP_UNIX
 #define NS_SYSTEM_PLUGINS_DIR       "SysPlugins"
 #endif
@@ -136,9 +135,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
     *persistent = PR_TRUE;
 
 #ifdef XP_MACOSX
-    short foundVRefNum;
-    long foundDirID;
-    FSSpec fileSpec;
+    FSRef fileRef;
     nsCOMPtr<nsILocalFileMac> macFile;
 #endif
     
@@ -206,33 +203,16 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
 #ifdef XP_MACOSX
     else if (nsCRT::strcmp(prop, NS_MACOSX_USER_PLUGIN_DIR) == 0)
     {
-        if (!(::FindFolder(kUserDomain,
-                           kInternetPlugInFolderType,
-                           kDontCreateFolder, &foundVRefNum, &foundDirID)) &&
-            !(::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec))) {
-            rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
+        if (::FSFindFolder(kUserDomain, kInternetPlugInFolderType, false, &fileRef) == noErr) {
+            rv = NS_NewLocalFileWithFSRef(&fileRef, PR_TRUE, getter_AddRefs(macFile));
             if (NS_SUCCEEDED(rv))
                 localFile = macFile;
         }
     }
     else if (nsCRT::strcmp(prop, NS_MACOSX_LOCAL_PLUGIN_DIR) == 0)
     {
-        if (!(::FindFolder(kLocalDomain,
-                           kInternetPlugInFolderType,
-                           kDontCreateFolder, &foundVRefNum, &foundDirID)) &&
-            !(::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec))) {
-            rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
-            if (NS_SUCCEEDED(rv))
-                localFile = macFile;
-        }
-    }
-    else if (nsCRT::strcmp(prop, NS_MAC_CLASSIC_PLUGIN_DIR) == 0)
-    {
-        if (!(::FindFolder(kOnAppropriateDisk,
-                           kInternetPlugInFolderType,
-                           kDontCreateFolder, &foundVRefNum, &foundDirID)) &&
-            !(::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec))) {
-            rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
+        if (::FSFindFolder(kLocalDomain, kInternetPlugInFolderType, false, &fileRef) == noErr) {
+            rv = NS_NewLocalFileWithFSRef(&fileRef, PR_TRUE, getter_AddRefs(macFile));
             if (NS_SUCCEEDED(rv))
                 localFile = macFile;
         }
@@ -579,17 +559,7 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
     if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
     {
 #ifdef XP_MACOSX
-        static const char* osXKeys[] = { NS_APP_PLUGINS_DIR, NS_MACOSX_USER_PLUGIN_DIR, NS_MACOSX_LOCAL_PLUGIN_DIR, nsnull };
-        static const char* os9Keys[] = { NS_APP_PLUGINS_DIR, NS_MAC_CLASSIC_PLUGIN_DIR, nsnull };
-        static const char** keys;
-        
-        if (!keys) {
-            OSErr err;
-            long response;
-            err = ::Gestalt(gestaltSystemVersion, &response); 
-            keys = (!err && response >= 0x00001000) ? osXKeys : os9Keys;
-        }
-
+        static const char* keys[] = { NS_APP_PLUGINS_DIR, NS_MACOSX_USER_PLUGIN_DIR, NS_MACOSX_LOCAL_PLUGIN_DIR, nsnull };
         *_retval = new nsAppDirectoryEnumerator(this, keys);
 #else
 #ifdef XP_UNIX

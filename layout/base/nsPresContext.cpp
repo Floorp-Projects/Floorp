@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -88,6 +89,11 @@
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
 #include "nsIEventListenerManager.h"
+#include "nsStyleStructInlines.h"
+
+#ifdef MOZ_SMIL
+#include "nsSMILAnimationController.h"
+#endif // MOZ_SMIL
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -154,7 +160,7 @@ IsVisualCharset(const nsCString& aCharset)
 
 
 static PLDHashOperator
-destroy_loads(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
+destroy_loads(const void * aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
 {
   aData->Destroy();
   return PL_DHASH_NEXT;
@@ -173,19 +179,24 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
     // Font sizes default to zero; they will be set in GetFontPreferences
     mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                         NS_FONT_WEIGHT_NORMAL, 0, 0),
+                         NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0, 0),
     mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL,
-                      NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+                      NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
+                      NS_FONT_STRETCH_NORMAL, 0, 0),
     mDefaultSerifFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                      NS_FONT_WEIGHT_NORMAL, 0, 0),
+                      NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0, 0),
     mDefaultSansSerifFont("sans-serif", NS_FONT_STYLE_NORMAL,
-                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
+                          NS_FONT_STRETCH_NORMAL, 0, 0),
     mDefaultMonospaceFont("monospace", NS_FONT_STYLE_NORMAL,
-                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
+                          NS_FONT_STRETCH_NORMAL, 0, 0),
     mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL,
-                        NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+                        NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
+                        NS_FONT_STRETCH_NORMAL, 0, 0),
     mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL,
-                        NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+                        NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
+                        NS_FONT_STRETCH_NORMAL, 0, 0),
     mCanPaginatedScroll(PR_FALSE),
     mIsRootPaginatedDocument(PR_FALSE), mSupressResizeReflow(PR_FALSE)
 {
@@ -236,8 +247,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
 nsPresContext::~nsPresContext()
 {
-  mImageLoaders.Enumerate(destroy_loads, nsnull);
-  mBorderImageLoaders.Enumerate(destroy_loads, nsnull);
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
+    mImageLoaders[i].Enumerate(destroy_loads, nsnull);
 
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
@@ -290,7 +301,6 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
   NS_IF_RELEASE(mLangGroup);
-  NS_IF_RELEASE(mUserFontSet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -304,7 +314,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
 
 static PLDHashOperator
-TraverseImageLoader(const void * aKey, nsCOMPtr<nsImageLoader>& aData,
+TraverseImageLoader(const void * aKey, nsRefPtr<nsImageLoader>& aData,
                     void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -322,8 +332,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
 
-  tmp->mImageLoaders.Enumerate(TraverseImageLoader, &cb);
-  tmp->mBorderImageLoaders.Enumerate(TraverseImageLoader, &cb);
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
+    tmp->mImageLoaders[i].Enumerate(TraverseImageLoader, &cb);
 
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
@@ -345,10 +355,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   // NS_RELEASE(tmp->mLookAndFeel); // a service
   // NS_RELEASE(tmp->mLangGroup); // an atom
 
-  tmp->mImageLoaders.Enumerate(destroy_loads, nsnull);
-  tmp->mImageLoaders.Clear();
-  tmp->mBorderImageLoaders.Enumerate(destroy_loads, nsnull);
-  tmp->mBorderImageLoaders.Clear();
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i) {
+    tmp->mImageLoaders[i].Enumerate(destroy_loads, nsnull);
+    tmp->mImageLoaders[i].Clear();
+  }
 
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
@@ -374,6 +384,10 @@ static const char* const kGenericFont[] = {
   ".cursive.",
   ".fantasy."
 };
+
+// whether no native theme service exists;
+// if this gets set to true, we'll stop asking for it.
+static PRBool sNoTheme = PR_FALSE;
 
 // Set to true when LookAndFeelChanged needs to be called.  This is used
 // because the look and feel is a service, so there's no need to notify it from
@@ -766,6 +780,13 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     // bother (yet, anyway).
     mPrefChangePendingNeedsReflow = PR_TRUE;
   }
+  if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("bidi."))) {
+    // Changes to bidi prefs need to trigger a reflow (see bug 443629)
+    mPrefChangePendingNeedsReflow = PR_TRUE;
+
+    // Changes to bidi.numeral also needs to empty the text run cache.
+    // This is handled in gfxTextRunWordCache.cpp.
+  }
   // we use a zero-delay timer to coalesce multiple pref updates
   if (!mPrefChangedTimer)
   {
@@ -821,11 +842,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
-  if (!mImageLoaders.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  if (!mBorderImageLoaders.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
+    if (!mImageLoaders[i].Init())
+      return NS_ERROR_OUT_OF_MEMORY;
   
   // Get the look and feel service here; default colors will be initialized
   // from calling GetUserPreferences() when we get a presshell.
@@ -894,6 +913,12 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 void
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
+  if (mUserFontSet) {
+    // Clear out user font set if we have one
+    mUserFontSet->Destroy();
+    NS_RELEASE(mUserFontSet);
+  }
+
   if (mShell) {
     // Remove ourselves as the charset observer from the shell's doc, because
     // this shell may be going away for good.
@@ -1036,10 +1061,13 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 
  // Enumeration call back for HashTable
 static PLDHashOperator
-set_animation_mode(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
+set_animation_mode(const void * aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
 {
-  imgIRequest* imgReq = aData->GetRequest();
-  SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
+  for (nsImageLoader *loader = aData; loader;
+       loader = loader->GetNextLoader()) {
+    imgIRequest* imgReq = loader->GetRequest();
+    SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
+  }
   return PL_DHASH_NEXT;
 }
 
@@ -1064,6 +1092,30 @@ void nsPresContext::SetImgAnimations(nsIContent *aParent, PRUint16 aMode)
   }
 }
 
+#ifdef MOZ_SMIL
+void
+nsPresContext::SetSMILAnimations(nsIDocument *aDoc, PRUint16 aNewMode,
+                                 PRUint16 aOldMode)
+{
+  nsSMILAnimationController *controller = aDoc->GetAnimationController();
+  if (controller) {
+    switch (aNewMode)
+    {
+      case imgIContainer::kNormalAnimMode:
+      case imgIContainer::kLoopOnceAnimMode:
+        if (aOldMode == imgIContainer::kDontAnimMode)
+          controller->Resume(nsSMILTimeContainer::PAUSE_USERPREF);
+        break;
+
+      case imgIContainer::kDontAnimMode:
+        if (aOldMode != imgIContainer::kDontAnimMode)
+          controller->Pause(nsSMILTimeContainer::PAUSE_USERPREF);
+        break;
+    }
+  }
+}
+#endif // MOZ_SMIL
+
 void
 nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
 {
@@ -1076,8 +1128,8 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
     return;
 
   // Set the mode on the image loaders.
-  mImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
-  mBorderImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
+    mImageLoaders[i].Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
 
   // Now walk the content tree and set the animation mode 
   // on all the images.
@@ -1088,6 +1140,10 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
       if (rootContent) {
         SetImgAnimations(rootContent, aMode);
       }
+
+#ifdef MOZ_SMIL
+      SetSMILAnimations(doc, aMode, mImageAnimationMode);
+#endif // MOZ_SMIL
     }
   }
 
@@ -1101,10 +1157,12 @@ nsPresContext::SetImageAnimationModeExternal(PRUint16 aMode)
 }
 
 already_AddRefed<nsIFontMetrics>
-nsPresContext::GetMetricsFor(const nsFont& aFont)
+nsPresContext::GetMetricsFor(const nsFont& aFont, PRBool aUseUserFontSet)
 {
   nsIFontMetrics* metrics = nsnull;
-  mDeviceContext->GetMetricsFor(aFont, mLangGroup, GetUserFontSet(), metrics);
+  mDeviceContext->GetMetricsFor(aFont, mLangGroup,
+                                aUseUserFontSet ? GetUserFontSet() : nsnull,
+                                metrics);
   return metrics;
 }
 
@@ -1147,7 +1205,7 @@ nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
-  if (!mShell || mFullZoom == aZoom) {
+  if (!mShell || mFullZoom == aZoom || !IsDynamic()) {
     return;
   }
   // Re-fetch the view manager's window dimensions in case there's a deferred
@@ -1166,74 +1224,63 @@ nsPresContext::SetFullZoom(float aZoom)
   mFullZoom = aZoom;
   GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
-  MediaFeatureValuesChanged(PR_TRUE);
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  if (HasCachedStyleData()) {
+    MediaFeatureValuesChanged(PR_TRUE);
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  }
 
   mSupressResizeReflow = PR_FALSE;
 
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
-imgIRequest*
-nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
-                           imgIRequest* aImage,
-                           nsIFrame* aTargetFrame,
-                           PRBool aReflowOnLoad)
+void
+nsPresContext::SetImageLoaders(nsIFrame* aTargetFrame,
+                               ImageLoadType aType,
+                               nsImageLoader* aImageLoaders)
 {
-  // look and see if we have a loader for the target frame.
-  nsCOMPtr<nsImageLoader> loader;
-  aTable.Get(aTargetFrame, getter_AddRefs(loader));
+  nsRefPtr<nsImageLoader> oldLoaders;
+  mImageLoaders[aType].Get(aTargetFrame, getter_AddRefs(oldLoaders));
 
-  if (!loader) {
-    loader = new nsImageLoader();
-    if (!loader)
-      return nsnull;
-
-    loader->Init(aTargetFrame, this, aReflowOnLoad);
-    aTable.Put(aTargetFrame, loader);
+  if (aImageLoaders) {
+    mImageLoaders[aType].Put(aTargetFrame, aImageLoaders);
+  } else if (oldLoaders) {
+    mImageLoaders[aType].Remove(aTargetFrame);
   }
 
-  loader->Load(aImage);
-
-  imgIRequest *request = loader->GetRequest();
-
-  return request;
+  if (oldLoaders)
+    oldLoaders->Destroy();
 }
 
-imgIRequest*
-nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
+void
+nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
+                                     const nsStyleBackground* aStyleBackground)
 {
-  return DoLoadImage(mImageLoaders, aImage, aTargetFrame, PR_FALSE);
+  nsRefPtr<nsImageLoader> loaders;
+  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
+    imgIRequest *image = aStyleBackground->mLayers[i].mImage.mRequest;
+    loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
+  }
+  SetImageLoaders(aFrame, BACKGROUND_IMAGE, loaders);
 }
 
-imgIRequest*
-nsPresContext::LoadBorderImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
+void
+nsPresContext::SetupBorderImageLoaders(nsIFrame* aFrame,
+                                       const nsStyleBorder* aStyleBorder)
 {
-  return DoLoadImage(mBorderImageLoaders, aImage, aTargetFrame,
-                     aTargetFrame->GetStyleBorder()->ImageBorderDiffers());
+  nsRefPtr<nsImageLoader> loader =
+    nsImageLoader::Create(aFrame, aStyleBorder->GetBorderImage(),
+                          aStyleBorder->ImageBorderDiffers(), nsnull);
+  SetImageLoaders(aFrame, BORDER_IMAGE, loader);
 }
 
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
-  StopBackgroundImageFor(aTargetFrame);
-  StopBorderImageFor(aTargetFrame);
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
+    SetImageLoaders(aTargetFrame, ImageLoadType(i), nsnull);
 }
 
-void
-nsPresContext::DoStopImageFor(nsPresContext::ImageLoaderTable& aTable,
-                              nsIFrame* aTargetFrame)
-{
-  nsCOMPtr<nsImageLoader> loader;
-  aTable.Get(aTargetFrame, getter_AddRefs(loader));
-
-  if (loader) {
-    loader->Destroy();
-
-    aTable.Remove(aTargetFrame);
-  }
-}
-  
 void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
@@ -1344,10 +1391,10 @@ nsPresContext::GetBidi() const
 nsITheme*
 nsPresContext::GetTheme()
 {
-  if (!mNoTheme && !mTheme) {
+  if (!sNoTheme && !mTheme) {
     mTheme = do_GetService("@mozilla.org/chrome/chrome-native-theme;1");
     if (!mTheme)
-      mNoTheme = PR_TRUE;
+      sNoTheme = PR_TRUE;
   }
 
   return mTheme;
@@ -1569,8 +1616,10 @@ nsPresContext::IsChrome() const
 /* virtual */ PRBool
 nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const
 {
-  return nsRuleNode::
-    HasAuthorSpecifiedRules(aFrame->GetStyleContext(), ruleTypeMask);
+  return
+    UseDocumentColors() &&
+    nsRuleNode::HasAuthorSpecifiedRules(aFrame->GetStyleContext(),
+                                        ruleTypeMask);
 }
 
 static void
@@ -1597,7 +1646,6 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   unit = val.GetUnit();
   if (unit == eCSSUnit_String) {
     val.GetStringValue(fontfamily);
-    fontfamily.Trim("\"");
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face family name has unexpected unit");
@@ -1696,6 +1744,10 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
             face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
           } else if (valueString.LowerCaseEqualsASCII("svg")) {
             face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          } else {
+            // unknown format specified, mark to distinguish from the 
+            // case where no format hints are specified
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_UNKNOWN;
           }
           i++;
         }
@@ -1725,6 +1777,12 @@ nsPresContext::GetUserFontSetInternal()
   // GetUserFontSet.  However, once it's been requested, we can't wait
   // for somebody to call GetUserFontSet in order to rebuild it (see
   // comments below in RebuildUserFontSet for why).
+#ifdef DEBUG
+  PRBool userFontSetGottenBefore = mGetUserFontSetCalled;
+#endif
+  // Set mGetUserFontSetCalled up front, so that FlushUserFontSet will actually
+  // flush.
+  mGetUserFontSetCalled = PR_TRUE;
   if (mUserFontSetDirty) {
     // If this assertion fails, and there have actually been changes to
     // @font-face rules, then we will call StyleChangeReflow in
@@ -1735,7 +1793,7 @@ nsPresContext::GetUserFontSetInternal()
 #ifdef DEBUG
     {
       PRBool inReflow;
-      NS_ASSERTION(!mGetUserFontSetCalled ||
+      NS_ASSERTION(!userFontSetGottenBefore ||
                    (NS_SUCCEEDED(mShell->IsReflowLocked(&inReflow)) &&
                     !inReflow),
                    "FlushUserFontSet should have been called first");
@@ -1744,7 +1802,6 @@ nsPresContext::GetUserFontSetInternal()
     FlushUserFontSet();
   }
 
-  mGetUserFontSetCalled = PR_TRUE;
   return mUserFontSet;
 }
 
@@ -1759,6 +1816,12 @@ nsPresContext::FlushUserFontSet()
 {
   if (!mShell)
     return; // we've been torn down
+
+  if (!mGetUserFontSetCalled) {
+    return; // No one cares about this font set yet, but we want to be careful
+            // to not unset our mUserFontSetDirty bit, so when someone really
+            // does we'll create it.
+  }
 
   if (mUserFontSetDirty) {
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
@@ -1784,19 +1847,15 @@ nsPresContext::FlushUserFontSet()
 
       // Only rebuild things if the set of @font-face rules is different.
       if (differ) {
-        NS_IF_RELEASE(mUserFontSet);
+        if (mUserFontSet) {
+          mUserFontSet->Destroy();
+          NS_RELEASE(mUserFontSet);
+        }
 
         if (rules.Length() > 0) {
-          nsFontFaceLoaderContext *loaderCtx =
-            new nsFontFaceLoaderContext(this);
-          if (!loaderCtx)
+          nsUserFontSet *fs = new nsUserFontSet(this);
+          if (!fs)
             return;
-          gfxUserFontSet *fs = new gfxUserFontSet(loaderCtx);
-          // user font set owns loader context
-          if (!fs) {
-            delete loaderCtx;
-            return;
-          }
           mUserFontSet = fs;
           NS_ADDREF(mUserFontSet);
 
@@ -1951,7 +2010,7 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
       !MayHavePaintEventListener(mDocument->GetInnerWindow()))
     return;
 
-  if (mSameDocDirtyRegion.IsEmpty() && mCrossDocDirtyRegion.IsEmpty()) {
+  if (!IsDOMPaintEventPending()) {
     // No event is pending. Dispatch one now.
     nsCOMPtr<nsIRunnable> ev =
       new nsRunnableMethod<nsPresContext>(this,
@@ -1962,4 +2021,10 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
   nsRegion* r = aIsCrossDoc ? &mCrossDocDirtyRegion : &mSameDocDirtyRegion;
   r->Or(*r, aRect);
   r->SimplifyOutward(10);
+}
+
+PRBool
+nsPresContext::HasCachedStyleData()
+{
+  return mShell && mShell->StyleSet()->HasCachedStyleData();
 }

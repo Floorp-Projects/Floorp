@@ -315,6 +315,8 @@ oggplay_fish_sound_callback_floats(FishSound * fsound, float ** pcm,
      */
     oggplay_data_handle_audio_data(&(decoder->decoder), (short *)pcm, frames,
               sizeof(float));
+
+      return FISH_SOUND_STOP_ERR;
   }
 
   return FISH_SOUND_CONTINUE;
@@ -473,10 +475,17 @@ OggPlayCallbackFunctions callbacks[] = {
 OggPlayDecode *
 oggplay_initialise_decoder(OggPlay *me, int content_type, int serialno) {
 
-  ogg_int64_t   num;
-  ogg_int64_t   denom;
+  ogg_int64_t    num;
+  ogg_int64_t    denom;
+  OggPlayDecode *decoder = NULL;
 
-  OggPlayDecode * decoder = malloc (callbacks[content_type].size);
+  if (me == NULL)
+    return NULL;
+
+  decoder = oggplay_malloc (callbacks[content_type].size);
+
+  if (decoder == NULL)
+    return NULL;
 
   decoder->serialno = serialno;
   decoder->content_type = content_type;
@@ -538,8 +547,7 @@ oggplay_callback_shutdown(OggPlayDecode *decoder) {
 
   oggplay_data_shutdown_list(decoder);
 
-  free(decoder);
-
+  oggplay_free(decoder);
 }
 
 
@@ -595,11 +603,20 @@ oggplay_callback_predetected (OGGZ *oggz, ogg_packet *op, long serialno,
     }
   }
 
-  me->callback_info = realloc (me->callback_info,
+  me->callback_info = oggplay_realloc (me->callback_info,
                   sizeof (OggPlayCallbackInfo) * ++me->num_tracks);
-  me->decode_data = realloc (me->decode_data, sizeof (long) * me->num_tracks);
+  if (me->callback_info == NULL)
+    return -1;
+
+  me->decode_data = oggplay_realloc (me->decode_data, sizeof (long) * me->num_tracks);
+  if (me->decode_data == NULL)
+    return -1;
+
   me->decode_data[me->num_tracks - 1] = oggplay_initialise_decoder(me,
                                                       content_type, serialno);
+  if (me->decode_data[me->num_tracks - 1] == NULL)
+    return -1; 
+
   /*me->decode_data->callback_info = me->callback_info + (me->num_tracks - 1);*/
 
   /*

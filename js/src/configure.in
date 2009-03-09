@@ -160,6 +160,17 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
+dnl Choose where to put the 'dist' directory.
+dnl ==============================================================
+
+MOZ_ARG_WITH_STRING(dist-dir,
+[  --with-dist-dir=DIR     Use DIR as 'dist' staging area.  DIR may be
+                          relative to the top of SpiderMonkey build tree,
+                          or absolute.],
+    TOP_DIST=$withval,
+    TOP_DIST=dist)
+AC_SUBST(TOP_DIST)
+
 dnl Default to MSVC for win32
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
@@ -172,7 +183,6 @@ case "$target" in
     if test -z "$CXXCPP"; then CXXCPP="cl -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
     if test -z "$LD"; then LD=link; fi
     if test -z "$AS"; then AS=ml; fi
-    if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 esac
 fi
@@ -187,15 +197,11 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-dnl Set CROSS_COMPILE in the environment when running configure
-dnl to use the cross-compile setup for now
-dnl ========================================================
 
 if test "$COMPILE_ENVIRONMENT"; then
 
-if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
+if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
-    cross_compiling=yes
 
     _SAVE_CC="$CC"
     _SAVE_CFLAGS="$CFLAGS"
@@ -284,28 +290,15 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", :)
     AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", :)
     AC_DEFINE(CROSS_COMPILE)
+
+    dnl If we cross compile for ppc on Mac OS X x86, cross_compiling will
+    dnl have erroneously been set to "no", because the x86 build host is
+    dnl able to run ppc code in a translated environment, making a cross
+    dnl compiler appear native.  So we override that here.
+    cross_compiling=yes
 else
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        dnl The Darwin cross compiler doesn't necessarily point itself at a
-        dnl root that has libraries for the proper architecture, it defaults
-        dnl to the system root.  The libraries in the system root on current
-        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
-        dnl checks will fail.  Fake a working SDK in that case.
-        _SAVE_CFLAGS=$CFLAGS
-        _SAVE_CXXFLAGS=$CXXLAGS
-        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
-        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
-        ;;
-    esac
     AC_PROG_CC
     AC_PROG_CXX
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        CFLAGS=$_SAVE_CFLAGS
-        CXXFLAGS=$_SAVE_CXXFLAGS
-        ;;
-    esac
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(AR, ar, :)
@@ -413,7 +406,6 @@ case "$target" in
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
-        AC_CHECK_PROGS(MIDL, midl)
 
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
@@ -513,29 +505,8 @@ case "$target" in
         fi
         INCREMENTAL_LINKER=1
 
-        # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
-        _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-        _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
-        _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-         # Add flags if necessary
-         AC_MSG_CHECKING([for midl flags])
-         if test \( "$_MIDL_MAJOR_VERSION" -gt "6" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" -gt "0" \) -o \( "$_MIDL_MAJOR_VERSION" = "6" -a "$_MIDL_MINOR_VERSION" = "00" -a "$_MIDL_REV_VERSION" -gt "359" \); then
-             # Starting with MIDL version 6.0.359, the MIDL compiler
-             # generates /Oicf /robust stubs by default, which is not
-             # compatible with versions of Windows older than Win2k.
-             # This switches us back to the old behaviour. When we drop
-             # support for Windows older than Win2k, we should remove
-             # this.
-             MIDL_FLAGS="${MIDL_FLAGS} -no_robust"
-             AC_MSG_RESULT([need -no_robust])
-         else
-             MIDL_FLAGS="${MIDL_FLAGS}"
-             AC_MSG_RESULT([none needed])
-        fi
-        
         unset _MSVC_VER_FILTER
-        
+
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -599,6 +570,28 @@ if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+
+    # Since we're skipping compiler and library checks, hard-code
+    # some facts here.
+
+    # Common to all MSVC environments:
+    # Windows lacks <stdint.h>, but has __int8, and so on.
+    AC_DEFINE(JS_HAVE___INTN)
+
+    case "$target" in
+    *-wince)
+        AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
+        AC_DEFINE(JS_CRTDEFS_H_HAS_INTPTR_T)
+        ;;
+    *)
+        AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
+        AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
+        # Windows <stddef.h> defines intptr_t and uintptr_t.
+        # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
+        # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
+        AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
+        ;;
+    esac
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -609,7 +602,6 @@ else
     CROSS_COMPILE=
 fi
 
-AC_SUBST(MIDL_FLAGS)
 AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_AS)
@@ -1025,6 +1017,21 @@ linux*)
     ;;
 solaris*)
     HOST_OS_ARCH=SunOS
+    SOLARIS_SUNPRO_CC=
+    SOLARIS_SUNPRO_CXX=
+    if test -z "$GNU_CC"; then
+        if test "`$_SUBDIR_CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
+            SOLARIS_SUNPRO_CC=1
+       fi
+    fi
+
+    if test -z "$GNU_CXX"; then
+       if test "`$_SUBDIR_CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
+           SOLARIS_SUNPRO_CXX=1
+       fi
+    fi
+    AC_SUBST(SOLARIS_SUNPRO_CC)
+    AC_SUBST(SOLARIS_SUNPRO_CXX)
     ;;
 BSD_386)
     HOST_OS_ARCH=BSD
@@ -1296,6 +1303,24 @@ if test "$GNU_CC"; then
 
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
+elif test "$SOLARIS_SUNPRO_CC"; then
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+
+    DSO_LDOPTS='-shared'
+    if test "$GNU_LD"; then
+        # Don't allow undefined symbols in libraries
+        DSO_LDOPTS="$DSO_LDOPTS -z defs"
+    fi
+
+    DSO_CFLAGS=''
+    if test "$CPU_ARCH" = "sparc"; then
+        # for Sun Studio on Solaris/SPARC
+        DSO_PIC_CFLAGS='-xcode=pic32'
+    else
+        DSO_PIC_CFLAGS='-KPIC'
+    fi
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
     MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
@@ -1347,6 +1372,24 @@ if test "$GNU_CXX"; then
         ])
     if test "$ac_has_wno_invalid_offsetof" = "yes"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+    fi
+
+    AC_CACHE_CHECK(whether the compiler supports -Wno-variadic-macros,
+                   ac_has_wno_variadic_macros,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-variadic-macros"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           ac_has_wno_variadic_macros="yes",
+                           ac_has_wno_variadic_macros="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_has_wno_variadic_macros" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
     fi
 else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
@@ -2279,21 +2322,13 @@ dnl the qsort routine under solaris is faulty
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
-    LIBS="-lCrun -lCstd $LIBS"
-    if test -z "$GNU_CC"; then
+    if test "$SOLARIS_SUNPRO_CC"; then
+       LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
        MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-
-       if test "$CPU_ARCH" != "sparc"; then
-          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
-          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
-       else
-          # Do not use -xbuiltin on SPARC to get around a bug of compiler
-          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%none"
-          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%none -features=tmplife -norunpath"
-       fi
-
+       CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
+       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2319,19 +2354,19 @@ dnl the qsort routine under solaris is faulty
        ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
        AS_DASH_C_FLAG=''
        TARGET_COMPILER_ABI="sunc"
-        CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-        CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-       AC_MSG_CHECKING([for Forte compiler version >= WS6U2])
+       CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
+       CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
+       AC_MSG_CHECKING([for Sun C++ compiler version >= 5.9])
        AC_LANG_SAVE
        AC_LANG_CPLUSPLUS
        AC_TRY_COMPILE([],
-           [#if (__SUNPRO_CC < 0x530)
+           [#if (__SUNPRO_CC < 0x590)
            #error "Denied"
            #endif],
            _BAD_COMPILER=,_BAD_COMPILER=1)
         if test -n "$_BAD_COMPILER"; then
             _res="no"
-            AC_MSG_ERROR([Forte version WS6U2 or higher is required to build. Your compiler version is $CC_VERSION .])
+            AC_MSG_ERROR([Sun C++ 5.9 (Sun Studio 12) or higher is required to build. Your compiler version is $CXX_VERSION .])
         else
             _res="yes"
         fi
@@ -2456,6 +2491,74 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
+dnl Configure JIT support
+
+case "$target" in
+i?86-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=i386
+    ;;
+arm*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=ARM
+    ;;
+sparc*-*)
+    ENABLE_JIT=1
+    NANOJIT_ARCH=Sparc
+    ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(jit,
+[  --disable-jit           Disable JIT support],
+  ENABLE_JIT=)
+
+if test "$ENABLE_JIT"; then
+
+AC_DEFINE(FEATURE_NANOJIT)
+AC_DEFINE(JS_TRACER)
+
+case "$target" in
+i?86-*)
+    AC_DEFINE(AVMPLUS_IA32)
+    ;;
+
+arm*-*)
+    AC_DEFINE(AVMPLUS_ARM)
+    ;;
+sparc-*)
+    AC_DEFINE(AVMPLUS_SPARC)
+    ;;
+esac
+
+case "$target_os" in
+linux*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    AC_DEFINE(AVMPLUS_LINUX)
+    ;;
+darwin*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+solaris*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+freebsd*|kfreebsd*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+*cygwin*|*mingw*|*mks*|*msvc*|*wince)
+    AC_DEFINE(AVMPLUS_WIN32)
+    ;;
+*os2*)
+    AC_DEFINE(AVMPLUS_OS2)
+    ;;
+*)
+    AC_MSG_ERROR([Unrecognized nanojit platform. Use --disable-jit to build without JIT support.])
+esac
+
+fi # ENABLE_JIT
+
+AC_SUBST(ENABLE_JIT)
+AC_SUBST(NANOJIT_ARCH)
+
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -2480,6 +2583,40 @@ if test "$ac_cv_siginfo_t" = true ; then
 else
   AC_MSG_RESULT(no)
 fi
+
+dnl Find exact-width integer types, or figure them out
+dnl ourselves.
+dnl ========================================================
+dnl Once this is working, we can delete the code for int16_t,
+dnl etc. below.
+
+AC_CHECK_HEADER(stdint.h)
+if test "$ac_cv_header_stdint_h" = yes; then
+    AC_DEFINE(JS_HAVE_STDINT_H)
+else
+    dnl We'll figure them out for ourselves.  List more likely types
+    dnl earlier.  If we ever really encounter a size for which none of
+    dnl the listed types are appropriate, we'll get a configure-time
+    dnl error; just add the right answer.
+    MOZ_N_BYTE_TYPE(JS_INT8_TYPE,  1, [char])
+    MOZ_N_BYTE_TYPE(JS_INT16_TYPE, 2, [short int long])
+    MOZ_N_BYTE_TYPE(JS_INT32_TYPE, 4, [int long 'long long' short])
+    MOZ_N_BYTE_TYPE(JS_INT64_TYPE, 8, [int long 'long long'])
+    MOZ_N_BYTE_TYPE(JS_INTPTR_TYPE, sizeof (void *),
+                                      [int long 'long long' short])
+fi
+
+MOZ_SIZE_OF_TYPE(JS_BYTES_PER_WORD, void*, 4 8)
+if test "$moz_cv_size_of_JS_BYTES_PER_WORD" -eq "4"; then
+  AC_DEFINE(JS_BITS_PER_WORD_LOG2, 5)
+elif test "$moz_cv_size_of_JS_BYTES_PER_WORD" -eq "8"; then
+  AC_DEFINE(JS_BITS_PER_WORD_LOG2, 6)
+else
+  AC_MSG_ERROR([Unexpected JS_BYTES_PER_WORD])
+fi
+
+MOZ_ALIGN_OF_TYPE(JS_ALIGN_OF_POINTER, void*, 2 4 8 16)
+MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
@@ -2760,7 +2897,7 @@ EOF
                        ])
         if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
                 "$ac_cv_have_visibility_class_bug" = "no"; then
-          VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+          VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers_js -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
         else
           VISIBILITY_FLAGS='-fvisibility=hidden'
@@ -2771,7 +2908,7 @@ EOF
 fi         # GNU_CC
 
 # visibility hidden flag for Sun Studio on Solaris
-if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+if test "$SOLARIS_SUNPRO_CC"; then
 VISIBILITY_FLAGS='-xldscope=hidden'
 fi         # Sun Studio on Solaris
 
@@ -2800,17 +2937,6 @@ dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
 AC_CHECK_HEADERS(mmintrin.h)
-
-AC_MSG_CHECKING(for ARM SIMD support)
-AC_TRY_COMPILE([],
-               [asm("uqadd8 r1, r1, r2");],
-               result="yes", result="no")
-AC_MSG_RESULT("$result")
-if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_ARM_SIMD)
-    HAVE_ARM_SIMD=1
-fi
-AC_SUBST(HAVE_ARM_SIMD)
 
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
@@ -2888,6 +3014,25 @@ if test ! "$GNU_CXX"; then
      esac
 fi
 AC_CHECK_LIB(socket, socket)
+
+dnl Enable VFP support on ARM
+MOZ_ARG_DISABLE_BOOL(arm-vfp,
+[  --disable-arm-vfp       Disable ARM VFP instructions in JavaScript JIT],
+   MOZ_ARM_VFP=, MOZ_ARM_VFP=1, MOZ_ARM_VFP=1)
+if test "$MOZ_ARM_VFP"; then
+   AC_DEFINE(NJ_ARM_VFP)
+fi
+
+AC_MSG_CHECKING(for ARM SIMD support)
+AC_TRY_COMPILE([],
+               [asm("uqadd8 r1, r1, r2");],
+               result="yes", result="no")
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_ARM_SIMD)
+    HAVE_ARM_SIMD=1
+fi
+AC_SUBST(HAVE_ARM_SIMD)
 
 dnl ========================================================
 dnl = pthread support
@@ -3016,8 +3161,8 @@ then
 			;;
 
 	    *-*-solaris*) 
-    			AC_DEFINE(_REENTRANT) 
-			if test ! "$GNU_CC"; then
+			AC_DEFINE(_REENTRANT)
+			if test "$SOLARIS_SUNPRO_CC"; then
 				CFLAGS="$CFLAGS -mt" 
 				CXXFLAGS="$CXXFLAGS -mt" 
 			fi
@@ -3080,11 +3225,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64)
 AC_CHECK_FUNCS(flockfile getpagesize)
-
-dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
-if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
-  AC_CHECK_FUNCS(localtime_r strtok_r)
-fi
+AC_CHECK_FUNCS(localtime_r strtok_r)
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
@@ -3806,7 +3947,6 @@ MOZ_ARG_HEADER(Application)
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_DBGRINFO_MODULES=
-JS_STATIC_BUILD=
 
 dnl ========================================================
 dnl =
@@ -4227,6 +4367,17 @@ if test -n "$MOZ_VTUNE"; then
 fi
 
 dnl ========================================================
+dnl Zealous GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gczeal,
+[  --enable-gczeal          Enable zealous GCing],
+    JS_GC_ZEAL=1,
+    JS_GC_ZEAL= )
+if test -n "$JS_GC_ZEAL"; then
+    AC_DEFINE(JS_GC_ZEAL)
+fi
+
+dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
 
@@ -4237,7 +4388,7 @@ MOZ_ARG_WITH_STRING(static-checking,
     DEHYDRA_PATH= )
 
 if test -n "$DEHYDRA_PATH"; then
-    if ! test -f "$DEHYDRA_PATH"; then
+    if test ! -f "$DEHYDRA_PATH"; then
         AC_MSG_ERROR([The dehydra plugin is not at the specified path.])
     fi
     AC_DEFINE(NS_STATIC_CHECKING)
@@ -4514,7 +4665,7 @@ if test -n "$INTEL_CC"; then
 fi
 
 dnl Sun Studio on Solaris
-if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+if test "$SOLARIS_SUNPRO_CC"; then
   PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
   PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
   if test "$CPU_ARCH" != "sparc"; then
@@ -4631,6 +4782,20 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
+
+dnl ========================================================
+dnl Check for tm_zone, tm_gmtoff in struct tm
+dnl ========================================================
+AC_CACHE_CHECK(for tm_zone tm_gmtoff in struct tm,
+    ac_cv_struct_tm_zone_tm_gmtoff,
+    [AC_TRY_COMPILE([#include <time.h>],
+                    [struct tm tm; tm.tm_zone = 0; tm.tm_gmtoff = 1;],
+                    [ac_cv_struct_tm_zone_tm_gmtoff="yes"],
+                    [ac_cv_struct_tm_zone_tm_gmtoff="no"])])
+if test "$ac_cv_struct_tm_zone_tm_gmtoff" = "yes" ; then
+    AC_DEFINE(HAVE_TM_ZONE_TM_GMTOFF)
+fi
+
 fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
@@ -4704,7 +4869,7 @@ MOZ_ARG_DISABLE_BOOL(md,
      _cpp_md_flag=1
    fi
   dnl Default is to use -xM if using Sun Studio on Solaris
-   if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+   if test "$SOLARIS_SUNPRO_CC"; then
      _cpp_md_flag=1
    fi])
 if test "$_cpp_md_flag"; then
@@ -4715,7 +4880,7 @@ if test "$_cpp_md_flag"; then
     _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(basename $(@F)).pp)'
   fi
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
-  if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+  if test "$SOLARIS_SUNPRO_CC"; then
     _DEPEND_CFLAGS=
   fi
 else
@@ -4744,23 +4909,33 @@ MOZ_ARG_ENABLE_BOOL(static,
     BUILD_STATIC_LIBS=)
 
 dnl ========================================================
-dnl = Force JS to be a static lib
+dnl = Link js shell to system readline
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-static-build,
-[  --enable-js-static-build  Force js to be a static lib],
-    JS_STATIC_BUILD=1,
-    JS_STATIC_BUILD= )
+MOZ_ARG_ENABLE_BOOL(readline,
+[  --enable-readline  Link js shell to system readline library],
+    JS_WANT_READLINE=1,
+    JS_WANT_READLINE= )
 
-AC_SUBST(JS_STATIC_BUILD)
-        
-if test -n "$JS_STATIC_BUILD"; then
-    AC_DEFINE(EXPORT_JS_API)
+JS_NATIVE_EDITLINE=
+EDITLINE_LIBS=
 
-if test -z "$BUILD_STATIC_LIBS"; then
-    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
+dnl Conveniently, Win32 sets SKIP_LIBRARY_CHECKS...
+if test -z "$SKIP_LIBRARY_CHECKS"; then
+  if test -n "$JS_WANT_READLINE"; then
+    AC_CHECK_LIB(readline, readline,
+                 EDITLINE_LIBS="-lreadline",
+                 AC_MSG_ERROR([No system readline library found.]))
+  else
+    dnl By default, we use editline
+    JS_NATIVE_EDITLINE=1
+    EDITLINE_LIBS='$(DEPTH)/editline/$(LIB_PREFIX)editline.$(LIB_SUFFIX)'
+  fi
+
+  dnl Either way, we want to build with line editing support.
+  AC_DEFINE(EDITLINE)
 fi
-
-fi
+AC_SUBST(JS_NATIVE_EDITLINE)
+AC_SUBST(EDITLINE_LIBS)
 
 dnl ========================================================
 dnl =
@@ -4857,7 +5032,6 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 AC_SUBST(WINCE)
-AC_SUBST(TARGET_DEVICE)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
@@ -5054,6 +5228,12 @@ done
 AC_SUBST(LIBS_PATH)
 
 dnl ========================================================
+dnl JavaScript shell
+dnl ========================================================
+
+AC_HAVE_FUNCS(setlocale)
+
+dnl ========================================================
 dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
 dnl ========================================================
 case "$host_os" in
@@ -5069,7 +5249,6 @@ cygwin*|msvc*|mks*)
     LD="\$(CYGWIN_WRAPPER) $LD"
     AS="\$(CYGWIN_WRAPPER) $AS"
     RC="\$(CYGWIN_WRAPPER) $RC"
-    MIDL="\$(CYGWIN_WRAPPER) $MIDL"
     CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
     WIN_TOP_SRC=`cygpath -a -w $srcdir | sed -e 's|\\\\|/|g'`
     ;;
@@ -5139,10 +5318,17 @@ mv confdefs.h.save confdefs.h
 
 MAKEFILES="
   Makefile
+  shell/Makefile
   config/Makefile
   config/autoconf.mk
   config/mkdepend/Makefile
 "
+
+if test -n "$JS_NATIVE_EDITLINE"; then
+   MAKEFILES="$MAKEFILES
+editline/Makefile
+"
+fi
 
 dnl 
 dnl Run a perl script to quickly create the makefiles.
@@ -5165,7 +5351,17 @@ rm conftest.sh
 
 echo $MAKEFILES > unallmakefiles
 
+mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
+
 AC_OUTPUT($MAKEFILES)
+
+dnl Prevent the regeneration of autoconf.mk forcing rebuilds of the world
+if cmp -s config/autoconf.mk config/autoconf.mk.orig; then
+  echo "config/autoconf.mk is unchanged"
+  mv -f config/autoconf.mk.orig config/autoconf.mk 2> /dev/null
+else
+  rm -f config/autoconf.mk.orig 2> /dev/null
+fi
 
 # Produce the js-config script at configure time; see the comments for
 # 'js-config' in Makefile.in.

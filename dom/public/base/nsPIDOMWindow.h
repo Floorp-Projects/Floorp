@@ -76,8 +76,8 @@ class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x3d2b6b38, 0x810d, 0x4ac5, \
-  { 0x81, 0x7c, 0xb9, 0x70, 0x81, 0x80, 0x4d, 0x9f } }
+{ 0x80dd53b6, 0x8c61, 0x4dd6, \
+  { 0xb4, 0x51, 0xf7, 0xd7, 0x5c, 0xfc, 0x51, 0x96 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -271,9 +271,15 @@ public:
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
+  // Suspend timeouts in this window and in child windows.
+  virtual void SuspendTimeouts(PRUint32 aIncrease = 1,
+                               PRBool aFreezeChildren = PR_TRUE) = 0;
+
   // Resume suspended timeouts in this window and in child windows.
-  virtual nsresult ResumeTimeouts() = 0;
-  
+  virtual nsresult ResumeTimeouts(PRBool aThawChildren = PR_TRUE) = 0;
+
+  virtual PRUint32 TimeoutSuspendCount() = 0;
+
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;

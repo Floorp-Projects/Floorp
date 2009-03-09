@@ -174,6 +174,7 @@ nsHttpHandler::nsHttpHandler()
     , mProduct("Gecko")
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
+    , mPromptTempRedirect(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
     , mEnablePersistentHttpsCaching(PR_FALSE)
 {
@@ -284,6 +285,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
         mObserverService->AddObserver(this, "profile-change-net-restore", PR_TRUE);
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+        mObserverService->AddObserver(this, "net:clear-active-logins", PR_TRUE);
     }
  
     StartPruneDeadConnectionsTimer();
@@ -1089,6 +1091,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
+    if (PREF_CHANGED(HTTP_PREF("prompt-temp-redirect"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("prompt-temp-redirect"), &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mPromptTempRedirect = cVar;
+        }
+    }
+
     // enable Persistent caching for HTTPS - bug#205921    
     if (PREF_CHANGED(BROWSER_PREF("disk_cache_ssl"))) {
         cVar = PR_FALSE;
@@ -1726,6 +1735,9 @@ nsHttpHandler::Observe(nsISupports *subject,
 #endif
         if (mConnMgr)
             mConnMgr->PruneDeadConnections();
+    }
+    else if (strcmp(topic, "net:clear-active-logins") == 0) {
+        mAuthCache.ClearAll();
     }
 
     return NS_OK;

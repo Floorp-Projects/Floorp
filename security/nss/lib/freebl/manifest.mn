@@ -70,7 +70,13 @@ ifneq (,$(findstring _,$(LIBRARY_NAME)))
   LIBRARY_VERSION := _$(LIBRARY_VERSION)
 endif
 
+ifdef FREEBL_NO_DEPEND
+LOWHASH_SRCS = stubs.c nsslowhash.c
+LOWHASH_EXPORTS = nsslowhash.h
+MAPFILE_SOURCE = freebl_hash.def
+else
 MAPFILE_SOURCE = freebl.def
+endif
 MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
 
 SOFTOKEN_LIBRARY_VERSION = 3
@@ -85,6 +91,9 @@ EXPORTS = \
 	blapit.h \
 	shsign.h \
 	ecl-exp.h \
+	hasht.h \
+	sechash.h \
+	$(LOWHASH_EXPORTS) \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
@@ -143,9 +152,11 @@ CSRCS = \
 	rsa.c \
 	shvfy.c \
 	tlsprfalg.c \
+	seed.c \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \
+	$(LOWHASH_SRCS) \
 	$(NULL)
 
 ALL_CSRCS := $(CSRCS)
@@ -164,6 +175,7 @@ ALL_HDRS =  \
 	sha256.h \
 	shsign.h \
 	vis_proto.h \
+	seed.h \
 	$(NULL)
 
 

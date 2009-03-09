@@ -49,6 +49,9 @@
 class nsIContent;
 class nsIDocument;
 class nsIDOMEvent;
+class nsIDOMNode;
+class nsIDOMNodeList;
+class nsINodeList;
 class nsIPresShell;
 class nsPresContext;
 class nsEventChainVisitor;
@@ -74,51 +77,66 @@ enum {
   // Whether this node has had any properties set on it
   NODE_HAS_PROPERTIES =          0x00000004U,
 
-  // Whether this node is anonymous
+  // Whether this node is the root of an anonymous subtree.  Note that this
+  // need not be a native anonymous subtree.  Any anonymous subtree, including
+  // XBL-generated ones, will do.  This flag is set-once: once a node has it,
+  // it must not be removed.
   // NOTE: Should only be used on nsIContent nodes
   NODE_IS_ANONYMOUS =            0x00000008U,
-  
+
+  // Whether the node has some ancestor, possibly itself, that is native
+  // anonymous.  This includes ancestors crossing XBL scopes, in cases when an
+  // XBL binding is attached to an element which has a native anonymous
+  // ancestor.  This flag is set-once: once a node has it, it must not be
+  // removed.
+  // NOTE: Should only be used on nsIContent nodes
   NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000010U,
+
+  // Whether this node is the root of a native anonymous (from the perspective
+  // of its parent) subtree.  This flag is set-once: once a node has it, it
+  // must not be removed.
+  // NOTE: Should only be used on nsIContent nodes
+  NODE_IS_NATIVE_ANONYMOUS_ROOT = 0x00000020U,
 
   // Whether this node may have a frame
   // NOTE: Should only be used on nsIContent nodes
-  NODE_MAY_HAVE_FRAME =          0x00000020U,
+  NODE_MAY_HAVE_FRAME =          0x00000040U,
 
   // Forces the XBL code to treat this node as if it were
   // in the document and therefore should get bindings attached.
-  NODE_FORCE_XBL_BINDINGS =      0x00000040U,
+  NODE_FORCE_XBL_BINDINGS =      0x00000080U,
 
   // Whether a binding manager may have a pointer to this
-  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000080U,
+  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000100U,
 
-  NODE_IS_EDITABLE =             0x00000100U,
+  NODE_IS_EDITABLE =             0x00000200U,
 
   // Optimizations to quickly check whether element may have ID, class or style
   // attributes. Not all element implementations may use these!
-  NODE_MAY_HAVE_ID =             0x00000200U,
+  NODE_MAY_HAVE_ID =             0x00000400U,
   // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
   // node in fact has a class, but may be set even if it doesn't.
-  NODE_MAY_HAVE_CLASS =          0x00000400U,
-  NODE_MAY_HAVE_STYLE =          0x00000800U,
+  NODE_MAY_HAVE_CLASS =          0x00000800U,
+  NODE_MAY_HAVE_STYLE =          0x00001000U,
 
-  NODE_IS_INSERTION_PARENT =     0x00001000U,
+  NODE_IS_INSERTION_PARENT =     0x00002000U,
 
   // Node has an :empty or :-moz-only-whitespace selector
-  NODE_HAS_EMPTY_SELECTOR =      0x00002000U,
+  NODE_HAS_EMPTY_SELECTOR =      0x00004000U,
 
   // A child of the node has a selector such that any insertion,
   // removal, or appending of children requires restyling the parent.
-  NODE_HAS_SLOW_SELECTOR =       0x00004000U,
+  NODE_HAS_SLOW_SELECTOR =       0x00008000U,
 
   // A child of the node has a :first-child, :-moz-first-node,
   // :only-child, :last-child or :-moz-last-node selector.
-  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00008000U,
+  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00010000U,
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling the parent (but append is
   // OK).
   NODE_HAS_SLOW_SELECTOR_NOAPPEND
-                               = 0x00010000U,
+                               = 0x00020000U,
 
   NODE_ALL_SELECTOR_FLAGS =      NODE_HAS_EMPTY_SELECTOR |
                                  NODE_HAS_SLOW_SELECTOR |
@@ -126,7 +144,7 @@ enum {
                                  NODE_HAS_SLOW_SELECTOR_NOAPPEND,
 
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               17,
+  NODE_SCRIPT_TYPE_OFFSET =               18,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -151,9 +169,9 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xb4125da4, 0x6f86, 0x45aa, \
- { 0xbb, 0x55, 0x80, 0x70, 0x44, 0x24, 0xe2, 0x47 } }
-
+{ 0x7bccc9bd, 0x30eb, 0x47c0, \
+ { 0x8b, 0xc7, 0x6f, 0x19, 0x75, 0xc8, 0xe7, 0xd7 } }
+ 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
@@ -212,7 +230,9 @@ public:
      returns a non-null value for nsIContent::GetText() */
     eDATA_NODE           = 1 << 12,
     /** nsMathMLElement */
-    eMATHML              = 1 << 13
+    eMATHML              = 1 << 13,
+    /** nsHTMLMediaElement */
+    eMEDIA               = 1 << 14
   };
 
   /**
@@ -638,7 +658,10 @@ public:
 
   void SetFlags(PtrBits aFlagsToSet)
   {
-    NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS | NODE_MAY_HAVE_FRAME)) ||
+    NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS |
+                                  NODE_MAY_HAVE_FRAME |
+                                  NODE_IS_NATIVE_ANONYMOUS_ROOT |
+                                  NODE_IS_IN_ANONYMOUS_SUBTREE)) ||
                  IsNodeOfType(eCONTENT),
                  "Flag only permitted on nsIContent nodes");
     PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
@@ -648,6 +671,11 @@ public:
 
   void UnsetFlags(PtrBits aFlagsToUnset)
   {
+    NS_ASSERTION(!(aFlagsToUnset &
+                   (NODE_IS_ANONYMOUS |
+                    NODE_IS_IN_ANONYMOUS_SUBTREE |
+                    NODE_IS_NATIVE_ANONYMOUS_ROOT)),
+                 "Trying to unset write-only flags");
     PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
                                   &mFlagsOrSlots;
     *flags &= ~aFlagsToUnset;
@@ -687,6 +715,30 @@ public:
    * node.
    */
   nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
+
+  virtual nsINodeList* GetChildNodesList();
+  nsIContent* GetSibling(PRInt32 aOffset)
+  {
+    nsINode *parent = GetNodeParent();
+    if (!parent) {
+      return nsnull;
+    }
+
+    return parent->GetChildAt(parent->IndexOf(this) + aOffset);
+  }
+  nsIContent* GetLastChild() const
+  {
+    PRUint32 count;
+    nsIContent* const* children = GetChildArray(&count);
+
+    return count > 0 ? children[count - 1] : nsnull;
+  }
+
+  /**
+   * Implementation is in nsIDocument.h, because it needs to cast from
+   * nsIDocument* to nsINode*.
+   */
+  nsIDocument* GetOwnerDocument() const;
 
 protected:
 
@@ -734,6 +786,14 @@ protected:
     return IsEditableInternal();
   }
 
+  nsresult GetParentNode(nsIDOMNode** aParentNode);
+  nsresult GetChildNodes(nsIDOMNodeList** aChildNodes);
+  nsresult GetFirstChild(nsIDOMNode** aFirstChild);
+  nsresult GetLastChild(nsIDOMNode** aLastChild);
+  nsresult GetPreviousSibling(nsIDOMNode** aPrevSibling);
+  nsresult GetNextSibling(nsIDOMNode** aNextSibling);
+  nsresult GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
+
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
   enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };
@@ -777,7 +837,8 @@ extern const nsIID kThisPtrOffsetsSID;
 // nsINode, so if you change the nsISupports line  below, make sure
 // nsNodeSH::PreCreate() still does the right thing!
 #define NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                      \
-  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, nsINode)
+  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, nsINode)              \
+    NS_INTERFACE_TABLE_ENTRY(_class, nsINode)                       
 
 #define NS_NODE_INTERFACE_TABLE2(_class, _i1, _i2)                            \
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(_class)                            \

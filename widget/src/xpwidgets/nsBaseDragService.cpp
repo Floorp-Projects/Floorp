@@ -78,7 +78,7 @@
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
 nsBaseDragService::nsBaseDragService()
-  : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mHasImage(PR_FALSE),
+  : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mHasImage(PR_FALSE), mUserCancelled(PR_FALSE),
     mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0),
     mImageX(0), mImageY(0), mScreenX(-1), mScreenY(-1), mSuppressLevel(0)
 {
@@ -354,6 +354,7 @@ nsBaseDragService::EndDragSession(PRBool aDoneDrag)
   mSelection = nsnull;
   mDataTransfer = nsnull;
   mHasImage = PR_FALSE;
+  mUserCancelled = PR_FALSE;
   mImage = nsnull;
   mImageX = 0;
   mImageY = 0;
@@ -373,6 +374,7 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsDragEvent event(PR_TRUE, aMsg, nsnull);
+        event.userCancelled = (aMsg == NS_DRAGDROP_END && mUserCancelled);
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
         return presShell->HandleDOMEventWithTarget(content, &event, &status);
@@ -401,7 +403,7 @@ nsresult
 nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             PRInt32 aScreenX, PRInt32 aScreenY,
-                            nsRect* aScreenDragRect,
+                            nsIntRect* aScreenDragRect,
                             gfxASurface** aSurface,
                             nsPresContext** aPresContext)
 {
@@ -441,10 +443,11 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
       // the region's coordinates are relative to the root frame
       nsIFrame* rootFrame = presShell->GetRootFrame();
       if (rootFrame && *aPresContext) {
-        nsRect dragRect;
+        nsIntRect dragRect;
         aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
-        dragRect.ScaleRoundOut(nsPresContext::AppUnitsPerCSSPixel());
-        dragRect.ScaleRoundOut(1.0 / (*aPresContext)->AppUnitsPerDevPixel());
+        dragRect = nsRect::ToOutsidePixels(nsIntRect::ToAppUnits(dragRect,
+                                                                 nsPresContext::AppUnitsPerCSSPixel()),
+                                           (*aPresContext)->AppUnitsPerDevPixel());
 
         nsIntRect screenRect = rootFrame->GetScreenRectExternal();
         aScreenDragRect->SetRect(screenRect.x + dragRect.x, screenRect.y + dragRect.y,
@@ -468,7 +471,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   // draw the image for selections
   if (mSelection) {
-    nsPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
+    nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
     nsRefPtr<gfxASurface> surface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect);
     *aSurface = surface;
     NS_IF_ADDREF(*aSurface);
@@ -498,7 +501,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   if (aRegion)
     aRegion->GetRegion(getter_AddRefs(clipRegion));
 
-  nsPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
+  nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
   nsRefPtr<gfxASurface> surface = presShell->RenderNode(dragNode, clipRegion,
                                                         pnt, aScreenDragRect);
 
@@ -520,7 +523,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsIImageLoadingContent* aImageLoader,
                                     nsICanvasElement* aCanvas,
                                     PRInt32 aScreenX, PRInt32 aScreenY,
-                                    nsRect* aScreenDragRect,
+                                    nsIntRect* aScreenDragRect,
                                     gfxASurface** aSurface)
 {
   nsCOMPtr<nsIImage> img;
@@ -559,8 +562,8 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = height;
   }
 
-  nsSize srcSize = aScreenDragRect->Size();
-  nsSize destSize = srcSize;
+  nsIntSize srcSize = aScreenDragRect->Size();
+  nsIntSize destSize = srcSize;
 
   if (destSize.width == 0 || destSize.height == 0)
     return NS_ERROR_FAILURE;

@@ -79,6 +79,8 @@
 #include "nsPrintfCString.h"
 #include "nsILivemarkService.h"
 #include "mozIStoragePendingStatement.h"
+#include "mozIStorageStatementCallback.h"
+#include "mozIStorageError.h"
 
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
@@ -125,6 +127,66 @@ const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
      "(SELECT rev_host FROM moz_places WHERE id = b.fk)) " \
    "ORDER BY frecency DESC LIMIT 1) "
 
+#define PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC "places-autocomplete-feedback-updated"
+
+// Used to notify a topic to system observers on async execute completion.
+// Will throw on error.
+class AutoCompleteStatementCallbackNotifier : public mozIStorageStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+};
+
+// AutocompleteStatementCallbackNotifier
+NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
+                   mozIStorageStatementCallback)
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
+    return NS_ERROR_UNEXPECTED;
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = observerService->NotifyObservers(nsnull,
+                                        PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC,
+                                        nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleError(mozIStorageError *aError)
+{
+  PRInt32 result;
+  nsresult rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString message;
+  rv = aError->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString warnMsg;
+  warnMsg.Append("An error occured while executing an async statement: ");
+  warnMsg.Append(result);
+  warnMsg.Append(" ");
+  warnMsg.Append(message);
+  NS_WARNING(warnMsg.get());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  NS_ASSERTION(PR_FALSE, "You cannot use AutoCompleteStatementCallbackNotifier to get async statements resultset");
+  return NS_OK;
+}
+
 void GetAutoCompleteBaseQuery(nsACString& aQuery) {
 // Define common pieces of various queries
 // XXX bug 412736
@@ -140,23 +202,15 @@ void GetAutoCompleteBaseQuery(nsACString& aQuery) {
 // not be read later and we don't have an associated kAutoCompleteIndex_
   aQuery = NS_LITERAL_CSTRING(
       "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-        "h.visit_count, h.frecency "
-      "FROM moz_places_temp h "
+        "h.visit_count, h.typed "
+      "FROM ("
+        "SELECT * FROM moz_places_temp "
+        "UNION ALL "
+        "SELECT * FROM moz_places "
+        "ORDER BY frecency DESC LIMIT ?2 OFFSET ?3) h "
       "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
       "WHERE h.frecency <> 0 "
-      "{ADDITIONAL_CONDITIONS} "
-      "UNION ALL "
-      "SELECT * FROM ( "
-        "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-          "h.visit_count, h.frecency "
-        "FROM moz_places h "
-        "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
-        "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-        "AND h.frecency <> 0 "
-        "{ADDITIONAL_CONDITIONS} "
-        "ORDER BY h.frecency DESC LIMIT (?2 + ?3) "
-      ") "
-      "ORDER BY 8 DESC LIMIT ?2 OFFSET ?3");
+      "{ADDITIONAL_CONDITIONS}");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,20 +227,20 @@ StartsWithJS(const nsAString &aString)
 
 /**
  * Callback function for putting URLs from a nsDataHashtable<nsStringHashKey,
- * PRBool> into a nsStringArray.
+ * PRBool> into a nsTArray<nsString>.
  *
  * @param aKey
  *        The hashtable entry's key (the url)
  * @param aData
  *        Unused data
  * @param aArg
- *        The nsStringArray pointer for collecting URLs
+ *        The nsTArray<nsString> pointer for collecting URLs
  */
 PLDHashOperator
 HashedURLsToArray(const nsAString &aKey, PRBool aData, void *aArg)
 {
   // Append the current url to the array of urls
-  static_cast<nsStringArray *>(aArg)->AppendString(aKey);
+  static_cast<nsTArray<nsString> *>(aArg)->AppendElement(aKey);
   return PL_DHASH_NEXT;
 }
 
@@ -409,11 +463,17 @@ nsNavHistory::CreateAutoCompleteQueries()
 {
   nsCString AutoCompleteQuery;
   GetAutoCompleteBaseQuery(AutoCompleteQuery);
-  AutoCompleteQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
-                                     (mAutoCompleteOnlyTyped ?
-                                        "AND h.typed = 1" : ""));
+  AutoCompleteQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}", "");
   nsresult rv = mDBConn->CreateStatement(AutoCompleteQuery,
-                                getter_AddRefs(mDBAutoCompleteQuery));
+    getter_AddRefs(mDBAutoCompleteQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString AutoCompleteTypedQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteTypedQuery);
+  AutoCompleteTypedQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
+                                          "AND h.typed = 1");
+  rv = mDBConn->CreateStatement(AutoCompleteTypedQuery,
+    getter_AddRefs(mDBAutoCompleteTypedQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // In this query we are taking BOOK_TAG_SQL only for h.id because it
@@ -423,7 +483,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   nsCString sql = NS_LITERAL_CSTRING(
     "SELECT IFNULL(h_t.url, h.url), IFNULL(h_t.title, h.title), f.url ") +
       BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-      "IFNULL(h_t.visit_count, h.visit_count), rank "
+      "IFNULL(h_t.visit_count, h.visit_count), IFNULL(h_t.typed, h.typed), rank "
     "FROM ( "
       "SELECT ROUND(MAX(((i.input = ?2) + (SUBSTR(i.input, 1, LENGTH(?2)) = ?2)) * "
         "i.use_count), 1) AS rank, place_id "
@@ -447,7 +507,8 @@ nsNavHistory::CreateAutoCompleteQueries()
         BEST_FAVICON_FOR_REVHOST("moz_places_temp") ", "
         BEST_FAVICON_FOR_REVHOST("moz_places")
       "), "
-      "b.parent, b.title, NULL, IFNULL(h_t.visit_count, h.visit_count) "
+      "b.parent, b.title, NULL, IFNULL(h_t.visit_count, h.visit_count), "
+      "IFNULL(h_t.typed, h.typed) "
     "FROM moz_keywords k "
     "JOIN moz_bookmarks b ON b.keyword_id = k.id "
     "LEFT JOIN moz_places AS h ON h.url = search_url "
@@ -500,7 +561,7 @@ nsNavHistory::PerformAutoComplete()
   // Only do some extra searches on the first chunk
   if (!mCurrentChunkOffset) {
     // Only show keywords if there's a search
-    if (mCurrentSearchTokens.Count()) {
+    if (mCurrentSearchTokens.Length()) {
       rv = AutoCompleteKeywordSearch();
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -633,13 +694,13 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   // into bug 412730 because we only specify urls and not titles to look at.
   // Also, only reuse the search if the previous and new search both start with
   // javascript: or both don't. (bug 417798)
-  if (mAutoCompleteSearchSources == SEARCH_NONE ||
+  if (!mAutoCompleteEnabled ||
       (!prevSearchString.IsEmpty() &&
        StringBeginsWith(mCurrentSearchString, prevSearchString) &&
        (StartsWithJS(prevSearchString) == StartsWithJS(mCurrentSearchString)))) {
 
     // Got nothing before? We won't get anything new, so stop now
-    if (mAutoCompleteSearchSources == SEARCH_NONE ||
+    if (!mAutoCompleteEnabled ||
         (mAutoCompleteFinishedSearch && prevMatchCount == 0)) {
       // Set up the result to let the listener know that there's nothing
       mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
@@ -671,7 +732,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
       nsCString sql = NS_LITERAL_CSTRING(
         "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
-          "h.visit_count "
+          "h.visit_count, h.typed "
         "FROM ( "
           "SELECT * FROM moz_places_temp "
           "WHERE url IN (") + bindings + NS_LITERAL_CSTRING(") "
@@ -687,12 +748,12 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Collect the previous result's URLs that we want to process
-      nsStringArray urls;
+      nsTArray<nsString> urls;
       (void)mCurrentResultURLs.EnumerateRead(HashedURLsToArray, &urls);
 
       // Bind the parameters right away. We can only use the query once.
       for (PRUint32 i = 0; i < prevMatchCount; i++) {
-        rv = mDBPreviousQuery->BindStringParameter(i + 1, *urls[i]);
+        rv = mDBPreviousQuery->BindStringParameter(i + 1, urls[i]);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -792,7 +853,7 @@ nsNavHistory::AddSearchToken(nsAutoString &aToken)
 {
   aToken.Trim("\r\n\t\b");
   if (!aToken.IsEmpty())
-    mCurrentSearchTokens.AppendString(aToken);
+    mCurrentSearchTokens.AppendElement(aToken);
 }
 
 void
@@ -801,40 +862,42 @@ nsNavHistory::ProcessTokensForSpecialSearch()
   // Start with the default behavior
   mAutoCompleteCurrentBehavior = mAutoCompleteDefaultBehavior;
 
-  // If we're searching only one of history or bookmark, we can use filters
-  if (mAutoCompleteSearchSources == SEARCH_HISTORY)
-    SET_BEHAVIOR(History);
-  else if (mAutoCompleteSearchSources == SEARCH_BOOKMARK)
-    SET_BEHAVIOR(Bookmark);
-  // SEARCH_BOTH doesn't require any filtering
-
   // Determine which special searches to apply
-  for (PRInt32 i = mCurrentSearchTokens.Count(); --i >= 0; ) {
+  for (PRInt32 i = PRInt32(mCurrentSearchTokens.Length()); --i >= 0;) {
     PRBool needToRemove = PR_TRUE;
-    const nsString *token = mCurrentSearchTokens.StringAt(i);
+    const nsString& token = mCurrentSearchTokens[i];
 
-    if (token->Equals(mAutoCompleteRestrictHistory))
+    if (token.Equals(mAutoCompleteRestrictHistory))
       SET_BEHAVIOR(History);
-    else if (token->Equals(mAutoCompleteRestrictBookmark))
+    else if (token.Equals(mAutoCompleteRestrictBookmark))
       SET_BEHAVIOR(Bookmark);
-    else if (token->Equals(mAutoCompleteRestrictTag))
+    else if (token.Equals(mAutoCompleteRestrictTag))
       SET_BEHAVIOR(Tag);
-    else if (token->Equals(mAutoCompleteMatchTitle))
+    else if (token.Equals(mAutoCompleteMatchTitle))
       SET_BEHAVIOR(Title);
-    else if (token->Equals(mAutoCompleteMatchUrl))
+    else if (token.Equals(mAutoCompleteMatchUrl))
       SET_BEHAVIOR(Url);
+    else if (token.Equals(mAutoCompleteRestrictTyped))
+      SET_BEHAVIOR(Typed);
     else
       needToRemove = PR_FALSE;
 
     // Remove the token if it's special search token
     if (needToRemove)
-      (void)mCurrentSearchTokens.RemoveStringAt(i);
+      mCurrentSearchTokens.RemoveElementAt(i);
+  }
+
+  // Search only typed pages in history for empty searches
+  if (mOrigSearchString.IsEmpty()) {
+    SET_BEHAVIOR(History);
+    SET_BEHAVIOR(Typed);
   }
 
   // We can use optimized queries for restricts, so check for the most
   // restrictive query first
   mDBCurrentQuery = GET_BEHAVIOR(Tag) ? GetDBAutoCompleteTagsQuery() :
     GET_BEHAVIOR(Bookmark) ? GetDBAutoCompleteStarQuery() :
+    GET_BEHAVIOR(Typed) ? static_cast<mozIStorageStatement *>(mDBAutoCompleteTypedQuery) :
     GET_BEHAVIOR(History) ? GetDBAutoCompleteHistoryQuery() :
     static_cast<mozIStorageStatement *>(mDBAutoCompleteQuery);
 }
@@ -1001,6 +1064,8 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
       PRInt32 visitCount = 0;
       rv = aQuery->GetInt32(kAutoCompleteIndex_VisitCount, &visitCount);
       NS_ENSURE_SUCCESS(rv, rv);
+      PRInt32 typed = 0;
+      rv = aQuery->GetInt32(kAutoCompleteIndex_Typed, &typed);
 
       // Always prefer the bookmark title unless it's empty
       nsAutoString title =
@@ -1029,6 +1094,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
           // is active, make sure a corresponding condition is *not* true. If
           // any are violated, matchAll will be false.
           PRBool matchAll = !((GET_BEHAVIOR(History) && visitCount == 0) ||
+                              (GET_BEHAVIOR(Typed) && typed == 0) ||
                               (GET_BEHAVIOR(Bookmark) && !parentId) ||
                               (GET_BEHAVIOR(Tag) && entryTags.IsEmpty()));
 
@@ -1037,13 +1103,13 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
           // Determine if every token matches either the bookmark title, tags,
           // page title, or page url
-          for (PRInt32 i = 0; i < mCurrentSearchTokens.Count() && matchAll; i++) {
-            const nsString *token = mCurrentSearchTokens.StringAt(i);
+          for (PRUint32 i = 0; i < mCurrentSearchTokens.Length() && matchAll; i++) {
+            const nsString& token = mCurrentSearchTokens[i];
 
             // Check if the tags match the search term
-            PRBool matchTags = (*tokenMatchesTarget)(*token, entryTags);
+            PRBool matchTags = (*tokenMatchesTarget)(token, entryTags);
             // Check if the title matches the search term
-            PRBool matchTitle = (*tokenMatchesTarget)(*token, title);
+            PRBool matchTitle = (*tokenMatchesTarget)(token, title);
 
             // Make sure we match something in the title or tags if we have to
             matchAll = matchTags || matchTitle;
@@ -1051,7 +1117,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
               break;
 
             // Check if the url matches the search term
-            PRBool matchUrl = (*tokenMatchesTarget)(*token, entryURL);
+            PRBool matchUrl = (*tokenMatchesTarget)(token, entryURL);
             // If we don't match the url when we have to, reset matchAll to
             // false; otherwise keep track that we did match the current search
             if (GET_BEHAVIOR(Url) && !matchUrl)
@@ -1159,8 +1225,10 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We do the update async and we don't care about failures
+  nsCOMPtr<AutoCompleteStatementCallbackNotifier> callback =
+    new AutoCompleteStatementCallbackNotifier();
   nsCOMPtr<mozIStoragePendingStatement> canceler;
-  rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(canceler));
+  rv = stmt->ExecuteAsync(callback, getter_AddRefs(canceler));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -78,11 +78,10 @@ nsLocale::nsLocale(nsLocale* other) : fHashtable(nsnull), fCategoryCount(0)
 }
 
 
-nsLocale::nsLocale(const nsStringArray& categoryList, 
-                   const nsStringArray& valueList) 
+nsLocale::nsLocale(const nsTArray<nsString>& categoryList, 
+                   const nsTArray<nsString>& valueList) 
                   : fHashtable(NULL), fCategoryCount(0)
 {
-  PRInt32 i;
   PRUnichar* key, *value;
 
   fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
@@ -93,11 +92,11 @@ nsLocale::nsLocale(const nsStringArray& categoryList,
 
   if (fHashtable)
   {
-    for(i=0; i < categoryList.Count(); ++i) 
+    for(PRUint32 i=0; i < categoryList.Length(); ++i) 
     {
-      key = ToNewUnicode(*categoryList.StringAt(i));
+      key = ToNewUnicode(categoryList[i]);
       NS_ASSERTION(key, "nsLocale: failed to allocate internal hash key");
-      value = ToNewUnicode(*valueList.StringAt(i));
+      value = ToNewUnicode(valueList[i]);
       NS_ASSERTION(value, "nsLocale: failed to allocate internal hash value");
       if (!PL_HashTableAdd(fHashtable,key,value)) {
           nsMemory::Free(key);

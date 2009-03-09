@@ -84,11 +84,12 @@ APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 PWD := $(shell pwd)
 core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
 
-# ZIP_IN is defaulted to be compatible with the files the wget-en-US target
-# pulls. You may override ZIP_IN if you provide your own files. You also _must_
-# override ZIP_IN when MOZ_PKG_PRETTYNAMES is defined - the default will not
+# These are defaulted to be compatible with the files the wget-en-US target
+# pulls. You may override them if you provide your own files. You _must_
+# override them when MOZ_PKG_PRETTYNAMES is defined - the defaults will not
 # work in that case.
 ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
+WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
@@ -208,7 +209,6 @@ endif
 
 PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
-include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
 repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
@@ -226,7 +226,10 @@ endif
 	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
 	$(RM) -r l10n-stage/localized
 	$(RM) l10n-stage/setup.exe
+# copy xpi-stage over, but not install.rdf and chrome.manifest,
+# those are just for language packs
 	cp -r $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
+	$(RM) l10n-stage/localized/install.rdf l10n-stage/localized/chrome.manifest
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	cp ../installer/windows/l10ngen/setup.exe l10n-stage
 	$(NSINSTALL) -D l10n-stage/localized/uninstall
@@ -240,7 +243,6 @@ endif
 	chmod 0755 $(WIN32_INSTALLER_OUT)
 
 ifeq (WINNT,$(OS_ARCH))
-repackage-win32-installer-%: WIN32_INSTALLER_IN=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 repackage-win32-installer-%: $(WIN32_INSTALLER_IN) libs-%
 	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN=$(WIN32_INSTALLER_IN)
 else
@@ -250,7 +252,7 @@ endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
 else
-STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)
+STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
 
 $(STAGEDIST): AB_CD:=en-US
@@ -292,8 +294,10 @@ ifeq (WINNT,$(OS_ARCH))
 	$(NSINSTALL) -D $(STAGEDIST)/uninstall
 	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
 endif
+# copy xpi-stage over, but not install.rdf and chrome.manifest,
+# those are just for language packs
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
+	  tar --exclude=install.rdf --exclude=chrome.manifest $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
 ifneq (en,$(AB))
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
@@ -318,7 +322,6 @@ endif
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(DIST)/$(PACKAGE)"
 
-repackage-zip-%: ZIP_IN=$(_ABS_DIST)/$(PACKAGE)
 repackage-zip-%: $(ZIP_IN) $(STAGEDIST) libs-%
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
 
@@ -330,7 +333,7 @@ langpack-%: libs-%
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome/$(AB_CD).jar chrome.manifest
+	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest -x chrome/$(AB_CD).manifest
 
 # This is a generic target that will make a langpack, repack ZIP (+tarball)
 # builds, and repack an installer if applicable. It is called from the
@@ -343,10 +346,13 @@ ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
 ifeq ($(OS_ARCH),WINNT)
 	cat $< $(srcdir)/updater_append.ini $(srcdir)/../installer/windows/nsis/updater_append.ini | \
-	  sed -e "s/%AB_CD%/$(AB_CD)/" | \
-	  iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) > $(FINAL_TARGET)/updater.ini
+	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
+	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" | \
+	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.ini
 else
 	cat $< $(srcdir)/updater_append.ini | \
+	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
+	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" | \
 	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.ini
 endif
 endif
@@ -424,6 +430,17 @@ ifeq (WINNT, $(OS_ARCH))
 endif
 # Set the permissions that the folders will have in ftp once uploaded
 	chmod -vR 775 $(UPLOAD_DIR)
+
+l10n-upload-%: AB_CD=$*
+l10n-upload-%:
+	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) "$(DIST)/$(PACKAGE)" $(DIST)/$(LANGPACK)
+ifdef MOZ_MAKE_COMPLETE_MAR
+	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) $(DIST)/$(COMPLETE_MAR)
+endif
+ifeq (WINNT, $(OS_ARCH))
+	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) "$(INSTALLER_PACKAGE)"
+endif
+
 
 merge-%:
 ifdef LOCALE_MERGEDIR

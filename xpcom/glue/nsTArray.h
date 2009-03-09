@@ -660,13 +660,42 @@ class nsTArray : public nsTArray_base {
     // removes elements from the array (see also RemoveElementsAt).
     // @param newLen  The desired length of this array.
     // @return        True if the operation succeeded; false otherwise.
+    // See also TruncateLength if the new length is guaranteed to be
+    // smaller than the old.
     PRBool SetLength(size_type newLen) {
       size_type oldLen = Length();
       if (newLen > oldLen) {
         return InsertElementsAt(oldLen, newLen - oldLen) != nsnull;
       }
       
+      TruncateLength(newLen);
+      return PR_TRUE;
+    }
+
+    // This method modifies the length of the array, but may only be
+    // called when the new length is shorter than the old.  It can
+    // therefore be called when elem_type has no default constructor,
+    // unlike SetLength.  It removes elements from the array (see also
+    // RemoveElementsAt).
+    // @param newLen  The desired length of this array.
+    void TruncateLength(size_type newLen) {
+      size_type oldLen = Length();
+      NS_ABORT_IF_FALSE(newLen <= oldLen,
+                        "caller should use SetLength instead");
       RemoveElementsAt(newLen, oldLen - newLen);
+    }
+
+    // This method ensures that the array has length at least the given
+    // length.  If the current length is shorter than the given length,
+    // then new elements will be constructed using elem_type's default
+    // constructor.
+    // @param minLen  The desired minimum length of this array.
+    // @return        True if the operation succeeded; false otherwise.
+    PRBool EnsureLengthAtLeast(size_type minLen) {
+      size_type oldLen = Length();
+      if (minLen > oldLen) {
+        return InsertElementsAt(oldLen, minLen - oldLen) != nsnull;
+      }
       return PR_TRUE;
     }
 

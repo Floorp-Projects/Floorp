@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <iframe id="foo" src="data:text/html,<body bgcolor='red'>FAIL</body>"></iframe> 
+    <script type="text/javascript">
+      // Globals
+      var foo = document.getElementById('foo');
+      var win = foo.contentWindow;
+
+      // Start the chain of execution when iframe's window loads
+      win.onload = iframeWindowLoaded;
+
+      function iframeWindowLoaded() {
+        setTimeout("tweak()", 0);
+      }
+      function tweak() {
+        win.location ="data:text/html,<body bgcolor='lime'>PASS</body>";
+        foo.onload = snapshot;
+      }
+      function snapshot() {
+        document.documentElement.className = '';
+      }
+    </script>
+  </body>
+</html>

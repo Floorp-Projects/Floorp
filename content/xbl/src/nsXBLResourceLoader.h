@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCOMArray.h"
+#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsIContent;
@@ -66,7 +67,7 @@ struct nsXBLResource {
 
   ~nsXBLResource() { 
     MOZ_COUNT_DTOR(nsXBLResource);  
-    delete mNext; 
+    NS_CONTENT_DELETE_LIST_MEMBER(nsXBLResource, this, mNext);
   }
 };
 

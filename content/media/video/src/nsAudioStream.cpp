@@ -52,11 +52,6 @@ PRLogModuleInfo* gAudioStreamLog = nsnull;
 
 #define FAKE_BUFFER_SIZE 176400
 
-static float CurrentTimeInSeconds()
-{
-  return PR_IntervalToMilliseconds(PR_IntervalNow()) / 1000.0;
-}
-
 void nsAudioStream::InitLibrary()
 {
 #ifdef PR_LOGGING
@@ -73,12 +68,7 @@ nsAudioStream::nsAudioStream() :
   mAudioHandle(0),
   mRate(0),
   mChannels(0),
-  mSavedPauseBytes(0),
-  mPauseBytes(0),
-  mPauseTime(0.0),
-  mSamplesBuffered(0),
-  mFormat(FORMAT_S16_LE),
-  mPaused(PR_FALSE)
+  mFormat(FORMAT_S16_LE)
 {
 }
 
@@ -87,11 +77,10 @@ void nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aForm
   mRate = aRate;
   mChannels = aNumChannels;
   mFormat = aFormat;
-  mStartTime = CurrentTimeInSeconds();
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
                            NULL, 
                            SA_MODE_WRONLY, 
-                           SA_PCM_FORMAT_S16_LE,
+                           SA_PCM_FORMAT_S16_NE,
                            aRate,
                            aNumChannels) != SA_SUCCESS) {
     mAudioHandle = nsnull;
@@ -121,50 +110,67 @@ void nsAudioStream::Write(const void* aBuf, PRUint32 aCount)
   NS_ABORT_IF_FALSE(aCount % mChannels == 0,
                     "Buffer size must be divisible by channel count");
 
-  mSamplesBuffered += aCount;
+  PRUint32 offset = mBufferOverflow.Length();
+  PRInt32 count = aCount + offset;
 
   if (!mAudioHandle)
     return;
 
-  nsAutoArrayPtr<short> s_data(new short[aCount]);
+  nsAutoArrayPtr<short> s_data(new short[count]);
 
   if (s_data) {
+    for (PRUint32 i=0; i < offset; ++i) {
+      s_data[i] = mBufferOverflow.ElementAt(i);
+    }
+    mBufferOverflow.Clear();
+
     switch (mFormat) {
-    case FORMAT_U8: {
-      const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
-      PRInt32 volume = PRInt32((1 << 16) * mVolume);
-      for (PRUint32 i = 0; i < aCount; ++i) {
-        s_data[i] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
-      }
-      break;
-    }
-    case FORMAT_S16_LE: {
-      const short* buf = static_cast<const short*>(aBuf);
-      PRInt32 volume = PRInt32((1 << 16) * mVolume);
-      for (PRUint32 i = 0; i < aCount; ++i) {
-        s_data[i] = short((PRInt32(buf[i]) * volume) >> 16);
-      }
-      break;
-    }
-    case FORMAT_FLOAT32_LE: {
-      const float* buf = static_cast<const float*>(aBuf);
-      for (PRUint32 i= 0; i <  aCount; ++i) {
-        float scaled_value = floorf(0.5 + 32768 * buf[i] * mVolume);
-        if (buf[i] < 0.0) {
-          s_data[i] = (scaled_value < -32768.0) ?
-            -32768 :
-            short(scaled_value);
-        } else {
-          s_data[i] = (scaled_value > 32767.0) ?
-            32767 :
-            short(scaled_value);
+      case FORMAT_U8: {
+        const PRUint8* buf = static_cast<const PRUint8*>(aBuf);
+        PRInt32 volume = PRInt32((1 << 16) * mVolume);
+        for (PRUint32 i = 0; i < aCount; ++i) {
+          s_data[i + offset] = short(((PRInt32(buf[i]) - 128) * volume) >> 8);
         }
+        break;
       }
-      break;
-    }
+      case FORMAT_S16_LE: {
+        const short* buf = static_cast<const short*>(aBuf);
+        PRInt32 volume = PRInt32((1 << 16) * mVolume);
+        for (PRUint32 i = 0; i < aCount; ++i) {
+          short s = buf[i];
+#if defined(IS_BIG_ENDIAN)
+          s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
+#endif
+          s_data[i + offset] = short((PRInt32(s) * volume) >> 16);
+        }
+        break;
+      }
+      case FORMAT_FLOAT32: {
+        const float* buf = static_cast<const float*>(aBuf);
+        for (PRUint32 i = 0; i <  aCount; ++i) {
+          float scaled_value = floorf(0.5 + 32768 * buf[i] * mVolume);
+          if (buf[i] < 0.0) {
+            s_data[i + offset] = (scaled_value < -32768.0) ?
+              -32768 :
+              short(scaled_value);
+          } else {
+            s_data[i+offset] = (scaled_value > 32767.0) ?
+              32767 :
+              short(scaled_value);
+          }
+        }
+        break;
+      }
     }
 
-    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle), s_data.get(), aCount * sizeof(short)) != SA_SUCCESS) {
+    PRInt32 available = Available();
+    if (available < count) {
+      mBufferOverflow.AppendElements(s_data.get() + available, (count - available));
+      count = available;
+    }
+
+    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
+       s_data.get(), count * sizeof(short)) != SA_SUCCESS) {
       PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
       Shutdown();
     }
@@ -183,11 +189,6 @@ PRInt32 nsAudioStream::Available()
   return s / sizeof(short);
 }
 
-float nsAudioStream::GetVolume()
-{
-  return mVolume;
-}
-
 void nsAudioStream::SetVolume(float aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
@@ -196,80 +197,19 @@ void nsAudioStream::SetVolume(float aVolume)
 
 void nsAudioStream::Drain()
 {
-  if (!mAudioHandle) {
-    PRUint32 drainTime = (float(mSamplesBuffered) / mRate / mChannels - GetTime()) * 1000.0;
-    PR_Sleep(PR_MillisecondsToInterval(drainTime));
+  if (!mAudioHandle)
     return;
+
+  // Write any remaining unwritten sound data in the overflow buffer
+  if (!mBufferOverflow.IsEmpty()) {
+    if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
+                        mBufferOverflow.Elements(),
+                        mBufferOverflow.Length() * sizeof(short)) != SA_SUCCESS)
+      return;
   }
 
   if (sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
         PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
         Shutdown();
   }
-}
-
-void nsAudioStream::Pause()
-{
-  if (mPaused)
-    return;
-
-  // Save the elapsed playback time.  Used to offset the wall-clock time
-  // when resuming.
-  mPauseTime = CurrentTimeInSeconds() - mStartTime;
-
-  mPaused = PR_TRUE;
-
-  if (!mAudioHandle)
-    return;
-
-  int64_t bytes = 0;
-#if !defined(WIN32)
-  sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_SOFTWARE, &bytes);
-#endif
-  mSavedPauseBytes = bytes;
-
-  sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
-}
-
-void nsAudioStream::Resume()
-{
-  if (!mPaused)
-    return;
-
-  // Reset the start time to the current time offset backwards by the
-  // elapsed time saved when the stream paused.
-  mStartTime = CurrentTimeInSeconds() - mPauseTime;
-
-  mPaused = PR_FALSE;
-
-  if (!mAudioHandle)
-    return;
-
-  sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
-
-#if !defined(WIN32)
-  mPauseBytes += mSavedPauseBytes;
-#endif
-}
-
-double nsAudioStream::GetTime()
-{
-  // If the audio backend failed to open, emulate the current playback
-  // position using the system clock.
-  if (!mAudioHandle) {
-    if (mPaused) {
-      return mPauseTime;
-    }
-    float curTime = CurrentTimeInSeconds() - mStartTime;
-    float maxTime = float(mSamplesBuffered) / mRate / mChannels;
-    return NS_MIN(curTime, maxTime);
-  }
-
-  int64_t bytes = 0;
-#if defined(WIN32)
-  sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_HARDWARE, &bytes);
-#else
-  sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle), SA_POSITION_WRITE_SOFTWARE, &bytes);
-#endif
-  return double(bytes + mPauseBytes) / (sizeof(short) * mChannels * mRate);
 }

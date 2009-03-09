@@ -46,7 +46,6 @@
 
 #include "pkixt.h"
 #include "pkix_util.h"
-#include "pkix_params.h"
 #include "pkix_results.h"
 #include "pkix_certstore.h"
 #include "pkix_certsel.h"
@@ -55,6 +54,7 @@
 #include "pkix_revchecker.h"
 #include "pkix_pl_system.h"
 #include "pkix_pl_pki.h"
+#include "pkix_params.h"
 
 #ifdef __cplusplus
 extern "C" {

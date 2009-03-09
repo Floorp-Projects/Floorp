@@ -140,6 +140,7 @@
 #include "nsIInlineSpellChecker.h"
 #include "nsRange.h"
 #include "mozAutoDocUpdate.h"
+#include "nsCCUncollectableMarker.h"
 #include "nsHtml5Module.h"
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
@@ -236,6 +237,8 @@ nsHTMLDocument::nsHTMLDocument()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLDocument)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
+  NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration()),
+               "Shouldn't traverse nsHTMLDocument!");
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mImages)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplets)
@@ -1838,7 +1841,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   // Note: We want to use GetDocumentFromContext here because this document
   // should inherit the security information of the document that's opening us,
-  // (since if it's secure, then it's presumeably trusted).
+  // (since if it's secure, then it's presumably trusted).
   nsCOMPtr<nsIDocument> callerDoc =
     do_QueryInterface(nsContentUtils::GetDocumentFromContext());
   if (!callerDoc) {
@@ -3127,13 +3130,24 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 }
 
 void
+nsHTMLDocument::MaybeEditingStateChanged()
+{
+  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
+    if (nsContentUtils::IsSafeToRunScript()) {
+      EditingStateChanged();
+    } else if (!mInDestructor) {
+      nsContentUtils::AddScriptRunner(
+        NS_NEW_RUNNABLE_METHOD(nsHTMLDocument, this, MaybeEditingStateChanged));
+    }
+  }
+}
+
+void
 nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   nsDocument::EndUpdate(aUpdateType);
 
-  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
-    EditingStateChanged();
-  }
+  MaybeEditingStateChanged();
 }
 
 nsresult
@@ -3300,12 +3314,13 @@ void
 nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
 {
   if (IsEditingOn()) {
+    EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
 
     nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(aEditor);
     if (editorss) {
       editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-      if (mEditingState == eDesignMode)
+      if (oldState == eDesignMode)
         editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
     }
   }
@@ -3404,6 +3419,7 @@ nsHTMLDocument::EditingStateChanged()
   nsCOMPtr<nsIEditor> editor;
 
   {
+    EditingState oldState = mEditingState;
     nsAutoEditingState push(this, eSettingUp);
 
     if (makeWindowEditable) {
@@ -3442,9 +3458,9 @@ nsHTMLDocument::EditingStateChanged()
       NS_ENSURE_SUCCESS(rv, rv);
 
       updateState = PR_TRUE;
-      spellRecheckAll = mEditingState == eContentEditable;
+      spellRecheckAll = oldState == eContentEditable;
     }
-    else if (mEditingState == eDesignMode) {
+    else if (oldState == eDesignMode) {
       // designMode is being turned off (contentEditable is still on).
       editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
 
@@ -4189,4 +4205,11 @@ nsHTMLDocument::IsEditingOnAfterFlush()
   }
 
   return IsEditingOn();
+}
+
+void
+nsHTMLDocument::RemovedFromDocShell()
+{
+  mEditingState = eOff;
+  nsDocument::RemovedFromDocShell();
 }

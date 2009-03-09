@@ -49,8 +49,8 @@ typedef struct {
   OggPlayReader     functions;
   char            * file_name;
   FILE            * file;
-  int               current_position;
-  int               size;
+  long              current_position;
+  long              size;
 } OggPlayFileReader;
 
 #endif

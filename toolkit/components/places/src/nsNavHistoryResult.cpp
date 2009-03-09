@@ -983,21 +983,21 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
   PRInt32 value = 0;
   if (a->mItemId != -1 || b->mItemId != -1) {
     // compare the keywords
-    nsAutoString aKeyword, bKeyword;
+    nsAutoString keywordA, keywordB;
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, 0);
 
     nsresult rv;
     if (a->mItemId != -1) {
-      rv = bookmarks->GetKeywordForBookmark(a->mItemId, aKeyword);
+      rv = bookmarks->GetKeywordForBookmark(a->mItemId, keywordA);
       NS_ENSURE_SUCCESS(rv, 0);
     }
     if (b->mItemId != -1) {
-      rv = bookmarks->GetKeywordForBookmark(b->mItemId, aKeyword);
+      rv = bookmarks->GetKeywordForBookmark(b->mItemId, keywordB);
       NS_ENSURE_SUCCESS(rv, 0);
     }
 
-    value = SortComparison_StringLess(aKeyword, bKeyword);
+    value = SortComparison_StringLess(keywordA, keywordB);
   }
 
   // fall back to title sorting
@@ -1126,19 +1126,19 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
         PRInt32 a_val = 0, b_val = 0;
         GET_ANNOTATIONS_VALUES(GetItemAnnotationInt32,
                                GetPageAnnotationInt32, &a_val, &b_val);
-        value = (a < b) ? -1 : (a > b) ? 1 : 0;
+        value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
       }
       else if (annoType == nsIAnnotationService::TYPE_INT64) {
         PRInt64 a_val = 0, b_val = 0;
         GET_ANNOTATIONS_VALUES(GetItemAnnotationInt64,
                                GetPageAnnotationInt64, &a_val, &b_val);
-        value = (a < b) ? -1 : (a > b) ? 1 : 0;
+        value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
       }
       else if (annoType == nsIAnnotationService::TYPE_DOUBLE) {
         double a_val = 0, b_val = 0;
         GET_ANNOTATIONS_VALUES(GetItemAnnotationDouble,
                                GetPageAnnotationDouble, &a_val, &b_val);
-        value = (a < b) ? -1 : (a > b) ? 1 : 0;
+        value = (a_val < b_val) ? -1 : (a_val > b_val) ? 1 : 0;
       }
     }
   }
@@ -2552,6 +2552,21 @@ nsNavHistoryQueryResultNode::GetSortingAnnotation(nsACString& aAnnotation) {
   else
     NS_NOTREACHED("We should always have a result");
 }
+
+void
+nsNavHistoryQueryResultNode::RecursiveSort(
+    const char* aData, SortComparator aComparator)
+{
+  void* data = const_cast<void*>(static_cast<const void*>(aData));
+
+  if (!IsContainersQuery())
+    mChildren.Sort(aComparator, data);
+  else
+    for (PRInt32 i = 0; i < mChildren.Count(); i ++)
+      mChildren[i]->GetAsContainer()->RecursiveSort(aData, aComparator);
+}
+
+
 // nsNavHistoryResultNode::OnBeginUpdateBatch
 
 NS_IMETHODIMP
@@ -2740,7 +2755,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
   }
 
   // compute what the new title should be
-  nsCAutoString newTitle = NS_ConvertUTF16toUTF8(aPageTitle);
+  NS_ConvertUTF16toUTF8 newTitle(aPageTitle);
 
   PRBool onlyOneEntry = (mOptions->ResultType() ==
                          nsINavHistoryQueryOptions::RESULTS_AS_URI ||
@@ -2825,7 +2840,7 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
 
   switch (aWhat) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      nsCString newFavicon = NS_ConvertUTF16toUTF8(aValue);
+      NS_ConvertUTF16toUTF8 newFavicon(aValue);
       PRBool onlyOneEntry = (mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_URI ||
                              mOptions->ResultType() ==

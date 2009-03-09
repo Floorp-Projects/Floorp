@@ -41,7 +41,6 @@
 /*
  * JS lexical scanner.
  */
-#include "jsstddef.h"
 #include <stdio.h>      /* first to avoid trouble on some systems */
 #include <errno.h>
 #include <limits.h>
@@ -186,14 +185,14 @@ GrowTokenBuf(JSStringBuffer *sb, size_t newlength)
 
     cx = (JSContext*) sb->data;
     base = sb->base;
-    offset = PTRDIFF(sb->ptr, base, jschar);
+    offset = sb->ptr - base;
     pool = &cx->tempPool;
     if (!base) {
         tbsize = TBMIN * sizeof(jschar);
         length = TBMIN - 1;
         JS_ARENA_ALLOCATE_CAST(base, jschar *, pool, tbsize);
     } else {
-        length = PTRDIFF(sb->limit, base, jschar);
+        length = sb->limit - base;
         if ((size_t)length >= ~(size_t)0 / sizeof(jschar)) {
             base = NULL;
         } else {
@@ -300,7 +299,7 @@ GetChar(JSTokenStream *ts)
         c = ts->ungetbuf[--ts->ungetpos];
     } else {
         if (ts->linebuf.ptr == ts->linebuf.limit) {
-            len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
+            len = ts->userbuf.limit - ts->userbuf.ptr;
             if (len <= 0) {
                 if (!ts->file) {
                     ts->flags |= TSF_EOF;
@@ -366,7 +365,7 @@ GetChar(JSTokenStream *ts)
              * Else copy JS_LINE_LIMIT-1 bytes into linebuf.
              */
             if (nl < ts->userbuf.limit)
-                len = PTRDIFF(nl, ts->userbuf.ptr, jschar) + 1;
+                len = (nl - ts->userbuf.ptr) + 1;
             if (len >= JS_LINE_LIMIT) {
                 len = JS_LINE_LIMIT - 1;
                 ts->saveEOL = nl;
@@ -559,7 +558,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
         tp = &ts->tokens[ts->cursor].pos;
     }
     report.lineno = ts->lineno;
-    linelength = PTRDIFF(ts->linebuf.limit, ts->linebuf.base, jschar);
+    linelength = ts->linebuf.limit - ts->linebuf.base;
     linechars = (jschar *)JS_malloc(cx, (linelength + 1) * sizeof(jschar));
     if (!linechars) {
         warning = JS_FALSE;
@@ -680,7 +679,7 @@ GrowStringBuffer(JSStringBuffer *sb, size_t newlength)
     ptrdiff_t offset;
     jschar *bp;
 
-    offset = PTRDIFF(sb->ptr, sb->base, jschar);
+    offset = sb->ptr - sb->base;
     JS_ASSERT(offset >= 0);
     newlength += offset + 1;
     if ((size_t)offset < newlength && newlength < ~(size_t)0 / sizeof(jschar))
@@ -816,7 +815,7 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
     JSErrNum msg;
 
     /* Put the entity, including the '&' already scanned, in ts->tokenbuf. */
-    offset = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar);
+    offset = ts->tokenbuf.ptr - ts->tokenbuf.base;
     FastAppendChar(&ts->tokenbuf, '&');
     if (!STRING_BUFFER_OK(&ts->tokenbuf))
         return JS_FALSE;
@@ -832,7 +831,7 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
     }
 
     /* Let length be the number of jschars after the '&', including the ';'. */
-    length = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar) - offset;
+    length = (ts->tokenbuf.ptr - ts->tokenbuf.base) - offset;
     bp = ts->tokenbuf.base + offset;
     c = d = 0;
     ispair = JS_FALSE;
@@ -915,9 +914,9 @@ badncr:
 bad:
     /* No match: throw a TypeError per ECMA-357 10.3.2.1 step 8(a). */
     JS_ASSERT(STRING_BUFFER_OK(&ts->tokenbuf));
-    JS_ASSERT(PTRDIFF(ts->tokenbuf.ptr, bp, jschar) >= 1);
+    JS_ASSERT((ts->tokenbuf.ptr - bp) >= 1);
     bytes = js_DeflateString(cx, bp + 1,
-                             PTRDIFF(ts->tokenbuf.ptr, bp, jschar) - 1);
+                             (ts->tokenbuf.ptr - bp) - 1);
     if (bytes) {
         js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     msg, bytes);
@@ -989,7 +988,7 @@ NewToken(JSTokenStream *ts, ptrdiff_t adjust)
     tp = &CURRENT_TOKEN(ts);
     tp->ptr = ts->linebuf.ptr + adjust;
     tp->pos.begin.index = ts->linepos +
-                          PTRDIFF(tp->ptr, ts->linebuf.base, jschar) -
+                          (tp->ptr - ts->linebuf.base) -
                           ts->ungetpos;
     tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
     return tp;
@@ -1020,7 +1019,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 #endif
 
 #define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
-#define TOKENBUF_LENGTH()   PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar)
+#define TOKENBUF_LENGTH()   (ts->tokenbuf.ptr - ts->tokenbuf.base)
 #define TOKENBUF_OK()       STRING_BUFFER_OK(&ts->tokenbuf)
 #define TOKENBUF_TO_ATOM()  (TOKENBUF_OK()                                    \
                              ? js_AtomizeChars(cx,                            \
@@ -1802,6 +1801,7 @@ skipline:
         }
 
         if (MatchChar(ts, '*')) {
+            uintN lineno = ts->lineno;
             while ((c = GetChar(ts)) != EOF &&
                    !(c == '*' && MatchChar(ts, '/'))) {
                 /* Ignore all characters until comment close. */
@@ -1811,12 +1811,17 @@ skipline:
                                             JSMSG_UNTERMINATED_COMMENT);
                 goto error;
             }
+            if ((ts->flags & TSF_NEWLINES) && lineno != ts->lineno) {
+                ts->flags &= ~TSF_DIRTYLINE;
+                tt = TOK_EOL;
+                goto eol_out;
+            }
             ts->cursor = (ts->cursor - 1) & NTOKENS_MASK;
             goto retry;
         }
 
         if (ts->flags & TSF_OPERAND) {
-            uintN flags;
+            uintN flags, length;
             JSBool inCharClass = JS_FALSE;
 
             INIT_TOKENBUF();
@@ -1841,15 +1846,15 @@ skipline:
                 }
                 ADD_TO_TOKENBUF(c);
             }
-            for (flags = 0; ; ) {
+            for (flags = 0, length = TOKENBUF_LENGTH() + 1; ; length++) {
                 c = PeekChar(ts);
-                if (c == 'g')
+                if (c == 'g' && !(flags & JSREG_GLOB))
                     flags |= JSREG_GLOB;
-                else if (c == 'i')
+                else if (c == 'i' && !(flags & JSREG_FOLD))
                     flags |= JSREG_FOLD;
-                else if (c == 'm')
+                else if (c == 'm' && !(flags & JSREG_MULTILINE))
                     flags |= JSREG_MULTILINE;
-                else if (c == 'y')
+                else if (c == 'y' && !(flags & JSREG_STICKY))
                     flags |= JSREG_STICKY;
                 else
                     break;
@@ -1857,9 +1862,11 @@ skipline:
             }
             c = PeekChar(ts);
             if (JS7_ISLET(c)) {
-                tp->ptr = ts->linebuf.ptr - 1;
+                char buf[2] = { '\0' };
+                tp->pos.begin.index += length + 1;
+                buf[0] = (char)c;
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                            JSMSG_BAD_REGEXP_FLAG);
+                                            JSMSG_BAD_REGEXP_FLAG, buf);
                 (void) GetChar(ts);
                 goto error;
             }
@@ -1978,7 +1985,7 @@ eol_out:
         tt = TOK_ERROR;
     JS_ASSERT(tt < TOK_LIMIT);
     tp->pos.end.index = ts->linepos +
-                        PTRDIFF(ts->linebuf.ptr, ts->linebuf.base, jschar) -
+                        (ts->linebuf.ptr - ts->linebuf.base) -
                         ts->ungetpos;
     tp->type = tt;
     return tt;

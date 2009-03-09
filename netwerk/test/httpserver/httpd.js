@@ -370,9 +370,7 @@ nsHttpServer.prototype =
    */
   onSocketAccepted: function(socket, trans)
   {
-    dumpn("*** onSocketAccepted(socket=" + socket + ", trans=" + trans + ") " +
-          "on thread " + gThreadManager.currentThread +
-          " (main is " + gThreadManager.mainThread + ")");
+    dumpn("*** onSocketAccepted(socket=" + socket + ", trans=" + trans + ")");
 
     dumpn(">>> new connection on " + trans.host + ":" + trans.port);
 
@@ -528,17 +526,33 @@ nsHttpServer.prototype =
   //
   // see nsIHttpServer.getState
   //
-  getState: function(k)
+  getState: function(path, k)
   {
-    return this._handler._getState(k);
+    return this._handler._getState(path, k);
   },
 
   //
   // see nsIHttpServer.setState
   //
-  setState: function(k, v)
+  setState: function(path, k, v)
   {
-    return this._handler._setState(k, v);
+    return this._handler._setState(path, k, v);
+  },
+
+  //
+  // see nsIHttpServer.getSharedState
+  //
+  getSharedState: function(k)
+  {
+    return this._handler._getSharedState(k);
+  },
+
+  //
+  // see nsIHttpServer.setSharedState
+  //
+  setSharedState: function(k, v)
+  {
+    return this._handler._setSharedState(k, v);
   },
 
   // NSISUPPORTS
@@ -942,7 +956,13 @@ Connection.prototype =
     this.server._handler.handleError(code, this, metadata);
   },
 
-  /** Ends this connection, destroying the resources it uses. */
+  /**
+   * Ends this connection, destroying the resources it uses.  This function
+   * should only be called after a response has been completely constructed,
+   * response headers have been sent, and the response body remains to be set,
+   * which all happens before ServerHandler._pendingRequests is incremented,
+   * because it handles the corresponding decrement of that value.
+   */
   end: function()
   {
     this.server._endConnection(this);
@@ -1056,7 +1076,28 @@ RequestReader.prototype =
     if (!data)
       return;
 
-    data.appendBytes(readBytes(input, input.available()));
+    try
+    {
+      data.appendBytes(readBytes(input, input.available()));
+    }
+    catch (e)
+    {
+      if (e.result !== Cr.NS_ERROR_BASE_STREAM_CLOSED)
+      {
+        dumpn("*** WARNING: unexpected error when reading from socket; will " +
+              "be treated as if the input stream had been closed");
+      }
+
+      // We've lost a race -- input has been closed, but we're still expecting
+      // to read more data.  available() will throw in this case, and since
+      // we're dead in the water now, destroy the connection.  NB: we don't use
+      // end() here because that has interesting interactions with
+      // ServerHandler._pendingRequests.
+      dumpn("*** onInputStreamReady called on a closed input, destroying " +
+            "connection");
+      this._connection.destroy();
+      return;
+    }
 
     switch (this._state)
     {
@@ -1118,7 +1159,7 @@ RequestReader.prototype =
 
     // if we don't have a full line, wait until we do
     if (!readSuccess)
-      return true;
+      return false;
 
     // we have the first non-blank line
     try
@@ -1929,11 +1970,6 @@ function ServerHandler(server)
    */
   this._overridePaths = {};
   
-  /** 
-   * Put data overrides, privileged before _overridePaths.
-   */
-  this._putDataOverrides = {};
-
   /**
    * Custom request handlers for the error handlers in the server in which this
    * resides.  Path-handler pairs are stored as property-value pairs in this
@@ -1955,10 +1991,11 @@ function ServerHandler(server)
    */
   this._indexHandler = defaultIndexHandler;
 
-  /**
-   * State storage for the server.
-   */
+  /** Per-path state storage for the server. */
   this._state = {};
+
+  /** Entire-server state storage. */
+  this._sharedState = {};
 }
 ServerHandler.prototype =
 {
@@ -1986,60 +2023,7 @@ ServerHandler.prototype =
     {
       try
       {
-        if (metadata.method == "PUT")
-        {
-          // remotely set path override
-          var avail;
-          var bytes = [];
-          var body = new BinaryInputStream(metadata.bodyInputStream);
-          while ((avail = body.available()) > 0)
-            Array.prototype.push.apply(bytes, body.readByteArray(avail));
-
-          var data = String.fromCharCode.apply(null, bytes);
-          var contentType;
-          try
-          {
-            contentType = metadata.getHeader("Content-Type");
-          }
-          catch (ex)
-          {
-            contentType = "application/octet-stream";
-          }
-
-          dumpn("PUT data \'" + data + "\' for " + path);
-          this._putDataOverrides[path] =
-            function(ametadata, aresponse)
-            {
-              aresponse.setStatusLine(ametadata.httpVersion, 200, "OK");
-              aresponse.setHeader("Content-Type", contentType, false);
-              dumpn("*** writing PUT data=\'" + data + "\'");
-              aresponse.bodyOutputStream.write(data, data.length);
-            };
-
-          response.setStatusLine(metadata.httpVersion, 200, "OK");
-        }
-        else if (metadata.method == "DELETE")
-        {
-          if (path in this._putDataOverrides)
-          {
-            delete this._putDataOverrides[path];
-            dumpn("clearing PUT data for " + path);
-            response.setStatusLine(metadata.httpVersion, 200, "OK");
-          }
-          else
-          {
-            dumpn("no PUT data for " + path + " to delete");
-            response.setStatusLine(metadata.httpVersion, 204, "No Content");
-          }
-        }
-        else if (path in this._putDataOverrides)
-        {
-          // PUT data overrides are priviledged before all
-          // other overrides.
-          dumpn("calling PUT data override for " + path);
-          this._putDataOverrides[path](metadata, response);
-        }
-        else if (path in this._overridePaths)
+        if (path in this._overridePaths)
         {
           // explicit paths first, then files based on existing directory mappings,
           // then (if the file doesn't exist) built-in server default paths
@@ -2361,7 +2345,7 @@ ServerHandler.prototype =
     const PR_RDONLY = 0x01;
 
     var type = this._getTypeFromFile(file);
-    if (type == SJS_TYPE)
+    if (type === SJS_TYPE)
     {
       var fis = new FileInputStream(file, PR_RDONLY, 0444,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
@@ -2375,8 +2359,10 @@ ServerHandler.prototype =
         // Define a basic key-value state-preservation API across requests, with
         // keys initially corresponding to the empty string.
         var self = this;
-        s.importFunction(function getState(k) { return self._getState(k); });
-        s.importFunction(function setState(k, v) { self._setState(k, v); });
+        s.importFunction(function getState(k) { return self._getState(metadata.path, k); });
+        s.importFunction(function setState(k, v) { self._setState(metadata.path, k, v); });
+        s.importFunction(function getSharedState(k) { return self._getSharedState(k); });
+        s.importFunction(function setSharedState(k, v) { self._setSharedState(k, v); });
 
         try
         {
@@ -2452,6 +2438,46 @@ ServerHandler.prototype =
   },
 
   /**
+   * Get the value corresponding to a given key for the given path for SJS state
+   * preservation across requests.
+   *
+   * @param path : string
+   *   the path from which the given state is to be retrieved
+   * @param k : string
+   *   the key whose corresponding value is to be returned
+   * @returns string
+   *   the corresponding value, which is initially the empty string
+   */
+  _getState: function(path, k)
+  {
+    var state = this._state;
+    if (path in state && k in state[path])
+      return state[path][k];
+    return "";
+  },
+
+  /**
+   * Set the value corresponding to a given key for the given path for SJS state
+   * preservation across requests.
+   *
+   * @param path : string
+   *   the path from which the given state is to be retrieved
+   * @param k : string
+   *   the key whose corresponding value is to be set
+   * @param v : string
+   *   the value to be set
+   */
+  _setState: function(path, k, v)
+  {
+    if (typeof v !== "string")
+      throw new Exception("non-string value passed");
+    var state = this._state;
+    if (!(path in state))
+      state[path] = {};
+    state[path][k] = v;
+  },
+
+  /**
    * Get the value corresponding to a given key for SJS state preservation
    * across requests.
    *
@@ -2460,13 +2486,12 @@ ServerHandler.prototype =
    * @returns string
    *   the corresponding value, which is initially the empty string
    */
-  _getState: function(k)
+  _getSharedState: function(k)
   {
-    NS_ASSERT(typeof k == "string");
-    var state = this._state;
+    var state = this._sharedState;
     if (k in state)
       return state[k];
-    return state[k] = "";
+    return "";
   },
 
   /**
@@ -2478,10 +2503,11 @@ ServerHandler.prototype =
    * @param v : string
    *   the value to be set
    */
-  _setState: function(k, v)
+  _setSharedState: function(k, v)
   {
-    NS_ASSERT(typeof v == "string");
-    this._state[k] = String(v);
+    if (typeof v !== "string")
+      throw new Exception("non-string value passed");
+    this._sharedState[k] = v;
   },
 
   /**
@@ -2630,6 +2656,7 @@ ServerHandler.prototype =
     }
     catch (e)
     {
+      dumpn("*** error in handleError: " + e);
       connection.close();
       connection.server.stop();
     }
@@ -2789,7 +2816,9 @@ ServerHandler.prototype =
       var fieldName = headEnum.getNext()
                               .QueryInterface(Ci.nsISupportsString)
                               .data;
-      preamble += fieldName + ": " + head.getHeader(fieldName) + "\r\n";
+      var values = head.getHeaderValues(fieldName);
+      for (var i = 0, sz = values.length; i < sz; i++)
+        preamble += fieldName + ": " + values[i] + "\r\n";
     }
 
     // end request-line/headers
@@ -3641,10 +3670,28 @@ nsHttpHeaders.prototype =
     var name = headerUtils.normalizeFieldName(fieldName);
     var value = headerUtils.normalizeFieldValue(fieldValue);
 
+    // The following three headers are stored as arrays because their real-world
+    // syntax prevents joining individual headers into a single header using 
+    // ",".  See also <http://hg.mozilla.org/mozilla-central/diff/9b2a99adc05e/netwerk/protocol/http/src/nsHttpHeaderArray.cpp#l77>
     if (merge && name in this._headers)
-      this._headers[name] = this._headers[name] + "," + value;
+    {
+      if (name === "www-authenticate" ||
+          name === "proxy-authenticate" ||
+          name === "set-cookie") 
+      {
+        this._headers[name].push(value);
+      }
+      else 
+      {
+        this._headers[name][0] += "," + value;
+        NS_ASSERT(this._headers[name].length === 1,
+            "how'd a non-special header have multiple values?")
+      }
+    }
     else
-      this._headers[name] = value;
+    {
+      this._headers[name] = [value];
+    }
   },
 
   /**
@@ -3657,9 +3704,33 @@ nsHttpHeaders.prototype =
    * @returns string
    *   the field value for the given header, possibly with non-semantic changes
    *   (i.e., leading/trailing whitespace stripped, whitespace runs replaced
-   *   with spaces, etc.) at the option of the implementation
+   *   with spaces, etc.) at the option of the implementation; multiple 
+   *   instances of the header will be combined with a comma, except for 
+   *   the three headers noted in the description of getHeaderValues
    */
   getHeader: function(fieldName)
+  {
+    return this.getHeaderValues(fieldName).join("\n");
+  },
+
+  /**
+   * Returns the value for the header specified by fieldName as an array.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   if fieldName does not constitute a valid header field name
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if the given header does not exist in this
+   * @returns [string]
+   *   an array of all the header values in this for the given
+   *   header name.  Header values will generally be collapsed
+   *   into a single header by joining all header values together
+   *   with commas, but certain headers (Proxy-Authenticate,
+   *   WWW-Authenticate, and Set-Cookie) violate the HTTP spec
+   *   and cannot be collapsed in this manner.  For these headers
+   *   only, the returned array may contain multiple elements if
+   *   that header has been added more than once.
+   */
+  getHeaderValues: function(fieldName)
   {
     var name = headerUtils.normalizeFieldName(fieldName);
 

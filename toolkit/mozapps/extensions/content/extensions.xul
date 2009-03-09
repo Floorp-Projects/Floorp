@@ -320,7 +320,7 @@
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>
-      <resizer dir="bottomright"/>
+      <resizer dir="bottomend"/>
     </hbox>
   </vbox>
 </window>

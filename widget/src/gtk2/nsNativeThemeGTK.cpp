@@ -59,6 +59,7 @@
 #include "nsIMenuFrame.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
 #include "nsWidgetAtoms.h"
 
 #include <gdk/gdkprivate.h>
@@ -212,11 +213,16 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         } else {
           if (aWidgetFlags) {
             nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
+            *aWidgetFlags = 0;
             if (inputElt) {
               PRBool isHTMLChecked;
               inputElt->GetChecked(&isHTMLChecked);
-              *aWidgetFlags = isHTMLChecked;
+              if (isHTMLChecked)
+                *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
             }
+
+            if (GetIndeterminate(aFrame))
+              *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
           }
         }
       } else if (aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
@@ -234,7 +240,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->canDefault = FALSE; // XXX fix me
       aState->depressed = FALSE;
 
-      if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
+      if (aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
         // For these widget types, some element (either a child or parent)
         // actually has element focus, so we check the focused attribute
         // to see whether to draw in the focused state.
@@ -301,9 +307,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_MENUSEPARATOR ||
             aWidgetType == NS_THEME_MENUARROW) {
           PRBool isTopLevel = PR_FALSE;
-          nsIMenuFrame *menuFrame;
-          CallQueryInterface(aFrame, &menuFrame);
-
+          nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
           if (menuFrame) {
             isTopLevel = menuFrame->IsOnMenuBar();
           }
@@ -800,7 +804,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
-                                  PRUint8 aWidgetType, nsMargin* aResult)
+                                  PRUint8 aWidgetType, nsIntMargin* aResult)
 {
   GtkTextDirection direction = GetTextDirection(aFrame);
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
@@ -853,7 +857,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
 PRBool
 nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
                                    nsIFrame* aFrame, PRUint8 aWidgetType,
-                                   nsMargin* aResult)
+                                   nsIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON_FOCUS:
@@ -915,7 +919,7 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame, PRUint8 aWidgetType,
-                                       nsSize* aResult, PRBool* aIsOverridable)
+                                       nsIntSize* aResult, PRBool* aIsOverridable)
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = PR_TRUE;
@@ -1069,7 +1073,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       nsCOMPtr<nsIDeviceContext> dc;
       aContext->GetDeviceContext(*getter_AddRefs(dc));
 
-      nsMargin border;
+      nsIntMargin border;
       nsNativeThemeGTK::GetWidgetBorder(dc, aFrame, aWidgetType, &border);
       aResult->width = border.left + border.right;
       aResult->height = border.top + border.bottom;

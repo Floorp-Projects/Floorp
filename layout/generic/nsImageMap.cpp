@@ -721,7 +721,7 @@ nsImageMap::nsImageMap() :
 
 nsImageMap::~nsImageMap()
 {
-  NS_ASSERTION(mAreas.Count() == 0, "Destroy was not called");
+  NS_ASSERTION(mAreas.Length() == 0, "Destroy was not called");
 }
 
 NS_IMPL_ISUPPORTS4(nsImageMap,
@@ -738,9 +738,9 @@ nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
   NS_ENSURE_TRUE(aContent && aPresContext, NS_ERROR_INVALID_ARG);
 
   // Find the Area struct associated with this content node, and return bounds
-  PRInt32 i, n = mAreas.Count();
+  PRUint32 i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas.ElementAt(i);
+    Area* area = mAreas.ElementAt(i);
     if (area->mArea == aContent) {
       aBounds = nsRect();
       nsIPresShell* shell = aPresContext->PresShell();
@@ -761,9 +761,9 @@ nsImageMap::FreeAreas()
 {
   nsFrameManager *frameManager = mPresShell->FrameManager();
 
-  PRInt32 i, n = mAreas.Count();
+  PRUint32 i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas.ElementAt(i);
+    Area* area = mAreas.ElementAt(i);
     frameManager->RemoveAsPrimaryFrame(area->mArea, mImageFrame);
 
     nsCOMPtr<nsIContent> areaContent;
@@ -912,9 +912,9 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
                      nsIContent** aContent) const
 {
   NS_ASSERTION(mMap, "Not initialized");
-  PRInt32 i, n = mAreas.Count();
+  PRUint32 i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas.ElementAt(i);
+    Area* area = mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
       area->GetArea(aContent);
 
@@ -928,9 +928,9 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
 void
 nsImageMap::Draw(nsIFrame* aFrame, nsIRenderingContext& aRC)
 {
-  PRInt32 i, n = mAreas.Count();
+  PRUint32 i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
-    Area* area = (Area*) mAreas.ElementAt(i);
+    Area* area = mAreas.ElementAt(i);
     area->Draw(aFrame, aRC);
   }
 }
@@ -1011,9 +1011,9 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus)
   if (NS_SUCCEEDED(aEvent->GetTarget(getter_AddRefs(target))) && target) {
     nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
     if (targetContent) {
-      PRInt32 i, n = mAreas.Count();
+      PRUint32 i, n = mAreas.Length();
       for (i = 0; i < n; i++) {
-        Area* area = (Area*) mAreas.ElementAt(i);
+        Area* area = mAreas.ElementAt(i);
         nsCOMPtr<nsIContent> areaContent;
         area->GetArea(getter_AddRefs(areaContent));
         if (areaContent.get() == targetContent.get()) {

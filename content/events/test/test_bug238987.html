@@ -117,23 +117,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
     utils.sendKeyEvent("keyup", key, 0, modifier);
     if (shouldStop) {
       // Did focus handling succeed
-      ok(forwardFocusArray.length == 0,
+      is(forwardFocusArray.length, 0,
          "Not all forward tabbing focus tests were run, " +
          forwardFocusArray.toString());
-      ok(backwardFocusArray.length == 0,
+      is(backwardFocusArray.length, 0,
          "Not all backward tabbing focus tests were run, " +
          backwardFocusArray.toString());
-      ok(expectedWindowFocusCount == 0,
+      is(expectedWindowFocusCount, 0,
          "|window| didn't get the right amount of focus events");
 
        // and blur.
-      ok(forwardBlurArray.length == 0,
+      is(forwardBlurArray.length, 0,
          "Not all forward tabbing blur tests were run, " +
          forwardBlurArray.toString());
-      ok(backwardBlurArray.length == 0,
+      is(backwardBlurArray.length, 0,
          "Not all backward tabbing blur tests were run, " +
          backwardBlurArray.toString());
-      ok(expectedWindowBlurCount == 0,
+      is(expectedWindowBlurCount, 0,
          "|window| didn't get the right amount of blur events");
       setOrRestoreTabFocus(0);
       SimpleTest.finish();
@@ -153,6 +153,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
       if (elements[i].hasAttribute("id")) {
         elements[i].addEventListener("focus", handleFocus, false);
         elements[i].addEventListener("blur", handleBlur, false);
+      }
+      if (elements[i].getAttribute("tabindex") == "1") {
+        elements[i].setAttribute("tabindex", "-1");
       }
     }
     tab();
@@ -206,6 +209,73 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
       <tr>
         <td>tabindex="0"</td><td><span tabindex="0" id="i12">span</span></td>
       </tr>
+      
+      <tr>
+        <td><h3>Form elements with tabindex="-1"</h3></td>
+      </tr>
+      <tr>
+        <td>type="text"</td><td><input type="text"  tabindex="-1" value=""></td>
+      </tr>
+      <tr>
+        <td>type="button"</td><td><input type="button" tabindex="-1" value="type='button'"></td>
+      </tr>
+      <tr>
+        <td>type="checkbox"</td><td><input type="checkbox" tabindex="-1"></td>
+      </tr>
+      <tr>
+        <td>type="radio" checked</td><td><input type="radio" tabindex="-1" name="radio3" checked>
+                                         <input type="radio" tabindex="-1" name="radio3"></td>
+      </tr>
+      <tr>
+        <td>type="radio"</td><td><input type="radio" tabindex="-1" name="radio4">
+                                 <input type="radio" tabindex="-1" name="radio4"></td>
+      </tr>
+      <tr>
+        <td>type="password"</td><td><input type="password" tabindex="-1"></td>
+      </tr>
+      <tr>
+        <td>type="file"</td><td><input type="file" tabindex="-1"></td>
+      </tr>
+      <tr>
+        <td>button</td><td><button tabindex="-1">button</button></td>
+      </tr>
+      <tr>
+        <td>select</td><td><select tabindex="-1"><option>select</option></select></td>
+      </tr>
+      
+      <tr>
+        <td><h3>Form elements with .setAttribute("tabindex", "-1")</h3></td>
+      </tr>
+      <tr>
+        <td>type="text"</td><td><input type="text"  tabindex="1" value=""></td>
+      </tr>
+      <tr>
+        <td>type="button"</td><td><input type="button" tabindex="1" value="type='button'"></td>
+      </tr>
+      <tr>
+        <td>type="checkbox"</td><td><input type="checkbox" tabindex="1"></td>
+      </tr>
+      <tr>
+        <td>type="radio" checked</td><td><input type="radio" tabindex="1" name="radio5" checked>
+                                         <input type="radio" tabindex="1" name="radio5"></td>
+      </tr>
+      <tr>
+        <td>type="radio"</td><td><input type="radio" tabindex="1" name="radio6">
+                                 <input type="radio" tabindex="1" name="radio6"></td>
+      </tr>
+      <tr>
+        <td>type="password"</td><td><input type="password" tabindex="1"></td>
+      </tr>
+      <tr>
+        <td>type="file"</td><td><input type="file" tabindex="1"></td>
+      </tr>
+      <tr>
+        <td>button</td><td><button tabindex="1">button</button></td>
+      </tr>
+      <tr>
+        <td>select</td><td><select tabindex="1"><option>select</option></select></td>
+      </tr>
+      
     </tbody>
   </table>
   <h4 tabindex="0" id="end">done.</h4>

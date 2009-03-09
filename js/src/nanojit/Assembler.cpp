@@ -49,6 +49,10 @@
 extern "C" void __clear_cache(char *BEG, char *END);
 #endif
 
+#ifdef AVMPLUS_SPARC
+extern  "C"	void sync_instruction_memory(caddr_t v, u_int len);
+#endif
+
 namespace nanojit
 {
 
@@ -76,7 +80,7 @@ namespace nanojit
 			for (;;) {
 				LInsp i = in->read();
 				if (!i || i->isGuard() || i->isBranch()
-					|| i->isCall() && !i->isCse(functions)
+					|| (i->isCall() && !i->isCse(functions))
 					|| !ignoreInstruction(i))
 					return i;
 			}
@@ -406,8 +410,8 @@ namespace nanojit
 		if (error()) return;
 
 #ifdef NANOJIT_IA32
-        NanoAssert(_allocator.active[FST0] && _fpuStkDepth == -1 ||
-            !_allocator.active[FST0] && _fpuStkDepth == 0);
+        NanoAssert((_allocator.active[FST0] && _fpuStkDepth == -1) ||
+            (!_allocator.active[FST0] && _fpuStkDepth == 0));
 #endif
 		
         AR &ar = _activation;
@@ -572,8 +576,8 @@ namespace nanojit
 
 #ifdef AVMPLUS_IA32
         if (r != UnknownReg && 
-            ((rmask(r)&XmmRegs) && !(allow&XmmRegs) ||
-                 (rmask(r)&x87Regs) && !(allow&x87Regs)))
+            (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
+                 ((rmask(r)&x87Regs) && !(allow&x87Regs))))
         {
             // x87 <-> xmm copy required
             //_nvprof("fpu-evict",1);
@@ -679,6 +683,17 @@ namespace nanojit
         }
     }
 
+#ifdef NANOJIT_IA32
+    void Assembler::patch(SideExit* exit, SwitchInfo* si)
+    {
+		for (GuardRecord* lr = exit->guards; lr; lr = lr->next) {
+			Fragment *frag = lr->exit->target;
+			NanoAssert(frag->fragEntry != 0);
+			si->table[si->index] = frag->fragEntry;
+		}
+    }
+#endif
+
     NIns* Assembler::asm_exit(LInsp guard)
     {
 		SideExit *exit = guard->record()->exit;
@@ -759,6 +774,8 @@ namespace nanojit
 	
 	void Assembler::beginAssembly(Fragment *frag, RegAllocMap* branchStateMap)
 	{
+		internalReset();
+
         _thisfrag = frag;
 		_activation.lowwatermark = 1;
 		_activation.tos = _activation.lowwatermark;
@@ -854,6 +871,11 @@ namespace nanojit
 
 	void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
 	{
+		// don't try to patch code if we are in an error state since we might have partially 
+		// overwritten the code cache already
+		if (error())
+			return;
+
 	    NIns* SOT = 0;
 	    if (frag->isRoot()) {
 	        SOT = frag->loopEntry;
@@ -928,6 +950,22 @@ namespace nanojit
 			}
 		}
 # endif
+#endif
+
+#ifdef AVMPLUS_SPARC
+        // Clear Instruction Cache
+        for (int i = 0; i < 2; i++) {
+            Page *p = (i == 0) ? _nativePages : _nativeExitPages;
+
+            Page *first = p;
+            while (p) {
+                if (!p->next || p->next != p+1) {
+                    sync_instruction_memory((char *)first, NJ_PAGE_SIZE);
+                    first = p->next;
+                }
+                p = p->next;
+            }
+        }
 #endif
 
 # ifdef AVMPLUS_PORTING_API
@@ -1019,8 +1057,11 @@ namespace nanojit
 
 	void Assembler::gen(LirFilter* reader,  NInsList& loopJumps)
 	{
-		// trace must start with LIR_x or LIR_loop
-		NanoAssert(reader->pos()->isop(LIR_x) || reader->pos()->isop(LIR_loop));
+		// trace must end with LIR_x, LIR_loop, LIR_ret, or LIR_xtbl
+		NanoAssert(reader->pos()->isop(LIR_x) ||
+		           reader->pos()->isop(LIR_loop) ||
+		           reader->pos()->isop(LIR_ret) ||
+				   reader->pos()->isop(LIR_xtbl));
 		 
 		for (LInsp ins = reader->read(); ins != 0 && !error(); ins = reader->read())
 		{
@@ -1030,7 +1071,7 @@ namespace nanojit
 				default:
 					NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)", op, op&~LIR64);
 					break;
-					
+
                 case LIR_live: {
                     countlir_live();
                     pending_lives.add(ins->oprnd1());
@@ -1329,7 +1370,20 @@ namespace nanojit
 					verbose_only( if (_verbose) { outputAddr=true; asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); } )
 					break;
 				}
-
+				case LIR_xbarrier: {
+					break;
+				}
+#ifdef NANOJIT_IA32
+				case LIR_xtbl: {
+                    NIns* exit = asm_exit(ins); // does intersectRegisterState()
+					asm_switch(ins, exit);
+					break;
+				}
+#else
+ 			    case LIR_xtbl:
+					NanoAssertMsg(0, "Not supported for this architecture");
+					break;
+#endif
                 case LIR_xt:
 				case LIR_xf:
 				{
@@ -1431,6 +1485,28 @@ namespace nanojit
 		}
 	}
 
+	/*
+	 * Write a jump table for the given SwitchInfo and store the table
+	 * address in the SwitchInfo. Every entry will initially point to
+	 * target.
+	 */
+	void Assembler::emitJumpTable(SwitchInfo* si, NIns* target)
+	{
+		underrunProtect(si->count * sizeof(NIns*) + 20);
+		// Align for platform. The branch should be optimized away and is
+		// required to select the compatible int type.
+		if (sizeof(NIns*) == 8) {
+			_nIns = (NIns*) (uint64(_nIns) & ~7);
+		} else if (sizeof(NIns*) == 4) {
+		    _nIns = (NIns*) (uint32(_nIns) & ~3);
+		}
+		for (uint32_t i = 0; i < si->count; ++i) {
+			_nIns = (NIns*) (((uint8*) _nIns) - sizeof(NIns*));
+			*(NIns**) _nIns = target;
+		}
+		si->table = (NIns**) _nIns;
+	}
+
     void Assembler::assignSavedRegs()
     {
         // restore saved regs
@@ -1521,7 +1597,7 @@ namespace nanojit
 
 				for(uint32_t i=_activation.lowwatermark; i<_activation.tos;i++) {
 					LInsp ins = _activation.entry[i];
-					if (ins /* && _activation.entry[i]!=_activation.entry[i+1]*/) {
+					if (ins) {
 						sprintf(s, "%d(%s) ", -4*i,_thisfrag->lirbuf->names->formatRef(ins));
 						s += strlen(s);
 					}

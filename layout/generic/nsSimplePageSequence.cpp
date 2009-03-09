@@ -137,17 +137,9 @@ nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame()
   if (mPageData) delete mPageData;
 }
 
-NS_IMETHODIMP
-nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIPageSequenceFrame))) {
-    *aInstancePtr = static_cast<nsIPageSequenceFrame*>(this);
-    return NS_OK;
-  }
-  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsSimplePageSequenceFrame)
+  NS_QUERYFRAME_ENTRY(nsIPageSequenceFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------------------------------------------------------------------
 
@@ -180,8 +172,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // it right in paginated mode.
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // Return our desired size
-    aDesiredSize.height  = mSize.height;
-    aDesiredSize.width   = mSize.width;
+    aDesiredSize.height  = mSize.height * PresContext()->GetPrintPreviewScale();
+    aDesiredSize.width   = mSize.width * PresContext()->GetPrintPreviewScale();
     aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                         aDesiredSize.height);
     FinishAndStoreOverflow(&aDesiredSize);
@@ -199,13 +191,13 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // now get out margins & edges
   if (mPageData->mPrintSettings) {
-    nsMargin unwriteableTwips;
+    nsIntMargin unwriteableTwips;
     mPageData->mPrintSettings->GetUnwriteableMarginInTwips(unwriteableTwips);
     NS_ASSERTION(unwriteableTwips.left  >= 0 && unwriteableTwips.top >= 0 &&
                  unwriteableTwips.right >= 0 && unwriteableTwips.bottom >= 0,
                  "Unwriteable twips should be non-negative");
 
-    nsMargin marginTwips;
+    nsIntMargin marginTwips;
     mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
     mMargin = aPresContext->TwipsToAppUnits(marginTwips + unwriteableTwips);
 
@@ -213,11 +205,11 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     mPageData->mPrintSettings->GetPrintRange(&printType);
     mPrintRangeType = printType;
 
-    nsMargin edgeTwips;
+    nsIntMargin edgeTwips;
     mPageData->mPrintSettings->GetEdgeInTwips(edgeTwips);
 
     // sanity check the values. three inches are sometimes needed
-    nscoord inchInTwips = NS_INCHES_TO_TWIPS(3.0);
+    PRInt32 inchInTwips = NS_INCHES_TO_TWIPS(3.0);
     edgeTwips.top = PR_MIN(PR_MAX(edgeTwips.top, 0), inchInTwips);
     edgeTwips.bottom = PR_MIN(PR_MAX(edgeTwips.bottom, 0), inchInTwips);
     edgeTwips.left = PR_MIN(PR_MAX(edgeTwips.left, 0), inchInTwips);
@@ -363,8 +355,9 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Return our desired size
   // Adjustr the reflow size by PrintPreviewScale so the scrollbars end up the
   // correct size
+  nscoord w = (x + availSize.width + deadSpaceGap);
   aDesiredSize.height  = y * PresContext()->GetPrintPreviewScale(); // includes page heights and dead space
-  aDesiredSize.width   = (x + availSize.width + deadSpaceGap) * PresContext()->GetPrintPreviewScale();
+  aDesiredSize.width   = w * PresContext()->GetPrintPreviewScale();
 
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                       aDesiredSize.height);
@@ -372,8 +365,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // cache the size so we can set the desired size 
   // for the other reflows that happen
-  mSize.width  = aDesiredSize.width;
-  mSize.height = aDesiredSize.height;
+  mSize.width  = w;
+  mSize.height = y;
 
   NS_FRAME_TRACE_REFLOW_OUT("nsSimplePageSequeceFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

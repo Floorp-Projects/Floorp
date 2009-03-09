@@ -48,20 +48,21 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
                         public nsISVGGlyphFragmentNode
 {
   friend nsIFrame*
-  NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                      nsIFrame* parentFrame, nsStyleContext* aContext);
+  NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGTSpanFrame(nsStyleContext* aContext) :
     nsSVGTextContainerFrame(aContext) {}
 
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
-
 public:
+  NS_DECL_QUERYFRAME
+
   // nsIFrame:
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
+
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);

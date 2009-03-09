@@ -52,7 +52,7 @@
 #ifdef DEBUG
 #include "nsSize.h"
 #endif
- 
+
 NS_IMPL_ISUPPORTS2(nsXPLookAndFeel, nsILookAndFeel, nsIObserver)
 
 nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
@@ -245,13 +245,16 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-mac-secondaryhighlight",
   "ui.-moz-win-mediatext",
   "ui.-moz-win-communicationstext",
-  "ui.-moz-nativehyperlinktext"
+  "ui.-moz-nativehyperlinktext",
+  "ui.-moz-comboboxtext",
+  "ui.-moz-combobox"
 };
 
 PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};
 PRInt32 nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
+PRBool nsXPLookAndFeel::sUseNativeColors = PR_TRUE;
 
 nsXPLookAndFeel::nsXPLookAndFeel() : nsILookAndFeel()
 {
@@ -450,6 +453,11 @@ nsXPLookAndFeel::Init()
     InitColorFromPref(i, prefs);
     prefBranchInternal->AddObserver(sColorPrefs[i], this, PR_FALSE);
   }
+
+  PRBool val;
+  if (NS_SUCCEEDED(prefs->GetBoolPref("ui.use_native_colors", &val))) {
+    sUseNativeColors = val;
+  }
 }
 
 nsXPLookAndFeel::~nsXPLookAndFeel()
@@ -612,7 +620,7 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
+  if (sUseNativeColors && NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
     if ((gfxPlatform::GetCMSMode() == eCMSMode_All) && !IsSpecialColor(aID, aColor)) {
       cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {

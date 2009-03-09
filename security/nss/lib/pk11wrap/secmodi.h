@@ -41,7 +41,6 @@
 #define _SECMODI_H_ 1
 #include "pkcs11.h"
 #include "nssilock.h"
-#include "mcom_db.h"
 #include "secoidt.h"
 #include "secdert.h"
 #include "certt.h"

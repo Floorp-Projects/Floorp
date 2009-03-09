@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-348904.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 350810;
+var BUGNUMBER = 348904;
 var summary = 'decompilation for "let" in lvalue part of for..in';
 var actual = '';
 var expect = '';

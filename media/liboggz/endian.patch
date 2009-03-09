@@ -1,0 +1,13 @@
+diff --git a/media/liboggz/include/oggz/config.h b/media/liboggz/include/oggz/config.h
+index d645685..19d20f5 100644
+--- a/media/liboggz/include/oggz/config.h
++++ b/media/liboggz/include/oggz/config.h
+@@ -126,3 +126,8 @@
+ /* Define to `unsigned int' if <sys/types.h> does not define. */
+ /* #undef size_t */
+ #undef DEBUG
++
++#include "prcpucfg.h"
++#ifdef IS_BIG_ENDIAN
++#define WORDS_BIGENDIAN
++#endif

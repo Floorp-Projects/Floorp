@@ -1,0 +1,14 @@
+# Tests related to SVG Animation (using SMIL) of CSS properties
+
+# NOTE: All tests here are currently marked 'fails'.  They'll be enabled
+# as part of a smil-for-CSS-properties patch.
+
+# Tests that are expected to pass with current smil_css draft patch:
+fails == font-size-1.svg  font-size-1-ref.svg  # Note: Opera v9.27 fails this
+fails == anim-css-fontsize-px-1a.svg anim-css-fontsize-px-1-ref.svg
+fails == anim-css-fontsize-px-1b.svg anim-css-fontsize-px-1-ref.svg
+fails == anim-css-fontsize-px-1c.svg anim-css-fontsize-px-1-ref.svg
+fails == anim-css-fontsize-pt-1.svg  anim-css-fontsize-pt-1-ref.svg
+
+# Tests that don't yet pass:
+fails == fill-1.svg       fill-1-ref.svg

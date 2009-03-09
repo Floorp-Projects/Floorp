@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=468190
+-->
+<head>
+  <title>Test for bug 468190</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=468190">Mozilla Bug 468190</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if video can be replayed after ended.
+var completed = false;
+var playCount = 0;
+
+function startTest() {
+  if (completed)
+    return false;
+
+  var v = document.getElementById('v');
+  v.play();
+  return false;
+}
+
+function playbackStarted() {
+  if (completed)
+    return false;
+
+  playCount++;
+}
+
+function playbackEnded() {
+  if (completed)
+    return false
+
+  var v = document.getElementById('v');
+  ok(v.currentTime >= 0.9 && v.currentTime <= 1.1,
+     "Checking currentTime at end: " + v.currentTime);
+  ok(v.ended, "Checking playback has ended");
+  if (playCount < 2) {
+    v.currentTime = 0;
+    ok(v.seeking, "Checking that seeking is now true");
+    ok(!v.ended, "Checking ended is no longer set as seeking has begun");
+    v.play();
+  }
+  else {
+    ok(playCount == 2, "Check playback after ended event");
+    completed = true;
+    SimpleTest.finish();
+  }
+  return false;
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+<video id='v'
+       onloadedmetadata='return startTest();'
+       onplay='return playbackStarted();'
+       onended='return playbackEnded();'><source src='r11025_s16_c1.wav' type='audio/x-wav'></video>
+</body>
+</html>

@@ -61,13 +61,32 @@
 #include "secder.h"
 #include "secport.h"
 #include "secrng.h"
-#include "nss.h"
 #include "prtypes.h"
 #include "nspr.h"
 #include "softkver.h"
 #include "secoid.h"
 #include "sftkdb.h"
 #include "sftkpars.h"
+
+PRBool parentForkedAfterC_Initialize;
+
+#ifndef NO_FORK_CHECK
+
+#if defined(CHECK_FORK_PTHREAD) || defined(CHECK_FORK_MIXED)
+PRBool forked = PR_FALSE;
+#endif
+
+#if defined(CHECK_FORK_GETPID) || defined(CHECK_FORK_MIXED)
+#include <unistd.h>
+pid_t myPid;
+#endif
+
+#ifdef CHECK_FORK_MIXED
+#include <sys/systeminfo.h>
+PRBool usePthread_atfork;
+#endif
+
+#endif
 
 /*
  * ******************** Static data *******************************
@@ -357,6 +376,13 @@ static const struct mechanismList mechanisms[] = {
      {CKM_CAMELLIA_MAC, 	{16, 32, CKF_SN_VR},            PR_TRUE},
      {CKM_CAMELLIA_MAC_GENERAL,	{16, 32, CKF_SN_VR},            PR_TRUE},
      {CKM_CAMELLIA_CBC_PAD,	{16, 32, CKF_EN_DE_WR_UN},      PR_TRUE},
+     /* ------------------------- SEED Operations --------------------------- */
+     {CKM_SEED_KEY_GEN,		{16, 16, CKF_GENERATE},		PR_TRUE},
+     {CKM_SEED_ECB,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_SEED_CBC,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_SEED_MAC,		{16, 16, CKF_SN_VR},		PR_TRUE},
+     {CKM_SEED_MAC_GENERAL,	{16, 16, CKF_SN_VR},		PR_TRUE},
+     {CKM_SEED_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN},	PR_TRUE},
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
@@ -460,15 +486,14 @@ static const struct mechanismList mechanisms[] = {
 };
 static const CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 
-static PRBool nsc_init = PR_FALSE;
+/* sigh global so fipstokn can read it */
+PRBool nsc_init = PR_FALSE;
 
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
+#if defined(CHECK_FORK_PTHREAD) || defined(CHECK_FORK_MIXED)
 
 #include <pthread.h>
 
-PRBool forked = PR_FALSE;
-
-void ForkedChild(void)
+static void ForkedChild(void)
 {
     if (nsc_init || nsf_init) {
         forked = PR_TRUE;
@@ -1166,6 +1191,21 @@ validateSecretKey(SFTKSession *session, SFTKObject *object,
 	}
 	sftk_FormatDESKey((unsigned char*)attribute->attrib.pValue,
 						 attribute->attrib.ulValueLen);
+	sftk_FreeAttribute(attribute);
+	break;
+    case CKK_AES:
+	attribute = sftk_FindAttribute(object,CKA_VALUE);
+	/* shouldn't happen */
+	if (attribute == NULL) 
+	    return CKR_TEMPLATE_INCOMPLETE;
+	if (attribute->attrib.ulValueLen != 16 &&
+	    attribute->attrib.ulValueLen != 24 &&
+	    attribute->attrib.ulValueLen != 32) {
+	    sftk_FreeAttribute(attribute);
+	    return CKR_KEY_SIZE_RANGE;
+	}
+	crv = sftk_forceAttribute(object, CKA_VALUE_LEN, 
+			&attribute->attrib.ulValueLen, sizeof(CK_ULONG));
 	sftk_FreeAttribute(attribute);
 	break;
     default:
@@ -2202,12 +2242,12 @@ CK_RV sftk_CloseAllSessions(SFTKSlot *slot)
 
     /* first log out the card */
     handle = sftk_getKeyDB(slot);
-    PZ_Lock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
     slot->isLoggedIn = PR_FALSE;
     if (handle) {
 	sftkdb_ClearPassword(handle);
     }
-    PZ_Unlock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
     if (handle) {
         sftk_freeDB(handle);
     }
@@ -2220,7 +2260,7 @@ CK_RV sftk_CloseAllSessions(SFTKSlot *slot)
     for (i=0; i < slot->sessHashSize; i++) {
 	PZLock *lock = SFTK_SESSION_LOCK(slot,i);
 	do {
-	    PZ_Lock(lock);
+	    SKIP_AFTER_FORK(PZ_Lock(lock));
 	    session = slot->head[i];
 	    /* hand deque */
 	    /* this duplicates function of NSC_close session functions, but 
@@ -2230,15 +2270,15 @@ CK_RV sftk_CloseAllSessions(SFTKSlot *slot)
 		slot->head[i] = session->next;
 		if (session->next) session->next->prev = NULL;
 		session->next = session->prev = NULL;
-		PZ_Unlock(lock);
-		PZ_Lock(slot->slotLock);
+		SKIP_AFTER_FORK(PZ_Unlock(lock));
+		SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
 		--slot->sessionCount;
-		PZ_Unlock(slot->slotLock);
+		SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
 		if (session->info.flags & CKF_RW_SESSION) {
 		    PR_AtomicDecrement(&slot->rwSessionCount);
 		}
 	    } else {
-		PZ_Unlock(lock);
+		SKIP_AFTER_FORK(PZ_Unlock(lock));
 	    }
 	    if (session) sftk_FreeSession(session);
 	} while (session != NULL);
@@ -2261,12 +2301,12 @@ sftk_DBShutdown(SFTKSlot *slot)
 {
     SFTKDBHandle *certHandle;
     SFTKDBHandle      *keyHandle;
-    PZ_Lock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
     certHandle = slot->certDB;
     slot->certDB = NULL;
     keyHandle = slot->keyDB;
     slot->keyDB = NULL;
-    PZ_Unlock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
     if (certHandle) {
 	sftk_freeDB(certHandle);
     }
@@ -2333,12 +2373,12 @@ SFTK_DestroySlotData(SFTKSlot *slot)
 
     /* OK everything has been disassembled, now we can finally get rid
      * of the locks */
-    PZ_DestroyLock(slot->slotLock);
+    SKIP_AFTER_FORK(PZ_DestroyLock(slot->slotLock));
     slot->slotLock = NULL;
     if (slot->sessionLock) {
 	for (i=0; i < slot->numSessionLocks; i++) {
 	    if (slot->sessionLock[i]) {
-		PZ_DestroyLock(slot->sessionLock[i]);
+		SKIP_AFTER_FORK(PZ_DestroyLock(slot->sessionLock[i]));
 		slot->sessionLock[i] = NULL;
 	    }
 	}
@@ -2346,16 +2386,26 @@ SFTK_DestroySlotData(SFTKSlot *slot)
 	slot->sessionLock = NULL;
     }
     if (slot->objectLock) {
-	PZ_DestroyLock(slot->objectLock);
+	SKIP_AFTER_FORK(PZ_DestroyLock(slot->objectLock));
 	slot->objectLock = NULL;
     }
     if (slot->pwCheckLock) {
-	PR_DestroyLock(slot->pwCheckLock);
+	SKIP_AFTER_FORK(PR_DestroyLock(slot->pwCheckLock));
 	slot->pwCheckLock = NULL;
     }
     PORT_Free(slot);
     return CKR_OK;
 }
+
+#ifndef NO_FORK_CHECK
+
+static CK_RV ForkCheck(void)
+{
+    CHECK_FORK();
+    return CKR_OK;
+}
+
+#endif
 
 /*
  * handle the SECMOD.db
@@ -2366,13 +2416,17 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, void *args)
     char *secmod = NULL;
     char *appName = NULL;
     char *filename = NULL;
+#ifdef NSS_DISABLE_DBM
+    SDBType dbType = SDB_SQL;
+#else
     SDBType dbType = SDB_LEGACY;
+#endif
     PRBool rw;
     static char *success="Success";
     char **rvstr = NULL;
 
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
-    if (forked) return NULL;
+#ifndef NO_FORK_CHECK
+    if (CKR_OK != ForkCheck()) return NULL;
 #endif
 
     secmod = sftk_getSecmodName(parameters, &dbType, &appName,&filename, &rw);
@@ -2478,6 +2532,11 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	crv = CKR_DEVICE_ERROR;
 	return crv;
     }
+    rv = BL_Init();             /* initialize freebl engine */
+    if (rv != SECSuccess) {
+	crv = CKR_DEVICE_ERROR;
+	return crv;
+    }
     RNG_SystemInfoForRNG();
 
 
@@ -2487,7 +2546,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
      * off from the rest on NSS.
      */
 
-    /* initialize the key and cert db's */
+   /* initialize the key and cert db's */
     if (init_args && (!(init_args->flags & CKF_OS_LOCKING_OK))) {
         if (init_args->CreateMutex && init_args->DestroyMutex &&
             init_args->LockMutex && init_args->UnlockMutex) {
@@ -2526,9 +2585,11 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	    sftk_closePeer(isFIPS);
 	    if (sftk_audit_enabled) {
 		if (isFIPS && nsc_init) {
-		    sftk_LogAuditMessage(NSS_AUDIT_INFO, "enabled FIPS mode");
+		    sftk_LogAuditMessage(NSS_AUDIT_INFO, NSS_AUDIT_FIPS_STATE, 
+				"enabled FIPS mode");
 		} else {
-		    sftk_LogAuditMessage(NSS_AUDIT_INFO, "disabled FIPS mode");
+		    sftk_LogAuditMessage(NSS_AUDIT_INFO, NSS_AUDIT_FIPS_STATE, 
+				"disabled FIPS mode");
 		}
 	    }
 	}
@@ -2549,9 +2610,39 @@ loser:
         sftk_InitFreeLists();
     }
 
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
+#ifndef NO_FORK_CHECK
     if (CKR_OK == crv) {
+#if defined(CHECK_FORK_MIXED)
+        /* Before Solaris 10, fork handlers are not unregistered at dlclose()
+         * time. So, we only use pthread_atfork on Solaris 10 and later. For
+         * earlier versions, we use PID checks.
+         */
+        char buf[200];
+        int major = 0, minor = 0;
+
+        long rv = sysinfo(SI_RELEASE, buf, sizeof(buf));
+        if (rv > 0 && rv < sizeof(buf)) {
+            if (2 == sscanf(buf, "%d.%d", &major, &minor)) {
+                /* Are we on Solaris 10 or greater ? */
+                if (major >5 || (5 == major && minor >= 10)) {
+                    /* we are safe to use pthread_atfork */
+                    usePthread_atfork = PR_TRUE;
+                }
+            }
+        }
+        if (usePthread_atfork) {
+            pthread_atfork(NULL, NULL, ForkedChild);
+        } else {
+            myPid = getpid();
+        }
+
+#elif defined(CHECK_FORK_PTHREAD)
         pthread_atfork(NULL, NULL, ForkedChild);
+#elif defined(CHECK_FORK_GETPID)
+        myPid = getpid();
+#else
+#error Incorrect fork check method.
+#endif
     }
 #endif
     return crv;
@@ -2561,7 +2652,7 @@ CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
 {
     CK_RV crv;
     
-    CHECK_FORK();
+    sftk_ForkReset(pReserved, &crv);
 
     if (nsc_init) {
 	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
@@ -2576,9 +2667,13 @@ CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
  * Cryptoki library.*/
 CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
 {
+    /* propagate the fork status to freebl and util */
+    BL_SetForkState(parentForkedAfterC_Initialize);
+    UTIL_SetForkState(parentForkedAfterC_Initialize);
+
     nscFreeAllSlots(isFIPS ? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE);
 
-    /* don't muck with the globals is our peer is still initialized */
+    /* don't muck with the globals if our peer is still initialized */
     if (isFIPS && nsc_init) {
 	return CKR_OK;
     }
@@ -2594,13 +2689,62 @@ CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
 
     /* tell freeBL to clean up after itself */
     BL_Cleanup();
-    /* unload freeBL shared library from memory */
+    
+    /* reset fork status in freebl. We must do this before BL_Unload so that
+     * this call doesn't force freebl to be reloaded. */
+    BL_SetForkState(PR_FALSE);
+    
+    /* unload freeBL shared library from memory. This may only decrement the
+     * OS refcount if it's been loaded multiple times, eg. by libssl */
     BL_Unload();
+
     /* clean up the default OID table */
     SECOID_Shutdown();
+
+    /* reset fork status in util */
+    UTIL_SetForkState(PR_FALSE);
+
     nsc_init = PR_FALSE;
 
+#ifdef CHECK_FORK_MIXED
+    if (!usePthread_atfork) {
+        myPid = 0; /* allow CHECK_FORK in the next softoken initialization to
+                    * succeed */
+    } else {
+        forked = PR_FALSE; /* allow reinitialization */
+    }
+#elif defined(CHECK_FORK_GETPID)
+    myPid = 0; /* allow reinitialization */
+#elif defined (CHECK_FORK_PTHREAD)
+    forked = PR_FALSE; /* allow reinitialization */
+#endif
     return CKR_OK;
+}
+
+/* Hard-reset the entire softoken PKCS#11 module if the parent process forked
+ * while it was initialized. */
+PRBool sftk_ForkReset(CK_VOID_PTR pReserved, CK_RV* crv)
+{
+#ifndef NO_FORK_CHECK
+    if (PARENT_FORKED()) {
+        parentForkedAfterC_Initialize = PR_TRUE;
+        if (nsc_init) {
+            /* finalize non-FIPS token */
+            *crv = nsc_CommonFinalize(pReserved, PR_FALSE);
+            PORT_Assert(CKR_OK == *crv);
+            nsc_init = (PRBool) !(*crv == CKR_OK);
+        }
+        if (nsf_init) {
+            /* finalize FIPS token */
+            *crv = nsc_CommonFinalize(pReserved, PR_TRUE);
+            PORT_Assert(CKR_OK == *crv);
+            nsf_init = (PRBool) !(*crv == CKR_OK);
+        }
+        parentForkedAfterC_Initialize = PR_FALSE;
+        return PR_TRUE;
+    }
+#endif
+    return PR_FALSE;
 }
 
 /* NSC_Finalize indicates that an application is done with the 
@@ -2609,10 +2753,13 @@ CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
 {
     CK_RV crv;
 
-    CHECK_FORK();
+    /* reset entire PKCS#11 module upon fork */
+    if (sftk_ForkReset(pReserved, &crv)) {
+        return crv;
+    }
 
     if (!nsc_init) {
-	return CKR_OK;
+        return CKR_OK;
     }
 
     crv = nsc_CommonFinalize (pReserved, PR_FALSE);
@@ -3273,7 +3420,12 @@ CK_RV NSC_CloseAllSessions (CK_SLOT_ID slotID)
 {
     SFTKSlot *slot;
 
-    CHECK_FORK();
+#ifndef NO_CHECK_FORK
+    /* skip fork check if we are being called from C_Initialize or C_Finalize */
+    if (!parentForkedAfterC_Initialize) {
+        CHECK_FORK();
+    }
+#endif
 
     slot = sftk_SlotFromID(slotID, PR_FALSE);
     if (slot == NULL) return CKR_SLOT_ID_INVALID;

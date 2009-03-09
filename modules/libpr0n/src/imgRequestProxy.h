@@ -49,6 +49,7 @@
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 #include "imgRequest.h"
 
@@ -85,6 +86,28 @@ public:
 protected:
   friend class imgRequest;
 
+  class imgCancelRunnable;
+  friend class imgCancelRunnable;
+
+  class imgCancelRunnable : public nsRunnable
+  {
+    public:
+      imgCancelRunnable(imgRequestProxy* owner, nsresult status)
+        : mOwner(owner), mStatus(status)
+      {}
+
+      NS_IMETHOD Run() {
+        mOwner->DoCancel(mStatus);
+        return NS_OK;
+      }
+
+    private:
+      nsRefPtr<imgRequestProxy> mOwner;
+      nsresult mStatus;
+  };
+
+
+
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode   ();
   void OnStartContainer(imgIContainer *aContainer);
@@ -104,6 +127,9 @@ protected:
   inline PRBool HasObserver() const {
     return mListener != nsnull;
   }
+
+  /* Finish up canceling ourselves */
+  void DoCancel(nsresult status);
 
   /* Do the proper refcount management to null out mListener */
   void NullOutListener();

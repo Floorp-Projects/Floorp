@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
+<bindings id="resizerBindings"
+   xmlns="http://www.mozilla.org/xbl">
+
+  <binding id="resizer">
+    <content chromedir="&locale.dir;">
+      <children/>
+    </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/resizer.css"/>
+    </resources>
+    <implementation>
+      <constructor><![CDATA[
+        // Bindings that extend this one wouldn't inherit the
+        // chromedir attribute if it would only be set in <content>.
+        this.setAttribute("chromedir", "]]>&locale.dir;<![CDATA[");
+      ]]></constructor>
+    </implementation>
+  </binding>
+
+</bindings>

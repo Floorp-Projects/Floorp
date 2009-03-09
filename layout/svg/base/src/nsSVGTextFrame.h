@@ -46,7 +46,7 @@ typedef nsSVGTextContainerFrame nsSVGTextFrameBase;
 class nsSVGTextFrame : public nsSVGTextFrameBase
 {
   friend nsIFrame*
-  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGTextFrame(nsStyleContext* aContext)
     : nsSVGTextFrameBase(aContext),
@@ -55,6 +55,12 @@ protected:
 
 public:
   // nsIFrame:
+#ifdef DEBUG
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
+#endif
+
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);

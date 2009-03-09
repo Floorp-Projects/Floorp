@@ -41,7 +41,6 @@
 /*
  * JS function support.
  */
-#include "jsstddef.h"
 #include <string.h>
 #include "jstypes.h"
 #include "jsbit.h"
@@ -461,7 +460,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             }
             *objp = obj;
         }
-    } else {
+    } else if (JSVAL_IS_STRING(id)) {
         str = JSVAL_TO_STRING(id);
         atom = cx->runtime->atomState.lengthAtom;
         if (str == ATOM_TO_STRING(atom)) {
@@ -591,9 +590,9 @@ JSClass js_ArgumentsClass = {
 #define CALL_CLASS_FIXED_RESERVED_SLOTS  2
 
 JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
+js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *callobj, *funobj;
+    JSObject *callobj;
 
     /* Create a call object for fp only if it lacks one. */
     JS_ASSERT(fp->fun);
@@ -601,15 +600,18 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
     if (callobj)
         return callobj;
 
-    /* The default call parent is its function's parent (static link). */
-    if (!parent) {
-        funobj = fp->callee;
-        if (funobj)
-            parent = OBJ_GET_PARENT(cx, funobj);
-    }
+#ifdef DEBUG
+    /* A call object should be a frame's outermost scope chain element.  */
+    JSClass *classp = OBJ_GET_CLASS(cx, fp->scopeChain);
+    if (classp == &js_WithClass || classp == &js_BlockClass || classp == &js_CallClass)
+        JS_ASSERT(OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
+#endif
 
-    /* Create the call object and link it to its stack frame. */
-    callobj = js_NewObject(cx, &js_CallClass, NULL, parent, 0);
+    /*
+     * Create the call object, using the frame's enclosing scope as
+     * its parent, and link the call to its stack frame.
+     */
+    callobj = js_NewObject(cx, &js_CallClass, NULL, fp->scopeChain, 0);
     if (!callobj)
         return NULL;
 
@@ -618,8 +620,10 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
                    OBJECT_TO_JSVAL(FUN_OBJECT(fp->fun)));
     fp->callobj = callobj;
 
-    /* Make callobj be the scope chain and the variables object. */
-    JS_ASSERT(fp->scopeChain == parent);
+    /*
+     * Push callobj on the top of the scope chain, and make it the
+     * variables object.
+     */
     fp->scopeChain = callobj;
     fp->varobj = callobj;
     return callobj;
@@ -714,7 +718,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSProperty *prop;
 
     fun = js_GetCallObjectFunction(obj);
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun ? JS_GET_LOCAL_NAME_COUNT(fun) : 0;
     if (n == 0)
         return JS_TRUE;
 
@@ -818,10 +822,12 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         JS_ASSERT(kind == JSCPK_VAR);
         array = fp->slots;
     }
-    if (setter)
+    if (setter) {
+        GC_POKE(cx, array[i]);
         array[i] = *vp;
-    else
+    } else {
         *vp = array[i];
+    }
     return JS_TRUE;
 }
 
@@ -884,7 +890,12 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     localKind = js_LookupLocal(cx, fun, JSID_TO_ATOM(id), &slot);
     if (localKind != JSLOCAL_NONE) {
         JS_ASSERT((uint16) slot == slot);
-        attrs = JSPROP_PERMANENT | JSPROP_SHARED;
+
+        /*
+         * We follow 10.2.3 of ECMA 262 v3 and make argument and variable
+         * properties of the Call objects enumerable.
+         */
+        attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
         if (localKind == JSLOCAL_ARG) {
             JS_ASSERT(slot < fun->nargs);
             getter = js_GetCallArg;
@@ -1587,7 +1598,7 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
@@ -1646,7 +1657,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
@@ -1737,7 +1748,7 @@ out:
 }
 
 #ifdef NARCISSUS
-static JSBool
+static JS_REQUIRES_STACK JSBool
 fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *aobj;
@@ -2106,7 +2117,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.n.spare = 0;
         if (flags & JSFUN_TRACEABLE) {
 #ifdef JS_TRACER
-            JSTraceableNative *trcinfo = (JSTraceableNative *) native;
+            JSTraceableNative *trcinfo =
+                JS_FUNC_TO_DATA_PTR(JSTraceableNative *, native);
             fun->u.n.native = (JSNative) trcinfo->native;
             FUN_TRCINFO(fun) = trcinfo;
 #else
@@ -2223,17 +2235,14 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
 JSObject *
 js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 {
-    JSObject *callable;
+    JSObject *callable = JSVAL_IS_PRIMITIVE(*vp) ? NULL : JSVAL_TO_OBJECT(*vp);
 
-    callable = JSVAL_IS_PRIMITIVE(*vp) ? NULL : JSVAL_TO_OBJECT(*vp);
-    if (callable &&
-        ((callable->map->ops == &js_ObjectOps)
-         ? OBJ_GET_CLASS(cx, callable)->call
-         : callable->map->ops->call)) {
+    if (js_IsCallable(cx, callable)) {
         *vp = OBJECT_TO_JSVAL(callable);
     } else {
         callable = js_ValueToFunctionObject(cx, vp, flags);
     }
+
     return callable;
 }
 

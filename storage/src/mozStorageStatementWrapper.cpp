@@ -80,7 +80,7 @@ mozStorageStatementWrapper::Initialize(mozIStorageStatement *aStatement)
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (NativeStatement(), i);
-        mColumnNames.AppendString(nsDependentString(static_cast<const PRUnichar*>(name)));
+        mColumnNames.AppendElement(nsDependentString(static_cast<const PRUnichar*>(name)));
     }
 
     return NS_OK;

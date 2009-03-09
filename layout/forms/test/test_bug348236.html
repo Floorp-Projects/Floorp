@@ -1,0 +1,131 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=348236
+-->
+<head>
+
+  <title>Test for Bug 348236</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+  #eSelect {
+    position: fixed; top:0; left: 350px; font-size: 24px; width: 100px
+  }
+  #eSelect option {
+    margin: 0; padding: 0; height: 24px
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=348236">Mozilla Bug 348236</a>
+<p id="display"></p>
+<div id="content">
+
+  <select id="eSelect" size="1" onchange="++this.onchangeCount">
+    <option selected>1</option>
+    <option>2</option>
+    <option>3</option>
+  </select>
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+  /** Test for Bug 348236 **/
+
+SimpleTest.waitForExplicitFinish()
+addLoadEvent(function test() {
+
+    var
+        CI = Components.interfaces,
+        WinUtils = window
+                   .QueryInterface(CI.nsIInterfaceRequestor)
+                   .getInterface(CI.nsIDOMWindowUtils),
+        sec = netscape.security,
+        eSelect = $("eSelect"),
+        IDOMNSEvent = CI.nsIDOMNSEvent,
+        IDOMKeyEvent = CI.nsIDOMKeyEvent,
+        timeout = 0 // Choose a larger value like 500 ms if you want to see what's happening.
+
+    function keypressOnSelect(key, modifiers) {
+        sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
+        WinUtils.focus(eSelect)
+        WinUtils.sendKeyEvent("keyup", key, 0, modifiers, true)
+        WinUtils.sendKeyEvent("keypress", key, 0, modifiers, true)
+        WinUtils.sendKeyEvent("keydown", key, 0, modifiers, true)
+    }
+
+    function testKey(key, modifiers, keyString, functionToContinue) {
+        var selectGotClick
+        function clickListener() { selectGotClick = true }
+        eSelect.selectedIndex = 0
+        eSelect.onchangeCount = 0
+
+        // Drop the SELECT down.
+        keypressOnSelect(key, modifiers)
+        // This timeout and the following are necessary to let the sent events take effect.
+        setTimeout(cont1, timeout)
+        function cont1() {
+            sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
+            // Move the mouse over option 3 (90 = 3 (rows) * 24 (row height) + 18).
+            WinUtils.sendMouseEvent("mousemove", 355, 90, 0, 0, 0, true)
+            setTimeout(cont2, timeout)
+        }
+        function cont2() {
+            // Close the select.
+            keypressOnSelect(key, modifiers)
+            setTimeout(cont3, timeout)
+        }
+        function cont3() {
+            sec.PrivilegeManager.enablePrivilege("UniversalXPConnect")
+            is(eSelect.value, "3", "Select's value should be 3 after hovering over option 3 and pressing " + keyString + ".")
+            is(eSelect.onchangeCount, 1, "Onchange should have fired once.")
+
+            // Simulate click on area to the left of the select.
+            eSelect.addEventListener("click", clickListener, true)
+            selectGotClick = false
+            WinUtils.sendMouseEvent("mousedown", 320, 0, 0, 0, 0, true)
+            WinUtils.sendMouseEvent("mouseup", 320, 0, 0, 0, 0, true)
+            setTimeout(cont4, timeout)
+        }
+        function cont4() {
+            eSelect.removeEventListener("click", clickListener, true)
+            ok(!selectGotClick, "SELECT must not capture mouse events after closing it with " + keyString + ".")
+            functionToContinue()
+        }
+    }
+
+
+    // Quick sanity checks.
+    is(eSelect.value, "1", "SELECT value should be 1 after load.")
+    is(eSelect.selectedIndex, 0, "SELECT selectedIndex should be 0 after load.")
+
+    // Check if sending key events works.
+    keypressOnSelect(IDOMKeyEvent.DOM_VK_DOWN, 0)
+    is(eSelect.value, "2", "SELECT value should be 2 after pressing Down.")
+      
+    // Test ALT-Down.
+    testKey(IDOMKeyEvent.DOM_VK_DOWN, IDOMNSEvent.ALT_MASK, "ALT-Down", nextKey1)
+    function nextKey1() {
+        // Test ALT-Up.
+        testKey(IDOMKeyEvent.DOM_VK_UP, IDOMNSEvent.ALT_MASK, "ALT-Up", nextKey2)
+    }
+    function nextKey2() {
+        // Test the F4 key on OS/2 and Windows.
+        if (/OS\/2|Win32/i.test(navigator.platform))
+            testKey(IDOMKeyEvent.DOM_VK_F4, 0, "F4", finished)
+        else
+            finished()
+    }
+    function finished() {
+    // Reset value to get the expected value if we reload the page.
+        eSelect.selectedIndex = 0
+        SimpleTest.finish()
+    }
+})
+
+</script>
+</pre>
+</body>
+</html>

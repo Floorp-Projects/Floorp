@@ -88,20 +88,19 @@ namespace nanojit
 	
 	// LCompressedBuffer
 	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
-		: _frago(frago), _pages(frago->core()->GetGC()), _functions(functions), abi(ABI_FASTCALL)
+		: _frago(frago),
+#ifdef NJ_VERBOSE
+		  names(NULL),
+#endif
+		  _functions(functions), abi(ABI_FASTCALL),
+		  state(NULL), param1(NULL), sp(NULL), rp(NULL),
+		  _pages(frago->core()->GetGC())
 	{
-		clear();
-		Page* start = pageAlloc();
-		if (start)
-			_unused = &start->lir[0];
-		//buffer_count++;
-		//fprintf(stderr, "LirBuffer %x unused %x\n", (int)this, (int)_unused);
+		rewind();
 	}
 
 	LirBuffer::~LirBuffer()
 	{
-		//buffer_count--;
-		//fprintf(stderr, "~LirBuffer %x start %x\n", (int)this, (int)_start);
 		clear();
 		verbose_only(if (names) NJ_DELETE(names);)
 		_frago = 0;
@@ -112,14 +111,24 @@ namespace nanojit
 		// free all the memory and clear the stats
 		_frago->pagesRelease(_pages);
 		NanoAssert(!_pages.size());
-		_thresholdPage = 0;
 		_unused = 0;
 		_stats.lir = 0;
 		_noMem = 0;
+		_nextPage = 0;
 		for (int i = 0; i < NumSavedRegs; ++i)
 			savedRegs[i] = NULL;
 		explicitSavedRegs = false;
 	}
+
+    void LirBuffer::rewind()
+	{
+		clear();
+		// pre-allocate the current and the next page we will be using
+		Page* start = pageAlloc();
+		_unused = start ? &start->lir[0] : NULL;
+		_nextPage = pageAlloc();
+		NanoAssert((_unused && _nextPage) || _noMem);
+    }
 
 	int32_t LirBuffer::insCount() 
 	{
@@ -152,24 +161,16 @@ namespace nanojit
 	{
 		LInsp before = _buf->next();
 		LInsp after = before+count+LIR_FAR_SLOTS;
-		if (!samepage(before,after+LirBuffer::LIR_BUF_THRESHOLD))
+		// transition to the next page?
+		if (!samepage(before,after))
 		{
-			// transition to the next page?
-			if (!samepage(before,after))
-			{
-				NanoAssert(_buf->_thresholdPage);
-				_buf->_unused = &_buf->_thresholdPage->lir[0];	
-				_buf->_thresholdPage = 0;  // pageAlloc() stored it in _pages already			
-
-				// link LIR stream back to prior instruction (careful insLink relies on _unused...)
-				insLinkTo(LIR_skip, before-1);
-			}
-			else if (!_buf->_thresholdPage)
-			{
-				// LIR_BUF_THRESHOLD away from a new page but pre-alloc it, setting noMem for early OOM detection
-				_buf->_thresholdPage = _buf->pageAlloc();
-				NanoAssert(_buf->_thresholdPage || _buf->_noMem);
-			}
+			// we don't want this to fail, so we always have a page in reserve
+			NanoAssert(_buf->_nextPage);
+			_buf->_unused = &_buf->_nextPage->lir[0];	
+			// link LIR stream back to prior instruction (careful insLink relies on _unused...)
+			insLinkTo(LIR_skip, before-1);
+			_buf->_nextPage = _buf->pageAlloc();
+			NanoAssert(_buf->_nextPage || _buf->_noMem);
 		}
 	}
 
@@ -501,7 +502,7 @@ namespace nanojit
 	}
 
 	bool FASTCALL isCmp(LOpcode c) {
-		return c >= LIR_eq && c <= LIR_uge || c >= LIR_feq && c <= LIR_fge;
+		return (c >= LIR_eq && c <= LIR_uge) || (c >= LIR_feq && c <= LIR_fge);
 	}
     
 	bool FASTCALL isCond(LOpcode c) {
@@ -569,7 +570,7 @@ namespace nanojit
 
     bool LIns::isCse(const CallInfo *functions) const
     { 
-		return nanojit::isCse(u.code) || isCall() && callInfo()->_cse;
+		return nanojit::isCse(u.code) || (isCall() && callInfo()->_cse);
     }
 
 	void LIns::setimm16(int32_t x)
@@ -688,8 +689,13 @@ namespace nanojit
         return *(const uint64_t*)ptr;
     #else
         union { uint64_t tmp; int32_t dst[2]; } u;
+		#ifdef AVMPLUS_BIG_ENDIAN
+        u.dst[0] = l->v[1];
+        u.dst[1] = l->v[0];
+		#else
         u.dst[0] = l->v[0];
         u.dst[1] = l->v[1];
+		#endif
         return u.tmp;
     #endif
 	}
@@ -703,8 +709,13 @@ namespace nanojit
 		return *(const double*)ptr;
 	#else
 		union { uint32_t dst[2]; double tmpf; } u;
+		#ifdef AVMPLUS_BIG_ENDIAN
+		u.dst[0] = l->v[1];
+		u.dst[1] = l->v[0];
+		#else
 		u.dst[0] = l->v[0];
 		u.dst[1] = l->v[1];
+		#endif
 		return u.tmpf;
 	#endif
 	}
@@ -949,7 +960,7 @@ namespace nanojit
 					return insImm(0);
 				}
 			}
-			else if (c == -1 || c == 1 && oprnd1->isCmp()) {
+			else if (c == -1 || (c == 1 && oprnd1->isCmp())) {
 				if (v == LIR_or) {
 					// x | -1 = -1, cmp | 1 = 1
 					return oprnd2;
@@ -975,14 +986,18 @@ namespace nanojit
 	{
 		if (v == LIR_xt || v == LIR_xf) {
 			if (c->isconst()) {
-				if (v == LIR_xt && !c->constval() || v == LIR_xf && c->constval()) {
+				if ((v == LIR_xt && !c->constval()) || (v == LIR_xf && c->constval())) {
 					return 0; // no guard needed
 				}
 				else {
-					// need a way to EOT now, since this is trace end.
 #ifdef JS_TRACER
-				    NanoAssertMsg(0, "need a way to EOT now, since this is trace end");
-#endif				    
+					// We're emitting a guard that will always fail. Any code
+					// emitted after this guard is dead code. We could
+					// silently optimize out the rest of the emitted code, but
+					// this could indicate a performance problem or other bug,
+					// so assert in debug builds.
+					NanoAssertMsg(0, "Constantly false guard detected");
+#endif
 					return out->insGuard(LIR_x, out->insImm(1), x);
 				}
 			}
@@ -1107,12 +1122,36 @@ namespace nanojit
 		args = args2;
         NanoAssert(j == argc);
 #endif
+		//
+		// An example of the what we're trying to serialize:
+		//
+		// byte                                             word
+		// ----                                             ----
+		//    N  [ arg tramp #0 ------------------------ ]  K
+		//  N+4  [ arg tramp #1 ------------------------ ]  K+1
+		//  N+8  [ arg tramp #2 ------------------------ ]  K+2
+		// N+12  [ arg tramp #3 ------------------------ ]  K+3
+		// N+16  [ argoff3 | argoff2 | argoff1 | argoff0 ]  K+4
+		// N+20  [ CallInfo* --------------------------- ]  K+5
+		// N+24  [ LIR_call ---------| imm8a=0 | imm8b=4 ]  K+6
+		//
+		// In this example:
+		//    32 bit words
+		//    'argc' = 4
+		//    'words' = argwords(argc) = 1  (word K+4       )
+		//    'LIR_CALL_SLOTS' = 2          (words K+5 - K+6)
+		//    'insSz' = 1+2 = 3             (words K+4 - K+6)
+		//    'from' = next + (insSz - 1)   (word K+6       )
+		//
 
 		NanoAssert(argc <= (int)MAXARGS);
 		uint32_t words = argwords(argc);
 		int32_t insSz = words + LIR_CALL_SLOTS; // words need for offsets + size of instruction
-		ensureRoom(argc+insSz);  // argc=# possible tramps for args
-		LInsp from = _buf->next()+argc+words; // assuming all args need a tramp, offsets are written here
+		ensureRoom(argc * LIR_FAR_SLOTS + insSz);  // argc=# possible tramps for args
+
+		// Argument deltas are calculated relative to the final LIns,
+		// which is the last word in the cluster.
+		LInsp from = _buf->next() + argc * LIR_FAR_SLOTS + insSz - 1; 
 		for (int32_t i=0; i < argc; i++)
 			makeReachable(args[i], from);
 
@@ -1863,6 +1902,8 @@ namespace nanojit
 			case LIR_x:
 			case LIR_xt:
 			case LIR_xf:
+			case LIR_xbarrier:
+			case LIR_xtbl:
 				formatGuard(i, s);
 				break;
 
@@ -2187,8 +2228,12 @@ namespace nanojit
 
     LabelMap::~LabelMap()
     {
+        clear();
+    }
+
+    void LabelMap::clear()
+    {
         Entry *e;
-        
         while ((e = names.removeLast()) != NULL) {
             core->freeString(e->name);
             NJ_DELETE(e);

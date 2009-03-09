@@ -67,17 +67,16 @@ public:
   // request to return an error. Call on main thread only.
   void Cancel();
 
-  // Return the number of bytes buffered from the file. This can safely
-  // be read without blocking.
-  PRUint32 Available();
+  // Suspend any downloads that are in progress.
+  void Suspend();
 
-  // Return average number of bytes per second that the 
-  // download of the media resource is achieving.
-  float DownloadRate();
+  // Resume any downloads that have been suspended.
+  void Resume();
 
-  // Return average number of bytes per second that the 
-  // playback of the media resource is achieving.
-  float PlaybackRate();
+  // Set the duration of the media resource. Call with decoder lock
+  // obtained so that the decoder thread does not request the duration
+  // while it is changing.
+  void SetDuration(PRInt64 aDuration);
 
   nsIPrincipal* GetCurrentPrincipal();
   
@@ -87,10 +86,13 @@ public:
   size_t io_read(char* aBuffer, size_t aCount);
   int io_seek(long aOffset, int aWhence);
   long io_tell();  
+  ogg_int64_t duration();
   
 public:
   nsMediaStream mStream;
-  unsigned long mCurrentPosition;
+
+  // Duration of the media resource. -1 if not known.
+  PRInt64 mDuration;
 };
 
 #endif

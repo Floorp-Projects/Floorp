@@ -62,6 +62,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsChannelProperties.h"
 #include "nsIInputStreamChannel.h"
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
@@ -96,6 +97,7 @@
 #include "nsIMutable.h"
 #include "nsIPropertyBag2.h"
 #include "nsIIDNService.h"
+#include "nsIChannelEventSink.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByContractIDWithError
@@ -191,6 +193,19 @@ NS_NewChannel(nsIChannel           **result,
         }
     }
     return rv;
+}
+
+// For now, works only with JARChannel.  Future: with all channels that may
+// have Content-Disposition header (JAR, nsIHttpChannel, and nsIMultiPartChannel).
+inline nsresult
+NS_GetContentDisposition(nsIRequest     *channel,
+                         nsACString     &result)
+{
+    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
+    if (props)
+        return props->GetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION,
+                                            result);
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 // Use this function with CAUTION. It creates a stream that blocks when you
@@ -1579,6 +1594,27 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
     }
 
     return NS_GetRealPort(targetBaseURI) == NS_GetRealPort(sourceBaseURI);
+}
+
+inline PRBool
+NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
+                             nsIChannel *aNewChannel,
+                             PRUint32 aFlags)
+{
+  if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIURI> oldURI, newURI;
+  aOldChannel->GetURI(getter_AddRefs(oldURI));
+  aNewChannel->GetURI(getter_AddRefs(newURI));
+
+  if (!oldURI || !newURI) {
+    return PR_FALSE;
+  }
+
+  PRBool res;
+  return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
 
 #endif // !nsNetUtil_h__

@@ -49,6 +49,7 @@
 #define strcmpi _stricmp
 #define stricmp _stricmp
 #define wgetcwd _wgetcwd
+#define vsnprintf _vsnprintf
 
 #define SHGetSpecialFolderPathW SHGetSpecialFolderPath
 #define SHGetPathFromIDListW    SHGetPathFromIDList
@@ -71,6 +72,10 @@ MOZCE_SHUNT_API int putenv(const char *a);
 MOZCE_SHUNT_API char SetEnvironmentVariableW(const unsigned short * name, const unsigned short * value );
 MOZCE_SHUNT_API char GetEnvironmentVariableW(const unsigned short * lpName, unsigned short* lpBuffer, unsigned long nSize);
   
+MOZCE_SHUNT_API unsigned int ExpandEnvironmentStringsW(const unsigned short* lpSrc,
+                                                       unsigned short* lpDst,
+                                                       unsigned int nSize);
+
 /* File system stuff */
 MOZCE_SHUNT_API unsigned short * _wgetcwd(unsigned short* dir, unsigned long size);
 MOZCE_SHUNT_API unsigned short *_wfullpath( unsigned short *absPath, const unsigned short *relPath, unsigned long maxLength );
@@ -98,6 +103,8 @@ MOZCE_SHUNT_API int _unlink(const char *filename );
   
 */
 
+
+MOZCE_SHUNT_API unsigned short* mozce_GetEnvironmentCL();
 
 #ifdef __cplusplus
 };

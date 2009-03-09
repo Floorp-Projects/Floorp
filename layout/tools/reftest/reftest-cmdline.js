@@ -97,6 +97,12 @@ RefTestCmdLineHandler.prototype =
       cmdLine.handleFlag("reftest", true);
     }
 
+    /* Ignore the platform's online/offline status while running reftests. */
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+              .getService(Components.interfaces.nsIIOService2);
+    ios.manageOfflineStatus = false;
+    ios.offline = false;
+
     /* Force sRGB as an output profile for color management before we load a
        window. */
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].

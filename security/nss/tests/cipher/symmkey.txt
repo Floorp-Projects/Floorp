@@ -25,3 +25,5 @@
  camellia_cbc     16       8192       10000        100000
  camellia_ecb     32       8192       10000        100000
  camellia_cbc     32       8192       10000        100000
+ seed_ecb    16       8192       10000        100000
+ seed_cbc    16       8192       10000        100000

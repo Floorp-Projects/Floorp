@@ -44,7 +44,8 @@
 
 #include "plstr.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -624,7 +625,8 @@ GConfProxy::Init()
     if (mInitialized)
         return PR_TRUE;
 
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID); 
+
     if (!pref)
         return PR_FALSE;
 

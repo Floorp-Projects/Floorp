@@ -23,6 +23,8 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Roberto Estrada <roberto.estrada@yahoo.es>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,10 +50,47 @@ var gPrivacyPane = {
   init: function ()
   {
     this._updateHistoryDaysUI();
-    this.updateClearNowButtonLabel();
+    this._updateSanitizeSettingsButton();
   },
 
   // HISTORY
+
+  /**
+   * Read the location bar enabled and suggestion prefs
+   * @return Int value for suggestion menulist
+   */
+  readSuggestionPref: function PPP_readSuggestionPref()
+  {
+    let getVal = function(aPref)
+      document.getElementById("browser.urlbar." + aPref).value;
+
+    // Suggest nothing if autocomplete is not enabled
+    if (!getVal("autocomplete.enabled"))
+      return -1;
+
+    // Bottom 2 bits of default.behavior specify history/bookmark
+    return getVal("default.behavior") & 3;
+  },
+
+  /**
+   * Write the location bar enabled and suggestion prefs when necessary
+   * @return Bool value for enabled pref
+   */
+  writeSuggestionPref: function PPP_writeSuggestionPref()
+  {
+    let menuVal = document.getElementById("locationBarSuggestion").value;
+    let enabled = menuVal != -1;
+
+    // Only update default.behavior if we're giving suggestions
+    if (enabled) {
+      // Put the selected menu item's value directly into the bottom 2 bits
+      let behavior = document.getElementById("browser.urlbar.default.behavior");
+      behavior.value = behavior.value >> 2 << 2 | menuVal;
+    }
+
+    // Always update the enabled pref
+    return enabled;
+  },
 
   /*
    * Preferences:
@@ -257,27 +296,7 @@ var gPrivacyPane = {
    * privacy.sanitize.sanitizeOnShutdown
    * - true if the user's private data is cleared on startup according to the
    *   Clear Private Data settings, false otherwise
-   * privacy.sanitize.promptOnSanitize
-   * - true if sanitizing forces the user to accept a dialog, false otherwise
    */
-
-  /**
-   * Sets the label of the "Clear Now..." button according to the
-   * privacy.sanitize.promptOnSanitize preference. Read valueFromPreferences to
-   * only change the button when the underlying pref changes, since in the case
-   * of instantApply=false, the call to clearPrivateDataNow would result in the
-   * dialog appearing when the user just unchecked the "Ask me" checkbox.
-   */
-  updateClearNowButtonLabel: function ()
-  {
-    var pref = document.getElementById("privacy.sanitize.promptOnSanitize");
-    var clearNowButton = document.getElementById("clearDataNow");
-
-    if (pref.valueFromPreferences)
-      clearNowButton.label = clearNowButton.getAttribute("label1"); // "Clear Now..."
-    else
-      clearNowButton.label = clearNowButton.getAttribute("label2"); // "Clear Now"
-  },
 
   /**
    * Displays the Clear Private Data settings dialog.
@@ -286,21 +305,18 @@ var gPrivacyPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/sanitize.xul",
                                            "", null);
-    this.updateClearNowButtonLabel();
   },
 
+  
   /**
-   * Either displays a dialog from which individual parts of private data may be
-   * cleared, or automatically clears private data according to current
-   * CPD settings.  The former happens if privacy.sanitize.promptOnSanitize is
-   * true, and the latter happens otherwise.
+   * Enables or disables the "Settings..." button depending
+   * on the privacy.sanitize.sanitizeOnShutdown preference value
    */
-  clearPrivateDataNow: function ()
-  {
-    const Cc = Components.classes, Ci = Components.interfaces;
-    var glue = Cc["@mozilla.org/browser/browserglue;1"]
-                 .getService(Ci.nsIBrowserGlue);
-    glue.sanitize(window || null);
-  }
+  _updateSanitizeSettingsButton: function () {
+    var settingsButton = document.getElementById("clearDataSettings");
+    var sanitizeOnShutdownPref = document.getElementById("privacy.sanitize.sanitizeOnShutdown");
+    
+    settingsButton.disabled = !sanitizeOnShutdownPref.value;  	
+   }
 
 };

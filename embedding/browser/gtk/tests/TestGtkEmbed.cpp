@@ -242,7 +242,7 @@ main(int argc, char **argv)
   TestGtkBrowser *browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
 
   // set our minimum size
-  gtk_widget_set_usize(browser->mozEmbed, 400, 400);
+  gtk_widget_set_size_request(browser->mozEmbed, 400, 400);
 
   set_browser_visibility(browser, TRUE);
 
@@ -260,8 +260,8 @@ main(int argc, char **argv)
     exit(1);
   }
 
-  gtk_signal_connect(GTK_OBJECT(single), "new_window_orphan",
-		     GTK_SIGNAL_FUNC(new_window_orphan_cb), NULL);
+  g_signal_connect(GTK_OBJECT(single), "new_window_orphan",
+                   G_CALLBACK(new_window_orphan_cb), NULL);
 
   gtk_moz_embed_push_startup();
   gtk_main();
@@ -328,31 +328,32 @@ new_gtk_browser(guint32 chromeMask)
 
   browser->fileOpenNewBrowser = 
     gtk_menu_item_new_with_label("Open New Browser");
-  gtk_menu_append(GTK_MENU(browser->fileMenu),
-		  browser->fileOpenNewBrowser);
+  gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(browser->fileMenu),
+                        browser->fileOpenNewBrowser);
   
   browser->fileStream =
     gtk_menu_item_new_with_label("Test Stream");
-  gtk_menu_append(GTK_MENU(browser->fileMenu),
-		  browser->fileStream);
+  gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(browser->fileMenu),
+                        browser->fileStream);
 
   browser->fileMemory =
     gtk_menu_item_new_with_label("Release Memory");
-  gtk_menu_append(GTK_MENU(browser->fileMenu),
-		  browser->fileMemory);
+  gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(browser->fileMenu),
+                        browser->fileMemory);
 
   browser->fileClose =
     gtk_menu_item_new_with_label("Close");
-  gtk_menu_append(GTK_MENU(browser->fileMenu),
-		  browser->fileClose);
+  gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(browser->fileMenu),
+                        browser->fileClose);
 
   browser->fileQuit =
     gtk_menu_item_new_with_label("Quit");
-  gtk_menu_append(GTK_MENU(browser->fileMenu),
-		  browser->fileQuit);
+  gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(browser->fileMenu),
+                        browser->fileQuit);
   
   // append it
-  gtk_menu_bar_append(GTK_MENU_BAR(browser->menuBar), browser->fileMenuItem);
+  gtk_menu_shell_append((GtkMenuShell *)GTK_MENU_BAR(browser->menuBar),
+                        browser->fileMenuItem);
 
   // add it to the vbox
   gtk_box_pack_start(GTK_BOX(browser->topLevelVBox),
@@ -387,7 +388,7 @@ new_gtk_browser(guint32 chromeMask)
 			    "Go Back",
 			    "Go Back",
 			    0, // XXX replace with icon
-			    GTK_SIGNAL_FUNC(back_clicked_cb),
+			    G_CALLBACK(back_clicked_cb),
 			    browser);
   // new stop button
   browser->stopButton = 
@@ -396,7 +397,7 @@ new_gtk_browser(guint32 chromeMask)
 			    "Stop",
 			    "Stop",
 			    0, // XXX replace with icon
-			    GTK_SIGNAL_FUNC(stop_clicked_cb),
+			    G_CALLBACK(stop_clicked_cb),
 			    browser);
   // new forward button
   browser->forwardButton =
@@ -405,7 +406,7 @@ new_gtk_browser(guint32 chromeMask)
 			    "Forward",
 			    "Forward",
 			    0, // XXX replace with icon
-			    GTK_SIGNAL_FUNC(forward_clicked_cb),
+			    G_CALLBACK(forward_clicked_cb),
 			    browser);
   // new reload button
   browser->reloadButton = 
@@ -414,7 +415,7 @@ new_gtk_browser(guint32 chromeMask)
 			    "Reload",
 			    "Reload",
 			    0, // XXX replace with icon
-			    GTK_SIGNAL_FUNC(reload_clicked_cb),
+			    G_CALLBACK(reload_clicked_cb),
 			    browser);
   // create the url text entry
   browser->urlEntry = gtk_entry_new();
@@ -449,7 +450,7 @@ new_gtk_browser(guint32 chromeMask)
   // create our status area and the alignment object that will keep it
   // from expanding
   browser->statusAlign = gtk_alignment_new(0, 0, 1, 1);
-  gtk_widget_set_usize(browser->statusAlign, 1, -1);
+  gtk_widget_set_size_request(browser->statusAlign, 1, -1);
   // create the status bar
   browser->statusBar = gtk_statusbar_new();
   gtk_container_add(GTK_CONTAINER(browser->statusAlign), browser->statusBar);
@@ -465,103 +466,103 @@ new_gtk_browser(guint32 chromeMask)
   gtk_widget_set_sensitive(browser->reloadButton, FALSE);
   
   // catch the destruction of the toplevel window
-  gtk_signal_connect(GTK_OBJECT(browser->topLevelWindow), "delete_event",
-		     GTK_SIGNAL_FUNC(delete_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->topLevelWindow), "delete_event",
+                   G_CALLBACK(delete_cb), browser);
 
   // hook up the activate signal to the right callback
-  gtk_signal_connect(GTK_OBJECT(browser->urlEntry), "activate",
-		     GTK_SIGNAL_FUNC(url_activate_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->urlEntry), "activate",
+                   G_CALLBACK(url_activate_cb), browser);
 
   // hook up to the open new browser activation
-  gtk_signal_connect(GTK_OBJECT(browser->fileOpenNewBrowser), "activate",
-		     GTK_SIGNAL_FUNC(menu_open_new_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->fileOpenNewBrowser), "activate",
+                   G_CALLBACK(menu_open_new_cb), browser);
   // hook up to the stream test
-  gtk_signal_connect(GTK_OBJECT(browser->fileStream), "activate",
-		     GTK_SIGNAL_FUNC(menu_stream_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->fileStream), "activate",
+                   G_CALLBACK(menu_stream_cb), browser);
   // hook up the memory pressure release function
-  gtk_signal_connect(GTK_OBJECT(browser->fileMemory), "activate",
-		     GTK_SIGNAL_FUNC(menu_memory_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->fileMemory), "activate",
+                   G_CALLBACK(menu_memory_cb), browser);
   // close this window
-  gtk_signal_connect(GTK_OBJECT(browser->fileClose), "activate",
-		     GTK_SIGNAL_FUNC(menu_close_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->fileClose), "activate",
+                   G_CALLBACK(menu_close_cb), browser);
   // quit the application
-  gtk_signal_connect(GTK_OBJECT(browser->fileQuit), "activate",
-		     GTK_SIGNAL_FUNC(menu_quit_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->fileQuit), "activate",
+                   G_CALLBACK(menu_quit_cb), browser);
 
   // hook up the location change to update the urlEntry
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "location",
-		     GTK_SIGNAL_FUNC(location_changed_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "location",
+                   G_CALLBACK(location_changed_cb), browser);
   // hook up the title change to update the window title
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "title",
-		     GTK_SIGNAL_FUNC(title_changed_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "title",
+                   G_CALLBACK(title_changed_cb), browser);
   // hook up the start and stop signals
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_start",
-		     GTK_SIGNAL_FUNC(load_started_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_stop",
-		     GTK_SIGNAL_FUNC(load_finished_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_start",
+                   G_CALLBACK(load_started_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_stop",
+                   G_CALLBACK(load_finished_cb), browser);
   // hook up to the change in network status
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state",
-		     GTK_SIGNAL_FUNC(net_state_change_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state_all",
-		     GTK_SIGNAL_FUNC(net_state_change_all_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state",
+                   G_CALLBACK(net_state_change_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state_all",
+                   G_CALLBACK(net_state_change_all_cb), browser);
   // hookup to changes in progress
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress",
-		     GTK_SIGNAL_FUNC(progress_change_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress_all",
-		     GTK_SIGNAL_FUNC(progress_change_all_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress",
+                   G_CALLBACK(progress_change_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress_all",
+                   G_CALLBACK(progress_change_all_cb), browser);
   // hookup to changes in over-link message
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "link_message",
-		     GTK_SIGNAL_FUNC(link_message_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "link_message",
+                   G_CALLBACK(link_message_cb), browser);
   // hookup to changes in js status message
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "js_status",
-		     GTK_SIGNAL_FUNC(js_status_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "js_status",
+                   G_CALLBACK(js_status_cb), browser);
   // hookup to see whenever a new window is requested
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "new_window",
-		     GTK_SIGNAL_FUNC(new_window_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "new_window",
+                   G_CALLBACK(new_window_cb), browser);
   // hookup to any requested visibility changes
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "visibility",
-		     GTK_SIGNAL_FUNC(visibility_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "visibility",
+                   G_CALLBACK(visibility_cb), browser);
   // hookup to the signal that says that the browser requested to be
   // destroyed
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy_browser",
-		     GTK_SIGNAL_FUNC(destroy_brsr_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy_browser",
+                   G_CALLBACK(destroy_brsr_cb), browser);
   // hookup to the signal that is called when someone clicks on a link
   // to load a new uri
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "open_uri",
-		     GTK_SIGNAL_FUNC(open_uri_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "open_uri",
+                   G_CALLBACK(open_uri_cb), browser);
   // this signal is emitted when there's a request to change the
   // containing browser window to a certain height, like with width
   // and height args for a window.open in javascript
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "size_to",
-		     GTK_SIGNAL_FUNC(size_to_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "size_to",
+                   G_CALLBACK(size_to_cb), browser);
   // key event signals
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_down",
-		     GTK_SIGNAL_FUNC(dom_key_down_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_press",
-		     GTK_SIGNAL_FUNC(dom_key_press_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_up",
-		     GTK_SIGNAL_FUNC(dom_key_up_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_down",
-		     GTK_SIGNAL_FUNC(dom_mouse_down_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_up",
-		     GTK_SIGNAL_FUNC(dom_mouse_up_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_click",
-		     GTK_SIGNAL_FUNC(dom_mouse_click_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_dbl_click",
-		     GTK_SIGNAL_FUNC(dom_mouse_dbl_click_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_over",
-		     GTK_SIGNAL_FUNC(dom_mouse_over_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_out",
-		     GTK_SIGNAL_FUNC(dom_mouse_out_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_activate",
-		     GTK_SIGNAL_FUNC(dom_activate_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_focus_in",
-		     GTK_SIGNAL_FUNC(dom_focus_in_cb), browser);
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_focus_out",
-		     GTK_SIGNAL_FUNC(dom_focus_out_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_down",
+                   G_CALLBACK(dom_key_down_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_press",
+                   G_CALLBACK(dom_key_press_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_key_up",
+                   G_CALLBACK(dom_key_up_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_down",
+                   G_CALLBACK(dom_mouse_down_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_up",
+                   G_CALLBACK(dom_mouse_up_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_click",
+                   G_CALLBACK(dom_mouse_click_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_dbl_click",
+                   G_CALLBACK(dom_mouse_dbl_click_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_over",
+                   G_CALLBACK(dom_mouse_over_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_mouse_out",
+                   G_CALLBACK(dom_mouse_out_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_activate",
+                   G_CALLBACK(dom_activate_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_focus_in",
+                   G_CALLBACK(dom_focus_in_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "dom_focus_out",
+                   G_CALLBACK(dom_focus_out_cb), browser);
   // hookup to when the window is destroyed
-  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
-		     GTK_SIGNAL_FUNC(destroy_cb), browser);
+  g_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
+                   G_CALLBACK(destroy_cb), browser);
   
   // set the chrome type so it's stored in the object
   gtk_moz_embed_set_chrome_mask(GTK_MOZ_EMBED(browser->mozEmbed),
@@ -666,7 +667,7 @@ menu_open_new_cb   (GtkMenuItem *menuitem, TestGtkBrowser *browser)
   g_print("opening new browser.\n");
   TestGtkBrowser *newBrowser = 
     new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
-  gtk_widget_set_usize(newBrowser->mozEmbed, 400, 400);
+  gtk_widget_set_size_request(newBrowser->mozEmbed, 400, 400);
   set_browser_visibility(newBrowser, TRUE);
 }
 
@@ -754,9 +755,9 @@ destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
   browser_list = g_list_remove_link(browser_list, tmp_list);
   if (browser->tempMessage)
     g_free(browser->tempMessage);
-  gtk_idle_add(idle_pop, NULL);
+  g_idle_add(idle_pop, NULL);
   if (num_browsers == 0)
-    gtk_idle_add (idle_quit, NULL);
+    g_idle_add (idle_quit, NULL);
 }
 
 void
@@ -819,7 +820,7 @@ load_finished_cb    (GtkMozEmbed *embed, TestGtkBrowser *browser)
   browser->bytesLoaded = 0;
   browser->maxBytesLoaded = 0;
   update_status_bar_text(browser);
-  gtk_progress_set_percentage(GTK_PROGRESS(browser->progressBar), 0);
+  gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(browser->progressBar), 0);
 }
 
 
@@ -872,7 +873,6 @@ void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
   // avoid those pesky divide by zero errors
   if (max < 1)
   {
-    gtk_progress_set_activity_mode(GTK_PROGRESS(browser->progressBar), FALSE);
     browser->loadPercent = 0;
     browser->bytesLoaded = cur;
     browser->maxBytesLoaded = 0;
@@ -887,7 +887,8 @@ void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
     else
       browser->loadPercent = (cur * 100) / max;
     update_status_bar_text(browser);
-    gtk_progress_set_percentage(GTK_PROGRESS(browser->progressBar), browser->loadPercent / 100.0);
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(browser->progressBar),
+                                  browser->loadPercent / 100.0);
   }
   
 }
@@ -933,7 +934,7 @@ new_window_cb (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, Tes
   g_print("new_window_cb\n");
   g_print("embed is %p chromemask is %d\n", (void *)embed, chromemask);
   TestGtkBrowser *newBrowser = new_gtk_browser(chromemask);
-  gtk_widget_set_usize(newBrowser->mozEmbed, 400, 400);
+  gtk_widget_set_size_request(newBrowser->mozEmbed, 400, 400);
   *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
   g_print("new browser is %p\n", (void *)*newEmbed);
 }
@@ -969,7 +970,7 @@ size_to_cb (GtkMozEmbed *embed, gint width, gint height,
 	    TestGtkBrowser *browser)
 {
   g_print("*** size_to_cb %d %d\n", width, height);
-  gtk_widget_set_usize(browser->mozEmbed, width, height);
+  gtk_widget_set_size_request(browser->mozEmbed, width, height);
 }
 
 gint dom_key_down_cb      (GtkMozEmbed *embed, nsIDOMKeyEvent *event,

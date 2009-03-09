@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Neil Deakin <enndeakin@sympatico.ca>
  *   Johnny Stenback <jst@mozilla.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,6 +60,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIJSContextStack.h"
+#include "nsIPrivateBrowsingService.h"
+#include "nsNetCID.h"
 
 static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
@@ -77,6 +80,40 @@ static const char kCookiesBehavior[] = "network.cookie.cookieBehavior";
 static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 static const char kOfflineAppWarnQuota[] = "offline-apps.quota.warn";
 static const char kOfflineAppQuota[] = "offline-apps.quota.max";
+
+// The URI returned is the innermost URI that should be used for
+// security-check-like stuff.  aHost is its hostname, correctly canonicalized.
+static nsresult
+GetPrincipalURIAndHost(nsIPrincipal* aPrincipal, nsIURI** aURI, nsString& aHost)
+{
+  nsresult rv = aPrincipal->GetDomain(aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!*aURI) {
+    rv = aPrincipal->GetURI(aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!*aURI) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(*aURI);
+  if (!innerURI) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCAutoString asciiHost;
+  rv = innerURI->GetAsciiHost(asciiHost);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  
+  CopyUTF8toUTF16(asciiHost, aHost);
+  innerURI.swap(*aURI);
+
+  return NS_OK;
+}
 
 //
 // Helper that tells us whether the caller is secure or not.
@@ -176,6 +213,11 @@ nsSessionStorageEntry::~nsSessionStorageEntry()
 
 nsDOMStorageManager* nsDOMStorageManager::gStorageManager;
 
+nsDOMStorageManager::nsDOMStorageManager()
+  : mInPrivateBrowsing(PR_FALSE)
+{
+}
+
 NS_IMPL_ISUPPORTS2(nsDOMStorageManager,
                    nsIDOMStorageManager,
                    nsIObserver)
@@ -200,6 +242,12 @@ nsDOMStorageManager::Initialize()
   if (os) {
     os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
     os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
+    os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+
+    nsCOMPtr<nsIPrivateBrowsingService> pbs =
+      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs)
+      pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
   }
 
   return NS_OK;
@@ -236,7 +284,7 @@ ClearStorage(nsDOMStorageEntry* aEntry, void* userArg)
 }
 
 static nsresult
-GetOfflineDomains(nsStringArray& aDomains)
+GetOfflineDomains(nsTArray<nsString>& aDomains)
 {
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
@@ -264,7 +312,7 @@ GetOfflineDomains(nsStringArray& aDomains)
           rv = perm->GetHost(host);
           NS_ENSURE_SUCCESS(rv, rv);
 
-          aDomains.AppendString(NS_ConvertUTF8toUTF16(host));
+          aDomains.AppendElement(NS_ConvertUTF8toUTF16(host));
         }
       }
     }
@@ -293,11 +341,17 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Remove global storage for domains that aren't marked for offline use.
-    nsStringArray domains;
+    nsTArray<nsString> domains;
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
     return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_FALSE);
 #endif
+  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
+    mStorages.EnumerateEntries(ClearStorage, nsnull);
+    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).get()))
+      mInPrivateBrowsing = PR_TRUE;
+    else if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).get()))
+      mInPrivateBrowsing = PR_FALSE;
   }
 
   return NS_OK;
@@ -319,7 +373,7 @@ nsDOMStorageManager::ClearOfflineApps()
     nsresult rv = nsDOMStorage::InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsStringArray domains;
+    nsTArray<nsString> domains;
     rv = GetOfflineDomains(domains);
     NS_ENSURE_SUCCESS(rv, rv);
     return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_TRUE);
@@ -375,11 +429,8 @@ SessionStorageTraverser(nsSessionStorageEntry* aEntry, void* userArg) {
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMStorage)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStorage)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mURI)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsDOMStorage)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mURI)
   {
     if (tmp->mItems.IsInitialized()) {
       tmp->mItems.EnumerateEntries(SessionStorageTraverser, &cb);
@@ -417,11 +468,10 @@ nsDOMStorage::nsDOMStorage()
     nsDOMStorageManager::gStorageManager->AddToStoragesHash(this);
 }
 
-nsDOMStorage::nsDOMStorage(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB)
+nsDOMStorage::nsDOMStorage(const nsAString& aDomain, PRBool aUseDB)
   : mUseDB(aUseDB),
     mSessionOnly(PR_TRUE),
     mItemsCached(PR_FALSE),
-    mURI(aURI),
     mDomain(aDomain)
 {
 #ifndef MOZ_STORAGE
@@ -440,9 +490,8 @@ nsDOMStorage::~nsDOMStorage()
 }
 
 void
-nsDOMStorage::Init(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB)
+nsDOMStorage::Init(const nsAString& aDomain, PRBool aUseDB)
 {
-  mURI = aURI;
   mDomain.Assign(aDomain);
 #ifdef MOZ_STORAGE
   mUseDB = aUseDB;
@@ -453,10 +502,10 @@ nsDOMStorage::Init(nsIURI* aURI, const nsAString& aDomain, PRBool aUseDB)
 
 //static
 PRBool
-nsDOMStorage::CanUseStorage(nsIURI* aURI, PRPackedBool* aSessionOnly)
+nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
 {
-  // check if the domain can use storage. Downgrade to session only if only
-  // session storage may be used.
+  // check if the calling domain can use storage. Downgrade to session
+  // only if only session storage may be used.
   NS_ASSERTION(aSessionOnly, "null session flag");
   *aSessionOnly = PR_FALSE;
 
@@ -467,13 +516,28 @@ nsDOMStorage::CanUseStorage(nsIURI* aURI, PRPackedBool* aSessionOnly)
   if (nsContentUtils::IsCallerChrome())
     return PR_TRUE;
 
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+
+  // if subjectPrincipal were null we'd have returned after
+  // IsCallerChrome().
+
+  nsCOMPtr<nsIURI> subjectURI;
+  nsAutoString unused;
+  if (NS_FAILED(GetPrincipalURIAndHost(subjectPrincipal,
+                                       getter_AddRefs(subjectURI),
+                                       unused))) {
+    return PR_FALSE;
+  }
+
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   if (!permissionManager)
     return PR_FALSE;
 
   PRUint32 perm;
-  permissionManager->TestPermission(aURI, kPermissionType, &perm);
+  permissionManager->TestPermission(subjectURI, kPermissionType, &perm);
 
   if (perm == nsIPermissionManager::DENY_ACTION)
     return PR_FALSE;
@@ -495,6 +559,23 @@ nsDOMStorage::CanUseStorage(nsIURI* aURI, PRPackedBool* aSessionOnly)
 
   return PR_TRUE;
 }
+
+PRBool
+nsDOMStorage::CacheStoragePermissions()
+{
+  if (!CanUseStorage(&mSessionOnly))
+    return PR_FALSE;
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+
+  return CanAccess(subjectPrincipal);
+}
+
 
 class ItemCounterState
 {
@@ -833,40 +914,6 @@ nsDOMStorage::GetDBValue(const nsAString& aKey, nsAString& aValue,
   return NS_OK;
 }
 
-// The URI returned is the innermost URI that should be used for
-// security-check-like stuff.  aHost is its hostname, correctly canonicalized.
-static nsresult
-GetPrincipalURIAndHost(nsIPrincipal* aPrincipal, nsIURI** aURI, nsString& aHost)
-{
-  nsresult rv = aPrincipal->GetDomain(aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!*aURI) {
-    rv = aPrincipal->GetURI(aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (!*aURI) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(*aURI);
-  if (!innerURI) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCAutoString asciiHost;
-  rv = innerURI->GetAsciiHost(asciiHost);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-  
-  CopyUTF8toUTF16(asciiHost, aHost);
-  innerURI.swap(*aURI);
-
-  return NS_OK;
-}
-
 nsresult
 nsDOMStorage::SetDBValue(const nsAString& aKey,
                          const nsAString& aValue,
@@ -983,6 +1030,7 @@ void
 nsDOMStorage::ClearAll()
 {
   mItems.EnumerateEntries(ClearStorageItem, nsnull);
+  mItemsCached = PR_FALSE;
 }
 
 static PLDHashOperator
@@ -1000,7 +1048,7 @@ CopyStorageItems(nsSessionStorageEntry* aEntry, void* userArg)
 }
 
 already_AddRefed<nsIDOMStorage>
-nsDOMStorage::Clone(nsIURI* aURI)
+nsDOMStorage::Clone()
 {
   if (UseDB()) {
     NS_ERROR("Uh, don't clone a global storage object.");
@@ -1008,7 +1056,7 @@ nsDOMStorage::Clone(nsIURI* aURI)
     return nsnull;
   }
 
-  nsDOMStorage* storage = new nsDOMStorage(aURI, mDomain, PR_FALSE);
+  nsDOMStorage* storage = new nsDOMStorage(mDomain, PR_FALSE);
   if (!storage)
     return nsnull;
 
@@ -1049,6 +1097,36 @@ nsDOMStorage::GetKeys()
     mItems.EnumerateEntries(KeysArrayBuilder, &keystruct);
  
   return keystruct.keys;
+}
+
+const nsString &
+nsDOMStorage::Domain()
+{
+  return mDomain;
+}
+
+PRBool
+nsDOMStorage::CanAccess(nsIPrincipal *aPrincipal)
+{
+  // Allow C++/system callers to access the storage
+  if (!aPrincipal)
+    return PR_TRUE;
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm)
+    return PR_TRUE;
+
+  PRBool isSystem;
+  if (NS_SUCCEEDED(ssm->IsSystemPrincipal(aPrincipal, &isSystem) && isSystem))
+    return PR_TRUE;
+
+  nsAutoString domain;
+  nsCOMPtr<nsIURI> unused;
+  nsresult rv = GetPrincipalURIAndHost(aPrincipal,
+                                       getter_AddRefs(unused), domain);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return domain.Equals(mDomain);
 }
 
 void
@@ -1111,31 +1189,28 @@ nsDOMStorageList::GetNamedItem(const nsAString& aDomain, nsresult* aResult)
   *aResult = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   NS_ENSURE_SUCCESS(*aResult, nsnull);
 
-  nsCOMPtr<nsIURI> uri;
   nsAutoString currentDomain;
   if (subjectPrincipal) {
-    *aResult = GetPrincipalURIAndHost(subjectPrincipal, getter_AddRefs(uri),
+    nsCOMPtr<nsIURI> unused;
+    *aResult = GetPrincipalURIAndHost(subjectPrincipal, getter_AddRefs(unused),
                                       currentDomain);
     NS_ENSURE_SUCCESS(*aResult, nsnull);
 
-    if (uri) {
-      PRPackedBool sessionOnly;
-      if (!nsDOMStorage::CanUseStorage(uri, &sessionOnly)) {
-        *aResult = NS_ERROR_DOM_SECURITY_ERR;
-        return nsnull;
-      }
+    PRPackedBool sessionOnly;
+    if (!nsDOMStorage::CanUseStorage(&sessionOnly)) {
+      *aResult = NS_ERROR_DOM_SECURITY_ERR;
+      return nsnull;
     }
   }
 
   PRBool isSystem = nsContentUtils::IsCallerTrustedForRead();
-
-  if (isSystem || !currentDomain.IsEmpty()) {
-    return GetStorageForDomain(uri, NS_ConvertUTF8toUTF16(requestedDomain),
-                               currentDomain, isSystem, aResult);
+  if (currentDomain.IsEmpty() && !isSystem) {
+    *aResult = NS_ERROR_DOM_SECURITY_ERR;
+    return nsnull;
   }
 
-  *aResult = NS_ERROR_DOM_SECURITY_ERR;
-  return nsnull;
+  return GetStorageForDomain(NS_ConvertUTF8toUTF16(requestedDomain),
+                             currentDomain, isSystem, aResult);
 }
 
 NS_IMETHODIMP
@@ -1156,16 +1231,15 @@ nsDOMStorageList::CanAccessDomain(const nsAString& aRequestedDomain,
 }
 
 nsIDOMStorage*
-nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
-                                      const nsAString& aRequestedDomain,
+nsDOMStorageList::GetStorageForDomain(const nsAString& aRequestedDomain,
                                       const nsAString& aCurrentDomain,
                                       PRBool aNoCurrentDomainCheck,
                                       nsresult* aResult)
 {
-  nsStringArray requestedDomainArray;
+  nsTArray<nsString> requestedDomainArray;
   if ((!aNoCurrentDomainCheck &&
        !CanAccessDomain(aRequestedDomain, aCurrentDomain)) ||
-      !ConvertDomainToArray(aRequestedDomain, &requestedDomainArray)) {
+    !ConvertDomainToArray(aRequestedDomain, &requestedDomainArray)) {
     *aResult = NS_ERROR_DOM_SECURITY_ERR;
 
     return nsnull;
@@ -1173,12 +1247,12 @@ nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
 
   // now rebuild a string for the domain.
   nsAutoString usedDomain;
-  PRInt32 requestedPos = 0;
-  for (requestedPos = 0; requestedPos < requestedDomainArray.Count();
+  PRUint32 requestedPos = 0;
+  for (requestedPos = 0; requestedPos < requestedDomainArray.Length();
        requestedPos++) {
     if (!usedDomain.IsEmpty())
       usedDomain.AppendLiteral(".");
-    usedDomain.Append(*requestedDomainArray[requestedPos]);
+    usedDomain.Append(requestedDomainArray[requestedPos]);
   }
 
   *aResult = NS_OK;
@@ -1186,7 +1260,7 @@ nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
   // now have a valid domain, so look it up in the storage table
   nsIDOMStorage* storage = mStorages.GetWeak(usedDomain);
   if (!storage) {
-    nsCOMPtr<nsIDOMStorage> newstorage = new nsDOMStorage(aURI, usedDomain, PR_TRUE);
+    nsCOMPtr<nsIDOMStorage> newstorage = new nsDOMStorage(usedDomain, PR_TRUE);
     if (newstorage && mStorages.Put(usedDomain, newstorage))
       storage = newstorage;
     else
@@ -1199,7 +1273,7 @@ nsDOMStorageList::GetStorageForDomain(nsIURI* aURI,
 // static
 PRBool
 nsDOMStorageList::ConvertDomainToArray(const nsAString& aDomain,
-                                       nsStringArray* aArray)
+                                       nsTArray<nsString> *aArray)
 {
   PRInt32 length = aDomain.Length();
   PRInt32 n = 0;
@@ -1215,7 +1289,7 @@ nsDOMStorageList::ConvertDomainToArray(const nsAString& aDomain,
       domain.Assign(Substring(aDomain, n, dotpos - n));
 
     ToLowerCase(domain);
-    aArray->AppendString(domain);
+    aArray->AppendElement(domain);
 
     if (dotpos == -1)
       break;

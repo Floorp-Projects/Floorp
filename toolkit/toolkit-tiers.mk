@@ -70,9 +70,7 @@ endif
 tier_external_dirs += modules/libmar
 endif
 
-ifndef MOZ_NATIVE_LCMS
 tier_external_dirs	+= modules/lcms
-endif
 
 #
 # tier "gecko" - core components
@@ -195,10 +193,6 @@ tier_toolkit_dirs += chrome profile
 # This must preceed xpfe
 ifdef MOZ_JPROF
 tier_toolkit_dirs        += tools/jprof
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-tier_toolkit_dirs       += xpfe/bootstrap/appleevents
 endif
 
 tier_toolkit_dirs	+= \

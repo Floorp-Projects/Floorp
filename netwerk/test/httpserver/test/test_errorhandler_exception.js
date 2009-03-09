@@ -39,94 +39,15 @@
 // Request handlers may throw exceptions, and those exception should be caught
 // by the server and converted into the proper error codes.
 
-var paths =
+var tests =
   [
-   "http://localhost:4444/throws/exception",
-   "http://localhost:4444/this/file/does/not/exist/and/404s",
-   "http://localhost:4444/attempts/404/fails/so/400/fails/so/500s"
+   new Test("http://localhost:4444/throws/exception",
+            null, start_throws_exception, succeeded),
+   new Test("http://localhost:4444/this/file/does/not/exist/and/404s",
+            null, start_nonexistent_404_fails_so_400, succeeded),
+   new Test("http://localhost:4444/attempts/404/fails/so/400/fails/so/500s",
+            register400Handler, start_multiple_exceptions_500, succeeded),
   ];
-var currPathIndex = 0;
-
-var listener =
-  {
-    // NSISTREAMLISTENER
-    onDataAvailable: function(request, cx, inputStream, offset, count)
-    {
-      makeBIS(inputStream).readByteArray(count); // required by API
-    },
-    // NSIREQUESTOBSERVER
-    onStartRequest: function(request, cx)
-    {
-      var ch = request.QueryInterface(Ci.nsIHttpChannel)
-                      .QueryInterface(Ci.nsIHttpChannelInternal);
-
-      switch (currPathIndex)
-      {
-        case 0:
-          checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
-          break;
-
-        case 1:
-          checkStatusLine(ch, 1, 1, 400, "Bad Request");
-          break;
-
-        case 2:
-          checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
-          break;
-      }
-    },
-    onStopRequest: function(request, cx, status)
-    {
-      do_check_true(Components.isSuccessCode(status));
-
-      switch (currPathIndex)
-      {
-        case 0:
-          break;
-
-        case 1:
-          srv.registerErrorHandler(400, throwsException);
-          break;
-
-        case 2:
-          break;
-      }
-
-      if (++currPathIndex == paths.length)
-        srv.stop();
-      else
-        performNextTest();
-      do_test_finished();
-    },
-    // NSISUPPORTS
-    QueryInterface: function(aIID)
-    {
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
-{
-  do_check_eq(channel.responseStatus, httpCode);
-  do_check_eq(channel.responseStatusText, statusText);
-
-  var respMaj = {}, respMin = {};
-  channel.getResponseVersion(respMaj, respMin);
-  do_check_eq(respMaj.value, httpMaxVer);
-  do_check_eq(respMin.value, httpMinVer);
-}
-
-function performNextTest()
-{
-  do_test_pending();
-
-  var ch = makeChannel(paths[currPathIndex]);
-  ch.asyncOpen(listener, null);
-}
 
 var srv;
 
@@ -139,8 +60,48 @@ function run_test()
 
   srv.start(4444);
 
-  performNextTest();
+  runHttpTests(tests, function() { srv.stop(); });
 }
+
+
+// TEST DATA
+
+function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
+{
+  do_check_eq(channel.responseStatus, httpCode);
+  do_check_eq(channel.responseStatusText, statusText);
+
+  var respMaj = {}, respMin = {};
+  channel.getResponseVersion(respMaj, respMin);
+  do_check_eq(respMaj.value, httpMaxVer);
+  do_check_eq(respMin.value, httpMinVer);
+}
+
+function start_throws_exception(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
+}
+
+function start_nonexistent_404_fails_so_400(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 400, "Bad Request");
+}
+
+function start_multiple_exceptions_500(ch, cx)
+{
+  checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
+}
+
+function succeeded(ch, cx, status, data)
+{
+  do_check_true(Components.isSuccessCode(status));
+}
+
+function register400Handler(ch)
+{
+  srv.registerErrorHandler(400, throwsException);
+}
+
 
 // PATH HANDLERS
 

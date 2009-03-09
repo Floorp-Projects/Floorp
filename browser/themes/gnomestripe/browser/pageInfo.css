@@ -50,6 +50,12 @@
   min-width: 4.5em;
   margin: 0;
   padding: 3px;
+  color: -moz-FieldText;
+}
+
+#viewGroup radio[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText; 
 }
 
 .viewSelector {
@@ -210,6 +216,7 @@ treechildren::-moz-tree-cell-text(broken) {
   -moz-padding-end: 7px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
+  color: -moz-FieldText;
 }
 
 #feedListbox richlistitem[selected="true"] {
@@ -246,6 +253,7 @@ treechildren::-moz-tree-cell-text(broken) {
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-field;
+  color: -moz-FieldText;
 }
 
 #permList > vbox {
@@ -263,6 +271,7 @@ treechildren::-moz-tree-cell-text(broken) {
 
 #permList > vbox:hover {
   background-color: -moz-dialog;
+  color: -moz-DialogText;
 }
 
 /* Security Tab */

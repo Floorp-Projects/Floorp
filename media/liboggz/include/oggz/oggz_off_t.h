@@ -39,6 +39,10 @@
  */
 
 #ifdef _WIN32
+#ifdef WINCE
+   typedef long off_t;
+#endif
+
   /* MSVC/Borland & Cygwin */
    typedef off_t oggz_off_t;
 

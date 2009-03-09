@@ -124,7 +124,7 @@ nsBaseContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(tmp, aReturn);
 }
 
-nsINode*
+nsIContent*
 nsBaseContentList::GetNodeAt(PRUint32 aIndex)
 {
   return mElements.SafeObjectAt(aIndex);
@@ -146,6 +146,12 @@ PRInt32
 nsBaseContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
 {
   return mElements.IndexOf(aContent);
+}
+
+PRInt32
+nsBaseContentList::IndexOf(nsIContent* aContent)
+{
+  return IndexOf(aContent, PR_TRUE);
 }
 
 void
@@ -444,6 +450,12 @@ nsContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
   return mElements.IndexOf(aContent);
 }
 
+PRInt32
+nsContentList::IndexOf(nsIContent* aContent)
+{
+  return IndexOf(aContent, PR_TRUE);
+}
+
 void
 nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
 {
@@ -508,7 +520,7 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-nsINode*
+nsIContent*
 nsContentList::GetNodeAt(PRUint32 aIndex)
 {
   return Item(aIndex, PR_TRUE);

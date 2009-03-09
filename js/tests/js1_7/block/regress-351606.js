@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-351606.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 351496;
+var BUGNUMBER = 351606;
 var summary = 'Do not assert with nested for..in and throw';
 var actual = 'No Crash';
 var expect = 'No Crash';

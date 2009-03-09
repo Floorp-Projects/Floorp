@@ -58,6 +58,8 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGSwitchElement,
+                                           nsSVGSwitchElementBase)
   NS_DECL_NSIDOMSVGSWITCHELEMENT
 
   // xxx I wish we could use virtual inheritance

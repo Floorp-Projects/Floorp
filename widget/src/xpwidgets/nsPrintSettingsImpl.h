@@ -82,9 +82,9 @@ protected:
   nsWeakPtr     mSession; // Should never be touched by Clone or Assign
  
   // mMargin, mEdge, and mUnwriteableMargin are stored in twips
-  nsMargin      mMargin;
-  nsMargin      mEdge;
-  nsMargin      mUnwriteableMargin;
+  nsIntMargin   mMargin;
+  nsIntMargin   mEdge;
+  nsIntMargin   mUnwriteableMargin;
 
   PRInt32       mPrintOptions;
 

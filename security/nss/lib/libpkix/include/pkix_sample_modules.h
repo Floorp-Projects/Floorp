@@ -283,68 +283,6 @@ PKIX_PL_LdapCertStore_Create(
         PKIX_CertStore **pCertStore,
         void *plContext);
 
-/*
- * FUNCTION: PKIX_PL_EkuChecker_Create
- *
- * DESCRIPTION:
- *  Create a CertChainChecker with EkuCheckerState and add it into
- *  PKIX_ProcessingParams object.
- *
- * PARAMETERS
- *  "params"
- *      a PKIX_ProcessingParams links to PKIX_ComCertSelParams where a list of
- *      Extended Key Usage OIDs specified by application can be retrieved for
- *      verification.
- *  "plContext"
- *      Platform-specific context pointer.
- *
- * THREAD SAFETY:
- *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
- *
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a UserDefinedModules Error if the function fails in a non-fatal
- *  way.
- *  Returns a Fatal Error
- */
-PKIX_Error *
-PKIX_PL_EkuChecker_Create(
-        PKIX_ProcessingParams *params,
-        void *plContext);
-
-/*
- * FUNCTION: PKIX_PL_EkuChecker_GetRequiredEku
- *
- * DESCRIPTION:
- *  This function retrieves application specified ExtenedKeyUsage(s) from
- *  ComCertSetparams and converts its OID representations to SECCertUsageEnum.
- *  The result is stored and returned in bit mask at "pRequiredExtKeyUsage".
- *
- * PARAMETERS
- *  "certSelector"
- *      a PKIX_CertSelector links to PKIX_ComCertSelParams where a list of
- *      Extended Key Usage OIDs specified by application can be retrieved for
- *      verification. Must be non-NULL.
- *  "pRequiredExtKeyUsage"
- *      Address where the result is returned. Must be non-NULL.
- *  "plContext"
- *      Platform-specific context pointer.
- *
- * THREAD SAFETY:
- *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
- *
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a UserDefinedModules Error if the function fails in a non-fatal
- *  way.
- *  Returns a Fatal Error
- */
-PKIX_Error *
-pkix_pl_EkuChecker_GetRequiredEku(
-        PKIX_CertSelector *certSelector,
-        PKIX_UInt32 *pRequiredExtKeyUsage,
-        void *plContext);
-
 /* PKIX_PL_NssContext
  *
  * A PKIX_PL_NssContext provides an example showing how the "plContext"
@@ -421,6 +359,45 @@ PKIX_PL_NssContext_Create(
 PKIX_Error *
 PKIX_PL_NssContext_Destroy(
         void *nssContext);
+
+/*
+ * FUNCTION: PKIX_PL_NssContext_SetTimeout
+ * DESCRIPTION:
+ *
+ * Sets IO timeout for network operations like OCSP response and cert
+ * fetching.
+ *
+ * PARAMETERS:
+ *  "nssContext"
+ *      Address of NssContext to be destroyed. Must be non-NULL.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Context Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_PL_NssContext_SetTimeout(PKIX_UInt32 timeout, PKIX_PL_NssContext *nssContext);
+
+/*
+ * FUNCTION: PKIX_PL_NssContext_SetMaxResponseLen
+ * DESCRIPTION:
+ *
+ * Sets maximum responce length allowed during network IO operations.
+ *
+ * PARAMETERS:
+ *  "nssContext"
+ *      Address of NssContext to be destroyed. Must be non-NULL.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Context Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_PL_NssContext_SetMaxResponseLen(PKIX_UInt32 len, PKIX_PL_NssContext *nssContext);
 
 #ifdef __cplusplus
 }

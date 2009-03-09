@@ -71,11 +71,11 @@ public:
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext,
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
-                             nsMargin* aResult);
+                             nsIntMargin* aResult);
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsSize* aResult,
+                                  nsIntSize* aResult,
                                   PRBool* aIsOverridable);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
@@ -92,7 +92,7 @@ public:
   virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsIDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               PRUint8 aWidgetType,
-                                              nsMargin* aResult);
+                                              nsIntMargin* aResult);
 
   NS_IMETHOD_(PRBool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                                nsIFrame* aFrame, PRUint8 aWidgetType);

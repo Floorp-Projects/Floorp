@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479859
+-->
+<head>
+  <title>Test for Bug 479859</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479859">Mozilla Bug 479859</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+function log(msg) {
+  //document.getElementById('log').innerHTML += "<p>" + msg + "</p>";
+}
+
+// We don't track: progress, canplay, and canplaythrough events, as these can be
+// delivered out of order, and/or multiple times.
+var gEventTypes = [ 'loadstart', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+
+var gEventNum = 0;
+var gTestNum = 0;
+var gExpectedEvents = null;
+var gTest = null;
+var gTestName = "?";
+
+
+function listener(evt) {
+  log('event ' + evt.type);
+  evt.stopPropagation();
+  ok(gEventNum < gExpectedEvents.length, gTestName+" - corrent number of events received");
+  var expected = (gEventNum < gExpectedEvents.length) ? gExpectedEvents[gEventNum] : "NoEvent";
+  is(evt.type, expected, gTestName+" - events received in order");
+  gEventNum++;
+  if (gEventNum == gExpectedEvents.length) {
+    setTimeout(nextTest, 0); 
+  }
+}
+
+var gMedia = null;
+
+function createMedia(tag) {
+  gMedia = document.createElement(tag);
+  for (var i=0; i<gEventTypes.length; i++) {
+    gMedia.addEventListener(gEventTypes[i], listener, false);
+  }
+}
+
+var gWavAudio = 'r11025_s16_c1.wav';
+var gWavAudioType = 'audio/x-wav';
+
+var gOggVideo = '320x240.ogv';
+var gOggVideoType = "application/ogg";
+
+function addSource(src, type) {
+  var s = document.createElement("source");
+  s.src = src;
+  s.type = type;
+  gMedia.appendChild(s);
+}
+
+function prependSource(src, type) {
+  var s = document.createElement("source");
+  s.src = src;
+  s.type = type;
+  gMedia.insertBefore(s, gMedia.firstChild);
+}
+
+var gTest10Prepended = false;
+var gTest11Prepended = false;
+
+var gTests = [
+  {
+    // Test 0: adding video to doc, then setting src should load implicitly.
+    create:
+      function() {
+        createMedia("video");
+        document.body.appendChild(gMedia);
+        gMedia.src = gOggVideo;
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 1: adding audio to doc, then setting src should load implicitly.
+    create:
+      function() {
+        createMedia("audio");
+        document.body.appendChild(gMedia);
+        gMedia.src = gWavAudio;
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 2: adding video to doc, then adding source.
+    create:
+      function() {
+        createMedia("video");
+        document.body.appendChild(gMedia);
+        addSource(gOggVideo, gOggVideoType);
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 3: adding audio to doc, then adding source.
+    create:
+      function() {
+        createMedia("audio");
+        document.body.appendChild(gMedia);
+        addSource(gWavAudio, gWavAudioType);
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 4: video with multiple source, the first of which are bad, we should load the last.
+    create:
+      function() {
+        createMedia("video");
+        document.body.appendChild(gMedia);
+        addSource("404a.ogv", gOggVideoType);
+        addSource("404b.ogv", gOggVideoType);
+        addSource(gOggVideo, gOggVideoType);
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 5: audio with multiple source, the first of which are bad, we should load the last.
+    create:
+      function() {
+        createMedia("audio");
+        document.body.appendChild(gMedia);
+        addSource("404a.wav", gWavAudioType);
+        addSource("404b.wav", gWavAudioType);
+        addSource(gWavAudio, gWavAudioType);
+      },
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 6:  video with bad src, good <source>, ensure that <source> aren't used.
+    create:
+      function() {
+        createMedia("video");
+        gMedia.src = "404a.ogv";
+        addSource(gOggVideo, gOggVideoType);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error']
+  }, {
+    // Test 7:  audio with bad src, good <source>, ensure that <source> aren't used.
+    create:
+      function() {
+        createMedia("audio");
+        gMedia.src = "404a.wav";
+        addSource(gWavAudio, gWavAudioType);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error']
+  }, {
+    // Test 8:  video with only bad source, loading, then adding a good source -  should resume load.
+    create:
+      function() {
+        createMedia("video");
+        addSource("404a.ogv", gOggVideoType);
+        addSource("404b.ogv", gOggVideoType);
+        gMedia.addEventListener("error",
+          function(e) {
+            // Should awaken waiting load, causing successful load.
+            addSource(gOggVideo, gOggVideoType);
+          },
+          false);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error', 'durationchange', 'loadedmetadata', 'loadeddata', 'load']
+  }, {
+    // Test 9:  audio with only bad source, loading, then adding a good source -  should resume load.
+    create:
+      function() {
+        createMedia("audio");
+        addSource("404a.wav", gWavAudioType);
+        addSource("404b.wav", gWavAudioType);
+        gMedia.addEventListener("error",
+          function(e) {
+            // Should awaken waiting load, causing successful load.
+            addSource(gWavAudio, gWavAudioType);
+          },
+          false);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error', 'durationchange', 'loadedmetadata', 'loadeddata',  'load']
+  }, {
+    // Test 10: video with only 1 bad source, let it fail to load, then prepend a good <source> to the video, it shouldn't be selected, because the "pointer" should be after the last child - the bad source.
+    prepended: false,
+    create:
+      function() {
+        createMedia("video");
+        addSource("404a.ogv", gOggVideoType);
+        addSource("404b.ogv", gOggVideoType);
+        gMedia.addEventListener("error",
+          function(e) {
+            // Should awaken waiting load, causing successful load.
+            if (!gTest10Prepended) {
+              prependSource(gOggVideo, gOggVideoType);
+              gTest10Prepended = true;
+            }
+          },
+          false);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error', 'error']
+  }, {
+    // Test 11: audio with only 1 bad source, let it fail to load, then prepend a good <source> to the video, it shouldn't be selected, because the "pointer" should be after the last child - the bad source.
+    create:
+      function() {
+        createMedia("audio");
+        addSource("404a.wav", gWavAudioType);
+        addSource("404b.wav", gWavAudioType);
+        gMedia.addEventListener("error",
+          function(e) {
+            // Should awaken waiting load, causing successful load.
+            if (!gTest11Prepended) {
+              prependSource(gWavAudio, gWavAudioType);
+              gTest11Prepended = true;
+            }
+          },
+          false);
+        document.body.appendChild(gMedia);
+      },
+    expectedEvents: ['loadstart', 'error', 'error']
+  }
+];
+
+function nextTest() {
+  if (gMedia) {
+    if (gMedia.parentNode)
+      gMedia.parentNode.removeChild(gMedia);
+    gMedia = null;
+  }
+  gEventNum = 0;
+  
+  if (gTestNum == gTests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  
+  log("Starting test " + gTestNum);
+  
+  var t = gTests[gTestNum];
+  gTestName = "Test"+gTestNum;
+  gTestNum++;
+  
+  gExpectedEvents = t.expectedEvents;
+  t.create();
+}
+
+addLoadEvent(nextTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<div id="log" style="font-size: small"></div>
+</body>
+</html>

@@ -36,3 +36,29 @@
  * ***** END LICENSE BLOCK ***** */
 
 // put cleanup of the bookmarks test here.
+
+// Run the event loop to be more like the browser, which normally runs the
+// event loop long before code like this would run.
+// Not doing so could cause us to close the connection before all tasks have
+// been completed, and that would crash badly.
+let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+while (tm.mainThread.hasPendingEvents())
+  tm.mainThread.processNextEvent(false);
+
+// XPCShell doesn't dispatch quit-application, to ensure cleanup we have to
+// dispatch it after each test run.
+var os = Cc['@mozilla.org/observer-service;1'].
+         getService(Ci.nsIObserverService);
+os.notifyObservers(null, "quit-application-granted", null);
+os.notifyObservers(null, "quit-application", null);
+
+// try to close the connection so we can remove places.sqlite
+var pip = Cc["@mozilla.org/browser/nav-history-service;1"].
+          getService(Ci.nsINavHistoryService).
+          QueryInterface(Ci.nsPIPlacesDatabase);
+if (pip.DBConnection.connectionReady) {
+  pip.commitPendingChanges();
+  pip.finalizeInternalStatements();
+  pip.DBConnection.close();
+  do_check_false(pip.DBConnection.connectionReady);
+}

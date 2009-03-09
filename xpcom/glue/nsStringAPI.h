@@ -53,6 +53,7 @@
 #include "nsXPCOMStrings.h"
 #include "nsISupportsImpl.h"
 #include "prlog.h"
+#include "nsTArray.h"
 
 class nsAString
 {
@@ -1417,5 +1418,8 @@ typedef nsCString PromiseFlatCString;
 
 typedef nsCString nsCAutoString;
 typedef nsString nsAutoString;
+
+NS_HIDDEN_(PRBool) ParseString(const nsACString& aAstring, char aDelimiter, 
+                               nsTArray<nsCString>& aArray);
 
 #endif // nsStringAPI_h__

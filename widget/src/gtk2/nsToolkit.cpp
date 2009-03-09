@@ -66,7 +66,7 @@ nsGTKToolkit::nsGTKToolkit()
 nsGTKToolkit::~nsGTKToolkit()
 {
     if (mSharedGC) {
-        gdk_gc_unref(mSharedGC);
+        g_object_unref(mSharedGC);
     }
 
     // Remove the TLS reference to the toolkit...
@@ -90,12 +90,12 @@ void nsGTKToolkit::CreateSharedGC(void)
 
     pixmap = gdk_pixmap_new(NULL, 1, 1, gdk_rgb_get_visual()->depth);
     mSharedGC = gdk_gc_new(pixmap);
-    gdk_pixmap_unref(pixmap);
+    g_object_unref(pixmap);
 }
 
 GdkGC *nsGTKToolkit::GetSharedGC(void)
 {
-    return gdk_gc_ref(mSharedGC);
+    return (GdkGC *)g_object_ref(mSharedGC);
 }
 
 //-------------------------------------------------------------------------

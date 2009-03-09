@@ -41,7 +41,6 @@
 /*
  * JS symbol tables.
  */
-#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -174,11 +173,6 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
     return scope;
 }
 
-#ifdef DEBUG_SCOPE_COUNT
-extern void
-js_unlog_scope(JSScope *scope);
-#endif
-
 #if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
 # include "jsprf.h"
 # define LIVE_SCOPE_METER(cx,expr) JS_LOCK_RUNTIME_VOID(cx->runtime,expr)
@@ -189,10 +183,6 @@ js_unlog_scope(JSScope *scope);
 void
 js_DestroyScope(JSContext *cx, JSScope *scope)
 {
-#ifdef DEBUG_SCOPE_COUNT
-    js_unlog_scope(scope);
-#endif
-
 #ifdef JS_THREADSAFE
     js_FinishTitle(cx, &scope->title);
 #endif
@@ -1036,8 +1026,6 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     spp = js_SearchScope(scope, id, JS_TRUE);
     sprop = overwriting = SPROP_FETCH(spp);
     if (!sprop) {
-        JS_COUNT_OPERATION(cx, JSOW_NEW_PROPERTY);
-
         /* Check whether we need to grow, if the load factor is >= .75. */
         size = SCOPE_CAPACITY(scope);
         if (scope->entryCount + scope->removedCount >= size - (size >> 2)) {
@@ -1571,16 +1559,12 @@ js_TraceScopeProperty(JSTracer *trc, JSScopeProperty *sprop)
 #if JS_HAS_GETTER_SETTER
     if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if (sprop->attrs & JSPROP_GETTER) {
-            JS_ASSERT(JSVAL_IS_OBJECT((jsval) sprop->getter));
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, sprop, 0);
-            JS_CallTracer(trc, JSVAL_TO_OBJECT((jsval) sprop->getter),
-                          JSTRACE_OBJECT);
+            JS_CallTracer(trc, js_CastAsObject(sprop->getter), JSTRACE_OBJECT);
         }
         if (sprop->attrs & JSPROP_SETTER) {
-            JS_ASSERT(JSVAL_IS_OBJECT((jsval) sprop->setter));
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, sprop, 1);
-            JS_CallTracer(trc, JSVAL_TO_OBJECT((jsval) sprop->setter),
-                          JSTRACE_OBJECT);
+            JS_CallTracer(trc, js_CastAsObject(sprop->setter), JSTRACE_OBJECT);
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */

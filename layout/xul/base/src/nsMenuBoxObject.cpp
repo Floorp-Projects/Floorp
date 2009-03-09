@@ -147,7 +147,7 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
     case NS_VK_END:
     {
       nsNavigationDirection theDirection;
-      NS_DIRECTION_FROM_KEY_CODE(popupFrame, theDirection, keyCode);
+      theDirection = NS_DIRECTION_FROM_KEY_CODE(popupFrame, keyCode);
       *aHandledFlag =
         pm->HandleKeyboardNavigationInPopup(popupFrame, theDirection);
       return NS_OK;

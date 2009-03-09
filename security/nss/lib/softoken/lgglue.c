@@ -46,6 +46,7 @@
 #include "prenv.h"
 #include "lgglue.h"
 #include "secerr.h"
+#include "softoken.h"
 
 static LGOpenFunc legacy_glue_open = NULL;
 static LGReadSecmodFunc legacy_glue_readSecmod = NULL;
@@ -411,7 +412,10 @@ sftkdbCall_Shutdown(void)
 	return CKR_OK;
     }
     if (legacy_glue_shutdown) {
-	crv = (*legacy_glue_shutdown)();
+#ifdef NO_FORK_CHECK
+	PRBool parentForkedAfterC_Initialize = PR_FALSE;
+#endif
+	crv = (*legacy_glue_shutdown)(parentForkedAfterC_Initialize);
     }
     disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");
     if (!disableUnload) {

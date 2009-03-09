@@ -43,21 +43,7 @@
 #include "nsINameSpaceManager.h" 
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsListItemFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsListItemFrame::Release(void)
-{
-  return NS_OK;
-}
-
-NS_INTERFACE_MAP_BEGIN(nsListItemFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsGridRowLeafFrame)
+#include "nsIBoxLayout.h"
 
 nsListItemFrame::nsListItemFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext,
@@ -99,9 +85,16 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
+already_AddRefed<nsIBoxLayout> NS_NewGridRowLeafLayout();
+
 nsIFrame*
-NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsListItemFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
+  nsCOMPtr<nsIBoxLayout> layout = NS_NewGridRowLeafLayout();
+  if (!layout) {
+    return nsnull;
+  }
+  
+  return new (aPresShell) nsListItemFrame(aPresShell, aContext, PR_FALSE, layout);
 } // NS_NewListItemFrame
 

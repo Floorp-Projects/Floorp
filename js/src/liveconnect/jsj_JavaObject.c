@@ -57,6 +57,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "jsapi.h"
 #include "jsobj.h"
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */

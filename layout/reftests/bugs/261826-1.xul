@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="MyWindow"
+	title=""
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	width="800"
+	height="600"
+	onload="revealTab()">
+
+<script type="application/x-javascript">
+	function revealTab(){
+		document.getElementById("fourthTab").setAttribute("hidden", "false");
+		}
+</script>
+
+<tabbox>
+	<tabs>
+		<tab label="first"/>
+		<tab label="second"/>
+		<tab label="third"/>
+		<tab id="fourthTab" label="fourth" hidden="true"/>
+	</tabs>
+	<tabpanels>
+		<tabpanel>
+			<label value="First page"/>
+		</tabpanel>
+		<tabpanel>
+			<label value="second page"/>
+		</tabpanel>
+		<tabpanel>
+			<label value="third page"/>
+		</tabpanel>
+		<tabpanel>
+			<label value="fourth page"/>
+		</tabpanel>
+	</tabpanels>
+</tabbox>
+</window>

@@ -71,6 +71,9 @@ endif
 
 ifndef MOZ_NO_INSPECTOR_APIS
 PARALLEL_DIRS += inspector/public inspector/src
+ifdef ENABLE_TESTS
+PARALLEL_DIRS += inspector/tests
+endif
 endif
 
 DIRS           += build

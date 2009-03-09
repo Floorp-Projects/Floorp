@@ -3404,12 +3404,7 @@ ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
                       JSOPTION_PRIVATE_IS_NSISUPPORTS);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
-
-        if(JS_GetOperationCallback(aOuterCx))
-        {
-            JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback,
-                                    JS_GetOperationLimit(aOuterCx));
-        }
+        JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback);
     }
 }
 
@@ -3424,19 +3419,7 @@ ContextHolder::ContextHolderOperationCallback(JSContext *cx)
     JSOperationCallback callback = JS_GetOperationCallback(origCx);
     JSBool ok = JS_TRUE;
     if(callback)
-    {
         ok = callback(origCx);
-        callback = JS_GetOperationCallback(origCx);
-        if(callback)
-        {
-            // If the callback is still set in the original context, reflect
-            // a possibly updated operation limit into cx.
-            JS_SetOperationLimit(cx, JS_GetOperationLimit(origCx));
-            return ok;
-        }
-    }
-
-    JS_ClearOperationCallback(cx);
     return ok;
 }
 
@@ -3479,22 +3462,43 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     if(NS_FAILED(rv))
         return rv;
 
+    // The second argument is the sandbox object. It is required.
     if (argc < 2)
         return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
 
-    // The second argument is the sandbox object. It is required.
     jsval *argv;
     rv = cc->GetArgvPtr(&argv);
     if (NS_FAILED(rv))
         return rv;
-    if (JSVAL_IS_PRIMITIVE(argv[1]))
-        return NS_ERROR_INVALID_ARG;
-    JSObject *sandbox = JSVAL_TO_OBJECT(argv[1]);
 
-    // Get the current source info from xpc.
-    nsXPIDLCString filename;
+    JSObject *sandbox;
+    char *jsVersionStr = NULL;
+    char *filenameStr = NULL;
     PRInt32 lineNo = 0;
-    {
+
+    JSBool ok = JS_ConvertArguments(cx, argc, argv, "*o/ssi",
+                                    &sandbox, &jsVersionStr,
+                                    &filenameStr, &lineNo);
+
+    if (!ok)
+        return NS_ERROR_INVALID_ARG;
+
+    JSVersion jsVersion = JSVERSION_DEFAULT;
+
+    // Optional third argument: JS version, as a string.
+    if (jsVersionStr) {
+        jsVersion = JS_StringToVersion(jsVersionStr);
+        if (jsVersion == JSVERSION_UNKNOWN)
+            return NS_ERROR_INVALID_ARG;
+    }
+
+    nsXPIDLCString filename;
+
+    // Optional fourth and fifth arguments: filename and line number.
+    if (filenameStr) {
+        filename = filenameStr;
+    } else {
+        // Get the current source info from xpc.
         nsCOMPtr<nsIStackFrame> frame;
         xpc->GetCurrentJSStack(getter_AddRefs(frame));
         if (frame) {
@@ -3504,7 +3508,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     }
 
     rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
-                           PR_FALSE, rval);
+                           jsVersion, PR_FALSE, rval);
 
     if (NS_SUCCEEDED(rv) && !JS_IsExceptionPending(cx))
         cc->SetReturnValueWasSet(PR_TRUE);
@@ -3517,7 +3521,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
-                  PRBool returnStringOnly, jsval *rval)
+                  JSVersion jsVersion, PRBool returnStringOnly, jsval *rval)
 {
     if (STOBJ_GET_CLASS(sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
@@ -3541,6 +3545,9 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         JSPRINCIPALS_DROP(cx, jsPrincipals);
         return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    if (jsVersion != JSVERSION_DEFAULT)
+        JS_SetVersion(sandcx->GetJSContext(), jsVersion);
 
     XPCPerThreadData *data = XPCPerThreadData::GetData(cx);
     XPCJSContextStack *stack = nsnull;

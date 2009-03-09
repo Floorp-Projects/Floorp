@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -364,6 +365,23 @@ nsNavBookmarks::InitStatements()
     getter_AddRefs(mDBIsBookmarkedInDatabase));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBIsRealBookmark
+  // Checks to make sure a place_id is a bookmark, and isn't a livemark.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id "
+      "FROM moz_bookmarks "
+      "WHERE fk = ?1 "
+        "AND type = ?2 "
+        "AND parent NOT IN ("
+          "SELECT a.item_id "
+          "FROM moz_items_annos a "
+          "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+          "WHERE n.name = ?3"
+        ") "
+      "LIMIT 1"),
+    getter_AddRefs(mDBIsRealBookmark));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBGetLastBookmarkID
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT id "
@@ -445,6 +463,7 @@ nsNavBookmarks::FinalizeStatements() {
     mDBGetRedirectDestinations,
     mDBInsertBookmark,
     mDBIsBookmarkedInDatabase,
+    mDBIsRealBookmark,
     mDBGetLastBookmarkID,
     mDBSetItemDateAdded,
     mDBSetItemLastModified,
@@ -540,18 +559,8 @@ nsNavBookmarks::InitRoots()
 
   // Set titles for special folders
   // We cannot rely on createdPlacesRoot due to Fx3beta->final migration path
-  nsCOMPtr<nsIPrefService> prefService =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefService->GetBranch("", getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRUint16 databaseStatus = nsINavHistoryService::DATABASE_STATUS_OK;
   rv = History()->GetDatabaseStatus(&databaseStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (NS_FAILED(rv) ||
       databaseStatus != nsINavHistoryService::DATABASE_STATUS_OK) {
     rv = InitDefaults();
@@ -889,10 +898,41 @@ nsNavBookmarks::UpdateBookmarkHashOnRemove(PRInt64 aPlaceId)
 }
 
 
+PRBool
+nsNavBookmarks::IsRealBookmark(PRInt64 aPlaceId)
+{
+  NS_ABORT_IF_FALSE(mBookmarksHash.IsInitialized(),
+                    "Bookmark hashtable has not been initialized!");
+
+  // Fast path is to check the hash table first.  If it is in the hash table,
+  // then verify that it is a real bookmark.
+  PRInt64 bookmarkId;
+  PRBool isBookmark = mBookmarksHash.Get(aPlaceId, &bookmarkId);
+  if (!isBookmark)
+    return PR_FALSE;
+
+  {
+    mozStorageStatementScoper scope(mDBIsRealBookmark);
+
+    (void)mDBIsRealBookmark->BindInt64Parameter(0, aPlaceId);
+    (void)mDBIsRealBookmark->BindInt32Parameter(1, TYPE_BOOKMARK);
+    (void)mDBIsRealBookmark->BindUTF8StringParameter(
+      2, NS_LITERAL_CSTRING(LMANNO_FEEDURI)
+    );
+
+    // If we get any rows, then there exists at least one bookmark corresponding
+    // to aPlaceId that is not a livemark item.
+    if (NS_SUCCEEDED(mDBIsRealBookmark->ExecuteStep(&isBookmark)))
+      return isBookmark;
+  }
+
+  return PR_FALSE;
+}
+
 // nsNavBookmarks::IsBookmarkedInDatabase
 //
-//    This checks to see if the specified URI is actually bookmarked, bypassing
-//    our hashtable. Normal IsBookmarked checks just use the hashtable.
+//    This checks to see if the specified place_id is actually bookmarked.
+//    This does not check for redirects in the hashtable.
 
 nsresult
 nsNavBookmarks::IsBookmarkedInDatabase(PRInt64 aPlaceId,
@@ -1109,6 +1149,8 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 {
+  NS_ENSURE_TRUE(aItemId != mRoot, NS_ERROR_INVALID_ARG);
+
   nsresult rv;
   PRInt32 childIndex;
   PRInt64 placeId, folderId;
@@ -1171,14 +1213,11 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   rv = UpdateBookmarkHashOnRemove(placeId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX is this too expensive when updating livemarks?
-  // UpdateBookmarkHashOnRemove() does a sanity check using
-  // IsBookmarkedInDatabase(),  so it might not have actually 
-  // removed the bookmark.  should we have a boolean out param
-  // for if we actually removed it, and use that to decide if we call
-  // UpdateFrecency() and the rest of this code?
   if (itemType == TYPE_BOOKMARK) {
-    rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+    // UpdateFrecency needs to know whether placeId is still bookmarked.
+    // Although we removed aItemId, placeId may still be bookmarked elsewhere;
+    // IsRealBookmark will know.
+    rv = History()->UpdateFrecency(placeId, IsRealBookmark(placeId));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1440,10 +1479,11 @@ nsNavBookmarks::GetLastChildId(PRInt64 aFolder, PRInt64* aItemId)
   NS_ENSURE_SUCCESS(rv, rv);
   if (!hasMore) {
     // Item doesn't exist
-    return NS_ERROR_INVALID_ARG;
+    *aItemId = -1;
   }
+  else
+    *aItemId = statement->AsInt64(0);
 
-  *aItemId = statement->AsInt64(0);
   return NS_OK;
 }
 
@@ -1453,7 +1493,8 @@ nsNavBookmarks::GetIdForItemAt(PRInt64 aFolder, PRInt32 aIndex, PRInt64* aItemId
   nsresult rv;
   if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
     // we want the last item within aFolder
-    return GetLastChildId(aFolder, aItemId);
+    rv = GetLastChildId(aFolder, aItemId);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     {
       // get the item in aFolder with position aIndex
@@ -1469,10 +1510,10 @@ nsNavBookmarks::GetIdForItemAt(PRInt64 aFolder, PRInt32 aIndex, PRInt64* aItemId
       NS_ENSURE_SUCCESS(rv, rv);
       if (!hasMore) {
         // Item doesn't exist
-        return NS_ERROR_INVALID_ARG;
+        *aItemId = -1;
       }
-      // actually found an item
-      *aItemId = mDBGetChildAt->AsInt64(0);
+      else
+        *aItemId = mDBGetChildAt->AsInt64(0);
     }
   }
   return NS_OK;
@@ -1550,10 +1591,11 @@ nsNavBookmarks::GetParentAndIndexOfFolder(PRInt64 aFolder, PRInt64* aParent,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolder(PRInt64 aFolderId)
 {
+  NS_ENSURE_TRUE(aFolderId != mRoot, NS_ERROR_INVALID_ARG);
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   nsresult rv;
-
   PRInt64 parent;
   PRInt32 index, type;
   nsCAutoString folderType;
@@ -1759,13 +1801,17 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
   // Delete items from the database now.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  rv = mDBConn->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageStatement> deleteStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_bookmarks "
-      "WHERE parent IN (") +
-        nsPrintfCString("%d", aFolderId) +
+      "WHERE parent IN (?1") +
         foldersToRemove +
-      NS_LITERAL_CSTRING(")"));
+      NS_LITERAL_CSTRING(")"),
+    getter_AddRefs(deleteStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->BindInt64Parameter(0, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Clean up orphan items annotations.
@@ -1788,13 +1834,10 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
       PRInt64 placeId = child.placeId;
       UpdateBookmarkHashOnRemove(placeId);
 
-      // XXX is this too expensive when updating livemarks?
-      // UpdateBookmarkHashOnRemove() does a sanity check using
-      // IsBookmarkedInDatabase(),  so it might not have actually
-      // removed the bookmark.  should we have a boolean out param
-      // for if we actually removed it, and use that to decide if we call
-      // UpdateFrecency() and the rest of this code?
-      rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+      // UpdateFrecency needs to know whether placeId is still bookmarked.
+      // Although we removed a child of aFolderId that bookmarked it, it may
+      // still be bookmarked elsewhere; IsRealBookmark will know.
+      rv = History()->UpdateFrecency(placeId, IsRealBookmark(placeId));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1842,6 +1885,8 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
 NS_IMETHODIMP
 nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
 {
+  NS_ENSURE_TRUE(aItemId != mRoot, NS_ERROR_INVALID_ARG);
+
   // You can pass -1 to indicate append, but no other negative number is allowed
   if (aIndex < -1)
     return NS_ERROR_INVALID_ARG;
@@ -2531,6 +2576,15 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   if (!placeId)
     return NS_ERROR_INVALID_ARG;
 
+  // We need the bookmark's current corresponding places ID below, so get it now
+  // before we change it.  GetBookmarkURI will fail if aBookmarkId is bad.
+  nsCOMPtr<nsIURI> oldURI;
+  PRInt64 oldPlaceId;
+  rv = GetBookmarkURI(aBookmarkId, getter_AddRefs(oldURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = History()->GetUrlIdFor(oldURI, &oldPlaceId, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_bookmarks SET fk = ?1 WHERE id = ?2"),
@@ -2547,18 +2601,29 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // upon changing the uri for a bookmark, update the frecency for the new place
-  // no need to check if this is a livemark, because...
-  rv = History()->UpdateFrecency(placeId, PR_TRUE /* isBookmark */);
+  // Add new URI to bookmark hash.
+  rv = AddBookmarkToHash(placeId, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if 0
-  // upon changing the uri for a bookmark, update the frecency for the old place
-  // XXX todo, we need to get the oldPlaceId (fk) before changing it above
-  // and then here, we need to determine if that oldPlaceId is still a bookmark (and not a livemark)
-  rv = History()->UpdateFrecency(oldPlaceId,  PR_FALSE /* isBookmark */);
+  // Remove old URI from bookmark hash.
+  rv = UpdateBookmarkHashOnRemove(oldPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
-#endif
+
+  // Upon changing the URI for a bookmark, update the frecency for the new place.
+  // UpdateFrecency needs to know whether placeId is bookmarked (as opposed
+  // to a livemark item).  Bookmarking it is exactly what we did above.
+  rv = History()->UpdateFrecency(placeId, PR_TRUE /* isBookmarked */);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Upon changing the URI for a bookmark, update the frecency for the old place.
+  // UpdateFrecency again needs to know whether oldPlaceId is bookmarked.  It may
+  // no longer be, so we need to figure out whether it still is.  Our strategy
+  // is: find all bookmarks corresponding to oldPlaceId that are not livemark
+  // items, i.e., whose parents are not livemarks.  If any such bookmarks exist,
+  // oldPlaceId is still bookmarked.
+
+  rv = History()->UpdateFrecency(oldPlaceId, IsRealBookmark(oldPlaceId));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
   rv = aNewURI->GetSpec(spec);

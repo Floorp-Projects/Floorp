@@ -74,7 +74,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLAudioElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLAudioElement, nsIDOMHTMLAudioElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLAudioElement, nsIDOMHTMLMediaElement, nsIDOMHTMLAudioElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAudioElement,
                                                nsHTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
@@ -89,26 +89,4 @@ nsHTMLAudioElement::nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
 
 nsHTMLAudioElement::~nsHTMLAudioElement()
 {
-}
-
-nsresult nsHTMLAudioElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                        nsIContent* aBindingParent,
-                                        PRBool aCompileEventHandlers)
-{
-  if (mDecoder)
-    mDecoder->ElementAvailable(this);
-
-  return nsHTMLMediaElement::BindToTree(aDocument, 
-                                        aParent, 
-                                        aBindingParent, 
-                                        aCompileEventHandlers);
-}
-
-void nsHTMLAudioElement::UnbindFromTree(PRBool aDeep,
-                                        PRBool aNullParent)
-{
-  if (mDecoder) 
-    mDecoder->ElementUnavailable();
-
-  nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
 }

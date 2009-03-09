@@ -42,6 +42,7 @@ interface nsIDOMDocument;
 interface nsIDOMEventListener;
 interface nsIPrincipal;
 interface nsIScriptContext;
+interface nsIURI;
 interface nsIVariant;
 interface nsPIDOMWindow;
 
@@ -101,7 +102,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(48ce10a0-c585-4e8f-a5f5-1ac1e47cc501)]
+[scriptable, uuid(ad78bf21-2227-447e-8ed5-824a017c265f)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -340,10 +341,13 @@ interface nsIXMLHttpRequest : nsISupports
    * @param scriptContext The script context to use for the request. May be
    *                      null.
    * @param ownerWindow The associated window for the request. May be null.
+   * @param baseURI The base URI to use when resolving relative URIs. May be
+   *                null.
    */
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
-                       in nsPIDOMWindow ownerWindow);
+                       in nsPIDOMWindow ownerWindow,
+                       in nsIURI baseURI);
 
   /**
    * Upload process can be tracked by adding event listener to |upload|.

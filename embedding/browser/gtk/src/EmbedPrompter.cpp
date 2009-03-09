@@ -85,7 +85,7 @@ EmbedPrompter::EmbedPrompter(void)
       mUserField(NULL),
       mPassField(NULL),
       mTextField(NULL),
-      mOptionMenu(NULL),
+      mComboBox(NULL),
       mCheckBox(NULL)
 {
 }
@@ -217,18 +217,12 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 
     // Add a dropdown menu
     if (aType == TYPE_SELECT) {
-        // Build up a GtkMenu containing the items
-        GtkWidget* menu = gtk_menu_new();
+        // Build up a GtkComboBox containing the items
+        GtkWidget* mComboBox = gtk_combo_box_new_text();
         for (PRUint32 i = 0; i < mItemCount; ++i) {
-            GtkWidget* item = gtk_menu_item_new_with_label(mItemList[i].get());
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+            gtk_combo_box_append_text(GTK_COMBO_BOX(mComboBox), mItemList[i].get());
         }
-
-        // Now create an OptionMenu and set this as the menu
-        mOptionMenu = gtk_option_menu_new();
-
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), menu);
-        gtk_box_pack_start(GTK_BOX(contentsVBox), mOptionMenu, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(contentsVBox), mComboBox, FALSE, FALSE, 0);
     }
 
     if (aType == TYPE_UNIVERSAL) {
@@ -403,6 +397,15 @@ EmbedPrompter::SaveDialogValues()
     if (mTextField)
         mTextValue.Assign(gtk_entry_get_text(GTK_ENTRY(mTextField)));
 
-    if (mOptionMenu)
-        mSelectedItem = gtk_option_menu_get_history(GTK_OPTION_MENU(mOptionMenu));
+    if (mComboBox)
+    {
+        gchar *str = gtk_combo_box_get_active_text(GTK_COMBO_BOX(mComboBox));
+        for (PRUint32 i = 0; i < mItemCount; ++i) {
+            if(mItemList[i].Equals(str))
+            {
+                mSelectedItem = i;
+                break;
+            }
+        }
+    }
 }

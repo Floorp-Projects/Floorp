@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
+
+
 #include "blapi.h"
 #include "prerr.h"
 #include "secerr.h"
@@ -117,6 +122,7 @@ ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
 	if (pointP != NULL) {
 		if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
 			(pointP->len != (2 * len + 1))) {
+			PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
 			return SECFailure;
 		};
 	}
@@ -591,9 +597,12 @@ ECDH_Derive(SECItem  *publicValue,
     }
 
     /* Multiply our private key and peer's public point */
-    if ((ec_points_mul(ecParams, NULL, &k, publicValue, &pointQ) != SECSuccess) ||
-	ec_point_at_infinity(&pointQ))
+    if (ec_points_mul(ecParams, NULL, &k, publicValue, &pointQ) != SECSuccess)
 	goto cleanup;
+    if (ec_point_at_infinity(&pointQ)) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);  /* XXX better error code? */
+	goto cleanup;
+    }
 
     /* Allocate memory for the derived secret and copy
      * the x co-ordinate of pointQ into it.
@@ -612,6 +621,10 @@ ECDH_Derive(SECItem  *publicValue,
 
 cleanup:
     mp_clear(&k);
+
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+    }
 
     if (pointQ.data) {
 	PORT_ZFree(pointQ.data, 2*len + 1);

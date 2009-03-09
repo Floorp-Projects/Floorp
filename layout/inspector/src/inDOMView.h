@@ -46,7 +46,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsStaticAtom.h"
 
@@ -104,7 +104,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mRootNode;
   nsCOMPtr<nsIDOMDocument> mRootDocument;
 
-  nsVoidArray mNodes;
+  nsTArray<inDOMViewNode*> mNodes;
 
   inDOMViewNode* GetNodeAt(PRInt32 aIndex);
   PRInt32 GetRowCount();
@@ -115,7 +115,7 @@ protected:
   void InsertNode(inDOMViewNode* aNode, PRInt32 aIndex);
   void RemoveNode(PRInt32 aIndex);
   void ReplaceNode(inDOMViewNode* aNode, PRInt32 aIndex);
-  void InsertNodes(nsVoidArray& aNodes, PRInt32 aIndex);
+  void InsertNodes(nsTArray<inDOMViewNode*>& aNodes, PRInt32 aIndex);
   void RemoveNodes(PRInt32 aIndex, PRInt32 aCount);
   void RemoveAllNodes();
   void ExpandNode(PRInt32 aRow);

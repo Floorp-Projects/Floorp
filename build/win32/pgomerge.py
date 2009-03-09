@@ -23,7 +23,7 @@ def MergePGOFiles(basename, pgddir, pgcdir):
   if not os.path.isfile(pgdfile):
     return
   for file in os.listdir(pgcdir):
-    if file.startswith(basename) and file.endswith(".pgc"):
+    if file.startswith(basename+"!") and file.endswith(".pgc"):
       try:
         pgcfile = os.path.normpath(os.path.join(pgcdir, file))
         subprocess.call(['pgomgr', '-merge',

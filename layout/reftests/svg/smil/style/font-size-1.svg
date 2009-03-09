@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+>
+  <!-- Test interaction of specified CSS style and animated values -->
+  <text y="40" style="font-size: 8pt">
+    This text should be large.
+	<set attributeType="CSS" attributeName="font-size" 
+             begin="0s" dur="1s" to="30pt" fill="freeze"/>
+  </text>
+</svg>

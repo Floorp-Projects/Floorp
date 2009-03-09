@@ -38,16 +38,15 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtk.h>
 
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCOMArray.h"
 
 class nsIWidget;
 class nsILocalFile;
-class PRLibrary;
 
 class nsFilePicker : public nsBaseFilePicker
 {
@@ -58,7 +57,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
-  NS_IMETHODIMP Init(nsIDOMWindow *aParent, const nsAString &aTitle, PRInt16 aMode);
   NS_IMETHODIMP AppendFilters(PRInt32 aFilterMask);
   NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
   NS_IMETHODIMP SetDefaultString(const nsAString& aString);
@@ -77,7 +75,6 @@ public:
   static void Shutdown();
 
 protected:
-  static nsresult LoadSymbolsGTK24();
 
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
@@ -92,12 +89,11 @@ protected:
   nsString  mDefault;
   nsString  mDefaultExtension;
 
-  nsCStringArray mFilters;
-  nsCStringArray mFilterNames;
+  nsTArray<nsCString> mFilters;
+  nsTArray<nsCString> mFilterNames;
 
 private:
   static nsILocalFile *mPrevDisplayDirectory;
-  static PRLibrary *mGTK24;
 };
 
 #endif

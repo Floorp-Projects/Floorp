@@ -42,7 +42,7 @@
 #include "nsFtpControlConnection.h"
 #include "nsIServiceManager.h"
 #include "nsIProxiedProtocolHandler.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIIOService.h"
 #include "nsITimer.h"
 #include "nsIObserverService.h"
@@ -74,6 +74,7 @@ public:
     // FTP Connection list access
     nsresult InsertConnection(nsIURI *aKey, nsFtpControlConnection *aConn);
     nsresult RemoveConnection(nsIURI *aKey, nsFtpControlConnection **aConn);
+    PRUint32 GetSessionId() { return mSessionId; }
 
 private:
     // Stuff for the timer callback function
@@ -97,11 +98,19 @@ private:
     };
 
     static void Timeout(nsITimer *aTimer, void *aClosure);
+    void ClearAllConnections();
 
-    nsVoidArray mRootConnectionList;
+    nsTArray<timerStruct*> mRootConnectionList;
 
     nsCOMPtr<nsICacheSession> mCacheSession;
     PRInt32 mIdleTimeout;
+
+    // When "clear active logins" is performed, all idle connection are dropped
+    // and mSessionId is incremented. When nsFtpState wants to insert idle
+    // connection we refuse to cache if its mSessionId is different (i.e.
+    // control connection had been created before last "clear active logins" was
+    // performed.
+    PRUint32 mSessionId;
 };
 
 //-----------------------------------------------------------------------------

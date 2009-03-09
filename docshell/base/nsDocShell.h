@@ -148,6 +148,8 @@ protected:
 class nsClassifierCallback : public nsIChannelClassifier
                            , public nsIURIClassifierCallback
                            , public nsIRunnable
+                           , public nsIChannelEventSink
+                           , public nsIInterfaceRequestor
 {
 public:
     nsClassifierCallback() {}
@@ -157,13 +159,16 @@ public:
     NS_DECL_NSICHANNELCLASSIFIER
     NS_DECL_NSIURICLASSIFIERCALLBACK
     NS_DECL_NSIRUNNABLE
+    NS_DECL_NSICHANNELEVENTSINK
+    NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsIChannel> mSuspendedChannel;
+    nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
 
     void MarkEntryClassified(nsresult status);
-    PRBool HasBeenClassified();
+    PRBool HasBeenClassified(nsIChannel *aChannel);
 };
 
 //*****************************************************************************
@@ -187,7 +192,8 @@ class nsDocShell : public nsDocLoader,
                    public nsIWebPageDescriptor,
                    public nsIAuthPromptProvider,
                    public nsIObserver,
-                   public nsILoadContext
+                   public nsILoadContext,
+                   public nsIDocShell_MOZILLA_1_9_1
 {
 friend class nsDSURIContentListener;
 
@@ -217,6 +223,7 @@ public:
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSIOBSERVER
     NS_DECL_NSILOADCONTEXT
+    NS_DECL_NSIDOCSHELL_MOZILLA_1_9_1
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop
@@ -547,8 +554,10 @@ protected:
     PRBool IsOKToLoadURI(nsIURI* aURI);
     
     void ReattachEditorToWindow(nsISHEntry *aSHEntry);
-    void DetachEditorFromWindow(nsISHEntry *aSHEntry);
 
+    nsresult GetSessionStorageForURI(nsIURI* aURI,
+                                     PRBool create,
+                                     nsIDOMStorage** aStorage);
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
@@ -633,7 +642,7 @@ protected:
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
     nsCOMPtr<nsISupportsArray> mSavedRefreshURIList;
     nsRefPtr<nsDSURIContentListener> mContentListener;
-    nsRect                     mBounds; // Dimensions of the docshell
+    nsIntRect                  mBounds; // Dimensions of the docshell
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
     nsCOMPtr<nsIWidget>        mParentWidget;
@@ -646,7 +655,7 @@ protected:
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
     nsCOMPtr<nsIWebBrowserFind> mFind;
-    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
+    nsIntPoint                 mDefaultScrollbarPref; // persistent across doc loads
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mOSHE; 

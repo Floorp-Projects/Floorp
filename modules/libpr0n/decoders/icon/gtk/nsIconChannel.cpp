@@ -50,12 +50,7 @@ extern "C" {
 }
 #endif
 
-#include <gtk/gtkwidget.h>
-#include <gtk/gtkiconfactory.h>
-#include <gtk/gtkimage.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkfixed.h>
-#include <gtk/gtkversion.h>
+#include <gtk/gtk.h>
 
 #include "nsIMIMEService.h"
 
@@ -444,7 +439,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     // scale...
     scaled = gdk_pixbuf_scale_simple(buf, iconSize, iconSize,
                                      GDK_INTERP_BILINEAR);
-    gdk_pixbuf_unref(buf);
+    g_object_unref(buf);
     if (!scaled)
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -453,7 +448,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   
   rv = moz_gdk_pixbuf_to_channel(scaled, aIconURI,
                                  getter_AddRefs(mRealChannel));
-  gdk_pixbuf_unref(scaled);
+  g_object_unref(scaled);
   return rv;
 }
 #endif
@@ -513,7 +508,7 @@ nsIconChannel::Init(nsIURI* aURI)
   nsresult rv = moz_gdk_pixbuf_to_channel(icon, iconURI,
                                           getter_AddRefs(mRealChannel));
 
-  gdk_pixbuf_unref(icon);
+  g_object_unref(icon);
 
   return rv;
 }

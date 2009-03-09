@@ -69,6 +69,7 @@ local ($test_id,
        $test_type, 
        $tmp_test_type,
        $test_description, 
+       $test_jsoptions,
        @messages,
        $test_processortype, 
        $test_kernel, 
@@ -80,9 +81,10 @@ local ($test_id,
        $state);
 
 local $test_memory = 0;
-local $test_cpuspeed = 0;
 local %test_reported = ();
 local $test_repo = 'CVS';
+
+$test_jsoptions = 'none';
 
 while ($file = shift @ARGV)
 {
@@ -140,9 +142,9 @@ while ($file = shift @ARGV)
             dbg "\nINPUT: $_";
         }
 
-        last if ( $_ =~ /^arguments:/);
+        last if ( $_ =~ /^include:/);
 
-        if (($envval) = $_ =~ /^environment: TEST_MOZILLA_HG=http:\/\/hg.mozilla.org\/(.*)/ )
+        if (($envval) = $_ =~ /^environment: TEST_MOZILLA_HG=http:\/\/hg.mozilla.org.*\/([^\/]+)/ )
         {
             $test_repo = $envval;
         }
@@ -162,19 +164,20 @@ while ($file = shift @ARGV)
         {
             $test_os = $envval;
         }
-    }
 
-    if ($test_cpuspeed < 4)
-    {
-        $test_cpuspeed = 'slow';
-    }
-    elsif ($test_cpuspeed < 9)
-    {
-        $test_cpuspeed = 'medium';
-    }
-    else
-    {
-        $test_cpuspeed = 'fast';
+        if ($_ =~ /^arguments: javascriptoptions/)
+        {
+            my ($o, @s, $j);
+
+            ($o) = $_ =~ /^arguments: javascriptoptions=(.*)/;
+            $o =~ s/(-\w) (\w)/$1$2/g; 
+            @s = sort split / /, $o; 
+            $j = join(" ", @s); 
+            $j =~ s/(-\w)(\w)/$1 $2/g; 
+
+            $test_jsoptions = $j || "none";
+            dbg "javascriptoptions: $test_jsoptions";
+        }
     }
 
     if ($test_product eq "js")
@@ -477,9 +480,11 @@ while ($file = shift @ARGV)
                !/real.*user.*sys.*$/ && 
                !/user.*system.*elapsed/)
         {
-            if ('runningtest, reportingtest' =~ /$state/)
+            if ('runningtest, reportingtest' =~ /$state/ && $#messages < 1000)
             {
-
+                # limit the number of processed and collected messages since firefox can
+                # go berserk and dump a couple of million output lines for a single test
+                # if things go horribly wrong.
                 if (/error: can.t allocate region/ || /set a breakpoint in malloc_error_break/ || 
                     /set a breakpoint in szone_error to debug/ || /malloc:.*mmap/ || /vm_allocate/ ||
                     /terminate called after throwing an instance of .*bad_alloc/)
@@ -577,8 +582,8 @@ sub outputrecord
         "TEST_KERNEL=$test_kernel, " .
         "TEST_PROCESSORTYPE=$test_processortype, " .
         "TEST_MEMORY=$test_memory, " .
-        "TEST_CPUSPEED=$test_cpuspeed, " . 
         "TEST_TIMEZONE=$test_timezone, " . 
+        "TEST_OPTIONS=$test_jsoptions, " .
         "TEST_RESULT=$test_result, " .
         "TEST_EXITSTATUS=$test_exit_status, " .
         "TEST_DESCRIPTION=$test_description, " .

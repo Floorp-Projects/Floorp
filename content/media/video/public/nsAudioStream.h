@@ -40,6 +40,7 @@
 
 #include "nscore.h"
 #include "prlog.h"
+#include "nsTArray.h"
 
 extern PRLogModuleInfo* gAudioStreamLog;
 
@@ -50,7 +51,7 @@ class nsAudioStream
   {
     FORMAT_U8,
     FORMAT_S16_LE,
-    FORMAT_FLOAT32_LE
+    FORMAT_FLOAT32
   };
 
   // Initialize Audio Library. Some Audio backends require initializing the
@@ -80,10 +81,6 @@ class nsAudioStream
   // without blocking.
   PRInt32 Available();
 
-  // Store in aVolume the value of the volume setting. This is a value from
-  // 0 (meaning muted) to 1 (meaning full volume).
-  float GetVolume();
-
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).
   void SetVolume(float aVolume);
@@ -91,32 +88,18 @@ class nsAudioStream
   // Block until buffered audio data has been consumed.
   void Drain();
 
-  // Pause sound playback.
-  void Pause();
-
-  // Resume sound playback.
-  void Resume();
-
-  // Return the position (in seconds) of the audio sample currently being
-  // played by the audio hardware.
-  double GetTime();
-
  private:
   double mVolume;
   void* mAudioHandle;
   int mRate;
   int mChannels;
 
-  // The byte position in the audio buffer where playback was last paused.
-  PRInt64 mSavedPauseBytes;
-  PRInt64 mPauseBytes;
-
-  float mStartTime;
-  float mPauseTime;
-  PRInt64 mSamplesBuffered;
-
   SampleFormat mFormat;
 
-  PRPackedBool mPaused;
+  // When a Write() request is made, and the number of samples
+  // requested to be written exceeds the buffer size of the audio
+  // backend, the remaining samples are stored in this variable. They
+  // will be written on the next Write() request.
+  nsTArray<short> mBufferOverflow;
 };
 #endif

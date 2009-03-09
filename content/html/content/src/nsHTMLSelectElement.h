@@ -164,6 +164,13 @@ private:
   nsHTMLSelectElement* mSelect;
 };
 
+#define NS_SELECT_STATE_IID                        \
+{ /* 4db54c7c-d159-455f-9d8e-f60ee466dbf3 */       \
+  0x4db54c7c,                                      \
+  0xd159,                                          \
+  0x455f,                                          \
+  {0x9d, 0x8e, 0xf6, 0x0e, 0xe4, 0x66, 0xdb, 0xf3} \
+}
 
 /**
  * The restore state used by select
@@ -177,6 +184,7 @@ public:
   {
   }
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SELECT_STATE_IID)
   NS_DECL_ISUPPORTS
 
   void PutOption(PRInt32 aIndex, const nsAString& aValue)
@@ -338,7 +346,6 @@ protected:
    * Called to trigger notifications of frames and fixing selected index
    *
    * @param aSelectFrame the frame for this content (could be null)
-   * @param aPresContext the current pres context
    * @param aIndex the index that was selected or deselected
    * @param aSelected whether the index was selected or deselected
    * @param aChangeOptionState if false, don't do anything to the
@@ -347,7 +354,6 @@ protected:
    * @param aNotify whether to notify the style system and such
    */
   void OnOptionSelected(nsISelectControlFrame* aSelectFrame,
-                        nsPresContext* aPresContext,
                         PRInt32 aIndex,
                         PRBool aSelected,
                         PRBool aChangeOptionState,
@@ -498,7 +504,7 @@ protected:
    * The temporary restore state in case we try to restore before parser is
    * done adding options
    */
-  nsRefPtr<nsSelectState> mRestoreState;
+  nsCOMPtr<nsSelectState> mRestoreState;
 };
 
 #endif

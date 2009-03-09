@@ -39,59 +39,7 @@
 // shutdown.
 
 function run_test() {
-  // initialization
-  var os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  var pb = Cc["@mozilla.org/privatebrowsing;1"].
-           getService(Ci.nsIPrivateBrowsingService);
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-
-  var expectedQuitting;
-  var called = 0;
-  var observer = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic == kPrivateBrowsingNotification &&
-          aData == kExit) {
-        // increment the call counter
-        ++ called;
-
-        do_check_neq(aSubject, null);
-        try {
-          aSubject.QueryInterface(Ci.nsISupportsPRBool);
-        } catch (ex) {
-          do_throw("aSubject was not null, but wasn't an nsISupportsPRBool");
-        }
-        // check the "quitting" argument
-        do_check_eq(aSubject.data, expectedQuitting);
-
-        // finish up the test
-        if (expectedQuitting) {
-          os.removeObserver(this, kPrivateBrowsingNotification);
-          prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
-          do_test_finished();
-        }
-      }
-    }
-  };
-
-  // set the observer
-  os.addObserver(observer, kPrivateBrowsingNotification, false);
-
-  // enter the private browsing mode
-  pb.privateBrowsingEnabled = true;
-
-  // exit the private browsing mode
-  expectedQuitting = false;
-  pb.privateBrowsingEnabled = false;
-  do_check_eq(called, 1);
-
-  // enter the private browsing mode
-  pb.privateBrowsingEnabled = true;
-
-  // Simulate an exit
-  expectedQuitting = true;
-  do_test_pending();
-  os.notifyObservers(null, "quit-application-granted", null);
+  PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
+  do_import_script("browser/components/privatebrowsing/test/unit/do_test_privatebrowsing_exit.js");
+  do_test();
 }

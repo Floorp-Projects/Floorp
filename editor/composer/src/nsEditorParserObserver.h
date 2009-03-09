@@ -62,8 +62,8 @@ public:
   NS_IMETHOD                Notify(nsISupports* aWebShell, 
                                    nsISupports* aChannel,
                                    const PRUnichar* aTag, 
-                                   const nsStringArray* aKeys, 
-                                   const nsStringArray* aValues,
+                                   const nsTArray<nsString>* aKeys, 
+                                   const nsTArray<nsString>* aValues,
                                    const PRUint32 aFlags);
 
   /* methods for nsIObserver */

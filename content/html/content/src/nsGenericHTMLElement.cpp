@@ -1326,8 +1326,7 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
   }
   nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument);
   if (frame) {
-    nsIFormControlFrame* form_frame = nsnull;
-    CallQueryInterface(frame, &form_frame);
+    nsIFormControlFrame* form_frame = do_QueryFrame(frame);
     if (form_frame) {
       return form_frame;
     }
@@ -1337,7 +1336,7 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
     for (frame = frame->GetFirstChild(nsnull);
          frame;
          frame = frame->GetNextSibling()) {
-      CallQueryInterface(frame, &form_frame);
+      form_frame = do_QueryFrame(frame);
       if (form_frame) {
         return form_frame;
       }
@@ -1364,10 +1363,12 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
     // Get the pres state for this key, if it doesn't exist, create one
     result = history->GetState(key, aPresState);
     if (!*aPresState) {
-      result = NS_NewPresState(aPresState);
-      if (NS_SUCCEEDED(result)) {
-        result = history->AddState(key, *aPresState);
+      *aPresState = new nsPresState();
+      if (!*aPresState) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
+        
+      result = history->AddState(key, *aPresState);
     }
   }
 
@@ -1677,7 +1678,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
-                                                eCSSUnit_String);
+                                                eCSSUnit_Ident);
     }
   }
 }
@@ -1940,8 +1941,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
     return;
 
   nsPresContext* presContext = aData->mPresContext;
-  if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null &&
-      presContext->UseDocumentColors()) {
+  if (!aData->mColorData->mBackImage && presContext->UseDocumentColors()) {
     // background
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::background);
     if (value && value->Type() == nsAttrValue::eString) {
@@ -1971,7 +1971,11 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
                                     doc->NodePrincipal(), doc);
             buffer->Release();
             if (NS_LIKELY(img != 0)) {
-              aData->mColorData->mBackImage.SetImageValue(img);
+              // Use nsRuleDataColor's temporary mTempBackImage to
+              // make a value list.
+              aData->mColorData->mTempBackImage.mValue.SetImageValue(img);
+              aData->mColorData->mBackImage =
+                &aData->mColorData->mTempBackImage;
             }
           }
         }
@@ -1979,7 +1983,10 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
       else if (presContext->CompatibilityMode() == eCompatibility_NavQuirks) {
         // in NavQuirks mode, allow the empty string to set the
         // background to empty
-        aData->mColorData->mBackImage.SetNoneValue();
+        // Use nsRuleDataColor's temporary mTempBackImage to make a value list.
+        aData->mColorData->mBackImage = nsnull;
+        aData->mColorData->mTempBackImage.mValue.SetNoneValue();
+        aData->mColorData->mBackImage = &aData->mColorData->mTempBackImage;
       }
     }
   }
@@ -1992,12 +1999,16 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
   if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null &&
+  if (aData->mColorData->mBackColor.mXValue.GetUnit() == eCSSUnit_Null &&
       aData->mPresContext->UseDocumentColors()) {
+    NS_ASSERTION(aData->mColorData->mBackColor.mYValue.GetUnit() ==
+                   eCSSUnit_Null,
+                 "half a property?");
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      aData->mColorData->mBackColor.SetColorValue(color);
+      aData->mColorData->mBackColor.mXValue.SetColorValue(color);
+      aData->mColorData->mBackColor.mYValue.SetColorValue(color);
     }
   }
 }
@@ -2863,6 +2874,8 @@ nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
+    NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+                 "Missing a script blocker!");
     // We're in a document now.  Kick off the frame load.
     LoadSrc();
   }
@@ -3548,8 +3561,7 @@ nsGenericHTMLElement::GetEditorInternal(nsIEditor** aEditor)
 
   nsIFormControlFrame *fcFrame = GetFormControlFrame(PR_FALSE);
   if (fcFrame) {
-    nsITextControlFrame *textFrame = nsnull;
-    CallQueryInterface(fcFrame, &textFrame);
+    nsITextControlFrame *textFrame = do_QueryFrame(fcFrame);
     if (textFrame) {
       return textFrame->GetEditor(aEditor);
     }

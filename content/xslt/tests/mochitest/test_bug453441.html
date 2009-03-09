@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=453441
+-->
+<head>
+  <title>Test for Bug 453441</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=453441">Mozilla Bug 453441</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 453441 **/
+
+function tryImportStylesheet(xml, valid)
+{
+  var processor = new XSLTProcessor;
+
+  var xsltdoc = new DOMParser().parseFromString(String(xml), "text/xml");
+  try
+  {
+    processor.importStylesheet(xsltdoc);
+    ok(valid, "should be able to parse this XSLT stylesheet");
+  }
+  catch (e)
+  {
+    ok(!valid, "should not be able to parse this XSLT stylesheet");
+  }
+}
+
+tryImportStylesheet(
+  <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="/">
+    <html xmlns="http://www.w3.org/1999/xhtml" xsl:version="1.0" />
+  </xsl:template>
+  </xsl:stylesheet>
+, true);
+
+tryImportStylesheet(
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" />
+, false);
+
+tryImportStylesheet(
+  <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" />
+, false);
+
+</script>
+</pre>
+</body>
+</html>

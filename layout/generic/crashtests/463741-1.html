@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html style="width: 1px;">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.appendChild(document.body);
+  document.documentElement.offsetHeight;
+  var v = document.getElementById("v");
+  v.parentNode.removeChild(v);
+  var w = document.createElement("span");
+  document.body.insertBefore(w, document.body.lastChild);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div></div><div style="height: 1px;"><span><div id="v"></div></span><div style="-moz-column-count: 2;">A<div style="margin: 67108863ch 0pt;">B</div><div>C</div></div></div><span></span></body>
+</html>

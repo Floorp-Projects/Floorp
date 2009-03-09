@@ -82,16 +82,3 @@ nsAbout::GetURIFlags(nsIURI *aURI, PRUint32 *result)
     *result = nsIAboutModule::ALLOW_SCRIPT;
     return NS_OK;
 }
-
-NS_METHOD
-nsAbout::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsAbout* about = new nsAbout();
-    if (about == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(about);
-    nsresult rv = about->QueryInterface(aIID, aResult);
-    NS_RELEASE(about);
-    return rv;
-}
-

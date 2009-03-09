@@ -116,6 +116,7 @@ nsXPInstallManager::nsXPInstallManager()
 
 nsXPInstallManager::~nsXPInstallManager()
 {
+    NS_ASSERT_OWNINGTHREAD(nsXPInstallManager);
     NS_ASSERTION(!mTriggers, "Shutdown not called, triggers still alive");
 }
 
@@ -136,8 +137,8 @@ NS_INTERFACE_MAP_BEGIN(nsXPInstallManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsXPInstallManager)
-NS_IMPL_RELEASE(nsXPInstallManager)
+NS_IMPL_THREADSAFE_ADDREF(nsXPInstallManager)
+NS_IMPL_THREADSAFE_RELEASE(nsXPInstallManager)
 
 NS_IMETHODIMP
 nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs,
@@ -1138,6 +1139,9 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
         }
     }
 
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(request, nsnull, NS_BINDING_RETARGETED);
+
     NS_ASSERTION( mItem && mItem->mFile, "XPIMgr::OnStartRequest bad state");
     if ( mItem && mItem->mFile )
     {
@@ -1162,6 +1166,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     {
 
         case NS_BINDING_SUCCEEDED:
+            NS_ASSERTION( mItem->mOutStream, "XPIManager: output stream doesn't exist");
             rv = NS_OK;
             break;
 
@@ -1178,7 +1183,6 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     }
 
     NS_ASSERTION( mItem, "Bad state in XPIManager");
-    NS_ASSERTION( mItem->mOutStream, "XPIManager: output stream doesn't exist");
     if ( mItem && mItem->mOutStream )
     {
         mItem->mOutStream->Close();

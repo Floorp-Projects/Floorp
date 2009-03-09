@@ -37,7 +37,7 @@
 
 #include "nsIFactory.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsICharsetConverterManager.h"
 #include "nsISaveAsCharset.h"
 
@@ -96,7 +96,7 @@ protected:
   PRUint32 mEntityVersion;                // see nsIEntityConverter
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;   // encoder (convert from unicode)
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
-  nsCStringArray mCharsetList;
+  nsTArray<nsCString> mCharsetList;
   PRInt32        mCharsetListIndex;
 };
 

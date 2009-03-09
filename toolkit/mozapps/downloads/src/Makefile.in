@@ -49,6 +49,7 @@ GARBAGE += nsHelperAppDlg.js
 
 EXTRA_JS_MODULES = \
   DownloadUtils.jsm \
+  DownloadLastDir.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

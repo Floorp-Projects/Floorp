@@ -1,0 +1,17 @@
+// <!-- <mdb:mork:z v="1.4"/> -->
+< <(a=c)> // (f=iso-8859-1)
+  (8A=Typed)(8B=LastPageVisited)(8C=ByteOrder)
+  (80=ns:history:db:row:scope:history:all)
+  (81=ns:history:db:table:kind:history)(82=URL)(83=Referrer)
+  (84=LastVisitDate)(85=FirstVisitDate)(86=VisitCount)(87=Name)
+  (88=Hostname)(89=Hidden)>
+
+<(80=LE)(8A=http://www.mozilla.org/)(99=1230666859910484)(96
+    =1230666845910353)(8C=mozilla.org)(84=1)(95=4)(8E
+    =M$00o$00z$00i$00l$00l$00a$00.$00o$00r$00g$00 $00-$00 $00H$00o$00m$00e$00 \
+$00o$00f$00 $00t$00h$00e$00 $00M$00o$00z$00i$00l$00l$00a$00 $00P$00r$00o$00j$00\
+e$00c$00t$00)(8F=http://www.google.it/)(97=1230666851648604)(88=google.it)
+  (93=3)(91=G$00o$00o$00g$00l$00e$00)>
+{1:^80 {(k^81:c)(s=9)[1(^8C=LE)]} 
+  [7(^82^8A)(^84^99)(^85^96)(^88^8C)(^8A=1)(^86=4)(^87^8E)]
+  [8(^82^8F)(^84^99)(^85^97)(^88^88)(^8A=1)(^86=3)(^87^91)]}

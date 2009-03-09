@@ -48,7 +48,15 @@
 OggPlay *
 oggplay_new_with_reader(OggPlayReader *reader) {
 
-  OggPlay * me = (OggPlay *)malloc(sizeof(OggPlay));
+  OggPlay * me = NULL;
+
+  /* check whether the reader is valid. */
+  if (reader == NULL)
+    return NULL;
+
+  me = (OggPlay *)oggplay_malloc (sizeof(OggPlay));
+  if (me == NULL)
+	  return NULL;
 
   me->reader = reader;
   me->decode_data = NULL;
@@ -64,6 +72,7 @@ oggplay_new_with_reader(OggPlayReader *reader) {
   me->trash = NULL;
   me->oggz = NULL;
   me->pt_update_valid = 1;
+  me->duration = -1;
 
   return me;
 
@@ -93,10 +102,20 @@ oggplay_initialise(OggPlay *me, int block) {
    * the main loop
    */
   me->oggz = oggz_new(OGGZ_READ | OGGZ_AUTO);
-  oggz_io_set_read(me->oggz, me->reader->io_read, me->reader);
-  oggz_io_set_seek(me->oggz, me->reader->io_seek, me->reader);
-  oggz_io_set_tell(me->oggz, me->reader->io_tell, me->reader);
-  oggz_set_read_callback(me->oggz, -1, oggplay_callback_predetected, me);
+  if (me->oggz == NULL)
+    return E_OGGPLAY_OGGZ_UNHAPPY;
+
+  if (oggz_io_set_read(me->oggz, me->reader->io_read, me->reader) != 0)
+    return E_OGGPLAY_OGGZ_UNHAPPY;
+
+  if (oggz_io_set_seek(me->oggz, me->reader->io_seek, me->reader) != 0)
+    return E_OGGPLAY_OGGZ_UNHAPPY;
+
+  if (oggz_io_set_tell(me->oggz, me->reader->io_tell, me->reader) != 0)
+    return E_OGGPLAY_OGGZ_UNHAPPY;
+
+  if (oggz_set_read_callback(me->oggz, -1, oggplay_callback_predetected, me))
+    return E_OGGPLAY_OGGZ_UNHAPPY;
 
   while (1) {
 
@@ -130,15 +149,20 @@ oggplay_initialise(OggPlay *me, int block) {
 OggPlay *
 oggplay_open_with_reader(OggPlayReader *reader) {
 
-  OggPlay *me = oggplay_new_with_reader(reader);
-
+  OggPlay *me = NULL;
   int r = E_OGGPLAY_TIMEOUT;
+
+  if ( (me = oggplay_new_with_reader(reader)) == NULL)
+    return NULL;
+
   while (r == E_OGGPLAY_TIMEOUT) {
     r = oggplay_initialise(me, 0);
   }
 
   if (r != E_OGGPLAY_OK) {
-    free(me);
+    /* in case of error close the OggPlay handle */
+    oggplay_close(me);
+
     return NULL;
   }
 
@@ -194,6 +218,7 @@ oggplay_set_callback_num_frames(OggPlay *me, int track, int frames) {
   me->callback_period = me->decode_data[track]->granuleperiod * frames;
   me->target = me->presentation_time + me->callback_period - 1;
 
+//  printf("targ: %lld, callback_per: %lld, prestime: %lld\n", me->target, me->callback_period,me->presentation_time );  
 
   return E_OGGPLAY_OK;
 
@@ -210,7 +235,7 @@ oggplay_set_offset(OggPlay *me, int track, ogg_int64_t offset) {
     return E_OGGPLAY_BAD_TRACK;
   }
 
-  me->decode_data[track]->offset = (offset << 32);
+  me->decode_data[track]->offset = (offset << 32) / 1000;
 
   return E_OGGPLAY_OK;
 
@@ -509,7 +534,7 @@ read_more_data:
     if (r == 0) {
       num_records = oggplay_callback_info_prepare(me, &info);
      /*
-       * set all of the tracks to active
+       * set all of the tracks to inactive
        */
       for (i = 0; i < me->num_tracks; i++) {
         me->decode_data[i]->active = 0;
@@ -523,8 +548,10 @@ read_more_data:
 
       /*
        * ensure all tracks have their final data packet set to end_of_stream
+       * But skip doing this if we're shutting down --- me->buffer may not
+       * be in a safe state.
        */
-      if (me->buffer != NULL) {
+      if (me->buffer != NULL && !me->shutdown) {
         oggplay_buffer_set_last_data(me, me->buffer);
       }
 
@@ -572,8 +599,11 @@ oggplay_start_decoding(OggPlay *me) {
   int r;
 
   while (1) {
-    if ((r = oggplay_step_decoding(me)) != E_OGGPLAY_CONTINUE)
-      return (OggPlayErrorCode)r;
+    r = oggplay_step_decoding(me);
+    if (r == E_OGGPLAY_CONTINUE || r == E_OGGPLAY_TIMEOUT) {
+      continue;
+    }
+    return (OggPlayErrorCode)r;
   }
 }
 
@@ -590,17 +620,21 @@ oggplay_close(OggPlay *me) {
     me->reader->destroy(me->reader);
   }
 
-  for (i = 0; i < me->num_tracks; i++) {
-    oggplay_callback_shutdown(me->decode_data[i]);
+
+  if (me->decode_data) {
+    for (i = 0; i < me->num_tracks; i++) {
+      oggplay_callback_shutdown(me->decode_data[i]);
+    }
   }
 
-  oggz_close(me->oggz);
+  if (me->oggz)
+    oggz_close(me->oggz);
 
   if (me->buffer != NULL) {
     oggplay_buffer_shutdown(me, me->buffer);
   }
 
-  free(me);
+  oggplay_free(me);
 
   return E_OGGPLAY_OK;
 }
@@ -641,17 +675,30 @@ oggplay_get_duration(OggPlay *me) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
 
-  if (me->reader->duration) 
-    return me->reader->duration(me->reader);
-  else {
+  /* If the reader has a duration function we always call that
+   * function to find the duration. We never cache the result
+   * of that function.
+   *
+   * If there is no reader duration function we use our cached
+   * duration value, or do a liboggz seek to find it and cache
+   * that.
+   */
+  if (me->reader->duration) {
+      ogg_int64_t d = me->reader->duration(me->reader);
+      if (d >= 0) {
+        me->duration = d;
+      }
+  }
+
+  if (me->duration < 0) {
     ogg_int64_t pos;
-    ogg_int64_t duration;
     pos = oggz_tell_units(me->oggz);
-    duration = oggz_seek_units(me->oggz, 0, SEEK_END);
+    me->duration = oggz_seek_units(me->oggz, 0, SEEK_END);
     oggz_seek_units(me->oggz, pos, SEEK_SET);
     oggplay_seek_cleanup(me, pos);
-    return duration;
   }
+
+  return me->duration;
 }
 
 int
@@ -668,3 +715,4 @@ oggplay_media_finished_retrieving(OggPlay *me) {
   return me->reader->finished_retrieving(me->reader);
 
 }
+

@@ -123,7 +123,9 @@ protected:
       mDstNameSpace(aDstNameSpace),
       mNext(nsnull) { }
 
-  ~nsXBLAttributeEntry() { delete mNext; }
+  ~nsXBLAttributeEntry() {
+    NS_CONTENT_DELETE_LIST_MEMBER(nsXBLAttributeEntry, this, mNext);
+  }
 
 private:
   // Hide so that only Create() and Destroy() can be used to

@@ -160,7 +160,7 @@ export::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
-ifeq (,$(filter-out WINNT WINCE, $(HOST_OS_ARCH)))
+ifeq (,$(filter-out WINNT WINCE os2-emx, $(HOST_OS_ARCH)))
 swapslashes = $(shell echo $(1) | sed -e 's|/|\\|g')
 getnativepath = $(call swapslashes,$(call normalizepath,$(1)))
 else
@@ -171,7 +171,7 @@ abs_srcdir = $(shell cd $(srcdir) && pwd)
 
 check::
 	@echo "Running TestVersionComparator tests"
-	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
+	@$(RUN_TEST_PROGRAM) $(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
 	@echo "Running XPIDL tests"
 	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl
 	@if grep Notscriptable TestScriptable.h | grep -q NS_SCRIPTABLE ; then \

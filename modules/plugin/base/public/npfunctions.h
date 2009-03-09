@@ -40,29 +40,34 @@
 
 #ifdef __OS2__
 #pragma pack(1)
+#define NP_LOADDS _System
+#else
+#define NP_LOADDS
 #endif
 
 #include "npapi.h"
 #include "npruntime.h"
 
-typedef void         (*NPP_InitializeProcPtr)();
-typedef void         (*NPP_ShutdownProcPtr)();
-typedef NPError      (*NPP_NewProcPtr)(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
-typedef NPError      (*NPP_DestroyProcPtr)(NPP instance, NPSavedData** save);
-typedef NPError      (*NPP_SetWindowProcPtr)(NPP instance, NPWindow* window);
-typedef NPError      (*NPP_NewStreamProcPtr)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
-typedef NPError      (*NPP_DestroyStreamProcPtr)(NPP instance, NPStream* stream, NPReason reason);
-typedef int32_t      (*NPP_WriteReadyProcPtr)(NPP instance, NPStream* stream);
-typedef int32_t      (*NPP_WriteProcPtr)(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
-typedef void         (*NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, const char* fname);
-typedef void         (*NPP_PrintProcPtr)(NPP instance, NPPrint* platformPrint);
-typedef int16_t      (*NPP_HandleEventProcPtr)(NPP instance, void* event);
-typedef void         (*NPP_URLNotifyProcPtr)(NPP instance, const char* url, NPReason reason, void* notifyData);
-typedef NPError      (*NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
-typedef NPError      (*NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
+typedef void         (* NP_LOADDS NPP_InitializeProcPtr)();
+typedef void         (* NP_LOADDS NPP_ShutdownProcPtr)();
+typedef NPError      (* NP_LOADDS NPP_NewProcPtr)(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
+typedef NPError      (* NP_LOADDS NPP_DestroyProcPtr)(NPP instance, NPSavedData** save);
+typedef NPError      (* NP_LOADDS NPP_SetWindowProcPtr)(NPP instance, NPWindow* window);
+typedef NPError      (* NP_LOADDS NPP_NewStreamProcPtr)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
+typedef NPError      (* NP_LOADDS NPP_DestroyStreamProcPtr)(NPP instance, NPStream* stream, NPReason reason);
+typedef int32_t      (* NP_LOADDS NPP_WriteReadyProcPtr)(NPP instance, NPStream* stream);
+typedef int32_t      (* NP_LOADDS NPP_WriteProcPtr)(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
+typedef void         (* NP_LOADDS NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, const char* fname);
+typedef void         (* NP_LOADDS NPP_PrintProcPtr)(NPP instance, NPPrint* platformPrint);
+typedef int16_t      (* NP_LOADDS NPP_HandleEventProcPtr)(NPP instance, void* event);
+typedef void         (* NP_LOADDS NPP_URLNotifyProcPtr)(NPP instance, const char* url, NPReason reason, void* notifyData);
+/* Any NPObjects returned to the browser via NPP_GetValue should be retained
+   by the plugin on the way out. The browser is responsible for releasing. */
+typedef NPError      (* NP_LOADDS NPP_GetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
+typedef NPError      (* NP_LOADDS NPP_SetValueProcPtr)(NPP instance, NPNVariable variable, void *value);
 
 typedef NPError      (*NPN_GetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
-typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *ret_value);
+typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *value);
 typedef NPError      (*NPN_GetURLNotifyProcPtr)(NPP instance, const char* url, const char* window, void* notifyData);
 typedef NPError      (*NPN_PostURLNotifyProcPtr)(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData);
 typedef NPError      (*NPN_GetURLProcPtr)(NPP instance, const char* url, const char* window);
@@ -72,6 +77,8 @@ typedef NPError      (*NPN_NewStreamProcPtr)(NPP instance, NPMIMEType type, cons
 typedef int32_t      (*NPN_WriteProcPtr)(NPP instance, NPStream* stream, int32_t len, void* buffer);
 typedef NPError      (*NPN_DestroyStreamProcPtr)(NPP instance, NPStream* stream, NPReason reason);
 typedef void         (*NPN_StatusProcPtr)(NPP instance, const char* message);
+/* Browser manages the lifetime of the buffer returned by NPN_UserAgent, don't
+   depend on it sticking around and don't free it. */
 typedef const char*  (*NPN_UserAgentProcPtr)(NPP instance);
 typedef void*        (*NPN_MemAllocProcPtr)(uint32_t size);
 typedef void         (*NPN_MemFreeProcPtr)(void* ptr);
@@ -106,6 +113,9 @@ typedef bool         (*NPN_PopPopupsEnabledStateProcPtr)(NPP npp);
 typedef bool         (*NPN_EnumerateProcPtr)(NPP npp, NPObject *obj, NPIdentifier **identifier, uint32_t *count);
 typedef void         (*NPN_PluginThreadAsyncCallProcPtr)(NPP instance, void (*func)(void *), void *userData);
 typedef bool         (*NPN_ConstructProcPtr)(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result);
+typedef NPError      (*NPN_GetValueForURLPtr)(NPP npp, NPNURLVariable variable, const char *url, char **value, uint32_t *len);
+typedef NPError      (*NPN_SetValueForURLPtr)(NPP npp, NPNURLVariable variable, const char *url, const char *value, uint32_t len);
+typedef NPError      (*NPN_GetAuthenticationInfoPtr)(NPP npp, const char *protocol, const char *host, int32_t port, const char *scheme, const char *realm, char **username, uint32_t *ulen, char **password, uint32_t *plen);
 
 typedef struct _NPPluginFuncs {
   uint16_t size;
@@ -174,6 +184,9 @@ typedef struct _NPNetscapeFuncs {
   NPN_EnumerateProcPtr enumerate;
   NPN_PluginThreadAsyncCallProcPtr pluginthreadasynccall;
   NPN_ConstructProcPtr construct;
+  NPN_GetValueForURLPtr getvalueforurl;
+  NPN_SetValueForURLPtr setvalueforurl;
+  NPN_GetAuthenticationInfoPtr getauthenticationinfo;
 } NPNetscapeFuncs;
 
 #ifdef XP_MACOSX
@@ -241,7 +254,7 @@ typedef struct _NPPluginData {   /* Alternate OS2 Plugin interface */
 NPError OSCALL NP_GetPluginData(NPPluginData * pPluginData);
 #endif
 NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs);
-NPError OSCALL NP_Initialize(NPNetscapeFuncs* pFuncs);
+NPError OSCALL NP_Initialize(NPNetscapeFuncs* bFuncs);
 NPError OSCALL NP_Shutdown();
 char*          NP_GetMIMEDescription();
 #ifdef __cplusplus

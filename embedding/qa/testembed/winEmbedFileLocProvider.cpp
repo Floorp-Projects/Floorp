@@ -204,7 +204,7 @@ static char * GetGreLocationFromRegistry()
     //    us to have multiple versions of GREs on the same machine by having
     //    subkeys such as 1.0, 1.1, 2.0 etc. under it.
     // 2. In this sample below we're looking for the location of GRE version 1.3
-    //    i.e. we're compatible with GRE 1.3 and we're trying to find it's install
+    //    i.e. we're compatible with GRE 1.3 and we're trying to find its install
     //    location.
     //
     // Please see http://www.mozilla.org/projects/embedding/MRE.html for

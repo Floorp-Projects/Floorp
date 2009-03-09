@@ -146,7 +146,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
   widget_class    = GTK_WIDGET_CLASS(klass);
   object_class    = GTK_OBJECT_CLASS(klass);
 
-  embed_parent_class = (GtkBinClass *)gtk_type_class(gtk_bin_get_type());
+  embed_parent_class = (GtkBinClass *)g_type_class_peek(gtk_bin_get_type());
 
   widget_class->realize = gtk_moz_embed_realize;
   widget_class->unrealize = gtk_moz_embed_unrealize;
@@ -168,7 +168,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, link_message),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[JS_STATUS] =
     g_signal_new("js_status",
@@ -176,7 +176,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, js_status),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[LOCATION] =
     g_signal_new("location",
@@ -184,7 +184,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, location),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[TITLE] =
     g_signal_new("title",
@@ -192,7 +192,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, title),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[PROGRESS] =
     g_signal_new("progress",
@@ -200,7 +200,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, progress),
                  NULL, NULL,
-                 gtk_marshal_NONE__INT_INT,
+                 gtkmozembed_VOID__INT_INT,
                  G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
   moz_embed_signals[PROGRESS_ALL] =
     g_signal_new("progress_all",
@@ -236,7 +236,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, net_start),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[NET_STOP] =
     g_signal_new("net_stop",
@@ -244,7 +244,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, net_stop),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[NEW_WINDOW] =
     g_signal_new("new_window",
@@ -252,7 +252,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, new_window),
                  NULL, NULL,
-                 gtk_marshal_NONE__POINTER_UINT,
+                 gtkmozembed_VOID__POINTER_UINT,
                  G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_UINT);
   moz_embed_signals[VISIBILITY] =
     g_signal_new("visibility",
@@ -260,7 +260,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, visibility),
                  NULL, NULL,
-                 gtk_marshal_NONE__BOOL,
+                 g_cclosure_marshal_VOID__BOOLEAN,
                  G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
   moz_embed_signals[DESTROY_BROWSER] =
     g_signal_new("destroy_browser",
@@ -268,7 +268,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, destroy_brsr),
                  NULL, NULL,
-                 gtk_marshal_NONE__NONE,
+                 g_cclosure_marshal_VOID__VOID,
                  G_TYPE_NONE, 0);
   moz_embed_signals[OPEN_URI] =
     g_signal_new("open_uri",
@@ -285,7 +285,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, size_to),
                  NULL, NULL,
-                 gtk_marshal_NONE__INT_INT,
+                 gtkmozembed_VOID__INT_INT,
                  G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
   moz_embed_signals[DOM_KEY_DOWN] =
     g_signal_new("dom_key_down",
@@ -293,7 +293,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_key_down),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_KEY_PRESS] =
     g_signal_new("dom_key_press",
@@ -301,7 +301,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_key_press),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_KEY_UP] =
     g_signal_new("dom_key_up",
@@ -309,7 +309,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_key_up),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_MOUSE_DOWN] =
     g_signal_new("dom_mouse_down",
@@ -317,7 +317,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_mouse_down),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_MOUSE_UP] =
     g_signal_new("dom_mouse_up",
@@ -325,7 +325,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_mouse_up),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_MOUSE_CLICK] =
     g_signal_new("dom_mouse_click",
@@ -333,7 +333,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_mouse_click),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_MOUSE_DBL_CLICK] =
     g_signal_new("dom_mouse_dbl_click",
@@ -341,7 +341,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_mouse_dbl_click),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_MOUSE_OVER] =
     g_signal_new("dom_mouse_over",
@@ -349,7 +349,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_mouse_over),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_MOUSE_OUT] =
     g_signal_new("dom_mouse_out",
@@ -357,7 +357,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_mouse_out),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[SECURITY_CHANGE] =
     g_signal_new("security_change",
@@ -365,7 +365,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, security_change),
                  NULL, NULL,
-                 gtk_marshal_NONE__POINTER_UINT,
+                 gtkmozembed_VOID__POINTER_UINT,
                  G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_UINT);
   moz_embed_signals[STATUS_CHANGE] =
     g_signal_new("status_change",
@@ -382,7 +382,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_activate),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_FOCUS_IN] =
     g_signal_new("dom_focus_in",
@@ -390,7 +390,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_focus_in),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   moz_embed_signals[DOM_FOCUS_OUT] =
     g_signal_new("dom_focus_out",
@@ -398,7 +398,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                  G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GtkMozEmbedClass, dom_focus_out),
                  NULL, NULL,
-                 gtk_marshal_BOOL__POINTER,
+                 gtkmozembed_BOOL__POINTER,
                  G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
 }
 
@@ -501,12 +501,12 @@ gtk_moz_embed_realize(GtkWidget *widget)
   GtkWidget *child_widget = GTK_BIN(widget)->child;
   g_signal_connect_object(G_OBJECT(child_widget),
                           "focus_out_event",
-                          GTK_SIGNAL_FUNC(handle_child_focus_out),
+                          G_CALLBACK(handle_child_focus_out),
                           embed,
                           G_CONNECT_AFTER);
   g_signal_connect_object(G_OBJECT(child_widget),
                           "focus_in_event",
-                          GTK_SIGNAL_FUNC(handle_child_focus_in),
+                          G_CALLBACK(handle_child_focus_in),
                           embed,
                           G_CONNECT_AFTER);
 }
@@ -1089,7 +1089,7 @@ gtk_moz_embed_single_class_init(GtkMozEmbedSingleClass *klass)
                  G_SIGNAL_RUN_FIRST,
                  G_STRUCT_OFFSET(GtkMozEmbedSingleClass, new_window_orphan),
                  NULL, NULL,
-                 gtk_marshal_NONE__POINTER_UINT,
+                 gtkmozembed_VOID__POINTER_UINT,
                  G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_UINT);
 
 }

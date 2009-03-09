@@ -175,12 +175,6 @@ struct nsXREAppData
 #define NS_XRE_ENABLE_CRASH_REPORTER (1 << 3)
 
 /**
- * The contract id for the nsIXULAppInfo service.
- */
-#define XULAPPINFO_SERVICE_CONTRACTID \
-  "@mozilla.org/xre/app-info;1"
-
-/**
  * A directory service key which provides the platform-correct "application
  * data" directory as follows, where $name and $vendor are as defined above and
  * $vendor is optional:

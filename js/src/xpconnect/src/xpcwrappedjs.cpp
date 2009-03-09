@@ -91,7 +91,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXPCWrappedJS)
-    if(tmp->mRoot && !tmp->mRoot->HasWeakReferences() && tmp->IsValid())
+    if(tmp->IsValid())
     {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if(rt)
@@ -116,10 +116,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXPCWrappedJS)
 NS_IMPL_CYCLE_COLLECTION_ROOT_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPCWrappedJS)
-    if(tmp->mRoot && !tmp->mRoot->HasWeakReferences())
-    {
-        tmp->Unlink();
-    }
+    tmp->Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMETHODIMP
@@ -454,9 +451,6 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 
     if(mRoot == this)
     {
-        // Let the nsWeakReference object (if present) know of our demise.
-        ClearWeakReferences();
-
         // Remove this root wrapper from the map
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
@@ -472,7 +466,11 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 void
 nsXPCWrappedJS::Unlink()
 {
-    if(mRoot != this && mRoot)
+    if(mRoot == this)
+    {
+        ClearWeakReferences();
+    }
+    else if(mRoot)
     {
         // unlink this wrapper
         nsXPCWrappedJS* cur = mRoot;

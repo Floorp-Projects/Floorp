@@ -1305,7 +1305,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
           rv = charData->GetLength(&dataLength);
           NS_ENSURE_SUCCESS(rv, rv);
 
-          if (dataLength > (PRUint32)startOffset)
+          if (dataLength >= (PRUint32)startOffset)
           {
             nsCOMPtr<nsIDOMCharacterData> cutNode;
             rv = SplitDataNode(charData, startOffset, dataLength,
@@ -1321,7 +1321,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
       {
         // Delete or extract everything before endOffset.
 
-        if (endOffset > 0)
+        if (endOffset >= 0)
         {
           nsCOMPtr<nsIDOMCharacterData> cutNode;
           /* The Range spec clearly states clones get cut and original nodes

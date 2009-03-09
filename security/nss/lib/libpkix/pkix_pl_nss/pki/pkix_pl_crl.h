@@ -71,11 +71,8 @@ pkix_pl_CRL_CreateWithSignedCRL(
         void *plContext);
 
 PKIX_Error *
-pkix_pl_CRL_CreateToList(
-        SECItem *derCrlItem,
-        PKIX_List *crlList,
-        void *plContext);
-
+pkix_pl_CRL_CreateToList(SECItem *derCrlItem, PKIX_List *crlList,
+                         void *plContext);
 #ifdef __cplusplus
 }
 #endif

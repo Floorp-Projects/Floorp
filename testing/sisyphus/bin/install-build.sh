@@ -52,7 +52,7 @@ $SCRIPT -p product -b branch  -x executablepath -f filename [-d datafiles]
 variable            description
 ===============     ============================================================
 -p product          required. firefox, thunderbird or fennec
--b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
+-b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
 -x executablepath   required. directory where to install build
 -f filename         required. path to filename where installer is stored
 -d datafiles        optional. one or more filenames of files containing 

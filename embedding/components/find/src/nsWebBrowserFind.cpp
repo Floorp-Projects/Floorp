@@ -440,7 +440,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
       nsIFrame* f = presShell->GetPrimaryFrameFor(content);
       if (!f)
         return;
-      CallQueryInterface(f, &tcFrame);
+      tcFrame = do_QueryFrame(f);
       break;
     }
   }

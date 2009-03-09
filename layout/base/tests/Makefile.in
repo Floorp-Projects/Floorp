@@ -43,37 +43,6 @@ relativesrcdir	= layout/base/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq (0,1) # false, since TestSpaceManager is broken
-
-MOZILLA_INTERNAL_API = 1
-
-REQUIRES	= xpcom \
-		  gfx \
-		  $(NULL)
-
-CPPSRCS		= \
-		TestSpaceManager.cpp \
-		$(NULL)
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../src \
-		$(NULL)
-
-EXTRA_DSO_LIBS	= gkbase_s gkgfx
-
-LIBS		+= \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(TK_LIBS) \
-		$(NULL)
-
-endif # false
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_LAYOUT
@@ -95,10 +64,53 @@ _TEST_FILES =	\
 		test_bug449781.html \
 		test_bug450930.xhtml \
 		test_bug458898.html \
+		test_bug465448.xul \
+		test_bug469170.html \
+		test_bug471126.html \
+		test_bug435293-scale.html \
+		test_bug435293-interaction.html \
+		test_bug435293-skew.html \
 		$(NULL)
 # test_bug396024.html is currently disabled because it interacts badly with
 # the "You can't print-preview while the page is loading" dialog.
 # (See bug 407080)
+
+# Tests for bugs 441782 and 467672 don't pass reliably on Windows, because of bug 469208
+ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES += \
+		bidi_numeral_test.js \
+		test_bug441782-1.html \
+		bug441782-1.html \
+		bug441782-1-ref.html \
+		test_bug441782-2.html \
+		bug441782-2.html \
+		bug441782-2-ref.html \
+		test_bug441782-3.html \
+		bug441782-3.html \
+		bug441782-3-ref.html \
+		test_bug441782-4.html \
+		bug441782-4.html \
+		bug441782-4-ref.html \
+		test_bug441782-5.html \
+		bug441782-5.html \
+		bug441782-5-ref.html \
+		test_bug467672-1.html \
+		bug467672-1.html \
+		bug467672-1-ref.html \
+		test_bug467672-2.html \
+		bug467672-2.html \
+		bug467672-2-ref.html \
+		test_bug467672-3.html \
+		bug467672-3.html \
+		bug467672-3-ref.html \
+		test_bug467672-4.html \
+		bug467672-4.html \
+		bug467672-4-ref.html \
+		test_bug467672-5.html \
+		bug467672-5.html \
+		bug467672-5-ref.html \
+		$(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

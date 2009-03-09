@@ -44,12 +44,16 @@ include $(topsrcdir)/config/config.mk
 
 DIRS = base components locales themes fuel app
 
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_INSTALLER
+DIRS += installer/windows
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_INSTALLER
-DIRS += installer/windows
-
 ifdef MOZ_BRANDING_DIRECTORY
 DEFINES += -DOFFICIAL_BRANDING=1
 endif

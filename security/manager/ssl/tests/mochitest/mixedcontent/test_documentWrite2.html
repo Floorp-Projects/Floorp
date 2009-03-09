@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>document.write('<iframe src="http://">')</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  function runTest()
+  {
+    isSecurityState("broken", "insecure iframe written dynamically breaks security");
+    finish();
+  }
+
+  function afterNavigationTest()
+  {
+    isSecurityState("broken", "security still broken after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <script class="testbody" type="text/javascript">
+  document.write(
+    "<iframe src='http://example.com/tests/security/ssl/mixedcontent/iframe.html'></iframe>");
+  </script>
+</body>
+</html>

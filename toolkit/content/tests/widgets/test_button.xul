@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for button
+  -->
+<window title="Button Test"
+        onload="setTimeout(test_button, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript"
+          src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<button id="one" label="One"/>
+<button id="two" label="Two"/>
+<hbox>
+  <button id="three" label="Three" open="true"/>
+</hbox>
+<hbox>
+  <button id="four" type="menu" label="Four"/>
+  <button id="five" type="panel" label="Five"/>
+  <button id="six" label="Six"/>
+</hbox>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function test_button()
+{
+  synthesizeMouseExpectEvent($("one"), 2, 2, {}, $("one"), "command", "button press");
+  $("one").focus();
+  synthesizeKeyExpectEvent("VK_SPACE", { }, $("one"), "command", "key press");
+  $("two").disabled = true;
+  synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "!command", "button press command when disabled");
+  synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "click", "button press click when disabled");
+
+  $("one").focus();
+  synthesizeKey("VK_DOWN", { });
+  is(document.activeElement, $("three"), "key cursor down on button");
+
+  synthesizeKey("VK_RIGHT", { });
+  is(document.activeElement, $("four"), "key cursor right on button");
+  synthesizeKey("VK_DOWN", { });
+  is(document.activeElement, $("four"), "key cursor down on menu button");
+  $("five").focus();
+  synthesizeKey("VK_DOWN", { });
+  is(document.activeElement, $("five"), "key cursor down on panel button");
+
+  $("three").focus();
+  synthesizeKey("VK_UP", { });
+  is(document.activeElement, $("one"), "key cursor up on button");
+
+  $("two").focus();
+  is(document.activeElement, $("one"), "focus disabled button");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+</window>

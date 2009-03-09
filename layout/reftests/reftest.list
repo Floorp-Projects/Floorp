@@ -11,6 +11,9 @@ include reftest-sanity/reftest.list
 # images (if libpr0n is busted, could result in weird failures in other tests)
 include ../../modules/libpr0n/test/reftest/reftest.list
 
+# backgrounds/
+include backgrounds/reftest.list
+
 # bidi/
 include bidi/reftest.list
 
@@ -41,6 +44,9 @@ include css-charset/reftest.list
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
 
+# css values and units
+include css-valuesandunits/reftest.list
+
 # columns/
 include columns/reftest.list
 
@@ -58,6 +64,9 @@ include first-letter/reftest.list
 
 # first-line/
 include first-line/reftest.list
+
+# floats/
+include floats/reftest.list
 
 # font-face
 include font-face/reftest.list
@@ -77,17 +86,29 @@ include line-breaking/reftest.list
 # mathml/
 include mathml/reftest.list
 
+# margin-collapsing
+include margin-collapsing/reftest.list
+
+# marquee/
+include marquee/reftest.list
+
 # native-theme/
 include native-theme/reftest.list
 
 # object/
 include object/reftest.list
 
+# ogg-video/
+include ogg-video/reftest.list
+
 # percent-overflow-sizing/
 include percent-overflow-sizing/reftest.list
 
 # pixel-rounding/
 include pixel-rounding/reftest.list
+
+# plugin/
+include ../../modules/plugin/test/reftest/reftest.list
 
 # printing
 include printing/reftest.list
@@ -143,3 +164,4 @@ include z-index/reftest.list
 
 # reftest(s) to verify content bugfixes
 include ../../content/html/document/reftests/reftests.list
+include ../../content/html/content/reftests/reftest.list

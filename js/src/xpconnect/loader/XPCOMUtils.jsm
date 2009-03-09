@@ -112,7 +112,7 @@ var XPCOMUtils = {
    * param, and if it is, returns |this| (the object it was called on).
    */
   generateQI: function(interfaces) {
-    return makeQI([i.name for each(i in interfaces)]);
+    return makeQI([i.name for each (i in interfaces) if (i)]);
   },
 
   /**

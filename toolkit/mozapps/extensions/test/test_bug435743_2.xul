@@ -1,0 +1,240 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<!-- Tests that add-on installs correctly fail in the presence of invalid https -->
+
+<window title="Bug 435743 Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="run_test_1();">
+<script type="application/javascript" 
+        src="chrome://mochikit/content/MochiKit/packed.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+const xpi = "chrome/toolkit/mozapps/extensions/test/bug435743.xpi";
+const redirect = "chrome/toolkit/mozapps/extensions/test/bug435743.sjs?";
+
+const SUCCESS = 0;
+const DOWNLOAD_ERROR = -228;
+
+SimpleTest.waitForExplicitFinish();
+
+function badCertListener(host, bits) {
+  this.host = host;
+  this.bits = bits;
+}
+
+badCertListener.prototype = {
+  host: null,
+  bits: null,
+
+  getInterface: function (aIID) {
+    return this.QueryInterface(aIID);
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIBadCertListener2) ||
+        aIID.equals(Ci.nsIInterfaceRequestor) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  notifyCertProblem: function (socketInfo, sslStatus, targetHost) {
+    cert = sslStatus.QueryInterface(Components.interfaces.nsISSLStatus)
+                    .serverCert;
+    var cos = Cc["@mozilla.org/security/certoverride;1"].
+              getService(Ci.nsICertOverrideService);
+    cos.rememberValidityOverride(this.host, -1, cert, this.bits, false);
+    return true;
+  }
+}
+
+// Add overrides for the bad certificates
+function addCertOverrides() {
+  var req = new XMLHttpRequest();
+  try {
+    req.open("GET", "https://nocert.example.com/" + xpi, false);
+    req.channel.notificationCallbacks = new badCertListener("nocert.example.com",
+                                                            Ci.nsICertOverrideService.ERROR_MISMATCH);
+    req.send(null);
+  }
+  catch (e) { }
+  try {
+    req = new XMLHttpRequest();
+    req.open("GET", "https://self-signed.example.com/" + xpi, false);
+    req.channel.notificationCallbacks = new badCertListener("self-signed.example.com",
+                                                            Ci.nsICertOverrideService.ERROR_UNTRUSTED);
+    req.send(null);
+  }
+  catch (e) { }
+  try {
+    req = new XMLHttpRequest();
+    req.open("GET", "https://untrusted.example.com/" + xpi, false);
+    req.channel.notificationCallbacks = new badCertListener("untrusted.example.com",
+                                                            Ci.nsICertOverrideService.ERROR_UNTRUSTED);
+    req.send(null);
+  }
+  catch (e) { }
+}
+
+function XPIInstaller(urls, nextTest) {
+  this.urls = urls;
+  this.pos = 0;
+  this.nextTest = nextTest;
+  this.installNextAddon();
+}
+
+XPIInstaller.prototype = {
+  urls: null,
+  pos: null,
+  nextTest: null,
+
+  installNextAddon: function() {
+    var manager = Cc["@mozilla.org/xpinstall/install-manager;1"].
+                  createInstance(Ci.nsIXPInstallManager);
+    manager.initManagerFromChrome([this.urls[this.pos].url], 1, this);
+  },
+
+  onProgress: function(index, value, maxValue) {
+  },
+
+  onStateChange: function(index, state, value) {
+    if (state == Ci.nsIXPIProgressDialog.INSTALL_DONE) {
+      is(value, this.urls[this.pos].expected, "Expected the right state for " + this.urls[this.pos].url);
+    }
+    else if (state == Ci.nsIXPIProgressDialog.DIALOG_CLOSE) {
+      var em = Cc["@mozilla.org/extensions/manager;1"].
+               getService(Ci.nsIExtensionManager);
+      em.cancelInstallItem("bug435743@tests.mozilla.org");
+      this.pos++;
+      if (this.pos < this.urls.length)
+        this.installNextAddon();
+      else
+        this.nextTest();
+    }
+  }
+};
+
+function run_test_1() {
+  var urls = [
+    // Tests that a simple xpi retrieval works as expected.
+    { url: "http://example.com/" + xpi, expected: SUCCESS },
+    { url: "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },                // Fails because non-built in CAs aren't allowed
+    { url: "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from http to other servers works as expected
+    { url: "http://example.com/" + redirect + "http://example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "http://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "http://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from valid https to other servers works as expected
+    { url: "https://example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },      // Fails because non-built in CAs aren't allowed
+    { url: "https://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from nocert https to other servers works as expected
+    { url: "https://nocert.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from self-signed https to other servers works as expected
+    { url: "https://self-signed.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from untrusted https to other servers works as expected
+    { url: "https://untrusted.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR }
+  ];
+  new XPIInstaller(urls, run_test_2);
+}
+
+function run_test_2() {
+  addCertOverrides();
+
+  var urls = [
+    // Tests that a simple xpi retrieval works as expected.
+    { url: "http://example.com/" + xpi, expected: SUCCESS },
+    { url: "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },                 // Fails because non-built in CAs aren't allowed
+    { url: "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from http to other servers works as expected
+    // These should all succeed, the url redirected to isn't any less secure than the original insecure http.
+    { url: "http://example.com/" + redirect + "http://example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: SUCCESS },
+
+    // Tests that redirecting from valid https to other servers works as expected
+    { url: "https://example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },      // Fails because non-built in CAs aren't allowed
+    { url: "https://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from nocert https to other servers works as expected
+    { url: "https://nocert.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from self-signed https to other servers works as expected
+    { url: "https://self-signed.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from untrusted https to other servers works as expected
+    { url: "https://untrusted.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR }
+  ];
+  new XPIInstaller(urls, finish);
+}
+
+function finish() {
+  var cos = Cc["@mozilla.org/security/certoverride;1"].
+            getService(Ci.nsICertOverrideService);
+  cos.clearValidityOverride("nocert.example.com", -1);
+  cos.clearValidityOverride("self-signed.example.com", -1);
+  cos.clearValidityOverride("untrusted.example.com", -1);
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>

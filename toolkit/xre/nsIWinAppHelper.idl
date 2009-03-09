@@ -44,11 +44,8 @@
  *                    future releases.
  */
 
-interface nsILocalFile;
-
-[scriptable, uuid(2bd9ec66-05eb-4f63-8825-a83ccf00fc7f)]
+[scriptable, uuid(dc263ca8-b257-47eb-b5b7-339d9e0b90f7)]
 interface nsIWinAppHelper : nsISupports
 {
-  void postUpdate(in nsILocalFile logFile);
   readonly attribute boolean userCanElevate;
 };

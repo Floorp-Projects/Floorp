@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="x"><content><span>a
+b<children xmlns="http://www.mozilla.org/xbl"/></span></content></binding>
+</bindings>
+<style>
+  div#d {
+    white-space: pre;
+    -moz-binding: url(#x);
+  }
+  span#s {
+    display: inline-block;
+  }
+</style>
+<script>
+function boom()
+{
+  document.getElementById("s").style.display = "inline";
+}
+</script>
+</head>
+<body onload="boom();">
+  <div id="d"><span id="s">s</span></div>
+</body>
+</html>

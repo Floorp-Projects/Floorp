@@ -38,7 +38,6 @@
 
 /*
  * style sheet and style rule processor representing style attributes
- * and some additional overrides
  */
 
 #include "nsIHTMLCSSStyleSheet.h"
@@ -55,276 +54,6 @@
 #include "nsCOMPtr.h"
 #include "nsRuleWalker.h"
 #include "nsRuleData.h"
-
-/*
- * The CSSFirstLetterRule and CSSFirstLineRule exist so that we can fix
- * up the style data so that we don't have non-default values for the
- * properties that don't apply to :first-letter and :first-line.
- *
- * CSSDisablePropsRule is a common base class for both the
- * CSSFirstLetterRule and CSSFirstLineRule.
- */
-
-class CSSDisablePropsRule : public nsIStyleRule {
-public:
-  CSSDisablePropsRule();
-  virtual ~CSSDisablePropsRule();
-
-  NS_DECL_ISUPPORTS
-
-  // Call this something else so that this class still has pure virtual
-  // functions.
-  void CommonMapRuleInfoInto(nsRuleData* aRuleData);
-
-#ifdef DEBUG
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-protected:
-  nsCSSValueList mInheritList;
-  nsCSSValuePairList mInheritQuotes;
-  nsCSSValuePairList mNoneCounter;
-};
-
-CSSDisablePropsRule::CSSDisablePropsRule()
-{
-  nsCSSValue none(eCSSUnit_None);
-  mNoneCounter.mXValue = none;
-  nsCSSValue inherit(eCSSUnit_Inherit);
-  mInheritList.mValue = inherit;
-  mInheritQuotes.mXValue = inherit;
-}
-
-class CSSFirstLineRule : public CSSDisablePropsRule {
-public:
-  CSSFirstLineRule() {}
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-class CSSFirstLetterRule : public CSSDisablePropsRule {
-public:
-  CSSFirstLetterRule() {}
-
-  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-};
-
-CSSDisablePropsRule::~CSSDisablePropsRule()
-{
-}
-
-NS_IMPL_ISUPPORTS1(CSSDisablePropsRule, nsIStyleRule)
-
-#ifdef DEBUG
-NS_IMETHODIMP
-CSSDisablePropsRule::List(FILE* out, PRInt32 aIndent) const
-{
-  return NS_OK;
-}
-#endif
-
-// -----------------------------------------------------------
-
-/*
- * Note:  These rule mapping functions, unlike practically all others,
- * will overwrite the properties even if they're not |eCSSUnit_Null|.
- * XXX This is only a partial fix for the fact that they should be
- * higher in the cascade (at the very top).  It doesn't work in the case
- * where something higher in the cascade fully specifies the struct.
- *
- * XXX This should be cleaned up once we implement eCSSUnit_Initial
- * throughout.
- */
-
-void
-CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
-{
-  /*
-   * Common code for disabling the properties that apply neither to
-   * :first-letter nor to :first-line.
-   */
-
-  // Disable 'unicode-bidi'.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
-    nsCSSValue normal(eCSSUnit_Normal);
-    aData->mTextData->mUnicodeBidi = normal;
-  }
-
-  // NOTE: 'text-align', 'text-indent', and 'white-space' should not be
-  // handled by the frames so we don't need to bother.
-
-  // Disable everything in the nsRuleDataDisplay struct except 'float'.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
-    nsCSSValue inherit(eCSSUnit_Inherit);
-    aData->mDisplayData->mVisibility = inherit;
-    aData->mDisplayData->mDirection = inherit;
-  }
-
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-    nsCSSValue none(eCSSUnit_None);
-    aData->mDisplayData->mAppearance = none;
-
-    nsCSSValue autovalue(eCSSUnit_Auto);
-    aData->mDisplayData->mClip.mTop = autovalue;
-    aData->mDisplayData->mClip.mRight = autovalue;
-    aData->mDisplayData->mClip.mBottom = autovalue;
-    aData->mDisplayData->mClip.mLeft = autovalue;
-
-    nsCSSValue one(1.0f, eCSSUnit_Number);
-    aData->mDisplayData->mOpacity = one;
-
-    nsCSSValue inlinevalue(NS_STYLE_DISPLAY_INLINE, eCSSUnit_Enumerated);
-    aData->mDisplayData->mDisplay = inlinevalue;
-
-    aData->mDisplayData->mBinding = none;
-
-    nsCSSValue staticposition(NS_STYLE_POSITION_STATIC, eCSSUnit_Enumerated);
-    aData->mDisplayData->mPosition = staticposition;
-
-    nsCSSValue visible(NS_STYLE_OVERFLOW_VISIBLE, eCSSUnit_Enumerated);
-    aData->mDisplayData->mOverflowX = visible;
-    aData->mDisplayData->mOverflowY = visible;
-
-    aData->mDisplayData->mClear = none;
-
-    // Nobody will care about 'break-before' or 'break-after', since
-    // they only apply to blocks (assuming we implement them correctly).
-  }
-
-  // NOTE:  We'll never do anything with what's in nsCSSList,
-  // nsCSSTable, nsCSSBreaks, nsCSSPage, nsCSSAural, nsCSSXUL, or
-  // nsCSSSVG, so don't bother.
-
-  // Disable everything in the position struct.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
-    nsCSSValue autovalue(eCSSUnit_Auto);
-    nsCSSValue none(eCSSUnit_None);
-    nsCSSValue zero(0.0f, eCSSUnit_Point);
-    aData->mPositionData->mOffset.mTop = autovalue;
-    aData->mPositionData->mOffset.mRight = autovalue;
-    aData->mPositionData->mOffset.mBottom = autovalue;
-    aData->mPositionData->mOffset.mLeft = autovalue;
-    aData->mPositionData->mWidth = autovalue;
-    aData->mPositionData->mMinWidth = zero;
-    aData->mPositionData->mMaxWidth = none;
-    aData->mPositionData->mHeight = autovalue;
-    aData->mPositionData->mMinHeight = zero;
-    aData->mPositionData->mMaxHeight = none;
-    nsCSSValue content(NS_STYLE_BOX_SIZING_CONTENT, eCSSUnit_Enumerated);
-    aData->mPositionData->mBoxSizing = content;
-    aData->mPositionData->mZIndex = autovalue;
-  }
-
-  // Disable everything in the Content struct.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Content)) {
-    // Don't bother resetting 'content'.
-
-    aData->mContentData->mCounterIncrement = &mNoneCounter;
-    aData->mContentData->mCounterReset = &mNoneCounter;
-
-    nsCSSValue autovalue(eCSSUnit_Auto);
-    aData->mContentData->mMarkerOffset = autovalue;
-  }
-
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Quotes)) {
-    aData->mContentData->mQuotes = &mInheritQuotes;
-  }
-
-  // Disable everything in the UserInterface struct.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UserInterface)) {
-    nsCSSValue inherit(eCSSUnit_Inherit);
-    aData->mUserInterfaceData->mUserInput = inherit;
-    aData->mUserInterfaceData->mUserModify = inherit;
-    aData->mUserInterfaceData->mUserFocus = inherit;
-    aData->mUserInterfaceData->mCursor = &mInheritList;
-  }
-
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UIReset)) {
-    nsCSSValue autovalue(eCSSUnit_Auto);
-    nsCSSValue none(eCSSUnit_None);
-    // Don't bother with '-moz-force-broken-image-icon' since it's only
-    // half a property.
-    // Don't bother with '-moz-user-select' because there's no way to
-    // specify the initial value.
-  }
-
-  // Disable all outline properties.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Outline)) {
-    nsCSSValue none(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-    aData->mMarginData->mOutlineStyle = none;
-  }
-
-}
-
-NS_IMETHODIMP
-CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
-{
-  /*
-   * See CSS2.1 section 5.12.1, which says that the properties that apply
-   * to :first-line are: font properties, color properties, background
-   * properties, 'word-spacing', 'letter-spacing', 'text-decoration',
-   * 'vertical-align', 'text-transform', and 'line-height'.
-   *
-   * We also allow 'text-shadow', which was listed in CSS2 (where the
-   * property existed).
-   */
-
-  CommonMapRuleInfoInto(aData);
-
-  // Disable 'float'.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-    nsCSSValue none(eCSSUnit_None);
-    aData->mDisplayData->mFloat = none;
-  }
-
-  // Disable border properties, margin properties, and padding
-  // properties.
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
-    nsCSSValue none(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-    aData->mMarginData->mBorderStyle.mTop = none;
-    aData->mMarginData->mBorderStyle.mRight = none;
-    aData->mMarginData->mBorderStyle.mBottom = none;
-    aData->mMarginData->mBorderStyle.mLeft = none;
-  }
-
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
-    nsCSSValue zero(0.0f, eCSSUnit_Point);
-    aData->mMarginData->mMargin.mTop = zero;
-    aData->mMarginData->mMargin.mRight = zero;
-    aData->mMarginData->mMargin.mBottom = zero;
-    aData->mMarginData->mMargin.mLeft = zero;
-  }
-
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Padding)) {
-    nsCSSValue zero(0.0f, eCSSUnit_Point);
-    aData->mMarginData->mPadding.mTop = zero;
-    aData->mMarginData->mPadding.mRight = zero;
-    aData->mMarginData->mPadding.mBottom = zero;
-    aData->mMarginData->mPadding.mLeft = zero;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSFirstLetterRule::MapRuleInfoInto(nsRuleData* aData)
-{
-  /*
-   * See CSS2.1 section 5.12.2, which says that the properties that
-   * apply to :first-letter are: font properties, 'text-decoration',
-   * 'text-transform', 'letter-spacing', 'word-spacing' (when
-   * appropriate), 'line-height', 'float', 'vertical-align' (only if
-   * 'float' is 'none'), margin properties, padding properties, border
-   * properties, 'color', and background properties.
-   */
-
-  CommonMapRuleInfoInto(aData);
-
-  // NOTE:  'vertical-align' is only supposed to be relevant if 'float'
-  // is 'none', but we don't do anything with it if 'float' is not none,
-  // so we don't need to disable it.
-
-  return NS_OK;
-}
 
 // -----------------------------------------------------------
 
@@ -384,9 +113,6 @@ protected:
 protected:
   nsIURI*         mURL;
   nsIDocument*    mDocument;
-
-  CSSFirstLineRule* mFirstLineRule;
-  CSSFirstLetterRule* mFirstLetterRule;
 };
 
 
@@ -394,18 +120,13 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
   : nsIHTMLCSSStyleSheet(),
     mRefCnt(0),
     mURL(nsnull),
-    mDocument(nsnull),
-    mFirstLineRule(nsnull),
-    mFirstLetterRule(nsnull)
+    mDocument(nsnull)
 {
 }
 
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
 {
   NS_RELEASE(mURL);
-
-  NS_IF_RELEASE(mFirstLineRule);
-  NS_IF_RELEASE(mFirstLetterRule);
 }
 
 NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
@@ -431,32 +152,6 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData)
 {
-  // We only want to add these rules if there are real :first-letter or
-  // :first-line rules that cause a pseudo-element frame to be created.
-  // Otherwise the use of ProbePseudoStyleContextFor will prevent frame
-  // creation, and adding rules here would cause it.
-  if (aData->mRuleWalker->AtRoot())
-    return NS_OK;
-
-  nsIAtom* pseudoTag = aData->mPseudoTag;
-  if (pseudoTag == nsCSSPseudoElements::firstLine) {
-    if (!mFirstLineRule) {
-      mFirstLineRule = new CSSFirstLineRule();
-      if (!mFirstLineRule)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(mFirstLineRule);
-    }
-    aData->mRuleWalker->Forward(mFirstLineRule);
-  }
-  else if (pseudoTag == nsCSSPseudoElements::firstLetter) {
-    if (!mFirstLetterRule) {
-      mFirstLetterRule = new CSSFirstLetterRule();
-      if (!mFirstLetterRule)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(mFirstLetterRule);
-    }
-    aData->mRuleWalker->Forward(mFirstLetterRule);
-  } 
   return NS_OK;
 }
 
@@ -510,8 +205,6 @@ HTMLCSSStyleSheetImpl::Reset(nsIURI* aURL)
   mURL = aURL;
   NS_ADDREF(mURL);
 
-  NS_IF_RELEASE(mFirstLineRule);
-  NS_IF_RELEASE(mFirstLetterRule);
   return NS_OK;
 }
 
@@ -548,8 +241,8 @@ HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
 NS_IMETHODIMP_(PRBool)
 HTMLCSSStyleSheetImpl::HasRules() const
 {
-  return PR_TRUE;  // We always have rules, since mFirstLineRule and
-                   // mFirstLetterRule are created on request.
+  // Say we always have rules, since we don't know.
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP

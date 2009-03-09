@@ -211,8 +211,8 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
   }
 
   if (!aArgc) {
-    JS_ReportError(aCx, "Function must have at least one argument!");
-    return JS_FALSE;
+    // No argument is ok according to spec.
+    return JS_TRUE;
   }
 
   nsAutoTArray<nsString, 10> urls;
@@ -522,29 +522,12 @@ GetStringForArgument(nsAString& aString,
   return NS_OK;
 }
 
-class nsDOMWorkerScope : public nsIWorkerScope,
-                         public nsIDOMEventTarget,
-                         public nsIXPCScriptable,
-                         public nsIClassInfo
+nsDOMWorkerScope::nsDOMWorkerScope(nsDOMWorker* aWorker)
+: mWorker(aWorker),
+  mHasOnerror(PR_FALSE)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWORKERGLOBALSCOPE
-  NS_DECL_NSIWORKERSCOPE
-  NS_DECL_NSIDOMEVENTTARGET
-  NS_DECL_NSIXPCSCRIPTABLE
-  NS_DECL_NSICLASSINFO
-
-  nsDOMWorkerScope(nsDOMWorker* aWorker)
-  : mWorker(aWorker) {
-    NS_ASSERTION(aWorker, "Null pointer!");
-  }
-
-private:
-  nsDOMWorker* mWorker;
-
-  nsRefPtr<nsDOMWorkerNavigator> mNavigator;
-};
+  NS_ASSERTION(aWorker, "Null pointer!");
+}
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsDOMWorkerScope, nsIWorkerScope,
                                                 nsIWorkerGlobalScope,
@@ -587,9 +570,65 @@ nsDOMWorkerScope::GetHelperForLanguage(PRUint32 aLanguage,
   nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY           | \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE            | \
   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY            | \
-  nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
+  nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES         | \
+  nsIXPCScriptable::WANT_ADDPROPERTY
+
+#define XPC_MAP_WANT_ADDPROPERTY
 
 #include "xpc_map_end.h"
+
+NS_IMETHODIMP
+nsDOMWorkerScope::AddProperty(nsIXPConnectWrappedNative* aWrapper,
+                              JSContext* aCx,
+                              JSObject* aObj,
+                              jsval aId,
+                              jsval* aVp,
+                              PRBool* _retval)
+{
+  // We're not going to be setting any exceptions manually so set _retval to
+  // true in the beginning.
+  *_retval = PR_TRUE;
+
+  // Bail out now if any of our prerequisites are not met. We only care about
+  // someone making an 'onmessage' or 'onerror' function so aId must be a
+  // string and aVp must be a function.
+  JSObject* funObj;
+  if (!(JSVAL_IS_STRING(aId) &&
+        JSVAL_IS_OBJECT(*aVp) &&
+        (funObj = JSVAL_TO_OBJECT(*aVp)) &&
+        JS_ObjectIsFunction(aCx, funObj))) {
+    return NS_OK;
+  }
+
+  const char* name = JS_GetStringBytes(JSVAL_TO_STRING(aId));
+
+  // Figure out which listener we're setting.
+  SetListenerFunc func;
+  if (!strcmp(name, "onmessage")) {
+    func = &nsDOMWorkerScope::SetOnmessage;
+  }
+  else if (!strcmp(name, "onerror")) {
+    func = &nsDOMWorkerScope::SetOnerror;
+  }
+  else {
+    // Some other function, we don't need to do anything special after all.
+    return NS_OK;
+  }
+
+  // Wrap the function as an nsIDOMEventListener.
+  nsCOMPtr<nsIDOMEventListener> listener;
+  nsresult rv =
+    nsContentUtils::XPConnect()->WrapJS(aCx, funObj,
+                                        NS_GET_IID(nsIDOMEventListener),
+                                        getter_AddRefs(listener));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // And pass the listener to the appropriate setter.
+  rv = (this->*func)(listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDOMWorkerScope::GetSelf(nsIWorkerGlobalScope** aSelf)
@@ -615,6 +654,56 @@ nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
 
   NS_ADDREF(*_retval = mNavigator);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerScope::GetOnerror(nsIDOMEventListener** aOnerror)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ENSURE_ARG_POINTER(aOnerror);
+
+  if (mWorker->IsCanceled()) {
+    return NS_ERROR_ABORT;
+  }
+
+  if (!mHasOnerror) {
+    // Spec says we have to return 'undefined' until something is set here.
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
+    NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+    nsAXPCNativeCallContext* cc;
+    nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+    jsval* retval;
+    rv = cc->GetRetValPtr(&retval);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *retval = JSVAL_VOID;
+    return cc->SetReturnValueWasSet(PR_TRUE);
+  }
+
+  nsCOMPtr<nsIDOMEventListener> listener =
+    mWorker->mInnerHandler->GetOnXListener(NS_LITERAL_STRING("error"));
+  listener.forget(aOnerror);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerScope::SetOnerror(nsIDOMEventListener* aOnerror)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (mWorker->IsCanceled()) {
+    return NS_ERROR_ABORT;
+  }
+
+  mHasOnerror = PR_TRUE;
+
+  return mWorker->mInnerHandler->SetOnXListener(NS_LITERAL_STRING("error"),
+                                                aOnerror);
 }
 
 NS_IMETHODIMP
@@ -862,13 +951,13 @@ nsDOMWorker::nsDOMWorker(nsDOMWorker* aParent,
                          nsIXPConnectWrappedNative* aParentWN)
 : mParent(aParent),
   mParentWN(aParentWN),
-  mCallbackCount(0),
   mLock(nsnull),
   mInnerScope(nsnull),
   mGlobal(NULL),
   mNextTimeoutId(0),
   mFeatureSuspendDepth(0),
   mWrappedNative(nsnull),
+  mErrorHandlerRecursionCount(0),
   mCanceled(PR_FALSE),
   mSuspended(PR_FALSE),
   mCompileAttempted(PR_FALSE),

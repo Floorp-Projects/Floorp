@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="boom();">
+
+<rect id="r"/><use id="u" xlink:href="#r"><rect id="r"/></use>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var r1 = document.getElementsByTagName("rect")[0]; // the first node with id="r" 
+  var use = document.getElementById("u");
+  document.documentElement.insertBefore(use, r1);
+  r1.appendChild(use);
+}
+
+</script>
+
+</svg>

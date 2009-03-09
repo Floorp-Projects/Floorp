@@ -1,3 +1,9 @@
+load 43040-1.html
+load 116848-1.html
+load 149320-1.html
+load 205225-1.html
+load 231475-1.html
+load 293388-1.html
 load 308120-1.xul
 load 324871-1.html
 load 325730-1.html
@@ -31,4 +37,6 @@ load 400763-1.html
 load 407818.html
 load 410860-1.xml
 load 426987-1.html
-load 458637-1.html
+skip load 458637-1.html # sporadically fails -- see bug 473680
+load 472593-1.html
+load 474041-1.svg

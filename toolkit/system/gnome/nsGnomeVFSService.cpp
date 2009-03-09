@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGnomeVFSService.h"
-#include "nsVoidArray.h"
 #include "nsStringAPI.h"
 #include "nsIURI.h"
 #include "nsTArray.h"

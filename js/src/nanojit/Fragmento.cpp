@@ -58,11 +58,18 @@ namespace nanojit
 	 * This is the main control center for creating and managing fragments.
 	 */
 	Fragmento::Fragmento(AvmCore* core, uint32_t cacheSizeLog2) 
-		: _frags(core->GetGC()),
-           _freePages(core->GetGC(), 1024),
+		:
+#ifdef NJ_VERBOSE
+		  enterCounts(NULL),
+		  mergeCounts(NULL),
+		  labels(NULL),
+#endif
+		  _frags(core->GetGC()),
+		  _freePages(core->GetGC(), 1024),
 		  _allocList(core->GetGC()),
-			_max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
-			_pagesGrowth(1)
+		  _gcHeap(NULL),
+		  _max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
+		  _pagesGrowth(1)
 	{
 #ifdef _DEBUG
 		{
@@ -95,6 +102,8 @@ namespace nanojit
 		_assm = NJ_NEW(gc, nanojit::Assembler)(this);
 		verbose_only( enterCounts = NJ_NEW(gc, BlockHist)(gc); )
 		verbose_only( mergeCounts = NJ_NEW(gc, BlockHist)(gc); )
+
+		memset(&_stats, 0, sizeof(_stats));
 	}
 
 	Fragmento::~Fragmento()
@@ -131,10 +140,11 @@ namespace nanojit
 	Page* Fragmento::pageAlloc()
 	{
         NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
-		if (!_freePages.size())
-			pagesGrow(_pagesGrowth);	// try to get more mem
-			            if ((_pagesGrowth << 1) < _max_pages)
-							_pagesGrowth <<= 1;						
+        if (!_freePages.size()) {
+            pagesGrow(_pagesGrowth);    // try to get more mem
+            if ((_pagesGrowth << 1) < _max_pages)
+                _pagesGrowth <<= 1;
+        }
 
 		trackPages();
 		Page* page = 0;
@@ -515,14 +525,51 @@ namespace nanojit
 	//
 	// Fragment
 	//
-	Fragment::Fragment(const void* _ip) : ip(_ip)
+	Fragment::Fragment(const void* _ip)
+		:
+#ifdef NJ_VERBOSE
+		  _called(0),
+		  _native(0),
+		  _exitNative(0),
+		  _lir(0),
+		  _lirbytes(0),
+		  _token(NULL),
+		  traceTicks(0),
+		  interpTicks(0),
+		  eot_target(NULL),
+		  sid(0),
+		  compileNbr(0),
+#endif
+		  treeBranches(NULL),
+		  branches(NULL),
+		  nextbranch(NULL),
+		  anchor(NULL),
+		  root(NULL),
+		  parent(NULL),
+		  first(NULL),
+		  peer(NULL),
+		  lirbuf(NULL),
+		  lastIns(NULL),
+		  spawnedFrom(NULL),
+		  kind(LoopTrace),
+		  ip(_ip),
+		  guardCount(0),
+		  xjumpCount(0),
+		  recordAttempts(0),
+		  blacklistLevel(0),
+		  fragEntry(NULL),
+		  loopEntry(NULL),
+		  vmprivate(NULL),
+		  _code(NULL),
+		  _links(NULL),
+		  _hits(0),
+		  _pages(NULL)
 	{
-        // Fragment is a gc object which is zero'd by the GC, no need to clear fields
     }
 
 	Fragment::~Fragment()
 	{
-        onDestroy();
+		onDestroy();
 		NanoAssert(_pages == 0);
     }
 
@@ -543,7 +590,6 @@ namespace nanojit
 		GC *gc = _core->gc;
         Fragment *f = NJ_NEW(gc, Fragment)(ip);
 		f->blacklistLevel = 5;
-        f->recordAttempts = 0;
         return f;
     }
 

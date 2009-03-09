@@ -343,6 +343,10 @@ nsToolkit::UnregisterAllProcessMouseEventHandlers()
     mEventTapRLS = nsnull;
   }
   if (mEventTapPort) {
+    // mEventTapPort must be invalidated as well as released.  Otherwise the
+    // event tap doesn't get destroyed until the browser process ends (it
+    // keeps showing up in the list returned by CGGetEventTapList()).
+    CFMachPortInvalidate(mEventTapPort);
     CFRelease(mEventTapPort);
     mEventTapPort = nsnull;
   }
