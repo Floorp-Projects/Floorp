@@ -3236,6 +3236,8 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
     }
     push(entryClone);
     listOfActiveFormattingElements[entryPos] = entryClone;
+    entry->release();
+    entryClone->retain();
   }
 }
 
