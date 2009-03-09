@@ -63,6 +63,28 @@ extern JSClass js_ArrayClass, js_SlowArrayClass;
 #define OBJ_IS_ARRAY(cx,obj)    (OBJ_IS_DENSE_ARRAY(cx, obj) ||               \
                                  OBJ_GET_CLASS(cx, obj) == &js_SlowArrayClass)
 
+/*
+ * Dense arrays are not native (OBJ_IS_NATIVE(cx, aobj) for a dense array aobj
+ * results in false, meaning aobj->map does not point to a JSScope).
+ *
+ * But Array methods are called via aobj.sort(), e.g., and the interpreter and
+ * the trace recorder must consult the property cache in order to perform well.
+ * The cache works only for native objects.
+ *
+ * Therefore the interpreter (js_Interpret in JSOP_GETPROP and JSOP_CALLPROP)
+ * and js_GetPropertyHelper use this inline function to skip up one link in the
+ * prototype chain when obj is a dense array, in order to find a likely-native
+ * object (to wit, Array.prototype) in which to probe for cached methods.
+ *
+ * Callers of js_GetProtoIfDenseArray must take care to use the original object
+ * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
+ */
+static JS_INLINE JSObject *
+js_GetProtoIfDenseArray(JSContext *cx, JSObject *obj)
+{
+    return OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+}
+
 extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
 
