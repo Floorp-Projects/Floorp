@@ -103,6 +103,8 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_css_eof_handling.html \
+		test_descriptor_storage.html \
+		test_descriptor_syntax_errors.html \
 		test_dont_use_document_colors.html \
 		test_font_face_parser.html \
 		test_hover.html \
@@ -130,6 +132,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_visited_pref.html \
 		css_properties.js \
 		property_database.js \
+		descriptor_database.js \
 		unstyled.xml \
 		unstyled.css \
 		unstyled-frame.xml \
