@@ -58,6 +58,7 @@ class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
 class nsHtml5Portability;
 
+
 class nsHtml5Tokenizer
 {
   private:
