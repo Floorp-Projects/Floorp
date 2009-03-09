@@ -786,6 +786,17 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #urlbar {
   width: 7em;
   min-width: 7em;
+  -moz-appearance: textfield;
+}
+
+#urlbar > .autocomplete-textbox-container {
+  -moz-appearance: none;
+  /* keep the URL bar content LTR */
+  direction: ltr;
+}
+
+#urlbar > .autocomplete-history-dropmarker {
+  -moz-appearance: toolbarbutton-dropdown;
 }
 
 #urlbar-container {
@@ -818,18 +829,11 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   cursor: -moz-grab;
 }
 
-#wrapper-urlbar-container #urlbar > .autocomplete-textbox-container {
-  -moz-appearance: textfield;
-}
-
 #wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
   display: none;
 }
 
-#PopupAutoComplete {
-  direction: ltr !important;
-}
-
+#PopupAutoComplete,
 #PopupAutoCompleteRichResult {
   direction: ltr !important;
 }
@@ -874,6 +878,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   background-color: -moz-dialog;
   color: -moz-dialogtext;
   -moz-border-end: 1px solid ThreeDShadow;
+}
+
+#identity-box[chromedir="rtl"] {
+  -moz-border-start: 1px solid ThreeDShadow;
 }
 
 #identity-box:focus {
@@ -976,27 +984,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   padding: 10px;
 }
 
-#urlbar > .autocomplete-textbox-container {
-  -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
-}
-
-#autocomplete-security-wrapper {
-  /* keep the URL bar content LTR */
-  direction: ltr;
-  /* cover the white gap between the text field and the drop down button */
-  margin-right: -3px;
-}
-
-#urlbar[chromedir="rtl"] > .autocomplete-textbox-container > #autocomplete-security-wrapper {
-  margin-right: 0px;
-  margin-left: -3px;
-}
-
-#wrapper-urlbar-container #urlbar >
-.autocomplete-textbox-container > #autocomplete-security-wrapper {
-  margin: 0px;
-}
-
 /* Feed icon */
 #feed-button,
 #feed-button > .button-box,
@@ -1012,11 +999,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   min-width: 0px; 
   margin-right: 1px !important;
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
-}
-
-/* Autocomplete */
-#urlbar .autocomplete-textbox-container {
-  -moz-box-align: stretch;
 }
 
 #treecolAutoCompleteImage {
