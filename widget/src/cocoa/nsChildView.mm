@@ -736,13 +736,14 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   [mView widgetDestroyed];
 
-  nsBaseWidget::OnDestroy();
   nsBaseWidget::Destroy();
 
   ReportDestroyEvent(); 
   mParentWidget = nil;
 
   TearDownView();
+
+  nsBaseWidget::OnDestroy();
 
   return NS_OK;
 
@@ -2942,7 +2943,7 @@ NSEvent* gLastDragEvent = nil;
 static const PRInt32 sShadowInvalidationInterval = 100;
 - (void)maybeInvalidateShadow
 {
-  if ([mWindow isOpaque] || ![mWindow hasShadow])
+  if (!mWindow || [mWindow isOpaque] || ![mWindow hasShadow])
     return;
 
   PRIntervalTime now = PR_IntervalNow();
@@ -2963,7 +2964,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
 - (void)invalidateShadow
 {
-  if (!mNeedsShadowInvalidation)
+  if (!mWindow || !mNeedsShadowInvalidation)
     return;
   [mWindow invalidateShadow];
   mNeedsShadowInvalidation = NO;
@@ -3659,6 +3660,9 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (!mWindow)
+    return;
+
   // Work around an Apple bug that causes the OS to continue sending
   // mouseMoved events to a window for a while after it's been miniaturized.
   // This may be related to a similar problem with popup windows (bmo bug
@@ -4173,10 +4177,13 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (!mWindow)
+    return nil;
+
   WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
 
   TopLevelWindowData* windowData = [windowMap dataForWindow:mWindow];
-  if (mWindow && !windowData)
+  if (!windowData)
   {
     windowData = [[TopLevelWindowData alloc] initWithWindow:mWindow];
     [windowMap setData:windowData forWindow:mWindow]; // takes ownership
