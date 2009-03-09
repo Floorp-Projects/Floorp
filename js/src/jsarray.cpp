@@ -41,7 +41,7 @@
 /*
  * JS array class.
  *
- * Array objects begin as "dense" arrays, optimized for numeric-only property
+ * Array objects begin as "dense" arrays, optimized for index-only property
  * access over a vector of slots (obj->dslots) with high load factor.  Array
  * methods optimize for denseness by testing that the object's class is
  * &js_ArrayClass, and can then directly manipulate the slots for efficiency.
@@ -60,7 +60,7 @@
  * are met:
  *  - the load factor (COUNT / capacity) is less than 0.25, and there are
  *    more than MIN_SPARSE_INDEX slots total
- *  - a property is set that is non-numeric (and not "length"); or
+ *  - a property is set that is not indexed (and not "length"); or
  *  - a property is defined that has non-default property attributes.
  *
  * Dense arrays do not track property creation order, so unlike other native
@@ -822,6 +822,28 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return JS_TRUE;
 }
 
+JSBool
+js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
+{
+    /*
+     * Walk up the prototype chain and see if this indexed element already
+     * exists. If we hit the end of the prototype chain, it's safe to set the
+     * element on the original object.
+     */
+   while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
+        /*
+         * If the prototype is a non-native object (possibly a dense array), or
+         * a native object (possibly a slow array) that has indexed properties,
+         * return true.
+         */
+        if (!OBJ_IS_NATIVE(obj))
+            return JS_TRUE;
+        if (SCOPE_HAS_INDEXED_PROPERTIES(OBJ_SCOPE(obj)))
+            return JS_TRUE;
+    }
+    return JS_FALSE;
+}
+
 #ifdef JS_TRACER
 JSBool FASTCALL
 js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
@@ -843,8 +865,9 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
         return JS_FALSE;
 
     if (obj->dslots[u] == JSVAL_HOLE) {
-        if (cx->runtime->anyArrayProtoHasElement)
+        if (js_PrototypeHasIndexedProperties(cx, obj))
             return JS_FALSE;
+
         if (u >= jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]))
             obj->fslots[JSSLOT_ARRAY_LENGTH] = u + 1;
         ++obj->fslots[JSSLOT_ARRAY_COUNT];

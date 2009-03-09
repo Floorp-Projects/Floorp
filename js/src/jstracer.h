@@ -418,7 +418,7 @@ class TraceRecorder : public avmplus::GCObject {
     jsbytecode*             terminate_imacpc;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
-    nanojit::Fragment*      outer;
+    jsbytecode*             outer;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -429,6 +429,7 @@ class TraceRecorder : public avmplus::GCObject {
                                   unsigned callDepth, unsigned ngslots, uint8* typeMap);
     void trackNativeStackUse(unsigned slots);
 
+    JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
 
     JS_REQUIRES_STACK nanojit::LIns* guard(bool expected, nanojit::LIns* cond,
@@ -529,7 +530,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                      ExitType exitType = MISMATCH_EXIT);
+                                      nanojit::LIns* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
     JS_REQUIRES_STACK bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
@@ -556,7 +557,7 @@ public:
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, nanojit::Fragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, uint8* typeMap,
-                  VMSideExit* expectedInnerExit, nanojit::Fragment* outerTree);
+                  VMSideExit* expectedInnerExit, jsbytecode* outerTree);
     ~TraceRecorder();
 
     static JS_REQUIRES_STACK JSMonitorRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);

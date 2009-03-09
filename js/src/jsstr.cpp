@@ -2556,7 +2556,7 @@ JS_DEFINE_TRCINFO_3(str_replace,
     (4, (static, STRING_RETRY,      String_p_replace_str2, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
     (5, (static, STRING_RETRY,      String_p_replace_str3, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
 JS_DEFINE_TRCINFO_1(str_split,
-    (3, (static, OBJECT_RETRY_NULL, String_p_split, CONTEXT, THIS_STRING, STRING,             0, 0)))
+    (3, (static, OBJECT_RETRY,      String_p_split, CONTEXT, THIS_STRING, STRING,             0, 0)))
 JS_DEFINE_TRCINFO_1(str_toLowerCase,
     (2, (extern, STRING_RETRY,      js_toLowerCase, CONTEXT, THIS_STRING,                     1, 1)))
 JS_DEFINE_TRCINFO_1(str_toUpperCase,
