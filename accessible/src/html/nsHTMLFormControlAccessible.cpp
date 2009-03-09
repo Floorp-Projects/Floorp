@@ -81,13 +81,15 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {    // 0 is the magic value for default action
-    // check or uncheck
+    // cycle, check or uncheck
     PRUint32 state;
     nsresult rv = GetStateInternal(&state, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (state & nsIAccessibleStates::STATE_CHECKED)
       aName.AssignLiteral("uncheck"); 
+    else if (state & nsIAccessibleStates::STATE_MIXED)
+      aName.AssignLiteral("cycle"); 
     else
       aName.AssignLiteral("check"); 
 
