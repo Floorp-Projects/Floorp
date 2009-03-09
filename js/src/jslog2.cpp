@@ -40,9 +40,25 @@
 #include "jsutil.h"
 
 /*
-** Compute the log of the least power of 2 greater than or equal to n
-*/
-JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
+ * Check that we can use js_bitscan_clz32 to implement JS_FLOOR_LOG2 and
+ * JS_FLOOR_LOG2W and js_bitscan_clz64 to implement JS_FLOOR_LOG2W on 64-bit
+ * systems.
+ */
+#ifdef JS_HAS_BUILTIN_BITSCAN32
+JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));
+JS_STATIC_ASSERT_IF(JS_BYTES_PER_WORD == 4,
+                    sizeof(unsigned int) == sizeof(JSUword));
+#endif
+#ifdef JS_HAS_BUILTIN_BITSCAN64
+JS_STATIC_ASSERT_IF(JS_BYTES_PER_WORD == 8,
+                    sizeof(unsigned long long) == sizeof(JSUword));
+#endif
+
+/*
+ * Compute the log of the least power of 2 greater than or equal to n
+ */
+JS_PUBLIC_API(JSIntn)
+JS_CeilingLog2(JSUint32 n)
 {
     JSIntn log2;
 
@@ -51,10 +67,11 @@ JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
 }
 
 /*
-** Compute the log of the greatest power of 2 less than or equal to n.
-** This really just finds the highest set bit in the word.
-*/
-JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 n)
+ * Compute the log of the greatest power of 2 less than or equal to n.
+ * This really just finds the highest set bit in the word.
+ */
+JS_PUBLIC_API(JSIntn)
+JS_FloorLog2(JSUint32 n)
 {
     JSIntn log2;
 
