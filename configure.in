@@ -5092,7 +5092,6 @@ then
     then
         MOZ_ENABLE_GNOMEVFS=1
         MOZ_ENABLE_GCONF=1
-        MOZ_ENABLE_LIBGNOME=1
     fi
 
     MOZ_ARG_DISABLE_BOOL(gnomevfs,
@@ -5114,6 +5113,7 @@ then
         ])
     fi
 
+    AC_SUBST(MOZ_ENABLE_GNOMEVFS)
     AC_SUBST(MOZ_GNOMEVFS_CFLAGS)
     AC_SUBST(MOZ_GNOMEVFS_LIBS)
 
@@ -5135,24 +5135,11 @@ then
     AC_SUBST(MOZ_GCONF_CFLAGS)
     AC_SUBST(MOZ_GCONF_LIBS)
 
-    if test "$MOZ_ENABLE_LIBGNOME"
-    then
-        PKG_CHECK_MODULES(MOZ_LIBGNOME, libgnome-2.0 >= $LIBGNOME_VERSION,[
-            MOZ_LIBGNOME_LIBS=`echo $MOZ_LIBGNOME_LIBS | sed 's/-llinc\>//'`
-            MOZ_ENABLE_LIBGNOME=1
-        ],[
-            MOZ_ENABLE_LIBGNOME=
-        ])
-    fi
-
-    AC_SUBST(MOZ_LIBGNOME_CFLAGS)
-    AC_SUBST(MOZ_LIBGNOME_LIBS)
-
-    # The GNOME component is built if gtk2, gconf, gnome-vfs, and libgnome
+    # The GNOME component is built if gtk2, gconf and gnome-vfs
     # are all available.
 
     if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" -a \
-            "$MOZ_ENABLE_GNOMEVFS" -a "$MOZ_ENABLE_LIBGNOME"; then
+            "$MOZ_ENABLE_GNOMEVFS"; then
       MOZ_ENABLE_GNOME_COMPONENT=1
     else
       MOZ_ENABLE_GNOME_COMPONENT=
