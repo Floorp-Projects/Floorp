@@ -482,7 +482,7 @@
                 },
 
                 togglePause : function () {
-                    if (this.video.paused)
+                    if (this.video.paused || this.video.ended)
                         this.video.play();
                     else
                         this.video.pause();
