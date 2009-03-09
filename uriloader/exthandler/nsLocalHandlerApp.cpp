@@ -116,8 +116,7 @@ nsLocalHandlerApp::LaunchWithIProcess(const nsCString& aArg)
 
   const char *string = aArg.get();
 
-  PRUint32 pid;
-  return process->Run(PR_FALSE, &string, 1, &pid);
+  return process->Run(PR_FALSE, &string, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
