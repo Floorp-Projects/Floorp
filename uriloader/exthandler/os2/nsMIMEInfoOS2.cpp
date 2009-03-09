@@ -219,8 +219,7 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile *aFile)
     if (NS_FAILED(rv = process->Init(application)))
       return rv;
     const char *strPath = filePath.get();
-    PRUint32 pid;
-    return process->Run(PR_FALSE, &strPath, 1, &pid);
+    return process->Run(PR_FALSE, &strPath, 1);
   }
 
   return rv;
