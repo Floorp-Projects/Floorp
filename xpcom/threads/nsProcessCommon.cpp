@@ -61,11 +61,9 @@
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
 #include <windows.h>
-#endif
-
-#if defined(XP_MACOSX)
-#include <Processes.h>
-#include "nsILocalFileMac.h"
+#else
+#include <sys/types.h>
+#include <signal.h>
 #endif
 
 //-------------------------------------------------------------------//
@@ -78,11 +76,37 @@ nsProcess::nsProcess()
     : mExitValue(-1),
       mProcess(nsnull)
 {
+#if defined(PROCESSMODEL_WINAPI)
+    procInfo.dwProcessId = nsnull;
+#endif
+}
+
+//Destructor
+nsProcess::~nsProcess()
+{
+#if defined(PROCESSMODEL_WINAPI)
+    if (procInfo.dwProcessId) {
+        CloseHandle( procInfo.hProcess );
+        CloseHandle( procInfo.hThread );
+    }
+#else
+    if (mProcess) 
+        PR_DetachProcess(mProcess);
+#endif
 }
 
 NS_IMETHODIMP
 nsProcess::Init(nsIFile* executable)
 {
+    //Prevent re-initializing if already attached to process
+#if defined(PROCESSMODEL_WINAPI)
+    if (procInfo.dwProcessId)
+        return NS_ERROR_ALREADY_INITIALIZED;
+#else
+    if (mProcess)
+        return NS_ERROR_ALREADY_INITIALIZED;
+#endif    
+
     NS_ENSURE_ARG_POINTER(executable);
     PRBool isFile;
 
@@ -216,8 +240,7 @@ static int assembleCmdLine(char *const *argv, PRUnichar **wideCmdLine)
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
-               PRUint32 *pid)
+nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
 {
     NS_ENSURE_TRUE(mExecutable, NS_ERROR_NOT_INITIALIZED);
     PRStatus status = PR_SUCCESS;
@@ -241,9 +264,8 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     // null terminate the array
     my_argv[count+1] = NULL;
 
-#if defined(XP_WIN) && !defined (WINCE) /* wince uses nspr */
+#if defined(PROCESSMODEL_WINAPI)
     STARTUPINFOW startupInfo;
-    PROCESS_INFORMATION procInfo;
     BOOL retVal;
     PRUnichar *cmdLine;
 
@@ -299,6 +321,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
             mExitValue = exitCode;
             CloseHandle(procInfo.hProcess);
             CloseHandle(procInfo.hThread);
+            procInfo.dwProcessId = nsnull;
         }
         else
             status = PR_FAILURE;
@@ -314,73 +337,14 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     }
 
 #else // Note, this must not be an #elif ...!
-
-#if defined(XP_MACOSX)
-    if (count == 0) {
-        FSSpec resolvedSpec;
-        OSErr err = noErr;
-
-        nsCOMPtr<nsILocalFileMac> macExecutable =
-            do_QueryInterface(mExecutable);
-        macExecutable->GetFSSpec(&resolvedSpec);
-
-        LaunchParamBlockRec launchPB;
-        launchPB.launchAppSpec = &resolvedSpec;
-        launchPB.launchAppParameters = NULL;
-        launchPB.launchBlockID = extendedBlock;
-        launchPB.launchEPBLength = extendedBlockLen;
-        launchPB.launchFileFlags = NULL;
-        launchPB.launchControlFlags =
-            launchContinue + launchNoFileFlags + launchUseMinimum;
-        if (!blocking)
-            launchPB.launchControlFlags += launchDontSwitch;
-
-        err = LaunchApplication(&launchPB);
-
-        // NOTE: blocking mode assumes you are running on a thread
-        //       other than the UI thread that has the main event loop
-        if (blocking && err == noErr) {
-            while (1) {
-                ProcessInfoRec info;
-                info.processInfoLength = sizeof(ProcessInfoRec);
-                info.processName = NULL;
-                info.processAppSpec = NULL;
-
-                err = GetProcessInformation(&launchPB.launchProcessSN, &info);
-
-                if (err != noErr) {
-                    // The process is no longer in the process
-                    // manager's internal list, assume the process is
-                    // done.
-                    err = noErr;
-
-                    break;
-                }
-
-                // still running so sleep some more (200 msecs)
-                PR_Sleep(200);
-            }
-        }
-
-        if (err != noErr) {
-            status = PR_FAILURE;
-        }
-
+    
+    mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL, NULL);
+    if (mProcess) {
+        status = PR_SUCCESS;
         if (blocking) {
-            mExitValue = err;
-        }
-    } else
-#endif
-    {
-        if (blocking) {
-            mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL,
-                                        NULL);
-            if (mProcess)
-                status = PR_WaitProcess(mProcess, &mExitValue);
-        } else {
-            status = PR_CreateProcessDetached(mTargetPath.get(), my_argv, NULL,
-                                          NULL);
-        }
+            status = PR_WaitProcess(mProcess, &mExitValue);
+            mProcess = nsnull;
+        } 
     }
 #endif
 
@@ -391,6 +355,28 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
         return NS_ERROR_FILE_EXECUTION_FAILED;
 
     return NS_OK;
+}
+
+NS_IMETHODIMP nsProcess::GetIsRunning(PRUint32 *aIsRunning)
+{
+#if defined(PROCESSMODEL_WINAPI)
+    DWORD ec = 0;
+    BOOL br = GetExitCodeProcess(procInfo.hProcess, &ec);
+    if (!br) {
+        aIsRunning = 0;
+        return NS_OK;
+    }
+    *aIsRunning = (ec == STILL_ACTIVE ? 1 : 0); 
+    return NS_OK;
+#elif defined WINCE
+    return NS_ERROR_NOT_IMPLEMENTED;   
+#else
+    PRUint32 pid;
+    GetPid(&pid);
+    if (pid)
+        *aIsRunning = (kill(pid, 0) != -1) ? 1 : 0;
+    return NS_OK;        
+#endif
 }
 
 NS_IMETHODIMP nsProcess::InitWithPid(PRUint32 pid)
@@ -407,7 +393,25 @@ nsProcess::GetLocation(nsIFile** aLocation)
 NS_IMETHODIMP
 nsProcess::GetPid(PRUint32 *aPid)
 {
+#if defined(PROCESSMODEL_WINAPI)
+    if (!procInfo.dwProcessId)
+        return NS_ERROR_FAILURE;
+    *aPid = procInfo.dwProcessId;
+    return NS_OK;
+#elif defined WINCE
     return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    if (!mProcess) {
+        *aPid = 0;
+        return NS_ERROR_FAILURE;
+    }
+    struct MYProcess {
+        PRUint32 pid;
+    };
+    MYProcess* ptrProc = (MYProcess *) mProcess;
+    *aPid = ptrProc->pid;
+    return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
@@ -426,9 +430,20 @@ NS_IMETHODIMP
 nsProcess::Kill()
 {
     nsresult rv = NS_OK;
+#if defined(PROCESSMODEL_WINAPI)
+    if ( TerminateProcess(procInfo.hProcess, NULL) == 0 ) {
+        rv = NS_ERROR_FAILURE;
+    }
+    else {
+        CloseHandle( procInfo.hProcess );
+        procInfo.dwProcessId = nsnull;
+    }
+#else
     if (mProcess)
         rv = PR_KillProcess(mProcess) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
-    
+    if (rv == NS_OK)
+        mProcess = nsnull;
+#endif  
     return rv;
 }
 
