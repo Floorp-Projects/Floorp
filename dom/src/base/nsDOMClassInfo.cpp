@@ -6369,7 +6369,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                  ::JS_GetStringLength(str),
-                                 JSVAL_VOID, nsnull, nsnull,
+                                 JSVAL_VOID, JS_PropertyStub, JS_PropertyStub,
                                  JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }

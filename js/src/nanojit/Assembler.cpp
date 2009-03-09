@@ -931,6 +931,11 @@ namespace nanojit
 		NanoAssert( !_branchStateMap || _branchStateMap->isEmpty());
 		_branchStateMap = 0;
 
+        // Tell Valgrind that new code has been generated, and it must flush
+        // any translations it has for the memory range generated into.
+        VALGRIND_DISCARD_TRANSLATIONS(pageTop(_nIns-1),     NJ_PAGE_SIZE);
+        VALGRIND_DISCARD_TRANSLATIONS(pageTop(_nExitIns-1), NJ_PAGE_SIZE);
+
 #ifdef AVMPLUS_ARM
 		// If we've modified the code, we need to flush so we don't end up trying 
 		// to execute junk

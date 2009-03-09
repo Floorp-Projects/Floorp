@@ -46,10 +46,14 @@
 
 JS_BEGIN_EXTERN_C
 
-#ifdef DEBUG
-
+/*
+ * JS_Assert is present even in release builds, for the benefit of applications
+ * that build DEBUG and link against a non-DEBUG SpiderMonkey library.
+ */
 extern JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, JSIntn ln);
+
+#ifdef DEBUG
 
 #define JS_ASSERT(expr)                                                       \
     ((expr) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
@@ -92,6 +96,8 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
     #define JS_STATIC_ASSERT(cond) extern void js_static_assert(int arg[(cond) ? 1 : -1])
 #endif
 #endif
+
+#define JS_STATIC_ASSERT_IF(cond, expr) JS_STATIC_ASSERT(!(cond) || (expr))
 
 /*
  * Abort the process in a non-graceful manner. This will cause a core file,

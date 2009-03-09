@@ -50,8 +50,6 @@
 
 JS_BEGIN_EXTERN_C
 
-JS_STATIC_ASSERT(JSTRACE_STRING == 2);
-
 #define JSTRACE_XML         3
 
 /*
@@ -70,17 +68,12 @@ JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 #define GCX_EXTERNAL_STRING     JSTRACE_LIMIT       /* JSString with external
                                                        chars */
 /*
- * The number of defined GC types.
+ * The number of defined GC types and the maximum limit for the number of
+ * possible GC types.
  */
 #define GCX_NTYPES              (GCX_EXTERNAL_STRING + 8)
-
-/*
- * The maximum limit for the number of GC types.
- */
 #define GCX_LIMIT_LOG2         4           /* type index bits */
 #define GCX_LIMIT              JS_BIT(GCX_LIMIT_LOG2)
-
-JS_STATIC_ASSERT(GCX_NTYPES <= GCX_LIMIT);
 
 /* GC flag definitions, must fit in 8 bits (type index goes in the low bits). */
 #define GCF_TYPEMASK    JS_BITMASK(GCX_LIMIT_LOG2)
@@ -238,12 +231,6 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 #endif
 
 /*
- * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_STRING is the last non-xml
- * trace kind when JS_HAS_XML_SUPPORT is false.
- */
-JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
-
-/*
  * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
  * JSVAL_OBJECT and js_GetGCThingTraceKind has to be used to find the real
  * type behind v.
@@ -335,8 +322,6 @@ union JSGCDoubleCell {
     JSGCDoubleCell  *link;
 };
 
-JS_STATIC_ASSERT(sizeof(JSGCDoubleCell) == sizeof(double));
-
 typedef struct JSGCDoubleArenaList {
     JSGCArenaInfo   *first;             /* first allocated GC arena */
     jsbitmap        *nextDoubleFlags;   /* bitmask with flags to check for free
@@ -366,7 +351,6 @@ struct JSWeakRoots {
     jsval           lastInternalResult;
 };
 
-JS_STATIC_ASSERT(JSVAL_NULL == 0);
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
 /*

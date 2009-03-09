@@ -98,6 +98,16 @@
 	#define NJ_DELETE(obj)			do { delete obj; } while (0)
 #endif
 
+// Embed no-op macros that let Valgrind work with the JIT.
+#ifdef MOZ_VALGRIND
+#  define JS_VALGRIND
+#endif
+#ifdef JS_VALGRIND
+#  include <valgrind/valgrind.h>
+#else
+#  define VALGRIND_DISCARD_TRANSLATIONS(addr, szB)
+#endif
+ 
 namespace nanojit
 {
 	/**

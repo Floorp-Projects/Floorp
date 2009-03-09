@@ -4272,14 +4272,6 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
-
-  AC_ARG_WITH([valgrind],
-    [  --with-valgrind         Enable valgrind integration hooks],
-    [enable_valgrind="yes"], [enable_valgrind="no"])
-  AC_CHECK_HEADER([valgrind/valgrind.h], [], [enable_valgrind="no"])
-  if test "x$enable_valgrind" = "xyes" ; then
-    AC_DEFINE(MOZ_VALGRIND)
-  fi
 fi
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(WIN32_CRT_SRC_DIR)
@@ -4310,6 +4302,20 @@ dnl ========================================================
 MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc=DIR  Location of malloc wrapper library],
     WRAP_MALLOC_LIB=$withval)
+
+dnl ========================================================
+dnl = Use Valgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(valgrind,
+[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
+    MOZ_VALGRIND=1,
+    MOZ_VALGRIND= )
+if test -n "$MOZ_VALGRIND"; then
+    AC_CHECK_HEADER([valgrind/valgrind.h], [],
+        AC_MSG_ERROR(
+            [--enable-valgrind specified but Valgrind is not installed]))
+    AC_DEFINE(MOZ_VALGRIND)
+fi
 
 dnl ========================================================
 dnl = Use Electric Fence
