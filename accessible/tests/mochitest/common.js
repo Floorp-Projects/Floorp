@@ -6,6 +6,8 @@ const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
 const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent =
   Components.interfaces.nsIAccessibleStateChangeEvent;
+const nsIAccessibleCaretMoveEvent =
+  Components.interfaces.nsIAccessibleCaretMoveEvent;
 
 const nsIAccessibleStates = Components.interfaces.nsIAccessibleStates;
 const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
@@ -15,6 +17,9 @@ const nsIAccessibleRelation = Components.interfaces.nsIAccessibleRelation;
 
 const nsIAccessNode = Components.interfaces.nsIAccessNode;
 const nsIAccessible = Components.interfaces.nsIAccessible;
+
+const nsIAccessibleCoordinateType =
+      Components.interfaces.nsIAccessibleCoordinateType;
 
 const nsIAccessibleDocument = Components.interfaces.nsIAccessibleDocument;
 
@@ -31,38 +36,49 @@ const nsIAccessibleValue = Components.interfaces.nsIAccessibleValue;
 
 const nsIObserverService = Components.interfaces.nsIObserverService;
 
+const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
+const nsIDOMEvent = Components.interfaces.nsIDOMEvent;
+const nsIDOMHTMLDocument = Components.interfaces.nsIDOMHTMLDocument;
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
+const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
+
 const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
-
-////////////////////////////////////////////////////////////////////////////////
-// Roles
-
-const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
-const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
-const ROLE_COMBOBOX_OPTION = nsIAccessibleRole.ROLE_COMBOBOX_OPTION;
-const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
-const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
-const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
-const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
-const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
-const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 
 ////////////////////////////////////////////////////////////////////////////////
 // States
 
+const STATE_CHECKED = nsIAccessibleStates.STATE_CHECKED;
+const STATE_CHECKABLE = nsIAccessibleStates.STATE_CHECKABLE;
 const STATE_COLLAPSED = nsIAccessibleStates.STATE_COLLAPSED;
 const STATE_EXPANDED = nsIAccessibleStates.STATE_EXPANDED;
 const STATE_EXTSELECTABLE = nsIAccessibleStates.STATE_EXTSELECTABLE;
 const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
 const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
 const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;
+const STATE_LINKED = nsIAccessibleStates.STATE_LINKED;
+const STATE_MIXED = nsIAccessibleStates.STATE_MIXED;
 const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;
+const STATE_PRESSED = nsIAccessibleStates.STATE_PRESSED;
 const STATE_READONLY = nsIAccessibleStates.STATE_READONLY;
 const STATE_SELECTABLE = nsIAccessibleStates.STATE_SELECTABLE;
 const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
+const STATE_TRAVERSED = nsIAccessibleStates.STATE_TRAVERSED;
+const STATE_UNAVAILABLE = nsIAccessibleStates.STATE_UNAVAILABLE;
 
 const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
 const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
+const EXT_STATE_HORIZONTAL = nsIAccessibleStates.EXT_STATE_HORIZONTAL;
+const EXT_STATE_INVALID = nsIAccessibleStates.STATE_INVALID;
+const EXT_STATE_MULTI_LINE = nsIAccessibleStates.EXT_STATE_MULTI_LINE;
+const EXT_STATE_REQUIRED = nsIAccessibleStates.STATE_REQUIRED;
+const EXT_STATE_SUPPORTS_AUTOCOMPLETION = 
+      nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+
+////////////////////////////////////////////////////////////////////////////////
+// OS detect
+const MAC = (navigator.platform.indexOf("Mac") != -1)? true : false;
+const LINUX = (navigator.platform.indexOf("Linux") != -1)? true : false;
+const WIN = (navigator.platform.indexOf("Win") != -1)? true : false;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible general
@@ -73,18 +89,88 @@ const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
 var gAccRetrieval = null;
 
 /**
- * Return accessible for the given ID attribute or DOM element.
+ * Invokes the given function when document is loaded. Preferable to mochitests
+ * 'addLoadEvent' function -- additionally ensures state of the document
+ * accessible is not busy.
  *
- * @param aAccOrElmOrID  [in] DOM element or ID attribute to get an accessible
- *                        for or an accessible to query additional interfaces.
- * @param aInterfaces    [in, optional] the accessible interface or the array of
- *                        accessible interfaces to query it/them from obtained
- *                        accessible
- * @param aElmObj        [out, optional] object to store DOM element which
- *                        accessible is obtained for
+ * @param aFunc  the function to invoke
  */
-function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
+function addA11yLoadEvent(aFunc)
 {
+  function waitForDocLoad()
+  {
+    window.setTimeout(
+      function()
+      {
+        var accDoc = getAccessible(document);
+        var state = {};
+        accDoc.getState(state, {});
+        if (state.value & nsIAccessibleStates.STATE_BUSY)
+          return waitForDocLoad();
+
+        aFunc.call();
+      },
+      200
+    );
+  }
+
+  addLoadEvent(waitForDocLoad);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Get DOM node/accesible helpers
+
+/**
+ * Return the DOM node.
+ */
+function getNode(aNodeOrID)
+{
+  if (!aNodeOrID)
+    return null;
+
+  var node = aNodeOrID;
+
+  if (!(aNodeOrID instanceof nsIDOMNode)) {
+    node = document.getElementById(aNodeOrID);
+
+    if (!node) {
+      ok(false, "Can't get DOM element for " + aNodeOrID);
+      return null;
+    }
+  }
+
+  return node;
+}
+
+/**
+ * Constants indicates getAccessible doesn't fail if there is no accessible.
+ */
+const DONOTFAIL_IF_NO_ACC = 1;
+
+/**
+ * Constants indicates getAccessible won't fail if accessible doesn't implement
+ * the requested interfaces.
+ */
+const DONOTFAIL_IF_NO_INTERFACE = 2;
+
+/**
+ * Return accessible for the given identifier (may be ID attribute or DOM
+ * element or accessible object).
+ *
+ * @param aAccOrElmOrID      [in] identifier to get an accessible implementing
+ *                           the given interfaces
+ * @param aInterfaces        [in, optional] the interface or an array interfaces
+ *                           to query it/them from obtained accessible
+ * @param aElmObj            [out, optional] object to store DOM element which
+ *                           accessible is obtained for
+ * @param aDoNotFailIf       [in, optional] no error for special cases (see
+ *                            constants above)
+ */
+function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
+{
+  if (!aAccOrElmOrID)
+    return;
+
   var elm = null;
 
   if (aAccOrElmOrID instanceof nsIAccessible) {
@@ -113,7 +199,9 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
     }
 
     if (!acc) {
-      ok(false, "Can't get accessible for " + aAccOrElmOrID);
+      if (!(aDoNotFailIf & DONOTFAIL_IF_NO_ACC))
+        ok(false, "Can't get accessible for " + aAccOrElmOrID);
+
       return null;
     }
   }
@@ -126,7 +214,9 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
       try {
         acc.QueryInterface(aInterfaces[index]);
       } catch (e) {
-        ok(false, "Can't query " + aInterfaces[index] + " for " + aID);
+        if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
+          ok(false, "Can't query " + aInterfaces[index] + " for " + aID);
+
         return null;
       }
     }
@@ -143,125 +233,91 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
   return acc;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Accessible Events
-
 /**
- * Register accessibility event listener.
- *
- * @param aEventType     the accessible event type (see nsIAccessibleEvent for
- *                       available constants).
- * @param aEventHandler  event listener object, when accessible event of the
- *                       given type is handled then 'handleEvent' method of
- *                       this object is invoked with nsIAccessibleEvent object
- *                       as the first argument.
+ * Return true if the given identifier has an accessible, or exposes the wanted
+ * interfaces.
  */
-function registerA11yEventListener(aEventType, aEventHandler)
+function isAccessible(aAccOrElmOrID, aInterfaces)
 {
-  if (!gA11yEventListenersCount) {
-    gObserverService = Components.classes["@mozilla.org/observer-service;1"].
-      getService(nsIObserverService);
-
-    gObserverService.addObserver(gA11yEventObserver, "accessible-event",
-                                 false);
-  }
-
-  if (!(aEventType in gA11yEventListeners))
-    gA11yEventListeners[aEventType] = new Array();
-
-  gA11yEventListeners[aEventType].push(aEventHandler);
-  gA11yEventListenersCount++;
+  return getAccessible(aAccOrElmOrID, aInterfaces, null,
+                       DONOTFAIL_IF_NO_ACC | DONOTFAIL_IF_NO_INTERFACE) ?
+    true : false;
 }
 
 /**
- * Unregister accessibility event listener. Must be called for every registered
- * event listener (see registerA11yEventListener() function) when it's not
- * needed.
+ * Run through accessible tree of the given identifier so that we ensure
+ * accessible tree is created.
  */
-function unregisterA11yEventListener(aEventType, aEventHandler)
+function ensureAccessibleTree(aAccOrElmOrID)
 {
-  var listenersArray = gA11yEventListeners[aEventType];
-  if (listenersArray) {
-    var index = listenersArray.indexOf(aEventHandler);
-    listenersArray.splice(index, 1);
+  var acc = getAccessible(aAccOrElmOrID);
+  if (!acc)
+    return;
 
-    if (!listenersArray.length) {
-      gA11yEventListeners[aEventType] = null;
-      delete gA11yEventListeners[aEventType];
+  var child = acc.firstChild;
+  while (child) {
+    ensureAccessibleTree(child);
+    try {
+      child = child.nextSibling;
+    } catch (e) {
+      child = null;
     }
   }
-  
-  gA11yEventListenersCount--;
-  if (!gA11yEventListenersCount) {
-    gObserverService.removeObserver(gA11yEventObserver,
-                                    "accessible-event");
-  }
 }
 
 /**
- * Creates event queue for the given event type. The queue consists of invoker
- * objects, each of them generates the event of the event type. When queue is
- * started then every invoker object is asked to generate event after timeout.
- * When event is caught then current invoker object is asked to check wether
- * event was handled correctly.
- *
- * Invoker interface is:
- *   var invoker = {
- *     invoke: function(){}, // generates event for the DOM node
- *     check: function(aEvent){}, // checks event for correctness
- *     DOMNode getter() {} // DOM node event is generated for
- *   };
- *
- * @param  aEventType     the given event type
+ * Convert role to human readable string.
  */
-function eventQueue(aEventType)
+function roleToString(aRole)
 {
-  /**
-   * Add invoker object into queue.
-   */
-  this.push = function eventQueue_push(aEventInvoker)
-  {
-    this.mInvokers.push(aEventInvoker);
+  return gAccRetrieval.getStringRole(aRole);
+}
+
+/**
+ * Convert states to human readable string.
+ */
+function statesToString(aStates, aExtraStates)
+{
+  var list = gAccRetrieval.getStringStates(aStates, aExtraStates);
+
+  var str = "";
+  for (var index = 0; index < list.length; index++)
+    str += list.item(index) + ", ";
+
+  return str;
+}
+
+/**
+ * Convert event type to human readable string.
+ */
+function eventTypeToString(aEventType)
+{
+  gAccRetrieval.getStringEventType(aEventType);
+}
+
+/**
+ * Convert relation type to human readable string.
+ */
+function relationTypeToString(aRelationType)
+{
+  return gAccRetrieval.getStringRelationType(aRelationType);
+}
+
+/**
+ * Return pretty name for identifier, it may be ID, DOM node or accessible.
+ */
+function prettyName(aIdentifier)
+{
+  if (aIdentifier instanceof nsIAccessible) {
+    var acc = getAccessible(aIdentifier, [nsIAccessNode]);
+    return getNodePrettyName(acc.DOMNode) + ", role: " +
+      roleToString(acc.finalRole);
   }
 
-  /**
-   * Start the queue processing.
-   */
-  this.invoke = function eventQueue_invoke()
-  {
-    window.setTimeout(
-      function(aQueue)
-      {
-        if (aQueue.mIndex == aQueue.mInvokers.length - 1) {
-          unregisterA11yEventListener(aQueue.mEventType, aQueue.mEventHandler);
+  if (aIdentifier instanceof nsIDOMNode)
+    return getNodePrettyName(aIdentifier);
 
-          for (var idx = 0; idx < aQueue.mInvokers.length; idx++)
-            ok(aQueue.mInvokers[idx].wasCaught, "test " + idx + " failed.");
-
-          SimpleTest.finish();
-          return;
-        }
-
-        aQueue.mInvokers[++aQueue.mIndex].invoke();
-
-        aQueue.invoke();
-      },
-      100, this
-    );
-  }
-
-  this.getInvoker = function eventQueue_getInvoker()
-  {
-    return this.mInvokers[this.mIndex];
-  }
-
-  this.mEventType = aEventType;
-  this.mEventHandler = new eventHandlerForEventQueue(this);
-
-  registerA11yEventListener(this.mEventType, this.mEventHandler);
-
-  this.mInvokers = new Array();
-  this.mIndex = -1;
+  return " '" + aIdentifier + "' ";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,42 +335,10 @@ function initialize()
 
 addLoadEvent(initialize);
 
-////////////////////////////////////////////////////////////////////////////////
-// Accessible Events
-
-var gObserverService = null;
-
-var gA11yEventListeners = {};
-var gA11yEventListenersCount = 0;
-
-var gA11yEventObserver =
+function getNodePrettyName(aNode)
 {
-  observe: function observe(aSubject, aTopic, aData)
-  {
-    if (aTopic != "accessible-event")
-      return;
+  if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE && aNode.hasAttribute("id"))
+    return " '" + aNode.getAttribute("id") + "' ";
 
-    var event = aSubject.QueryInterface(nsIAccessibleEvent);
-    var listenersArray = gA11yEventListeners[event.eventType];
-    if (!listenersArray)
-      return;
-
-    for (var index = 0; index < listenersArray.length; index++)
-      listenersArray[index].handleEvent(event);
-  }
-};
-
-function eventHandlerForEventQueue(aQueue)
-{
-  this.handleEvent = function eventHandlerForEventQueue_handleEvent(aEvent)
-  {
-    var invoker = this.mQueue.getInvoker();
-    if (aEvent.DOMNode == invoker.DOMNode) {
-      invoker.check(aEvent);
-      invoker.wasCaught = true;
-    }
-  }
-  
-  this.mQueue = aQueue;
+  return " '" + aNode.localName + " node' ";
 }
-

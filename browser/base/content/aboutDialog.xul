@@ -83,7 +83,12 @@
 #expand <label id="version" value="&aboutVersion; __MOZ_APP_VERSION__"/>
       <label id="distribution"/>
       <label id="distributionId"/>
-      <description id="copyright">&copyrightInfo;</description>
+      <description id="copyright">
+        &copyrightInfo1;<label 
+        class="text-link" href="&licenseLink;"
+        >&licenseLinkText;</label>&copyrightInfo2;
+        &logoCopyright;
+      </description>
       <textbox id="userAgent" multiline="true" readonly="true" flex="1"/>
     </vbox>
     <vbox flex="1" id="creditsBox">

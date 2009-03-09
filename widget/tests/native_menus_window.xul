@@ -292,6 +292,16 @@
         menubarNode.removeChild(tmpMenu0);
         delete tmpMenu0;
 
+        // This test is basically a crash test for bug 433858.
+        newMenuItem1.setAttribute("hidden", "true");
+        newMenuItem2.setAttribute("hidden", "true");
+        newMenu1.setAttribute("hidden", "true");
+        forceUpdateNativeMenuAt("1");
+        newMenuItem1.setAttribute("hidden", "false");
+        newMenuItem2.setAttribute("hidden", "false");
+        newMenu1.setAttribute("hidden", "false");
+        forceUpdateNativeMenuAt("1");
+
         onTestsFinished();
       }
 

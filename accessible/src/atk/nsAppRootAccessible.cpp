@@ -563,6 +563,9 @@ nsApplicationAccessibleWrap::Init()
         // it will overwrite gail_util
         g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
 
+        // Init atk-bridge now
+        PR_SetEnv("NO_AT_BRIDGE=0");
+
         // load and initialize atk-bridge library
         rv = LoadGtkModule(sAtkBridge);
         if (NS_SUCCEEDED(rv)) {

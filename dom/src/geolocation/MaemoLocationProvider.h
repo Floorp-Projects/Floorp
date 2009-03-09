@@ -36,6 +36,7 @@
 
 #include "nsIGeolocationProvider.h"
 #include "nsIDOMGeoPosition.h"
+
 #include "nsCOMPtr.h"
 
 #include <glib.h>
@@ -63,13 +64,13 @@ public:
 private:
   ~MaemoLocationProvider();
 
-  nsCOMPtr<nsIDOMGeoPosition> mLastPosition;
+  nsCOMPtr<nsIGeolocationUpdate> mCallback;
 
-  nsIGeolocationUpdate* mCallback; // weak reference by contract.
-
-
-  gpsbt_t mGPSBT;
   LocationGPSDevice *mGPSDevice;
-  gulong mLocationCallbackHandle;
+
+  gulong mCallbackChanged;
+
   PRBool mHasSeenLocation;
+  PRTime mLastSeenTime;
+
 };

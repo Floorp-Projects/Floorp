@@ -1,6 +1,10 @@
+const CC = Components.Constructor;
+const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
+                             "nsIBinaryInputStream",
+                             "setInputStream");
+
 function handleRequest(request, response)
 {
-  try {
   var query = {};
   request.queryString.split('&').forEach(function (val) {
     [name, value] = val.split('=');
@@ -9,32 +13,61 @@ function handleRequest(request, response)
 
   var isPreflight = request.method == "OPTIONS";
 
+  var bodyStream = new BinaryInputStream(request.bodyInputStream);
+  var bodyBytes = [];
+  while ((bodyAvail = bodyStream.available()) > 0)
+    Array.prototype.push.apply(bodyBytes, bodyStream.readByteArray(bodyAvail));
+
+  var body = decodeURIComponent(
+    escape(String.fromCharCode.apply(null, bodyBytes)));
+
   // Check that request was correct
+
+  if (!isPreflight && query.body && body != query.body) {
+    sendHttp500(response, "Wrong body. Expected " + query.body + " got " +
+      body);
+    return;
+  }
+
   if (!isPreflight && "headers" in query) {
     headers = eval(query.headers);
     for(headerName in headers) {
-      if (request.getHeader(headerName) != headers[headerName]) {
-        throw "Header " + headerName + " had wrong value. Expected " +
-              headers[headerName] + " got " + request.getHeader(headerName);
+      // Content-Type is changed if there was a body 
+      if (!(headerName == "Content-Type" && body) &&
+          request.getHeader(headerName) != headers[headerName]) {
+        sendHttp500(response,
+          "Header " + headerName + " had wrong value. Expected " +
+          headers[headerName] + " got " + request.getHeader(headerName));
+        return;
       }
     }
   }
+
   if (isPreflight && "requestHeaders" in query &&
       request.getHeader("Access-Control-Request-Headers") != query.requestHeaders) {
-    throw "Access-Control-Request-Headers had wrong value. Expected " +
-          query.requestHeaders + " got " +
-          request.getHeader("Access-Control-Request-Headers");
+    sendHttp500(response,
+      "Access-Control-Request-Headers had wrong value. Expected " +
+      query.requestHeaders + " got " +
+      request.getHeader("Access-Control-Request-Headers"));
+    return;
   }
+
   if (isPreflight && "requestMethod" in query &&
       request.getHeader("Access-Control-Request-Method") != query.requestMethod) {
-    throw "Access-Control-Request-Method had wrong value. Expected " +
-          query.requestMethod + " got " +
-          request.getHeader("Access-Control-Request-Method");
+    sendHttp500(response,
+      "Access-Control-Request-Method had wrong value. Expected " +
+      query.requestMethod + " got " +
+      request.getHeader("Access-Control-Request-Method"));
+    return;
   }
+
   if ("origin" in query && request.getHeader("Origin") != query.origin) {
-    throw "Origin had wrong value. Expected " + query.origin + " got " +
-          request.getHeader("Origin");
+    sendHttp500(response,
+      "Origin had wrong value. Expected " + query.origin + " got " +
+      request.getHeader("Origin"));
+    return;
   }
+
   if ("cookie" in query) {
     cookies = {};
     request.getHeader("Cookie").split(/ *; */).forEach(function (val) {
@@ -45,18 +78,29 @@ function handleRequest(request, response)
     query.cookie.split(",").forEach(function (val) {
       [name, value] = val.split('=');
       if (cookies[name] != value) {
-        throw "Cookie " + name  + " had wrong value. Expected " + value +
-              " got " + cookies[name];
+        sendHttp500(response,
+          "Cookie " + name  + " had wrong value. Expected " + value +
+          " got " + cookies[name]);
+        return;
       }
     });
   }
+
   if ("noCookie" in query && request.hasHeader("Cookie")) {
-    throw "Got cookies when didn't expect to";
+    sendHttp500(response,
+      "Got cookies when didn't expect to: " + request.getHeader("Cookie"));
+    return;
   }
 
-
   // Send response
-       
+
+  if (query.hop) {
+     query.hop = parseInt(query.hop, 10);
+     hops = eval(query.hops);
+     query.allowOrigin = hops[query.hop-1].allowOrigin;
+     query.allowHeaders = hops[query.hop-1].allowHeaders;
+  }
+  
   if (query.allowOrigin && (!isPreflight || !query.noAllowPreflight))
     response.setHeader("Access-Control-Allow-Origin", query.allowOrigin);
 
@@ -66,22 +110,31 @@ function handleRequest(request, response)
   if (query.setCookie)
     response.setHeader("Set-Cookie", query.setCookie + "; path=/");
 
-
   if (isPreflight) {
     if (query.allowHeaders)
       response.setHeader("Access-Control-Allow-Headers", query.allowHeaders);
 
     if (query.allowMethods)
       response.setHeader("Access-Control-Allow-Methods", query.allowMethods);
+  }
+
+  if (query.hop && query.hop < hops.length) {
+    newURL = hops[query.hop].server +
+             "/tests/content/base/test/file_CrossSiteXHR_server.sjs?" +
+             "hop=" + (query.hop + 1) + "&hops=" + query.hops;
+    response.setStatusLine(null, 307, "redirect");
+    response.setHeader("Location", newURL);
 
     return;
   }
 
-  response.setHeader("Content-Type", "application/xml", false);
-  response.write("<res>hello pass</res>\n");
-  
-  } catch (e) {
-    dump(e + "\n");
-    throw e;
+  // Send response body
+  if (!isPreflight && request.method != "HEAD") {
+    response.setHeader("Content-Type", "application/xml", false);
+    response.write("<res>hello pass</res>\n");
   }
+}
+
+function sendHttp500(response, text) {
+  response.setStatusLine(null, 500, text);
 }

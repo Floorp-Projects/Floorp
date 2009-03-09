@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html reftest-zoom="1.5" class="reftest-wait">
+<body style="margin:0;">
+<div id="d" style="position:absolute; top:15px; left:15px; width:100px; height:100px;"></div>
+<script>
+function doTest() {
+  document.getElementById("d").style.background = "yellow";
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

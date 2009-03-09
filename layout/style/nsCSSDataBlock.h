@@ -43,6 +43,7 @@
 #define nsCSSDataBlock_h__
 
 #include "nsCSSStruct.h"
+#include "nsCSSProps.h"
 
 struct nsRuleData;
 
@@ -73,6 +74,42 @@ public:
      * Inefficient (by design).
      */
     const void* StorageFor(nsCSSProperty aProperty) const;
+
+    /**
+     * A set of slightly more typesafe helpers for the above.  All
+     * return null if the value is not present.
+     */
+    const nsCSSValue* ValueStorageFor(nsCSSProperty aProperty) const {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      return static_cast<const nsCSSValue*>(StorageFor(aProperty));
+    }
+    const nsCSSRect* RectStorageFor(nsCSSProperty aProperty) const {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Rect,
+                        "type mismatch");
+      return static_cast<const nsCSSRect*>(StorageFor(aProperty));
+    }
+    const nsCSSValuePair* ValuePairStorageFor(nsCSSProperty aProperty) const {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                          eCSSType_ValuePair,
+                        "type mismatch");
+      return static_cast<const nsCSSValuePair*>(StorageFor(aProperty));
+    }
+    const nsCSSValueList*const*
+    ValueListStorageFor(nsCSSProperty aProperty) const {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                          eCSSType_ValueList,
+                        "type mismatch");
+      return static_cast<const nsCSSValueList*const*>(StorageFor(aProperty));
+    }
+    const nsCSSValuePairList*const*
+    ValuePairListStorageFor(nsCSSProperty aProperty) const {
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                          eCSSType_ValuePairList,
+                        "type mismatch");
+      return static_cast<const nsCSSValuePairList*const*>(
+               StorageFor(aProperty));
+    }
 
     /**
      * Clone this block, or return null on out-of-memory.

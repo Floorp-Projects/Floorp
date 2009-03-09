@@ -39,7 +39,7 @@
       </xul:slider>
     </content>
     
-    <implementation implements="nsIAccessibleProvider">
+    <implementation implements="nsIAccessibleProvider, nsISliderListener">
       <property name="accessibleType" readonly="true">
         <getter>
           return Components.interfaces.nsIAccessibleProvider.XULScale;
@@ -57,6 +57,7 @@
       <property name="pageIncrement" onget="return this._getIntegerAttribute('pageincrement', 10);"
                                      onset="return this._setIntegerAttribute('pageincrement', val);"/>
 
+      <field name="_userChanged">false</field>
       <field name="_sliderElement"/>
       <property name="_slider" readonly="true">
         <getter>
@@ -148,55 +149,89 @@
         </body>
       </method>
 
+      <method name="valueChanged">
+        <parameter name="which"/>
+        <parameter name="newValue"/>
+        <parameter name="userChanged"/>
+        <body>
+        <![CDATA[
+          switch (which) {
+            case "curpos":
+              this.setAttribute("value", newValue);
+
+              // in the future, only fire the change event when userChanged
+              // or _userChanged is true
+              var changeEvent = document.createEvent("Events");
+              changeEvent.initEvent("change", true, true);
+              this.dispatchEvent(changeEvent);
+              break;
+
+            case "minpos":
+              this.setAttribute("min", newValue);
+              break;
+
+            case "maxpos":
+              this.setAttribute("max", newValue);
+              break;
+          }
+        ]]>
+        </body>
+      </method>
+
     </implementation>
 
     <handlers>
-      <handler event="DOMAttrModified">
-        if (event.originalTarget != this._slider)
-          return;
-
-        switch (event.attrName) {
-          case "curpos":
-            this.setAttribute("value", event.newValue);
-
-            var changeEvent = document.createEvent("Events");
-            changeEvent.initEvent("change", true, true);
-            this.dispatchEvent(changeEvent);
-            break;
-
-          case "minpos":
-            this.setAttribute("min", event.newValue);
-            break;
-
-          case "maxpos":
-            this.setAttribute("max", event.newValue);
-            break;
-        }
-      </handler>
-
-      <handler event="keypress" keycode="VK_UP" preventdefault="true">
-        return (this.dir == "reverse") ? this.increase() : this.decrease();
-      </handler>
       <handler event="keypress" keycode="VK_LEFT" preventdefault="true">
-        return (this.dir == "reverse") ? this.increase() : this.decrease();
-      </handler>
-      <handler event="keypress" keycode="VK_DOWN" preventdefault="true">
-        return (this.dir == "reverse") ? this.decrease() : this.increase();
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient != "vertical" && this.dir == "reverse") ? this.increase() : this.decrease();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_RIGHT" preventdefault="true">
-        return (this.dir == "reverse") ? this.decrease() : this.increase();
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient != "vertical" && this.dir == "reverse") ? this.decrease() : this.increase();
+          this._userChanged = false;
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_UP" preventdefault="true">
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.decrease() : this.increase();
+          this._userChanged = false;
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN" preventdefault="true">
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.increase() : this.decrease();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true">
-        return (this.dir == "reverse") ? this.increasePage() : this.decreasePage();
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.decreasePage() : this.increasePage();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true">
-        return (this.dir == "reverse") ? this.decreasePage() : this.increasePage();
+        <![CDATA[
+          this._userChanged = true;
+          (this.orient == "vertical" && this.dir != "reverse") ? this.increasePage() : this.decreasePage();
+          this._userChanged = false;
+        ]]>
       </handler>
       <handler event="keypress" keycode="VK_HOME" preventdefault="true">
+        this._userChanged = true;
         this.value = (this.dir == "reverse") ? this.max : this.min;
+        this._userChanged = false;
       </handler>
       <handler event="keypress" keycode="VK_END" preventdefault="true">
+        this._userChanged = true;
         this.value = (this.dir == "reverse") ? this.min : this.max;
+        this._userChanged = false;
       </handler>
     </handlers>
 

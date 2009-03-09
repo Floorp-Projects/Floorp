@@ -66,6 +66,13 @@ const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
 const Register Assembler::retRegs[] = { R0, R1 };
 const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
 
+const char *ccName(ConditionCode cc)
+{
+    const char *ccNames[] = { "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
+                              "hi", "ls", "ge", "lt", "gt", "le", "al", "nv" };
+    return ccNames[(int)cc];
+}
+
 void
 Assembler::nInit(AvmCore*)
 {
@@ -171,6 +178,19 @@ Assembler::genEpilogue()
     return _nIns;
 }
 
+/* ARM EABI (used by gcc/linux) calling conventions differ from Windows CE; use these
+ * as the default.
+ *
+ * - double arg following an initial dword arg use r0 for the int arg
+ *   and r2/r3 for the double; r1 is skipped
+ * - 3 dword args followed by a double arg cause r3 to be skipped,
+ *   and the double to be stuck on the stack.
+ *
+ * Under Windows CE, the arguments are placed in r0-r3 and then the stack,
+ * one dword at a time, with the high order dword of a quad/double coming
+ * first.  No registers are skipped as they are in the EABI case.
+ */
+
 void
 Assembler::asm_call(LInsp ins)
 {
@@ -186,11 +206,12 @@ Assembler::asm_call(LInsp ins)
 #endif
     atypes >>= 2;
 
+    bool arg0IsInt32FollowedByFloat = false;
+#ifndef UNDER_CE
     // we need to detect if we have arg0 as LO followed by arg1 as F;
     // in that case, we need to skip using r1 -- the F needs to be
     // loaded in r2/r3, at least according to the ARM EABI and gcc 4.2's
     // generated code.
-    bool arg0IsInt32FollowedByFloat = false;
     while ((atypes & 3) != ARGSIZE_NONE) {
         if (((atypes >> 2) & 3) == ARGSIZE_LO &&
             ((atypes >> 0) & 3) == ARGSIZE_F &&
@@ -201,6 +222,7 @@ Assembler::asm_call(LInsp ins)
         }
         atypes >>= 2;
     }
+#endif
 
 #ifdef NJ_ARM_VFP
     if (rsize == ARGSIZE_F) {
@@ -237,6 +259,21 @@ Assembler::asm_call(LInsp ins)
         Register r = (i + roffset) < 4 ? argRegs[i+roffset] : UnknownReg;
 #ifdef NJ_ARM_VFP
         if (sz == ARGSIZE_F) {
+#ifdef UNDER_CE
+            if (r >= R0 && r <= R2) {
+                // we can use up r0/r1, r1/r2, r2/r3 without anything special
+                roffset++;
+                FMRRD(r, nextreg(r), sr);
+            } else if (r == R3) {
+                // to use R3 gets complicated; we need to move the high dword
+                // into R3, and the low dword on the stack.
+                STR_preindex(Scratch, SP, -4);
+                FMRDL(Scratch, sr);
+                FMRDH(r, sr);
+            } else {
+                asm_pusharg(arg);
+            }
+#else
             if (r == R0 || r == R2) {
                 roffset++;
             } else if (r == R1) {
@@ -256,6 +293,7 @@ Assembler::asm_call(LInsp ins)
             } else {
                 asm_pusharg(arg);
             }
+#endif
         } else {
             asm_arg(sz, arg, r);
         }
@@ -264,6 +302,7 @@ Assembler::asm_call(LInsp ins)
         asm_arg(sz, arg, r);
 #endif
 
+        // Under CE, arg0IsInt32FollowedByFloat will always be false
         if (i == 0 && arg0IsInt32FollowedByFloat)
             roffset = 1;
     }
@@ -1039,63 +1078,6 @@ Assembler::asm_fcmp(LInsp ins)
     Register ra = findRegFor(lhs, FpRegs);
     Register rb = findRegFor(rhs, FpRegs);
 
-    // We can't uniquely identify fge/fle via a single bit
-    // pattern (since equality and lt/gt are separate bits);
-    // so convert to the single-bit variant.
-    if (op == LIR_fge) {
-        Register temp = ra;
-        ra = rb;
-        rb = temp;
-        op = LIR_flt;
-    } else if (op == LIR_fle) {
-        Register temp = ra;
-        ra = rb;
-        rb = temp;
-        op = LIR_fgt;
-    }
-
-    // There is no way to test for an unordered result using
-    // the conditional form of an instruction; the encoding (C=1 V=1)
-    // ends up having overlaps with a few other tests.  So, test for
-    // the explicit mask.
-    uint8_t mask = 0x0;
-
-    // NZCV
-    // for a valid ordered result, V is always 0 from VFP
-    if (op == LIR_feq)
-        // ZC // cond EQ (both equal and "not less than"
-        mask = 0x6;
-    else if (op == LIR_flt)
-        // N  // cond MI
-        mask = 0x8;
-    else if (op == LIR_fgt)
-        // C  // cond CS
-        mask = 0x2;
-    else
-        NanoAssert(0);
-/*
-    // these were converted into gt and lt above.
-    if (op == LIR_fle)
-        // NZ // cond LE
-        mask = 0xC;
-    else if (op == LIR_fge)
-        // ZC // cond fail?
-        mask = 0x6;
-*/
-
-    // TODO XXX could do this as fcmpd; fmstat; tstvs rX, #0 the tstvs
-    // would reset the status bits if V (NaN flag) is set, but that
-    // doesn't work for NE.  For NE could teqvs rX, #1.  rX needs to
-    // be any register that has lsb == 0, such as sp/fp/pc.
-
-    // Test explicily with the full mask; if V is set, test will fail.
-    // Assumption is that this will be followed up by a BEQ/BNE
-    CMPi(Scratch, mask);
-    // grab just the condition fields
-    SHRi(Scratch, 28);
-    MRS(Scratch);
-
-    // do the comparison and get results loaded in ARM status register
     FMSTAT();
     FCMPD(ra, rb);
 }
@@ -1108,11 +1090,11 @@ Assembler::asm_prep_fcall(Reservation*, LInsp)
 }
 
 NIns*
-Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool far)
+Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
 {
-    // ignore far -- we figure this out on our own.
+    // ignore isfar -- we figure this out on our own.
     // XXX noone actually uses the far param in nj anyway... (always false)
-    (void)far;
+    (void)isfar;
 
     NIns* at = 0;
     LOpcode condop = cond->opcode();
@@ -1120,10 +1102,28 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool far)
 
     if (condop >= LIR_feq && condop <= LIR_fge)
     {
-        if (branchOnFalse)
-            JNE(targ);
-        else
-            JE(targ);
+        ConditionCode cc = NV;
+
+        if (branchOnFalse) {
+            switch (condop) {
+                case LIR_feq: cc = NE; break;
+                case LIR_flt: cc = PL; break;
+                case LIR_fgt: cc = LE; break;
+                case LIR_fle: cc = HI; break;
+                case LIR_fge: cc = LT; break;
+            }
+        } else {
+            switch (condop) {
+                case LIR_feq: cc = EQ; break;
+                case LIR_flt: cc = MI; break;
+                case LIR_fgt: cc = GT; break;
+                case LIR_fle: cc = LS; break;
+                case LIR_fge: cc = GE; break;
+            }
+        }
+
+        B_cond(cc, targ);
+        asm_output("b(%d) 0x%08x", cc, (unsigned int) targ);
 
         NIns *at = _nIns;
         asm_fcmp(cond);
@@ -1240,7 +1240,14 @@ Assembler::asm_fcond(LInsp ins)
     // only want certain regs
     Register r = prepResultReg(ins, AllowableFlagRegs);
 
-    SETE(r);
+    switch (ins->opcode()) {
+        case LIR_feq: SET(r,EQ,NE); break;
+        case LIR_flt: SET(r,MI,PL); break;
+        case LIR_fgt: SET(r,GT,LE); break;
+        case LIR_fle: SET(r,LS,HI); break;
+        case LIR_fge: SET(r,GE,LT); break;
+    }
+
     asm_fcmp(ins);
 }
 
@@ -1398,14 +1405,26 @@ Assembler::asm_ld(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     int d = disp->constval();
     Register ra = getBaseReg(base, d, GpRegs);
-    if (op == LIR_ld || op == LIR_ldc)
+
+    // these will always be 4-byte aligned
+    if (op == LIR_ld || op == LIR_ldc) {
         LD(rr, d, ra);
-    else if (op == LIR_ldcb)
-        LDRB(rr, d, ra);
-    else if (op == LIR_ldcs)
+        return;
+    }
+
+    // these will be 2 or 4-byte aligned
+    if (op == LIR_ldcs) {
         LDRH(rr, d, ra);
-    else
-        NanoAssertMsg(0, "Unsupported instruction in asm_ld");
+        return;
+    }
+
+    // aaand this is just any byte.
+    if (op == LIR_ldcb) {
+        LDRB(rr, d, ra);
+        return;
+    }
+
+    NanoAssertMsg(0, "Unsupported instruction in asm_ld");
 }
 
 void

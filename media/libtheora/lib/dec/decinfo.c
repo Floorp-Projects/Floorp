@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: decinfo.c 14719 2008-04-12 11:36:40Z tterribe $
+    last mod: $Id: decinfo.c 15400 2008-10-15 12:10:58Z tterribe $
 
  ********************************************************************/
 

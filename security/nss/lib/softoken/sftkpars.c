@@ -546,7 +546,11 @@ const char *
 sftk_EvaluateConfigDir(const char *configdir, SDBType *dbType, char **appName)
 {
     *appName = NULL;
+#ifdef NSS_DISABLE_DBM
+    *dbType = SDB_SQL;
+#else
     *dbType = SDB_LEGACY;
+#endif
     if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS)-1) == 0) {
 	char *cdir;
 	*dbType = SDB_MULTIACCESS;

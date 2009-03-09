@@ -80,7 +80,7 @@ componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete
                                  autoCompleteSimpleName, autoCompleteSimple);
 
 
-// Test Bug 325842 - autoFill and autoFillAfterMatch
+// Test Bug 325842 - completeDefaultIndex
 
 SimpleTest.waitForExplicitFinish();
 setTimeout(startTest, 0);

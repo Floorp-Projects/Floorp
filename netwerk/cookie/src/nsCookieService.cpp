@@ -94,7 +94,7 @@ static const char kOldCookieFileName[] = "cookies.txt";
 
 // default limits for the cookie list. these can be tuned by the
 // network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
-static const PRUint32 kMaxNumberOfCookies = 1000;
+static const PRUint32 kMaxNumberOfCookies = 3000;
 static const PRUint32 kMaxCookiesPerHost  = 50;
 static const PRUint32 kMaxBytesPerCookie  = 4096;
 static const PRUint32 kMaxBytesPerPath    = 1024;
@@ -333,39 +333,6 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 
 /******************************************************************************
  * nsCookieService impl:
- * private list sorting callbacks
- *
- * these functions return:
- *   < 0 if the first element should come before the second element,
- *     0 if the first element may come before or after the second element,
- *   > 0 if the first element should come after the second element.
- ******************************************************************************/
-
-// comparison function for sorting cookies before sending to a server.
-static int
-compareCookiesForSending(const void *aElement1,
-                         const void *aElement2,
-                         void       *aData)
-{
-  const nsCookie *cookie1 = static_cast<const nsCookie*>(aElement1);
-  const nsCookie *cookie2 = static_cast<const nsCookie*>(aElement2);
-
-  // compare by cookie path length in accordance with RFC2109
-  int rv = cookie2->Path().Length() - cookie1->Path().Length();
-  if (rv == 0) {
-    // when path lengths match, older cookies should be listed first.  this is
-    // required for backwards compatibility since some websites erroneously
-    // depend on receiving cookies in the order in which they were sent to the
-    // browser!  see bug 236772.
-    // note: CreationID is unique, so two id's can never be equal.
-    // we may have overflow problems returning the result directly, so we need branches
-    rv = (cookie1->CreationID() > cookie2->CreationID() ? 1 : -1);
-  }
-  return rv;
-}
-
-/******************************************************************************
- * nsCookieService impl:
  * singleton instance ctor/dtor methods
  ******************************************************************************/
 
@@ -437,9 +404,14 @@ nsCookieService::Init()
     PrefChanged(prefBranch);
   }
 
-  // ignore failure here, since it's non-fatal (we can run fine without
+  // failure here is non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile)
   rv = InitDB();
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // database is corrupt - delete and try again
+    COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): db corrupt, trying again", rv));
+    rv = InitDB(PR_TRUE);
+  }
   if (NS_FAILED(rv))
     COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): InitDB() gave error %x", rv));
 
@@ -470,7 +442,7 @@ nsCookieService::Init()
 }
 
 nsresult
-nsCookieService::InitDB()
+nsCookieService::InitDB(PRBool aDeleteExistingDB)
 {
   // null out any existing connection
   CloseDB();
@@ -481,19 +453,18 @@ nsCookieService::InitDB()
 
   cookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
 
+  // remove an existing db, if we've been told to (i.e. it's corrupt)
+  if (aDeleteExistingDB) {
+    rv = cookieFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCOMPtr<mozIStorageService> storage = do_GetService("@mozilla.org/storage/service;1");
   if (!storage)
     return NS_ERROR_UNEXPECTED;
 
   // cache a connection to the cookie database
   rv = storage->OpenUnsharedDatabase(cookieFile, getter_AddRefs(mDBConn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // delete and try again
-    rv = cookieFile->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = storage->OpenUnsharedDatabase(cookieFile, getter_AddRefs(mDBConn));
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool tableExists = PR_FALSE;
@@ -590,19 +561,29 @@ nsCookieService::InitDB()
     "UPDATE moz_cookies SET lastAccessed = ?1 WHERE id = ?2"), getter_AddRefs(mStmtUpdate));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // if we deleted a corrupt db, don't attempt to import - return now
+  if (aDeleteExistingDB)
+    return NS_OK;
+
   // check whether to import or just read in the db
   if (tableExists)
     return Read();
 
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
+  nsCOMPtr<nsIFile> oldCookieFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(oldCookieFile));
   if (NS_FAILED(rv)) return rv;
 
-  cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
-  rv = ImportCookies(cookieFile);
-  if (NS_FAILED(rv)) return rv;
+  oldCookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
+  rv = ImportCookies(oldCookieFile);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND)
+      return NS_OK;
+
+    return rv;
+  }
 
   // we're done importing - delete the old cookie file
-  cookieFile->Remove(PR_FALSE);
+  oldCookieFile->Remove(PR_FALSE);
   return NS_OK;
 }
 
@@ -990,7 +971,7 @@ nsCookieService::Read()
 
   nsCAutoString name, value, host, path;
   PRBool hasResult;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt64 creationID = stmt->AsInt64(0);
     
     stmt->GetUTF8String(1, name);
@@ -1028,7 +1009,7 @@ nsCookieService::Read()
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read(): %ld cookies read", mCookieCount));
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1170,6 +1151,29 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
 // helper function for GetCookieList
 static inline PRBool ispathdelimiter(char c) { return c == '/' || c == '?' || c == '#' || c == ';'; }
 
+// Comparator class for sorting cookies before sending to a server.
+class CompareCookiesForSendingComparator
+{
+  public:
+  PRBool Equals(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
+    return PR_FALSE; // CreationID is unique, so two id's can never be equal.
+  }
+  PRBool LessThan(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
+    // compare by cookie path length in accordance with RFC2109
+    int rv = aCookie2->Path().Length() - aCookie1->Path().Length();
+    if (rv == 0) {
+      // when path lengths match, older cookies should be listed first.  this is
+      // required for backwards compatibility since some websites erroneously
+      // depend on receiving cookies in the order in which they were sent to the
+      // browser!  see bug 236772.
+      // note: CreationID is unique, so two id's can never be equal.
+      // we may have overflow problems returning the result directly, so we need branches
+      rv = (aCookie1->CreationID() > aCookie2->CreationID() ? 1 : -1);
+    }
+    return rv < 0;
+  }
+};
+
 void
 nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
                                    nsIChannel  *aChannel,
@@ -1216,7 +1220,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   }
 
   nsCookie *cookie;
-  nsAutoVoidArray foundCookieList;
+  nsAutoTArray<nsCookie*, 8> foundCookieList;
   PRInt64 currentTimeInUsec = PR_Now();
   PRInt64 currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
   const char *currentDot = hostFromURI.get();
@@ -1281,7 +1285,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
 
   } while (currentDot);
 
-  PRInt32 count = foundCookieList.Count();
+  PRInt32 count = foundCookieList.Length();
   if (count == 0)
     return;
 
@@ -1293,7 +1297,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
     mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
     for (PRInt32 i = 0; i < count; ++i) {
-      cookie = static_cast<nsCookie*>(foundCookieList.ElementAt(i));
+      cookie = foundCookieList.ElementAt(i);
 
       if (currentTimeInUsec - cookie->LastAccessed() > kCookieStaleThreshold)
         UpdateCookieInList(cookie, currentTimeInUsec);
@@ -1303,11 +1307,11 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   // return cookies in order of path length; longest to shortest.
   // this is required per RFC2109.  if cookies match in length,
   // then sort by creation time (see bug 236772).
-  foundCookieList.Sort(compareCookiesForSending, nsnull);
+  foundCookieList.Sort(CompareCookiesForSendingComparator());
 
   nsCAutoString cookieData;
   for (PRInt32 i = 0; i < count; ++i) {
-    cookie = static_cast<nsCookie*>(foundCookieList.ElementAt(i));
+    cookie = foundCookieList.ElementAt(i);
 
     // check if we have anything to write
     if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {

@@ -40,23 +40,17 @@
 #ifndef nsIFrameDebug_h___
 #define nsIFrameDebug_h___
 
-#include "nsISupports.h"
 #include "nsIFrame.h"
 
 class nsPresContext;
 struct PRLogModuleInfo;
 
-// IID for the nsIFrameDebug interface {a6cf9069-15b3-11d2-932e-00805f8add32}
-#define NS_IFRAMEDEBUG_IID         \
-{ 0xa6cf9069, 0x15b3, 0x11d2, \
-  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
- 
 /**
  * Debug related functions
  */
-class nsIFrameDebug : public nsISupports {
+class nsIFrameDebug {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMEDEBUG_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIFrameDebug)
   
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
   /**
@@ -83,10 +77,8 @@ public:
    * specific kind of data dumped is up to the frame itself, with
    * the caveat that some base types are defined.
    * For more information, see XXX.
-   *
-   * Argument aIncludeStyleData: if PR_TRUE, style information is dumpted, otherwise it is not
    */
-  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData) = 0;
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
 
   NS_IMETHOD  VerifyTree() const = 0;
 
@@ -134,12 +126,6 @@ public:
   static PRBool GetShowEventTargetFrameBorder();
   
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList);
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
-  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameDebug, NS_IFRAMEDEBUG_IID)
 
 #endif /* nsIFrameDebug_h___ */

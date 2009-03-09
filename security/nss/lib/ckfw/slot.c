@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.7 $ $Date: 2009/02/09 07:55:53 $";
 #endif /* DEBUG */
 
 /*
@@ -172,7 +172,7 @@ nssCKFWSlot_Create
   NSSArena *arena;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSCKFWSlot *)NULL;
   }
 
@@ -183,20 +183,20 @@ nssCKFWSlot_Create
 #endif /* NSSDEBUG */
 
   mdInstance = nssCKFWInstance_GetMDInstance(fwInstance);
-  if( (NSSCKMDInstance *)NULL == mdInstance ) {
+  if (!mdInstance) {
     *pError = CKR_GENERAL_ERROR;
     return (NSSCKFWSlot *)NULL;
   }
 
   arena = nssCKFWInstance_GetArena(fwInstance, pError);
-  if( (NSSArena *)NULL == arena ) {
+  if (!arena) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
   }
 
   fwSlot = nss_ZNEW(arena, NSSCKFWSlot);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     *pError = CKR_HOST_MEMORY;
     return (NSSCKFWSlot *)NULL;
   }
@@ -207,7 +207,7 @@ nssCKFWSlot_Create
   fwSlot->slotID = slotID;
 
   fwSlot->mutex = nssCKFWInstance_CreateMutex(fwInstance, arena, pError);
-  if( (NSSCKFWMutex *)NULL == fwSlot->mutex ) {
+  if (!fwSlot->mutex) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -215,7 +215,7 @@ nssCKFWSlot_Create
     return (NSSCKFWSlot *)NULL;
   }
 
-  if( (void *)NULL != (void *)mdSlot->Initialize ) {
+  if (mdSlot->Initialize) {
     *pError = CKR_OK;
     *pError = mdSlot->Initialize(mdSlot, fwSlot, mdInstance, fwInstance);
     if( CKR_OK != *pError ) {
@@ -228,7 +228,7 @@ nssCKFWSlot_Create
 #ifdef DEBUG
   *pError = slot_add_pointer(fwSlot);
   if( CKR_OK != *pError ) {
-    if( (void *)NULL != (void *)mdSlot->Destroy ) {
+    if (mdSlot->Destroy) {
       mdSlot->Destroy(mdSlot, fwSlot, mdInstance, fwInstance);
     }
 
@@ -265,7 +265,7 @@ nssCKFWSlot_Destroy
 
   (void)nssCKFWMutex_Destroy(fwSlot->mutex);
 
-  if( (void *)NULL != (void *)fwSlot->mdSlot->Destroy ) {
+  if (fwSlot->mdSlot->Destroy) {
     fwSlot->mdSlot->Destroy(fwSlot->mdSlot, fwSlot, 
       fwSlot->mdInstance, fwSlot->fwInstance);
   }
@@ -384,12 +384,12 @@ nssCKFWSlot_GetSlotDescription
     return error;
   }
 
-  if( (NSSUTF8 *)NULL == fwSlot->slotDescription ) {
-    if( (void *)NULL != (void *)fwSlot->mdSlot->GetSlotDescription ) {
+  if (!fwSlot->slotDescription) {
+    if (fwSlot->mdSlot->GetSlotDescription) {
       fwSlot->slotDescription = fwSlot->mdSlot->GetSlotDescription(
         fwSlot->mdSlot, fwSlot, fwSlot->mdInstance, 
         fwSlot->fwInstance, &error);
-      if( ((NSSUTF8 *)NULL == fwSlot->slotDescription) && (CKR_OK != error) ) {
+      if ((!fwSlot->slotDescription) && (CKR_OK != error)) {
         goto done;
       }
     } else {
@@ -434,12 +434,12 @@ nssCKFWSlot_GetManufacturerID
     return error;
   }
 
-  if( (NSSUTF8 *)NULL == fwSlot->manufacturerID ) {
-    if( (void *)NULL != (void *)fwSlot->mdSlot->GetManufacturerID ) {
+  if (!fwSlot->manufacturerID) {
+    if (fwSlot->mdSlot->GetManufacturerID) {
       fwSlot->manufacturerID = fwSlot->mdSlot->GetManufacturerID(
         fwSlot->mdSlot, fwSlot, fwSlot->mdInstance, 
         fwSlot->fwInstance, &error);
-      if( ((NSSUTF8 *)NULL == fwSlot->manufacturerID) && (CKR_OK != error) ) {
+      if ((!fwSlot->manufacturerID) && (CKR_OK != error)) {
         goto done;
       }
     } else {
@@ -471,7 +471,7 @@ nssCKFWSlot_GetTokenPresent
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwSlot->mdSlot->GetTokenPresent ) {
+  if (!fwSlot->mdSlot->GetTokenPresent) {
     return CK_TRUE;
   }
 
@@ -495,7 +495,7 @@ nssCKFWSlot_GetRemovableDevice
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwSlot->mdSlot->GetRemovableDevice ) {
+  if (!fwSlot->mdSlot->GetRemovableDevice) {
     return CK_FALSE;
   }
 
@@ -519,7 +519,7 @@ nssCKFWSlot_GetHardwareSlot
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwSlot->mdSlot->GetHardwareSlot ) {
+  if (!fwSlot->mdSlot->GetHardwareSlot) {
     return CK_FALSE;
   }
 
@@ -557,7 +557,7 @@ nssCKFWSlot_GetHardwareVersion
     goto done;
   }
 
-  if( (void *)NULL != (void *)fwSlot->mdSlot->GetHardwareVersion ) {
+  if (fwSlot->mdSlot->GetHardwareVersion) {
     fwSlot->hardwareVersion = fwSlot->mdSlot->GetHardwareVersion(
       fwSlot->mdSlot, fwSlot, fwSlot->mdInstance, fwSlot->fwInstance);
   } else {
@@ -601,7 +601,7 @@ nssCKFWSlot_GetFirmwareVersion
     goto done;
   }
 
-  if( (void *)NULL != (void *)fwSlot->mdSlot->GetFirmwareVersion ) {
+  if (fwSlot->mdSlot->GetFirmwareVersion) {
     fwSlot->firmwareVersion = fwSlot->mdSlot->GetFirmwareVersion(
       fwSlot->mdSlot, fwSlot, fwSlot->mdInstance, fwSlot->fwInstance);
   } else {
@@ -630,7 +630,7 @@ nssCKFWSlot_GetToken
   NSSCKFWToken *fwToken;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSCKFWToken *)NULL;
   }
 
@@ -645,8 +645,8 @@ nssCKFWSlot_GetToken
     return (NSSCKFWToken *)NULL;
   }
 
-  if( (NSSCKFWToken *)NULL == fwSlot->fwToken ) {
-    if( (void *)NULL == (void *)fwSlot->mdSlot->GetToken ) {
+  if (!fwSlot->fwToken) {
+    if (!fwSlot->mdSlot->GetToken) {
       *pError = CKR_GENERAL_ERROR;
       fwToken = (NSSCKFWToken *)NULL;
       goto done;
@@ -654,7 +654,7 @@ nssCKFWSlot_GetToken
 
     mdToken = fwSlot->mdSlot->GetToken(fwSlot->mdSlot, fwSlot,
       fwSlot->mdInstance, fwSlot->fwInstance, pError);
-    if( (NSSCKMDToken *)NULL == mdToken ) {
+    if (!mdToken) {
       if( CKR_OK == *pError ) {
         *pError = CKR_GENERAL_ERROR;
       }

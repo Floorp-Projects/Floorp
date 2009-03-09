@@ -1040,7 +1040,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
       if (!theRoot) return NS_ERROR_FAILURE;
       
       nsCOMPtr<nsIDOMNodeList> nodeList;
-      res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("div"),
+      res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
                                           getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
       if (nodeList)
@@ -1048,7 +1048,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
         PRUint32 len;
         nodeList->GetLength(&len);
         
-        if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
+        if (len != 1) return NS_OK;  // only in the case of one br could there be the bogus node
         nsCOMPtr<nsIDOMNode> node;
         nodeList->Item(0, getter_AddRefs(node));
         if (!node) return NS_ERROR_NULL_POINTER;

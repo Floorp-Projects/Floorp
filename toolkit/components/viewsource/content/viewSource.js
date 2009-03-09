@@ -39,6 +39,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
 const nsISelectionPrivate = Components.interfaces.nsISelectionPrivate;
 const nsISelectionController = Components.interfaces.nsISelectionController;
@@ -227,15 +228,19 @@ function viewSource(url)
           //
           PageLoader.loadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
 
+          // The content was successfully loaded.
+          loadFromURL = false;
+
           // Record the page load in the session history so <back> will work.
+          var shEntrySource = arg.QueryInterface(Ci.nsISHEntry);
           var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].createInstance(Ci.nsISHEntry);
           shEntry.setURI(makeURI(viewSrcUrl, null, null));
           shEntry.setTitle(viewSrcUrl);
           shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
-          getBrowser().webNavigation.sessionHistory.addEntry(shEntry, true);
-
-          // The content was successfully loaded from the page cookie.
-          loadFromURL = false;
+          shEntry.cacheKey = shEntrySource.cacheKey;
+          getBrowser().webNavigation.sessionHistory
+                      .QueryInterface(Ci.nsISHistoryInternal)
+                      .addEntry(shEntry, true);
         }
       } catch(ex) {
         // Ignore the failure.  The content will be loaded via the URL
@@ -270,7 +275,7 @@ function viewSource(url)
   }
 
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
-  window._content.focus();
+  window.content.focus();
 
   return true;
 }
@@ -287,7 +292,7 @@ function onLoadContent()
   document.getElementById('cmd_goToLine').removeAttribute('disabled');
 
   // Register a listener so that we can show the caret position on the status bar.
-  window._content.getSelection()
+  window.content.getSelection()
    .QueryInterface(nsISelectionPrivate)
    .addSelectionListener(gSelectionListener);
 }
@@ -410,7 +415,7 @@ function ViewSourceGoToLine()
 
 function goToLine(line)
 {
-  var viewsource = window._content.document.body;
+  var viewsource = window.content.document.body;
 
   //
   // The source document is made up of a number of pre elements with
@@ -443,7 +448,7 @@ function goToLine(line)
     return false;
   }
 
-  var selection = window._content.getSelection();
+  var selection = window.content.getSelection();
   selection.removeAllRanges();
 
   // In our case, the range's startOffset is after "\n" on the previous line.
@@ -499,7 +504,7 @@ function updateStatusBar()
 
   var statusBarField = document.getElementById("statusbar-line-col");
 
-  var selection = window._content.getSelection();
+  var selection = window.content.getSelection();
   if (!selection.focusNode) {
     statusBarField.label = '';
     return;
@@ -553,7 +558,7 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
   //
   // Walk through each of the text nodes and count newlines.
   //
-  var treewalker = window._content.document
+  var treewalker = window.content.document
       .createTreeWalker(pre, NodeFilter.SHOW_TEXT, null, false);
 
   //
@@ -645,7 +650,7 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
 //pref to persist the last state
 function wrapLongLines()
 {
-  var myWrap = window._content.document.body;
+  var myWrap = window.content.document.body;
 
   if (myWrap.className == '')
     myWrap.className = 'wrap';

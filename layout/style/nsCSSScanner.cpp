@@ -707,130 +707,135 @@ nsCSSScanner::EatNewline()
 PRBool
 nsCSSScanner::Next(nsCSSToken& aToken)
 {
-  PRInt32 ch = Read();
-  if (ch < 0) {
-    return PR_FALSE;
-  }
-
-  // IDENT
-  if (StartsIdent(ch, Peek()))
-    return ParseIdent(ch, aToken);
-
-  // AT_KEYWORD
-  if (ch == '@') {
-    PRInt32 nextChar = Read();
-    if (nextChar >= 0) {
-      PRInt32 followingChar = Peek();
-      Pushback(nextChar);
-      if (StartsIdent(nextChar, followingChar))
-        return ParseAtKeyword(ch, aToken);
+  for (;;) { // Infinite loop so we can restart after comments.
+    PRInt32 ch = Read();
+    if (ch < 0) {
+      return PR_FALSE;
     }
-  }
 
-  // NUMBER or DIM
-  if ((ch == '.') || (ch == '+') || (ch == '-')) {
-    PRInt32 nextChar = Peek();
-    if (IsDigit(nextChar)) {
+    // IDENT
+    if (StartsIdent(ch, Peek()))
+      return ParseIdent(ch, aToken);
+
+    // AT_KEYWORD
+    if (ch == '@') {
+      PRInt32 nextChar = Read();
+      if (nextChar >= 0) {
+        PRInt32 followingChar = Peek();
+        Pushback(nextChar);
+        if (StartsIdent(nextChar, followingChar))
+          return ParseAtKeyword(ch, aToken);
+      }
+    }
+
+    // NUMBER or DIM
+    if ((ch == '.') || (ch == '+') || (ch == '-')) {
+      PRInt32 nextChar = Peek();
+      if (IsDigit(nextChar)) {
+        return ParseNumber(ch, aToken);
+      }
+      else if (('.' == nextChar) && ('.' != ch)) {
+        nextChar = Read();
+        PRInt32 followingChar = Peek();
+        Pushback(nextChar);
+        if (IsDigit(followingChar))
+          return ParseNumber(ch, aToken);
+      }
+    }
+    if (IsDigit(ch)) {
       return ParseNumber(ch, aToken);
     }
-    else if (('.' == nextChar) && ('.' != ch)) {
-      nextChar = Read();
-      PRInt32 followingChar = Peek();
-      Pushback(nextChar);
-      if (IsDigit(followingChar))
-        return ParseNumber(ch, aToken);
+
+    // ID
+    if (ch == '#') {
+      return ParseRef(ch, aToken);
     }
-  }
-  if (IsDigit(ch)) {
-    return ParseNumber(ch, aToken);
-  }
 
-  // ID
-  if (ch == '#') {
-    return ParseRef(ch, aToken);
-  }
+    // STRING
+    if ((ch == '"') || (ch == '\'')) {
+      return ParseString(ch, aToken);
+    }
 
-  // STRING
-  if ((ch == '"') || (ch == '\'')) {
-    return ParseString(ch, aToken);
-  }
-
-  // WS
-  if (IsWhitespace(ch)) {
-    aToken.mType = eCSSToken_WhiteSpace;
-    aToken.mIdent.Assign(PRUnichar(ch));
-    (void) EatWhiteSpace();
-    return PR_TRUE;
-  }
-  if (ch == '/') {
-    PRInt32 nextChar = Peek();
-    if (nextChar == '*') {
-      (void) Read();
-#if 0
-      // If we change our storage data structures such that comments are
-      // stored (for Editor), we should reenable this code, condition it
-      // on being in editor mode, and apply glazou's patch from bug
-      // 60290.
-      aToken.mIdent.SetCapacity(2);
+    // WS
+    if (IsWhitespace(ch)) {
+      aToken.mType = eCSSToken_WhiteSpace;
       aToken.mIdent.Assign(PRUnichar(ch));
-      aToken.mIdent.Append(PRUnichar(nextChar));
-      return ParseCComment(aToken);
-#endif
-      return SkipCComment() && Next(aToken);
+      (void) EatWhiteSpace();
+      return PR_TRUE;
     }
-  }
-  if (ch == '<') {  // consume HTML comment tags
-    if (LookAhead('!')) {
-      if (LookAhead('-')) {
+    if (ch == '/') {
+      PRInt32 nextChar = Peek();
+      if (nextChar == '*') {
+        (void) Read();
+#if 0
+        // If we change our storage data structures such that comments are
+        // stored (for Editor), we should reenable this code, condition it
+        // on being in editor mode, and apply glazou's patch from bug
+        // 60290.
+        aToken.mIdent.SetCapacity(2);
+        aToken.mIdent.Assign(PRUnichar(ch));
+        aToken.mIdent.Append(PRUnichar(nextChar));
+        return ParseCComment(aToken);
+#endif
+        if (!SkipCComment()) {
+          return PR_FALSE;
+        }
+        continue; // start again at the beginning
+      }
+    }
+    if (ch == '<') {  // consume HTML comment tags
+      if (LookAhead('!')) {
         if (LookAhead('-')) {
+          if (LookAhead('-')) {
+            aToken.mType = eCSSToken_HTMLComment;
+            aToken.mIdent.AssignLiteral("<!--");
+            return PR_TRUE;
+          }
+          Pushback('-');
+        }
+        Pushback('!');
+      }
+    }
+    if (ch == '-') {  // check for HTML comment end
+      if (LookAhead('-')) {
+        if (LookAhead('>')) {
           aToken.mType = eCSSToken_HTMLComment;
-          aToken.mIdent.AssignLiteral("<!--");
+          aToken.mIdent.AssignLiteral("-->");
           return PR_TRUE;
         }
         Pushback('-');
       }
-      Pushback('!');
     }
-  }
-  if (ch == '-') {  // check for HTML comment end
-    if (LookAhead('-')) {
-      if (LookAhead('>')) {
-        aToken.mType = eCSSToken_HTMLComment;
-        aToken.mIdent.AssignLiteral("-->");
-        return PR_TRUE;
-      }
-      Pushback('-');
-    }
-  }
 
-  // INCLUDES ("~=") and DASHMATCH ("|=")
-  if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
-      ( ch == '$' ) || ( ch == '*' )) {
-    PRInt32 nextChar = Read();
-    if ( nextChar == '=' ) {
-      if (ch == '~') {
-        aToken.mType = eCSSToken_Includes;
+    // INCLUDES ("~=") and DASHMATCH ("|=")
+    if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
+        ( ch == '$' ) || ( ch == '*' )) {
+      PRInt32 nextChar = Read();
+      if ( nextChar == '=' ) {
+        if (ch == '~') {
+          aToken.mType = eCSSToken_Includes;
+        }
+        else if (ch == '|') {
+          aToken.mType = eCSSToken_Dashmatch;
+        }
+        else if (ch == '^') {
+          aToken.mType = eCSSToken_Beginsmatch;
+        }
+        else if (ch == '$') {
+          aToken.mType = eCSSToken_Endsmatch;
+        }
+        else if (ch == '*') {
+          aToken.mType = eCSSToken_Containsmatch;
+        }
+        return PR_TRUE;
+      } else if (nextChar >= 0) {
+        Pushback(nextChar);
       }
-      else if (ch == '|') {
-        aToken.mType = eCSSToken_Dashmatch;
-      }
-      else if (ch == '^') {
-        aToken.mType = eCSSToken_Beginsmatch;
-      }
-      else if (ch == '$') {
-        aToken.mType = eCSSToken_Endsmatch;
-      }
-      else if (ch == '*') {
-        aToken.mType = eCSSToken_Containsmatch;
-      }
-      return PR_TRUE;
-    } else if (nextChar >= 0) {
-      Pushback(nextChar);
     }
+    aToken.mType = eCSSToken_Symbol;
+    aToken.mSymbol = ch;
+    return PR_TRUE;
   }
-  aToken.mType = eCSSToken_Symbol;
-  aToken.mSymbol = ch;
-  return PR_TRUE;
 }
 
 PRBool
@@ -852,23 +857,6 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     aToken.mIdent.Assign(PRUnichar(ch));
     (void) EatWhiteSpace();
     return PR_TRUE;
-  }
-  if (ch == '/') {
-    PRInt32 nextChar = Peek();
-    if (nextChar == '*') {
-      (void) Read();
-#if 0
-      // If we change our storage data structures such that comments are
-      // stored (for Editor), we should reenable this code, condition it
-      // on being in editor mode, and apply glazou's patch from bug
-      // 60290.
-      aToken.mIdent.SetCapacity(2);
-      aToken.mIdent.Assign(PRUnichar(ch));
-      aToken.mIdent.Append(PRUnichar(nextChar));
-      return ParseCComment(aToken);
-#endif
-      return SkipCComment() && Next(aToken);
-    }
   }
 
   // Process a url lexical token. A CSS1 url token can contain

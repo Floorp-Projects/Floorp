@@ -749,9 +749,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                               nsnull /* don't care */);
                 if (NS_FAILED(rv)) return rv;
 
-                if (isGenerationElement && !(mFlags & eDontRecurse)) {
-                    // if recursion is allowed, continue by building the next
-                    // level of children
+                if (isGenerationElement) {
+                    // build the next level of children
                     rv = CreateContainerContents(realKid, aChild, PR_FALSE,
                                                  PR_FALSE, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
@@ -1022,16 +1021,9 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
         // are given ids) and only those elements, so get the reference point
         // from the corresponding match.
         nsTemplateMatch *match = nsnull;
-        if (mContentSupportMap.Get(aElement, &match)) {
-            // don't generate children if child processing isn't allowed
-            PRBool mayProcessChildren;
-            nsresult rv = match->mResult->GetMayProcessChildren(&mayProcessChildren);
-            if (NS_FAILED(rv) || !mayProcessChildren)
-                return rv;
-
+        if (mContentSupportMap.Get(aElement, &match))
             CreateContainerContents(aElement, match->mResult, aForceCreation,
                                     PR_FALSE, PR_TRUE);
-        }
     }
 
     PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
@@ -1049,6 +1041,17 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
 {
     if (!aForceCreation && !IsOpen(aElement))
         return NS_OK;
+
+    // don't generate children if recursion or child processing isn't allowed
+    if (aResult != mRootResult) {
+        if (mFlags & eDontRecurse)
+            return NS_OK;
+
+        PRBool mayProcessChildren;
+        nsresult rv = aResult->GetMayProcessChildren(&mayProcessChildren);
+        if (NS_FAILED(rv) || !mayProcessChildren)
+            return rv;
+    }
 
     nsCOMPtr<nsIRDFResource> refResource;
     GetResultResource(aResult, getter_AddRefs(refResource));
@@ -1233,9 +1236,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
                 }
 
                 // Grab the template node
-                nsCOMPtr<nsIContent> action;
-                matchedrule->GetAction(getter_AddRefs(action));
-
+                nsCOMPtr<nsIContent> action = matchedrule->GetAction();
                 BuildContentFromTemplate(action, aElement, aElement, PR_TRUE,
                                          mRefVariable == matchedrule->GetMemberVariable(),
                                          nextresult, aNotify, newmatch,
@@ -1707,9 +1708,7 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
     }
 
     if (aNewMatch) {
-        nsCOMPtr<nsIContent> action;
-        aNewMatchRule->GetAction(getter_AddRefs(action));
-
+        nsCOMPtr<nsIContent> action = aNewMatchRule->GetAction();
         return BuildContentFromTemplate(action, content, content, PR_TRUE,
                                         mRefVariable == aNewMatchRule->GetMemberVariable(),
                                         aNewMatch->mResult, PR_TRUE, aNewMatch,

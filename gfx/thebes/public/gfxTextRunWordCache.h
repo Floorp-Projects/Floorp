@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Jonathan Kew <jfkthame@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +48,23 @@
   */
 class THEBES_API gfxTextRunWordCache {
 public:
-    enum { TEXT_IN_CACHE = 0x10000000 };
+    enum {
+      TEXT_IN_CACHE = 0x10000000,
+
+      /**
+       * nsTextFrameThebes sets these, but they're defined here rather than in
+       * nsTextFrameUtils.h because the cache also needs to check the _INCOMING flag
+       */
+      TEXT_TRAILING_ARABICCHAR = 0x20000000,
+      /**
+       * When set, the previous character for this textrun was an Arabic
+       * character.  This is used for the context detection necessary for
+       * bidi.numeral implementation.
+       */
+      TEXT_INCOMING_ARABICCHAR = 0x40000000,
+
+      TEXT_UNUSED_FLAGS = 0x80000000
+    };
 
     /**
      * Create a textrun using cached words.

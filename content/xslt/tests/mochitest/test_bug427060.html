@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=427060
+-->
+<head>
+  <title>Test for Bug 427060</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=427060">Mozilla Bug 427060</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 427060 **/
+
+var xmldoc, xsltdoc;
+[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(String(xml), "text/xml") for each (xml in [ 
+
+    <opml version="1.0"><body></body></opml> ,
+
+    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    	<xsl:template match="/opml">
+    		<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    			<head>
+    				<base target="_blank"></base>
+    			</head>
+    			<body></body>
+    		</html>
+    	</xsl:template>
+    </xsl:stylesheet>
+
+]) ];
+
+var processor = new XSLTProcessor;
+processor.importStylesheet(xsltdoc);
+try
+{
+  var result = processor.transformToDocument(xmldoc);
+}
+catch (e)
+{
+}
+ok(result && result instanceof Document, "XSLT transform should have created a document");
+</script>
+</pre>
+</body>
+</html>

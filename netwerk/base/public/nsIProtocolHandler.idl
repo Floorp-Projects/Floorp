@@ -230,6 +230,11 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_IS_LOCAL_RESOURCE = (1<<12);
 
     /**
+     * URIs for this protocol execute script when they are opened.
+     */
+    const unsigned long URI_OPENING_EXECUTES_SCRIPT = (1<<13);
+
+    /**
      * This protocol handler can be proxied via a proxy (socks or http)
      * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
      * proxying, the handler should implement nsIProxiedProtocolHandler.

@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style type="text/css">
+
+[class='anon'], #v { float: left; }
+[class='anon']:first-line { word-spacing: 30ch; }
+body { width: 30ch; }
+
+</style>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo"><content><div class="anon"><span>A B</span><children xmlns="http://www.mozilla.org/xbl"/></div></content></binding></bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.body.insertBefore(document.createTextNode("jk"), document.body.firstChild);
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="-moz-binding: url(#foo)"><div id="v"></div></body>
+
+</html>

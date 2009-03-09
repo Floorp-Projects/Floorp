@@ -54,7 +54,9 @@ function LoadAvailableCharSets()
     var kNC_Root = rdf.GetResource("NC:DecodersRoot");
     var kNC_name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
     var rdfDataSource = rdf.GetDataSource("rdf:charset-menu"); 
-    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
+    var rdfContainer =
+      Components.classes["@mozilla.org/rdf/container;1"]
+                .createInstance(Components.interfaces.nsIRDFContainer);
 
     rdfContainer.Init(rdfDataSource, kNC_Root);
     var availableCharsets = rdfContainer.GetElements();

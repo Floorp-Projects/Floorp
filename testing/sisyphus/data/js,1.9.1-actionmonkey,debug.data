@@ -1,5 +1,6 @@
-product=js
-branch=1.9.1
-jsshellsourcepath=${BUILDDIR}/1.9.1-actionmonkey/mozilla/js/src
-buildtype=debug
-TEST_MOZILLA_HG=http://hg.mozilla.org/actionmonkey
+product=${product:-js}
+branch=${branch:-1.9.1}
+buildtype=${buildtype:-debug}
+jsshellsourcepath=${jsshellsourcepath:-/work/mozilla/builds/1.9.1-actionmonkey/mozilla/js/src}
+TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/actionmonkey}
+TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}

@@ -131,6 +131,7 @@ protected:
   static const char sColorPrefs[][38];
   static PRInt32 sCachedColors[nsILookAndFeel::eColor_LAST_COLOR];
   static PRInt32 sCachedColorBits[COLOR_CACHE_SIZE];
+  static PRBool sUseNativeColors;
 };
 
 extern nsresult NS_NewXPLookAndFeel(nsILookAndFeel**);

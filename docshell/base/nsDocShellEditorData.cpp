@@ -55,6 +55,8 @@ nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 : mDocShell(inOwningDocShell)
 , mMakeEditable(PR_FALSE)
 , mIsDetached(PR_FALSE)
+, mDetachedMakeEditable(PR_FALSE)
+, mDetachedEditingState(nsIHTMLDocument::eOff)
 {
   NS_ASSERTION(mDocShell, "Where is my docShell?");
 }
@@ -74,7 +76,7 @@ void
 nsDocShellEditorData::TearDownEditor()
 {
   if (mEditor) {
-    mEditor->PreDestroy();
+    mEditor->PreDestroy(PR_FALSE);
     mEditor = nsnull;
   }
   mEditingSession = nsnull;
@@ -99,7 +101,7 @@ nsDocShellEditorData::MakeEditable(PRBool inWaitForUriLoad)
   {
     NS_WARNING("Destroying existing editor on frame");
     
-    mEditor->PreDestroy();
+    mEditor->PreDestroy(PR_FALSE);
     mEditor = nsnull;
   }
   
@@ -186,7 +188,7 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
   {
     if (mEditor)
     {
-      mEditor->PreDestroy();
+      mEditor->PreDestroy(PR_FALSE);
       mEditor = nsnull;
     }
       

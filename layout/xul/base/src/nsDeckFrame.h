@@ -53,8 +53,7 @@ class nsDeckFrame : public nsBoxFrame
 public:
 
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
-                                   nsStyleContext* aContext,
-                                   nsIBoxLayout* aLayoutManager);
+                                   nsStyleContext* aContext);
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -76,7 +75,9 @@ public:
 
   virtual nsIAtom* GetType() const;
 
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
   virtual PRBool ChildrenMustHaveWidgets() const { return PR_TRUE; }
+#endif
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -85,9 +86,7 @@ public:
   }
 #endif
 
-  nsDeckFrame(nsIPresShell* aPresShell,
-              nsStyleContext* aContext,
-              nsIBoxLayout* aLayout = nsnull);
+  nsDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
 

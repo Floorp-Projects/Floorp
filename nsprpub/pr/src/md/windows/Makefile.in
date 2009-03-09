@@ -62,7 +62,7 @@ CSRCS = \
     ntinrval.c \
     $(NULL)
 else
-ifeq ($(OS_TARGET), WIN95)
+ifeq (,$(filter-out WIN95 WINCE, $(OS_TARGET)))
 CSRCS =          \
     ntmisc.c \
     ntsec.c   \

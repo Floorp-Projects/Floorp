@@ -93,6 +93,17 @@
 #define NS_CRYPTO_HMAC_CLASSNAME "Mozilla Crypto HMAC Function Component"
 #define NS_CRYPTO_HMAC_CID {0xa496d0a2, 0xdff7, 0x4e23, {0xbd, 0x65, 0x1c, 0xa7, 0x42, 0xfa, 0x17, 0x8a}}
 
+enum EnsureNSSOperator
+{
+  nssLoading = 0,
+  nssInitSucceeded = 1,
+  nssInitFailed = 2,
+  nssShutdown = 3,
+  nssEnsure = 4
+};
+
+extern PRBool EnsureNSSInitialized(EnsureNSSOperator op);
+
 //--------------------------------------------
 // Now we need a content listener to register 
 //--------------------------------------------
@@ -287,6 +298,7 @@ private:
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterPSMContentListener();
   nsresult RegisterObservers();
+  nsresult DeregisterObservers();
   nsresult DownloadCrlSilently();
   nsresult PostCRLImportEvent(const nsCSubstring &urlString, nsIStreamListener *psmDownloader);
   nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);

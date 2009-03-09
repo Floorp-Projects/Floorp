@@ -51,11 +51,12 @@ enum {
   kHiddenColumn,
   kTypedColumn,
   kLastVisitColumn,
+  kFirstVisitColumn,
   kColumnCount // keep me last
 };
 
 static const char * const gColumnNames[] = {
-  "URL", "Name", "VisitCount", "Hidden", "Typed", "LastVisitDate"
+  "URL", "Name", "VisitCount", "Hidden", "Typed", "LastVisitDate", "FirstVisitDate"
 };
 
 struct TableReadClosure
@@ -142,14 +143,19 @@ AddToHistoryCB(const nsCSubstring &aRowID,
     const PRUnichar *title = reinterpret_cast<const PRUnichar*>(titleBytes);
 
     PRInt32 err;
-    PRInt32 count = values[kVisitCountColumn].ToInteger(&err);
-    if (err != 0 || count == 0) {
-      count = 1;
+    PRInt32 visitCount = values[kVisitCountColumn].ToInteger(&err);
+    if (err != 0 || visitCount == 0) {
+      visitCount = 1;
     }
 
-    PRTime date;
-    if (PR_sscanf(values[kLastVisitColumn].get(), "%lld", &date) != 1) {
-      date = -1;
+    PRTime lastVisitDate;
+    if (PR_sscanf(values[kLastVisitColumn].get(), "%lld", &lastVisitDate) != 1) {
+      lastVisitDate = -1;
+    }
+
+    PRTime firstVisitDate;
+    if (PR_sscanf(values[kFirstVisitColumn].get(), "%lld", &firstVisitDate) != 1) {
+      firstVisitDate = -1;
     }
 
     PRBool isTyped = values[kTypedColumn].EqualsLiteral("1");
@@ -163,8 +169,9 @@ AddToHistoryCB(const nsCSubstring &aRowID,
       titleStr = nsDependentString(title, titleLength);
     else
       titleStr.SetIsVoid(PR_TRUE);
-    history->AddPageWithVisit(uri, titleStr,
-                              PR_FALSE, isTyped, count, transition, date);
+
+    history->AddPageWithVisits(uri, titleStr, visitCount, transition,
+                               firstVisitDate, lastVisitDate);
   }
   return PL_DHASH_NEXT;
 }

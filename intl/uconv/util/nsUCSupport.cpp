@@ -51,6 +51,7 @@
 // Class nsBasicDecoderSupport [implementation]
 
 nsBasicDecoderSupport::nsBasicDecoderSupport() 
+  : mErrBehavior(kOnError_Recover)
 {
 }
 
@@ -71,6 +72,20 @@ NS_IMPL_QUERY_INTERFACE1(nsBasicDecoderSupport, nsIUnicodeDecoder)
 
 //----------------------------------------------------------------------
 // Interface nsIUnicodeDecoder [implementation]
+
+void
+nsBasicDecoderSupport::SetInputErrorBehavior(PRInt32 aBehavior)
+{
+  NS_ABORT_IF_FALSE(aBehavior == kOnError_Recover || aBehavior == kOnError_Signal,
+                    "Unknown behavior for SetInputErrorBehavior");
+  mErrBehavior = aBehavior;
+}
+
+PRUnichar
+nsBasicDecoderSupport::GetCharacterForUnMapped()
+{
+  return PRUnichar(0xfffd); // Unicode REPLACEMENT CHARACTER
+}
 
 //----------------------------------------------------------------------
 // Class nsBufferDecoderSupport [implementation]
@@ -143,6 +158,11 @@ NS_IMETHODIMP nsBufferDecoderSupport::Convert(const char * aSrc,
     bcw = destEnd - dest;
     res = ConvertNoBuff(mBuffer, &bcr, dest, &bcw);
     dest += bcw;
+
+    // Detect invalid input character
+    if (res == NS_ERROR_ILLEGAL_INPUT && mErrBehavior == kOnError_Signal) {
+      break;
+    }
 
     if ((res == NS_OK_UDEC_MOREINPUT) && (bcw == 0)) {
         res = NS_ERROR_UNEXPECTED;
@@ -237,7 +257,8 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
   return nsUnicodeDecodeHelper::ConvertByTable(aSrc, aSrcLength,
                                                aDest, aDestLength,
                                                mScanClass, 
-                                               mShiftInTable, mMappingTable);
+                                               mShiftInTable, mMappingTable,
+                                               mErrBehavior == kOnError_Signal);
 }
 
 //----------------------------------------------------------------------
@@ -273,7 +294,8 @@ NS_IMETHODIMP nsMultiTableDecoderSupport::ConvertNoBuff(const char * aSrc,
                                                     aDest, aDestLength, 
                                                     mTableCount, mRangeArray,
                                                     mScanClassArray,
-                                                    mMappingTable);
+                                                    mMappingTable,
+                                                    mErrBehavior == kOnError_Signal);
 }
 
 //----------------------------------------------------------------------
@@ -309,7 +331,8 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Convert(const char * aSrc,
   return nsUnicodeDecodeHelper::ConvertByFastTable(aSrc, aSrcLength, 
                                                    aDest, aDestLength, 
                                                    mFastTable,
-                                                   ONE_BYTE_TABLE_SIZE);
+                                                   ONE_BYTE_TABLE_SIZE,
+                                                   mErrBehavior == kOnError_Signal);
 }
 
 NS_IMETHODIMP nsOneByteDecoderSupport::GetMaxLength(const char * aSrc, 

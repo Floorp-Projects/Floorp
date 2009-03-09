@@ -91,6 +91,8 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                            nsIAtom *aPrefix, const nsAString &aValue,
                            PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
   virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRUint32 GetDesiredIMEState();
@@ -263,6 +265,17 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
                                            aValue, aNotify);
 }
 
+nsresult
+nsHTMLObjectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                               PRBool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::data) {
+    Fallback(aNotify);
+  }
+
+  return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+}
+
 PRBool
 nsHTMLObjectElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
@@ -285,7 +298,7 @@ PRUint32
 nsHTMLObjectElement::GetDesiredIMEState()
 {
   if (Type() == eType_Plugin) {
-    return nsIContent::IME_STATUS_ENABLE;
+    return nsIContent::IME_STATUS_PLUGIN;
   }
    
   return nsGenericHTMLFormElement::GetDesiredIMEState();
@@ -310,11 +323,7 @@ nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission *aFormSubmission,
 
   nsIFrame* frame = GetPrimaryFrame();
 
-  nsIObjectFrame *objFrame = nsnull;
-  if (frame) {
-    CallQueryInterface(frame, &objFrame);
-  }
-
+  nsIObjectFrame *objFrame = do_QueryFrame(frame);
   if (!objFrame) {
     // No frame, nothing to submit.
 

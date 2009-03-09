@@ -155,7 +155,7 @@ bin\components\necko_http.xpt
 bin\components\necko_res.xpt
 bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
-#ifdef MOZ_OJI
+#ifdef OJI
 bin\components\oji.xpt
 #endif
 bin\components\loginmgr.xpt
@@ -223,7 +223,6 @@ bin\components\nsBlocklistService.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
 bin\components\nsPlacesTransactionsService.js
-bin\components\nsPostUpdateWin.js
 bin\components\nsPrivateBrowsingService.js
 bin\components\nsLoginInfo.js
 bin\components\nsLoginManager.js
@@ -338,6 +337,9 @@ bin\res\entityTables\*
 ; svg
 bin\res\svg.css
 bin\components\dom_svg.xpt
+#ifdef MOZ_SMIL
+bin\components\dom_smil.xpt
+#endif
 
 ; [Personal Security Manager]
 ;

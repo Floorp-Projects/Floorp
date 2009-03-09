@@ -68,23 +68,23 @@
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
-// See matching definitions in nsXULPopupManager.h
-nsNavigationDirection DirectionFromKeyCode_lr_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_Start,  // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_End,    // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
-};
-
-nsNavigationDirection DirectionFromKeyCode_rl_tb [6] = {
-  eNavigationDirection_Last,   // NS_VK_END
-  eNavigationDirection_First,  // NS_VK_HOME
-  eNavigationDirection_End,    // NS_VK_LEFT
-  eNavigationDirection_Before, // NS_VK_UP
-  eNavigationDirection_Start,  // NS_VK_RIGHT
-  eNavigationDirection_After   // NS_VK_DOWN
+const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
+  {
+    eNavigationDirection_Last,   // NS_VK_END
+    eNavigationDirection_First,  // NS_VK_HOME
+    eNavigationDirection_Start,  // NS_VK_LEFT
+    eNavigationDirection_Before, // NS_VK_UP
+    eNavigationDirection_End,    // NS_VK_RIGHT
+    eNavigationDirection_After   // NS_VK_DOWN
+  },
+  {
+    eNavigationDirection_Last,   // NS_VK_END
+    eNavigationDirection_First,  // NS_VK_HOME
+    eNavigationDirection_End,    // NS_VK_LEFT
+    eNavigationDirection_Before, // NS_VK_UP
+    eNavigationDirection_Start,  // NS_VK_RIGHT
+    eNavigationDirection_After   // NS_VK_DOWN
+  }
 };
 
 nsXULPopupManager* nsXULPopupManager::sInstance = nsnull;
@@ -135,6 +135,7 @@ NS_IMPL_ISUPPORTS5(nsXULPopupManager,
 
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),
+  mCachedMousePoint(nsIntPoint(0, 0)),
   mActiveMenuBar(nsnull),
   mPopups(nsnull),
   mNoHidePanels(nsnull),
@@ -247,7 +248,7 @@ nsXULPopupManager::AdjustPopupsOnWindowChange()
   while (item) {
     // if the auto positioning has been disabled, don't move the popup
     if (item->Frame()->GetAutoPosition())
-      item->Frame()->SetPopupPosition(nsnull);
+      item->Frame()->SetPopupPosition(nsnull, PR_TRUE);
     item = item->GetParent();
   }
 }
@@ -308,7 +309,7 @@ nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, PRInt32* aOffset)
 void
 nsXULPopupManager::SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup)
 {
-  mCachedMousePoint = nsPoint(0, 0);
+  mCachedMousePoint = nsIntPoint(0, 0);
 
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
   if (uiEvent) {
@@ -338,15 +339,14 @@ nsXULPopupManager::SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup)
               mouseEvent->GetClientY(&mCachedMousePoint.y);
 
               // convert to device pixels
-              PRInt32 adj = presContext->DeviceContext()->AppUnitsPerDevPixel();
-              mCachedMousePoint.x = nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.x) / adj;
-              mCachedMousePoint.y = nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.y) / adj;
+              mCachedMousePoint.x = presContext->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.x));
+              mCachedMousePoint.y = presContext->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.y));
             }
             else if (rootFrame) {
               nsPoint pnt =
                 nsLayoutUtils::GetEventCoordinatesRelativeTo(event, rootFrame);
-              mCachedMousePoint = nsPoint(presContext->AppUnitsToDevPixels(pnt.x),
-                                          presContext->AppUnitsToDevPixels(pnt.y));
+              mCachedMousePoint = nsIntPoint(presContext->AppUnitsToDevPixels(pnt.x),
+                                             presContext->AppUnitsToDevPixels(pnt.y));
             }
           }
         }
@@ -422,7 +422,7 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   if (aAsynchronous) {
     SetTriggerEvent(nsnull, nsnull);
     nsCOMPtr<nsIRunnable> event =
-      new nsXULPopupShowingEvent(popupFrame->GetContent(), aMenu,
+      new nsXULPopupShowingEvent(popupFrame->GetContent(), aMenu, popupFrame->PopupType(),
                                  parentIsContextMenu, aSelectFirstItem);
     NS_DispatchToCurrentThread(event);
   }
@@ -1000,7 +1000,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                             GetClosestView()->GetNearestWidget(&pnt);
   event.refPoint = mCachedMousePoint;
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
-  mCachedMousePoint = nsPoint(0, 0);
+  mCachedMousePoint = nsIntPoint(0, 0);
 
   // if a panel, blur whatever has focus so that the panel can take the focus.
   // This is done after the popupshowing event in case that event is cancelled.
@@ -1169,13 +1169,13 @@ nsXULPopupManager::GetTopPopup(nsPopupType aType)
 }
 
 nsTArray<nsIFrame *>
-nsXULPopupManager::GetOpenPopups()
+nsXULPopupManager::GetVisiblePopups()
 {
   nsTArray<nsIFrame *> popups;
 
   nsMenuChainItem* item = mPopups;
   while (item) {
-    if (item->Frame()->PopupState() != ePopupInvisible)
+    if (item->Frame()->PopupState() == ePopupOpenAndVisible)
       popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
     item = item->GetParent();
   }
@@ -1604,7 +1604,8 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
     return PR_FALSE;
 
   nsNavigationDirection theDirection;
-  NS_DIRECTION_FROM_KEY_CODE(itemFrame, theDirection, aKeyCode);
+  NS_ASSERTION(aKeyCode >= NS_VK_END && aKeyCode <= NS_VK_DOWN, "Illegal key code");
+  theDirection = NS_DIRECTION_FROM_KEY_CODE(itemFrame, aKeyCode);
 
   // if a popup is open, first check for navigation within the popup
   if (item && HandleKeyboardNavigationInPopup(item, theDirection))
@@ -2010,9 +2011,7 @@ nsXULPopupShowingEvent::Run()
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   nsPresContext* context = GetPresContextFor(mPopup);
   if (pm && context) {
-    // the popupshowing event should only be fired asynchronously
-    // for menus, so just use ePopupTypeMenu as the type
-    pm->FirePopupShowingEvent(mPopup, mMenu, context, ePopupTypeMenu,
+    pm->FirePopupShowingEvent(mPopup, mMenu, context, mPopupType,
                               mIsContextMenu, mSelectFirstItem);
   }
 

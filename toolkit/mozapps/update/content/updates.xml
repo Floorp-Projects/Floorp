@@ -18,7 +18,8 @@
         </xul:hbox>
       </xul:vbox>
       <xul:vbox flex="1">
-        <xul:browser class="remoteContent" type="content" flex="1"/>
+        <xul:browser class="remoteContent" type="content" disablehistory="true"
+                     flex="1"/>
       </xul:vbox>
       <xul:stringbundle anonid="strings" 
                         src="chrome://mozapps/locale/update/updates.properties"/>

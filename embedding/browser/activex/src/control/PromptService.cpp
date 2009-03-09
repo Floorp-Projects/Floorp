@@ -666,18 +666,18 @@ CMozillaBrowser *CPromptService::GetOwningBrowser(nsIDOMWindow *parent)
     if (parent == nsnull)
     {
         // return the first element from the list if there is one
-        if (CMozillaBrowser::sBrowserList.Count() > 0)
+        if (CMozillaBrowser::sBrowserList.Length() > 0)
         {
-            return (CMozillaBrowser *) CMozillaBrowser::sBrowserList[0];
+            return CMozillaBrowser::sBrowserList[0];
         }
         return NULL;
     }
 
     // Search for the browser with a content window matching the one provided
-    PRInt32 i;
-    for (i = 0; i < CMozillaBrowser::sBrowserList.Count(); i++)
+    PRUint32 i;
+    for (i = 0; i < CMozillaBrowser::sBrowserList.Length(); i++)
     {
-        CMozillaBrowser *p = (CMozillaBrowser *) CMozillaBrowser::sBrowserList[i];
+        CMozillaBrowser *p = CMozillaBrowser::sBrowserList[i];
         if (p->mWebBrowser)
         {
             nsCOMPtr<nsIDOMWindow> domWindow;

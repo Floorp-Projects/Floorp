@@ -196,11 +196,6 @@
 #define NS_MACCYRILLICTOUNICODE_CID \
   { 0x6394eea9, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
-// Class ID for our MacUkrainianToUnicode charset converter
-// {6394EEAA-FC3D-11d2-B3B8-00805F8A6670}
-#define NS_MACUKRAINIANTOUNICODE_CID \
-  { 0x6394eeaa, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
 // Class ID for our MacIcelandicToUnicode charset converter
 // {6394EEAB-FC3D-11d2-B3B8-00805F8A6670}
 #define NS_MACICELANDICTOUNICODE_CID \
@@ -396,11 +391,6 @@
 // {6394EEB9-FC3D-11d2-B3B8-00805F8A6670}
 #define NS_UNICODETOMACCYRILLIC_CID \
   { 0x6394eeb9, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our UnicodeToMacUkrainian charset converter
-// {6394EEBA-FC3D-11d2-B3B8-00805F8A6670}
-#define NS_UNICODETOMACUKRAINIAN_CID \
-  { 0x6394eeba, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
 // Class ID for our UnicodeToMacIcelandic charset converter
 // {6394EEBB-FC3D-11d2-B3B8-00805F8A6670}

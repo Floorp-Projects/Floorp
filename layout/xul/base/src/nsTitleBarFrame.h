@@ -70,7 +70,7 @@ protected:
 
 protected:
 	PRBool mTrackingMouseMove;	
-	nsPoint mLastPoint;
+	nsIntPoint mLastPoint;
 
 
 }; // class nsTitleBarFrame

@@ -2,7 +2,7 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/licenses/publicdomain/
 -->
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait" onload="setTimeout(doTest,10)" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait" onload="startTest()" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Testing that dynamic changes to the element for a given ID are reflected in textPath</title>
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=458010 -->
   <defs>
@@ -14,6 +14,12 @@
   </text>
 
   <script>
+  function startTest() {
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+  }
+  
   function doTest() {
     // check that changing an id to "m1" lets l1 find it
     var x = document.getElementById("x");

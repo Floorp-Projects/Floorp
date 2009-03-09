@@ -43,7 +43,7 @@
 // nsSVGGenericContainerFrame Implementation
 
 nsIFrame*
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
+NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGGenericContainerFrame(aContext);
 }

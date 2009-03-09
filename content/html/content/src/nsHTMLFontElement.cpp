@@ -180,7 +180,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::face);
       if (value && value->Type() == nsAttrValue::eString &&
           !value->IsEmptyString()) {
-        font.mFamily.SetStringValue(value->GetStringValue(), eCSSUnit_String);
+        font.mFamily.SetStringValue(value->GetStringValue(), eCSSUnit_Families);
         font.mFamilyFromHTML = PR_TRUE;
       }
     }

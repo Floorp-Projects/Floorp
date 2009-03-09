@@ -282,7 +282,8 @@ nsSVGGradientFrame::GetReferencedGradient()
   if (!property) {
     // Fetch our gradient element's xlink:href attribute
     nsSVGGradientElement *grad = static_cast<nsSVGGradientElement *>(mContent);
-    const nsString &href = grad->mStringAttributes[nsSVGGradientElement::HREF].GetAnimValue();
+    nsAutoString href;
+    grad->mStringAttributes[nsSVGGradientElement::HREF].GetAnimValue(href, grad);
     if (href.IsEmpty()) {
       mNoHRefURI = PR_TRUE;
       return nsnull; // no URL
@@ -414,6 +415,19 @@ nsSVGGradientFrame::GetGradientUnits()
 // Linear Gradients
 // -------------------------------------------------------------------------
 
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGLinearGradientFrame::Init(nsIContent* aContent,
+                               nsIFrame* aParent,
+                               nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGLinearGradientElement> grad = do_QueryInterface(aContent);
+  NS_ASSERTION(grad, "Content is not an SVG linearGradient");
+
+  return nsSVGLinearGradientFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
+
 nsIAtom*
 nsSVGLinearGradientFrame::GetType() const
 {
@@ -481,6 +495,19 @@ nsSVGLinearGradientFrame::CreateGradient()
 // -------------------------------------------------------------------------
 // Radial Gradients
 // -------------------------------------------------------------------------
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGRadialGradientFrame::Init(nsIContent* aContent,
+                               nsIFrame* aParent,
+                               nsIFrame* aPrevInFlow)
+{
+  nsCOMPtr<nsIDOMSVGRadialGradientElement> grad = do_QueryInterface(aContent);
+  NS_ASSERTION(grad, "Content is not an SVG radialGradient");
+
+  return nsSVGRadialGradientFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif /* DEBUG */
 
 nsIAtom*
 nsSVGRadialGradientFrame::GetType() const
@@ -563,11 +590,14 @@ nsSVGRadialGradientFrame::CreateGradient()
     // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
     // the circumference of the gradient or we'll get rendering anomalies. We
     // calculate the distance from the focal point to the gradient center and
-    // make sure it is *less* than the gradient radius. 0.999 is used as the
+    // make sure it is *less* than the gradient radius. 0.99 is used as the
     // factor of the radius because it's close enough to 1 that we won't get a
     // fringe at the edge of the gradient if we clamp, but not so close to 1
     // that rounding error will give us the same results as using fR itself.
-    double dMax = 0.999 * r;
+    // Also note that .99 < 255/256/2 which is the limit of the fractional part
+    // of cairo's 24.8 fixed point representation divided by 2 to ensure that
+    // we get different cairo fractions
+    double dMax = 0.99 * r;
     float dx = fx - cx;
     float dy = fy - cy;
     double d = sqrt((dx * dx) + (dy * dy));
@@ -589,28 +619,14 @@ nsSVGRadialGradientFrame::CreateGradient()
 
 nsIFrame*
 NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
-                             nsIContent*     aContent,
                              nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGLinearGradientElement> grad = do_QueryInterface(aContent);
-  if (!grad) {
-    NS_ERROR("Can't create frame! Content is not an SVG linearGradient");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGLinearGradientFrame(aContext);
 }
 
 nsIFrame*
 NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
-                             nsIContent*     aContent,
                              nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGRadialGradientElement> grad = do_QueryInterface(aContent);
-  if (!grad) {
-    NS_ERROR("Can't create frame! Content is not an SVG radialGradient");
-    return nsnull;
-  }
-
   return new (aPresShell) nsSVGRadialGradientFrame(aContext);
 }

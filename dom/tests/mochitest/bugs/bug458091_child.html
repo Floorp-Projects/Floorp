@@ -1,0 +1,13 @@
+<html> <head>
+<title></title>
+<script type="text/javascript">
+function finish() {
+  window.opener.finish(sessionStorage["testItem"]);
+  window.close();
+}
+</script>
+</head>
+
+<body onload="finish();">
+</body>
+</html>

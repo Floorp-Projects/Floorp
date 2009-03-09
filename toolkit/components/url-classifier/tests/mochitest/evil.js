@@ -1,0 +1,1 @@
+scriptItem = "loaded malware javascript!";

@@ -106,6 +106,12 @@ nsCSSValueList::Equal(nsCSSValueList* aList1, nsCSSValueList* aList2)
 // --- nsCSSColor -----------------
 
 nsCSSColor::nsCSSColor(void)
+  : mBackImage(nsnull)
+  , mBackRepeat(nsnull)
+  , mBackAttachment(nsnull)
+  , mBackPosition(nsnull)
+  , mBackClip(nsnull)
+  , mBackOrigin(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSColor);
 }
@@ -113,6 +119,13 @@ nsCSSColor::nsCSSColor(void)
 nsCSSColor::~nsCSSColor(void)
 {
   MOZ_COUNT_DTOR(nsCSSColor);
+
+  delete mBackImage;
+  delete mBackRepeat;
+  delete mBackAttachment;
+  delete mBackPosition;
+  delete mBackClip;
+  delete mBackOrigin;
 }
 
 // --- nsCSSText -----------------

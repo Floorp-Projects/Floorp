@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.17 2008/02/05 05:33:37 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: softoken.h,v 1.22 2009/02/03 05:34:43 julien.pierre.boogz%sun.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -189,7 +189,8 @@ unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 */
 extern PRBool sftk_audit_enabled;
 
-extern void sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg);
+extern void sftk_LogAuditMessage(NSSAuditSeverity severity, 
+				 NSSAuditType, const char *msg);
 
 extern void sftk_AuditCreateObject(CK_SESSION_HANDLE hSession,
 			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
@@ -262,22 +263,111 @@ extern void sftk_AuditDigestKey(CK_SESSION_HANDLE hSession,
 extern PRBool sftk_fatalError;
 
 /*
-** macros to check for forked child after C_Initialize
+** macros to check for forked child process after C_Initialize
 */
-#if defined(XP_UNIX) && !defined(NO_PTHREADS)
+#if defined(XP_UNIX) && !defined(NO_CHECK_FORK)
 
-extern PRBool forked;
+#ifdef DEBUG
 
-extern void ForkedChild(void);
-
-#define CHECK_FORK() \
-    do { if (forked) return CKR_DEVICE_ERROR; } while (0)
+#define FORK_ASSERT() \
+    { \
+        char* forkAssert = getenv("NSS_STRICT_NOFORK"); \
+        if ( (!forkAssert) || (0 == strcmp(forkAssert, "1")) ) { \
+            PORT_Assert(0); \
+        } \
+    }
 
 #else
 
-#define CHECK_FORK()
+#define FORK_ASSERT()
 
 #endif
+
+/* we have 3 methods of implementing the fork checks :
+ * - Solaris "mixed" method
+ * - pthread_atfork method
+ * - getpid method
+ */
+
+#if !defined (CHECK_FORK_MIXED) && !defined(CHECK_FORK_PTHREAD) && \
+    !defined (CHECK_FORK_GETPID)
+
+/* Choose fork check method automatically unless specified
+ * This section should be updated as more platforms get pthread fixes
+ * to unregister fork handlers in dlclose.
+ */
+
+#ifdef SOLARIS
+
+/* Solaris 8, s9 use PID checks, s10 uses pthread_atfork */
+
+#define CHECK_FORK_MIXED
+
+#elif defined(LINUX)
+
+#define CHECK_FORK_PTHREAD
+
+#else
+
+/* Other Unix platforms use only PID checks. Even if pthread_atfork is
+ * available, the behavior of dlclose isn't guaranteed by POSIX to
+ * unregister the fork handler. */
+
+#define CHECK_FORK_GETPID
+
+#endif
+
+#endif
+
+#if defined(CHECK_FORK_MIXED)
+
+extern PRBool usePthread_atfork;
+#include <unistd.h>
+extern pid_t myPid;
+extern PRBool forked;
+
+#define PARENT_FORKED() usePthread_atfork ? forked : (myPid && myPid != getpid())
+
+#elif defined(CHECK_FORK_PTHREAD)
+
+extern PRBool forked;
+
+#define PARENT_FORKED() forked
+
+#elif defined(CHECK_FORK_GETPID)
+
+#include <unistd.h>
+extern pid_t myPid;
+
+#define PARENT_FORKED() myPid && myPid != getpid()
+    
+#endif
+
+extern PRBool parentForkedAfterC_Initialize;
+
+#define CHECK_FORK() \
+    do { \
+        if (PARENT_FORKED()) { \
+            FORK_ASSERT(); \
+            return CKR_DEVICE_ERROR; \
+        } \
+    } while (0)
+
+#define SKIP_AFTER_FORK(x) if (!parentForkedAfterC_Initialize) x
+
+#else
+
+/* non-Unix platforms, or fork check disabled */
+
+#define CHECK_FORK()
+#define SKIP_AFTER_FORK(x) x
+
+#ifndef NO_FORK_CHECK
+#define NO_FORK_CHECK
+#endif
+
+#endif
+
 
 SEC_END_PROTOS
 

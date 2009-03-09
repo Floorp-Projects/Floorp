@@ -59,24 +59,35 @@ _TEST_FILES	= \
 	test_changingManifest.html \
 	test_refetchManifest.html \
 	test_offlineIFrame.html \
+	test_offlineMode.html \
 	test_bug445544.html \
+	test_bug460353.html \
+	test_bug474696.html \
 	test_foreign.html \
 	test_fallback.html \
+	test_overlap.html \
+	test_redirectManifest.html \
+	test_redirectUpdateItem.html \
+	overlap.cacheManifest \
+	overlap.cacheManifest^headers^ \
+	test_updatingManifest.html \
 	445544_part1.html \
 	445544_part2.html \
 	445544.cacheManifest \
 	445544.cacheManifest^headers^ \
-	test_bug460353.html \
 	460353_iframe_nomanifest.html \
 	460353_iframe_ownmanifest.html \
 	460353_iframe_samemanifest.html \
 	test_obsolete.html \
 	obsolete.html \
+	obsoletingManifest.sjs \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
 	bypass.cacheManifest \
 	bypass.cacheManifest^headers^ \
 	bypass.html \
+	dynamicRedirect.sjs \
+	explicitRedirect.sjs \
 	fallback.html \
 	fallback2.html \
 	fallbackTop.html \
@@ -87,29 +98,27 @@ _TEST_FILES	= \
 	foreign2.cacheManifest \
 	foreign2.cacheManifest^headers^ \
 	foreign2.html \
-	updatingIFrame.html \
-	updatingIFrame.html^headers^ \
+	notonwhitelist.html \
+	onwhitelist.html \
+	onwhitelist.html^headers^ \
+	updatingIframe.sjs \
 	updatingImplicit.html \
+	manifestRedirect.sjs \
 	missingFile.cacheManifest \
 	missingFile.cacheManifest^headers^ \
+	redirects.sjs \
 	simpleManifest.cacheManifest \
 	simpleManifest.cacheManifest^headers^ \
-	updating.cacheManifest \
-	updating.cacheManifest^headers^ \
+	updatingManifest.sjs \
 	simpleManifest.notmanifest \
 	changing1Sec.sjs \
 	changing1Hour.sjs \
-	changingManifest.cacheManifest \
-	changingManifest.cacheManifest^headers^ \
+	changingManifest.sjs \
 	offlineChild.html \
+	test_xhtmlManifest.xhtml \
+	test_missingManifest.html \
+	missing.html \
 	$(NULL)
-
-# Bug 466314 - updatingImplicit.html (used by test_offlineMode.html and test_updatingManifest.html) crashes SeaMonkey
-#	test_offlineMode.html \
-#	notonwhitelist.html \
-#	test_updatingManifest.html \
-#	onwhitelist.html \
-#	onwhitelist.html^headers^ \
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

@@ -88,46 +88,38 @@ nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* 
   return NS_OK;
 }
 
-nsresult
-nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag,
-                               nsIContent** aResult)
+nsIContent*
+nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag)
 {
   ChildIterator iter, last;
   for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
-    nsCOMPtr<nsIContent> child = *iter;
+    nsIContent* child = *iter;
 
     if (child->Tag() == aTag) {
-      NS_ADDREF(*aResult = child);
-      return NS_OK;
+      return child;
     }
   }
 
-  *aResult = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
-nsresult
-nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
+nsIContent*
+nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag)
 {
   ChildIterator iter, last;
   for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
-    nsCOMPtr<nsIContent> child = *iter;
+    nsIContent* child = *iter;
     if (child->Tag() == aTag) {
-      NS_ADDREF(*aResult = child);
-      return NS_OK;
+      return child;
     }
-    else {
-      nsresult rv = GetDescendantChild(child, aTag, aResult);
-      if(NS_FAILED(rv))
-        return rv;
 
-      if(*aResult)
-        return NS_OK;
+    child = GetDescendantChild(child, aTag);
+    if (child) {
+      return child;
     }
   }
 
-  *aResult = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult

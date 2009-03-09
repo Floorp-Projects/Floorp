@@ -354,7 +354,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
   case NPVariantType_String :
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
-      NS_ConvertUTF8toUTF16 utf16String(s->utf8characters, s->utf8length);
+      NS_ConvertUTF8toUTF16 utf16String(s->UTF8Characters, s->UTF8Length);
 
       JSString *str =
         ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
@@ -1166,18 +1166,18 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
-  if (!npobj || !npobj->_class || !npobj->_class->hasProperty) {
+  if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||
+      !npobj->_class->removeProperty) {
     ThrowJSException(cx, "Bad NPObject as private data!");
 
     return JS_FALSE;
   }
 
-  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id)) {
-    ThrowJSException(cx, "Trying to remove unsupported property on scriptable "
-                     "plugin object!");
+  if (!npobj->_class->hasProperty(npobj, (NPIdentifier)id))
+    return JS_TRUE;
 
-    return JS_FALSE;
-  }
+  if (!npobj->_class->removeProperty(npobj, (NPIdentifier)id))
+    *vp = JSVAL_FALSE;
 
   return ReportExceptionIfPending(cx);
 }

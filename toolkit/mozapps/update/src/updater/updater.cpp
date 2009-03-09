@@ -1069,6 +1069,8 @@ LaunchWinPostProcess(const WCHAR *appExe)
 
   WCHAR exefile[MAXPATHLEN];
   WCHAR exearg[MAXPATHLEN];
+  WCHAR exeasync[10];
+  PRBool async = PR_TRUE;
 
   if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeRelPath", NULL, exefile,
                                 MAXPATHLEN, inifile))
@@ -1076,6 +1078,10 @@ LaunchWinPostProcess(const WCHAR *appExe)
 
   if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeArg", NULL, exearg,
                                 MAXPATHLEN, inifile))
+    return;
+
+  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeAsync", L"TRUE", exeasync,
+                                sizeof(exeasync)/sizeof(exeasync[0]), inifile))
     return;
 
   WCHAR exefullpath[MAXPATHLEN];
@@ -1093,20 +1099,48 @@ LaunchWinPostProcess(const WCHAR *appExe)
   WCHAR slogFile[MAXPATHLEN];
   _snwprintf(slogFile, MAXPATHLEN, L"%s/update.log", gSourcePath);
 
+  WCHAR dummyArg[13];
+  wcscpy(dummyArg, L"argv0ignored ");
+
+  int len = wcslen(exearg) + wcslen(dummyArg);
+  WCHAR *cmdline = (WCHAR *) malloc((len + 1) * sizeof(WCHAR));
+  if (!cmdline)
+    return;
+
+  wcscpy(cmdline, dummyArg);
+  wcscat(cmdline, exearg);
+
+  if (!_wcsnicmp(exeasync, L"false", 6) || !_wcsnicmp(exeasync, L"0", 2))
+    async = PR_FALSE;
+
   // We want to launch the post update helper app to update the Windows
   // registry even if there is a failure with removing the uninstall.update
   // file or copying the update.log file.
   NS_tremove(dlogFile);
   CopyFile(slogFile, dlogFile, FALSE);
 
-  static int    argc = 2;
-  static WCHAR* argv[3] = {
-    L"argv0ignoredbywinlaunchchild",
-    exearg,
-    L"\0"
-  };
- 
-  WinLaunchChild(exefullpath, argc, argv, 0);
+  STARTUPINFOW si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
+
+  BOOL ok = CreateProcessW(exefullpath,
+                           cmdline,
+                           NULL,  // no special security attributes
+                           NULL,  // no special thread attributes
+                           FALSE, // don't inherit filehandles
+                           0,     // No special process creation flags
+                           NULL,  // inherit my environment
+                           NULL,  // use my current directory
+                           &si,
+                           &pi);
+  free(cmdline);
+
+  if (ok) {
+    if (!async)
+      WaitForSingleObject(pi.hProcess, INFINITE);
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+  }
 }
 #endif
 
@@ -1124,7 +1158,7 @@ LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
 #elif defined(XP_WIN)
-  WinLaunchChild(argv[0], argc, argv, 0);
+  WinLaunchChild(argv[0], argc, argv);
 #else
 # warning "Need implementaton of LaunchCallbackApp"
 #endif

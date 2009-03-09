@@ -1,7 +1,10 @@
+load 105619-1.html
 load 187671-1.html
+load 192408-1.html
 load 286707-1.html
 load 285727-1.html
 load 330998-1.html
+load 368175-1.html
 load 379788-1.html
 load 383979-1.xhtml
 load 383979-2.html
@@ -12,6 +15,8 @@ load 399289-1.svg
 load 404470-1.html
 load 411603-1.html
 load 413274-1.xhtml
+load 416461-1.xul
+load 431705-1.xul
 load 432561-1.html
 load 437170-1.html
 skip load 439184-1.html # skip until we figure out how to test this
@@ -23,3 +28,11 @@ load 448161-1.html
 load 448161-2.html
 load 456196.html
 load 460217-1.html
+load 466845-1.html
+load 472195-1.html
+load 472237-1.html # will fail, test for leak (474704)
+HTTP(..) load 472237-1.html
+load 473720-1.html
+load 473892-1.html
+load 473914-1.html
+skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)

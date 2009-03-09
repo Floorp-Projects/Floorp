@@ -30,7 +30,7 @@
       snap2 = snapshotWindow(window);
 
       var equal, str1, str2;
-      [equal, str1, str2] = compareSnapshots(snap1, snap2);
+      [equal, str1, str2] = compareSnapshots(snap1, snap2, true);
 
       ok(equal, "persistent attribute in tab box broken, expected: "+str1+" got: "+str2);
           

@@ -37,6 +37,7 @@ classic.jar:
         skin/classic/global/printPreview.css
         skin/classic/global/progressmeter.css
         skin/classic/global/radio.css
+        skin/classic/global/resizer.css
         skin/classic/global/richlistbox.css
 *       skin/classic/global/scale.css
         skin/classic/global/scrollbars.css                       (xulscrollbars.css)
@@ -146,7 +147,12 @@ classic.jar:
         skin/classic/global/icons/warningGhosted-64.png          (icons/warningGhosted-64.png)
         skin/classic/global/icons/wrap.png                       (icons/wrap.png)
         skin/classic/global/media/videocontrols.css              (media/videocontrols.css)
-        skin/classic/global/media/videocontrols.png              (media/videocontrols.png)
+        skin/classic/global/media/pauseButton.png                (media/pauseButton.png)
+        skin/classic/global/media/playButton.png                 (media/playButton.png)
+        skin/classic/global/media/muteButton.png                 (media/muteButton.png)
+        skin/classic/global/media/unmuteButton.png               (media/unmuteButton.png)
+        skin/classic/global/media/scrubberThumb.png              (media/scrubberThumb.png)
+        skin/classic/global/media/throbber.png                   (media/throbber.png)
         skin/classic/global/radio/radio-check.gif                (radio/radio-check.gif)
         skin/classic/global/radio/radio-check-dis.gif            (radio/radio-check-dis.gif)
         skin/classic/global/scrollbar/slider.gif                 (scrollbar/slider.gif)
@@ -204,6 +210,7 @@ classic.jar:
         skin/classic/aero/global/printPreview.css
         skin/classic/aero/global/progressmeter.css
         skin/classic/aero/global/radio.css
+        skin/classic/aero/global/resizer.css
         skin/classic/aero/global/richlistbox.css
 *       skin/classic/aero/global/scale.css
         skin/classic/aero/global/scrollbars.css                          (xulscrollbars.css)
@@ -313,7 +320,12 @@ classic.jar:
         skin/classic/aero/global/icons/warningGhosted-64.png             (icons/warningGhosted-64-aero.png)
         skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
         skin/classic/aero/global/media/videocontrols.css                 (media/videocontrols.css)
-        skin/classic/aero/global/media/videocontrols.png                 (media/videocontrols.png)
+        skin/classic/aero/global/media/pauseButton.png                   (media/pauseButton.png)
+        skin/classic/aero/global/media/playButton.png                    (media/playButton.png)
+        skin/classic/aero/global/media/muteButton.png                    (media/muteButton.png)
+        skin/classic/aero/global/media/unmuteButton.png                  (media/unmuteButton.png)
+        skin/classic/aero/global/media/scrubberThumb.png                 (media/scrubberThumb.png)
+        skin/classic/aero/global/media/throbber.png                      (media/throbber.png)
         skin/classic/aero/global/radio/radio-check.gif                   (radio/radio-check.gif)
         skin/classic/aero/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
         skin/classic/aero/global/scrollbar/slider.gif                    (scrollbar/slider.gif)

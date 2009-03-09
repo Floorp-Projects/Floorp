@@ -341,6 +341,12 @@ public:
     _class *tmp = Downcast(s);                                                 \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 
+// Base class' CC participant should return NS_SUCCESS_INTERRUPTED_TRAVERSE
+// from Traverse if it wants derived classes to not traverse anything from
+// their CC participant.
+#define NS_SUCCESS_INTERRUPTED_TRAVERSE \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 2)
+
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
@@ -351,7 +357,10 @@ public:
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = static_cast<_class*>(Downcast(s));                           \
-    NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb);
+    if (NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb) ==         \
+        NS_SUCCESS_INTERRUPTED_TRAVERSE) {                                     \
+      return NS_SUCCESS_INTERRUPTED_TRAVERSE;                                  \
+    }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(_class)                 \
   NS_IMETHODIMP                                                                \

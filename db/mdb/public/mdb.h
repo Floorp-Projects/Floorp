@@ -1592,7 +1592,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMdbPortTableCursor,
 **|
 **|| dropping: when a caller expects a row or table will no longer be used, the
 **| caller can tell the collection to 'drop activity', which means the runtime
-**| object can have it's internal representation purged to save memory or any
+**| object can have its internal representation purged to save memory or any
 **| other resource that is being consumed by the collection's representation.
 **| This has no effect on the collection's persistent content or semantics,
 **| and is only considered a runtime effect.  After a collection drops

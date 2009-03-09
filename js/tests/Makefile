@@ -19,13 +19,26 @@ spidermonkey-extensions-n.tests: $(TEST_JS)
 menu-list.txt:
 	echo "http://$(TEST_HTTP)/tests/mozilla.org/$(JSDIR)/menu.html" > menu-list.txt
 
-confidential-failures.txt:
+.PHONY: patterns
+
+patterns:
 	touch confidential-failures.txt
+	if [[ -e confidential-failures.txt.expanded ]]; then \
+		cp confidential-failures.txt confidential-failures.txt.save; \
+		export TEST_UNIVERSE=$(CURRDIR)/confidential-universe.data && \
+		./pattern-extracter.pl confidential-failures.txt.expanded > confidential-failures.txt; \
+	fi
+	touch public-failures.txt
+	if [[ -e public-failures.txt.expanded ]]; then \
+		cp public-failures.txt public-failures.txt.save; \
+		./pattern-extracter.pl public-failures.txt.expanded > public-failures.txt; \
+	fi
 
 public-failures.txt.expanded: public-failures.txt universe.data
 	./pattern-expander.pl public-failures.txt > public-failures.txt.expanded
 
-confidential-failures.txt.expanded: confidential-failures.txt universe.data
+confidential-failures.txt.expanded: confidential-failures.txt confidential-universe.data
+	export TEST_UNIVERSE=$(CURRDIR)/confidential-universe.data && \
 	./pattern-expander.pl confidential-failures.txt > confidential-failures.txt.expanded
 
 failures.txt: public-failures.txt.expanded confidential-failures.txt.expanded

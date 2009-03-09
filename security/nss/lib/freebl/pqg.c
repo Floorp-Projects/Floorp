@@ -37,8 +37,11 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.15 2007/11/09 18:49:32 wtc%google.com Exp $
+ * $Id: pqg.c,v 1.16 2008/11/18 19:48:23 rrelyea%redhat.com Exp $
  */
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
 
 #include "prerr.h"
 #include "secerr.h"

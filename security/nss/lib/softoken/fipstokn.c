@@ -74,8 +74,13 @@
 #include <pthread.h>
 #include <dlfcn.h>
 #define LIBAUDIT_NAME "libaudit.so.0"
-#ifndef AUDIT_USER
-#define AUDIT_USER 1005  /* message type: message from userspace */
+#ifndef AUDIT_CRYPTO_TEST_USER
+#define AUDIT_CRYPTO_TEST_USER          2400 /* Crypto test results */
+#define AUDIT_CRYPTO_PARAM_CHANGE_USER  2401 /* Crypto attribute change */
+#define AUDIT_CRYPTO_LOGIN              2402 /* Logged in as crypto officer */
+#define AUDIT_CRYPTO_LOGOUT             2403 /* Logged out from crypto */
+#define AUDIT_CRYPTO_KEY_USER           2404 /* Create,delete,negotiate */
+#define AUDIT_CRYPTO_FAILURE_USER       2405 /* Fail decrypt,encrypt,randomize */
 #endif
 static void *libaudit_handle;
 static int (*audit_open_func)(void);
@@ -321,6 +326,47 @@ sftk_get_object_class_and_fipsCheck(CK_SESSION_HANDLE hSession,
     return rv;
 }
 
+#ifdef LINUX
+
+int
+sftk_mapLinuxAuditType(NSSAuditSeverity severity, NSSAuditType auditType)
+{
+    switch (auditType) {
+    case NSS_AUDIT_ACCESS_KEY:
+    case NSS_AUDIT_CHANGE_KEY: 
+    case NSS_AUDIT_COPY_KEY:
+    case NSS_AUDIT_DERIVE_KEY:
+    case NSS_AUDIT_DESTROY_KEY:
+    case NSS_AUDIT_DIGEST_KEY:
+    case NSS_AUDIT_GENERATE_KEY: 
+    case NSS_AUDIT_LOAD_KEY:
+    case NSS_AUDIT_UNWRAP_KEY:
+    case NSS_AUDIT_WRAP_KEY:
+	return AUDIT_CRYPTO_KEY_USER;
+    case NSS_AUDIT_CRYPT:
+	return (severity == NSS_AUDIT_ERROR) ? AUDIT_CRYPTO_FAILURE_USER : 
+					 AUDIT_CRYPTO_KEY_USER;
+    case NSS_AUDIT_FIPS_STATE:
+    case NSS_AUDIT_INIT_PIN:
+    case NSS_AUDIT_INIT_TOKEN:
+    case NSS_AUDIT_SET_PIN:
+	return AUDIT_CRYPTO_PARAM_CHANGE_USER;
+    case NSS_AUDIT_SELF_TEST: 
+	return AUDIT_CRYPTO_TEST_USER;
+    case NSS_AUDIT_LOGIN:
+	return AUDIT_CRYPTO_LOGIN;
+    case NSS_AUDIT_LOGOUT:
+	return AUDIT_CRYPTO_LOGOUT;
+    /* we skip the fault case here so we can get compiler 
+     * warnings if new 'NSSAuditType's are added without
+     * added them to this list, defaults fall through */
+    }
+    /* default */
+    return AUDIT_CRYPTO_PARAM_CHANGE_USER;
+} 
+#endif
+
+
 /**********************************************************************
  *
  *     FIPS 140 auditable event logging
@@ -344,7 +390,8 @@ PRBool sftk_audit_enabled = PR_FALSE;
  * - for assuming a role, the type of role, and the location of the request
  */
 void
-sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg)
+sftk_LogAuditMessage(NSSAuditSeverity severity, NSSAuditType auditType,
+		     const char *msg)
 {
 #ifdef NSS_AUDIT_WITH_SYSLOG
     int level;
@@ -370,6 +417,7 @@ sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg)
     }
     if (libaudit_handle) {
 	int audit_fd;
+	int linuxAuditType;
 	int result = (severity != NSS_AUDIT_ERROR); /* 1=success; 0=failed */
 	char *message = PR_smprintf("NSS " SOFTOKEN_LIB_NAME ": %s", msg);
 	if (!message) {
@@ -380,11 +428,12 @@ sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg)
 	    PR_smprintf_free(message);
 	    return;
 	}
+	linuxAuditType = sftk_mapLinuxAuditType(severity, auditType);
 	if (audit_log_user_message_func) {
-	    audit_log_user_message_func(audit_fd, AUDIT_USER, message,
+	    audit_log_user_message_func(audit_fd, linuxAuditType, message,
 					NULL, NULL, NULL, result);
 	} else {
-	    audit_send_user_message_func(audit_fd, AUDIT_USER, message);
+	    audit_send_user_message_func(audit_fd, linuxAuditType, message);
 	}
 	audit_close_func(audit_fd);
 	PR_smprintf_free(message);
@@ -446,7 +495,7 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
     const char *envp;
     CK_RV crv;
 
-    CHECK_FORK();
+    sftk_ForkReset(pReserved, &crv);
 
     if (nsf_init) {
 	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
@@ -476,7 +525,7 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
 			"C_Initialize()=0x%08lX "
 			"power-up self-tests failed",
 			(PRUint32)crv);
-	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
+	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, NSS_AUDIT_SELF_TEST, msg);
 	}
 	return crv;
     }
@@ -489,12 +538,16 @@ CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
 CK_RV FC_Finalize (CK_VOID_PTR pReserved) {
    CK_RV crv;
 
-   CHECK_FORK();
+   if (sftk_ForkReset(pReserved, &crv)) {
+       return crv;
+   }
 
    if (!nsf_init) {
       return CKR_OK;
    }
+
    crv = nsc_CommonFinalize (pReserved, PR_TRUE);
+
    nsf_init = (PRBool) !(crv == CKR_OK);
    return crv;
 }
@@ -580,7 +633,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	PR_snprintf(msg,sizeof msg,
 		"C_InitToken(slotID=%lu, pLabel=\"%.32s\")=0x%08lX",
 		(PRUint32)slotID,pLabel,(PRUint32)crv);
-	sftk_LogAuditMessage(severity, msg);
+	sftk_LogAuditMessage(severity, NSS_AUDIT_INIT_TOKEN, msg);
     }
     return crv;
 }
@@ -604,7 +657,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	PR_snprintf(msg,sizeof msg,
 		"C_InitPIN(hSession=0x%08lX)=0x%08lX",
 		(PRUint32)hSession,(PRUint32)rv);
-	sftk_LogAuditMessage(severity, msg);
+	sftk_LogAuditMessage(severity, NSS_AUDIT_INIT_PIN, msg);
     }
     return rv;
 }
@@ -629,7 +682,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	PR_snprintf(msg,sizeof msg,
 		"C_SetPIN(hSession=0x%08lX)=0x%08lX",
 		(PRUint32)hSession,(PRUint32)rv);
-	sftk_LogAuditMessage(severity, msg);
+	sftk_LogAuditMessage(severity, NSS_AUDIT_SET_PIN, msg);
     }
     return rv;
 }
@@ -699,7 +752,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	PR_snprintf(msg,sizeof msg,
 		    "C_Login(hSession=0x%08lX, userType=%lu)=0x%08lX",
 		    (PRUint32)hSession,(PRUint32)userType,(PRUint32)rv);
-	sftk_LogAuditMessage(severity, msg);
+	sftk_LogAuditMessage(severity, NSS_AUDIT_LOGIN, msg);
     }
     return rv;
 }
@@ -721,7 +774,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 	PR_snprintf(msg,sizeof msg,
 		    "C_Logout(hSession=0x%08lX)=0x%08lX",
 		    (PRUint32)hSession,(PRUint32)rv);
-	sftk_LogAuditMessage(severity, msg);
+	sftk_LogAuditMessage(severity, NSS_AUDIT_LOGOUT, msg);
     }
     return rv;
 }
@@ -1416,7 +1469,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 			"self-test: continuous RNG test failed",
 			(PRUint32)hSession,pRandomData,
 			(PRUint32)ulRandomLen,(PRUint32)crv);
-	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
+	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, NSS_AUDIT_SELF_TEST, msg);
 	}
     }
     return crv;

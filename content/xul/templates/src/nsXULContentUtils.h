@@ -64,7 +64,6 @@ class nsICollation;
 class nsXULContentUtils
 {
 protected:
-    static nsrefcnt gRefCnt;
     static nsIRDFService* gRDF;
     static nsIDateTimeFormat* gFormat;
     static nsICollation *gCollation;

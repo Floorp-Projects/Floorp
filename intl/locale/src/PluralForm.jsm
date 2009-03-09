@@ -93,7 +93,7 @@ let gFunctions = [
   // 11: Irish Gaeilge
   [5, function(n) n==1?0:n==2?1:n>=3&&n<=6?2:n>=7&&n<=10?3:4],
   // 12: Arabic
-  [4, function(n) n==1?0:n==2?1:n<=10?2:3],
+  [6, function(n) n==0?5:n==1?0:n==2?1:n%100>=3&&n%100<=10?2:n%100>=11&&n%100<=99?3:4],
   // 13: Maltese
   [4, function(n) n==1?0:n==0||n%100>0&&n%100<=10?1:n%100>10&&n%100<20?2:3],
   // 14: Macedonian

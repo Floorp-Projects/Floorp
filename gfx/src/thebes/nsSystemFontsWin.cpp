@@ -64,6 +64,9 @@ nsresult nsSystemFontsWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONTW* ptrLog
   aFontStyle->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
             FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL);
 
+  // FIXME: Set aFontStyle->stretch correctly!
+  aFontStyle->stretch = NS_FONT_STRETCH_NORMAL;
+
   // XXX mPixelScale is currently hardcoded to 1 in thebes gfx...
   float mPixelScale = 1.0f;
   // Do Point Size

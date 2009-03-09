@@ -59,11 +59,14 @@ class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
 class nsIDocShell;
+#ifdef MOZ_SMIL
+class nsISMILAttr;
+#endif // MOZ_SMIL
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x2813b1d9, 0x7fe1, 0x496f, \
- { 0x85, 0x52, 0xa2, 0xc1, 0xc5, 0x6b, 0x15, 0x40 } }
+{ 0x48cb2d6d, 0x9ccc, 0x4d0b, \
+  { 0x8c, 0x07, 0x29, 0x96, 0xb5, 0xf9, 0x68, 0x55 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -148,7 +151,11 @@ public:
    */
   PRBool IsRootOfNativeAnonymousSubtree() const
   {
-    return HasFlag(NODE_IS_ANONYMOUS);
+    NS_ASSERTION(!HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) ||
+                 (HasFlag(NODE_IS_ANONYMOUS) &&
+                  HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)),
+                 "Some flags seem to be missing!");
+    return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT);
   }
 
   /**
@@ -157,7 +164,8 @@ public:
    */
   void SetNativeAnonymous()
   {
-    SetFlags(NODE_IS_ANONYMOUS);
+    SetFlags(NODE_IS_ANONYMOUS | NODE_IS_IN_ANONYMOUS_SUBTREE |
+             NODE_IS_NATIVE_ANONYMOUS_ROOT);
   }
 
   /**
@@ -199,19 +207,24 @@ public:
                  (GetParent() && GetBindingParent() == GetParent()),
                  "root of native anonymous subtree must have parent equal "
                  "to binding parent");
-    nsIContent *bindingParent = GetBindingParent();
-    return bindingParent && bindingParent == GetParent();
+    NS_ASSERTION(!GetParent() ||
+                 ((GetBindingParent() == GetParent()) ==
+                  HasFlag(NODE_IS_ANONYMOUS)),
+                 "For nodes with parent, flag and GetBindingParent() check "
+                 "should match");
+    return HasFlag(NODE_IS_ANONYMOUS);
   }
 
   /**
-   * Returns true if and only if there is NOT a path through child lists
-   * from the top of this node's parent chain back to this node.
+   * Returns true if there is NOT a path through child lists
+   * from the top of this node's parent chain back to this node or
+   * if the node is in native anonymous subtree without a parent.
    */
   PRBool IsInAnonymousSubtree() const
   {
-    NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent(),
-                 "must have binding parent when in native anonymous subtree");
-    return GetBindingParent() != nsnull;
+    NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent() || !GetParent(),
+                 "must have binding parent when in native anonymous subtree with a parent node");
+    return IsInNativeAnonymousSubtree() || GetBindingParent() != nsnull;
   }
 
   /**
@@ -404,7 +417,7 @@ public:
    * @returns The name at the given index, or null if the index is
    *          out-of-bounds.
    * @note    The document returned by NodeInfo()->GetDocument() (if one is
-   *          present) is *not* neccesarily the owner document of the element.
+   *          present) is *not* necessarily the owner document of the element.
    * @note    The pointer returned by this function is only valid until the
    *          next call of either GetAttrNameAt or SetAttr on the element.
    */
@@ -558,18 +571,23 @@ public:
    *         IME_STATUS_PASSWORD should be returned only from password editor,
    *         this value has a special meaning. It is used as alternative of
    *         IME_STATUS_DISABLED.
+   *         IME_STATUS_PLUGIN should be returned only when plug-in has focus.
+   *         When a plug-in is focused content, we should send native events
+   *         directly. Because we don't process some native events, but they may
+   *         be needed by the plug-in.
    */
   enum {
     IME_STATUS_NONE     = 0x0000,
     IME_STATUS_ENABLE   = 0x0001,
     IME_STATUS_DISABLE  = 0x0002,
     IME_STATUS_PASSWORD = 0x0004,
-    IME_STATUS_OPEN     = 0x0008,
-    IME_STATUS_CLOSE    = 0x0010
+    IME_STATUS_PLUGIN   = 0x0008,
+    IME_STATUS_OPEN     = 0x0010,
+    IME_STATUS_CLOSE    = 0x0020
   };
   enum {
     IME_STATUS_MASK_ENABLED = IME_STATUS_ENABLE | IME_STATUS_DISABLE |
-                              IME_STATUS_PASSWORD,
+                              IME_STATUS_PASSWORD | IME_STATUS_PLUGIN,
     IME_STATUS_MASK_OPENED  = IME_STATUS_OPEN | IME_STATUS_CLOSE
   };
   virtual PRUint32 GetDesiredIMEState()
@@ -853,6 +871,16 @@ public:
    * Saves the form state of this node and its children.
    */
   virtual void SaveSubtreeState() = 0;
+
+#ifdef MOZ_SMIL
+  /*
+   * Returns a new nsISMILAttr that allows the caller to animate the given
+   * attribute on this element.
+   *
+   * The CALLER OWNS the result and is responsible for deleting it.
+   */
+  virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName) = 0;
+#endif // MOZ_SMIL
 
 private:
   /**

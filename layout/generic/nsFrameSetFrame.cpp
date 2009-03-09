@@ -253,18 +253,9 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
                                          FrameResizePrefCallback, this);
 }
 
-NS_IMETHODIMP
-nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsHTMLFramesetFrame))) {
-    *aInstancePtr = (void*)this;
-    return NS_OK;
-  } 
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLFramesetFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 // static
 int
@@ -311,9 +302,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   nsIFrame* parentFrame = GetParent();
   mTopLevelFrameset = (nsHTMLFramesetFrame*)this;
   while (parentFrame) {
-    nsHTMLFramesetFrame* frameset = nsnull;
-    CallQueryInterface(parentFrame, &frameset);
-    
+    nsHTMLFramesetFrame* frameset = do_QueryFrame(parentFrame);
     if (frameset) {
       mTopLevelFrameset = frameset;
       parentFrame = parentFrame->GetParent();
@@ -486,6 +475,21 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
   mNonBorderChildCount = mChildCount;
   return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLFramesetFrame::SetInitialChildList(nsIAtom*  aListName,
+                                         nsIFrame* aChildList)
+{
+  // We do this weirdness where we create our child frames in Init().  On the
+  // other hand, we're going to get a SetInitialChildList() with a null list
+  // and list name after the frame constructor is done creating us.  So just
+  // ignore that call.
+  if (!aListName && !aChildList) {
+    return NS_OK;
+  }
+
+  return nsHTMLContainerFrame::SetInitialChildList(aListName, aChildList);
 }
 
 // XXX should this try to allocate twips based on an even pixel boundary?
@@ -746,7 +750,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
 // only valid for non border children
 void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32  aIndexInParent, 
                                            nsSize&  aSize, 
-                                           nsPoint& aCellIndex)
+                                           nsIntPoint& aCellIndex)
 {
   PRInt32 row = aIndexInParent / mNumCols;
   PRInt32 col = aIndexInParent - (row * mNumCols); // remainder from dividing index by mNumCols
@@ -756,7 +760,8 @@ void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32  aIndexInParent,
     aCellIndex.x = col;
     aCellIndex.y = row;
   } else {
-    aSize.width = aSize.height = aCellIndex.x = aCellIndex.y = 0;
+    aSize.width = aSize.height = 0;
+    aCellIndex.x = aCellIndex.y = 0;
   }
 }
 
@@ -770,7 +775,7 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
   for (nsIFrame* child = mFrames.FirstChild(); child;
        child = child->GetNextSibling()) {
     if (aChild == child) {
-      nsPoint ignore;
+      nsIntPoint ignore;
       GetSizeOfChildAt(i, aSize, ignore);
       return;
     }
@@ -865,7 +870,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       const nsHTMLReflowState& aReflowState,
                                       nsPoint&                 aOffset,
                                       nsSize&                  aSize,
-                                      nsPoint*                 aCellIndex)
+                                      nsIntPoint*              aCellIndex)
 {
   // reflow the child
   nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
@@ -1070,7 +1075,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* lastChild = mFrames.LastChild();
 
   for (PRInt32 childX = 0; childX < mNonBorderChildCount; childX++) {
-    nsPoint cellIndex;
+    nsIntPoint cellIndex;
     GetSizeOfChildAt(childX, size, cellIndex);
 
     if (lastRow != cellIndex.y) {  // changed to next row
@@ -1309,8 +1314,7 @@ nsHTMLFramesetFrame::IsLeaf() const
 PRBool 
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {
-  nsIFrame* childFrame = nsnull;
-  aChild->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame), (void**)&childFrame);
+  nsHTMLFramesetFrame* childFrame = do_QueryFrame(aChild);
   if (childFrame) {
     return PR_TRUE;
   }
@@ -1600,6 +1604,12 @@ nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext)
 nsIFrame*
 NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
+#ifdef DEBUG
+  const nsStyleDisplay* disp = aContext->GetStyleDisplay();
+  NS_ASSERTION(!disp->IsAbsolutelyPositioned() && !disp->IsFloating(),
+               "Framesets should not be positioned and should not float");
+#endif
+
   return new (aPresShell) nsHTMLFramesetFrame(aContext);
 }
 

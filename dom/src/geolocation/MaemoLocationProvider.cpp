@@ -34,32 +34,132 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-
 #include "MaemoLocationProvider.h"
 #include "nsGeolocation.h"
+#include "nsIClassInfo.h"
+#include "nsDOMClassInfoID.h"
 
+////////////////////////////////////////////////////
+// nsGeoPositionCoords
+////////////////////////////////////////////////////
+
+class nsGeoPositionCoords : public nsIDOMGeoPositionCoords
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMGEOPOSITIONCOORDS
+  
+  nsGeoPositionCoords(double aLat, double aLong,
+                      double aAlt, double aHError,
+                      double aVError, double aHeading,
+                      double aSpeed)
+    : mLat(aLat),
+      mLong(aLong),
+      mAlt(aAlt),
+      mHError(aHError),
+      mVError(aVError),
+      mHeading(aHeading),
+      mSpeed(aSpeed)
+  {
+  }
+  
+  
+  ~nsGeoPositionCoords(){}
+
+private:
+  double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
+};
+
+NS_INTERFACE_MAP_BEGIN(nsGeoPositionCoords)
+NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionCoords)
+NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCoords)
+NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPositionCoords)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsGeoPositionCoords)
+NS_IMPL_RELEASE(nsGeoPositionCoords)
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetLatitude(double *aLatitude)
+{
+  *aLatitude = mLat;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetLongitude(double *aLongitude)
+{
+  *aLongitude = mLong;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetAltitude(double *aAltitude)
+{
+  *aAltitude = mAlt;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetAccuracy(double *aAccuracy)
+{
+  *aAccuracy = mHError;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetAltitudeAccuracy(double *aAltitudeAccuracy)
+{
+  *aAltitudeAccuracy = mVError;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetHeading(double *aHeading)
+{
+  *aHeading = mHeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionCoords::GetSpeed(double *aSpeed)
+{
+  *aSpeed = mSpeed;
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////
 // nsGeoPosition
 ////////////////////////////////////////////////////
 
-/**
- * Simple object that holds a single point in space.
- */ 
 class nsGeoPosition : public nsIDOMGeoPosition
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITION
 
-    nsGeoPosition(double aLat, double aLong, double aAlt, double aHError, double aVError, double aHeading, double aSpeed, long long aTimestamp)
-    : mLat(aLat), mLong(aLong), mAlt(aAlt), mHError(aHError), mVError(aVError), mHeading(aHeading), mSpeed(aSpeed), mTimestamp(aTimestamp){};
+    nsGeoPosition(double aLat, double aLong,
+                  double aAlt, double aHError,
+                  double aVError, double aHeading,
+                  double aSpeed, long long aTimestamp)
+      : mLat(aLat),
+        mLong(aLong),
+        mAlt(aAlt),
+        mHError(aHError),
+        mVError(aVError),
+        mHeading(aHeading),
+        mSpeed(aSpeed),
+        mTimestamp(aTimestamp)
+  {
+  }
 
 private:
-  ~nsGeoPosition(){}
+  ~nsGeoPosition()
+  {
+  }
   double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
   long long mTimestamp;
+  nsRefPtr<nsGeoPositionCoords> mCoords;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsGeoPosition)
@@ -68,57 +168,24 @@ NS_INTERFACE_MAP_BEGIN(nsGeoPosition)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPosition)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_THREADSAFE_ADDREF(nsGeoPosition)
-NS_IMPL_THREADSAFE_RELEASE(nsGeoPosition)
+NS_IMPL_ADDREF(nsGeoPosition)
+NS_IMPL_RELEASE(nsGeoPosition)
 
 NS_IMETHODIMP
-nsGeoPosition::GetLatitude(double *aLatitude)
+nsGeoPosition::GetCoords(nsIDOMGeoPositionCoords * *aCoords)
 {
-  *aLatitude = mLat;
+  if (mCoords == nsnull)
+    mCoords = new nsGeoPositionCoords(mLat,
+                                      mLong,
+                                      mAlt,
+                                      mHError,
+                                      mVError,
+                                      mHeading,
+                                      mSpeed);
+  NS_IF_ADDREF(*aCoords = mCoords);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGeoPosition::GetLongitude(double *aLongitude)
-{
-  *aLongitude = mLong;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeoPosition::GetAltitude(double *aAltitude)
-{
-  *aAltitude = mAlt;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeoPosition::GetAccuracy(double *aAccuracy)
-{
-  *aAccuracy = mHError;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeoPosition::GetAltitudeAccuracy(double *aAltitudeAccuracy)
-{
-  *aAltitudeAccuracy = mVError;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeoPosition::GetHeading(double *aHeading)
-{
-  *aHeading = mHeading;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeoPosition::GetSpeed(double *aSpeed)
-{
-  *aSpeed = mSpeed;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp)
@@ -131,7 +198,9 @@ nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp)
 NS_IMPL_ISUPPORTS1(MaemoLocationProvider, nsIGeolocationProvider)
 
 MaemoLocationProvider::MaemoLocationProvider()
-: mGPSDevice(nsnull), mLocationCallbackHandle(0), mHasSeenLocation(PR_FALSE)
+: mGPSDevice(nsnull),
+  mHasSeenLocation(PR_FALSE),
+  mLastSeenTime(0)
 {
 }
 
@@ -139,16 +208,24 @@ MaemoLocationProvider::~MaemoLocationProvider()
 {
 }
 
-void location_changed (LocationGPSDevice *device, gpointer userdata)
+static void location_changed(LocationGPSDevice *device, gpointer userdata)
 {
+  if (!userdata || !device || !device->fix) {
+    return;
+  }
+
+  //  printf ("Latitude: %.5f\nLongitude: %.5f\nAltitude: %.2f\n",
+  //	  device->fix->latitude, device->fix->longitude, device->fix->altitude);
+
   MaemoLocationProvider* provider = (MaemoLocationProvider*) userdata;
   nsRefPtr<nsGeoPosition> somewhere = new nsGeoPosition(device->fix->latitude,
                                                         device->fix->longitude,
                                                         device->fix->altitude,
-                                                        device->fix->eph,
-                                                        device->fix->epv,
-                                                        0,0,
-							device->fix->time);
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        0,
+                                                        PR_Now());
   provider->Update(somewhere);
 }
 
@@ -156,15 +233,14 @@ NS_IMETHODIMP MaemoLocationProvider::Startup()
 {
   if (!mGPSDevice)
   {
-    // if we are already started, don't do anything
-    memset(&mGPSBT, 0, sizeof(gpsbt_t));
-    int result = gpsbt_start(NULL, 0, 0, 0, NULL, 0, 0, &mGPSBT);
-    if (result <0)
-      return NS_ERROR_NOT_AVAILABLE;
-    
     mGPSDevice = (LocationGPSDevice*) g_object_new (LOCATION_TYPE_GPS_DEVICE, NULL);
-    mLocationCallbackHandle = g_signal_connect (mGPSDevice, "changed", G_CALLBACK (location_changed), this->mCallback);
+
+    mCallbackChanged = g_signal_connect(mGPSDevice, 
+                                        "changed",
+                                        G_CALLBACK(location_changed),
+                                        this);
   }
+
   return NS_OK;
 }
 
@@ -176,34 +252,38 @@ NS_IMETHODIMP MaemoLocationProvider::IsReady(PRBool *_retval NS_OUTPARAM)
 
 NS_IMETHODIMP MaemoLocationProvider::Watch(nsIGeolocationUpdate *callback)
 {
-  mCallback = callback; // weak ref
-  return NS_OK;
-}
+  if (mCallback)
+    return NS_OK;
 
-/* readonly attribute nsIDOMGeoPosition currentPosition; */
-NS_IMETHODIMP MaemoLocationProvider::GetCurrentPosition(nsIDOMGeoPosition * *aCurrentPosition)
-{
-  NS_IF_ADDREF(*aCurrentPosition = mLastPosition);
+  mCallback = callback;
   return NS_OK;
 }
 
 NS_IMETHODIMP MaemoLocationProvider::Shutdown()
 {
-  if (mGPSDevice && mLocationCallbackHandle) {
-    g_signal_handler_disconnect(mGPSDevice, mLocationCallbackHandle);
+  if (mGPSDevice)
+  {
+    g_signal_handler_disconnect(mGPSDevice, mCallbackChanged);
+
     g_object_unref(mGPSDevice);
-    gpsbt_stop(&mGPSBT);
-    mLocationCallbackHandle = 0;
     mGPSDevice = nsnull;
+
     mHasSeenLocation = PR_FALSE;
+    
+    mCallback = nsnull;
   }
   return NS_OK;
 }
 
 void MaemoLocationProvider::Update(nsIDOMGeoPosition* aPosition)
 {
+  if ((PR_Now() - mLastSeenTime) / PR_USEC_PER_SEC < 5)
+    return;
+
   mHasSeenLocation = PR_TRUE;
-  mLastPosition = aPosition;
+
   if (mCallback)
     mCallback->Update(aPosition);
+
+  mLastSeenTime = PR_Now();
 }

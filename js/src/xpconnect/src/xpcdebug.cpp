@@ -291,6 +291,11 @@ JSBool
 xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
     char* buf;
+    JSExceptionState *state = JS_SaveExceptionState(cx);
+    if(!state)
+        puts("Call to a debug function modifying state!");
+
+    JS_ClearPendingException(cx);
 
     buf = FormatJSStackDump(cx, nsnull, showArgs, showLocals, showThisProps);
     if(buf)
@@ -300,6 +305,8 @@ xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showTh
     }
     else
         puts("Failed to format JavaScript stack for dump");
+
+    JS_RestoreExceptionState(cx, state);
     return JS_TRUE;
 }
 

@@ -55,6 +55,7 @@
  */
 
 #include "jspubtd.h"
+#include "jsutil.h"
 
 /* Internal identifier (jsid) macros. */
 
@@ -258,6 +259,21 @@ struct JSTempValueRooter {
 # define js_CStringsAreUTF8 JS_TRUE
 #else
 extern JSBool js_CStringsAreUTF8;
+#endif
+
+/*
+ * Helper macros to convert between function and data pointers assuming that
+ * they have the same size.
+ */
+JS_STATIC_ASSERT(sizeof(void *) == sizeof(void (*)()));
+
+#ifdef __GNUC__
+# define JS_FUNC_TO_DATA_PTR(type, fun) (__extension__ (type) (fun))
+# define JS_DATA_TO_FUNC_PTR(type, ptr) (__extension__ (type) (ptr))
+#else
+/* Use an extra (void *) cast for MSVC. */
+# define JS_FUNC_TO_DATA_PTR(type, fun) ((type) (void *) (fun))
+# define JS_DATA_TO_FUNC_PTR(type, ptr) ((type) (void *) (ptr))
 #endif
 
 #endif /* jsprvtd_h___ */

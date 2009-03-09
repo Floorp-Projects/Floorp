@@ -40,9 +40,13 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+MODULE = test_rdf
+
 include $(DEPTH)/config/autoconf.mk
 
 DIRS		= rdfcat rdfpoll triplescat
+
+XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
 

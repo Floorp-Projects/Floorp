@@ -404,13 +404,12 @@ nsDOMWorkerXHRProxy::InitInternal()
   }
 
   nsIPrincipal* nodePrincipal = pool->ParentDocument()->NodePrincipal();
-  nsIScriptContext* scriptContext = pool->ScriptContext();
-  NS_ASSERTION(nodePrincipal && scriptContext, "Shouldn't be null!");
 
   nsRefPtr<nsXMLHttpRequest> xhrConcrete = new nsXMLHttpRequest();
   NS_ENSURE_TRUE(xhrConcrete, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = xhrConcrete->Init(nodePrincipal, scriptContext, nsnull);
+  nsresult rv = xhrConcrete->Init(nodePrincipal, nsnull, nsnull,
+                                  worker->GetURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Call QI manually here to avoid keeping up with the cast madness of
@@ -737,6 +736,10 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+  // This will be filled if the request has completed and we're running in
+  // sync mode.
+  nsRefPtr<nsDOMWorkerXHRFinishSyncXHRRunnable> syncFinishedRunnable;
+
   PRBool requestDone;
   if (type == LISTENER_TYPE_ABORT || type == LISTENER_TYPE_ERROR ||
       type == LISTENER_TYPE_LOAD) {
@@ -760,8 +763,10 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
       }
     }
 
-    // Dummy memory barrier.
+    NS_ASSERTION(!syncFinishedRunnable, "This shouldn't be set!");
+
     nsAutoLock lock(mWorkerXHR->Lock());
+    mSyncFinishedRunnable.swap(syncFinishedRunnable);
   }
   else {
     requestDone = PR_FALSE;
@@ -818,7 +823,13 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
 
-  return HandleEventRunnable(runnable);
+  rv = HandleEventRunnable(runnable);
+
+  if (syncFinishedRunnable) {
+    syncFinishedRunnable->Dispatch();
+  }
+
+  return rv;
 }
 
 nsresult
@@ -1161,17 +1172,6 @@ nsDOMWorkerXHRProxy::OnStopRequest(nsIRequest* /* aRequest */,
   NS_ASSERTION(mOwnedByXHR, "Inconsistent state!");
 
   FlipOwnership();
-
-  nsRefPtr<nsDOMWorkerXHRFinishSyncXHRRunnable> syncFinishedRunnable;
-  {
-    nsAutoLock lock(mWorkerXHR->Lock());
-    mSyncFinishedRunnable.swap(syncFinishedRunnable);
-  }
-
-  if (syncFinishedRunnable) {
-    nsresult rv = syncFinishedRunnable->Dispatch();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return NS_OK;
 }

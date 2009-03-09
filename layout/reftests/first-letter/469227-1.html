@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<title>Testcase for issue in bug 469227 comment 8</title>
+<style type="text/css">
+
+span, p::first-letter { color: green; }
+span.foo, p.foo::first-letter { position: relative; }
+span.foo, p.foo::first-letter { left: 30px; }
+
+</style>
+<span></span>
+<p class="foo"></p>
+<span class="foo">Hello</span>

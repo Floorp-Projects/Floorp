@@ -677,7 +677,6 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsPresContext* aPresContext,
 
 nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
-                                         nsIFrame* aContentParentFrame,
                                          PRBool aForce)
 {
   if (aFrame->HasView()) {

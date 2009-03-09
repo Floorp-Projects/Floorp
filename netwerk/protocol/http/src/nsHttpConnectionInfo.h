@@ -120,6 +120,7 @@ public:
     PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
     PRBool        UsingSSL() const       { return mUsingSSL; }
     PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
+    void          SetAnonymous()         { mHashKey.SetCharAt('A', 2); }
             
 private:
     nsrefcnt               mRef;

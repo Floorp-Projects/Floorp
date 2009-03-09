@@ -37,27 +37,21 @@
 #ifndef nsIPageSequenceFrame_h___
 #define nsIPageSequenceFrame_h___
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 #include "nsRect.h"
 
 class nsPresContext;
 class nsIPrintSettings;
-
-// IID for the nsIPageSequenceFrame interface 
-// a6cf90d2-15b3-11d2-932e-00805f8add32
-#define NS_IPAGESEQUENCEFRAME_IID \
- { 0xa6cf90d2, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-//----------------------------------------------------------------------
 
 /**
  * Interface for accessing special capabilities of the page sequence frame.
  *
  * Today all that exists are member functions for printing.
  */
-class nsIPageSequenceFrame : public nsISupports {
+class nsIPageSequenceFrame : public nsQueryFrame
+{
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPAGESEQUENCEFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIPageSequenceFrame)
 
   /**
    * Print the set of pages.
@@ -92,13 +86,7 @@ public:
 
   // For Shrink To Fit
   NS_IMETHOD GetSTFPercent(float& aSTFPercent) = 0;
-  
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
-  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIPageSequenceFrame, NS_IPAGESEQUENCEFRAME_IID)
 
 #endif /* nsIPageSequenceFrame_h___ */
 

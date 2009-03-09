@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="window470711"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <tabbox>
+    <tabs>
+      <tab label="One"/>
+      <tab label="Two" style="padding: 0"/>
+      <tab label="Three" style="display: none"/>
+    </tabs>
+    <tabpanels>
+       <label value="One"/>
+       <label value="Two"/>
+       <label value="Three"/>
+    </tabpanels>
+  </tabbox>
+</window>

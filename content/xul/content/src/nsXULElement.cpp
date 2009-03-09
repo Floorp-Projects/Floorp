@@ -362,11 +362,6 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
                                                   nsGenericElement)
-    nsIDocument* currentDoc = tmp->GetCurrentDoc();
-    if (currentDoc && nsCCUncollectableMarker::InGeneration(
-                          currentDoc->GetMarkedCCGeneration())) {
-        return NS_OK;
-    }
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
                                                     nsXULPrototypeElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -849,6 +844,8 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
+      NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+                   "Missing a script blocker!");
       // We're in a document now.  Kick off the frame load.
       LoadSrc();
   }
@@ -1342,7 +1339,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         }
 
         // If the accesskey attribute is removed, unregister it here
-        // Also see nsAreaFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
+        // Also see nsXULLabelFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
         if (aName == nsGkAtoms::accesskey || aName == nsGkAtoms::control) {
             UnregisterAccessKey(oldValue);
         }

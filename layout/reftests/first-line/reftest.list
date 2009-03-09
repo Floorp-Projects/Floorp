@@ -24,3 +24,7 @@ fails == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 == stress-9.html stress-9-ref.html # assertion/crash test
 == stress-10.html about:blank # crash test
 fails == stress-11.xhtml stress-11-ref.xhtml # crash test, fails due to bug 402933
+
+== border-not-apply.html border-not-apply-ref.html
+== 469227-2.html 469227-2-ref.html
+== 469227-3.html 469227-3-ref.html

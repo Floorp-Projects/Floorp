@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.15 $ $Date: 2007/12/12 00:41:37 $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.16 $ $Date: 2009/02/09 07:55:53 $";
 #endif /* DEBUG */
 
 /*
@@ -159,7 +159,7 @@ nssCKFWObject_Create
   nssCKFWHash *mdObjectHash;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSCKFWObject *)NULL;
   }
 
@@ -169,12 +169,12 @@ nssCKFWObject_Create
   }
 #endif /* NSSDEBUG */
 
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     *pError = CKR_ARGUMENTS_BAD;
     return (NSSCKFWObject *)NULL;
   }
   mdObjectHash = nssCKFWToken_GetMDObjectHash(fwToken);
-  if( (nssCKFWHash *)NULL == mdObjectHash ) {
+  if (!mdObjectHash) {
     *pError = CKR_GENERAL_ERROR;
     return (NSSCKFWObject *)NULL;
   }
@@ -185,7 +185,7 @@ nssCKFWObject_Create
   }
 
   fwObject = nss_ZNEW(arena, NSSCKFWObject);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     *pError = CKR_HOST_MEMORY;
     return (NSSCKFWObject *)NULL;
   }
@@ -194,7 +194,7 @@ nssCKFWObject_Create
   fwObject->mdObject = mdObject;
   fwObject->fwSession = fwSession;
 
-  if( (NSSCKFWSession *)NULL != fwSession ) {
+  if (fwSession) {
     fwObject->mdSession = nssCKFWSession_GetMDSession(fwSession);
   }
 
@@ -203,7 +203,7 @@ nssCKFWObject_Create
   fwObject->fwInstance = fwInstance;
   fwObject->mdInstance = nssCKFWInstance_GetMDInstance(fwInstance);
   fwObject->mutex = nssCKFWInstance_CreateMutex(fwInstance, arena, pError);
-  if( (NSSCKFWMutex *)NULL == fwObject->mutex ) {
+  if (!fwObject->mutex) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -250,7 +250,7 @@ nssCKFWObject_Finalize
 
   (void)nssCKFWMutex_Destroy(fwObject->mutex);
 
-  if( (void *)NULL != (void *)fwObject->mdObject->Finalize ) {
+  if (fwObject->mdObject->Finalize) {
     fwObject->mdObject->Finalize(fwObject->mdObject, fwObject,
       fwObject->mdSession, fwObject->fwSession, fwObject->mdToken,
       fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance);
@@ -258,7 +258,7 @@ nssCKFWObject_Finalize
 
   if (removeFromHash) {
     mdObjectHash = nssCKFWToken_GetMDObjectHash(fwObject->fwToken);
-    if( (nssCKFWHash *)NULL != mdObjectHash ) {
+    if (mdObjectHash) {
       nssCKFWHash_Remove(mdObjectHash, fwObject->mdObject);
     }
  }
@@ -295,14 +295,14 @@ nssCKFWObject_Destroy
 
   (void)nssCKFWMutex_Destroy(fwObject->mutex);
 
-  if( (void *)NULL != (void *)fwObject->mdObject->Destroy ) {
+  if (fwObject->mdObject->Destroy) {
     fwObject->mdObject->Destroy(fwObject->mdObject, fwObject,
       fwObject->mdSession, fwObject->fwSession, fwObject->mdToken,
       fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance);
   }
 
   mdObjectHash = nssCKFWToken_GetMDObjectHash(fwObject->fwToken);
-  if( (nssCKFWHash *)NULL != mdObjectHash ) {
+  if (mdObjectHash) {
     nssCKFWHash_Remove(mdObjectHash, fwObject->mdObject);
   }
 
@@ -349,7 +349,7 @@ nssCKFWObject_GetArena
 )
 {
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSArena *)NULL;
   }
 
@@ -430,7 +430,7 @@ nssCKFWObject_IsTokenObject
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->IsTokenObject ) {
+  if (!fwObject->mdObject->IsTokenObject) {
     NSSItem item;
     NSSItem *pItem;
     CK_RV rv = CKR_OK;
@@ -440,7 +440,7 @@ nssCKFWObject_IsTokenObject
 
     pItem = nssCKFWObject_GetAttribute(fwObject, CKA_TOKEN, &item, 
       (NSSArena *)NULL, &rv);
-    if( (NSSItem *)NULL == pItem ) {
+    if (!pItem) {
       /* Error of some type */
       b = CK_FALSE;
       goto done;
@@ -471,7 +471,7 @@ nssCKFWObject_GetAttributeCount
   CK_ULONG rv;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (CK_ULONG)0;
   }
 
@@ -481,7 +481,7 @@ nssCKFWObject_GetAttributeCount
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->GetAttributeCount ) {
+  if (!fwObject->mdObject->GetAttributeCount) {
     *pError = CKR_GENERAL_ERROR;
     return (CK_ULONG)0;
   }
@@ -525,7 +525,7 @@ nssCKFWObject_GetAttributeTypes
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->GetAttributeTypes ) {
+  if (!fwObject->mdObject->GetAttributeTypes) {
     return CKR_GENERAL_ERROR;
   }
 
@@ -558,7 +558,7 @@ nssCKFWObject_GetAttributeSize
   CK_ULONG rv;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (CK_ULONG)0;
   }
 
@@ -568,7 +568,7 @@ nssCKFWObject_GetAttributeSize
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->GetAttributeSize ) {
+  if (!fwObject->mdObject->GetAttributeSize) {
     *pError = CKR_GENERAL_ERROR;
     return (CK_ULONG )0;
   }
@@ -611,7 +611,7 @@ nssCKFWObject_GetAttribute
   NSSCKFWItem mdItem;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSItem *)NULL;
   }
 
@@ -621,7 +621,7 @@ nssCKFWObject_GetAttribute
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->GetAttribute ) {
+  if (!fwObject->mdObject->GetAttribute) {
     *pError = CKR_GENERAL_ERROR;
     return (NSSItem *)NULL;
   }
@@ -636,7 +636,7 @@ nssCKFWObject_GetAttribute
     fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance,
     attribute, pError);
 
-  if( (NSSItem *)NULL == mdItem.item ) {
+  if (!mdItem.item) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -644,9 +644,9 @@ nssCKFWObject_GetAttribute
     goto done;
   }
 
-  if( (NSSItem *)NULL == itemOpt ) {
+  if (!itemOpt) {
     rv = nss_ZNEW(arenaOpt, NSSItem);
-    if( (NSSItem *)NULL == rv ) {
+    if (!rv) {
       *pError = CKR_HOST_MEMORY;
       goto done;
     }
@@ -654,12 +654,12 @@ nssCKFWObject_GetAttribute
     rv = itemOpt;
   }
 
-  if( (void *)NULL == rv->data ) {
+  if (!rv->data) {
     rv->size = mdItem.item->size;
     rv->data = nss_ZAlloc(arenaOpt, rv->size);
-    if( (void *)NULL == rv->data ) {
+    if (!rv->data) {
       *pError = CKR_HOST_MEMORY;
-      if( (NSSItem *)NULL == itemOpt ) {
+      if (!itemOpt) {
         nss_ZFreeIf(rv);
       }
       rv = (NSSItem *)NULL;
@@ -729,7 +729,7 @@ nssCKFWObject_SetAttribute
 
     newFwObject = nssCKFWSession_CopyObject(fwSession, fwObject,
                     &a, 1, &error);
-    if( (NSSCKFWObject *)NULL == newFwObject ) {
+    if (!newFwObject) {
       if( CKR_OK == error ) {
         error = CKR_GENERAL_ERROR;
       }
@@ -799,7 +799,7 @@ nssCKFWObject_SetAttribute
     /*
      * An "ordinary" change.
      */
-    if( (void *)NULL == (void *)fwObject->mdObject->SetAttribute ) {
+    if (!fwObject->mdObject->SetAttribute) {
       /* We could fake it with copying, like above.. later */
       return CKR_ATTRIBUTE_READ_ONLY;
     }
@@ -834,7 +834,7 @@ nssCKFWObject_GetObjectSize
   CK_ULONG rv;
 
 #ifdef NSSDEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (CK_ULONG)0;
   }
 
@@ -844,7 +844,7 @@ nssCKFWObject_GetObjectSize
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->GetObjectSize ) {
+  if (!fwObject->mdObject->GetObjectSize) {
     *pError = CKR_INFORMATION_SENSITIVE;
     return (CK_ULONG)0;
   }
@@ -894,7 +894,7 @@ NSSCKFWObject_GetArena
 )
 {
 #ifdef DEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSArena *)NULL;
   }
 
@@ -938,7 +938,7 @@ NSSCKFWObject_GetAttributeCount
 )
 {
 #ifdef DEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (CK_ULONG)0;
   }
 
@@ -992,7 +992,7 @@ NSSCKFWObject_GetAttributeSize
 )
 {
 #ifdef DEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (CK_ULONG)0;
   }
 
@@ -1020,7 +1020,7 @@ NSSCKFWObject_GetAttribute
 )
 {
 #ifdef DEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (NSSItem *)NULL;
   }
 
@@ -1045,7 +1045,7 @@ NSSCKFWObject_GetObjectSize
 )
 {
 #ifdef DEBUG
-  if( (CK_RV *)NULL == pError ) {
+  if (!pError) {
     return (CK_ULONG)0;
   }
 

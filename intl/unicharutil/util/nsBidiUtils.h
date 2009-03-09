@@ -23,6 +23,7 @@
  *   Maha Abou El Rous <mahar@eg.ibm.com>
  *   Lina Kemmel <lkemmel@il.ibm.com>
  *   Simon Montagu <smontagu@netscape.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -156,6 +157,19 @@ typedef enum nsCharType nsCharType;
   nsresult Conv_06_FE_WithReverse(const nsString& aSrc, nsString& aDst, PRUint32 aDir);
 
   /**
+   * Inspects a Unichar, converting numbers to Arabic or Hindi forms and returning them
+   * @param aChar is the character
+   * @param aPrevCharArabic is true if the previous character in the string is an Arabic char
+   * @param aNumFlag specifies the conversion to perform:
+   *        IBMBIDI_NUMERAL_NOMINAL:      don't do any conversion
+   *        IBMBIDI_NUMERAL_HINDI:        convert to Hindi forms (Unicode 0660-0669)
+   *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
+   *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
+   * @return the converted Unichar
+   */
+  PRUnichar HandleNumberInChar(PRUnichar aChar, PRBool aPrevCharArabic, PRUint32 aNumFlag);
+
+  /**
    * Scan a Unichar string, converting numbers to Arabic or Hindi forms in place
    * @param aBuffer is the string
    * @param aSize is the size of aBuffer
@@ -166,13 +180,6 @@ typedef enum nsCharType nsCharType;
    *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
    */
   nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
-
-  /**
-   * Scan an nsString, converting numerals to Arabic or Hindi forms
-   * @param aSrc is the input string
-   * @param aDst is the output string
-   */
-  nsresult HandleNumbers(const nsString& aSrc, nsString& aDst);
 
   /**
    * Give a Unicode character, return the symmetric equivalent
@@ -263,6 +270,8 @@ typedef enum nsCharType nsCharType;
 #define IBMBIDI_NUMERAL_HINDICONTEXT  2 //  2 = hindicontextnumeralBidi
 #define IBMBIDI_NUMERAL_ARABIC        3 //  3 = arabicnumeralBidi
 #define IBMBIDI_NUMERAL_HINDI         4 //  4 = hindinumeralBidi
+#define IBMBIDI_NUMERAL_PERSIANCONTEXT 5 // 5 = persiancontextnumeralBidi
+#define IBMBIDI_NUMERAL_PERSIAN       6 //  6 = persiannumeralBidi
 //  ------------------
 //  Support Mode
 //  ------------------

@@ -202,8 +202,8 @@ public:
   nsSpeculativeScriptThread()
     : mLock(nsAutoLock::DestroyLock),
       mCVar(PR_DestroyCondVar),
-      mKeepParsing(0),
-      mCurrentlyParsing(0),
+      mKeepParsing(PR_FALSE),
+      mCurrentlyParsing(PR_FALSE),
       mNumURIs(0),
       mNumConsumed(0),
       mContext(nsnull),
@@ -272,8 +272,8 @@ private:
   Holder<PRLock> mLock;
   Holder<PRCondVar> mCVar;
 
-  volatile PRUint32 mKeepParsing;
-  volatile PRUint32 mCurrentlyParsing;
+  volatile PRBool mKeepParsing;
+  volatile PRBool mCurrentlyParsing;
   nsRefPtr<nsHTMLTokenizer> mTokenizer;
   nsAutoPtr<nsScanner> mScanner;
 
@@ -398,7 +398,7 @@ nsSpeculativeScriptThread::Run()
   {
     nsAutoLock al(mLock.get());
 
-    mCurrentlyParsing = 0;
+    mCurrentlyParsing = PR_FALSE;
     PR_NotifyCondVar(mCVar.get());
   }
   return NS_OK;
@@ -489,10 +489,11 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
   if (!mScanner) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  mScanner->SetIncremental(PR_TRUE);
 
   mDocument.swap(doc);
-  mKeepParsing = 1;
-  mCurrentlyParsing = 1;
+  mKeepParsing = PR_TRUE;
+  mCurrentlyParsing = PR_TRUE;
   mContext = context;
   return aParser->ThreadPool()->Dispatch(this, NS_DISPATCH_NORMAL);
 }
@@ -510,7 +511,7 @@ nsSpeculativeScriptThread::StopParsing(PRBool /*aFromDocWrite*/)
   {
     nsAutoLock al(mLock.get());
 
-    mKeepParsing = 0;
+    mKeepParsing = PR_FALSE;
     if (mCurrentlyParsing) {
       PR_WaitCondVar(mCVar.get(), PR_INTERVAL_NO_TIMEOUT);
       NS_ASSERTION(!mCurrentlyParsing, "Didn't actually stop parsing?");
@@ -552,7 +553,7 @@ nsSpeculativeScriptThread::ProcessToken(CToken *aToken)
         nsAutoString src;
         nsAutoString elementType;
         nsAutoString charset;
-        PrefetchType ptype;
+        PrefetchType ptype = SCRIPT;
 
         switch (tag) {
 #if 0 // TODO Support stylesheet and image preloading.
@@ -588,9 +589,11 @@ nsSpeculativeScriptThread::ProcessToken(CToken *aToken)
 
           case eHTMLTag_style:
             ptype = STYLESHEET;
+            /* FALL THROUGH */
           case eHTMLTag_img:
             if (tag == eHTMLTag_img)
               ptype = IMAGE;
+            /* FALL THROUGH */
 #endif
           case eHTMLTag_script:
             if (tag == eHTMLTag_script)
@@ -1525,7 +1528,11 @@ nsParser::DidBuildModel(nsresult anErrorCode)
 
   if (IsComplete()) {
     if (mParserContext && !mParserContext->mPrevContext) {
-      if (mParserContext->mDTD) {
+      // Let sink know if we're about to end load because we've been terminated.
+      // In that case we don't want it to run deferred scripts.
+      PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
+      if (mParserContext->mDTD && mSink &&
+          mSink->ReadyToCallDidBuildModel(terminated)) {
         result = mParserContext->mDTD->DidBuildModel(anErrorCode,PR_TRUE,this,mSink);
       }
 
@@ -1704,6 +1711,13 @@ nsParser::ContinueParsing()
 NS_IMETHODIMP
 nsParser::ContinueInterruptedParsing()
 {
+  // If there are scripts executing, then the content sink is jumping the gun
+  // (probably due to a synchronous XMLHttpRequest) and will re-enable us
+  // later, see bug 460706.
+  if (mScriptsExecuting) {
+    return NS_OK;
+  }
+
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
@@ -2092,6 +2106,12 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   if (NS_FAILED(result)) {
     mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
     return result;
+  }
+
+  if (!mSink) {
+    // Parse must have failed in the XML case and so the sink was killed.
+    NS_ASSERTION(aXMLMode, "Unexpected!");
+    return NS_ERROR_HTMLPARSER_STOPPARSING;
   }
 
   nsCOMPtr<nsIFragmentContentSink> fragSink = do_QueryInterface(mSink);

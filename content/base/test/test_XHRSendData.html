@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=464848
+-->
+<head>
+  <title>XMLHttpRequest send data and headers</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=464848">Mozilla Bug 464848</a>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+xhr = new XMLHttpRequest();
+xhr.open("GET", "file_XHRSendData_doc.xml", false);
+xhr.send();
+testDoc1 = xhr.responseXML;
+is(testDoc1.inputEncoding, "ISO-8859-1", "wrong encoding");
+
+testDoc2 = document.implementation.createDocument("", "", null);
+testDoc2.appendChild(testDoc2.createComment(" doc 2 "));
+testDoc2.appendChild(testDoc2.createElement("res"));
+testDoc2.documentElement.appendChild(testDoc2.createTextNode("text"));
+is(testDoc2.inputEncoding, null, "wrong encoding");
+
+tests = [{ body: null,
+           resBody: "",
+         },
+         { body: undefined,
+           resBody: "",
+         },
+         { body: "hi",
+           resBody: "hi",
+           resContentType: "text/plain; charset=UTF-8",
+         },
+         { body: "r\xe4ksm\xf6rg\xe5s",
+           resBody: "r\xc3\xa4ksm\xc3\xb6rg\xc3\xa5s",
+           resContentType: "text/plain; charset=UTF-8",
+         },
+         { body: "hi",
+           contentType: "",
+           resBody: "hi",
+           resContentType: "text/plain; charset=UTF-8",
+         },
+         { body: "hi",
+           contentType: "foo/bar",
+           resBody: "hi",
+           resContentType: "foo/bar; charset=UTF-8",
+         },
+         { body: "hi",
+           contentType: "foo/bar; baz=bin",
+           resBody: "hi",
+           resContentType: "foo/bar; charset=UTF-8; baz=bin",
+         },
+         { body: "hi",
+           contentType: "foo/bar; charset=ascii; baz=bin",
+           resBody: "hi",
+           resContentType: "foo/bar; charset=UTF-8; baz=bin",
+         },
+         { body: "hi",
+           contentType: "foo/bar; charset=uTf-8",
+           resBody: "hi",
+           resContentType: "foo/bar; charset=uTf-8",
+         },
+         { body: testDoc1,
+           resBody: "<!-- comment -->\n<out>hi</out>",
+           resContentType: "application/xml; charset=ISO-8859-1",
+         },
+         { body: testDoc1,
+           contentType: "foo/bar",
+           resBody: "<!-- comment -->\n<out>hi</out>",
+           resContentType: "foo/bar; charset=ISO-8859-1",
+         },
+         { body: testDoc1,
+           contentType: "foo/bar; charset=ascii; baz=bin",
+           resBody: "<!-- comment -->\n<out>hi</out>",
+           resContentType: "foo/bar; charset=ISO-8859-1; baz=bin",
+         },
+         { body: testDoc1,
+           contentType: "foo/bar; charset=IsO-8859-1",
+           resBody: "<!-- comment -->\n<out>hi</out>",
+           resContentType: "foo/bar; charset=IsO-8859-1",
+         },
+         { body: testDoc2,
+           resBody: "<!-- doc 2 -->\n<res>text</res>",
+           resContentType: "application/xml; charset=UTF-8",
+         },
+         { body: testDoc2,
+           contentType: "foo/bar",
+           resBody: "<!-- doc 2 -->\n<res>text</res>",
+           resContentType: "foo/bar; charset=UTF-8",
+         },
+         { body: testDoc2,
+           contentType: "foo/bar; charset=ascii; baz=bin",
+           resBody: "<!-- doc 2 -->\n<res>text</res>",
+           resContentType: "foo/bar; charset=UTF-8; baz=bin",
+         },
+         { body: testDoc2,
+           contentType: "foo/bar; charset=uTf-8",
+           resBody: "<!-- doc 2 -->\n<res>text</res>",
+           resContentType: "foo/bar; charset=uTf-8",
+         },
+         ];
+
+for each(test in tests) {
+  xhr = new XMLHttpRequest;
+  xhr.open("POST", "file_XHRSendData.sjs", false);
+  if (test.contentType)
+    xhr.setRequestHeader("Content-Type", test.contentType);
+  xhr.send(test.body);
+
+  if (test.resContentType) {
+    is(xhr.getResponseHeader("Result-Content-Type"), test.resContentType,
+       "Wrong Content-Type sent");
+  }
+  else {
+    is(xhr.getResponseHeader("Result-Content-Type"), null);
+  }
+
+  if (test.body instanceof Document) {
+    is(xhr.responseText.replace("\r\n", "\n"), test.resBody, "Wrong body");
+  }
+  else {
+    is(xhr.responseText, test.resBody, "Wrong body");
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -253,40 +253,6 @@ function checkPrimariesThrow(id)
 }
 
 /**
- * Spew a bunch of HTTP metadata from request into the body of response.
- *
- * @param request : nsIHttpRequestMetadata
- *   the request whose metadata should be output
- * @param response : nsIHttpResponse
- *   the response to which the metadata is written
- */
-function writeDetails(request, response)
-{
-  response.write("Method:  " + request.method + "\r\n");
-  response.write("Path:    " + request.path + "\r\n");
-  response.write("Query:   " + request.queryString + "\r\n");
-  response.write("Version: " + request.httpVersion + "\r\n");
-  response.write("Scheme:  " + request.scheme + "\r\n");
-  response.write("Host:    " + request.host + "\r\n");
-  response.write("Port:    " + request.port);
-}
-
-/**
- * Advances iter past all non-blank lines and a single blank line, after which
- * point the body of the response will be returned next from the iterator.
- *
- * @param iter : Iterator
- *   an iterator over the CRLF-delimited lines in an HTTP response, currently
- *   just after the Request-Line
- */
-function skipHeaders(iter)
-{
-  var line = iter.next();
-  while (line !== "")
-    line = iter.next();
-}
-
-/**
  * Utility function to check for a 400 response.
  */
 function check400(data)

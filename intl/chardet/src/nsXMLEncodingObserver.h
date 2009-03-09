@@ -44,6 +44,7 @@
 #include "nsIObserverService.h"
 #include "nsObserverBase.h"
 #include "nsWeakReference.h"
+#include "nsTArray.h"
 
 class nsXMLEncodingObserver: public nsIElementObserver, 
                              public nsIObserver, 
@@ -71,8 +72,8 @@ public:
   NS_IMETHOD Notify(nsISupports* aWebShell,
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
-                    const nsStringArray* keys, 
-                    const nsStringArray* values,
+                    const nsTArray<nsString>* keys, 
+                    const nsTArray<nsString>* values,
                     const PRUint32 aFlags)
   { return NS_ERROR_NOT_IMPLEMENTED; }
 

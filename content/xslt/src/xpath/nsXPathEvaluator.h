@@ -69,8 +69,8 @@ public:
     NS_IMETHOD SetDocument(nsIDOMDocument* aDocument);
     NS_IMETHOD CreateExpression(const nsAString &aExpression, 
                                 nsIDOMXPathNSResolver *aResolver,
-                                nsStringArray *aNamespaceURIs,
-                                nsCStringArray *aContractIDs,
+                                nsTArray<nsString> *aNamespaceURIs,
+                                nsTArray<nsCString> *aContractIDs,
                                 nsCOMArray<nsISupports> *aState,
                                 nsIDOMXPathExpression **aResult);
 
@@ -78,7 +78,7 @@ private:
     nsresult CreateExpression(const nsAString & aExpression,
                               nsIDOMXPathNSResolver *aResolver,
                               nsTArray<PRInt32> *aNamespaceIDs,
-                              nsCStringArray *aContractIDs,
+                              nsTArray<nsCString> *aContractIDs,
                               nsCOMArray<nsISupports> *aState,
                               nsIDOMXPathExpression **aResult);
 

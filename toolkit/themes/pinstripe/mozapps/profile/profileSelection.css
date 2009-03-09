@@ -43,6 +43,11 @@
   list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
 }
 
+#profiles > listitem > listcell > image {
+  width: 16px;
+  height: 16px;
+}
+
 box#managebuttons > button {
   min-width: 8em;
 }

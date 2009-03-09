@@ -116,7 +116,7 @@
       <separator class="thin"/>
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserHomePage"/>
-        <textbox id="browserHomePage" class="padded" flex="1"
+        <textbox id="browserHomePage" class="padded uri-element" flex="1"
                  type="autocomplete" autocompletesearch="history"
                  preference="browser.startup.homepage"/>
       </hbox>

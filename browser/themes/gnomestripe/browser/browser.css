@@ -592,6 +592,13 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-print?size=toolbar&state=disabled");
 }
 
+#new-tab-button {
+  -moz-image-region: rect(0px 96px 24px 72px);
+}
+#new-tab-button[disabled="true"] {
+  -moz-image-region: rect(24px 96px 48px 72px);
+}
+
 #new-window-button {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
@@ -722,6 +729,13 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu&state=disabled");
 }
 
+toolbar[iconsize="small"] #new-tab-button {
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
+  -moz-image-region: rect(16px 64px 32px 48px);
+}
+
 toolbar[iconsize="small"] #new-window-button {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
@@ -780,7 +794,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #urlbar-icons {
-  height: 18px;
   -moz-box-align: center;
   -moz-padding-end: 2px;
 }
@@ -867,6 +880,15 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   outline: 1px dotted -moz-DialogText;
 }
 
+#identity-box:hover > hbox {
+  background-color: rgba(255, 255, 255, .2);
+}
+
+#identity-box:hover:active > hbox,
+#identity-box[open="true"] > hbox {
+  background-color: rgba(0, 0, 0, .1);
+}
+
 #identity-icon-label {
   padding: 0 2px;
   margin: 0;
@@ -876,12 +898,12 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   display: none;
 }
 
-#identity-box.verifiedDomain > hbox {
+#identity-box.verifiedDomain {
   background-color: rgba(30, 80, 170, 0.7);
   color: white;
 }
 
-#identity-box.verifiedIdentity > hbox {
+#identity-box.verifiedIdentity {
   background-color: rgba(50, 150, 50, 0.8);
   color: white;
 }
@@ -961,7 +983,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #autocomplete-security-wrapper {
   /* keep the URL bar content LTR */
   direction: ltr;
-  -moz-box-align: stretch;
   /* cover the white gap between the text field and the drop down button */
   margin-right: -3px;
 }
@@ -986,19 +1007,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   background-color: transparent;
 }
 
-#feed-button > hbox > .button-menu-dropmarker,
-#feed-button > hbox > .button-text {
-  display: none;
-}
-
 #feed-button {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
   -moz-appearance: none; 
   min-width: 0px; 
   margin-right: 1px !important;
-}
-
-#feed-button[feeds] {
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
@@ -1097,6 +1109,11 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   font-size: 130%;
 }
 
+/* Implements editBookmarkPanel resizing on folderTree un-collapse. */
+#editBMPanel_folderTree {
+  min-width: 27em;
+}
+
 /* Content area */
 #sidebar {
   background-color: Window;
@@ -1130,14 +1147,8 @@ statusbarpanel#statusbar-display {
 }
 
 #page-report-button {
-  list-style-image: none;
-  width: 20px;
-  display: none;
-}
-
-#page-report-button[blocked] {
   list-style-image: url("chrome://browser/skin/Info.png");
-  display: -moz-box;
+  width: 20px;
 }
 
 /* Throbber */
@@ -1264,14 +1275,20 @@ tabpanels {
   outline: none !important;
 }
 
-/* New tab button */
+/* Tabstrip new tab button */
 .tabs-newtab-button {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
+  list-style-image: url("moz-icon://stock/gtk-add?size=menu");
   border: none;
+  margin-bottom: 1px;
+}
+
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  width: 32px;
 }
 
 .tabs-newtab-button > .toolbarbutton-icon {
-  margin: -1px 0 0;
+  margin-top: -2px;
+  margin-bottom: -2px;
 }
 
 /* Tabstrip close button */
@@ -1324,12 +1341,13 @@ toolbarbutton.chevron[chromedir="rtl"] {
   list-style-image: url("chrome://global/skin/toolbar/chevron-rtl.gif") !important;
 }
 
-toolbarbutton.chevron > .toolbarbutton-text {
-  display: none; /* hide chevron label */
-}
-
+toolbarbutton.chevron > .toolbarbutton-text,
 toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
+}
+
+toolbarbutton.chevron > .toolbarbutton-icon {
+  margin: 0;
 }
 
 toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {

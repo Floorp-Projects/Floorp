@@ -72,7 +72,8 @@ private:
 
   struct DOMAnimatedInteger : public nsIDOMSVGAnimatedInteger
   {
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedInteger)
 
     DOMAnimatedInteger(nsSVGInteger* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}

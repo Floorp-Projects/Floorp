@@ -53,6 +53,7 @@ _TEST_FILES	= \
 		test_bug418216.xul \
 		test_bug445177.xul \
 		test_bug449457.xul \
+		test_bug468176.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

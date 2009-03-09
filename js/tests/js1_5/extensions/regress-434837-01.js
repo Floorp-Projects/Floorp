@@ -119,50 +119,5 @@ function test()
   }
   reportCompare(expect, actual, summary + ': x.test3 (2)');
 
-  try
-  {
-    var y = ['a', 'b', 'c', 'd'];
-    expect = 4;
-    actual = y.__count__;
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary + ': y.__count__');
-
-  try
-  {
-    expect = 0;
-    actual = [].__count__;
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary + ': [].__count__');
-
-  try
-  {
-    expect = 1;
-    actual = [1].__count__;
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary + ': [1].__count__');
-
-  try
-  {
-    expect = 9;
-    actual = [1,2,3,4,5,6,7,8,9].__count__;
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary + ': [1].__count__');
-
   exitFunc ('test');
 }

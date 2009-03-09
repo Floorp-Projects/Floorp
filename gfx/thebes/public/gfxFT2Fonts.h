@@ -44,6 +44,7 @@
 #include "gfxFont.h"
 #include "gfxContext.h"
 #include "gfxFontUtils.h"
+#include "gfxUserFontSet.h"
 
 typedef struct FT_FaceRec_* FT_Face;
 
@@ -61,6 +62,9 @@ public:
 
     FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
 
+protected:
+    virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle);
+
 public:
     nsTArray<nsRefPtr<FontEntry> > mFaces;
     nsString mName;
@@ -74,8 +78,6 @@ public:
     {
         mFontFace = nsnull;
         mFTFontIndex = 0;
-        mUnicodeFont = PR_FALSE;
-        mSymbolFont = PR_FALSE;
     }
 
     FontEntry(const FontEntry& aFontEntry);
@@ -85,6 +87,13 @@ public:
         return mFaceName;
     }
 
+    static FontEntry* 
+    CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, nsISupports *aLoader,
+                    const PRUint8 *aFontData, PRUint32 aLength);
+    
+    static FontEntry* 
+    CreateFontEntryFromFace(FT_Face aFace);
+    
     cairo_font_face_t *CairoFontFace();
 
     cairo_font_face_t *mFontFace;
@@ -92,9 +101,6 @@ public:
     nsString mFaceName;
     nsCString mFilename;
     PRUint8 mFTFontIndex;
-
-    PRPackedBool mTrueType    : 1;
-    PRPackedBool mIsType1     : 1;
 };
 
 
@@ -115,6 +121,10 @@ public: // new functions
     virtual PRUint32 GetSpaceGlyph();
 
     FontEntry *GetFontEntry();
+
+    static already_AddRefed<gfxFT2Font>
+    GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle);
+
 private:
     cairo_scaled_font_t *mScaledFont;
 
@@ -139,6 +149,8 @@ public: // new functions
         NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
                      "Whoever was caching this font group should have "
                      "called UpdateFontList on it");
+        NS_ASSERTION(mFonts.Length() > PRUint32(i), 
+                     "Requesting a font index that doesn't exist");
 
         return static_cast <gfxFT2Font *>(static_cast <gfxFont *>(mFonts[i]));
     }

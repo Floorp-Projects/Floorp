@@ -37,6 +37,9 @@
 #ifndef _nsNativeDragSource_h_
 #define _nsNativeDragSource_h_
 
+#include "nscore.h"
+#include "nsIDOMDataTransfer.h"
+#include "nsCOMPtr.h"
 #include <ole2.h>
 #include <oleidl.h>
 
@@ -52,7 +55,7 @@ public:
 
   // construct an nsNativeDragSource referencing adapter
   // nsNativeDragSource(nsIDragSource * adapter);
-  nsNativeDragSource();
+  nsNativeDragSource(nsIDOMDataTransfer* aDataTransfer);
   ~nsNativeDragSource();
 
   // IUnknown methods - see iunknown.h for documentation
@@ -74,11 +77,20 @@ public:
   // to execute the drop, otherwise NOERROR.
   STDMETHODIMP QueryContinueDrag(BOOL fESC, DWORD grfKeyState);
 
-protected:
-  ULONG        m_cRef;     // reference count
-  //nsIDragSource *  mDragSource; // adapter
-  //CfDragDrop *  mDragSource; // adapter
+  PRPackedBool UserCancelled() { return mUserCancelled; }
 
+protected:
+  // Reference count
+  ULONG m_cRef;
+
+  // Data object, hold information about cursor state
+  nsCOMPtr<nsIDOMNSDataTransfer> mDataTransfer;
+
+  // Custom drag cursor
+  HCURSOR m_hCursor;
+
+  // true if the user cancelled the drag by pressing escape
+  PRPackedBool mUserCancelled;
 };
 
 #endif // _nsNativeDragSource_h_

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2.5, false)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="15" width="200" height="20" fill="blue">
+    <animate attributeName="height" calcMode="discrete"
+             additive="sum" accumulate="none" 
+             from="20" to="180"
+             begin="0s" dur="2s" fill="freeze"/>
+  </rect>
+</svg>

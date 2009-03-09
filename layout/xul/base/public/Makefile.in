@@ -63,6 +63,7 @@ XPIDLSRCS=      nsIBoxObject.idl                  \
                 nsIEditorBoxObject.idl \
                 nsIContainerBoxObject.idl \
                 nsIListBoxObject.idl \
+                nsISliderListener.idl \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -301,6 +301,9 @@ nsFindContentIterator::Reset()
   range->SetStart(mStartNode, mStartOffset);
   range->SetEnd(mEndNode, mEndOffset);
   mOuterIterator->Init(range);
+  // if there's nothing to search, just return
+  if (mOuterIterator->IsDone())
+    return;
 
   if (!mFindBackward) {
     if (mStartOuterNode != mStartNode) {
@@ -378,8 +381,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   if (!frame)
     return;
 
-  nsITextControlFrame* tcFrame = nsnull;
-  CallQueryInterface(frame, &tcFrame);
+  nsITextControlFrame* tcFrame = do_QueryFrame(frame);
   if (!tcFrame)
     return;
 

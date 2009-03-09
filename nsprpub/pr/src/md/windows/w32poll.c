@@ -247,6 +247,12 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 
     if (0 != ready) return ready;  /* no need to block */
 
+    /*
+     * FD_SET does nothing if the fd_set's internal fd_array is full.  If
+     * nrd, nwt, or nex is greater than FD_SETSIZE, we know FD_SET must
+     * have failed to insert an osfd into the corresponding fd_set, and
+     * therefore we should fail.
+     */
     if ((nrd > FD_SETSIZE) || (nwt > FD_SETSIZE) || (nex > FD_SETSIZE)) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return -1;

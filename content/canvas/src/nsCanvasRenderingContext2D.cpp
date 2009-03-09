@@ -670,7 +670,8 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull),
-      mSaveCount(0), mIsFrameInvalid(PR_FALSE), mStyleStack(20)
+      mSaveCount(0), mIsFrameInvalid(PR_FALSE), mLastStyle(STYLE_MAX),
+      mStyleStack(20)
 {
 }
 
@@ -1967,13 +1968,18 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     // un-zoom the font size to avoid being affected by text-only zoom
     const nscoord fontSize = nsStyleFont::UnZoomText(parentContext->PresContext(), fontStyle->mFont.size);
 
+    PRBool printerFont = (presShell->GetPresContext()->Type() == nsPresContext::eContext_PrintPreview ||
+                          presShell->GetPresContext()->Type() == nsPresContext::eContext_Print);
+
     gfxFontStyle style(fontStyle->mFont.style,
                        fontStyle->mFont.weight,
+                       fontStyle->mFont.stretch,
                        NSAppUnitsToFloatPixels(fontSize, aupcp),
                        langGroup,
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
-                       fontStyle->mFont.familyNameQuirks);
+                       fontStyle->mFont.familyNameQuirks,
+                       printerFont);
 
     CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style, presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
@@ -2156,7 +2162,9 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
     {
         gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(0,
                                                                    mTextRun->GetLength(),
-                                                                   mDoMeasureBoundingBox,
+                                                                   mDoMeasureBoundingBox ?
+                                                                       gfxFont::TIGHT_INK_EXTENTS :
+                                                                       gfxFont::LOOSE_INK_EXTENTS,
                                                                    mThebes,
                                                                    nsnull);
 
@@ -3146,9 +3154,14 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
         if (!forceCopy && canvas->CountContexts() == 1) {
             nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
             rv = srcCanvas->GetThebesSurface(getter_AddRefs(sourceSurface));
+#ifndef WINCE
             // force a copy if we couldn't get the surface, or if it's
             // the same as what we have
             if (sourceSurface == mSurface || NS_FAILED(rv))
+#else
+            // force a copy if we couldn't get the surface
+            if (NS_FAILED(rv))
+#endif
                 sourceSurface = nsnull;
         }
 
@@ -3345,8 +3358,8 @@ FlushLayoutForTree(nsIDOMWindow* aWindow)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt32 aY,
-                                       PRInt32 aW, PRInt32 aH, 
+nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY,
+                                       float aW, float aH, 
                                        const nsAString& aBGColor,
                                        PRUint32 flags)
 {
@@ -3396,8 +3409,11 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
              nsPresContext::CSSPixelsToAppUnits(aY),
              nsPresContext::CSSPixelsToAppUnits(aW),
              nsPresContext::CSSPixelsToAppUnits(aH));
-    presShell->RenderDocument(r, PR_FALSE, PR_TRUE, bgColor,
-                              mThebes);
+    PRUint32 renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
+    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
+        renderDocFlags |= nsIPresShell::RENDER_CARET;
+    }
+    presShell->RenderDocument(r, renderDocFlags, bgColor, mThebes);
 
     // get rid of the pattern surface ref, just in case
     mThebes->SetColor(gfxRGBA(1,1,1,1));
@@ -3676,18 +3692,20 @@ nsCanvasRenderingContext2D::PutImageData()
         PRUint8 ir, ig, ib, ia;
         PRUint8 *ptr = imgPtr;
         for (int32 i = 0; i < w*h; i++) {
-#ifdef IS_LITTLE_ENDIAN
             ir = ptr[0];
             ig = ptr[1];
             ib = ptr[2];
             ia = ptr[3];
+
+#ifdef IS_LITTLE_ENDIAN
             ptr[0] = (ib*ia + 254) / 255;
             ptr[1] = (ig*ia + 254) / 255;
             ptr[2] = (ir*ia + 254) / 255;
 #else
-            ptr[0] = (ptr[0]*ptr[3] + 254) / 255;
-            ptr[1] = (ptr[1]*ptr[3] + 254) / 255;
-            ptr[2] = (ptr[2]*ptr[3] + 254) / 255;
+            ptr[0] = ia;
+            ptr[1] = (ir*ia + 254) / 255;
+            ptr[2] = (ig*ia + 254) / 255;
+            ptr[3] = (ib*ia + 254) / 255;
 #endif
             ptr += 4;
         }

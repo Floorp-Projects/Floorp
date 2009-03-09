@@ -84,6 +84,7 @@
 #include "nsFrameSelection.h"
 #include "nsIDOM3Node.h"
 #include "nsContentUtils.h"
+#include "nsTArray.h"
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -1947,10 +1948,24 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     if (NS_FAILED(res)) return res;
     if (*aCancel) return NS_OK;
 
+    res = mHTMLEditor->ExtendSelectionForDelete(aSelection, &aAction);
+    NS_ENSURE_SUCCESS(res, res);
+
     // We should delete nothing.
     if (aAction == nsIEditor::eNone)
       return NS_OK;
 
+    // ExtendSelectionForDelete() may have changed the selection, update it
+    res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+    if (NS_FAILED(res)) return res;
+    if (!startNode) return NS_ERROR_FAILURE;
+    
+    res = aSelection->GetIsCollapsed(&bCollapsed);
+    if (NS_FAILED(res)) return res;
+  }
+
+  if (bCollapsed)
+  {
     // what's in the direction we are deleting?
     nsWSRunObject wsObj(mHTMLEditor, startNode, startOffset);
     nsCOMPtr<nsIDOMNode> visNode;
@@ -1995,9 +2010,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       }
       else
       {
-        res = mHTMLEditor->ExtendSelectionForDelete(aSelection, &aAction);
-        NS_ENSURE_SUCCESS(res, res);
-
         nsCOMPtr<nsIDOMRange> range;
         res = aSelection->GetRangeAt(0, getter_AddRefs(range));
         NS_ENSURE_SUCCESS(res, res);
@@ -2014,6 +2026,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         NS_ASSERTION(container == visNode, "selection end not in visNode");
 #endif
 
+        res = range->GetStartOffset(&so);
+        NS_ENSURE_SUCCESS(res, res);
         res = range->GetEndOffset(&eo);
         NS_ENSURE_SUCCESS(res, res);
       }
@@ -5758,39 +5772,42 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
   
   if (!aDontTouchContent)
   {
-    nsVoidArray rangeItemArray;
+    nsAutoTArray<nsRangeStore, 16> rangeItemArray;
+    if (!rangeItemArray.AppendElements(rangeCount)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ASSERTION(rangeCount == rangeItemArray.Length(), "How did that happen?");
+
     // first register ranges for special editor gravity
-    // XXXbz doesn't this leak all the nsRangeStore structs on error
-    // conditions??
     for (i = 0; i < (PRInt32)rangeCount; i++)
     {
       opRange = inArrayOfRanges[0];
-      nsRangeStore *item = new nsRangeStore();
-      if (!item) return NS_ERROR_NULL_POINTER;
+      nsRangeStore *item = rangeItemArray.Elements() + i;
       item->StoreRange(opRange);
       mHTMLEditor->mRangeUpdater.RegisterRangeItem(item);
-      rangeItemArray.AppendElement((void*)item);
       inArrayOfRanges.RemoveObjectAt(0);
     }    
-    // now bust up inlines
-    for (i = rangeCount-1; i >= 0; i--)
+    // now bust up inlines.  Safe to start at rangeCount-1, since we
+    // asserted we have enough items above.
+    for (i = rangeCount-1; i >= 0 && NS_SUCCEEDED(res); i--)
     {
-      nsRangeStore *item = (nsRangeStore*)rangeItemArray.ElementAt(i);
-      res = BustUpInlinesAtRangeEndpoints(*item);
-      if (NS_FAILED(res)) return res;    
+      res = BustUpInlinesAtRangeEndpoints(rangeItemArray[i]);
     } 
     // then unregister the ranges
     for (i = 0; i < rangeCount; i++)
     {
-      nsRangeStore *item = (nsRangeStore*)rangeItemArray.ElementAt(0);
-      if (!item) return NS_ERROR_NULL_POINTER;
-      rangeItemArray.RemoveElementAt(0);
+      nsRangeStore *item = rangeItemArray.Elements() + i;
       mHTMLEditor->mRangeUpdater.DropRangeItem(item);
-      res = item->GetRange(address_of(opRange));
-      if (NS_FAILED(res)) return res;
-      delete item;
+      nsresult res2 = item->GetRange(address_of(opRange));
+      if (NS_FAILED(res2) && NS_SUCCEEDED(res)) {
+        // Remember the failure, but keep going so we make sure to unregister
+        // all our range items.
+        res = res2;
+      }
       inArrayOfRanges.AppendObject(opRange);
-    }    
+    }
+    if (NS_FAILED(res)) return res;
   }
   // gather up a list of all the nodes
   for (i = 0; i < rangeCount; i++)

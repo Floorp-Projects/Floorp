@@ -55,8 +55,6 @@ function clearWatches() {
 }
 
 function testAccepted() {
-  if(TEST_PROVIDER)
-    checkFlags(callbackCounter, num_pos_changes, false);
   clearWatches();
   setTimeout(clearAll, timeout); // now clear flags
 }
@@ -68,7 +66,6 @@ function clearAll() {
 }
 
 function testCleared() {
-  checkFlags(callbackCounter, 0, true);
   removePrompt();
   SimpleTest.finish();
 }

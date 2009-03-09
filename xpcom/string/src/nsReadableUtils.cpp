@@ -791,6 +791,41 @@ ToLowerCase( const nsACString& aSource, nsACString& aDest )
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
+NS_COM
+PRBool
+ParseString(const nsACString& aSource, char aDelimiter, 
+            nsTArray<nsCString>& aArray)
+  {
+    nsACString::const_iterator start, end;
+    aSource.BeginReading(start);
+    aSource.EndReading(end);
+
+    PRUint32 oldLength = aArray.Length();
+
+    for (;;)
+      {
+        nsACString::const_iterator delimiter = start;
+        FindCharInReadable(aDelimiter, delimiter, end);
+
+        if (delimiter != start)
+          {
+            if (!aArray.AppendElement(Substring(start, delimiter)))
+              {
+                aArray.RemoveElementsAt(oldLength, aArray.Length() - oldLength);
+                return PR_FALSE;
+              }
+          }
+
+        if (delimiter == end)
+          break;
+        start = ++delimiter;
+        if (start == end)
+          break;
+      }
+
+    return PR_TRUE;
+  }
+
 template <class StringT, class IteratorT, class Comparator>
 PRBool
 FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT& aSearchEnd, const Comparator& compare )

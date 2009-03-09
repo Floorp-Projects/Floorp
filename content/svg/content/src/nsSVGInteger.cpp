@@ -36,10 +36,13 @@
 
 #include "nsSVGInteger.h"
 
-NS_IMPL_ADDREF(nsSVGInteger::DOMAnimatedInteger)
-NS_IMPL_RELEASE(nsSVGInteger::DOMAnimatedInteger)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGInteger::DOMAnimatedInteger)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGInteger::DOMAnimatedInteger, mSVGElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGInteger::DOMAnimatedInteger)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGInteger::DOMAnimatedInteger)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGInteger::DOMAnimatedInteger)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedInteger)
@@ -96,4 +99,3 @@ nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
   NS_ADDREF(*aResult);
   return NS_OK;
 }
-

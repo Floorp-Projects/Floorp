@@ -76,6 +76,7 @@
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
+#include "nsHTMLEntities.h"
 
 #include "nsIServiceManager.h"
 
@@ -1000,8 +1001,10 @@ PRBool CViewSourceHTML::IsUrlAttribute(const nsAString& tagName,
   // This doesn't feel like the ideal place for this, but the alternatives don't
   // seem all that nice either.
   if (isHref && tagName.LowerCaseEqualsLiteral("base")) {
-    const nsSubstring& baseSpec = TrimTokenValue(attrValue);
-    SetBaseURI(baseSpec);
+    const nsAString& baseSpec = TrimTokenValue(attrValue);
+    nsAutoString expandedBaseSpec;
+    ExpandEntities(baseSpec, expandedBaseSpec);
+    SetBaseURI(expandedBaseSpec);
   }
 
   return isHref || isSrc;
@@ -1046,13 +1049,19 @@ void CViewSourceHTML::WriteHrefAttribute(nsTokenAllocator* allocator,
   CreateViewSourceURL(hrefProper, viewSourceUrl);
 
   // Construct the HTML that will represent the HREF.
-  NS_NAMED_LITERAL_STRING(HREF, "href");
-  if (fullPrecedingText.Length() > 0) {
-    WriteTextInSpan(fullPrecedingText, allocator, EmptyString(), EmptyString());
-  }
-  WriteTextInAnchor(hrefProper, allocator, HREF, viewSourceUrl);
-  if (succeedingText.Length() > 0) {
-    WriteTextInSpan(succeedingText, allocator, EmptyString(), EmptyString());
+  if (viewSourceUrl.IsEmpty()) {
+    nsAutoString equalsHref(kEqual);
+    equalsHref.Append(href);
+    WriteTextInSpan(equalsHref, allocator, EmptyString(), EmptyString());
+  } else {
+    NS_NAMED_LITERAL_STRING(HREF, "href");
+    if (fullPrecedingText.Length() > 0) {
+      WriteTextInSpan(fullPrecedingText, allocator, EmptyString(), EmptyString());
+    }
+    WriteTextInAnchor(hrefProper, allocator, HREF, viewSourceUrl);
+    if (succeedingText.Length() > 0) {
+      WriteTextInSpan(succeedingText, allocator, EmptyString(), EmptyString());
+    }
   }
 }
 
@@ -1062,9 +1071,7 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   nsCOMPtr<nsIURI> hrefURI;
   nsresult rv;
 
-  // Default the view source URL to the empty string in case we fail.  Links
-  // with empty HREFs are essentially non-functional, at least as of Firefox
-  // 3.03.  This is preferrable behavior to links that look good but then 404.
+  // Default the view source URL to the empty string in case we fail.
   viewSourceUrl.Truncate();
   
   // Get the character set.
@@ -1076,16 +1083,40 @@ nsresult CViewSourceHTML::CreateViewSourceURL(const nsAString& linkUrl,
   rv = GetBaseURI(getter_AddRefs(baseURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Use the link URL and the base URI to build a URI for the link.
-  rv = NS_NewURI(getter_AddRefs(hrefURI), linkUrl, charset.get(), baseURI);
+  // Use the link URL and the base URI to build a URI for the link.  Note that
+  // the link URL may have untranslated entities in it.
+  nsAutoString expandedLinkUrl;
+  ExpandEntities(linkUrl, expandedLinkUrl);
+  rv = NS_NewURI(getter_AddRefs(hrefURI), expandedLinkUrl, charset.get(), baseURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the absolute URL from the link URI.
   nsCString absoluteLinkUrl;
   hrefURI->GetSpec(absoluteLinkUrl);
 
-  // Prepend "view-source:" onto the absolute URL and store it in the out param.
-  viewSourceUrl.AssignLiteral("view-source:");
+  // URLs that execute script (e.g. "javascript:" URLs) should just be
+  // ignored.  There's nothing reasonable we can do with them, and allowing
+  // them to execute in the context of the view-source window presents a
+  // security risk.  Just return the empty string in this case.
+  PRBool openingExecutesScript = PR_FALSE;
+  rv = NS_URIChainHasFlags(hrefURI, nsIProtocolHandler::URI_OPENING_EXECUTES_SCRIPT,
+                           &openingExecutesScript);
+  NS_ENSURE_SUCCESS(rv, NS_OK); // if there's an error, return the empty string
+  if (openingExecutesScript) {
+    return NS_OK;
+  }
+
+  // URLs that return data (e.g. "http:" URLs) should be prefixed with
+  // "view-source:".  URLs that don't return data should just be returned
+  // undecorated.
+  PRBool doesNotReturnData = PR_FALSE;
+  rv = NS_URIChainHasFlags(hrefURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                           &doesNotReturnData);
+  NS_ENSURE_SUCCESS(rv, NS_OK);  // if there's an error, return the empty string
+  if (!doesNotReturnData) {
+    viewSourceUrl.AssignLiteral("view-source:");    
+  }
+
   viewSourceUrl.AppendWithConversion(absoluteLinkUrl);
 
   return NS_OK;
@@ -1130,6 +1161,7 @@ void CViewSourceHTML::WriteTextInElement(const nsAString& tagName,
     AddAttrToNode(startNode, allocator, attrName, attrValue);
   }
   mSink->OpenContainer(startNode);
+  IF_FREE(startToken, theAllocator);
 
   // Add the text node.
   CTextToken textToken(text);
@@ -1205,3 +1237,188 @@ nsresult CViewSourceHTML::SetBaseURI(const nsAString& baseSpec) {
   mBaseURI = baseURI;
   return NS_OK;
 }
+
+void CViewSourceHTML::ExpandEntities(const nsAString& textIn, nsString& textOut)
+{  
+  nsAString::const_iterator iter, end;
+  textIn.BeginReading(iter);
+  textIn.EndReading(end);
+
+  // The outer loop treats the input as a sequence of pairs of runs.  The first
+  // run of each pair is just a run of regular characters.  The second run is
+  // something that looks like it might be an entity reference, e.g. "&amp;".
+  // Any regular run may be empty, and the entity run can be skipped at the end
+  // of the text.  Apparent entities that can't be translated are copied
+  // verbatim.  In particular this allows for raw ampersands in the input.
+  // Special care is taken to handle the end of the text at any point inside
+  // the loop.
+  while (iter != end) {
+    // Copy characters to textOut until but not including the first ampersand.
+    for (; iter != end; ++iter) {
+      PRUnichar ch = *iter;
+      if (ch == kAmpersand) {
+        break;
+      }
+      textOut.Append(ch);
+    }
+
+    // We have a possible entity.  If the entity is well-formed (or well-enough
+    // formed) copy the entity value to "textOut".  Otherwise, copy the "entity"
+    // source characters to "textOut" verbatim.  Either way, advance "iter" to
+    // the first position after the entity/entity-like-thing.
+    CopyPossibleEntity(iter, end, textOut);
+  }
+}
+
+static PRBool InRange(PRUnichar ch, unsigned char chLow, unsigned char chHigh)
+{
+  return (chLow <= ch) && (ch <= chHigh);
+}
+
+static PRBool IsDigit(PRUnichar ch)
+{ 
+  return InRange(ch, '0', '9');
+}
+
+static PRBool IsHexDigit(PRUnichar ch)
+{
+  return IsDigit(ch) || InRange(ch, 'A', 'F') || InRange(ch, 'a', 'f');
+}
+
+static PRBool IsAlphaNum(PRUnichar ch)
+{
+  return InRange(ch, 'A', 'Z') || InRange(ch, 'a', 'z') || IsDigit(ch);
+}
+
+static PRBool IsAmpersand(PRUnichar ch)
+{
+  return ch == kAmpersand;
+}
+
+static PRBool IsHashsign(PRUnichar ch)
+{
+  return ch == kHashsign;
+}
+
+static PRBool IsXx(PRUnichar ch)
+{
+  return (ch == 'X') || (ch == 'x');
+}
+
+static PRBool IsSemicolon(PRUnichar ch)
+{
+  return ch == kSemicolon;
+}
+
+static PRBool ConsumeChar(nsAString::const_iterator& start,
+                          const nsAString::const_iterator &end,
+                          PRBool (*testFun)(PRUnichar ch))
+{
+  if (start == end) {
+    return PR_FALSE;
+  }
+  if (!testFun(*start)) {
+    return PR_FALSE;
+  }
+  ++start;
+  return PR_TRUE;
+}
+
+void CViewSourceHTML::CopyPossibleEntity(nsAString::const_iterator& iter,
+                                         const nsAString::const_iterator& end,
+                                         nsAString& textBuffer)
+{
+  // Note that "iter" is passed by reference, and we need to make sure that
+  // we update its position as we parse characters, so the caller will know
+  // how much text we processed.
+
+  // Remember where we started.
+  const nsAString::const_iterator start(iter);
+  
+  // Our possible entity must at least start with an '&' -- bail if it doesn't.
+  if (!ConsumeChar(iter, end, IsAmpersand)) {
+    return;
+  }
+
+  // Identify the entity "body" and classify it.
+  nsAString::const_iterator startBody, endBody;
+  enum {TYPE_ID, TYPE_DECIMAL, TYPE_HEXADECIMAL} entityType;
+  if (ConsumeChar(iter, end, IsHashsign)) {
+    if (ConsumeChar(iter, end, IsXx)) {
+      startBody = iter;
+      entityType = TYPE_HEXADECIMAL;
+      while (ConsumeChar(iter, end, IsHexDigit)) {
+        // empty
+      }
+    } else {
+      startBody = iter;
+      entityType = TYPE_DECIMAL;
+      while (ConsumeChar(iter, end, IsDigit)) {
+        // empty
+      }
+    }
+  } else {
+    startBody = iter;
+    entityType = TYPE_ID;
+    // The parser seems to allow some other characters, such as ":" and "_".
+    // However, all of the entities that we know about (see nsHTMLEntityList.h)
+    // are strictly alphanumeric.
+    while (ConsumeChar(iter, end, IsAlphaNum)) {
+      // empty
+    }
+  }
+
+  // Record the end of the entity body.
+  endBody = iter;
+  
+  // If the entity body is terminated with a semicolon, consume that too.
+  PRBool properlyTerminated = ConsumeChar(iter, end, IsSemicolon);
+
+  // If the entity body is empty, then it's not really an entity.  Copy what
+  // we've parsed verbatim, and return immediately.
+  if (startBody == endBody) {
+    textBuffer.Append(Substring(start, iter));
+    return;
+  }
+
+  // Construct a string from the body range.  Note that we need a regular
+  // string since substrings don't provide ToInteger().
+  nsAutoString entityBody(Substring(startBody, endBody));
+
+  // Decode the entity to a Unicode character.
+  PRInt32 entityCode = -1;
+  switch (entityType) {
+  case TYPE_ID:
+    entityCode = nsHTMLEntities::EntityToUnicode(entityBody);
+    break;
+  case TYPE_DECIMAL:
+    entityCode = ToUnicode(entityBody, 10, -1);
+    break;
+  case TYPE_HEXADECIMAL:
+    entityCode = ToUnicode(entityBody, 16, -1);
+    break;
+  default:
+    NS_NOTREACHED("Unknown entity type!");
+    break;
+  }
+
+  // Note that the parser does not require terminating semicolons for entities
+  // with eight bit values.  We want to allow the same here.
+  if (properlyTerminated || ((0 <= entityCode) && (entityCode < 256))) {
+    textBuffer.Append((PRUnichar) entityCode);
+  } else {
+    // If the entity is malformed in any way, just copy the source text verbatim.
+    textBuffer.Append(Substring(start, iter));
+  }
+}
+
+PRInt32 CViewSourceHTML::ToUnicode(const nsString &strNum, PRInt32 radix, PRInt32 fallback)
+{
+  PRInt32 result;
+  PRInt32 code = strNum.ToInteger(&result, radix);
+  if (result == NS_OK) {
+    return code;
+  }
+  return fallback;
+}
+

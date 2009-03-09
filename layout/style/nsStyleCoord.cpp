@@ -171,42 +171,6 @@ void nsStyleCoord::SetNoneValue(void)
   mValue.mInt = 0;
 }
 
-#ifdef DEBUG
-void nsStyleCoord::AppendToString(nsString& aBuffer) const
-{
-  if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-    aBuffer.AppendFloat(mValue.mFloat);
-  }
-  else if ((eStyleUnit_Coord == mUnit) || 
-           (eStyleUnit_Enumerated == mUnit) ||
-           (eStyleUnit_Integer == mUnit)) {
-    aBuffer.AppendInt(mValue.mInt, 10);
-    aBuffer.AppendLiteral("[0x");
-    aBuffer.AppendInt(mValue.mInt, 16);
-    aBuffer.Append(PRUnichar(']'));
-  }
-
-  switch (mUnit) {
-    case eStyleUnit_Null:         aBuffer.AppendLiteral("Null");     break;
-    case eStyleUnit_Coord:        aBuffer.AppendLiteral("tw");       break;
-    case eStyleUnit_Percent:      aBuffer.AppendLiteral("%");        break;
-    case eStyleUnit_Factor:       aBuffer.AppendLiteral("f");        break;
-    case eStyleUnit_Normal:       aBuffer.AppendLiteral("Normal");   break;
-    case eStyleUnit_Auto:         aBuffer.AppendLiteral("Auto");     break;
-    case eStyleUnit_None:         aBuffer.AppendLiteral("None");     break;
-    case eStyleUnit_Enumerated:   aBuffer.AppendLiteral("enum");     break;
-    case eStyleUnit_Integer:      aBuffer.AppendLiteral("int");      break;
-  }
-  aBuffer.Append(PRUnichar(' '));
-}
-
-void nsStyleCoord::ToString(nsString& aBuffer) const
-{
-  aBuffer.Truncate();
-  AppendToString(aBuffer);
-}
-#endif
-
 // used by nsStyleSides and nsStyleCorners
 #define COMPARE_INDEXED_COORD(i)                                              \
   PR_BEGIN_MACRO                                                              \
@@ -242,29 +206,6 @@ void nsStyleSides::Reset(void)
   memset(this, 0x00, sizeof(nsStyleSides));
 }
 
-#ifdef DEBUG
-void nsStyleSides::AppendToString(nsString& aBuffer) const
-{
-  aBuffer.AppendLiteral("left: ");
-  GetLeft().AppendToString(aBuffer);
-
-  aBuffer.AppendLiteral("top: ");
-  GetTop().AppendToString(aBuffer);
-
-  aBuffer.AppendLiteral("right: ");
-  GetRight().AppendToString(aBuffer);
-
-  aBuffer.AppendLiteral("bottom: ");
-  GetBottom().AppendToString(aBuffer);
-}
-
-void nsStyleSides::ToString(nsString& aBuffer) const
-{
-  aBuffer.Truncate();
-  AppendToString(aBuffer);
-}
-#endif
-
 nsStyleCorners::nsStyleCorners()
 {
   memset(this, 0x00, sizeof(nsStyleCorners));
@@ -283,33 +224,6 @@ void nsStyleCorners::Reset(void)
 {
   memset(this, 0x00, sizeof(nsStyleCorners));
 }
-
-#ifdef DEBUG
-void nsStyleCorners::AppendToString(nsString& aBuffer) const
-{
-  aBuffer.AppendLiteral("top-left: ");
-  Get(NS_CORNER_TOP_LEFT_X).AppendToString(aBuffer);
-  Get(NS_CORNER_TOP_LEFT_Y).AppendToString(aBuffer);
-  
-  aBuffer.AppendLiteral("top-right: ");
-  Get(NS_CORNER_TOP_RIGHT_X).AppendToString(aBuffer);
-  Get(NS_CORNER_TOP_RIGHT_Y).AppendToString(aBuffer);
-
-  aBuffer.AppendLiteral("bottom-right: ");
-  Get(NS_CORNER_BOTTOM_RIGHT_X).AppendToString(aBuffer);
-  Get(NS_CORNER_BOTTOM_RIGHT_Y).AppendToString(aBuffer);
-
-  aBuffer.AppendLiteral("bottom-left: ");
-  Get(NS_CORNER_BOTTOM_LEFT_X).AppendToString(aBuffer);
-  Get(NS_CORNER_BOTTOM_LEFT_Y).AppendToString(aBuffer);
-}
-
-void nsStyleCorners::ToString(nsString& aBuffer) const
-{
-  aBuffer.Truncate();
-  AppendToString(aBuffer);
-}
-#endif
 
 // Validation of NS_SIDE_IS_VERTICAL and NS_HALF_CORNER_IS_X.
 #define CASE(side, result)                                                    \

@@ -127,11 +127,6 @@ class nsIntervalSet;
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
-#define NS_BLOCK_FRAME_CID \
- { 0xa6cf90df, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-extern const nsIID kBlockFrameCID;
-
 /*
  * Base class for block and inline frames.
  * The block frame has an additional named child list:
@@ -142,6 +137,8 @@ extern const nsIID kBlockFrameCID;
 class nsBlockFrame : public nsBlockFrameSuper
 {
 public:
+  NS_DECLARE_FRAME_ACCESSOR(nsBlockFrame)
+
   typedef nsLineList::iterator                  line_iterator;
   typedef nsLineList::const_iterator            const_line_iterator;
   typedef nsLineList::reverse_iterator          reverse_line_iterator;
@@ -158,8 +155,8 @@ public:
 
   friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-  // nsISupports
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  // nsQueryFrame
+  NS_DECL_QUERYFRAME
 
   // nsIFrame
   NS_IMETHOD Init(nsIContent*      aContent,
@@ -286,7 +283,7 @@ public:
     nsBlockReflowState& aState, nsLineBox* aLine);
 
   static PRBool BlockIsMarginRoot(nsIFrame* aBlock);
-  static PRBool BlockNeedsSpaceManager(nsIFrame* aBlock);
+  static PRBool BlockNeedsFloatManager(nsIFrame* aBlock);
 
   /**
    * Returns whether aFrame is a block frame that will wrap its contents
@@ -379,10 +376,12 @@ protected:
 
   virtual void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                                 nsBlockReflowState&      aState,
-                                nsHTMLReflowMetrics&     aMetrics);
+                                nsHTMLReflowMetrics&     aMetrics,
+                                nscoord*                 aBottomEdgeOfChildren);
 
   void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
-                           nsHTMLReflowMetrics& aMetrics);
+                           nsHTMLReflowMetrics&     aMetrics,
+                           nscoord                  aBottomEdgeOfChildren);
 
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code
@@ -426,7 +425,7 @@ public:
    * don't use it for out of flows.
    */
   enum {
-    PERSERVE_REMOVED_FRAMES    = 0x01,
+    PRESERVE_REMOVED_FRAMES    = 0x01,
     REMOVE_FIXED_CONTINUATIONS = 0x02,
     FRAMES_ARE_EMPTY           = 0x04
   };
@@ -677,7 +676,7 @@ public:
   static PRBool gNoisyIntrinsic;
   static PRBool gNoisyReflow;
   static PRBool gReallyNoisyReflow;
-  static PRBool gNoisySpaceManager;
+  static PRBool gNoisyFloatManager;
   static PRBool gVerifyLines;
   static PRBool gDisableResizeOpt;
 

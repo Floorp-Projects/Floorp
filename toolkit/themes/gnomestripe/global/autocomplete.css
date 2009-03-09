@@ -137,7 +137,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 /* ::::: richlistbox autocomplete ::::: */
 
 .autocomplete-richlistbox {
-  margin: 0;
+  margin: 1px;
   background-color: transparent;
 }
 

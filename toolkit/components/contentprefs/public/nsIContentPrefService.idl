@@ -65,7 +65,7 @@ interface nsIContentPrefObserver : nsISupports
   void onContentPrefRemoved(in AString aGroup, in AString aName);
 };
 
-[scriptable, uuid(72c05ba2-9d92-4661-b053-f8f869973e6a)]
+[scriptable, uuid(5047e359-dfda-4858-abec-d145c7463250)]
 interface nsIContentPrefService : nsISupports
 {
   /**
@@ -109,6 +109,12 @@ interface nsIContentPrefService : nsISupports
    * @param    aName       the name of the pref to remove
    */
   void removePref(in nsIURI aURI, in AString aName);
+
+  /**
+   * Remove all grouped prefs.  Useful for removing references to the sites
+   * the user has visited when the user clears their private data.
+   */
+  void removeGroupedPrefs();
 
   /**
    * Get the prefs that apply to the given URI.

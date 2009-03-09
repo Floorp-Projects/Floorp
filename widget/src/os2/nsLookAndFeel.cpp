@@ -207,9 +207,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_eventreerow:
     case eColor__moz_oddtreerow:
     case eColor__moz_field:
+    case eColor__moz_combobox:
       idx = SYSCLR_ENTRYFIELD;
       break;
     case eColor__moz_fieldtext:
+    case eColor__moz_comboboxtext:
       idx = SYSCLR_WINDOWTEXT;
       break;
     case eColor__moz_dialog:

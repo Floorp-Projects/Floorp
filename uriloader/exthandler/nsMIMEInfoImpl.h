@@ -42,7 +42,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIAtom.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIMutableArray.h"
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
@@ -125,7 +125,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     /**
      * Return whether this MIMEInfo has any extensions
      */
-    PRBool HasExtensions() const { return mExtensions.Count() != 0; }
+    PRBool HasExtensions() const { return mExtensions.Length() != 0; }
 
   protected:
     /**
@@ -166,7 +166,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
                                                     nsILocalFile **aFile);
 
     // member variables
-    nsCStringArray         mExtensions; ///< array of file extensions associated w/ this MIME obj
+    nsTArray<nsCString>    mExtensions; ///< array of file extensions associated w/ this MIME obj
     nsString               mDescription; ///< human readable description
     PRUint32               mMacType, mMacCreator; ///< Mac file type and creator
     nsCString              mType;

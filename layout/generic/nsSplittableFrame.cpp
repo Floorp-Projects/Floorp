@@ -254,9 +254,9 @@ nsSplittableFrame::BreakFromPrevFlow(nsIFrame* aFrame)
 
 #ifdef DEBUG
 void
-nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
+nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent, aIncludeStyleData);
+  nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent);
   if (nsnull != mNextContinuation) {
     IndentBy(out, aIndent);
     fprintf(out, "<next-continuation va=\"%ld\"/>\n", PRUptrdiff(mNextContinuation));

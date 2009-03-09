@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+
+<style type="text/css">
+
+.p { marker: url('#c'); }
+
+</style>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("a").setAttribute("class", "p");
+  document.documentElement.offsetHeight;
+  document.getElementById("b").setAttribute("id", "c");
+}
+
+</script>
+</head><body onload="boom();"><div class="p" id="a">C</div><div id="c"></div></body></html>

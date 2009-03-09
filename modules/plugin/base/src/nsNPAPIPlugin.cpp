@@ -45,6 +45,7 @@
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
+#include "nsIPrivateBrowsingService.h"
 
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
@@ -85,6 +86,8 @@
 #endif
 
 #include "nsJSNPRuntime.h"
+#include "nsIHttpAuthManager.h"
+#include "nsICookieService.h"
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
 static PRCList sPendingAsyncCalls = PR_INIT_STATIC_CLIST(&sPendingAsyncCalls);
@@ -156,17 +159,6 @@ PR_BEGIN_EXTERN_C
 
   static void NP_CALLBACK
   _forceredraw(NPP npp);
-
-  static void NP_CALLBACK
-  _pushpopupsenabledstate(NPP npp, NPBool enabled);
-
-  static void NP_CALLBACK
-  _poppopupsenabledstate(NPP npp);
-
-  typedef void(*PluginThreadCallback)(void *);
-  static void NP_CALLBACK
-  _pluginthreadasynccall(NPP instance, PluginThreadCallback func,
-                         void *userData);
 
   static const char* NP_CALLBACK
   _useragent(NPP npp);
@@ -259,6 +251,9 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   CALLBACKS.pushpopupsenabledstate = ((NPN_PushPopupsEnabledStateProcPtr)_pushpopupsenabledstate);
   CALLBACKS.poppopupsenabledstate = ((NPN_PopPopupsEnabledStateProcPtr)_poppopupsenabledstate);
   CALLBACKS.pluginthreadasynccall = ((NPN_PluginThreadAsyncCallProcPtr)_pluginthreadasynccall);
+  CALLBACKS.getvalueforurl = ((NPN_GetValueForURLPtr)_getvalueforurl);
+  CALLBACKS.setvalueforurl = ((NPN_SetValueForURLPtr)_setvalueforurl);
+  CALLBACKS.getauthenticationinfo = ((NPN_GetAuthenticationInfoPtr)_getauthenticationinfo);
 
   if (!sPluginThreadAsyncCallLock)
     sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
@@ -343,6 +338,15 @@ nsNPAPIPlugin::~nsNPAPIPlugin(void)
   // reset the callbacks list
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
 }
+
+
+#if defined(XP_MACOSX)
+void
+nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
+{
+  fPluginRefNum = aRefNum;
+}
+#endif
 
 // Creates the nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
@@ -502,13 +506,18 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
 #endif
 
 #if defined(XP_MACOSX)
+  short appRefNum = ::CurResFile();
+  short pluginRefNum;
+
   nsCOMPtr<nsILocalFile> pluginPath;
   NS_NewNativeLocalFile(nsDependentCString(aFullPath), PR_TRUE,
                         getter_AddRefs(pluginPath));
 
   nsPluginFile pluginFile(pluginPath);
+  pluginRefNum = pluginFile.OpenPluginResource();
 
   nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, aLibrary, nsnull);
+  ::UseResFile(appRefNum);
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -519,6 +528,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFileName, const char* aFullPath,
     NS_RELEASE(*aResult);
     return NS_ERROR_FAILURE;
   }
+
+  plugin->SetPluginRefNum(pluginRefNum);
 #endif
 
 #ifdef XP_BEOS
@@ -613,6 +624,8 @@ nsNPAPIPlugin::Shutdown(void)
   if (fShutdownEntry) {
 #if defined(XP_MACOSX)
     (*fShutdownEntry)();
+    if (fPluginRefNum > 0)
+      ::CloseResFile(fPluginRefNum);
 #else
     NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary, nsnull);
 #endif
@@ -1505,14 +1518,14 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     VOID_TO_NPVARIANT(*result);
   }
 
-  if (!script || !script->utf8length || !script->utf8characters) {
+  if (!script || !script->UTF8Length || !script->UTF8Characters) {
     // Nothing to evaluate.
 
     return true;
   }
 
-  NS_ConvertUTF8toUTF16 utf16script(script->utf8characters,
-                                    script->utf8length);
+  NS_ConvertUTF8toUTF16 utf16script(script->UTF8Characters,
+                                    script->UTF8Length);
 
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
   NS_ENSURE_TRUE(scx, false);
@@ -1550,7 +1563,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                  ("NPN_Evaluate(npp %p, npobj %p, script <<<%s>>>) called\n",
-                  npp, npobj, script->utf8characters));
+                  npp, npobj, script->UTF8Characters));
 
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
                                              spec, 0, 0, rval, nsnull);
@@ -1658,7 +1671,7 @@ _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
                  ("NPN_HasMethod(npp %p, npobj %p, property %p) called\n",
                   npp, npobj, methodName));
 
-  return npobj->_class->hasProperty(npobj, methodName);
+  return npobj->_class->hasMethod(npobj, methodName);
 }
 
 bool NP_CALLBACK
@@ -1745,12 +1758,12 @@ _releasevariantvalue(NPVariant* variant)
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
 
-      if (s->utf8characters) {
+      if (s->UTF8Characters) {
 #ifdef MOZ_MEMORY_WINDOWS
-        if (malloc_usable_size((void *)s->utf8characters) != 0) {
-          PR_Free((void *)s->utf8characters);
+        if (malloc_usable_size((void *)s->UTF8Characters) != 0) {
+          PR_Free((void *)s->UTF8Characters);
         } else {
-          void *p = (void *)s->utf8characters;
+          void *p = (void *)s->UTF8Characters;
           DWORD nheaps = 0;
           nsAutoTArray<HANDLE, 50> heaps;
           nheaps = GetProcessHeaps(0, heaps.Elements());
@@ -1764,7 +1777,7 @@ _releasevariantvalue(NPVariant* variant)
           }
         }
 #else
-        PR_Free((void *)s->utf8characters);
+        PR_Free((void *)s->UTF8Characters);
 #endif
       }
       break;
@@ -1884,7 +1897,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     // XtDisplay just call gtk_xtbin_new(w,0) once
     static GtkWidget *gtkXtBinHolder = 0;
     if (!gtkXtBinHolder) {
-      gtkXtBinHolder = gtk_xtbin_new(GDK_ROOT_PARENT(),0);
+      gtkXtBinHolder = gtk_xtbin_new((GdkWindow*)GDK_ROOT_WINDOW(),0);
       // it crashes on destroy, let it leak
       // gtk_widget_destroy(gtkXtBinHolder);
     }
@@ -2028,6 +2041,17 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(NPBool*)result = PR_FALSE;
 #endif
     return NPERR_NO_ERROR;
+  }
+
+  case NPNVprivateModeBool: {
+    nsCOMPtr<nsIPrivateBrowsingService> pbs = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs) {
+      PRBool enabled;
+      pbs->GetPrivateBrowsingEnabled(&enabled);
+      *(NPBool*)result = (NPBool)enabled;
+      return NPERR_NO_ERROR;
+    }
+    return NPERR_GENERIC_ERROR;
   }
 
 #ifdef XP_MACOSX
@@ -2381,6 +2405,150 @@ _pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
   }
 }
 
+NPError NP_CALLBACK
+_getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
+                char **value, uint32_t *len)
+{
+  if (!instance) {
+    return NPERR_INVALID_PARAM;
+  }
+
+  if (!url || !*url || !len) {
+    return NPERR_INVALID_URL;
+  }
+
+  *len = 0;
+
+  switch (variable) {
+  case NPNURLVProxy:
+    {
+      nsCOMPtr<nsIPluginManager2> pm(do_GetService(kPluginManagerCID));
+
+      if (pm && NS_SUCCEEDED(pm->FindProxyForURL(url, value))) {
+        *len = *value ? PL_strlen(*value) : 0;
+        return NPERR_NO_ERROR;
+      }
+      break;
+    }
+  case NPNURLVCookie:
+    {
+      nsCOMPtr<nsICookieService> cookieService =
+        do_GetService(NS_COOKIESERVICE_CONTRACTID);
+
+      if (!cookieService)
+        return NPERR_GENERIC_ERROR;
+
+      // Make an nsURI from the url argument
+      nsCOMPtr<nsIURI> uri;
+      if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), nsDependentCString(url)))) {
+        return NPERR_GENERIC_ERROR;
+      }
+
+      nsXPIDLCString cookieStr;
+      if (NS_FAILED(cookieService->GetCookieString(uri, nsnull,
+                                                   getter_Copies(cookieStr))) ||
+          !cookieStr) {
+        return NPERR_GENERIC_ERROR;
+      }
+
+      *value = PL_strndup(cookieStr, cookieStr.Length());
+
+      if (*value) {
+        *len = cookieStr.Length();
+
+        return NPERR_NO_ERROR;
+      }
+    }
+
+    break;
+  default:
+    // Fall through and return an error...
+    ;
+  }
+
+  return NPERR_GENERIC_ERROR;
+}
+
+NPError NP_CALLBACK
+_setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
+                const char *value, uint32_t len)
+{
+  if (!instance) {
+    return NPERR_INVALID_PARAM;
+  }
+
+  if (!url || !*url) {
+    return NPERR_INVALID_URL;
+  }
+
+  switch (variable) {
+  case NPNURLVCookie:
+    {
+      nsCOMPtr<nsICookieStorage> cs = do_GetService(kPluginManagerCID);
+
+      if (cs && NS_SUCCEEDED(cs->SetCookie(url, value, len))) {
+        return NPERR_NO_ERROR;
+      }
+    }
+
+    break;
+  case NPNURLVProxy:
+    // We don't support setting proxy values, fall through...
+  default:
+    // Fall through and return an error...
+    ;
+  }
+
+  return NPERR_GENERIC_ERROR;
+}
+
+NPError NP_CALLBACK
+_getauthenticationinfo(NPP instance, const char *protocol, const char *host,
+                       int32_t port, const char *scheme, const char *realm,
+                       char **username, uint32_t *ulen, char **password,
+                       uint32_t *plen)
+{
+  if (!instance || !protocol || !host || !scheme || !realm || !username ||
+      !ulen || !password || !plen)
+    return NPERR_INVALID_PARAM;
+
+  *username = nsnull;
+  *password = nsnull;
+  *ulen = 0;
+  *plen = 0;
+
+  nsDependentCString proto(protocol);
+
+  if (!proto.LowerCaseEqualsLiteral("http") &&
+      !proto.LowerCaseEqualsLiteral("https"))
+    return NPERR_GENERIC_ERROR;
+
+  nsCOMPtr<nsIHttpAuthManager> authManager =
+    do_GetService("@mozilla.org/network/http-auth-manager;1");
+  if (!authManager)
+    return NPERR_GENERIC_ERROR;
+
+  nsAutoString unused, uname16, pwd16;
+  if (NS_FAILED(authManager->GetAuthIdentity(proto, nsDependentCString(host),
+                                             port, nsDependentCString(scheme),
+                                             nsDependentCString(realm),
+                                             EmptyCString(), unused, uname16,
+                                             pwd16))) {
+    return NPERR_GENERIC_ERROR;
+  }
+
+  NS_ConvertUTF16toUTF8 uname8(uname16);
+  NS_ConvertUTF16toUTF8 pwd8(pwd16);
+
+  *username = ToNewCString(uname8);
+  *ulen = *username ? uname8.Length() : 0;
+
+  *password = ToNewCString(pwd8);
+  *plen = *password ? pwd8.Length() : 0;
+
+  return NPERR_NO_ERROR;
+}
+
 void
 OnPluginDestroy(NPP instance)
 {
@@ -2438,3 +2606,4 @@ ExitAsyncPluginThreadCallLock()
 }
 
 NPP NPPStack::sCurrentNPP = nsnull;
+

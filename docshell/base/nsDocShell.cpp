@@ -437,6 +437,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsILoadContext)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShell_MOZILLA_1_9_1)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
@@ -1685,12 +1686,66 @@ nsDocShell::HistoryPurged(PRInt32 aNumEntries)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
+                                          PRBool aCreate,
+                                          nsIDOMStorage** aStorage)
+{
+    NS_ENSURE_ARG_POINTER(aStorage);
+    *aStorage = nsnull;
+
+    if (!aPrincipal)
+        return NS_OK;
+
+    nsCOMPtr<nsIURI> codebaseURI;
+    nsresult rv = aPrincipal->GetDomain(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!codebaseURI) {
+        rv = aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (!codebaseURI)
+        return NS_OK;
+
+    rv = GetSessionStorageForURI(codebaseURI, aCreate, aStorage);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
+    if (piStorage) {
+        PRBool canAccess = piStorage->CanAccess(aPrincipal);
+        NS_ASSERTION(canAccess,
+                     "GetSessionStorageForPrincipal got a storage "
+                     "that could not be accessed!");
+        if (!canAccess) {
+            NS_RELEASE(*aStorage);
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
                                     nsIDOMStorage** aStorage)
 {
+    return GetSessionStorageForURI(aURI, PR_TRUE, aStorage);
+}
+
+nsresult
+nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
+                                    PRBool aCreate,
+                                    nsIDOMStorage** aStorage)
+{
+    NS_ENSURE_ARG(aURI);
     NS_ENSURE_ARG_POINTER(aStorage);
 
     *aStorage = nsnull;
+
+    nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+    NS_ASSERTION(innerURI, "Failed to get innermost URI");
+    if (!innerURI)
+        return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShellTreeItem> topItem;
     nsresult rv = GetSameTypeRootTreeItem(getter_AddRefs(topItem));
@@ -1700,18 +1755,18 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
     if (!topItem)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDocShell> topDocShell = do_QueryInterface(topItem);
+    nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
     if (topDocShell != this)
-        return topDocShell->GetSessionStorageForURI(aURI, aStorage);
+        return topDocShell->GetSessionStorageForURI(aURI, aCreate, aStorage);
 
     nsCAutoString currentDomain;
-    rv = aURI->GetAsciiHost(currentDomain);
+    rv = innerURI->GetAsciiHost(currentDomain);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (currentDomain.IsEmpty())
         return NS_OK;
 
-    if (!mStorages.Get(currentDomain, aStorage)) {
+    if (!mStorages.Get(currentDomain, aStorage) && aCreate) {
         nsCOMPtr<nsIDOMStorage> newstorage =
             do_CreateInstance("@mozilla.org/dom/storage;1");
         if (!newstorage)
@@ -1720,13 +1775,12 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
         nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
         if (!pistorage)
             return NS_ERROR_FAILURE;
-        pistorage->Init(aURI, NS_ConvertUTF8toUTF16(currentDomain), PR_FALSE);
+        pistorage->Init(NS_ConvertUTF8toUTF16(currentDomain), PR_FALSE);
 
         if (!mStorages.Put(currentDomain, newstorage))
             return NS_ERROR_OUT_OF_MEMORY;
-		
-        *aStorage = newstorage;
-        NS_ADDREF(*aStorage);
+
+        newstorage.swap(*aStorage);
     }
 
     return NS_OK;
@@ -1749,6 +1803,10 @@ nsDocShell::AddSessionStorage(const nsACString& aDomain,
     if (topItem) {
         nsCOMPtr<nsIDocShell> topDocShell = do_QueryInterface(topItem);
         if (topDocShell == this) {
+            // Do not replace an existing session storage.
+            if (mStorages.GetWeak(aDomain))
+                return NS_ERROR_NOT_AVAILABLE;
+
             if (!mStorages.Put(aDomain, aStorage))
                 return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -4345,8 +4403,7 @@ nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
         static_cast<nsIFrame*>(scrollView->View()->GetParent()->GetClientData());
     if (!scrollFrame)
         return NS_ERROR_FAILURE;
-    nsIScrollableFrame* scrollable = nsnull;
-    CallQueryInterface(scrollFrame, &scrollable);
+    nsIScrollableFrame* scrollable = do_QueryFrame(scrollFrame);
     if (!scrollable)
         return NS_ERROR_FAILURE;
 
@@ -5046,18 +5103,14 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 SetCurrentURI(uri, aRequest, PR_TRUE);
                 // Save history state of the previous page
                 rv = PersistLayoutHistoryState();
-                if (mOSHE)
-                    SetHistoryEntry(&mOSHE, mLSHE);
+                // We'll never get an Embed() for this load, so just go ahead
+                // and SetHistoryEntry now.
+                SetHistoryEntry(&mOSHE, mLSHE);
             }
         
         }
         // Page has begun to load
         mBusyFlags = BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD;
-        nsCOMPtr<nsIWidget> mainWidget;
-        GetMainWidget(getter_AddRefs(mainWidget));
-        if (mainWidget) {
-            mainWidget->SetCursor(eCursor_spinning);
-        }
     }
     else if ((~aStateFlags & (STATE_TRANSFERRING | STATE_IS_DOCUMENT)) == 0) {
         // Page is loading
@@ -5066,11 +5119,6 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
     else if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
         // Page has finished loading
         mBusyFlags = BUSY_FLAGS_NONE;
-        nsCOMPtr<nsIWidget> mainWidget;
-        GetMainWidget(getter_AddRefs(mainWidget));
-        if (mainWidget) {
-            mainWidget->SetCursor(eCursor_standard);
-        }
     }
     if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_STOP)) == 0) {
         nsCOMPtr<nsIWebProgress> webProgress =
@@ -5444,21 +5492,24 @@ nsDocShell::ReattachEditorToWindow(nsISHEntry *aSHEntry)
 }
 
 void
-nsDocShell::DetachEditorFromWindow(nsISHEntry *aSHEntry)
+nsDocShell::DetachEditorFromWindow()
 {
-    if (!mEditorData)
+    if (!mEditorData || mEditorData->WaitingForLoad()) {
+        // If there's nothing to detach, or if the editor data is actually set
+        // up for the _new_ page that's coming in, don't detach.
         return;
+    }
 
-    NS_ASSERTION(!aSHEntry || !aSHEntry->HasDetachedEditor(),
+    NS_ASSERTION(!mOSHE || !mOSHE->HasDetachedEditor(),
                  "Detaching editor when it's already detached.");
 
     nsresult res = mEditorData->DetachFromWindow();
     NS_ASSERTION(NS_SUCCEEDED(res), "Failed to detach editor");
 
     if (NS_SUCCEEDED(res)) {
-        // Make aSHEntry hold the owning ref to the editor data.
-        if (aSHEntry)
-            aSHEntry->SetEditorData(mEditorData.forget());
+        // Make mOSHE hold the owning ref to the editor data.
+        if (mOSHE)
+            mOSHE->SetEditorData(mEditorData.forget());
         else
             mEditorData = nsnull;
     }
@@ -5471,14 +5522,6 @@ nsDocShell::DetachEditorFromWindow(nsISHEntry *aSHEntry)
                      "Window is still editable after detaching editor.");
     }
 #endif // DEBUG
-
-}
-
-void
-nsDocShell::DetachEditorFromWindow()
-{
-    if (mOSHE)
-        DetachEditorFromWindow(mOSHE);
 }
 
 nsresult
@@ -5525,7 +5568,7 @@ nsDocShell::CaptureState()
             if (rootView) {
                 nsIWidget *widget = rootView->GetWidget();
                 if (widget) {
-                    nsRect bounds(0, 0, 0, 0);
+                    nsIntRect bounds(0, 0, 0, 0);
                     widget->GetBounds(bounds);
                     rv = mOSHE->SetViewerBounds(bounds);
                 }
@@ -5850,7 +5893,7 @@ nsDocShell::RestoreFromHistory()
     // bounds of the root view's widget.
 
     nsIView *rootViewSibling = nsnull, *rootViewParent = nsnull;
-    nsRect newBounds(0, 0, 0, 0);
+    nsIntRect newBounds(0, 0, 0, 0);
 
     nsCOMPtr<nsIPresShell> oldPresShell;
     nsDocShell::GetPresShell(getter_AddRefs(oldPresShell));
@@ -5906,7 +5949,7 @@ nsDocShell::RestoreFromHistory()
     }
 
     // get the previous content viewer size
-    nsRect oldBounds(0, 0, 0, 0);
+    nsIntRect oldBounds(0, 0, 0, 0);
     mLSHE->GetViewerBounds(oldBounds);
 
     // Restore the refresh URI list.  The refresh timers will be restarted
@@ -5967,7 +6010,22 @@ nsDocShell::RestoreFromHistory()
     }
 
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+    PRUint32 parentSuspendCount = 0;
     if (document) {
+        nsCOMPtr<nsIDocShellTreeItem> parent;
+        GetParent(getter_AddRefs(parent));
+        nsCOMPtr<nsIDOMDocument> parentDoc = do_GetInterface(parent);
+        nsCOMPtr<nsIDocument> d = do_QueryInterface(parentDoc);
+        if (d) {
+            if (d->EventHandlingSuppressed()) {
+                document->SuppressEventHandling(d->EventHandlingSuppressed());
+            }
+            nsCOMPtr<nsPIDOMWindow> parentWindow = d->GetWindow();
+            if (parentWindow) {
+                parentSuspendCount = parentWindow->TimeoutSuspendCount();
+            }
+        }
+
         // Use the uri from the mLSHE we had when we entered this function
         // (which need not match the document's URI if anchors are involved),
         // since that's the history entry we're loading.  Note that if we use
@@ -6053,6 +6111,13 @@ nsDocShell::RestoreFromHistory()
             NS_ASSERTION(newRootView->GetNextSibling() == rootViewSibling,
                          "error in InsertChild");
         }
+    }
+
+    // If parent is suspended, increase suspension count.
+    // This can't be done as early as event suppression since this
+    // depends on docshell tree.
+    if (parentSuspendCount) {
+      privWin->SuspendTimeouts(parentSuspendCount, PR_FALSE);
     }
 
     // Now that all of the child docshells have been put into place, we can
@@ -6440,8 +6505,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     }
 
     nscolor bgcolor = NS_RGBA(0, 0, 0, 0);
-    PRBool bgSet = PR_FALSE;
-
     // Ensure that the content viewer is destroyed *after* the GC - bug 71515
     nsCOMPtr<nsIContentViewer> kungfuDeathGrip = mContentViewer;
     if (mContentViewer) {
@@ -6449,8 +6512,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         // releasing it...
         mContentViewer->Stop();
 
-        // Try to extract the default background color from the old
-        // view manager, so we can use it for the next document.
+        // Try to extract the canvas background color from the old
+        // presentation shell, so we can use it for the next document.
         nsCOMPtr<nsIDocumentViewer> docviewer =
         do_QueryInterface(mContentViewer);
 
@@ -6459,13 +6522,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             docviewer->GetPresShell(getter_AddRefs(shell));
 
             if (shell) {
-                nsIViewManager* vm = shell->GetViewManager();
-
-                if (vm) {
-                    vm->GetDefaultBackgroundColor(&bgcolor);
-                    // If the background color is not known, don't propagate it.
-                    bgSet = NS_GET_A(bgcolor) != 0;
-                }
+                bgcolor = shell->GetCanvasBackground();
             }
         }
 
@@ -6480,7 +6537,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     nsCOMPtr<nsIWidget> widget;
     NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
-    nsRect bounds(x, y, cx, cy);
+    nsIntRect bounds(x, y, cx, cy);
 
     if (NS_FAILED(mContentViewer->Init(widget, bounds))) {
         mContentViewer = nsnull;
@@ -6526,23 +6583,18 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         focusController->SetSuppressFocus(PR_FALSE,
                                           "Win32-Only Link Traversal Issue");
 
-    if (bgSet && widget) {
-        // Stuff the bgcolor from the last view manager into the new
-        // view manager. This improves page load continuity.
-        nsCOMPtr<nsIDocumentViewer> docviewer =
-            do_QueryInterface(mContentViewer);
 
-        if (docviewer) {
-            nsCOMPtr<nsIPresShell> shell;
-            docviewer->GetPresShell(getter_AddRefs(shell));
+    // Stuff the bgcolor from the old pres shell into the new
+    // pres shell. This improves page load continuity.
+    nsCOMPtr<nsIDocumentViewer> docviewer =
+        do_QueryInterface(mContentViewer);
 
-            if (shell) {
-                nsIViewManager* vm = shell->GetViewManager();
+    if (docviewer) {
+        nsCOMPtr<nsIPresShell> shell;
+        docviewer->GetPresShell(getter_AddRefs(shell));
 
-                if (vm) {
-                    vm->SetDefaultBackgroundColor(bgcolor);
-                }
-            }
+        if (shell) {
+            shell->SetCanvasBackground(bgcolor);
         }
     }
 
@@ -6599,7 +6651,7 @@ nsDocShell::CheckLoadingPermissions()
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && subjPrincipal, rv);
 
     // Check if the caller is from the same origin as this docshell,
-    // or any of it's ancestors.
+    // or any of its ancestors.
     nsCOMPtr<nsIDocShellTreeItem> item(this);
     do {
         nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(item));
@@ -6880,42 +6932,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
             targetDocShell = do_QueryInterface(webNav);
-
-            nsCOMPtr<nsIScriptObjectPrincipal> sop =
-                do_QueryInterface(mScriptGlobal);
-            nsCOMPtr<nsIURI> currentCodebase;
-
-            if (sop) {
-                nsIPrincipal *principal = sop->GetPrincipal();
-
-                if (principal) {
-                    principal->GetURI(getter_AddRefs(currentCodebase));
-                }
-            }
-
-            // We opened a new window for the target, clone the
-            // session storage if the current URI's domain matches
-            // that of the loading URI.
-            if (targetDocShell && currentCodebase && aURI) {
-                nsCAutoString thisDomain, newDomain;
-                nsresult gethostrv = currentCodebase->GetAsciiHost(thisDomain);
-                gethostrv |= aURI->GetAsciiHost(newDomain);
-                if (NS_SUCCEEDED(gethostrv) && thisDomain.Equals(newDomain)) {
-                    nsCOMPtr<nsIDOMStorage> storage;
-                    GetSessionStorageForURI(currentCodebase,
-                                            getter_AddRefs(storage));
-                    nsCOMPtr<nsPIDOMStorage> piStorage =
-                        do_QueryInterface(storage);
-                    if (piStorage) {
-                        nsCOMPtr<nsIDOMStorage> newstorage =
-                            piStorage->Clone(currentCodebase);
-                        targetDocShell->AddSessionStorage(thisDomain,
-                                                          newstorage);
-                    }
-                }
-            }
         }
-        
+
         //
         // Transfer the load to the target DocShell...  Pass nsnull as the
         // window target name from to prevent recursive retargeting!
@@ -7774,12 +7792,7 @@ nsDocShell::CheckClassifier(nsIChannel *aChannel)
     nsRefPtr<nsClassifierCallback> classifier = new nsClassifierCallback();
     if (!classifier) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = classifier->Start(aChannel);
-    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
-        rv == NS_ERROR_NOT_AVAILABLE) {
-        // no URI classifier => ignored cases
-        return NS_OK;
-    }
+    nsresult rv = classifier->Start(aChannel, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mClassifier = classifier;
@@ -9264,8 +9277,8 @@ nsDocShell::SetHasFocus(PRBool aHasFocus)
 // child lists.  aFrame must be non-null.
 static nsICanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
 {
-    nsICanvasFrame* canvasFrame;
-    if (NS_SUCCEEDED(CallQueryInterface(aFrame, &canvasFrame))) {
+    nsICanvasFrame* canvasFrame = do_QueryFrame(aFrame);
+    if (canvasFrame) {
         return canvasFrame;
     }
 
@@ -9302,8 +9315,8 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
       if (frame) {
           frame = frame->GetParent();
           if (frame) {
-              nsICanvasFrame* canvasFrame;
-              if (NS_SUCCEEDED(CallQueryInterface(frame, &canvasFrame))) {
+              nsICanvasFrame* canvasFrame = do_QueryFrame(frame);
+              if (canvasFrame) {
                   return canvasFrame->SetHasFocus(aCanvasHasFocus);
               }
           }
@@ -9660,10 +9673,12 @@ nsDocShell::IsOKToLoadURI(nsIURI* aURI)
 // nsClassifierCallback
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS3(nsClassifierCallback,
+NS_IMPL_ISUPPORTS5(nsClassifierCallback,
                    nsIChannelClassifier,
                    nsIURIClassifierCallback,
-                   nsIRunnable)
+                   nsIRunnable,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsClassifierCallback::Run()
@@ -9688,7 +9703,7 @@ nsClassifierCallback::Run()
 
     // Don't bother to run the classifier on a cached load that was
     // previously classified.
-    if (HasBeenClassified()) {
+    if (HasBeenClassified(channel)) {
         return NS_OK;
     }
 
@@ -9724,7 +9739,12 @@ nsClassifierCallback::Run()
 
     nsCOMPtr<nsIURIClassifier> uriClassifier =
         do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
+        rv == NS_ERROR_NOT_AVAILABLE) {
+        // no URI classifier, ignore this failure.
+        return NS_OK;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool expectCallback;
     rv = uriClassifier->Classify(uri, this, &expectCallback);
@@ -9780,10 +9800,10 @@ nsClassifierCallback::MarkEntryClassified(nsresult status)
 }
 
 PRBool
-nsClassifierCallback::HasBeenClassified()
+nsClassifierCallback::HasBeenClassified(nsIChannel *aChannel)
 {
     nsCOMPtr<nsICachingChannel> cachingChannel =
-        do_QueryInterface(mSuspendedChannel);
+        do_QueryInterface(aChannel);
     if (!cachingChannel) {
         return PR_FALSE;
     }
@@ -9839,15 +9859,26 @@ nsClassifierCallback::OnClassifyComplete(nsresult aErrorCode)
 }
 
 NS_IMETHODIMP
-nsClassifierCallback::Start(nsIChannel *aChannel)
+nsClassifierCallback::Start(nsIChannel *aChannel, PRBool aInstallListener)
 {
     mChannel = aChannel;
+
+    if (aInstallListener) {
+        nsresult rv = aChannel->GetNotificationCallbacks
+            (getter_AddRefs(mNotificationCallbacks));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = aChannel->SetNotificationCallbacks
+            (static_cast<nsIInterfaceRequestor*>(this));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     return Run();
 }
 
 NS_IMETHODIMP
 nsClassifierCallback::OnRedirect(nsIChannel *aOldChannel,
-                                nsIChannel *aNewChannel)
+                                 nsIChannel *aNewChannel)
 {
     mChannel = aNewChannel;
 
@@ -9876,4 +9907,37 @@ nsClassifierCallback::Cancel()
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClassifierCallback::OnChannelRedirect(nsIChannel *aOldChannel,
+                                        nsIChannel *aNewChannel,
+                                        PRUint32 aFlags)
+{
+    nsresult rv = OnRedirect(aOldChannel, aNewChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mNotificationCallbacks) {
+        nsCOMPtr<nsIChannelEventSink> sink =
+            do_GetInterface(mNotificationCallbacks);
+        if (sink) {
+            return sink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClassifierCallback::GetInterface(const nsIID &aIID, void **aResult)
+{
+    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+        NS_ADDREF_THIS();
+        *aResult = static_cast<nsIChannelEventSink *>(this);
+        return NS_OK;
+    } else if (mNotificationCallbacks) {
+        return mNotificationCallbacks->GetInterface(aIID, aResult);
+    } else {
+        return NS_ERROR_NO_INTERFACE;
+    }
 }

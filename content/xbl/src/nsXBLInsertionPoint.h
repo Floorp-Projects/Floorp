@@ -81,6 +81,8 @@ public:
 
   nsIContent* ChildAt(PRUint32 aIndex);
 
+  PRInt32 IndexOf(nsIContent* aContent) { return mElements.IndexOf(aContent); }
+
   PRBool Matches(nsIContent* aContent, PRUint32 aIndex);
 
   // Unbind all the default content in this insertion point.  Used

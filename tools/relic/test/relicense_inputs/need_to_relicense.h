@@ -49,6 +49,7 @@
 #include "ChangeCSSInlineStyleTxn.h"
 #include "nsEditProperty.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsTArray.h"
 
 #define SPECIFIED_STYLE_TYPE    1
 #define COMPUTED_STYLE_TYPE     2
@@ -337,7 +338,7 @@ private:
     */
 
   void      BuildCSSDeclarations(nsVoidArray & aPropertyArray,
-                                 nsStringArray & cssValueArray,
+                                 nsTArray<nsString> & cssValueArray,
                                  const CSSEquivTable * aEquivTable,
                                  const nsAString * aValue,
                                  PRBool aGetOrRemoveRequest);
@@ -360,7 +361,7 @@ private:
                                                  const nsAString *aAttribute,
                                                  const nsAString *aValue,
                                                  nsVoidArray & aPropertyArray,
-                                                 nsStringArray & aValueArray,
+                                                 nsTArray<nsString> & aValueArray,
                                                  PRBool aGetOrRemoveRequest);
 
   /** creates a Transaction for setting or removing a css property

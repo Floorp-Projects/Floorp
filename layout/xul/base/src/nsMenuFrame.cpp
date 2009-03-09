@@ -153,40 +153,36 @@ private:
 };
 
 //
-// NS_NewMenuFrame
+// NS_NewMenuFrame and NS_NewMenuItemFrame
 //
-// Wrapper for creating a new menu popup container
+// Wrappers for creating a new menu popup container
 //
 nsIFrame*
-NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
+NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell, aContext);
   
-  if ((it != nsnull) && aFlags)
+  if (it)
     it->SetIsMenu(PR_TRUE);
 
   return it;
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsMenuFrame::AddRef(void)
+nsIFrame*
+NS_NewMenuItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return NS_OK;
+  nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell, aContext);
+
+  if (it)
+    it->SetIsMenu(PR_FALSE);
+
+  return it;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
-nsMenuFrame::Release(void)
-{
-    return NS_OK;
-}
-
-//
-// QueryInterface
-//
-NS_INTERFACE_MAP_BEGIN(nsMenuFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIMenuFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+NS_QUERYFRAME_HEAD(nsMenuFrame)
+  NS_QUERYFRAME_ENTRY(nsIMenuFrame)
+  NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 //
 // nsMenuFrame cntr
@@ -430,6 +426,10 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
                          nsEventStatus*  aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   nsWeakFrame weakFrame(this);
   if (*aEventStatus == nsEventStatus_eIgnore)
     *aEventStatus = nsEventStatus_eConsumeDoDefault;
@@ -770,7 +770,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
     nsRect bounds(mPopupFrame->GetRect());
 
-    nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
+    nsIScrollableFrame *scrollframe = do_QueryFrame(child);
     if (scrollframe &&
         scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
       if (bounds.height < prefSize.height) {

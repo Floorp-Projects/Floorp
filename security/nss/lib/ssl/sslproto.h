@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslproto.h,v 1.12 2007/02/28 19:47:38 rrelyea%redhat.com Exp $ */
+/* $Id: sslproto.h,v 1.13 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
 
 #ifndef __sslproto_h_
 #define __sslproto_h_
@@ -178,6 +178,8 @@
 #define TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA  	0x0087
 #define TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA  	0x0088
 #define TLS_DH_ANON_WITH_CAMELLIA_256_CBC_SHA  	0x0089
+
+#define TLS_RSA_WITH_SEED_CBC_SHA		0x0096
 
 #define TLS_ECDH_ECDSA_WITH_NULL_SHA            0xC001
 #define TLS_ECDH_ECDSA_WITH_RC4_128_SHA         0xC002

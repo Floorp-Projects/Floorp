@@ -10,8 +10,6 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlePrivateBrowsingSuffix): This will be appended to the window's title
                                                                 inside the private browsing mode -->
 <!ENTITY mainWindow.titlePrivateBrowsingSuffix "(Private Browsing)">
-<!-- LOCALIZATION NOTE (mainWindowPrivateBrowsing.titlemodifier): DONT_TRANSLATE -->
-<!ENTITY mainWindow.titlemodifierPrivateBrowsing "&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;">
 
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
@@ -71,6 +69,7 @@
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
 <!ENTITY organizeBookmarks.label "Organize Bookmarks…">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs…">
+<!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
@@ -87,6 +86,7 @@
 <!ENTITY stopCmd.macCommandKey        ".">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY goEndCap.tooltip             "Go to the address in the Location Bar">
+<!ENTITY feedButton.tooltip           "Subscribe to this page…">
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
@@ -166,8 +166,12 @@
 <!ENTITY clearRecentHistoryCmd.label            "Clear Recent History">
 <!ENTITY clearRecentHistoryCmd.accesskey        "H">
 
-<!ENTITY privateBrowsingCmd.label            "Private Browsing">
-<!ENTITY privateBrowsingCmd.accesskey        "B">
+<!-- LOCALIZATION NOTE : These two strings can share an access key beause they never appear together on the menu -->
+<!ENTITY privateBrowsingCmd.start.label         "Start Private Browsing">
+<!ENTITY privateBrowsingCmd.start.accesskey     "P">
+<!ENTITY privateBrowsingCmd.stop.label          "Stop Private Browsing">
+<!ENTITY privateBrowsingCmd.stop.accesskey      "P">
+<!ENTITY privateBrowsingCmd.commandkey          "P">
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
@@ -346,6 +350,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY fullZoom.label                 "Zoom">
 <!ENTITY fullZoom.accesskey             "Z">
 
+<!ENTITY newTabButton.tooltip           "Open a new tab">
 <!ENTITY newWindowButton.tooltip        "Open a new window">
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
 

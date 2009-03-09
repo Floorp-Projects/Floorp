@@ -1,0 +1,6 @@
+<script>
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite");
+  window.opener.opener.postMessage(window.opener.testNum + " - " + window.x, "http://localhost:8888/");
+  window.opener.close();
+  window.close();
+</script>

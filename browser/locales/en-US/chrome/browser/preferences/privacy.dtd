@@ -1,4 +1,12 @@
-<!ENTITY  history.label "History">
+<!ENTITY  history.label                 "History">
+
+<!ENTITY  locbar.pre.label              "When using the location bar, suggest:">
+<!ENTITY  locbar.pre.accessKey          "l">
+<!ENTITY  locbar.post.label             "">
+<!ENTITY  locbar.both.label             "History and Bookmarks">
+<!ENTITY  locbar.history.label          "History">
+<!ENTITY  locbar.bookmarks.label        "Bookmarks">
+<!ENTITY  locbar.nothing.label          "Nothing">
 
 <!-- LOCALIZATION NOTE:
   The entities rememberDaysBefore.label and rememberDaysAfter2.label appear on a single
@@ -44,12 +52,5 @@
 <!ENTITY  alwaysClear.label              "Always clear my private data when I close &brandShortName;">
 <!ENTITY  alwaysClear.accesskey          "w">
 
-<!ENTITY  askBeforeClear.label           "Ask me before clearing private data">
-<!ENTITY  askBeforeClear.accesskey       "A">
-
 <!ENTITY  clearDataSettings.label        "Settings…">
 <!ENTITY  clearDataSettings.accesskey    "t">
-
-<!ENTITY  clearDataNow.label             "Clear Now…">
-<!ENTITY  clearDataNow.label2            "Clear Now">
-<!ENTITY  clearDataNow.accesskey         "N">

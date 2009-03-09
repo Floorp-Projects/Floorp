@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=472396
+-->
+<head>
+  <title>Test for Bug 472396</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472396">Mozilla Bug 472396</a>
+<p id="display"></p>
+<iframe id="iframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 472396 **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+
+var testpath = "http://example.com" + document.location.pathname + "/../subtst_privbrowsing.html";
+
+function get_PBSvc() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  try {
+    return Cc["@mozilla.org/privatebrowsing;1"].
+           getService(Ci.nsIPrivateBrowsingService);
+  } catch (e) {}
+  return null;
+}
+
+var loadCount = 0;
+function handleLoad(aEvent) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  if (++loadCount == 2) {
+    ok(!formhist.entryExists("field", "value"),
+      "The field's value should not be saved in private browsing mode");
+
+    pb.privateBrowsingEnabled = false;
+    formhist.removeEntriesForName("field");
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    SimpleTest.finish();
+  }
+}
+
+var pb = get_PBSvc();
+if (!pb) { // Private Browsing might not be available
+  ok(true, "Private browsing service is not available");
+  SimpleTest.finish();
+} else {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch);
+  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
+  var formhist = Cc["@mozilla.org/satchel/form-history;1"].
+                 getService(Ci.nsIFormHistory2);
+
+  ok(!formhist.entryExists("field", "value"), "The field's value should not exist at startup");
+
+  pb.privateBrowsingEnabled = true;
+
+  var iframe = document.getElementById("iframe");
+  iframe.onload = handleLoad;
+
+  SimpleTest.waitForExplicitFinish();
+
+  iframe.src = testpath;
+}
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -552,17 +552,18 @@ PRBool test_concat_2()
     return PR_FALSE;
   }
 
-#if 0
 PRBool test_concat_3()
   {
-    nsCString a("a"), b("b");
+    nsCString result;
+    nsCString ab("ab"), c("c");
 
-    // THIS DOES NOT COMPILE
-    const nsACString& r = a + b;
+    result = ab + result + c;
+    if (strcmp(result.get(), "abc") == 0)
+      return PR_TRUE;
 
-    return PR_TRUE;
+    printf("[result=%s]\n", result.get());
+    return PR_FALSE;
   }
-#endif
 
 PRBool test_xpidl_string()
   {
@@ -895,6 +896,76 @@ PRBool test_voided_autostr()
     return PR_TRUE;
   }
 
+struct ToIntegerTest
+{
+  const char *str;
+  PRUint32 radix;
+  PRInt32 result;
+  nsresult rv;
+};
+
+static const ToIntegerTest kToIntegerTests[] = {
+  { "123", 10, 123, NS_OK },
+  { "7b", 16, 123, NS_OK },
+  { "90194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE },
+  { nsnull, 0, 0, 0 }
+};
+
+PRBool test_string_tointeger()
+{
+  PRInt32 rv;
+  for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
+    PRInt32 result = nsCAutoString(t->str).ToInteger(&rv, t->radix);
+    if (rv != t->rv || result != t->result)
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+static PRBool test_parse_string_helper(const char* str, char separator, int len,
+                                       const char* s1, const char* s2)
+{
+  nsCString data(str);
+  nsTArray<nsCString> results;
+  if (!ParseString(data, separator, results))
+    return PR_FALSE;
+  if (int(results.Length()) != len)
+    return PR_FALSE;
+  const char* strings[] = { s1, s2 };
+  for (int i = 0; i < len; ++i) {
+    if (!results[i].Equals(strings[i]))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+static PRBool test_parse_string_helper0(const char* str, char separator)
+{
+  return test_parse_string_helper(str, separator, 0, nsnull, nsnull);
+}
+
+static PRBool test_parse_string_helper1(const char* str, char separator, const char* s1)
+{
+  return test_parse_string_helper(str, separator, 1, s1, nsnull);
+}
+
+static PRBool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
+{
+  return test_parse_string_helper(str, separator, 2, s1, s2);
+}
+
+static PRBool test_parse_string()
+{
+  return test_parse_string_helper1("foo, bar", '_', "foo, bar") &&
+         test_parse_string_helper2("foo, bar", ',', "foo", " bar") &&
+         test_parse_string_helper2("foo, bar ", ' ', "foo,", "bar") &&
+         test_parse_string_helper2("foo,bar", 'o', "f", ",bar") &&
+         test_parse_string_helper0("", '_') &&
+         test_parse_string_helper0("  ", ' ') &&
+         test_parse_string_helper1(" foo", ' ', "foo") &&
+         test_parse_string_helper1("  foo", ' ', "foo");
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -927,6 +998,7 @@ tests[] =
     { "test_fixed_string", test_fixed_string },
     { "test_concat", test_concat },
     { "test_concat_2", test_concat_2 },
+    { "test_concat_3", test_concat_3 },
     { "test_xpidl_string", test_xpidl_string },
     { "test_empty_assign", test_empty_assign },
     { "test_set_length", test_set_length },
@@ -938,6 +1010,8 @@ tests[] =
     { "test_stringbuffer", test_stringbuffer },
     { "test_voided", test_voided },
     { "test_voided_autostr", test_voided_autostr },
+    { "test_string_tointeger", test_string_tointeger },
+    { "test_parse_string", test_parse_string },
     { nsnull, nsnull }
   };
 

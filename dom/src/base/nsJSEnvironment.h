@@ -43,7 +43,6 @@
 #include "jsapi.h"
 #include "nsIObserver.h"
 #include "nsIXPCScriptNotify.h"
-#include "nsITimer.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsScriptNameSpaceManager.h"
@@ -51,8 +50,7 @@
 class nsIXPConnectJSObjectHolder;
 
 class nsJSContext : public nsIScriptContext,
-                    public nsIXPCScriptNotify,
-                    public nsITimerCallback
+                    public nsIXPCScriptNotify
 {
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -166,11 +164,7 @@ public:
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);
 
-  virtual void ReportPendingException();
-
   NS_DECL_NSIXPCSCRIPTNOTIFY
-
-  NS_DECL_NSITIMERCALLBACK
 
   static void LoadStart();
   static void LoadEnd();
@@ -196,26 +190,33 @@ public:
 
   // Calls CC() if user is currently inactive, otherwise MaybeCC(PR_TRUE)
   static void CCIfUserInactive();
+
+  static void FireGCTimer(PRBool aLoadInProgress);
+
 protected:
   nsresult InitializeExternalClasses();
   // aHolder should be holding our global object
   nsresult FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder);
 
   // Helper to convert xpcom datatypes to jsvals.
-  nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
-                                   void *aScope,
-                                   PRUint32 *aArgc, void **aArgv,
-                                   void **aMarkp);
+  JS_FORCES_STACK nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
+                                                   void *aScope,
+                                                   PRUint32 *aArgc,
+                                                   void **aArgv,
+                                                   void **aMarkp);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
-
-  void FireGCTimer(PRBool aLoadInProgress);
 
   // given an nsISupports object (presumably an event target or some other
   // DOM object), get (or create) the JSObject wrapping it.
   nsresult JSObjectFromInterface(nsISupports *aSup, void *aScript, 
                                  JSObject **aRet);
 
+  // Report the pending exception on our mContext, if any
+  // If aSetAsideFrameChain is true, set aside the frame chain on mContext
+  // before reporting.  True should be passed if the frame chain isn't really
+  // related to our exception.
+  void ReportPendingException(PRBool aSetAsideFrameChain);
 private:
   void Unlink();
 

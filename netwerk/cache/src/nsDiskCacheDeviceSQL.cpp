@@ -757,6 +757,14 @@ nsApplicationCache::GetMatchingNamespace(const nsACString &key,
   return mDevice->GetMatchingNamespace(mClientID, key, out);
 }
 
+NS_IMETHODIMP
+nsApplicationCache::GetUsage(PRUint32 *usage)
+{
+  NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+
+  return mDevice->GetUsage(mClientID, usage);
+}
+
 /******************************************************************************
  * nsOfflineCacheDevice
  */
@@ -1077,8 +1085,7 @@ nsOfflineCacheDevice::Init()
       statement (aStatement), sql (aSql) {}
   } prepared[] = {
     StatementSql ( mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" ),
-    // XXX bug 442810: Restore the ability to monitor individual cache usage
-    StatementSql ( mStatement_DomainSize,        "SELECT 0;"),
+    StatementSql ( mStatement_ApplicationCacheSize, "SELECT Sum(DataSize) from moz_cache WHERE ClientID = ?;" ),
     StatementSql ( mStatement_EntryCount,        "SELECT count(*) from moz_cache;" ),
     StatementSql ( mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" ),
     StatementSql ( mStatement_UpdateEntrySize,   "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" ),
@@ -1104,13 +1111,12 @@ nsOfflineCacheDevice::Init()
                                                      "  ON ns.ClientID = groups.ActiveClientID"
                                                      " WHERE ns.NameSpace <= ?1 AND ?1 GLOB ns.NameSpace || '*'"
                                                      " ORDER BY ns.NameSpace DESC, groups.ActivateTimeStamp DESC;"),
-    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT ns.NameSpace, ns.Data, ns.ItemType FROM "
-                                                     "  moz_cache_namespaces AS ns JOIN moz_cache_groups AS groups"
-                                                     "  ON ns.ClientID = groups.ActiveClientID"
+    StatementSql ( mStatement_FindNamespaceEntry,    "SELECT NameSpace, Data, ItemType FROM moz_cache_namespaces"
                                                      " WHERE ClientID = ?1"
                                                      " AND NameSpace <= ?2 AND ?2 GLOB NameSpace || '*'"
-                                                     " ORDER BY ns.NameSpace DESC, groups.ActivateTimeStamp DESC;"),
+                                                     " ORDER BY NameSpace DESC;"),
     StatementSql ( mStatement_InsertNamespaceEntry,  "INSERT INTO moz_cache_namespaces (ClientID, NameSpace, Data, ItemType) VALUES(?, ?, ?, ?);"),
+    StatementSql ( mStatement_EnumerateGroups,       "SELECT GroupID, ActiveClientID FROM moz_cache_groups;")
   };
   for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < NS_ARRAY_LENGTH(prepared); ++i)
   {
@@ -1143,12 +1149,7 @@ nsOfflineCacheDevice::InitActiveCaches()
   nsresult rv = mActiveCaches.Init(5);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv =
-    mDB->CreateStatement(NS_LITERAL_CSTRING("SELECT GroupID, ActiveClientID"
-                                            " FROM moz_cache_groups"),
-                         getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  AutoResetStatement statement(mStatement_EnumerateGroups);
 
   PRBool hasRows;
   rv = statement->ExecuteStep(&hasRows);
@@ -1770,26 +1771,40 @@ nsOfflineCacheDevice::GetMatchingNamespace(const nsCString &clientID,
 
   *out = nsnull;
 
-  if (hasRows)
+  PRBool found = PR_FALSE;
+  nsCString nsSpec;
+  PRInt32 nsType;
+  nsCString nsData;
+
+  while (hasRows)
   {
-    nsCString namespaceSpec;
-    rv = statement->GetUTF8String(0, namespaceSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString data;
-    rv = statement->GetUTF8String(1, data);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRInt32 itemType;
     rv = statement->GetInt32(2, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (!found || itemType > nsType)
+    {
+      nsType = itemType;
+
+      rv = statement->GetUTF8String(0, nsSpec);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = statement->GetUTF8String(1, nsData);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      found = PR_TRUE;
+    }
+
+    rv = statement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (found) {
     nsCOMPtr<nsIApplicationCacheNamespace> ns =
       new nsApplicationCacheNamespace();
     if (!ns)
       return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = ns->Init(itemType, namespaceSpec, data);
+    rv = ns->Init(nsType, nsSpec, nsData);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ns.swap(*out);
@@ -1891,6 +1906,43 @@ nsOfflineCacheDevice::AddNamespace(const nsCString &clientID,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+nsresult
+nsOfflineCacheDevice::GetUsage(const nsACString &clientID,
+                               PRUint32 *usage)
+{
+  LOG(("nsOfflineCacheDevice::GetUsage [cid=%s]\n",
+       PromiseFlatCString(clientID).get()));
+
+  *usage = 0;
+
+  AutoResetStatement statement(mStatement_ApplicationCacheSize);
+
+  nsresult rv = statement->BindUTF8StringParameter(0, clientID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasRows;
+  rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!hasRows)
+    return NS_OK;
+
+  *usage = static_cast<PRUint32>(statement->AsInt32(0));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCacheDevice::GetGroups(PRUint32 *count,
+                                 char ***keys)
+{
+
+  LOG(("nsOfflineCacheDevice::GetGroups"));
+
+  AutoResetStatement statement(mStatement_EnumerateGroups);
+  return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
 }
 
 nsresult

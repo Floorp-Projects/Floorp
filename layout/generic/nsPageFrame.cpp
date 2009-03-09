@@ -80,7 +80,7 @@ nsPageFrame::~nsPageFrame()
 {
 }
 
-NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
+NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*           aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -628,7 +628,7 @@ nsPageBreakFrame::GetIntrinsicHeight()
 }
 
 nsresult 
-nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
+nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
@@ -658,4 +658,10 @@ nsPageBreakFrame::GetType() const
   return nsGkAtoms::pageBreakFrame; 
 }
 
-
+#ifdef DEBUG
+NS_IMETHODIMP
+nsPageBreakFrame::GetFrameName(nsAString& aResult) const
+{
+  return MakeFrameName(NS_LITERAL_STRING("PageBreak"), aResult);
+}
+#endif

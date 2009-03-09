@@ -193,6 +193,8 @@ nsTString_CharT::ToInteger( PRInt32* aErrorCode, PRUint32 aRadix ) const
       PRBool haveValue = PR_FALSE;
 
       while(cp<endcp){
+        PRInt32 oldresult = result;
+
         theChar=*cp++;
         if(('0'<=theChar) && (theChar<='9')){
           result = (theRadix * result) + (theChar-'0');
@@ -244,6 +246,13 @@ nsTString_CharT::ToInteger( PRInt32* aErrorCode, PRUint32 aRadix ) const
         }
         else {
           //we've encountered a char that's not a legal number or sign
+          break;
+        }
+
+        if (result < oldresult) {
+          // overflow!
+          *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+          result = 0;
           break;
         }
       } //while

@@ -90,7 +90,7 @@ function test()
   var time = timed_gc();
 
   if (time > (base_time + 10) * 3)
-    throw "generate_big_object_graph() leaked, base_gc_time="+base_time+", last_gc_time="+time;
+    actual = "generate_big_object_graph() leaked, base_gc_time="+base_time+", last_gc_time="+time;
 
   reportCompare(expect, actual, summary);
 

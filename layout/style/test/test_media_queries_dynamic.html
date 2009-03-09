@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=473400
+-->
+<head>
+  <title>Test for Bug 473400</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=473400">Mozilla Bug 473400</a>
+<iframe id="subdoc" src="about:blank"></iframe>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript; version=1.7">
+
+/** Test for Bug 473400 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var subdoc = document.getElementById("subdoc").contentDocument;
+  var subwin = document.getElementById("subdoc").contentWindow;
+  var style = subdoc.createElement("style");
+  style.setAttribute("type", "text/css");
+  subdoc.getElementsByTagName("head")[0].appendChild(style);
+  var sheet = style.sheet;
+  var iframe_style = document.getElementById("subdoc").style;
+
+  // Create a style rule and an element now based on the given media
+  // query "q", and return the computed style that should be passed to
+  // query_applies to see if that query currently applies.
+  var n = 0;
+  function make_query(q) {
+    var i = ++n;
+    sheet.insertRule("@media " + q + " { #e" + i + " { text-decoration: underline; } }", sheet.cssRules.length);
+    var e = subdoc.createElement("div");
+    e.id = "e" + i;
+    subdoc.body.appendChild(e);
+    var cs = subdoc.defaultView.getComputedStyle(e, "");
+    cs._originalQueryText = q;
+    return cs;
+  }
+  function query_applies(cs) {
+    return cs.getPropertyValue("text-decoration") == "underline";
+  }
+
+  function should_apply(cs) {
+    ok(query_applies(cs), cs._originalQueryText + " should apply");
+  }
+
+  function should_not_apply(cs) {
+    ok(!query_applies(cs), cs._originalQueryText + " should not apply");
+  }
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  const CI = Components.interfaces;
+  var iframe_docshell = subwin.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIWebNavigation).QueryInterface(CI.nsIDocShell);
+  var iframe_mudv = iframe_docshell.contentViewer.QueryInterface(CI.nsIMarkupDocumentViewer);
+
+  var content_div = document.getElementById("content");
+  content_div.style.font = "-moz-initial";
+  var em_size =
+    getComputedStyle(content_div, "").fontSize.match(/^(\d+)px$/)[1];
+
+  let width_val = 317; // pick two not-too-round numbers
+  let height_val = 228;
+  iframe_style.width = width_val + "px";
+  iframe_style.height = height_val + "px";
+  var wh_queries = [
+    make_query("all and (min-width: " +
+                     (Math.ceil(width_val/em_size) + 1) + "em)"),
+    make_query("all and (min-width: " +
+                 (Math.floor(width_val/em_size) - 1) + "em)"),
+    make_query("all and (max-width: " +
+                 (Math.ceil(width_val/em_size) + 1) + "em)"),
+    make_query("all and (max-width: " +
+                     (Math.floor(width_val/em_size) - 1) + "em)"),
+    make_query("all and (min-width: " +
+                     (Math.ceil(width_val/(em_size*2)) + 1) + "em)"),
+    make_query("all and (min-width: " +
+                 (Math.floor(width_val/(em_size*2)) - 1) + "em)"),
+    make_query("all and (max-width: " +
+                 (Math.ceil(width_val/(em_size*2)) + 1) + "em)"),
+    make_query("all and (max-width: " +
+                     (Math.floor(width_val/(em_size*2)) - 1) + "em)")
+  ];
+
+  is(wh_queries[0].fontSize, em_size + "px", "text zoom is 1.0");
+  should_not_apply(wh_queries[0]);
+  should_apply(wh_queries[1]);
+  should_apply(wh_queries[2]);
+  should_not_apply(wh_queries[3]);
+  iframe_mudv.textZoom = 2.0;
+  isnot(wh_queries[0].fontSize, em_size + "px", "text zoom is not 1.0");
+  should_not_apply(wh_queries[4]);
+  should_apply(wh_queries[5]);
+  should_apply(wh_queries[6]);
+  should_not_apply(wh_queries[7]);
+  iframe_mudv.textZoom = 1.0;
+  is(wh_queries[0].fontSize, em_size + "px", "text zoom is 1.0");
+  is(subwin.innerHeight, 228, "full zoom is 1.0");
+  should_not_apply(wh_queries[0]);
+  should_apply(wh_queries[1]);
+  should_apply(wh_queries[2]);
+  should_not_apply(wh_queries[3]);
+  iframe_mudv.fullZoom = 2.0;
+  isnot(subwin.innerHeight, 228, "full zoom is not 1.0");
+  should_not_apply(wh_queries[4]);
+  should_apply(wh_queries[5]);
+  should_apply(wh_queries[6]);
+  should_not_apply(wh_queries[7]);
+  iframe_mudv.fullZoom = 1.0;
+  is(subwin.innerHeight, 228, "full zoom is 1.0");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

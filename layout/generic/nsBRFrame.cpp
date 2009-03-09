@@ -281,7 +281,7 @@ NS_IMETHODIMP BRFrame::GetAccessible(nsIAccessible** aAccessible)
     // "bogus node" used when there is no text in the control
     return NS_ERROR_FAILURE;
   }
-  return accService->CreateHTMLBRAccessible(static_cast<nsIFrame*>(this), aAccessible);
+  return accService->CreateHTMLBRAccessible(this, aAccessible);
 }
 #endif
 

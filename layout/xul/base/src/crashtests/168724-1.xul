@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css" ?>
+
+<window
+  id="nodeCreator" title="Node Creator"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  >
+<description context="context">Right-click here, and expect a crash.</description>
+
+<popupset id="context-set">
+<popup id="context">
+<deck selectedItem="0">
+<menuitem label="You should never see this" />
+</deck>
+</popup>
+</popupset>
+</window>

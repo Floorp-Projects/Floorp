@@ -111,6 +111,9 @@ static const char kUpdaterINI[] = "updater.ini";
 #ifdef XP_MACOSX
 static const char kUpdaterApp[] = "updater.app";
 #endif
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+static const char kUpdaterPNG[] = "updater.png";
+#endif
 
 static nsresult
 GetCurrentWorkingDir(char *buf, size_t size)
@@ -354,7 +357,13 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
     return PR_FALSE;
 #endif
   CopyFileIntoUpdateDir(appDir, kUpdaterINI, updateDir);
-
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+  nsCOMPtr<nsIFile> iconDir;
+  appDir->Clone(getter_AddRefs(iconDir));
+  iconDir->AppendNative(NS_LITERAL_CSTRING("icons"));
+  if (!CopyFileIntoUpdateDir(iconDir, kUpdaterPNG, updateDir))
+    return PR_FALSE;
+#endif
   // Finally, return the location of the updater binary.
   nsresult rv = updateDir->Clone(getter_AddRefs(updater));
   if (NS_FAILED(rv))
@@ -513,7 +522,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #elif defined(XP_WIN)
   _wchdir(applyToDir.get());
 
-  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv, 0))
+  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv))
     return;
   _exit(0);
 #else

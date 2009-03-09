@@ -99,12 +99,6 @@
 // A single pane (inside the tabpanels container)
 #define NS_THEME_TAB_PANEL                                 62
 
-// The tab just before the selection
-#define NS_THEME_TAB_LEFT_EDGE                             63
-
-// The tab just after the selection
-#define NS_THEME_TAB_RIGHT_EDGE                            64
-
 // The tab panels container.
 #define NS_THEME_TAB_PANELS                                65
 

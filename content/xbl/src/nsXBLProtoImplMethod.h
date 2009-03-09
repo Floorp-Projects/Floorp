@@ -59,7 +59,7 @@ struct nsXBLParameter {
   ~nsXBLParameter() {
     MOZ_COUNT_DTOR(nsXBLParameter);
     nsMemory::Free(mName);
-    delete mNext;
+    NS_CONTENT_DELETE_LIST_MEMBER(nsXBLParameter, this, mNext);
   }
 };
 

@@ -87,15 +87,8 @@ public:
   /**
    * Helper method to wrap views around frames. Used by containers
    * under special circumstances (can be used by leaf frames as well)
-   * @param aContentParentFrame
-   *         if non-null, this is the frame 
-   *         which would have held aFrame except that aFrame was reparented
-   *         to an alternative geometric parent. This is necessary
-   *         so that aFrame can remember to get its Z-order from 
-   *         aContentParentFrame.
    */
   static nsresult CreateViewForFrame(nsIFrame* aFrame,
-                                     nsIFrame* aContentParentFrame,
                                      PRBool aForce);
 
   static nsresult ReparentFrameView(nsPresContext* aPresContext,

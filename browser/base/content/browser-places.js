@@ -22,6 +22,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Joe Hughes <joe@retrovirus.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -112,21 +113,23 @@ var StarUI = {
         break;
       case "keypress":
         if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-          // In edit mode, if we're not editing a folder, the ESC key is mapped
-          // to the cancel button
+          // If the panel is visible the ESC key is mapped to the cancel button
+          // unless we are editing a folder in the folderTree, or an
+          // autocomplete popup is open.
           if (!this._element("editBookmarkPanelContent").hidden) {
             var elt = aEvent.target;
-            if (elt.localName != "tree" ||
-                (elt.localName == "tree" && !elt.hasAttribute("editing")))
+            if ((elt.localName != "tree" || !elt.hasAttribute("editing")) &&
+                !elt.popupOpen)
               this.cancelButtonOnCommand();
           }
         }
         else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
-          // hide the panel unless the folder tree is focused
-          // or the tag autocomplete popup is open
+          // hide the panel unless the folder tree or an expander are focused
+          // or an autocomplete popup is open.
           if (aEvent.target.localName != "tree" &&
-              (aEvent.target.id != "editBMPanel_tagsField" ||
-               !aEvent.target.popupOpen))
+              aEvent.target.className != "expander-up" &&
+              aEvent.target.className != "expander-down" &&
+              !aEvent.target.popupOpen)
             this.panel.hidePopup();
         }
         break;
@@ -166,6 +169,9 @@ var StarUI = {
 
   _doShowEditBookmarkPanel:
   function SU__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
+    if (this.panel.state != "closed")
+      return;
+
     this._blockCommands(); // un-done in the popuphiding handler
 
     var bundle = this._element("bundle_browser");
@@ -216,17 +222,10 @@ var StarUI = {
                                       isTransient: false,
                                       merge: function() { return false; } });
 
-    if (this.panel.state == "closed") {
-      // Consume dismiss clicks, see bug 400924
-      this.panel.popupBoxObject
-          .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-      this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
-    }
-    else {
-      var namePicker = this._element("editBMPanel_namePicker");
-      namePicker.focus();
-      namePicker.editor.selectAll();
-    }
+    // Consume dismiss clicks, see bug 400924
+    this.panel.popupBoxObject
+        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
+    this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
     gEditItemOverlay.initPanel(this._itemId,
                                { hiddenRows: ["description", "location",
@@ -237,12 +236,17 @@ var StarUI = {
   function SU_panelShown(aEvent) {
     if (aEvent.target == this.panel) {
       if (!this._element("editBookmarkPanelContent").hidden) {
-        var namePicker = this._element("editBMPanel_namePicker");
-        namePicker.focus();
-        namePicker.editor.selectAll();
+        fieldToFocus = "editBMPanel_" +
+          gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField");
+        var elt = this._element(fieldToFocus);
+        elt.focus();
+        elt.select();
       }
-      else
+      else {
+        // Note this isn't actually used anymore, we should remove this
+        // once we decide not to bring back the page bookmarked notification
         this.panel.focus();
+      }
     }
   },
 
@@ -954,7 +958,11 @@ var PlacesMenuDNDController = {
 
 var PlacesStarButton = {
   init: function PSB_init() {
-    PlacesUtils.bookmarks.addObserver(this, false);
+    try {
+      PlacesUtils.bookmarks.addObserver(this, false);
+    } catch(ex) {
+      Components.utils.reportError("PlacesStarButton.init(): error adding bookmark observer: " + ex);
+    }
   },
 
   uninit: function PSB_uninit() {

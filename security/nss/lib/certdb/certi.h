@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.26 2008/06/18 01:00:40 wtc%google.com Exp $
+ * $Id: certi.h,v 1.27 2008/10/31 23:02:36 alexei.volkov.bugs%sun.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -256,6 +256,10 @@ extern CERTAVA * CERT_CreateAVAFromRaw(PRArenaPool *pool,
 SECStatus AcquireDPCache(CERTCertificate* issuer, SECItem* subject,
                          SECItem* dp, int64 t, void* wincx,
                          CRLDPCache** dpcache, PRBool* writeLocked);
+
+/* check if a particular SN is in the CRL cache and return its entry */
+SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
+                         CERTCrlEntry** returned);
 
 /* release a DPCache object that was previously acquired */
 void ReleaseDPCache(CRLDPCache* dpcache, PRBool writeLocked);

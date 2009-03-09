@@ -118,16 +118,6 @@ nsXPITriggerItem::~nsXPITriggerItem()
     MOZ_COUNT_DTOR(nsXPITriggerItem);
 }
 
-PRBool nsXPITriggerItem::IsRelativeURL()
-{
-    PRInt32 cpos = mURL.FindChar(':');
-    if (cpos == kNotFound)
-        return PR_TRUE;
-
-    PRInt32 spos = mURL.FindChar('/');
-    return (cpos > spos);
-}
-
 const PRUnichar*
 nsXPITriggerItem::GetSafeURLString()
 {
@@ -206,20 +196,15 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
 void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 {
     NS_ASSERTION( mCx == 0, "callback set twice, memory leak" );
+    // We'll only retain the callback if we can get a strong reference to the
+    // context.
+    if (!(JS_GetOptions(aCx) & JSOPTION_PRIVATE_IS_NSISUPPORTS))
+        return;
+    mContextWrapper = static_cast<nsISupports *>(JS_GetContextPrivate(aCx));
+    if (!mContextWrapper)
+        return;
+
     mCx = aCx;
-    JSObject *obj = JS_GetGlobalObject( mCx );
-
-    JSClass* clazz;
-
-    clazz = ::JS_GET_CLASS(aCx, obj);
-
-    if (clazz &&
-        (clazz->flags & JSCLASS_HAS_PRIVATE) &&
-        (clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
-      mGlobalWrapper =
-        do_QueryInterface((nsISupports*)::JS_GetPrivate(aCx, obj));
-    }
-
     mCbval = aVal;
     mThread = do_GetCurrentThread();
 
@@ -242,12 +227,21 @@ XPITriggerEvent::Run()
 {
     jsval  ret;
     void*  mark;
-    jsval* args;
+    jsval* args = nsnull;
 
     JS_BeginRequest(cx);
-    args = JS_PushArguments(cx, &mark, "Wi",
-                            URL.get(),
-                            status);
+
+    // If Components doesn't exist in the global object then XPConnect has
+    // been torn down, probably because the page was closed. Bail out if that
+    // is the case.
+    JSObject* innerGlobal = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(cbval));
+    jsval components;
+    if (JS_LookupProperty(cx, innerGlobal, "Components", &components) &&
+        JSVAL_IS_OBJECT(components))
+    {
+        args = JS_PushArguments(cx, &mark, "Wi", URL.get(), status);
+    }
+
     if ( args )
     {
         // This code is all in a JS request, and here we're about to
@@ -298,7 +292,7 @@ XPITriggerEvent::Run()
         else
         {
             JS_CallFunctionValue(cx,
-                                 JSVAL_TO_OBJECT(global),
+                                 JS_GetGlobalObject(cx),
                                  cbval,
                                  2,
                                  args,
@@ -320,7 +314,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 {
     nsresult rv;
 
-    if ( mCx && mGlobalWrapper && !JSVAL_IS_NULL(mCbval) )
+    if ( mCx && mContextWrapper && !JSVAL_IS_NULL(mCbval) )
     {
         // create event and post it
         nsRefPtr<XPITriggerEvent> event = new XPITriggerEvent();
@@ -331,12 +325,6 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
             event->cx       = mCx;
             event->princ    = mPrincipal;
 
-            JSObject *obj = nsnull;
-
-            mGlobalWrapper->GetJSObject(&obj);
-
-            event->global   = OBJECT_TO_JSVAL(obj);
-
             event->cbval    = mCbval;
             JS_BeginRequest(event->cx);
             JS_AddNamedRoot(event->cx, &event->cbval,
@@ -345,7 +333,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 
             // Hold a strong reference to keep the underlying
             // JSContext from dying before we handle this event.
-            event->ref      = mGlobalWrapper;
+            event->ref      = mContextWrapper;
 
             rv = mThread->Dispatch(event, NS_DISPATCH_NORMAL);
         }
@@ -355,7 +343,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
         if ( NS_FAILED( rv ) )
         {
             // couldn't get event queue -- maybe window is gone or
-            // some similarly catastrophic occurrance
+            // some similarly catastrophic occurrence
             NS_WARNING("failed to dispatch XPITriggerEvent");
         }
     }

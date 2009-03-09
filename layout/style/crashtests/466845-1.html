@@ -1,0 +1,14 @@
+<html>
+<head>
+<title>Crash [@ nsViewManager::CreateView] with ::first-line position: absolute and -moz-transform</title>
+<style>
+#a::first-line {  -moz-transform: translate(50px);}
+</style>
+</head>
+<body style="position: absolute;">
+<span style="position: absolute;" id="a">
+<span style="-moz-transform: translate(50px);">&#1593; &#1593; &#1593;
+</span>
+</span>
+</body>
+</html>

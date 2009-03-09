@@ -61,6 +61,7 @@ function run_test()
     destFile.remove(false);
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
+  do_check_eq(0, getDBVersion(testfile));
 
   fh = Cc["@mozilla.org/satchel/form-history;1"].
        getService(Ci.nsIFormHistory2);
@@ -73,9 +74,30 @@ function run_test()
   do_check_true(fh.entryExists("name-B", "value-B"));
   do_check_true(fh.entryExists("name-C", "value-C1"));
   do_check_true(fh.entryExists("name-C", "value-C2"));
+  // check for upgraded schema.
+  do_check_eq(CURRENT_SCHEMA, fh.DBConnection.schemaVersion);
 
 
   // ===== 2 =====
+  testnum++;
+  // Check that timestamps were created correctly.
+
+  var query = "SELECT timesUsed, firstUsed, lastUsed " +
+              "FROM moz_formhistory WHERE fieldname = 'name-A'";
+  var stmt = fh.DBConnection.createStatement(query);
+  stmt.executeStep();
+
+  timesUsed = stmt.getInt32(0);
+  firstUsed = stmt.getInt64(1);
+  lastUsed  = stmt.getInt64(2);
+
+  do_check_eq(1, timesUsed);
+  do_check_true(firstUsed == lastUsed);
+  // Upgraded entries timestamped 24 hours in the past.
+  do_check_true(is_about_now(firstUsed + 24 * PR_HOURS));
+
+
+  // ===== 3 =====
   testnum++;
   // Exercise adding and removing a name/value pair
   do_check_false(fh.entryExists("name-D", "value-D"));
@@ -85,16 +107,16 @@ function run_test()
   do_check_false(fh.entryExists("name-D", "value-D"));
 
 
-  // ===== 3 =====
+  // ===== 4 =====
   testnum++;
   // Add a new entry, check expected properties
   do_check_false(fh.entryExists("name-E", "value-E"));
   fh.addEntry("name-E", "value-E");
   do_check_true(fh.entryExists("name-E", "value-E"));
 
-  var query = "SELECT timesUsed, firstUsed, lastUsed " +
-              "FROM moz_formhistory WHERE fieldname = 'name-E'";
-  var stmt = fh.DBConnection.createStatement(query);
+  query = "SELECT timesUsed, firstUsed, lastUsed " +
+          "FROM moz_formhistory WHERE fieldname = 'name-E'";
+  stmt = fh.DBConnection.createStatement(query);
   stmt.executeStep();
 
   timesUsed = stmt.getInt32(0);
@@ -121,7 +143,7 @@ function run_test()
 function delayed_test() {
   try {
 
-  // ===== 4 =====
+  // ===== 5 =====
   testnum++;
   // Add entry again, check for updated properties.
   do_check_true(fh.entryExists("name-E", "value-E"));

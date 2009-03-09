@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 /* bidi */
 
@@ -485,6 +486,22 @@ tr:focus, tt:focus, u:focus, ul:focus, var:focus {
 area, base, basefont, head, meta, script, style, title,
 noembed, param {
    display: none;
+}
+
+/* media elements */
+video > xul|videocontrols, audio > xul|videocontrols {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#videoControls");
+}
+
+video:not([controls]) > xul|videocontrols,
+audio:not([controls]) > xul|videocontrols {
+  visibility: hidden;
+}
+
+audio:not([controls]) {
+  display: none;
 }
 
 /* emulation of non-standard HTML <marquee> tag */

@@ -526,7 +526,7 @@ extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
  * not emulating anything.  Just mapping.
  */
 #define FreeLibrary(x) DosFreeModule((HMODULE)x)
-#define OutputDebugString(x)
+#define OutputDebugStringA(x)
                                
 extern int _MD_os2_get_nonblocking_connect_error(int osfd);
 

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()"
+     class="reftest-wait"
+>
+  <script type="application/javascript">
+    function go(evt) {
+      // Try calling the animation-related methods in nsSVGSVGElement.cpp
+      // If any aren't implemented, we'll throw an exception and
+      // the rect will stay red.
+
+      // Note: I'm catching the exception because (I think) we need to
+      // make sure to remove the "reftest-wait" document-class
+      try {
+        document.documentElement.animationsPaused();
+        document.documentElement.pauseAnimations();
+        document.documentElement.unpauseAnimations();
+        document.documentElement.getCurrentTime();
+        document.documentElement.setCurrentTime(0);
+      } catch (e) {
+        document.documentElement.removeAttribute("class");
+        throw e;
+      }
+
+      // If we get here, we're successful!
+      // Change the rect color.
+      var rect = document.getElementById("rect");
+      rect.setAttributeNS(null, "fill", "lime");
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <rect id="rect" width="100px" height="100px"
+        fill="red"/>
+</svg>

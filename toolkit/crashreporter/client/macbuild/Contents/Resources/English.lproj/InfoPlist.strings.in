@@ -2,4 +2,4 @@
 
 CFBundleName = "Crash Reporter";
 CFBundleDisplayName = "Crash Reporter";
-NSHumanReadableCopyright = "Copyright © 2007-2008 Mozilla Foundation";
+NSHumanReadableCopyright = "Copyright © 2007-2009 Mozilla Foundation";

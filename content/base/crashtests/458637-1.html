@@ -3,6 +3,7 @@
 <script type="text/javascript">
 
 var iterations = 0;
+var start = new Date();
 
 function boom()
 {
@@ -14,7 +15,8 @@ function boom()
 function boom2()
 {
   document.getElementById("i").style.overflow = "";
-  if (++iterations < 10)
+  var now = new Date();
+  if (++iterations < 20 && now - start < 5000)
     setTimeout(boom, 10);
   else
     document.documentElement.removeAttribute("class");

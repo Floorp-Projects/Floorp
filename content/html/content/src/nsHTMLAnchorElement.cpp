@@ -215,11 +215,7 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Prefetch links
   if (aDocument && nsHTMLDNSPrefetch::IsAllowed(GetOwnerDoc())) {
-    nsCOMPtr<nsIURI> hrefURI;
-    
-    GetHrefURI(getter_AddRefs(hrefURI));
-    if (hrefURI) 
-      nsHTMLDNSPrefetch::PrefetchLow(hrefURI);
+    nsHTMLDNSPrefetch::PrefetchLow(this);
   }
   return rv;
 }
@@ -227,9 +223,10 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  if (IsInDoc()) {
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
     RegUnRegAccessKey(PR_FALSE);
-    GetCurrentDoc()->ForgetLink(this);
+    doc->ForgetLink(this);
     // If this link is ever reinserted into a document, it might
     // be under a different xml:base, so forget the cached state now
     mLinkState = eLinkState_Unknown;

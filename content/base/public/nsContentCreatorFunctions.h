@@ -121,7 +121,8 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
 
 #ifdef MOZ_SVG
 nsresult
-NS_NewSVGElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
+NS_NewSVGElement(nsIContent** aResult, nsINodeInfo* aNodeInfo,
+                 PRBool aFromParser);
 #endif
 
 nsresult

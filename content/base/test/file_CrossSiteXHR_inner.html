@@ -1,8 +1,14 @@
 <!DOCTYPE HTML>
+<!--
+  NOTE! The content of this file is duplicated in file_CrossSiteXHR_inner.jar
+  and file_CrossSiteXHR_inner_data.sjs
+  Please update those files if you update this one.
+-->
+
 <html>
 <head>
 <script>
-window.addEventListener('message', function(e) {
+window.addEventListener("message", function(e) {
 
   sendData = null;
 
@@ -57,6 +63,8 @@ window.addEventListener('message', function(e) {
 
   if (req.withCred)
     xhr.withCredentials = true;
+  if (req.body)
+    sendData = req.body;
 
   res.events.push("opening");
   xhr.open(req.method, req.url, true);

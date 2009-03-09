@@ -81,7 +81,6 @@ pkix_VerifyNode_Create(
         PKIX_VerifyNode *node = NULL;
 
         PKIX_ENTER(VERIFYNODE, "pkix_VerifyNode_Create");
-
         PKIX_NULLCHECK_TWO(cert, pObject);
 
         PKIX_CHECK(PKIX_PL_Object_Alloc
@@ -1204,7 +1203,7 @@ pkix_VerifyNode_FindError(
         }
     }
     
-    if (node->error) {
+    if (node->error && node->error->plErr) {
         PKIX_INCREF(node->error);
         *error = node->error;
     }

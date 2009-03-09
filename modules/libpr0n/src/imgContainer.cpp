@@ -1224,9 +1224,9 @@ imgContainer::sDiscardTimerCallback(nsITimer *aTimer, void *aClosure)
 
   int old_frame_count = self->mFrames.Count();
 
+  // Don't discard animated images, because we don't handle that very well. (See bug 414259.)
   if (self->mAnim) {
-    delete self->mAnim;
-    self->mAnim = nsnull;
+    return;
   }
 
   self->mFrames.Clear();

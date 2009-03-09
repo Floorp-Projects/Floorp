@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4 -*- */
+/* -*- Mode: C;  c-basic-offset: 2; tab-width: 4; indent-tabs-mode: nil; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,9 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
- #include "stdlib.h"
- #include "Windows.h"
+#include "stdlib.h"
+#include "Windows.h"
  
 #include "mozce_shunt.h"
 #include "time_conversions.h"
@@ -47,151 +46,279 @@
 //  Environment Variable Stuff
 ////////////////////////////////////////////////////////
 
-// Convert to registry soon!
+typedef struct env_entry env_entry;
 
-struct mapping{
-char* key;
-char* value;
-mapping* next;
+#define ENV_IS_STATIC 0
+#define ENV_FREE_KEY 1
+#define ENV_FREE_BOTH 2
+
+struct env_entry {
+  char *key;
+  char *value;
+  int flag;
+  env_entry *next;
 };
 
-static int init_i =1;
-static mapping initial_map[] = {
-#ifdef DEBUG_NSPR_ALL
-    {"NSPR_LOG_MODULES", "all:5",initial_map + (init_i++)},
-    {"NSPR_LOG_FILE","nspr.log",initial_map + (init_i++)},
-#endif  
-#ifdef TIMELINE
-    {"NS_TIMELINE_LOG_FILE","\\bin\\timeline.log",initial_map + (init_i++)},
-    {"NS_TIMELINE_ENABLE", "1",initial_map + (init_i++)},
-#endif
-    {"tmp", "/Temp",initial_map + (init_i++)},
-    {"GRE_HOME",".",initial_map + (init_i++)},
-    {"NSS_DEFAULT_DB_TYPE", "sql",initial_map + (init_i++)},
-    {"NSPR_FD_CACHE_SIZE_LOW", "10",initial_map + (init_i++)},              
-    {"NSPR_FD_CACHE_SIZE_HIGH", "30",initial_map + (init_i++)},
-    {"XRE_PROFILE_PATH", "\\Application Data\\Mozilla\\Profiles",initial_map + (init_i++)},
-    {"XRE_PROFILE_LOCAL_PATH","./profile",initial_map + (init_i++)},
-    {"XRE_PROFILE_NAME","default",0}
-};
+static bool env_ready = false;
+static env_entry *env_head = NULL;
 
-static mapping* head = initial_map;
-
- 
-mapping* getMapping(const char* key)
+static env_entry *
+env_find_key(const char *key)
 {
-  mapping* cur = head;
-  while(cur != NULL){
-    if(!strcmp(cur->key,key))
-      return cur;
-    cur = cur->next;
+  env_entry *entry = env_head;
+  while (entry) {
+    if (strcmp(entry->key, key) == 0)
+      return entry;
+
+    entry = entry->next;
   }
+
   return NULL;
 }
 
-int map_put(const char* key,const char* val)
+static void
+putenv_internal(char *key, char *value, int flag)
 {
-  mapping* map = getMapping(key);
-  if(map){
-    if(!((map > initial_map) && 
-         (map < (initial_map + init_i))))
-      free( map->value);
-  }else{        
-    map = (mapping*)malloc(sizeof(mapping));
-    map->key = (char*)malloc((strlen(key)+1)*sizeof(char));
-    strcpy(map->key,key);
-    map->next = head;
-    head = map;
+  env_entry *entry = env_find_key(key);
+  if (entry) {
+    // get rid of old key/value; if flag is set, then
+    // they're static strings and we don't touch them
+    if (entry->flag == ENV_FREE_BOTH)
+      free (entry->value);
+    if (entry->flag == ENV_FREE_KEY)
+      free (entry->key);
+  } else {
+    entry = new env_entry;
+    entry->next = env_head;
+    env_head = entry;
   }
-  map->value = (char*)malloc((strlen(val)+1)*sizeof(char));
-  strcpy(map->value,val);
+
+  entry->key = key;
+  entry->value = value;
+  entry->flag = flag;
+}
+
+static void
+init_initial_env() {
+  env_ready = true;
+
+#ifdef DEBUG_NSPR_ALL
+  putenv_internal("NSPR_LOG_MODULES", "all:5", ENV_IS_STATIC);
+  putenv_internal("NSPR_LOG_FILE", "nspr.log", ENV_IS_STATIC);
+#endif  
+#ifdef TIMELINE
+  putenv_internal("NS_TIMELINE_LOG_FILE", "\\bin\\timeline.log", ENV_IS_STATIC);
+  putenv_internal("NS_TIMELINE_ENABLE", "1", ENV_IS_STATIC);
+#endif
+  putenv_internal("NSS_DEFAULT_DB_TYPE", "sql", ENV_IS_STATIC);
+  putenv_internal("NSPR_FD_CACHE_SIZE_LOW", "10", ENV_IS_STATIC);
+  putenv_internal("NSPR_FD_CACHE_SIZE_HIGH", "30", ENV_IS_STATIC);
+  putenv_internal("XRE_PROFILE_NAME", "default", ENV_IS_STATIC);
+  putenv_internal("tmp", "/Temp", ENV_IS_STATIC);
+}
+
+static void
+putenv_copy(const char *k, const char *v)
+{
+  if (!env_ready)
+    init_initial_env();
+
+  putenv_internal(strdup(k), strdup(v), ENV_FREE_BOTH);
+}
+
+MOZCE_SHUNT_API int
+putenv(const char *envstr)
+{
+  if (!env_ready)
+    init_initial_env();
+
+  char *key = strdup(envstr);
+  char *value = strchr(key, '=');
+  if (!value) {
+    free(key);
+    return -1;
+  }
+
+  *value++ = '\0';
+
+  putenv_internal(key, value, ENV_FREE_KEY);
+
   return 0;
 }
 
-char*  map_get(const char* key)
+MOZCE_SHUNT_API char *
+getenv(const char* name)
 {
-  mapping* map = getMapping(key);
-  if(map)
-    return map->value;
+  if (!env_ready)
+    init_initial_env();
+
+  env_entry *entry = env_find_key(name);
+  if (entry && entry->value[0] != 0) {
+    return entry->value;
+  }
+
   return NULL;
 }
- 
-MOZCE_SHUNT_API char* getenv(const char* inName)
-{
-  return map_get(inName);
-}
- 
-MOZCE_SHUNT_API int putenv(const char *a)
-{
-  int len = strlen(a);
-  char* key = (char*) malloc(len*sizeof(char));
-  strcpy(key,a);
-  char* val = strchr(key,'=');
-  val[0] = '\0';
-  int rv;
-  val++;
-  rv = map_put(key,val);
-  free(key);
-  return rv;
-}
 
-MOZCE_SHUNT_API char GetEnvironmentVariableW(const unsigned short * lpName, unsigned short* lpBuffer, unsigned long nSize)
+MOZCE_SHUNT_API char
+GetEnvironmentVariableW(const unsigned short* lpName,
+                        unsigned short* lpBuffer,
+                        unsigned long nSize)
 {
   char key[256];
-  int rv = WideCharToMultiByte(CP_ACP,
-                               0,
-                               lpName,
-                               -1,
-                               key,
-                               256,
-                               NULL,
-                               NULL);
-  if(rv < 0)
-    return rv;
+  int rv = WideCharToMultiByte(CP_ACP, 0, lpName, -1, key, 255, NULL, NULL);
+  if (rv <= 0)
+    return 0;
+
+  key[rv] = 0;
   
-  char* val = map_get(key);
+  char* val = getenv(key);
   
-  if(val) 
-    {
-      MultiByteToWideChar(CP_ACP,
-                          0,
-                          val,
-                          strlen(val)+1,
-                          lpBuffer,
-                          nSize );
-      return ERROR_SUCCESS;
-    }
-  return -1;
+  if (!val)
+    return 0;
+
+  // strlen(val)+1, let MBTWC convert the nul byte for us
+  return MultiByteToWideChar(CP_ACP, 0, val, strlen(val)+1, lpBuffer, nSize);
 }
 
-MOZCE_SHUNT_API char SetEnvironmentVariableW( const unsigned short * name, const unsigned short * value )
+MOZCE_SHUNT_API char
+SetEnvironmentVariableW(const unsigned short* name,
+                        const unsigned short* value)
 {
   char key[256];
   char val[256];
-  int rv = WideCharToMultiByte(CP_ACP,
-                               0,
-                               name,
-                               -1,
-                               key,
-                               256,
-                               NULL,
-                               NULL);
-  if(rv < 0)
+  int rv;
+
+  rv = WideCharToMultiByte(CP_ACP, 0, name, -1, key, 255, NULL, NULL);
+  if (rv < 0)
     return rv;
+
+  key[rv] = 0;
   
-  rv = WideCharToMultiByte(CP_ACP,
-                           0,
-                           value,
-                           -1,
-                           val,
-                           256,
-                           NULL,
-                           NULL);
-  if(rv < 0)
+  rv = WideCharToMultiByte(CP_ACP, 0, value, -1, val, 255, NULL, NULL);
+  if (rv < 0)
     return rv;
-  
-  return map_put(key,val);
+
+  val[rv] = 0;
+
+  putenv_copy(key, val);
+  return 0;
 }
+
+
+typedef struct MOZCE_SHUNT_SPECIAL_FOLDER_INFO
+{
+  int   nFolder;
+  char *folderEnvName;
+} MozceShuntSpecialFolderInfo;
+
+// TAKEN DIRECTLY FROM MICROSOFT SHELLAPI.H HEADER FILE 
+// supported SHGetSpecialFolderPath nFolder ids
+#define CSIDL_DESKTOP            0x0000
+#define CSIDL_PROGRAMS           0x0002      // \Windows\Start Menu\Programs
+#define CSIDL_PERSONAL           0x0005
+#define CSIDL_WINDOWS            0x0024      // \Windows
+#define CSIDL_PROGRAM_FILES      0x0026      // \Program Files
+
+#define CSIDL_APPDATA            0x001A      // NOT IN SHELLAPI.H header file
+#define CSIDL_PROFILE            0x0028      // NOT IN SHELLAPI.H header file
+
+MozceShuntSpecialFolderInfo mozceSpecialFoldersToEnvVars[] = {
+  { CSIDL_APPDATA,  "APPDATA" },
+  { CSIDL_PROGRAM_FILES, "ProgramFiles" },
+  { CSIDL_WINDOWS,  "windir" },
+
+  //  { CSIDL_PROFILE,  "HOMEPATH" },     // No return on WinMobile 6 Pro
+  //  { CSIDL_PROFILE,  "USERPROFILE" },  // No return on WinMobile 6 Pro
+  //  { int, "ALLUSERSPROFILE" },         // Only one profile on WinCE
+  //  { int, "CommonProgramFiles" },
+  //  { int, "COMPUTERNAME" },
+  //  { int, "HOMEDRIVE" },
+  //  { int, "SystemDrive" },
+  //  { int, "SystemRoot" },
+  //  { int, "TEMP" },
+
+  { NULL, NULL }
+};
+
+
+static void InitializeSpecialFolderEnvVars()
+{
+  MozceShuntSpecialFolderInfo *p = mozceSpecialFoldersToEnvVars;
+  while ( p && p->nFolder && p->folderEnvName ) {
+    WCHAR wPath[MAX_PATH];
+    char  cPath[MAX_PATH];
+    if ( SHGetSpecialFolderPath(NULL, wPath, p->nFolder, FALSE) )
+      if ( 0 != WideCharToMultiByte(CP_ACP, 0, wPath, -1, cPath, MAX_PATH, 0, 0) )
+        putenv_copy(p->folderEnvName, cPath);
+    p++;
+  }
+}
+
+
+
+MOZCE_SHUNT_API unsigned int ExpandEnvironmentStringsW(const unsigned short* lpSrc,
+                                                       unsigned short* lpDst,
+                                                       unsigned int nSize)
+{
+  if ( NULL == lpDst )
+    return 0;
+  
+  unsigned int size = 0;
+  unsigned int index = 0;
+  unsigned int origLen = wcslen(lpSrc);
+
+  const unsigned short *pIn = lpSrc;
+  unsigned short *pOut = lpDst;
+  
+  while ( index < origLen ) {
+    
+    if (*pIn != L'%') {  // Regular char, copy over
+      if ( size < nSize ) *pOut = *pIn, pOut++;
+      index++, size++, pIn++;
+      continue;
+    }
+    
+    // Have a starting '%' - look for matching '%'
+    int envlen = 0;
+    const unsigned short *pTmp = ++pIn;                    // Move past original '%'
+    while ( L'%' != *pTmp ) {
+      envlen++, pTmp++;
+      if ( origLen < index + envlen ) {    // Ran past end of original
+        SetLastError(ERROR_INVALID_PARAMETER); // buffer without matching '%'
+        return -1;
+      }
+    }
+    
+    if ( 0 == envlen ) {  // Encountered a "%%" - mapping to "%"
+      size++;
+      if ( size < nSize ) *pOut = *pIn, pOut++;
+      pIn++;
+      index += 2;
+    } else {
+      // Encountered a "%something%" - mapping "something"
+      char key[256];
+      int k = WideCharToMultiByte(CP_ACP, 0, pIn, envlen, key, 255, NULL, NULL);
+      key[k] = 0;
+      char *pC = getenv(key);
+      if ( NULL != pC ) {
+        int n = MultiByteToWideChar( CP_ACP, 0, pC, -1, pOut, nSize - size );
+        if ( n > 0 ) {
+          size += n - 1;  // Account for trailing zero
+          pOut += n - 1;
+        }
+      }
+      index += envlen + 2;
+      pIn = ++pTmp;
+    }
+  }
+  
+  if ( size < nSize ) lpDst[size] = 0;
+  return size;
+}
+
+
+
 
 ////////////////////////////////////////////////////////
 //  errno
@@ -223,14 +350,25 @@ MOZCE_SHUNT_API unsigned short *_wfullpath( unsigned short *absPath, const unsig
   if(absPath == NULL){
     absPath = (unsigned short *)malloc(maxLength*sizeof(unsigned short));
   }
-  _wgetcwd( absPath, maxLength);
-  unsigned long len = wcslen(absPath);
-  if(!(absPath[len-1] == TCHAR('/') || absPath[len-1] == TCHAR('\\'))&& len< maxLength){
-    absPath[len] = TCHAR('\\');
-    absPath[++len] = TCHAR('\0');
+  unsigned short cwd[MAX_PATH];
+  if (NULL == _wgetcwd( cwd, MAX_PATH))
+    return NULL;
+
+  unsigned long len = wcslen(cwd);
+  if(!(cwd[len-1] == TCHAR('/') || cwd[len-1] == TCHAR('\\'))&& len< maxLength){
+    cwd[len] = TCHAR('\\');
+    cwd[++len] = TCHAR('\0');
   }
   if(len+wcslen(relPath) < maxLength){
-    return wcscat(absPath,relPath);
+#if (_WIN32_WCE > 300)
+    if ( 0 < CeGetCanonicalPathName(relPath[0] == L'\\'? relPath : 
+                                                         wcscat(cwd,relPath), 
+                                    absPath, maxLength, 0))
+      return absPath;
+#else
+    #error Need CeGetCanonicalPathName to build.
+    // NO ACTUAL CeGetCanonicalPathName function in earlier versions of WinCE
+#endif
   }
   return NULL;
 }
@@ -276,18 +414,18 @@ MOZCE_SHUNT_API void abort(void)
 #undef clock
 
 extern "C" {
-#if 0
+  MOZCE_SHUNT_API size_t strftime(char *, size_t, const char *, const struct tm *);
+  MOZCE_SHUNT_API struct tm* localtime(const time_t* inTimeT);
+  MOZCE_SHUNT_API time_t mktime(struct tm* inTM);
+  MOZCE_SHUNT_API struct tm* gmtime(const time_t* inTimeT);
+  MOZCE_SHUNT_API time_t time(time_t *);
+  MOZCE_SHUNT_API clock_t clock();
 }
-#endif
 
 static const int sDaysOfYear[12] = {
   0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
 };
 static struct tm tmStorage;
-
-#ifdef strftime
-#undef strftime
-#endif
 
 MOZCE_SHUNT_API size_t strftime(char *, size_t, const char *, const struct tm *)
 {
@@ -432,6 +570,10 @@ MOZCE_SHUNT_API clock_t clock()
 #include <locale.h>
 #undef localeconv
 
+extern "C" {
+  MOZCE_SHUNT_API struct lconv * localeconv(void);
+}
+
 static struct lconv s_locale_conv =
   {
     ".",   /* decimal_point */
@@ -458,8 +600,90 @@ MOZCE_SHUNT_API struct lconv * localeconv(void)
 {
   return &s_locale_conv;
 }
- 
- #if 0
- {
- #endif
- } /* extern "C" */
+
+MOZCE_SHUNT_API unsigned short *
+mozce_GetEnvironmentCL()
+{
+  env_entry *entry = env_head;
+  int len = 0;
+  while (entry) {
+    if (entry->flag == ENV_IS_STATIC) {
+      entry = entry->next;
+      continue;
+    }
+
+    len += strlen(entry->key);
+    len += strlen(entry->value);
+
+    // for each env var, 11 chars of " --environ:", 3 chars of '"="', and a null at the end
+    len += 11 + 3 + 1;
+
+    entry = entry->next;
+  }
+
+  if (len == 0) {
+    return wcsdup(L"");
+  }
+
+  wchar_t *env = (wchar_t*) malloc(sizeof(wchar_t) * (len+1));
+  if (!env)
+    return NULL;
+
+  entry = env_head;
+
+  int pos = 0;
+  while (entry) {
+    if (entry->flag == ENV_IS_STATIC) {
+      entry = entry->next;
+      continue;
+    }
+
+    if (strchr(entry->key, '"') || strchr(entry->value, '"')) {
+      // argh, we don't have a good way of encoding the ", so let's just
+      // ignore this var for now
+      RETAILMSG(1, (L"Skipping environment variable with quote marks in key or value! %S -> %s\r\n", entry->key, entry->value));
+      entry = entry->next;
+      continue;
+    }
+
+    wcscpy (env+pos, L" --environ:\"");
+    pos += 12;
+    pos += MultiByteToWideChar(CP_ACP, 0, entry->key, strlen(entry->key), env+pos, len-pos);
+    env[pos++] = '=';
+    pos += MultiByteToWideChar(CP_ACP, 0, entry->value, strlen(entry->value), env+pos, len-pos);
+    env[pos++] = '\"';
+
+    entry = entry->next;
+  } 
+
+  env[pos] = '\0';
+
+  return env;
+  
+}
+
+BOOL WINAPI DllMain(HANDLE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+{
+  // Perform actions based on the reason for calling.
+  switch( fdwReason ) 
+  { 
+    case DLL_PROCESS_ATTACH:
+      // Initialize once for each new process.
+      // Return FALSE to fail DLL load.
+      InitializeSpecialFolderEnvVars();
+      break;
+
+    case DLL_THREAD_ATTACH:
+      // Do thread-specific initialization.
+      break;
+
+    case DLL_THREAD_DETACH:
+      // Do thread-specific cleanup.
+      break;
+
+    case DLL_PROCESS_DETACH:
+      // Perform any necessary cleanup.
+      break;
+  }
+  return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}

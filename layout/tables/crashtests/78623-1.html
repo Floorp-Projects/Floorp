@@ -1,0 +1,17 @@
+<html><head>
+<script>
+function crashMoz() {
+   var div = document.getElementById( "adiv" );
+   var table = document.createElement( "TABLE" );
+   var tr = table.insertRow( 0 );
+   var td = tr.insertCell( 0 );
+   var text = document.createTextNode( "Hello, World." );
+   td.appendChild( text );
+   td.style.backgroundImage = "url( 'any_image_here.gif' )";
+   div.appendChild( table );
+}
+</script>
+</head><body onload="crashMoz();">
+<div id=adiv></div>
+</body></html>
+

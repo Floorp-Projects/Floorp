@@ -571,7 +571,7 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@import url(");
-  aCssText.Append(mURLSpec);
+  nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
   aCssText.Append(NS_LITERAL_STRING(")"));
   if (mMedia) {
     nsAutoString mediaText;
@@ -1162,19 +1162,18 @@ nsCSSDocumentRule::GetCssText(nsAString& aCssText)
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {
       case eURL:
-        aCssText.AppendLiteral("url(\"");
+        aCssText.AppendLiteral("url(");
         break;
       case eURLPrefix:
-        aCssText.AppendLiteral("url-prefix(\"");
+        aCssText.AppendLiteral("url-prefix(");
         break;
       case eDomain:
-        aCssText.AppendLiteral("domain(\"");
+        aCssText.AppendLiteral("domain(");
         break;
     }
-    nsCAutoString escapedURL(url->url);
-    escapedURL.ReplaceSubstring("\"", "\\\""); // escape quotes
-    AppendUTF8toUTF16(escapedURL, aCssText);
-    aCssText.AppendLiteral("\"), ");
+    nsStyleUtil::AppendEscapedCSSString(NS_ConvertUTF8toUTF16(url->url),
+                                        aCssText);
+    aCssText.AppendLiteral("), ");
   }
   aCssText.Cut(aCssText.Length() - 2, 1); // remove last ,
 
@@ -1257,6 +1256,10 @@ nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
   return PR_FALSE;
 }
 
+nsCSSDocumentRule::URL::~URL()
+{
+  NS_CSS_DELETE_LIST_MEMBER(nsCSSDocumentRule::URL, this, next);
+}
 
 // -------------------------------------------
 // nsICSSNameSpaceRule
@@ -1443,7 +1446,7 @@ CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
     aCssText.AppendLiteral(" ");
   }
   aCssText.AppendLiteral("url(");
-  aCssText.Append(mURLSpec);
+  nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
   aCssText.Append(NS_LITERAL_STRING(");"));
   return NS_OK;
 }
@@ -1500,19 +1503,15 @@ SerializeFontSrc(const nsCSSValue& src, nsAString & aResult NS_OUTPARAM)
     nsAutoString formats;
 
     if (sources[i].GetUnit() == eCSSUnit_URL) {
+      aResult.AppendLiteral("url(");
       nsDependentString url(sources[i].GetOriginalURLValue());
-      nsAutoString escapedUrl;
-      nsStyleUtil::EscapeCSSString(url, escapedUrl);
-      aResult.AppendLiteral("url(\"");
-      aResult.Append(escapedUrl);
-      aResult.AppendLiteral("\")");
+      nsStyleUtil::AppendEscapedCSSString(url, aResult);
+      aResult.AppendLiteral(")");
     } else if (sources[i].GetUnit() == eCSSUnit_Local_Font) {
+      aResult.AppendLiteral("local(");
       nsDependentString local(sources[i].GetStringBufferValue());
-      nsAutoString escapedLocal;
-      nsStyleUtil::EscapeCSSString(local, escapedLocal);
-      aResult.AppendLiteral("local(\"");
-      aResult.Append(escapedLocal);
-      aResult.AppendLiteral("\")");
+      nsStyleUtil::AppendEscapedCSSString(local, aResult);
+      aResult.AppendLiteral(")");
     } else {
       NS_NOTREACHED("entry in src: descriptor with improper unit");
       i++;
@@ -1580,12 +1579,9 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
       // we don't use AppendCSSValueToString here because it doesn't
       // canonicalize the way we want, and anyway it's overkill when
       // we know we have eCSSUnit_String
+      NS_ASSERTION(val.GetUnit() == eCSSUnit_String, "unexpected unit");
       nsDependentString family(val.GetStringBufferValue());
-      nsAutoString escapedFamily;
-      nsStyleUtil::EscapeCSSString(family, escapedFamily);
-      aResult.Append('"');
-      aResult.Append(escapedFamily);
-      aResult.Append('"');
+      nsStyleUtil::AppendEscapedCSSString(family, aResult);
       return NS_OK;
     }
 

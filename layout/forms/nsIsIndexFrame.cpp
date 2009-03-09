@@ -85,9 +85,9 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 nsIsIndexFrame::nsIsIndexFrame(nsStyleContext* aContext) :
-  nsAreaFrame(aContext)
+  nsBlockFrame(aContext)
 {
-  SetFlags(NS_BLOCK_SPACE_MGR);
+  SetFlags(NS_BLOCK_FLOAT_MGR);
 }
 
 nsIsIndexFrame::~nsIsIndexFrame()
@@ -105,10 +105,10 @@ nsIsIndexFrame::Destroy()
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
   nsContentUtils::DestroyAnonymousContent(&mPreHr);
   nsContentUtils::DestroyAnonymousContent(&mPostHr);
-  nsAreaFrame::Destroy();
+  nsBlockFrame::Destroy();
 }
 
-// REVIEW: We don't need to override BuildDisplayList, nsAreaFrame will honour
+// REVIEW: We don't need to override BuildDisplayList, nsBlockFrame will honour
 // our visibility setting
 
 nsresult
@@ -147,7 +147,8 @@ nsIsIndexFrame::GetInputFrame(nsIFormControlFrame** oFrame)
   if (presShell && mInputContent) {
     nsIFrame *frame = presShell->GetPrimaryFrameFor(mInputContent);
     if (frame) {
-      return CallQueryInterface(frame, oFrame);
+      *oFrame = do_QueryFrame(frame);
+      return *oFrame ? NS_OK : NS_NOINTERFACE;
     }
   }
   return NS_OK;
@@ -233,20 +234,17 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
+NS_QUERYFRAME_HEAD(nsIsIndexFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
+
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(aInstancePtr, "null out param");
 
-  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
-    *aInstancePtr = static_cast<nsIAnonymousContentCreator*>(this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = static_cast<nsIStatefulFrame*>(this);
-    return NS_OK;
-  }
   if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
     *aInstancePtr = static_cast<nsIDOMKeyListener*>(this);
     return NS_OK;
@@ -256,7 +254,7 @@ nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
+  return NS_NOINTERFACE;
 }
 
 nscoord
@@ -266,7 +264,7 @@ nsIsIndexFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   DISPLAY_MIN_WIDTH(this, result);
 
   // Our min width is our pref width; the rest of our reflow is
-  // happily handled by nsAreaFrame
+  // happily handled by nsBlockFrame
   result = GetPrefWidth(aRenderingContext);
   return result;
 }
@@ -286,7 +284,7 @@ nsIsIndexFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (nsGkAtoms::prompt == aAttribute) {
     rv = UpdatePromptLabel(PR_TRUE);
   } else {
-    rv = nsAreaFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+    rv = nsBlockFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
   return rv;
 }
@@ -535,9 +533,18 @@ nsIsIndexFrame::SaveState(SpecialStateID aStateID, nsPresState** aState)
   if (! stateString.IsEmpty()) {
 
     // Construct a pres state and store value in it.
-    res = NS_NewPresState(aState);
-    NS_ENSURE_SUCCESS(res, res);
-    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+    *aState = new nsPresState();
+    if (!*aState)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsISupportsString> state
+      (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+
+    if (!state)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    state->SetData(stateString);
+    (*aState)->SetStateProperty(state);
   }
 
   return res;
@@ -549,11 +556,12 @@ nsIsIndexFrame::RestoreState(nsPresState* aState)
   NS_ENSURE_ARG_POINTER(aState);
 
   // Set the value to the stored state.
-  nsAutoString stateString;
-  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsISupportsString> stateString
+    (do_QueryInterface(aState->GetStateProperty()));
+  
+  nsAutoString data;
+  stateString->GetData(data);
+  SetInputValue(data);
 
-  if (res == NS_STATE_PROPERTY_EXISTS)
-    SetInputValue(stateString);
   return NS_OK;
 }

@@ -183,17 +183,33 @@ nsMemoryImpl::HeapMinimize(PRBool aImmediate)
     return FlushMemory(NS_LITERAL_STRING("heap-minimize").get(), aImmediate);
 }
 
+/* this magic number is something greater than 40mb
+ * and after all, 40mb should be good enough for any web app
+ * unless it's part of an office suite.
+ */
+static const int kRequiredMemory = 0x3000000;
+
 NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(PRBool *result)
 {
 #if defined(WINCE)
+    *result = PR_FALSE;
+    // See bug 475595 -- this is incorrect right now, and causes a big
+    // perf hit since GlobalMemoryStatus has to grab a kernel VM lock
+    // and do a bunch of munging through VM pages to get the data
+    // that's requested.  We call IsLowMemory in some performance
+    // critical code (e.g. during painting), so that's bad.
+#if 0
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = ((float)stat.dwAvailPhys / stat.dwTotalPhys) < 0.1;
+#endif
 #elif defined(XP_WIN)
-    MEMORYSTATUS stat;
-    GlobalMemoryStatus(&stat);
-    *result = ((float)stat.dwAvailPageFile / stat.dwTotalPageFile) < 0.1;
+    MEMORYSTATUSEX stat;
+    stat.dwLength = sizeof stat;
+    GlobalMemoryStatusEx(&stat);
+    *result = (stat.ullAvailPageFile < kRequiredMemory) &&
+        ((float)stat.ullAvailPageFile / stat.ullTotalPageFile) < 0.1;
 #elif defined(NS_OSSO)
     int fd = open (kHighMark, O_RDONLY);
     if (fd == -1) {

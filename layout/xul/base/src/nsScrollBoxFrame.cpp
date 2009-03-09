@@ -101,6 +101,11 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {  
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   switch(aEvent->message)
   {
     // repeat mode may be "hover" for repeating while the mouse is hovering

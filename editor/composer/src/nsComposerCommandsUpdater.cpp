@@ -54,8 +54,7 @@
 #include "nsITransactionManager.h"
 
 nsComposerCommandsUpdater::nsComposerCommandsUpdater()
-:  mDOMWindow(nsnull)
-,  mDirtyState(eStateUninitialized)
+:  mDirtyState(eStateUninitialized)
 ,  mSelectionCollapsed(eStateUninitialized)
 ,  mFirstDoOfFirstUndo(PR_TRUE)
 {
@@ -63,6 +62,11 @@ nsComposerCommandsUpdater::nsComposerCommandsUpdater()
 
 nsComposerCommandsUpdater::~nsComposerCommandsUpdater()
 {
+  // cancel any outstanding update timer
+  if (mUpdateTimer)
+  {
+    mUpdateTimer->Cancel();
+  }
 }
 
 NS_IMPL_ISUPPORTS4(nsComposerCommandsUpdater, nsISelectionListener,
@@ -241,7 +245,7 @@ nsresult
 nsComposerCommandsUpdater::Init(nsIDOMWindow* aDOMWindow)
 {
   NS_ENSURE_ARG(aDOMWindow);
-  mDOMWindow = aDOMWindow;
+  mDOMWindow = do_GetWeakReference(aDOMWindow);
 
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
   if (window)
@@ -364,10 +368,12 @@ nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 PRBool
 nsComposerCommandsUpdater::SelectionIsCollapsed()
 {
-  if (!mDOMWindow) return PR_TRUE;
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryReferent(mDOMWindow);
+  if (!domWindow)
+    return PR_TRUE;
 
   nsCOMPtr<nsISelection> domSelection;
-  if (NS_SUCCEEDED(mDOMWindow->GetSelection(getter_AddRefs(domSelection))) && domSelection)
+  if (NS_SUCCEEDED(domWindow->GetSelection(getter_AddRefs(domSelection))) && domSelection)
   {
     PRBool selectionCollapsed = PR_FALSE;
     domSelection->GetIsCollapsed(&selectionCollapsed);

@@ -446,8 +446,10 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       currentItem->UpdateForFrameBackground(this);
     }
 
-    if (GetStyleBorder()->mBoxShadow) {
-      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadow(this);
+    // display outset box-shadows if we need to.
+    PRBool hasBoxShadow = !!(GetStyleBorder()->mBoxShadow);
+    if (hasBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowOuter(this);
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -463,6 +465,13 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
       item->UpdateForFrameBackground(this);
+    }
+
+    // display inset box-shadows if we need to.
+    if (hasBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowInner(this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     
     // display borders if we need to
@@ -500,7 +509,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 //null range means the whole thing
 NS_IMETHODIMP
-nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
+nsTableCellFrame::SetSelected(nsPresContext*  aPresContext,
                               nsIDOMRange*    aRange,
                               PRBool          aSelected,
                               nsSpread        aSpread,
@@ -672,7 +681,7 @@ nsTableCellFrame::HasVerticalAlignBaseline()
 PRBool 
 nsTableCellFrame::CellHasVisibleContent(nscoord       height,
                                         nsTableFrame* tableFrame,
-                                        nsIFrame* kidFrame)
+                                        nsIFrame*     kidFrame)
 {
   // see  http://www.w3.org/TR/CSS21/tables.html#empty-cells
   if (height > 0)
@@ -805,7 +814,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 // it is the height (minus border, padding) of the cell's first in flow during its final 
 // reflow without an unconstrained height.
 static nscoord
-CalcUnpaginagedHeight(nsPresContext*       aPresContext,
+CalcUnpaginagedHeight(nsPresContext*        aPresContext,
                       nsTableCellFrame&     aCellFrame, 
                       nsTableFrame&         aTableFrame,
                       nscoord               aVerticalBorderPadding)
@@ -835,7 +844,7 @@ CalcUnpaginagedHeight(nsPresContext*       aPresContext,
   return computedHeight;
 }
 
-NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
+NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -847,14 +856,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     GetFirstInFlow()->AddStateBits(NS_TABLE_CELL_HAD_SPECIAL_REFLOW);
   }
 
-  // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
-  nscoord availHeight = aReflowState.availableHeight;
-
   // see if a special height reflow needs to occur due to having a pct height
   nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   aStatus = NS_FRAME_COMPLETE;
-  nsSize availSize(aReflowState.availableWidth, availHeight);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   /* It's the 'border-collapse' on the table that matters */
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -872,9 +878,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   nscoord leftInset   = borderPadding.left;
 
   // reduce available space by insets, if we're in a constrained situation
-  availSize.width -= leftInset+rightInset;
-  if (NS_UNCONSTRAINEDSIZE!=availSize.height)
-    availSize.height -= topInset+bottomInset;
+  availSize.width -= leftInset + rightInset;
+  if (NS_UNCONSTRAINEDSIZE != availSize.height)
+    availSize.height -= topInset + bottomInset;
 
   // Try to reflow the child into the available space. It might not
   // fit or might need continuing.
@@ -1015,25 +1021,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
 /* ----- global methods ----- */
 
-NS_IMPL_ADDREF_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
-NS_IMPL_RELEASE_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
-
-NS_IMETHODIMP
-nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
-    *aInstancePtr = static_cast<nsITableCellLayout*>(this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIPercentHeightObserver))) {
-    *aInstancePtr = static_cast<nsIPercentHeightObserver*>(this);
-    return NS_OK;
-  }
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsTableCellFrame)
+  NS_QUERYFRAME_ENTRY(nsITableCellLayout)
+  NS_QUERYFRAME_ENTRY(nsIPercentHeightObserver)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)

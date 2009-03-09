@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: append source child</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="v1" onerror="event.stopPropagation();"></video>
+<audio id="a1" onerror="event.stopPropagation();"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById("v1");
+var a1 = document.getElementById("a1");
+
+is(v1.src, "", "src should be null");
+is(a1.src, "", "src should be null");
+is(v1.currentSrc, "", "currentSrc should be null");
+is(a1.currentSrc, "", "currentSrc should be null");
+is(v1.childNodes.length, 0, "should have no children");
+is(a1.childNodes.length, 0, "should have no children");
+
+function newSource() {
+  var e = document.createElement("source");
+  e.type = "application/ogg";
+  e.src = "320x240.ogv";
+  return e;
+}
+
+var audioLoaded = false;
+var videoLoaded = false;
+
+function loaded(media) {
+  ok(media.networkState > 0, "networkState should be > 0");
+  is(media.childNodes.length, 1, "should have 1 child");
+  var sourceFile = media.currentSrc.substring(media.currentSrc.lastIndexOf('/'));
+  is(sourceFile, "/320x240.ogv", "loaded wrong resource");
+  if (media == a1)
+    audioLoaded = true;
+  else if (media == v1)
+    videoLoaded = true;
+  if (audioLoaded && videoLoaded) {
+    SimpleTest.finish();
+  }
+}
+
+v1.addEventListener('loadeddata', function() { loaded(v1); }, false);
+a1.addEventListener('loadeddata', function() { loaded(a1); }, false);
+
+v1.appendChild(newSource());
+v1.load();
+a1.appendChild(newSource());
+a1.load();
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

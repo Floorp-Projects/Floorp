@@ -100,6 +100,8 @@ interface nsIAuthPrompt : nsISupports
      *                       when matching existing logins or saving new ones.
      *                       If no username is specified, only password-only
      *                       logins will be matched or saved.
+     *                       Note: if a username is specified, the username
+     *                       should be escaped.
      * @param  savePassword  One of the SAVE_PASSWORD_* options above.
      * @param  pwd           The password entered by the user if OK was
      *                       selected.

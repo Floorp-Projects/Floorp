@@ -51,7 +51,6 @@
 #include "nsMargin.h"
 #include "nsRect.h"
 #include "nsFont.h"
-#include "nsVoidArray.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
@@ -59,6 +58,7 @@
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsIURI.h"
 #include "nsCSSValue.h"
@@ -165,30 +165,122 @@ struct nsStyleBackground {
   static nsChangeHint MaxDifference();
 #endif
 
-  PRUint8 mBackgroundFlags;        // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundAttachment;   // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundClip;         // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundInlinePolicy; // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundOrigin;       // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundRepeat;       // [reset] See nsStyleConsts.h
+  struct Position;
+  friend struct Position;
+  struct Position {
+    typedef union {
+      nscoord mCoord; // for lengths
+      float   mFloat; // for percents
+    } PositionCoord;
+    PositionCoord mXPosition, mYPosition;
+    PRPackedBool mXIsPercent, mYIsPercent;
 
-  // Note: a member of this union is valid IFF the appropriate bit flag
-  // is set in mBackgroundFlags.
-  union {
-    nscoord mCoord;
-    float   mFloat;
-  } mBackgroundXPosition,         // [reset]
-    mBackgroundYPosition;         // [reset]
+    // Initialize nothing
+    Position() {}
+
+    // Initialize to initial values
+    void SetInitialValues();
+
+    PRBool operator==(const Position& aOther) const {
+      return mXIsPercent == aOther.mXIsPercent &&
+             (mXIsPercent ? (mXPosition.mFloat == aOther.mXPosition.mFloat)
+                          : (mXPosition.mCoord == aOther.mXPosition.mCoord)) &&
+             mYIsPercent == aOther.mYIsPercent &&
+             (mYIsPercent ? (mYPosition.mFloat == aOther.mYPosition.mFloat)
+                          : (mYPosition.mCoord == aOther.mYPosition.mCoord));
+    }
+    PRBool operator!=(const Position& aOther) const {
+      return !(*this == aOther);
+    }
+  };
+
+  /**
+   * We represent images as as struct because we need to distinguish the
+   * case where the imgIRequest is null because the winning
+   * background-image declaration specified no image from the case where
+   * the imgIRequest is null because the image that was specified was
+   * blocked or missing (e.g., missing file).
+   */
+  struct Image;
+  friend struct Image;
+  struct Image {
+    nsCOMPtr<imgIRequest> mRequest;
+    PRBool mSpecified; // if false, mRequest is guaranteed to be null
+
+    // These are not inline so that we can avoid #include "imgIRequest.h"
+
+    // Initialize to initial values
+    Image();
+    ~Image();
+    void SetInitialValues();
+
+    // An equality operator that compares the images using URL-equality
+    // rather than pointer-equality.
+    PRBool operator==(const Image& aOther) const;
+    PRBool operator!=(const Image& aOther) const {
+      return !(*this == aOther);
+    }
+  };
+
+  struct Layer;
+  friend struct Layer;
+  struct Layer {
+    PRUint8 mAttachment;                // [reset] See nsStyleConsts.h
+    PRUint8 mClip;                      // [reset] See nsStyleConsts.h
+    PRUint8 mOrigin;                    // [reset] See nsStyleConsts.h
+    PRUint8 mRepeat;                    // [reset] See nsStyleConsts.h
+    Position mPosition;                 // [reset]
+    Image mImage;                       // [reset]
+
+    // Initializes only mImage
+    Layer();
+    ~Layer();
+
+    void SetInitialValues();
+
+    // An equality operator that compares the images using URL-equality
+    // rather than pointer-equality.
+    PRBool operator==(const Layer& aOther) const;
+    PRBool operator!=(const Layer& aOther) const {
+      return !(*this == aOther);
+    }
+  };
+
+  // The (positive) number of computed values of each property, since
+  // the lengths of the lists are independent.
+  PRUint32 mAttachmentCount,
+           mClipCount,
+           mOriginCount,
+           mRepeatCount,
+           mPositionCount,
+           mImageCount;
+  // Layers are stored in an array, matching the top-to-bottom order in
+  // which they are specified in CSS.  The number of layers to be used
+  // should come from the background-image property.  We create
+  // additional |Layer| objects for *any* property, not just
+  // background-image.  This means that the bottommost layer that
+  // callers in layout care about (which is also the one whose
+  // background-clip applies to the background-color) may not be last
+  // layer.  In layers below the bottom layer, properties will be
+  // unitialized unless their count, above, indicates that they are
+  // present.
+  nsAutoTArray<Layer, 1> mLayers;
+
+  const Layer& BottomLayer() const { return mLayers[mImageCount - 1]; }
+
+  #define NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(var_, stylebg_) \
+    for (PRUint32 var_ = (stylebg_)->mImageCount; var_-- != 0; )
 
   nscolor mBackgroundColor;       // [reset]
-  nsCOMPtr<imgIRequest> mBackgroundImage; // [reset]
+  nscolor mFallbackBackgroundColor; // [reset]
+
+  // FIXME: This (now background-break in css3-background) should
+  // probably move into a different struct so that everything in
+  // nsStyleBackground is set by the background shorthand.
+  PRUint8 mBackgroundInlinePolicy; // [reset] See nsStyleConsts.h
 
   // True if this background is completely transparent.
-  PRBool IsTransparent() const
-  {
-    return (NS_GET_A(mBackgroundColor) == 0 &&
-            (mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE));
-  }
+  PRBool IsTransparent() const;
 
   // We have to take slower codepaths for fixed background attachment,
   // but we don't want to do that when there's no image.
@@ -308,6 +400,7 @@ struct nsCSSShadowItem {
 
   nscolor      mColor;
   PRPackedBool mHasColor; // Whether mColor should be used
+  PRPackedBool mInset;
 
   nsCSSShadowItem() : mHasColor(PR_FALSE) {
     MOZ_COUNT_CTOR(nsCSSShadowItem);
@@ -322,6 +415,7 @@ struct nsCSSShadowItem {
             mRadius == aOther.mRadius &&
             mHasColor == aOther.mHasColor &&
             mSpread == aOther.mSpread &&
+            mInset == aOther.mInset &&
             (!mHasColor || mColor == aOther.mColor));
   }
   PRBool operator!=(const nsCSSShadowItem& aOther) {
@@ -358,7 +452,13 @@ class nsCSSShadowArray {
       }
     }
 
-    nsrefcnt AddRef() { return ++mRefCnt; }
+    nsrefcnt AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking object");
+        return mRefCnt;
+      }
+      return ++mRefCnt;
+    }
     nsrefcnt Release();
 
     PRUint32 Length() const { return mLength; }
@@ -431,7 +531,7 @@ struct nsStyleBorder {
   }
 
   void ClearBorderColors(PRUint8 aSide) {
-    if (mBorderColors[aSide]) {
+    if (mBorderColors && mBorderColors[aSide]) {
       delete mBorderColors[aSide];
       mBorderColors[aSide] = nsnull;
     }
@@ -781,7 +881,7 @@ struct nsStyleText {
   nsStyleCoord  mLetterSpacing;         // [inherited] coord, normal
   nsStyleCoord  mLineHeight;            // [inherited] coord, factor, normal
   nsStyleCoord  mTextIndent;            // [inherited] coord, percent
-  nsStyleCoord  mWordSpacing;           // [inherited] coord, normal
+  nscoord mWordSpacing;                 // [inherited]
 
   nsRefPtr<nsCSSShadowArray> mTextShadow; // [inherited] NULL in case of a zero-length
   

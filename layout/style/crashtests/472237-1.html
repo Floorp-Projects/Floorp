@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style type="text/css">
+
+@font-face {
+      font-family: "Fontin-Sans SC";
+      /* the font url below is correct but won't be accessed due to cross-site restrictions */
+      src: url(../../reftests/fonts/markA.ttf) format("opentype");
+}
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("r").style.fontFamily = "'Fontin-Sans SC'";
+  document.documentElement.offsetHeight;
+  document.removeChild(document.documentElement);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="r">R</div></body>
+</html>

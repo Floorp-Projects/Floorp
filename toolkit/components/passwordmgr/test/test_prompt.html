@@ -23,7 +23,7 @@ Login Manager test: username/password prompts
 /** Test for Login Manager: username / password prompts. **/
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-var pwmgr, tmplogin, login1, login2A, login2B, login3A, login3B, login4;
+var pwmgr, tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4;
 
 function initLogins() {
   pwmgr = Cc["@mozilla.org/login-manager;1"].
@@ -38,6 +38,12 @@ function initLogins() {
             createInstance(Ci.nsILoginInfo);
   login2B = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
+  login2C = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login2D = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login2E = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
   login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
   login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -51,6 +57,12 @@ function initLogins() {
                "user1name", "user1pass", "", "");
   login2B.init("http://example2.com", null, "http://example2.com",
                "user2name", "user2pass", "", "");
+  login2C.init("http://example2.com", null, "http://example2.com",
+               "user3.name@host", "user3pass", "", "");
+  login2D.init("http://example2.com", null, "http://example2.com",
+               "100@beef", "user3pass", "", "");
+  login2E.init("http://example2.com", null, "http://example2.com",
+               "100%beef", "user3pass", "", "");
   login3A.init("http://localhost:8888", null, "mochitest",
                "mochiuser1", "mochipass1", "", "");
   login3B.init("http://localhost:8888", null, "mochitest2",
@@ -61,6 +73,9 @@ function initLogins() {
   pwmgr.addLogin(login1);
   pwmgr.addLogin(login2A);
   pwmgr.addLogin(login2B);
+  pwmgr.addLogin(login2C);
+  pwmgr.addLogin(login2D);
+  pwmgr.addLogin(login2E);
   pwmgr.addLogin(login3A);
   pwmgr.addLogin(login3B);
   pwmgr.addLogin(login4);
@@ -71,6 +86,9 @@ function finishTest() {
   pwmgr.removeLogin(login1);
   pwmgr.removeLogin(login2A);
   pwmgr.removeLogin(login2B);
+  pwmgr.removeLogin(login2C);
+  pwmgr.removeLogin(login2D);
+  pwmgr.removeLogin(login2E);
   pwmgr.removeLogin(login3A);
   pwmgr.removeLogin(login3B);
   pwmgr.removeLogin(login4);
@@ -540,6 +558,34 @@ isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user2name@exa
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
 ok(isOk, "Checking dialog return value (accept)");
 is(pword.value, "user2pass", "Checking returned password");
+
+// ===== test 17 =====
+// No default password provided, matching login is returned w/o prompting.
+testNum++;
+pword.value = null;
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://user3%2Ename%40host@example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "user3pass", "Checking returned password");
+
+// ===== test 18 =====
+// No default password provided, matching login is returned w/o prompting.
+testNum++;
+pword.value = null;
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://100@beef@example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "user3pass", "Checking returned password");
+
+// ===== test 19 =====
+// No default password provided, matching login is returned w/o prompting.
+testNum++;
+pword.value = null;
+isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://100%25beef@example2.com",
+                                Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+ok(isOk, "Checking dialog return value (accept)");
+is(pword.value, "user3pass", "Checking returned password");
+
 
 // XXX test saving a password with  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY
 

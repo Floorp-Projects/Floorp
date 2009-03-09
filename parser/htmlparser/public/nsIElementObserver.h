@@ -49,6 +49,7 @@
 #include "prtypes.h"
 #include "nsHTMLTags.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 
 
 // {4672AA04-F6AE-11d2-B3B7-00805F8A6670}
@@ -80,8 +81,8 @@ public:
   NS_IMETHOD Notify(nsISupports* aWebShell, 
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
-                    const nsStringArray* aKeys, 
-                    const nsStringArray* aValues,
+                    const nsTArray<nsString>* aKeys, 
+                    const nsTArray<nsString>* aValues,
                     const PRUint32 aFlags) = 0;
 
 };

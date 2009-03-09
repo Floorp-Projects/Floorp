@@ -5,7 +5,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:html="http://www.w3.org/1999/xhtml"
      class="reftest-wait"
-     onload="setTimeout(move_foreignObject, 100);">
+     onload="startTest()">
 
   <title>Testcase for repaint of the area previously covered by a foreignObject</title>
 
@@ -13,21 +13,21 @@
 
   <script type="application/javascript">
 
-// The green rect is initially covered by the red div. After 100 ms (to give
-// the div a chance to render), the foreignObject (and thus div) is moved out
+// The green rect is initially covered by the red div. After the div
+// has rendered the foreignObject (and thus div) is moved out
 // of the viewport which should then be filled by the green rect as a result.
 
-function move_foreignObject()
-{
-  document.getElementById('fo').setAttribute('y', '100%');
-  setTimeout(finish_test, 100); // give the user agent some time to repaint
-}
+  function startTest() {
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+  }
 
-function finish_test()
-{
-  document.documentElement.removeAttribute('class');
-}
+  function doTest() {
+    document.getElementById('fo').setAttribute('y', '100%');
 
+    document.documentElement.removeAttribute('class');
+  }
   </script>
 
   <rect width="100%" height="100%" fill="red"/>

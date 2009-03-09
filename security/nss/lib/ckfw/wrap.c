@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.17 $ $Date: 2008/08/25 22:47:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.18 $ $Date: 2009/02/09 07:55:53 $";
 #endif /* DEBUG */
 
 /*
@@ -187,12 +187,12 @@ NSSCKFWC_Initialize
     goto loser;
   }
 
-  if( (NSSCKFWInstance *)NULL != *pFwInstance ) {
+  if (*pFwInstance) {
     error = CKR_CRYPTOKI_ALREADY_INITIALIZED;
     goto loser;
   }
 
-  if( (NSSCKMDInstance *)NULL == mdInstance ) {
+  if (!mdInstance) {
     error = CKR_GENERAL_ERROR;
     goto loser;
   }
@@ -203,7 +203,7 @@ NSSCKFWC_Initialize
   }
 
   *pFwInstance = nssCKFWInstance_Create(pInitArgs, locking_state, mdInstance, &error);
-  if( (NSSCKFWInstance *)NULL == *pFwInstance ) {
+  if (!*pFwInstance) {
     goto loser;
   }
   PR_AtomicIncrement(&liveInstances);
@@ -245,7 +245,7 @@ NSSCKFWC_Finalize
     goto loser;
   }
 
-  if( (NSSCKFWInstance *)NULL == *pFwInstance ) {
+  if (!*pFwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -366,7 +366,7 @@ NSSCKFWC_GetSlotList
   CK_RV error = CKR_OK;
   CK_ULONG nSlots;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -454,7 +454,7 @@ NSSCKFWC_GetSlotInfo
   NSSCKFWSlot **slots;
   NSSCKFWSlot *fwSlot;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -548,7 +548,7 @@ NSSCKFWC_GetTokenInfo
   NSSCKFWSlot *fwSlot;
   NSSCKFWToken *fwToken = (NSSCKFWToken *)NULL;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -586,7 +586,7 @@ NSSCKFWC_GetTokenInfo
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
@@ -707,7 +707,7 @@ NSSCKFWC_WaitForSlotEvent
   NSSCKFWSlot *fwSlot;
   CK_ULONG i;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -740,7 +740,7 @@ NSSCKFWC_WaitForSlotEvent
   }
 
   fwSlot = nssCKFWInstance_WaitForSlotEvent(fwInstance, block, &error);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     goto loser;
   }
 
@@ -790,7 +790,7 @@ NSSCKFWC_GetMechanismList
   NSSCKFWToken *fwToken = (NSSCKFWToken *)NULL;
   CK_ULONG count;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -823,7 +823,7 @@ NSSCKFWC_GetMechanismList
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
@@ -904,7 +904,7 @@ NSSCKFWC_GetMechanismInfo
   NSSCKFWToken *fwToken = (NSSCKFWToken *)NULL;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -942,12 +942,12 @@ NSSCKFWC_GetMechanismInfo
   (void)nsslibc_memset(pInfo, 0, sizeof(CK_MECHANISM_INFO));
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, type, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -1046,7 +1046,7 @@ NSSCKFWC_InitToken
   NSSItem pin;
   NSSUTF8 *label;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -1074,7 +1074,7 @@ NSSCKFWC_InitToken
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
@@ -1136,13 +1136,13 @@ NSSCKFWC_InitPIN
   NSSCKFWSession *fwSession;
   NSSItem pin, *arg;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1212,13 +1212,13 @@ NSSCKFWC_SetPIN
   NSSCKFWSession *fwSession;
   NSSItem oldPin, newPin, *oldArg, *newArg;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1301,7 +1301,7 @@ NSSCKFWC_OpenSession
   NSSCKFWSession *fwSession;
   CK_BBOOL rw;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -1357,13 +1357,13 @@ NSSCKFWC_OpenSession
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwSession = nssCKFWToken_OpenSession(fwToken, rw, pApplication,
                Notify, &error);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     goto loser;
   }
 
@@ -1421,13 +1421,13 @@ NSSCKFWC_CloseSession
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1483,7 +1483,7 @@ NSSCKFWC_CloseAllSessions
   NSSCKFWSlot *fwSlot;
   NSSCKFWToken *fwToken = (NSSCKFWToken *)NULL;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -1511,7 +1511,7 @@ NSSCKFWC_CloseAllSessions
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
@@ -1561,13 +1561,13 @@ NSSCKFWC_GetSessionInfo
   NSSCKFWSession *fwSession;
   NSSCKFWSlot *fwSlot;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1583,7 +1583,7 @@ NSSCKFWC_GetSessionInfo
   (void)nsslibc_memset(pInfo, 0, sizeof(CK_SESSION_INFO));
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR;
     goto loser;
   }
@@ -1644,13 +1644,13 @@ NSSCKFWC_GetOperationState
   CK_ULONG len;
   NSSItem buf;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1736,7 +1736,7 @@ NSSCKFWC_SetOperationState
   NSSCKFWObject *aKey;
   NSSItem state;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
@@ -1752,7 +1752,7 @@ NSSCKFWC_SetOperationState
    */
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1761,7 +1761,7 @@ NSSCKFWC_SetOperationState
     eKey = (NSSCKFWObject *)NULL;
   } else {
     eKey = nssCKFWInstance_ResolveObjectHandle(fwInstance, hEncryptionKey);
-    if( (NSSCKFWObject *)NULL == eKey ) {
+    if (!eKey) {
       error = CKR_KEY_HANDLE_INVALID;
       goto loser;
     }
@@ -1771,7 +1771,7 @@ NSSCKFWC_SetOperationState
     aKey = (NSSCKFWObject *)NULL;
   } else {
     aKey = nssCKFWInstance_ResolveObjectHandle(fwInstance, hAuthenticationKey);
-    if( (NSSCKFWObject *)NULL == aKey ) {
+    if (!aKey) {
       error = CKR_KEY_HANDLE_INVALID;
       goto loser;
     }
@@ -1831,13 +1831,13 @@ NSSCKFWC_Login
   NSSCKFWSession *fwSession;
   NSSItem pin, *arg;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1905,13 +1905,13 @@ NSSCKFWC_Logout
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1967,13 +1967,13 @@ NSSCKFWC_CreateObject
   NSSCKFWSession *fwSession;
   NSSCKFWObject *fwObject;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -1990,7 +1990,7 @@ NSSCKFWC_CreateObject
 
   fwObject = nssCKFWSession_CreateObject(fwSession, pTemplate,
                ulCount, &error);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     goto loser;
   }
 
@@ -2055,13 +2055,13 @@ NSSCKFWC_CopyObject
   NSSCKFWObject *fwObject;
   NSSCKFWObject *fwNewObject;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -2077,14 +2077,14 @@ NSSCKFWC_CopyObject
   *phNewObject = (CK_OBJECT_HANDLE)0;
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hObject);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_OBJECT_HANDLE_INVALID;
     goto loser;
   }
 
   fwNewObject = nssCKFWSession_CopyObject(fwSession, fwObject,
                   pTemplate, ulCount, &error);
-  if( (NSSCKFWObject *)NULL == fwNewObject ) {
+  if (!fwNewObject) {
     goto loser;
   }
 
@@ -2146,19 +2146,19 @@ NSSCKFWC_DestroyObject
   NSSCKFWSession *fwSession;
   NSSCKFWObject *fwObject;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hObject);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_OBJECT_HANDLE_INVALID;
     goto loser;
   }
@@ -2213,19 +2213,19 @@ NSSCKFWC_GetObjectSize
   NSSCKFWSession *fwSession;
   NSSCKFWObject *fwObject;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hObject);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_OBJECT_HANDLE_INVALID;
     goto loser;
   }
@@ -2296,19 +2296,19 @@ NSSCKFWC_GetAttributeValue
   CK_BBOOL tooSmall = CK_FALSE;
   CK_ULONG i;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hObject);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_OBJECT_HANDLE_INVALID;
     goto loser;
   }
@@ -2353,7 +2353,7 @@ NSSCKFWC_GetAttributeValue
       it.data = (void *)pTemplate[i].pValue;
       p = nssCKFWObject_GetAttribute(fwObject, pTemplate[i].type, &it, 
             (NSSArena *)NULL, &error);
-      if( (NSSItem *)NULL == p ) {
+      if (!p) {
         switch( error ) {
         case CKR_ATTRIBUTE_SENSITIVE:
         case CKR_INFORMATION_SENSITIVE:
@@ -2434,19 +2434,19 @@ NSSCKFWC_SetAttributeValue
   NSSCKFWObject *fwObject;
   CK_ULONG i;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hObject);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_OBJECT_HANDLE_INVALID;
     goto loser;
   }
@@ -2521,13 +2521,13 @@ NSSCKFWC_FindObjectsInit
   NSSCKFWSession *fwSession;
   NSSCKFWFindObjects *fwFindObjects;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -2538,7 +2538,7 @@ NSSCKFWC_FindObjectsInit
   }
 
   fwFindObjects = nssCKFWSession_GetFWFindObjects(fwSession, &error);
-  if( (NSSCKFWFindObjects *)NULL != fwFindObjects ) {
+  if (fwFindObjects) {
     error = CKR_OPERATION_ACTIVE;
     goto loser;
   }
@@ -2549,7 +2549,7 @@ NSSCKFWC_FindObjectsInit
 
   fwFindObjects = nssCKFWSession_FindObjectsInit(fwSession,
                     pTemplate, ulCount, &error);
-  if( (NSSCKFWFindObjects *)NULL == fwFindObjects ) {
+  if (!fwFindObjects) {
     goto loser;
   }
 
@@ -2609,13 +2609,13 @@ NSSCKFWC_FindObjects
   NSSCKFWFindObjects *fwFindObjects;
   CK_ULONG i;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -2632,14 +2632,14 @@ NSSCKFWC_FindObjects
   *pulObjectCount = (CK_ULONG)0;
 
   fwFindObjects = nssCKFWSession_GetFWFindObjects(fwSession, &error);
-  if( (NSSCKFWFindObjects *)NULL == fwFindObjects ) {
+  if (!fwFindObjects) {
     goto loser;
   }
 
   for( i = 0; i < ulMaxObjectCount; i++ ) {
     NSSCKFWObject *fwObject = nssCKFWFindObjects_Next(fwFindObjects,
                                 NULL, &error);
-    if( (NSSCKFWObject *)NULL == fwObject ) {
+    if (!fwObject) {
       break;
     }
 
@@ -2699,19 +2699,19 @@ NSSCKFWC_FindObjectsFinal
   NSSCKFWSession *fwSession;
   NSSCKFWFindObjects *fwFindObjects;
   
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwFindObjects = nssCKFWSession_GetFWFindObjects(fwSession, &error);
-  if( (NSSCKFWFindObjects *)NULL == fwFindObjects ) {
+  if (!fwFindObjects) {
     error = CKR_OPERATION_NOT_INITIALIZED;
     goto loser;
   }
@@ -2772,25 +2772,25 @@ NSSCKFWC_EncryptInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -2801,12 +2801,12 @@ NSSCKFWC_EncryptInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -2868,13 +2868,13 @@ NSSCKFWC_Encrypt
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -2933,13 +2933,13 @@ NSSCKFWC_EncryptUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -2995,13 +2995,13 @@ NSSCKFWC_EncryptFinal
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3061,25 +3061,25 @@ NSSCKFWC_DecryptInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -3090,12 +3090,12 @@ NSSCKFWC_DecryptInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -3157,13 +3157,13 @@ NSSCKFWC_Decrypt
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3229,13 +3229,13 @@ NSSCKFWC_DecryptUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3299,13 +3299,13 @@ NSSCKFWC_DecryptFinal
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3371,19 +3371,19 @@ NSSCKFWC_DigestInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -3394,12 +3394,12 @@ NSSCKFWC_DigestInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -3457,13 +3457,13 @@ NSSCKFWC_Digest
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3518,13 +3518,13 @@ NSSCKFWC_DigestUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3578,19 +3578,19 @@ NSSCKFWC_DigestKey
   NSSCKFWSession *fwSession;
   NSSCKFWObject *fwObject;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
@@ -3643,13 +3643,13 @@ NSSCKFWC_DigestFinal
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3708,25 +3708,25 @@ NSSCKFWC_SignInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -3737,12 +3737,12 @@ NSSCKFWC_SignInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -3805,13 +3805,13 @@ NSSCKFWC_Sign
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3870,13 +3870,13 @@ NSSCKFWC_SignUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -3932,13 +3932,13 @@ NSSCKFWC_SignFinal
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4000,25 +4000,25 @@ NSSCKFWC_SignRecoverInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -4029,12 +4029,12 @@ NSSCKFWC_SignRecoverInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -4097,13 +4097,13 @@ NSSCKFWC_SignRecover
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4165,25 +4165,25 @@ NSSCKFWC_VerifyInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -4194,12 +4194,12 @@ NSSCKFWC_VerifyInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -4262,13 +4262,13 @@ NSSCKFWC_Verify
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4326,13 +4326,13 @@ NSSCKFWC_VerifyUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4387,13 +4387,13 @@ NSSCKFWC_VerifyFinal
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4454,25 +4454,25 @@ NSSCKFWC_VerifyRecoverInit
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwObject ) {
+  if (!fwObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -4483,12 +4483,12 @@ NSSCKFWC_VerifyRecoverInit
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -4551,13 +4551,13 @@ NSSCKFWC_VerifyRecover
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4616,13 +4616,13 @@ NSSCKFWC_DigestEncryptUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4681,13 +4681,13 @@ NSSCKFWC_DecryptDigestUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4753,13 +4753,13 @@ NSSCKFWC_SignEncryptUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4819,13 +4819,13 @@ NSSCKFWC_DecryptVerifyUpdate
   CK_RV error = CKR_OK;
   NSSCKFWSession *fwSession;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -4893,19 +4893,19 @@ NSSCKFWC_GenerateKey
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -4916,12 +4916,12 @@ NSSCKFWC_GenerateKey
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -4934,7 +4934,7 @@ NSSCKFWC_GenerateKey
                 &error);
 
   nssCKFWMechanism_Destroy(fwMechanism);
-  if ((NSSCKFWObject *)NULL == fwObject) {
+  if (!fwObject) {
     goto loser;
   }
   *phKey= nssCKFWInstance_CreateObjectHandle(fwInstance, fwObject, &error);
@@ -5004,19 +5004,19 @@ NSSCKFWC_GenerateKeyPair
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -5027,12 +5027,12 @@ NSSCKFWC_GenerateKeyPair
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -5126,32 +5126,32 @@ NSSCKFWC_WrapKey
   NSSItem  wrappedKey;
   CK_ULONG wrappedKeyLength = 0;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwWrappingKeyObject = nssCKFWInstance_ResolveObjectHandle(fwInstance,
                                                             hWrappingKey);
-  if( (NSSCKFWObject *)NULL == fwWrappingKeyObject ) {
+  if (!fwWrappingKeyObject) {
     error = CKR_WRAPPING_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwKeyObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hKey);
-  if( (NSSCKFWObject *)NULL == fwKeyObject ) {
+  if (!fwKeyObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -5162,12 +5162,12 @@ NSSCKFWC_WrapKey
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -5281,26 +5281,26 @@ NSSCKFWC_UnwrapKey
   NSSCKFWMechanism *fwMechanism;
   NSSItem  wrappedKey;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwWrappingKeyObject = nssCKFWInstance_ResolveObjectHandle(fwInstance,
                                                             hUnwrappingKey);
-  if( (NSSCKFWObject *)NULL == fwWrappingKeyObject ) {
+  if (!fwWrappingKeyObject) {
     error = CKR_WRAPPING_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -5311,12 +5311,12 @@ NSSCKFWC_UnwrapKey
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -5334,7 +5334,7 @@ NSSCKFWC_UnwrapKey
                 &error);
 
   nssCKFWMechanism_Destroy(fwMechanism);
-  if ((NSSCKFWObject *)NULL == fwObject) {
+  if (!fwObject) {
     goto loser;
   }
   *phKey = nssCKFWInstance_CreateObjectHandle(fwInstance, fwObject, &error);
@@ -5424,25 +5424,25 @@ NSSCKFWC_DeriveKey
   NSSCKFWToken  *fwToken;
   NSSCKFWMechanism *fwMechanism;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
   
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
 
   fwBaseKeyObject = nssCKFWInstance_ResolveObjectHandle(fwInstance, hBaseKey);
-  if( (NSSCKFWObject *)NULL == fwBaseKeyObject ) {
+  if (!fwBaseKeyObject) {
     error = CKR_KEY_HANDLE_INVALID;
     goto loser;
   }
 
   fwSlot = nssCKFWSession_GetFWSlot(fwSession);
-  if( (NSSCKFWSlot *)NULL == fwSlot ) {
+  if (!fwSlot) {
     error = CKR_GENERAL_ERROR; /* should never happen! */
     goto loser;
   }
@@ -5453,12 +5453,12 @@ NSSCKFWC_DeriveKey
   }
 
   fwToken = nssCKFWSlot_GetToken(fwSlot, &error);
-  if( (NSSCKFWToken *)NULL == fwToken ) {
+  if (!fwToken) {
     goto loser;
   }
 
   fwMechanism = nssCKFWToken_GetMechanism(fwToken, pMechanism->mechanism, &error);
-  if( (NSSCKFWMechanism *)NULL == fwMechanism ) {
+  if (!fwMechanism) {
     goto loser;
   }
 
@@ -5472,7 +5472,7 @@ NSSCKFWC_DeriveKey
                 &error);
 
   nssCKFWMechanism_Destroy(fwMechanism);
-  if ((NSSCKFWObject *)NULL == fwObject) {
+  if (!fwObject) {
     goto loser;
   }
   *phKey = nssCKFWInstance_CreateObjectHandle(fwInstance, fwObject, &error);
@@ -5537,13 +5537,13 @@ NSSCKFWC_SeedRandom
   NSSCKFWSession *fwSession;
   NSSItem seed;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }
@@ -5614,13 +5614,13 @@ NSSCKFWC_GenerateRandom
   NSSCKFWSession *fwSession;
   NSSItem buffer;
 
-  if( (NSSCKFWInstance *)NULL == fwInstance ) {
+  if (!fwInstance) {
     error = CKR_CRYPTOKI_NOT_INITIALIZED;
     goto loser;
   }
 
   fwSession = nssCKFWInstance_ResolveSessionHandle(fwInstance, hSession);
-  if( (NSSCKFWSession *)NULL == fwSession ) {
+  if (!fwSession) {
     error = CKR_SESSION_HANDLE_INVALID;
     goto loser;
   }

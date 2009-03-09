@@ -22,10 +22,15 @@ cp $1/lib/dec/x86/x86state.c ./lib/dec/x86/x86state.c
 cp $1/lib/dec/x86/x86int.h ./lib/dec/x86/x86int.h
 cp $1/lib/dec/x86/mmxstate.c ./lib/dec/x86/mmxstate.c
 cp $1/lib/dec/x86/mmxidct.c ./lib/dec/x86/mmxidct.c
-cp $1/lib/dec/bitwise.h ./lib/dec/bitwise.h
+cp $1/lib/dec/x86_vc/mmxfrag.c ./lib/dec/x86_vc/mmxfrag.c
+cp $1/lib/dec/x86_vc/mmxidct.c ./lib/dec/x86_vc/mmxidct.c
+cp $1/lib/dec/x86_vc/mmxloopfilter.c ./lib/dec/x86_vc/mmxloopfilter.c
+cp $1/lib/dec/x86_vc/mmxstate.c ./lib/dec/x86_vc/mmxstate.c
+cp $1/lib/dec/x86_vc/x86int.h ./lib/dec/x86_vc/x86int.h
+cp $1/lib/dec/x86_vc/x86state.c ./lib/dec/x86_vc/x86state.c
+cp $1/lib/dec/bitpack.h ./lib/dec/bitpack.h
 cp $1/lib/dec/quant.c ./lib/dec/quant.c
-cp $1/lib/dec/bitwise.c ./lib/dec/bitwise.c
-cp $1/lib/dec/enquant.h ./lib/dec/enquant.h
+cp $1/lib/dec/bitpack.c ./lib/dec/bitpack.c
 cp $1/lib/dec/internal.c ./lib/dec/internal.c
 cp $1/lib/dec/huffdec.h ./lib/dec/huffdec.h
 cp $1/lib/dec/dct.h ./lib/dec/dct.h
@@ -47,4 +52,4 @@ cp $1/lib/internal.h ./lib/internal.h
 cp $1/include/theora/theora.h ./include/theora/theora.h
 cp $1/include/theora/theoradec.h ./include/theora/theoradec.h
 cp $1/include/theora/codec.h ./include/theora/codec.h
-patch -p3 <changeset_r15144.diff
+patch -p3 <455357_wince_local_variable_macro_clash_patch

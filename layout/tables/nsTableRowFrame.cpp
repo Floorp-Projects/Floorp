@@ -235,11 +235,11 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
   // gather the new frames (only those which are cells) into an array
   nsIAtom* cellFrameType = (tableFrame->IsBorderCollapse()) ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
-  nsVoidArray cellChildren;
+  nsTArray<nsTableCellFrame*> cellChildren;
   for (nsIFrame* childFrame = aFrameList; childFrame;
        childFrame = childFrame->GetNextSibling()) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
-      cellChildren.AppendElement(childFrame);
+      cellChildren.AppendElement(static_cast<nsTableCellFrame*>(childFrame));
     }
   }
   // insert the cells into the cell map
@@ -678,35 +678,25 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
 
 // Calculates the available width for the table cell based on the known
 // column widths taking into account column spans and column spacing
-static void 
+static nscoord
 CalcAvailWidth(nsTableFrame&     aTableFrame,
                nsTableCellFrame& aCellFrame,
-               nscoord           aCellSpacingX,
-               nscoord&          aColAvailWidth,
-               nscoord&          aCellAvailWidth)
+               nscoord           aCellSpacingX)
 {
-  aColAvailWidth = aCellAvailWidth = NS_UNCONSTRAINEDSIZE;
+  nscoord cellAvailWidth = 0;
   PRInt32 colIndex;
   aCellFrame.GetColIndex(colIndex);
   PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
-  nscoord cellSpacing = 0;
+  NS_ASSERTION(colspan > 0, "effective colspan should be positive");
 
   for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
-    nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
-    if (NS_UNCONSTRAINEDSIZE == aColAvailWidth) {
-      aColAvailWidth = colWidth; 
-    }
-    else {
-      aColAvailWidth += colWidth;
-    }
-    if ((spanX > 0) && aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
-      cellSpacing += aCellSpacingX;
+    cellAvailWidth += aTableFrame.GetColumnWidth(colIndex + spanX);
+    if (spanX > 0 &&
+        aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
+      cellAvailWidth += aCellSpacingX;
     }
   }
-  if (NS_UNCONSTRAINEDSIZE != aColAvailWidth) {
-    aColAvailWidth += cellSpacing;
-  } 
-  aCellAvailWidth = aColAvailWidth;
+  return cellAvailWidth;
 }
 
 nscoord
@@ -772,7 +762,7 @@ GetSpaceBetween(PRInt32       aPrevColIndex,
 
 // subtract the heights of aRow's prev in flows from the unpaginated height
 static
-nscoord CalcHeightFromUnpaginatedHeight(nsPresContext*  aPresContext,
+nscoord CalcHeightFromUnpaginatedHeight(nsPresContext*   aPresContext,
                                         nsTableRowFrame& aRow)
 {
   nscoord height = 0;
@@ -881,9 +871,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
     if (doReflowChild) {
       // Calculate the available width for the table cell using the known column widths
-      nscoord availColWidth, availCellWidth;
-      CalcAvailWidth(aTableFrame, *cellFrame, cellSpacingX,
-                     availColWidth, availCellWidth);
+      nscoord availCellWidth =
+        CalcAvailWidth(aTableFrame, *cellFrame, cellSpacingX);
 
       nsHTMLReflowMetrics desiredSize;
 
@@ -903,7 +892,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
           HasPctHeight()) {
         // Reflow the cell to fit the available width, height
         // XXX The old IR_ChildIsDirty code used availCellWidth here.
-        nsSize  kidAvailSize(availColWidth, aReflowState.availableHeight);
+        nsSize  kidAvailSize(availCellWidth, aReflowState.availableHeight);
 
         // Reflow the child
         nsTableCellReflowState kidReflowState(aPresContext, aReflowState, 
@@ -935,7 +924,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
                                             cellDesiredSize.height);
         
         // if we are in a floated table, our position is not yet established, so we cannot reposition our views
-        // the containing glock will do this for us after positioning the table
+        // the containing block will do this for us after positioning the table
         if (!aTableFrame.GetStyleDisplay()->IsFloating()) {
           // Because we may have moved the frame we need to make sure any views are
           // positioned properly. We have to do this, because any one of our parent
@@ -970,9 +959,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       }
 
       // Place the child
-      if (NS_UNCONSTRAINEDSIZE != availColWidth) {
-        desiredSize.width = PR_MAX(availCellWidth, availColWidth);
-      }
+      desiredSize.width = availCellWidth;
 
       FinishReflowChild(kidFrame, aPresContext, nsnull, desiredSize, x, 0, 0);
 
@@ -1379,7 +1366,7 @@ nsTableRowFrame::GetNextRow() const
 
 void 
 nsTableRowFrame::SetUnpaginatedHeight(nsPresContext* aPresContext,
-                                      nscoord         aValue)
+                                      nscoord        aValue)
 {
   NS_ASSERTION(!GetPrevInFlow(), "program error");
   // Get the property 

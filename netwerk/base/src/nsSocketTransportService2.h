@@ -49,6 +49,7 @@
 #include "prlog.h"
 #include "prio.h"
 #include "nsASocketHandler.h"
+#include "nsIObserver.h"
 
 //-----------------------------------------------------------------------------
 
@@ -72,6 +73,7 @@ class nsSocketTransportService : public nsPISocketTransportService
                                , public nsIEventTarget
                                , public nsIThreadObserver
                                , public nsIRunnable
+                               , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -80,6 +82,7 @@ public:
     NS_DECL_NSIEVENTTARGET
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIRUNNABLE
+    NS_DECL_NSIOBSERVER 
 
     nsSocketTransportService();
 
@@ -183,6 +186,10 @@ private:
     //-------------------------------------------------------------------------
 
     nsEventQueue mPendingSocketQ; // queue of nsIRunnable objects
+
+    // Preference Monitor for SendBufferSize
+    nsresult    UpdatePrefs();
+    PRInt32     mSendBufferSize;
 };
 
 extern nsSocketTransportService *gSocketTransportService;

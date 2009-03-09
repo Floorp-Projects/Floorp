@@ -596,7 +596,7 @@ morkStore::LazyGetRowSpace(morkEnv* ev, mdb_scope inRowScope)
     {
       this->MaybeDirtyStore();
     
-      // note adding to node map creates it's own strong ref...
+      // note adding to node map creates its own strong ref...
       if ( mStore_RowSpaces.AddRowSpace(ev, outSpace) )
         outSpace->CutStrongRef(ev); // ...so we can drop our strong ref
     }
@@ -625,7 +625,7 @@ morkStore::LazyGetAtomSpace(morkEnv* ev, mdb_scope inAtomScope)
       {
         this->MaybeDirtyStore();
     
-        // note adding to node map creates it's own strong ref...
+        // note adding to node map creates its own strong ref...
         if ( mStore_AtomSpaces.AddAtomSpace(ev, outSpace) )
           outSpace->CutStrongRef(ev); // ...so we can drop our strong ref
       }

@@ -709,10 +709,13 @@ NS_IMETHODIMP nsPref::SecurityClearUserPref(const char *pref_name)
 nsPref* nsPref::GetInstance()
 //----------------------------------------------------------------------------------------
 {
+  if (gInstance)
+    return gInstance;
+  NS_NEWXPCOM(gInstance, nsPref);
   if (!gInstance)
-  {
-    NS_NEWXPCOM(gInstance, nsPref);
-  }
+    return nsnull;
+  if (!gInstance->mPrefService)
+    NS_RELEASE(gInstance);
   return gInstance;
 } // nsPref::GetInstance
 

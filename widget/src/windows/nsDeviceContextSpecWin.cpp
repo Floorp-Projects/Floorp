@@ -37,13 +37,17 @@
 
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
+
+#ifndef WINCE
 #include <winspool.h>
+#endif
+
 #include <tchar.h>
 
 #include "nsAutoPtr.h"
 #include "nsIWidget.h"
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIPrintSettingsWin.h"
 
 #include "nsString.h"
@@ -91,23 +95,23 @@ public:
   void FreeGlobalPrinters();
 
   PRBool       PrintersAreAllocated() { return mPrinters != nsnull; }
-  LPTSTR       GetItemFromList(PRInt32 aInx) { return mPrinters?(LPTSTR)mPrinters->ElementAt(aInx):nsnull; }
+  LPTSTR       GetItemFromList(PRInt32 aInx) { return mPrinters?mPrinters->ElementAt(aInx):nsnull; }
   nsresult     EnumeratePrinterList();
   void         GetDefaultPrinterName(LPTSTR& aDefaultPrinterName);
-  PRInt32      GetNumPrinters() { return mPrinters?mPrinters->Count():0; }
+  PRInt32      GetNumPrinters() { return mPrinters?mPrinters->Length():0; }
 
 protected:
   GlobalPrinters() {}
   nsresult EnumerateNativePrinters();
   void     ReallocatePrinters();
 
-  static GlobalPrinters mGlobalPrinters;
-  static nsVoidArray*   mPrinters;
+  static GlobalPrinters    mGlobalPrinters;
+  static nsTArray<LPTSTR>* mPrinters;
 };
 //---------------
 // static members
-GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsVoidArray*   GlobalPrinters::mPrinters = nsnull;
+GlobalPrinters    GlobalPrinters::mGlobalPrinters;
+nsTArray<LPTSTR>* GlobalPrinters::mPrinters = nsnull;
 
 
 //******************************************************
@@ -935,7 +939,7 @@ nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameLis
   }
 
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsStringArray *printers = new nsStringArray(numPrinters);
+  nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
   if (!printers)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -948,7 +952,7 @@ nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameLis
     nsAutoString newName; 
     NS_CopyNativeToUnicode(nsDependentCString(name), newName);
 #endif
-    printers->AppendString(newName);
+    printers->AppendElement(newName);
   }
 
   return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
@@ -974,7 +978,7 @@ GlobalPrinters::ReallocatePrinters()
   if (PrintersAreAllocated()) {
     FreeGlobalPrinters();
   }
-  mPrinters = new nsVoidArray();
+  mPrinters = new nsTArray<LPTSTR>();
   NS_ASSERTION(mPrinters, "Printers Array is NULL!");
 }
 
@@ -983,8 +987,8 @@ void
 GlobalPrinters::FreeGlobalPrinters()
 {
   if (mPrinters != nsnull) {
-    for (int i=0;i<mPrinters->Count();i++) {
-      free((LPTSTR)mPrinters->ElementAt(i));
+    for (int i=0;i<mPrinters->Length();i++) {
+      free(mPrinters->ElementAt(i));
     }
     delete mPrinters;
     mPrinters = nsnull;
@@ -1073,13 +1077,13 @@ GlobalPrinters::EnumeratePrinterList()
 
   // put the default printer at the beginning of list
   if (defPrinterName != nsnull) {
-    for (PRInt32 i=0;i<mPrinters->Count();i++) {
-      LPTSTR name = (LPTSTR)mPrinters->ElementAt(i);
+    for (PRInt32 i=0;i<mPrinters->Length();i++) {
+      LPTSTR name = mPrinters->ElementAt(i);
       if (!_tcscmp(name, defPrinterName)) {
         if (i > 0) {
-          LPTSTR ptr = (LPTSTR)mPrinters->ElementAt(0);
-          mPrinters->ReplaceElementAt((void*)name, 0);
-          mPrinters->ReplaceElementAt((void*)ptr, i);
+          LPTSTR ptr = mPrinters->ElementAt(0);
+          mPrinters->ElementAt(0) = name;
+          mPrinters->ElementAt(i) = ptr;
         }
         break;
       }

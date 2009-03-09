@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd">
+<html lang="en"><head>
+
+
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>Frame="void" and Rules="void"</title>
+<link rel="stylesheet" type="text/css" href="bordercol.css" />
+</head>
+<body>
+<table rules="rows" frame="void">
+	<caption><a name="void-none">Frame="void" and Rules="rows"</caption>
+	<thead>
+		<tr>
+			<td>Row 1, Cell 1</td>
+			<td>Row 1, Cell 2</td>
+			<td>Row 1, Cell 3</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td rowspan="2">Row 2, Cell 1</td>
+			<td colspan="2">Row 2, Cell 2</td>
+		</tr>
+		<tr>
+			<td>Row 3, Cell 2</td>
+			<td rowspan="2">Row 3, Cell 3</td>
+		</tr>
+		<tr>
+			<td colspan="2">Row 4, Cell 1</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td>Row 5, Cell 1</td>
+			<td>Row 5, Cell 2</td>
+			<td>Row 5, Cell 3</td>
+		</tr>
+	</tfoot>
+</table>
+
+
+</body>
+
+</html>

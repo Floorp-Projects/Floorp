@@ -42,7 +42,8 @@
 <window id="browserTestHarness"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TestStart();"
-        title="Browser chrome tests">
+        title="Browser chrome tests"
+        width="1024">
   <script src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/quit.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
@@ -53,6 +54,7 @@
     }
 
     #summary {
+      color: white;
       border: 2px solid black;
     }
 
@@ -87,7 +89,7 @@
       // so the tester knows which tests will run when they press that button.
       if (gConfig.testPath)
         document.getElementById("runTestsButton").label =
-          "Run " + gConfig.testPath + " Tests";
+          "Run " + gConfig.testPath + " tests";
 
       if (gConfig.autoRun)
         setTimeout(runAllTests, 0);
@@ -187,27 +189,43 @@
 
       var testsDir = getChromeDir();
       testsDir.appendRelativePath("browser");
+
+      var requestPath = "chrome://mochikit/content/browser";
+      var fileNameRegexp = /browser_.+\.js$/;
+
       if (gConfig.testPath) {
         var testsDirURI = ioSvc.newFileURI(testsDir);
         testsDir = ioSvc.newURI(gConfig.testPath, null, testsDirURI)
                         .QueryInterface(Ci.nsIFileURL).file;
+
+        // Invalid testPath...
+        if (!testsDir.exists())
+          return [];
+
+        // If we were passed a specific file, run only that test.
+        if (testsDir.isFile()) {
+          if (fileNameRegexp.test(testsDir.leafName))
+            return [new browserTestFile(requestPath + "/" + gConfig.testPath)];
+
+          // We were passed a file that's not a test...
+          return [];
+        }
+
+        // otherwise, we were passed a directory of tests
+        requestPath += "/" + gConfig.testPath;
       }
 
-      /** load server.js in so we can share template functions **/
+      // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                          getService(Ci.mozIJSSubScriptLoader);
       var srvScope = {};
       scriptLoader.loadSubScript("chrome://mochikit/content/server.js", srvScope);
 
-      var requestPath = "chrome://mochikit/content/browser";
-      if (gConfig.testPath)
-        requestPath += "/" + gConfig.testPath;
-
-      var [links, count] = srvScope.list(requestPath, testsDir, true);
+      var [links, ] = srvScope.list(requestPath, testsDir, true);
       var fileNames = [];
-      srvScope.arrayOfTestFiles(links, fileNames, /browser_.+\.js$/);
+      srvScope.arrayOfTestFiles(links, fileNames, fileNameRegexp);
 
-      return fileNames.map(function (f) new browserTestFile(f));;
+      return fileNames.map(function (f) new browserTestFile(f));
     }
 
     function setStatus(aStatusString) {
@@ -226,10 +244,17 @@
       Tester.start();
     }
 
+    function sum(a, b) {
+      return a + b;
+    }
+
     function getHTMLLogFromTests(aTests) {
+      if (!aTests.length)
+        return "<div id=\"summary\" class=\"success\">No tests to run. " +
+               "Did you pass an invalid --test-path?</div>";
+
       var log = "";
 
-      function sum(a, b){ return a + b; }
       var passCount = aTests.map(function (f) f.passCount).reduce(sum);
       var failCount = aTests.map(function (f) f.failCount).reduce(sum);
       var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
@@ -255,7 +280,7 @@
                              return output;
                            }).join("");
       log += "\nBrowser Chrome Test Summary\n";
-      function sum(a, b){ return a + b; }
+
       var passCount = aTests.map(function (f) f.passCount).reduce(sum);
       var failCount = aTests.map(function (f) f.failCount).reduce(sum);
       var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
@@ -295,6 +320,6 @@
   <button id="runTestsButton" onclick="runAllTests();" label="Run All Tests"/>
   <label id="status"/>
   <scrollbox flex="1" style="overflow: auto" align="stretch">
-    <div id="results" xmlns="http://www.w3.org/1999/xhtml"/>
+    <div id="results" xmlns="http://www.w3.org/1999/xhtml" flex="1"/>
   </scrollbox>
 </window>

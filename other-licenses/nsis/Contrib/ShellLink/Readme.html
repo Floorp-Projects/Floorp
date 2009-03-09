@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<HTML><HEAD><TITLE>ShellLink</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+<STYLE type=text/css>
+BODY {
+	PADDING-RIGHT: 10px; PADDING-LEFT: 10px; FONT-WEIGHT: normal; FONT-SIZE: 10pt; PADDING-BOTTOM: 10px; PADDING-TOP: 10px; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; BACKGROUND-COLOR: #f0f0f0
+}
+CENTER {
+	TEXT-ALIGN: center
+}
+TABLE {
+	MARGIN: auto; BACKGROUND-COLOR: #ffffff; TEXT-ALIGN: left
+}
+.maintable {
+	BORDER-RIGHT: #376eab 2px solid; BORDER-TOP: #376eab 2px solid; BORDER-LEFT: #376eab 2px solid; BORDER-BOTTOM: #376eab 2px solid
+}
+.margin {
+	MARGIN: 20px
+}
+.text {
+	MARGIN: 20px
+}
+.bold {
+	FONT-WEIGHT: bold
+}
+.italic {
+	FONT-STYLE: italic
+}
+.bigheader {
+	FONT-SIZE: 24pt; MARGIN: 10px; COLOR: #333333; TEXT-ALIGN: center
+}
+.header {
+	FONT-SIZE: 14pt; COLOR: #7a7272
+}
+.subheader {
+	FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030
+}
+.footer {
+	FONT-SIZE: 8pt; MARGIN: 5px; COLOR: #909090; TEXT-ALIGN: right
+}
+A:link {
+	COLOR: #294f75; TEXT-DECORATION: none
+}
+A:visited {
+	COLOR: #294f75; TEXT-DECORATION: none
+}
+A:active {
+	COLOR: #294f75; TEXT-DECORATION: none
+}
+A:hover {
+	COLOR: #182634; TEXT-DECORATION: none
+}
+</STYLE>
+
+<META content="MSHTML 6.00.2800.1264" name=GENERATOR></HEAD>
+<BODY>
+<DIV class=center>
+<TABLE class=maintable cellSpacing=0 cellPadding=0 width=750>
+  <TBODY>
+  <TR>
+    <TD>
+      <TABLE cellSpacing=0 cellPadding=0>
+        <TBODY>
+        <TR>
+          <TD>
+            <P class=bigheader>ShellLink </P></TD></TR>
+        <TR>
+          <TD>
+<DIV style="MARGIN: 20px">
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">Introduction</P>
+<P style="MARGIN: 20px">ShellLink is a NSIS plugin that allows you to read and write shell link (.lnk) files.</P>
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">How to use</P>
+<P style="MARGIN: 20px">Make sure you have a valid path (link.lnk) to the shell link file.</P>
+
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Working Directory</P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutWorkingDirectory link.lnk
+Pop $0
+
+$0=C:\Program Files\MyProgram
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Target</P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutTarget link.lnk
+Pop $0
+
+$0=C:\Program Files\MyProgram\run.exe
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Arguments </P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutArgs link.lnk
+Pop $0
+
+$0=/s /d=1
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Icon Location </P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutIconLocation link.lnk
+Pop $0
+
+$0=C:\Program Files\MyProgram\run.dll
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Icon Index </P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutIconIndex link.lnk
+Pop $0
+
+$0=3
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Show Mode </P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutShowMode link.lnk
+Pop $0
+
+$0=0    (SW_HIDE)
+$0=1    (SW_SHOWNORMAL or SW_NORMAL)
+$0=2    (SW_SHOWMINIMIZED)
+$0=3    (SW_SHOWMAXIMIZED or SW_MAXIMIZE)
+$0=4    (SW_SHOWNOACTIVATE)
+$0=5    (SW_SHOW)
+$0=6    (SW_MINIMIZE)
+$0=7    (SW_SHOWMINNOACTIVE)
+$0=8    (SW_SHOWNA)
+$0=9    (SW_RESTORE)
+$0=10   (SW_SHOWDEFAULT)
+$0=11   (SW_FORCEMINIMIZE or SW_MAX)
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Hot Keys</P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutHotkey link.lnk
+Pop $0
+
+$0=634
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Get Shortcut Description</P>
+<PRE style="MARGIN: 20px">ShellLink::GetShortCutDescription link.lnk
+Pop $0
+
+$0=My Shortcut Description
+</PRE>
+
+<BR>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Working Directory</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutWorkingDirectory link.lnk directory
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Target</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutTarget link.lnk target.file
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Arguments</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutArgs link.lnk parameters
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Icon Location</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutIconLocation link.lnk icon.file
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Icon Index</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutIconIndex link.lnk icon_index_number
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Show Mode</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutShowMode link.lnk start_options
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Hot Keys</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutHotkey link.lnk keyboard_shortcut
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">Set Shortcut Description</P>
+<PRE style="MARGIN: 20px">ShellLink::SetShortCutDescription link.lnk description
+Pop $0
+
+$0=0   -no errors
+$0=-1  -error
+</PRE>
+
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">Source code</P>
+<P style="FONT-WEIGHT: bold; FONT-SIZE: 11pt; MARGIN: 20px; COLOR: #303030">NSIS plug-in (C++)</P>
+<P style="MARGIN: 20px">A download link to the source and DLL of this NSIS plug-in 
+can be found below.</P>
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">Version history</P>
+<UL>
+  <LI>1.1 by Shengalts Aleksander aka Instructor (Shengalts@mail.ru)
+  <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-code has been rewritten
+  <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-added functions to change shell link information
+  <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-reduced dll size 44Kb -> 4Kb
+  <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-documentation updated
+  <LI>1.0 first release of ShellLink.
+</UL>
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">Credits</P>
+<P style="MARGIN: 20px">Written and documented by Angelo Mandato </P>
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">License</P>
+<PRE style="MARGIN: 20px">&copy; 2004 Angelo Mandato
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; 
+   you must not claim that you wrote the original software.
+   If you use this software in a product, an acknowledgment in the
+   product documentation would be appreciated but is not required.
+2. Altered versions must be plainly marked as such,
+   and must not be misrepresented as being the original software.
+3. This notice may not be removed or altered from any distribution.
+</PRE>
+<P style="FONT-SIZE: 14pt; COLOR: #7a7272">Download</P>
+<P style="MARGIN: 20px"><a href="http://www.spaceblue.com/downloads/shelllink.zip">http://www.spaceblue.com/downloads/shelllink.zip</a></P>
+            </DIV></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></DIV></BODY></HTML>

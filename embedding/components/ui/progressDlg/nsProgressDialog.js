@@ -386,8 +386,7 @@ nsProgressDialog.prototype = {
             iid.equals(Components.interfaces.nsISupports))
             return this;
 
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-        return null;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
     },
 
     // ---------- nsIInterfaceRequestor methods ----------
@@ -405,8 +404,7 @@ nsProgressDialog.prototype = {
                 prompt = ww.getNewAuthPrompter(this.parent);
             return prompt;
         }
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-        return null;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
     },
 
     // ---------- implementation methods ----------

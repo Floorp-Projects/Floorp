@@ -38,14 +38,17 @@
 #include "nsNativeDragSource.h"
 #include <stdio.h>
 #include "nsISupportsImpl.h"
-
+#include "nsString.h"
 
 /*
  * class nsNativeDragSource
  */
-nsNativeDragSource::nsNativeDragSource()
-  : m_cRef(0)
+nsNativeDragSource::nsNativeDragSource(nsIDOMDataTransfer* aDataTransfer) :
+  m_cRef(0),
+  mUserCancelled(PR_FALSE),
+  m_hCursor(nsnull)
 {
+  mDataTransfer = do_QueryInterface(aDataTransfer);
 }
 
 nsNativeDragSource::~nsNativeDragSource()
@@ -99,6 +102,7 @@ nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 #ifdef DEBUG
     //printf("fEsc\n");
 #endif
+    mUserCancelled = PR_TRUE;
     return ResultFromScode(DRAGDROP_S_CANCEL);
   }
 
@@ -121,5 +125,23 @@ nsNativeDragSource::GiveFeedback(DWORD dwEffect)
 #ifdef DEBUG
   //printf("GiveFeedback\n");
 #endif
+  
+  // For drags involving tabs, we do some custom work with cursors. 
+  if (mDataTransfer) {
+    nsAutoString cursor;
+    mDataTransfer->GetMozCursor(cursor);
+    if (cursor.EqualsASCII("default")) {
+      m_hCursor = ::LoadCursor(0, IDC_ARROW);
+    } else {
+      m_hCursor =  nsnull;
+    }
+  }
+
+  if (m_hCursor) {
+    ::SetCursor(m_hCursor);
+    return S_OK;
+  }
+  
+  // Let the system choose which cursor to apply.
 	return ResultFromScode(DRAGDROP_S_USEDEFAULTCURSORS);
 }

@@ -126,6 +126,14 @@ protected:
 private:
   nsresult EnsureChildState(PRBool aSetText, PRBool &aHasChild) const;
 
+  PRUint32 GetChildCount(PRBool aSetText) const
+  {
+    PRBool hasChild;
+    EnsureChildState(aSetText, hasChild);
+
+    return hasChild ? 1 : 0;
+  }
+
   nsString mValue;
   // XXX For now, there's only a single child - a text element
   // representing the value.  This is strong ref, but we use a raw

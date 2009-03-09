@@ -109,7 +109,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     return PR_FALSE;
 
   // Prepare the drag image
-  nsRect dragRect;
+  nsIntRect dragRect;
   nsRefPtr<gfxASurface> surface;
   nsPresContext* pc;
   DrawDrag(aDOMNode, aRegion,
@@ -270,11 +270,12 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
 {
   // To do the drag we need to create an object that
   // implements the IDataObject interface (for OLE)
-  NS_IF_RELEASE(mNativeDragSrc);
-  mNativeDragSrc = (IDropSource *)new nsNativeDragSource();
-  if (!mNativeDragSrc)
+  nsNativeDragSource* nativeDragSource = new nsNativeDragSource(mDataTransfer);
+  if (!nativeDragSource)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_IF_RELEASE(mNativeDragSrc);
+  mNativeDragSrc = (IDropSource *)nativeDragSource;
   mNativeDragSrc->AddRef();
 
   // Now figure out what the native drag effect should be
@@ -351,7 +352,9 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
         dataTransfer->SetDropEffectInt(DRAGDROP_ACTION_NONE);
     }
   }
-      
+
+  mUserCancelled = nativeDragSource->UserCancelled();
+
   // We're done dragging
   EndDragSession(PR_TRUE);
 

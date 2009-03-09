@@ -71,7 +71,7 @@ nsXBLProtoImplField::~nsXBLProtoImplField()
   if (mFieldText)
     nsMemory::Free(mFieldText);
   NS_Free(mName);
-  delete mNext;
+  NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplField, this, mNext);
 }
 
 void 

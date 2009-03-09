@@ -41,6 +41,52 @@
 
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
+#include "nsSVGValue.h"
+
+////////////////////////////////////////////////////////////////////////
+// nsSVGAnimatedTransformList
+
+class nsSVGTransformSMILAttr;
+
+class nsSVGAnimatedTransformList : public nsIDOMSVGAnimatedTransformList,
+                                   public nsSVGValue,
+                                   public nsISVGValueObserver
+{  
+protected:
+  friend nsresult
+  NS_NewSVGAnimatedTransformList(nsIDOMSVGAnimatedTransformList** result,
+                                 nsIDOMSVGTransformList* baseVal);
+
+  ~nsSVGAnimatedTransformList();
+  void Init(nsIDOMSVGTransformList* baseVal);
+
+public:
+  // nsISupports interface:
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMSVGAnimatedTransformList interface:
+  NS_DECL_NSIDOMSVGANIMATEDTRANSFORMLIST
+
+  // remainder of nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
+
+  // nsISVGValueObserver
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
+
+  // nsISupportsWeakReference
+  // implementation inherited from nsSupportsWeakReference
+
+protected:
+  friend class nsSVGTransformSMILAttr;
+
+  nsCOMPtr<nsIDOMSVGTransformList> mBaseVal;
+  // XXX This should be read-only, i.e. its setters should throw
+  nsCOMPtr<nsIDOMSVGTransformList> mAnimVal;
+};
 
 nsresult
 NS_NewSVGAnimatedTransformList(nsIDOMSVGAnimatedTransformList** result,

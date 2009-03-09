@@ -158,7 +158,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 {
     cairo_status_t status;
 
-    if (NEARLY_ZERO (sc->yx) && NEARLY_ZERO (sc->xy)) {
+    if (NEARLY_ZERO (sc->yx) && NEARLY_ZERO (sc->xy) &&
+	!NEARLY_ZERO (sc->xx) && !NEARLY_ZERO (sc->yy)) {
 	scaled_font->preserve_axes = TRUE;
 	scaled_font->x_scale = sc->xx;
 	scaled_font->swap_x = (sc->xx < 0);
@@ -166,7 +167,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 	scaled_font->swap_y = (sc->yy < 0);
 	scaled_font->swap_axes = FALSE;
 
-    } else if (NEARLY_ZERO (sc->xx) && NEARLY_ZERO (sc->yy)) {
+    } else if (NEARLY_ZERO (sc->xx) && NEARLY_ZERO (sc->yy) &&
+	!NEARLY_ZERO (sc->yx) && !NEARLY_ZERO (sc->xy)) {
 	scaled_font->preserve_axes = TRUE;
 	scaled_font->x_scale = sc->yx;
 	scaled_font->swap_x = (sc->yx < 0);
@@ -984,6 +986,19 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
 	  status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetGlyphOutlineW");
 	  memset (&metrics, 0, sizeof (GLYPHMETRICS));
+	} else {
+	    if (metrics.gmBlackBoxX > 0 && scaled_font->base.options.antialias != CAIRO_ANTIALIAS_NONE) {
+		/* The bounding box reported by Windows supposedly contains the glyph's "black" area;
+		 * however, antialiasing (especially with ClearType) means that the actual image that
+		 * needs to be rendered may "bleed" into the adjacent pixels, mainly on the right side.
+		 * To avoid clipping the glyphs when drawn by _cairo_surface_fallback_show_glyphs,
+		 * for example, or other code that uses glyph extents to determine the area to update,
+		 * we add a pixel of "slop" to left side of the nominal "black" area returned by GDI,
+		 * and two pixels to the right (as tests show some glyphs bleed into this column).
+		 */
+		metrics.gmptGlyphOrigin.x -= 1;
+		metrics.gmBlackBoxX += 3;
+	    }
 	}
 	cairo_win32_scaled_font_done_font (&scaled_font->base);
 	if (status)
@@ -1185,12 +1200,12 @@ _add_glyph (cairo_glyph_state_t *state,
 	    if (status)
 		return status;
 	    state->start_x = logical_x;
+	} else {
+	    dx = logical_x - state->last_x;
+	    status = _cairo_array_append (&state->dx, &dx);
+	    if (status)
+		return status;
 	}
-
-	dx = logical_x - state->last_x;
-	status = _cairo_array_append (&state->dx, &dx);
-	if (status)
-	    return status;
     } else {
 	state->start_x = logical_x;
     }

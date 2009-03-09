@@ -4,26 +4,34 @@ Monty <monty@xiph.org>
 Ralph Giles
 Timothy B. Terriberry 
 	- Ongoing development
-	
+
 Dan B. Miller
 	- Pre alpha3 development
-	
+
 Wim Tayman
 Dan Lenski
 	- MMX optimized functions
-	
+
 Aaron Colwell
 Thomas Vander Stichele
 Jan Gerber
 Conrad Parker
 	- Bug fixes, enhancements, build systems.
-	
+
 Mauricio Piacentini
 	- Original win32 projects and example ports
+	- dump_video example
 	- VP3->Theora transcoder
 
 Silvia Pfeiffer
 	- Figures for the spec
+
+Vegard Nossum
+	- Original png2theora implementation
+
+Rudolf Marek
+Nils Pipenbrinck
+	- MMX optimizations
 
 Michael Smith
 Andre Pang

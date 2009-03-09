@@ -163,11 +163,29 @@
           <![CDATA[
             var palette = this.parentNode.palette;
             // Remove all items before the first permanent child and after the last permanent child.
-            while (this.lastChild != this.lastPermanentChild)
-              palette.appendChild(this.lastChild);
+            while (this.lastChild != this.lastPermanentChild) {
+              switch (this.lastChild.localName) {
+                case "toolbarseparator":
+                case "toolbarspring":
+                case "toolbarspacer":
+                  this.removeChild(this.lastChild);
+                  break;
+                default:
+                  palette.appendChild(this.lastChild);
+              }
+            }
 
-            while (this.firstChild != this.firstPermanentChild)
-              palette.appendChild(this.firstChild);
+            while (this.firstChild != this.firstPermanentChild) {
+              switch (this.firstChild.localName) {
+                case "toolbarseparator":
+                case "toolbarspring":
+                case "toolbarspacer":
+                  this.removeChild(this.firstChild);
+                  break;
+                default:
+                  palette.appendChild(this.firstChild);
+              }
+            }
 
             var firstChildID = this.firstPermanentChild ? this.firstPermanentChild.id : "";
             var lastChildID = this.lastPermanentChild ? this.lastPermanentChild.id : "";

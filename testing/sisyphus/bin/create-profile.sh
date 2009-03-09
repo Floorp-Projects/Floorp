@@ -53,7 +53,7 @@ $SCRIPT -p product -b branch -x executablepath -D directory -N profilename
 variable            description
 ===============     ============================================================
 -p product          required. firefox, thunderbird or fennec
--b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
+-b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
 -x executablepath   required. directory-tree containing executable 'product'
 -D directory        required. directory where profile is to be created.
 -N profilename      required. profile name 
@@ -93,14 +93,7 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || \
     usage
 fi
 
-if [[ "$product" != "firefox" && "$product" != "thunderbird" && "$product" != "fennec" ]]; then
-    error "product \"$product\" must be one of firefox, thunderbird or fennec" $LINENO
-fi
-
-if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" && "$branch" != "1.9.1" ]]; 
-    then
-    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0 1.9.1" $LINENO
-fi
+checkProductBranch $product $branch
 
 executable=`get_executable $product $branch $executablepath`
 

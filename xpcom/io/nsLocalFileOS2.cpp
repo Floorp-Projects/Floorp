@@ -705,30 +705,18 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 
     // just do a sanity check.  if it has any forward slashes, it is not
     // a Native path.  Also, it must have a colon at after the first char.
-
-    char *path = nsnull;
-    PRInt32 pathLen = 0;
-
-    if ( ( (secondChar == ':') && !FindCharInReadable('/', begin, end) ) ||  // normal path
-         ( (firstChar == '\\') && (secondChar == '\\') ) )  // network path
-    {
-        // This is a native path
-        path = ToNewCString(filePath);
-        pathLen = filePath.Length();
-    }
-
-    if (path == nsnull)
+    if (FindCharInReadable('/', begin, end))
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    // kill any trailing '\' provided it isn't the second char of DBCS
-    PRInt32 len = pathLen - 1;
-    if (path[len] == '\\' && !::isleadbyte(path[len-1]))
-    {
-        path[len] = '\0';
-        pathLen = len;
-    }
+    if (secondChar != ':' && (secondChar != '\\' || firstChar != '\\'))
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    mWorkingPath.Adopt(path, pathLen);
+    mWorkingPath = filePath;
+    // kill any trailing '\' provided it isn't the second char of DBCS
+    PRInt32 len = mWorkingPath.Length() - 1;
+    if (mWorkingPath[len] == '\\' && !::isleadbyte(mWorkingPath[len - 1]))
+        mWorkingPath.Truncate(len);
+
     return NS_OK;
 }
 

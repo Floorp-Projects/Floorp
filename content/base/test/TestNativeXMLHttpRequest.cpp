@@ -89,7 +89,7 @@ nsresult TestNativeXMLHttpRequest()
   rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   TEST_ENSURE_SUCCESS(rv, "Couldn't get system principal!");
 
-  rv = xhr->Init(systemPrincipal, nsnull, nsnull);
+  rv = xhr->Init(systemPrincipal, nsnull, nsnull, nsnull);
   TEST_ENSURE_SUCCESS(rv, "Couldn't initialize the XHR!");
 
   rv = xhr->OpenRequest(getString, testURL, PR_FALSE, empty, empty);

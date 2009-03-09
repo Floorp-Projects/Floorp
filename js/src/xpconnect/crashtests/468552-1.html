@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var dp = document.__proto__;
+  dp.__proto__ = new XPCNativeWrapper(new XMLSerializer);
+  try {
+    dp.isSupported();
+  } catch(e) { }
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

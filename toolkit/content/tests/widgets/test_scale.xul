@@ -102,17 +102,19 @@ function testtag_scale_UI(element, testid, horiz, reverse)
 
   element.focus();
 
+  var leftIncrements = horiz && reverse;
+  var upDecrements = !horiz && !reverse;
   synthesizeKeyExpectEvent("VK_LEFT", { }, element, "change", testid + "key left");
-  is(element.value, reverse ? 9 : 5, testid + " key left");
+  is(element.value, leftIncrements ? 9 : 5, testid + " key left");
   synthesizeKeyExpectEvent("VK_RIGHT", { }, element, "change", testid + "key right");
   is(element.value, 7, testid + " key right");
   synthesizeKeyExpectEvent("VK_UP", { }, element, "change", testid + "key up");
-  is(element.value, reverse ? 9 : 5, testid + " key up");
+  is(element.value, upDecrements ? 5 : 9, testid + " key up");
   synthesizeKeyExpectEvent("VK_DOWN", { }, element, "change", testid + "key down");
   is(element.value, 7, testid + " key down");
 
   synthesizeKeyExpectEvent("VK_PAGE_UP", { }, element, "change", testid + "key page up");
-  is(element.value, reverse ? 11 : 3, testid + " key page up");
+  is(element.value, upDecrements ? 3 : 11, testid + " key page up");
   synthesizeKeyExpectEvent("VK_PAGE_DOWN", { }, element, "change", testid + "key page down");
   is(element.value, 7, testid + " key page down");
 

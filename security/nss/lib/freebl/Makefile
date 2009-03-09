@@ -74,9 +74,12 @@ ifdef USE_ABI32_FPU
 	DEFINES += -DNSS_USE_ABI32_FPU
 endif
 
-# des.c wants _X86_ defined for intel CPUs.  
+ifdef FREEBL_NO_DEPEND
+	DEFINES += -DFREEBL_NO_DEPEND
+endif
+# some codes want _X86_ defined for intel CPUs.
 # coreconf does this for windows, but not for Linux, FreeBSD, etc.
-ifeq ($(CPU_ARCH),x86)
+ifeq (,$(filter-out x86 x86_64,$(CPU_ARCH)))
 ifneq (,$(filter-out WIN%,$(OS_TARGET)))
 	OS_REL_CFLAGS += -D_X86_
 endif
@@ -135,6 +138,9 @@ ifeq ($(CPU_ARCH),x86_64)
     DEFINES += -DNSS_USE_COMBA
     DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
 #   DEFINES += -DMPI_AMD64_ADD
+    # comment the next two lines to turn off intel HW accelleration
+    DEFINES += -DUSE_HW_AES
+    ASFILES += intel-aes.s
     MPI_SRCS += mpi_amd64.c mp_comba.c
 endif
 ifeq ($(CPU_ARCH),x86)
@@ -382,6 +388,9 @@ else
 	endif
 	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
 	DEFINES += -DNSS_USE_COMBA -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+	# comment the next two lines to turn off intel HW accelleration
+	DEFINES += -DUSE_HW_AES
+	ASFILES += intel-aes.s
 	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86

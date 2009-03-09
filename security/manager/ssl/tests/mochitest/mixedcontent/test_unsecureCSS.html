@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Unsecure css load</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  
+  <link rel="stylesheet" type="text/css" 
+    href="http://example.com/tests/security/ssl/mixedcontent/somestyle.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  function runTest()
+  {
+    isSecurityState("broken", "insecure <img> load breaks security");
+    finish();
+  }
+
+  function afterNavigationTest()
+  {
+    isSecurityState("broken", "security still broken after navigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+</body>
+</html>

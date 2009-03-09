@@ -1,8 +1,8 @@
-product=firefox
-branch=1.8.0
-profilename=firefox-1.8.0-test-profile
-profiledirectory=/tmp/firefox-1.8.0-test-profile
-executablepath=${BUILDDIR}/1.8.0-test/mozilla/firefox-opt/dist
-userpreferences=${TEST_DIR}/prefs/test-user.js
-extensiondir=${TEST_DIR}/xpi
-buildtype=opt
+product=${product:-firefox}
+branch=${branch:-1.8.0}
+buildtype=${buildtype:-opt}
+profilename=${profilename:-firefox-1.8.0-test-profile}
+profiledirectory=${profiledirectory:-/tmp/firefox-1.8.0-test-profile}
+executablepath=${executablepath:-/work/mozilla/builds/1.8.0-test/mozilla/firefox-opt/dist}
+userpreferences=${userpreferences:-/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js}
+extensiondir=${extensiondir:-/work/mozilla/mozilla.com/test.mozilla.com/www/xpi}

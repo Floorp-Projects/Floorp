@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <binding id="gridlike">
+    <content>
+      <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
+                     flex="1" style="overflow: auto;">
+        <children includes="gridlikecols">
+          <xul:gridlikecols>
+            <xul:gridlikecol flex="1"/>
+          </xul:gridlikecols>
+        </children>
+        <xul:gridlikerows>
+          <children includes="gridlikehead"/>
+          <xul:gridlikeboxbody xbl:inherits="rows,size,minheight">
+            <children includes="gridlikeitem"/>
+          </xul:gridlikeboxbody>
+        </xul:gridlikerows>
+      </xul:scrollbox>
+    </content>
+  </binding>
+
+  <binding id="gridlikehead">
+    <content>
+      <xul:gridlikeheaditem>
+        <children includes="gridlikeheader"/>
+      </xul:gridlikeheaditem>
+    </content>
+  </binding>
+</bindings>

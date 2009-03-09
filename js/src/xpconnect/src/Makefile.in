@@ -74,6 +74,7 @@ REQUIRES	+= content \
 		   svg \
 		   xuldoc \
 		   xultmpl \
+		   widget \
 		   $(NULL)
 
 
@@ -175,6 +176,8 @@ endif
 endif
 
 nsXPConnect.$(OBJ_SUFFIX): dom_quickstubs.h
+
+xpcjsruntime.$(OBJ_SUFFIX): dom_quickstubs.h
 
 dom_quickstubs.h dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
                                      $(srcdir)/qsgen.py \

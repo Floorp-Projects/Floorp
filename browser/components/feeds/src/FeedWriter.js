@@ -1114,8 +1114,8 @@ FeedWriter.prototype = {
         this._document.getElementById("feedSubscriptionInfo2");
       this._contentSandbox.feedinfo2Str = this._getString(textfeedinfo2);
       this._contentSandbox.header = header;
-      codeStr = "feedinfo1.value = feedinfo1Str; " +
-                "feedinfo2.value = feedinfo2Str; " +
+      codeStr = "feedinfo1.textContent = feedinfo1Str; " +
+                "feedinfo2.textContent = feedinfo2Str; " +
                 "header.setAttribute('firstrun', 'true');"
       Cu.evalInSandbox(codeStr, this._contentSandbox);
       prefs.setBoolPref(PREF_SHOW_FIRST_RUN_UI, false);
@@ -1265,7 +1265,7 @@ FeedWriter.prototype = {
     var selectedItem = this._getSelectedItemFromMenulist(handlersMenuList);
 
     // Show the file picker before subscribing if the
-    // choose application menuitem was choosen using the keyboard
+    // choose application menuitem was chosen using the keyboard
     if (selectedItem.id == "chooseApplicationMenuItem") {
       if (!this._chooseClientApp())
         return;

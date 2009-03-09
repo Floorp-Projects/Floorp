@@ -243,7 +243,6 @@ OTHER_HFILES =		\
 	jscompat.h	\
 	jscpucfg.h	\
 	jsotypes.h	\
-	jsstddef.h	\
 	prmjtime.h	\
 	resource.h	\
 	jsopcode.tbl	\

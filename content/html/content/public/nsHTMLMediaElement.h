@@ -39,6 +39,9 @@
 #include "nsGenericHTMLElement.h"
 #include "nsMediaDecoder.h"
 #include "nsIChannel.h"
+#include "nsThreadUtils.h"
+#include "nsIDOMRange.h"
+#include "nsCycleCollectionParticipant.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -64,6 +67,11 @@ public:
 
   // nsIDOMHTMLMediaElement
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLMediaElement,
+                                           nsGenericHTMLElement)
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -111,11 +119,6 @@ public:
   // when the video playback has ended.
   void PlaybackEnded();
 
-  // Called by the decoder object, on the main thread, when
-  // approximately enough of the resource has been loaded to play
-  // through without pausing for buffering.
-  void CanPlayThrough();
-
   // Called by the video decoder object, on the main thread,
   // when the resource has started seeking.
   void SeekStarted();
@@ -134,13 +137,33 @@ public:
   nsresult DispatchAsyncSimpleEvent(const nsAString& aName);
   nsresult DispatchAsyncProgressEvent(const nsAString& aName);
 
+  // Called by the decoder when some data has been downloaded or
+  // buffering/seeking has ended. aNextFrameAvailable is true when
+  // the data for the next frame is available. This method will
+  // decide whether to set the ready state to HAVE_CURRENT_DATA,
+  // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
+  enum NextFrameStatus {
+    // The next frame of audio/video is available
+    NEXT_FRAME_AVAILABLE,
+    // The next frame of audio/video is unavailable because the decoder
+    // is paused while it buffers up data
+    NEXT_FRAME_UNAVAILABLE_BUFFERING,
+    // The next frame of audio/video is unavailable for some other reasons
+    NEXT_FRAME_UNAVAILABLE
+  };
+  void UpdateReadyStateForData(NextFrameStatus aNextFrame);
+
   // Use this method to change the mReadyState member, so required
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
-  // Is the media element actively playing as defined by the HTML 5 specification.
-  // http://www.whatwg.org/specs/web-apps/current-work/#actively
-  PRBool IsActivelyPlaying() const;
+  // Gets the pref media.enforce_same_site_origin, which determines
+  // if we should check Access Controls, or allow cross domain loads.
+  PRBool ShouldCheckAllowOrigin();
+
+  // Is the media element potentially playing as defined by the HTML 5 specification.
+  // http://www.whatwg.org/specs/web-apps/current-work/#potentially-playing
+  PRBool IsPotentiallyPlaying() const;
 
   // Has playback ended as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#ended
@@ -159,8 +182,14 @@ public:
   void Thaw();
 
   // Returns true if we can handle this MIME type in a <video> or <audio>
-  // element
-  static PRBool CanHandleMediaType(const char* aMIMEType);
+  // element.
+  // If it returns true, then it also returns a null-terminated list
+  // of supported codecs in *aSupportedCodecs, and a null-terminated list
+  // of codecs that *may* be supported in *aMaybeSupportedCodecs. These
+  // lists should not be freed, they area static data.
+  static PRBool CanHandleMediaType(const char* aMIMEType,
+                                   const char*** aSupportedCodecs,
+                                   const char*** aMaybeSupportedCodecs);
 
   /**
    * Initialize data for available media types
@@ -171,21 +200,39 @@ public:
    */
   static void ShutdownMediaTypes();
 
-protected:
   /**
-   * Figure out which resource to load (either the 'src' attribute or
-   * a <source> child) and create the decoder for it.
+   * Called when a child source element is added to this media element. This
+   * may queue a load() task if appropriate.
    */
-  nsresult PickMediaElement();
+  void NotifyAddedSource();
+
+  /**
+   * Called when there's been an error fetching the resource. This decides
+   * whether it's appropriate to fire an error event.
+   */
+  void NotifyLoadError();
+
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+
+  /**
+   * Returns the current load ID. Asynchronous events store the ID that was
+   * current when they were enqueued, and if it has changed when they come to
+   * fire, they consider themselves cancelled, and don't fire.
+   */
+  PRUint32 GetCurrentLoadID() { return mCurrentLoadID; }
+
+
+protected:
+  class MediaLoadListener;
+  class LoadNextSourceEvent;
+  class SelectResourceEvent;
+
   /**
    * Create a decoder for the given aMIMEType. Returns false if we
    * were unable to create the decoder.
    */
   PRBool CreateDecoder(const nsACString& aMIMEType);
-  /**
-   * Initialize a decoder to load the given URI.
-   */
-  nsresult InitializeDecoder(const nsAString& aURISpec);
+
   /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
@@ -193,18 +240,106 @@ protected:
   nsresult InitializeDecoderForChannel(nsIChannel *aChannel,
                                        nsIStreamListener **aListener);
 
+  /**
+   * Execute the initial steps of the load algorithm that ensure existing
+   * loads are aborted, the element is emptied, and a new load ID is
+   * created.
+   */
+  void AbortExistingLoads();
+
+  /**
+   * Create a URI for the given aURISpec string.
+   */
+  nsresult NewURIFromString(const nsAutoString& aURISpec, nsIURI** aURI);
+
+  /**
+   * Called when all postential resources are exhausted. Changes network
+   * state to NETWORK_NO_SOURCE, and sends error event with code
+   * MEDIA_ERR_NONE_SUPPORTED.
+   */
+  void NoSupportedMediaError();
+
+  /**
+   * Attempts to load resources from the <source> children. This is a
+   * substep of the media selection algorith. Do not call this directly,
+   * call QueueLoadFromSourceTask() instead.
+   */
+  void LoadFromSourceChildren();
+
+  /**
+   * Sends an async event to call LoadFromSourceChildren().
+   */
+  void QueueLoadFromSourceTask();
+ 
+  /**
+   * Media selection algorithm.
+   */
+  void SelectResource();
+
+  /**
+   * Sends an async event to call SelectResource().
+   */
+  void QueueSelectResourceTask();
+
+  /**
+   * The resource-fetch algorithm step of the load algorithm.
+   */
+  nsresult LoadResource(nsIURI* aURI);
+
+  /**
+   * Selects the next <source> child from which to load a resource. Called
+   * during the media selection algorithm.
+   */
+  already_AddRefed<nsIURI> GetNextSource();
+
+  /**
+   * Changes mDelayingLoadEvent, and will call BlockOnLoad()/UnblockOnLoad()
+   * on the owning document, so it can delay the load event firing.
+   */
+  void ChangeDelayLoadStatus(PRBool aDelay);
+
   nsRefPtr<nsMediaDecoder> mDecoder;
+
+  nsCOMPtr<nsIChannel> mChannel;
 
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
+
+  // The current media load ID. This is incremented every time we start a
+  // new load. Async events note the ID when they're first sent, and only fire
+  // if the ID is unchanged when they come to fire.
+  PRUint32 mCurrentLoadID;
+
+  // Points to the child source elements, used to iterate through the children
+  // when selecting a resource to load.
+  nsCOMPtr<nsIDOMRange> mSourcePointer;
+
+  // Points to the document whose load we're blocking. This is the document
+  // we're bound to when loading starts.
+  nsCOMPtr<nsIDocument> mLoadBlockedDoc;
 
   // Media loading flags. See: 
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
 
-  // Value of the volume before it was muted
-  float mMutedVolume;
+  enum LoadAlgorithmState {
+    // Not waiting for any src/<source>.
+    NOT_WAITING,
+    // No src or <source> children, load is waiting at load algorithm step 1.
+    WAITING_FOR_SRC_OR_SOURCE, 
+    // No src at load time, and all <source> children don't resolve or
+    // give network errors during fetch, waiting for more <source> children
+    // to be added.
+    WAITING_FOR_SOURCE 
+  };
+  
+  // When the load algorithm is waiting for more src/<source>, this denotes
+  // what type of waiting we're doing.
+  LoadAlgorithmState mLoadWaitStatus;
+
+  // Current audio volume
+  float mVolume;
 
   // Size of the media. Updated by the decoder on the main thread if
   // it changes. Defaults to a width and height of -1 if not set.
@@ -213,9 +348,6 @@ protected:
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
   PRPackedBool mBegun;
-
-  // If truen then the video playback has completed.
-  PRPackedBool mEnded;
 
   // True when the decoder has loaded enough data to display the
   // first frame of the content.
@@ -231,6 +363,10 @@ protected:
   // 'mAutoplaying' flag, which indicates whether the current playback
   // is a result of the autoplay attribute.
   PRPackedBool mAutoplaying;
+
+  // Indicates whether |autoplay| will actually autoplay based on the pref 
+  // media.autoplay.enabled
+  PRPackedBool mAutoplayEnabled;
 
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
@@ -253,4 +389,25 @@ protected:
   // to ensure that the playstate doesn't change when the user goes Forward/Back
   // from the bfcache.
   PRPackedBool mPausedBeforeFreeze;
+  
+  // PR_TRUE if we've reported a "waiting" event since the last
+  // readyState change to HAVE_CURRENT_DATA.
+  PRPackedBool mWaitingFired;
+
+  // PR_TRUE if we're in BindToTree().
+  PRPackedBool mIsBindingToTree;
+
+  // PR_TRUE if we're running the "load()" method.
+  PRPackedBool mIsRunningLoadMethod;
+
+  // PR_TRUE if we're loading exclusively from the src attribute's resource.
+  PRPackedBool mIsLoadingFromSrcAttribute;
+
+  // PR_TRUE if we're delaying the "load" event. They are delayed until either
+  // an error occurs, or the first frame is loaded.
+  PRPackedBool mDelayingLoadEvent;
+
+  // PR_TRUE when we've got a task queued to call SelectResource(),
+  // or while we're running SelectResource().
+  PRPackedBool mIsRunningSelectResource;
 };

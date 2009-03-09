@@ -225,4 +225,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 #define NS_EVENT_STATE_HANDLER_DISABLED \
                                      0x02000000
 
+#define NS_EVENT_STATE_INDETERMINATE 0x04000000 // CSS3-Selectors
+
 #endif // nsIEventStateManager_h__

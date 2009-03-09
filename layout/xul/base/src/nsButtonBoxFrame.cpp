@@ -79,6 +79,11 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
                               nsGUIEvent* aEvent,
                               nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   switch (aEvent->message) {
     case NS_KEY_DOWN:
       if (NS_KEY_EVENT == aEvent->eventStructType) {

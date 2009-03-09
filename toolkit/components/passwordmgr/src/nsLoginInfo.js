@@ -47,13 +47,17 @@ nsLoginInfo.prototype = {
     classDescription  : "LoginInfo",
     contractID : "@mozilla.org/login-manager/loginInfo;1",
     classID : Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginInfo]), 
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginInfo, Ci.nsILoginMetaInfo]), 
 
     // Allow storage-Legacy.js to get at the JS object so it can
     // slap on a few extra properties for internal use.
     get wrappedJSObject() {
         return this;
     },
+
+    //
+    // nsILoginInfo interfaces...
+    //
 
     hostname      : null,
     formSubmitURL : null,
@@ -105,7 +109,27 @@ nsLoginInfo.prototype = {
             return false;
 
         return true;
-    }
+    },
+
+    clone : function() {
+        let clone = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                    createInstance(Ci.nsILoginInfo);
+        clone.init(this.hostname, this.formSubmitURL, this.httpRealm,
+                   this.username, this.password,
+                   this.usernameField, this.passwordField);
+
+        // Copy nsILoginMetaInfo props
+        clone.QueryInterface(Ci.nsILoginMetaInfo);
+        clone.guid = this.guid;
+
+        return clone;
+    },
+
+    //
+    // nsILoginMetaInfo interfaces...
+    //
+
+    guid : null
 
 }; // end of nsLoginInfo implementation
 

@@ -75,6 +75,7 @@
 #include "nsIPrincipal.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsTArray.h"
 
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
@@ -415,7 +416,7 @@ void nsCSSSelector::SetOperator(PRUnichar aOperator)
   mOperator = aOperator;
 }
 
-PRInt32 nsCSSSelector::CalcWeight(void) const
+PRInt32 nsCSSSelector::CalcWeightWithoutNegations() const
 {
   PRInt32 weight = 0;
 
@@ -442,8 +443,15 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
     weight += 0x000100;
     attr = attr->mNext;
   }
-  if (nsnull != mNegations) {
-    weight += mNegations->CalcWeight();
+  return weight;
+}
+
+PRInt32 nsCSSSelector::CalcWeight() const
+{
+  // Loop over this selector and all its negations.
+  PRInt32 weight = 0;
+  for (const nsCSSSelector *n = this; n; n = n->mNegations) {
+    weight += n->CalcWeightWithoutNegations();
   }
   return weight;
 }
@@ -461,11 +469,6 @@ static PRBool IsPseudoElement(nsIAtom* aAtom)
   return PR_FALSE;
 }
 
-void nsCSSSelector::AppendNegationToString(nsAString& aString)
-{
-  aString.AppendLiteral(":not(");
-}
-
 //
 // Builds the textual representation of a selector. Called by DOM 2 CSS 
 // StyleRule:selectorText
@@ -476,28 +479,58 @@ nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
 {
   if (!aAppend)
    aString.Truncate();
+
+  // selectors are linked from right-to-left, so the next selector in
+  // the linked list actually precedes this one in the resulting string
+  nsAutoTArray<const nsCSSSelector*, 8> stack;
+  for (const nsCSSSelector *s = this; s; s = s->mNext) {
+    stack.AppendElement(s);
+  }
    
-  ToStringInternal(aString, aSheet, IsPseudoElement(mTag), PR_FALSE);
+  while (!stack.IsEmpty()) {
+    PRUint32 index = stack.Length() - 1;
+    const nsCSSSelector *s = stack.ElementAt(index);
+    stack.RemoveElementAt(index);
+
+    s->AppendToStringWithoutCombinators(aString, aSheet);
+
+    // Append the combinator, if needed.
+    if (!stack.IsEmpty()) {
+      const nsCSSSelector *next = stack.ElementAt(index - 1);
+      if (!IsPseudoElement(next->mTag)) {
+        aString.Append(PRUnichar(' '));
+        PRUnichar oper = s->mOperator;
+        if (oper != PRUnichar(0)) {
+          aString.Append(oper);
+          aString.Append(PRUnichar(' '));
+        }
+      }
+    }
+  }
 }
 
-void nsCSSSelector::ToStringInternal(nsAString& aString,
-                                     nsICSSStyleSheet* aSheet,
-                                     PRBool aIsPseudoElem,
-                                     PRBool aIsNegated) const
+void
+nsCSSSelector::AppendToStringWithoutCombinators
+                   (nsAString& aString, nsICSSStyleSheet* aSheet) const
+{
+  AppendToStringWithoutCombinatorsOrNegations(aString, aSheet, PR_FALSE);
+
+  for (const nsCSSSelector* negation = mNegations; negation;
+       negation = negation->mNegations) {
+    aString.AppendLiteral(":not(");
+    negation->AppendToStringWithoutCombinatorsOrNegations(aString, aSheet,
+                                                          PR_TRUE);
+    aString.Append(PRUnichar(')'));
+  }
+}
+
+void
+nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
+                   (nsAString& aString, nsICSSStyleSheet* aSheet,
+                   PRBool aIsNegated) const
 {
   nsAutoString temp;
   PRBool isPseudoElement = IsPseudoElement(mTag);
-  
-  // selectors are linked from right-to-left, so the next selector in the linked list
-  // actually precedes this one in the resulting string
-  if (mNext) {
-    mNext->ToStringInternal(aString, aSheet, IsPseudoElement(mTag), 0);
-    if (!aIsNegated && !isPseudoElement) {
-      // don't add a leading whitespace if we have a pseudo-element
-      // or a negated simple selector
-      aString.Append(PRUnichar(' '));
-    }
-  }
 
   // For non-pseudo-element selectors or for lone pseudo-elements, deal with
   // namespace prefixes.
@@ -524,6 +557,11 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       NS_ASSERTION(mNameSpace == kNameSpaceID_Unknown ||
                    CanBeNamespaced(aIsNegated),
                    "How did we end up with this namespace?");
+    } else if (mNameSpace == kNameSpaceID_None) {
+      NS_ASSERTION(CanBeNamespaced(aIsNegated),
+                   "How did we end up with this namespace?");
+      aString.Append(PRUnichar('|'));
+      wroteNamespace = PR_TRUE;
     } else if (mNameSpace != kNameSpaceID_Unknown) {
       NS_ASSERTION(CanBeNamespaced(aIsNegated),
                    "How did we end up with this namespace?");
@@ -635,12 +673,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
         aString.Append(PRUnichar('='));
       
         // Append the value
-        nsAutoString escaped;
-        nsStyleUtil::EscapeCSSString(list->mValue, escaped);
-      
-        aString.Append(PRUnichar('\"'));
-        aString.Append(escaped);
-        aString.Append(PRUnichar('\"'));
+        nsStyleUtil::AppendEscapedCSSString(list->mValue, aString);
       }
 
       aString.Append(PRUnichar(']'));
@@ -684,22 +717,6 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       }
       list = list->mNext;
     }
-  }
-
-  if (!aIsNegated) {
-    for (nsCSSSelector* negation = mNegations; negation;
-         negation = negation->mNegations) {
-      aString.AppendLiteral(":not(");
-      negation->ToStringInternal(aString, aSheet, PR_FALSE, PR_TRUE);
-      aString.Append(PRUnichar(')'));
-    }
-  }
-
-  // Append the operator only if the selector is not negated and is not
-  // a pseudo-element
-  if (!aIsNegated && mOperator && !aIsPseudoElem) {
-    aString.Append(PRUnichar(' '));
-    aString.Append(mOperator);
   }
 }
 
