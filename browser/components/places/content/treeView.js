@@ -928,6 +928,10 @@ PlacesTreeView.prototype = {
       else if (itemId != -1) { // bookmark nodes
         if (PlacesUtils.nodeIsLivemarkContainer(node.parent))
           properties.push(this._getAtomFor("livemarkItem"));
+        else if (PlacesUtils.nodeIsURI(node)) {
+          if (node.uri.lastIndexOf("javascript:", 0) == 0)
+            properties.push(this._getAtomFor("bookmarklet"));
+        }
       }
 
       this._visibleElements[aRow].properties = properties;
