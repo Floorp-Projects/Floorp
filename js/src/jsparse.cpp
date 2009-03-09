@@ -51,7 +51,6 @@
  *
  * This parser attempts no error recovery.
  */
-#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -503,7 +502,8 @@ extern JSScript *
 js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                  JSPrincipals *principals, uint32 tcflags,
                  const jschar *chars, size_t length,
-                 FILE *file, const char *filename, uintN lineno)
+                 FILE *file, const char *filename, uintN lineno,
+                 JSString *source)
 {
     JSParseContext pc;
     JSArenaPool codePool, notePool;
@@ -543,16 +543,36 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     cg.treeContext.u.scopeChain = scopeChain;
     cg.staticDepth = TCF_GET_STATIC_DEPTH(tcflags);
 
-    if ((tcflags & TCF_COMPILE_N_GO) && callerFrame && callerFrame->fun) {
-        /*
-         * An eval script in a caller frame needs to have its enclosing function
-         * captured in case it uses an upvar reference, and someone wishes to
-         * decompile it while running.
-         */
-        JSParsedObjectBox *pob = js_NewParsedObjectBox(cx, &pc, callerFrame->callee);
-        pob->emitLink = cg.objectList.lastPob;
-        cg.objectList.lastPob = pob;
-        cg.objectList.length++;
+    /*
+     * If funpob is non-null after we create the new script, callerFrame->fun
+     * was saved in the 0th object table entry.
+     */
+    JSParsedObjectBox *funpob = NULL;
+
+    if (tcflags & TCF_COMPILE_N_GO) {
+        if (source) {
+            /*
+             * Save eval program source in script->atomMap.vector[0] for the
+             * eval cache (see obj_eval in jsobj.cpp).
+             */
+            JSAtom *atom = js_AtomizeString(cx, source, 0);
+            if (!atom || !js_IndexAtom(cx, atom, &cg.atomList))
+                return NULL;
+        }
+
+        if (callerFrame && callerFrame->fun) {
+            /*
+             * An eval script in a caller frame needs to have its enclosing
+             * function captured in case it uses an upvar reference, and
+             * someone wishes to decompile it while it's running.
+             */
+            funpob = js_NewParsedObjectBox(cx, &pc, FUN_OBJECT(callerFrame->fun));
+            if (!funpob)
+                return NULL;
+            funpob->emitLink = cg.objectList.lastPob;
+            cg.objectList.lastPob = funpob;
+            cg.objectList.length++;
+        }
     }
 
     /* Inline Statements() to emit as we go to save space. */
@@ -647,6 +667,8 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     JS_DumpArenaStats(stdout);
 #endif
     script = js_NewScriptFromCG(cx, &cg);
+    if (script && funpob)
+        script->flags |= JSSF_SAVED_CALLER_FUN;
 
 #ifdef JS_SCOPE_DEPTH_METER
     if (script) {
@@ -1075,6 +1097,25 @@ NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
     return fun;
 }
 
+static JSBool
+MatchOrInsertSemicolon(JSContext *cx, JSTokenStream *ts)
+{
+    JSTokenType tt;
+
+    ts->flags |= TSF_OPERAND;
+    tt = js_PeekTokenSameLine(cx, ts);
+    ts->flags &= ~TSF_OPERAND;
+    if (tt == TOK_ERROR)
+        return JS_FALSE;
+    if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                    JSMSG_SEMI_BEFORE_STMNT);
+        return JS_FALSE;
+    }
+    (void) js_MatchToken(cx, ts, TOK_SEMI);
+    return JS_TRUE;
+}
+
 static JSParseNode *
 FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             uintN lambda)
@@ -1144,8 +1185,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     return NULL;
                 }
             }
-            if (!AT_TOP_LEVEL(tc) && prevop == JSOP_DEFVAR)
-                tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
         } else {
             ale = js_IndexAtom(cx, funAtom, &tc->decls);
             if (!ale)
@@ -1299,8 +1338,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_EXPR_CLOSURES
     if (tt == TOK_LC)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
-    else if (lambda == 0)
-        js_MatchToken(cx, ts, TOK_SEMI);
+    else if (lambda == 0 && !MatchOrInsertSemicolon(cx, ts))
+        return NULL;
 #else
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
 #endif
@@ -1447,8 +1486,11 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         tt = js_PeekToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
         if (tt <= TOK_EOF || tt == TOK_RC) {
-            if (tt == TOK_ERROR)
+            if (tt == TOK_ERROR) {
+                if (ts->flags & TSF_EOF)
+                    ts->flags |= TSF_UNEXPECTED_EOF;
                 return NULL;
+            }
             break;
         }
         pn2 = Statement(cx, ts, tc);
@@ -1619,8 +1661,6 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                 return JS_FALSE;
             }
         }
-        if (op == JSOP_DEFVAR && prevop == JSOP_DEFFUN)
-            tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
     }
     if (!ale) {
         ale = js_IndexAtom(cx, atom, &tc->decls);
@@ -2759,7 +2799,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                  * 'var' and 'const'.
                  */
                 pn2 = pn1->pn_head;
-                if (pn2->pn_type == TOK_NAME && pn2->pn_expr
+                if ((pn2->pn_type == TOK_NAME && pn2->pn_expr)
 #if JS_HAS_DESTRUCTURING
                     || pn2->pn_type == TOK_ASSIGN
 #endif
@@ -3520,21 +3560,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     }
 
     /* Check termination of this primitive statement. */
-    if (ON_CURRENT_LINE(ts, pn->pn_pos)) {
-        ts->flags |= TSF_OPERAND;
-        tt = js_PeekTokenSameLine(cx, ts);
-        ts->flags &= ~TSF_OPERAND;
-        if (tt == TOK_ERROR)
-            return NULL;
-        if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                        JSMSG_SEMI_BEFORE_STMNT);
-            return NULL;
-        }
-    }
-
-    (void) js_MatchToken(cx, ts, TOK_SEMI);
-    return pn;
+    return MatchOrInsertSemicolon(cx, ts) ? pn : NULL;
 }
 
 static JSParseNode *
@@ -3655,6 +3681,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn2->pn_op = (!let && data.op == JSOP_DEFCONST)
                          ? JSOP_SETCONST
                          : JSOP_SETNAME;
+            pn2->pn_pos.end = pn2->pn_expr->pn_pos.end;
             if (!let && atom == cx->runtime->atomState.argumentsAtom)
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
         }

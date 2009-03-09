@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="tab-test"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <tabbox id="main_courseframe" flex="1">
+        <tabs id="main_coursetabs" ida-type="gradient">
+            <tab id="main_coursetab_general" label="General" />
+            <tab id="main_coursetab_overview" label="Overview" />
+            <tab id="main_coursetab_extensions" label="Extensions" />
+        </tabs>
+
+        <tabpanels id="main_coursetabpanels" flex="1">
+            <tabpanel id="main_coursetabpanel_general">
+                <label value="this is the general tabpanel" />
+            </tabpanel>
+
+            <tabpanel id="main_coursetabpanel_overview">
+                <label value="this is the OVERVIEW tabpanel" />
+            </tabpanel>
+            
+            <tabpanel id="main_coursetabpanel_extensions">
+                <label value="this is the EXTENSIONS tabpanel" />
+            </tabpanel>
+        </tabpanels>
+    </tabbox>
+</window>

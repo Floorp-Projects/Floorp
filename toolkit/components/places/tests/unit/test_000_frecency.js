@@ -145,6 +145,10 @@ bucketPrefs.every(function(bucket) {
     }
     else {
       // visited
+      // visited bookmarks get the visited bookmark bonus twice
+      if (visitType == Ci.nsINavHistoryService.TRANSITION_BOOKMARK)
+        bonusValue = bonusValue * 2;
+
       var points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
       if (!points) {
         if (!visitType ||
@@ -247,6 +251,7 @@ function run_test() {
 
   // always search in history + bookmarks, no matter what the default is
   prefs.setIntPref("browser.urlbar.search.sources", 3);
+  prefs.setIntPref("browser.urlbar.default.behavior", 0);
 
   // Search is asynchronous, so don't let the test finish immediately
   do_test_pending();

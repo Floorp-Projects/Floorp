@@ -44,7 +44,6 @@
 #include "gfxPlatform.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsVoidArray.h"
 #include "prlong.h"
 
 #ifdef PR_LOGGING
@@ -109,13 +108,9 @@ gfxMixedFontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
 }
 
 
-gfxUserFontSet::gfxUserFontSet(LoaderContext *aContext)
-    : mLoaderContext(aContext)
+gfxUserFontSet::gfxUserFontSet()
 {
-    NS_ASSERTION(mLoaderContext, "font set loader context not initialized");
     mFontFamilies.Init(5);
-    mLoaderContext->mUserFontSet = this;
-
     IncrementGeneration();
 }
 
@@ -266,8 +261,12 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
     LoadStatus status;
 
     status = LoadNext(pe);
-    if (status == STATUS_LOADED)
+    if (status == STATUS_LOADED) {
+        // load may succeed if external font resource followed by
+        // local font, in this case need to bump generation
+        IncrementGeneration();
         return PR_TRUE;
+    }
 
     return PR_FALSE;
 }
@@ -279,10 +278,6 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
     PRUint32 numSrc = aProxyEntry->mSrcList.Length();
 
     NS_ASSERTION(aProxyEntry->mSrcIndex < numSrc, "already at the end of the src list for user font");
-
-    NS_ASSERTION(mLoaderContext, "user font loader context not initialized");
-    if (!mLoaderContext)
-        return STATUS_ERROR; 
 
     if (aProxyEntry->mIsLoading) {
         aProxyEntry->mSrcIndex++;
@@ -297,15 +292,16 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
         // src local ==> lookup and load   
 
         if (currSrc.mIsLocal) {
-            gfxFontEntry *fe = gfxPlatform::GetPlatform()->LookupLocalFont(currSrc.mLocalName);
+            gfxFontEntry *fe =
+                gfxPlatform::GetPlatform()->LookupLocalFont(aProxyEntry,
+                                                            currSrc.mLocalName);
             if (fe) {
-                aProxyEntry->mFamily->ReplaceFontEntry(aProxyEntry, fe);
-                IncrementGeneration();
                 LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n", 
                      this, aProxyEntry->mSrcIndex, 
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(), 
                      NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get(), 
                      PRUint32(mGeneration)));
+                aProxyEntry->mFamily->ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
                 LOG(("userfonts (%p) [src %d] failed local: (%s) for (%s)\n", 
@@ -319,8 +315,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
         else {
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI, 
                     currSrc.mFormatFlags)) {
-                nsresult rv = mLoaderContext->mLoaderProc(aProxyEntry, &currSrc,
-                                                          mLoaderContext);
+                nsresult rv = StartLoad(aProxyEntry, &currSrc);
                 PRBool loadOK = NS_SUCCEEDED(rv);
                 
                 if (loadOK) {

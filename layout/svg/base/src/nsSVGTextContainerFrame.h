@@ -59,13 +59,9 @@ public:
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
   
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
-
 public:
+  NS_DECL_QUERYFRAME
+
   // nsIFrame
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=347174
+-->
+<head>
+  <title>Test for Bug 347174</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=347174">Mozilla Bug 347174</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 347174 **/
+// verifies that documents created with createDocument are born in "complete" state
+// (so we don't accidentally leave them in "interactive" state)
+window.readyStateText = [];
+
+function xmlLoaded(e) {
+    var xslDoc = document.implementation.createDocument("", "test", null);
+    xslDoc.async=false;
+    xslDoc.load("347174transform.xsl");
+      
+    var processor = new XSLTProcessor();
+    processor.importStylesheet(xslDoc);
+    
+    window.transformedDoc = processor.transformToDocument(xmlDoc);
+      
+    showMessage("loaded: " + xmlDoc.readyState);
+    is(xmlDoc.readyState, "complete", "XML document.readyState should be 'complete' after transform");
+    SimpleTest.finish();
+}
+
+var xmlDoc = document.implementation.createDocument("", "test", null);
+showMessage("createDocument: " + xmlDoc.readyState);
+is(xmlDoc.readyState, "complete", "created document readyState should be 'complete' before being associated with a parser");
+xmlDoc.async=true;
+xmlDoc.addEventListener("load", xmlLoaded, false);
+xmlDoc.load("347174transformable.xml");
+showMessage("load called: " + xmlDoc.readyState);
+isnot(xmlDoc.readyState, "complete", "created document readyState should not be 'complete' after load called");
+
+
+function showMessage(msg) {
+    window.readyStateText.push(msg);
+    $("display").innerHTML = readyStateText.join("<br>");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

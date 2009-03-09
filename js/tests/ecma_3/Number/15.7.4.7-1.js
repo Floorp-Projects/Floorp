@@ -67,6 +67,21 @@ actual = testNum.toPrecision(4);
 expect = '5.123';
 captureThis();
 
+status = 'Section B of test: Infinity.toPrecision() with out-of-range fractionDigits';
+actual = Number.POSITIVE_INFINITY.toPrecision(-3);
+expect = 'Infinity';
+captureThis();
+
+status = 'Section C of test: -Infinity.toPrecision() with out-of-range fractionDigits';
+actual = Number.NEGATIVE_INFINITY.toPrecision(-3);
+expect = '-Infinity';
+captureThis();
+
+status = 'Section D of test: NaN.toPrecision() with out-of-range fractionDigits';
+actual = Number.NaN.toPrecision(-3);
+expect = 'NaN';
+captureThis();
+
 
 ///////////////////////////    OOPS....    ///////////////////////////////
 /*************************************************************************

@@ -49,6 +49,9 @@
 #include "prlock.h"
 #include "prerror.h"
 #include "plstr.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
+#include "nsServiceManagerUtils.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gSocketTransportLog = nsnull;
@@ -56,6 +59,8 @@ PRLogModuleInfo *gSocketTransportLog = nsnull;
 
 nsSocketTransportService *gSocketTransportService = nsnull;
 PRThread                 *gSocketThread           = nsnull;
+
+#define SEND_BUFFER_PREF "network.tcp.sendbuffer"
 
 //-----------------------------------------------------------------------------
 // ctor/dtor (called on the main/UI thread by the service manager)
@@ -69,6 +74,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mShuttingDown(PR_FALSE)
     , mActiveCount(0)
     , mIdleCount(0)
+    , mSendBufferSize(0)
 {
 #if defined(PR_LOGGING)
     gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
@@ -360,12 +366,13 @@ nsSocketTransportService::Poll(PRBool wait, PRUint32 *interval)
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransportService,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsSocketTransportService,
                               nsISocketTransportService,
                               nsIEventTarget,
                               nsIThreadObserver,
                               nsIRunnable,
-                              nsPISocketTransportService)
+                              nsPISocketTransportService,
+                              nsIObserver)
 
 // called from main thread only
 NS_IMETHODIMP
@@ -412,6 +419,11 @@ nsSocketTransportService::Init()
         thread.swap(mThread);
     }
 
+    nsCOMPtr<nsIPrefBranch2> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (tmpPrefService) 
+        tmpPrefService->AddObserver(SEND_BUFFER_PREF, this, PR_FALSE);
+    UpdatePrefs();
+
     mInitialized = PR_TRUE;
     return NS_OK;
 }
@@ -449,6 +461,10 @@ nsSocketTransportService::Shutdown()
         // readers are excluded
         mThread = nsnull;
     }
+
+    nsCOMPtr<nsIPrefBranch2> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (tmpPrefService) 
+        tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
 
     mInitialized = PR_FALSE;
     mShuttingDown = PR_FALSE;
@@ -711,3 +727,39 @@ nsSocketTransportService::DoPollIteration(PRBool wait)
 
     return NS_OK;
 }
+
+nsresult
+nsSocketTransportService::UpdatePrefs()
+{
+    mSendBufferSize = 0;
+    
+    nsCOMPtr<nsIPrefBranch2> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (tmpPrefService) {
+        PRInt32 bufferSize;
+        nsresult rv = tmpPrefService->GetIntPref(SEND_BUFFER_PREF, &bufferSize);
+        if (NS_SUCCEEDED(rv) && bufferSize > 0)
+            mSendBufferSize = bufferSize;
+    }
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::Observe(nsISupports *subject,
+                                  const char *topic,
+                                  const PRUnichar *data)
+{
+    if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+        UpdatePrefs();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::GetSendBufferSize(PRInt32 *value)
+{
+    *value = mSendBufferSize;
+    return NS_OK;
+}
+
+

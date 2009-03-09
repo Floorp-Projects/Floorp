@@ -53,8 +53,9 @@ PKIX_Error *
 pkix_CheckChain(
         PKIX_List *certs,
         PKIX_UInt32 numCerts,
+        PKIX_TrustAnchor *anchor,
         PKIX_List *checkers,
-        PKIX_List *revCheckers,
+        PKIX_RevocationChecker *revChecker,
         PKIX_List *buildCheckedExtOIDs,
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 *pCertCheckedIndex,

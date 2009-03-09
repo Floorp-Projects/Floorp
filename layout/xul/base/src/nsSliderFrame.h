@@ -47,7 +47,6 @@
 #include "nsIDOMMouseListener.h"
 
 class nsString;
-class nsIScrollbarListener;
 class nsISupportsArray;
 class nsITimer;
 class nsSliderFrame;
@@ -186,8 +185,6 @@ public:
   static PRInt32 GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 defaultValue);
   void EnsureOrient();
 
-  void SetScrollbarListener(nsIScrollbarListener* aListener);
-
   virtual nsIView* GetMouseCapturer() const { return GetView(); }
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
@@ -242,11 +239,14 @@ private:
 
   PRInt32 mCurPos;
 
-  nsIScrollbarListener* mScrollbarListener;
-
   nscoord mChange;
   nsPoint mDestinationPoint;
   nsRefPtr<nsSliderMediator> mMediator;
+
+  // true if an attribute change has been caused by the user manipulating the
+  // slider. This allows notifications to tell how a slider's current position
+  // was changed.
+  PRBool mUserChanged;
 
   static PRBool gMiddlePref;
   static PRInt32 gSnapMultiplier;

@@ -1,4 +1,4 @@
-product=js
-branch=1.9.0
-jsshellsourcepath=${BUILDDIR}/1.9.0-gcov/mozilla/js/src
-buildtype=opt
+product=${product:-js}
+branch=${branch:-1.9.0}
+buildtype=${buildtype:-opt}
+jsshellsourcepath=${jsshellsourcepath:-/work/mozilla/builds/1.9.0-gcov/mozilla/js/src}

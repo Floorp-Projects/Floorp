@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.59 2008/03/25 05:02:22 julien.pierre.boogz%sun.com Exp $
+ * $Id: crl.c,v 1.62 2009/02/05 20:31:26 nelson%bolyard.com Exp $
  */
  
 #include "cert.h"
@@ -732,6 +732,10 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 	    crl = newCrl;
 	    crl->slot = PK11_ReferenceSlot(slot);
 	    crl->pkcs11ID = oldCrl->pkcs11ID;
+	    if (oldCrl->url && !url)
+	        url = oldCrl->url;
+	    if (url)
+		crl->url = PORT_ArenaStrdup(crl->arena, url);
 	    goto done;
 	}
         if (!SEC_CrlIsNewer(&newCrl->crl,&oldCrl->crl)) {
@@ -754,7 +758,7 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
         }
 
         /* if we have a url in the database, use that one */
-        if (oldCrl->url) {
+        if (oldCrl->url && !url) {
 	    url = oldCrl->url;
         }
 
@@ -945,10 +949,6 @@ static SECStatus DPCache_AddCRL(CRLDPCache* cache, CachedCrl* crl,
 /* fetch the CRL for this DP from the PKCS#11 tokens */
 static SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate,
                                          void* wincx);
-
-/* check if a particular SN is in the CRL cache and return its entry */
-static SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
-                                CERTCrlEntry** returned);
 
 /* update the content of the CRL cache, including fetching of CRLs, and
    reprocessing with specified issuer and date */
@@ -1648,7 +1648,7 @@ static SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate,
                     rv = CachedCrl_Destroy(returned);
                     returned = NULL;
                 }
-                else
+                else if (vfdate)
                 {
                     rv = CachedCrl_Verify(cache, returned, vfdate, wincx);
                 }
@@ -1713,7 +1713,7 @@ static SECStatus CachedCrl_GetEntry(CachedCrl* crl, SECItem* sn,
 }
 
 /* check if a particular SN is in the CRL cache and return its entry */
-static SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
+SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
                                 CERTCrlEntry** returned)
 {
     if (!cache || !sn || !returned)

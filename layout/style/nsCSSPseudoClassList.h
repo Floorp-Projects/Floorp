@@ -72,6 +72,7 @@ CSS_PSEUDO_CLASS(focus, ":focus")
 CSS_PSEUDO_CLASS(hover, ":hover")
 CSS_PSEUDO_CLASS(mozDragOver, ":-moz-drag-over")
 CSS_PSEUDO_CLASS(target, ":target")
+CSS_PSEUDO_CLASS(indeterminate, ":indeterminate")
 
 CSS_PSEUDO_CLASS(firstChild, ":first-child")
 CSS_PSEUDO_CLASS(firstNode, ":-moz-first-node")

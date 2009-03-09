@@ -74,7 +74,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLVideoElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLVideoElement, nsIDOMHTMLVideoElement)
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLVideoElement,
                                                nsHTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLVideoElement)
@@ -114,24 +114,47 @@ nsIntSize nsHTMLVideoElement::GetVideoSize(nsIntSize aDefaultSize)
   return mMediaSize.width == -1 && mMediaSize.height == -1 ? aDefaultSize : mMediaSize;
 }
 
-nsresult nsHTMLVideoElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                        nsIContent* aBindingParent,
-                                        PRBool aCompileEventHandlers)
+PRBool
+nsHTMLVideoElement::ParseAttribute(PRInt32 aNamespaceID,
+                                   nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
-  if (mDecoder)
-    mDecoder->ElementAvailable(this);
+   if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
+     return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
+   }
 
-  return nsHTMLMediaElement::BindToTree(aDocument, 
-                                        aParent, 
-                                        aBindingParent, 
-                                        aCompileEventHandlers);
+   return nsHTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                             aResult);
 }
 
-void nsHTMLVideoElement::UnbindFromTree(PRBool aDeep,
-                                        PRBool aNullParent)
+static void
+MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
-  nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+}
 
-  if (mDecoder) 
-    mDecoder->ElementUnavailable();
+NS_IMETHODIMP_(PRBool)
+nsHTMLVideoElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+{
+  static const MappedAttributeEntry attributes[] = {
+    { &nsGkAtoms::width },
+    { &nsGkAtoms::height },
+    { nsnull }
+  };
+
+  static const MappedAttributeEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap
+  };
+
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+}
+
+nsMapRuleToAttributesFunc
+nsHTMLVideoElement::GetAttributeMappingFunction() const
+{
+  return &MapAttributesIntoRule;
 }

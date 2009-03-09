@@ -599,23 +599,26 @@ static JAR_Physical *jar_get_physical (JAR *jar, char *pathname)
 
 static int jar_extract_manifests (JAR *jar, jarArch format, JAR_FILE fp)
   {
-  int status;
+  int status, signatures;
 
   if (format != jarArchZip && format != jarArchTar)
     return JAR_ERR_CORRUPT;
 
   if ((status = jar_extract_mf (jar, format, fp, "mf")) < 0)
     return status;
-
+  if (!status) 
+    return JAR_ERR_ORDER;
   if ((status = jar_extract_mf (jar, format, fp, "sf")) < 0)
     return status;
-
+  if (!status) 
+    return JAR_ERR_ORDER;
   if ((status = jar_extract_mf (jar, format, fp, "rsa")) < 0)
     return status;
-
+  signatures = status;
   if ((status = jar_extract_mf (jar, format, fp, "dsa")) < 0)
     return status;
-
+  if (!(signatures += status)) 
+    return JAR_ERR_SIG;
   return 0;
   }
 
@@ -649,7 +652,7 @@ static int jar_extract_mf (JAR *jar, jarArch format, JAR_FILE fp, char *ext)
     return JAR_ERR_PNF;
 
   for (link = ZZ_ListHead (list);
-       !ZZ_ListIterDone (list, link);
+       ret >= 0 && !ZZ_ListIterDone (list, link);
        link = link->next)
     {
     it = link->thing;
@@ -733,7 +736,10 @@ static int jar_extract_mf (JAR *jar, jarArch format, JAR_FILE fp, char *ext)
 
         PORT_Free (manifest);
 
-        if (status < 0 && ret == 0) ret = status;
+        if (status < 0) 
+	  ret = status;
+	else
+	  ++ret;
         }
       else
         return JAR_ERR_MEMORY;

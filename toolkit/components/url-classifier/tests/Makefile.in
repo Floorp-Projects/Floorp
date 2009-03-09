@@ -55,6 +55,10 @@ REQUIRES = \
 	necko \
 	$(NULL)
 
+# mochitest tests
+DIRS += mochitest \
+	$(NULL)
+
 # xpcshell tests
 XPCSHELL_TESTS=unit
 

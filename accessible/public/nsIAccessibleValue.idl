@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(F4ABBC2F-0F28-47DC-A9E9-F7A1719AB2BE)]
+[scriptable, uuid(42a1e1dc-58cf-419d-bff0-ed3314c70016)]
 interface nsIAccessibleValue : nsISupports
 {
   readonly attribute double maximumValue;

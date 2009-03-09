@@ -43,6 +43,8 @@
  * JS boolean interface.
  */
 
+#include "jsapi.h"
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -54,10 +56,17 @@ JS_BEGIN_EXTERN_C
  *
  * JSVAL_ARETURN is used to throw asynchronous return for generator.close().
  *
- * NB: BOOLEAN_TO_JSVAL(2) is JSVAL_VOID (see jsapi.h).
+ * NB: PSEUDO_BOOLEAN_TO_JSVAL(2) is JSVAL_VOID (see jsapi.h).
  */
-#define JSVAL_HOLE      BOOLEAN_TO_JSVAL(3)
-#define JSVAL_ARETURN   BOOLEAN_TO_JSVAL(4)
+#define JSVAL_HOLE      PSEUDO_BOOLEAN_TO_JSVAL(3)
+#define JSVAL_ARETURN   PSEUDO_BOOLEAN_TO_JSVAL(4)
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_TO_PUBLIC_PSEUDO_BOOLEAN(jsval v)
+{
+    JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE || v == JSVAL_VOID);
+    return JSVAL_TO_PSEUDO_BOOLEAN(v);
+}
 
 extern JSClass js_BooleanClass;
 

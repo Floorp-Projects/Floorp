@@ -7,8 +7,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   <title>nsIHyper>TextAccessible chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
 
   <script type="application/javascript">
     var gParagraphAcc;
@@ -17,28 +22,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
     {
       is(gParagraphAcc.getLinkIndex(aCharIndex), aExpectedLinkIndex,
          "Wrong link index for ID " + aID + "!");
-      var linkAcc;
+      var linkAcc = null;
       try {
         linkAcc = gParagraphAcc.getLink(aExpectedLinkIndex);
-      } catch(e) {
-        ok(linkAcc, "No accessible for link " + aID + "!");
-      }
+      } catch(e) { }
+      ok(linkAcc, "No accessible for link " + aID + "!");
+
       // Just test the link's name to make sure we get the right one.
       is(linkAcc.getAnchor(0).name, aName, "Wrong name for " + aID + "!");
     }
 
     function doTest()
     {
-      var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                       getService(Components.interfaces.nsIAccessibleRetrieval);
-
-      var paragraphElement = document.getElementById("testParagraph");
-      try {
-        gParagraphAcc = accService.getAccessibleFor(paragraphElement).
-            QueryInterface(Components.interfaces.nsIAccessibleHyperText);
-      } catch(e) {
-        ok(gParagraphAcc, "No interface for the paragraph!");
-      }
+      gParagraphAcc = getAccessible("testParagraph", [nsIAccessibleHyperText]);
 
       // Test link count
       is(gParagraphAcc.linkCount, 7, "Wrong link count for paragraph!");
@@ -56,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       testThis("imgmap", 78, 3, "b");
 
       // empty hyperlink
-// XXX see bug 434636      testThis("emptyLink", 93, 4, "");
+      testThis("emptyLink", 93, 4, null);
 
       // normal hyperlink with embedded span
       testThis("LinkWithSpan", 119, 5, "Heise Online");

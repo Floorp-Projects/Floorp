@@ -44,6 +44,7 @@
 #include "gfxFont.h"
 
 #include "nsAutoRef.h"
+#include "nsTArray.h"
 
 #include <pango/pango.h>
 
@@ -82,6 +83,9 @@ public:
 
     static void Shutdown();
 
+    // Used for @font-face { src: local(); }
+    static gfxFontEntry *NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
+                                      const nsAString &aFullname);
     // Used for @font-face { src: url(); }
     static gfxFontEntry *NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
                                       nsISupports *aLoader,

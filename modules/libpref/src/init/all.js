@@ -83,6 +83,7 @@ pref("offline-apps.quota.warn",        51200);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
+pref("ui.use_native_colors", true);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
 pref("browser.display.use_system_colors",   false);
@@ -131,6 +132,20 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
+// When loading <video> or <audio>, check for Access-Control-Allow-Origin
+// header, and disallow the connection if not present or permitted.
+pref("media.enforce_same_site_origin", false);
+
+#ifdef MOZ_OGG
+pref("media.ogg.enabled", true);
+#endif
+#ifdef MOZ_WAVE
+pref("media.wave.enabled", true);
+#endif
+
+// Whether to autostart a media element with an |autoplay| attribute
+pref("media.autoplay.enabled", true);
+
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/public/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
@@ -138,10 +153,11 @@ pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
 pref("gfx.downloadable_fonts.enabled", true);
-pref("gfx.downloadable_fonts.enforce_same_site_origin", true);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
+
+pref("accessibility.browsewithcaret_shortcut.enabled", true);
 
 #ifndef XP_MACOSX
 // Tab focus model bit field:
@@ -230,6 +246,9 @@ pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
 pref("browser.fixup.hide_user_pass", true);
+
+// Location Bar AutoComplete
+pref("browser.urlbar.autocomplete.enabled", true);
 
 // Print header customization
 // Use the following codes:
@@ -374,6 +393,7 @@ pref("capability.policy.mailnews.*.substringData.get", "noAccess");
 pref("capability.policy.mailnews.*.text.get", "noAccess");
 pref("capability.policy.mailnews.*.textContent", "noAccess");
 pref("capability.policy.mailnews.*.title.get", "noAccess");
+pref("capability.policy.mailnews.*.wholeText", "noAccess");
 pref("capability.policy.mailnews.DOMException.toString", "noAccess");
 pref("capability.policy.mailnews.HTMLAnchorElement.toString", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
@@ -636,6 +656,9 @@ pref("network.http.proxy.pipelining", false);
 // Max number of requests in the pipeline
 pref("network.http.pipelining.maxrequests" , 4);
 
+// Prompt for 307 redirects
+pref("network.http.prompt-temp-redirect", true);
+
 // </http>
 
 // If false, remote JAR files that are served with a content type other than
@@ -718,7 +741,7 @@ pref("network.IDN.whitelist.xn--zckzah", true);
 // attempt and so we always display the domain name as punycode. This would 
 // override the settings "network.IDN_show_punycode" and 
 // "network.IDN.whitelist.*".
-pref("network.IDN.blacklist_chars", "\u0020\u00A0\u00BC\u00BD\u01C3\u0337\u0338\u05C3\u05F4\u06D4\u0702\u115F\u1160\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u2024\u2027\u2028\u2029\u202F\u2039\u203A\u2044\u205F\u2154\u2155\u2156\u2159\u215A\u215B\u215F\u2215\u23AE\u29F6\u29F8\u2AFB\u2AFD\u2FF0\u2FF1\u2FF2\u2FF3\u2FF4\u2FF5\u2FF6\u2FF7\u2FF8\u2FF9\u2FFA\u2FFB\u3000\u3002\u3014\u3015\u3033\u3164\u321D\u321E\u33AE\u33AF\u33C6\u33DF\uFE14\uFE15\uFE3F\uFE5D\uFE5E\uFEFF\uFF0E\uFF0F\uFF61\uFFA0\uFFF9\uFFFA\uFFFB\uFFFC\uFFFD");
+pref("network.IDN.blacklist_chars", "\u0020\u00A0\u00BC\u00BD\u00BE\u01C3\u02D0\u0337\u0338\u0589\u05C3\u05F4\u0609\u060A\u066A\u06D4\u0701\u0702\u0703\u0704\u115F\u1160\u1735\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u2024\u2027\u2028\u2029\u202F\u2039\u203A\u2041\u2044\u2052\u205F\u2153\u2154\u2155\u2156\u2157\u2158\u2159\u215A\u215B\u215C\u215D\u215E\u215F\u2215\u2236\u23AE\u2571\u29F6\u29F8\u2AFB\u2AFD\u2FF0\u2FF1\u2FF2\u2FF3\u2FF4\u2FF5\u2FF6\u2FF7\u2FF8\u2FF9\u2FFA\u2FFB\u3000\u3002\u3014\u3015\u3033\u3164\u321D\u321E\u33AE\u33AF\u33C6\u33DF\uA789\uFE14\uFE15\uFE3F\uFE5D\uFE5E\uFEFF\uFF0E\uFF0F\uFF61\uFFA0\uFFF9\uFFFA\uFFFB\uFFFC\uFFFD");
 
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
@@ -852,7 +875,7 @@ pref("intl.charsetmenu.browser.more2",      "chrome://global/locale/intl.propert
 pref("intl.charsetmenu.browser.more3",      "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more4",      "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more5",      "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.unicode",    "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.unicode",    "UTF-8, UTF-16LE, UTF-16BE, UTF-32, UTF-32LE, UTF-32BE");
 pref("intl.charsetmenu.mailedit",           "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache",      "");
 pref("intl.charsetmenu.mailview.cache",     "");
@@ -1004,6 +1027,8 @@ pref("bidi.controlstextmode", 1);
 // 2 = hindicontextnumeralBidi
 // 3 = arabicnumeralBidi
 // 4 = hindinumeralBidi
+// 5 = persiancontextnumeralBidi
+// 6 = persiannumeralBidi
 pref("bidi.numeral", 0);
 // ------------------
 //  Support Mode
@@ -1028,6 +1053,11 @@ pref("bidi.edit.delete_immediately", false);
 // 1 = visual
 // 2 = visual, but logical during selection
 pref("bidi.edit.caret_movement_style", 2);
+
+// Setting this pref to |true| forces Bidi UI menu items and keyboard shortcuts
+// to be exposed, and enables the directional caret hook. By default, only
+// expose it for bidi-associated system locales.
+pref("bidi.browser.ui", false);
 
 // used for double-click word selection behavior. Win will override.
 pref("layout.word_select.eat_space_to_next_word", false);
@@ -1521,6 +1551,13 @@ pref("intl.jis0208.map", "CP932");
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
 
+// Enable/Disable TSF support
+pref("intl.enable_tsf_support", false);
+
+// We need to notify the layout change to TSF, but we cannot check the actual
+// change now, therefore, we always notify it by this fequency.
+pref("intl.tsf.on_layout_change_interval", 100);
+
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
 
@@ -1949,7 +1986,7 @@ pref("ui.panel.default_level_parent", false);
 pref("ui.key.menuAccessKeyFocuses", true);
 pref("layout.css.dpi", -1); // max(96dpi, System setting)
 
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
+pref("font.alias-list", "sans,sans-serif,serif,monospace,Tms Rmn,Helv,Courier,Times New Roman");
 
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, DejaVu Sans");
 
@@ -2004,18 +2041,18 @@ pref("font.name.monospace.x-cyrillic", "Courier");
 // Unicode fonts
 // Fontconfig will match substrings, so that we only need to list e.g.
 // Times New Roman WT and it will search for the J, SC, TC, K variants.
-// The DejaVu fonts are shipped with eCS, so list them first but include all
+// The DejaVu fonts are shipped with eCS, so list them first but include other
 // fonts that OS/2 users are likely to have.
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.serif.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Gentium, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Georgia, Tms Rmn");
+pref("font.name-list.serif.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Tms Rmn");
 pref("font.name.sans-serif.x-unicode", "Lucida Sans Unicode");
-pref("font.name-list.sans-serif.x-unicode", "DejaVu Sans, FreeSans, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000, Arial, Helv");
+pref("font.name-list.sans-serif.x-unicode", "DejaVu Sans, FreeSans, Arial Unicode, Lucida Sans Unicode, Helv");
 pref("font.name.monospace.x-unicode", "DejaVu Sans Mono");
-pref("font.name-list.monospace.x-unicode", "DejaVu Sans Mono, FreeMono, Andale Mono, Monotype Sans Duospace WT J, Courier New, Courier");
+pref("font.name-list.monospace.x-unicode", "DejaVu Sans Mono, FreeMono, Andale Mono, Courier New, Courier");
 pref("font.name.fantasy.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.fantasy.x-unicode", "DejaVu Serif, FreeSerif, Junicode, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
+pref("font.name-list.fantasy.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30");
 pref("font.name.cursive.x-unicode", "Times New Roman MT 30");
-pref("font.name-list.cursive.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30, Doulos SIL, TITUS Cyberbit Basic, Bitstream Cyberbit, Charis SIL, Arial Unicode, Lucida Sans Unicode, Code2002, Code2001, Code2000");
+pref("font.name-list.cursive.x-unicode", "DejaVu Serif, FreeSerif, Times New Roman WT, Times New Roman MT 30");
 
 pref("font.name.serif.x-western", "Tms Rmn");
 pref("font.name.sans-serif.x-western", "Helv");
@@ -2659,3 +2696,14 @@ pref("image.cache.size", 5242880);
 // A weight, from 0-1000, to place on time when comparing to size.
 // Size is given a weight of 1000 - timeweight.
 pref("image.cache.timeweight", 500);
+
+#ifdef XP_WIN
+#ifndef WINCE
+// The default TCP send window on Windows is too small, and autotuning only occurs on receive
+pref("network.tcp.sendbuffer", 131072);
+#endif
+#endif
+
+#ifdef WINCE
+pref("mozilla.widget.disable-native-theme", true);
+#endif

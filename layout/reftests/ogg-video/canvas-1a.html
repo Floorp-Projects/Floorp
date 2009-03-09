@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<canvas id="canvas" width="200" height="200"></canvas>
+<script>
+var video = document.createElement("video");
+video.src = "black140x100.ogv";
+video.load();
+function draw() {
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  document.documentElement.removeAttribute("class");
+}
+video.addEventListener("loadeddata", draw, false);
+</script>
+</body>
+</html>

@@ -87,6 +87,7 @@ function run_test() {
   var stmt = dbConn.createStatement("UPDATE moz_bookmarks SET fk = NULL WHERE id = :itemId");
   stmt.params.itemId = corruptItemId;
   stmt.execute();
+  stmt.finalize();
 
   // Export bookmarks
   var bookmarksFile = dirSvc.get("ProfD", Ci.nsILocalFile);

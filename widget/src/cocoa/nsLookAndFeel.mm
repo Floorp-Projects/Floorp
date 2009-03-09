@@ -269,9 +269,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushDocumentWindowBackground, aColor, NS_RGB(0xFF,0xFF,0xFF));        
       break;
     case eColor__moz_field:
+    case eColor__moz_combobox:
       aColor = NS_RGB(0xff,0xff,0xff);
       break;
     case eColor__moz_fieldtext:
+    case eColor__moz_comboboxtext:
       // XXX There may be a better color for this, but I'm making it
       // the same as WindowText since that's what's currently used where
       // I will use -moz-FieldText.

@@ -204,7 +204,7 @@ nsresult TestBackwardsAllocator()
                    SEGMENT_SIZE, SEGMENT_COUNT, allocator); 
   if (NS_FAILED(rv))
   {
-    printf("FAIL TP_NewPipe2 failed: %x\n", rv);
+    fail("TP_NewPipe2 failed: %x", rv);
     return rv;
   }
 

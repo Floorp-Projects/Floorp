@@ -149,6 +149,8 @@ struct nsTimeout : PRCList
   nsTimeout();
   ~nsTimeout();
 
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
+
   nsrefcnt Release();
   nsrefcnt AddRef();
 
@@ -199,7 +201,7 @@ struct nsTimeout : PRCList
 
 private:
   // reference count for shared usage
-  PRInt32 mRefCnt;
+  nsAutoRefCnt mRefCnt;
 };
 
 //*****************************************************************************
@@ -301,7 +303,10 @@ public:
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
-  virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
+  virtual NS_HIDDEN_(void) SuspendTimeouts(PRUint32 aIncrease = 1,
+                                           PRBool aFreezeChildren = PR_TRUE);
+  virtual NS_HIDDEN_(nsresult) ResumeTimeouts(PRBool aThawChildren = PR_TRUE);
+  virtual NS_HIDDEN_(PRUint32) TimeoutSuspendCount();
   virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
   virtual NS_HIDDEN_(PRBool) IsFrozen() const
   {
@@ -597,8 +602,6 @@ protected:
 
   already_AddRefed<nsIWidget> GetMainWidget();
 
-  void SuspendTimeouts();
-
   void Freeze()
   {
     NS_ASSERTION(!IsFrozen(), "Double-freezing?");
@@ -625,6 +628,14 @@ protected:
   PRBool IsTimeout(PRCList* aList) {
     return aList != &mTimeouts;
   }
+
+  // Convenience functions for the many methods that need to scale
+  // from device to CSS pixels or vice versa.  Note: if a presentation
+  // context is not available, they will assume a 1:1 ratio.
+  PRInt32 DevToCSSIntPixels(PRInt32 px);
+  PRInt32 CSSToDevIntPixels(PRInt32 px);
+  nsIntSize DevToCSSIntPixels(nsIntSize px);
+  nsIntSize CSSToDevIntPixels(nsIntSize px);
 
   static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
 
@@ -723,6 +734,8 @@ protected:
 
   nsDataHashtable<nsStringHashKey, PRBool> *mPendingStorageEvents;
 
+  PRUint32 mTimeoutsSuspendDepth;
+
 #ifdef DEBUG
   PRBool mSetOpenerWindowCalled;
   PRUint32 mSerial;
@@ -732,6 +745,8 @@ protected:
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
   nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
+
+  nsCOMPtr<nsIDocument> mSuspendedDoc;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

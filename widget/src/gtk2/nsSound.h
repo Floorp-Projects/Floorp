@@ -60,6 +60,8 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 
 private:
+    nsresult PlaySystemEventSound(const nsAString &aSoundAlias);
+
     PRBool mInited;
 
 };

@@ -57,6 +57,7 @@
 #include <fontconfig/fontconfig.h>
 
 #include "nsMathUtils.h"
+#include "nsTArray.h"
 
 #include "lcms.h"
 
@@ -133,7 +134,7 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 nsresult
 gfxQtPlatform::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsStringArray& aListOfFonts)
+                            nsTArray<nsString>& aListOfFonts)
 {
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);

@@ -49,8 +49,8 @@
 #undef THIS
 #endif
 
-enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_JSVAL };
-enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
+enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_COOKIE };
+enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10 };
 
 #define JSTN_ERRTYPE(jstn)  ((jstn)->flags & JSTN_ERRTYPE_MASK)
 
@@ -85,7 +85,7 @@ struct JSTraceableNative {
     const nanojit::CallInfo *builtin;
     const char              *prefix;
     const char              *argtypes;
-    uintN                   flags;  /* JSTN_MORE | JSTNErrType */
+    uintN                   flags;  /* JSTNErrType | JSTN_UNBOX_AFTER | JSTN_MORE */
 };
 
 /*
@@ -94,7 +94,7 @@ struct JSTraceableNative {
  * in use. If it is, a performance regression occurs, not an actual runtime
  * error.
  */
-#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((void*)0x10)
+#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((JSObject*)0x10)
 
 /* Macros used by JS_DEFINE_CALLINFOn. */
 #ifdef DEBUG
@@ -120,15 +120,41 @@ struct JSTraceableNative {
  * Types with -- for the two string fields are not permitted as argument types
  * in JS_DEFINE_TRCINFO.
  *
- * If a traceable native can fail, the values that indicate failure are part of
- * the return type:
- *     JSVAL_FAIL: JSVAL_ERROR_COOKIE
- *     BOOL_FAIL: JSVAL_TO_BOOLEAN(JSVAL_VOID)
- *     INT32_FAIL: any negative value
- *     STRING_FAIL: NULL
- *     OBJECT_FAIL_NULL: NULL
- *     OBJECT_FAIL_VOID: JSVAL_TO_OBJECT(JSVAL_VOID)
- *         (NULL means the function successfully returned JS null.)
+ * There are three kinds of traceable-native error handling.
+ *
+ *   - If a traceable native's return type ends with _FAIL, it always runs to
+ *     completion.  It can either succeed or fail with an error or exception;
+ *     on success, it may or may not stay on trace.  There may be side effects
+ *     in any case.  If the call succeeds but bails off trace, we resume in the
+ *     interpreter at the next opcode.
+ *
+ *     _FAIL builtins indicate failure or bailing off trace by setting bits in
+ *     cx->builtinStatus.
+ *
+ *   - If a traceable native's return type contains _RETRY, it can either
+ *     succeed, fail with a JS exception, or tell the caller to bail off trace
+ *     and retry the call from the interpreter.  The last case happens if the
+ *     builtin discovers that it can't do its job without examining the JS
+ *     stack, reentering the interpreter, accessing properties of the global
+ *     object, etc.
+ *
+ *     The builtin must detect the need to retry before committing any side
+ *     effects.  If a builtin can't do this, it must use a _FAIL return type
+ *     instead of _RETRY.
+ *
+ *     _RETRY builtins indicate failure with a special return value that
+ *     depends on the return type:
+ *
+ *         BOOL_RETRY: JSVAL_TO_BOOLEAN(JSVAL_VOID)
+ *         INT32_RETRY: any negative value
+ *         STRING_RETRY: NULL
+ *         OBJECT_RETRY_NULL: NULL
+ *         JSVAL_RETRY: JSVAL_ERROR_COOKIE
+ *
+ *     _RETRY function calls are faster than _FAIL calls.  Each _RETRY call
+ *     saves a write to cx->bailExit and a read from cx->builtinStatus.
+ *
+ *   - All other traceable natives are infallible (e.g. Date.now, Math.log).
  *
  * Special builtins known to the tracer can have their own idiosyncratic
  * error codes.
@@ -144,30 +170,35 @@ struct JSTraceableNative {
  * effects.
  */
 #define _JS_CTYPE(ctype, size, pch, ach, flags)     (ctype, size, pch, ach, flags)
-#define _JS_CTYPE_CONTEXT          _JS_CTYPE(JSContext *,            _JS_PTR,"C", "", INFALLIBLE)
-#define _JS_CTYPE_RUNTIME          _JS_CTYPE(JSRuntime *,            _JS_PTR,"R", "", INFALLIBLE)
-#define _JS_CTYPE_THIS             _JS_CTYPE(JSObject *,             _JS_PTR,"T", "", INFALLIBLE)
-#define _JS_CTYPE_THIS_DOUBLE      _JS_CTYPE(jsdouble,               _JS_F64,"D", "", INFALLIBLE)
-#define _JS_CTYPE_THIS_STRING      _JS_CTYPE(JSString *,             _JS_PTR,"S", "", INFALLIBLE)
-#define _JS_CTYPE_PC               _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
-#define _JS_CTYPE_JSVAL            _JS_CTYPE(jsval,                  _JS_PTR, "","v", INFALLIBLE)
-#define _JS_CTYPE_JSVAL_FAIL       _JS_CTYPE(jsval,                  _JS_PTR, --, --, FAIL_JSVAL)
-#define _JS_CTYPE_BOOL             _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_BOOL_FAIL        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_VOID)
-#define _JS_CTYPE_INT32            _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_INT32_FAIL       _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_NEG)
-#define _JS_CTYPE_UINT32           _JS_CTYPE(uint32,                 _JS_I32, --, --, INFALLIBLE)
-#define _JS_CTYPE_DOUBLE           _JS_CTYPE(jsdouble,               _JS_F64, "","d", INFALLIBLE)
-#define _JS_CTYPE_STRING           _JS_CTYPE(JSString *,             _JS_PTR, "","s", INFALLIBLE)
-#define _JS_CTYPE_STRING_FAIL      _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_NULL)
-#define _JS_CTYPE_OBJECT           _JS_CTYPE(JSObject *,             _JS_PTR, "","o", INFALLIBLE)
-#define _JS_CTYPE_OBJECT_FAIL_NULL _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL)
-#define _JS_CTYPE_OBJECT_FAIL_VOID _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_VOID)
-#define _JS_CTYPE_REGEXP           _JS_CTYPE(JSObject *,             _JS_PTR, "","r", INFALLIBLE)
-#define _JS_CTYPE_SCOPEPROP        _JS_CTYPE(JSScopeProperty *,      _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_SIDEEXIT         _JS_CTYPE(SideExit *,             _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_INTERPSTATE      _JS_CTYPE(InterpState *,          _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_FRAGMENT         _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
+#define _JS_JSVAL_CTYPE(size, pch, ach, flags)  (jsval, size, pch, ach, (flags | JSTN_UNBOX_AFTER))
+
+#define _JS_CTYPE_CONTEXT           _JS_CTYPE(JSContext *,            _JS_PTR,"C", "", INFALLIBLE)
+#define _JS_CTYPE_RUNTIME           _JS_CTYPE(JSRuntime *,            _JS_PTR,"R", "", INFALLIBLE)
+#define _JS_CTYPE_THIS              _JS_CTYPE(JSObject *,             _JS_PTR,"T", "", INFALLIBLE)
+#define _JS_CTYPE_THIS_DOUBLE       _JS_CTYPE(jsdouble,               _JS_F64,"D", "", INFALLIBLE)
+#define _JS_CTYPE_THIS_STRING       _JS_CTYPE(JSString *,             _JS_PTR,"S", "", INFALLIBLE)
+#define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
+#define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
+#define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
+#define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
+#define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_VOID)
+#define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_STATUS)
+#define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
+#define _JS_CTYPE_INT32_RETRY       _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_NEG)
+#define _JS_CTYPE_UINT32            _JS_CTYPE(uint32,                 _JS_I32, --, --, INFALLIBLE)
+#define _JS_CTYPE_DOUBLE            _JS_CTYPE(jsdouble,               _JS_F64, "","d", INFALLIBLE)
+#define _JS_CTYPE_STRING            _JS_CTYPE(JSString *,             _JS_PTR, "","s", INFALLIBLE)
+#define _JS_CTYPE_STRING_RETRY      _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_NULL)
+#define _JS_CTYPE_STRING_FAIL       _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_OBJECT            _JS_CTYPE(JSObject *,             _JS_PTR, "","o", INFALLIBLE)
+#define _JS_CTYPE_OBJECT_RETRY_NULL _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL)
+#define _JS_CTYPE_OBJECT_FAIL       _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_REGEXP            _JS_CTYPE(JSObject *,             _JS_PTR, "","r", INFALLIBLE)
+#define _JS_CTYPE_SCOPEPROP         _JS_CTYPE(JSScopeProperty *,      _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_SIDEEXIT          _JS_CTYPE(SideExit *,             _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_INTERPSTATE       _JS_CTYPE(InterpState *,          _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 
 #define _JS_EXPAND(tokens)  tokens
 
@@ -258,27 +289,27 @@ struct JSTraceableNative {
 #define _JS_TN_INIT_HELPER_2(linkage, rt, op, at0, at1, cse, fold)                                \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                                        \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1),                                                        \
+    _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                                        \
     _JS_CTYPE_FLAGS(rt)
 
 #define _JS_TN_INIT_HELPER_3(linkage, rt, op, at0, at1, at2, cse, fold)                           \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                     \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at2),                                     \
+    _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                     \
     _JS_CTYPE_FLAGS(rt)
 
 #define _JS_TN_INIT_HELPER_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)                      \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                  \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at3),                  \
+    _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                  \
     _JS_CTYPE_FLAGS(rt)
 
 #define _JS_TN_INIT_HELPER_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)                 \
     &_JS_CALLINFO(op),                                                                            \
     _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2) _JS_CTYPE_PCH(at1)                   \
         _JS_CTYPE_PCH(at0),                                                                       \
-    _JS_CTYPE_ACH(at0) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at3)                   \
-        _JS_CTYPE_ACH(at4),                                                                       \
+    _JS_CTYPE_ACH(at4) _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1)                   \
+        _JS_CTYPE_ACH(at0),                                                                       \
     _JS_CTYPE_FLAGS(rt)
 
 #define JS_DEFINE_TRCINFO_1(name, tn0)                                                            \
@@ -325,6 +356,19 @@ js_StringToNumber(JSContext* cx, JSString* str);
 jsdouble FASTCALL
 js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
 
+static JS_INLINE JSBool
+js_Int32ToId(JSContext* cx, int32 index, jsid* id)
+{
+    if (index <= JSVAL_INT_MAX) {
+        *id = INT_TO_JSID(index);
+        return JS_TRUE;
+    }
+    JSString* str = js_NumberToString(cx, index);
+    if (!str)
+        return JS_FALSE;
+    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
+}
+
 #else
 
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)
@@ -346,6 +390,7 @@ JS_DECLARE_CALLINFO(js_FastNewArray)
 JS_DECLARE_CALLINFO(js_NewUninitializedArray)
 JS_DECLARE_CALLINFO(js_FastNewArrayWithLength)
 JS_DECLARE_CALLINFO(js_Array_1str)
+JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
 /* Defined in jsdate.cpp */
 JS_DECLARE_CALLINFO(js_FastNewDate)
@@ -356,7 +401,10 @@ JS_DECLARE_CALLINFO(js_NumberToString)
 /* Defined in jsstr.cpp */
 JS_DECLARE_CALLINFO(js_ConcatStrings)
 JS_DECLARE_CALLINFO(js_String_getelem)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt0)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt0_int)
 JS_DECLARE_CALLINFO(js_String_p_charCodeAt)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt_int)
 JS_DECLARE_CALLINFO(js_EqualStrings)
 JS_DECLARE_CALLINFO(js_CompareStrings)
 

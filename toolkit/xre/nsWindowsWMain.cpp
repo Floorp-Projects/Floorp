@@ -62,8 +62,28 @@ FreeAllocStrings(int argc, char **argv)
   delete [] argv;
 }
 
+#ifdef WINCE
+/** argc/argv are in/out parameters */
+void ExtractEnvironmentFromCL(int &argc, WCHAR **&argv)
+{
+  for (int x = 0; x < argc; ++x) {
+    if (!wcsncmp(argv[x], L"--environ:",10)) {
+      char* key_val = AllocConvertUTF16toUTF8(argv[x]+10);
+      putenv(key_val);
+      free(key_val);
+      argc -= 1;
+      memcpy(&argv[x], &argv[x+1], (argc - x) * sizeof(WCHAR*));      
+    }
+  } 
+}
+#endif  
+
+
 int wmain(int argc, WCHAR **argv)
 {
+#ifdef WINCE
+  ExtractEnvironmentFromCL(argc, argv);
+#endif
   char **argvConverted = new char*[argc + 1];
   if (!argvConverted)
     return 127;

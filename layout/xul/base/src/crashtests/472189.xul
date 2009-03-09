@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="yourwindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="text/javascript">
+<![CDATA[
+function onload() {
+  document.addEventListener("DOMAttrModified", function() {}, true);
+  document.getElementById("test").setAttribute("value", "50");
+}
+]]>
+</script>
+<progressmeter id="test"/>
+</window>

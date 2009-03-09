@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: dequant.c 14369 2008-01-05 23:15:32Z tterribe $
+    last mod: $Id: dequant.c 15400 2008-10-15 12:10:58Z tterribe $
 
  ********************************************************************/
 
@@ -127,65 +127,6 @@ int oc_quant_params_unpack(oggpack_buffer *_opb,
     }
     while(qri-->0);
   }
-
-#ifdef _TH_DEBUG_
-  /* dump the tables */
-  {
-    int i, j, k, l, m;
-    TH_DEBUG("loop filter limits = {");
-    for(i=0;i<64;){
-      TH_DEBUG("\n        ");
-      for(j=0;j<16;i++,j++)
-	TH_DEBUG("%3d ",_qinfo->loop_filter_limits[i]);
-    }
-    TH_DEBUG("\n}\n\n");
-
-    TH_DEBUG("ac scale = {");
-    for(i=0;i<64;){
-      TH_DEBUG("\n        ");
-      for(j=0;j<16;i++,j++)
-	TH_DEBUG("%3d ",_qinfo->ac_scale[i]);
-    }
-    TH_DEBUG("\n}\n\n");
-
-    TH_DEBUG("dc scale = {");
-    for(i=0;i<64;){
-      TH_DEBUG("\n        ");
-      for(j=0;j<16;i++,j++)
-	TH_DEBUG("%3d ",_qinfo->dc_scale[i]);
-    }
-    TH_DEBUG("\n}\n\n");
-
-    for(k=0;k<2;k++)
-      for(l=0;l<3;l++){
-	char *name[2][3]={
-	  {"intra Y bases","intra U bases", "intra V bases"},
-	  {"inter Y bases","inter U bases", "inter V bases"}
-	};
-
-	th_quant_ranges *r = &_qinfo->qi_ranges[k][l];
-	TH_DEBUG("%s = {\n",name[k][l]);
-	TH_DEBUG("        ranges = %d\n",r->nranges);
-	TH_DEBUG("        intervals = { ");
-	for(i=0;i<r->nranges;i++)
-	  TH_DEBUG("%3d ",r->sizes[i]);
-	TH_DEBUG("}\n");
-	TH_DEBUG("\n        matricies = { ");
-	for(m=0;m<r->nranges+1;m++){
-	  TH_DEBUG("\n          { ");
-	  for(i=0;i<64;){
-	    TH_DEBUG("\n            ");
-	    for(j=0;j<8;i++,j++)
-	      TH_DEBUG("%3d ",r->base_matrices[m][i]);
-	  }
-	  TH_DEBUG("\n          }");
-	}
-	TH_DEBUG("\n        }\n");
-      }
-  }
-    
-#endif
-
   _ogg_free(base_mats);
   return 0;
 }
@@ -227,4 +168,3 @@ void oc_quant_params_clear(th_quant_info *_qinfo){
     _ogg_free((void *)_qinfo->qi_ranges[qti][pli].base_matrices);
   }
 }
-

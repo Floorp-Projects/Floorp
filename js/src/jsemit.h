@@ -43,8 +43,6 @@
 /*
  * JS bytecode generation.
  */
-
-#include "jsstddef.h"
 #include "jstypes.h"
 #include "jsatom.h"
 #include "jsopcode.h"
@@ -188,7 +186,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_RETURN_EXPR        0x02 /* function has 'return expr;' */
 #define TCF_RETURN_VOID        0x04 /* function has 'return;' */
 #define TCF_IN_FOR_INIT        0x08 /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_CLOSURE_VS_VAR 0x10 /* function and var with same name */
+#define TCF_NO_SCRIPT_RVAL     0x10 /* API caller does not want result value
+                                       from global script */
 #define TCF_FUN_USES_NONLOCALS 0x20 /* function refers to non-local names */
 #define TCF_FUN_HEAVYWEIGHT    0x40 /* function needs Call object per call */
 #define TCF_FUN_IS_GENERATOR   0x80 /* parsed yield statement in function */
@@ -198,8 +197,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_COMPILE_N_GO      0x800 /* compiler-and-go mode of script, can
                                        optimize name references based on scope
                                        chain */
-#define TCF_NO_SCRIPT_RVAL   0x1000 /* API caller does not want result value
-                                       from global script */
 /*
  * Flags to propagate out of the blocks.
  */
@@ -210,8 +207,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
  */
 #define TCF_FUN_FLAGS           (TCF_FUN_IS_GENERATOR   |                     \
                                  TCF_FUN_HEAVYWEIGHT    |                     \
-                                 TCF_FUN_USES_NONLOCALS |                     \
-                                 TCF_FUN_CLOSURE_VS_VAR)
+                                 TCF_FUN_USES_NONLOCALS)
 
 /*
  * Flags field, not stored in JSTreeContext.flags, for passing staticDepth
@@ -381,7 +377,7 @@ struct JSCodeGenerator {
 #define CG_LIMIT(cg)            ((cg)->current->limit)
 #define CG_NEXT(cg)             ((cg)->current->next)
 #define CG_CODE(cg,offset)      (CG_BASE(cg) + (offset))
-#define CG_OFFSET(cg)           PTRDIFF(CG_NEXT(cg), CG_BASE(cg), jsbytecode)
+#define CG_OFFSET(cg)           (CG_NEXT(cg) - CG_BASE(cg))
 
 #define CG_NOTES(cg)            ((cg)->current->notes)
 #define CG_NOTE_COUNT(cg)       ((cg)->current->noteCount)
@@ -393,8 +389,7 @@ struct JSCodeGenerator {
 #define CG_PROLOG_LIMIT(cg)     ((cg)->prolog.limit)
 #define CG_PROLOG_NEXT(cg)      ((cg)->prolog.next)
 #define CG_PROLOG_CODE(cg,poff) (CG_PROLOG_BASE(cg) + (poff))
-#define CG_PROLOG_OFFSET(cg)    PTRDIFF(CG_PROLOG_NEXT(cg), CG_PROLOG_BASE(cg),\
-                                        jsbytecode)
+#define CG_PROLOG_OFFSET(cg)    (CG_PROLOG_NEXT(cg) - CG_PROLOG_BASE(cg))
 
 #define CG_SWITCH_TO_MAIN(cg)   ((cg)->current = &(cg)->main)
 #define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)

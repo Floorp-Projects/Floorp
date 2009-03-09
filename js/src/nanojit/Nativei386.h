@@ -101,7 +101,7 @@ namespace nanojit
         // then by the C functions it calls).
 	const int NJ_ALIGN_STACK = 16;
 
-	const int32_t LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
+	const int32_t LARGEST_UNDERRUN_PROT = 3200;  // largest value passed to underrunProtect
 	
 	typedef uint8_t NIns;
 
@@ -181,8 +181,7 @@ namespace nanojit
 		void nativePageReset();\
 		void nativePageSetup();\
         void underrunProtect(int);\
-        void asm_farg(LInsp);\
-        void asm_align_code();
+        void asm_farg(LInsp);
 		
 	#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 		
@@ -377,6 +376,9 @@ namespace nanojit
 
 #define MR(d,s)		do { count_mov(); ALU(0x8b,d,s);				asm_output("mov %s,%s",gpn(d),gpn(s)); } while(0)
 #define LEA(r,d,b)	do { count_alu(); ALUm(0x8d, r,d,b);			asm_output("lea %s,%d(%s)",gpn(r),d,gpn(b)); } while(0)
+// lea %r, d(%i*4)
+// This addressing mode is not supported by the MODRMSIB macro.
+#define LEAmi4(r,d,i) do { count_alu(); IMM32(d); *(--_nIns) = (2<<6)|(i<<3)|5; *(--_nIns) = (0<<6)|(r<<3)|4; *(--_nIns) = 0x8d;                    asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i)); } while(0)
 
 #define SETE(r)		do { count_alu(); ALU2(0x0f94,(r),(r));			asm_output("sete %s",gpn(r)); } while(0)
 #define SETNP(r)	do { count_alu(); ALU2(0x0f9B,(r),(r));			asm_output("setnp %s",gpn(r)); } while(0)
@@ -416,7 +418,7 @@ namespace nanojit
 #define LDdm(reg,addr) do {		\
 	count_ld();                 \
 	ALUdm(0x8b,reg,addr);		\
-	asm_output("mov %s,0(%lx)",gpn(reg),addr); \
+	asm_output("mov %s,0(%lx)",gpn(reg),(unsigned long)addr); \
 	} while (0)
 
 
@@ -434,7 +436,7 @@ namespace nanojit
 // load 16-bit, zero extend
 #define LD16Z(r,d,b) do { count_ld(); ALU2m(0x0fb7,r,d,b); asm_output("movsz %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
 
-#define LD16Zdm(r,addr) do { count_ld(); ALU2dm(0x0fb7,r,addr); asm_output("movsz %s,0(%lx)", gpn(r),addr); } while (0)
+#define LD16Zdm(r,addr) do { count_ld(); ALU2dm(0x0fb7,r,addr); asm_output("movsz %s,0(%lx)", gpn(r),(unsigned long)addr); } while (0)
 
 #define LD16Zsib(r,disp,base,index,scale) do {	\
 	count_ld();                                 \
@@ -451,7 +453,7 @@ namespace nanojit
 	count_ld(); \
 	NanoAssert((d)>=0&&(d)<=31); \
 	ALU2dm(0x0fb6,r,addr); \
-	asm_output("movzx %s,0(%lx)", gpn(r),addr); \
+	asm_output("movzx %s,0(%lx)", gpn(r),(long unsigned)addr); \
 	} while(0)
 
 #define LD8Zsib(r,disp,base,index,scale) do {	\
@@ -573,6 +575,12 @@ namespace nanojit
  		IMM32((o)); \
  		*(--_nIns) = JMP32; \
 		asm_output("jmp %p",(next+(o))); } while(0)
+
+#define JMP_indirect(r) do { \
+        underrunProtect(2);  \
+        MODRMm(4, 0, r);     \
+        *(--_nIns) = 0xff;   \
+        asm_output("jmp *(%s)", gpn(r)); } while (0)
 
 #define JE(t, isfar)	   JCC(0x04, t, isfar, "je")
 #define JNE(t, isfar)	   JCC(0x05, t, isfar, "jne")
@@ -774,7 +782,7 @@ namespace nanojit
 
 #define FPU(o,r)							\
 		underrunProtect(2);					\
-		*(--_nIns) = uint8_t(((uint8_t)(o)&0xff) | r&7);\
+		*(--_nIns) = uint8_t(((uint8_t)(o)&0xff) | (r&7));\
 		*(--_nIns) = (uint8_t)(((o)>>8)&0xff)
 
 #define FPUm(o,d,b)							\

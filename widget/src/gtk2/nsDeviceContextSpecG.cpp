@@ -71,6 +71,7 @@
 
 #include "nsIFileStreams.h"
 #include "nsILocalFile.h"
+#include "nsTArray.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -101,15 +102,15 @@ public:
 
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
   PRInt32   GetNumPrinters()
-    { return mGlobalPrinterList ? mGlobalPrinterList->Count() : 0; }
-  nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
+    { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
+  nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar **aDefaultPrinterName);
 
 protected:
   GlobalPrinters() {}
 
   static GlobalPrinters mGlobalPrinters;
-  static nsStringArray* mGlobalPrinterList;
+  static nsTArray<nsString>* mGlobalPrinterList;
 };
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
@@ -380,7 +381,7 @@ void nsPrinterFeatures::SetMultipleConcurrentDeviceContextsSupported( PRBool aCa
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
+nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nsnull;
 //---------------
 
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
@@ -831,7 +832,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
   }
 
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  nsStringArray *printers = new nsStringArray(numPrinters);
+  nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
   if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -840,7 +841,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
   int count = 0;
   while( count < numPrinters )
   {
-    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
+    printers->AppendElement(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
@@ -1068,18 +1069,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPri
   return NS_OK;
 }
 
-
-//----------------------------------------------------------------------
-//String array enumeration callback to append a printer to the global
-//printer list.
-static PRBool
-GlobalPrinterEnumFunc(nsCString& aName, void *aData)
-{
-  nsStringArray *a = (nsStringArray *)aData;
-  a->AppendString(NS_ConvertUTF8toUTF16(aName));
-  return PR_TRUE;
-}
-
 //----------------------------------------------------------------------
 nsresult GlobalPrinters::InitializeGlobalPrinters ()
 {
@@ -1087,7 +1076,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     return NS_OK;
   }
 
-  mGlobalPrinterList = new nsStringArray();
+  mGlobalPrinterList = new nsTArray<nsString>();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1100,14 +1089,20 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   nsPSPrinterList psMgr;
   if (NS_SUCCEEDED(psMgr.Init()) && psMgr.Enabled()) {
     /* Get the list of PostScript-module printers */
-    nsCStringArray printerList;
+    // XXX: this function is the only user of GetPrinterList
+    // So it may be interesting to convert the nsCStrings
+    // in this function, we would save one loop here
+    nsTArray<nsCString> printerList;
     psMgr.GetPrinterList(printerList);
-    printerList.EnumerateForwards(GlobalPrinterEnumFunc, mGlobalPrinterList);
+    for (PRUint32 i = 0; i < printerList.Length(); i++)
+    {
+      mGlobalPrinterList->AppendElement(NS_ConvertUTF8toUTF16(printerList[i]));
+    }
   }
 #endif /* USE_POSTSCRIPT */  
       
   /* If there are no printers available after all checks, return an error */
-  if (!mGlobalPrinterList->Count())
+  if (!mGlobalPrinterList->Length())
   {
     /* Make sure we do not cache an empty printer list */
     FreeGlobalPrinters();

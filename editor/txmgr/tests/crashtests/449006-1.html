@@ -1,0 +1,28 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("d").focus();
+  document.execCommand("inserthtml", false, "AB");
+  document.execCommand("delete", false, null);
+  document.execCommand("undo", false, null);
+
+  document.addEventListener("DOMCharacterDataModified", f, false);
+  document.execCommand("redo", false, null);
+  document.removeEventListener("DOMCharacterDataModified", f, false);
+
+  function f()
+  {
+    document.removeEventListener("DOMCharacterDataModified", f, false);
+    document.execCommand("formatBlock", false, "<h3>");
+  }
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div id="d" contenteditable="true"></div></body>
+
+</html>

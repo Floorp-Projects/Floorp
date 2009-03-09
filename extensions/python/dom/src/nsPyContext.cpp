@@ -933,9 +933,3 @@ nsPythonContext::HoldScriptObject(void *object)
   }
   return NS_OK;
 }
-
-void
-nsPythonContext::ReportPendingException()
-{
-  // Not sure there's anything to do here
-}

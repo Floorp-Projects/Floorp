@@ -45,3 +45,6 @@
 
 ; Hebrew
 !define he_rtl
+
+; Persian
+!define fa_rtl

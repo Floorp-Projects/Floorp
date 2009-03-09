@@ -36,13 +36,9 @@
 
 #include "nsIDOMSVGSymbolElement.h"
 #include "nsSVGStylableElement.h"
-#include "nsSVGAnimatedPreserveAspectRatio.h"
+#include "nsSVGViewBox.h"
 #include "nsSVGPreserveAspectRatio.h"
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGFitToViewBox.h"
-#include "nsSVGRect.h"
-#include "nsSVGAnimatedRect.h"
 #include "nsGkAtoms.h"
 
 typedef nsSVGStylableElement nsSVGSymbolElementBase;
@@ -55,7 +51,6 @@ protected:
   friend nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo);
   nsSVGSymbolElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
 
 public:
   // interfaces:
@@ -70,14 +65,16 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
   // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
+  virtual nsSVGViewBox *GetViewBox();
+  virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
 
-  nsCOMPtr<nsIDOMSVGAnimatedRect> mViewBox;
-  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
+  nsSVGViewBox mViewBox;
+  nsSVGPreserveAspectRatio mPreserveAspectRatio;
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Symbol)
@@ -104,41 +101,6 @@ nsSVGSymbolElement::nsSVGSymbolElement(nsINodeInfo *aNodeInfo)
 }
 
 
-nsresult
-nsSVGSymbolElement::Init()
-{
-  nsresult rv = nsSVGSymbolElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-
-  // DOM property: viewBox
-  {
-    nsCOMPtr<nsIDOMSVGRect> viewbox;
-    rv = NS_NewSVGRect(getter_AddRefs(viewbox));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), viewbox);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::viewBox, mViewBox);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: preserveAspectRatio
-  {
-    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
-    rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedPreserveAspectRatio(
-                                          getter_AddRefs(mPreserveAspectRatio),
-                                          preserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
-                           mPreserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
@@ -150,18 +112,15 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGSymbolElement)
 /* readonly attribute nsIDOMSVGAnimatedRect viewBox; */
 NS_IMETHODIMP nsSVGSymbolElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
 {
-  *aViewBox = mViewBox;
-  NS_ADDREF(*aViewBox);
-  return NS_OK;
+  return mViewBox.ToDOMAnimatedRect(aViewBox, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedPreserveAspectRatio preserveAspectRatio; */
 NS_IMETHODIMP
-nsSVGSymbolElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio * *aPreserveAspectRatio)
+nsSVGSymbolElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
+                                           **aPreserveAspectRatio)
 {
-  *aPreserveAspectRatio = mPreserveAspectRatio;
-  NS_ADDREF(*aPreserveAspectRatio);
-  return NS_OK;
+  return mPreserveAspectRatio.ToDOMAnimatedPreserveAspectRatio(aPreserveAspectRatio, this);
 }
 
 //----------------------------------------------------------------------
@@ -186,4 +145,19 @@ nsSVGSymbolElement::IsAttributeMapped(const nsIAtom* name) const
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGSymbolElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGViewBox *
+nsSVGSymbolElement::GetViewBox()
+{
+  return &mViewBox;
+}
+
+nsSVGPreserveAspectRatio *
+nsSVGSymbolElement::GetPreserveAspectRatio()
+{
+  return &mPreserveAspectRatio;
 }

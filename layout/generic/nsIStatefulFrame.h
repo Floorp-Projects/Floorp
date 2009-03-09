@@ -6,18 +6,15 @@
 #ifndef _nsIStatefulFrame_h
 #define _nsIStatefulFrame_h
 
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 
 class nsPresContext;
 class nsPresState;
 
-#define NS_ISTATEFULFRAME_IID \
-{ 0x25c232cf, 0x40ba, 0x4394, \
- { 0x84, 0xe4, 0x73, 0xa2, 0xf7, 0x4d, 0x8b, 0x64 } }
-
-class nsIStatefulFrame : public nsISupports {
+class nsIStatefulFrame
+{
  public: 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTATEFULFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIStatefulFrame)
 
   // If you create a special type stateful frame (e.g. scroll) that needs
   // to be captured outside of the standard pass through the frames, you'll need
@@ -33,7 +30,5 @@ class nsIStatefulFrame : public nsISupports {
   // Restore the state for this frame from aState
   NS_IMETHOD RestoreState(nsPresState* aState) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIStatefulFrame, NS_ISTATEFULFRAME_IID)
 
 #endif /* _nsIStatefulFrame_h */

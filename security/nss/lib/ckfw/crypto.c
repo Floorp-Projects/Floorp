@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crypto.c,v $ $Revision: 1.3 $ $Date: 2006/04/22 05:30:18 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crypto.c,v $ $Revision: 1.4 $ $Date: 2009/02/09 07:55:51 $";
 #endif /* DEBUG */
 
 /*
@@ -101,7 +101,7 @@ nssCKFWCryptoOperation_Create(
 {
   NSSCKFWCryptoOperation *fwOperation;
   fwOperation = nss_ZNEW(NULL, NSSCKFWCryptoOperation);
-  if ((NSSCKFWCryptoOperation *)NULL == fwOperation) {
+  if (!fwOperation) {
     *pError = CKR_HOST_MEMORY;
     return (NSSCKFWCryptoOperation *)NULL;
   }
@@ -126,7 +126,7 @@ nssCKFWCryptoOperation_Destroy
 )
 {
   if ((NSSCKMDCryptoOperation *) NULL != fwOperation->mdOperation) {
-    if ((void *) NULL != (void *)fwOperation->mdOperation->Destroy) {
+    if (fwOperation->mdOperation->Destroy) {
       fwOperation->mdOperation->Destroy(
                                 fwOperation->mdOperation,
                                 fwOperation,
@@ -171,7 +171,7 @@ nssCKFWCryptoOperation_GetFinalLength
   CK_RV *pError
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->GetFinalLength) {
+  if (!fwOperation->mdOperation->GetFinalLength) {
     *pError = CKR_FUNCTION_FAILED;
     return 0;
   }
@@ -198,7 +198,7 @@ nssCKFWCryptoOperation_GetOperationLength
   CK_RV *pError
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->GetOperationLength) {
+  if (!fwOperation->mdOperation->GetOperationLength) {
     *pError = CKR_FUNCTION_FAILED;
     return 0;
   }
@@ -225,7 +225,7 @@ nssCKFWCryptoOperation_Final
   NSSItem *outputBuffer
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->Final) {
+  if (!fwOperation->mdOperation->Final) {
     return CKR_FUNCTION_FAILED;
   }
   return fwOperation->mdOperation->Final(
@@ -251,7 +251,7 @@ nssCKFWCryptoOperation_Update
   NSSItem *outputBuffer
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->Update) {
+  if (!fwOperation->mdOperation->Update) {
     return CKR_FUNCTION_FAILED;
   }
   return fwOperation->mdOperation->Update(
@@ -277,7 +277,7 @@ nssCKFWCryptoOperation_DigestUpdate
   NSSItem *inputBuffer
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->DigestUpdate) {
+  if (!fwOperation->mdOperation->DigestUpdate) {
     return CKR_FUNCTION_FAILED;
   }
   return fwOperation->mdOperation->DigestUpdate(
@@ -304,7 +304,7 @@ nssCKFWCryptoOperation_DigestKey
 {
   NSSCKMDObject *mdObject;
 
-  if ((void *) NULL == (void *)fwOperation->mdOperation->DigestKey) {
+  if (!fwOperation->mdOperation->DigestKey) {
     return CKR_FUNCTION_FAILED;
   }
   mdObject = nssCKFWObject_GetMDObject(fwObject);
@@ -330,7 +330,7 @@ nssCKFWCryptoOperation_UpdateFinal
   NSSItem *outputBuffer
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->UpdateFinal) {
+  if (!fwOperation->mdOperation->UpdateFinal) {
     return CKR_FUNCTION_FAILED;
   }
   return fwOperation->mdOperation->UpdateFinal(
@@ -358,7 +358,7 @@ nssCKFWCryptoOperation_UpdateCombo
   NSSItem *outputBuffer
 )
 {
-  if ((void *) NULL == (void *)fwOperation->mdOperation->UpdateCombo) {
+  if (!fwOperation->mdOperation->UpdateCombo) {
     return CKR_FUNCTION_FAILED;
   }
   return fwOperation->mdOperation->UpdateCombo(

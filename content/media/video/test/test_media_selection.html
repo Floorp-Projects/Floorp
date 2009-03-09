@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: media selection</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function maketest(expect_load, attach_media, name, type, check_metadata) {
+  return function (testNum) {
+    var e = document.createElement('video');
+    var errorRun = false;
+    if (expect_load) {
+      e.addEventListener('loadedmetadata', function () {
+          ok(e.readyState >= HTMLMediaElement.HAVE_METADATA,
+             'test ' +  testNum + ' readyState ' + e.readyState + ' expected >= ' + HTMLMediaElement.HAVE_METADATA);
+          is(e.currentSrc.substring(e.currentSrc.length - name.length), name, 'test ' + testNum);
+          ok(e.networkState >= HTMLMediaElement.NETWORK_LOADING,
+              'test ' + testNum + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_LOADING);
+          check_metadata(e);
+          e.parentNode.removeChild(e);
+          runNextTest();
+        }, false);
+      e.addEventListener('error', function(e) { e.stopPropagation();}, false);      
+    } else {
+      e.addEventListener('error', function(event) {
+        event.stopPropagation();
+        is(expect_load, false, "Didn't load when we weren't expecting to.");
+        is(errorRun, false, "error handler should run once only!");
+        errorRun = true;
+        is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
+           'test ' + testNum + ' readyState should be HAVE_NOTHING when load fails.');
+        e.parentNode.removeChild(e);
+        runNextTest();
+      }, false);
+    }    
+    attach_media(e, name, type);
+  }
+}
+
+function set_src(element, name, type) {
+  element.src = name;
+  document.body.appendChild(element);
+}
+
+function add_source(element, name, type) {
+  do_add_source(element, name, type);
+  document.body.appendChild(element);
+}
+
+function do_add_source(element, name, type) {
+  var source = document.createElement('source');
+  if (type) {
+    source.type = type;
+  }
+  source.src = name;
+  element.appendChild(source);
+}
+
+function add_sources_last(element, name, type) {
+  do_add_source(element, name, 'unsupported/type');
+  do_add_source(element, name, type);
+  document.body.appendChild(element);
+}
+
+function add_sources_first(element, name, type) {
+  do_add_source(element, name, type);
+  do_add_source(element, name, 'unsupported/type');
+  document.body.appendChild(element);
+}
+
+function late_add_sources_last(element, name, type) {
+  document.body.appendChild(element);
+  do_add_source(element, name, 'unsupported/type');
+  do_add_source(element, name, type);
+}
+
+function late_add_sources_first(element, name, type) {
+  document.body.appendChild(element);
+  do_add_source(element, name, type);
+  do_add_source(element, name, 'unsupported/type');
+}
+
+function check_ogg(e) {
+  is(e.videoWidth, 320, "video width " + e.currentSrc);
+  is(e.videoHeight, 240, "video height " + e.currentSrc);
+}
+
+function check_wav(e) {
+  ok(e.duration > 0.9 && e.duration < 1.1, "duration should be around 1.0");
+}
+
+var nextTest  = 0;
+var subTests = [
+                maketest(true, set_src, '320x240.ogv', null, check_ogg),
+                maketest(true, add_source, '320x240.ogv', null, check_ogg),
+                maketest(true, add_source, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, add_sources_last, '320x240.ogv', null, check_ogg),
+                maketest(true, add_sources_first, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, set_src, 'r11025_u8_c1.wav', null, check_wav),
+                maketest(true, add_source, 'r11025_u8_c1.wav', null, check_wav),
+                maketest(true, add_source, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
+                maketest(true, add_sources_last, 'r11025_u8_c1.wav', null, check_wav),
+                maketest(true, add_sources_first, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
+
+                // type hint matches a decoder, actual type matches different decoder
+                maketest(true, add_source, '320x240.ogv', 'audio/x-wav', check_ogg),
+                maketest(true, add_source, 'r11025_u8_c1.wav', 'application/ogg', check_wav),
+
+                // should not start loading, type excludes it from media candiate list
+                maketest(false, add_source, '320x240.ogv', 'bogus/type', null),
+                maketest(false, add_source, 'r11025_u8_c1.wav', 'bogus/type', null),
+                maketest(false, add_source, 'unknown.raw', 'bogus/type', null),
+
+                // should start loading, then fire error, needs bug 462455 fixed
+                maketest(false, add_source, 'unknown.raw', 'application/ogg', null),
+                maketest(false, add_source, 'unknown.raw', 'audio/x-wav', null),
+
+                // element doesn't notice source children attached later, needs bug 462455 fixed
+                maketest(true, late_add_sources_last, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, late_add_sources_first, '320x240.ogv', 'application/ogg', check_ogg),
+                maketest(true, late_add_sources_last, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
+                maketest(true, late_add_sources_first, 'r11025_u8_c1.wav', 'audio/x-wav', check_wav),
+
+                SimpleTest.finish
+                ];
+
+function runNextTest() {
+  setTimeout(function () {
+      dump('subtest ' + nextTest + '\n');
+      subTests[nextTest](nextTest);
+      nextTest += 1;
+    }, 0);
+}
+
+addLoadEvent(runNextTest);
+</script>
+</pre>
+</body>
+</html>

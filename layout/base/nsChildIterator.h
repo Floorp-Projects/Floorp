@@ -43,8 +43,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMNode.h"
+#include "nsINodeList.h"
 
 /**
  * Helper class for iterating children during frame construction.
@@ -55,13 +54,17 @@
 class NS_STACK_CLASS ChildIterator
 {
 protected:
-  nsCOMPtr<nsIContent> mContent;
+  // We could just use a mNodes for the case when we're not dealing with XBL
+  // anon content too, but in practice that would basically replace our current
+  // branch on mNodes with an extra virtual function call in the common case.
+
+  nsIContent* mContent;
   PRUint32 mIndex;
-  nsCOMPtr<nsIDOMNodeList> mNodes;
+  nsINodeList* mNodes;
 
 public:
   ChildIterator()
-    : mIndex(0) {}
+    : mContent(nsnull), mIndex(0), mNodes(nsnull) {}
 
   ChildIterator(const ChildIterator& aOther)
     : mContent(aOther.mContent),
@@ -97,21 +100,15 @@ public:
     return result;
   }
 
-  already_AddRefed<nsIContent> get() const {
-    nsIContent* result = nsnull;
-    if (mNodes) {
-      nsCOMPtr<nsIDOMNode> node;
-      mNodes->Item(mIndex, getter_AddRefs(node));
-      CallQueryInterface(node, &result);
-    } else {
-      result = mContent->GetChildAt(PRInt32(mIndex));
-      NS_IF_ADDREF(result);
+  nsIContent* get() const {
+    if (XBLInvolved()) {
+      return mNodes->GetNodeAt(mIndex);
     }
 
-    return result;
+    return mContent->GetChildAt(mIndex);
   }
 
-  already_AddRefed<nsIContent> operator*() const { return get(); }
+  nsIContent* operator*() const { return get(); }
 
   PRBool operator==(const ChildIterator& aOther) const {
     return mContent == aOther.mContent && mIndex == aOther.mIndex;
@@ -129,20 +126,42 @@ public:
     // Make sure that aIndex is reasonable.  This should be |#ifdef
     // DEBUG|, but we need these numbers for the temporary workaround
     // for bug 133219.
-    PRUint32 length;
-    if (mNodes)
-      mNodes->GetLength(&length);
-    else
-      length = mContent->GetChildCount();
+    PRUint32 l = length();
 
-    NS_ASSERTION(PRInt32(aIndex) >= 0 && aIndex <= length, "out of bounds");
+    NS_ASSERTION(PRInt32(aIndex) >= 0 && aIndex <= l, "out of bounds");
 
     // Temporary workaround for bug 133219.
-    if (aIndex > length)
-      aIndex = length;
+    if (aIndex > l)
+      aIndex = l;
 
     mIndex = aIndex;
   }
+
+  void seek(nsIContent* aContent) {
+    PRInt32 index;
+    if (XBLInvolved()) {
+      index = mNodes->IndexOf(aContent);
+    } else {
+      index = mContent->IndexOf(aContent);
+    }
+    // XXXbz I wish we could assert that index != -1, but I think that's not
+    // necessarily the case when called from ContentInserted if first-letter
+    // frames are about.  It also seems to not be the case in some XBL cases
+    // with filtered insertion points and no default insertion point.  I will
+    // now claim that XBL's management of its insertion points is broken in
+    // those cases, since it's returning an insertion parent for a node that
+    // doesn't actually have the node in its child list according to
+    // ChildIterator.  See bug 474324.
+    if (index != -1) {
+      mIndex = index;
+    } else {
+      // If aContent isn't going to get hit by this iterator, just seek to the
+      // end of the list for lack of anything better to do.
+      mIndex = length();
+    }
+  }
+
+  PRBool XBLInvolved() const { return mNodes != nsnull; }
 
   /**
    * Create a pair of ChildIterators for a content node. aFirst will
@@ -152,4 +171,15 @@ public:
   static nsresult Init(nsIContent*    aContent,
                        ChildIterator* aFirst,
                        ChildIterator* aLast);
+
+private:
+  PRUint32 length() {
+    PRUint32 l;
+    if (XBLInvolved()) {
+      mNodes->GetLength(&l);
+    } else {
+      l = mContent->GetChildCount();
+    }
+    return l;
+  }
 };

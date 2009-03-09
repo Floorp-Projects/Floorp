@@ -1,0 +1,6 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <span xmlns="http://www.w3.org/1999/xhtml" style="-moz-box-ordinal-group: 2;">
+    <mtext xmlns="http://www.w3.org/1998/Math/MathML" style="display: block;"/>
+  </span>
+  <div xmlns="http://www.w3.org/1999/xhtml" style="overflow: auto;"/>
+</window>

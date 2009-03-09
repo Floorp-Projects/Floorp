@@ -16,10 +16,11 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Heather Arthur <harthur@cmu.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,6 +43,7 @@ VPATH		= @srcdir@
 relativesrcdir	= dom/tests/mochitest/ajax/prototype/test/lib
 
 include $(DEPTH)/config/autoconf.mk
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \

@@ -44,10 +44,6 @@
 #include "nsIStreamListener.h"
 #include "nsIPrincipal.h"
 
-// Constant for download and playback rates that are unknown, or otherwise
-// unable to be computed.
-#define NS_MEDIA_UNKNOWN_RATE -1.0
-
 class nsMediaDecoder;
 
 /* 
@@ -68,16 +64,14 @@ class nsChannelToPipeListener : public nsIStreamListener
 
   public:
   // If aSeeking is PR_TRUE then this listener was created as part of a
-  // seek request and is expecting a byte range partial result.
-  nsChannelToPipeListener(nsMediaDecoder* aDecoder, PRBool aSeeking = PR_FALSE);
+  // seek request and is expecting a byte range partial result. aOffset
+  // is the offset in bytes that this listener started reading from.
+  nsChannelToPipeListener(nsMediaDecoder* aDecoder,
+                          PRBool aSeeking = PR_FALSE);
   nsresult Init();
   nsresult GetInputStream(nsIInputStream** aStream);
   void Stop();
   void Cancel();
-
-  // Return the download rate in bytes per second. Returns 
-  // less than zero if the download has complated.
-  double BytesPerSecond() const;
 
   nsIPrincipal* GetCurrentPrincipal();
 
@@ -86,17 +80,6 @@ private:
   nsCOMPtr<nsIOutputStream> mOutput;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsRefPtr<nsMediaDecoder> mDecoder;
-
-  // Interval when download started. Used in
-  // computing bytes per second download rate.
-  PRIntervalTime mIntervalStart;
-
-  // Interval when last downloaded bytes occurred. Used in computer
-  // bytes per second download rate.
-  PRIntervalTime mIntervalEnd;
-
-  // Total bytes transferred so far
-  PRInt64 mTotalBytes;
 
   // PR_TRUE if this listener is expecting a byte range request result
   PRPackedBool mSeeking;

@@ -258,6 +258,8 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
         
         return rv;
     }
+    // This should really be handled by nsIDocument::EndLoad
+    mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
 
     if (!mRefreshString.IsEmpty()) {
         nsPIDOMWindow *win = mDocument->GetWindow();
@@ -832,6 +834,8 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
             rv = NS_NewXMLDocument(getter_AddRefs(mDocument));
             NS_ENSURE_SUCCESS(rv, rv);
         }
+        // This should really be handled by nsIDocument::BeginLoad
+        mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
         nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
         NS_ENSURE_STATE(source);
         PRBool hasHadScriptObject = PR_FALSE;

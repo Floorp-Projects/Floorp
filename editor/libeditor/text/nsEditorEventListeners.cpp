@@ -1042,12 +1042,11 @@ FindSelectionRoot(nsIEditor *aEditor, nsIContent *aContent)
     // We still want to allow selection in a readonly editor.
     nsCOMPtr<nsIDOMElement> rootElement;
     aEditor->GetRootElement(getter_AddRefs(rootElement));
+    if (!rootElement) {
+      return nsnull;
+    }
 
     CallQueryInterface(rootElement, &root);
-
-    if (!root && document) {
-      NS_IF_ADDREF(root = document->GetRootContent());
-    }
 
     return root;
   }

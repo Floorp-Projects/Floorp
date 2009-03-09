@@ -55,6 +55,7 @@
 #define jstypes_h___
 
 #include <stddef.h>
+#include "jsstdint.h"
 
 /***********************************************************************
 ** MACROS:      JS_EXTERN_API
@@ -182,7 +183,7 @@
 # elif defined _MSC_VER
 #  define JS_ALWAYS_INLINE   __forceinline
 # elif defined __GNUC__
-#  define JS_ALWAYS_INLINE   __attribute__((always_inline))
+#  define JS_ALWAYS_INLINE   __attribute__((always_inline)) JS_INLINE
 # else
 #  define JS_ALWAYS_INLINE   JS_INLINE
 # endif
@@ -272,12 +273,10 @@
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
-#if (defined(XP_WIN) && !defined(CROSS_COMPILE)) || defined (WINCE)
-# include "jscpucfg.h"      /* Use standard Mac or Windows configuration */
-#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) || defined(CROSS_COMPILE)
-# include "jsautocfg.h"     /* Use auto-detected configuration */
+#ifdef _MSC_VER
+# include "jscpucfg.h"  /* We can't auto-detect MSVC configuration */
 #else
-# error "Must define one of XP_BEOS, XP_OS2, XP_WIN or XP_UNIX"
+# include "jsautocfg.h" /* Use auto-detected configuration */
 #endif
 
 JS_BEGIN_EXTERN_C
@@ -289,12 +288,9 @@ JS_BEGIN_EXTERN_C
 **  The int8 types are known to be 8 bits each. There is no type that
 **      is equivalent to a plain "char".
 ************************************************************************/
-#if JS_BYTES_PER_BYTE == 1
-typedef unsigned char JSUint8;
-typedef signed char JSInt8;
-#else
-# error No suitable type for JSInt8/JSUint8
-#endif
+
+typedef uint8_t JSUint8;
+typedef int8_t JSInt8;
 
 /************************************************************************
 ** TYPES:       JSUint16
@@ -302,12 +298,9 @@ typedef signed char JSInt8;
 ** DESCRIPTION:
 **  The int16 types are known to be 16 bits each.
 ************************************************************************/
-#if JS_BYTES_PER_SHORT == 2
-typedef unsigned short JSUint16;
-typedef short JSInt16;
-#else
-# error No suitable type for JSInt16/JSUint16
-#endif
+
+typedef uint16_t JSUint16;
+typedef int16_t JSInt16;
 
 /************************************************************************
 ** TYPES:       JSUint32
@@ -315,19 +308,9 @@ typedef short JSInt16;
 ** DESCRIPTION:
 **  The int32 types are known to be 32 bits each.
 ************************************************************************/
-#if JS_BYTES_PER_INT == 4
-typedef unsigned int JSUint32;
-typedef int JSInt32;
-# define JS_INT32(x)    x
-# define JS_UINT32(x)   x ## U
-#elif JS_BYTES_PER_LONG == 4
-typedef unsigned long JSUint32;
-typedef long JSInt32;
-# define JS_INT32(x)    x ## L
-# define JS_UINT32(x)   x ## UL
-#else
-# error No suitable type for JSInt32/JSUint32
-#endif
+
+typedef uint32_t JSUint32;
+typedef int32_t JSInt32;
 
 /************************************************************************
 ** TYPES:       JSUint64
@@ -339,34 +322,9 @@ typedef long JSInt32;
 **      64 bit values. The only guaranteed portability requires the use of
 **      the JSLL_ macros (see jslong.h).
 ************************************************************************/
-#ifdef JS_HAVE_LONG_LONG
 
-# if JS_BYTES_PER_LONG == 8
-typedef long JSInt64;
-typedef unsigned long JSUint64;
-# elif defined(WIN16)
-typedef __int64 JSInt64;
-typedef unsigned __int64 JSUint64;
-# elif defined(WIN32) && !defined(__GNUC__)
-typedef __int64  JSInt64;
-typedef unsigned __int64 JSUint64;
-# else
-typedef long long JSInt64;
-typedef unsigned long long JSUint64;
-# endif /* JS_BYTES_PER_LONG == 8 */
-
-#else  /* !JS_HAVE_LONG_LONG */
-
-typedef struct {
-# ifdef IS_LITTLE_ENDIAN
-    JSUint32 lo, hi;
-# else
-    JSUint32 hi, lo;
-#endif
-} JSInt64;
-typedef JSInt64 JSUint64;
-
-#endif /* !JS_HAVE_LONG_LONG */
+typedef uint64_t JSUint64;
+typedef int64_t JSInt64;
 
 /************************************************************************
 ** TYPES:       JSUintn
@@ -377,12 +335,9 @@ typedef JSInt64 JSUint64;
 **      define them to be wider (e.g., 32 or even 64 bits). These types are
 **      never valid for fields of a structure.
 ************************************************************************/
-#if JS_BYTES_PER_INT >= 2
+
 typedef int JSIntn;
 typedef unsigned int JSUintn;
-#else
-# error 'sizeof(int)' not sufficient for platform use
-#endif
 
 /************************************************************************
 ** TYPES:       JSFloat64
@@ -412,11 +367,7 @@ typedef ptrdiff_t JSPtrdiff;
 **  A type for pointer difference. Variables of this type are suitable
 **      for storing a pointer or pointer sutraction.
 ************************************************************************/
-#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
-typedef JSUint64 JSUptrdiff;
-#else
-typedef unsigned long JSUptrdiff;
-#endif
+typedef uintptr_t JSUptrdiff;
 
 /************************************************************************
 ** TYPES:       JSBool
@@ -441,13 +392,8 @@ typedef JSUint8 JSPackedBool;
 /*
 ** A JSWord is an integer that is the same size as a void*
 */
-#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
-typedef JSInt64 JSWord;
-typedef JSUint64 JSUword;
-#else
-typedef long JSWord;
-typedef unsigned long JSUword;
-#endif
+typedef intptr_t JSWord;
+typedef uintptr_t JSUword;
 
 #include "jsotypes.h"
 
@@ -498,6 +444,12 @@ typedef unsigned long JSUword;
 
 #define JS_ARRAY_LENGTH(array) (sizeof (array) / sizeof (array)[0])
 #define JS_ARRAY_END(array)    ((array) + JS_ARRAY_LENGTH(array))
+
+#define JS_BITS_PER_BYTE 8
+#define JS_BITS_PER_BYTE_LOG2 3
+
+#define JS_BITS_PER_WORD (JS_BITS_PER_BYTE * JS_BYTES_PER_WORD)
+#define JS_BITS_PER_DOUBLE (JS_BITS_PER_BYTE * JS_BYTES_PER_DOUBLE)
 
 JS_END_EXTERN_C
 

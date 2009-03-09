@@ -43,7 +43,6 @@
  */
 #if JS_HAS_FILE_OBJECT
 
-#include "jsstddef.h"
 #include "jsfile.h"
 
 /* ----------------- Platform-specific includes and defines ----------------- */
@@ -309,7 +308,7 @@ js_fileBaseName(JSContext *cx, const char *pathname)
 
     index = strlen(pathname)-1;
 
-    /* Chop off trailing seperators. */
+    /* Chop off trailing separators. */
     while (index > 0 && (pathname[index]==FILESEPARATOR ||
                          pathname[index]==FILESEPARATOR2)) {
         --index;

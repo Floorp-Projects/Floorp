@@ -6,21 +6,70 @@
    xmlns:xbl="http://www.mozilla.org/xbl"
    xmlns:svg="http://www.w3.org/2000/svg">
 
+  <binding id="suppressChangeEvent"
+            extends="chrome://global/content/bindings/scale.xml#scale">
+      <implementation>
+      <method name="valueChanged">
+          <parameter name="which"/>
+          <parameter name="newValue"/>
+          <parameter name="userChanged"/>
+          <body>
+          <![CDATA[
+            // This method is a copy of the base binding's valueChanged(), except that it does
+            // not dispatch a |change| event (to avoid exposing the event to web content), and
+            // just calls the videocontrol's seekToPosition() method directly.
+            switch (which) {
+              case "curpos":
+                // The value of userChanged is true when changing the position with the mouse,
+                // but not when pressing an arrow key. However, the base binding sets
+                // ._userChanged in its keypress handlers, so we just need to check both.
+                if (!userChanged && !this._userChanged)
+                  return;
+                this.setAttribute("value", newValue);
+                document.getBindingParent(this.parentNode).Utils.seekToPosition();
+                break;
+  
+              case "minpos":
+                this.setAttribute("min", newValue);
+                break;
+  
+              case "maxpos":
+                this.setAttribute("max", newValue);
+                break;
+            }
+          ]]>
+          </body>
+      </method>
+      </implementation>
+  </binding>
+
   <binding id="videoControls">
 
     <resources>
+        <stylesheet src="chrome://global/content/bindings/videocontrols.css"/>
         <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
     </resources>
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-        <spacer flex="1"/>
-        <hbox id="controlsBackground">
-            <image id="playButton"
-                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.togglePause();"/>
-            <box id="controlsMiddle" flex="1"/>
-            <image id="muteButton"
-                   onclick="if (event.button == 0) this.parentNode.parentNode.Utils.toggleMute();"/>
-        </hbox>
+        <stack flex="1">
+            <vbox class="throbberOverlay">
+                <box class="throbber" flex="1"/>
+            </vbox>
+
+            <vbox>
+                <spacer flex="1"/>
+                <hbox class="controlBar">
+                    <button class="playButton" oncommand="document.getBindingParent(this).Utils.togglePause();"/>
+                    <stack class="scrubberStack" flex="1">
+                        <box class="backgroundBar"/>
+                        <progressmeter class="bufferBar"/>
+                        <progressmeter class="progressBar" max="10000"/>
+                        <scale class="scrubber"/>
+                    </stack>
+                    <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
+                </hbox>
+            </vbox>
+        </stack>
     </xbl:content>
 
     <implementation implements="nsISecurityCheckedComponent">
@@ -73,21 +122,114 @@
             ]]>
         </constructor>
 
+        <field name="randomID">0</field>
+
         <field name="Utils">
             <![CDATA[ ({
                 debug : false,
                 video : null,
-                controls : null,
+                videocontrols : null,
                 playButton : null,
                 muteButton : null,
 
-                animationSteps : 8,
-                animationStep : 0,
-                animationDirection : 1,
-                animationTimer : null,
+                scrubber       : null,
+                progressBar    : null,
+                bufferBar      : null,
+                thumbWidth : 0,
 
+                randomID : 0,
+                videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
+                               "loadstart", "durationchange", "timeupdate", "progress",
+                               "playing", "waiting", "canplaythrough", "seeking",
+                               "seeked", "emptied"],
+
+                controlFader  : {
+                                    name : "controls", // shorthand for debugging
+                                    element : null,    // the element to fade in/out
+                                    runtime : 0,       // duration of active animation
+                                    fadingIn : false,  // are we fading in, or fading out?
+                                    isVisible : false, // is it at all visible?
+                                    timer : null,      // handle from setInterval()
+                                    delayTimer : null, // handle from setTimeout()
+                                    START_DELAY : 0,   // ms, delay before fading in
+                                    RUNTIME_MAX : 200, // ms
+                                    RUNTIME_STEP : 30  // ms
+                                },
+
+                throbberFader : {
+                                    name : "throbber",
+                                    element : null,
+                                    runtime : 0,
+                                    fadingIn : false,
+                                    isVisible : false,
+                                    timer : null,
+                                    delayTimer : null,
+                                    START_DELAY : 750,
+                                    RUNTIME_MAX : 300,
+                                    RUNTIME_STEP : 20
+                                },
+
+                firstFrameShown : false,
+                lastTimeUpdate : 0,
+                maxCurrentTimeSeen : 0,
+
+                /*
+                 * Set the initial state of the controls. The binding is normally created along
+                 * with video element, but could be attached at any point (eg, if the video is
+                 * removed from the document and then reinserted). Thus, some one-time events may
+                 * have already fired, and so we'll need to explicitly check the initial state.
+                 */
+                setupInitialState : function() {
+                    this.randomID = Math.random();
+                    this.videocontrols.randomID = this.randomID;
+
+                    this.playButton.setAttribute("paused", this.video.paused);
+                    this.muteButton.setAttribute("muted", this.video.muted);
+
+                    var duration = Math.round(this.video.duration * 1000); // in ms
+                    var currentTime = Math.round(this.video.currentTime * 1000); // in ms
+                    this.log("Initial playback position is at " + currentTime + " of " + duration);
+                    // It would be nice to retain maxCurrentTimeSeen, but it would be difficult
+                    // to determine if the media source changed while we were detached.
+                    this.maxCurrentTimeSeen = currentTime;
+                    this.durationChange(duration);
+                    this.showPosition(currentTime, duration);
+
+                    // If the first frame hasn't loaded, kick off a throbber fade-in.
+                    if (this.video.readyState >= this.video.HAVE_CURRENT_DATA)
+                        this.firstFrameShown = true;
+                    else
+                        this.startFadeIn(this.throbberFader);
+
+                    // We can't determine the exact buffering status, but do know if it's
+                    // fully loaded. (If it's still loading, it will fire a progress event
+                    // and we'll figure out the exact state then.)
+                    this.bufferBar.setAttribute("max", 100);
+                    if (this.video.networkState == this.video.NETWORK_LOADED)
+                        this.bufferBar.setAttribute("value", 100);
+                    else
+                        this.bufferBar.setAttribute("value", 0);
+                },
+
+                get dynamicControls() {
+                    // Don't fade controls for <audio> elements.
+                    var enabled = this.video instanceof HTMLVideoElement;
+
+                    // Allow tests to explicitly suppress the fading of controls.
+                    if (this.video.hasAttribute("mozNoDynamicControls"))
+                        enabled = false;
+
+                    return enabled;
+                },
+                
                 handleEvent : function (aEvent) {
-                    this.log("Got " + aEvent.type + " media event");
+                    this.log("Got media event ----> " + aEvent.type);
+
+                    // If the binding is detached (or has been replaced by a
+                    // newer instance of the binding), nuke our event-listeners.
+                    if (this.videocontrols.randomID != this.randomID)
+                        this.terminateEventListeners();
+
                     switch (aEvent.type) {
                         case "play":
                             this.playButton.setAttribute("paused", false);
@@ -99,31 +241,248 @@
                         case "volumechange":
                             this.muteButton.setAttribute("muted", this.video.muted);
                             break;
+                        case "loadeddata":
+                            this.firstFrameShown = true;
+                            break;
+                        case "loadstart":
+                            this.maxCurrentTimeSeen = 0;
+                            break;
+                        case "durationchange":
+                            var duration = Math.round(this.video.duration * 1000); // in ms
+                            this.durationChange(duration);
+                            break;
+                        case "progress":
+                            var loaded = aEvent.loaded;
+                            var total = aEvent.total;
+                            this.log("+++ load, " + loaded + " of " + total);
+                            // When the source is streaming, the value of .total is -1. Set the
+                            // progress bar to the maximum, since it's not useful.
+                            if (total == -1)
+                                total = loaded;
+                            this.bufferBar.max = total;
+                            this.bufferBar.value = loaded;
+                            break;
+                        case "timeupdate":
+                            var currentTime = Math.round(this.video.currentTime * 1000); // in ms
+                            var duration = Math.round(this.video.duration * 1000); // in ms
+
+                            // Timeupdate events are dispatched *every frame*. Reduce workload by
+                            // ignoring position changes that are within 333ms of the current position.
+                            if (Math.abs(currentTime - this.lastTimeUpdate) < 333)
+                                return;
+                            this.lastTimeUpdate = currentTime;
+
+                            this.showPosition(currentTime, duration);
+                            break;
+                        case "emptied":
+                            this.bufferBar.value = 0;
+                            break;
+                        case "seeking":
+                        case "waiting":
+                            this.startFadeIn(this.throbberFader);
+                            break;
+                        case "seeked":
+                            // Normally we'd expect canplaythough to fire, but if we already
+                            // have the data cached it shouldn't fire again.
+                            if (this.video.readyState == this.video.HAVE_ENOUGH_DATA)
+                                this.startFadeOut(this.throbberFader);
+                            break;
+                        case "playing":
+                        case "canplaythrough":
+                            this.startFadeOut(this.throbberFader);
+                            break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
                     }
                 },
 
-                fadeControls : function (self) {
-                    self.log("fadeControls @" + self.animationStep);
-                    self.animationStep += self.animationDirection;
+                terminateEventListeners : function () {
+                    for each (var event in this.videoEvents)
+                        this.video.removeEventListener(event, this, false);
 
-                    if (self.animationStep <= 0) {
-                        self.animationStep = 0;
-                        clearInterval(self.animationTimer);
-                        self.animationTimer = null;
-                    } else if (self.animationStep >= self.animationSteps) {
-                        self.animationStep = self.animationSteps;
-                        clearInterval(self.animationTimer);
-                        self.animationTimer = null;
+                    if (this.controlFader.timer)
+                        clearInterval(this.controlFader.timer);
+                    if (this.controlFader.delayTimer)
+                        clearInterval(this.controlFader.delayTimer);
+                    if (this.throbberFader.timer)
+                        clearInterval(this.throbberFader.timer);
+                    if (this.throbberFader.delayTimer)
+                        clearTimeout(this.throbberFader.delayTimer);
+                    this.log("--- videocontrols terminated ---");
+                },
+
+                durationChange : function (duration) {
+                    if (isNaN(duration))
+                        duration = this.maxCurrentTimeSeen;
+                    this.log("Duration is " + duration + "ms");
+
+                    this.scrubber.max = duration;
+                    // XXX Can't set increment here, due to bug 473103. Also, doing so causes
+                    // snapping when dragging with the mouse, so we can't just set a value for
+                    // the arrow-keys.
+                    //this.scrubber.increment = duration / 50;
+                    this.scrubber.pageIncrement = Math.round(duration / 10);
+                },
+
+                seekToPosition : function() {
+                    var newPosition = this.scrubber.getAttribute("value");
+                    newPosition /= 1000; // convert from ms
+                    this.log("+++ seeking to " + newPosition);
+                    this.video.currentTime = newPosition;
+                },
+
+                showPosition : function(currentTime, duration) {
+                    // If the duration is unknown (because the server didn't provide
+                    // it, or the video is a stream), then we want to fudge the duration
+                    // by using the maximum playback position that's been seen.
+                    if (currentTime > this.maxCurrentTimeSeen)
+                        this.maxCurrentTimeSeen = currentTime;
+                    if (isNaN(duration)) {
+                        duration = this.maxCurrentTimeSeen;
+                        this.durationChange(duration);
                     }
 
-                    // XXX might be good to do logarithmic steps, maybe use timer error too (for smoothness)?
-                    self.controls.style.opacity = self.animationStep / self.animationSteps;
+                    this.log("time update @ " + currentTime + "ms of " + duration + "ms");
+                    this.scrubber.value = currentTime;
+
+                    // Extend the progressBar so it goes to the right-edge of the
+                    // scrubber thumb. This is a bit tricky, due to how the thumb is
+                    // positioned... It's flush-left at the minimum position, but
+                    // flush-right at the maximum position (so that the full thumb is
+                    // always visible in the <scale>'s box).
+                    var percent = currentTime / duration;
+                    var leftEdge = Math.floor(percent * (this.scrubber.clientWidth - this.thumbWidth));
+                    var rightEdge = leftEdge + this.thumbWidth;
+                    var adjPercent = rightEdge / this.scrubber.clientWidth;
+
+                    // The progressBar has max=10000
+                    this.progressBar.value = Math.round(adjPercent * 10000);
+                },
+
+                onMouseInOut : function (event) {
+                    // If the controls are static, don't change anything.
+                    if (!this.dynamicControls)
+                        return;
+
+                    // Ignore events caused by transitions between child nodes.
+                    // Note that the videocontrols element is the same
+                    // size as the *content area* of the video element,
+                    // but this is not the same as the video element's
+                    // border area if the video has border or padding.
+                    if (this.isControlsOrDescendant(event.target) &&
+                        this.isControlsOrDescendant(event.relatedTarget))
+                        return;
+
+                    var isMouseOver = (event.type == "mouseover");
+
+                    // Suppress fading out the controls until the video has rendered
+                    // its first frame. But since autoplay videos start off with no
+                    // controls, let them fade-out so the controls don't get stuck on.
+                    if (!this.firstFrameShown && !isMouseOver &&
+                        !(this.video.autoplay && this.video.mozAutoplayEnabled))
+                        return;
+
+                    this.startFade(this.controlFader, isMouseOver);
+                },
+
+                startFadeIn : function (fader) {
+                    this.startFade(fader, true);
+                },
+
+                startFadeOut : function (fader) {
+                    this.startFade(fader, false);
+                },
+
+                startFade : function (fader, fadeIn, immediate) {
+                    // If the fader specifies a start delay, don't immediately fade in...
+                    // Unless there's already a fade underway, in which case we want to be
+                    // able to immediately reverse it (eg, a seeking event right after seeked).
+                    if (fadeIn && fader.START_DELAY && !immediate && !fader.timer) {
+                        function delayedFadeStart(self, fader) {
+                            self.log("Delated start timer fired.");
+                            fader.delayTimer = null;
+                            self.startFade(fader, true, true);
+                        }
+
+                        // If there's already a timer running, let it handle things.
+                        if (fader.delayTimer)
+                            return;
+
+                        this.log("Delaying " + fader.name + " fade-in...");
+                        fader.delayTimer = setTimeout(delayedFadeStart, fader.START_DELAY, this, fader);
+                        return;
+                    }
+
+                    // Cancel any delay timer (eg, if we start fading-out before it fires)
+                    if (fader.delayTimer) {
+                        this.log("Canceling " + fader.name + " fade-in delay...");
+                        clearTimeout(fader.delayTimer);
+                        fader.delayTimer = null;
+                    }
+
+
+                    // If we're already fading towards the desired state (or are
+                    // already there), then we don't need to do anything more.
+                    var directionChange = (fader.fadingIn != fadeIn);
+                    if (!directionChange)
+                        return;
+
+                    fader.fadingIn = fadeIn;
+                    this.log("Fading " + fader.name + (fader.fadingIn ? " in" : " out"));
+
+                    // When switching direction mid-fade, we want the reversed fade
+                    // to complete in the same amount of time as the current fade has
+                    // been running. So we invert the runtime.
+                    //
+                    // For example, if we're 20ms into a 100ms fade-in, then we want to
+                    // fade-out over 20ms. This is done by setting the .runtime to 80ms
+                    // (100-20), so that doFade will only animate for 20ms more.
+                    if (fader.runtime)
+                        fader.runtime = fader.RUNTIME_MAX - fader.runtime;
+
+                    if (!fader.timer) {
+                        fader.timer = setInterval(this.doFade, fader.RUNTIME_STEP, this, fader);
+                        // Perform the first fade step now, notably to make a fade-in
+                        // immediately activate the controls.
+                        this.doFade(this, fader, -(fader.RUNTIME_STEP - 1));
+                    }
+                },
+
+                doFade : function (self, fader, lateness) {
+                    // Update elapsed time, and compute position as a percent
+                    // of total. Last frame could run over, so clamp to 1.
+                    fader.runtime += fader.RUNTIME_STEP + lateness;
+                    var pos = fader.runtime / fader.RUNTIME_MAX;
+                    if (pos > 1)
+                        pos = 1;
+                    
+                    // Calculate the opacity for our position in the animation.
+                    var opacity;
+                    if (fader.fadingIn)
+                        opacity = Math.pow(pos, 0.5);
+                    else
+                        opacity = Math.pow(1 - pos, 0.5);
+                    fader.isVisible = (opacity ? true : false);
+                    //self.log("Fading " + fader.name + " to opacity " + opacity);
+
+                    fader.element.style.opacity = opacity;
+
+                    // Use .visibility to ignore mouse clicks when hidden.
+                    if (fader.isVisible)
+                        fader.element.style.visibility = "visible";
+                    else
+                        fader.element.style.visibility = "hidden";
+
+                    // Is the animation done?
+                    if (pos == 1) {
+                        clearInterval(fader.timer);
+                        fader.timer = null;
+                        fader.runtime = 0;
+                    }
                 },
 
                 togglePause : function () {
-                    if (this.video.paused)
+                    if (this.video.paused || this.video.ended)
                         this.video.play();
                     else
                         this.video.pause();
@@ -141,13 +500,13 @@
                     // controlling volume.
                 },
 
-                isChildNode : function (node) {
+                isControlsOrDescendant : function (node) {
                     while (node) {
-                        if (node == this.controls)
-                            break;
+                        if (node == this.videocontrols)
+                            return true;
                         node = node.parentNode;
                     }
-                    return (node == this);
+                    return false;
                 },
 
                 log : function (msg) {
@@ -162,21 +521,45 @@
             <![CDATA[
             var video = this.parentNode;
             this.Utils.video = video;
-            this.Utils.controls = this;
+            this.Utils.videocontrols = this;
 
-            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "id", "playButton");
-            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "id", "muteButton");
+            this.Utils.controlFader.element  = document.getAnonymousElementByAttribute(this, "class", "controlBar");
+            this.Utils.throbberFader.element = document.getAnonymousElementByAttribute(this, "class", "throbberOverlay");
 
-            // Set initial state of play/pause button.
-            this.Utils.playButton.setAttribute("paused", video.paused);
+            this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
+            this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");
+            this.Utils.progressBar    = document.getAnonymousElementByAttribute(this, "class", "progressBar");
+            this.Utils.bufferBar      = document.getAnonymousElementByAttribute(this, "class", "bufferBar");
+            this.Utils.scrubber       = document.getAnonymousElementByAttribute(this, "class", "scrubber");
 
-            this.style.opacity = 0;
+            // Get the width of the scrubber thumb.
+            var thumb = document.getAnonymousElementByAttribute(this.Utils.scrubber, "class", "scale-thumb");
+            if (thumb)
+                this.Utils.thumbWidth = thumb.clientWidth;
+             
+            this.Utils.setupInitialState();
 
-            // Use Utils.handleEvent() callback for all media events.
-            video.addEventListener("play",         this.Utils, false);
-            video.addEventListener("pause",        this.Utils, false);
-            video.addEventListener("ended",        this.Utils, false);
-            video.addEventListener("volumechange", this.Utils, false);
+            // videocontrols.css hides the control bar by default, because if script
+            // is disabled our binding's script is disabled too (bug 449358). Thus,
+            // the controls are broken and we don't want them shown. But if script is
+            // enabled, the code here will run and can explicitly unhide the controls.
+            //
+            // For videos with |autoplay| set, we'll leave the controls initially hidden,
+            // so that they don't get in the way of the playing video. Otherwise we'll
+            // go ahead and reveal the controls now, so they're an obvious user cue.
+            //
+            // (Note: the |controls| attribute is already handled via layout/style/html.css)
+            if (!(video.autoplay && video.mozAutoplayEnabled) || !this.Utils.dynamicControls) {
+                var fader = this.Utils.controlFader;
+                fader.element.style.visibility = "visible";
+                fader.element.style.opacity = 1.0;
+                fader.isVisible = true;
+                fader.fadingIn = true;
+            }
+
+            // Use the Utils.handleEvent() callback for all media events.
+            for each (var event in this.Utils.videoEvents)
+                video.addEventListener(event, this.Utils, false);
 
             this.Utils.log("--- videocontrols initialized ---");
             ]]>
@@ -187,33 +570,10 @@
 
     <handlers>
         <handler event="mouseover">
-            <![CDATA[
-            // Ignore events caused by transitions between child nodes.
-            if (this.Utils.isChildNode(event.relatedTarget))
-                return;
-
-            // Don't show controls unless they're enabled
-            // XXX sucks that spec defaults to controls=false. :-(
-            // XXX add support for dynamically hiding controls w/o waiting for mouseout?
-            if (!this.Utils.video.controls)
-                return;
-
-            this.Utils.animationDirection = 1;
-            if (!this.Utils.animationTimer)
-                this.Utils.animationTimer = setInterval(this.Utils.fadeControls, 50, this.Utils);
-            ]]>
+            this.Utils.onMouseInOut(event);
         </handler>
-
         <handler event="mouseout">
-            <![CDATA[
-            // Ignore events caused by transitions between child nodes.
-            if (this.Utils.isChildNode(event.relatedTarget))
-                return;
-
-            this.Utils.animationDirection = -1;
-            if (!this.Utils.animationTimer)
-                this.Utils.animationTimer = setInterval(this.Utils.fadeControls, 50, this.Utils);
-            ]]>
+            this.Utils.onMouseInOut(event);
         </handler>
     </handlers>
   </binding>

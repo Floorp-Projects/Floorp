@@ -46,6 +46,8 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIClipboardOwner.h"
+#include "nsClipboardPrivacyHandler.h"
+#include "nsAutoPtr.h"
 #include <nsCOMPtr.h>
 
 class nsITransferable;
@@ -91,6 +93,7 @@ private:
   nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
   nsCOMPtr<nsITransferable>   mSelectionTransferable;
   nsCOMPtr<nsITransferable>   mGlobalTransferable;
+  nsRefPtr<nsClipboardPrivacyHandler> mPrivacyHandler;
 
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:

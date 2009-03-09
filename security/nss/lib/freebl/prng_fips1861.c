@@ -35,7 +35,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: prng_fips1861.c,v 1.27 2006/10/13 16:54:04 wtchang%redhat.com Exp $ */
+/* $Id: prng_fips1861.c,v 1.29 2009/02/03 05:34:41 julien.pierre.boogz%sun.com Exp $ */
+
+#ifdef FREEBL_NO_DEPEND
+#include "stubs.h"
+#endif
 
 #include "prerr.h"
 #include "secerr.h"
@@ -49,6 +53,7 @@
 #include "sha256.h"
 #include "secrng.h"	/* for RNG_GetNoise() */
 #include "secmpi.h"
+#include "blapii.h"
 
 /*
  * The minimum amount of seed data required before the generator will
@@ -184,7 +189,7 @@ freeRNGContext()
     SECStatus rv;
 
     /* destroy context lock */
-    PZ_DestroyLock(globalrng->lock);
+    SKIP_AFTER_FORK(PZ_DestroyLock(globalrng->lock));
 
     /* zero global RNG context except for XKEY to preserve entropy */
     rv = SHA256_HashBuf(inputhash, globalrng->XKEY, BSIZE);

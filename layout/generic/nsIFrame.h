@@ -47,7 +47,7 @@
    variables in this file.  -dwh */
 
 #include <stdio.h>
-#include "nsISupports.h"
+#include "nsQueryFrame.h"
 #include "nsEvent.h"
 #include "nsStyleStruct.h"
 #include "nsStyleContext.h"
@@ -464,10 +464,10 @@ typedef PRBool nsDidReflowStatus;
  * If you're not in layout but you must call functions in here, at least
  * restrict yourself to calling virtual methods, which won't hurt you as badly.
  */
-class nsIFrame : public nsISupports
+class nsIFrame : public nsQueryFrame
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
+  NS_DECLARE_FRAME_ACCESSOR(nsIFrame)
 
   nsPresContext* PresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
@@ -853,8 +853,9 @@ public:
     nsITheme *theme = pc->GetTheme();
     if(!theme || !theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance))
       return PR_FALSE;
-    if (aTransparencyMode)
+    if (aTransparencyMode) {
       *aTransparencyMode = theme->GetWidgetTransparency(aDisp->mAppearance);
+    }
     return PR_TRUE;
   }
   
@@ -1172,6 +1173,7 @@ public:
   struct InlineIntrinsicWidthData {
     InlineIntrinsicWidthData()
       : line(nsnull)
+      , lineContainer(nsnull)
       , prevLines(0)
       , currentLine(0)
       , skipWhitespace(PR_TRUE)
@@ -1181,6 +1183,9 @@ public:
     // The line. This may be null if the inlines are not associated with
     // a block or if we just don't know the line.
     const nsLineList_iterator* line;
+
+    // The line container.
+    nsIFrame* lineContainer;
 
     // The maximum intrinsic width for all previous lines.
     nscoord prevLines;
@@ -1200,7 +1205,7 @@ public:
     nscoord trailingWhitespace;
 
     // Floats encountered in the lines.
-    nsVoidArray floats; // of nsIFrame*
+    nsTArray<nsIFrame*> floats;
   };
 
   struct InlineMinWidthData : public InlineIntrinsicWidthData {
@@ -2347,9 +2352,6 @@ protected:
    nsresult PeekOffsetParagraph(nsPeekOffsetStruct *aPos);
 
 private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
-  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
-
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
 };
 
@@ -2423,8 +2425,5 @@ private:
   nsWeakFrame*  mPrev;
   nsIFrame*     mFrame;
 };
-
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrame, NS_IFRAME_IID)
 
 #endif /* nsIFrame_h___ */

@@ -60,6 +60,7 @@ function run_test()
     destFile.remove(false);
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
+  do_check_eq(999, getDBVersion(testfile));
 
   var fh = Cc["@mozilla.org/satchel/form-history;1"].
            getService(Ci.nsIFormHistory2);
@@ -74,7 +75,8 @@ function run_test()
   do_check_true(fh.entryExists("name-C", "value-C1"));
   do_check_true(fh.entryExists("name-C", "value-C2"));
   do_check_true(fh.entryExists("name-E", "value-E"));
-
+  // check for downgraded schema.
+  do_check_eq(CURRENT_SCHEMA, fh.DBConnection.schemaVersion);
 
   // ===== 2 =====
   testnum++;

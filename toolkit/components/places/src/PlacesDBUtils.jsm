@@ -69,9 +69,9 @@ const FINISHED_MAINTENANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
 // and we can hit without big troubles.
 const IDLE_TIMEOUT = 10 * 60 * 1000;
 
-// Check for idle every 30 minutes and do maintenance if the user has been idle
+// Check for idle every 10 minutes and do maintenance if the user has been idle
 // for more than IDLE_TIMEOUT.
-const IDLE_LOOKUP_REPEAT = 30 * 60 * 1000;
+const IDLE_LOOKUP_REPEAT = 10 * 60 * 1000;
 
 // These are the seconds between each maintenance (24h).
 const MAINTENANCE_REPEAT =  24 * 60 * 60;
@@ -80,6 +80,42 @@ const MAINTENANCE_REPEAT =  24 * 60 * 60;
 //// nsPlacesDBUtils class
 
 function nsPlacesDBUtils() {
+  //////////////////////////////////////////////////////////////////////////////
+  //// Smart getters
+
+  this.__defineGetter__("_bms", function() {
+    delete this._bms;
+    return this._bms = Cc[BS_CONTRACTID].getService(Ci.nsINavBookmarksService);
+  });
+
+  this.__defineGetter__("_hs", function() {
+    delete this._hs;
+    return this._hs = Cc[HS_CONTRACTID].getService(Ci.nsINavHistoryService);
+  });
+
+  this.__defineGetter__("_os", function() {
+    delete this._os;
+    return this._os = Cc[OS_CONTRACTID].getService(Ci.nsIObserverService);
+  });
+
+  this.__defineGetter__("_idlesvc", function() {
+    delete this._idlesvc;
+    return this._idlesvc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
+  });
+
+  this.__defineGetter__("_dbConn", function() {
+    delete this._dbConn;
+    return this._dbConn = Cc[HS_CONTRACTID].
+                          getService(Ci.nsPIPlacesDatabase).DBConnection;
+  });
+
+  this.__defineGetter__("_bundle", function() {
+    delete this._bundle;
+    return this._bundle = Cc[SB_CONTRACTID].
+                          getService(Ci.nsIStringBundleService).
+                          createBundle(PLACES_STRING_BUNDLE_URI);
+  });
+
   // register the maintenance timer
   try {
     let tim = Cc[TIM_CONTRACTID].getService(Ci.nsIUpdateTimerManager);
@@ -226,27 +262,39 @@ nsPlacesDBUtils.prototype = {
     fixTagsRootTitle.params["title"] =
       this._bundle.GetStringFromName("TagsFolderTitle");
     cleanupStatements.push(fixTagsRootTitle);
-
-    // C.2 fix broken roots
-    //     Roots must be folders and have places root as parent
-    let fixInvalidRoots = this._dbConn.createStatement(
-      "DELETE FROM moz_bookmarks_roots WHERE folder_id IN (" +
-        "SELECT folder_id FROM moz_bookmarks_roots r " +
-        "WHERE folder_id <> :places_root " + //exclude root
-          "AND NOT EXISTS " +
-            "(SELECT id FROM moz_bookmarks WHERE id = r.folder_id " +
-              "AND type = :type_folder AND parent = :places_root LIMIT 1)" +
-      ")");
-    fixInvalidRoots.params["type_folder"] = this._bms.TYPE_FOLDER;
-    fixInvalidRoots.params["places_root"] = this._bms.placesRoot;
-    cleanupStatements.push(fixInvalidRoots);
 */
+
+    // C.2 fix missing Places root
+    //     Bug 477739 shows a case where the root could be wrongly removed
+    //     due to an endianness issue.  We try to fix broken roots here.
+    let selectPlacesRoot = this._dbConn.createStatement(
+      "SELECT id FROM moz_bookmarks WHERE id = :places_root");
+    selectPlacesRoot.params["places_root"] = this._bms.placesRoot;
+    if (!selectPlacesRoot.executeStep()) {
+      // We are missing the root, try to recreate it.
+      let createPlacesRoot = this._dbConn.createStatement(
+        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title) " +
+        "VALUES (:places_root, 2, NULL, 0, 0, NULL)");
+      createPlacesRoot.params["places_root"] = this._bms.placesRoot;
+      cleanupStatements.push(createPlacesRoot);
+
+      // Now ensure that other roots are children of Places root.
+      let fixPlacesRootChildren = this._dbConn.createStatement(
+        "UPDATE moz_bookmarks SET parent = :places_root WHERE id IN " +
+          "(SELECT folder_id FROM moz_bookmarks_roots " +
+            "WHERE folder_id <> :places_root)");
+      fixPlacesRootChildren.params["places_root"] = this._bms.placesRoot;
+      cleanupStatements.push(fixPlacesRootChildren);
+    }
+    selectPlacesRoot.finalize();
 
     // MOZ_BOOKMARKS
     // D.1 remove items without a valid place
     // if fk IS NULL we fix them in D.7
     let deleteNoPlaceItems = this._dbConn.createStatement(
-      "DELETE FROM moz_bookmarks WHERE id IN (" +
+      "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN (" +
         "SELECT b.id FROM moz_bookmarks b " +
         "WHERE fk NOT NULL AND b.type = :bookmark_type " +
           "AND NOT EXISTS (SELECT url FROM moz_places_temp WHERE id = b.fk LIMIT 1) " +
@@ -257,7 +305,9 @@ nsPlacesDBUtils.prototype = {
 
     // D.2 remove items that are not uri bookmarks from tag containers
     let deleteBogusTagChildren = this._dbConn.createStatement(
-      "DELETE FROM moz_bookmarks WHERE id IN (" +
+      "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN (" +
         "SELECT b.id FROM moz_bookmarks b " +
         "WHERE b.parent IN " +
           "(SELECT id FROM moz_bookmarks WHERE parent = :tags_folder) " +
@@ -269,7 +319,9 @@ nsPlacesDBUtils.prototype = {
 
     // D.3 remove empty tags
     let deleteEmptyTags = this._dbConn.createStatement(
-      "DELETE FROM moz_bookmarks WHERE id IN (" +
+      "DELETE FROM moz_bookmarks WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN (" +
         "SELECT b.id FROM moz_bookmarks b " +
         "WHERE b.id IN " +
           "(SELECT id FROM moz_bookmarks WHERE parent = :tags_folder) " +
@@ -281,9 +333,11 @@ nsPlacesDBUtils.prototype = {
 
     // D.4 move orphan items to unsorted folder
     let fixOrphanItems = this._dbConn.createStatement(
-      "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id IN (" +
+      "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " +  // skip roots
+      ") AND id IN (" +
         "SELECT b.id FROM moz_bookmarks b " +
-        "WHERE b.parent <> 0 " + // exclude root
+        "WHERE b.parent <> 0 " + // exclude Places root
         "AND NOT EXISTS " +
           "(SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1) " +
       ")");
@@ -292,7 +346,9 @@ nsPlacesDBUtils.prototype = {
 
     // D.5 fix wrong keywords
     let fixInvalidKeywords = this._dbConn.createStatement(
-      "UPDATE moz_bookmarks SET keyword_id = NULL WHERE id IN ( " +
+      "UPDATE moz_bookmarks SET keyword_id = NULL WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN ( " +
         "SELECT id FROM moz_bookmarks b " +
         "WHERE keyword_id NOT NULL " +
           "AND NOT EXISTS " +
@@ -305,7 +361,9 @@ nsPlacesDBUtils.prototype = {
     //     If they have a valid fk convert them to bookmarks. Later in D.9 we
     //     will move eventual children to unsorted bookmarks.
     let fixBookmarksAsFolders = this._dbConn.createStatement(
-      "UPDATE moz_bookmarks SET type = :bookmark_type WHERE id IN ( " +
+      "UPDATE moz_bookmarks SET type = :bookmark_type WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN ( " +
         "SELECT id FROM moz_bookmarks b " +
         "WHERE type IN (:folder_type, :separator_type, :dynamic_type) " +
           "AND fk NOTNULL " +
@@ -320,7 +378,9 @@ nsPlacesDBUtils.prototype = {
     //     Bookmarks should have an fk, if they don't have any, convert them to
     //     folders.
     let fixFoldersAsBookmarks = this._dbConn.createStatement(
-      "UPDATE moz_bookmarks SET type = :folder_type WHERE id IN ( " +
+      "UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN ( " +
         "SELECT id FROM moz_bookmarks b " +
         "WHERE type = :bookmark_type " +
           "AND fk IS NULL " +
@@ -333,7 +393,9 @@ nsPlacesDBUtils.prototype = {
     //     Dynamic containers should have a folder_type, if they don't have any
     //     convert them to folders.
     let fixFoldersAsDynamic = this._dbConn.createStatement(
-      "UPDATE moz_bookmarks SET type = :folder_type WHERE id IN ( " +
+      "UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " + // skip roots
+      ") AND id IN ( " +
         "SELECT id FROM moz_bookmarks b " +
         "WHERE type = :dynamic_type " +
           "AND folder_type IS NULL " +
@@ -346,7 +408,9 @@ nsPlacesDBUtils.prototype = {
     //     Items cannot have dynamic containers, separators or other bookmarks
     //     as parent, if they have bad parent move them to unsorted bookmarks.
     let fixInvalidParents = this._dbConn.createStatement(
-      "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id IN ( " +
+      "UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN ( " +
+        "SELECT folder_id FROM moz_bookmarks_roots " +  // skip roots
+      ") AND id IN ( " +
         "SELECT id FROM moz_bookmarks b " +
         "WHERE EXISTS " +
           "(SELECT id FROM moz_bookmarks WHERE id = b.parent " +
@@ -394,9 +458,10 @@ nsPlacesDBUtils.prototype = {
     //      status items bookmarks inside it. We should remove them.
     //      Note: This does not need to query the temp table.
     let removeLivemarkStaticItems = this._dbConn.createStatement(
-      "DELETE FROM moz_bookmarks WHERE fk IN ( " +
+      "DELETE FROM moz_bookmarks WHERE type = :bookmark_type AND fk IN ( " +
         "SELECT id FROM moz_places WHERE url = :lmloading OR url = :lmfailed " +
       ")");
+    removeLivemarkStaticItems.params["bookmark_type"] = this._bms.TYPE_BOOKMARK;
     removeLivemarkStaticItems.params["lmloading"] = "about:livemark-loading";
     removeLivemarkStaticItems.params["lmfailed"] = "about:livemark-failed";
     cleanupStatements.push(removeLivemarkStaticItems);
@@ -514,42 +579,6 @@ nsPlacesDBUtils.prototype = {
       }, this);
   },
 };
-
-//////////////////////////////////////////////////////////////////////////////
-//// Smart getters
-
-nsPlacesDBUtils.prototype.__defineGetter__("_bms", function() {
-  delete nsPlacesDBUtils._bms;
-  return nsPlacesDBUtils._bms = Cc[BS_CONTRACTID].getService(Ci.nsINavBookmarksService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_hs", function() {
-  delete nsPlacesDBUtils._hs;
-  return nsPlacesDBUtils._hs = Cc[HS_CONTRACTID].getService(Ci.nsINavHistoryService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_os", function() {
-  delete nsPlacesDBUtils._os;
-  return nsPlacesDBUtils._os = Cc[OS_CONTRACTID].getService(Ci.nsIObserverService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_idlesvc", function() {
-  delete nsPlacesDBUtils._idlesvc;
-  return nsPlacesDBUtils._idlesvc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_dbConn", function() {
-  delete nsPlacesDBUtils._dbConn;
-  return nsPlacesDBUtils._dbConn = Cc[HS_CONTRACTID].
-                        getService(Ci.nsPIPlacesDatabase).DBConnection;
-});
-
-nsPlacesDBUtils.prototype.__defineGetter__("_bundle", function() {
-  delete nsPlacesDBUtils._bundle;
-  return nsPlacesDBUtils._bundle = Cc[SB_CONTRACTID].
-                                   getService(Ci.nsIStringBundleService).
-                                   createBundle(PLACES_STRING_BUNDLE_URI);
-});
 
 __defineGetter__("PlacesDBUtils", function() {
   delete this.PlacesDBUtils;

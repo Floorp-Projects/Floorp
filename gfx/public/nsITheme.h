@@ -46,9 +46,9 @@
 #include "nsColor.h"
 
 struct nsRect;
-struct nsSize;
+struct nsIntSize;
 struct nsFont;
-struct nsMargin;
+struct nsIntMargin;
 class nsPresContext;
 class nsIRenderingContext;
 class nsIDeviceContext;
@@ -57,9 +57,9 @@ class nsIContent;
 class nsIAtom;
 
 // IID for the nsITheme interface
-// {f5eb2e02-ed3f-4340-82fc-22f55bb556f9}
-#define NS_ITHEME_IID     \
-{ 0xf5eb2e02, 0xed3f, 0x4340, { 0x82, 0xfc, 0x22, 0xf5, 0x5b, 0xb5, 0x56, 0xf9 } }
+// {887e8902-db6b-41b4-8481-a80f49c5a93a}
+ #define NS_ITHEME_IID     \
+{ 0x887e8902, 0xdb6b, 0x41b4, { 0x84, 0x81, 0xa8, 0x0f, 0x49, 0xc5, 0xa9, 0x3a } }
 
 // {D930E29B-6909-44e5-AB4B-AF10D6923705}
 #define NS_THEMERENDERER_CID \
@@ -97,7 +97,7 @@ public:
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
-                             nsMargin* aResult)=0;
+                             nsIntMargin* aResult)=0;
 
   /**
    * This method can return PR_FALSE to indicate that the CSS padding
@@ -111,7 +111,7 @@ public:
   virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsMargin* aResult) = 0;
+                                  nsIntMargin* aResult) = 0;
 
   /**
    * On entry, *aResult is positioned at 0,0 and sized to the new size
@@ -136,7 +136,7 @@ public:
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsSize* aResult,
+                                  nsIntSize* aResult,
                                   PRBool* aIsOverridable)=0;
 
   virtual nsTransparencyMode GetWidgetTransparency(PRUint8 aWidgetType)=0;

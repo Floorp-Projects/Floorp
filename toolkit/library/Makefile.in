@@ -209,7 +209,7 @@ EXTRA_DSO_LDOPTS += \
 ifdef MOZ_SYDNEYAUDIO
 EXTRA_DSO_LDOPTS += \
 	-framework CoreAudio \
- 	-framework AudioToolbox \
+	-framework AudioToolbox \
 	-framework AudioUnit \
 	$(NULL)
 endif
@@ -228,12 +228,16 @@ EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_PANGO_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XT_LIBS) $(MOZ_QT_LIBS) -lgthread-2.0
+EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+endif
+
+ifdef MOZ_TREE_FREETYPE
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 
@@ -258,7 +262,10 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32 Ws2)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2)
+ifdef WINCE_WINDOWS_MOBILE
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, cellcore)
+endif
 endif
 
 

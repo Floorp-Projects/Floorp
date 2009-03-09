@@ -59,6 +59,7 @@
 #include "nsIDOMEvent.h"
 #include "nsTArray.h"
 #include "nsTextFragment.h"
+#include "nsReadableUtils.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -112,6 +113,7 @@ class nsIXTFService;
 #ifdef IBMBIDI
 class nsIBidiKeyboard;
 #endif
+class nsIMIMEHeaderParam;
 
 extern const char kLoadAsData[];
 
@@ -882,6 +884,28 @@ public:
                                        PRBool *aDefaultAction = nsnull);
 
   /**
+   * This method creates and dispatches a trusted event to the chrome
+   * event handler.
+   * Works only with events which can be created by calling
+   * nsIDOMDocumentEvent::CreateEvent() with parameter "Events".
+   * @param aDocument      The document which will be used to create the event,
+   *                       and whose window's chrome handler will be used to
+   *                       dispatch the event.
+   * @param aTarget        The target of the event, used for event->SetTarget()
+   * @param aEventName     The name of the event.
+   * @param aCanBubble     Whether the event can bubble.
+   * @param aCancelable    Is the event cancelable.
+   * @param aDefaultAction Set to true if default action should be taken,
+   *                       see nsIDOMEventTarget::DispatchEvent.
+   */
+  static nsresult DispatchChromeEvent(nsIDocument* aDoc,
+                                      nsISupports* aTarget,
+                                      const nsAString& aEventName,
+                                      PRBool aCanBubble,
+                                      PRBool aCancelable,
+                                      PRBool *aDefaultAction = nsnull);
+
+  /**
    * Determines if an event attribute name (such as onclick) is valid for
    * a given element type. Types are from the EventNameType enumeration
    * defined above.
@@ -1300,6 +1324,7 @@ public:
    *                   scripts. Passing null is allowed and results in nothing
    *                   happening. It is also allowed to pass an object that
    *                   has not yet been AddRefed.
+   * @return false on out of memory, true otherwise.
    */
   static PRBool AddScriptRunner(nsIRunnable* aRunnable);
 
@@ -1357,6 +1382,26 @@ public:
   {
     return sThreadJSContextStack;
   }
+  
+
+  /**
+   * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
+   * nsIURI or the URI of the passed in nsIPrincipal does not have a host, the
+   * origin is set to 'null'.
+   *
+   * The ASCII versions return a ASCII strings that are puny-code encoded,
+   * suitable for for example header values. The UTF versions return strings
+   * containing international characters.
+   *
+   * aPrincipal/aOrigin must not be null.
+   */
+  static nsresult GetASCIIOrigin(nsIPrincipal* aPrincipal,
+                                 nsCString& aOrigin);
+  static nsresult GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin);
+  static nsresult GetUTFOrigin(nsIPrincipal* aPrincipal,
+                               nsString& aOrigin);
+  static nsresult GetUTFOrigin(nsIURI* aURI, nsString& aOrigin);
+
 private:
 
   static PRBool InitializeEventTable();
@@ -1453,12 +1498,25 @@ public:
 
   // Returns PR_FALSE if something erroneous happened.
   PRBool Push(nsPIDOMEventTarget *aCurrentTarget);
+  // If a null JSContext is passed to Push(), that will cause no
+  // push to happen and false to be returned.
   PRBool Push(JSContext *cx);
+  // Explicitly push a null JSContext on the the stack
+  PRBool PushNull();
+
+  // Pop() will be a no-op if Push() or PushNull() fail
   void Pop();
 
 private:
+  // Combined code for PushNull() and Push(JSContext*)
+  PRBool DoPush(JSContext* cx);
+
   nsCOMPtr<nsIScriptContext> mScx;
   PRBool mScriptIsRunning;
+  PRBool mPushedSomething;
+#ifdef DEBUG
+  JSContext* mPushedContext;
+#endif
 };
 
 class nsAutoGCRoot {
@@ -1607,7 +1665,7 @@ private:
   
   // sMutationCount is a global mutation counter which is decreased by one at
   // every mutation. It is capped at 0 to avoid wrapping.
-  // It's value is always between 0 and 300, inclusive.
+  // Its value is always between 0 and 300, inclusive.
   static PRUint32 sMutationCount;
 };
 
@@ -1682,5 +1740,34 @@ inline NS_HIDDEN_(PRBool) NS_FloatIsFinite(jsdouble f) {
   if (!NS_FloatIsFinite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                     \
     return (rv);                                                              \
   }
+
+// Deletes a linked list iteratively to avoid blowing up the stack (bug 460444).
+#define NS_CONTENT_DELETE_LIST_MEMBER(type_, ptr_, member_)                   \
+  {                                                                           \
+    type_ *cur = (ptr_)->member_;                                             \
+    (ptr_)->member_ = nsnull;                                                 \
+    while (cur) {                                                             \
+      type_ *next = cur->member_;                                             \
+      cur->member_ = nsnull;                                                  \
+      delete cur;                                                             \
+      cur = next;                                                             \
+    }                                                                         \
+  }
+
+class nsContentTypeParser {
+public:
+  nsContentTypeParser(const nsAString& aString);
+  ~nsContentTypeParser();
+
+  nsresult GetParameter(const char* aParameterName, nsAString& aResult);
+  nsresult GetType(nsAString& aResult)
+  {
+    return GetParameter(nsnull, aResult);
+  }
+
+private:
+  NS_ConvertUTF16toUTF8 mString;
+  nsIMIMEHeaderParam*   mService;
+};
 
 #endif /* nsContentUtils_h___ */

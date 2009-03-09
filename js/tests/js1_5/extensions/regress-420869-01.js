@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-420869-01.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 424683;
+var BUGNUMBER = 420869;
 var summary = 'Throw too much recursion instead of script stack space quota';
 var actual = 'No Error';
 var expect = 'InternalError: too much recursion';

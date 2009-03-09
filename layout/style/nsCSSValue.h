@@ -97,10 +97,13 @@ enum nsCSSUnit {
                                   //       only in temporary values
   eCSSUnit_DummyInherit = 8,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
+  eCSSUnit_RectIsAuto   = 9,      // (n/a) 'auto' for an entire rect()
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
-  eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
-  eCSSUnit_Local_Font   = 12,     // (PRUnichar*) a local font name
-  eCSSUnit_Font_Format  = 13,     // (PRUnichar*) a font format name
+  eCSSUnit_Ident        = 11,     // (PRUnichar*) a string value
+  eCSSUnit_Families     = 12,     // (PRUnichar*) a string value
+  eCSSUnit_Attr         = 13,     // (PRUnichar*) a attr(string) value
+  eCSSUnit_Local_Font   = 14,     // (PRUnichar*) a local font name
+  eCSSUnit_Font_Format  = 15,     // (PRUnichar*) a font format name
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
@@ -141,6 +144,7 @@ enum nsCSSUnit {
   eCSSUnit_EM           = 800,    // (float) == current font size
   eCSSUnit_XHeight      = 801,    // (float) distance from top of lower case x to baseline
   eCSSUnit_Char         = 802,    // (float) number of characters, used for width with monospace font
+  eCSSUnit_RootEM       = 803,    // (float) == root element font size
 
   // Screen relative measure
   eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit
@@ -174,7 +178,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
+    NS_ASSERTION(aUnit <= eCSSUnit_RectIsAuto, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
@@ -317,6 +321,7 @@ public:
   NS_HIDDEN_(void)  SetSystemFontValue();
   NS_HIDDEN_(void)  SetDummyValue();
   NS_HIDDEN_(void)  SetDummyInheritValue();
+  NS_HIDDEN_(void)  SetRectIsAutoValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
                                    const;  // Not really const, but pretending
 
@@ -324,104 +329,6 @@ public:
   // failure.
   static nsStringBuffer* BufferFromString(const nsString& aValue);
   
-  struct Array {
-
-    // return |Array| with reference count of zero
-    static Array* Create(PRUint16 aItemCount) {
-      return new (aItemCount) Array(aItemCount);
-    }
-
-    nsCSSValue& operator[](PRUint16 aIndex) {
-      NS_ASSERTION(aIndex < mCount, "out of range");
-      return *(First() + aIndex);
-    }
-
-    const nsCSSValue& operator[](PRUint16 aIndex) const {
-      NS_ASSERTION(aIndex < mCount, "out of range");
-      return *(First() + aIndex);
-    }
-
-    nsCSSValue& Item(PRUint16 aIndex) { return (*this)[aIndex]; }
-    const nsCSSValue& Item(PRUint16 aIndex) const { return (*this)[aIndex]; }
-
-    PRUint16 Count() const { return mCount; }
-
-    PRBool operator==(const Array& aOther) const
-    {
-      if (mCount != aOther.mCount)
-        return PR_FALSE;
-      for (PRUint16 i = 0; i < mCount; ++i)
-        if ((*this)[i] != aOther[i])
-          return PR_FALSE;
-      return PR_TRUE;
-    }
-
-    void AddRef() {
-      if (mRefCnt == PR_UINT16_MAX) {
-        NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
-        return;
-      }
-      ++mRefCnt;
-      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Array", sizeof(*this));
-    }
-    void Release() {
-      if (mRefCnt == PR_UINT16_MAX) {
-        NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
-        return;
-      }
-      --mRefCnt;
-      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Array");
-      if (mRefCnt == 0)
-        delete this;
-    }
-
-  private:
-
-    PRUint16 mRefCnt;
-    PRUint16 mCount;
-
-    void* operator new(size_t aSelfSize, PRUint16 aItemCount) CPP_THROW_NEW {
-      return ::operator new(aSelfSize + sizeof(nsCSSValue)*aItemCount);
-    }
-
-    void operator delete(void* aPtr) { ::operator delete(aPtr); }
-
-    nsCSSValue* First() {
-      return (nsCSSValue*) (((char*)this) + sizeof(*this));
-    }
-
-    const nsCSSValue* First() const {
-      return (const nsCSSValue*) (((const char*)this) + sizeof(*this));
-    }
-
-#define CSSVALUE_LIST_FOR_VALUES(var)                                         \
-  for (nsCSSValue *var = First(), *var##_end = var + mCount;                  \
-       var != var##_end; ++var)
-
-    Array(PRUint16 aItemCount)
-      : mRefCnt(0)
-      , mCount(aItemCount)
-    {
-      MOZ_COUNT_CTOR(nsCSSValue::Array);
-      CSSVALUE_LIST_FOR_VALUES(val) {
-        new (val) nsCSSValue();
-      }
-    }
-
-    ~Array()
-    {
-      MOZ_COUNT_DTOR(nsCSSValue::Array);
-      CSSVALUE_LIST_FOR_VALUES(val) {
-        val->~nsCSSValue();
-      }
-    }
-
-#undef CSSVALUE_LIST_FOR_VALUES
-
-  private:
-    Array(const Array& aOther); // not to be implemented
-  };
-
   struct URL {
     // Methods are not inline because using an nsIPrincipal means requiring
     // caps, which leads to REQUIRES hell, since this header is included all
@@ -448,8 +355,21 @@ public:
     nsCOMPtr<nsIURI> mReferrer;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
-    void AddRef() { ++mRefCnt; }
-    void Release() { if (--mRefCnt == 0) delete this; }
+    void AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
+        return;
+      }
+      ++mRefCnt;
+    }
+    void Release() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
+        return;
+      }
+      if (--mRefCnt == 0)
+        delete this;
+    }
   protected:
     nsrefcnt mRefCnt;
   };
@@ -467,9 +387,15 @@ public:
 
     nsCOMPtr<imgIRequest> mRequest; // null == image load blocked or somehow failed
 
-    // Override AddRef/Release so we delete ourselves via the right pointer.
-    void AddRef() { ++mRefCnt; }
-    void Release() { if (--mRefCnt == 0) delete this; }
+    // Override Release so we delete correctly without a virtual destructor
+    void Release() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
+        return;
+      }
+      if (--mRefCnt == 0)
+        delete this;
+    }
   };
 
 private:
@@ -490,6 +416,105 @@ protected:
     URL*       mURL;
     Image*     mImage;
   }         mValue;
+};
+
+struct nsCSSValue::Array {
+
+  // return |Array| with reference count of zero
+  static Array* Create(PRUint16 aItemCount) {
+    return new (aItemCount) Array(aItemCount);
+  }
+
+  nsCSSValue& operator[](PRUint16 aIndex) {
+    NS_ASSERTION(aIndex < mCount, "out of range");
+    return mArray[aIndex];
+  }
+
+  const nsCSSValue& operator[](PRUint16 aIndex) const {
+    NS_ASSERTION(aIndex < mCount, "out of range");
+    return mArray[aIndex];
+  }
+
+  nsCSSValue& Item(PRUint16 aIndex) { return (*this)[aIndex]; }
+  const nsCSSValue& Item(PRUint16 aIndex) const { return (*this)[aIndex]; }
+
+  PRUint16 Count() const { return mCount; }
+
+  PRBool operator==(const Array& aOther) const
+  {
+    if (mCount != aOther.mCount)
+      return PR_FALSE;
+    for (PRUint16 i = 0; i < mCount; ++i)
+      if ((*this)[i] != aOther[i])
+        return PR_FALSE;
+    return PR_TRUE;
+  }
+
+  void AddRef() {
+    if (mRefCnt == PR_UINT16_MAX) {
+      NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
+      return;
+    }
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Array", sizeof(*this));
+  }
+  void Release() {
+    if (mRefCnt == PR_UINT16_MAX) {
+      NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
+      return;
+    }
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Array");
+    if (mRefCnt == 0)
+      delete this;
+  }
+
+private:
+
+  PRUint16 mRefCnt;
+  const PRUint16 mCount;
+  // This must be the last sub-object, since we extend this array to
+  // be of size mCount; it needs to be a sub-object so it gets proper
+  // alignment.
+  nsCSSValue mArray[1];
+
+  void* operator new(size_t aSelfSize, PRUint16 aItemCount) CPP_THROW_NEW {
+    NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have a 0 item count");
+    return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1));
+  }
+
+  void operator delete(void* aPtr) { ::operator delete(aPtr); }
+
+  nsCSSValue* First() { return mArray; }
+
+  const nsCSSValue* First() const { return mArray; }
+
+#define CSSVALUE_LIST_FOR_EXTRA_VALUES(var)                                   \
+  for (nsCSSValue *var = First() + 1, *var##_end = First() + mCount;          \
+       var != var##_end; ++var)
+
+  Array(PRUint16 aItemCount)
+    : mRefCnt(0)
+    , mCount(aItemCount)
+  {
+    MOZ_COUNT_CTOR(nsCSSValue::Array);
+    CSSVALUE_LIST_FOR_EXTRA_VALUES(val) {
+      new (val) nsCSSValue();
+    }
+  }
+
+  ~Array()
+  {
+    MOZ_COUNT_DTOR(nsCSSValue::Array);
+    CSSVALUE_LIST_FOR_EXTRA_VALUES(val) {
+      val->~nsCSSValue();
+    }
+  }
+
+#undef CSSVALUE_LIST_FOR_EXTRA_VALUES
+
+private:
+  Array(const Array& aOther); // not to be implemented
 };
 
 #endif /* nsCSSValue_h___ */

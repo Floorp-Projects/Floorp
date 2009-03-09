@@ -234,7 +234,9 @@ NS_IMETHODIMP
 nsXFormsAccessible::GetDescription(nsAString& aDescription)
 {
   nsAutoString description;
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_describedby, description);
+  nsresult rv = nsTextEquivUtils::
+    GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
+                           description);
 
   if (NS_SUCCEEDED(rv) && !description.IsEmpty()) {
     aDescription = description;
@@ -243,23 +245,6 @@ nsXFormsAccessible::GetDescription(nsAString& aDescription)
 
   // search the xforms:hint element
   return GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
-}
-
-nsresult
-nsXFormsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
-{
-  NS_ENSURE_ARG_POINTER(aAttributes);
-
-  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString name;
-  rv = sXFormsService->GetBuiltinTypeName(mDOMNode, name);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString unused;
-  return aAttributes->SetStringProperty(NS_LITERAL_CSTRING("datatype"),
-                                        name, unused);
 }
 
 NS_IMETHODIMP
@@ -279,11 +264,9 @@ nsXFormsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 {
 }
 
-NS_IMETHODIMP
-nsXFormsContainerAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsXFormsContainerAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  NS_ENSURE_ARG_POINTER(aRole);
-
   *aRole = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }

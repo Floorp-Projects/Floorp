@@ -106,7 +106,8 @@ namespace nanojit
 
 		uint32_t stackPushed =
             STACK_GRANULARITY + // returnaddr
-            STACK_GRANULARITY; // ebp
+            STACK_GRANULARITY + // ebp
+			STACK_GRANULARITY;  // dummy
 		
 		if (!_thisfrag->lirbuf->explicitSavedRegs)
 			stackPushed += NumSavedRegs * STACK_GRANULARITY;
@@ -130,38 +131,14 @@ namespace nanojit
 		MR(FP, SP); // Establish our own FP.
         PUSHr(FP); // Save caller's FP.
 
-		if (!_thisfrag->lirbuf->explicitSavedRegs) 
+		if (!_thisfrag->lirbuf->explicitSavedRegs) {
+			PUSHr(FP); // dummy
 			for (int i = 0; i < NumSavedRegs; ++i)
 				PUSHr(savedRegs[i]);
-
-        // align the entry point
-        asm_align_code();
+		}
 
 		return fragEntry;
 	}
-
-    void Assembler::asm_align_code() {
-        static uint8_t nop[][9] = {
-                {0x90},
-                {0x66,0x90},
-                {0x0f,0x1f,0x00},
-                {0x0f,0x1f,0x40,0x00},
-                {0x0f,0x1f,0x44,0x00,0x00},
-                {0x66,0x0f,0x1f,0x44,0x00,0x00},
-                {0x0f,0x1f,0x80,0x00,0x00,0x00,0x00},
-                {0x0f,0x1f,0x84,0x00,0x00,0x00,0x00,0x00},
-                {0x66,0x0f,0x1f,0x84,0x00,0x00,0x00,0x00,0x00},
-        };
-        unsigned n;
-        while((n = uintptr_t(_nIns) & 15) != 0) {
-            if (n > 9)
-                n = 9;
-            underrunProtect(n);
-            _nIns -= n;
-            memcpy(_nIns, nop[n-1], n);
-            asm_output("nop%d", n);
-        }
-    }
 
 	void Assembler::nFragExit(LInsp guard)
 	{
@@ -170,27 +147,34 @@ namespace nanojit
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
 		bool destKnown = (frag && frag->fragEntry);
-		if (destKnown && !trees)
-		{
-			// already exists, emit jump now.  no patching required.
-			JMP(frag->fragEntry);
-            lr = 0;
-		}
-		else
-		{
-			// target doesn't exit yet.  emit jump to epilog, and set up to patch later.
+		// Generate jump to epilog and initialize lr.
+		// If the guard is LIR_xtbl, use a jump table with epilog in every entry
+		if (guard->isop(LIR_xtbl)) {
 			lr = guard->record();
-#if defined NANOJIT_AMD64
-            /* 8 bytes for address, 4 for imm32, 2 for jmp */
-            underrunProtect(14);
-            _nIns -= 8;
-            *(intptr_t *)_nIns = intptr_t(_epilogue);
-            lr->jmp = _nIns;
-            JMPm_nochk(0);
-#else
-            JMP_long(_epilogue);
-            lr->jmp = _nIns;
-#endif
+			Register r = EBX;
+			SwitchInfo* si = guard->record()->exit->switchInfo;
+			emitJumpTable(si, _epilogue);
+			JMP_indirect(r);
+			LEAmi4(r, si->table, r);
+		} else {
+			// If the guard already exists, use a simple jump.
+			if (destKnown && !trees) {
+				JMP(frag->fragEntry);
+				lr = 0;
+			} else {  // target doesn't exist. Use 0 jump offset and patch later
+				lr = guard->record();
+	#if defined NANOJIT_AMD64
+				/* 8 bytes for address, 4 for imm32, 2 for jmp */
+				underrunProtect(14);
+				_nIns -= 8;
+				*(intptr_t *)_nIns = intptr_t(_epilogue);
+				lr->jmp = _nIns;
+				JMPm_nochk(0);
+	#else
+				JMP_long(_epilogue);
+				lr->jmp = _nIns;
+	#endif
+			}
 		}
 		// first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue
         MR(SP,FP);
@@ -207,9 +191,11 @@ namespace nanojit
     {
         RET();
 
-		if (!_thisfrag->lirbuf->explicitSavedRegs) 
+		if (!_thisfrag->lirbuf->explicitSavedRegs) {
 			for (int i = NumSavedRegs - 1; i >= 0; --i)
 				POPr(savedRegs[i]);
+			POPr(FP); // dummy
+		}
 
         POPr(FP); // Restore caller's FP.
         MR(SP,FP); // pop the stack frame
@@ -463,7 +449,7 @@ namespace nanojit
             if (i->imm8() < max_regs)
     			prefer &= rmask(Register(i->imm8()));
         }
-        else if (op == LIR_callh || op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh) {
+        else if (op == LIR_callh || (op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh)) {
             prefer &= rmask(retRegs[1]);
         }
         else if (i->isCmp()) {
@@ -907,6 +893,13 @@ namespace nanojit
 		return at;
 	}
 
+	void Assembler::asm_switch(LIns* ins, NIns* exit)
+	{
+		LIns* diff = ins->oprnd1();
+		findSpecificRegFor(diff, EBX);
+		JMP(exit);
+   	}
+
 	void Assembler::asm_cmp(LIns *cond)
 	{
         LOpcode condop = cond->opcode();
@@ -1258,7 +1251,7 @@ namespace nanojit
 				case LIR_ule:	MRA(rr, iffalsereg);	break;
 				case LIR_ugt:	MRBE(rr, iffalsereg);	break;
 				case LIR_uge:	MRB(rr, iffalsereg);	break;
-				debug_only( default: NanoAssert(0); break; )
+			    default: debug_only( NanoAssert(0); ) break;
 			}
 		} else if (op == LIR_qcmov) {
 #if !defined NANOJIT_64BIT

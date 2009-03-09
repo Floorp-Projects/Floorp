@@ -211,6 +211,11 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
 extern jsdouble *
 js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d);
 
+#ifdef JS_TRACER
+extern JSBool
+js_ReserveObjects(JSContext *cx, size_t nobjects);
+#endif
+
 extern JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing);
 
@@ -249,10 +254,10 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
 
-extern void
+extern JS_REQUIRES_STACK void
 js_TraceRuntime(JSTracer *trc, JSBool allAtoms);
 
-extern JS_FRIEND_API(void)
+extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx);
 
 /*
@@ -291,6 +296,20 @@ typedef enum JSGCInvocationKind {
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
+
+
+/*
+ * This function must be called with the GC lock held. It is a helper for code
+ * that can potentially run outside JS request to ensure that the GC is not
+ * running when the function returns.
+ */
+#ifdef JS_THREADSAFE
+extern void
+js_WaitForGC(JSRuntime *rt);
+#else
+# define js_WaitForGC(rt)    ((void) 0)
+#endif
+
 
 /* Call this after succesful malloc of memory for GC-related things. */
 extern void

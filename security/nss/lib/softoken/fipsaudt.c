@@ -105,7 +105,7 @@ void sftk_AuditCreateObject(CK_SESSION_HANDLE hSession,
 	"phObject=%p)=0x%08lX%s",
 	(PRUint32)hSession, pTemplate, (PRUint32)ulCount,
 	phObject, (PRUint32)rv, shObject);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_LOAD_KEY, msg);
 }
 
 void sftk_AuditCopyObject(CK_SESSION_HANDLE hSession,
@@ -124,7 +124,7 @@ void sftk_AuditCopyObject(CK_SESSION_HANDLE hSession,
 	"pTemplate=%p, ulCount=%lu, phNewObject=%p)=0x%08lX%s",
 	(PRUint32)hSession, (PRUint32)hObject,
 	pTemplate, (PRUint32)ulCount, phNewObject, (PRUint32)rv, shNewObject);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_COPY_KEY, msg);
 }
 
 /* WARNING: hObject has been destroyed and can only be printed. */
@@ -138,7 +138,7 @@ void sftk_AuditDestroyObject(CK_SESSION_HANDLE hSession,
     PR_snprintf(msg, sizeof msg,
 	"C_DestroyObject(hSession=0x%08lX, hObject=0x%08lX)=0x%08lX",
 	(PRUint32)hSession, (PRUint32)hObject, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_DESTROY_KEY, msg);
 }
 
 void sftk_AuditGetObjectSize(CK_SESSION_HANDLE hSession,
@@ -153,7 +153,7 @@ void sftk_AuditGetObjectSize(CK_SESSION_HANDLE hSession,
 	"pulSize=%p)=0x%08lX",
 	(PRUint32)hSession, (PRUint32)hObject,
 	pulSize, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_ACCESS_KEY, msg);
 }
 
 void sftk_AuditGetAttributeValue(CK_SESSION_HANDLE hSession,
@@ -169,7 +169,7 @@ void sftk_AuditGetAttributeValue(CK_SESSION_HANDLE hSession,
 	"pTemplate=%p, ulCount=%lu)=0x%08lX",
 	(PRUint32)hSession, (PRUint32)hObject,
 	pTemplate, (PRUint32)ulCount, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_ACCESS_KEY, msg);
 }
 
 void sftk_AuditSetAttributeValue(CK_SESSION_HANDLE hSession,
@@ -185,7 +185,7 @@ void sftk_AuditSetAttributeValue(CK_SESSION_HANDLE hSession,
 	"pTemplate=%p, ulCount=%lu)=0x%08lX",
 	(PRUint32)hSession, (PRUint32)hObject,
 	pTemplate, (PRUint32)ulCount, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_CHANGE_KEY, msg);
 }
 
 void sftk_AuditCryptInit(const char *opName, CK_SESSION_HANDLE hSession,
@@ -202,7 +202,7 @@ void sftk_AuditCryptInit(const char *opName, CK_SESSION_HANDLE hSession,
 	"hKey=0x%08lX)=0x%08lX",
 	opName, (PRUint32)hSession, mech,
 	(PRUint32)hKey, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_CRYPT, msg);
 }
 
 void sftk_AuditGenerateKey(CK_SESSION_HANDLE hSession,
@@ -222,7 +222,7 @@ void sftk_AuditGenerateKey(CK_SESSION_HANDLE hSession,
 	"pTemplate=%p, ulCount=%lu, phKey=%p)=0x%08lX%s",
 	(PRUint32)hSession, mech,
 	pTemplate, (PRUint32)ulCount, phKey, (PRUint32)rv, shKey);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_GENERATE_KEY, msg);
 }
 
 void sftk_AuditGenerateKeyPair(CK_SESSION_HANDLE hSession,
@@ -252,7 +252,7 @@ void sftk_AuditGenerateKeyPair(CK_SESSION_HANDLE hSession,
 	pPublicKeyTemplate, (PRUint32)ulPublicKeyAttributeCount,
 	pPrivateKeyTemplate, (PRUint32)ulPrivateKeyAttributeCount,
 	phPublicKey, phPrivateKey, (PRUint32)rv, shPublicKey, shPrivateKey);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_GENERATE_KEY, msg);
 }
 
 void sftk_AuditWrapKey(CK_SESSION_HANDLE hSession,
@@ -271,7 +271,7 @@ void sftk_AuditWrapKey(CK_SESSION_HANDLE hSession,
 	"hKey=0x%08lX, pWrappedKey=%p, pulWrappedKeyLen=%p)=0x%08lX",
 	(PRUint32)hSession, mech, (PRUint32)hWrappingKey,
 	(PRUint32)hKey, pWrappedKey, pulWrappedKeyLen, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_WRAP_KEY, msg);
 }
 
 void sftk_AuditUnwrapKey(CK_SESSION_HANDLE hSession,
@@ -295,7 +295,7 @@ void sftk_AuditUnwrapKey(CK_SESSION_HANDLE hSession,
 	(PRUint32)hSession, mech,
 	(PRUint32)hUnwrappingKey, pWrappedKey, (PRUint32)ulWrappedKeyLen,
 	pTemplate, (PRUint32)ulAttributeCount, phKey, (PRUint32)rv, shKey);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_UNWRAP_KEY, msg);
 }
 
 void sftk_AuditDeriveKey(CK_SESSION_HANDLE hSession,
@@ -334,7 +334,7 @@ void sftk_AuditDeriveKey(CK_SESSION_HANDLE hSession,
 	(PRUint32)hSession, mech,
 	(PRUint32)hBaseKey, pTemplate,(PRUint32)ulAttributeCount,
 	phKey, (PRUint32)rv, shKey, sTlsKeys);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_DERIVE_KEY, msg);
 }
 
 void sftk_AuditDigestKey(CK_SESSION_HANDLE hSession,
@@ -347,5 +347,5 @@ void sftk_AuditDigestKey(CK_SESSION_HANDLE hSession,
     PR_snprintf(msg, sizeof msg,
 	"C_DigestKey(hSession=0x%08lX, hKey=0x%08lX)=0x%08lX",
 	(PRUint32)hSession, (PRUint32)hKey, (PRUint32)rv);
-    sftk_LogAuditMessage(severity, msg);
+    sftk_LogAuditMessage(severity, NSS_AUDIT_DIGEST_KEY, msg);
 }

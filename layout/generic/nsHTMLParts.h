@@ -72,7 +72,7 @@ class nsTableColFrame;
  */
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
-#define NS_BLOCK_SPACE_MGR                  0x00800000
+#define NS_BLOCK_FLOAT_MGR                  0x00800000
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
 #define NS_BLOCK_HAS_FIRST_LETTER_CHILD     0x80000000
@@ -81,9 +81,6 @@ class nsTableColFrame;
 #define NS_BLOCK_FLAGS_MASK                 0xF0E00000 
 
 // Factory methods for creating html layout objects
-
-// These are variations on AreaFrame with slightly different layout
-// policies.
 
 // Create a frame that supports "display: block" layout behavior
 nsIFrame*
@@ -103,34 +100,12 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
 nsIFrame*
 NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-// Create a basic area frame.
-nsIFrame*
-NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
-
-// These AreaFrame's shrink wrap around their contents
-inline nsIFrame*
-NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext);
-}
-
-// This type of BlockFrame is a margin root, but does not shrink wrap
-inline nsIFrame*
-NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
-}
-
-// This type of BlockFrame shrink wraps
-inline nsIFrame*
-NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewBlockFrame(aPresShell, aContext,
-    NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
-}
-
-// This type of BlockFrame doesn't use its own space manager and
-// doesn't shrink wrap.
-inline nsIFrame*
-NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags) {
-  return NS_NewBlockFrame(aPresShell, aContext, aFlags);
+// Create a block formatting context blockframe
+inline nsIFrame* NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
+                                              nsStyleContext* aStyleContext)
+{
+  return NS_NewBlockFrame(aPresShell, aStyleContext,
+                          NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
 }
 
 nsIFrame*

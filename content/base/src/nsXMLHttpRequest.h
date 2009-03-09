@@ -127,6 +127,7 @@ public:
 
   CacheEntry* GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
                        PRBool aWithCredentials, PRBool aCreate);
+  void RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal);
 
   void Clear();
 
@@ -477,6 +478,8 @@ protected:
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 
   nsIRequestObserver* mRequestObserver;
+
+  nsCOMPtr<nsIURI> mBaseURI;
 
   PRUint32 mState;
 

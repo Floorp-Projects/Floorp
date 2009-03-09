@@ -62,9 +62,8 @@
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
-
-#include "nsAEEventHandling.h"
-#include "nsXPFEComponentsCID.h"
+#include "nsICommandLineRunner.h"
+#include "nsDirectoryServiceDefs.h"
 
 // NSPR
 #include "prmem.h"
@@ -102,32 +101,6 @@ static PRInt32 ReadLine(FILE* inStream, char* buf, PRInt32 bufSize)
   return (c == EOF && !charsRead) ? -1 : charsRead; 
 }
 
-static PRUint32
-ProcessAppleEvents()
-{
-  // Dispatch all of the Apple Events waiting in the event queue.
-
-  PRUint32 processed = 0;
-
-  const EventTypeSpec kAppleEventList[] = {
-    { kEventClassAppleEvent, kEventAppleEvent },
-  };
-
-  EventRef carbonEvent;
-  while (::ReceiveNextEvent(GetEventTypeCount(kAppleEventList),
-                            kAppleEventList,
-                            kEventDurationNoWait,
-                            PR_TRUE,
-                            &carbonEvent) == noErr) {
-    EventRecord eventRecord;
-    ::ConvertEventRefToEventRecord(carbonEvent, &eventRecord);
-    ::AEProcessAppleEvent(&eventRecord);
-    ::ReleaseEvent(carbonEvent);
-    processed++;
-  }
-
-  return processed;
-}
 
 //----------------------------------------------------------------------------------------
 nsMacCommandLine::nsMacCommandLine()
@@ -144,7 +117,6 @@ nsMacCommandLine::nsMacCommandLine()
 nsMacCommandLine::~nsMacCommandLine()
 //----------------------------------------------------------------------------------------
 {
-  ShutdownAEHandlerClasses();
   if (mArgs) {
     for (PRUint32 i = 0; i < mArgsUsed; i++)
       free(mArgs[i]);
@@ -172,22 +144,6 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
     if (strncmp(flag, "-psn_", 5) != 0)
       AddToCommandLine(flag);
   }
-
-  // Set up AppleEvent handling.
-  OSErr err = CreateAEHandlerClasses(false);
-  if (err != noErr) return NS_ERROR_FAILURE;
-
-  // Snarf all the odoc and pdoc apple-events.
-  //
-  // 1. If they are odoc for 'CMDL' documents, read them into the buffer ready for
-  //    parsing (concatenating multiple files).
-  //
-  // 2. If they are any other kind of document, convert them into -url command-line
-  //    parameters or -print parameters, with file URLs.
-
-  // Spin a native event loop to allow AE handlers for waiting events to be
-  // called
-  ProcessAppleEvents();
 
   // we've started up now
   mStartedUp = PR_TRUE;
@@ -256,16 +212,10 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 
 
 //----------------------------------------------------------------------------------------
-nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec)
+nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FSRef* inFSRef)
 //----------------------------------------------------------------------------------------
 {
-  // Convert the filespec to a URL.  Avoid using xpcom because this may be
-  // called before xpcom startup.
-  FSRef fsRef;
-  if (::FSpMakeFSRef(&inFileSpec, &fsRef) != noErr)
-    return NS_ERROR_FAILURE;
-
-  CFURLRef url = ::CFURLCreateFromFSRef(nsnull, &fsRef);
+  CFURLRef url = ::CFURLCreateFromFSRef(nsnull, inFSRef);
   if (!url)
     return NS_ERROR_FAILURE;
 
@@ -308,11 +258,11 @@ nsresult nsMacCommandLine::AddToEnvironmentVars(const char* inArgText)
 
 
 //----------------------------------------------------------------------------------------
-OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFileType)
+OSErr nsMacCommandLine::HandleOpenOneDoc(const FSRef* inFSRef, OSType inFileType)
 //----------------------------------------------------------------------------------------
 {
   nsCOMPtr<nsILocalFileMac> inFile;
-  nsresult rv = NS_NewLocalFileWithFSSpec(&inFileSpec, PR_TRUE, getter_AddRefs(inFile));
+  nsresult rv = NS_NewLocalFileWithFSRef(inFSRef, PR_TRUE, getter_AddRefs(inFile));
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
 
@@ -357,44 +307,37 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
     // add a command-line "-url" argument to the global list. This means that if
     // the app is opened with documents on the mac, they'll be handled the same
     // way as if they had been typed on the command line in Unix or DOS.
-    return AddToCommandLine("-url", inFileSpec);
+    rv = AddToCommandLine("-url", inFSRef);
+    return (NS_SUCCEEDED(rv)) ? noErr : errAEEventNotHandled;
   }
 
-  // Final case: we're not just starting up. How do we handle this?
-  nsCAutoString specBuf;
-  rv = NS_GetURLSpecFromFile(inFile, specBuf);
-  if (NS_FAILED(rv))
+  // Final case: we're not just starting up, use the arg as a -file <arg>
+  nsCOMPtr<nsICommandLineRunner> cmdLine
+    (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+  if (!cmdLine) {
+    NS_ERROR("Couldn't create command line!");
     return errAEEventNotHandled;
-  
-  return OpenURL(specBuf.get());
-}
-
-OSErr nsMacCommandLine::OpenURL(const char* aURL)
-{
-  nsresult rv;
-  
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-
-  nsXPIDLCString browserURL;
-  if (NS_SUCCEEDED(rv))
-    rv = prefBranch->GetCharPref("browser.chromeURL", getter_Copies(browserURL));
-  
-  if (NS_FAILED(rv)) {
-    NS_WARNING("browser.chromeURL not supplied! How is the app supposed to know what the main window is?");
-    browserURL.Assign("chrome://navigator/content/navigator.xul");
   }
-     
-  rv = OpenWindow(browserURL.get(), NS_ConvertASCIItoUTF16(aURL).get());
+  nsCString filePath;
+  rv = inFile->GetNativePath(filePath);
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
-    
-  return noErr;
+
+  nsCOMPtr<nsIFile> workingDir;
+  rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+
+  const char *argv[3] = {nsnull, "-file", filePath.get()};
+  rv = cmdLine->Init(3, const_cast<char**>(argv), workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+  rv = cmdLine->Run();
+  return (NS_SUCCEEDED(rv)) ? noErr : errAEEventNotHandled;
 }
-
-
 
 //----------------------------------------------------------------------------------------
-OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileType)
+OSErr nsMacCommandLine::HandlePrintOneDoc(const FSRef* inFSRef, OSType fileType)
 //----------------------------------------------------------------------------------------
 {
   // If  we are starting up the application,
@@ -402,7 +345,7 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
   // the app is opened with documents on the mac, they'll be handled the same
   // way as if they had been typed on the command line in Unix or DOS.
   if (!mStartedUp)
-    return AddToCommandLine("-print", inFileSpec);
+    return AddToCommandLine("-print", inFSRef);
   
   // Final case: we're not just starting up. How do we handle this?
   NS_NOTYETIMPLEMENTED("Write Me");
@@ -410,78 +353,16 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
 }
 
 
-
-//----------------------------------------------------------------------------------------
-nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
-//----------------------------------------------------------------------------------------
-{
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  nsCOMPtr<nsISupportsString> urlWrapper(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-  if (!wwatch || !urlWrapper)
-    return NS_ERROR_FAILURE;
-
-  urlWrapper->SetData(nsDependentString(url));
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  nsresult rv;
-  rv = wwatch->OpenWindow(0, chrome, "_blank",
-               "chrome,dialog=no,all", urlWrapper,
-               getter_AddRefs(newWindow));
-
-  return rv;
-}
-
 //----------------------------------------------------------------------------------------
 OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 //----------------------------------------------------------------------------------------
 {
   OSErr err = errAEEventNotHandled;
-  if (mStartedUp)
-    return OpenURL(url);
-  else {
-    err = AddToCommandLine("-url");
-    if (err == noErr)
-      err = AddToCommandLine(url);
-  }
+  err = AddToCommandLine("-url");
+  if (err == noErr)
+    err = AddToCommandLine(url);
   
   return err;
-}
-
-//----------------------------------------------------------------------------------------
-OSErr nsMacCommandLine::Quit(TAskSave askSave)
-//----------------------------------------------------------------------------------------
-{
-  nsresult rv;
-  
-  nsCOMPtr<nsIObserverService> obsServ =
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-
-  nsCOMPtr<nsISupportsPRBool> cancelQuit =
-           do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-
-  cancelQuit->SetData(PR_FALSE);
-  if (askSave != eSaveNo) {
-    rv = obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
-    if (NS_FAILED(rv))
-      return errAEEventNotHandled;
-  }
-
-  PRBool abortQuit;
-  cancelQuit->GetData(&abortQuit);
-  if (abortQuit)
-    return userCanceledErr;
-
-  nsCOMPtr<nsIAppStartup> appStartup =
-           do_GetService(NS_APPSTARTUP_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
-
-  appStartup->Quit(nsIAppStartup::eAttemptQuit);
-  return noErr;
 }
 
 #pragma mark -

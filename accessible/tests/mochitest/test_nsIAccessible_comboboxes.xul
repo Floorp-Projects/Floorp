@@ -17,10 +17,12 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js" />        
 
   <script type="application/javascript">
   <![CDATA[
-    function openHideCombobox(aComboboxNode, aIsOpen)
+    function openHideCombobox(aComboboxNodeOrID, aIsOpen)
     {
       this.invoke = function invoke()
       {
@@ -30,13 +32,21 @@
       {
         aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
 
+        var id = this.getID();
         is(aEvent.state, nsIAccessibleStates.STATE_EXPANDED,
-            "Wrong state change event is handled.");
+            "Wrong state change event is handled in test '" + id + "'.");
         is(aEvent.isEnabled(), this.mIsOpen,
-            "Wrong value of state expanded.");
+            "Wrong value of state expanded in test '" + id + "'.");
+      }
+      this.getID = function getID()
+      {
+        if (this.mIsOpen)
+          return this.DOMNodeOrID + " open combobox";
+        return this.DOMNodeOrID + " close combobox";
       }
 
-      this.DOMNode = aComboboxNode;
+      this.DOMNodeOrID = aComboboxNodeOrID;
+      this.DOMNode = getNode(aComboboxNodeOrID);
       this.mIsOpen = aIsOpen;
     }
 
@@ -45,9 +55,9 @@
     {
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_STATE_CHANGE);
 
-      var menulist = document.getElementById("menulist");
-      gQueue.push(new openHideCombobox(menulist, true));
-      gQueue.push(new openHideCombobox(menulist, false));
+      var ID = "menulist";
+      gQueue.push(new openHideCombobox(ID, true));
+      gQueue.push(new openHideCombobox(ID, false));
 
       // XXX: searchbar doesn't fire state change events because accessible
       // parent of combobox_list accessible is pushbutton accessible.
@@ -67,7 +77,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(doTest);
+    addA11yLoadEvent(doTest);
   ]]>
   </script>
 

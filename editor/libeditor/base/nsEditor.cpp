@@ -470,7 +470,7 @@ nsEditor::GetDesiredSpellCheckState()
 }
 
 NS_IMETHODIMP
-nsEditor::PreDestroy()
+nsEditor::PreDestroy(PRBool aDestroyingFrames)
 {
   if (mDidPreDestroy)
     return NS_OK;
@@ -482,7 +482,7 @@ nsEditor::PreDestroy()
   // object that is still in use! It will be freed when the editor is
   // destroyed.
   if (mInlineSpellChecker)
-    mInlineSpellChecker->Cleanup();
+    mInlineSpellChecker->Cleanup(aDestroyingFrames);
 
   // tell our listeners that the doc is going away
   NotifyDocumentListeners(eDocumentToBeDestroyed);
@@ -938,7 +938,7 @@ nsEditor::EndPlaceHolderTransaction()
   if (mPlaceHolderBatch == 1)
   {
     nsCOMPtr<nsISelection>selection;
-    nsresult rv = GetSelection(getter_AddRefs(selection));
+    GetSelection(getter_AddRefs(selection));
 
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
@@ -1997,18 +1997,23 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
       // XXX_kin: END HACK! HACK! HACK!
 
       nsIView *view = nsnull;
+      nsRect rect;
       result =
         caretP->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
                                     selection,
-                                    &(aReply->mCursorPosition),
+                                    &rect,
                                     &(aReply->mCursorIsCollapsed),
                                     &view);
+      aReply->mCursorPosition =
+        nsRect::ToOutsidePixels(rect,
+                                ps->GetPresContext()->AppUnitsPerDevPixel());
       if (NS_SUCCEEDED(result) && view)
         aReply->mReferenceWidget = view->GetWidget();
     }
   }
   return result;
 }
+
 NS_IMETHODIMP
 nsEditor::BeginComposition(nsTextEventReply* aReply)
 {
@@ -4339,7 +4344,7 @@ nsresult nsEditor::EndUpdateViewBatch()
       // the reflows we caused will get processed before the invalidates.
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
         updateFlag = NS_VMREFRESH_DEFERRED;
-      } else {
+      } else if (presShell) {
         // Flush out layout.  Need to do this because if we have no invalidates
         // to flush the viewmanager code won't flush our reflow here, and we
         // have selection code that does sync caret scrolling in this case.

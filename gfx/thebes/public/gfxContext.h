@@ -676,6 +676,16 @@ public:
     mContext->Save();    
   }
 
+  void Reset(gfxContext *aContext) {
+    // Do the equivalent of destroying and re-creating this object.
+    NS_PRECONDITION(aContext, "must provide a context");
+    if (mContext) {
+      mContext->Restore();
+    }
+    mContext = aContext;
+    mContext->Save();
+  }
+
 private:
   gfxContext *mContext;
 };

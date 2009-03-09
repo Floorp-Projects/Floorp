@@ -40,7 +40,6 @@
 /*
  * PR time code.
  */
-#include "jsstddef.h"
 #ifdef SOLARIS
 #define _REENTRANT 1
 #endif
@@ -139,12 +138,8 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
 
     JSLL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
     JSLL_UI2L(low,G1970GMTMICROLOW);
-#ifndef JS_HAVE_LONG_LONG
     JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
     JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
-#else
-    JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,32);
-#endif
     JSLL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
 
     JSLL_I2L(exttime,base_time);
@@ -153,7 +148,16 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
     return exttime;
 }
 
-#ifdef XP_WIN
+#ifdef HAVE_SYSTEMTIMETOFILETIME
+
+static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
+
+#define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
+
+#endif
+
+#ifdef HAVE_GETSYSTEMTIMEASFILETIME
+
 typedef struct CalibrationData
 {
     long double freq;         /* The performance counter frequency */
@@ -171,11 +175,7 @@ typedef struct CalibrationData
 #endif
 } CalibrationData;
 
-static const JSInt64 win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000);
-
 static CalibrationData calibration = { 0 };
-
-#define FILETIME2INT64(ft) (((JSInt64)ft.dwHighDateTime) << 32LL | (JSInt64)ft.dwLowDateTime)
 
 static void
 NowCalibrate()
@@ -262,9 +262,48 @@ static PRCallOnceType calibrationOnce = { 0 };
 
 #endif
 
+#endif /* HAVE_GETSYSTEMTIMEASFILETIME */
 
-#endif /* XP_WIN */
 
+#if defined(XP_OS2)
+JSInt64
+PRMJ_Now(void)
+{
+    JSInt64 s, us, ms2us, s2us;
+    struct timeb b;
+
+    ftime(&b);
+    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
+    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
+    JSLL_UI2L(s, b.time);
+    JSLL_UI2L(us, b.millitm);
+    JSLL_MUL(us, us, ms2us);
+    JSLL_MUL(s, s, s2us);
+    JSLL_ADD(s, s, us);
+    return s;
+}
+
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+JSInt64
+PRMJ_Now(void)
+{
+    struct timeval tv;
+    JSInt64 s, us, s2us;
+
+#ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
+    gettimeofday(&tv);
+#else
+    gettimeofday(&tv, 0);
+#endif /* _SVID_GETTOD */
+    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
+    JSLL_UI2L(s, tv.tv_sec);
+    JSLL_UI2L(us, tv.tv_usec);
+    JSLL_MUL(s, s, s2us);
+    JSLL_ADD(s, s, us);
+    return s;
+}
+
+#elif defined(HAVE_GETSYSTEMTIMEASFILETIME)
 /*
 
 Win32 python-esque pseudo code
@@ -331,11 +370,6 @@ def PRMJ_Now():
 JSInt64
 PRMJ_Now(void)
 {
-#ifdef XP_OS2
-    JSInt64 s, us, ms2us, s2us;
-    struct timeb b;
-#endif
-#ifdef XP_WIN
     static int nCalls = 0;
     long double lowresTime, highresTimerValue;
     FILETIME ft;
@@ -344,24 +378,6 @@ PRMJ_Now(void)
     JSBool needsCalibration = JS_FALSE;
     JSInt64 returnedTime;
     long double cachedOffset = 0.0;
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-    struct timeval tv;
-    JSInt64 s, us, s2us;
-#endif /* XP_UNIX */
-
-#ifdef XP_OS2
-    ftime(&b);
-    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, b.time);
-    JSLL_UI2L(us, b.millitm);
-    JSLL_MUL(us, us, ms2us);
-    JSLL_MUL(s, s, s2us);
-    JSLL_ADD(s, s, us);
-    return s;
-#endif
-#ifdef XP_WIN
 
     /* To avoid regressing startup time (where high resolution is likely
        not needed), give the old behavior for the first few calls.
@@ -424,7 +440,7 @@ PRMJ_Now(void)
 
             /* On some dual processor/core systems, we might get an earlier time
                so we cache the last time that we returned */
-            calibration.last = max(calibration.last,(JSInt64)highresTime);
+            calibration.last = JS_MAX(calibration.last,(JSInt64)highresTime);
             returnedTime = calibration.last;
             MUTEX_UNLOCK(&calibration.data_lock);
 
@@ -488,22 +504,22 @@ PRMJ_Now(void)
     } while (needsCalibration);
 
     return returnedTime;
-#endif
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
-    gettimeofday(&tv);
-#else
-    gettimeofday(&tv, 0);
-#endif /* _SVID_GETTOD */
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, tv.tv_sec);
-    JSLL_UI2L(us, tv.tv_usec);
-    JSLL_MUL(s, s, s2us);
-    JSLL_ADD(s, s, us);
-    return s;
-#endif /* XP_UNIX */
 }
+
+#elif defined (HAVE_SYSTEMTIMETOFILETIME)
+JSInt64
+PRMJ_Now(void)
+{
+    FILETIME ft;
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st,&ft);
+    return (FILETIME2INT64(ft)-win2un)/10L;
+}
+
+#else
+#error "No implementation of PRMJ_Now was selected."
+#endif
 
 /* Get the DST timezone offset for the time passed in */
 JSInt64
@@ -545,11 +561,10 @@ PRMJ_DSTOffset(JSInt64 local_time)
 #endif
 
     diff = ((tm.tm_hour - prtm.tm_hour) * PRMJ_HOUR_SECONDS) +
-	((tm.tm_min - prtm.tm_min) * 60);
+           ((tm.tm_min - prtm.tm_min) * 60);
 
-    if(diff < 0){
-	diff += PRMJ_DAY_SECONDS;
-    }
+    if (diff < 0)
+        diff += PRMJ_DAY_SECONDS;
 
     JSLL_UI2L(local_time,diff);
 
@@ -604,6 +619,16 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     a.tm_mday = prtm->tm_mday;
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
+
+#if defined(HAVE_LOCALTIME_R) && defined(HAVE_TM_ZONE_TM_GMTOFF)
+    {
+        struct tm td;
+        time_t bogus = 0;
+        localtime_r(&bogus, &td);
+        a.tm_gmtoff = td.tm_gmtoff;
+        a.tm_zone = td.tm_zone;
+    }
+#endif
 
     /*
      * Years before 1900 and after 9999 cause strftime() to abort on Windows.

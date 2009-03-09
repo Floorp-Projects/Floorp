@@ -7,6 +7,10 @@ include sizing/reftest.list
 
 include filters/reftest.list
 
+# smil / animation tests
+# disabled because SMIL is not built by default
+# include smil/reftest.list
+
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
 include moz-only/reftest.list
 
@@ -43,6 +47,7 @@ include moz-only/reftest.list
 == dynamic-use-02.svg pass.svg
 == use-01-extref.svg pass.svg
 == use-02-extref.svg use-02-extref-ref.svg
+== use-children.svg pass.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
 == fallback-color-02a.svg fallback-color-02-ref.svg
@@ -81,10 +86,12 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
+== radialGradient-basic-03.svg radialGradient-basic-03-ref.svg
 == rect-01.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
+== selector-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
 == style-property-not-on-script-element-01.svg pass.svg
 == style-without-type-attribute.svg pass.svg

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads
+-->
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("nonexistent_worker.js");
+
+  worker.onmessage = function(event) {
+    ok(false, "Shouldn't ever get a message!");
+    SimpleTest.finish();
+  }
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    is(event.message, "Script file not found: nonexistent_worker.js");
+    event.preventDefault();
+    SimpleTest.finish();
+  };
+
+  worker.postMessage("dummy");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

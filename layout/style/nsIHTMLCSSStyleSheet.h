@@ -37,7 +37,6 @@
 
 /*
  * style sheet and style rule processor representing style attributes
- * and some additional overrides
  */
 
 #ifndef nsIHTMLCSSStyleSheet_h___

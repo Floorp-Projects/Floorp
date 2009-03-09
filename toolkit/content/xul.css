@@ -112,11 +112,17 @@ button {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button");
 }
 
+%ifdef XP_MACOSX
+button[default="true"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#button-periodic-redraw");
+}
+%endif
+
 button[type="repeat"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button-repeat");
 }
 
-button[type="menu"] {
+button[type="menu"], button[type="panel"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
 }
 
@@ -130,12 +136,18 @@ toolbarbutton {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
 }
 
-toolbarbutton[type="menu"] {
+toolbarbutton[type="menu"],
+toolbarbutton[type="panel"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
 }
 
 toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
+}
+
+toolbar[mode="icons"] .toolbarbutton-text,
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
 }
 
 /******** browser, editor, iframe ********/
@@ -551,6 +563,10 @@ tree:not([treelines="true"]) > treechildren::-moz-tree-line {
   visibility: hidden;
 }
 
+treechildren::-moz-tree-cell(ltr) {
+  direction: ltr !important;
+}
+
 /********** deck & stack *********/
 
 deck {
@@ -658,6 +674,23 @@ html|*.textbox-textarea {
   text-shadow: inherit;
 }
 
+textbox[empty="true"] html|*.textbox-input ,
+textbox[empty="true"] html|*.textbox-textarea {
+  text-align: left;
+  direction: ltr;
+}
+
+textbox[empty="true"][chromedir="rtl"] html|*.textbox-input ,
+textbox[empty="true"][chromedir="rtl"] html|*.textbox-textarea {
+  text-align: right;
+  direction: rtl;
+}
+
+textbox[empty="true"] html|*.textbox-input[emptytextdelay="true"] ,
+textbox[empty="true"] html|*.textbox-textarea[emptytextdelay="true"] {
+  color: transparent !important;
+}
+
 .textbox-input-box {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box");
 }
@@ -676,6 +709,10 @@ textbox[type="search"] {
 
 textbox[type="number"] {
   -moz-binding: url("chrome://global/content/bindings/numberbox.xml#numberbox");
+}
+
+.textbox-contextmenu[chromedir="rtl"] {
+  direction: rtl;
 }
 
 /********** autocomplete textbox **********/
@@ -823,6 +860,12 @@ menulist > menupopup > menuitem {
 
 dropmarker {
   -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
+}
+
+/********** resizer **********/
+
+resizer {
+  -moz-binding: url("chrome://global/content/bindings/resizer.xml#resizer");
 }
 
 /********** splitter **********/
@@ -1099,6 +1142,10 @@ timepicker {
 /*********** findbar ************/
 findbar {
   -moz-binding: url('chrome://global/content/bindings/findbar.xml#findbar');
+}
+
+.findbar-textbox {
+  -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
 }
 
 

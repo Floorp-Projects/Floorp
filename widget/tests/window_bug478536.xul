@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Mozilla Bug 478536"
+  width="600" height="600"
+  onload="onload();"
+  onunload="onunload();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+<body xmlns="http://www.w3.org/1999/xhtml" id="body">
+<style type="text/css">
+  #view {
+    overflow: auto;
+    width: 100px;
+    height: 100px;
+    border: 1px solid;
+    margin: 0;
+  }
+</style>
+<pre id="view" onscroll="onScrollView(event);">
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+Text. Text. Text. Text. Text. Text. Text. Text. Text. Text. Text.
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function ok(aCondition, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  window.opener.wrappedJSObject.SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+var gBody = document.getElementById("body");
+var gView = document.getElementById("view");
+
+/**
+ * Description:
+ *
+ *   First, lock the wheel scrolling target to "view" at first step.
+ *   Next, scroll back to top most of the "view" at second step.
+ *   Finally, scroll back again at third step.  This fails to scroll the "view",
+ *   then, |onMouseScrollFailed| event should be fired.  And at that time, we
+ *   can remove the "view".  So, in post processing of the event firere, the
+ *   "view" should not be referred.
+ *
+ *   For suppressing random test failure, all tests will be retried if we handle
+ *   unexpected timeout event.
+ */
+
+var gTests = [
+ { scrollToForward: true,  shouldScroll: true },
+ { scrollToForward: false, shouldScroll: true },
+ { scrollToForward: false, shouldScroll: false }
+];
+var gCurrentTestIndex = -1;
+var gIgnoreScrollEvent = true;
+
+var gPrefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+               getService(Components.interfaces.nsIPrefBranch2);
+const kPrefNameTimeout = "mousewheel.transaction.timeout";
+const kDefaultTimeout = gPrefSvc.getIntPref(kPrefNameTimeout);
+
+var gTimeout = kDefaultTimeout;
+
+gBody.addEventListener("MozMouseScrollFailed", onMouseScrollFailed, false);
+gBody.addEventListener("MozMouseScrollTransactionTimeout",
+                       onTransactionTimeout, false);
+
+function setTimeoutPrefs(aTimeout)
+{
+  gPrefSvc.setIntPref(kPrefNameTimeout, aTimeout);
+  gTimeout = aTimeout;
+}
+
+function resetTimeoutPrefs()
+{
+  if (gTimeout == kDefaultTimeout)
+    return;
+  setTimeoutPrefs(kDefaultTimeout);
+}
+
+function growUpTimeoutPrefs()
+{
+  if (gTimeout != kDefaultTimeout)
+    return;
+  setTimeoutPrefs(5000);
+}
+
+function onload()
+{
+  disableNonTestMouseEvents(true);
+  setTimeout(runNextTest, 0);
+}
+
+function onunload()
+{
+  resetTimeoutPrefs();
+  disableNonTestMouseEvents(false);
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+function finish()
+{
+  window.close();
+}
+
+// testing code
+
+var gTimer;
+function clearTimer()
+{
+  clearTimeout(gTimer);
+  gTimer = 0;
+}
+
+function runNextTest()
+{
+  clearTimer();
+  if (++gCurrentTestIndex >= gTests.length) {
+    ok(true, "didn't crash, succeeded");
+    finish();
+    return;
+  }
+  fireWheelScrollEvent(gTests[gCurrentTestIndex].scrollToForward);
+}
+
+var gRetryCount = 5;
+function retryAllTests()
+{
+  clearTimer();
+  if (--gRetryCount >= 0) {
+    gView.scrollTop = 0;
+    gView.scrollLeft = 0;
+    gCurrentTestIndex = -1;
+    growUpTimeoutPrefs();
+    ok(true, "WARNING: retry current test-list...");
+    gTimer = setTimeout(runNextTest, 0);
+  } else {
+    ok(false, "Failed by unexpected timeout");
+    finish();
+  }
+}
+
+function fireWheelScrollEvent(aForward)
+{
+  gIgnoreScrollEvent = false;
+  var event = { axis: "vertical", delta: aForward ? 4 : -4,
+                type: "DOMMouseScroll" };
+  synthesizeMouseScroll(gView, 5, 5, event, window);
+}
+
+function onScrollView(aEvent)
+{
+  if (gIgnoreScrollEvent)
+    return;
+  gIgnoreScrollEvent = true;
+  clearTimer();
+  ok(gTests[gCurrentTestIndex].shouldScroll, "The view is scrolled");
+  gTimer = setTimeout(runNextTest, 0);
+}
+
+function onMouseScrollFailed(aEvent)
+{
+  clearTimer();
+  gIgnoreScrollEvent = true;
+  ok(!gTests[gCurrentTestIndex].shouldScroll, "The view is not scrolled");
+  if (!gTests[gCurrentTestIndex].shouldScroll)
+    gBody.removeChild(gView);
+  runNextTest();
+}
+
+function onTransactionTimeout(aEvent)
+{
+  if (!gTimer)
+    return;
+  gIgnoreScrollEvent = true;
+  retryAllTests();
+}
+
+]]>
+</script>
+
+</window>

@@ -100,7 +100,7 @@ extern JSBool
 js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
 
 extern JSBool
-js_FinishJSONParse(JSContext *cx, JSONParser *jp);
+js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 
 JS_END_EXTERN_C
 

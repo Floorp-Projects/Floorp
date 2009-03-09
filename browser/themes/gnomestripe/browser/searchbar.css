@@ -42,12 +42,17 @@
   border: 0;
 }
 
-.searchbar-engine-button[addengines="true"] {
-  background-color: Highlight;
+.searchbar-engine-button:hover > .button-box {
+  background-color: rgba(255, 255, 255, .2);
 }
 
-.searchbar-engine-button[addengines="true"] > .button-box {
-  background-color: rgba(230, 230, 230, 0.3);
+.searchbar-engine-button:hover:active > .button-box,
+.searchbar-engine-button[open="true"] > .button-box {
+  background-color: rgba(0, 0, 0, .1);
+}
+
+.searchbar-engine-button[addengines="true"] {
+  -moz-box-shadow: 0 0 5px Highlight inset, 0 0 20px Highlight inset;
 }
 
 .searchbar-dropmarker-image {

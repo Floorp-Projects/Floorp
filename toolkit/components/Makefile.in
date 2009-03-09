@@ -60,6 +60,7 @@ DIRS += \
 	viewconfig \
 	typeaheadfind \
 	parentalcontrols \
+	passwordmgr \
 	$(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
@@ -105,12 +106,6 @@ ifdef MOZ_XUL
 DIRS += satchel
 endif # MOZ_XUL
 
-ifdef MOZ_SUITE
-# Suite can't use passwordmgr because mail still depends on wallet (bug 239131)
-DIRS += passwordmgr/public
-else
-DIRS += passwordmgr
-endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
 
 ifndef SUITE_USING_XPFE_DM

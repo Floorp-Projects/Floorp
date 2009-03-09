@@ -41,6 +41,7 @@
 /* Per JSRuntime object */
 
 #include "xpcprivate.h"
+#include "dom_quickstubs.h"
 
 /***************************************************************************/
 
@@ -346,24 +347,31 @@ struct ClearedGlobalObject : public JSDHashEntryHdr
     JSObject* mGlobalObject;
 };
 
-void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
+void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc, JSBool rootGlobals)
 {
-    if(mClearedGlobalObjects.ops)
+    if(mUnrootedGlobalCount != 0)
     {
         JSContext *iter = nsnull, *acx;
         while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
         {
-            JSDHashEntryHdr* entry =
-                JS_DHashTableOperate(&mClearedGlobalObjects, acx,
-                                     JS_DHASH_LOOKUP);
-            if(JS_DHASH_ENTRY_IS_BUSY(entry))
+            if(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
             {
-                ClearedGlobalObject* clearedGlobal =
-                    reinterpret_cast<ClearedGlobalObject*>(entry);
-                JS_CALL_OBJECT_TRACER(trc, clearedGlobal->mGlobalObject,
+                NS_ASSERTION(nsXPConnect::GetXPConnect()->GetRequestDepth(acx)
+                             == 0, "active cx must be always rooted");
+                NS_ASSERTION(acx->globalObject, "bad state");
+                JS_CALL_OBJECT_TRACER(trc, acx->globalObject,
                                       "global object");
+                if(rootGlobals)
+                {
+                    NS_ASSERTION(mUnrootedGlobalCount != 0, "bad state");
+                    NS_ASSERTION(trc == acx->runtime->gcMarkingTracer,
+                                 "bad tracer");
+                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+                    --mUnrootedGlobalCount;
+                }
             }
         }
+        NS_ASSERTION(!rootGlobals || mUnrootedGlobalCount == 0, "bad state");
     }
 
     XPCWrappedNativeScope::TraceJS(trc, this);
@@ -433,78 +441,41 @@ void XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
         JS_DHashTableEnumerate(&mJSHolders, NoteJSHolder, &cb);
 }
 
-void XPCJSRuntime::UnsetContextGlobals()
+void XPCJSRuntime::UnrootContextGlobals()
 {
-    if(!mClearedGlobalObjects.ops)
-        return;
-
-    RestoreContextGlobals();
-
+    mUnrootedGlobalCount = 0;
     JSContext *iter = nsnull, *acx;
     while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
     {
+        NS_ASSERTION(!JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL),
+                     "unrooted global should be set only during CC");
         if(nsXPConnect::GetXPConnect()->GetRequestDepth(acx) == 0)
         {
             JS_ClearNewbornRoots(acx);
             if(acx->globalObject)
             {
-                JSDHashEntryHdr* entry =
-                    JS_DHashTableOperate(&mClearedGlobalObjects, acx,
-                                         JS_DHASH_ADD);
-                ClearedGlobalObject* clearedGlobal =
-                    reinterpret_cast<ClearedGlobalObject*>(entry);
-                if(clearedGlobal)
-                {
-                    clearedGlobal->mContext = acx;
-                    clearedGlobal->mGlobalObject = acx->globalObject;
-                    acx->globalObject = nsnull;
-                }
+                JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+                ++mUnrootedGlobalCount;
             }
         }
     }
 }
 
-JSDHashOperator
-RemoveContextGlobal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                    void *arg)
+#ifdef DEBUG_CC
+void XPCJSRuntime::RootContextGlobals()
 {
-  return JS_DHASH_REMOVE;
-}
-
-void XPCJSRuntime::RestoreContextGlobals()
-{
-    if(!mClearedGlobalObjects.ops || mClearedGlobalObjects.entryCount == 0)
-        return;
-
     JSContext *iter = nsnull, *acx;
     while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
     {
-        JSDHashEntryHdr* entry =
-            JS_DHashTableOperate(&mClearedGlobalObjects, acx, JS_DHASH_LOOKUP);
-        if(JS_DHASH_ENTRY_IS_BUSY(entry))
+        if(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
         {
-            ClearedGlobalObject* clearedGlobal =
-                reinterpret_cast<ClearedGlobalObject*>(entry);
-            acx->globalObject = clearedGlobal->mGlobalObject;
+            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+            --mUnrootedGlobalCount;
         }
     }
-    JS_DHashTableEnumerate(&mClearedGlobalObjects, RemoveContextGlobal, nsnull);
+    NS_ASSERTION(mUnrootedGlobalCount == 0, "bad state");
 }
-
-JSObject* XPCJSRuntime::GetUnsetContextGlobal(JSContext* cx)
-{
-    if(!mClearedGlobalObjects.ops)
-        return nsnull;
-
-    JSDHashEntryHdr* entry =
-        JS_DHashTableOperate(&mClearedGlobalObjects, cx, JS_DHASH_LOOKUP);
-    ClearedGlobalObject* clearedGlobal =
-        reinterpret_cast<ClearedGlobalObject*>(entry);
-
-    return JS_DHASH_ENTRY_IS_BUSY(entry) ?
-           clearedGlobal->mGlobalObject :
-           nsnull;
-}
+#endif
 
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
@@ -604,6 +575,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
                 self->mDetachedWrappedNativeProtoMap->
                     Enumerate(DetachedWrappedNativeProtoMarker, nsnull);
+
+                DOM_MarkInterfaces();
 
                 // Mark the sets used in the call contexts. There is a small
                 // chance that a wrapper's set will change *while* a call is
@@ -820,6 +793,49 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
+// Auto JS GC lock helper.
+class AutoLockJSGC
+{
+public:
+    AutoLockJSGC(JSRuntime* rt) : mJSRuntime(rt) { JS_LOCK_GC(mJSRuntime); }
+    ~AutoLockJSGC() { JS_UNLOCK_GC(mJSRuntime); }
+private:
+    JSRuntime* mJSRuntime;
+
+    // Disable copy or assignment semantics.
+    AutoLockJSGC(const AutoLockJSGC&);
+    void operator=(const AutoLockJSGC&);
+};
+
+//static
+void
+XPCJSRuntime::WatchdogMain(void *arg)
+{
+    XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
+
+    // Lock lasts until we return
+    AutoLockJSGC lock(self->mJSRuntime);
+
+    while (self->mWatchdogThread)
+    {
+#ifdef DEBUG
+        PRStatus status =
+#endif
+            PR_WaitCondVar(self->mWatchdogWakeup, PR_TicksPerSecond());
+        JS_ASSERT(status == PR_SUCCESS);
+
+        JSContext* cx = nsnull;
+        while((cx = js_NextActiveContext(self->mJSRuntime, cx)))
+        {
+            JS_TriggerOperationCallback(cx);
+        }
+    }
+
+    /* Wake up the main thread waiting for the watchdog to terminate. */
+    PR_NotifyCondVar(self->mWatchdogWakeup);
+}
+
+
 /***************************************************************************/
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -859,6 +875,8 @@ DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *h
 
 void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
 {
+    DOM_ClearInterfaces();
+
     if(mDetachedWrappedNativeProtoMap)
         mDetachedWrappedNativeProtoMap->
             Enumerate(DetachedWrappedNativeProtoShutdownMarker, cx);
@@ -866,6 +884,24 @@ void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
 
 XPCJSRuntime::~XPCJSRuntime()
 {
+    if (mWatchdogWakeup)
+    {
+        // If the watchdog thread is running, tell it to terminate waking it
+        // up if necessary and wait until it signals that it finished. As we
+        // must release the lock before calling PR_DestroyCondVar, we use an
+        // extra block here.
+        {
+            AutoLockJSGC lock(mJSRuntime);
+            if (mWatchdogThread) {
+                mWatchdogThread = nsnull;
+                PR_NotifyCondVar(mWatchdogWakeup);
+                PR_WaitCondVar(mWatchdogWakeup, PR_INTERVAL_NO_TIMEOUT);
+            }
+        }
+        PR_DestroyCondVar(mWatchdogWakeup);
+        mWatchdogWakeup = nsnull;
+    }
+
 #ifdef XPC_DUMP_AT_SHUTDOWN
     {
     // count the total JSContexts in use
@@ -1005,11 +1041,6 @@ XPCJSRuntime::~XPCJSRuntime()
         JS_DHashTableFinish(&mJSHolders);
         mJSHolders.ops = nsnull;
     }
-    if(mClearedGlobalObjects.ops)
-    {
-        JS_DHashTableFinish(&mClearedGlobalObjects);
-        mClearedGlobalObjects.ops = nsnull;
-    }
 
     if(mJSRuntime)
     {
@@ -1043,13 +1074,18 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mDoingFinalization(JS_FALSE),
    mVariantRoots(nsnull),
    mWrappedJSRoots(nsnull),
-   mObjectHolderRoots(nsnull)
+   mObjectHolderRoots(nsnull),
+   mUnrootedGlobalCount(0),
+   mWatchdogWakeup(nsnull),
+   mWatchdogThread(nsnull)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =
         JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
                          sizeof(JSDHashEntryStub), 128);
 #endif
+
+    DOM_InitInterfaces();
 
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = 0;
@@ -1084,20 +1120,24 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
+        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
     }
 
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
                           sizeof(ObjectHolder), 512))
         mJSHolders.ops = nsnull;
-    if(!JS_DHashTableInit(&mClearedGlobalObjects, JS_DHashGetStubOps(), nsnull,
-                          sizeof(ClearedGlobalObject), JS_DHASH_MIN_SIZE))
-        mClearedGlobalObjects.ops = nsnull;
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
     if(mJSRuntime && !JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
+
+    AutoLockJSGC lock(mJSRuntime);
+
+    mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
+                                      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                      PR_UNJOINABLE_THREAD, 0);
 }
 
 // static
@@ -1119,7 +1159,8 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
        self->GetNativeScriptableSharedMap()  &&
        self->GetDyingWrappedNativeProtoMap() &&
        self->GetExplicitNativeWrapperMap()   &&
-       self->GetMapLock())
+       self->GetMapLock()                    &&
+       self->mWatchdogThread)
     {
         return self;
     }
@@ -1289,7 +1330,8 @@ void
 XPCRootSetElem::AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead)
 {
     NS_ASSERTION(!mSelfp, "Must be not linked");
-    JS_LOCK_GC(rt);
+
+    AutoLockJSGC lock(rt);
     mSelfp = listHead;
     mNext = *listHead;
     if(mNext)
@@ -1298,19 +1340,18 @@ XPCRootSetElem::AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead)
         mNext->mSelfp = &mNext;
     }
     *listHead = this;
-    JS_UNLOCK_GC(rt);
 }
 
 void
 XPCRootSetElem::RemoveFromRootSet(JSRuntime* rt)
 {
     NS_ASSERTION(mSelfp, "Must be linked");
-    JS_LOCK_GC(rt);
+
+    AutoLockJSGC lock(rt);
     NS_ASSERTION(*mSelfp == this, "Link invariant");
     *mSelfp = mNext;
     if(mNext)
         mNext->mSelfp = mSelfp;
-    JS_UNLOCK_GC(rt);
 #ifdef DEBUG
     mSelfp = nsnull;
     mNext = nsnull;

@@ -95,7 +95,7 @@
 #endif
     <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
 #ifdef XP_GNOME
-    <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
+    <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel,shift"/>
 #else
     <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
 #endif
@@ -190,6 +190,7 @@
             tooltiptext="&cmd.clearList.tooltip;"/>
     <spacer flex="1"/>
     <textbox type="search" id="searchbox" cocoa-size="small"
+             aria-controls="downloadView"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
   </windowdragbox>
 

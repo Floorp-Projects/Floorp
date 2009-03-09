@@ -42,56 +42,80 @@
 #ifndef nsFontFaceLoader_h_
 #define nsFontFaceLoader_h_
 
+#include "nsCOMPtr.h"
+#include "nsIPresShell.h"
 #include "nsIStreamLoader.h"
 #include "nsIURI.h"
+#include "nsIChannel.h"
 #include "gfxUserFontSet.h"
+#include "nsHashKeys.h"
+#include "nsTHashtable.h"
 
 class nsIRequest;
 class nsISupports;
+class nsIPresShell;
 class nsPresContext;
 class nsIPrincipal;
+
+class nsFontFaceLoader;
+
+// nsUserFontSet - defines the loading mechanism for downloadable fonts
+class nsUserFontSet : public gfxUserFontSet
+{
+public:
+  nsUserFontSet(nsPresContext *aContext);
+  ~nsUserFontSet();
+
+  // Called when this font set is no longer associated with a presentation.
+  void Destroy();
+
+  // starts loading process, creating and initializing a nsFontFaceLoader obj
+  // returns whether load process successfully started or not
+  nsresult StartLoad(gfxFontEntry *aFontToLoad, 
+                     const gfxFontFaceSrc *aFontFaceSrc);
+
+  // Called by nsFontFaceLoader when the loader has completed normally.
+  // It's removed from the mLoaders set.
+  void RemoveLoader(nsFontFaceLoader *aLoader);
+
+  nsPresContext *GetPresContext() { return mPresContext; }
+
+protected:
+  nsPresContext *mPresContext;  // weak reference
+
+  // Set of all loaders pointing to us. These are not strong pointers,
+  // but that's OK because nsFontFaceLoader always calls RemoveLoader on
+  // us before it dies (unless we die first).
+  nsTHashtable< nsPtrHashKey<nsFontFaceLoader> > mLoaders;
+};
 
 class nsFontFaceLoader : public nsIStreamLoaderObserver
 {
 public:
 
   nsFontFaceLoader(gfxFontEntry *aFontToLoad, nsIURI *aFontURI, 
-                   gfxUserFontSet::LoaderContext *aContext);
+                   nsUserFontSet *aFontSet, nsIChannel *aChannel);
   virtual ~nsFontFaceLoader();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER 
 
   // initiate the load
-  nsresult Init();  
+  nsresult Init();
+  // cancel the load and remove its reference to mFontSet
+  void Cancel();
 
-  // returns whether create succeeded or not
-  static nsresult CreateHandler(gfxFontEntry *aFontToLoad, 
-                                const gfxFontFaceSrc *aFontFaceSrc,
-                                gfxUserFontSet::LoaderContext *aContext);
-                              
-private:
+  void DropChannel() { mChannel = nsnull; }
 
   static nsresult CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                                    nsIURI* aTargetURI,
                                    nsISupports* aContext);
-  
-  nsRefPtr<gfxFontEntry>              mFontEntry;
-  nsCOMPtr<nsIURI>                    mFontURI;
-  gfxUserFontSet::LoaderContext*      mLoaderContext;
+
+private:
+  nsRefPtr<gfxFontEntry>  mFontEntry;
+  nsCOMPtr<nsIURI>        mFontURI;
+  nsRefPtr<nsUserFontSet> mFontSet;
+  nsCOMPtr<nsIChannel>    mChannel;
 };
-
-class nsFontFaceLoaderContext : public gfxUserFontSet::LoaderContext {
-public:
-  nsFontFaceLoaderContext(nsPresContext* aContext)
-    : gfxUserFontSet::LoaderContext(nsFontFaceLoader::CreateHandler), 
-      mPresContext(aContext)
-  {
-
-  }
-
-  nsPresContext*    mPresContext;
-};
-
 
 #endif /* !defined(nsFontFaceLoader_h_) */

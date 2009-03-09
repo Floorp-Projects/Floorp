@@ -56,7 +56,7 @@ interface nsITransaction;
  *       nsINavBookmarksService.runInBatchMode.
  */
 
-[scriptable, uuid(7179d28c-bc41-4110-8225-b3ba7e1cb293)]
+[scriptable, uuid(32eee5da-2bc7-4d18-8a54-a8ff0dec4d2a)]
 interface nsIPlacesTransactionsService : nsITransactionManager
 {
   /**
@@ -76,7 +76,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *
    * @param aName
    *        the name of the new folder
-   * @param aContainer
+   * @param aContainerId
    *        the identifier of the folder in which the new folder should be
    *        added.
    * @param [optional] aIndex
@@ -88,7 +88,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *        array of transactions for items to be created under the new folder.
    * @returns nsITransaction object
    */
-  nsITransaction createFolder(in AString aName, in long long aContainer,
+  nsITransaction createFolder(in AString aName, in long long aContainerId,
                               [optional] in long long aIndex,
                               [optional] in nsIVariant aAnnotations,
                               [optional] in nsIVariant aChildItemsTransactions);
@@ -98,7 +98,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *
    * @param aURI
    *        the uri of the new bookmark (nsIURI)
-   * @param aContainer
+   * @param aContainerId
    *        the identifier of the folder in which the bookmark should be added.
    * @param [optional] aIndex
    *        the index of the item in aContainer, pass -1 or nothing to create
@@ -118,7 +118,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *        identifier via an "id" js setter.
    * @returns nsITransaction object
    */
-  nsITransaction createItem(in nsIURI aURI, in long long aContainer,
+  nsITransaction createItem(in nsIURI aURI, in long long aContainerId,
                             [optional] in long long aIndex,
                             [optional] in AString aTitle,
                             [optional] in AString aKeyword,
@@ -128,7 +128,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
   /**
    * Transaction for creating a new separator item
    *
-   * @param aContainer
+   * @param aContainerId
    *        the identifier of the folder in which the separator should be
    *        added.
    * @param [optional] aIndex
@@ -136,7 +136,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *        the separator at the end of aContainer.
    * @returns nsITransaction object
    */
-  nsITransaction createSeparator(in long long aContainer,
+  nsITransaction createSeparator(in long long aContainerId,
                                  [optional] in long long aIndex);
 
   /**
@@ -145,7 +145,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    * @see nsILivemarksService::createLivemark for documentation regarding the
    * first three arguments.
    *
-   * @param aContainer
+   * @param aContainerId
    *        the identifier of the folder in which the live-bookmark should be
    *        added.
    * @param [optional]  aIndex
@@ -158,7 +158,7 @@ interface nsIPlacesTransactionsService : nsITransactionManager
   nsITransaction createLivemark(in nsIURI aFeedURI,
                                 in nsIURI aSiteURI,
                                 in AString aName,
-                                in long long aContainer,
+                                in long long aContainerId,
                                 [optional] in long long aIndex,
                                 [optional] in nsIVariant aAnnotations);
 
@@ -167,14 +167,14 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *
    * @param aItemId
    *        the id of the item to move
-   * @param aNewContainer
+   * @param aNewContainerId
    *        id of the new container to move to
    * @param aNewIndex
    *        index of the new position to move to
    * @returns nsITransaction object
    */
   nsITransaction moveItem(in long long aItemId,
-                          in long long aNewContainer,
+                          in long long aNewContainerId,
                           in long long aNewIndex);
 
   /**
@@ -189,13 +189,13 @@ interface nsIPlacesTransactionsService : nsITransactionManager
   /**
    * Transaction for editting a bookmark's title.
    *
-   * @param id
+   * @param aItemId
    *        id of the item to edit
-   * @param newTitle
+   * @param aNewTitle
    *        new title for the item to edit
    * @returns nsITransaction object
    */
-  nsITransaction editItemTitle(in long long id, in AString newTitle);
+  nsITransaction editItemTitle(in long long aItemId, in AString aNewTitle);
 
   /**
    * Transaction for editing a bookmark's uri.
@@ -209,10 +209,40 @@ interface nsIPlacesTransactionsService : nsITransactionManager
   nsITransaction editBookmarkURI(in long long aBookmarkId, in nsIURI aNewURI);
 
   /**
+   * Transaction for setting/unsetting an item annotation
+   *
+   * @param aItemId
+   *        id of the item where to set annotation
+   * @param aAnnotationObject
+   *        Object representing an annotation, containing the following
+   *        properties: name, flags, expires, type, mimeType (only used for
+   *        binary annotations), value.
+   *        If value is null the annotation will be removed
+   * @returns nsITransaction object
+   */
+  nsITransaction setItemAnnotation(in nsIVariant aItemId,
+                                   in nsIVariant aAnnotationObject);
+
+  /**
+   * Transaction for setting/unsetting a page annotation
+   *
+   * @param aURI
+   *        URI of the page where to set annotation
+   * @param aAnnotationObject
+   *        Object representing an annotation, containing the following
+   *        properties: name, flags, expires, type, mimeType (only used for
+   *        binary annotations), value.
+   *        If value is null the annotation will be removed
+   * @returns nsITransaction object
+   */
+  nsITransaction setPageAnnotation(in nsIURI aURI,
+                                   in nsIVariant aAnnotationObject);
+
+  /**
    * Transaction for setting/unsetting Load-in-sidebar annotation
    *
    * @param aBookmarkId
-   *        id of the selected bookmark
+   *        id of the bookmark where to set Load-in-sidebar annotation
    * @param aLoadInSidebar
    *        boolean value
    * @returns nsITransaction object
@@ -235,59 +265,59 @@ interface nsIPlacesTransactionsService : nsITransactionManager
   /**
    * Transaction for editing a bookmark's keyword.
    *
-   * @param id
+   * @param aBookmarkId
    *        id of the bookmark to edit
-   * @param newKeyword
+   * @param aNewKeyword
    *        new keyword for the bookmark
    * @returns nsITransaction object
    */
-  nsITransaction editBookmarkKeyword(in long long aItemId,
+  nsITransaction editBookmarkKeyword(in long long aBookmarkId,
                                      in AString aNewKeyword);
 
   /**
    * Transaction for editing the post data associated with a bookmark.
    *
-   * @param aItemId
+   * @param aBookmarkId
    *        id of the bookmark to edit
    * @param aPostData
    *        post data
    * @returns nsITransaction object
    */
-  nsITransaction editBookmarkPostData(in long long aItemId,
+  nsITransaction editBookmarkPostData(in long long aBookmarkId,
                                       in AString aPostData);
 
   /**
    * Transaction for editing a live bookmark's site URI.
    *
-   * @param aFolderId
+   * @param aLivemarkId
    *        id of the livemark
    * @param aURI
    *        new site uri
    * @returns nsITransaction object
    */
-  nsITransaction editLivemarkSiteURI(in long long aFolderId, in nsIURI aURI);
+  nsITransaction editLivemarkSiteURI(in long long aLivemarkId, in nsIURI aURI);
 
   /**
    * Transaction for editting a live bookmark's feed URI.
    *
-   * @param folderId
+   * @param aLivemarkId
    *        id of the livemark
-   * @param uri
+   * @param aURI
    *        new feed uri
    * @returns nsITransaction object
    */
-  nsITransaction editLivemarkFeedURI(in long long folderId, in nsIURI uri);
+  nsITransaction editLivemarkFeedURI(in long long aLivemarkId, in nsIURI aURI);
 
   /**
    * Transaction for editing a bookmark's microsummary.
    *
-   * @param aItemId
+   * @param aBookmarkId
    *        id of the bookmark to edit
    * @param aNewMicrosummary
    *        new microsummary for the bookmark
    * @returns nsITransaction object
    */
-  nsITransaction editBookmarkMicrosummary(in long long aItemId,
+  nsITransaction editBookmarkMicrosummary(in long long aBookmarkId,
                                           in nsIMicrosummary aNewMicrosummary);
 
   /**

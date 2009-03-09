@@ -57,7 +57,6 @@ _CHROME_FILES	= \
 		test_342484.xul \
 		test_341972a.xul \
 		test_381357.xul \
-		test_423060.xul \
 		$(NULL)
 
 libs:: $(_HTTP_FILES)

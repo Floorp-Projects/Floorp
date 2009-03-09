@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -85,6 +84,10 @@ SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_
 RES     = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = freebl.rc
 
+ifndef WINCE
+OS_LIBS += shell32.lib
+endif
+
 ifdef NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
@@ -101,13 +104,17 @@ endif # NS_USE_GCC
 
 else
 
+ifndef FREEBL_NO_DEPEND
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
 	-lnspr4 \
 	$(NULL)
-
+else
+#drop pthreads as well
+OS_PTHREAD=
+endif
 endif
 
 ifeq ($(OS_ARCH), Darwin)

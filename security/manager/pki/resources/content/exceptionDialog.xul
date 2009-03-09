@@ -115,7 +115,7 @@
       <description id="status3LongDescription" style="white-space: pre-wrap;"/>
       <spacer flex="1"/>
     </vbox>
-    <checkbox id="permanent" checked="true" disabled="true"
+    <checkbox id="permanent" disabled="true"
               label="&exceptionMgr.permanent.label;"
               accesskey="&exceptionMgr.permanent.accesskey;"/>
   </groupbox>

@@ -68,19 +68,19 @@ public:
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
-                             nsMargin* aResult);
+                             nsIntMargin* aResult);
 
   virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsMargin* aResult);
+                                  nsIntMargin* aResult);
 
   virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                    PRUint8 aWidgetType, nsRect* aOverflowRect);
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsSize* aResult, PRBool* aIsOverridable);
+                                  nsIntSize* aResult, PRBool* aIsOverridable);
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint);
   NS_IMETHOD ThemeChanged();
@@ -115,12 +115,14 @@ protected:
                            const HIRect& inBoxRect, PRBool inSelected,
                            PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
   void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect, nsIFrame* aFrame);
-  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
+  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                       PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
   void DrawButton(CGContextRef context, ThemeButtonKind inKind,
                   const HIRect& inBoxRect, PRBool inIsDefault, 
                   PRBool inDisabled, ThemeButtonValue inValue,
                   ThemeButtonAdornment inAdornment, PRInt32 inState, nsIFrame* aFrame);
+  void DrawDropdown(CGContextRef context, const HIRect& inBoxRect, PRInt32 inState,
+                    PRBool aIsEditable, nsIFrame* aFrame);
   void DrawSpinButtons(CGContextRef context, ThemeButtonKind inKind,
                        const HIRect& inBoxRect,
                        PRBool inDisabled, ThemeDrawState inDrawState,
@@ -128,6 +130,8 @@ protected:
                        nsIFrame* aFrame);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           nsIFrame *aFrame);
+  void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
+                     nsIFrame *aFrame);
 
   // Scrollbars
   void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
@@ -141,6 +145,8 @@ private:
   NSButtonCell* mRadioButtonCell;
   NSButtonCell* mCheckboxCell;
   NSSearchFieldCell* mSearchFieldCell;
+  NSPopUpButtonCell* mDropdownCell;
+  NSComboBoxCell* mComboBoxCell;
 };
 
 #endif // nsNativeThemeCocoa_h_

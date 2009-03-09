@@ -201,8 +201,9 @@ public:
   // set the position of the popup either relative to the anchor aAnchorFrame
   // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
   // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
-  // will be adjusted so that it is on screen.
-  nsresult SetPopupPosition(nsIFrame* aAnchorFrame);
+  // will be adjusted so that it is on screen. If aIsMove is true, then the popup
+  // is being moved.
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove = PR_FALSE);
 
   PRBool HasGeneratedChildren() { return mGeneratedChildren; }
   void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
@@ -271,9 +272,11 @@ public:
 
   void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
 
-  // This sets 'left' and 'top' attributes.
-  // May kill the frame.
-  void MoveTo(PRInt32 aLeft, PRInt32 aTop);
+  // Move the popup to the screen coordinate (aLeft, aTop). If aUpdateAttrs
+  // is true, and the popup already has left or top attributes, then those
+  // attributes are updated to the new location.
+  // The frame may be destroyed by this method.
+  void MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs);
 
   PRBool GetAutoPosition();
   void SetAutoPosition(PRBool aShouldAutoPosition);
@@ -290,8 +293,6 @@ public:
   void SetPreferredSize(nsSize aSize) { mPrefSize = aSize; }
 
 protected:
-  // Move without updating attributes.                                          
-  void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);                             
 
   // redefine to tell the box system not to move the views.
   virtual void GetLayoutFlags(PRUint32& aFlags);
@@ -299,17 +300,31 @@ protected:
   void InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                    const nsAString& aAlign);
 
-  void AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPos, const nsSize & inParentRect,
-                                      PRBool* outFlushWithTopBottom ) ;
+  // return the position where the popup should be, when it should be
+  // anchored at anchorRect. aHFlip and aVFlip will be set if the popup may be
+  // flipped in that direction if there is not enough space available.
+  nsPoint AdjustPositionForAnchorAlign(const nsRect& anchorRect, PRBool& aHFlip, PRBool& aVFlip);
 
-  PRBool IsMoreRoomOnOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32 inScreenViewLocX, PRInt32 inScreenViewLocY,
-                                           const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
-                                           PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips ) ;
 
-  void MovePopupToOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32* ioXPos, PRInt32* ioYPos, 
-                                           PRInt32* ioScreenViewLocX, PRInt32* ioScreenViewLocY,
-                                           const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
-                                           PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips ) ;
+  // check if the popup will fit into the available space and resize it. This
+  // method handles only one axis at a time so is called twice, once for
+  // horizontal and once for vertical. All arguments are specified for this
+  // one axis. All coordinates are in app units relative to the screen.
+  //   aScreenPoint - the point where the popup should appear
+  //   aSize - the size of the popup
+  //   aScreenBegin - the left or top edge of the screen
+  //   aScreenEnd - the right or bottom edge of the screen
+  //   aAnchorBegin - the left or top edge of the anchor rectangle
+  //   aAnchorEnd - the right or bottom edge of the anchor rectangle
+  //   aMarginBegin - the left or top margin of the popup
+  //   aMarginEnd - the right or bottom margin of the popup
+  //   aOffsetForContextMenu - the additional offset to add for context menus
+  //   aFlip - whether to flip or resize the popup when there isn't space
+  nscoord FlipOrResize(nscoord& aScreenPoint, nscoord aSize, 
+                       nscoord aScreenBegin, nscoord aScreenEnd,
+                       nscoord aAnchorBegin, nscoord aAnchorEnd,
+                       nscoord aMarginBegin, nscoord aMarginEnd,
+                       nscoord aOffsetForContextMenu, PRBool aFlip);
 
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();

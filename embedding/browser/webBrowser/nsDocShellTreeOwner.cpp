@@ -1482,9 +1482,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
       if (textFound) {
         nsString tipText(tooltipText);
         self->CreateAutoHideTimer();
-        nsRect widgetDot(0, 0, 1, 1);
-        nsRect screenDot;
-        widget->WidgetToScreen(widgetDot, screenDot);
+        nsIntPoint screenDot = widget->WidgetToScreenOffset();
         self->ShowTooltip (self->mMouseScreenX - screenDot.x,
                            self->mMouseScreenY - screenDot.y,
                            tipText);

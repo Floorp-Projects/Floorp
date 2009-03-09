@@ -58,15 +58,14 @@ ChildIterator::Init(nsIContent*    aContent,
   if (! aContent)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> doc = aContent->GetDocument();
+  nsIDocument* doc = aContent->GetOwnerDoc();
   NS_ASSERTION(doc, "element not in the document");
   if (! doc)
     return NS_ERROR_FAILURE;
 
   // If this node has XBL children, then use them. Otherwise, just use
   // the vanilla content APIs.
-  nsCOMPtr<nsIDOMNodeList> nodes;
-  doc->BindingManager()->GetXBLChildNodesFor(aContent, getter_AddRefs(nodes));
+  nsINodeList* nodes = doc->BindingManager()->GetXBLChildNodesFor(aContent);
 
   PRUint32 length;
   if (nodes)

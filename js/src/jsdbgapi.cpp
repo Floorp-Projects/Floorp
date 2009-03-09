@@ -41,7 +41,6 @@
 /*
  * JS debugging API.
  */
-#include "jsstddef.h"
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
@@ -436,7 +435,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
         if (wp->object == obj) {
             TRACE_SCOPE_PROPERTY(trc, wp->sprop);
             if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter) {
-                JS_CALL_OBJECT_TRACER(trc, (JSObject *)wp->setter,
+                JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
                                       "wp->setter");
             }
             JS_SET_TRACING_NAME(trc, "wp->closure");
@@ -651,9 +650,10 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 #endif
                 ok = !wp->setter ||
                      ((sprop->attrs & JSPROP_SETTER)
-                      ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(wp->setter),
+                      ? js_InternalCall(cx, obj,
+                                        js_CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
-                      : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
+                      : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
                     /* Evil code can cause us to have an arguments object. */
                     if (frame.callobj)
@@ -674,7 +674,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JSBool
+JS_REQUIRES_STACK JSBool
 js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
@@ -709,11 +709,11 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
         atom = NULL;
     }
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             OBJ_GET_PARENT(cx, (JSObject *)setter),
+                             OBJ_GET_PARENT(cx, js_CastAsObject(setter)),
                              atom);
     if (!wrapper)
         return NULL;
-    return (JSPropertyOp) FUN_OBJECT(wrapper);
+    return js_CastAsPropertyOp(FUN_OBJECT(wrapper));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -735,10 +735,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         return JS_FALSE;
     }
 
-    if (JSVAL_IS_INT(idval))
+    if (JSVAL_IS_INT(idval)) {
         propid = INT_JSVAL_TO_JSID(idval);
-    else if (!js_ValueToStringId(cx, idval, &propid))
-        return JS_FALSE;
+    } else {
+        if (!js_ValueToStringId(cx, idval, &propid))
+            return JS_FALSE;
+        CHECK_FOR_STRING_INDEX(propid);
+    }
 
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
@@ -1105,7 +1108,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
      * XXX ill-defined: null return here means error was reported, unlike a
      *     null returned above or in the #else
      */
-    return js_GetCallObject(cx, fp, NULL);
+    return js_GetCallObject(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1246,9 +1249,15 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!scobj)
         return JS_FALSE;
 
+    /*
+     * NB: This function breaks the assumption that the compiler can see all
+     * calls and properly compute a static depth. In order to get around this,
+     * we use a static depth that will cause us not to attempt to optimize
+     * variable references made by this frame.
+     */
     script = js_CompileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
                               TCF_COMPILE_N_GO |
-                              TCF_PUT_STATIC_DEPTH(fp->script->staticDepth + 1),
+                              TCF_PUT_STATIC_DEPTH(JS_DISPLAY_SIZE),
                               chars, length, NULL,
                               filename, lineno);
     if (!script)

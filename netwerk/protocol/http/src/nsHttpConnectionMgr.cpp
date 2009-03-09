@@ -54,20 +54,20 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 //-----------------------------------------------------------------------------
 
 static void
-InsertTransactionSorted(nsVoidArray &pendingQ, nsHttpTransaction *trans)
+InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransaction *trans)
 {
     // insert into queue with smallest valued number first.  search in reverse
     // order under the assumption that many of the existing transactions will
     // have the same priority (usually 0).
 
-    for (PRInt32 i=pendingQ.Count()-1; i>=0; --i) {
-        nsHttpTransaction *t = (nsHttpTransaction *) pendingQ[i];
+    for (PRInt32 i=pendingQ.Length()-1; i>=0; --i) {
+        nsHttpTransaction *t = pendingQ[i];
         if (trans->Priority() >= t->Priority()) {
-            pendingQ.InsertElementAt(trans, i+1);
+            pendingQ.InsertElementAt(i+1, trans);
             return;
         }
     }
-    pendingQ.InsertElementAt(trans, 0);
+    pendingQ.InsertElementAt(0, trans);
 }
 
 //-----------------------------------------------------------------------------
@@ -243,9 +243,9 @@ nsHttpConnectionMgr::AddTransactionToPipeline(nsHttpPipeline *pipeline)
         nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
         if (ent) {
             // search for another request to pipeline...
-            PRInt32 i, count = ent->mPendingQ.Count();
+            PRInt32 i, count = ent->mPendingQ.Length();
             for (i=0; i<count; ++i) {
-                nsHttpTransaction *trans = (nsHttpTransaction *) ent->mPendingQ[i];
+                nsHttpTransaction *trans = ent->mPendingQ[i];
                 if (trans->Caps() & NS_HTTP_ALLOW_PIPELINING) {
                     pipeline->AddTransaction(trans);
 
@@ -311,8 +311,8 @@ nsHttpConnectionMgr::PurgeOneIdleConnectionCB(nsHashKey *key, void *data, void *
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
     nsConnectionEntry *ent = (nsConnectionEntry *) data;
 
-    if (ent->mIdleConns.Count() > 0) {
-        nsHttpConnection *conn = (nsHttpConnection *) ent->mIdleConns[0];
+    if (ent->mIdleConns.Length() > 0) {
+        nsHttpConnection *conn = ent->mIdleConns[0];
         ent->mIdleConns.RemoveElementAt(0);
         conn->Close(NS_ERROR_ABORT);
         NS_RELEASE(conn);
@@ -331,10 +331,10 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *cl
 
     LOG(("  pruning [ci=%s]\n", ent->mConnInfo->HashKey().get()));
 
-    PRInt32 count = ent->mIdleConns.Count();
+    PRInt32 count = ent->mIdleConns.Length();
     if (count > 0) {
         for (PRInt32 i=count-1; i>=0; --i) {
-            nsHttpConnection *conn = (nsHttpConnection *) ent->mIdleConns[i];
+            nsHttpConnection *conn = ent->mIdleConns[i];
             if (!conn->CanReuse()) {
                 ent->mIdleConns.RemoveElementAt(i);
                 conn->Close(NS_ERROR_ABORT);
@@ -345,19 +345,19 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *cl
     }
 
 #ifdef DEBUG
-    count = ent->mActiveConns.Count();
+    count = ent->mActiveConns.Length();
     if (count > 0) {
         for (PRInt32 i=count-1; i>=0; --i) {
-            nsHttpConnection *conn = (nsHttpConnection *) ent->mActiveConns[i];
+            nsHttpConnection *conn = ent->mActiveConns[i];
             LOG(("    active conn [%x] with trans [%x]\n", conn, conn->Transaction()));
         }
     }
 #endif
 
     // if this entry is empty, then we can remove it.
-    if (ent->mIdleConns.Count()   == 0 &&
-        ent->mActiveConns.Count() == 0 &&
-        ent->mPendingQ.Count()    == 0) {
+    if (ent->mIdleConns.Length()   == 0 &&
+        ent->mActiveConns.Length() == 0 &&
+        ent->mPendingQ.Length()    == 0) {
         LOG(("    removing empty connection entry\n"));
         delete ent;
         return kHashEnumerateRemove;
@@ -381,8 +381,8 @@ nsHttpConnectionMgr::ShutdownPassCB(nsHashKey *key, void *data, void *closure)
     nsHttpConnection *conn;
 
     // close all active connections
-    while (ent->mActiveConns.Count()) {
-        conn = (nsHttpConnection *) ent->mActiveConns[0];
+    while (ent->mActiveConns.Length()) {
+        conn = ent->mActiveConns[0];
 
         ent->mActiveConns.RemoveElementAt(0);
         self->mNumActiveConns--;
@@ -392,8 +392,8 @@ nsHttpConnectionMgr::ShutdownPassCB(nsHashKey *key, void *data, void *closure)
     }
 
     // close all idle connections
-    while (ent->mIdleConns.Count()) {
-        conn = (nsHttpConnection *) ent->mIdleConns[0];
+    while (ent->mIdleConns.Length()) {
+        conn = ent->mIdleConns[0];
 
         ent->mIdleConns.RemoveElementAt(0);
         self->mNumIdleConns--;
@@ -403,8 +403,8 @@ nsHttpConnectionMgr::ShutdownPassCB(nsHashKey *key, void *data, void *closure)
     }
 
     // close all pending transactions
-    while (ent->mPendingQ.Count()) {
-        trans = (nsHttpTransaction *) ent->mPendingQ[0];
+    while (ent->mPendingQ.Length()) {
+        trans = ent->mPendingQ[0];
 
         ent->mPendingQ.RemoveElementAt(0);
 
@@ -424,13 +424,13 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
     LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry [ci=%s]\n",
         ent->mConnInfo->HashKey().get()));
 
-    PRInt32 i, count = ent->mPendingQ.Count();
+    PRInt32 i, count = ent->mPendingQ.Length();
     if (count > 0) {
         LOG(("  pending-count=%u\n", count));
         nsHttpTransaction *trans = nsnull;
         nsHttpConnection *conn = nsnull;
         for (i=0; i<count; ++i) {
-            trans = (nsHttpTransaction *) ent->mPendingQ[i];
+            trans = ent->mPendingQ[i];
             GetConnection(ent, trans->Caps(), &conn);
             if (conn)
                 break;
@@ -447,7 +447,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
             else {
                 LOG(("  DispatchTransaction failed [rv=%x]\n", rv));
                 // on failure, just put the transaction back
-                ent->mPendingQ.InsertElementAt(trans, i);
+                ent->mPendingQ.InsertElementAt(i, trans);
                 // might be something wrong with the connection... close it.
                 conn->Close(rv);
             }
@@ -480,11 +480,11 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     nsHttpConnection *conn;
     PRInt32 i, totalCount, persistCount = 0;
     
-    totalCount = ent->mActiveConns.Count();
+    totalCount = ent->mActiveConns.Length();
 
     // count the number of persistent connections
     for (i=0; i<totalCount; ++i) {
-        conn = (nsHttpConnection *) ent->mActiveConns[i];
+        conn = ent->mActiveConns[i];
         if (conn->IsKeepAlive()) // XXX make sure this is thread-safe
             persistCount++;
     }
@@ -526,8 +526,8 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent, PRUint8 caps,
 
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
         // search the idle connection list
-        while (!conn && (ent->mIdleConns.Count() > 0)) {
-            conn = (nsHttpConnection *) ent->mIdleConns[0];
+        while (!conn && (ent->mIdleConns.Length() > 0)) {
+            conn = ent->mIdleConns[0];
             // we check if the connection can be reused before even checking if
             // it is a "matching" connection.
             if (!conn->CanReuse()) {
@@ -629,9 +629,9 @@ nsHttpConnectionMgr::BuildPipeline(nsConnectionEntry *ent,
     nsHttpPipeline *pipeline = nsnull;
     nsHttpTransaction *trans;
 
-    PRInt32 i = 0, numAdded = 0;
-    while (i < ent->mPendingQ.Count()) {
-        trans = (nsHttpTransaction *) ent->mPendingQ[i];
+    PRUint32 i = 0, numAdded = 0;
+    while (i < ent->mPendingQ.Length()) {
+        trans = ent->mPendingQ[i];
         if (trans->Caps() & NS_HTTP_ALLOW_PIPELINING) {
             if (numAdded == 0) {
                 pipeline = new nsHttpPipeline;
@@ -719,7 +719,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
     nsresult rv;
     if (!conn) {
         LOG(("  adding transaction to pending queue [trans=%x pending-count=%u]\n",
-            trans, ent->mPendingQ.Count()+1));
+            trans, ent->mPendingQ.Length()+1));
         // put this transaction on the pending queue...
         InsertTransactionSorted(ent->mPendingQ, trans);
         NS_ADDREF(trans);

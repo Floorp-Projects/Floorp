@@ -580,10 +580,17 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // Try to skip reflowing the child. We can't skip if the child is dirty. We also can't
     // skip if the next column is dirty, because the next column's first line(s)
     // might be pullable back to this column. We can't skip if it's the last child
-    // because we need to obtain the bottom margin.
+    // because we need to obtain the bottom margin. We can't skip
+    // if this is the last column and we're supposed to assign unbounded
+    // height to it, because that could change the available height from
+    // the last time we reflowed it and we should try to pull all the
+    // content from its next sibling. (Note that it might be the last
+    // column, but not be the last child because the desired number of columns
+    // has changed.)
     PRBool skipIncremental = !(GetStateBits() & NS_FRAME_IS_DIRTY)
       && !NS_SUBTREE_DIRTY(child)
       && child->GetNextSibling()
+      && !(aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1)
       && !NS_SUBTREE_DIRTY(child->GetNextSibling());
     // If we need to pull up content from the prev-in-flow then this is not just
     // a height shrink. The prev in flow will have set the dirty bit.
@@ -644,10 +651,10 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     
       nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
 
-      // XXX it would be cool to consult the space manager for the
+      // XXX it would be cool to consult the float manager for the
       // previous block to figure out the region of floats from the
       // previous column that extend into this column, and subtract
-      // that region from the new space manager.  So you could stick a
+      // that region from the new float manager.  So you could stick a
       // really big float in the first column and text in following
       // columns would flow around it.
 
@@ -1017,6 +1024,10 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.mCarriedOutBottomMargin = carriedOutBottomMargin;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus) ||
+               aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
+               "Column set should be complete if the available height is unconstrained");
 
   return NS_OK;
 }

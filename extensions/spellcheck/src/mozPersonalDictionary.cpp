@@ -158,7 +158,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
 static PLDHashOperator
 AddHostToStringArray(nsUniCharEntry *aEntry, void *aArg)
 {
-  static_cast<nsStringArray*>(aArg)->AppendString(nsDependentString(aEntry->GetKey()));
+  static_cast<nsTArray<nsString>*>(aArg)->AppendElement(nsDependentString(aEntry->GetKey()));
   return PL_DHASH_NEXT;
 }
 
@@ -185,14 +185,13 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   res = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), outStream, 4096);
   if (NS_FAILED(res)) return res;
 
-  nsStringArray array(mDictionaryTable.Count());
+  nsTArray<nsString> array(mDictionaryTable.Count());
   mDictionaryTable.EnumerateEntries(AddHostToStringArray, &array);
 
   PRUint32 bytesWritten;
   nsCAutoString utf8Key;
-  for (PRInt32 i = 0; i < array.Count(); ++i ) {
-    const nsString *key = array[i];
-    CopyUTF16toUTF8(*key, utf8Key);
+  for (PRInt32 i = 0; i < array.Length(); ++i ) {
+    CopyUTF16toUTF8(array[i], utf8Key);
 
     bufferedOutputStream->Write(utf8Key.get(), utf8Key.Length(), &bytesWritten);
     bufferedOutputStream->Write("\n", 1, &bytesWritten);
@@ -206,7 +205,7 @@ NS_IMETHODIMP mozPersonalDictionary::GetWordList(nsIStringEnumerator **aWords)
   NS_ENSURE_ARG_POINTER(aWords);
   *aWords = nsnull;
 
-  nsStringArray *array = new nsStringArray(mDictionaryTable.Count());
+  nsTArray<nsString> *array = new nsTArray<nsString>(mDictionaryTable.Count());
   if (!array)
     return NS_ERROR_OUT_OF_MEMORY;
 

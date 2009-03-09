@@ -41,7 +41,7 @@
 #ifndef __NS_ACCESSIBILITY_HELPER_H__
 #define __NS_ACCESSIBILITY_HELPER_H__
 
-#include <gtk/gtkdialog.h>
+#include <gtk/gtk.h>
 
 // This helper function attach/deattach the AtkObject of the dialog 
 // to Gecko a11y root, before/after calling gtk_dialog_run.

@@ -39,7 +39,7 @@
 #include "nsXPCOM.h"
 #include <fstream.h>
 #include "nsDoubleHashtable.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #ifdef MOZ_JPROF
 #include "jprof.h"
 #endif
@@ -78,7 +78,7 @@ public:
     txOptionEntry(const void* aKey) : PLDHashCStringEntry(aKey)
     {
     }
-    nsCStringArray mValues;
+    nsTArray<nsCString> mValues;
 };
 
 DECL_DHASH_WRAPPER(txOptions, txOptionEntry, nsACString&)
@@ -106,7 +106,7 @@ void parseCommandLine(int argc, char** argv, txOptions& aOptions)
         else {
             txOptionEntry* option = aOptions.AddEntry(flag);
             if (option) {
-                option->mValues.AppendCString(nsCString(arg));
+                option->mValues.AppendElement(nsCString(arg));
             }
             flag.Truncate();
         }
@@ -163,19 +163,19 @@ int main(int argc, char** argv)
 
     txOptionEntry* option = options.GetEntry(NS_LITERAL_CSTRING("o"));
     if (option &&
-        option->mValues.Count() > 0 &&
-        !option->mValues[0]->EqualsLiteral("-")) {
-        resultFileStream.open(option->mValues[0]->get(), ios::out);
+        option->mValues.Length() > 0 &&
+        !option->mValues[0].EqualsLiteral("-")) {
+        resultFileStream.open(option->mValues[0].get(), ios::out);
         if (!resultFileStream) {
             cerr << "error opening output file: ";
-            cerr << option->mValues[0]->get() << endl;
+            cerr << option->mValues[0].get() << endl;
             return -1;
         }
         resultOutput = &resultFileStream;
     }
 
     option = options.GetEntry(NS_LITERAL_CSTRING("i"));
-    if (!option || option->mValues.Count() == 0) {
+    if (!option || option->mValues.Length() == 0) {
         cerr << "you must specify at least a source XML path" << endl;
         printUsage();
         return -1;
@@ -185,12 +185,12 @@ int main(int argc, char** argv)
     txStandaloneXSLTProcessor proc;
 
     txOptionEntry* styleOption = options.GetEntry(NS_LITERAL_CSTRING("s"));
-    if (!styleOption || styleOption->mValues.Count() == 0) {
-        rv = proc.transform(*option->mValues[0], *resultOutput, obs);
+    if (!styleOption || styleOption->mValues.Length() == 0) {
+        rv = proc.transform(option->mValues[0], *resultOutput, obs);
     }
     else {
         // XXX TODO: Handle multiple stylesheets
-        rv = proc.transform(*option->mValues[0], *styleOption->mValues[0],
+        rv = proc.transform(option->mValues[0], styleOption->mValues[0],
                             *resultOutput, obs);
     }
 

@@ -83,13 +83,55 @@ JS_BEGIN_EXTERN_C
 /* Objects, strings, and doubles are GC'ed. */
 #define JSVAL_IS_GCTHING(v)     (!((v) & JSVAL_INT) &&                        \
                                  JSVAL_TAG(v) != JSVAL_BOOLEAN)
-#define JSVAL_TO_GCTHING(v)     ((void *)JSVAL_CLRTAG(v))
-#define JSVAL_TO_OBJECT(v)      ((JSObject *)JSVAL_TO_GCTHING(v))
-#define JSVAL_TO_DOUBLE(v)      ((jsdouble *)JSVAL_TO_GCTHING(v))
-#define JSVAL_TO_STRING(v)      ((JSString *)JSVAL_TO_GCTHING(v))
-#define OBJECT_TO_JSVAL(obj)    ((jsval)(obj))
-#define DOUBLE_TO_JSVAL(dp)     JSVAL_SETTAG((jsval)(dp), JSVAL_DOUBLE)
-#define STRING_TO_JSVAL(str)    JSVAL_SETTAG((jsval)(str), JSVAL_STRING)
+
+static JS_ALWAYS_INLINE void *
+JSVAL_TO_GCTHING(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_GCTHING(v));
+    return (void *) JSVAL_CLRTAG(v);
+}
+
+static JS_ALWAYS_INLINE JSObject *
+JSVAL_TO_OBJECT(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_OBJECT(v));
+    return (JSObject *) JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE jsdouble *
+JSVAL_TO_DOUBLE(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_DOUBLE(v));
+    return (jsdouble *) JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE JSString *
+JSVAL_TO_STRING(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    return (JSString *) JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE jsval
+OBJECT_TO_JSVAL(JSObject *obj)
+{
+    JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
+    JS_ASSERT(((jsval) obj & JSVAL_TAGMASK) == JSVAL_OBJECT);
+    return (jsval) obj;
+}
+
+static JS_ALWAYS_INLINE jsval
+DOUBLE_TO_JSVAL(jsdouble *dp)
+{
+    JS_ASSERT(((jsword) dp & JSVAL_TAGMASK) == 0);
+    return JSVAL_SETTAG((jsval) dp, JSVAL_DOUBLE);
+}
+
+static JS_ALWAYS_INLINE jsval
+STRING_TO_JSVAL(JSString *str)
+{
+    return JSVAL_SETTAG((jsval) str, JSVAL_STRING);
+}
 
 /* Lock and unlock the GC thing held by a jsval. */
 #define JSVAL_LOCK(cx,v)        (JSVAL_IS_GCTHING(v)                          \
@@ -109,10 +151,45 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_TO_INT(v)         ((jsint)(v) >> 1)
 #define INT_TO_JSVAL(i)         (((jsval)(i) << 1) | JSVAL_INT)
 
-/* Convert between boolean and jsval. */
-#define JSVAL_TO_BOOLEAN(v)     ((JSBool)((v) >> JSVAL_TAGBITS))
-#define BOOLEAN_TO_JSVAL(b)     JSVAL_SETTAG((jsval)(b) << JSVAL_TAGBITS,     \
-                                             JSVAL_BOOLEAN)
+/*
+ * A pseudo-boolean is a 29-bit (for 32-bit jsval) or 61-bit (for 64-bit jsval)
+ * value other than 0 or 1 encoded as a jsval whose tag is JSVAL_BOOLEAN.
+ *
+ * JSVAL_VOID happens to be defined as a jsval encoding a pseudo-boolean, but
+ * embedders MUST NOT rely on this. All other possible pseudo-boolean values
+ * are implementation-reserved and MUST NOT be constructed by any embedding of
+ * SpiderMonkey.
+ */
+#define JSVAL_TO_PSEUDO_BOOLEAN(v) ((JSBool) ((v) >> JSVAL_TAGBITS))
+#define PSEUDO_BOOLEAN_TO_JSVAL(b)                                            \
+    JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_BOOLEAN)
+
+/*
+ * Well-known JS values.  The extern'd variables are initialized when the
+ * first JSContext is created by JS_NewContext (see below).
+ */
+#define JSVAL_NULL              ((jsval) 0)
+#define JSVAL_ZERO              INT_TO_JSVAL(0)
+#define JSVAL_ONE               INT_TO_JSVAL(1)
+#define JSVAL_FALSE             PSEUDO_BOOLEAN_TO_JSVAL(JS_FALSE)
+#define JSVAL_TRUE              PSEUDO_BOOLEAN_TO_JSVAL(JS_TRUE)
+#define JSVAL_VOID              PSEUDO_BOOLEAN_TO_JSVAL(2)
+
+
+/* Convert between boolean and jsval, asserting that inputs are valid. */
+static JS_ALWAYS_INLINE JSBool
+JSVAL_TO_BOOLEAN(jsval v)
+{
+    JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE);
+    return JSVAL_TO_PSEUDO_BOOLEAN(v);
+}
+
+static JS_ALWAYS_INLINE jsval
+BOOLEAN_TO_JSVAL(JSBool b)
+{
+    JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
+    return PSEUDO_BOOLEAN_TO_JSVAL(b);
+}
 
 /* A private data pointer (2-byte-aligned) can be stored as an int jsval. */
 #define JSVAL_TO_PRIVATE(v)     ((void *)((v) & ~JSVAL_INT))
@@ -178,17 +255,6 @@ JS_BEGIN_EXTERN_C
  * JSFunctionSpec structs are allocated in static arrays.
  */
 #define JSFUN_GENERIC_NATIVE    JSFUN_LAMBDA
-
-/*
- * Well-known JS values.  The extern'd variables are initialized when the
- * first JSContext is created by JS_NewContext (see below).
- */
-#define JSVAL_VOID              BOOLEAN_TO_JSVAL(2)
-#define JSVAL_NULL              OBJECT_TO_JSVAL(0)
-#define JSVAL_ZERO              INT_TO_JSVAL(0)
-#define JSVAL_ONE               INT_TO_JSVAL(1)
-#define JSVAL_FALSE             BOOLEAN_TO_JSVAL(JS_FALSE)
-#define JSVAL_TRUE              BOOLEAN_TO_JSVAL(JS_TRUE)
 
 /*
  * Microseconds since the epoch, midnight, January 1, 1970 UTC.  See the
@@ -564,15 +630,6 @@ JS_StringToVersion(const char *string);
                                                    not backward compatible with
                                                    the comment-hiding hack used
                                                    in HTML script tags. */
-#define JSOPTION_NATIVE_BRANCH_CALLBACK \
-                                JS_BIT(7)       /* the branch callback set by
-                                                   JS_SetBranchCallback may be
-                                                   called with a null script
-                                                   parameter, by native code
-                                                   that loops intensively.
-                                                   Deprecated, use
-                                                   JS_SetOperationCallback
-                                                   instead */
 #define JSOPTION_DONT_REPORT_UNCAUGHT \
                                 JS_BIT(8)       /* When returning from the
                                                    outermost API call, prevent
@@ -595,6 +652,11 @@ JS_StringToVersion(const char *string);
                                                    that a null rval out-param
                                                    will be passed to each call
                                                    to JS_ExecuteScript. */
+#define JSOPTION_UNROOTED_GLOBAL JS_BIT(13)     /* The GC will not root the
+                                                   contexts' global objects
+                                                   (see JS_GetGlobalObject),
+                                                   leaving that up to the
+                                                   embedding. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
@@ -1134,11 +1196,30 @@ typedef enum JSGCParamKey {
     JSGC_MAX_MALLOC_BYTES   = 1,
 
     /* Hoard stackPools for this long, in ms, default is 30 seconds. */
-    JSGC_STACKPOOL_LIFESPAN = 2
+    JSGC_STACKPOOL_LIFESPAN = 2,
+
+    /*
+     * The factor that defines when the GC is invoked. The factor is a
+     * percent of the memory allocated by the GC after the last run of
+     * the GC. When the current memory allocated by the GC is more than
+     * this percent then the GC is invoked. The factor cannot be less
+     * than 100 since the current memory allocated by the GC cannot be less
+     * than the memory allocated after the last run of the GC.
+     */
+    JSGC_TRIGGER_FACTOR = 3,
+
+    /* Amount of bytes allocated by the GC. */
+    JSGC_BYTES = 4,
+
+    /* Number of times when GC was invoked. */
+    JSGC_NUMBER = 5
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
 JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value);
+
+extern JS_PUBLIC_API(uint32)
+JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key);
 
 /*
  * Add a finalizer for external strings created by JS_NewExternalString (see
@@ -1406,6 +1487,7 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_DETECTING     0x04    /* 'if (o.p)...' or '(o.p) ?...:...' */
 #define JSRESOLVE_DECLARING     0x08    /* var, const, or function prolog op */
 #define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
+#define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
 
 extern JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
@@ -1598,6 +1680,13 @@ JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                    uintN *attrsp, JSBool *foundp,
                                    JSPropertyOp *getterp,
                                    JSPropertyOp *setterp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
+                                       jsid id,
+                                       uintN *attrsp, JSBool *foundp,
+                                       JSPropertyOp *getterp,
+                                       JSPropertyOp *setterp);
 
 /*
  * Set the attributes of a property on a given object.
@@ -2167,62 +2256,33 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
 /*
- * The maximum value of the operation limit to pass to JS_SetOperationCallback
- * and JS_SetOperationLimit.
+ * These functions allow setting an operation callback that will be called
+ * from the thread the context is associated with some time after any thread
+ * triggered the callback using JS_TriggerOperationCallback(cx).
+ * 
+ * In a threadsafe build the engine internally triggers operation callbacks
+ * under certain circumstances (i.e. GC and title transfer) to force the
+ * context to yield its current request, which the engine always 
+ * automatically does immediately prior to calling the callback function.
+ * The embedding should thus not rely on callbacks being triggered through
+ * the external API only.
+ * 
+ * Important note: Additional callbacks can occur inside the callback handler
+ * if it re-enters the JS engine. The embedding must ensure that the callback
+ * is disconnected before attempting such re-entry.
  */
-#define JS_MAX_OPERATION_LIMIT ((uint32) 0x7FFFFFFF)
 
-#define JS_OPERATION_WEIGHT_BASE 4096
-
-/*
- * Set the operation callback that the engine calls periodically after
- * the internal operation count reaches the specified limit.
- *
- * When operationLimit is JS_OPERATION_WEIGHT_BASE, the callback will be
- * called at least after each backward jump in the interpreter. To minimize
- * the overhead of the callback invocation we suggest at least
- *
- *   100 * JS_OPERATION_WEIGHT_BASE
- *
- * as a value for operationLimit.
- */
-extern JS_PUBLIC_API(void)
-JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
-                        uint32 operationLimit);
-
-extern JS_PUBLIC_API(void)
-JS_ClearOperationCallback(JSContext *cx);
+extern JS_PUBLIC_API(JSOperationCallback)
+JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback);
 
 extern JS_PUBLIC_API(JSOperationCallback)
 JS_GetOperationCallback(JSContext *cx);
 
-/*
- * Get the operation limit associated with the operation callback. This API
- * function may be called only when the result of JS_GetOperationCallback(cx)
- * is not null.
- */
-extern JS_PUBLIC_API(uint32)
-JS_GetOperationLimit(JSContext *cx);
-
-/*
- * Change the operation limit associated with the operation callback. This API
- * function may be called only when the result of JS_GetOperationCallback(cx)
- * is not null.
- */
 extern JS_PUBLIC_API(void)
-JS_SetOperationLimit(JSContext *cx, uint32 operationLimit);
+JS_TriggerOperationCallback(JSContext *cx);
 
-/*
- * Note well: JS_SetBranchCallback is deprecated. It is similar to
- *
- *   JS_SetOperationCallback(cx, callback, 4096, NULL);
- *
- * except that the callback will not be called from a long-running native
- * function when JSOPTION_NATIVE_BRANCH_CALLBACK is not set and the top-most
- * frame is native.
- */
-extern JS_PUBLIC_API(JSBranchCallback)
-JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb);
+extern JS_PUBLIC_API(void)
+JS_TriggerAllOperationCallbacks(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
@@ -2453,7 +2513,7 @@ JS_PUBLIC_API(JSBool)
 JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
 
 JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp);
+JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 
 /************************************************************************/
 

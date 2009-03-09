@@ -7,7 +7,7 @@
 }
 
 #modes {
-  min-height: 380px;
+  min-height: 400px;
 }
 
 #clientBox {
@@ -23,6 +23,7 @@
 } 
 
 #userAgent {
+  direction: ltr;
   margin-top: 10px;
   -moz-margin-end: 13px;
   margin-bottom: 0;
@@ -90,4 +91,11 @@ button[dlgtype="extra2"] {
 
 button[dlgtype="accept"] {
   -moz-margin-end: 13px;
+}
+
+.text-link,
+.text-link:focus {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
 }

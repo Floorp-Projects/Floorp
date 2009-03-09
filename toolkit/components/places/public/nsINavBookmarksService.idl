@@ -351,8 +351,7 @@ interface nsINavBookmarksService : nsISupports
    *         The direct parent folder of the item
    *  @param aIndex
    *         The index of the item within aFolder, DEFAULT_INDEX for the last item
-   *  @returns the id of the found item
-   *  @throws if the item does not exist
+   *  @returns the id of the found item, -1 if the item does not exists
    */
   long long getIdForItemAt(in long long aFolder, in long aIndex);
 

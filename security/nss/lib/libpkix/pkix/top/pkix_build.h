@@ -45,6 +45,7 @@
 #define _PKIX_BUILD_H
 #include "pkix_tools.h"
 #include "pkix_pl_ldapt.h"
+#include "pkix_ekuchecker.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,7 +66,6 @@ typedef enum {
         BUILD_CHECKTRUSTED,
         BUILD_CHECKTRUSTED2,
         BUILD_ADDTOCHAIN,
-        BUILD_CHECKWITHANCHORS,
         BUILD_CRL2PREP,
         BUILD_CRL2,
         BUILD_VALCHAIN,
@@ -98,7 +98,7 @@ struct BuildConstantsStruct {
         PKIX_List *anchors;
         PKIX_List *userCheckers;
         PKIX_List *hintCerts;
-        PKIX_CertChainChecker *crlChecker;
+        PKIX_RevocationChecker *revChecker;
         PKIX_PL_AIAMgr *aiaMgr;
         PKIX_Boolean useAIAForCertFetching;
 };
@@ -111,14 +111,12 @@ struct PKIX_ForwardBuilderStateStruct{
         PKIX_UInt32 numAias;
         PKIX_UInt32 certIndex;
         PKIX_UInt32 aiaIndex;
-        PKIX_UInt32 anchorIndex;
         PKIX_UInt32 certCheckedIndex;
         PKIX_UInt32 checkerIndex;
         PKIX_UInt32 hintCertIndex;
         PKIX_UInt32 numFanout;
         PKIX_UInt32 numDepth;
         PKIX_UInt32 reasonCode;
-        PKIX_Boolean dsaParamsNeeded;
         PKIX_Boolean revCheckDelayed;
         PKIX_Boolean canBeCached;
         PKIX_Boolean useOnlyLocal;
@@ -135,7 +133,6 @@ struct PKIX_ForwardBuilderStateStruct{
         PKIX_List *reversedCertChain;
         PKIX_List *checkedCritExtOIDs;
         PKIX_List *checkerChain;
-        PKIX_List *revCheckers;
         PKIX_CertSelector *certSel;
         PKIX_VerifyNode *verifyNode;
         void *client; /* messageHandler, such as LDAPClient */

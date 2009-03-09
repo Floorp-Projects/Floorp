@@ -73,4 +73,3 @@ DEFINES		+= -DNGPREFS
 endif
 endif # WINNT
 
-DEFINES += -DIMPL_NS_NET

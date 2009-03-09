@@ -45,11 +45,19 @@ var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
 var gToolboxIconSize = false;
+var gToolboxSheet = false;
 
 function onLoad()
 {
-  InitWithToolbox(window.arguments[0]);
-  repositionDialog();
+  if ("arguments" in window && window.arguments[0]) {
+    InitWithToolbox(window.arguments[0]);
+    repositionDialog();
+  }
+  else if (window.frameElement &&
+           "toolbox" in window.frameElement) {
+    gToolboxSheet = true;
+    InitWithToolbox(window.frameElement.toolbox);
+  }
 }
 
 function InitWithToolbox(aToolbox)
@@ -64,6 +72,22 @@ function InitWithToolbox(aToolbox)
   gToolbox.addEventListener("drop", onToolbarDrop, false);
 
   initDialog();
+
+  notifyParentInitialized();
+}
+
+function onClose()
+{
+  if (!gToolboxSheet)
+    window.close();
+  else
+    finishToolbarCustomization();
+}
+
+function onUnload()
+{
+  if (!gToolboxSheet)
+    finishToolbarCustomization();
 }
 
 function finishToolbarCustomization()
@@ -127,11 +151,21 @@ function notifyParentComplete()
     gToolbox.customizeDone(gToolboxChanged);
 }
 
-function toolboxChanged()
+/**
+ * Invoke a callback on the toolbox to notify it that the dialog is fully
+ * initialized.
+ */
+function notifyParentInitialized()
+{
+  if ("customizeInitialized" in gToolbox)
+    gToolbox.customizeInitialized();
+}
+
+function toolboxChanged(aEvent)
 {
   gToolboxChanged = true;
   if ("customizeChange" in gToolbox)
-    gToolbox.customizeChange();
+    gToolbox.customizeChange(aEvent);
 }
 
 function getToolbarAt(i)
@@ -223,8 +257,13 @@ function unwrapToolbarItems()
     if (paletteItem.hasAttribute("itemdisabled"))
       toolbarItem.disabled = true;
 
-    if (paletteItem.hasAttribute("itemcommand"))
-      toolbarItem.setAttribute("command", paletteItem.getAttribute("itemcommand"));
+    if (paletteItem.hasAttribute("itemcommand")) {
+      let commandID = paletteItem.getAttribute("itemcommand");
+      toolbarItem.setAttribute("command", commandID);
+
+      //XXX Bug 309953 - toolbarbuttons aren't in sync with their commands after customizing
+      toolbarItem.disabled = gToolboxDocument.getElementById(commandID).disabled;
+    }
 
     paletteItem.parentNode.replaceChild(toolbarItem, paletteItem);
   }
@@ -617,7 +656,7 @@ function restoreDefaultSet()
   // Now re-wrap the items on the toolbar.
   wrapToolbarItems();
 
-  toolboxChanged();
+  toolboxChanged("reset");
 }
 
 function updateIconSize(aUseSmallIcons, localDefault)

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    function doTest() {
+      var l = document.createElement("legend");
+      l.textContent = "This is a test";
+      l.style.border = "2px solid green";
+      l.style.display = "block"
+      document.body.appendChild(l);
+
+      l = document.createElement("legend");
+      var d = document.createElement("div");
+      d.textContent = "This is a test";
+      l.style.border = "2px solid green";
+      l.style.display = "inline"
+      l.textContent = "before";
+      l.appendChild(d);
+      l.appendChild(document.createTextNode("after"));
+      document.body.appendChild(l);
+
+      var t = document.getElementById("x");
+      var r = document.createElement("div");
+      r.style.display = "table-row";
+      l = document.createElement("legend");
+      l.textContent = "2 - 1";
+      l.style.display = "table-cell";
+      r.appendChild(l);
+      l = document.createElement("legend");
+      l.textContent = "2 - 2";
+      l.style.display = "table-cell";
+      r.appendChild(l);
+      t.appendChild(r);
+    }
+  </script>
+</head>
+<body onload="doTest()">
+  <div style="display: table" id="x">
+    <div style="display: table-row">
+      <div style="display: table-cell">1 - 1</div>
+      <div style="display: table-cell">1 - 2</div>
+    </div>
+  </div>
+</body>

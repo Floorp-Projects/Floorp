@@ -63,7 +63,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gtk/gtkversion.h>
+#include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <limits.h>

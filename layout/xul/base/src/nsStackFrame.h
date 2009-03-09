@@ -52,7 +52,8 @@ class nsStackFrame : public nsBoxFrame
 {
 public:
 
-  friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayout = nsnull);
+  friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell,
+                                    nsStyleContext* aContext);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -66,7 +67,7 @@ public:
                                          const nsDisplayListSet& aLists);
 
 protected:
-  nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayout = nsnull);
+  nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 }; // class nsStackFrame
 
 

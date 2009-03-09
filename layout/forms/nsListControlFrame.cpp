@@ -386,28 +386,11 @@ nsListControlFrame::InvalidateFocus()
   }
 }
 
-//---------------------------------------------------------
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = static_cast<nsIFormControlFrame*>(this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIListControlFrame))) {
-    *aInstancePtr = static_cast<nsIListControlFrame*>(this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
-    *aInstancePtr = static_cast<nsISelectControlFrame*>(this);
-    return NS_OK;
-  }
-
-  return nsHTMLScrollFrame::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsListControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIListControlFrame)
+  NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLScrollFrame)
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -1290,9 +1273,7 @@ nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex) const
 }
 
 NS_IMETHODIMP
-nsListControlFrame::OnOptionSelected(nsPresContext* aPresContext,
-                                     PRInt32 aIndex,
-                                     PRBool aSelected)
+nsListControlFrame::OnOptionSelected(PRInt32 aIndex, PRBool aSelected)
 {
   if (aSelected) {
     ScrollToIndex(aIndex);
@@ -1366,7 +1347,7 @@ void
 nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 {
   if (nsnull != aComboboxFrame) {
-    aComboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),(void**) &mComboboxFrame); 
+    mComboboxFrame = do_QueryFrame(aComboboxFrame);
   }
 }
 
@@ -1483,7 +1464,7 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
+nsListControlFrame::AddOption(PRInt32 aIndex)
 {
 #ifdef DO_REFLOW_DEBUG
   printf("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
@@ -1510,7 +1491,7 @@ nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
+nsListControlFrame::RemoveOption(PRInt32 aIndex)
 {
   // Need to reset if we're a dropdown
   if (IsInDropDownMode()) {
@@ -1602,15 +1583,15 @@ nsListControlFrame::UpdateSelection()
 {
   if (mIsAllFramesHere) {
     // if it's a combobox, display the new text
+    nsWeakFrame weakFrame(this);
     if (mComboboxFrame) {
       mComboboxFrame->RedisplaySelectedText();
     }
     // if it's a listbox, fire on change
     else if (mIsAllContentHere) {
-      nsWeakFrame weakFrame(this);
       FireOnChange();
-      return weakFrame.IsAlive();
     }
+    return weakFrame.IsAlive();
   }
   return PR_TRUE;
 }
@@ -1625,11 +1606,15 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
 
     PRInt32 displayIndex = mComboboxFrame->GetIndexOfDisplayArea();
 
+    nsWeakFrame weakFrame(this);
+
     if (displayIndex != aIndex) {
-      mComboboxFrame->RedisplaySelectedText();
+      mComboboxFrame->RedisplaySelectedText(); // might destroy us
     }
 
-    mComboboxFrame->RollupFromList(); // might destroy us
+    if (weakFrame.IsAlive() && mComboboxFrame) {
+      mComboboxFrame->RollupFromList(); // might destroy us
+    }
   }
 }
 
@@ -2201,8 +2186,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       if (!nsComboboxControlFrame::ToolkitHasNativePopup())
       {
         PRBool isDroppedDown = mComboboxFrame->IsDroppedDown();
-        nsIFrame* comboFrame;
-        CallQueryInterface(mComboboxFrame, &comboFrame);
+        nsIFrame* comboFrame = do_QueryFrame(mComboboxFrame);
         nsWeakFrame weakFrame(comboFrame);
         mComboboxFrame->ShowDropDown(!isDroppedDown);
         if (!weakFrame.IsAlive())
@@ -2479,13 +2463,16 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
   // dropdowns there.
   if (IsInDropDownMode() && !nsComboboxControlFrame::ToolkitHasNativePopup()) {
     aKeyEvent->PreventDefault();
-    nsIFrame* comboFrame;
-    CallQueryInterface(mComboboxFrame, &comboFrame);
-    nsWeakFrame weakFrame(comboFrame);
-    mComboboxFrame->ShowDropDown(!mComboboxFrame->IsDroppedDown());
-    if (!weakFrame.IsAlive())
-      return;
-    mComboboxFrame->RedisplaySelectedText();
+    if (!mComboboxFrame->IsDroppedDown()) {
+      mComboboxFrame->ShowDropDown(PR_TRUE);
+    } else {
+      nsWeakFrame weakFrame(this);
+      // mEndSelectionIndex is the last item that got selected.
+      ComboboxFinish(mEndSelectionIndex);
+      if (weakFrame.IsAlive()) {
+        FireOnChange();
+      }
+    }
   }
 }
 

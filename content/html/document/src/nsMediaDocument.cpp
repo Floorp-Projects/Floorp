@@ -85,7 +85,7 @@ nsMediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *
     return mNextStream->OnStartRequest(request, ctxt);
   }
 
-  return NS_OK;
+  return NS_BINDING_ABORTED;
 }
 
 NS_IMETHODIMP
@@ -279,9 +279,7 @@ nsMediaDocument::StartLayout()
   nsPresShellIterator iter(this);
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell())) {
-    PRBool didInitialReflow = PR_FALSE;
-    shell->GetDidInitialReflow(&didInitialReflow);
-    if (didInitialReflow) {
+    if (shell->DidInitialReflow()) {
       // Don't mess with this presshell: someone has already handled
       // its initial reflow.
       continue;
@@ -302,6 +300,46 @@ nsMediaDocument::StartLayout()
   return NS_OK;
 }
 
+void
+nsMediaDocument::GetFileName(nsAString& aResult)
+{
+  aResult.Truncate();
+
+  nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURI);
+  if (!url)
+    return;
+
+  nsCAutoString fileName;
+  url->GetFileName(fileName);
+  if (fileName.IsEmpty())
+    return;
+
+  nsCAutoString docCharset;
+  // Now that the charset is set in |StartDocumentLoad| to the charset of
+  // the document viewer instead of a bogus value ("ISO-8859-1" set in
+  // |nsDocument|'s ctor), the priority is given to the current charset. 
+  // This is necessary to deal with a media document being opened in a new 
+  // window or a new tab, in which case |originCharset| of |nsIURI| is not 
+  // reliable.
+  if (mCharacterSetSource != kCharsetUninitialized) {  
+    docCharset = mCharacterSet;
+  } else {  
+    // resort to |originCharset|
+    url->GetOriginCharset(docCharset);
+    SetDocumentCharacterSet(docCharset);
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsITextToSubURI> textToSubURI = 
+    do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    // UnEscapeURIForUI always succeeds
+    textToSubURI->UnEscapeURIForUI(docCharset, fileName, aResult);
+  } else {
+    CopyUTF8toUTF16(fileName, aResult);
+  }
+}
+
 void 
 nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                        const char* const* aFormatNames,
@@ -309,40 +347,7 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                        const nsAString& aStatus)
 {
   nsXPIDLString fileStr;
-  if (mDocumentURI) {
-    nsCAutoString fileName;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURI);
-    if (url)
-      url->GetFileName(fileName);
-
-    nsCAutoString docCharset;
-
-    // Now that the charset is set in |StartDocumentLoad| to the charset of
-    // the document viewer instead of a bogus value ("ISO-8859-1" set in
-    // |nsDocument|'s ctor), the priority is given to the current charset. 
-    // This is necessary to deal with a media document being opened in a new 
-    // window or a new tab, in which case |originCharset| of |nsIURI| is not 
-    // reliable.
-    if (mCharacterSetSource != kCharsetUninitialized) {  
-      docCharset = mCharacterSet;
-    }
-    else {  
-      // resort to |originCharset|
-      mDocumentURI->GetOriginCharset(docCharset);
-      SetDocumentCharacterSet(docCharset);
-    }
-    if (!fileName.IsEmpty()) {
-      nsresult rv;
-      nsCOMPtr<nsITextToSubURI> textToSubURI = 
-        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv))
-        // UnEscapeURIForUI always succeeds
-        textToSubURI->UnEscapeURIForUI(docCharset, fileName, fileStr);
-      else 
-        CopyUTF8toUTF16(fileName, fileStr);
-    }
-  }
-
+  GetFileName(fileStr);
 
   NS_ConvertASCIItoUTF16 typeStr(aTypeStr);
   nsXPIDLString title;

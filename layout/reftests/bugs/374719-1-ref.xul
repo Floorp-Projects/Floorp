@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"
+                 type="text/css"?>
+<?xml-stylesheet href="374719-1-css.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <gridlikebox flex="1">
+    <gridlikecols>
+      <gridlikecol flex="1"/>
+      <gridlikecol flex="1"/>
+    </gridlikecols>
+
+    <gridlikehead>
+      <gridlikeheader label="Col1"/>
+      <gridlikeheader label="Col2"/>
+    </gridlikehead>
+
+    <gridlikeitem value="hello1">
+      <gridlikecell><label value="Hello"/></gridlikecell>
+      <gridlikecell><label value="Hello"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="aValue">
+      <gridlikecell><label value="aLabel1"/></gridlikecell>
+      <gridlikecell><label value="aLabel2"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="hello2">
+      <gridlikecell><label value="Hello2"/></gridlikecell>
+      <gridlikecell><label value="Hello2.1"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="hello3">
+      <gridlikecell><label value="Hello592"/></gridlikecell>
+      <gridlikecell><label value="Hello592.1"/></gridlikecell>
+    </gridlikeitem>
+    <gridlikeitem value="hello4">
+      <gridlikecell><label value="Hello4"/></gridlikecell>
+      <gridlikecell><label value="Hello4--"/></gridlikecell>
+    </gridlikeitem>
+  </gridlikebox>
+</window>

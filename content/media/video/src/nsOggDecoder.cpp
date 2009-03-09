@@ -141,7 +141,18 @@ public:
       MOZ_COUNT_DTOR(FrameData);
     }
 
+    // Write the audio data from the frame to the Audio stream.
+    void Write(nsAudioStream* aStream)
+    {
+      PRUint32 length = mAudioData.Length();
+      if (length == 0)
+        return;
 
+      aStream->Write(mAudioData.Elements(), length);
+    }
+
+    // The position in the stream where this frame ended, in bytes
+    PRInt64 mEndStreamPosition;
     nsAutoArrayPtr<unsigned char> mVideoData;
     nsTArray<float> mAudioData;
     int mVideoWidth;
@@ -187,12 +198,12 @@ public:
       return result;
     }
 
-    PRBool IsEmpty()
+    PRBool IsEmpty() const
     {
       return mEmpty;
     }
 
-    PRBool IsFull()
+    PRBool IsFull() const
     {
       return !mEmpty && mHead == mTail;
     }
@@ -260,9 +271,8 @@ public:
   void PlayVideo(FrameData* aFrame);
 
   // Play the audio data from the given frame. The decode monitor must
-  // be locked when calling this method. Returns PR_FALSE if unable to
-  // write to the audio device without blocking.
-  PRBool PlayAudio(FrameData* aFrame);
+  // be locked when calling this method.
+  void PlayAudio(FrameData* aFrame);
 
   // Called from the main thread to get the current frame time. The decoder
   // monitor must be obtained before calling this.
@@ -276,19 +286,37 @@ public:
   // resource. The decoder monitor must be obtained before calling this.
   void SetContentLength(PRInt64 aLength);
 
+  // Called from the main thread to set the duration of the media resource
+  // if it is able to be obtained via HTTP headers. The decoder monitor
+  // must be obtained before calling this.
+  void SetDuration(PRInt64 aDuration);
+
   // Called from the main thread to set whether the media resource can
   // be seeked. The decoder monitor must be obtained before calling this.
   void SetSeekable(PRBool aSeekable);
 
-  // Get and set the audio volume. The decoder monitor must be
-  // obtained before calling this.
-  float GetVolume();
+  // Set the audio volume. The decoder monitor must be obtained before
+  // calling this.
   void SetVolume(float aVolume);
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
   // be called with the decode monitor held.
   void ClearPositionChangeFlag();
+
+  // Must be called with the decode monitor held. Can be called by main
+  // thread.
+  PRBool HaveNextFrameData() const {
+    return !mDecodedFrames.IsEmpty() &&
+      (mState == DECODER_STATE_DECODING ||
+       mState == DECODER_STATE_COMPLETED);
+  }
+
+  // Must be called with the decode monitor held. Can be called by main
+  // thread.
+  PRBool IsBuffering() const {
+    return mState == nsOggDecodeStateMachine::DECODER_STATE_BUFFERING;
+  }
 
 protected:
   // Convert the OggPlay frame information into a format used by Gecko
@@ -299,7 +327,7 @@ protected:
   void HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize);
 
   // These methods can only be called on the decoding thread.
-  void LoadOggHeaders();
+  void LoadOggHeaders(nsChannelReader* aReader);
 
   // Initializes and opens the audio stream. Called from the decode
   // thread only. Must be called with the decode monitor held.
@@ -346,8 +374,9 @@ private:
   OggPlay* mPlayer;
 
   // Frame data containing decoded video/audio for the frame the
-  // current frame and the previous frame. Accessed only via the
-  // decoder thread.
+  // current frame and the previous frame. Always accessed with monitor
+  // held. Written only via the decoder thread, but can be tested on
+  // main thread via HaveNextFrameData.
   FrameQueue mDecodedFrames;
 
   // The time that playback started from the system clock. This is used
@@ -393,14 +422,18 @@ private:
   // accessed in the decoder thread.
   PRIntervalTime mBufferingStart;
 
-  // Number of bytes to buffer when buffering. Only accessed in the
-  // decoder thread.
-  PRUint32 mBufferingBytes;
+  // Download position where we should stop buffering. Only
+  // accessed in the decoder thread.
+  PRInt64 mBufferingEndOffset;
 
   // The time value of the last decoded video frame. Used for
   // computing the sleep period between frames for a/v sync.
   // Read/Write from the decode thread only.
   float mLastFrameTime;
+
+  // The decoder position of the end of the last decoded video frame.
+  // Read/Write from the decode thread only.
+  PRInt64 mLastFramePosition;
 
   // *****
   // The follow fields are accessed by the decoder thread or
@@ -418,7 +451,7 @@ private:
   float mSeekTime;
 
   // The audio stream resource. Used on the decode thread and the
-  // main thread (Via the Get/SetVolume calls). Synchronisation via
+  // main thread (Via the SetVolume call). Synchronisation via
   // mDecoder monitor.
   nsAutoPtr<nsAudioStream> mAudioStream;
 
@@ -468,8 +501,9 @@ nsOggDecodeStateMachine::nsOggDecodeStateMachine(nsOggDecoder* aDecoder) :
   mAudioChannels(0),
   mAudioTrack(-1),
   mBufferingStart(0),
-  mBufferingBytes(0),
+  mBufferingEndOffset(0),
   mLastFrameTime(0),
+  mLastFramePosition(-1),
   mState(DECODER_STATE_DECODING_METADATA),
   mSeekTime(0.0),
   mCurrentFrameTime(0.0),
@@ -508,7 +542,18 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
   }
 
   frame->mTime = mLastFrameTime;
+  frame->mEndStreamPosition = mDecoder->mDecoderPosition;
   mLastFrameTime += mCallbackPeriod;
+
+  if (mLastFramePosition >= 0) {
+    NS_ASSERTION(frame->mEndStreamPosition >= mLastFramePosition,
+                 "Playback positions must not decrease without an intervening reset");
+    mDecoder->mPlaybackStatistics.Start(frame->mTime*PR_TicksPerSecond());
+    mDecoder->mPlaybackStatistics.AddBytes(frame->mEndStreamPosition - mLastFramePosition);
+    mDecoder->mPlaybackStatistics.Stop(mLastFrameTime*PR_TicksPerSecond());
+  }
+  mLastFramePosition = frame->mEndStreamPosition;
+
   int num_tracks = oggplay_get_num_tracks(mPlayer);
   float audioTime = 0.0;
   float videoTime = 0.0;
@@ -586,7 +631,11 @@ void nsOggDecodeStateMachine::HandleVideoData(FrameData* aFrame, int aTrackNum, 
   rgb.rgb_width = aFrame->mVideoWidth;
   rgb.rgb_height = aFrame->mVideoHeight;
 
+#ifdef IS_BIG_ENDIAN
+  oggplay_yuv2argb(&yuv, &rgb);
+#else
   oggplay_yuv2bgr(&yuv, &rgb);
+#endif
 }
 
 void nsOggDecodeStateMachine::HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize) {
@@ -625,17 +674,19 @@ void nsOggDecodeStateMachine::PlayFrame() {
         // Reset the play start time.
         mPlayStartTime = PR_IntervalNow();
         mPauseDuration = 0;
+        frame->mState = OGGPLAY_STREAM_INITIALISED;
       }
 
       double time = (PR_IntervalToMilliseconds(PR_IntervalNow()-mPlayStartTime-mPauseDuration)/1000.0);
       if (time >= frame->mTime) {
-        mDecodedFrames.Pop();
         // Audio for the current frame is played, but video for the next frame
         // is displayed, to account for lag from the time the audio is written
         // to when it is played. This will go away when we move to a/v sync
         // using the audio hardware clock.
-        PlayVideo(mDecodedFrames.IsEmpty() ? frame : mDecodedFrames.Peek());
         PlayAudio(frame);
+        mDecodedFrames.Pop();
+        PlayVideo(mDecodedFrames.IsEmpty() ? frame : mDecodedFrames.Peek());
+        mDecoder->mPlaybackPosition = frame->mEndStreamPosition;
         UpdatePlaybackPosition(frame->mDecodedFrameTime);
         delete frame;
       }
@@ -677,17 +728,13 @@ void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
   }
 }
 
-PRBool nsOggDecodeStateMachine::PlayAudio(FrameData* aFrame)
+void nsOggDecodeStateMachine::PlayAudio(FrameData* aFrame)
 {
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "PlayAudio() called without acquiring decoder monitor");
-  if (mAudioStream && aFrame && !aFrame->mAudioData.IsEmpty()) {
-    if (PRUint32(mAudioStream->Available()) < aFrame->mAudioData.Length())
-      return PR_FALSE;
+  if (!mAudioStream)
+    return;
 
-    mAudioStream->Write(aFrame->mAudioData.Elements(), aFrame->mAudioData.Length());
-  }
-
-  return PR_TRUE;
+  aFrame->Write(mAudioStream);
 }
 
 void nsOggDecodeStateMachine::OpenAudioStream()
@@ -698,7 +745,7 @@ void nsOggDecodeStateMachine::OpenAudioStream()
     LOG(PR_LOG_ERROR, ("Could not create audio stream"));
   }
   else {
-    mAudioStream->Init(mAudioChannels, mAudioRate, nsAudioStream::FORMAT_FLOAT32_LE);
+    mAudioStream->Init(mAudioChannels, mAudioRate, nsAudioStream::FORMAT_FLOAT32);
     mAudioStream->SetVolume(mVolume);
   }
 }
@@ -771,12 +818,6 @@ void nsOggDecodeStateMachine::ClearPositionChangeFlag()
   mPositionChangeQueued = PR_FALSE;
 }
 
-float nsOggDecodeStateMachine::GetVolume()
-{
-  //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "GetVolume() called without acquiring decoder monitor");
-  return mVolume;
-}
-
 void nsOggDecodeStateMachine::SetVolume(float volume)
 {
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetVolume() called without acquiring decoder monitor");
@@ -805,6 +846,12 @@ void nsOggDecodeStateMachine::SetContentLength(PRInt64 aLength)
   mContentLength = aLength;
 }
 
+void nsOggDecodeStateMachine::SetDuration(PRInt64 aDuration)
+{
+   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetDuration() called without acquiring decoder monitor");
+  mDuration = aDuration;
+}
+
 void nsOggDecodeStateMachine::SetSeekable(PRBool aSeekable)
 {
    //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "SetSeekable() called without acquiring decoder monitor");
@@ -820,6 +867,7 @@ void nsOggDecodeStateMachine::Shutdown()
   if (mPlayer) {
     oggplay_prepare_for_close(mPlayer);
   }
+  LOG(PR_LOG_DEBUG, ("Changed state to SHUTDOWN"));
   mState = DECODER_STATE_SHUTDOWN;
   mon.NotifyAll();
 }
@@ -830,6 +878,7 @@ void nsOggDecodeStateMachine::Decode()
   // we are currently buffering.
   nsAutoMonitor mon(mDecoder->GetMonitor());
   if (mState == DECODER_STATE_BUFFERING) {
+    LOG(PR_LOG_DEBUG, ("Changed state from BUFFERING to DECODING"));
     mState = DECODER_STATE_DECODING;
   }
 }
@@ -838,6 +887,7 @@ void nsOggDecodeStateMachine::Seek(float aTime)
 {
   nsAutoMonitor mon(mDecoder->GetMonitor());
   mSeekTime = aTime;
+  LOG(PR_LOG_DEBUG, ("Changed state to SEEKING (to %f)", aTime));
   mState = DECODER_STATE_SEEKING;
 }
 
@@ -853,10 +903,11 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_DECODING_METADATA:
       mon.Exit();
-      LoadOggHeaders();
+      LoadOggHeaders(reader);
       mon.Enter();
       
       if (mState == DECODER_STATE_DECODING_METADATA) {
+        LOG(PR_LOG_DEBUG, ("Changed state from DECODING_METADATA to DECODING_FIRSTFRAME"));
         mState = DECODER_STATE_DECODING_FIRSTFRAME;
       }
       break;
@@ -877,6 +928,7 @@ nsresult nsOggDecodeStateMachine::Run()
         FrameData* frame = NextFrame();
         if (frame) {
           mDecodedFrames.Push(frame);
+          mDecoder->mPlaybackPosition = frame->mEndStreamPosition;
           UpdatePlaybackPosition(frame->mDecodedFrameTime);
           PlayVideo(frame);
         }
@@ -886,6 +938,7 @@ nsresult nsOggDecodeStateMachine::Run()
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
         if (mState == DECODER_STATE_DECODING_FIRSTFRAME) {
+          LOG(PR_LOG_DEBUG, ("Changed state from DECODING_FIRSTFRAME to DECODING"));
           mState = DECODER_STATE_DECODING;
         }
       }
@@ -893,51 +946,75 @@ nsresult nsOggDecodeStateMachine::Run()
 
     case DECODER_STATE_DECODING:
       {
-        // Before decoding check if we should buffer more data
-        if (reader->DownloadRate() >= 0 &&
-            reader->Available() < reader->PlaybackRate() * BUFFERING_SECONDS_LOW_WATER_MARK) {
-          if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
-            if (mPlaying) {
-              StopPlayback();
-            }
+        PRBool bufferExhausted = PR_FALSE;
+
+        if (!mDecodedFrames.IsFull()) {
+          PRInt64 initialDownloadPosition = mDecoder->mDownloadPosition;
+
+          mon.Exit();
+          OggPlayErrorCode r = DecodeFrame();
+          mon.Enter();
+
+          // Check whether decoding that frame required us to read data
+          // that wasn't available at the start of the frame. That means
+          // we should probably start buffering.
+          bufferExhausted =
+            mDecoder->mDecoderPosition > initialDownloadPosition;
+
+          if (mState != DECODER_STATE_DECODING)
+            continue;
+
+          // Get the decoded frame and store it in our queue of decoded frames
+          FrameData* frame = NextFrame();
+          if (frame) {
+            mDecodedFrames.Push(frame);
           }
+
+          if (r != E_OGGPLAY_CONTINUE &&
+              r != E_OGGPLAY_USER_INTERRUPT &&
+              r != E_OGGPLAY_TIMEOUT)  {
+            LOG(PR_LOG_DEBUG, ("Changed state from DECODING to COMPLETED"));
+            mState = DECODER_STATE_COMPLETED;
+          }
+        }
+
+        // Show at least the first frame if we're not playing
+        // so we have a poster frame on initial load and after seek.
+        if (!mPlaying && !mDecodedFrames.IsEmpty()) {
+          PlayVideo(mDecodedFrames.Peek());
+        }
+
+        if (bufferExhausted && mState == DECODER_STATE_DECODING &&
+            mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING &&
+            (mDecoder->mTotalBytes < 0 ||
+             mDecoder->mDownloadPosition < mDecoder->mTotalBytes)) {
+          // There is at most one frame in the queue and there's
+          // more data to load. Let's buffer to make sure we can play a
+          // decent amount of video in the future.
+          if (mPlaying) {
+            StopPlayback();
+          }
+
+          // We need to tell the element that buffering has started.
+          // We can't just directly send an asynchronous runnable that
+          // eventually fires the "waiting" event. The problem is that
+          // there might be pending main-thread events, such as "data
+          // received" notifications, that mean we're not actually still
+          // buffering by the time this runnable executes. So instead
+          // we just trigger UpdateReadyStateForData; when it runs, it
+          // will check the current state and decide whether to tell
+          // the element we're buffering or not.
+          nsCOMPtr<nsIRunnable> event = 
+            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
+          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
           mBufferingStart = PR_IntervalNow();
-          mBufferingBytes = PRUint32(BUFFERING_RATE(reader->PlaybackRate()) * BUFFERING_WAIT);
+          double playbackRate = mDecoder->GetStatistics().mPlaybackRate;
+          mBufferingEndOffset = mDecoder->mDownloadPosition +
+              BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
           mState = DECODER_STATE_BUFFERING;
-
-          nsCOMPtr<nsIRunnable> event =
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, BufferingStarted);
-          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-        }
-        else {
-          if (!mDecodedFrames.IsFull()) {
-            mon.Exit();
-            OggPlayErrorCode r = DecodeFrame();
-            mon.Enter();
-
-            if (mState != DECODER_STATE_DECODING)
-              continue;
-
-            // Get the decoded frame and store it in our queue of decoded frames
-            FrameData* frame = NextFrame();
-            if (frame) {
-              mDecodedFrames.Push(frame);
-            }
-
-            if (r != E_OGGPLAY_CONTINUE &&
-                r != E_OGGPLAY_USER_INTERRUPT &&
-                r != E_OGGPLAY_TIMEOUT)  {
-              mState = DECODER_STATE_COMPLETED;
-            }
-          }
-
-          // Show at least the first frame if we're not playing
-          // so we have a poster frame on initial load and after seek.
-          if (!mPlaying && !mDecodedFrames.IsEmpty()) {
-            PlayVideo(mDecodedFrames.Peek());
-          }
-
+          LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
+        } else {
           PlayFrame();
         }
       }
@@ -954,12 +1031,15 @@ nsresult nsOggDecodeStateMachine::Run()
         // acquiring the lock again in case shutdown has occurred
         // during the time when we didn't have the lock.
         float seekTime = mSeekTime;
+        mDecoder->StopProgressUpdates();
         mon.Exit();
         nsCOMPtr<nsIRunnable> startEvent = 
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStarted);
         NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
         
+        LOG(PR_LOG_DEBUG, ("Entering oggplay_seek(%f)", seekTime));
         oggplay_seek(mPlayer, ogg_int64_t(seekTime * 1000));
+        LOG(PR_LOG_DEBUG, ("Leaving oggplay_seek"));
 
         // Reactivate all tracks. Liboggplay deactivates tracks when it
         // reads to the end of stream, but they must be reactivated in order
@@ -971,6 +1051,8 @@ nsresult nsOggDecodeStateMachine::Run()
         }
 
         mon.Enter();
+        mLastFramePosition = mDecoder->mDecoderPosition;
+        mDecoder->StartProgressUpdates();
         if (mState == DECODER_STATE_SHUTDOWN)
           continue;
 
@@ -1004,39 +1086,43 @@ nsresult nsOggDecodeStateMachine::Run()
         mon.Enter();
 
         if (mState == DECODER_STATE_SEEKING && mSeekTime == seekTime) {
+          LOG(PR_LOG_DEBUG, ("Changed state from SEEKING (to %f) to DECODING", seekTime));
           mState = DECODER_STATE_DECODING;
         }
       }
       break;
 
     case DECODER_STATE_BUFFERING:
-      if ((PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart) < BUFFERING_WAIT*1000) &&
-          reader->DownloadRate() >= 0 &&            
-          reader->Available() < mBufferingBytes) {
-        LOG(PR_LOG_DEBUG, 
-            ("Buffering data until %d bytes available or %d milliseconds", 
-             mBufferingBytes - reader->Available(),
-             BUFFERING_WAIT*1000 - (PR_IntervalToMilliseconds(PR_IntervalNow() - mBufferingStart))));
-        mon.Wait(PR_MillisecondsToInterval(1000));
-        if (mState == DECODER_STATE_SHUTDOWN)
-          continue;
-      }
-      else {
-        mState = DECODER_STATE_DECODING;
-      }
+      {
+        PRIntervalTime now = PR_IntervalNow();
+        if ((PR_IntervalToMilliseconds(now - mBufferingStart) < BUFFERING_WAIT*1000) &&
+            mDecoder->mDownloadPosition < mBufferingEndOffset &&
+            (mDecoder->mTotalBytes < 0 || mDecoder->mDownloadPosition < mDecoder->mTotalBytes)) {
+          LOG(PR_LOG_DEBUG, 
+              ("In buffering: buffering data until %d bytes available or %d milliseconds", 
+               PRUint32(mBufferingEndOffset - mDecoder->mDownloadPosition),
+               BUFFERING_WAIT*1000 - (PR_IntervalToMilliseconds(now - mBufferingStart))));
+          mon.Wait(PR_MillisecondsToInterval(1000));
+          if (mState == DECODER_STATE_SHUTDOWN)
+            continue;
+        } else {
+          LOG(PR_LOG_DEBUG, ("Changed state from BUFFERING to DECODING"));
+          mState = DECODER_STATE_DECODING;
+        }
 
-      if (mState != DECODER_STATE_BUFFERING) {
-        nsCOMPtr<nsIRunnable> event = 
-          NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, BufferingStopped);
-        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-        if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
-          if (!mPlaying) {
-            StartPlayback();
+        if (mState != DECODER_STATE_BUFFERING) {
+          nsCOMPtr<nsIRunnable> event = 
+            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, UpdateReadyStateForData);
+          NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+          if (mDecoder->GetState() == nsOggDecoder::PLAY_STATE_PLAYING) {
+            if (!mPlaying) {
+              StartPlayback();
+            }
           }
         }
-      }
 
-      break;
+        break;
+      }
 
     case DECODER_STATE_COMPLETED:
       {
@@ -1054,12 +1140,22 @@ nsresult nsOggDecodeStateMachine::Run()
         if (mState != DECODER_STATE_COMPLETED)
           continue;
 
+        if (mAudioStream) {
+          mon.Exit();
+          LOG(PR_LOG_DEBUG, ("Begin nsAudioStream::Drain"));
+          mAudioStream->Drain();
+          LOG(PR_LOG_DEBUG, ("End nsAudioStream::Drain"));
+          mon.Enter();
+          if (mState != DECODER_STATE_COMPLETED)
+            continue;
+        }
+
         nsCOMPtr<nsIRunnable> event =
           NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, PlaybackEnded);
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         do {
           mon.Wait();
-        } while (mState != DECODER_STATE_SHUTDOWN);
+        } while (mState == DECODER_STATE_COMPLETED);
       }
       break;
     }
@@ -1068,10 +1164,10 @@ nsresult nsOggDecodeStateMachine::Run()
   return NS_OK;
 }
 
-void nsOggDecodeStateMachine::LoadOggHeaders() 
+void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader) 
 {
   LOG(PR_LOG_DEBUG, ("Loading Ogg Headers"));
-  mPlayer = oggplay_open_with_reader(mDecoder->GetReader());
+  mPlayer = oggplay_open_with_reader(aReader);
   if (mPlayer) {
     LOG(PR_LOG_DEBUG, ("There are %d tracks", oggplay_get_num_tracks(mPlayer)));
 
@@ -1080,11 +1176,20 @@ void nsOggDecodeStateMachine::LoadOggHeaders()
       if (mVideoTrack == -1 && oggplay_get_track_type(mPlayer, i) == OGGZ_CONTENT_THEORA) {
         oggplay_set_callback_num_frames(mPlayer, i, 1);
         mVideoTrack = i;
+
         int fpsd, fpsn;
         oggplay_get_video_fps(mPlayer, i, &fpsd, &fpsn);
         mFramerate = fpsd == 0 ? 0.0 : float(fpsn)/float(fpsd);
         mCallbackPeriod = 1.0 / mFramerate;
         LOG(PR_LOG_DEBUG, ("Frame rate: %f", mFramerate));
+
+        int y_width;
+        int y_height;
+        oggplay_get_video_y_size(mPlayer, i, &y_width, &y_height);
+        {
+          nsAutoLock lock(mDecoder->mVideoUpdateLock);
+          mDecoder->SetRGBData(y_width, y_height, mFramerate, nsnull);
+        }
       }
       else if (mAudioTrack == -1 && oggplay_get_track_type(mPlayer, i) == OGGZ_CONTENT_VORBIS) {
         mAudioTrack = i;
@@ -1110,19 +1215,24 @@ void nsOggDecodeStateMachine::LoadOggHeaders()
     // Get the duration from the Ogg file. We only do this if the
     // content length of the resource is known as we need to seek
     // to the end of the file to get the last time field. We also
-    // only do this if the resource is seekable.
+    // only do this if the resource is seekable and if we haven't
+    // already obtained the duration via an HTTP header.
     {
       nsAutoMonitor mon(mDecoder->GetMonitor());
       if (mState != DECODER_STATE_SHUTDOWN &&
           mContentLength >= 0 && 
-          mSeekable) {
+          mSeekable &&
+          mDuration == -1) {
+        mDecoder->StopProgressUpdates();
         // Don't hold the monitor during the duration
         // call as it can issue seek requests
         // and blocks until these are completed.
         mon.Exit();
         PRInt64 d = oggplay_get_duration(mPlayer);
+        oggplay_seek(mPlayer, 0);
         mon.Enter();
         mDuration = d;
+        mDecoder->StartProgressUpdates();
       }
       if (mState == DECODER_STATE_SHUTDOWN)
         return;
@@ -1149,12 +1259,6 @@ void nsOggDecoder::Pause()
   ChangeState(PLAY_STATE_PAUSED);
 }
 
-float nsOggDecoder::GetVolume()
-{
-  nsAutoMonitor mon(mMonitor);
-  return mDecodeStateMachine ? mDecodeStateMachine->GetVolume() : mInitialVolume;
-}
-
 void nsOggDecoder::SetVolume(float volume)
 {
   nsAutoMonitor mon(mMonitor);
@@ -1176,62 +1280,41 @@ float nsOggDecoder::GetDuration()
 
 nsOggDecoder::nsOggDecoder() :
   nsMediaDecoder(),
-  mBytesDownloaded(0),
+  mTotalBytes(-1),
+  mDownloadPosition(0),
+  mProgressPosition(0),
+  mDecoderPosition(0),
+  mPlaybackPosition(0),
   mCurrentTime(0.0),
   mInitialVolume(0.0),
   mRequestedSeekTime(-1.0),
-  mContentLength(-1),
+  mDuration(-1),
   mNotifyOnShutdown(PR_FALSE),
   mSeekable(PR_TRUE),
   mReader(0),
   mMonitor(0),
   mPlayState(PLAY_STATE_PAUSED),
-  mNextState(PLAY_STATE_PAUSED)
+  mNextState(PLAY_STATE_PAUSED),
+  mResourceLoaded(PR_FALSE),
+  mIgnoreProgressData(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsOggDecoder);
 }
 
-PRBool nsOggDecoder::Init() 
+PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mMonitor = nsAutoMonitor::NewMonitor("media.decoder");
-  return mMonitor && nsMediaDecoder::Init();
+  return mMonitor && nsMediaDecoder::Init(aElement);
 }
 
-// An event that gets posted to the main thread, when the media
-// element is being destroyed, to destroy the decoder. Since the
-// decoder shutdown can block and post events this cannot be done
-// inside destructor calls. So this event is posted asynchronously to
-// the main thread to perform the shutdown. It keeps a strong
-// reference to the decoder to ensure it does not get deleted when the
-// element is deleted.
-class nsOggDecoderShutdown : public nsRunnable
-{
-public:
-  nsOggDecoderShutdown(nsOggDecoder* aDecoder) :
-    mDecoder(aDecoder)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    mDecoder->Stop();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsOggDecoder> mDecoder;
-};
-
-
-void nsOggDecoder::Shutdown() 
+void nsOggDecoder::Shutdown()
 {
   mShuttingDown = PR_TRUE;
 
   ChangeState(PLAY_STATE_SHUTDOWN);
   nsMediaDecoder::Shutdown();
 
-  nsCOMPtr<nsIRunnable> event = new nsOggDecoderShutdown(this);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  Stop();
 }
 
 nsOggDecoder::~nsOggDecoder()
@@ -1246,6 +1329,17 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
   // Reset Stop guard flag flag, else shutdown won't occur properly when
   // reusing decoder.
   mStopping = PR_FALSE;
+
+  // Reset progress member variables
+  mDownloadPosition = 0;
+  mProgressPosition = 0;
+  mDecoderPosition = 0;
+  mPlaybackPosition = 0;
+  mResourceLoaded = PR_FALSE;
+
+  NS_ASSERTION(!mReader, "Didn't shutdown properly!");
+  NS_ASSERTION(!mDecodeStateMachine, "Didn't shutdown properly!");
+  NS_ASSERTION(!mDecodeThread, "Didn't shutdown properly!");
 
   if (aStreamListener) {
     *aStreamListener = nsnull;
@@ -1265,12 +1359,12 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  StartProgress();
-
   RegisterShutdownObserver();
 
   mReader = new nsChannelReader();
   NS_ENSURE_TRUE(mReader, NS_ERROR_OUT_OF_MEMORY);
+  mDownloadStatistics.Reset();
+  mDownloadStatistics.Start(PR_IntervalNow());
 
   nsresult rv = mReader->Init(this, mURI, aChannel, aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1281,7 +1375,7 @@ nsresult nsOggDecoder::Load(nsIURI* aURI, nsIChannel* aChannel,
   mDecodeStateMachine = new nsOggDecodeStateMachine(this);
   {
     nsAutoMonitor mon(mMonitor);
-    mDecodeStateMachine->SetContentLength(mContentLength);
+    mDecodeStateMachine->SetContentLength(mTotalBytes);
     mDecodeStateMachine->SetSeekable(mSeekable);
   }
 
@@ -1310,10 +1404,6 @@ nsresult nsOggDecoder::Seek(float aTime)
   if (aTime < 0.0)
     return NS_ERROR_FAILURE;
 
-  if (mPlayState == PLAY_STATE_LOADING && aTime == 0.0) {
-    return NS_OK;
-  }
-
   mRequestedSeekTime = aTime;
 
   // If we are already in the seeking state, then setting mRequestedSeekTime
@@ -1332,6 +1422,42 @@ nsresult nsOggDecoder::PlaybackRateChanged()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// Postpones destruction of nsOggDecoder's objects, so they can be safely
+// performed later, when events can't interfere.
+class nsDestroyStateMachine : public nsRunnable {
+public:
+  nsDestroyStateMachine(nsOggDecoder *aDecoder,
+                        nsOggDecodeStateMachine *aMachine,
+                        nsChannelReader *aReader,
+                        nsIThread *aThread)
+  : mDecoder(aDecoder),
+    mDecodeStateMachine(aMachine),
+    mReader(aReader),
+    mDecodeThread(aThread)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
+    // The decode thread must die before the state machine can die.
+    // The state machine must die before the reader.
+    // The state machine must die before the decoder.
+    if (mDecodeThread)
+      mDecodeThread->Shutdown();
+    mDecodeThread = nsnull;
+    mDecodeStateMachine = nsnull;
+    mReader = nsnull;
+    mDecoder = nsnull;
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsOggDecoder> mDecoder;
+  nsCOMPtr<nsOggDecodeStateMachine> mDecodeStateMachine;
+  nsAutoPtr<nsChannelReader> mReader;
+  nsCOMPtr<nsIThread> mDecodeThread;
+};
+
 void nsOggDecoder::Stop()
 {
   NS_ASSERTION(NS_IsMainThread(), 
@@ -1345,6 +1471,7 @@ void nsOggDecoder::Stop()
   ChangeState(PLAY_STATE_ENDED);
 
   StopProgress();
+  mDownloadStatistics.Stop(PR_IntervalNow());
 
   // Force any outstanding seek and byterange requests to complete
   // to prevent shutdown from deadlocking.
@@ -1359,16 +1486,28 @@ void nsOggDecoder::Stop()
     mDecodeStateMachine->Shutdown();
   }
 
-  // The state machines must be Shutdown() before the thread is
-  // Shutdown. The Shutdown() on the state machine unblocks any
-  // blocking calls preventing the thread Shutdown from deadlocking.
-  if (mDecodeThread) {
-    mDecodeThread->Shutdown();
-    mDecodeThread = nsnull;
-  }
+  // mDecodeThread holds a ref to mDecodeStateMachine, so we can't destroy
+  // mDecodeStateMachine until mDecodeThread is destroyed. We can't destroy
+  // mReader until mDecodeStateMachine is destroyed because mDecodeStateMachine
+  // uses mReader in its destructor. In addition, it's unsafe to Shutdown() the
+  // decode thread here, as nsIThread::Shutdown() may run events, such as JS
+  // event handlers, which could kick off a new Load().
+  // mDecodeStateMachine::Run() may also be holding a reference to the decoder
+  // in an event runner object on its stack, so the decoder must outlive the
+  // state machine, else we may destroy the decoder on a non-main thread,
+  // and its monitor doesn't like that. So we need to create a new event which
+  // holds references the decoder, reader, thread, and state machine, and
+  // releases them safely later on the main thread when events can't interfere.
+  // See bug 468721.
+  nsCOMPtr<nsIRunnable> event = new nsDestroyStateMachine(this,
+                                                          mDecodeStateMachine,
+                                                          mReader.forget(),
+                                                          mDecodeThread);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
+  // Null data fields. They can be reinitialized in future Load()s safely now.
+  mDecodeThread = nsnull;
   mDecodeStateMachine = nsnull;
-  mReader = nsnull;
   UnregisterShutdownObserver();
 }
 
@@ -1406,7 +1545,20 @@ void nsOggDecoder::MetadataLoaded()
   }
 
   if (mElement && notifyElement) {
+    // Make sure the element and the frame (if any) are told about
+    // our new size.
+    Invalidate();
     mElement->MetadataLoaded();
+  }
+
+  if (!mResourceLoaded) {
+    StartProgress();
+  }
+  else if (mElement)
+  {
+    // Resource was loaded during metadata loading, when progress
+    // events are being ignored. Fire the final progress event.
+    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
   }
 }
 
@@ -1440,22 +1592,48 @@ void nsOggDecoder::FirstFrameLoaded()
       ChangeState(mNextState);
     }
   }
+
+  if (!mResourceLoaded && mDownloadPosition == mTotalBytes) {
+    ResourceLoaded();
+  }
 }
 
 void nsOggDecoder::ResourceLoaded()
 {
+  // Don't handle ResourceLoaded if we are shutting down, or if
+  // we need to ignore progress data due to seeking (in the case
+  // that the seek results in reaching end of file, we get a bogus call
+  // to ResourceLoaded).
   if (mShuttingDown)
     return;
 
+  {
+    // If we are seeking or loading then the resource loaded notification we get
+    // should be ignored, since it represents the end of the seek request.
+    nsAutoMonitor mon(mMonitor);
+    if (mIgnoreProgressData || mResourceLoaded || mPlayState == PLAY_STATE_LOADING)
+      return;
+
+    Progress(PR_FALSE);
+
+    // Note that mTotalBytes should not be -1 now; NotifyDownloadEnded
+    // should have set it to the download position.
+    NS_ASSERTION(mDownloadPosition == mTotalBytes, "Wrong byte count");
+
+    mResourceLoaded = PR_TRUE;
+    StopProgress();
+  }
+
+  // Ensure the final progress event gets fired
   if (mElement) {
+    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
     mElement->ResourceLoaded();
   }
-  StopProgress();
 }
 
 void nsOggDecoder::NetworkError()
 {
-  if (mShuttingDown)
+  if (mStopping || mShuttingDown)
     return;
 
   if (mElement)
@@ -1465,12 +1643,17 @@ void nsOggDecoder::NetworkError()
 
 PRBool nsOggDecoder::IsSeeking() const
 {
-  return mPlayState == PLAY_STATE_SEEKING;
+  return mPlayState == PLAY_STATE_SEEKING || mNextState == PLAY_STATE_SEEKING;
+}
+
+PRBool nsOggDecoder::IsEnded() const
+{
+  return mPlayState == PLAY_STATE_ENDED || mPlayState == PLAY_STATE_SHUTDOWN;
 }
 
 void nsOggDecoder::PlaybackEnded()
 {
-  if (mShuttingDown)
+  if (mShuttingDown || mPlayState == nsOggDecoder::PLAY_STATE_SEEKING)
     return;
 
   Stop();
@@ -1490,48 +1673,126 @@ NS_IMETHODIMP nsOggDecoder::Observe(nsISupports *aSubjet,
   return NS_OK;
 }
 
-PRUint64 nsOggDecoder::GetBytesLoaded()
+nsMediaDecoder::Statistics
+nsOggDecoder::GetStatistics()
 {
-  return mBytesDownloaded;
-}
+  Statistics result;
 
-PRInt64 nsOggDecoder::GetTotalBytes()
-{
-  return mContentLength;
+  nsAutoMonitor mon(mMonitor);
+  result.mDownloadRate =
+    mDownloadStatistics.GetRate(PR_IntervalNow(), &result.mDownloadRateReliable);
+  if (mDuration >= 0 && mTotalBytes >= 0) {
+    result.mPlaybackRate = double(mTotalBytes)*1000.0/mDuration;
+    result.mPlaybackRateReliable = PR_TRUE;
+  } else {
+    result.mPlaybackRate =
+      mPlaybackStatistics.GetRateAtLastStop(&result.mPlaybackRateReliable);
+  }
+  result.mTotalBytes = mTotalBytes;
+  // Use mProgressPosition here because we don't want changes in
+  // mDownloadPosition due to intermediate seek operations etc to be
+  // reported in progress events
+  result.mDownloadPosition = mProgressPosition;
+  result.mDecoderPosition = mDecoderPosition;
+  result.mPlaybackPosition = mPlaybackPosition;
+  return result;
 }
 
 void nsOggDecoder::SetTotalBytes(PRInt64 aBytes)
 {
-  mContentLength = aBytes;
+  nsAutoMonitor mon(mMonitor);
+
+  // Servers could lie to us about the size of the resource, so make
+  // sure we don't set mTotalBytes to less than what we've already
+  // downloaded
+  mTotalBytes = PR_MAX(mDownloadPosition, aBytes);
   if (mDecodeStateMachine) {
+    mDecodeStateMachine->SetContentLength(mTotalBytes);
+  }
+}
+
+void nsOggDecoder::NotifyBytesDownloaded(PRInt64 aBytes)
+{
+  NS_ASSERTION(NS_IsMainThread(), 
+               "nsOggDecoder::NotifyBytesDownloaded called on non-main thread");   
+  {
     nsAutoMonitor mon(mMonitor);
-    mDecodeStateMachine->SetContentLength(aBytes);
-  } 
+
+    mDownloadPosition += aBytes;
+    if (mTotalBytes >= 0) {
+      // Ensure that mDownloadPosition <= mTotalBytes
+      mTotalBytes = PR_MAX(mTotalBytes, mDownloadPosition);
+    }
+    if (!mIgnoreProgressData) {
+      mDownloadStatistics.AddBytes(aBytes);
+      mProgressPosition = mDownloadPosition;
+    }
+  }
+
+  UpdateReadyStateForData();
 }
 
-void nsOggDecoder::UpdateBytesDownloaded(PRUint64 aBytes)
+void nsOggDecoder::NotifyDownloadSeeked(PRInt64 aOffsetBytes)
 {
-  mBytesDownloaded = aBytes;
-}
-
-void nsOggDecoder::BufferingStopped()
-{
-  if (mShuttingDown)
-    return;
-
-  if (mElement) {
-    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::CAN_SHOW_CURRENT_FRAME);
+  nsAutoMonitor mon(mMonitor);
+  // Don't change mProgressPosition here, since mIgnoreProgressData is set
+  mDownloadPosition = mDecoderPosition = mPlaybackPosition = aOffsetBytes;
+  if (!mIgnoreProgressData) {
+    mProgressPosition = mDownloadPosition;
+  }
+  if (mTotalBytes >= 0) {
+    // Ensure that mDownloadPosition <= mTotalBytes
+    mTotalBytes = PR_MAX(mTotalBytes, mDownloadPosition);
   }
 }
 
-void nsOggDecoder::BufferingStarted()
+void nsOggDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
-  if (mShuttingDown)
+  if (aStatus == NS_BINDING_ABORTED)
     return;
 
-  if (mElement) {
-    mElement->ChangeReadyState(nsIDOMHTMLMediaElement::DATA_UNAVAILABLE);
+  {
+    nsAutoMonitor mon(mMonitor);
+    mDownloadStatistics.Stop(PR_IntervalNow());
+    if (NS_SUCCEEDED(aStatus)) {
+      // Update total bytes now we know the end of the stream
+      mTotalBytes = mDownloadPosition;
+    }
   }
+
+  if (NS_SUCCEEDED(aStatus)) {
+    ResourceLoaded();
+  } else if (aStatus != NS_BASE_STREAM_CLOSED) {
+    NetworkError();
+  }
+  UpdateReadyStateForData();
+}
+
+void nsOggDecoder::NotifyBytesConsumed(PRInt64 aBytes)
+{
+  nsAutoMonitor mon(mMonitor);
+  if (!mIgnoreProgressData) {
+    mDecoderPosition += aBytes;
+  }
+}
+
+void nsOggDecoder::UpdateReadyStateForData()
+{
+  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+    return;
+
+  nsHTMLMediaElement::NextFrameStatus frameStatus;
+  {
+    nsAutoMonitor mon(mMonitor);
+    if (mDecodeStateMachine->HaveNextFrameData()) {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
+    } else if (mDecodeStateMachine->IsBuffering()) {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+    } else {
+      frameStatus = nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
+    }
+  }
+  mElement->UpdateReadyStateForData(frameStatus);
 }
 
 void nsOggDecoder::SeekingStopped()
@@ -1552,6 +1813,7 @@ void nsOggDecoder::SeekingStopped()
 
   if (mElement) {
     mElement->SeekCompleted();
+    UpdateReadyStateForData();
   }
 }
 
@@ -1680,6 +1942,19 @@ void nsOggDecoder::PlaybackPositionChanged()
   }
 }
 
+void nsOggDecoder::SetDuration(PRInt64 aDuration)
+{
+  mDuration = aDuration;
+  if (mDecodeStateMachine) {
+    nsAutoMonitor mon(mMonitor);
+    mDecodeStateMachine->SetDuration(mDuration);
+
+    if (mReader) {
+      mReader->SetDuration(mDuration);
+    }
+  }
+}
+
 void nsOggDecoder::SetSeekable(PRBool aSeekable)
 {
   mSeekable = aSeekable;
@@ -1694,3 +1969,32 @@ PRBool nsOggDecoder::GetSeekable()
   return mSeekable;
 }
 
+void nsOggDecoder::Suspend()
+{
+  mDownloadStatistics.Stop(PR_IntervalNow());
+  if (mReader) {
+    mReader->Suspend();
+  }
+}
+
+void nsOggDecoder::Resume()
+{
+  if (mReader) {
+    mReader->Resume();
+  }
+  mDownloadStatistics.Start(PR_IntervalNow());
+}
+
+void nsOggDecoder::StopProgressUpdates()
+{
+  mIgnoreProgressData = PR_TRUE;
+  mDownloadStatistics.Stop(PR_IntervalNow());
+}
+
+void nsOggDecoder::StartProgressUpdates()
+{
+  mIgnoreProgressData = PR_FALSE;
+  // Resync progress position now
+  mProgressPosition = mDownloadPosition;
+  mDownloadStatistics.Start(PR_IntervalNow());
+}

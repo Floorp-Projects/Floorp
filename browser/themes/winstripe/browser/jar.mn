@@ -144,7 +144,7 @@ classic.jar:
         skin/classic/aero/browser/feeds/videoFeedIcon.png            (feeds/videoFeedIcon-aero.png)
         skin/classic/aero/browser/feeds/videoFeedIcon16.png          (feeds/videoFeedIcon16-aero.png)
         skin/classic/aero/browser/feeds/subscribe.css                (feeds/subscribe.css)
-        skin/classic/aero/browser/places/places.css                  (places/places.css)
+*       skin/classic/aero/browser/places/places.css                  (places/places-aero.css)
 *       skin/classic/aero/browser/places/organizer.css               (places/organizer-aero.css)
         skin/classic/aero/browser/places/bookmark.png                (places/bookmark-aero.png)
         skin/classic/aero/browser/places/editBookmark.png            (places/editBookmark-aero.png)

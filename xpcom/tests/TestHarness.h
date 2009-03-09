@@ -55,14 +55,14 @@
 
 /**
  * Prints the given failure message and arguments using printf, prepending
- * "FAIL " for the benefit of the test harness and appending "\n" to eliminate
- * having to type it at each call site.
+ * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
+ * appending "\n" to eliminate having to type it at each call site.
  */
 void fail(const char* msg, ...)
 {
   va_list ap;
 
-  printf("FAIL ");
+  printf("TEST-UNEXPECTED-FAIL | ");
 
   va_start(ap, msg);
   vprintf(msg, ap);
@@ -72,12 +72,13 @@ void fail(const char* msg, ...)
 }
 
 /**
- * Prints the given string followed by " PASSED!\n", to be used at the end
- * of a successful test function.
+ * Prints the given string prepending "TEST-PASS | " for the benefit of
+ * the test harness and with "\n" at the end, to be used at the end of a
+ * successful test function.
  */
 void passed(const char* test)
 {
-  printf("%s PASSED!\n", test);
+  printf("TEST-PASS | %s\n", test);
 }
 
 

@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
  *   Daniel Witte <dwitte@stanford.edu>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,6 +60,7 @@
 #include "nsCRT.h"
 #include "nsILoadContext.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsNetCID.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
@@ -301,8 +303,10 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     // check whether the user wants to be prompted
     if (mCookiesLifetimePolicy == ASK_BEFORE_ACCEPT) {
       // if it's a session cookie and the user wants to accept these 
-      // without asking, just accept the cookie and return
-      if (*aIsSession && mCookiesAlwaysAcceptSession) {
+      // without asking, or if we are in private browsing mode, just
+      // accept the cookie and return
+      if ((*aIsSession && mCookiesAlwaysAcceptSession) ||
+          InPrivateBrowsing()) {
         *aResult = PR_TRUE;
         return NS_OK;
       }
@@ -507,4 +511,15 @@ nsCookiePermission::Observe(nsISupports     *aSubject,
   if (prefBranch)
     PrefChanged(prefBranch, NS_LossyConvertUTF16toASCII(aData).get());
   return NS_OK;
+}
+
+PRBool
+nsCookiePermission::InPrivateBrowsing()
+{
+  PRBool inPrivateBrowsingMode = PR_FALSE;
+  if (!mPBService)
+    mPBService = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+  if (mPBService)
+    mPBService->GetPrivateBrowsingEnabled(&inPrivateBrowsingMode);
+  return inPrivateBrowsingMode;
 }

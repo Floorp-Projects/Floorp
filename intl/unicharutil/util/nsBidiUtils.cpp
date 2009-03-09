@@ -25,6 +25,7 @@
  *   Lina Kemmel <lkemmel@il.ibm.com>
  *   Simon Montagu <smontagu@netscape.com>
  *   Roozbeh Pournader <roozbeh@sharif.edu>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -279,14 +280,26 @@ static nsCharType cc2ucd[5] = {
 };
 
 #define ARABIC_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_ARABIC_DIGITS)
+#define PERSIAN_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_FARSI_DIGITS)
+#define ARABIC_TO_PERSIAN_DIGIT_INCREMENT (START_FARSI_DIGITS - START_ARABIC_DIGITS)
 #define NUM_TO_ARABIC(c) \
   ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
    ((c) - (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT) : \
-   (c))
+   ((((c)>=START_FARSI_DIGITS) && ((c)<=END_FARSI_DIGITS)) ? \
+    ((c) - (PRUint16)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
+     (c)))
 #define NUM_TO_HINDI(c) \
   ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
    ((c) + (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
-   (c))
+   ((((c)>=START_FARSI_DIGITS) && ((c)<=END_FARSI_DIGITS)) ? \
+    ((c) + (PRUint16)PERSIAN_TO_HINDI_DIGIT_INCREMENT) : \
+     (c)))
+#define NUM_TO_PERSIAN(c) \
+  ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
+   ((c) - (PRUint16)PERSIAN_TO_HINDI_DIGIT_INCREMENT) : \
+   ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
+    ((c) + (PRUint16)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
+     (c)))
 
 // helper function to reverse a PRUnichar buffer
 static void ReverseString(PRUnichar* aBuffer, PRUint32 aLen)
@@ -546,9 +559,8 @@ nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
   return NS_OK;
 }
 
-nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+PRUnichar HandleNumberInChar(PRUnichar aChar, PRBool aPrevCharArabic, PRUint32 aNumFlag)
 {
-  PRUint32 i;
   // IBMBIDI_NUMERAL_NOMINAL *
   // IBMBIDI_NUMERAL_REGULAR
   // IBMBIDI_NUMERAL_HINDICONTEXT
@@ -557,34 +569,49 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 
   switch (aNumFlag) {
     case IBMBIDI_NUMERAL_HINDI:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-      break;
+      return NUM_TO_HINDI(aChar);
     case IBMBIDI_NUMERAL_ARABIC:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      break;
+      return NUM_TO_ARABIC(aChar);
+    case IBMBIDI_NUMERAL_PERSIAN:
+      return NUM_TO_PERSIAN(aChar);
     case IBMBIDI_NUMERAL_REGULAR:
     case IBMBIDI_NUMERAL_HINDICONTEXT:
-        // for clipboard handling
-        //XXX do we really want to convert numerals when copying text?
-      for (i=1;i<aSize;i++) {
-        if (IS_ARABIC_CHAR(aBuffer[i-1])) 
-          aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-        else 
-          aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
+    case IBMBIDI_NUMERAL_PERSIANCONTEXT:
+      // for clipboard handling
+      //XXX do we really want to convert numerals when copying text?
+      if (aPrevCharArabic) {
+        if (aNumFlag == IBMBIDI_NUMERAL_PERSIANCONTEXT)
+          return NUM_TO_PERSIAN(aChar);
+        else
+          return NUM_TO_HINDI(aChar);
       }
+      else
+        return NUM_TO_ARABIC(aChar);
+    case IBMBIDI_NUMERAL_NOMINAL:
+    default:
+      return aChar;
+  }
+}
+
+nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
+{
+  PRUint32 i;
+
+  switch (aNumFlag) {
+    case IBMBIDI_NUMERAL_HINDI:
+    case IBMBIDI_NUMERAL_ARABIC:
+    case IBMBIDI_NUMERAL_PERSIAN:
+    case IBMBIDI_NUMERAL_REGULAR:
+    case IBMBIDI_NUMERAL_HINDICONTEXT:
+    case IBMBIDI_NUMERAL_PERSIANCONTEXT:
+      for (i=0;i<aSize;i++)
+        aBuffer[i] = HandleNumberInChar(aBuffer[i], !!(i>0 ? aBuffer[i-1] : 0), aNumFlag);
+      break;
     case IBMBIDI_NUMERAL_NOMINAL:
     default:
       break;
   }
   return NS_OK;
-}
-
-nsresult HandleNumbers(const nsString& aSrc, nsString& aDst)
-{
-  aDst = aSrc;
-  return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(), IBMBIDI_NUMERAL_REGULAR);
 }
 
 PRUint32 SymmSwap(PRUint32 aChar)

@@ -66,6 +66,7 @@ _TEST_FILES =	\
 		file_bug379959_data.html \
 		file_bug379959_cross.html \
 		file_bug379959_xbl.xml \
+		test_bug468210.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

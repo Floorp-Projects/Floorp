@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: idct.c 13884 2007-09-22 08:38:10Z giles $
+    last mod: $Id: idct.c 15400 2008-10-15 12:10:58Z tterribe $
 
  ********************************************************************/
 
@@ -169,7 +169,6 @@ static void idct8_3(ogg_int16_t *_y,const ogg_int16_t _x[8]){
   _y[7<<3]=(ogg_int16_t)(t[0]-t[7]);
 }
 
-
 /*Performs an inverse 8 point Type-II DCT transform.
   The output is scaled by a factor of 2 relative to the orthonormal version of
    the transform.
@@ -203,7 +202,6 @@ static void idct8_2(ogg_int16_t *_y,const ogg_int16_t _x[8]){
   _y[6<<3]=(ogg_int16_t)(t[0]-t[6]);
   _y[7<<3]=(ogg_int16_t)(t[0]-t[7]);
 }
-
 
 /*Performs an inverse 8 point Type-II DCT transform.
   The output is scaled by a factor of 2 relative to the orthonormal version of

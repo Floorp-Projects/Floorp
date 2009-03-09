@@ -64,7 +64,13 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOZ_PKG_FORMAT  = BZ2
 else
+ifeq (,$(filter-out WINCE, $(OS_ARCH)))
+MOZ_PKG_CAB_SCRIPT ?= $(error MOZ_PKG_CAB_SCRIPT not specified)
+MOZ_PKG_CAB_INF ?= $(error MOZ_PKG_CAB_INF not specified)
+MOZ_PKG_FORMAT  = CAB
+else
 MOZ_PKG_FORMAT  = TGZ
+endif
 endif
 endif
 INSTALLER_DIR   = unix
@@ -73,8 +79,6 @@ endif
 endif # MOZ_PKG_FORMAT
 
 PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
-
-MOZ_PKG_DIR   = $(MOZ_APP_NAME)
 
 # By default, the SDK uses the same packaging type as the main bundle,
 # but on mac it is a .tar.bz2
@@ -108,6 +112,12 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
+UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
+MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
+endif
+ifeq ($(MOZ_PKG_FORMAT),CAB)
+PKG_SUFFIX	= .cab
+MAKE_PACKAGE = $(MOZ_PKG_CAB_SCRIPT) "$(VSINSTALLDIR)" "$(topsrcdir)" "$(MOZ_PKG_DIR)" "$(MOZ_PKG_CAB_INF)" "$(MOZ_APP_NAME)" "$(PACKAGE)"
 UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
 endif
@@ -227,6 +237,7 @@ NO_PKG_FILES += \
 	core \
 	bsdecho \
 	gtscc \
+	js \
 	js-config \
 	jscpucfg \
 	nsinstall \
@@ -487,8 +498,21 @@ ifeq ($(OS_TARGET), WINNT)
 INSTALLER_PACKAGE = $(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 endif
 
+# These are necessary because some of our packages/installers contain spaces
+# in their filenames and GNU Make's $(wildcard) function doesn't properly
+# deal with them.
+empty :=
+space = $(empty) $(empty)
+QUOTED_WILDCARD = $(if $(wildcard $(subst $(space),?,$(1))),"$(1)")
+
 upload:
-	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) $(DIST)/$(PACKAGE) $(INSTALLER_PACKAGE)
+	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE)) \
+		$(call QUOTED_WILDCARD,$(INSTALLER_PACKAGE)) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(COMPLETE_MAR)) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip) \
+		$(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 ifndef MOZ_PKG_SRCDIR
 MOZ_PKG_SRCDIR = $(topsrcdir)

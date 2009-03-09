@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-355090.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 354945;
+var BUGNUMBER = 355090;
 var summary = 'Iterator(8) is a function';
 var actual = '';
 var expect = '';

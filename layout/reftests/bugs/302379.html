@@ -1,0 +1,21 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html class="reftest-wait"><head><title></title></head>
+<body onload="document.documentElement.className='';">
+<table width="400">
+<tbody><tr> 
+<td> 
+<font><b>
+long string long string long string long string long string long string long string long string
+<select id="sel">
+<option value="a">long string long string long string long string</option>
+<option value="b">short string</option>
+</select>
+</b></font>
+</td>
+</tr>
+</tbody></table>
+<script>
+sel = document.getElementById('sel');
+sel.selectedIndex=1;
+</script>
+</body></html>

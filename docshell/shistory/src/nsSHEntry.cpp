@@ -535,14 +535,14 @@ nsSHEntry::GetWindowState(nsISupports **aState)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetViewerBounds(const nsRect &aBounds)
+nsSHEntry::SetViewerBounds(const nsIntRect &aBounds)
 {
   mViewerBounds = aBounds;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetViewerBounds(nsRect &aBounds)
+nsSHEntry::GetViewerBounds(nsIntRect &aBounds)
 {
   aBounds = mViewerBounds;
   return NS_OK;

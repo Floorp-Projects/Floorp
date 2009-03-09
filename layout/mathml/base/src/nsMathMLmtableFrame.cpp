@@ -38,7 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsAreaFrame.h"
+#include "nsBlockFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -46,7 +46,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
@@ -64,8 +64,8 @@
 // aOffset[0] is the first string, aOffset[1] is the second string, etc.
 // Used to parse attributes like columnalign='left right', rowalign='top bottom'
 static void
-SplitString(nsString&    aString, // [IN/OUT]
-            nsVoidArray& aOffset) // [OUT]
+SplitString(nsString&             aString, // [IN/OUT]
+            nsTArray<PRUnichar*>& aOffset) // [OUT]
 {
   static const PRUnichar kNullCh = PRUnichar('\0');
 
@@ -95,8 +95,8 @@ SplitString(nsString&    aString, // [IN/OUT]
 
 struct nsValueList
 {
-  nsString    mData;
-  nsVoidArray mArray;
+  nsString             mData;
+  nsTArray<PRUnichar*> mArray;
 
   nsValueList(nsString& aData) {
     mData.Assign(aData);
@@ -133,16 +133,16 @@ GetValueAt(nsIFrame* aTableOrRowFrame,
     aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttribute, values);
     if (!values.IsEmpty())
       valueList = new nsValueList(values);
-    if (!valueList || !valueList->mArray.Count()) {
+    if (!valueList || !valueList->mArray.Length()) {
       delete valueList; // ok either way, delete is null safe
       return nsnull;
     }
     aTableOrRowFrame->SetProperty(aAttribute, valueList, DestroyValueListFunc);
   }
-  PRInt32 count = valueList->mArray.Count();
+  PRInt32 count = valueList->mArray.Length();
   return (aRowOrColIndex < count)
-         ? (PRUnichar*)(valueList->mArray[aRowOrColIndex])
-         : (PRUnichar*)(valueList->mArray[count-1]);
+         ? valueList->mArray[aRowOrColIndex]
+         : valueList->mArray[count-1];
 }
 
 #ifdef NS_DEBUG
@@ -349,9 +349,9 @@ ListMathMLTree(nsIFrame* atLeast)
 // --------
 // implementation of nsMathMLmtableOuterFrame
 
-NS_IMPL_ADDREF_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
-NS_IMPL_RELEASE_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtableOuterFrame, nsTableOuterFrame, nsMathMLFrame)
+NS_QUERYFRAME_HEAD(nsMathMLmtableOuterFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsTableOuterFrame)
 
 nsIFrame*
 NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -647,13 +647,6 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
-// --------
-// implementation of nsMathMLmtableFrame
-
-NS_IMPL_ADDREF_INHERITED(nsMathMLmtableFrame, nsTableFrame)
-NS_IMPL_RELEASE_INHERITED(nsMathMLmtableFrame, nsTableFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtableFrame, nsTableFrame)
-
 nsIFrame*
 NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -687,10 +680,6 @@ nsMathMLmtableFrame::RestyleTable()
 
 // --------
 // implementation of nsMathMLmtrFrame
-
-NS_IMPL_ADDREF_INHERITED(nsMathMLmtrFrame, nsTableRowFrame)
-NS_IMPL_RELEASE_INHERITED(nsMathMLmtrFrame, nsTableRowFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtrFrame, nsTableRowFrame)
 
 nsIFrame*
 NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -748,10 +737,6 @@ nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
 // --------
 // implementation of nsMathMLmtdFrame
-
-NS_IMPL_ADDREF_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
-NS_IMPL_RELEASE_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtdFrame, nsTableCellFrame)
 
 nsIFrame*
 NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -835,9 +820,9 @@ nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
 // --------
 // implementation of nsMathMLmtdInnerFrame
 
-NS_IMPL_ADDREF_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
-NS_IMPL_RELEASE_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
-NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtdInnerFrame, nsBlockFrame, nsMathMLFrame)
+NS_QUERYFRAME_HEAD(nsMathMLmtdInnerFrame)
+  NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsIFrame*
 NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

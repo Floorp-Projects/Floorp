@@ -1,0 +1,20 @@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        >
+
+<html:style>
+    #prog {
+        -moz-appearance: none;
+        background-color: blue;
+    }
+    #prog .progress-bar {
+        -moz-border-radius: 3px 3px;
+        background-color: red;
+    }
+</html:style>
+
+<progressmeter id="prog" value="50" max="200"/>
+
+</window>

@@ -191,7 +191,7 @@ private:
     txOwningExpandedNameMap<txXSLKey> mKeys;
     
     // Array of all txStripSpaceTests, sorted in acending order
-    nsTPtrArray<txStripSpaceTest> mStripSpaceTests;
+    nsTArray<nsAutoPtr<txStripSpaceTest> > mStripSpaceTests;
     
     // Default templates
     nsAutoPtr<txInstruction> mContainerTemplate;

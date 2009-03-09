@@ -48,7 +48,7 @@ class nsBoxLayoutState;
 class nsListBoxLayout : public nsGridRowGroupLayout
 {
 public:
-  nsListBoxLayout(nsIPresShell* aShell);
+  nsListBoxLayout();
 
   // nsIBoxLayout
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);

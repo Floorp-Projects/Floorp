@@ -60,8 +60,7 @@ class nsGridRowLeafFrame : public nsBoxFrame
 public:
 
   friend nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
-                                          nsStyleContext* aContext,
-                                          nsIBoxLayout* aLayoutManager);
+                                          nsStyleContext* aContext);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

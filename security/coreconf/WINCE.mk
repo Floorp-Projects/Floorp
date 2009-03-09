@@ -81,6 +81,7 @@ GARBAGE     += $(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb
 XP_DEFINE   += -DXP_PC
 LIB_SUFFIX   = lib
 DLL_SUFFIX   = dll
+OS_DLLFLAGS  += -DLL
 
 ifdef BUILD_OPT
 #   OS_CFLAGS  += -MD

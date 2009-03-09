@@ -74,6 +74,7 @@ radio[pane] {
   min-width: 4.5em;
   margin: 0;
   padding: 3px;
+  color: -moz-FieldText;
 }
 
 .paneSelector {

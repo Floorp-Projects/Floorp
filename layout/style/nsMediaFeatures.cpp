@@ -59,7 +59,7 @@ static const PRInt32 kScanKeywords[] = {
   eCSSKeyword_UNKNOWN,                  -1
 };
 
-// A helper for three features below
+// A helper for four features below
 static nsSize
 GetSize(nsPresContext* aPresContext)
 {
@@ -143,7 +143,7 @@ GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 static nsresult
 GetOrientation(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
-    nsSize size = aPresContext->GetVisibleArea().Size();
+    nsSize size = GetSize(aPresContext);
     PRInt32 orientation;
     if (size.width > size.height) {
         orientation = NS_STYLE_ORIENTATION_LANDSCAPE;
@@ -193,11 +193,6 @@ GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
     nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     PRUint32 depth;
     dx->GetDepth(depth);
-    // Some graphics backends may claim 32-bit depth when it's really 24
-    // (because they're counting the Alpha component).
-    if (depth == 32) {
-        depth = 24;
-    }
     // The spec says to use bits *per color component*, so divide by 3,
     // and round down, since the spec says to use the smallest when the
     // color components differ.

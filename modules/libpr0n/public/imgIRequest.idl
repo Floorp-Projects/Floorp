@@ -104,5 +104,16 @@ interface imgIRequest : nsIRequest
    * The principal gotten from the channel the image was loaded from.
    */
   readonly attribute nsIPrincipal imagePrincipal;
+
+  /**
+   * Cancels this request as in nsIRequest::Cancel(); further, also nulls out
+   * decoderObserver so it gets no further notifications from us.
+   *
+   * NOTE: You should not use this in any new code; instead, use cancel(). Note
+   * that cancel() is asynchronous, which means that some time after you call
+   * it, the listener/observer will get an OnStopRequest(). This means that, if
+   * you're the observer, you can't call cancel() from your destructor.
+   */
+  void cancelAndForgetObserver(in nsresult aStatus);
 };
 

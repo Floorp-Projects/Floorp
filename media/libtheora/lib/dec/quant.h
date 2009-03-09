@@ -6,12 +6,12 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2007                *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: quant.h 14059 2007-10-28 23:43:27Z xiphmont $
+    last mod: $Id: quant.h 15400 2008-10-15 12:10:58Z tterribe $
 
  ********************************************************************/
 
@@ -24,23 +24,11 @@ typedef ogg_uint16_t   oc_quant_table[64];
 typedef oc_quant_table oc_quant_tables[64];
 
 
-
 /*Maximum scaled quantizer value.*/
 #define OC_QUANT_MAX          (1024<<2)
 
 
-
-/*Minimum scaled DC coefficient frame quantizer value for intra and inter
-   modes.*/
-extern unsigned OC_DC_QUANT_MIN[2];
-/*Minimum scaled AC coefficient frame quantizer value for intra and inter
-   modes.*/
-extern unsigned OC_AC_QUANT_MIN[2];
-
-
-
 void oc_dequant_tables_init(oc_quant_table *_dequant[2][3],
-			    int _pp_dc_scale[64],
-			    const th_quant_info *_qinfo);
+ int _pp_dc_scale[64],const th_quant_info *_qinfo);
 
 #endif

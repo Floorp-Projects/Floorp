@@ -18,7 +18,8 @@ notification[type="critical"] {
 .messageImage {
   width: 16px;
   height: 16px;
-  margin: 0px 1px 0px 6px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 1px;
 }
 
 /* Default icons for notifications */
@@ -35,10 +36,6 @@ notification[type="critical"] .messageImage {
   list-style-image: url("chrome://global/skin/icons/error-16.png");
 }
 
-.messageText {
-  -moz-margin-start: 5px;
-}
-
 .messageCloseButton {
   list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
@@ -53,4 +50,8 @@ notification[type="critical"] .messageImage {
 
 .messageCloseButton:hover:active {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
+}
+
+.messageCloseButton > .toolbarbutton-icon {
+  -moz-margin-end: 5px;
 }

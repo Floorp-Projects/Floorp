@@ -62,6 +62,11 @@ else
 EXEC			= exec
 endif
 
+# Don't copy xulrunner files at install time, when using system xulrunner
+ifdef SYSTEM_LIBXUL
+  SKIP_COPY_XULRUNNER=1
+endif
+
 # ELOG prints out failed command when building silently (gmake -s).
 ifneq (,$(findstring -s,$(MAKEFLAGS)))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
@@ -124,13 +129,15 @@ ifndef MODULE
 $(error Must define MODULE when defining XPCSHELL_TESTS.)
 endif
 
+testxpcobjdir = $(DEPTH)/_tests/xpcshell
+
 # Test file installation
 libs::
 	@$(EXIT_ON_ERROR) \
 	for testdir in $(XPCSHELL_TESTS); do \
 	  $(INSTALL) \
 	    $(srcdir)/$$testdir/*.js \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	    $(testxpcobjdir)/$(MODULE)/$$testdir; \
 	done
 
 # Path formats on Windows are hard.  We require a topsrcdir formatted so that
@@ -148,43 +155,49 @@ else
 FWDSLASH_TOPSRCDIR := $(topsrcdir)
 ifeq ($(HOST_OS_ARCH),WINNT)
 NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
-else 
+else
+ifeq ($(HOST_OS_ARCH),os2-emx)
+NATIVE_TOPSRCDIR   := $(subst /,\\,$(topsrcdir))
+else
 NATIVE_TOPSRCDIR   := $(topsrcdir)
 endif
+endif
 endif # CYGWIN_WRAPPER
+
+testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 
 # Test execution
 check::
 	@$(EXIT_ON_ERROR) \
 	for testdir in $(XPCSHELL_TESTS); do \
 	  $(RUN_TEST_PROGRAM) \
-	    $(topsrcdir)/tools/test-harness/xpcshell-simple/test_all.sh \
+	    $(testxpcsrcdir)/test_all.sh \
 	      $(DIST)/bin/xpcshell \
 	      $(FWDSLASH_TOPSRCDIR) \
 	      $(NATIVE_TOPSRCDIR) \
-	      $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir; \
+	      $(testxpcobjdir)/$(MODULE)/$$testdir; \
 	done
 
 # Test execution
 check-interactive::
 	@$(EXIT_ON_ERROR) \
 	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	  $(testxpcsrcdir)/test_one.sh \
 	    $(DIST)/bin/xpcshell \
 	    $(FWDSLASH_TOPSRCDIR) \
 	    $(NATIVE_TOPSRCDIR) \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(testxpcobjdir)/$(MODULE)/$$testdir \
 	    $(SOLO_FILE) 1;
 
 # Test execution
 check-one::
 	@$(EXIT_ON_ERROR) \
 	$(RUN_TEST_PROGRAM) \
-	  $(topsrcdir)/tools/test-harness/xpcshell-simple/test_one.sh \
+	  $(testxpcsrcdir)/test_one.sh \
 	    $(DIST)/bin/xpcshell \
 	    $(FWDSLASH_TOPSRCDIR) \
 	    $(NATIVE_TOPSRCDIR) \
-	    $(DEPTH)/_tests/xpcshell-simple/$(MODULE)/$$testdir \
+	    $(testxpcobjdir)/$(MODULE)/$$testdir \
 	    $(SOLO_FILE) 0;
 
 endif # XPCSHELL_TESTS
@@ -219,15 +232,16 @@ endif # ENABLE_TESTS
 #
 
 ifndef LIBRARY
-ifdef LIBRARY_NAME
+ifdef STATIC_LIBRARY_NAME
 ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 ifdef SHORT_LIBNAME
-LIBRARY_NAME		:= $(SHORT_LIBNAME)
+STATIC_LIBRARY_NAME	:= $(SHORT_LIBNAME)
+SHARED_LIBRARY_NAME	:= $(SHORT_LIBNAME)
 endif
 endif
-LIBRARY			:= $(LIB_PREFIX)$(LIBRARY_NAME).$(LIB_SUFFIX)
-endif
-endif
+LIBRARY			:= $(LIB_PREFIX)$(STATIC_LIBRARY_NAME).$(LIB_SUFFIX)
+endif # STATIC_LIBRARY_NAME
+endif # LIBRARY
 
 ifndef HOST_LIBRARY
 ifdef HOST_LIBRARY_NAME
@@ -244,9 +258,9 @@ MKSHLIB			= $(MKCSHLIB)
 endif
 
 ifdef MAKE_FRAMEWORK
-SHARED_LIBRARY		:= $(LIBRARY_NAME)
+SHARED_LIBRARY		:= $(SHARED_LIBRARY_NAME)
 else
-SHARED_LIBRARY		:= $(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
+SHARED_LIBRARY		:= $(DLL_PREFIX)$(SHARED_LIBRARY_NAME)$(DLL_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -254,7 +268,7 @@ DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
 ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-IMPORT_LIBRARY		:= $(LIB_PREFIX)$(LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
+IMPORT_LIBRARY		:= $(LIB_PREFIX)$(SHARED_LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
 ifdef MOZ_ENABLE_LIBXUL
@@ -319,11 +333,11 @@ CODFILE=$(basename $(@F)).cod
 endif
 
 ifdef MOZ_MAPINFO
-ifdef LIBRARY_NAME
-MAPFILE=$(LIBRARY_NAME).map
+ifdef SHARED_LIBRARY_NAME
+MAPFILE=$(SHARED_LIBRARY_NAME).map
 else
 MAPFILE=$(basename $(@F)).map
-endif # LIBRARY_NAME
+endif # SHARED_LIBRARY_NAME
 endif # MOZ_MAPINFO
 
 ifdef DEFFILE
@@ -333,14 +347,7 @@ endif
 
 ifdef MAPFILE
 OS_LDFLAGS += -MAP:$(MAPFILE)
-#CFLAGS += -Fm$(MAPFILE)
-#CXXFLAGS += -Fm$(MAPFILE)
 endif
-
-#ifdef CODFILE
-#CFLAGS += -Fa$(CODFILE) -FAsc
-#CFLAGS += -Fa$(CODFILE) -FAsc
-#endif
 
 endif # !GNU_CC
 
@@ -430,10 +437,8 @@ endif
 # the Solaris WorkShop template repository cache.  it occasionally can get
 # out of sync, so targets like clobber should kill it.
 #
-ifeq ($(OS_ARCH),SunOS)
-ifeq ($(GNU_CXX),)
+ifeq ($(SOLARIS_SUNPRO_CXX),1)
 GARBAGE_DIRS += SunWS_cache
-endif
 endif
 
 ifeq ($(OS_ARCH),OpenVMS)
@@ -459,28 +464,35 @@ ifdef MOZ_UPDATE_XTERM
 # Its good not to have a newline at the end of the titlebar string because it
 # makes the make -s output easier to read.  Echo -n does not work on all
 # platforms, but we can trick sed into doing it.
-UPDATE_TITLE = sed -e "s!Y!$@ in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(dir)!" $(MOZILLA_DIR)/config/xterm.str;
-UPDATE_TITLE_export = sed -e "s!Y!export in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
-UPDATE_TITLE_libs = sed -e "s!Y!libs in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
-UPDATE_TITLE_tools = sed -e "s!Y!tools in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$*!" $(MOZILLA_DIR)/config/xterm.str;
+UPDATE_TITLE = sed -e "s!Y!$(1) in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2)!" $(MOZILLA_DIR)/config/xterm.str;
 endif
 
+define SUBMAKE # $(call SUBMAKE,target,directory)
+@$(UPDATE_TITLE)
++@$(MAKE) $(if $(2),-C $(2)) $(1)
+
+endef # The extra line is important here! don't delete it
+
+ifneq (,$(strip $(DIRS)))
 LOOP_OVER_DIRS = \
-    @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+  $(foreach dir,$(DIRS),$(call SUBMAKE,$@,$(dir)))
+endif
 
 # we only use this for the makefiles target and other stuff that doesn't matter
+ifneq (,$(strip $(PARALLEL_DIRS)))
 LOOP_OVER_PARALLEL_DIRS = \
-    @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(PARALLEL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+  $(foreach dir,$(PARALLEL_DIRS),$(call SUBMAKE,$@,$(dir)))
+endif
 
+ifneq (,$(strip $(STATIC_DIRS)))
 LOOP_OVER_STATIC_DIRS = \
-    @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(STATIC_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+  $(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,$@,$(dir)))
+endif
 
+ifneq (,$(strip $(TOOL_DIRS)))
 LOOP_OVER_TOOL_DIRS = \
-    @$(EXIT_ON_ERROR) \
-    $(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) $@; ) true
+  $(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,$@,$(dir)))
+endif
 
 ifdef PARALLEL_DIRS
 # create a bunch of fake targets for order-only processing
@@ -709,19 +721,14 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 # default rule before including rules.mk
 ifndef SUPPRESS_DEFAULT_RULES
 ifdef TIERS
-
-DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
-STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
-
 default all alldep::
-	$(EXIT_ON_ERROR) \
-	$(foreach tier,$(TIERS),$(MAKE) tier_$(tier); ) true
-
+	$(foreach tier,$(TIERS),$(call SUBMAKE,tier_$(tier)))
 else
 
 default all::
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir); ) true
+ifneq (,$(strip $(STATIC_DIRS)))
+	$(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,,$(dir)))
+endif
 	$(MAKE) export
 	$(MAKE) libs
 	$(MAKE) tools
@@ -746,28 +753,24 @@ endif
 
 MAKE_TIER_SUBMAKEFILES = +$(if $(tier_$*_dirs),$(MAKE) $(addsuffix /Makefile,$(tier_$*_dirs)))
 
-export_tier_%: 
+export_tier_%:
 	@$(ECHO) "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) export; ) true
+	$(foreach dir,$(tier_$*_dirs),$(call SUBMAKE,export,$(dir)))
 
 libs_tier_%:
 	@$(ECHO) "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) libs; ) true
+	$(foreach dir,$(tier_$*_dirs),$(call SUBMAKE,libs,$(dir)))
 
 tools_tier_%:
 	@$(ECHO) "$@"
 	@$(MAKE_TIER_SUBMAKEFILES)
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(tier_$*_dirs),$(MAKE) -C $(dir) tools; ) true
+	$(foreach dir,$(tier_$*_dirs),$(call SUBMAKE,tools,$(dir)))
 
 $(foreach tier,$(TIERS),tier_$(tier))::
 	@$(ECHO) "$@: $($@_staticdirs) $($@_dirs)"
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$($@_staticdirs),$(MAKE) -C $(dir); ) true
+	$(foreach dir,$($@_staticdirs),$(call SUBMAKE,,$(dir)))
 	$(MAKE) export_$@
 	$(MAKE) libs_$@
 
@@ -779,53 +782,36 @@ everything::
 # Add dummy depend target for tinderboxes
 depend::
 
-ifdef ALL_PLATFORMS
-all_platforms:: $(NFSPWD)
-	@d=`$(NFSPWD)`;							\
-	if test ! -d LOGS; then rm -rf LOGS; mkdir LOGS; else true; fi;	\
-	for h in $(PLATFORM_HOSTS); do					\
-		echo "On $$h: $(MAKE) $(ALL_PLATFORMS) >& LOGS/$$h.log";\
-		rsh $$h -n "(chdir $$d;					\
-			     $(MAKE) $(ALL_PLATFORMS) >& LOGS/$$h.log;	\
-			     echo DONE) &" 2>&1 > LOGS/$$h.pid &	\
-		sleep 1;						\
-	done
-
-$(NFSPWD):
-	cd $(@D); $(MAKE) $(@F)
-endif
-
 # Target to only regenerate makefiles
 makefiles: $(SUBMAKEFILES)
 ifneq (,$(DIRS)$(TOOL_DIRS)$(PARALLEL_DIRS))
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 endif
 
 ifdef PARALLEL_DIRS
 export:: $(PARALLEL_DIRS_export)
 
 $(PARALLEL_DIRS_export): %_export: %/Makefile
-	+@$(UPDATE_TITLE_export) $(MAKE) -C $* export
+	+@$(call SUBMAKE,export,$*)
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS) $(if $(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),$(PUBLIC)) $(if $(SDK_HEADERS)$(SDK_XPIDLSRCS),$(SDK_PUBLIC)) $(if $(XPIDLSRCS),$(IDL_DIR)) $(if $(SDK_XPIDLSRCS),$(SDK_IDL_DIR))
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 
 ifdef PARALLEL_DIRS
 tools:: $(PARALLEL_DIRS_tools)
 
 $(PARALLEL_DIRS_tools): %_tools: %/Makefile
-	+@$(UPDATE_TITLE_tools) $(MAKE) -C $* tools
+	+@$(call SUBMAKE,tools,$*)
 endif
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
-	+$(LOOP_OVER_DIRS)
-ifdef TOOL_DIRS
-	@$(EXIT_ON_ERROR) \
-	$(foreach dir,$(TOOL_DIRS),$(UPDATE_TITLE) $(MAKE) -C $(dir) libs; ) true
+	$(LOOP_OVER_DIRS)
+ifneq (,$(strip $(TOOL_DIRS)))
+	$(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,libs,$(dir)))
 endif
 
 #
@@ -836,13 +822,13 @@ ifdef LIBRARY_NAME
 ifdef EXPORT_LIBRARY
 ifdef IS_COMPONENT
 ifdef BUILD_STATIC_LIBS
-	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) $(LIBRARY_NAME)
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) $(STATIC_LIBRARY_NAME)
 ifdef MODULE_NAME
 	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMP_NAMES) $(MODULE_NAME)
 endif
-endif
-else
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_LIBS) $(LIBRARY_NAME)
+endif # BUILD_STATIC_LIBS
+else  # !IS_COMPONENT
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_LIBS) $(STATIC_LIBRARY_NAME)
 endif # IS_COMPONENT
 endif # EXPORT_LIBRARY
 endif # LIBRARY_NAME
@@ -860,7 +846,7 @@ ifdef PARALLEL_DIRS
 libs:: $(PARALLEL_DIRS_libs)
 
 $(PARALLEL_DIRS_libs): %_libs: %/Makefile
-	+@$(UPDATE_TITLE_libs) $(MAKE) -C $* libs
+	+@$(call SUBMAKE,libs,$*)
 endif
 
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
@@ -923,7 +909,7 @@ else
 endif
 endif # JAVA_LIBRARY
 endif # !NO_DIST_INSTALL
-	+$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_DIRS)
 
 ##############################################
 
@@ -935,21 +921,25 @@ ifeq ($(OS_ARCH)_$(GNU_CC)$(INTERNAL_TOOLS), WINNT_)
 # in both stages so you can do depend builds with PGO.
 ifdef SHARED_LIBRARY
 $(SHARED_LIBRARY): FORCE
-BINARY_BASENAME = $(SHARED_LIBRARY:$(DLL_SUFFIX)=)
 endif
 ifdef PROGRAM
 $(PROGRAM): FORCE
-BINARY_BASENAME = $(PROGRAM:$(BIN_SUFFIX)=)
 endif
 
 ifdef MOZ_PROFILE_USE
 # In the second pass, we need to merge the pgc files into the pgd file.
 # The compiler would do this for us automatically if they were in the right
 # place, but they're in dist/bin.
-ifdef BINARY_BASENAME
+ifneq (,$(SHARED_LIBRARY)$(PROGRAM))
 export::
+ifdef PROGRAM
 	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
-	  $(BINARY_BASENAME) $(DIST)/bin
+	  $(PROGRAM:$(BIN_SUFFIX)=) $(DIST)/bin
+endif
+ifdef SHARED_LIBRARY
+	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
+	  $(SHARED_LIBRARY_NAME) $(DIST)/bin
+endif
 endif
 endif # MOZ_PROFILE_USE
 endif # WINNT_
@@ -970,16 +960,10 @@ run_viewer: $(FINAL_TARGET)/viewer
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)
 	-rm -rf $(ALL_TRASH_DIRS)
-	+-$(LOOP_OVER_PARALLEL_DIRS)
-	+-$(LOOP_OVER_DIRS)
-	+-$(LOOP_OVER_STATIC_DIRS)
-	+-$(LOOP_OVER_TOOL_DIRS)
+	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(STATIC_DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
 
 distclean:: $(SUBMAKEFILES)
-	+-$(LOOP_OVER_PARALLEL_DIRS)
-	+-$(LOOP_OVER_DIRS)
-	+-$(LOOP_OVER_STATIC_DIRS)
-	+-$(LOOP_OVER_TOOL_DIRS)
+	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(STATIC_DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
 	-rm -rf $(ALL_TRASH_DIRS) 
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
@@ -1178,7 +1162,7 @@ endif
 ifeq ($(OS_ARCH),OS2)
 $(DEF_FILE): $(OBJS) $(SHARED_LIBRARY_LIBS)
 	rm -f $@
-	echo LIBRARY $(LIBRARY_NAME) INITINSTANCE TERMINSTANCE > $@
+	echo LIBRARY $(SHARED_LIBRARY_NAME) INITINSTANCE TERMINSTANCE > $@
 	echo PROTMODE >> $@
 	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
 	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
@@ -1317,7 +1301,7 @@ endif
 
 ifdef MOZ_AUTO_DEPS
 ifdef COMPILER_DEPEND
-ifeq (__SunOS,$(GNU_CC)_$(GNU_CXX)_$(OS_ARCH))
+ifeq ($(SOLARIS_SUNPRO_CC),1)
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
 define MAKE_DEPS_AUTO_CC
@@ -1380,7 +1364,7 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
-%: %.c $(GLOBAL_DEPS)
+%:: %.c $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
@@ -1403,7 +1387,7 @@ endif
 %.$(OBJ_SUFFIX): %.S $(GLOBAL_DEPS)
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-%: %.cpp $(GLOBAL_DEPS)
+%:: %.cpp $(GLOBAL_DEPS)
 	@$(MAKE_DEPS_AUTO_CXX)
 	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(_VPATH_SRCS) $(LDFLAGS)
 
@@ -1470,12 +1454,12 @@ endif
 endif
 
 # need 3 separate lines for OS/2
-%: %.pl
+%:: %.pl
 	rm -f $@
 	cp $< $@
 	chmod +x $@
 
-%: %.sh
+%:: %.sh
 	rm -f $@; cp $< $@; chmod +x $@
 
 # Cancel these implicit rules
@@ -1582,7 +1566,7 @@ endif
 # Copy each element of EXPORTS to $(PUBLIC)
 
 ifneq ($(EXPORTS)$(XPIDLSRCS)$(SDK_HEADERS)$(SDK_XPIDLSRCS),)
-$(SDK_PUBLIC) $(PUBLIC)::
+$(SDK_PUBLIC) $(PUBLIC):
 	$(NSINSTALL) -D $@
 endif
 
@@ -1756,9 +1740,9 @@ export-idl:: $(XPIDLSRCS) $(SDK_XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 endif
 endif
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 
 
 
@@ -1903,9 +1887,9 @@ JAR_MANIFEST := $(srcdir)/jar.mn
 
 chrome::
 	$(MAKE) realchrome
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 
 $(FINAL_TARGET)/chrome:
 	$(NSINSTALL) -D $@
@@ -1921,7 +1905,10 @@ endif
 endif
 
 ifneq ($(DIST_FILES),)
-libs:: $(DIST_FILES)
+$(DIST)/bin:
+	$(NSINSTALL) -D $@
+
+libs:: $(DIST_FILES) $(DIST)/bin
 	@$(EXIT_ON_ERROR) \
 	for f in $(DIST_FILES); do \
 	  dest=$(FINAL_TARGET)/`basename $$f`; \
@@ -2052,15 +2039,15 @@ depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MDDEPFILES)
 else
 depend:: $(SUBMAKEFILES)
 endif
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 
 dependclean:: $(SUBMAKEFILES)
 	rm -f $(MDDEPFILES)
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 
 endif # MOZ_AUTO_DEPS
 
@@ -2151,7 +2138,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE check check-interactive check-one
+.PHONY: all alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE check check-interactive check-one
 
 # Used as a dependency to force targets to rebuild
 FORCE:
@@ -2166,14 +2153,17 @@ tags: TAGS
 
 TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
 
 echo-variable-%:
-	@echo $($*)
+	@echo "$($*)"
 
 echo-tiers:
 	@echo $(TIERS)
+
+echo-tier-dirs:
+	@$(foreach tier,$(TIERS),echo '$(tier):'; echo '  dirs: $(tier_$(tier)_dirs)'; echo '  staticdirs: $(tier_$(tier)_staticdirs)'; )
 
 echo-dirs:
 	@echo $(DIRS)
@@ -2190,8 +2180,8 @@ ifdef _REPORT_ALL_DIRS
 else
 	@$(if $(REQUIRES),echo $(subst $(topsrcdir)/,,$(srcdir)): $(MODULE): $(REQUIRES))
 endif
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
 
 echo-depth-path:
 	@$(topsrcdir)/build/unix/print-depth-path.sh
@@ -2220,8 +2210,8 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
 	@echo --------------------------------------------------------------------------------
 endif
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
 
 showbuild:
 	@echo "MOZ_BUILD_ROOT     = $(MOZ_BUILD_ROOT)"
@@ -2278,18 +2268,11 @@ showbuildmods::
 	@echo "Build Modules	= $(BUILD_MODULES)"
 	@echo "Module dirs	= $(BUILD_MODULE_DIRS)"
 
-zipmakes:
-ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
-	zip $(DEPTH)/makefiles $(subst $(topsrcdir),$(MOZ_SRC)/mozilla,$(srcdir)/Makefile.in)
-endif
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-
 documentation:
 	@cd $(DEPTH)
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
 check:: $(SUBMAKEFILES) $(MAKE_DIRS)
-	+$(LOOP_OVER_PARALLEL_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)

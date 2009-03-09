@@ -1,10 +1,14 @@
-# Everything here uses HTTP(..) because they use fonts in ../fonts/.  We
-# can't use file:/// URLs because of cross-directory access restrictions
-# on file: URLs.
+# Tests using downloaded fonts use HTTP(..) because they use fonts in
+# ../fonts/.  We can't use file:/// URLs because of cross-directory access
+# restrictions on file: URLs.
 
 HTTP(..) != download-1.html download-1-notref.html
 HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
+HTTP(..) != download-2-big-otf.html about:blank
+HTTP(..) != download-3-notref.html download-3.html
+HTTP(..) == download-3-ref.html download-3.html
 HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html
@@ -13,12 +17,24 @@ HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
 HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
-fails HTTP(..) == src-list-format-1.html src-list-format-1-ref.html # bug 465452
-fails HTTP(..) == src-list-format-2.html src-list-format-2-ref.html # bug 465452
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
+HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
+HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 HTTP(..) == src-list-format-3.html src-list-format-3-ref.html
 HTTP(..) == src-list-format-4.html src-list-format-1-ref.html
 HTTP(..) == src-list-format-5.html src-list-format-2-ref.html
-fails HTTP(..) == src-list-format-6.html src-list-format-3-ref.html # bug 465452
+HTTP(..) == src-list-format-6.html src-list-format-3-ref.html
+# assumes AAT fonts are only supported on MacOS
+skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-list-format-7.html src-list-format-2-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-list-format-7.html src-list-format-3-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full.html src-list-local-full-ref.html # bug 468387 (windows)
+skip-if(MOZ_WIDGET_TOOLKIT=="windows") == src-list-local-full-quotes.html src-list-local-full-ref.html # bug 468387 (windows)
+skip HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html # bug 481729
+
+# Postscript name lookup only supported on MacOS currently
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == helveticaneue-ultra.html helveticaneue-ultra-ref.html
+
 # FIXME: The behavior here is neither mandated nor specified by the spec, but
 # it really ought to be.
 HTTP(..) == order-1.html order-1-ref.html
@@ -48,8 +64,9 @@ HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
 HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
 HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
 HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # gtk2 failure is bug 468217
-HTTP(..) == insert-rule-1.html insert-rule-1-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
+HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
+HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
 HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
 HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
 HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
@@ -58,3 +75,5 @@ HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
+
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == local-1.html local-1-ref.html # bug 468387

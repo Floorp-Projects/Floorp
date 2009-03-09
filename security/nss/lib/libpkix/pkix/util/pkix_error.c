@@ -47,10 +47,18 @@
 
 #define PKIX_ERRORENTRY(name,desc,nsserr) #desc
 
+#if defined PKIX_ERROR_DESCRIPTION
+
 const char * const PKIX_ErrorText[] =
 {
 #include "pkix_errorstrings.h"
 };
+
+#else
+
+#include "prprf.h"
+
+#endif /* PKIX_ERROR_DESCRIPTION */
 
 extern const int PKIX_PLErrorIndex[];
 
@@ -563,12 +571,23 @@ PKIX_Error_GetDescription(
         void *plContext)
 {
         PKIX_PL_String *descString = NULL;
+#ifndef PKIX_ERROR_DESCRIPTION
+        char errorStr[32];
+#endif
 
         PKIX_ENTER(ERROR, "PKIX_Error_GetDescription");
         PKIX_NULLCHECK_TWO(error, pDesc);
 
+#ifndef PKIX_ERROR_DESCRIPTION
+        PR_snprintf(errorStr, 32, "Error code: %d", error->errCode);
+#endif
+
         PKIX_PL_String_Create(PKIX_ESCASCII,
+#if defined PKIX_ERROR_DESCRIPTION
                               (void *)PKIX_ErrorText[error->errCode],
+#else
+                              errorStr,
+#endif
                               0,
                               &descString,
                               plContext);

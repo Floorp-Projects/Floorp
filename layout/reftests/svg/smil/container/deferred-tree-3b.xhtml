@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Deferred tree</title>
+    <script src="deferred-tree-util.js" type="text/javascript"/>
+    <script>
+        function animate()
+        {
+          // Set up
+          var div = makeDiv();
+          var svg = makeSvg();
+          var target = document.getElementById('tree-container');
+
+          div.appendChild(svg);
+          target.appendChild(div);
+
+          // These calls *should* have an effect, since they happen
+          // after 'svg' has been attached to the XHTML document.
+          svg.setCurrentTime(1.0);
+          svg.pauseAnimations();
+
+          // Shift the SVG element to its parent's parent.
+          // (If we're sane, this shouldn't reset its time container.)
+          target.appendChild(svg);
+
+          // Reftest Snapshot
+          document.documentElement.removeAttribute("class");
+        }
+    </script>
+  </head>
+
+  <body onload="animate()">
+    <p id="tree-container"/>
+  </body>
+</html>

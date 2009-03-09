@@ -63,7 +63,6 @@ DIRS = \
 	certerror \
 	dirprovider \
 	microsummaries \
-	migration \
 	preferences \
 	search \
 	sessionstore \
@@ -73,6 +72,10 @@ DIRS = \
 	places \
 	privatebrowsing \
 	$(NULL)
+
+ifndef WINCE
+DIRS += migration
+endif
 
 ifdef MOZ_SAFE_BROWSING
 DIRS += safebrowsing

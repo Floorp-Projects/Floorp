@@ -248,7 +248,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
 nsresult
 gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsStringArray& aListOfFonts)
+                            nsTArray<nsString>& aListOfFonts)
 {
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);
@@ -284,6 +284,13 @@ gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
     return new gfxPangoFontGroup(aFamilies, aStyle, aUserFontSet);
 }
 
+gfxFontEntry*
+gfxPlatformGtk::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                const nsAString& aFontName)
+{
+    return gfxPangoFontGroup::NewFontEntry(*aProxyEntry, aFontName);
+}
+
 gfxFontEntry* 
 gfxPlatformGtk::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry, 
                                  nsISupports *aLoader,
@@ -301,20 +308,25 @@ gfxPlatformGtk::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 PRBool
 gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 {
-    // reject based on format flags
-    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_EOT | gfxUserFontSet::FLAG_FORMAT_SVG)) {
-        return PR_FALSE;
-    }
+    // check for strange format flags
+    NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
+                 "strange font format hint set");
 
+    // accept supported formats
     // Pango doesn't apply features from AAT TrueType extensions.
     // Assume that if this is the only SFNT format specified,
     // then AAT extensions are required for complex script support.
-    if ((aFormatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT) 
-         && !(aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE | gfxUserFontSet::FLAG_FORMAT_TRUETYPE))) {
+    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
+                        gfxUserFontSet::FLAG_FORMAT_TRUETYPE)) {
+        return PR_TRUE;
+    }
+
+    // reject all other formats, known and unknown
+    if (aFormatFlags != 0) {
         return PR_FALSE;
     }
 
-    // otherwise, return true
+    // no format hint set, need to look at data
     return PR_TRUE;
 }
 
@@ -323,7 +335,7 @@ gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 nsresult
 gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
-                            nsStringArray& aListOfFonts)
+                            nsTArray<nsString>& aListOfFonts)
 {
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);
@@ -547,8 +559,10 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                                &retAtom, &retFormat, &retLength,
                                &retAfter, &retProperty);
 
-            cmsHPROFILE profile =
-                cmsOpenProfileFromMem(retProperty, retLength);
+            cmsHPROFILE profile = NULL;
+
+            if (retLength > 0)
+                profile = cmsOpenProfileFromMem(retProperty, retLength);
 
             XFree(retProperty);
 
@@ -688,7 +702,7 @@ gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
     if (target->CairoStatus())
         return;
 
-    gdk_drawable_ref(drawable);
+    g_object_ref(drawable);
 
     cairo_surface_set_user_data (target->CairoSurface(),
                                  &cairo_gdk_drawable_key,

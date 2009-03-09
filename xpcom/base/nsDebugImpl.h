@@ -35,12 +35,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDebug.h"
+#include "nsIDebug2.h"
 
-class nsDebugImpl : public nsIDebug
+class nsDebugImpl : public nsIDebug2
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDEBUG
+    NS_DECL_NSIDEBUG2
     
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 };

@@ -1,0 +1,14 @@
+diff -r f33a75da59bd media/libvorbis/lib/os.h
+--- a/media/libvorbis/lib/os.h	Sun Dec 07 19:31:40 2008 -0800
++++ b/media/libvorbis/lib/os.h	Mon Dec 15 16:26:36 2008 +0800
+@@ -25,6 +25,10 @@
+ #include <ogg/os_types.h>
+ 
+ #include "misc.h"
++
++#ifdef SOLARIS
++#define HAVE_ALLOCA_H
++#endif
+ 
+ #ifndef _V_IFDEFJAIL_H_
+ #  define _V_IFDEFJAIL_H_

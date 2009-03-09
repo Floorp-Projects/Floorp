@@ -75,6 +75,9 @@ void
 oggplay_yuv2rgb(OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
 
 void 
+oggplay_yuv2argb(OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
+
+void
 oggplay_yuv2bgr(OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb);
 
 ogg_int64_t

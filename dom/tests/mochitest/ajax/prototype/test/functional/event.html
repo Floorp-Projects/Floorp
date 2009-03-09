@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype functional test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../dist/prototype.js"       type="text/javascript"></script>
+  
+  <style type="text/css" media="screen">
+  /* <![CDATA[ */
+    body { margin:1em 2em; padding:0; font-size:0.8em }
+    hr { width:31.2em; margin:1em 0; text-align:left }
+    p { width:30em; margin:0.5em 0; padding:0.3em 0.6em; color:#222; background:#eee; border:1px solid silver; }
+    .subtest { margin-top:-0.5em }
+    .passed { color:green; border-color:olive }
+    .failed { color:firebrick; border-color:firebrick }
+    .button { padding:0.2em 0.4em; background:#ccc; border:1px solid #aaa }
+    #log { position:absolute; left:35em; top:5em; width:20em; font-size:13px !important }
+    h2 { font:normal 1.1em Verdana,Arial,sans-serif; font-style:italic; color:gray; margin-top:-1.2em }
+    h2 *, h2 a:visited { color:#444 }
+    h2 a:hover { color:blue }
+    a:visited { color:blue }
+    a:hover { color:red }
+  /* ]]> */
+  </style>
+  
+  <script type="text/javascript">
+    Element.addMethods({
+      passed: function(el, message) {
+        el = $(el);
+        el.className = 'passed';
+        (el.down('span') || el).update(message || 'Test passed!');
+      },
+      
+      failed: function(el, message) {
+        el = $(el);
+        el.className = 'failed';
+        (el.down('span') || el).update(message || 'Test failed');
+      }
+    });
+    
+    function log(obj) {
+      var line, all = [];
+      for (prop in obj) {
+        if (typeof obj[prop] == 'function' || /^[A-Z]|[XY]$/.test(prop)) continue;
+        line = prop + ": " + Object.inspect(obj[prop]);
+        all.push(line.escapeHTML());
+      }
+      $('log').update(all.join('<br />'));
+    }
+  </script>
+</head>
+<body>
+  <h1>Prototype functional tests for the Event module</h1>
+  
+  <div id="log">log empty</div>
+  
+  <p id="basic">A basic event test - <strong>click here</strong></p>
+  <p id="basic_remove" class="subtest"><strong>click</strong> to stop observing the first test</p>
+  
+  <p id="inline_test" onclick="Event.stop(event); $(this).passed();"><strong>click</strong> to ensure generic Event methods work on inline handlers</p>
+  
+  <script type="text/javascript">
+    var basic_callback = function(e){
+      $('basic').passed();
+      if ($('basic_remove')) $('basic_remove').show()
+      else $('basic').failed()
+      log(e);
+    }
+    $('basic').observe('click', basic_callback)
+    $('basic_remove').observe('click', function(e){
+      el = $('basic')
+      el.passed('This test should now be inactive (try clicking)')
+      el.stopObserving('click')
+      $('basic_remove').remove()
+      log(e);
+    }).hide()
+  </script>
+  
+  <p id="basic2"><strong>Scope</strong> test - scope of the handler should be this element</p>
+  
+  <script type="text/javascript">
+    $('basic2').observe('click', function(e) {
+      if (this === window) $('basic2').failed('Window scope! (needs scope correction)');
+      else this.passed();
+      log(e);
+    });
+  </script>
+
+  <p id="basic3"><strong>Event object</strong> test - should be present as a first argument</p>
+  
+  <script type="text/javascript">
+    $('basic3').observe('click', function(evt) {
+      el = $('basic3');
+      if (typeof evt != 'object') this.failed('Expected event object for first argument');
+      else this.passed('Good first argument');
+      log(evt);
+    });
+  </script>
+
+  <p><a href="#wrong" id="hijack">Hijack link test</a> (preventDefault)</p>
+  
+  <script type="text/javascript">
+    $('hijack').observe('click', function(e){
+      el = $(this.parentNode);
+      log(e); // this makes it fail?!?
+      e.preventDefault();
+
+      setTimeout(function() {
+        if (window.location.hash == '#wrong') el.failed('Hijack failed (<a href="' +
+            window.location.toString().replace(/#.+$/, '') + '">remove the fragment</a>)')
+        else el.passed();
+      }, 50)
+    })
+  </script>
+  
+  <hr />
+
+
+  <p>Mouse click:
+  <span class="button" id="left">left</span> <span class="button" id="middle">middle</span> <span class="button" id="right">right</span></p>
+  
+  <script type="text/javascript">
+    $w('left middle right').each(function(button) {
+      Event.observe(button, 'mousedown', function(e) {
+	  if (Event['is' + this.id.capitalize() + 'Click'](e)) this.passed('Squeak!')
+	  else this.failed('OH NO!');
+	  log(e);
+      });
+    });
+  </script>
+  
+  <p id="context">Context menu event (tries to prevent default)</p>
+  
+  <script type="text/javascript">
+    $('context').observe('contextmenu', function(e){
+      this.passed();
+      Event.stop(e);
+      log(e);
+    })
+  </script>
+
+  <p id="target">Event.element() test</p>
+  
+  <script type="text/javascript">
+    $('target').observe('click', function(e) {
+      if (e.element() == this && e.target == this) this.passed();
+      else this.failed();
+      log(e);
+    });
+  </script>
+
+  <p id="currentTarget"><span>Event.currentTarget test</span></p>
+  
+  <script type="text/javascript">
+    $('currentTarget').observe('click', function(e){
+      if (e.currentTarget !== this) this.failed();
+      else this.passed();
+      log(e);
+    })
+  </script>
+  
+  <p id="findElement"><span>Event.findElement() test</span></p>
+  
+  <script type="text/javascript">
+    $('findElement').observe('click', function(e){
+      if (e.findElement('p') == this && e.findElement('body') == document.body &&
+         e.findElement('foo') == null) this.passed();
+      else this.failed();
+      log(e);
+    })
+  </script>
+  
+  <div id="container"><p id="stop"><strong>Stop propagation</strong> test (bubbling)</p></div>
+  
+  <script type="text/javascript">
+    $('stop').observe('click', function(e){
+      e.stop();
+      this.passed();
+      log(e);
+    })
+    $('container').observe('click', function(e){
+      $('stop').failed();
+      log(e);
+    })
+  </script>
+  
+  <div>
+    <p id="keyup_log"><strong>Keyup</strong> test - focus on the textarea and type</p>
+    <textarea id="keyup" class="subtest"></textarea>
+  </div>
+  
+  <script type="text/javascript">
+    $('keyup').observe('keyup', function(e){
+      el = $('keyup_log');
+      el.passed('Key captured: the length is ' + $('keyup').value.length);
+      log(e);
+    })
+  </script>
+  
+  <p id="bind"><code>bindAsEventListener()</code> test</p>
+  
+  <script type="text/javascript">
+    $('bind').observe('click', function(e, str, arr){
+      el = $('bind')
+      try {
+        if (arguments.length != 3) throw arguments.length + ' arguments: ' + $A(arguments).inspect()
+        if (str != 'foo') throw 'wrong string: ' + str
+        if (arr.constructor != Array) throw '3rd parameter is not an array'
+        el.passed();
+      }
+      catch (err) { el.failed(err.toString()) }
+      log(e);
+    }.bindAsEventListener(document.body, 'foo', [1,2,3]))
+  </script>
+  
+  <p id="obj_inspect"><code>Object.inspect(event)</code> test</p>
+  
+  <script type="text/javascript">
+    $('obj_inspect').observe('click', function(e){
+      el = $('obj_inspect')
+      try { el.passed(Object.inspect(e)) }
+      catch (err) { el.failed('Failed! Error thrown') }
+      log(e);
+    })
+  </script>
+  
+  <p id="addunload">Add unload events</p>
+  
+  <script type="text/javascript">
+    $('addunload').observe('click', function(e){
+      if (this._done) return
+
+      window.onunload = function(){ alert('inline unload fired!') }
+      Event.observe(window, 'unload', function(){ alert('observed unload fired!') })
+
+      this.update('Registered two unload events, one inline ("onunload") and one regular - try to refresh, both should fire')
+      this._done = true
+      log(e);
+    })
+  </script>
+</body>
+</html>

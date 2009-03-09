@@ -42,7 +42,8 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(6F704E69-A5FB-11D9-8CE8-0011246ECD24)]
+[scriptable, uuid(83123036-81c0-47cb-8d9c-bd85d29a1b3f)]
+
 interface nsPISocketTransportService : nsISocketTransportService
 {
   /**
@@ -56,4 +57,10 @@ interface nsPISocketTransportService : nsISocketTransportService
    * the autodialer on connection failure.
    */
   attribute boolean autodialEnabled;
+
+  /**
+   * controls the TCP sender window clamp
+   */
+  readonly attribute long sendBufferSize;
+
 };

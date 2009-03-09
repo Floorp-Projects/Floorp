@@ -106,7 +106,7 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
     return NS_ERROR_ALREADY_INITIALIZED;
 
   // options: we only have one option so this is easy
-  int quality = 50;
+  int quality = 92;
   if (aOutputOptions.Length() > 0) {
     // have options string
     const nsString qualityPrefix(NS_LITERAL_STRING("quality="));

@@ -254,8 +254,10 @@
                 onget="return this._docShell || (this._docShell = this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell);"
                 readonly="true"/>
 
+      <field name="_webNavigation">null</field>
+
       <property name="webNavigation"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
+                onget="return this._webNavigation || (this._webNavigation = this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation));"
                 readonly="true"/>
 
       <field name="_webBrowserFind">null</field>
@@ -311,9 +313,11 @@
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
 
+      <field name="_contentWindow">null</field>
+
       <property name="contentWindow"
                 readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);"/>
+                onget="return this._contentWindow || (this._contentWindow = this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow));"/>
 
       <property name="sessionHistory"
                 onget="return this.webNavigation.sessionHistory;"
@@ -769,7 +773,7 @@
           <![CDATA[
             const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             var popup = document.createElementNS(XUL_NS, "popup");
-            popup.id = "autoscroller";
+            popup.className = "autoscroller";
             return popup;
           ]]>
         </body>
@@ -962,8 +966,9 @@
         <parameter name="aOtherBrowser"/>
         <body>
         <![CDATA[
-          // We need to swap fields that are tied to our docshell
-          var fieldsToSwap = [ "_docShell", "_webBrowserFind" ];
+          // We need to swap fields that are tied to our docshell or related to the loaded page
+          var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation",
+                               "mIconURL" ];
 
           var ourTabBrowser = this.getTabBrowser();
 
@@ -996,6 +1001,10 @@
       <handler event="keypress" keycode="VK_F7" group="system">
         <![CDATA[
           if (event.getPreventDefault() || !event.isTrusted)
+            return;
+
+          var isEnabled = this.mPrefs.getBoolPref("accessibility.browsewithcaret_shortcut.enabled");
+          if (!isEnabled)
             return;
 
           // Toggle browse with caret mode

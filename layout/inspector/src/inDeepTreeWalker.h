@@ -42,9 +42,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 class inIDOMUtils;
+class DeepTreeStackItem;
 
 class inDeepTreeWalker : public inIDeepTreeWalker
 {
@@ -65,7 +66,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mCurrentNode;
   PRUint32 mWhatToShow;
   
-  nsAutoVoidArray mStack;
+  nsAutoTArray<DeepTreeStackItem*, 8> mStack;
   nsCOMPtr<inIDOMUtils> mDOMUtils;
 };
 

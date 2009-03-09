@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2.5, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <text x="20" y="100" font-size="50px" fill="blue">Some Long Text Here
+    <animate attributeName="font-size" attributeType="CSS"
+             from="50px" to="25px" begin="0s" dur="2s" fill="freeze"/>
+  </text>
+</svg>

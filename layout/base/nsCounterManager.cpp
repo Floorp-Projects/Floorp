@@ -41,6 +41,7 @@
 #include "nsCounterManager.h"
 #include "nsBulletFrame.h" // legacy location for list style type to text code
 #include "nsContentUtils.h"
+#include "nsTArray.h"
 
 PRBool
 nsCounterUseNode::InitTextFrame(nsGenConList* aList,
@@ -98,20 +99,26 @@ nsCounterUseNode::GetText(nsString& aResult)
 {
     aResult.Truncate();
 
-    nsAutoVoidArray stack;
+    nsAutoTArray<nsCounterNode*, 8> stack;
     stack.AppendElement(static_cast<nsCounterNode*>(this));
 
     if (mAllCounters && mScopeStart)
         for (nsCounterNode *n = mScopeStart; n->mScopePrev; n = n->mScopeStart)
             stack.AppendElement(n->mScopePrev);
 
-    PRInt32 style = mCounterStyle->Item(mAllCounters ? 2 : 1).GetIntValue();
+    const nsCSSValue& styleItem = mCounterStyle->Item(mAllCounters ? 2 : 1);
+    PRInt32 style;
+    if (styleItem.GetUnit() == eCSSUnit_None) {
+        style = NS_STYLE_LIST_STYLE_NONE;
+    } else {
+        style = styleItem.GetIntValue();
+    }
     const PRUnichar* separator;
     if (mAllCounters)
         separator = mCounterStyle->Item(1).GetStringBufferValue();
 
-    for (PRInt32 i = stack.Count() - 1;; --i) {
-        nsCounterNode *n = static_cast<nsCounterNode*>(stack[i]);
+    for (PRUint32 i = stack.Length() - 1;; --i) {
+        nsCounterNode *n = stack[i];
         nsBulletFrame::AppendCounterText(style, n->mValueAfter, aResult);
         if (i == 0)
             break;

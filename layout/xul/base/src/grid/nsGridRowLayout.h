@@ -79,7 +79,7 @@ public:
 protected:
   virtual void ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState)=0;
 
-  nsGridRowLayout(nsIPresShell* aShell);
+  nsGridRowLayout();
 };
 
 #endif

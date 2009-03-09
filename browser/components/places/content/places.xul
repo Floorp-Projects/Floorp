@@ -389,6 +389,7 @@
       <textbox id="searchFilter"
                clickSelectsAll="true"
                type="search"
+               aria-controls="placeContent"
                oncommand="PlacesSearchBox.search(this.value);"
                collection="bookmarks">
       </textbox>
@@ -420,7 +421,7 @@
           <vbox id="searchModifiers" hidden="true">
             <toolbar id="organizerScopeBar" class="chromeclass-toolbar" align="center">
               <label id="scopeBarTitle" value="&search.label;"/>
-              <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar" 
+              <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                              label="&search.scopeFolder.label;"/>
               <toolbarbutton id="scopeBarAll" type="radio" group="scopeBar"
@@ -508,12 +509,13 @@
                 <vbox id="infoBox" minimal="true">
                   <vbox id="editBookmarkPanelContent"/>
                   <spacer flex="1"/>
-                  <hbox>
-#ifdef XP_WIN
+                  <hbox id="infoBoxExpanderWrapper" align="center">
+
                     <button type="image" id="infoBoxExpander"
                             class="expander-down"
                             oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
                             observes="paneElementsBroadcaster"/>
+
                     <label id="infoBoxExpanderLabel"
                            lesslabel="&detailsPane.less.label;"
                            lessaccesskey="&detailsPane.less.accesskey;"
@@ -522,17 +524,7 @@
                            value="&detailsPane.more.label;"
                            accesskey="&detailsPane.more.accesskey;"
                            control="infoBoxExpander"/>
-#else
-                    <button type="image" id="infoBoxExpander"
-                            lesslabel="&detailsPane.less.label;"
-                            lessaccesskey="&detailsPane.less.accesskey;"
-                            morelabel="&detailsPane.more.label;"
-                            moreaccesskey="&detailsPane.more.accesskey;"
-                            label="&detailsPane.more.label;"
-                            accesskey="&detailsPane.more.accesskey;"
-                            oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
-                            observes="paneElementsBroadcaster"/>
-#endif
+
                     <spacer flex="1"/>
                   </hbox>
                 </vbox>

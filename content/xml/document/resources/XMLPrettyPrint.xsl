@@ -36,7 +36,12 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://global/locale/xml/prettyprint.dtd">
+<!DOCTYPE overlay [
+  <!ENTITY % prettyPrintDTD SYSTEM "chrome://global/locale/xml/prettyprint.dtd">
+  %prettyPrintDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
 
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -47,7 +52,7 @@
   <xsl:template match="/">
     <link href="chrome://global/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
     <link title="Monospace" href="chrome://global/content/xml/XMLMonoPrint.css" type="text/css" rel="alternate stylesheet"/>
-    <div id="header">
+    <div id="header" dir="&locale.dir;">
       <p>
         &xml.nostylesheet;
       </p>

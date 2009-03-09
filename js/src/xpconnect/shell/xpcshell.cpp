@@ -45,8 +45,10 @@
 /* XPConnect JavaScript interactive shell. */
 
 #include <stdio.h>
+#include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "nsStringAPI.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsIInterfaceInfo.h"
@@ -55,18 +57,27 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsILocalFile.h"
+#include "nsStringAPI.h"
+#include "nsIDirectoryService.h"
+#include "nsILocalFile.h"
+#include "nsDirectoryServiceDefs.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsprf.h"
 #include "nscore.h"
 #include "nsMemory.h"
 #include "nsIGenericFactory.h"
+#include "nsISupportsImpl.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIXPCSecurityManager.h"
 #ifdef XP_MACOSX
 #include "xpcshellMacUtils.h"
+#endif
+#ifdef XP_WIN
+#include <windows.h>
 #endif
 
 #ifndef XPCONNECT_STANDALONE
@@ -77,13 +88,30 @@
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
 #include <errno.h>
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef HAVE_IO_H
 #include <io.h>     /* for isatty() */
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* for isatty() */
 #endif
 
 #include "nsIJSContextStack.h"
+
+class XPCShellDirProvider : public nsIDirectoryServiceProvider
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+
+    XPCShellDirProvider() { }
+    ~XPCShellDirProvider() { }
+
+    PRBool SetGREDir(const char *dir);
+    void ClearGREDir() { mGREDir = nsnull; }
+
+private:
+    nsCOMPtr<nsILocalFile> mGREDir;
+};
 
 /***************************************************************************/
 
@@ -96,6 +124,8 @@
 #endif
 
 /***************************************************************************/
+
+static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
@@ -110,6 +140,90 @@ static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
 
 JSPrincipals *gJSPrincipals = nsnull;
+nsAutoString *gWorkingDirectory = nsnull;
+
+static JSBool
+GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+#if (!defined(XP_WIN) && !defined(XP_UNIX)) || defined(WINCE)
+    //XXX: your platform should really implement this
+    return JS_FALSE;
+#else
+    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+    JSScript *script = JS_GetFrameScript(cx, fp);
+    const char *filename = JS_GetScriptFilename(cx, script);
+
+    if (filename) {
+        nsresult rv;
+        nsCOMPtr<nsIXPConnect> xpc =
+            do_GetService(kXPConnectServiceContractID, &rv);
+
+#if defined(XP_WIN)
+        // convert from the system codepage to UTF-16
+        int bufferSize = MultiByteToWideChar(CP_ACP, 0, filename,
+                                             -1, NULL, 0);
+        nsAutoString filenameString;
+        filenameString.SetLength(bufferSize);
+        MultiByteToWideChar(CP_ACP, 0, filename,
+                            -1, (LPWSTR)filenameString.BeginWriting(),
+                            filenameString.Length());
+        // remove the null terminator
+        filenameString.SetLength(bufferSize - 1);
+
+        // replace forward slashes with backslashes,
+        // since nsLocalFileWin chokes on them
+        PRUnichar *start, *end;
+
+        filenameString.BeginWriting(&start, &end);
+        
+        while (start != end) {
+            if (*start == L'/')
+                *start = L'\\';
+            start++;
+        }
+#elif defined(XP_UNIX)
+        NS_ConvertUTF8toUTF16 filenameString(filename);
+#endif
+
+        nsCOMPtr<nsILocalFile> location;
+        if (NS_SUCCEEDED(rv)) {
+            rv = NS_NewLocalFile(filenameString,
+                                 PR_FALSE, getter_AddRefs(location));
+        }
+
+        if (!location && gWorkingDirectory) {
+            // could be a relative path, try appending it to the cwd
+            // and then normalize
+            nsAutoString absolutePath(*gWorkingDirectory);
+            absolutePath.Append(filenameString);
+
+            rv = NS_NewLocalFile(absolutePath,
+                                 PR_FALSE, getter_AddRefs(location));
+        }
+
+        if (location) {
+            nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
+            JSObject *locationObj = NULL;
+
+            PRBool symlink;
+            // don't normalize symlinks, because that's kind of confusing
+            if (NS_SUCCEEDED(location->IsSymlink(&symlink)) &&
+                !symlink)
+                location->Normalize();
+            rv = xpc->WrapNative(cx, obj, location,
+                                 NS_GET_IID(nsILocalFile),
+                                 getter_AddRefs(locationHolder));
+
+            if (NS_SUCCEEDED(rv) &&
+                NS_SUCCEEDED(locationHolder->GetJSObject(&locationObj))) {
+                *vp = OBJECT_TO_JSVAL(locationObj);
+            }
+        }
+    }
+
+    return JS_TRUE;
+#endif
+}
 
 static JSBool
 GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
@@ -333,16 +447,20 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
         file = fopen(filename, "r");
+        if (!file) {
+            JS_ReportError(cx, "cannot open file '%s' for reading", filename);
+            return JS_FALSE;
+        }
         script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
                                                    gJSPrincipals);
+        fclose(file);
         if (!script)
-            ok = JS_FALSE;
-        else {
-            ok = !compileOnly
-                 ? JS_ExecuteScript(cx, obj, script, &result)
-                 : JS_TRUE;
-            JS_DestroyScript(cx, script);
-        }
+            return JS_FALSE;
+
+        ok = !compileOnly
+             ? JS_ExecuteScript(cx, obj, script, &result)
+             : JS_TRUE;
+        JS_DestroyScript(cx, script);
         if (!ok)
             return JS_FALSE;
     }
@@ -701,7 +819,6 @@ extern void     add_history(char *line);
 }
 #endif
 
-
 static void
 ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
             JSBool forceTTY)
@@ -715,7 +832,12 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
 
     if (forceTTY) {
         file = stdin;
-    } else if (!isatty(fileno(file))) {
+    }
+    else
+#ifdef HAVE_ISATTY
+    if (!isatty(fileno(file)))
+#endif
+    {
         /*
          * It's not interactive - just execute it.
          *
@@ -819,13 +941,15 @@ Process(JSContext *cx, JSObject *obj, const char *filename, JSBool forceTTY)
     }
 
     ProcessFile(cx, obj, filename, file, forceTTY);
+    if (file != stdin)
+        fclose(file);
 }
 
 static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -846,6 +970,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     if (rcfile) {
         printf("[loading '%s'...]\n", rcfilename);
         ProcessFile(cx, obj, rcfilename, rcfile, JS_FALSE);
+        fclose(rcfile);
     }
 
     /*
@@ -1395,6 +1520,44 @@ ContextCallback(JSContext *cx, uintN contextOp)
     return JS_TRUE;
 }
 
+static bool
+GetCurrentWorkingDirectory(nsAString& workingDirectory)
+{
+#if (!defined(XP_WIN) && !defined(XP_UNIX)) || defined(WINCE)
+    //XXX: your platform should really implement this
+    return false;
+#elif XP_WIN
+    DWORD requiredLength = GetCurrentDirectoryW(0, NULL);
+    workingDirectory.SetLength(requiredLength);
+    GetCurrentDirectoryW(workingDirectory.Length(),
+                         (LPWSTR)workingDirectory.BeginWriting());
+    // we got a trailing null there
+    workingDirectory.SetLength(requiredLength);
+    workingDirectory.Replace(workingDirectory.Length() - 1, 1, L'\\');
+#elif defined(XP_UNIX)
+    nsCAutoString cwd;
+    // 1024 is just a guess at a sane starting value
+    size_t bufsize = 1024;
+    char* result = nsnull;
+    while (result == nsnull) {
+        if (!cwd.SetLength(bufsize))
+            return false;
+        result = getcwd(cwd.BeginWriting(), cwd.Length());
+        if (!result) {
+            if (errno != ERANGE)
+                return false;
+            // need to make the buffer bigger
+            bufsize *= 2;
+        }
+    }
+    // size back down to the actual string length
+    cwd.SetLength(strlen(result) + 1);
+    cwd.Replace(cwd.Length() - 1, 1, '/');
+    workingDirectory = NS_ConvertUTF8toUTF16(cwd);
+#endif
+    return true;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1407,16 +1570,48 @@ main(int argc, char **argv, char **envp)
     int result;
     nsresult rv;
 
+#ifdef HAVE_SETBUF
     // unbuffer stdout so that output is in the correct order; note that stderr
     // is unbuffered by default
     setbuf(stdout, 0);
+#endif
 
     gErrFile = stderr;
     gOutFile = stdout;
     gInFile = stdin;
+
+    NS_LogInit();
+
+    nsCOMPtr<nsILocalFile> appFile;
+    rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(appFile));
+    if (NS_FAILED(rv)) {
+        printf("Couldn't figure application file.\n");
+        return 1;
+    }
+    nsCOMPtr<nsIFile> appDir;
+    rv = appFile->GetParent(getter_AddRefs(appDir));
+    if (NS_FAILED(rv)) {
+        printf("Couldn't get application directory.\n");
+        return 1;
+    }
+
+    XPCShellDirProvider dirprovider;
+
+    if (argc > 1 && !strcmp(argv[1], "-g")) {
+        if (argc < 3)
+            return usage();
+
+        if (!dirprovider.SetGREDir(argv[2])) {
+            printf("SetGREDir failed.\n");
+            return 1;
+        }
+        argc -= 2;
+        argv += 2;
+    }
+
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        rv = NS_InitXPCOM2(getter_AddRefs(servMan), appDir, &dirprovider);
         if (NS_FAILED(rv)) {
             printf("NS_InitXPCOM failed!\n");
             return 1;
@@ -1539,6 +1734,13 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        nsAutoString workingDirectory;
+        if (GetCurrentWorkingDirectory(workingDirectory))
+            gWorkingDirectory = &workingDirectory;
+
+        JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
+                          GetLocationProperty, NULL, 0);
+
         argc--;
         argv++;
 
@@ -1575,9 +1777,49 @@ main(int argc, char **argv, char **envp)
     bogus = nsnull;
 #endif
 
+    appDir = nsnull;
+    appFile = nsnull;
+    dirprovider.ClearGREDir();
+
+    NS_LogTerm();
+
 #ifdef XP_MACOSX
     FinishAutoreleasePool();
 #endif
 
     return result;
+}
+
+PRBool
+XPCShellDirProvider::SetGREDir(const char *dir)
+{
+    nsresult rv = XRE_GetFileFromPath(dir, getter_AddRefs(mGREDir));
+    return NS_SUCCEEDED(rv);
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+XPCShellDirProvider::AddRef()
+{
+    return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+XPCShellDirProvider::Release()
+{
+    return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE1(XPCShellDirProvider, nsIDirectoryServiceProvider)
+
+NS_IMETHODIMP
+XPCShellDirProvider::GetFile(const char *prop, PRBool *persistent,
+                             nsIFile* *result)
+{
+    if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {
+        *persistent = PR_TRUE;
+        NS_ADDREF(*result = mGREDir);
+        return NS_OK;
+    }
+
+    return NS_ERROR_FAILURE;
 }

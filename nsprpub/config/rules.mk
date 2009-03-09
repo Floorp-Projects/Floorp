@@ -106,13 +106,13 @@ endif
 #
 
 ifdef LIBRARY_NAME
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 
 #
 # Win95, Win16, and OS/2 require library names conforming to the 8.3 rule.
 # other platforms do not.
 #
-ifeq (,$(filter-out WIN95 OS2,$(OS_TARGET)))
+ifeq (,$(filter-out WIN95 WINCE OS2,$(OS_TARGET)))
 LIBRARY		= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION)_s.$(LIB_SUFFIX)
 SHARED_LIBRARY	= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
 IMPORT_LIBRARY	= $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).$(LIB_SUFFIX)
@@ -139,7 +139,7 @@ endif
 endif
 
 ifndef TARGETS
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 TARGETS		= $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifndef BUILD_OPT
 ifdef MSC_VER
@@ -349,7 +349,7 @@ ifeq ($(OS_TARGET), OpenVMS)
 	  fi; \
 	fi
 endif	# OpenVMS
-	$(MKSHLIB) $(OBJS) $(RES) $(EXTRA_LIBS)
+	$(MKSHLIB) $(OBJS) $(RES) $(LDFLAGS) $(EXTRA_LIBS)
 endif	# WINNT && !GCC
 endif	# AIX 4.1
 ifdef ENABLE_STRIP
@@ -401,18 +401,23 @@ endif
 
 ifdef NEED_ABSOLUTE_PATH
 PWD := $(shell pwd)
-abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
+# The quotes allow absolute paths to contain spaces.
+pr_abspath = "$(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))"
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
-	$(CCC) -Fo$@ -c $(CCCFLAGS) $(call abspath,$<)
+	$(CCC) -Fo$@ -c $(CCCFLAGS) $(call pr_abspath,$<)
+else
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINCE)
+	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
 else
 ifdef NEED_ABSOLUTE_PATH
-	$(CCC) -o $@ -c $(CCCFLAGS) $(call abspath,$<)
+	$(CCC) -o $@ -c $(CCCFLAGS) $(call pr_abspath,$<)
 else
 	$(CCC) -o $@ -c $(CCCFLAGS) $<
+endif
 endif
 endif
 
@@ -422,12 +427,16 @@ WCCFLAGS3 = $(subst -D,-d,$(WCCFLAGS2))
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
-	$(CC) -Fo$@ -c $(CFLAGS) $(call abspath,$<)
+	$(CC) -Fo$@ -c $(CFLAGS) $(call pr_abspath,$<)
+else
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINCE)
+	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
 ifdef NEED_ABSOLUTE_PATH
-	$(CC) -o $@ -c $(CFLAGS) $(call abspath,$<)
+	$(CC) -o $@ -c $(CFLAGS) $(call pr_abspath,$<)
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
+endif
 endif
 endif
 

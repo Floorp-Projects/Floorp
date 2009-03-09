@@ -183,20 +183,6 @@ extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
 /*
- * Convert int to C string. The buf must be big enough for MIN_INT to fit
- * including '-' and '\0'.
- */
-char *
-js_IntToCString(jsint i, jsint base, char *buf, size_t bufSize);
-
-/*
- * Convert a number to C string. The buf must be at least
- * DTOSTR_STANDARD_BUFFER_SIZE.
- */
-char *
-js_NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize);
-
-/*
  * Convert a value to a number. On exit JSVAL_IS_NULL(*vp) iff there was an
  * error. If on exit JSVAL_IS_NUMBER(*vp), then *vp holds the jsval that
  * matches the result. Otherwise *vp is JSVAL_TRUE indicating that the jsval

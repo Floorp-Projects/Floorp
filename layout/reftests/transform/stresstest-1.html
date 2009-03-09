@@ -1,0 +1,27 @@
+<html class="reftest-wait">
+  <head>
+      <script type="application/javascript">
+        function runtest() {
+          var iframe = document.getElementById("test");
+          var style = iframe.getAttribute("style");
+          // We depend on the transform being the last rule so clip the ending ';'
+          style = style.substring(0, style.length-1);
+
+          // Here, we add transform functions to explicitly undo the effects of
+          // each already-applied transform.  This should leave us with an
+          // effectively-untransformed iframe.
+          style = style + " scale(0.5, 0.25) translatex(-50px) rotate(-45deg) translate(-50px, -50px) skewx(135deg);"
+          iframe.setAttribute("style", style);
+          document.documentElement.className = "";
+        }
+      </script>
+  </head>
+  <body>
+    <iframe
+      src="square.html"
+      style="height: 200px; width: 300px; -moz-transform: skewx(45deg) translate(50px, 50px) rotate(45deg) translatex(50px) scale(2.0, 4.0);"
+      id="test"
+      onload="runtest();">
+    </iframe>
+  </body>
+</html>

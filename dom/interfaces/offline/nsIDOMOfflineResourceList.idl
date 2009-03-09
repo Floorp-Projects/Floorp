@@ -1,0 +1,136 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "domstubs.idl"
+
+interface nsIDOMDOMStringList;
+
+[scriptable, uuid(f394a721-66e9-46fc-bb24-b980bb732dd0)]
+interface nsIDOMOfflineResourceList : nsISupports
+{
+  /**
+   * Get the list of dynamically-managed entries.
+   */
+  readonly attribute nsIDOMDOMStringList mozItems;
+
+  /**
+   * Check that an entry exists in the list of dynamically-managed entries.
+   *
+   * @param uri
+   *        The resource to check.
+   */
+  boolean mozHasItem(in DOMString uri);
+
+  /**
+   * Get the number of dynamically-managed entries.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
+   */
+  readonly attribute unsigned long mozLength;
+
+  /**
+   * Get the URI of a dynamically-managed entry.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
+   */
+  DOMString mozItem(in unsigned long index);
+
+  /**
+   * Add an item to the list of dynamically-managed entries.  The resource
+   * will be fetched into the application cache.
+   *
+   * @param uri
+   *        The resource to add.
+   */
+  void mozAdd(in DOMString uri);
+
+  /**
+   * Remove an item from the list of dynamically-managed entries.  If this
+   * was the last reference to a URI in the application cache, the cache
+   * entry will be removed.
+   *
+   * @param uri
+   *        The resource to remove.
+   */
+  void mozRemove(in DOMString uri);
+
+  /**
+   * State of the application cache this object is associated with.
+   */
+
+  /* This object is not associated with an application cache. */
+  const unsigned short UNCACHED = 0;
+
+  /* The application cache is not being updated. */
+  const unsigned short IDLE = 1;
+
+  /* The manifest is being fetched and checked for updates */
+  const unsigned short CHECKING = 2;
+
+  /* Resources are being downloaded to be added to the cache */
+  const unsigned short DOWNLOADING = 3;
+
+  /* There is a new version of the application cache available */
+  const unsigned short UPDATEREADY = 4;
+
+  /* The application cache group is now obsolete. */
+  const unsigned short OBSOLETE = 5;
+
+  readonly attribute unsigned short status;
+
+  /**
+   * Begin the application update process on the associated application cache.
+   */
+  void update();
+
+  /**
+   * Swap in the newest version of the application cache, or disassociate
+   * from the cache if the cache group is obsolete.
+   */
+  void swapCache();
+
+  /* Events */
+  attribute nsIDOMEventListener onchecking;
+  attribute nsIDOMEventListener onerror;
+  attribute nsIDOMEventListener onnoupdate;
+  attribute nsIDOMEventListener ondownloading;
+  attribute nsIDOMEventListener onprogress;
+  attribute nsIDOMEventListener onupdateready;
+  attribute nsIDOMEventListener oncached;
+  attribute nsIDOMEventListener onobsolete;
+};

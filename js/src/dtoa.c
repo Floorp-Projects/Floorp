@@ -2990,7 +2990,7 @@ dtoa
 		ds = tens[k];
 		if (ndigits < 0 && ilim <= 0) {
 			S = mhi = 0;
-			if (ilim < 0 || dval(d) <= 5*ds)
+			if (ilim < 0 || dval(d) < 5*ds)
 				goto no_digits;
 			goto one_digit;
 			}
@@ -3137,7 +3137,7 @@ dtoa
 			}
 		}
 	if (ilim <= 0 && (mode == 3 || mode == 5)) {
-		if (ilim < 0 || cmp(b,S = multadd(S,5,0)) <= 0) {
+		if (ilim < 0 || cmp(b,S = multadd(S,5,0)) < 0) {
 			/* no digits, fcvt style */
  no_digits:
 			/* MOZILLA CHANGE: Always return a non-empty string. */
@@ -3273,7 +3273,7 @@ dtoa
 #endif
 	b = lshift(b, 1);
 	j = cmp(b, S);
-	if (j > 0 || (j == 0 && dig & 1)) {
+	if (j >= 0) {  /* ECMA compatible rounding needed by Spidermonkey */
  roundoff:
 		while(*--s == '9')
 			if (s == s0) {

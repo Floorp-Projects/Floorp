@@ -73,6 +73,8 @@ CHECK_VARS := \
  SHORT_LIBNAME \
  XPI_PKGNAME \
  INSTALL_EXTENSION_ID \
+ SHARED_LIBRARY_NAME \
+ STATIC_LIBRARY_NAME \
  $(NULL)
 
 # checks for internal spaces or trailing spaces in the variable
@@ -356,6 +358,18 @@ ifeq ($(OS_ARCH)_$(HAVE_GCC3_ABI),Darwin_1)
 DSO_PIC_CFLAGS=-mdynamic-no-pic
 else
 DSO_PIC_CFLAGS=
+endif
+endif
+
+ifndef SHARED_LIBRARY_NAME
+ifdef LIBRARY_NAME
+SHARED_LIBRARY_NAME=$(LIBRARY_NAME)
+endif
+endif
+
+ifndef STATIC_LIBRARY_NAME
+ifdef LIBRARY_NAME
+STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 
@@ -846,6 +860,10 @@ ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif
 
+ifeq ($(OS_ARCH),OS2)
+RUN_TEST_PROGRAM = $(topsrcdir)/testing/xpcshell/test_os2.cmd "$(DIST)"
+endif
+
 #
 # Java macros
 #
@@ -855,4 +873,9 @@ JAVAC_FLAGS += -source 1.4
 
 ifdef MOZ_DEBUG
 JAVAC_FLAGS += -g
+endif
+
+ifdef TIERS
+DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
+STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
 endif

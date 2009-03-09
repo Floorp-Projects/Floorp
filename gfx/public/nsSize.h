@@ -71,7 +71,6 @@ struct nsSize {
                                            return *this;}
 };
 
-#ifdef NS_COORD_IS_FLOAT
 struct nsIntSize {
   PRInt32 width, height;
 
@@ -79,10 +78,16 @@ struct nsIntSize {
   nsIntSize(const nsIntSize& aSize) {width = aSize.width; height = aSize.height;}
   nsIntSize(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
 
+  // Overloaded operators. Note that '=' isn't defined so we'll get the
+  // compiler generated default assignment operator
+  PRBool  operator==(const nsIntSize& aSize) const {
+    return (PRBool) ((width == aSize.width) && (height == aSize.height));
+  }
+  PRBool  operator!=(const nsIntSize& aSize) const {
+    return (PRBool) ((width != aSize.width) || (height != aSize.height));
+  }
+
   void SizeTo(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
 };
-#else
-typedef nsSize nsIntSize;
-#endif
 
 #endif /* NSSIZE_H */

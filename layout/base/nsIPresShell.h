@@ -79,7 +79,6 @@ class nsIRenderingContext;
 class nsIPageSequenceFrame;
 class nsString;
 class nsAString;
-class nsStringArray;
 class nsCaret;
 class nsStyleContext;
 class nsFrameSelection;
@@ -98,14 +97,15 @@ class nsWeakFrame;
 class nsIScrollableFrame;
 class gfxASurface;
 class gfxContext;
+class nsPIDOMEventTarget;
 
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 5c103bc2-788e-4bbe-b82e-635bea34e78f
+// fa7f090d-b19a-4ef8-9552-82992a3b4a83
 #define NS_IPRESSHELL_IID \
-{ 0x5c103bc2, 0x788e, 0x4bbe, \
-  { 0xb8, 0x2e, 0x63, 0x5b, 0xea, 0x34, 0xe7, 0x8f } }
+{ 0xfa7f090d, 0xb19a, 0x4ef8, \
+  { 0x95, 0x52, 0x82, 0x99, 0x2a, 0x3b, 0x4a, 0x83 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -123,8 +123,7 @@ typedef PRUint32 nsFrameState;
 #define VERIFY_REFLOW_DUMP_COMMANDS   0x08
 #define VERIFY_REFLOW_NOISY_RC        0x10
 #define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
-#define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
-#define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
+#define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x40
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -270,11 +269,9 @@ public:
   NS_IMETHOD EndObservingDocument() = 0;
 
   /**
-   * Determine if InitialReflow() was previously called.
-   * @param aDidInitialReflow PR_TRUE if InitalReflow() was previously called,
-   * PR_FALSE otherwise.
+   * Return whether InitialReflow() was previously called.
    */
-  NS_IMETHOD GetDidInitialReflow(PRBool *aDidInitialReflow) = 0;
+  PRBool DidInitialReflow() const { return mDidInitialReflow; }
 
   /**
    * Perform the initial reflow. Constructs the frame for the root content
@@ -696,6 +693,9 @@ public:
    */
   virtual void Thaw() = 0;
 
+  virtual void NeedsFocusOrBlurAfterSuppression(nsPIDOMEventTarget* aTarget, PRUint32 aEventType) = 0;
+  virtual void FireOrClearDelayedEvents(PRBool aFireEvents) = 0;
+
   /**
    * When this shell is disconnected from its containing docshell, we
    * lose our container pointer.  However, we'd still like to be able to target
@@ -716,19 +716,26 @@ public:
    * root frame's coordinate system (if aIgnoreViewportScrolling is false)
    * or in the root scrolled frame's coordinate system
    * (if aIgnoreViewportScrolling is true). The coordinates are in appunits.
-   * @param aUntrusted set to PR_TRUE if the contents may be passed to malicious
+   * @param aFlags see below;
+   *   set RENDER_IS_UNTRUSTED if the contents may be passed to malicious
    * agents. E.g. we might choose not to paint the contents of sensitive widgets
    * such as the file name in a file upload widget, and we might choose not
    * to paint themes.
-   * @param aIgnoreViewportScrolling ignore clipping/scrolling/scrollbar painting
-   * due to scrolling in the viewport
+   *   set RENDER_IGNORE_VIEWPORT_SCROLLING to ignore
+   * clipping/scrolling/scrollbar painting due to scrolling in the viewport
+   *   set RENDER_CARET to draw the caret if one would be visible
+   * (by default the caret is never drawn)
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext the gfxContext to render to. We render so that
    * one CSS pixel in the source document is rendered to one unit in the current
    * transform.
    */
-  NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
-                            PRBool aIgnoreViewportScrolling,
+  enum {
+    RENDER_IS_UNTRUSTED = 0x01,
+    RENDER_IGNORE_VIEWPORT_SCROLLING = 0x02,
+    RENDER_CARET = 0x04
+  };
+  NS_IMETHOD RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                             nscolor aBackgroundColor,
                             gfxContext* aRenderedContext) = 0;
 
@@ -740,8 +747,8 @@ public:
    */
   virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
                                                    nsIRegion* aRegion,
-                                                   nsPoint& aPoint,
-                                                   nsRect* aScreenRect) = 0;
+                                                   nsIntPoint& aPoint,
+                                                   nsIntRect* aScreenRect) = 0;
 
   /*
    * Renders a selection to a surface and returns it. This method is primarily
@@ -759,8 +766,8 @@ public:
    * as the position can be determined from the displayed frames.
    */
   virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
-                                                        nsPoint& aPoint,
-                                                        nsRect* aScreenRect) = 0;
+                                                        nsIntPoint& aPoint,
+                                                        nsIntRect* aScreenRect) = 0;
 
   void AddWeakFrame(nsWeakFrame* aWeakFrame);
   void RemoveWeakFrame(nsWeakFrame* aWeakFrame);
@@ -768,6 +775,24 @@ public:
 #ifdef NS_DEBUG
   nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
 #endif
+
+  /**
+   * Stop or restart non synthetic test mouse event handling on *all*
+   * presShells.
+   *
+   * @param aDisable If true, disable all non synthetic test mouse
+   * events on all presShells.  Otherwise, enable them.
+   */
+  NS_IMETHOD DisableNonTestMouseEvents(PRBool aDisable) = 0;
+
+  /* Record the background color of the most recently loaded canvas.
+   * This color is composited on top of the user's default background
+   * color whenever we need to provide an "ultimate" background color.
+   * See PresShell::Paint, PresShell::PaintDefaultBackground, and
+   * nsDocShell::SetupNewViewer; bug 476557 and other bugs mentioned there.
+   */
+  void SetCanvasBackground(nscolor aColor) { mCanvasBackgroundColor = aColor; }
+  nscolor GetCanvasBackground() { return mCanvasBackgroundColor; }
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
@@ -807,6 +832,9 @@ protected:
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
+
+  // Most recent canvas background color.
+  nscolor                   mCanvasBackgroundColor;
 };
 
 /**

@@ -41,6 +41,8 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIClipboardOwner.h"
+#include "nsClipboardPrivacyHandler.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 
 #include <qclipboard.h>
@@ -68,6 +70,7 @@ protected:
     nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
     nsCOMPtr<nsITransferable>   mSelectionTransferable;
     nsCOMPtr<nsITransferable>   mGlobalTransferable;
+    nsRefPtr<nsClipboardPrivacyHandler> mPrivacyHandler;
 };
 
 #endif // nsClipboard_h__

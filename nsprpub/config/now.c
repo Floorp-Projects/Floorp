@@ -42,7 +42,7 @@
 #include <sys/timeb.h>
 #elif defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 #include <sys/time.h>
-#elif defined(WIN32)
+#elif defined(_WIN32)
 #include <windows.h>
 #else
 #error "Architecture not supported"
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     fprintf(stdout, "%lld", now);
 #endif
 
-#elif defined(WIN32)
+#elif defined(_WIN32)
     __int64 now;
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);

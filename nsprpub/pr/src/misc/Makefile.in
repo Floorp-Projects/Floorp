@@ -94,9 +94,9 @@ ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 $(OBJDIR)/prdtoa.$(OBJ_SUFFIX): prdtoa.c
 	@$(MAKE_OBJDIR)
 ifeq (,$(filter-out 1100 1200 1300 1310,$(MSC_VER)))
-	$(CC) -Fo$@ -c $(CFLAGS) -Op $(call abspath,$<)
+	$(CC) -Fo$@ -c $(CFLAGS) -Op $(call pr_abspath,$<)
 else
-	$(CC) -Fo$@ -c $(CFLAGS) -fp:precise $(call abspath,$<)
+	$(CC) -Fo$@ -c $(CFLAGS) -fp:precise $(call pr_abspath,$<)
 endif
 endif
 

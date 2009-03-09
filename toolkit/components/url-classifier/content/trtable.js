@@ -53,9 +53,9 @@ function UrlClassifierTable() {
 UrlClassifierTable.prototype.QueryInterface = function(iid) {
   if (iid.equals(Components.interfaces.nsISupports) ||
       iid.equals(Components.interfaces.nsIUrlClassifierTable))
-    return this;                                              
-  Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-  return null;
+    return this;
+
+  throw Components.results.NS_ERROR_NO_INTERFACE;
 }
 
 /**

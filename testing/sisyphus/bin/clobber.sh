@@ -40,8 +40,18 @@
 source $TEST_DIR/bin/library.sh
 source $TEST_DIR/bin/set-build-env.sh $@
 
+if [[ ! -e "$BUILDDIR" ]]; then
+    echo "build directory \"$BUILDDIR\" doesn't exist, ignoring clobber"
+    exit
+fi 
+
 case $product in
     firefox|thunderbird|fennec)
+
+        if [[ ! -e "$executablepath" ]]; then
+            echo "executable path $executablepath doesn't exist, ignoring clobber"
+            exit
+        fi 
 
         if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clobber" 2>&1; then
             echo "error during client.mk clobber" $LINENO
@@ -52,27 +62,13 @@ case $product in
 
     js)
 
+        if [[ ! -e "$jsshellsourcepath" ]]; then
+            echo "javascript shell source path $jsshellsourcepath doesn't exist, ignoring clobber"
+            exit
+        fi 
         if [[ -e "$BUILDTREE/mozilla/js/src/configure.in" ]]; then
-
             rm -f $BUILDTREE/mozilla/js/src/configure
-            rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
-
-        elif [[ -e "$BUILDTREE/mozilla/js/src/Makefile.ref" ]]; then
-
-            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/editline; make -f Makefile.ref clobber" 2>&1; then
-                error "during editline clobber" $LINENO
-            fi
-
-            if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clobber" 2>&1; then
-                echo "error during SpiderMonkey clobber." $LINENO
-                echo "Forcing clobber" $LINENO
-                rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
-            fi
-
-        else
-
-            error "Neither Makefile.ref or autoconf builds available"
-
         fi
+        rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
         ;;
 esac

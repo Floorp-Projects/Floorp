@@ -1,0 +1,701 @@
+# -*- indent-tabs-mode: nil; -*-
+# vim: set sw=4 ts=8 et tw=78 ft=asm:
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the TraceMonkey IMacro Assembler.
+#
+# The Initial Developer of the Original Code is
+# Brendan Eich <brendan@mozilla.org>.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+.igroup equality JSOP_EQ-JSOP_NE
+
+    .imacro any_obj                     # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # any obj valueOf obj "void"
+        call 1                          # any obj rval
+        ifprimtop 3                     # any obj rval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any rval
+        primtop                         # any rval
+        goto 4                          # any rval
+3:      swap                            # any rval obj
+        pop                             # any rval
+4:      imacop                          # eqval
+        stop
+    .end
+
+    .imacro obj_any                     # obj any
+        swap                            # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # any obj valueOf obj "void"
+        call 1                          # any obj lval
+        ifprimtop 3                     # any obj lval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any lval
+        primtop                         # any rval
+        goto 4                          # any lval
+3:      swap                            # any lval obj
+        pop                             # any lval
+4:      swap                            # lval any
+        imacop                          # eqval
+        stop
+    .end
+
+.end
+
+.igroup binary JSOP_BITOR-JSOP_MOD
+
+    .imacro any_obj                     # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string number                   # any obj valueOf obj "number"
+        call 1                          # any obj rval
+        ifprimtop 3                     # any obj rval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any rval
+        primtop                         # any rval
+        goto 4                          # any rval
+3:      swap                            # any rval obj
+        pop                             # any rval
+4:      imacop                          # bval
+        stop
+    .end
+
+    .imacro obj_any                     # obj any
+        swap                            # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string number                   # any obj valueOf obj "number"
+        call 1                          # any obj lval
+        ifprimtop 3                     # any obj lval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any lval
+        primtop                         # any rval
+        goto 4                          # any lval
+3:      swap                            # any lval obj
+        pop                             # any lval
+4:      swap                            # lval any
+        imacop                          # bval
+        stop
+    .end
+
+    .imacro obj_obj                     # obj1 obj2
+        swap                            # obj2 obj1
+        dup                             # obj2 obj1 obj1
+        dup                             # obj2 obj1 obj1 obj1
+        getprop valueOf                 # obj2 obj1 obj1 valueOf
+        ifprimtop 1                     # obj2 obj1 obj1 valueOf
+        swap                            # obj2 obj1 valueOf obj1
+        string number                   # obj2 obj1 valueOf obj1 "number"
+        call 1                          # obj2 obj1 lval
+        ifprimtop 3                     # obj2 obj1 lval
+        goto 2
+1:      pop                             # obj2 obj1 obj1
+2:      pop                             # obj2 obj1
+        callprop toString               # obj2 toString obj1
+        call 0                          # obj2 lval
+        primtop                         # obj2 lval
+        goto 4                          # obj2 lval
+3:      swap                            # obj2 lval obj1
+        pop                             # obj2 lval
+4:      swap                            # lval obj2
+        dup                             # lval obj1 obj1
+        dup                             # lval obj obj obj
+        getprop valueOf                 # lval obj obj valueOf
+        ifprimtop 5                     # lval obj obj valueOf
+        swap                            # lval obj valueOf obj
+        string number                   # lval obj valueOf obj "number"
+        call 1                          # lval obj rval
+        ifprimtop 7                     # lval obj rval
+        goto 6
+5:      pop                             # lval obj obj
+6:      pop                             # lval obj
+        callprop toString               # lval toString obj
+        call 0                          # lval rval
+        primtop                         # lval rval
+        goto 8                          # lval rval
+7:      swap                            # lval rval obj
+        pop                             # lval rval
+8:      imacop                          # bval
+        stop
+    .end
+
+.end
+
+.igroup add JSOP_ADD
+
+    .imacro any_obj                     # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # any obj rval
+        ifprimtop 3                     # any obj rval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any rval
+        primtop                         # any rval
+        goto 4                          # any rval
+3:      swap                            # any rval obj
+        pop                             # any rval
+4:      add                             # aval
+        stop
+    .end
+
+    .imacro obj_any                     # obj any
+        swap                            # any obj
+        dup                             # any obj obj
+        dup                             # any obj obj obj
+        getprop valueOf                 # any obj obj valueOf
+        ifprimtop 1                     # any obj obj valueOf
+        swap                            # any obj valueOf obj
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # any obj lval
+        ifprimtop 3                     # any obj lval
+        goto 2
+1:      pop                             # any obj obj
+2:      pop                             # any obj
+        callprop toString               # any toString obj
+        call 0                          # any lval
+        primtop                         # any lval
+        goto 4                          # any lval
+3:      swap                            # any lval obj
+        pop                             # any lval
+4:      swap                            # lval any
+        add                             # aval
+        stop
+    .end
+
+    .imacro obj_obj                     # obj1 obj2
+        swap                            # obj2 obj1
+        dup                             # obj2 obj1 obj1
+        dup                             # obj2 obj1 obj1 obj1
+        getprop valueOf                 # obj2 obj1 obj1 valueOf
+        ifprimtop 1                     # obj2 obj1 obj1 valueOf
+        swap                            # obj2 obj1 valueOf obj1
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # obj2 obj1 lval
+        ifprimtop 3                     # obj2 obj1 lval
+        goto 2
+1:      pop                             # obj2 obj1 obj1
+2:      pop                             # obj2 obj1
+        callprop toString               # obj2 toString obj1
+        call 0                          # obj2 lval
+        primtop                         # obj2 lval
+        goto 4                          # obj2 lval
+3:      swap                            # obj2 lval obj1
+        pop                             # obj2 lval
+4:      swap                            # lval obj2
+        dup                             # lval obj1 obj1
+        dup                             # lval obj obj obj
+        getprop valueOf                 # lval obj obj valueOf
+        ifprimtop 5                     # lval obj obj valueOf
+        swap                            # lval obj valueOf obj
+        string void                     # lval obj valueOf obj "void"
+        call 1                          # lval obj rval
+        ifprimtop 7                     # lval obj rval
+        goto 6
+5:      pop                             # lval obj obj
+6:      pop                             # lval obj
+        callprop toString               # lval toString obj
+        call 0                          # lval rval
+        primtop                         # lval rval
+        goto 8                          # lval rval
+7:      swap                            # lval rval obj
+        pop                             # lval rval
+8:      add                             # aval
+        stop
+    .end
+
+.end
+
+.igroup unary JSOP_NEG-JSOP_POS
+
+    .imacro sign                        # obj
+        dup                             # obj obj
+        dup                             # obj obj obj
+        getprop valueOf                 # obj obj valueOf
+        ifprimtop 2                     # obj obj valueOf
+        swap                            # obj valueOf obj
+        string number                   # obj valueOf obj "number"
+        call 1                          # obj lval
+        ifprimtop 1                     # obj lval
+        goto 3                          # obj lval
+1:      swap                            # lval obj
+        pop                             # lval
+        goto 4                          # lval
+2:      pop                             # obj obj
+3:      pop                             # obj
+        callprop toString               # toString obj
+        call 0                          # lval
+        primtop                         # lval
+4:      imacop                          # aval
+        stop
+    .end
+
+.end
+
+.igroup apply JSOP_APPLY
+    .imacro apply0                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        pop                                 # fun this
+        call 0                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply1                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        pop                                 # fun this arg0
+        call 1                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply2                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        pop                                 # fun this arg0 arg1
+        call 2                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply3                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        pop                                 # fun this arg0 arg1 arg2
+        call 3                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply4                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3
+        call 4                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply5                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4
+        call 5                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply6                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arr arr
+        int8 5                              # fun this arg0 arg1 arg2 arg3 arg4 arr arr 5
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arr arg5
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5
+        call 6                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply7                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arr arr
+        int8 5                              # fun this arg0 arg1 arg2 arg3 arg4 arr arr 5
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arr arg5
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr
+        int8 6                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr 6
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arg6
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6
+        call 7                              #
+        stop                                #
+    .end                                    #
+
+    .imacro apply8                          # apply fun this arr
+        pick 3                              # fun this arr apply
+        pop                                 # fun this arr
+        dup                                 # fun this arr arr
+        zero                                # fun this arr arr 0
+        getelem                             # fun this arr arg0
+        swap                                # fun this arg0 arr
+        dup                                 # fun this arg0 arr arr
+        one                                 # fun this arg0 arr arr 1
+        getelem                             # fun this arg0 arr arg1
+        swap                                # fun this arg0 arg1 arr
+        dup                                 # fun this arg0 arg1 arr arr
+        int8 2                              # fun this arg0 arg1 arr arr 2
+        getelem                             # fun this arg0 arg1 arr arg2
+        swap                                # fun this arg0 arg1 arg2 arr
+        dup                                 # fun this arg0 arg1 arg2 arr arr
+        int8 3                              # fun this arg0 arg1 arg2 arr arr 3
+        getelem                             # fun this arg0 arg1 arg2 arr arg3
+        swap                                # fun this arg0 arg1 arg2 arg3 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arr arr
+        int8 4                              # fun this arg0 arg1 arg2 arg3 arr arr 4
+        getelem                             # fun this arg0 arg1 arg2 arg3 arr arg4
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arr arr
+        int8 5                              # fun this arg0 arg1 arg2 arg3 arg4 arr arr 5
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arr arg5
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr
+        int8 6                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arr 6
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arg5 arr arg6
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr
+        dup                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr arr
+        int8 7                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr arr 7
+        getelem                             # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arr arg7
+        swap                                # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arr
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7
+        call 8                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call0                           # call fun
+        swap                                # fun call
+        pop                                 # fun
+        nullthis                            # fun this
+        call 0                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call1                           # call fun this
+        pick 2                              # fun this call
+        pop                                 # fun this
+        call 0                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call2                           # call fun this arg0
+        pick 3                              # fun this arg0 call
+        pop                                 # fun this arg0
+        call 1                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call3                           # call fun this arg0 arg1
+        pick 4                              # fun this arg0 arg1 call
+        pop                                 # fun this arg0 arg1
+        call 2                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call4                           # call fun this arg0 arg1 arg2
+        pick 5                              # fun this arg0 arg1 arg2 call
+        pop                                 # fun this arg0 arg1 arg2
+        call 3                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call5                           # call fun this arg0 arg1 arg2 arg3
+        pick 6                              # fun this arg0 arg1 arg2 arg3 call
+        pop                                 # fun this arg0 arg1 arg2 arg3
+        call 4                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call6                           # call fun this arg0 arg1 arg2 arg3 arg4
+        pick 7                              # fun this arg0 arg1 arg2 arg3 arg4 call
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4
+        call 5                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call7                           # call fun this arg0 arg1 arg2 arg3 arg4 arg5
+        pick 8                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 call
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5
+        call 6                              #
+        stop                                #
+    .end                                    #
+
+    .imacro call8                           # call fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6
+        pick 9                              # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6 call
+        pop                                 # fun this arg0 arg1 arg2 arg3 arg4 arg5 arg6
+        call 7                              #
+        stop                                #
+    .end                                    #
+
+.end
+
+.igroup iter JSOP_ITER
+
+    .imacro for_in                                  # obj
+        callprop iterator                           # fun obj
+        int8 (JSITER_ENUMERATE)                     # fun obj flags
+        call 1                                      # iterobj
+        objtop (JSMSG_BAD_ITERATOR_RETURN)          # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+    .imacro for_each                                # obj
+        callprop iterator                           # fun obj
+        int8 (JSITER_ENUMERATE|JSITER_FOREACH)      # fun obj flags
+        call 1                                      # iterobj
+        objtop (JSMSG_BAD_ITERATOR_RETURN)          # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+    .imacro for_in_native                           # obj
+        callbuiltin (JSBUILTIN_ObjectToIterator)    # fun obj
+        int8 (JSITER_ENUMERATE)                     # fun obj flags
+        call 1                                      # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+    .imacro for_each_native                         # obj
+        callbuiltin (JSBUILTIN_ObjectToIterator)    # fun obj
+        int8 (JSITER_ENUMERATE|JSITER_FOREACH)      # fun obj flags
+        call 1                                      # iterobj
+        push                                        # iterobj undef
+        stop
+    .end
+
+.end
+
+.igroup nextiter JSOP_NEXTITER
+
+    .imacro custom_iter_next                        # iterobj prevval
+        pop                                         # iterobj
+        dup                                         # iterobj iterobj
+        callprop next                               # iterobj fun iterobj
+        call 0                                      # iterobj nextval
+        true                                        # iterobj nextval true
+        stop
+    .end
+
+    .imacro native_iter_next                        # iterobj prevval
+        pop                                         # iterobj
+        dup                                         # iterobj iterobj
+        callbuiltin (JSBUILTIN_CallIteratorNext)    # iterobj fun iterobj
+        call 0                                      # iterobj nextval?
+        dup                                         # iterobj nextval? nextval?
+        hole                                        # iterobj nextval? nextval? hole
+        strictne                                    # iterobj nextval? boolean
+        stop
+    .end
+
+.end
+
+.igroup getelem JSOP_GETELEM
+
+    .imacro getprop                                 # obj name
+        swap                                        # name obj
+        callbuiltin (JSBUILTIN_GetProperty)         # name fun obj
+        pick 2                                      # fun obj name
+        call 1                                      # propval
+        stop
+    .end
+
+    .imacro getelem                                 # obj i
+        swap                                        # i obj
+        callbuiltin (JSBUILTIN_GetElement)          # i fun obj
+        pick 2                                      # fun obj i
+        call 1                                      # propval
+        stop
+    .end
+
+.end
+
+.igroup setelem JSOP_SETELEM
+
+    .imacro setprop                                 # obj name val
+        dup                                         # obj name val val
+        pick 3                                      # name val val obj
+        callbuiltin (JSBUILTIN_SetProperty)         # name val val fun obj
+        pick 4                                      # val val fun obj name
+        pick 4                                      # val fun obj name val
+        call 2                                      # val junk
+        pop                                         # val
+        stop
+    .end
+
+    .imacro setelem                                 # obj i val
+        dup                                         # obj i val val
+        pick 3                                      # i val val obj
+        callbuiltin (JSBUILTIN_SetElement)          # i val val fun obj
+        pick 4                                      # val val fun obj i
+        pick 4                                      # val fun obj i val
+        call 2                                      # val junk
+        pop                                         # val
+        stop
+    .end
+
+.end
+
+.igroup initelem JSOP_INITELEM
+
+    .imacro initelem                                # obj i val
+        pick 2                                      # i val obj
+        dup                                         # i val obj obj
+        callbuiltin (JSBUILTIN_SetElement)          # i val obj fun obj
+        pick 4                                      # val obj fun obj i
+        pick 4                                      # obj fun obj i val
+        call 2                                      # obj junk
+        pop                                         # obj
+        stop
+    .end
+
+.end

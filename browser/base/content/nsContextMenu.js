@@ -1242,11 +1242,12 @@ nsContextMenu.prototype = {
            "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
   },
 
-  // Returns true if aNode is a from control (except text boxes).
+  // Returns true if aNode is a from control (except text boxes and images).
   // This is used to disable the context menu for form controls.
   isTargetAFormControl: function(aNode) {
     if (aNode instanceof HTMLInputElement)
-      return (aNode.type != "text" && aNode.type != "password");
+      return (aNode.type != "text" && aNode.type != "password" &&
+              aNode.type != "image");
 
     return (aNode instanceof HTMLButtonElement) ||
            (aNode instanceof HTMLSelectElement) ||

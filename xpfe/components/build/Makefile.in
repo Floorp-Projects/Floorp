@@ -77,32 +77,18 @@ SHARED_LIBRARY_LIBS += ../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../../browser/src
 endif
 
-# Suite specific includes
-ifdef MOZ_SUITE
+# Suite xpfe download manager includes
 ifdef SUITE_USING_XPFE_DM
-REQUIRES += downloadmanager
-endif
-
 REQUIRES	+= \
+		downloadmanager \
 		intl \
-		mork \
 		widget \
 		mimetype \
-		autocomplete \
 		$(NULL)
 
-SHARED_LIBRARY_LIBS += \
-	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
-	$(NULL)
-LOCAL_INCLUDES += \
-	-I$(srcdir)/../related/src       \
-	$(NULL)
-
-ifdef SUITE_USING_XPFE_DM
 SHARED_LIBRARY_LIBS += ../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../download-manager/src
 endif
-endif # MOZ_SUITE
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)

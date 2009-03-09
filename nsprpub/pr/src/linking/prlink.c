@@ -44,7 +44,7 @@
 #include <image.h>
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
 #include <CodeFragments.h>
 #include <TextUtils.h>
 #include <Types.h>
@@ -155,8 +155,8 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
 /*
  * On these platforms, symbols have a leading '_'.
  */
-#if defined(SUNOS4) || defined(DARWIN) || defined(NEXTSTEP) \
-    || defined(WIN16) || defined(XP_OS2) \
+#if defined(SUNOS4) || (defined(DARWIN) && defined(USE_MACH_DYLD)) \
+    || defined(NEXTSTEP) || defined(WIN16) || defined(XP_OS2) \
     || ((defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
@@ -179,7 +179,7 @@ struct PRLibrary {
 #endif
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
     CFragConnectionID           connection;
     CFBundleRef                 bundle;
     Ptr                         main;
@@ -210,28 +210,10 @@ static char* _pr_currentLibPath = NULL;
 
 static PRLibrary *pr_LoadLibraryByPathname(const char *name, PRIntn flags);
 
-#ifdef WIN95
-typedef HMODULE (WINAPI *LoadLibraryWFn)(LPCWSTR);
-static HMODULE WINAPI EmulateLoadLibraryW(LPCWSTR);
-static LoadLibraryWFn loadLibraryW = LoadLibraryW;
-#endif
-
-#ifdef WIN32
-static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len);
-#endif
-
 /************************************************************************/
 
 #if !defined(USE_DLFCN) && !defined(HAVE_STRERROR)
-static char* errStrBuf = NULL;
 #define ERR_STR_BUF_LENGTH    20
-static char* errno_string(PRIntn oserr)
-{
-    if (errStrBuf == NULL)
-        errStrBuf = PR_MALLOC(ERR_STR_BUF_LENGTH);
-    PR_snprintf(errStrBuf, ERR_STR_BUF_LENGTH, "error %d", oserr);
-    return errStrBuf;
-}
 #endif
 
 static void DLLErrorInternal(PRIntn oserr)
@@ -247,7 +229,9 @@ static void DLLErrorInternal(PRIntn oserr)
 #elif defined(HAVE_STRERROR)
     error = strerror(oserr);  /* this should be okay */
 #else
-    error = errno_string(oserr);
+    char errStrBuf[ERR_STR_BUF_LENGTH];
+    PR_snprintf(errStrBuf, sizeof(errStrBuf), "error %d", oserr);
+    error = errStrBuf;
 #endif
     if (NULL != error)
         PR_SetErrorText(strlen(error), error);
@@ -258,12 +242,6 @@ void _PR_InitLinker(void)
     PRLibrary *lm = NULL;
 #if defined(XP_UNIX)
     void *h;
-#endif
-
-#ifdef WIN95
-    if (!_pr_useUnicode) {
-        loadLibraryW = EmulateLoadLibraryW;
-    }
 #endif
 
     if (!pr_linker_lock) {
@@ -382,10 +360,6 @@ void _PR_ShutdownLinker(void)
         free(_pr_currentLibPath);
         _pr_currentLibPath = NULL;
     }
-
-#if !defined(USE_DLFCN) && !defined(HAVE_STRERROR)
-    PR_DELETE(errStrBuf);
-#endif
 }
 #endif
 
@@ -629,7 +603,7 @@ pr_LoadMachDyldModule(const char *name)
 }
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
 
 /*
 ** macLibraryLoadProc is a function definition for a Mac shared library
@@ -788,26 +762,7 @@ pr_LoadViaDyld(const char *name, PRLibrary *lm)
     return (lm->dlh != NULL || lm->image != NULL) ? PR_SUCCESS : PR_FAILURE;
 }
 
-#endif /* XP_MACOSX */
-
-#ifdef WIN95
-static HMODULE WINAPI
-EmulateLoadLibraryW(LPCWSTR lpLibFileName)
-{
-    HMODULE h;
-    char nameA[MAX_PATH];
-
-    if (!WideCharToMultiByte(CP_ACP, 0, lpLibFileName, -1,
-                             nameA, sizeof nameA, NULL, NULL)) {
-        return NULL;
-    }
-    /* Perhaps it's better to add a check for characters 
-     * not representable in CP_ACP.
-     */
-    h = LoadLibraryA(nameA);
-    return h;
-}
-#endif /* WIN95 */
+#endif /* XP_MACOSX && USE_MACH_DYLD */
 
 /*
 ** Dynamically load a library. Only load libraries once, so scan the load
@@ -848,11 +803,12 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
             goto unlock;
         }
     }
-    len = pr_ConvertUTF16toUTF8(wname, NULL, 0);
+    len = WideCharToMultiByte(CP_UTF8, 0, wname, -1, NULL, 0, NULL, NULL);
     if (len > MAX_PATH)
         utf8name = utf8name_malloc = PR_Malloc(len);
     if (utf8name == NULL ||
-        !pr_ConvertUTF16toUTF8(wname, utf8name, len)) {
+        !WideCharToMultiByte(CP_UTF8, 0, wname, -1,
+                             utf8name, len, NULL, NULL)) {
         oserr = _MD_ERRNO();
         goto unlock;
     }
@@ -891,42 +847,24 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif /* XP_OS2 */
 
-#if defined(WIN32) || defined(WIN16)
+#ifdef WIN32
     {
     HINSTANCE h;
 
-#ifdef WIN32
-#ifdef WIN95
-    if (flags & PR_LD_PATHW)
-        h = loadLibraryW(wname);
-    else
-        h = LoadLibraryA(name);
-#else
-    if (flags & PR_LD_PATHW)
-        h = LoadLibraryW(wname);
-    else
-        h = LoadLibraryA(name);
-#endif /* WIN95 */
-#else 
-    h = LoadLibrary(name);
-#endif
-    if (h < (HINSTANCE)HINSTANCE_ERROR) {
+    h = LoadLibraryW(wname);
+    if (h == NULL) {
         oserr = _MD_ERRNO();
         PR_DELETE(lm);
         goto unlock;
     }
-#ifdef WIN32
     lm->name = strdup(utf8name);
-#else
-    lm->name = strdup(name);
-#endif
     lm->dlh = h;
     lm->next = pr_loadmap;
     pr_loadmap = lm;
     }
-#endif /* WIN32 || WIN16 */
+#endif /* WIN32 */
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
     {
     int     i;
     PRStatus status;
@@ -954,7 +892,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#if defined(XP_UNIX) && !(defined(XP_MACOSX) && defined(USE_MACH_DYLD))
 #ifdef HAVE_DLL
     {
 #if defined(USE_DLFCN)
@@ -1018,7 +956,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     pr_loadmap = lm;
     }
 #endif /* HAVE_DLL */
-#endif /* XP_UNIX */
+#endif /* XP_UNIX && !(XP_MACOSX && USE_MACH_DYLD) */
 
     lm->refCount = 1;
 
@@ -1130,125 +1068,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     return result;
 }
 
-#ifdef WIN32
-#ifdef WIN95
-/*
- * CP_UTF8 is not supported by WideCharToMultiByte on Windows 95 so that 
- * we have to emulate it
- */
-static PRStatus 
-pr_ConvertSingleCharToUTF8(PRUint32 usv, PRUint16 offset, int bufLen,
-                           int *utf8Len, char * *buf)
-{
-    char* p = *buf;
-    PR_ASSERT(!bufLen || *buf);
-    if (!bufLen) {
-        *utf8Len += offset;
-        return PR_SUCCESS;
-    }
-
-    if (*utf8Len + offset >= bufLen)
-        return PR_FAILURE;
-
-    *utf8Len += offset;
-    if (offset == 1) {
-        *p++ = (char) usv;
-    } else if (offset == 2) {
-        *p++ = (char)0xc0 | (usv >> 6);
-        *p++ = (char)0x80 | (usv & 0x003f);
-    } else if (offset == 3) {
-        *p++ = (char)0xe0 | (usv >> 12);
-        *p++ = (char)0x80 | ((usv >> 6) & 0x003f);
-        *p++ = (char)0x80 | (usv & 0x003f);
-    } else { /* offset = 4 */
-        *p++ = (char)0xf0 | (usv >> 18);
-        *p++ = (char)0x80 | ((usv >> 12) & 0x003f);
-        *p++ = (char)0x80 | ((usv >> 6) & 0x003f);
-        *p++ = (char)0x80 | (usv & 0x003f);
-    }
-
-    *buf = p;
-    return PR_SUCCESS;
-}
-
-static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len)
-{
-    LPCWSTR pw = wname;
-    LPSTR p = name;
-    int utf8Len = 0;
-    PRBool highSurrogate = PR_FALSE;
-
-    utf8Len = WideCharToMultiByte(CP_UTF8, 0, wname, -1, name, len, 
-                                  NULL, NULL);
-    /*
-     * Windows 95 and NT 3.51 don't support CP_UTF8.
-     * WideCharToMultiByte(CP_UTF8, ...) fails with the error code
-     * ERROR_INVALID_PARAMETER on Windows 95 and NT 3.51.
-     */
-    if (utf8Len || GetLastError() != ERROR_INVALID_PARAMETER)
-        return utf8Len;
-
-    if (!wname || len < 0 || (len > 0 && !name)) {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    while (*pw) {
-        PRStatus status = PR_SUCCESS;
-        if (highSurrogate) {
-            if (*pw >= (PRUnichar) 0xDC00 && *pw < (PRUnichar) 0xE000) {
-                /* found a matching low surrogate */
-                /* convert a surrogate pair to UCS4 */
-                PRUint32 usv = ((*(pw-1) - (PRUnichar)0xD800) << 10) + 
-                               (*pw - (PRUnichar)0xDC00) + (PRUint32)0x10000;
-                if (pr_ConvertSingleCharToUTF8(usv, 4, len, &utf8Len, &p) ==
-                    PR_FAILURE)
-                    return 0;
-                highSurrogate = PR_FALSE;
-                ++pw;
-                continue;
-            } else {
-                /*
-                 * silently ignore a lone high surrogate
-                 * as is done by WideCharToMultiByte by default
-                 */
-                highSurrogate = PR_FALSE;
-            }
-        }
-        if (*pw <= 0x7f) 
-            status = pr_ConvertSingleCharToUTF8(*pw, 1, len, &utf8Len, &p);
-        else if (*pw <= 0x07ff)
-            status = pr_ConvertSingleCharToUTF8(*pw, 2, len, &utf8Len, &p);
-        else if (*pw < (PRUnichar) 0xD800 || *pw >= (PRUnichar) 0xE000)
-            status = pr_ConvertSingleCharToUTF8(*pw, 3, len, &utf8Len, &p);
-        else if (*pw < (PRUnichar) 0xDC00)
-            highSurrogate = PR_TRUE;
-        /* else */
-        /* silently ignore a lone low surrogate as is done by 
-         * WideCharToMultiByte by default */
-
-        if (status == PR_FAILURE) {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return 0;
-        }
-        ++pw;
-    }
-
-    /* if we're concerned with a lone high surrogate,
-     * we have to take care of it here, but we just drop it 
-     */
-    if (len > 0)
-        *p = '\0';
-    return utf8Len + 1;
-}
-#else
-static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len)
-{
-    return WideCharToMultiByte(CP_UTF8, 0, wname, -1, name, len, NULL, NULL);
-}
-#endif /* WIN95 */
-#endif /* WIN32 */
-
 /*
 ** Unload a shared library which was loaded via PR_LoadLibrary
 */
@@ -1299,7 +1118,7 @@ PR_UnloadLibrary(PRLibrary *lib)
     }
 #endif  /* XP_PC */
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
     /* Close the connection */
     if (lib->connection)
         CloseConnection(&(lib->connection));
@@ -1398,7 +1217,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     f = GetProcAddress(lm->dlh, name);
 #endif  /* WIN32 || WIN16 */
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
 /* add this offset to skip the leading underscore in name */
 #define SYM_OFFSET 1
     if (lm->bundle) {
@@ -1439,7 +1258,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
             f = NULL;
     }
 #undef SYM_OFFSET
-#endif /* XP_MACOSX */
+#endif /* XP_MACOSX && USE_MACH_DYLD */
 
 #ifdef XP_BEOS
     if( B_NO_ERROR != get_image_symbol( (image_id)lm->dlh, name, B_SYMBOL_TYPE_TEXT, &f ) ) {
@@ -1627,7 +1446,8 @@ PR_IMPLEMENT(char *)
 PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
 {
 #if defined(USE_DLFCN) && (defined(SOLARIS) || defined(FREEBSD) \
-        || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__))
+        || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
+        || defined(DARWIN))
     Dl_info dli;
     char *result;
 
@@ -1932,24 +1752,35 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
     }
     return result;
 #elif defined(WIN32)
-    HMODULE handle;
-    char module_name[MAX_PATH];
+    PRUnichar wname[MAX_PATH];
+    HMODULE handle = NULL;
+    PRUnichar module_name[MAX_PATH];
+    int len;
     char *result;
 
-    handle = GetModuleHandle(name);
+    if (MultiByteToWideChar(CP_ACP, 0, name, -1, wname, MAX_PATH)) {
+        handle = GetModuleHandleW(wname);
+    }
     if (handle == NULL) {
         PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
         DLLErrorInternal(_MD_ERRNO());
         return NULL;
     }
-    if (GetModuleFileName(handle, module_name, sizeof module_name) == 0) {
+    if (GetModuleFileNameW(handle, module_name, MAX_PATH) == 0) {
         /* should not happen */
         _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
         return NULL;
     }
-    result = PR_Malloc(strlen(module_name)+1);
+    len = WideCharToMultiByte(CP_ACP, 0, module_name, -1,
+                              NULL, 0, NULL, NULL);
+    if (len == 0) {
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(len * sizeof(PRUnichar));
     if (result != NULL) {
-        strcpy(result, module_name);
+        WideCharToMultiByte(CP_ACP, 0, module_name, -1,
+                            result, len, NULL, NULL);
     }
     return result;
 #elif defined(XP_OS2)

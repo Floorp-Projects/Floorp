@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        title="insertBefore - Weirdness"
+        onload="var atab = document.createElement('tab'); atab.setAttribute('label','new'); document.getElementById('tabs-id').insertBefore(atab,document.getElementById('tabs-id').lastChild);" >
+<tabbox>
+ <tabs id="tabs-id">
+  <tab label="foo" />
+  <tab label="bar" />
+ </tabs>
+ <tabpanels>
+  <tabpanel>
+   <vbox>
+    <label value="foo"/>
+   </vbox>
+  </tabpanel>
+  <tabpanel>
+   <vbox>
+    <label value="bar"/>
+   </vbox>
+  </tabpanel>
+ </tabpanels>
+</tabbox>
+</window>

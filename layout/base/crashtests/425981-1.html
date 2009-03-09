@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+div:first-letter { float: left; }
+</style>
+<script>
+function boom()
+{
+  var v = document.getElementById("v");
+  var t = v.firstChild;
+  v.appendChild(document.createTextNode(" "));
+  v.removeChild(t);
+}
+</script>
+</head>
+<body onload="boom();"><div id="v" style="-moz-column-count: 2; width: 1px;">a b</div></body>
+</html>

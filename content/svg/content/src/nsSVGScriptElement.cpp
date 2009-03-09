@@ -85,7 +85,7 @@ public:
   virtual PRBool HasScriptContent();
 
   // nsSVGElement specializations:
-  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeString(PRUint8 aAttrEnum);
 
   // nsIContent specializations:
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -101,10 +101,6 @@ protected:
   enum { HREF };
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
-
-  PRUint32 mLineNumber;
-  PRPackedBool mIsEvaluated;
-  PRPackedBool mEvaluating;
 };
 
 nsSVGElement::StringInfo nsSVGScriptElement::sStringInfo[1] =
@@ -132,10 +128,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 // Implementation
 
 nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo)
-  : nsSVGScriptElementBase(aNodeInfo),
-    mLineNumber(0),
-    mIsEvaluated(PR_FALSE),
-    mEvaluating(PR_FALSE)
+  : nsSVGScriptElementBase(aNodeInfo)
 {
   AddMutationObserver(this);
 }
@@ -143,7 +136,30 @@ nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo)
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGScriptElement)
+nsresult
+nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+{
+  *aResult = nsnull;
+
+  nsSVGScriptElement* it = new nsSVGScriptElement(aNodeInfo);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsINode> kungFuDeathGrip = it;
+  nsresult rv = it->Init();
+  rv |= CopyInnerTo(it);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The clone should be marked evaluated if we are.
+  it->mIsEvaluated = mIsEvaluated;
+  it->mLineNumber = mLineNumber;
+  it->mMalformed = mMalformed;
+
+  kungFuDeathGrip.swap(*aResult);
+
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGScriptElement methods
@@ -189,7 +205,8 @@ already_AddRefed<nsIURI>
 nsSVGScriptElement::GetScriptURI()
 {
   nsIURI *uri = nsnull;
-  const nsString &src = mStringAttributes[HREF].GetAnimValue();
+  nsAutoString src;
+  mStringAttributes[HREF].GetAnimValue(src, this);
   if (!src.IsEmpty()) {
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     NS_NewURI(&uri, src, nsnull, baseURI);
@@ -221,7 +238,9 @@ nsSVGScriptElement::GetScriptDeferred()
 PRBool
 nsSVGScriptElement::HasScriptContent()
 {
-  return !mStringAttributes[HREF].GetAnimValue().IsEmpty() ||
+  nsAutoString str;
+  mStringAttributes[HREF].GetAnimValue(str, this);
+  return !str.IsEmpty() ||
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 
@@ -229,9 +248,9 @@ nsSVGScriptElement::HasScriptContent()
 // nsSVGElement methods
 
 void
-nsSVGScriptElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGScriptElement::DidChangeString(PRUint8 aAttrEnum)
 {
-  nsSVGScriptElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
+  nsSVGScriptElementBase::DidChangeString(aAttrEnum);
 
   if (aAttrEnum == HREF) {
     MaybeProcessScript();
@@ -271,3 +290,4 @@ nsSVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   return NS_OK;
 }
+

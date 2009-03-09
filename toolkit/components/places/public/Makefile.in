@@ -60,6 +60,7 @@ XPIDLSRCS += \
   nsIDynamicContainer.idl \
   nsITaggingService.idl  \
   nsPIPlacesDatabase.idl \
+  nsPIPlacesHistoryListenersNotifier.idl \
   $(NULL)
 endif
 

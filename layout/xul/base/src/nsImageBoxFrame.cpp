@@ -207,7 +207,7 @@ nsImageBoxFrame::Destroy()
 {
   // Release image loader first so that it's refcnt can go to zero
   if (mImageRequest)
-    mImageRequest->Cancel(NS_ERROR_FAILURE);
+    mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
 
   if (mListener)
     reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
@@ -543,7 +543,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
 
 NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container,
                                             gfxIImageFrame *newframe,
-                                            nsRect * dirtyRect)
+                                            nsIntRect *dirtyRect)
 {
   nsBoxLayoutState state(PresContext());
   this->Redraw(state);
@@ -591,7 +591,7 @@ NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
 
 NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIContainer *container,
                                                gfxIImageFrame *newframe,
-                                               nsRect * dirtyRect)
+                                               nsIntRect *dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;

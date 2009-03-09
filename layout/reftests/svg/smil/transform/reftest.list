@@ -1,0 +1,12 @@
+# Tests related to SVG Animation (using SMIL), focusing on the animateTransform
+# element.
+
+== rotate-angle-1.svg rotate-angle-ref.svg
+== rotate-angle-2.svg rotate-angle-ref.svg
+== rotate-angle-3.svg rotate-angle-ref.svg
+== rotate-angle-4.svg rotate-angle-ref.svg
+== rotate-angle-5.svg rotate-angle-ref.svg
+== scale-1.svg scale-1-ref.svg
+== skew-1.svg skew-1-ref.svg
+== paced-1.svg paced-1-ref.svg
+== additive-1.svg additive-1-ref.svg

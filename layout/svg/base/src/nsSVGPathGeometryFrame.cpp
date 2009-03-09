@@ -53,18 +53,17 @@
 
 nsIFrame*
 NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell,
-                           nsIContent* aContent,
                            nsStyleContext* aContext)
 {
   return new (aPresShell) nsSVGPathGeometryFrame(aContext);
 }
 
 //----------------------------------------------------------------------
-// nsISupports methods
+// nsQueryFrame methods
 
-NS_INTERFACE_MAP_BEGIN(nsSVGPathGeometryFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
+NS_QUERYFRAME_HEAD(nsSVGPathGeometryFrame)
+  NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGPathGeometryFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods

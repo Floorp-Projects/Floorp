@@ -125,12 +125,12 @@ NSView* nsFilePicker::GetAccessoryView()
 
   // set up popup button
   NSPopUpButton* popupButton = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 0, 0) pullsDown:NO] autorelease];
-  PRInt32 numMenuItems = mTitles.Count();
-  for (int i = 0; i < numMenuItems; i++) {
-    const nsString& currentTitle = *mTitles[i];
+  PRUint32 numMenuItems = mTitles.Length();
+  for (PRUint32 i = 0; i < numMenuItems; i++) {
+    const nsString& currentTitle = mTitles[i];
     NSString *titleString;
     if (currentTitle.IsEmpty()) {
-      const nsString& currentFilter = *mFilters[i];
+      const nsString& currentFilter = mFilters[i];
       titleString = [[NSString alloc] initWithCharacters:currentFilter.get()
                                                   length:currentFilter.Length()];
     }
@@ -198,11 +198,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   switch (mMode)
   {
     case modeOpen:
-      userClicksOK = GetLocalFiles(mTitle, PR_FALSE, mFiles);
+      userClicksOK = GetLocalFiles(mTitle, mDefault, PR_FALSE, mFiles);
       break;
     
     case modeOpenMultiple:
-      userClicksOK = GetLocalFiles(mTitle, PR_TRUE, mFiles);
+      userClicksOK = GetLocalFiles(mTitle, mDefault, PR_TRUE, mFiles);
       break;
       
     case modeSave:
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog. 
 PRInt16
-nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
+nsFilePicker::GetLocalFiles(const nsString& inTitle, const nsString& inDefaultName, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -251,6 +251,9 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   if (!filters)
     [thePanel setTreatsFilePackagesAsDirectories:NO];       
 
+  // set up default file name
+  NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)inDefaultName.get() length:inDefaultName.Length()];
+
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   
@@ -262,7 +265,8 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   }
 
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  int result = [thePanel runModalForDirectory:theDir file:nil types:filters];  
+  int result = [thePanel runModalForDirectory:theDir file:defaultFilename
+                types:filters];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
   
   if (result == NSFileHandlingPanelCancelButton)
@@ -414,25 +418,25 @@ nsFilePicker::GenerateFilterList()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSArray *filterArray = nil;
-  if (mFilters.Count() > 0) {
+  if (mFilters.Length() > 0) {
     // Set up our filter string
     NSMutableString *giantFilterString = [[[NSMutableString alloc] initWithString:@""] autorelease];
 
     // Loop through each of the filter strings
-    for (PRInt32 loop = 0; loop < mFilters.Count(); loop++) {
-      nsString *filterWide = mFilters[loop];
+    for (PRUint32 loop = 0; loop < mFilters.Length(); loop++) {
+      const nsString& filterWide = mFilters[loop];
 
       // separate individual filters
       if ([giantFilterString length] > 0)
         [giantFilterString appendString:[NSString stringWithString:@";"]];
 
       // handle special case filters
-      if (filterWide->Equals(NS_LITERAL_STRING("*"))) {
+      if (filterWide.Equals(NS_LITERAL_STRING("*"))) {
         // if we'll allow all files, we won't bother parsing all other
         // file types. just return early.
         return nil;
       }
-      else if (filterWide->Equals(NS_LITERAL_STRING("..apps"))) {
+      else if (filterWide.Equals(NS_LITERAL_STRING("..apps"))) {
         // this magic filter means that we should enable app bundles.
         // translate it into a usable filter, and continue looping through 
         // other filters.
@@ -440,8 +444,8 @@ nsFilePicker::GenerateFilterList()
         continue;
       }
       
-      if (filterWide && filterWide->Length() > 0)
-        [giantFilterString appendString:[NSString stringWithCharacters:filterWide->get() length:filterWide->Length()]];
+      if (filterWide.Length() > 0)
+        [giantFilterString appendString:[NSString stringWithCharacters:filterWide.get() length:filterWide.Length()]];
     }
     
     // Now we clean stuff up.  Get rid of white spaces, "*"'s, and the odd period or two.
@@ -559,8 +563,8 @@ NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  mFilters.AppendString(aFilter);
-  mTitles.AppendString(aTitle);
+  mFilters.AppendElement(aFilter);
+  mTitles.AppendElement(aTitle);
   
   return NS_OK;
 }

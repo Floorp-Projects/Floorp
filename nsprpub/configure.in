@@ -49,8 +49,8 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=7
-MOD_PATCH_VERSION=2
+MOD_MINOR_VERSION=8
+MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -384,7 +384,7 @@ if test -n "$MOZ_DEBUG"; then
     beos*)
         DEFINES="$DEFINES -DDEBUG_${USER}"
         ;;
-    msvc*|mks*|cygwin*|mingw*|os2*)
+    msvc*|mks*|cygwin*|mingw*|wince*|os2*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -651,6 +651,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
+        wince*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin ;;
     esac
 else
@@ -817,7 +818,7 @@ case "$host" in
 *-mingw*)
     NSINSTALL=nsinstall
     ;;
-*-cygwin*|*-msvc*|*-mks*)
+*-cygwin*|*-msvc*|*-mks*|*-wince*)
     NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
     if test `echo "${PATH}" | grep -c \;` = 0; then
         CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
@@ -1100,11 +1101,7 @@ tools are selected during the Xcode/Developer Tools installation.])
                     MACOS_SDK_LIBS="-Wl,-syslibroot,${MACOS_SDK_DIR}"
                 fi
 
-                dnl LDFLAGS is for the utilities built in config (now and
-                dnl nsinstall).  DSO_LDOPTS is used when linking shared
-                dnl libraries.
                 LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
-                DSO_LDOPTS="${MACOS_SDK_LIBS} $DSO_LDOPTS"
                 export NEXT_ROOT=$MACOS_SDK_DIR
 
                 if test -n "$CROSS_COMPILE" ; then
@@ -1126,19 +1123,14 @@ tools are selected during the Xcode/Developer Tools installation.])
                 dnl has an ld that supports -syslibroot.  Don't set
                 dnl NEXT_ROOT because it will be ignored and cause
                 dnl warnings when -syslibroot is specified.
-                dnl
-                dnl Both LDFLAGS and DSO_LDOPTS are set here, see the
-                dnl gcc < 4.0 case for the explanation.
                 if test "$GCC_VERSION_FULL" != "4.0.0" ; then
                     dnl gcc > 4.0.0 will pass -syslibroot to ld automatically
                     dnl based on the -isysroot it receives.
                     LDFLAGS="$LDFLAGS -isysroot ${MACOS_SDK_DIR}"
-                    DSO_LDOPTS="$DSO_LDOPTS -isysroot ${MACOS_SDK_DIR}"
                 else
                     dnl gcc 4.0.0 doesn't pass -syslibroot to ld, it needs
                     dnl to be explicit.
                     LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
-                    DSO_LDOPTS="$DSO_LDOPTS -Wl,-syslibroot,${MACOS_SDK_DIR}"
                 fi
             fi
         fi
@@ -1684,6 +1676,36 @@ tools are selected during the Xcode/Developer Tools installation.])
 
     ;;
 
+*-wince*)
+    AC_DEFINE(XP_PC)
+    AC_DEFINE(WIN32)
+    AC_DEFINE(WINCE)
+    AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
+
+    AR='lib -NOLOGO -OUT:"$@"'
+    AR_FLAGS=
+
+    OBJ_SUFFIX=obj
+    LIB_SUFFIX=lib
+    DLL_SUFFIX=dll
+    MKSHLIB='$(LD) -DLL $(DSO_LDOPTS) -OUT:$@'
+
+    PR_MD_ARCH_DIR=windows
+    RESOLVE_LINK_SYMBOLS=1
+
+    MDCPUCFG_H=_win95.cfg
+    LIBNSPR='$(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+    LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+
+    DLLFLAGS='-OUT:"$@"'
+    if test -n "$MOZ_DEBUG_SYMBOLS"; then
+        OS_LDFLAGS=-DEBUG -DEBUGTYPE:CV
+        OS_DLLFLAGS=-DEBUG -DEBUGTYPE:CV
+        DSO_LDOPTS=-DEBUG -DEBUGTYPE:CV
+    fi
+    _DEBUG_FLAGS=-Zi
+    ;;
+
 *-ncr-sysv*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(SVR4)
@@ -1729,7 +1751,9 @@ mips-nec-sysv*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(NETBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
-    USE_NSPR_THREADS=1
+    if test -z "$USE_NSPR_THREADS"; then
+        USE_PTHREADS=1
+    fi
     MDCPUCFG_H=_netbsd.cfg
     PR_MD_CSRCS=netbsd.c
 
@@ -1827,7 +1851,7 @@ mips-sony-newsos*)
     AR_FLAGS='c $@'
     MDCPUCFG_H=_openvms.cfg
     PR_MD_CSRCS=openvms.c
-    DSO_LDOPTS='-shared -auto_symvec $(LDFLAGS)'
+    DSO_LDOPTS='-shared -auto_symvec'
     if test -n "$MOZ_DEBUG"; then
       DSO_LDOPTS="$DSO_LDOPTS $_DEBUG_FLAGS"
     else
@@ -1989,15 +2013,29 @@ mips-sony-newsos*)
     LD=/usr/ccs/bin/ld
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     RESOLVE_LINK_SYMBOLS=1
+    case "${OS_RELEASE}" in
+    5.8|5.9)
+        ;;
+    *)
+        # It is safe to use the -Bdirect linker flag on Solaris 10 or later.
+        USE_B_DIRECT=1
+        ;;
+    esac
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
         if `$CC -print-prog-name=ld` -v 2>&1 | grep -c GNU >/dev/null; then
             GCC_USE_GNU_LD=1
         fi
-        DSO_LDOPTS='-shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs,-z,ignore,-Bdirect' 
+        DSO_LDOPTS='-shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs,-z,ignore' 
+        if test -n "$USE_B_DIRECT"; then
+            DSO_LDOPTS="$DSO_LDOPTS,-Bdirect"
+        fi
     else
         DSO_CFLAGS=-KPIC
-        DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs -z ignore -Bdirect'
+        DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs -z ignore'
+        if test -n "$USE_B_DIRECT"; then
+            DSO_LDOPTS="$DSO_LDOPTS -Bdirect"
+        fi
     fi
     if test -n "$GNU_CC"; then
         CFLAGS="$CFLAGS -Wall"
@@ -2149,7 +2187,7 @@ mips-sony-newsos*)
     CXXFLAGS="$CFLAGS -Wall -Zomf"
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     DSO_CFLAGS=
-    DSO_LDOPTS='-Zomf -Zdll -Zmap'
+    DSO_LDOPTS='-Zomf -Zdll'
     LDFLAGS='-Zmap'
     _OPTIMIZE_FLAGS="-O2 -s"
     _DEBUG_FLAGS="-g -fno-inline"
@@ -2160,7 +2198,6 @@ mips-sony-newsos*)
     IMPLIB='emximp -o'
     FILTER='emxexp -o'
     if test -n "$MOZ_OS2_HIGH_MEMORY"; then
-      DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
       LDFLAGS="$LDFLAGS -Zhigh-mem"
       AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
     fi
@@ -2594,8 +2631,8 @@ case "$target" in
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-*-mingw*|*-cygwin*|*-msvc*|*-mks*|*-os2*|*-beos*)
-    dnl win32, os2 & beos cannot use pthreads
+*-mingw*|*-cygwin*|*-msvc*|*-mks*|*-wince*|*-os2*|*-beos*)
+    dnl win32, wince, os2 & beos cannot use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=

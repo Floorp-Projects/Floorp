@@ -221,6 +221,9 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
         aFontStyle->weight = FONT_WEIGHT_NORMAL;
     }
 
+    // FIXME: Set aFontStyle->stretch correctly!
+    aFontStyle->stretch = NS_FONT_STRETCH_NORMAL;
+
     // similar hopes for italic and oblique fonts...
     NS_NAMED_LITERAL_CSTRING(spcItalic, " Italic");
     NS_NAMED_LITERAL_CSTRING(spcOblique, " Oblique");

@@ -50,8 +50,10 @@
 #include "nsUConvDll.h"
 #include "prmem.h"
 #include "nsCRT.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsStringEnumerator.h"
+#include "nsThreadUtils.h"
+#include "nsIProxyObjectManager.h"
 
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -301,7 +303,7 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCStringArray* array = new nsCStringArray;
+  nsTArray<nsCString>* array = new nsTArray<nsCString>;
   if (!array)
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -330,7 +332,7 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
     if (NS_FAILED(rv)) 
       continue;
 
-    rv = array->AppendCString(alias);
+    rv = array->AppendElement(alias) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
     
   return NS_NewAdoptingUTF8StringEnumerator(aResult, array);
@@ -369,6 +371,18 @@ nsCharsetConverterManager::GetCharsetAlias(const char * aCharset,
   NS_PRECONDITION(aCharset, "null param");
   if (!aCharset)
     return NS_ERROR_NULL_POINTER;
+
+  // We must not use the charset alias from a background thread
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsICharsetConverterManager> self;
+    nsresult rv =
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsICharsetConverterManager),
+                         this, NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                         getter_AddRefs(self));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return self->GetCharsetAlias(aCharset, aResult);
+  }
 
   // We try to obtain the preferred name for this charset from the charset 
   // aliases. If we don't get it from there, we just use the original string

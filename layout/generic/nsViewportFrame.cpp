@@ -224,16 +224,15 @@ ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) c
 
   // Get our prinicpal child frame and see if we're scrollable
   nsIFrame* kidFrame = mFrames.FirstChild();
-  nsCOMPtr<nsIScrollableFrame> scrollingFrame(do_QueryInterface(kidFrame));
+  nsIScrollableFrame *scrollingFrame = do_QueryFrame(kidFrame);
 
   if (scrollingFrame) {
     nsMargin scrollbars = scrollingFrame->GetActualScrollbarSizes();
     aReflowState->SetComputedWidth(aReflowState->ComputedWidth() -
                                    scrollbars.LeftRight());
     aReflowState->availableWidth -= scrollbars.LeftRight();
-    aReflowState->SetComputedHeight(aReflowState->ComputedHeight() -
-                                    scrollbars.TopBottom());
-    // XXX why don't we also adjust "aReflowState->availableHeight"?
+    aReflowState->SetComputedHeightWithoutResettingResizeFlags(
+      aReflowState->ComputedHeight() - scrollbars.TopBottom());
     return nsPoint(scrollbars.left, scrollbars.top);
   }
   return nsPoint(0, 0);
@@ -278,7 +277,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
                                          kidFrame, availableSpace);
 
       // Reflow the frame
-      kidReflowState.SetComputedHeight(aReflowState.availableHeight);
+      kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
       rv = ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                        0, 0, 0, aStatus);
       kidHeight = kidDesiredSize.height;
@@ -296,8 +295,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.width = aReflowState.availableWidth;
   // Being flowed initially at an unconstrained height means we should
   // return our child's intrinsic size.
-  aDesiredSize.height = aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE
-                          ? aReflowState.availableHeight
+  aDesiredSize.height = aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE
+                          ? aReflowState.ComputedHeight()
                           : kidHeight;
 
   // Make a copy of the reflow state and change the computed width and height

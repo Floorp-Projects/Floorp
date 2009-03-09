@@ -71,7 +71,7 @@ class nsMathMLContainerFrame : public nsHTMLContainerFrame,
 public:
   nsMathMLContainerFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_QUERYFRAME
 
   // --------------------------------------------------------------------------
   // Overloaded nsMathMLFrame methods -- see documentation in nsIMathMLFrame.h
@@ -353,7 +353,7 @@ public:
   //
   // aBits are the bits to pass to FrameNeedsReflow() when we call it.
   static nsresult
-  ReLayoutChildren(nsIFrame* aParentFrame, nsFrameState aBits);
+  ReLayoutChildren(nsIFrame* aParentFrame);
 
 protected:
   // Helper method which positions child frames as an <mrow> on given baseline
@@ -415,8 +415,7 @@ public:
                  "unexpected frame list");
     nsresult rv = nsBlockFrame::AppendFrames(aListName, aFrameList);
     if (NS_LIKELY(!aListName))
-      nsMathMLContainerFrame::ReLayoutChildren(this,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+      nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
@@ -429,8 +428,7 @@ public:
                  "unexpected frame list");
     nsresult rv = nsBlockFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
     if (NS_LIKELY(!aListName))
-      nsMathMLContainerFrame::ReLayoutChildren(this,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+      nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
@@ -442,8 +440,7 @@ public:
                  "unexpected frame list");
     nsresult rv = nsBlockFrame::RemoveFrame(aListName, aOldFrame);
     if (NS_LIKELY(!aListName))
-      nsMathMLContainerFrame::ReLayoutChildren(this,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+      nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
@@ -454,9 +451,9 @@ public:
 
 protected:
   nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
-    // We should always have a space manager.  Not that things can really try
+    // We should always have a float manager.  Not that things can really try
     // to float out of us anyway, but we need one for line layout.
-    AddStateBits(NS_BLOCK_SPACE_MGR);
+    AddStateBits(NS_BLOCK_FLOAT_MGR);
   }
   virtual ~nsMathMLmathBlockFrame() {}
 };
@@ -486,8 +483,7 @@ public:
                  "unexpected frame list");
     nsresult rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
     if (NS_LIKELY(!aListName))
-      nsMathMLContainerFrame::ReLayoutChildren(this,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+      nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
@@ -500,8 +496,7 @@ public:
                  "unexpected frame list");
     nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
     if (NS_LIKELY(!aListName))
-      nsMathMLContainerFrame::ReLayoutChildren(this,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+      nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
@@ -513,8 +508,7 @@ public:
                  "unexpected frame list");
     nsresult rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
     if (NS_LIKELY(!aListName))
-      nsMathMLContainerFrame::ReLayoutChildren(this,
-                                               NS_FRAME_HAS_DIRTY_CHILDREN);
+      nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 

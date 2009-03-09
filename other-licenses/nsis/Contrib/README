@@ -1,0 +1,56 @@
+These directories contain modified source code to the NSIS Plugins used by the
+Windows installers. All of these plugin dll's have been compiled with VC6.
+
+NSIS project page: http://nsis.sourceforge.net/
+NSIS Unicode port project page: http://www.scratchpaper.com/
+
+APPLICABLE LICENSES
+-------------------
+* All NSIS source code, plug-ins, documentation, examples, header files and
+  graphics, with the exception of the compression modules and where otherwise
+  noted, are licensed under the zlib/libpng license.
+
+* The zlib compression module for NSIS is licensed under the zlib/libpng
+  license.
+
+* The bzip2 compression module for NSIS is licensed under the bzip2 license.
+
+* The LZMA compression module for NSIS is licensed under the Common Public
+  License version 1.0.
+
+-------------------------------------------------------------------------------
+
+ExDLL NSIS Unicode source 2.38.1 for plugin projects
+http://www.scratchpaper.com/
+These files are required to compile the nsProcess and ShellLink plugins. No
+changes were made to these files.
+
+-------------------------------------------------------------------------------
+
+nsProcess NSIS plugin v1.5
+http://nsis.sourceforge.net/NsProcess_plugin
+Unicode support was added for this plugin. A diff of the changes to the source
+are available at:
+https://bugzilla.mozilla.org/show_bug.cgi?id=473348
+https://bugzilla.mozilla.org/attachment.cgi?id=357012
+
+-------------------------------------------------------------------------------
+
+ShellLink NSIS plugin v1.1
+http://nsis.sourceforge.net/ShellLink_plug-in
+Unicode support was added for this plugin. A diff of the changes to the source
+are available at:
+https://bugzilla.mozilla.org/show_bug.cgi?id=473348
+https://bugzilla.mozilla.org/attachment.cgi?id=357058
+
+-------------------------------------------------------------------------------
+
+UAC NSIS plugin v0.0.10a
+http://nsis.sourceforge.net/UAC_plug-in
+The source files already support Unicode but there is no Unicode distribution
+so the plugin had to be compiled with Unicode support. A diff of the changes to
+the source are available at:
+https://bugzilla.mozilla.org/show_bug.cgi?id=473348
+https://bugzilla.mozilla.org/attachment.cgi?id=357014
+
+-------------------------------------------------------------------------------

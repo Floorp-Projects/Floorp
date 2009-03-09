@@ -163,36 +163,42 @@ TaggingService.prototype = {
     if (!aURI || !aTags)
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    for (var i=0; i < aTags.length; i++) {
-      var tag = aTags[i];
-      var tagId = null;
-      if (typeof(tag) == "number") {
-        // is it a tag folder id?
-        if (this._tagFolders[tag]) {
-          tagId = tag;
-          tag = this._tagFolders[tagId];
+    this._bms.runInBatchMode({
+      _self: this,
+      runBatched: function(aUserData) {
+        for (var i = 0; i < aTags.length; i++) {
+          var tag = aTags[i];
+          var tagId = null;
+          if (typeof(tag) == "number") {
+            // is it a tag folder id?
+            if (this._self._tagFolders[tag]) {
+              tagId = tag;
+              tag = this._self._tagFolders[tagId];
+            }
+            else
+              throw Cr.NS_ERROR_INVALID_ARG;
+          }
+          else {
+            tagId = this._self._getItemIdForTag(tag);
+            if (tagId == -1)
+              tagId = this._self._createTag(tag);
+          }
+
+          var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
+          if (itemId == -1)
+            this._self._bms.insertBookmark(tagId, aURI,
+                                           this._self._bms.DEFAULT_INDEX, null);
+
+          // Rename the tag container so the Places view would match the
+          // most-recent user-typed values.
+          var currentTagTitle = this._self._bms.getItemTitle(tagId);
+          if (currentTagTitle != tag) {
+            this._self._bms.setItemTitle(tagId, tag);
+            this._self._tagFolders[tagId] = tag;
+          }
         }
-        else
-          throw Cr.NS_ERROR_INVALID_ARG;
       }
-      else {
-        tagId = this._getItemIdForTag(tag);
-        if (tagId == -1)
-          tagId = this._createTag(tag);
-      }
-
-      var itemId = this._getItemIdForTaggedURI(aURI, tag);
-      if (itemId == -1)
-        this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, null);
-
-      // Rename the tag container so the Places view would match the
-      // most-recent user-typed values.
-      var currentTagTitle = this._bms.getItemTitle(tagId);
-      if (currentTagTitle != tag) {
-        this._bms.setItemTitle(tagId, tag);
-        this._tagFolders[tagId] = tag;
-      }
-    }
+    }, null);
   },
 
   /**
@@ -225,29 +231,34 @@ TaggingService.prototype = {
       aTags = this.getTagsForURI(aURI, { });
     }
 
-    for (var i=0; i < aTags.length; i++) {
-      var tag = aTags[i];
-      var tagId = null;
-      if (typeof(tag) == "number") {
-        // is it a tag folder id?
-        if (this._tagFolders[tag]) {
-          tagId = tag;
-          tag = this._tagFolders[tagId];
-        }
-        else
-          throw Cr.NS_ERROR_INVALID_ARG;
-      }
-      else
-        tagId = this._getItemIdForTag(tag);
+    this._bms.runInBatchMode({
+      _self: this,
+      runBatched: function(aUserData) {
+        for (var i = 0; i < aTags.length; i++) {
+          var tag = aTags[i];
+          var tagId = null;
+          if (typeof(tag) == "number") {
+            // is it a tag folder id?
+            if (this._self._tagFolders[tag]) {
+              tagId = tag;
+              tag = this._self._tagFolders[tagId];
+            }
+            else
+              throw Cr.NS_ERROR_INVALID_ARG;
+          }
+          else
+            tagId = this._self._getItemIdForTag(tag);
 
-      if (tagId != -1) {
-        var itemId = this._getItemIdForTaggedURI(aURI, tag);
-        if (itemId != -1) {
-          this._bms.removeItem(itemId);
-          this._removeTagIfEmpty(tagId);
+          if (tagId != -1) {
+            var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
+            if (itemId != -1) {
+              this._self._bms.removeItem(itemId);
+              this._self._removeTagIfEmpty(tagId);
+            }
+          }
         }
       }
-    }
+    }, null);
   },
 
   // nsITaggingService
@@ -527,21 +538,32 @@ TagAutoCompleteSearch.prototype = {
         if (self._stopped)
           yield false;
         // for each match, prepend what the user has typed so far
-        var pattern = new RegExp("(^" + searchResults[i] + "$|" + searchResults[i] + "(,|;))");
         if (searchResults[i].indexOf(searchString) == 0 &&
-            !pattern.test(before)) {
+            comments.indexOf(searchResults[i]) == -1) {
           results.push(before + searchResults[i]);
           comments.push(searchResults[i]);
         }
     
         ++i;
+
+        /* TODO: bug 481451
+         * For each yield we pass a new result to the autocomplete
+         * listener. The listener appends instead of replacing previous results,
+         * causing invalid matchCount values.
+         *
+         * As a workaround, all tags are searched through in a single batch,
+         * making this synchronous until the above issue is fixed.
+         */
+
+        /*
         // 100 loops per yield
         if ((i % 100) == 0) {
           var newResult = new TagAutoCompleteResult(searchString,
             Ci.nsIAutoCompleteResult.RESULT_SUCCESS_ONGOING, 0, "", results, comments);
           listener.onSearchResult(self, newResult);
           yield true;
-        } 
+        }
+        */
       }
 
       var newResult = new TagAutoCompleteResult(searchString,
@@ -550,28 +572,13 @@ TagAutoCompleteSearch.prototype = {
       yield false;
     }
     
-    // chunk the search results via a generator
+    // chunk the search results via the generator
     var gen = doSearch();
-    function driveGenerator() {
-      if (gen.next()) { 
-        var timer = Cc["@mozilla.org/timer;1"]
-          .createInstance(Components.interfaces.nsITimer);
-        self._callback = driveGenerator;
-        timer.initWithCallback(self, 0, timer.TYPE_ONE_SHOT);
-      }
-      else {
-        gen.close();	
-      }
-    }
-    driveGenerator();
+    while (gen.next());
+    gen.close();
   },
 
-  notify: function PTACS_notify(timer) {
-    if (this._callback) 
-      this._callback();
-  },
-
-  /*
+  /**
    * Stop an asynchronous search that is in progress
    */
   stopSearch: function PTACS_stopSearch() {

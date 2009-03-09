@@ -62,9 +62,6 @@
 #endif
 
 
-NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
-
-
 //////////////////////////////////////////////////////////////////////
 
 // Basic nsInlineFrame methods
@@ -75,18 +72,9 @@ NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsInlineFrame(aContext);
 }
 
-NS_IMETHODIMP
-nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(kInlineFrameCID)) {
-    *aInstancePtr = this;
-    return NS_OK;
-  }
-
-  return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
-}
+NS_QUERYFRAME_HEAD(nsInlineFrame)
+  NS_QUERYFRAME_ENTRY(nsInlineFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsInlineFrameSuper)
 
 #ifdef DEBUG
 NS_IMETHODIMP
@@ -314,14 +302,19 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
       nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, prevOverflowFrames,
                                                   prevInFlow, this);
 
-      if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-        // If it's the initial reflow, then our child list must be empty, so
-        // just set the child list rather than calling InsertFrame(). This avoids
-        // having to get the last child frame in the list.
+      // Check if we should do the lazilySetParentPointer optimization.
+      // Only do it in simple cases where we're being reflowed for the
+      // first time, nothing (e.g. bidi resolution) has already given
+      // us children, and there's no next-in-flow, so all our frames
+      // will be taken from prevOverflowFrames.
+      if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) && mFrames.IsEmpty() &&
+          !GetNextInFlow()) {
+        // If our child list is empty, just set the child list rather than
+        // calling InsertFrame(). This avoids having to get the last child
+        // frame in the list.
         // Note that we don't set the parent pointer for the new frames. Instead wait
         // to do this until we actually reflow the frame. If the overflow list contains
         // thousands of frames this is a big performance issue (see bug #5588)
-        NS_ASSERTION(mFrames.IsEmpty(), "child list is not empty for initial reflow");
         mFrames.SetFrames(prevOverflowFrames);
         lazilySetParentPointer = PR_TRUE;
       } else {

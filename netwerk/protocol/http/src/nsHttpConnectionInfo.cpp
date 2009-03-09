@@ -49,7 +49,10 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
     // build hash key:
     //
     // the hash key uniquely identifies the connection type.  two connections
-    // are "equal" if they end up talking the same protocol to the same server.
+    // are "equal" if they end up talking the same protocol to the same server
+    // and are both used for anonymous or non-anonymous connection only;
+    // anonymity of the connection is setup later from nsHttpChannel::AsyncOpen
+    // where we know we use anonymous connection (LOAD_ANONYMOUS load flag)
     //
 
     const char *keyHost;
@@ -64,7 +67,7 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
         keyPort = Port();
     }
 
-    mHashKey.AssignLiteral("..");
+    mHashKey.AssignLiteral("...");
     mHashKey.Append(keyHost);
     mHashKey.Append(':');
     mHashKey.AppendInt(keyPort);

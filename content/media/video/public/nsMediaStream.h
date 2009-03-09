@@ -42,7 +42,13 @@
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
+#include "nsIStreamListener.h"
 #include "prlock.h"
+
+// For HTTP seeking, if number of bytes needing to be
+// seeked forward is less than this value then a read is
+// done rather than a byte range request.
+#define SEEK_VS_READ_THRESHOLD (32*1024)
 
 class nsMediaDecoder;
 
@@ -82,10 +88,12 @@ public:
   virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes) = 0;
   virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
   virtual PRInt64  Tell() = 0;
-  virtual PRUint32 Available() = 0;
-  virtual float    DownloadRate() = 0;
   virtual void     Cancel() { }
   virtual nsIPrincipal* GetCurrentPrincipal() = 0;
+  virtual void     Suspend() = 0;
+  virtual void     Resume() = 0;
+
+  nsMediaDecoder* Decoder() { return mDecoder; }
 
 protected:
   // This is not an nsCOMPointer to prevent a circular reference
@@ -163,19 +171,6 @@ class nsMediaStream
   // Can be called from any thread.
   PRInt64 Tell();
 
-  // Return the number of bytes available in the stream that can be
-  // read without blocking. Can be called from any thread.
-  PRUint32 Available();
-
-  // Return the current download rate in bytes per second. Returns less than
-  // zero if the download has completed. Can be called from any
-  // thread.
-  float DownloadRate();
-
-  // Return the current playback rate in bytes per second. Can be
-  // called from any thread.
-  float PlaybackRate();
-
   // Cancels any currently blocking request and forces that request to
   // return an error. Call on main thread only.
   void Cancel();
@@ -183,23 +178,20 @@ class nsMediaStream
   // Call on main thread only.
   nsIPrincipal* GetCurrentPrincipal();
 
+  // Suspend any downloads that are in progress. Call on the main thread
+  // only.
+  void Suspend();
+
+  // Resume any downloads that have been suspended. Call on the main thread
+  // only.
+  void Resume();
+
  private:
   // Strategy object that is used for the handling seeking, etc
   // Accessed from any thread. Set on the Open call on the main thread
   // only. Open is always called first on the main thread before any
   // other calls from other threads.
   nsAutoPtr<nsStreamStrategy> mStreamStrategy;
-
-  // Time used for computing average playback rate. Written on the 
-  // main thread only during the Open call. Read from any thread during
-  // calls to PlaybackRate() - which can only ever happen after Open.
-  PRIntervalTime mPlaybackRateStart;
-
-  // Bytes downloaded for average playback rate computation. Initialized
-  // on the main thread during Open(). After that it is read and written
-  // possibly on a different thread, but exclusively from that
-  // thread. In the case of the Ogg Decoder, it is the Decoder thread.
-  PRUint32 mPlaybackRateCount;
 };
 
 #endif

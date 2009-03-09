@@ -37,7 +37,7 @@
 
 var gTestfile = 'regress-407957.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 407323;
+var BUGNUMBER = 407957;
 var summary = 'Iterator is mutable.';
 var actual = '';
 var expect = '';

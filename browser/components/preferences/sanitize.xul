@@ -68,6 +68,7 @@
       <preference id="privacy.item.cache"                 name="privacy.item.cache"                 type="bool"/>
       <preference id="privacy.item.offlineApps"           name="privacy.item.offlineApps"           type="bool"/>
       <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool"/>
+      <preference id="privacy.item.siteSettings"          name="privacy.item.siteSettings"          type="bool"/>
     </preferences>
 
     <description>&clearDataSettings2.label;</description>
@@ -103,6 +104,9 @@
         <checkbox label="&itemPasswords.label;"
                   accesskey="&itemPasswords.accesskey;"
                   preference="privacy.item.passwords"/>
+        <checkbox label="&itemSiteSettings.label;"
+                  accesskey="&itemSiteSettings.accesskey;"
+                  preference="privacy.item.siteSettings"/>
       </vbox>
       <vbox style="width: &column.width;">
         <checkbox label="&itemOfflineApps.label;"

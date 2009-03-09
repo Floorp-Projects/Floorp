@@ -106,6 +106,7 @@ nsSystemFontsBeOS::GetSystemFontInfo(const BFont *theFont, nsString *aFontName,
   aFontStyle->style       = FONT_STYLE_NORMAL; 
   aFontStyle->weight      = FONT_WEIGHT_NORMAL; 
   aFontStyle->decorations = FONT_DECORATION_NONE; 
+  aFontStyle->stretch     = NS_FONT_STRETCH_NORMAL;
   
   font_family family; 
   theFont->GetFamilyAndStyle(&family, NULL);
@@ -119,6 +120,8 @@ nsSystemFontsBeOS::GetSystemFontInfo(const BFont *theFont, nsString *aFontName,
 
   if (face & B_BOLD_FACE)
     aFontStyle->weight = FONT_WEIGHT_BOLD;
+
+  // FIXME: Set aFontStyle->stretch correctly!
 
   if (face & B_UNDERSCORE_FACE)
     aFontStyle->decorations |= FONT_DECORATION_UNDERLINE;

@@ -51,7 +51,6 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettings.h"
-#include "nsVoidArray.h"
 #include "nsPrintdOS2.h"
 #include <os2.h>
 #include <pmddim.h>

@@ -198,7 +198,7 @@ nsresult Register(const char *path)
   nsCOMPtr<nsIComponentRegistrar> registrar;
   rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
   if (NS_FAILED(rv)) {
-    printf("Can not aquire component registrar\n");
+    printf("Can not acquire component registrar\n");
     return rv;
   }
 
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
     nsCOMPtr<nsIComponentRegistrar> registrar;
     rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
     if (NS_FAILED(rv)) {
-      printf("Can not aquire component registrar\n");
+      printf("Can not acquire component registrar\n");
       return -1;
     }
     rv = registrar->AutoRegister(nsnull);

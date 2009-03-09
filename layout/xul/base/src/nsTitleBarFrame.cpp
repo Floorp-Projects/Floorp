@@ -103,7 +103,10 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
-
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
 
   PRBool doDefault = PR_TRUE;
 
@@ -159,7 +162,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
    case NS_MOUSE_MOVE: {
        if(mTrackingMouseMove)
        {
-         nsPoint nsMoveBy = aEvent->refPoint - mLastPoint;
+         nsIntPoint nsMoveBy = aEvent->refPoint - mLastPoint;
 
          nsIFrame* parent = GetParent();
          while (parent && parent->GetType() != nsGkAtoms::menuPopupFrame)
@@ -171,7 +174,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
            nsCOMPtr<nsIWidget> widget;
            (static_cast<nsMenuPopupFrame*>(parent))->
              GetWidget(getter_AddRefs(widget));
-           nsRect bounds;
+           nsIntRect bounds;
            widget->GetScreenBounds(bounds);
            widget->Move(bounds.x + nsMoveBy.x, bounds.y + nsMoveBy.y);
          }
