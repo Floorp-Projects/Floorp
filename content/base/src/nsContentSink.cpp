@@ -883,10 +883,18 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
   if (StringBeginsWith(aHref, NS_LITERAL_STRING("//")))  {
     hostname = Substring(aHref, 2);
   }
-  else
-    nsGenericHTMLElement::GetHostnameFromHrefString(aHref, hostname);
+  else {
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aHref);
+    if (!uri) {
+      return;
+    }
+    nsCAutoString host;
+    uri->GetHost(host);
+    CopyUTF8toUTF16(host, hostname);
+  }
 
-  if (nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
+  if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
     nsHTMLDNSPrefetch::PrefetchLow(hostname);
   }
 }
