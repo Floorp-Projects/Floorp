@@ -155,4 +155,4 @@ https://sub.sectest1.example.org:443
 #
 # Used while testing the url-classifier
 #
-http://malware.com:80
+http://malware.example.com:80
