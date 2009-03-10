@@ -679,12 +679,15 @@ WeaveSvc.prototype = {
   /**
    * Sync up engines with the server.
    *
-   * @param useThresh
-   *        True to use thresholds to determine what engines to sync
+   * @param fullSync
+   *        True to unconditionally sync all engines
    * @throw Reason for not syncing
    */
   _sync: function WeaveSvc__sync(useThresh) {
     let self = yield;
+
+    // Use thresholds to determine what to sync only if it's not a full sync
+    let useThresh = !fullSync;
 
     // Make sure we should sync or record why we shouldn't. We always obey the
     // reason if we're using thresholds (not a full sync); otherwise, allow
@@ -771,9 +774,9 @@ WeaveSvc.prototype = {
    *        True to unconditionally sync all engines
    */
   sync: function WeaveSvc_sync(onComplete, fullSync) {
-    let useThresh = false; // !fullSync but not doing thresholds yet
+    fullSync = true; // not doing thresholds yet
     this._catchAll(this._notify("sync", "", this._localLock(this._sync))).
-      async(this, onComplete, useThresh);
+      async(this, onComplete, fullSync);
   },
 
   // returns true if sync should proceed
