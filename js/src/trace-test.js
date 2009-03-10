@@ -4468,6 +4468,26 @@ function testNonStubGetter() {
 testNonStubGetter.expected = "ok";
 test(testNonStubGetter);
 
+function testString() {
+    var q;
+    for (var i = 0; i <= RUNLOOP; ++i) {
+        q = [];
+        q.push(String(void 0));
+        q.push(String(true));
+        q.push(String(5));
+        q.push(String(5.5));
+        q.push(String("5"));
+        q.push(String([5]));
+    }
+    return q.join(",");
+}
+testString.expected = "undefined,true,5,5.5,5,5";
+testString.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1
+};
+test(testString);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

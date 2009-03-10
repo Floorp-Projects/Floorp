@@ -4404,7 +4404,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         flag = tr->record_##x();                                              \
         if (x == JSOP_ITER || x == JSOP_NEXTITER || x == JSOP_APPLY ||        \
             x == JSOP_GETELEM || x == JSOP_SETELEM || x== JSOP_INITELEM ||    \
-            JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||                          \
+            x == JSOP_CALL || JSOP_IS_BINARY(x) || JSOP_IS_UNARY(x) ||        \
             JSOP_IS_EQUALITY(x)) {                                            \
             goto imacro;                                                      \
         }                                                                     \
@@ -6699,8 +6699,18 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
         return interpretedFunctionCall(fval, fun, argc, constructing);
     }
 
-    if (FUN_SLOW_NATIVE(fun) && fun->u.n.native == js_Array)
-        return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
+    if (FUN_SLOW_NATIVE(fun)) {
+        JSNative native = fun->u.n.native;
+        if (native == js_Array)
+            return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
+        if (native == js_String && argc == 1) {
+            jsval& v = stackval(0 - argc);
+            if (!JSVAL_IS_PRIMITIVE(v))
+                return call_imacro(call_imacros.String);
+            set(&fval, stringify(v));
+            return true;
+        }
+    }
 
     if (!(fun->flags & JSFUN_TRACEABLE))
         ABORT_TRACE("untraceable native");
