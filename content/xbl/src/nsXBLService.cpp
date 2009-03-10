@@ -1121,7 +1121,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (principalURI &&
-        !(gAllowDataURIs && SchemeIs(aBindingURI, "data"))) {
+        !(gAllowDataURIs && SchemeIs(aBindingURI, "data")) &&
+        !SchemeIs(aBindingURI, "chrome")) {
       nsresult uaCheckRes =
         nsContentUtils::GetSecurityManager()->
         CheckLoadURIWithPrincipal(aBoundDocument->NodePrincipal(),
