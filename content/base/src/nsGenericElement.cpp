@@ -1906,7 +1906,7 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
   }
 #endif /* MOZ_SVG */
 #ifdef MOZ_SMIL
-  else if (PL_strcasecmp(f, "TimeControl") == 0) {
+  else if (NS_SMILEnabled() && PL_strcasecmp(f, "TimeControl") == 0) {
     if (aVersion.IsEmpty() || PL_strcmp(v, "1.0") == 0) {
       *aReturn = PR_TRUE;
     }
