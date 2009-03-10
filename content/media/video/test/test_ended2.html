@@ -11,7 +11,8 @@
 <script class="testbody" type="text/javascript">
 // Test if video can be replayed after ended.
 var completed = false;
-var playCount = 0;
+var playingCount = 0;
+var endCount = 0;
 
 function startTest() {
   if (completed)
@@ -26,21 +27,24 @@ function playbackStarted() {
   if (completed)
     return false;
 
-  playCount++;
+  playingCount++;
 }
 
 function playbackEnded() {
   if (completed)
     return false
+
+  endCount++;
   var v = document.getElementById('v');
   ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
-  if (playCount < 2) {
+  ok(playingCount > 0, "Expect at least one playing event");
+  playingCount = 0;
+  if (endCount < 2) {
     v.play();
-  }
-  else {
-    ok(playCount == 2, "Check playback after ended event");
+  } else {
+    ok(endCount == 2, "Check playback after ended event");
     completed = true;
     SimpleTest.finish();
   }
@@ -53,7 +57,7 @@ SimpleTest.waitForExplicitFinish();
 <video id='v'
        src='seek.ogv'
        onloadedmetadata='return startTest();'
-       onplay='return playbackStarted();'
+       onplaying='return playbackStarted();'
        onended='return playbackEnded();'></video>
 </body>
 </html>

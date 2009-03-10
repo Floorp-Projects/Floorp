@@ -3371,11 +3371,26 @@
         if (anonid == "close-button")
           this.mOverCloseButton = false;
       </handler>
+      <handler event="dragstart" phase="capturing">
+        this.style.MozUserFocus = '';
+      </handler>
       <handler event="mousedown" button="0" phase="capturing">
       <![CDATA[
-        if (this.mOverCloseButton)
+        if (this.mOverCloseButton) {
           event.stopPropagation();
+        }
+        else {
+          this.style.MozUserFocus = 'ignore';
+          this.clientTop; // just using this to flush style updates
+        }
       ]]>
+      </handler>
+      <handler event="mousedown" button="2">
+        this.style.MozUserFocus = 'ignore';
+        this.clientTop;
+      </handler>
+      <handler event="mouseup">
+        this.style.MozUserFocus = '';
       </handler>
     </handlers>
   </binding>

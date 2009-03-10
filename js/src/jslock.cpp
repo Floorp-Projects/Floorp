@@ -56,6 +56,11 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
+/*
+ * Check that we can cast the data after JSObjectMap as JSTitle.
+ */
+JS_STATIC_ASSERT(offsetof(JSScope, title) == sizeof(JSObjectMap));
+
 #define ReadWord(W) (W)
 
 /* Implement NativeCompareAndSwap. */

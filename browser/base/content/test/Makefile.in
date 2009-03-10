@@ -101,9 +101,10 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug479408_sample.html \
     $(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-_BROWSER_FILES += browser_customize.js \
-    $(NULL)
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+_BROWSER_FILES += browser_bug462289.js
+else
+_BROWSER_FILES += browser_customize.js
 endif
 
 libs:: $(_TEST_FILES)

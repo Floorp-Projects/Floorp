@@ -358,204 +358,27 @@ nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
   return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
 }
 
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetProtocol(nsAString& aProtocol)
-{
-  nsAutoString href;
+#define IMPL_URI_PART(_part)                                 \
+  NS_IMETHODIMP                                              \
+  nsHTMLAnchorElement::Get##_part(nsAString& a##_part)       \
+  {                                                          \
+    return Get##_part##FromHrefURI(a##_part);                \
+  }                                                          \
+  NS_IMETHODIMP                                              \
+  nsHTMLAnchorElement::Set##_part(const nsAString& a##_part) \
+  {                                                          \
+    return Set##_part##InHrefURI(a##_part);                  \
+  }
 
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
+IMPL_URI_PART(Protocol)
+IMPL_URI_PART(Host)
+IMPL_URI_PART(Hostname)
+IMPL_URI_PART(Pathname)
+IMPL_URI_PART(Search)
+IMPL_URI_PART(Port)
+IMPL_URI_PART(Hash)
 
-  // XXX this should really use GetHrefURI and not do so much string stuff
-  return GetProtocolFromHrefString(href, aProtocol, GetOwnerDoc());
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetProtocol(const nsAString& aProtocol)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetProtocolInHrefString(href, aProtocol, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHost(nsAString& aHost)
-{
-  nsAutoString href;
-  
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetHostFromHrefString(href, aHost);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHost(const nsAString& aHost)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetHostInHrefString(href, aHost, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHostname(nsAString& aHostname)
-{
-  nsAutoString href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetHostnameFromHrefString(href, aHostname);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHostname(const nsAString& aHostname)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetHostnameInHrefString(href, aHostname, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-  
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPathname(nsAString& aPathname)
-{
-  nsAutoString href;
- 
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetPathnameFromHrefString(href, aPathname);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetPathname(const nsAString& aPathname)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetPathnameInHrefString(href, aPathname, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetSearch(nsAString& aSearch)
-{
-  nsAutoString href;
-
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetSearchFromHrefString(href, aSearch);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetSearch(const nsAString& aSearch)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetSearchInHrefString(href, aSearch, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPort(nsAString& aPort)
-{
-  nsAutoString href;
-  
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetPortFromHrefString(href, aPort);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetPort(const nsAString& aPort)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetPortInHrefString(href, aPort, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-  
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHash(nsAString& aHash)
-{
-  nsAutoString href;
-
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetHashFromHrefString(href, aHash);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHash(const nsAString& aHash)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetHashInHrefString(href, aHash, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
+#undef IMPL_URI_PART
 
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetText(nsAString& aText)

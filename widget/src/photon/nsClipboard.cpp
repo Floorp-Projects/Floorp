@@ -135,7 +135,7 @@ NS_IMETHODIMP nsClipboard::SetData(nsITransferable * aTransferable,
     rv = NS_NewClipboardPrivacyHandler(getter_AddRefs(mPrivacyHandler));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = mPrivacyHandler.PrepareDataForClipboard(aTransferable);
+  rv = mPrivacyHandler->PrepareDataForClipboard(aTransferable);
   NS_ENSURE_SUCCESS(rv, rv);
 
 	EmptyClipboard(aWhichClipboard);

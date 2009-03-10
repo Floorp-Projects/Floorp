@@ -50,7 +50,7 @@
 #define ASO    7        // accent small other
 #define CLASS_NUM   8    // total classes
 
-static unsigned char Latin1_CharToClass[] = 
+static const unsigned char Latin1_CharToClass[] = 
 {
   OTH, OTH, OTH, OTH, OTH, OTH, OTH, OTH,   // 00 - 07
   OTH, OTH, OTH, OTH, OTH, OTH, OTH, OTH,   // 08 - 0F
@@ -92,7 +92,7 @@ static unsigned char Latin1_CharToClass[] =
    2 : normal 
    3 : very likely
 */
-static unsigned char Latin1ClassModel[] = 
+static const unsigned char Latin1ClassModel[] = 
 {
 /*      UDF OTH ASC ASS ACV ACO ASV ASO  */
 /*UDF*/  0,  0,  0,  0,  0,  0,  0,  0,

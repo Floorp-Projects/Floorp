@@ -118,6 +118,25 @@ nsCocoaWindow::nsCocoaWindow()
 }
 
 
+// Under unusual circumstances, an nsCocoaWindow object can be destroyed
+// before the nsChildView objects it contains are destroyed.  But this will
+// invalidate the (weak) mWindow variable in these nsChildView objects
+// before their own destructors have been called.  So we need to null-out
+// this variable in our nsChildView objects as we're destroyed.  This helps
+// resolve bmo bug 479749.
+static void TellNativeViewsGoodbye(NSView *aNativeView)
+{
+  if (!aNativeView)
+    return;
+  if ([aNativeView respondsToSelector:@selector(setNativeWindow:)])
+    [(NSView<mozView>*)aNativeView setNativeWindow:nil];
+  NSArray *immediateSubviews = [aNativeView subviews];
+  int count = [immediateSubviews count];
+  for (int i = 0; i < count; ++i)
+    TellNativeViewsGoodbye((NSView *)[immediateSubviews objectAtIndex:i]);
+}
+
+
 nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -128,12 +147,15 @@ nsCocoaWindow::~nsCocoaWindow()
     childWindow->mParent = nsnull;
   }
 
-  if (mWindow && mWindowMadeHere) {
-    // we want to unhook the delegate here because we don't want events
-    // sent to it after this object has been destroyed
-    [mWindow setDelegate:nil];
-    [mWindow autorelease];
-    [mDelegate autorelease];
+  if (mWindow) {
+    TellNativeViewsGoodbye([mWindow contentView]);
+    if (mWindowMadeHere) {
+      // we want to unhook the delegate here because we don't want events
+      // sent to it after this object has been destroyed
+      [mWindow setDelegate:nil];
+      [mWindow autorelease];
+      [mDelegate autorelease];
+    }
   }
 
   NS_IF_RELEASE(mPopupContentView);
@@ -429,8 +451,8 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   if (mPopupContentView)
     mPopupContentView->Destroy();
 
-  nsBaseWidget::OnDestroy();
   nsBaseWidget::Destroy();
+  nsBaseWidget::OnDestroy();
 
   return NS_OK;
 }

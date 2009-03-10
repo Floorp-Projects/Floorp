@@ -131,6 +131,7 @@ _TEST_FILES += \
 		test_bug465498.html \
 		test_bug468190_wav.html \
 		test_can_play_type_wave.html \
+		test_paused_after_ended.html \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
 		test_wav_ended2.html \

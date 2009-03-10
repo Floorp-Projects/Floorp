@@ -130,7 +130,7 @@ nsNativeDragSource::GiveFeedback(DWORD dwEffect)
   if (mDataTransfer) {
     nsAutoString cursor;
     mDataTransfer->GetMozCursor(cursor);
-    if (cursor.EqualsASCII("default")) {
+    if (cursor.EqualsLiteral("default")) {
       m_hCursor = ::LoadCursor(0, IDC_ARROW);
     } else {
       m_hCursor =  nsnull;

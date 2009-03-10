@@ -219,6 +219,12 @@
               this._containerNodesMap.push({ resultNode: aChild,
                                              domNode: popup });
             }
+            else if (PlacesUtils.nodeIsURI(aChild)) {
+              if (aChild.uri.lastIndexOf("javascript:", 0) == 0)
+                button.setAttribute("bookmarklet", "true");
+              else
+                button.removeAttribute("bookmarklet");
+            }
           }
 
           button.node = aChild;
@@ -637,6 +643,12 @@
             // If this is a livemark container check if the status menuitem has
             // to be added or removed.
             PlacesUIUtils.ensureLivemarkStatusMenuItem(element.firstChild);
+          }
+          else if (PlacesUtils.nodeIsURI(aNode)) {
+            if (aNode.uri.lastIndexOf("javascript:", 0) == 0)
+              element.setAttribute("bookmarklet", "true");
+            else
+              element.removeAttribute("bookmarklet");
           }
         },
 

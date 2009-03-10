@@ -2149,7 +2149,7 @@ class RegExpNativeCompiler {
             }
         }
 
-        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, lir->ins2(LIR_sub, cpend, lir->insImm(2))), 0);
         fails.add(to_fail);
         LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
         LIns* comp_word = useFastCI ?
@@ -4950,35 +4950,80 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return regexp_compile_sub(cx, obj, argc, argv, rval);
 }
 
+#ifdef JS_TRACER
+
+static JSObject* FASTCALL
+RegExp_tn1(JSContext *cx, JSObject *proto, JSString *str)
+{
+    JSObject* obj = js_NewNativeObject(cx, &js_RegExpClass, proto, JSSLOT_PRIVATE);
+    if (!obj)
+        return NULL;
+
+    jsval argv[] = { JSVAL_NULL, OBJECT_TO_JSVAL(obj), STRING_TO_JSVAL(str) };
+    jsval rval;
+
+    if (!regexp_compile_sub(cx, obj, 1, argv + 2, &rval))
+        return NULL;
+
+    JS_ASSERT(JSVAL_IS_OBJECT(rval));
+    return JSVAL_TO_OBJECT(rval);
+}
+
+static JSObject* FASTCALL
+RegExp_tn2(JSContext *cx, JSObject *proto, JSString *str, JSString *opt)
+{
+    JSObject* obj = js_NewNativeObject(cx, &js_RegExpClass, proto, JSSLOT_PRIVATE);
+    if (!obj)
+        return NULL;
+
+    jsval argv[] = { JSVAL_NULL, OBJECT_TO_JSVAL(obj), STRING_TO_JSVAL(str), STRING_TO_JSVAL(opt) };
+    jsval rval;
+
+    if (!regexp_compile_sub(cx, obj, 2, argv + 2, &rval))
+        return NULL;
+
+    JS_ASSERT(JSVAL_IS_OBJECT(rval));
+    return JSVAL_TO_OBJECT(rval);
+}
+
+JS_DEFINE_TRCINFO_2(RegExp,
+    (3, (extern, CONSTRUCTOR_RETRY, RegExp_tn1, CONTEXT, CALLEE_PROTOTYPE, STRING,         0, 0)),
+    (4, (extern, CONSTRUCTOR_RETRY, RegExp_tn2, CONTEXT, CALLEE_PROTOTYPE, STRING, STRING, 0, 0)))
+
+#else  /* !JS_TRACER */
+
+# define RegExp_trcinfo NULL
+
+#endif /* !JS_TRACER */
+
 JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto, *ctor;
-    jsval rval;
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, RegExp, 1,
+                                   regexp_props, regexp_methods,
+                                   regexp_static_props, NULL,
+                                   RegExp_trcinfo);
 
-    proto = JS_InitClass(cx, obj, NULL, &js_RegExpClass, RegExp, 1,
-                         regexp_props, regexp_methods,
-                         regexp_static_props, NULL);
-
-    if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
+    if (!proto)
         return NULL;
+
+    JSObject *ctor = JS_GetConstructor(cx, proto);
+    if (!ctor)
+        return NULL;
+
+    /* Give RegExp.prototype private data so it matches the empty string. */
+    jsval rval;
     if (!JS_AliasProperty(cx, ctor, "input",        "$_") ||
         !JS_AliasProperty(cx, ctor, "multiline",    "$*") ||
         !JS_AliasProperty(cx, ctor, "lastMatch",    "$&") ||
         !JS_AliasProperty(cx, ctor, "lastParen",    "$+") ||
         !JS_AliasProperty(cx, ctor, "leftContext",  "$`") ||
-        !JS_AliasProperty(cx, ctor, "rightContext", "$'")) {
-        goto bad;
+        !JS_AliasProperty(cx, ctor, "rightContext", "$'") ||
+        !regexp_compile_sub(cx, proto, 0, NULL, &rval)) {
+        return NULL;
     }
 
-    /* Give RegExp.prototype private data so it matches the empty string. */
-    if (!regexp_compile_sub(cx, proto, 0, NULL, &rval))
-        goto bad;
     return proto;
-
-bad:
-    JS_DeleteProperty(cx, obj, js_RegExpClass.name);
-    return NULL;
 }
 
 JSObject *
