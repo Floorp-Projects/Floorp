@@ -378,7 +378,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             if(resolved)
                 *resolved = JS_TRUE;
             return OBJ_DEFINE_PROPERTY(ccx, obj, id, JSVAL_VOID,
-                                       (JSPropertyOp) funobj, nsnull,
+                                       JS_DATA_TO_FUNC_PTR(JSPropertyOp, funobj),
+                                       nsnull,
                                        propFlags, nsnull);
         }
 
@@ -484,8 +485,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     JSObject* funobj = JSVAL_TO_OBJECT(funval);
     return JS_ValueToId(ccx, idval, &id) &&
            OBJ_DEFINE_PROPERTY(ccx, obj, id, JSVAL_VOID,
-                               (JSPropertyOp) funobj,
-                               (JSPropertyOp) funobj,
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, funobj),
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, funobj),
                                propFlags, nsnull);
 }
 
