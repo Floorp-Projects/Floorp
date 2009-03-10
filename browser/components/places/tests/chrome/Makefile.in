@@ -43,9 +43,9 @@ relativesrcdir = browser/components/places/tests/chrome
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-#	test_treeview_date.xul is disabled because fails randomly - bug 481765
 _CHROME_TEST_FILES = \
+	test_treeview_date.xul \
 	$(NULL)
 
-#libs:: $(_CHROME_TEST_FILES)
-#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
