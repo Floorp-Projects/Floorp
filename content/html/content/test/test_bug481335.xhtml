@@ -40,14 +40,14 @@ var unvisitedColor = document.defaultView.getComputedStyle($("t"), "").color;
 var visitedColor;
 
 function afterSecondLoad() {
-  todo(document.defaultView.getComputedStyle($("t"), "").color == visitedColor,
+  is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
        "Should be visited now");
   SimpleTest.finish();
 }
 
 function afterFirstLoad() {
   visitedColor = document.defaultView.getComputedStyle($("t"), "").color;
-  todo(visitedColor != unvisitedColor, "Why are the colors the same?");
+  isnot(visitedColor, unvisitedColor, "Why are the colors the same?");
   $("newparent").appendChild($("t"));
   is($("t").href, "http://www.example.com/" + rand,
      "Unexpected href after move");
