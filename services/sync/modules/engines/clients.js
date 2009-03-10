@@ -105,9 +105,7 @@ ClientEngine.prototype = {
   },
 
   get syncID() {
-    let oldSyncId = Svc.Prefs.get("client.syncID");
-    dump("oldSyncId is " + oldSyncId + "\n");
-    if (!oldSyncId)
+    if (!Svc.Prefs.get("client.syncID"))
       Svc.Prefs.set("client.syncID", Utils.makeGUID());
     return Svc.Prefs.get("client.syncID");
   },
