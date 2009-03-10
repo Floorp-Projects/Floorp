@@ -67,6 +67,8 @@ const THRESHOLD_DECREMENT_STEP = 25;
 // The following are various error messages for not syncing
 const kSyncWeaveDisabled = "Weave is disabled";
 const kSyncNotLoggedIn = "User is not logged in";
+const kSyncNetworkOffline = "Network is offline";
+const kSyncInPrivateBrowsing = "Private browsing is enabled";
 const kSyncNotScheduled = "Not scheduled to do sync";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -267,6 +269,8 @@ WeaveSvc.prototype = {
     }
 
     Utils.prefs.addObserver("", this, false);
+    Svc.Observer.addObserver(this, "network:offline-status-changed", true);
+    Svc.Observer.addObserver(this, "private-browsing", true);
     Svc.Observer.addObserver(this, "quit-application", true);
     FaultTolerance.Service; // initialize FT service
 
@@ -352,6 +356,16 @@ WeaveSvc.prototype = {
             this._checkSync();
             break;
         }
+        break;
+      case "network:offline-status-changed":
+        // Whether online or offline, we'll reschedule syncs
+        this._log.debug("Network offline status change: " + data);
+        this._checkSync();
+        break;
+      case "private-browsing":
+        // Entering or exiting private browsing? Reschedule syncs
+        this._log.debug("Private browsing change: " + data);
+        this._checkSync();
         break;
       case "quit-application":
         this._onQuitApplication();
@@ -634,6 +648,10 @@ WeaveSvc.prototype = {
       reason = kSyncWeaveDisabled;
     else if (!this._loggedIn)
       reason = kSyncNotLoggedIn;
+    else if (Svc.IO.offline)
+      reason = kSyncNetworkOffline;
+    else if (Svc.Private.privateBrowsingEnabled)
+      reason = kSyncInPrivateBrowsing;
     else if (Svc.Prefs.get("schedule", 0) != 1)
       reason = kSyncNotScheduled;
 
