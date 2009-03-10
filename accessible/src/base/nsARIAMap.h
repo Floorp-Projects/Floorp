@@ -73,11 +73,12 @@ enum ELiveAttrRule
 // ARIA attribute characteristic masks, grow as needed
 
 /**
- * This mask indicates the attribute should be exposed as an object attribute,
- * used to expose semantics not traditionally found in a11y APIs.
- * (See for example usage in nsAccessible::GetAttributes)
+ * This mask indicates the attribute should not be exposed as an object
+ * attribute via the catch-all logic in nsAccessible::GetAttributes.
+ * This means it either isn't mean't to be exposed as an object attribute, or
+ * that it should, but is already handled in other code.
  */
-const PRUint8 ATTR_EXPOSEOBJ  = 0x0001;
+const PRUint8 ATTR_BYPASSOBJ  = 0x0001;
 
 /**
  * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
