@@ -914,3 +914,31 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_HOLE */
     0,  /* JSOP_LOOP */
 };
+#define JSOP_IS_IMACOP(x) (0 \
+ || x == JSOP_BITOR \
+ || x == JSOP_BITXOR \
+ || x == JSOP_BITAND \
+ || x == JSOP_EQ \
+ || x == JSOP_NE \
+ || x == JSOP_LT \
+ || x == JSOP_LE \
+ || x == JSOP_GT \
+ || x == JSOP_GE \
+ || x == JSOP_LSH \
+ || x == JSOP_RSH \
+ || x == JSOP_URSH \
+ || x == JSOP_ADD \
+ || x == JSOP_SUB \
+ || x == JSOP_MUL \
+ || x == JSOP_DIV \
+ || x == JSOP_MOD \
+ || x == JSOP_NEG \
+ || x == JSOP_POS \
+ || x == JSOP_GETELEM \
+ || x == JSOP_SETELEM \
+ || x == JSOP_CALL \
+ || x == JSOP_ITER \
+ || x == JSOP_NEXTITER \
+ || x == JSOP_APPLY \
+ || x == JSOP_INITELEM \
+)
