@@ -4488,6 +4488,22 @@ testString.jitstats = {
 };
 test(testString);
 
+function testToStringBeforeValueOf()
+{
+  var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a.push(String(o));
+  return a.join(",");
+}
+testToStringBeforeValueOf.expected = "s,s,s,s,s,s,s,s,s,s";
+testToStringBeforeValueOf.jitstats = {
+  recorderStarted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testToStringBeforeValueOf);
+
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
