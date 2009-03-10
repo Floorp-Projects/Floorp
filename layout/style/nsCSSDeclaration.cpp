@@ -94,16 +94,11 @@ nsCSSDeclaration::~nsCSSDeclaration(void)
 nsresult
 nsCSSDeclaration::ValueAppended(nsCSSProperty aProperty)
 {
+  NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
+                    "shorthands forbidden");
   // order IS important for CSS, so remove and add to the end
-  if (nsCSSProps::IsShorthand(aProperty)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-      mOrder.RemoveElement(*p);
-      mOrder.AppendElement(*p);
-    }
-  } else {
-    mOrder.RemoveElement(aProperty);
-    mOrder.AppendElement(aProperty);
-  }
+  mOrder.RemoveElement(aProperty);
+  mOrder.AppendElement(aProperty);
   return NS_OK;
 }
 
@@ -246,7 +241,11 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
     nsAutoString  buffer;
     aValue.GetStringValue(buffer);
-    aResult.Append(buffer);
+    if (unit == eCSSUnit_String) {
+      nsStyleUtil::AppendEscapedCSSString(buffer, aResult);
+    } else {
+      aResult.Append(buffer);
+    }
   }
   else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Counters) {
     switch (unit) {
@@ -312,22 +311,19 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      if (NS_STYLE_TEXT_DECORATION_NONE != intValue) {
-        PRInt32 mask;
-        for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
-             mask <= NS_STYLE_TEXT_DECORATION_BLINK; 
-             mask <<= 1) {
-          if ((mask & intValue) == mask) {
-            AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
-            intValue &= ~mask;
-            if (0 != intValue) { // more left
-              aResult.Append(PRUnichar(' '));
-            }
+      NS_ABORT_IF_FALSE(NS_STYLE_TEXT_DECORATION_NONE != intValue,
+                        "none should be parsed as eCSSUnit_None");
+      PRInt32 mask;
+      for (mask = NS_STYLE_TEXT_DECORATION_UNDERLINE;
+           mask <= NS_STYLE_TEXT_DECORATION_PREF_ANCHORS; 
+           mask <<= 1) {
+        if ((mask & intValue) == mask) {
+          AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask), aResult);
+          intValue &= ~mask;
+          if (0 != intValue) { // more left
+            aResult.Append(PRUnichar(' '));
           }
         }
-      }
-      else {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_TEXT_DECORATION_NONE), aResult);
       }
     }
     else if (eCSSProperty_azimuth == aProperty) {
@@ -397,9 +393,10 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
-    aResult.Append(NS_LITERAL_STRING("url(") +
-                   nsDependentString(aValue.GetOriginalURLValue()) +
-                   NS_LITERAL_STRING(")"));
+    aResult.Append(NS_LITERAL_STRING("url("));
+    nsStyleUtil::AppendEscapedCSSString(
+      nsDependentString(aValue.GetOriginalURLValue()), aResult);
+    aResult.Append(NS_LITERAL_STRING(")"));
   }
   else if (eCSSUnit_Percent == unit) {
     nsAutoString tmpStr;
@@ -427,6 +424,8 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
       break;
 
     case eCSSUnit_String:       break;
+    case eCSSUnit_Ident:        break;
+    case eCSSUnit_Families:     break;
     case eCSSUnit_URL:          break;
     case eCSSUnit_Image:        break;
     case eCSSUnit_Array:        break;
@@ -444,16 +443,10 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Number:       break;
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
-    case eCSSUnit_Foot:         aResult.AppendLiteral("ft");   break;
-    case eCSSUnit_Mile:         aResult.AppendLiteral("mi");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
     case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
-    case eCSSUnit_Meter:        aResult.AppendLiteral("m");    break;
-    case eCSSUnit_Kilometer:    aResult.AppendLiteral("km");   break;
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
-    case eCSSUnit_Didot:        aResult.AppendLiteral("dt");   break;
-    case eCSSUnit_Cicero:       aResult.AppendLiteral("cc");   break;
 
     case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
     case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;

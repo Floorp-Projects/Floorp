@@ -50,6 +50,16 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
     is(state & STATE_COLLAPSED, 0,
        "Expanded " + aAccOrElmOrID + " cannot be collapsed!");
 
+  if (state & STATE_CHECKED || state & STATE_MIXED)
+    is(state & STATE_CHECKABLE, STATE_CHECKABLE,
+       "Checked or mixed element must be checkable!");
+
+  if (state & STATE_CHECKED)
+    is(state & STATE_MIXED, 0, "Checked element cannot be state mixed!");
+
+  if (state & STATE_MIXED)
+    is(state & STATE_CHECKED, 0, "Mixed element cannot be state checked!");
+
   if ((state & STATE_UNAVAILABLE)
       && (getRole(aAccOrElmOrID) != ROLE_GROUPING))
     is(state & STATE_FOCUSABLE, STATE_FOCUSABLE,
@@ -73,7 +83,7 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
   if (!acc)
     return;
 
-  if (acc.finalRole != ROLE_TEXT_LEAF)
+  if (getRole(acc) != ROLE_TEXT_LEAF)
     // Right now, text leafs don't get tested because the states are not being
     // propagated.
     testStates(acc, aState, aExtraState, aAbsentState);

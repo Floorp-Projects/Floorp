@@ -51,10 +51,7 @@ progressmeter {
   height: 12px;
 }
 
-
-
 .progress-remainder[flex="100"], .progress-remainder[flex="0"] {
-
   background-image: none !important;
   -moz-appearance: none;
 }
@@ -64,25 +61,4 @@ progressmeter {
 .progressmeter-statusbar {
   margin: 0;
   border-width: 1px;
-}
-
-
-.progressmeter-statusbar > .progressmeter-remainder {
-}
-/* ::::: statusbar progressmeter ::::: */
-
-
-.progressmeter-statusbar[mode="determined"]  {
- margin: 0;
-  border-width: 1px;
-}
-
-
-/* :::::: download progress meter :::::::: */
-
-#progress, #progress0 {
-	  vertical-align: baseline !important;
-          -moz-appearance: progressbar;
-           border-left: 1px solid #cccccc;
-  border-right: 1px solid #cccccc;
 }

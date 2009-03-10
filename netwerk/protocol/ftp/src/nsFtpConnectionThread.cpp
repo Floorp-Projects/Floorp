@@ -265,7 +265,9 @@ nsFtpState::EstablishControlConnection()
         
     // Look to see if we can use a cached control connection:
     nsFtpControlConnection *connection = nsnull;
-    gFtpHandler->RemoveConnection(mChannel->URI(), &connection);
+    // Don't use cached control if anonymous (bug #473371)
+    if (!mChannel->HasLoadFlag(nsIRequest::LOAD_ANONYMOUS))
+        gFtpHandler->RemoveConnection(mChannel->URI(), &connection);
 
     if (connection) {
         mControlConnection.swap(connection);
@@ -678,6 +680,11 @@ nsFtpState::S_user() {
     } else {
         mReconnectAndLoginAgain = PR_FALSE;
         if (mUsername.IsEmpty()) {
+
+            // No prompt for anonymous requests (bug #473371)
+            if (mChannel->HasLoadFlag(nsIRequest::LOAD_ANONYMOUS))
+              return NS_ERROR_FAILURE;
+
             nsCOMPtr<nsIAuthPrompt2> prompter;
             NS_QueryAuthPrompt2(static_cast<nsIChannel*>(mChannel),
                                 getter_AddRefs(prompter));
@@ -762,6 +769,11 @@ nsFtpState::S_pass() {
         }
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
+            
+            // No prompt for anonymous requests (bug #473371)
+            if (mChannel->HasLoadFlag(nsIRequest::LOAD_ANONYMOUS))
+                return NS_ERROR_FAILURE;
+
             nsCOMPtr<nsIAuthPrompt2> prompter;
             NS_QueryAuthPrompt2(static_cast<nsIChannel*>(mChannel),
                                 getter_AddRefs(prompter));
@@ -1725,8 +1737,12 @@ nsFtpState::KillControlConnection()
         mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
         mControlConnection->mPwd = mPwd;
-        nsresult rv = gFtpHandler->InsertConnection(mChannel->URI(),
-                                                    mControlConnection);
+        
+        nsresult rv = NS_OK;
+        // Don't cache controlconnection if anonymous (bug #473371)
+        if (!mChannel->HasLoadFlag(nsIRequest::LOAD_ANONYMOUS))
+            rv = gFtpHandler->InsertConnection(mChannel->URI(),
+                                               mControlConnection);
         // Can't cache it?  Kill it then.  
         mControlConnection->Disconnect(rv);
     } else {

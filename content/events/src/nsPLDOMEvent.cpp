@@ -49,26 +49,23 @@ NS_IMETHODIMP nsPLDOMEvent::Run()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> domEvent(mEvent);
-  if (!domEvent) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mEventNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDOMDocumentEvent> domEventDoc = do_QueryInterface(domDoc);
-    if (domEventDoc) {
-      domEventDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                               getter_AddRefs(domEvent));
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(domEvent));
-      if (privateEvent &&
-          NS_SUCCEEDED(domEvent->InitEvent(mEventType, PR_TRUE, PR_TRUE))) {
-        privateEvent->SetTrusted(PR_TRUE);
+  if (mEvent) {
+    NS_ASSERTION(!mDispatchChromeOnly, "Can't do that");
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mEventNode);
+    PRBool defaultActionEnabled; // This is not used because the caller is async
+    target->DispatchEvent(mEvent, &defaultActionEnabled);
+  } else {
+    nsIDocument* doc = mEventNode->GetOwnerDoc();
+    if (doc) {
+      if (mDispatchChromeOnly) {
+        nsContentUtils::DispatchChromeEvent(doc, mEventNode, mEventType,
+                                            PR_TRUE, PR_TRUE);
+      } else {
+        nsContentUtils::DispatchTrustedEvent(doc, mEventNode, mEventType,
+                                             PR_TRUE, PR_TRUE);
       }
     }
   }
-
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mEventNode);
-  PRBool defaultActionEnabled; // This is not used because the caller is async
-  target->DispatchEvent(domEvent, &defaultActionEnabled);
 
   return NS_OK;
 }

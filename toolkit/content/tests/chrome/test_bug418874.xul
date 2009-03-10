@@ -42,7 +42,8 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Textbox with emptyText test" width="500" height="600"
-        onload="doTest();"
+        onload="window.focus();"
+        onfocus="if (doTest) setTimeout(doTest, 0); doTest = null;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
@@ -68,6 +69,8 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
     function doTest() {
       var t1 = $("t1");
       var t2 = $("t2");
@@ -75,8 +78,10 @@
       synthesizeKey("1", {});
       var t1Enabled = {};
       var t1CanUndo = {};
+      is(t1.value, "1", "t1 value correct following input");
       t1.editor.canUndo(t1Enabled, t1CanUndo);
-      ok(t1CanUndo.value, "undo correctly enabled when emptyText was not changed through property");
+      is(t1CanUndo.value, true,
+         "undo correctly enabled when emptyText was not changed through property");
 
       t2.emptyText = "reallyempty";
       is(t2.inputField.value, "reallyempty", "updated emptyText displayed");
@@ -84,8 +89,12 @@
       synthesizeKey("2", {});
       var t2Enabled = {};
       var t2CanUndo = {};
+      is(t2.value, "2", "t2 value correct following input");
       t2.editor.canUndo(t2Enabled, t2CanUndo);
-      ok(t2CanUndo.value, "undo correctly enabled when emptyText explicitly changed through property");
+      is(t2CanUndo.value, true,
+         "undo correctly enabled when emptyText explicitly changed through property");
+
+      SimpleTest.finish();
    }
 
   ]]></script>

@@ -106,7 +106,6 @@ findbar {
 }
 
 .findbar-textbox {
-  -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
   -moz-appearance: none;
   border: 3px solid;
   -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;

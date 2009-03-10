@@ -407,10 +407,15 @@ PlacesTreeView.prototype = {
 
     // Date is calculated starting from midnight, so the modulo with a day are
     // milliseconds from today's midnight.
-    var now = Date.now();
-    var midnight = now - (now % (24 * 60 * 60 * 1000));
+    // getTimezoneOffset corrects that based on local time.
+    // 86400000 = 24 * 60 * 60 * 1000 = 1 day
+    // 60000 = 60 * 1000 = 1 minute
+    var dateObj = new Date();
+    var timeZoneOffsetInMs = dateObj.getTimezoneOffset() * 60000;
+    var now = dateObj.getTime() - timeZoneOffsetInMs;
+    var midnight = now - (now % (86400000));
 
-    var dateFormat = timeInMilliseconds > midnight ?
+    var dateFormat = timeInMilliseconds - timeZoneOffsetInMs >= midnight ?
                       Ci.nsIScriptableDateFormat.dateFormatNone :
                       Ci.nsIScriptableDateFormat.dateFormatShort;
 
@@ -923,6 +928,10 @@ PlacesTreeView.prototype = {
       else if (itemId != -1) { // bookmark nodes
         if (PlacesUtils.nodeIsLivemarkContainer(node.parent))
           properties.push(this._getAtomFor("livemarkItem"));
+        else if (PlacesUtils.nodeIsURI(node)) {
+          if (node.uri.lastIndexOf("javascript:", 0) == 0)
+            properties.push(this._getAtomFor("bookmarklet"));
+        }
       }
 
       this._visibleElements[aRow].properties = properties;

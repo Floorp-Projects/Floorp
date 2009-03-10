@@ -58,7 +58,7 @@ interface nsIAccessibleRelation;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(76c72c70-2c4b-4fce-8e75-b121db024333)]
+[scriptable, uuid(c81d8f8c-8585-4094-bc7c-71dd01494906)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -147,19 +147,12 @@ interface nsIAccessible : nsISupports
   nsIDOMDOMStringList getKeyBindings(in PRUint8 aActionIndex);
 
   /**
-   * Natural enumerated accessible role for the associated element.
-   * The values depend on platform because of variations.
-   * See the ROLE_* constants defined in nsIAccessibleRole.
-   * This does not take into account role attribute as the finalRole does.
+   * Enumerated accessible role (see the constants defined in nsIAccessibleRole).
+   *
+   * @note  The values might depend on platform because of variations. Widgets
+   *        can use ARIA role attribute to force the final role.
    */
   readonly attribute unsigned long role;
-
-  /**
-   * Enumerated accessible role. The values depend on platform because of variations.
-   * See the ROLE_* constants defined in nsIAccessibleRole.
-   * Widgets can use role attribute to force the final role
-   */
-  readonly attribute unsigned long finalRole;
 
   /**
    * Accessible states -- bit fields which describe boolean properties of node.

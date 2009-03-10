@@ -319,3 +319,10 @@ nsEnumRoleAccessible::nsEnumRoleAccessible(nsIDOMNode* aNode, nsIWeakReference* 
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, nsAccessible)
+
+nsresult
+nsEnumRoleAccessible::GetRoleInternal(PRUint32 *aRole)
+{
+  *aRole = mRole;
+  return NS_OK;
+}

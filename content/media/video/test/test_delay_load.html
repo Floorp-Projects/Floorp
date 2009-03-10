@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=479711
+-->
+<head>
+  <title>Test for Bug 479711</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script>
+  
+  var gLoadedDataCount = 0;
+  
+  function log(msg) {
+    //document.getElementById('log').innerHTML += "<p>"+msg+"</p>";
+    //dump(msg + "\n");
+  }
+  
+  function loadeddata() {
+    gLoadedDataCount++;
+  }
+  
+  function loaded() {
+    is(gLoadedDataCount, 5, "onload was not delayed until after metadataloaded");
+    log("doc-loaded gLoadedDataCount = " + gLoadedDataCount);
+    SimpleTest.finish();
+  }
+  
+  addLoadEvent(loaded);
+  
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479711">Mozilla Bug 479711</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+
+
+<video src="320x240.ogv" onloadeddata="loadeddata();"></video>
+
+
+<div id="log" style="font-size: small;"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 479711 **/
+
+var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
+
+
+
+function listener(evt) {
+  log('event ' + evt.target.id + " " + evt.type);
+}
+
+function createVideo(id) {
+  var v = document.createElement("video");
+  v.id = id;
+  for (var i=0; i<gEventTypes.length; i++) {
+    var t = gEventTypes[i];
+    v.addEventListener(t, listener, false);
+  }
+  v.addEventListener('loadeddata', loadeddata, false);
+  v.src = "http://localhost:8888/tests/content/media/video/test/320x240.ogv";
+  return v;
+}
+
+
+// Load, add, then remove.
+var v1 = createVideo("v1");
+v1.load();
+document.body.appendChild(v1);
+v1.parentNode.removeChild(v1);
+
+// Load and add.
+var v2 = createVideo("v2");
+v2.load();
+document.body.appendChild(v2);
+
+// Load outside of doc.
+var v3 = createVideo("v3");
+v3.load();
+
+// Load and move to another document.
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var v4 = createVideo("v4");
+v4.load(); // load started while in this document, this doc's load will block until
+            // the video's finished loading (in the other document).
+var gTestWindow = window.open("", "testWindow", "width=400,height=400");
+gTestWindow.document.body.appendChild(v4);
+v4.addEventListener('load',
+  function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    gTestWindow.close();
+  }, false);
+  
+</script>
+</pre>
+</body>
+</html>

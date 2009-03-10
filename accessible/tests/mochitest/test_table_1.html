@@ -3,64 +3,63 @@
  <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+
   <script type="application/javascript">
 
 function doTest()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var table = document.getElementById("table");
-  var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                   getService(Components.interfaces.nsIAccessibleRetrieval);
-  var accTable   = accService.getAccessibleFor(table).
-                   QueryInterface(Components.interfaces.nsIAccessibleTable);
+  var accTable = getAccessible("table", [nsIAccessibleTable]);
   var caption = accTable.caption;
   is(caption.firstChild.name, "Test Table", "wrong text inside caption");
-  const nsIAccessNode = Components.interfaces.nsIAccessible;
 
-  is(caption.children.queryElementAt(0, nsIAccessNode).name, "Test Table",
+  is(caption.children.queryElementAt(0, nsIAccessible).name, "Test Table",
      "wrong text inside caption");
 
   is(accTable.summary, "this is a test table for nsIAccessibleTable",
      "wrong summary on table");
-  is(accTable.columns, 4,"wrong number of columns");
+  is(accTable.columns, 4, "wrong number of columns");
   is(accTable.rows, 3, "wrong number of rows");
 
   var s = window.getSelection();
   if (s.rangeCount > 0)
     s.removeAllRanges();
 
-  var cell = document.getElementById("col2b");
+  var cell = getNode("col2b");
   var range = document.createRange();
   range.selectNode(cell);
   s.addRange(range);
 
-  is(accTable.selectedCellsCount, 1,"only one cell selected");
-  cell = document.getElementById("col2a");
+  is(accTable.selectedCellsCount, 1, "only one cell selected");
+  cell = getNode("col2a");
   range.selectNode(cell);
   s.addRange(range);
-  cell = document.getElementById("col2c");
+  cell = getNode("col2c");
   range.selectNode(cell);
   s.addRange(range);
   is(accTable.selectedColumnsCount, 1, "only one column selected");
-  cell = document.getElementById("row2a");
+  cell = getNode("row2a");
   range.selectNode(cell);
   s.addRange(range);
-  cell = document.getElementById("row2b");
+  cell = getNode("row2b");
   range.selectNode(cell);
   s.addRange(range);
-  cell = document.getElementById("row2c");
+  cell = getNode("row2c");
   range.selectNode(cell);
   s.addRange(range);
 
   is(accTable.selectedRowsCount, 1, "no cells selected");
 
   var rowheader;
-  var works;
-  works = true;
+  var works = true;
   try {
-    rowheader  = accTable.rowHeader;
+    rowheader = accTable.rowHeader;
   }
   catch (e) {
     works = false;
@@ -71,7 +70,7 @@ function doTest()
   works = true;
   try {
     columnHeader = accTable.columnHeader;
-    columnHeaderIndex =columnHeader.getIndexAt(0,2);
+    columnHeaderIndex = columnHeader.getIndexAt(0, 2);
     is(columnHeaderIndex, 2, "columnheaderindex is wrong");
   }
   catch (e) {

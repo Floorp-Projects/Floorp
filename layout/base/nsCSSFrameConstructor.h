@@ -282,6 +282,8 @@ public:
   PRBool IsDestroyingFrameTree() { return mIsDestroyingFrameTree; }
 
 private:
+  struct FrameConstructionItem;
+  class FrameConstructionItemList;
 
   nsresult ReconstructDocElementHierarchyInternal();
 
@@ -315,11 +317,21 @@ private:
   already_AddRefed<nsStyleContext>
   ResolveStyleContext(nsIFrame*         aParentFrame,
                       nsIContent*       aContent);
+  already_AddRefed<nsStyleContext>
+  ResolveStyleContext(nsStyleContext* aParentStyleContext,
+                      nsIContent* aContent);
 
   nsresult ConstructFrame(nsFrameConstructorState& aState,
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
                           nsFrameItems&            aFrameItems);
+
+  // Add the frame construction items for the given aContent and aParentFrame
+  // to the list.  This might add more than one item in some rare cases.
+  void AddFrameConstructionItems(nsFrameConstructorState& aState,
+                                 nsIContent*              aContent,
+                                 nsIFrame*                aParentFrame,
+                                 FrameConstructionItemList& aItems);
 
   nsresult ConstructDocElementFrame(nsFrameConstructorState& aState,
                                     nsIContent*              aDocElement,
@@ -375,12 +387,13 @@ private:
                                                       nsStyleContext* aStyleContext,
                                                       PRUint32        aContentIndex);
 
-  void CreateGeneratedContentFrame(nsFrameConstructorState& aState,
-                                   nsIFrame*                aFrame,
-                                   nsIContent*              aContent,
-                                   nsStyleContext*          aStyleContext,
-                                   nsIAtom*                 aPseudoElement,
-                                   nsFrameItems&            aFrameItems);
+  // aFrame may be null; this method doesn't use it directly in any case.
+  void CreateGeneratedContentItem(nsFrameConstructorState& aState,
+                                  nsIFrame*                aFrame,
+                                  nsIContent*              aContent,
+                                  nsStyleContext*          aStyleContext,
+                                  nsIAtom*                 aPseudoElement,
+                                  FrameConstructionItemList& aItems);
 
   // This method can change aFrameList: it can chop off the end and
   // put it in a special sibling of aParentFrame.  It can also change
@@ -397,11 +410,8 @@ private:
    * callback used for the job.
    */
   nsresult ConstructTable(nsFrameConstructorState& aState,
-                          nsIContent*              aContent,
+                          FrameConstructionItem&   aItem,
                           nsIFrame*                aParentFrame,
-                          nsIAtom*                 aTag,
-                          PRInt32                  aNameSpaceID,
-                          nsStyleContext*          aStyleContext,
                           const nsStyleDisplay*    aDisplay,
                           nsFrameItems&            aFrameItems,
                           nsIFrame**               aNewFrame);
@@ -411,11 +421,8 @@ private:
    * the FrameConstructionData callback used for the job.
    */
   nsresult ConstructTablePart(nsFrameConstructorState& aState,
-                              nsIContent*              aContent,
+                              FrameConstructionItem&   aItem,
                               nsIFrame*                aParentFrame,
-                              nsIAtom*                 aTag,
-                              PRInt32                  aNameSpaceID,
-                              nsStyleContext*          aStyleContext,
                               const nsStyleDisplay*    aDisplay,
                               nsFrameItems&            aFrameItems,
                               nsIFrame**               aNewFrame);
@@ -576,12 +583,10 @@ private:
      expected to deal with the primary frame map.
 
      @param aState the frame construction state to use.
-     @param aContent the content node to construct the frame for.
+     @param aItem the frame construction item to use
      @param aParentFrame the frame to set as the parent of the
                          newly-constructed frame.
-     @param aTag the content's XBL-resolved tag.
-     @param aNameSpaceID the content's XBL-resolved namespace.
-     @param aStyleContext the style context to use for the new frame.
+     @param aStyleDisplay the display struct from aItem's mStyleContext
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
      @param aFrame out param handing out the frame that was constructed.  This
@@ -589,11 +594,8 @@ private:
   */
   typedef nsresult
     (nsCSSFrameConstructor::* FrameFullConstructor)(nsFrameConstructorState& aState,
-                                                    nsIContent* aContent,
+                                                    FrameConstructionItem& aItem,
                                                     nsIFrame* aParentFrame,
-                                                    nsIAtom* aTag,
-                                                    PRInt32 aNameSpaceID,
-                                                    nsStyleContext* aStyleContext,
                                                     const nsStyleDisplay* aStyleDisplay,
                                                     nsFrameItems& aFrameItems,
                                                     nsIFrame** aFrame);
@@ -614,8 +616,9 @@ private:
      mFunc */
 #define FCDATA_FUNC_IS_FULL_CTOR 0x4
   /* If FCDATA_DISALLOW_OUT_OF_FLOW is set, do not allow the frame to
-     float or be absolutely positioned.  This cannot be used with
-     FCDATA_FUNC_IS_FULL_CTOR */
+     float or be absolutely positioned.  This can also be used with
+     FCDATA_FUNC_IS_FULL_CTOR to indicate what the full-constructor
+     function will do. */
 #define FCDATA_DISALLOW_OUT_OF_FLOW 0x8
   /* If FCDATA_FORCE_NULL_ABSPOS_CONTAINER is set, make sure to push a
      null absolute containing block before processing children for this
@@ -658,6 +661,12 @@ private:
      table-related thing and we should not attempt to fetch a table-cell parent
      for it if it's inside another table-related frame. */
 #define FCDATA_IS_TABLE_PART 0x1000
+  /* If FCDATA_IS_INLINE is set, then the frame is a non-replaced CSS
+     inline box. */
+#define FCDATA_IS_INLINE 0x2000
+  /* If FCDATA_IS_LINE_PARTICIPANT is set, the the frame is something that will
+     return true for IsFrameOfType(nsIFrame::eLineParticipant) */
+#define FCDATA_IS_LINE_PARTICIPANT 0x4000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -719,6 +728,160 @@ private:
                   const FrameConstructionDataByTag* aDataPtr,
                   PRUint32 aDataLength);
 
+  /* A class representing a list of FrameConstructionItems */
+  class FrameConstructionItemList {
+  public:
+    FrameConstructionItemList() :
+      mInlineCount(0),
+      mLineParticipantCount(0),
+      mItemCount(0)
+    {
+      PR_INIT_CLIST(&mItems);
+    }
+
+    ~FrameConstructionItemList() {
+      PRCList* cur = PR_NEXT_LINK(&mItems);
+      while (cur != &mItems) {
+        PRCList* next = PR_NEXT_LINK(cur);
+        delete ToItem(cur);
+        cur = next;
+      }
+
+      // Leaves our mItems pointing to deleted memory in both directions,
+      // but that's OK at this point.
+    }
+
+    PRBool IsEmpty() const { return PR_CLIST_IS_EMPTY(&mItems); }
+    PRBool AnyItemsNeedBlockParent() const { return mLineParticipantCount != 0; }
+    PRBool AreAllItemsInline() const { return mInlineCount == mItemCount; }
+    PRBool IsStartInline() const {
+      NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
+      return ToItem(PR_LIST_HEAD(&mItems))->mHasInlineEnds;
+    }
+    PRBool IsEndInline() const {
+      NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
+      return ToItem(PR_LIST_TAIL(&mItems))->mHasInlineEnds;
+    }
+
+    FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
+                                      nsIContent* aContent,
+                                      nsIAtom* aTag,
+                                      PRInt32 aNameSpaceID,
+                                      already_AddRefed<nsStyleContext> aStyleContext)
+    {
+      FrameConstructionItem* item =
+        new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
+                                  aStyleContext);
+      if (item) {
+        PR_APPEND_LINK(item, &mItems);
+        ++mItemCount;
+      } else {
+        // Clean up the style context
+        nsRefPtr<nsStyleContext> sc(aStyleContext);
+      }
+      return item;
+    }
+
+    void InlineItemAdded() { ++mInlineCount; }
+    void LineParticipantItemAdded() { ++mLineParticipantCount; }
+
+    class Iterator;
+    friend class Iterator;
+    class Iterator {
+    public:
+      Iterator(FrameConstructionItemList& list) :
+        mCurrent(PR_NEXT_LINK(&list.mItems)),
+        mEnd(&list.mItems)
+      {}
+
+      operator FrameConstructionItem& () {
+        return *FrameConstructionItemList::ToItem(mCurrent);
+      }
+      PRBool IsDone() const { return mCurrent == mEnd; }
+      void Next() {
+        NS_ASSERTION(!IsDone(), "Should have checked IsDone()!");
+        mCurrent = PR_NEXT_LINK(mCurrent);
+      }
+    private:
+      PRCList* mCurrent;
+      PRCList* mEnd;
+    };
+
+  private:
+    static FrameConstructionItem* ToItem(PRCList* item) {
+      return static_cast<FrameConstructionItem*>(item);
+    }
+
+    PRCList mItems;
+    PRUint32 mInlineCount;
+    PRUint32 mLineParticipantCount;
+    PRUint32 mItemCount;
+  };
+
+  typedef FrameConstructionItemList::Iterator FCItemIterator;
+
+  /* A struct representing an item for which frames might need to be
+   * constructed.  This contains all the information needed to construct the
+   * frame other than the parent frame and whatever would be stored in the
+   * frame constructor state. */
+  struct FrameConstructionItem : public PRCList {
+    // No need to PR_INIT_CLIST in the constructor because the only
+    // place that creates us immediately appends us.
+    FrameConstructionItem(const FrameConstructionData* aFCData,
+                          nsIContent* aContent,
+                          nsIAtom* aTag,
+                          PRInt32 aNameSpaceID,
+                          already_AddRefed<nsStyleContext> aStyleContext) :
+      mFCData(aFCData), mContent(aContent), mTag(aTag),
+      mNameSpaceID(aNameSpaceID), mStyleContext(aStyleContext),
+      mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
+      mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE),
+      mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE)
+    {}
+    ~FrameConstructionItem() {
+      if (mIsGeneratedContent) {
+        mContent->UnbindFromTree();
+        NS_RELEASE(mContent);
+      }
+    }
+
+    // The FrameConstructionData to use.
+    const FrameConstructionData* mFCData;
+    // The nsIContent node to use when initializing the new frame.
+    nsIContent* mContent;
+    // The XBL-resolved tag name to use for frame construction.
+    nsIAtom* mTag;
+    // The XBL-resolved namespace to use for frame construction.
+    PRInt32 mNameSpaceID;
+    // The style context to use for creating the new frame.
+    nsRefPtr<nsStyleContext> mStyleContext;
+    // Whether this is a text content item.
+    PRPackedBool mIsText;
+    // Whether this is generated content.  If it is, mContent is a strong
+    // pointer.
+    PRPackedBool mIsGeneratedContent;
+    // Whether this is an item for the root popupgroup.
+    PRPackedBool mIsRootPopupgroup;
+    // Whether construction from this item will create only frames that are
+    // IsInlineOutside() in the principal child list.
+    PRPackedBool mIsAllInline;
+    // Whether construction from this item will give leading and trailing
+    // inline frames.  This is equal to mIsAllInline, except for inline frame
+    // items, where it's always true, whereas mIsAllInline might be false due
+    // to {ib} splits.
+    PRPackedBool mHasInlineEnds;
+    // Whether construction from this item will create a popup that needs to
+    // go into the global popup items.
+    PRPackedBool mIsPopup;
+
+    // Child frame construction items.
+    // Only used for inline frame items for now.
+    FrameConstructionItemList mChildItems;
+
+  private:
+    FrameConstructionItem(const FrameConstructionItem& aOther); /* not implemented */
+  };
+
   /**
    * Function to adjust aParentFrame and aFrameItems to deal with table
    * pseudo-frames that may have to be inserted.
@@ -729,14 +892,12 @@ private:
    * @param aFCData the FrameConstructionData that would be used for frame
    *        construction.
    * @param aNameSpaceID namespace that will be used for frame construction
-   * @param aDisplay the display style struct for aChildContent
+   * @param aStyleContext the style context for aChildContent
    * @param aFrameItems the framelist we think we need to put the child frame
    *        into.  If we have to construct pseudo-frames, we'll modify the
    *        pointer to point to the list the child frame should go into.
    * @param aSaveState the nsFrameConstructorSaveState we can use for pushing a
    *        float containing block if we have to do it.
-   * @param aSuppressFrame whether we should not create a frame below this
-   *        parent
    * @param aCreatedPseudo whether we had to create a pseudo-parent
    * @return NS_OK on success, NS_ERROR_OUT_OF_MEMORY and such as needed.
    */
@@ -749,10 +910,9 @@ private:
                              nsIFrame* &                  aParentFrame,
                              const FrameConstructionData* aFCData,
                              PRInt32                      aNameSpaceID,
-                             const nsStyleDisplay*        aDisplay,
+                             nsStyleContext*              aStyleContext,
                              nsFrameItems* &              aFrameItems,
                              nsFrameConstructorSaveState& aSaveState,
-                             PRBool&                      aSuppressFrame,
                              PRBool&                      aCreatedPseudo);
 
   // END TABLE SECTION
@@ -770,11 +930,8 @@ private:
   // ConstructButtonFrame puts the new frame in aFrameItems and
   // handles the kids of the button.
   nsresult ConstructButtonFrame(nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
+                                FrameConstructionItem&    aItem,
                                 nsIFrame*                aParentFrame,
-                                nsIAtom*                 aTag,
-                                PRInt32                  aNameSpaceID,
-                                nsStyleContext*          aStyleContext,
                                 const nsStyleDisplay*    aStyleDisplay,
                                 nsFrameItems&            aFrameItems,
                                 nsIFrame**               aNewFrame);
@@ -782,11 +939,8 @@ private:
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
   nsresult ConstructSelectFrame(nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
+                                FrameConstructionItem&   aItem,
                                 nsIFrame*                aParentFrame,
-                                nsIAtom*                 aTag,
-                                PRInt32                  aNameSpaceID,
-                                nsStyleContext*          aStyleContext,
                                 const nsStyleDisplay*    aStyleDisplay,
                                 nsFrameItems&            aFrameItems,
                                 nsIFrame**               aNewFrame);
@@ -794,15 +948,14 @@ private:
   // ConstructFieldSetFrame puts the new frame in aFrameItems and
   // handles the kids of the fieldset
   nsresult ConstructFieldSetFrame(nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
+                                  FrameConstructionItem&   aItem,
                                   nsIFrame*                aParentFrame,
-                                  nsIAtom*                 aTag,
-                                  PRInt32                  aNameSpaceID,
-                                  nsStyleContext*          aStyleContext,
                                   const nsStyleDisplay*    aStyleDisplay,
                                   nsFrameItems&            aFrameItems,
                                   nsIFrame**               aNewFrame);
 
+  // aParentFrame might be null.  If it is, that means it was an
+  // inline frame.
   static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame);
 
   nsresult ConstructTextFrame(const FrameConstructionData* aData,
@@ -813,24 +966,14 @@ private:
                               nsFrameItems&            aFrameItems,
                               PRBool                   aPseudoParent);
 
-  nsresult ConstructPageBreakFrame(nsFrameConstructorState& aState,
-                                   nsIContent*              aContent,
-                                   nsIFrame*                aParentFrame,
-                                   nsStyleContext*          aStyleContext,
-                                   nsFrameItems&            aFrameItems);
-
-  // Construct a page break frame if page-break-before:always is set in aStyleContext
-  // and add it to aFrameItems. Return true if page-break-after:always is set on aStyleContext.
-  // Don't do this for row groups, rows or cell, because tables handle those internally.
-  PRBool PageBreakBefore(nsFrameConstructorState& aState,
-                         nsIContent*              aContent,
-                         nsIFrame*                aParentFrame,
-                         nsStyleContext*          aStyleContext,
-                         const FrameConstructionData* aFCData,
-                         nsFrameItems&            aFrameItems);
+  void AddPageBreakItem(nsIContent* aContent,
+                        nsStyleContext* aMainStyleContext,
+                        FrameConstructionItemList& aItems);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not HTML.
+  // aParentFrame might be null.  If it is, that means it was an
+  // inline frame.
   static const FrameConstructionData* FindHTMLData(nsIContent* aContent,
                                                    nsIAtom* aTag,
                                                    PRInt32 aNameSpaceID,
@@ -846,46 +989,58 @@ private:
   static const FrameConstructionData*
     FindObjectData(nsIContent* aContent, nsStyleContext* aStyleContext);
 
-  /* Construct a frame from the given FrameConstructionData.  This function
+  /* Construct a frame from the given FrameConstructionItem.  This function
      will handle adding the frame to frame lists, processing children, adding
      it to the primary frame map, and so forth.
 
-     @param aData the FrameConstructionData to use.  Must not be null.
+     @param aItem the FrameConstructionItem to use.
      @param aState the frame construction state to use.
-     @param aContent the content node to construct the frame for.
      @param aParentFrame the frame to set as the parent of the
                          newly-constructed frame.
-     @param aTag the content's XBL-resolved tag.
-     @param aNameSpaceID the content's XBL-resolved namespace ID.
-     @param aStyleContext the style context to use for the new frame.
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
      @param aHasPseudoParent whether aParentFrame is a table pseudo-frame.
   */
-  nsresult ConstructFrameFromData(const FrameConstructionData* aData,
-                                  nsFrameConstructorState& aState,
-                                  nsIContent* aContent,
-                                  nsIFrame* aParentFrame,
-                                  nsIAtom* aTag,
-                                  PRInt32 aNameSpaceID,
-                                  nsStyleContext* aStyleContext,
-                                  nsFrameItems& aFrameItems,
-                                  PRBool aHasPseudoParent);
+  nsresult ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
+                                          nsFrameConstructorState& aState,
+                                          nsIFrame* aParentFrame,
+                                          nsFrameItems& aFrameItems,
+                                          PRBool aHasPseudoParent);
 
-  nsresult ConstructFrameInternal(nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParentFrame,
-                                  nsIAtom*                 aTag,
-                                  PRInt32                  aNameSpaceID,
-                                  nsStyleContext*          aStyleContext,
-                                  nsFrameItems&            aFrameItems,
-                                  PRBool                   aAllowXBLBase,
-                                  PRBool                   aAllowPageBreaks);
+  // possible flags for AddFrameConstructionItemInternal's aFlags argument
+  /* Allow xbl:base to affect the tag/namespace used. */
+#define ITEM_ALLOW_XBL_BASE 0x1
+  /* Allow page-break before and after items to be created if the
+     style asks for them. */
+#define ITEM_ALLOW_PAGE_BREAK 0x2
+  /* The item is a generated content item. */
+#define ITEM_IS_GENERATED_CONTENT 0x4
+  // The guts of AddFrameConstructionItems
+  // aParentFrame might be null.  If it is, that means it was an
+  // inline frame.
+  void AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
+                                         nsIContent*              aContent,
+                                         nsIFrame*                aParentFrame,
+                                         nsIAtom*                 aTag,
+                                         PRInt32                  aNameSpaceID,
+                                         nsStyleContext*          aStyleContext,
+                                         PRUint32                 aFlags,
+                                         FrameConstructionItemList& aItems);
+
+  // On success, always puts something in aChildItems
+  nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
+                                   FrameConstructionItem& aItem,
+                                   nsIFrame* aParentFrame,
+                                   nsFrameItems& aFrameItems);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aParentFrame,
                                  nsFrameItems&            aChildItems);
+
+  nsresult GetAnonymousContent(nsIContent* aParent,
+                               nsIFrame* aParentFrame,
+                               nsTArray<nsIContent*>& aAnonContent);
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
@@ -953,11 +1108,8 @@ private:
                                                   nsStyleContext* aStyleContext);
 
   nsresult ConstructSVGForeignObjectFrame(nsFrameConstructorState& aState,
-                                          nsIContent* aContent,
+                                          FrameConstructionItem&   aItem,
                                           nsIFrame* aParentFrame,
-                                          nsIAtom* aTag,
-                                          PRInt32 aNameSpaceID,
-                                          nsStyleContext* aStyleContext,
                                           const nsStyleDisplay* aStyleDisplay,
                                           nsFrameItems& aFrameItems,
                                           nsIFrame** aNewFrame);
@@ -972,11 +1124,8 @@ private:
    * Construct a scrollable block frame
    */
   nsresult ConstructScrollableBlock(nsFrameConstructorState& aState,
-                                    nsIContent*              aContent,
+                                    FrameConstructionItem&   aItem,
                                     nsIFrame*                aParentFrame,
-                                    nsIAtom*                 aTag,
-                                    PRInt32                  aNameSpaceID,
-                                    nsStyleContext*          aStyleContext,
                                     const nsStyleDisplay*    aDisplay,
                                     nsFrameItems&            aFrameItems,
                                     nsIFrame**               aNewFrame);
@@ -985,11 +1134,8 @@ private:
    * Construct a non-scrollable block frame
    */
   nsresult ConstructNonScrollableBlock(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
+                                       FrameConstructionItem&   aItem,
                                        nsIFrame*                aParentFrame,
-                                       nsIAtom*                 aTag,
-                                       PRInt32                  aNameSpaceID,
-                                       nsStyleContext*          aStyleContext,
                                        const nsStyleDisplay*    aDisplay,
                                        nsFrameItems&            aFrameItems,
                                        nsIFrame**               aNewFrame);
@@ -1027,9 +1173,9 @@ private:
                            nsIContent*              aContent,
                            nsStyleContext*          aStyleContext,
                            nsIFrame*                aFrame,
-                           PRBool                   aCanHaveGeneratedContent,
+                           const PRBool             aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
-                           PRBool                   aAllowBlockStyles);
+                           const PRBool             aAllowBlockStyles);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
@@ -1168,11 +1314,8 @@ private:
                           PRBool                   aAbsPosContainer);
 
   nsresult ConstructInline(nsFrameConstructorState& aState,
-                           nsIContent*              aContent,
+                           FrameConstructionItem&   aItem,
                            nsIFrame*                aParentFrame,
-                           nsIAtom*                 aTag,
-                           PRInt32                  aNameSpaceID,
-                           nsStyleContext*          aStyleContext,
                            const nsStyleDisplay*    aDisplay,
                            nsFrameItems&            aFrameItems,
                            nsIFrame**               aNewFrame);
@@ -1195,24 +1338,36 @@ private:
                                 nsIFrame* aBlockPart,
                                 nsFrameConstructorState* aTargetState);
 
-  nsresult ProcessInlineChildren(nsFrameConstructorState& aState,
-                                 nsIContent*              aContent,
-                                 nsIFrame*                aFrame,
-                                 PRBool                   aCanHaveGeneratedContent,
-                                 nsFrameItems&            aFrameItems,
-                                 PRBool*                  aKidsAllInline);
+  /**
+   * For an inline aParentItem, construct its list of child
+   * FrameConstructionItems and set its mIsAllInline flag appropriately.
+   */
+  void BuildInlineChildItems(nsFrameConstructorState& aState,
+                             FrameConstructionItem& aParentItem);
+
+  /**
+   * Construct frames for the given item list and put the resulting frames in
+   * aFrameItems.  This function will save pseudoframes on entry and restore on
+   * exit.
+   */
+  nsresult ConstructFramesFromItemList(nsFrameConstructorState& aState,
+                                       FrameConstructionItemList& aItems,
+                                       nsIFrame* aParentFrame,
+                                       nsFrameItems& aFrameItems);
 
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
   // (and therefore need an {ib} split).  If aIsAppend is true, aPrevSibling is
   // ignored.  Otherwise it may be used to determine whether to reframe when
-  // inserting into the block of an {ib} split.
+  // inserting into the block of an {ib} split.  Passing a null aPrevSibling in
+  // the non-append case is ok in terms of correctness.  It might reframe when
+  // we don't really need to, but that's it.
   // @return PR_TRUE if we reconstructed the containing block, PR_FALSE
   // otherwise
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
                              nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             const nsFrameItems&      aFrameList,
+                             const FrameConstructionItemList& aItems,
                              PRBool                   aIsAppend,
                              nsIFrame*                aPrevSibling);
 

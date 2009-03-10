@@ -447,18 +447,20 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
         file = fopen(filename, "r");
+        if (!file) {
+            JS_ReportError(cx, "cannot open file '%s' for reading", filename);
+            return JS_FALSE;
+        }
         script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
                                                    gJSPrincipals);
-        if (file)
-            fclose(file);
+        fclose(file);
         if (!script)
-            ok = JS_FALSE;
-        else {
-            ok = !compileOnly
-                 ? JS_ExecuteScript(cx, obj, script, &result)
-                 : JS_TRUE;
-            JS_DestroyScript(cx, script);
-        }
+            return JS_FALSE;
+
+        ok = !compileOnly
+             ? JS_ExecuteScript(cx, obj, script, &result)
+             : JS_TRUE;
+        JS_DestroyScript(cx, script);
         if (!ok)
             return JS_FALSE;
     }

@@ -50,7 +50,6 @@
 #include "nsSVGPoint.h"
 #include "nsSVGTransform.h"
 #include "nsIDOMEventTarget.h"
-#include "nsBindingManager.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h" //XXX
 #include "nsSVGNumber.h"
@@ -460,15 +459,16 @@ NS_IMETHODIMP
 nsSVGSVGElement::PauseAnimations()
 {
 #ifdef MOZ_SMIL
-  if (mTimedDocumentRoot) {
-    mTimedDocumentRoot->Pause(nsSMILTimeContainer::PAUSE_SCRIPT);
+  if (NS_SMILEnabled()) {
+    if (mTimedDocumentRoot) {
+      mTimedDocumentRoot->Pause(nsSMILTimeContainer::PAUSE_SCRIPT);
+    }
+    // else we're not the outermost <svg> or not bound to a tree, so silently fail
+    return NS_OK;
   }
-  // else we're not the outermost <svg> or not bound to a tree, so silently fail
-  return NS_OK;
-#else
+#endif // MOZ_SMIL
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::PauseAnimations");
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 /* void unpauseAnimations (); */
@@ -476,15 +476,16 @@ NS_IMETHODIMP
 nsSVGSVGElement::UnpauseAnimations()
 {
 #ifdef MOZ_SMIL
-  if (mTimedDocumentRoot) {
-    mTimedDocumentRoot->Resume(nsSMILTimeContainer::PAUSE_SCRIPT);
+  if (NS_SMILEnabled()) {
+    if (mTimedDocumentRoot) {
+      mTimedDocumentRoot->Resume(nsSMILTimeContainer::PAUSE_SCRIPT);
+    }
+    // else we're not the outermost <svg> or not bound to a tree, so silently fail
+    return NS_OK;
   }
-  // else we're not the outermost <svg> or not bound to a tree, so silently fail
-  return NS_OK;
-#else
+#endif // MOZ_SMIL
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::UnpauseAnimations");
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 /* boolean animationsPaused (); */
@@ -492,13 +493,14 @@ NS_IMETHODIMP
 nsSVGSVGElement::AnimationsPaused(PRBool *_retval)
 {
 #ifdef MOZ_SMIL
-  nsSMILTimeContainer* root = GetTimedDocumentRoot();
-  *_retval = root && root->IsPausedByType(nsSMILTimeContainer::PAUSE_SCRIPT);
-  return NS_OK;
-#else
+  if (NS_SMILEnabled()) {
+    nsSMILTimeContainer* root = GetTimedDocumentRoot();
+    *_retval = root && root->IsPausedByType(nsSMILTimeContainer::PAUSE_SCRIPT);
+    return NS_OK;
+  }
+#endif // MOZ_SMIL
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::AnimationsPaused");
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 /* float getCurrentTime (); */
@@ -506,18 +508,19 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentTime(float *_retval)
 {
 #ifdef MOZ_SMIL
-  nsSMILTimeContainer* root = GetTimedDocumentRoot();
-  if (root) {
-    double fCurrentTimeMs = double(root->GetCurrentTime());
-    *_retval = (float)(fCurrentTimeMs / PR_MSEC_PER_SEC);
-  } else {
-    *_retval = 0.f;
+  if (NS_SMILEnabled()) {
+    nsSMILTimeContainer* root = GetTimedDocumentRoot();
+    if (root) {
+      double fCurrentTimeMs = double(root->GetCurrentTime());
+      *_retval = (float)(fCurrentTimeMs / PR_MSEC_PER_SEC);
+    } else {
+      *_retval = 0.f;
+    }
+    return NS_OK;
   }
-  return NS_OK;
-#else
+#endif // MOZ_SMIL
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetCurrentTime");
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 /* void setCurrentTime (in float seconds); */
@@ -526,33 +529,34 @@ nsSVGSVGElement::SetCurrentTime(float seconds)
 {
   NS_ENSURE_FINITE(seconds, NS_ERROR_ILLEGAL_VALUE);
 #ifdef MOZ_SMIL
-  if (mTimedDocumentRoot) {
-    double fMilliseconds = double(seconds) * PR_MSEC_PER_SEC;
-    // Round to nearest whole number before converting, to avoid precision
-    // errors
-    nsSMILTime lMilliseconds = PRInt64(NS_round(fMilliseconds));
-    mTimedDocumentRoot->SetCurrentTime(lMilliseconds);
-    // Force a resample now
-    //
-    // It's not sufficient to just request a resample here because calls to
-    // BeginElement etc. expect to operate on an up-to-date timegraph or else
-    // instance times may be incorrectly discarded.
-    //
-    // See the mochitest: test_smilSync.xhtml:testSetCurrentTime()
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      nsSMILAnimationController* smilController = doc->GetAnimationController();
-      if (smilController) {
-        smilController->Resample();
+  if (NS_SMILEnabled()) {
+    if (mTimedDocumentRoot) {
+      double fMilliseconds = double(seconds) * PR_MSEC_PER_SEC;
+      // Round to nearest whole number before converting, to avoid precision
+      // errors
+      nsSMILTime lMilliseconds = PRInt64(NS_round(fMilliseconds));
+      mTimedDocumentRoot->SetCurrentTime(lMilliseconds);
+      // Force a resample now
+      //
+      // It's not sufficient to just request a resample here because calls to
+      // BeginElement etc. expect to operate on an up-to-date timegraph or else
+      // instance times may be incorrectly discarded.
+      //
+      // See the mochitest: test_smilSync.xhtml:testSetCurrentTime()
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        nsSMILAnimationController* smilController = doc->GetAnimationController();
+        if (smilController) {
+          smilController->Resample();
+        }
       }
-    }
-  } // else we're not the outermost <svg> or not bound to a tree, so silently
-    // fail
-  return NS_OK;
-#else
+    } // else we're not the outermost <svg> or not bound to a tree, so silently
+      // fail
+    return NS_OK;
+  }
+#endif // MOZ_SMIL
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetCurrentTime");
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 /* nsIDOMNodeList getIntersectionList (in nsIDOMSVGRect rect, in nsIDOMSVGElement referenceElement); */
@@ -775,31 +779,13 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
 
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the bindings that gives us our anonymous
-  // ancestors. That's the binding manager for the document we actually belong
-  // to, which is our owner doc.
-  nsIDocument* ownerDoc = GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
   nsCOMPtr<nsIContent> element = this;
   nsCOMPtr<nsIContent> ancestor;
   unsigned short ancestorCount = 0;
   nsCOMPtr<nsIDOMSVGMatrix> ancestorCTM;
 
   while (1) {
-    ancestor = nsnull;
-    if (bindingManager) {
-      // check for an anonymous ancestor first
-      ancestor = bindingManager->GetInsertionParent(element);
-    }
-    if (!ancestor) {
-      // if we didn't find an anonymous ancestor, use the explicit one
-      ancestor = element->GetParent();
-    }
+    ancestor = nsSVGUtils::GetParentElement(element);
     if (!ancestor) {
       // reached the top of our parent chain without finding an SVG ancestor
       break;
@@ -897,31 +883,13 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the bindings that gives us our anonymous
-  // ancestors. That's the binding manager for the document we actually belong
-  // to, which is our owner doc.
-  nsIDocument* ownerDoc = GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
   nsCOMPtr<nsIContent> element = this;
   nsCOMPtr<nsIContent> ancestor;
   unsigned short ancestorCount = 0;
   nsCOMPtr<nsIDOMSVGMatrix> ancestorScreenCTM;
 
   while (1) {
-    ancestor = nsnull;
-    if (bindingManager) {
-      // check for an anonymous ancestor first
-      ancestor = bindingManager->GetInsertionParent(element);
-    }
-    if (!ancestor) {
-      // if we didn't find an anonymous ancestor, use the explicit one
-      ancestor = element->GetParent();
-    }
+    ancestor = nsSVGUtils::GetParentElement(element);
     if (!ancestor) {
       // reached the top of our parent chain without finding an SVG ancestor
       break;
@@ -1321,15 +1289,26 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
                             nsIContent* aBindingParent,
                             PRBool aCompileEventHandlers)
 {
-  PRBool outermost = WillBeOutermostSVG(aParent, aBindingParent);
+  nsSMILAnimationController* smilController = nsnull;
 
-  if (!mTimedDocumentRoot && outermost) {
-    // We will now be the outermost SVG element
-    mTimedDocumentRoot = new nsSMILTimeContainer();
-    NS_ENSURE_TRUE(mTimedDocumentRoot, NS_ERROR_OUT_OF_MEMORY);
-  } else if (!outermost) {
-    mTimedDocumentRoot = nsnull;
-    mStartAnimationOnBindToTree = PR_TRUE;
+  if (aDocument) {
+    smilController = aDocument->GetAnimationController();
+    if (smilController) {
+      // SMIL is enabled in this document
+      if (WillBeOutermostSVG(aParent, aBindingParent)) {
+        // We'll be the outermost <svg> element.  We'll need a time container.
+        if (!mTimedDocumentRoot) {
+          mTimedDocumentRoot = new nsSMILTimeContainer();
+          NS_ENSURE_TRUE(mTimedDocumentRoot, NS_ERROR_OUT_OF_MEMORY);
+        }
+      } else {
+        // We're a child of some other <svg> element, so we don't need our own
+        // time container. However, we need to make sure that we'll get a
+        // kick-start if we get promoted to be outermost later on.
+        mTimedDocumentRoot = nsnull;
+        mStartAnimationOnBindToTree = PR_TRUE;
+      }
+    }
   }
 
   nsresult rv = nsSVGSVGElementBase::BindToTree(aDocument, aParent,
@@ -1337,14 +1316,8 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
                                                 aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (mTimedDocumentRoot) {
-    if (aDocument) {
-      nsSMILAnimationController* smilController = 
-        aDocument->GetAnimationController();
-      if (smilController) {
-        rv = mTimedDocumentRoot->SetParent(smilController);
-      }
-    }
+  if (mTimedDocumentRoot && smilController) {
+    rv = mTimedDocumentRoot->SetParent(smilController);
     if (mStartAnimationOnBindToTree) {
       mTimedDocumentRoot->Begin();
     }
@@ -1362,7 +1335,6 @@ nsSVGSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
   nsSVGSVGElementBase::UnbindFromTree(aDeep, aNullParent);
 }
-
 #endif // MOZ_SMIL
 
 //----------------------------------------------------------------------

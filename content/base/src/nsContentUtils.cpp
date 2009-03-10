@@ -462,19 +462,21 @@ nsContentUtils::InitializeEventTable() {
 #ifdef MOZ_MEDIA 
     { &nsGkAtoms::onloadstart,                   { NS_LOADSTART, EventNameType_HTML }},
     { &nsGkAtoms::onprogress,                    { NS_PROGRESS, EventNameType_HTML }},
-    { &nsGkAtoms::onloadedmetadata,              { NS_LOADEDMETADATA, EventNameType_HTML }},
-    { &nsGkAtoms::onloadeddata,                  { NS_LOADEDDATA, EventNameType_HTML }},
+    { &nsGkAtoms::onsuspend,                     { NS_SUSPEND, EventNameType_HTML }},
     { &nsGkAtoms::onemptied,                     { NS_EMPTIED, EventNameType_HTML }},
     { &nsGkAtoms::onstalled,                     { NS_STALLED, EventNameType_HTML }},
     { &nsGkAtoms::onplay,                        { NS_PLAY, EventNameType_HTML }},
     { &nsGkAtoms::onpause,                       { NS_PAUSE, EventNameType_HTML }},
+    { &nsGkAtoms::onloadedmetadata,              { NS_LOADEDMETADATA, EventNameType_HTML }},
+    { &nsGkAtoms::onloadeddata,                  { NS_LOADEDDATA, EventNameType_HTML }},
     { &nsGkAtoms::onwaiting,                     { NS_WAITING, EventNameType_HTML }},
+    { &nsGkAtoms::onplaying,                     { NS_PLAYING, EventNameType_HTML }},
+    { &nsGkAtoms::oncanplay,                     { NS_CANPLAY, EventNameType_HTML }},
+    { &nsGkAtoms::oncanplaythrough,              { NS_CANPLAYTHROUGH, EventNameType_HTML }},
     { &nsGkAtoms::onseeking,                     { NS_SEEKING, EventNameType_HTML }},
     { &nsGkAtoms::onseeked,                      { NS_SEEKED, EventNameType_HTML }},
     { &nsGkAtoms::ontimeupdate,                  { NS_TIMEUPDATE, EventNameType_HTML }},
     { &nsGkAtoms::onended,                       { NS_ENDED, EventNameType_HTML }},
-    { &nsGkAtoms::oncanplay,                     { NS_CANPLAY, EventNameType_HTML }},
-    { &nsGkAtoms::oncanplaythrough,              { NS_CANPLAYTHROUGH, EventNameType_HTML }},
     { &nsGkAtoms::onratechange,                  { NS_RATECHANGE, EventNameType_HTML }},
     { &nsGkAtoms::ondurationchange,              { NS_DURATIONCHANGE, EventNameType_HTML }},
     { &nsGkAtoms::onvolumechange,                { NS_VOLUMECHANGE, EventNameType_HTML }},
@@ -3095,12 +3097,12 @@ nsContentUtils::GetEventId(nsIAtom* aName)
   return NS_USER_DEFINED_EVENT;
 }
 
-// static
-nsresult
-nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
-                                     const nsAString& aEventName,
-                                     PRBool aCanBubble, PRBool aCancelable,
-                                     PRBool *aDefaultAction)
+static
+nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
+                           const nsAString& aEventName,
+                           PRBool aCanBubble, PRBool aCancelable,
+                           nsIDOMEvent** aEvent,
+                           nsIDOMEventTarget** aTargetOut)
 {
   nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(aTarget));
@@ -3120,6 +3122,28 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
   rv = privateEvent->SetTrusted(PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = privateEvent->SetTarget(target);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  event.forget(aEvent);
+  target.forget(aTargetOut);
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
+                                     const nsAString& aEventName,
+                                     PRBool aCanBubble, PRBool aCancelable,
+                                     PRBool *aDefaultAction)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
+                                  aCancelable, getter_AddRefs(event),
+                                  getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRBool dummy;
   return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
 }
@@ -3132,31 +3156,16 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
                                     PRBool *aDefaultAction)
 {
 
-  NS_ENSURE_ARG_POINTER(aDoc);
+  nsCOMPtr<nsIDOMEvent> event;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
+                                  aCancelable, getter_AddRefs(event),
+                                  getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(aDoc, "GetEventAndTarget lied?");
   NS_ENSURE_ARG_POINTER(aDoc->GetWindow());
   NS_ENSURE_ARG_POINTER(aDoc->GetWindow()->GetChromeEventHandler());
-
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(aDoc);
-  nsCOMPtr<nsIDOMEventTarget> originalTarget =
-    do_QueryInterface(aTarget);
-  NS_ENSURE_TRUE(docEvent && originalTarget, NS_ERROR_INVALID_ARG);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv =
-    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
-
-  rv = event->InitEvent(aEventName, aCanBubble, aCancelable);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = privateEvent->SetTarget(originalTarget);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = privateEvent->SetTrusted(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsEventStatus status = nsEventStatus_eIgnore;
   rv = aDoc->GetWindow()->GetChromeEventHandler()->DispatchDOMEvent(nsnull,

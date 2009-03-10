@@ -201,7 +201,6 @@ public:
   PRBool IsHTMLLink(nsIURI** aURI) const;
 
   // Used by A, AREA, LINK, and STYLE.
-  // Callers must hold a reference to nsHTMLUtils's global reference count.
   nsresult GetHrefURIForAnchors(nsIURI** aURI) const;
 
   // HTML element methods
@@ -520,55 +519,22 @@ public:
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
   // Helper functions for <a> and <area>
-  static nsresult SetProtocolInHrefString(const nsAString &aHref,
-                                          const nsAString &aProtocol,
-                                          nsAString &aResult);
+  void SetHrefToURI(nsIURI* aURI);
+  nsresult SetProtocolInHrefURI(const nsAString &aProtocol);
+  nsresult SetHostInHrefURI(const nsAString &aHost);
+  nsresult SetHostnameInHrefURI(const nsAString &aHostname);
+  nsresult SetPathnameInHrefURI(const nsAString &aPathname);
+  nsresult SetSearchInHrefURI(const nsAString &aSearch);
+  nsresult SetPortInHrefURI(const nsAString &aPort);
+  nsresult SetHashInHrefURI(const nsAString &aHash);
 
-  static nsresult SetHostInHrefString(const nsAString &aHref,
-                                      const nsAString &aHost,
-                                      nsAString &aResult);
-
-  static nsresult SetHostnameInHrefString(const nsAString &aHref,
-                                          const nsAString &aHostname,
-                                          nsAString &aResult);
-
-  static nsresult SetPathnameInHrefString(const nsAString &aHref,
-                                          const nsAString &aHostname,
-                                          nsAString &aResult);
-
-  static nsresult SetSearchInHrefString(const nsAString &aHref,
-                                        const nsAString &aSearch,
-                                        nsAString &aResult);
-  
-  static nsresult SetHashInHrefString(const nsAString &aHref,
-                                      const nsAString &aHash,
-                                      nsAString &aResult);
-
-  static nsresult SetPortInHrefString(const nsAString &aHref,
-                                      const nsAString &aPort,
-                                      nsAString &aResult);
-
-  static nsresult GetProtocolFromHrefString(const nsAString &aHref,
-                                            nsAString& aProtocol,
-                                            nsIDocument *aDocument);
-
-  static nsresult GetHostFromHrefString(const nsAString &aHref,
-                                        nsAString& aHost);
-
-  static nsresult GetHostnameFromHrefString(const nsAString &aHref,
-                                            nsAString& aHostname);
-
-  static nsresult GetPathnameFromHrefString(const nsAString &aHref,
-                                            nsAString& aPathname);
-
-  static nsresult GetSearchFromHrefString(const nsAString &aHref,
-                                          nsAString& aSearch);
-
-  static nsresult GetPortFromHrefString(const nsAString &aHref,
-                                        nsAString& aPort);
-
-  static nsresult GetHashFromHrefString(const nsAString &aHref,
-                                        nsAString& aHash);
+  nsresult GetProtocolFromHrefURI(nsAString& aProtocol);
+  nsresult GetHostFromHrefURI(nsAString& aHost);
+  nsresult GetHostnameFromHrefURI(nsAString& aHostname);
+  nsresult GetPathnameFromHrefURI(nsAString& aPathname);
+  nsresult GetSearchFromHrefURI(nsAString& aSearch);
+  nsresult GetPortFromHrefURI(nsAString& aPort);
+  nsresult GetHashFromHrefURI(nsAString& aHash);
 
   /**
    * Locate an nsIEditor rooted at this content node, if there is one.
@@ -720,6 +686,15 @@ protected:
    * @param aResult    result value [out]
    */
   NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult);
+
+  /**
+   * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
+   * nsIURI in the out param..
+   *
+   * @return PR_TRUE if we had the attr, PR_FALSE otherwise.
+   */
+  NS_HIDDEN_(PRBool) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
+                                nsIURI** aURI) const;
 
   /**
    * This method works like GetURIAttr, except that it supports multiple

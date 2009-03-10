@@ -38,7 +38,7 @@ function testThis(aID, aName, aValue, aDescription, aRole, aState,
   is(acc.name, aName, "Wrong name for " + aID + "!");
   testValue(aID, acc, aValue, aRole);
   is(acc.description, aDescription, "Wrong description for " + aID + "!");
-  is(acc.role, aRole, "Wrong role for " + aID + "!");
+  testRole(aID, aRole);
 
   testStates(acc, aState, aExtraState, aAbsentState);
 

@@ -587,8 +587,7 @@ nsGNOMEShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const ns
 
   const nsCString spec(aURI);
   const char* specStr = spec.get();
-  PRUint32 pid;
-  return process->Run(PR_FALSE, &specStr, 1, &pid);
+  return process->Run(PR_FALSE, &specStr, 1);
 }
 
 NS_IMETHODIMP

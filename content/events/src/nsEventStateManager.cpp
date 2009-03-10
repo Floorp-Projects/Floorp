@@ -2817,6 +2817,28 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   }
 
   if (!passToParent && scrollView) {
+    if (aScrollQuantity == eScrollByLine) {
+      // Limit scrolling to be at most one page, but if possible, try to
+      // just adjust the number of scrolled lines.
+      nscoord lineHeight = 0;
+      scrollView->GetLineHeight(&lineHeight);
+      if (lineHeight) {
+        nsSize pageScrollDistances(0, 0);
+        scrollView->GetPageScrollDistances(&pageScrollDistances);
+        nscoord pageScroll = aScrollHorizontal ?
+          pageScrollDistances.width : pageScrollDistances.height;
+
+        if (PR_ABS(aNumLines) * lineHeight > pageScroll) {
+          nscoord maxLines = (pageScroll / lineHeight);
+          if (maxLines >= 1) {
+            aNumLines = ((aNumLines < 0) ? -1 : 1) * maxLines;
+          } else {
+            aScrollQuantity = eScrollByPage;
+          }
+        }
+      }
+    }
+
     PRInt32 scrollX = 0;
     PRInt32 scrollY = aNumLines;
 
@@ -3453,22 +3475,6 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
       haveHotspot = framecursor.mHaveHotspot;
       hotspotX = framecursor.mHotspotX;
       hotspotY = framecursor.mHotspotY;
-  }
-
-  // Check whether or not to show the busy cursor
-  nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
-  if (!docShell) return;
-  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-  docShell->GetBusyFlags(&busyFlags);
-
-  // Show busy cursor everywhere before page loads
-  // and just replace the arrow cursor after page starts loading
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY &&
-        (cursor == NS_STYLE_CURSOR_AUTO || cursor == NS_STYLE_CURSOR_DEFAULT))
-  {
-    cursor = NS_STYLE_CURSOR_SPINNING;
-    container = nsnull;
   }
 
   if (aTargetFrame) {

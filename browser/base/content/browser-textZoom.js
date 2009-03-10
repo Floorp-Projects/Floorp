@@ -327,17 +327,19 @@ var FullZoom = {
    * one.
    **/
   _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue, aBrowser) {
+    var browser = aBrowser || gBrowser.selectedBrowser;
+
     if (!this.siteSpecific || gInPrintPreviewMode ||
-        content.document instanceof Ci.nsIImageDocument)
+        browser.contentDocument instanceof Ci.nsIImageDocument)
       return;
 
     try {
       if (typeof aValue != "undefined")
-        ZoomManager.setZoomForBrowser(aBrowser || gBrowser, this._ensureValid(aValue));
+        ZoomManager.setZoomForBrowser(browser, this._ensureValid(aValue));
       else if (typeof this.globalValue != "undefined")
-        ZoomManager.setZoomForBrowser(aBrowser || gBrowser, this.globalValue);
+        ZoomManager.setZoomForBrowser(browser, this.globalValue);
       else
-        ZoomManager.setZoomForBrowser(aBrowser || gBrowser, 1);
+        ZoomManager.setZoomForBrowser(browser, 1);
     }
     catch(ex) {}
   },

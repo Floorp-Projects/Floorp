@@ -87,7 +87,6 @@ findbar {
 }
 
 .findbar-textbox {
-  -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
   -moz-appearance: none;
   border: none;
   margin: 0;

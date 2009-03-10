@@ -38,4 +38,6 @@ cd ./src/liboggplay
 patch <../../yuv_disable_optimized.patch
 cd ../..
 patch -p3 <yuv2argb.patch
-patch -p3 <bug464007.patch
+patch -p1 <bug468281_r3863.patch 
+patch -p1 <bug468281_r3864.patch
+patch -p3 <bug468281_r3871.patch

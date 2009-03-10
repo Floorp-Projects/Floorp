@@ -51,7 +51,7 @@ interface nsISHEntry;
 
 typedef long nsDocShellInfoLoadType;
 
-[scriptable, uuid(4f813a88-7aca-4607-9896-d97270cdf15e)]
+[scriptable, uuid(92a0a637-373e-4647-9476-ead11e005c75)]
 interface nsIDocShellLoadInfo : nsISupports
 {
     /** This is the referrer for the load. */
@@ -66,6 +66,14 @@ interface nsIDocShellLoadInfo : nsISupports
      *  the owner from the referring document.
      */
     attribute boolean inheritOwner;
+
+    /** If this attribute is true only ever use the owner specify by
+     *  the owner and inheritOwner attributes.
+     *  If there are security reasons for why this is unsafe, such
+     *  as trying to use a systemprincipal owner for a content docshell
+     *  the load fails.
+     */
+    attribute boolean ownerIsExplicit;
 
     /* these are load type enums... */
     const long loadNormal = 0;                     // Normal Load

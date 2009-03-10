@@ -22,26 +22,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=473914
 
 var div = document.getElementById("content");
 
-// This test relies on normalization (removal of quote marks) that we're not
-// really guaranteed to continue doing in the future (and we should probably
-// actually change to add the quote marks).
+// This test relies on normalization (insertion of quote marks) that
+// we're not really guaranteed to continue doing in the future.
 div.style.listStyleImage = 'url(http://example.org/**/)';
-is(div.style.listStyleImage, 'url(http://example.org/**/)',
+is(div.style.listStyleImage, 'url("http://example.org/**/")',
    "not treated as comment");
 div.style.listStyleImage = 'url("http://example.org/**/")';
-is(div.style.listStyleImage, 'url(http://example.org/**/)',
+is(div.style.listStyleImage, 'url("http://example.org/**/")',
    "not treated as comment");
 div.style.listStyleImage = 'url(/**/foo)';
-is(div.style.listStyleImage, 'url(/**/foo)',
+is(div.style.listStyleImage, 'url("/**/foo")',
    "not treated as comment");
 div.style.listStyleImage = 'url("/**/foo")';
-is(div.style.listStyleImage, 'url(/**/foo)',
+is(div.style.listStyleImage, 'url("/**/foo")',
    "not treated as comment");
 div.style.listStyleImage = 'url(/**/)';
-is(div.style.listStyleImage, 'url(/**/)',
+is(div.style.listStyleImage, 'url("/**/")',
    "not treated as comment");
 div.style.listStyleImage = 'url("/**/")';
-is(div.style.listStyleImage, 'url(/**/)',
+is(div.style.listStyleImage, 'url("/**/")',
    "not treated as comment");
 
 </script>

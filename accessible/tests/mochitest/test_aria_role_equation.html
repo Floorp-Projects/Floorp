@@ -14,16 +14,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428479
 
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
     function testThis(aID)
     {
+      getRole(aID, ROLE_FLAT_EQUATION);
       var eqAcc = getAccessible(aID);
-      if (eqAcc) {
-        is(eqAcc.finalRole, ROLE_FLAT_EQUATION,
-           "Wrong role for " + aID +"!");
+      if (eqAcc)
         is(eqAcc.name, "x^2 + y^2 + z^2", "Wrong name for " + aID + "!");
-      }
     }
 
     function doTest()

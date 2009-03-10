@@ -19,10 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=350471
 </div>
 </body>
 
-<vbox style="height: 150px; background: cyan; overflow: auto;" id="scrollbox">
-  <hbox style="height: 8000px;"><vbox style="width: 8000px;"/></hbox>
-</vbox>
-
 <script class="testbody" type="application/javascript;version=1.7"><![CDATA[
 
 /** Test for Bug 350471 **/
@@ -34,7 +30,7 @@ const minLineHeight = 10, maxLineHeight = 20;
 function between(x, min, max) (min <= max) ? (min <= x && x <= max) : (max <= x && x <= min);
 function isbetween(x, min, max, msg) ok(between(x, min, max), msg + " - Expected " + min + " to " + max + ", got " + x);
 
-function testEventDispatching() {
+function testEventDispatching(aWin) {
   function helper(aAxis, aDelta, aKind, aShiftKey, aCtrlKey, aAltKey, aMetaKey) {
     let expectedEvents = [];
     let deltaUnit = "";
@@ -104,18 +100,18 @@ function testEventDispatching() {
     }
     deltaUnit = aKind == 2 ? "pixels" : "lines";
     
-    document.addEventListener("DOMMouseScroll", listener, true);
-    document.addEventListener("MozMousePixelScroll", listener, true);
+    aWin.document.addEventListener("DOMMouseScroll", listener, true);
+    aWin.document.addEventListener("MozMousePixelScroll", listener, true);
   
     // Send the event to the documentElement.
-    synthesizeMouseScroll(document.documentElement, 10, 10, expectedEvents[0]);
+    synthesizeMouseScroll(aWin.document.documentElement, 10, 10, expectedEvents[0], aWin);
   
-    document.removeEventListener("DOMMouseScroll", listener, true);
-    document.removeEventListener("MozMousePixelScroll", listener, true);
+    aWin.document.removeEventListener("DOMMouseScroll", listener, true);
+    aWin.document.removeEventListener("MozMousePixelScroll", listener, true);
   
     // expectedEvents should be empty now. If it's not, print errors.
     expectedEvents.forEach(function(e) {
-      ok(false, "Didn't receive expected event: " + JSON.parse(e));
+      ok(false, "Didn't receive expected event: " + JSON.stringify(e));
     });
   };
   let i = 0;
@@ -134,9 +130,9 @@ function testEventDispatching() {
   });
 }
 
-function testDefaultHandling(andThen) {
-  let scrollbox = document.getElementById("scrollbox");
-  
+function testDefaultHandling(aWin, andThen) {
+  let scrollbox = aWin.document.getElementById("scrollbox");
+
   function scrollWithPreventDefault(aEvent, aDoConsume) {
     function listener(e) {
       if (aDoConsume[e.type])
@@ -144,7 +140,7 @@ function testDefaultHandling(andThen) {
     }
     scrollbox.addEventListener("DOMMouseScroll", listener, true);
     scrollbox.addEventListener("MozMousePixelScroll", listener, true);
-    synthesizeMouseScroll(scrollbox, 10, 10, aEvent);
+    synthesizeMouseScroll(scrollbox, 10, 10, aEvent, aWin);
     scrollbox.removeEventListener("DOMMouseScroll", listener, true);
     scrollbox.removeEventListener("MozMousePixelScroll", listener, true);
   }
@@ -225,21 +221,21 @@ function testDefaultHandling(andThen) {
   exec();
 }
 
-function runTests() {
+window.onload = function () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  testEventDispatching();
-
-  let scrollbox = document.getElementById("scrollbox");
-  synthesizeMouse(scrollbox, 10, 10, { type: "mousemove" });
-
-  setTimeout(runOtherTests, 1000);
+  let win = window.open('data:application/vnd.mozilla.xul+xml,<?xml version="1.0"?><?xml-stylesheet href="chrome://global/skin" type="text/css"?><window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"><vbox style="height: 150px; background: cyan; overflow: auto;" id="scrollbox"><hbox style="height: 8000px;"><vbox style="width: 8000px;"/></hbox></vbox></window>', '_blank', 'chrome,width=400,height=200');
+  win.onload = function() {
+    setTimeout(function() {
+      testEventDispatching(win);
+      testDefaultHandling(win, function() {
+        win.close();
+        SimpleTest.finish();
+      });
+    }, 0);
+  }
 }
-function runOtherTests() {
-  testDefaultHandling(SimpleTest.finish);
-}
 
-window.onload = function() { setTimeout(runTests, 0); };
 SimpleTest.waitForExplicitFinish();
 
 ]]></script>

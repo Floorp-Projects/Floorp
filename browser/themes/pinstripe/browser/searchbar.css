@@ -3,10 +3,9 @@
 .searchbar-textbox {
   -moz-appearance: none;
   font: icon;
-  height: 26px;
+  height: 28px;
   width: 5em;
-  margin-top: 3px;
-  -moz-margin-start: 4px;
+  margin: 0 3px 1px;
   min-width: 5em;
   border: none;
   background-color: transparent;
@@ -14,8 +13,9 @@
 
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
   background: url("chrome://browser/skin/urlbar/textfield-mid.png") repeat-x;
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
+  -moz-margin-start: 45px;
 }
 
 .searchbar-textbox[focused="true"] > .autocomplete-textbox-container > .textbox-input-box {
@@ -26,22 +26,18 @@
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-  -moz-margin-start: 2px;
-}
-
-.searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
-  -moz-margin-start: 44px !important;
+  -moz-margin-start: 3px;
 }
 
 .searchbar-engine-button {
   background: url("chrome://browser/skin/urlbar/startcap.png") center center no-repeat;
   -moz-appearance: none;
-  height: 26px;
-  min-width: 44px;
+  height: 28px;
+  min-width: 45px;
   border: 0;
   -moz-box-align: center;
   margin: 0;
-  -moz-margin-start: -44px;
+  -moz-margin-start: -45px;
   padding: 0;
 }
 
@@ -97,7 +93,7 @@
 .search-go-container {
   -moz-box-align: center;
   background: url("chrome://browser/skin/urlbar/endcap.png") no-repeat right top;
-  -moz-padding-end: 4px;
+  -moz-padding-end: 5px;
 }
 
 .search-go-container[chromedir="rtl"] {

@@ -107,7 +107,6 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
 
 nsScreenManagerGtk :: nsScreenManagerGtk ( )
   : mXineramalib(nsnull)
-  , mXineramaIsActive(PR_FALSE)
   , mRootWindow(nsnull)
 {
   // nothing else to do. I guess we could cache a bunch of information
@@ -131,12 +130,6 @@ nsScreenManagerGtk :: ~nsScreenManagerGtk()
    * We can't unload libXinerama.so.1 here because this will make
    * the address of close_display() registered in X to be invalid and
    * it will crash when XCloseDisplay() is called later. */
-#ifdef MOZ_X11
-  if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED &&
-      !mXineramaIsActive) {
-    PR_UnloadLibrary(mXineramalib);
-  }
-#endif
 }
 
 
@@ -197,9 +190,6 @@ nsScreenManagerGtk :: Init()
     if (_XnrmIsActive && _XnrmQueryScreens &&
         _XnrmIsActive(GDK_DISPLAY())) {
       screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &numScreens);
-
-      // remember for the destructor, if we are really working with Xinerama
-      mXineramaIsActive = numScreens > 0;
     }
   }
 

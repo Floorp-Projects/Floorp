@@ -431,7 +431,6 @@ GetLinkStateFromURI(nsIURI* aURI, nsIContent* aContent,
 /*static*/
 PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag,
                                nsILinkHandler *aLinkHandler,
-                               PRBool aForStyling,
                                nsLinkState *aState)
 {
   NS_ASSERTION(aContent && aState, "null arg in IsHTMLLink");
@@ -466,8 +465,7 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag,
         } else {
           linkState = eLinkState_NotLink;
         }
-        if (linkState != eLinkState_NotLink && aForStyling &&
-            aContent->IsInDoc()) {
+        if (linkState != eLinkState_NotLink && aContent->IsInDoc()) {
           aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, hrefURI);
         }
         link->SetLinkState(linkState);
@@ -485,7 +483,6 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag,
 /*static*/
 PRBool nsStyleUtil::IsLink(nsIContent     *aContent,
                            nsILinkHandler *aLinkHandler,
-                           PRBool          aForStyling,
                            nsLinkState    *aState)
 {
   // XXX PERF This function will cause serious performance problems on
@@ -500,7 +497,7 @@ PRBool nsStyleUtil::IsLink(nsIContent     *aContent,
     nsCOMPtr<nsIURI> absURI;
     if (aContent->IsLink(getter_AddRefs(absURI))) {
       *aState = GetLinkStateFromURI(absURI, aContent, aLinkHandler);
-      if (aForStyling && aContent->IsInDoc()) {
+      if (aContent->IsInDoc()) {
         aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, absURI);
       }
 
@@ -538,9 +535,10 @@ PRBool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
   return result;
 }
 
-void nsStyleUtil::EscapeCSSString(const nsString& aString, nsAString& aReturn)
+void nsStyleUtil::AppendEscapedCSSString(const nsString& aString,
+                                         nsAString& aReturn)
 {
-  aReturn.Truncate();
+  aReturn.Append(PRUnichar('"'));
 
   const nsString::char_type* in = aString.get();
   const nsString::char_type* const end = in + aString.Length();
@@ -570,6 +568,8 @@ void nsStyleUtil::EscapeCSSString(const nsString& aString, nsAString& aReturn)
        aReturn.Append(PRUnichar(*in));
     }
   }
+
+  aReturn.Append(PRUnichar('"'));
 }
 
 /* static */ float

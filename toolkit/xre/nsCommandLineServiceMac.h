@@ -65,11 +65,11 @@ public:
   void            SetupCommandLine(int& argc, char**& argv);
   
   nsresult        AddToCommandLine(const char* inArgText);
-  nsresult        AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec);
+  nsresult        AddToCommandLine(const char* inOptionString, const FSRef* inFSRef);
   nsresult        AddToEnvironmentVars(const char* inArgText);
 
-  OSErr           HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFileType);
-  OSErr           HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileType);
+  OSErr           HandleOpenOneDoc(const FSRef* inFSRef, OSType inFileType);
+  OSErr           HandlePrintOneDoc(const FSRef* inFSRef, OSType fileType);
 
 	OSErr						DispatchURLToNewBrowser(const char* url);
 

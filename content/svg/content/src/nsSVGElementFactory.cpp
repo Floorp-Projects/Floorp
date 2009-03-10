@@ -299,12 +299,14 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
   if (name == nsGkAtoms::svgSwitch)
     return NS_NewSVGSwitchElement(aResult, aNodeInfo);
 #ifdef MOZ_SMIL
-  if (name == nsGkAtoms::animate)
-    return NS_NewSVGAnimateElement(aResult, aNodeInfo);
-  if (name == nsGkAtoms::animateTransform)
-    return NS_NewSVGAnimateTransformElement(aResult, aNodeInfo);
-  if (name == nsGkAtoms::set)
-    return NS_NewSVGSetElement(aResult, aNodeInfo);
+  if (NS_SMILEnabled()) {
+    if (name == nsGkAtoms::animate)
+      return NS_NewSVGAnimateElement(aResult, aNodeInfo);
+    if (name == nsGkAtoms::animateTransform)
+      return NS_NewSVGAnimateTransformElement(aResult, aNodeInfo);
+    if (name == nsGkAtoms::set)
+      return NS_NewSVGSetElement(aResult, aNodeInfo);
+  }
 #endif // MOZ_SMIL
 
   // if we don't know what to create, just create a standard xml element:

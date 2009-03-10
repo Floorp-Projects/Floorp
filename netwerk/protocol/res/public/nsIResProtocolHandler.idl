@@ -38,10 +38,6 @@
 
 #include "nsIProtocolHandler.idl"
 
-%{C++
-#include "nsAString.h"
-%}
-
 /**
  * Protocol handler interface for the resource:// protocol
  */

@@ -14,6 +14,8 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js" />
   <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+  <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js" />
 
   <script type="application/javascript"
