@@ -5386,7 +5386,7 @@ js_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
         obj = JSVAL_TO_OBJECT(v);
         if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_OBJECT, &v))
             return JS_FALSE;
-        if (JSVAL_IS_OBJECT(v))
+        if (!JSVAL_IS_PRIMITIVE(v))
             obj = JSVAL_TO_OBJECT(v);
     } else {
         if (!js_PrimitiveToObject(cx, &v))

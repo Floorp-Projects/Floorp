@@ -324,6 +324,11 @@ function assemble(filename) {
               ",  /* " + opinfo[i].jsop + " */");
     }
     print("};");
+
+    print("#define JSOP_IS_IMACOP(x) (0 \\");
+    for (let i in opcode2extra)
+        print(" || x == " + opinfo[i].jsop + " \\");
+    print(")");
 }
 
 for (let i = 0; i < arguments.length; i++) {
