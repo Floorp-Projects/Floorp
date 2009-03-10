@@ -96,6 +96,9 @@ public:
   NS_IMETHOD GetAsACString(nsACString &) { NO_CONVERSION }
   NS_IMETHOD GetAsStringWithSize(PRUint32 *, char **) { NO_CONVERSION }
   NS_IMETHOD GetAsWStringWithSize(PRUint32 *, PRUnichar **) { NO_CONVERSION }
+
+protected:
+  virtual ~mozStorageVariant_base() { }
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(
   mozStorageVariant_base,
