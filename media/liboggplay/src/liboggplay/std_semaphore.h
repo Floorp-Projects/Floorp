@@ -34,6 +34,46 @@
 
 #ifndef _STD_SEMAPHORE_H
 #define _STD_SEMAPHORE_H
+
+/**
+ * @def SEM_CREATE(p,s)
+ *
+ * Macro that creates a semaphore.  
+ *
+ * @param p semaphore handle
+ * @param s initial value of the semaphore
+ * @retval 0 on success
+ * @retval non-zero on error 
+ */
+
+/**
+ * @def SEM_SIGNAL(p) 
+ *
+ * The macro increments the given semaphore.
+ * 
+ * @param p semaphore handle.
+ * @retval 0 on success
+ * @retval non-zero on error 
+ */
+
+/**
+ * @def SEM_WAIT(p)
+ *
+ * Macro that decrements (locks) the semaphore.
+ *
+ * @param p semaphore handle
+ */
+
+/**
+ * @def SEM_CLOSE(p)
+ *
+ * Macro that closes a given semaphore.
+ *
+ * @param p semaphore handle
+ * @retval 0 on success
+ * @retval non-zero on error 
+ */
+
 #if defined(linux) || defined(SOLARIS)
 #include <semaphore.h>
 #define SEM_CREATE(p,s) sem_init(&(p), 1, s)
@@ -43,11 +83,10 @@
 typedef sem_t           semaphore;
 #elif defined(WIN32)
 #include <windows.h>
-#define SEM_CREATE(p,s) p = CreateSemaphore(NULL, (long)(s), (long)(s), NULL)
-#define SEM_SIGNAL(p)   ReleaseSemaphore(p, 1, NULL)
+#define SEM_CREATE(p,s) (!(p = CreateSemaphore(NULL, (long)(s), (long)(s), NULL)))
+#define SEM_SIGNAL(p)   (!ReleaseSemaphore(p, 1, NULL))
 #define SEM_WAIT(p)     WaitForSingleObject(p, INFINITE)
-#define SEM_TEST(p,s)   p = WaitForSingleObject(s, 0)
-#define SEM_CLOSE(p)    CloseHandle(p)
+#define SEM_CLOSE(p)    (!CloseHandle(p))
 typedef HANDLE          semaphore;
 #elif defined(__APPLE__)
 #include <Multiprocessing.h>

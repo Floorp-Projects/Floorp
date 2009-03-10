@@ -53,10 +53,10 @@ class nsICSSImportRule;
 class nsIPrincipal;
 
 // IID for the nsICSSStyleSheet interface
-// ee0270c7-5581-4165-92a5-a83ff691f60d
+// ba09b3a4-4a29-495d-987b-cfbb58c5c6ec
 #define NS_ICSS_STYLE_SHEET_IID     \
-{ 0xee0270c7, 0x5581, 0x4165, \
- { 0x92, 0xa5, 0xa8, 0x3f, 0xf6, 0x91, 0xf6, 0x0d } }
+{ 0xba09b3a4, 0x4a29, 0x495d, \
+ { 0x98, 0x7b, 0xcf, 0xbb, 0x58, 0xc5, 0xc6, 0xec } }
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
@@ -125,6 +125,10 @@ public:
    */
   NS_IMETHOD InsertRuleInternal(const nsAString& aRule,
                                 PRUint32 aIndex, PRUint32* aReturn) = 0;
+
+  /* Get the URI this sheet was originally loaded from, if any.  Can
+     return null */
+  NS_IMETHOD_(nsIURI*) GetOriginalURI() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleSheet, NS_ICSS_STYLE_SHEET_IID)

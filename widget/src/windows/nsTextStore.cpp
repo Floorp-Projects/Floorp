@@ -116,7 +116,6 @@ nsTextStore::Create(nsWindow* aWindow,
 PRBool
 nsTextStore::Destroy(void)
 {
-  Blur();
   if (mWindow) {
     // When blurred, Tablet Input Panel posts "blur" messages
     // and try to insert text when the message is retrieved later.
@@ -138,25 +137,6 @@ nsTextStore::Destroy(void)
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: Destroyed, window=%08x\n", mWindow));
   mWindow = NULL;
-  return PR_TRUE;
-}
-
-PRBool
-nsTextStore::Focus(void)
-{
-  HRESULT hr = sTsfThreadMgr->SetFocus(mDocumentMgr);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), PR_FALSE);
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: Focused\n"));
-  return PR_TRUE;
-}
-
-PRBool
-nsTextStore::Blur(void)
-{
-  sTsfThreadMgr->SetFocus(NULL);
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: Blurred\n"));
   return PR_TRUE;
 }
 
@@ -602,6 +582,46 @@ IsSameTextEvent(const nsTextEvent* aEvent1, const nsTextEvent* aEvent2)
 }
 
 HRESULT
+nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
+{
+  NS_ENSURE_TRUE(mCompositionView, E_FAIL);
+
+  HRESULT hr;
+  nsRefPtr<ITfCompositionView> pComposition(mCompositionView);
+  nsRefPtr<ITfRange> composingRange(aRangeNew);
+  if (!composingRange) {
+    hr = pComposition->GetRange(getter_AddRefs(composingRange));
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  }
+
+  // Get starting offset of the composition
+  LONG compStart = 0, compLength = 0;
+  hr = GetRangeExtent(composingRange, &compStart, &compLength);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (mCompositionStart != compStart ||
+      mCompositionString.Length() != compLength) {
+    // If the queried composition length is different from the length
+    // of our composition string, OnUpdateComposition is being called
+    // because a part of the original composition was committed.
+    // Reflect that by committing existing composition and starting
+    // a new one. OnEndComposition followed by OnStartComposition
+    // will accomplish this automagically.
+    OnEndComposition(pComposition);
+    OnStartCompositionInternal(pComposition, composingRange, PR_TRUE);
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: UpdateCompositionExtent, (reset) range=%ld-%ld\n",
+            compStart, compStart + compLength));
+  } else {
+    mCompositionLength = compLength;
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: UpdateCompositionExtent, range=%ld-%ld\n",
+            compStart, compStart + compLength));
+  }
+
+  return S_OK;
+}
+
+HRESULT
 nsTextStore::SendTextEventForCompositionString()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
@@ -704,6 +724,10 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
          ("TSF: SetSelection, sel=%ld-%ld\n",
           pSelection->acpStart, pSelection->acpEnd));
   if (mCompositionView) {
+    if (aDispatchTextEvent) {
+      HRESULT hr = UpdateCompositionExtent(nsnull);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    }
     // Emulate selection during compositions
     NS_ENSURE_TRUE(pSelection->acpStart >= mCompositionStart &&
                    pSelection->acpEnd <= mCompositionStart +
@@ -1270,29 +1294,8 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
   if (!pRangeNew) // pRangeNew is null when the update is not complete
     return S_OK;
 
-  // Get starting offset of the composition
-  LONG compStart = 0, compLength = 0;
-  HRESULT hr = GetRangeExtent(pRangeNew, &compStart, &compLength);
+  HRESULT hr = UpdateCompositionExtent(pRangeNew);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  if (mCompositionStart != compStart ||
-      mCompositionString.Length() != compLength) {
-    // If the queried composition length is different from the length
-    // of our composition string, OnUpdateComposition is being called
-    // because a part of the original composition was committed.
-    // Reflect that by committing existing composition and starting
-    // a new one. OnEndComposition followed by OnStartComposition
-    // will accomplish this automagically.
-    OnEndComposition(pComposition);
-    OnStartCompositionInternal(pComposition, pRangeNew, PR_TRUE);
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: OnUpdateComposition, (reset) range=%ld-%ld\n",
-            compStart, compStart + compLength));
-  } else {
-    mCompositionLength = compLength;
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: OnUpdateComposition, range=%ld-%ld\n",
-            compStart, compStart + compLength));
-  }
 
   return SendTextEventForCompositionString();
 }
@@ -1351,8 +1354,11 @@ nsTextStore::OnFocusChange(PRBool aFocus,
     return NS_ERROR_NOT_AVAILABLE;
 
   if (aFocus) {
-    if (sTsfTextStore->Create(aWindow, aIMEEnabled))
-      sTsfTextStore->Focus();
+    PRBool bRet = sTsfTextStore->Create(aWindow, aIMEEnabled);
+    NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(sTsfTextStore->mDocumentMgr, NS_ERROR_FAILURE);
+    HRESULT hr = sTsfThreadMgr->SetFocus(sTsfTextStore->mDocumentMgr);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   } else {
     sTsfTextStore->Destroy();
   }

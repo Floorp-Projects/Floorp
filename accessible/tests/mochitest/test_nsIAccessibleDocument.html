@@ -12,6 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
   <script type="application/javascript"
     src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
+    src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
     src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
 
   <script type="application/javascript">
@@ -23,8 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         // nsIAccessible
         is(docAcc.name, "nsIAccessibleDocument chrome tests",
            "Name for document accessible not correct!");
-        is(docAcc.role, nsIAccessibleRole.ROLE_DOCUMENT,
-           "Wrong role for document!");
+
+        testRole(docAcc, ROLE_DOCUMENT);
 
         // check if it is focusable, read-only.
         testStates(docAcc, (STATE_READONLY | STATE_FOCUSABLE));

@@ -65,9 +65,10 @@ nsFormControlAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetRole(PRUint32 *_retval)
+nsresult
+nsHTMLCheckboxAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_CHECKBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
@@ -80,13 +81,15 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {    // 0 is the magic value for default action
-    // check or uncheck
+    // cycle, check or uncheck
     PRUint32 state;
     nsresult rv = GetStateInternal(&state, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (state & nsIAccessibleStates::STATE_CHECKED)
       aName.AssignLiteral("uncheck"); 
+    else if (state & nsIAccessibleStates::STATE_MIXED)
+      aName.AssignLiteral("cycle"); 
     else
       aName.AssignLiteral("check"); 
 
@@ -283,9 +286,10 @@ nsHTMLButtonAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
+nsresult
+nsHTMLButtonAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -356,9 +360,10 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
+nsresult
+nsHTML4ButtonAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -392,7 +397,8 @@ nsHyperTextAccessibleWrap(aNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsHTMLTextFieldAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
+nsresult
+nsHTMLTextFieldAccessible::GetRoleInternal(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_ENTRY;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -592,9 +598,10 @@ nsHyperTextAccessibleWrap(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetRole(PRUint32 *_retval)
+nsresult
+nsHTMLGroupboxAccessible::GetRoleInternal(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_GROUPING;
+  *aRole = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 
@@ -651,6 +658,9 @@ nsHTMLGroupboxAccessible::GetRelationByType(PRUint32 aRelationType,
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLLegendAccessible
+
 nsHTMLLegendAccessible::nsHTMLLegendAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsHyperTextAccessibleWrap(aNode, aShell)
 { 
@@ -683,5 +693,12 @@ nsHTMLLegendAccessible::GetRelationByType(PRUint32 aRelationType,
     }
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLegendAccessible::GetRoleInternal(PRUint32 *aRole)
+{
+  *aRole = nsIAccessibleRole::ROLE_LABEL;
   return NS_OK;
 }

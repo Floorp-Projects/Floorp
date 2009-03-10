@@ -131,10 +131,16 @@ public:
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
+  void ResetLinkCacheState();
+  
   // The cached visited state
   nsLinkState mLinkState;
 };
@@ -223,13 +229,9 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
+  if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
-    doc->ForgetLink(this);
-    // If this link is ever reinserted into a document, it might
-    // be under a different xml:base, so forget the cached state now
-    mLinkState = eLinkState_Unknown;
+    ResetLinkCacheState();
   }
     
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -358,204 +360,27 @@ nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
   return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
 }
 
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetProtocol(nsAString& aProtocol)
-{
-  nsAutoString href;
+#define IMPL_URI_PART(_part)                                 \
+  NS_IMETHODIMP                                              \
+  nsHTMLAnchorElement::Get##_part(nsAString& a##_part)       \
+  {                                                          \
+    return Get##_part##FromHrefURI(a##_part);                \
+  }                                                          \
+  NS_IMETHODIMP                                              \
+  nsHTMLAnchorElement::Set##_part(const nsAString& a##_part) \
+  {                                                          \
+    return Set##_part##InHrefURI(a##_part);                  \
+  }
 
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
+IMPL_URI_PART(Protocol)
+IMPL_URI_PART(Host)
+IMPL_URI_PART(Hostname)
+IMPL_URI_PART(Pathname)
+IMPL_URI_PART(Search)
+IMPL_URI_PART(Port)
+IMPL_URI_PART(Hash)
 
-  // XXX this should really use GetHrefURI and not do so much string stuff
-  return GetProtocolFromHrefString(href, aProtocol, GetOwnerDoc());
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetProtocol(const nsAString& aProtocol)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetProtocolInHrefString(href, aProtocol, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHost(nsAString& aHost)
-{
-  nsAutoString href;
-  
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetHostFromHrefString(href, aHost);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHost(const nsAString& aHost)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetHostInHrefString(href, aHost, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHostname(nsAString& aHostname)
-{
-  nsAutoString href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetHostnameFromHrefString(href, aHostname);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHostname(const nsAString& aHostname)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetHostnameInHrefString(href, aHostname, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-  
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPathname(nsAString& aPathname)
-{
-  nsAutoString href;
- 
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetPathnameFromHrefString(href, aPathname);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetPathname(const nsAString& aPathname)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetPathnameInHrefString(href, aPathname, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetSearch(nsAString& aSearch)
-{
-  nsAutoString href;
-
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetSearchFromHrefString(href, aSearch);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetSearch(const nsAString& aSearch)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetSearchInHrefString(href, aSearch, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPort(nsAString& aPort)
-{
-  nsAutoString href;
-  
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetPortFromHrefString(href, aPort);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetPort(const nsAString& aPort)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetPortInHrefString(href, aPort, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-  
-  return SetHref(new_href);
-}
-
-NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHash(nsAString& aHash)
-{
-  nsAutoString href;
-
-  nsresult rv = GetHref(href);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return GetHashFromHrefString(href, aHash);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHash(const nsAString& aHash)
-{
-  nsAutoString href, new_href;
-  nsresult rv = GetHref(href);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = SetHashInHrefString(href, aHash, new_href);
-  if (NS_FAILED(rv))
-    // Ignore failures to be compatible with NS4
-    return NS_OK;
-
-  return SetHref(new_href);
-}
+#undef IMPL_URI_PART
 
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetText(nsAString& aText)
@@ -641,14 +466,7 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsAutoString val;
     GetHref(val);
     if (!val.Equals(aValue)) {
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        doc->ForgetLink(this);
-        // The change to 'href' will cause style reresolution which will
-        // eventually recompute the link state and re-add this element
-        // to the link map if necessary.
-      }
-      SetLinkState(eLinkState_Unknown);
+      ResetLinkCacheState();
     }
   }
 
@@ -672,11 +490,7 @@ nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
   if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      doc->ForgetLink(this);
-    }
-    SetLinkState(eLinkState_Unknown);
+    ResetLinkCacheState();
   }
 
   if (aAttribute == nsGkAtoms::accesskey &&
@@ -685,4 +499,35 @@ nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+}
+
+PRBool
+nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
+{
+  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::href) {
+    return aResult.ParseLazyURIValue(aValue);
+  }
+
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
+}
+
+void
+nsHTMLAnchorElement::ResetLinkCacheState()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->ForgetLink(this);
+  }
+  mLinkState = eLinkState_Unknown;
+
+  // Clear our cached URI _after_ we ForgetLink(), since ForgetLink()
+  // wants that URI.
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::href);
+  if (attr && attr->Type() == nsAttrValue::eLazyURIValue) {
+    const_cast<nsAttrValue*>(attr)->DropCachedURI();
+  }
 }

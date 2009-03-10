@@ -380,8 +380,7 @@ nsAccUtils::GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole)
   nsCOMPtr<nsIAccessible> parentAccessible = aDescendant, testRoleAccessible;
   while (NS_SUCCEEDED(parentAccessible->GetParent(getter_AddRefs(testRoleAccessible))) &&
          testRoleAccessible) {
-    PRUint32 testRole;
-    testRoleAccessible->GetFinalRole(&testRole);
+    PRUint32 testRole = nsAccUtils::Role(testRoleAccessible);
     if (testRole == aRole) {
       nsIAccessible *returnAccessible = testRoleAccessible;
       NS_ADDREF(returnAccessible);
@@ -419,8 +418,7 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
         if (!accessNode) {
           break; // Reached top of tree, no higher level found
         }
-        PRUint32 role;
-        currentAccessible->GetFinalRole(&role);
+        PRUint32 role = nsAccUtils::Role(currentAccessible);
         if (role != nsIAccessibleRole::ROLE_OUTLINEITEM)
           continue;
         nsCOMPtr<nsIDOMNode> treeItemNode;
@@ -448,8 +446,7 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
   aStartTreeItem->GetParent(getter_AddRefs(parentAccessible));
   if (!parentAccessible)
     return;
-  PRUint32 role;
-  parentAccessible->GetFinalRole(&role);
+  PRUint32 role = nsAccUtils::Role(parentAccessible);
   if (role != nsIAccessibleRole::ROLE_GROUPING) {
     NS_ADDREF(*aTreeItemParentResult = parentAccessible);
     return; // The container for the tree items
@@ -458,7 +455,7 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
   parentAccessible->GetPreviousSibling(getter_AddRefs(prevAccessible));
   if (!prevAccessible)
     return;
-  prevAccessible->GetFinalRole(&role);
+  role = nsAccUtils::Role(prevAccessible);
   if (role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
     // XXX Sometimes an empty text accessible is in the hierarchy here,
     // although the text does not appear to be rendered, GetRenderedText() says that it is
@@ -467,7 +464,7 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
     tempAccessible->GetPreviousSibling(getter_AddRefs(prevAccessible));
     if (!prevAccessible)
       return;
-    prevAccessible->GetFinalRole(&role);
+    role = nsAccUtils::Role(prevAccessible);
   }
   if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
     // Previous sibling of parent group is a tree item -- this is the conceptual tree item parent
@@ -676,6 +673,23 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   return &nsARIAMap::gLandmarkRoleMap;
 }
 
+PRUint32
+nsAccUtils::RoleInternal(nsIAccessible *aAcc)
+{
+  PRUint32 role = nsIAccessibleRole::ROLE_NOTHING;
+  if (aAcc) {
+    nsAccessible* accessible = nsnull;
+    CallQueryInterface(aAcc, &accessible);
+
+    if (accessible) {
+      accessible->GetRoleInternal(&role);
+      NS_RELEASE(accessible);
+    }
+  }
+
+  return role;
+}
+
 PRUint8
 nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
 {
@@ -815,8 +829,8 @@ nsAccUtils::GetMultiSelectFor(nsIDOMNode *aNode)
   while (0 == (state & nsIAccessibleStates::STATE_MULTISELECTABLE)) {
     nsIAccessible *current = accessible;
     current->GetParent(getter_AddRefs(accessible));
-    if (!accessible || (NS_SUCCEEDED(accessible->GetFinalRole(&containerRole)) &&
-                        containerRole == nsIAccessibleRole::ROLE_PANE)) {
+    if (!accessible ||
+        nsAccUtils::Role(accessible) == nsIAccessibleRole::ROLE_PANE) {
       return nsnull;
     }
     state = State(accessible);

@@ -797,12 +797,12 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   direction: ltr !important;
   border: none;
   background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
-  margin: 0px 4px 1px 4px;
-  -moz-padding-end: 10px;
+  margin: 0 3px 1px;
+  -moz-padding-end: 11px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
-  height: 26px;
+  height: 28px;
 }
 
 #urlbar[focused="true"] {
@@ -830,7 +830,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 #urlbar-icons {
   -moz-box-align: center;
-  min-height: 26px;
 }
 
 #urlbar-search-splitter {
@@ -877,7 +876,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #page-proxy-stack {
-  -moz-margin-start: 9px;
+  -moz-margin-start: 10px;
   width: 24px;
   height: 20px;
   padding: 2px 4px;
@@ -1531,8 +1530,7 @@ tabbrowser > tabbox {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
 }
 
-.tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image,
-.tabbrowser-arrowscrollbox > .tabs-newtab-button:not(:hover) > .toolbarbutton-icon {
+.tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image {
   opacity: .6;
 }
 
@@ -1564,6 +1562,11 @@ tabbrowser > tabbox {
   background-image: url(chrome://browser/skin/tabbrowser/tab-bkgnd.png);
 }
 
+.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  width: 34px;
+  padding-top: 1px;
+}
+
 .tabbrowser-tab[selected="true"] {
   -moz-user-focus: normal;
   padding: 0 6px 1px;
@@ -1576,9 +1579,11 @@ tabbrowser > tabbox {
 }
 
 .tabbrowser-tab[selected="true"]:focus > .tab-text {
-  outline: 2px solid #4F8EC9;
-  outline-offset: -2px;
-  -moz-outline-radius: 3px;
+  -moz-box-shadow: 0 0 4px -moz-mac-focusring,
+                   0 0 4px -moz-mac-focusring,
+                   0 0 3px -moz-mac-focusring,
+                   0 0 2px -moz-mac-focusring inset,
+                   0 0 3px -moz-mac-focusring inset;
 }
 
 .tabbrowser-tab[selected="true"],
@@ -1852,7 +1857,7 @@ tabpanels.plain {
 
 #identity-box {
   background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
-  min-width: 44px;
+  min-width: 45px;
 }
 
 #urlbar[focused="true"] > #identity-box {
@@ -1872,7 +1877,7 @@ tabpanels.plain {
 #identity-icon-label {
   margin: 0;
   color: black;
-  padding: 2px 6px 3px;
+  padding: 4px 6px 3px;
   -moz-padding-end: 14px;
 }
 
@@ -1885,7 +1890,7 @@ tabpanels.plain {
 /* - Normal state */
 #identity-box.verifiedDomain {
   background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png");
-  -moz-padding-start: 12px;
+  -moz-padding-start: 13px;
 }
 
 #identity-box.verifiedDomain > hbox {
@@ -1939,7 +1944,7 @@ tabpanels.plain {
 /* - Normal state */
 #identity-box.verifiedIdentity {
   background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png");
-  -moz-padding-start: 12px;
+  -moz-padding-start: 13px;
 }
 
 #identity-box.verifiedIdentity > hbox {

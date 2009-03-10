@@ -45,6 +45,7 @@
 #define nsTextFragment_h___
 
 #include "nsAString.h"
+#include "nsTraceRefcnt.h"
 class nsString;
 class nsCString;
 
@@ -88,6 +89,7 @@ public:
   nsTextFragment()
     : m1b(nsnull), mAllBits(0)
   {
+    MOZ_COUNT_CTOR(nsTextFragment);
     NS_ASSERTION(sizeof(FragmentBits) == 4, "Bad field packing!");
   }
 

@@ -22,6 +22,7 @@ endif
 endif
 
 _PROFILE_DIR = $(TARGET_DEPTH)/_profile/pgo
+_SYMBOLS_PATH = $(TARGET_DIST)/crashreporter-symbols
 
 ifneq (,$(filter /%,$(topsrcdir)))
 # $(topsrcdir) is already an absolute pathname.
@@ -38,6 +39,7 @@ AUTOMATION_PPARGS = 	\
 			-DBIN_SUFFIX=\"$(BIN_SUFFIX)\" \
 			-DPROFILE_DIR=\"$(_PROFILE_DIR)\" \
 			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \
+			-DSYMBOLS_PATH=\"$(_SYMBOLS_PATH)\" \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
@@ -68,6 +70,6 @@ else
 AUTOMATION_PPARGS += -DIS_DEBUG_BUILD=0
 endif
 
-automation.py: $(topsrcdir)/build/automation.py.in
+automation.py: $(topsrcdir)/build/automation.py.in $(topsrcdir)/build/automation-build.mk
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@

@@ -256,6 +256,10 @@ NS_METHOD nsBaseWidget::Destroy()
   // Just in case our parent is the only ref to us
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   
+  // Clear the device context's mWidget field -- otherwise it may get accessed
+  // after it's been deleted.  See bug 479749.
+  if (mContext)
+    mContext->Init(nsnull);
   // disconnect from the parent
   nsIWidget *parent = GetParent();
   if (parent) {

@@ -958,6 +958,21 @@ public:
    * disabled.
    */
   static PRBool sDisableGetUsedXAssertions;
+
+  /**
+   * Initilizes text run container for printing. Does *nothing* if
+   * aFrame->PresContext() is dynamic.
+   * @param aContainerContent The nsIContent object from which aFrame gets data
+   *                          for text run creation.
+   * @param aFrame            The nsIFrame object which is being initialized.
+   * @param aBits             Frame type dependent bits which will be set to
+   *                          aFrame to mark that PresContext has a text fragment
+   *                          property called nsGkAtoms::clonedTextForPrint for
+   *                          aContent.
+   */
+  static nsresult InitTextRunContainerForPrinting(nsIContent* aContainerContent,
+                                                  nsIFrame* aFrame,
+                                                  nsFrameState aBits);
 };
 
 class nsAutoDisableGetUsedXAssertions

@@ -55,7 +55,7 @@ function testThis(aID, aAcc, aNames, aRoles, aStates, aUndesiredStates, aIndex)
 
   is(aAcc.name, aNames[aIndex],
      "wrong name for " + aID + " at index " + aIndex + "!");
-  var role = aAcc.role;
+  var role = getRole(aAcc);
   is(role, aRoles[aIndex],
      "Wrong role for " + aID + " at index " + aIndex + "!");
   testStates(aID, aAcc, aStates, aUndesiredStates, aIndex);

@@ -48,7 +48,9 @@ class nsXULTreeAccessibleWrap : public nsXULTreeAccessible
 public:
   nsXULTreeAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell);
   virtual ~nsXULTreeAccessibleWrap() {}
-  NS_IMETHOD GetRole(PRUint32 *aRole);
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
 };
 
 class nsXULTreeitemAccessibleWrap : public nsXULTreeitemAccessible
@@ -58,9 +60,12 @@ public:
     PRInt32 aRow, nsITreeColumn* aColumn);
   virtual ~nsXULTreeitemAccessibleWrap() {}
 
+  // nsIAccessible
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-  NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetName(nsAString &aName);
+
+  // nsAccessible
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
 };
 
 #endif

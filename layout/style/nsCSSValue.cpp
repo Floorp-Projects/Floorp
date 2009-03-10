@@ -215,28 +215,16 @@ nscoord nsCSSValue::GetLengthTwips() const
     switch (mUnit) {
     case eCSSUnit_Inch:        
       return NS_INCHES_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Foot:        
-      return NS_FEET_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Mile:        
-      return NS_MILES_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Millimeter:
       return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Centimeter:
       return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Meter:
-      return NS_METERS_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Kilometer:
-      return NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Point:
       return NS_POINTS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Pica:
       return NS_PICAS_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Didot:
-      return NS_DIDOTS_TO_TWIPS(mValue.mFloat);
-    case eCSSUnit_Cicero:
-      return NS_CICEROS_TO_TWIPS(mValue.mFloat);
     default:
       NS_ERROR("should never get here");
       break;

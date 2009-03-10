@@ -12,6 +12,13 @@
   #one, #three { background: blue; color: yellow; border: thin solid red; -moz-column-rule: 2px solid green; }
   #two { background: transparent; border: thin solid; }
   #five, #six {border: thick solid red; -moz-border-start-color:green; -moz-border-end-color:blue}
+  #seven {
+    border: 3px solid;
+    -moz-border-top-colors: blue aqua fuchsia;
+    -moz-border-right-colors: aqua blue fuchsia;
+    -moz-border-bottom-colors: blue fuchsia aqua;
+    -moz-border-left-colors: fuchsia blue blue;
+  }
 
   /* XXX also test rgba() */
 
@@ -28,6 +35,7 @@
 <input id="four" type="button" value="Hello">
 <div id="five" dir="ltr">Hello</div>
 <div id="six" dir="rtl">Hello</div>
+<div id="seven">Hello</div>
 
 </div>
 <pre id="test">
@@ -58,6 +66,7 @@ var cs3 = getComputedStyle(document.getElementById("three"), "");
 var cs4 = getComputedStyle(document.getElementById("four"), "");
 var cs5 = getComputedStyle(document.getElementById("five"), "");
 var cs6 = getComputedStyle(document.getElementById("six"), "");
+var cs7 = getComputedStyle(document.getElementById("seven"), "");
 
 
 var oldVal = get_pref();
@@ -99,6 +108,14 @@ function part1()
           "-moz-border-start-color applies");
     isnot(cs6.borderLeftColor, cs2.borderLeftColor,
           "-moz-border-end-color applies");
+    isnot(cs7.MozBorderTopColors, cs2.MozBorderTopColors,
+          "-moz-border-top-colors applies");
+    isnot(cs7.MozBorderRightColors, cs2.MozBorderRightColors,
+          "-moz-border-right-colors applies");
+    isnot(cs7.MozBorderBottomColors, cs2.MozBorderBottomColors,
+          "-moz-border-bottom-colors applies");
+    isnot(cs7.MozBorderLeftColors, cs2.MozBorderLeftColors,
+          "-moz-border-left-colors applies");
     is(cs1.color, cs3.color, "color applies");
     is(cs1.backgroundColor, cs3.backgroundColor, "background-color applies");
     isnot(cs3.backgroundColor, cs4.backgroundColor, "background-color applies");
@@ -139,6 +156,14 @@ function part2()
        "-moz-border-start-color is blocked");
     is(cs6.borderLeftColor, cs2.borderLeftColor,
        "-moz-border-end-color is blocked");
+    is(cs7.MozBorderTopColors, cs2.MozBorderTopColors,
+       "-moz-border-top-colors is blocked");
+    is(cs7.MozBorderRightColors, cs2.MozBorderRightColors,
+       "-moz-border-right-colors is blocked");
+    is(cs7.MozBorderBottomColors, cs2.MozBorderBottomColors,
+       "-moz-border-bottom-colors is blocked");
+    is(cs7.MozBorderLeftColors, cs2.MozBorderLeftColors,
+       "-moz-border-left-colors is blocked");
     is(cs1.borderBottomColor, cs2.borderBottomColor,
        "border-bottom-color is blocked");
     is(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,

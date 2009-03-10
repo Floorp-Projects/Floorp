@@ -81,7 +81,6 @@ public:
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
   NS_IMETHOD GetDefaultKeyBinding(nsAString& aKeyBinding);
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -91,6 +90,7 @@ public:
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
@@ -103,13 +103,13 @@ public:
   nsXULMenuSeparatorAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
@@ -118,11 +118,9 @@ class nsXULMenupopupAccessible : public nsXULSelectableAccessible
 public:
   nsXULMenupopupAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
-  // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *aRole);
-
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
   // nsXULMenupopupAccessible
@@ -136,11 +134,9 @@ class nsXULMenubarAccessible : public nsAccessibleWrap
 public:
   nsXULMenubarAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
-  // nsIAccessible
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
-
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 };
 

@@ -40,7 +40,7 @@
 
 #define M(x)  ((x) >> 32) 
 
-void _print_list(char *name, OggPlayDataHeader *p);
+extern void _print_list(char *name, OggPlayDataHeader *p);
 
 int
 oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
@@ -56,7 +56,9 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
   /*
    * allocate the structure for return to the user
    */
-  (*info) = malloc (me->num_tracks * sizeof (OggPlayCallbackInfo *));
+  (*info) = oggplay_calloc (me->num_tracks, sizeof (OggPlayCallbackInfo *));
+  if ((*info) == NULL)
+    return -1;
 
   /*
    * fill in each active track.  Leave gaps for inactive tracks.
@@ -128,7 +130,18 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
     }
    
     /* null-terminate the record list for the python interface */
-    track_info->records = malloc ((count + 1) * sizeof (OggPlayDataHeader *));
+    track_info->records = oggplay_calloc ((count + 1), sizeof (OggPlayDataHeader *));
+    if (track_info->records == NULL)
+    {
+      for (i = 0; i < me->num_tracks; i++) {
+        if ((*info)[i]->records != NULL) 
+          oggplay_free ((*info)[i]->records);
+      }
+      oggplay_free (*info);
+      *info = NULL;
+      return -1;
+    }
+
     track_info->records[count] = NULL;
 
     track_info->available_records = count;
@@ -270,18 +283,20 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
      * and callback creation
      */
     for (i = 0; i < me->num_tracks; i++) {
-      if ((*info)[i]->records != NULL) free((*info)[i]->records);
+      if ((*info)[i]->records != NULL) 
+        oggplay_free((*info)[i]->records);
     }
-    free(*info);
+    oggplay_free(*info);
     (*info) = NULL;
 
   }
 
   if (tcount == 0) {
     for (i = 0; i < me->num_tracks; i++) {
-      if ((*info)[i]->records != NULL) free((*info)[i]->records);
+      if ((*info)[i]->records != NULL) 
+        oggplay_free((*info)[i]->records);
     }
-    free(*info);
+    oggplay_free(*info);
     (*info) = NULL;
   }
 
@@ -299,10 +314,10 @@ oggplay_callback_info_destroy(OggPlay *me, OggPlayCallbackInfo **info) {
   for (i = 0; i < me->num_tracks; i++) {
     p = info[i];
     if (me->buffer == NULL && p->records != NULL)
-      free(p->records);
+      oggplay_free(p->records);
   }
 
-  free(info);
+  oggplay_free(info);
 
 }
 

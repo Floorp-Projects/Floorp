@@ -711,10 +711,8 @@ nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
       case eStyleContentType_String:
         {
           nsString str;
-          nsStyleUtil::EscapeCSSString(nsDependentString(data.mContent.mString),
-                                       str);
-          str.Insert(PRUnichar('"'), 0);
-          str.Append(PRUnichar('"'));
+          nsStyleUtil::AppendEscapedCSSString(
+            nsDependentString(data.mContent.mString), str);
           val->SetString(str);
         }
         break;
@@ -749,17 +747,20 @@ nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
           PRInt32 typeItem = 1;
           if (data.mType == eStyleContentType_Counters) {
             typeItem = 2;
-            str.AppendLiteral(", \"");
-            nsString itemstr;
-            nsStyleUtil::EscapeCSSString(
-              nsDependentString(a->Item(1).GetStringBufferValue()), itemstr);
-            str.Append(itemstr);
-            str.Append(PRUnichar('"'));
-          }
-          PRInt32 type = a->Item(typeItem).GetIntValue();
-          if (type != NS_STYLE_LIST_STYLE_DECIMAL) {
             str.AppendLiteral(", ");
-            str.AppendInt(type);
+            nsStyleUtil::AppendEscapedCSSString(
+              nsDependentString(a->Item(1).GetStringBufferValue()), str);
+          }
+          if (a->Item(typeItem).GetUnit() == eCSSUnit_None) {
+            str.AppendLiteral(", none");
+          } else {
+            PRInt32 type = a->Item(typeItem).GetIntValue();
+            if (type != NS_STYLE_LIST_STYLE_DECIMAL) {
+              str.AppendLiteral(", ");
+              AppendASCIItoUTF16(
+                nsCSSProps::ValueToKeyword(type, nsCSSProps::kListStyleKTable),
+                str);
+            }
           }
 
           str.Append(PRUnichar(')'));
@@ -1009,13 +1010,10 @@ nsComputedDOMStyle::GetQuotes(nsIDOMCSSValue** aValue)
     }
 
     nsString s;
-    nsStyleUtil::EscapeCSSString(*quotes->OpenQuoteAt(i), s);
-    s.Insert(PRUnichar('"'), 0);
-    s.Append(PRUnichar('"'));
+    nsStyleUtil::AppendEscapedCSSString(*quotes->OpenQuoteAt(i), s);
     openVal->SetString(s);
-    nsStyleUtil::EscapeCSSString(*quotes->CloseQuoteAt(i), s);
-    s.Insert(PRUnichar('"'), 0);
-    s.Append(PRUnichar('"'));
+    s.Truncate();
+    nsStyleUtil::AppendEscapedCSSString(*quotes->CloseQuoteAt(i), s);
     closeVal->SetString(s);
   }
 

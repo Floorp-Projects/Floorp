@@ -169,6 +169,11 @@
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
 
+#ifdef PAINT_USE_IMAGE_SURFACE
+static nsAutoPtr<PRUint8> gSharedSurfaceData;
+static gfxIntSize gSharedSurfaceSize;
+#endif
+
 /*
  * WinCE helpers
  */
@@ -1658,9 +1663,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
         switch (mSizeMode) {
 #ifdef WINCE
           case nsSizeMode_Maximized :
-#ifdef WINCE_WINDOWS_MOBILE
             ::SetForegroundWindow(mWnd);
-#endif
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
           // use default for nsSizeMode_Minimized on Windows CE
@@ -1674,7 +1677,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
 #endif
           default:
             if (CanTakeFocus()) {
-#ifdef WINCE_WINDOWS_MOBILE
+#ifdef WINCE
               ::SetForegroundWindow(mWnd);
 #endif
               ::ShowWindow(mWnd, SW_SHOWNORMAL);
@@ -5692,7 +5695,7 @@ DWORD nsWindow::WindowStyle()
 
     case eWindowType_dialog:
       style = WS_BORDER | WS_POPUP;
-#ifndef WINCE_WINDOWS_MOBILE
+#if !defined(WINCE_WINDOWS_MOBILE)
       style |= WS_SYSMENU;
       if (mBorderStyle != eBorderStyle_default)
         style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
@@ -5700,7 +5703,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_popup:
-      style = WS_POPUP;
+      style = WS_POPUP | WS_BORDER;
       break;
 
     default:
@@ -5710,8 +5713,8 @@ DWORD nsWindow::WindowStyle()
     case eWindowType_toplevel:
     case eWindowType_invisible:
       style = WS_BORDER;
-#ifndef WINCE_WINDOWS_MOBILE
-      style |= WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+#if !defined(WINCE_WINDOWS_MOBILE)
+      style |= WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 #endif
       break;
   }
@@ -5805,7 +5808,11 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
 
     case eWindowType_popup:
-      return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
+      return
+#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
+        WS_EX_NOACTIVATE |
+#endif
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
 
     default:
       NS_ASSERTION(0, "unknown border style");
@@ -6073,10 +6080,37 @@ PRBool nsWindow::OnPaint(HDC aDC)
         targetSurface = new gfxWindowsSurface(hDC);
       }
 #elif defined(PAINT_USE_IMAGE_SURFACE)
+      if (!gSharedSurfaceData) {
+        gSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
+        gSharedSurfaceSize.width = GetSystemMetrics(SM_CXSCREEN);
+        gSharedSurfaceData = (PRUint8*) malloc(gSharedSurfaceSize.width * gSharedSurfaceSize.height * 4);
+      }
+
       gfxIntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
                              ps.rcPaint.bottom - ps.rcPaint.top);
-      nsRefPtr<gfxImageSurface> targetSurface = new gfxImageSurface(surfaceSize,
-                                                                    gfxASurface::ImageFormatRGB24);
+
+      nsRefPtr<gfxImageSurface> targetSurface;
+
+      if (!gSharedSurfaceData ||
+          surfaceSize.width > gSharedSurfaceSize.width ||
+          surfaceSize.height > gSharedSurfaceSize.height)
+      {
+#ifdef DEBUG_vladimir
+          RETAILMSG(1, (L"OnPaint: Paint area bigger than screen! Screen %dx%d, surface %dx%d, HWND %p\r\n", gSharedSurfaceSize.width, gSharedSurfaceSize.height, surfaceSize.width, surfaceSize.height, mWnd));
+#endif
+
+          // allocate a new oversize surface; hopefully this will just be a one-time thing,
+          // and we should really fix whatever's doing it!
+          targetSurface = new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatRGB24);
+      } else {
+          // don't use the shared surface directly; instead, create a new one
+          // that just reuses its buffer.
+          targetSurface = new gfxImageSurface(gSharedSurfaceData.get(),
+                                              surfaceSize,
+                                              surfaceSize.width * 4,
+                                              gfxASurface::ImageFormatRGB24);
+      }
+
       if (targetSurface && !targetSurface->CairoStatus()) {
         targetSurface->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
       }

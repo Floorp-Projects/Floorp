@@ -167,6 +167,9 @@ protected:
   PRUint32 mDropEffect;
   PRUint32 mEffectAllowed;
 
+  // Indicates the behavior of the cursor during drag operations
+  PRPackedBool mCursorState;
+
   // readonly data transfers may not be modified except the drop effect and
   // effect allowed.
   PRPackedBool mReadOnly;
