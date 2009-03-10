@@ -428,6 +428,8 @@ fs_vorbis_init (FishSound * fsound)
   fsv->finished = 0;
   vorbis_info_init (&fsv->vi);
   vorbis_comment_init (&fsv->vc);
+  vorbis_dsp_init (&fsv->vd);
+  vorbis_block_init (&fsv->vd, &fsv->vb);
   fsv->pcm = NULL;
   fsv->ipcm = NULL;
   fsv->max_pcm = 0;
