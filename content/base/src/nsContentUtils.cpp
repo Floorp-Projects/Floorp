@@ -3164,8 +3164,10 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(aDoc, "GetEventAndTarget lied?");
-  NS_ENSURE_ARG_POINTER(aDoc->GetWindow());
-  NS_ENSURE_ARG_POINTER(aDoc->GetWindow()->GetChromeEventHandler());
+  if (!aDoc->GetWindow())
+    return NS_ERROR_INVALID_ARG;
+  if (!aDoc->GetWindow()->GetChromeEventHandler())
+    return NS_ERROR_INVALID_ARG;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   rv = aDoc->GetWindow()->GetChromeEventHandler()->DispatchDOMEvent(nsnull,
