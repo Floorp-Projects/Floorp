@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="doUpdate(testUpdate);">
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
@@ -19,7 +19,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 
 // Add some URLs to the malware database.
-var testData = "malware.com/";
+var testData = "malware.example.com/";
 var testUpdate =
   "n:1000\ni:test-malware-simple\nad:1\n" +
   "a:524:32:" + testData.length + "\n" +
@@ -69,8 +69,6 @@ function doUpdate(update) {
     throw ex;
   }
 }
-
-doUpdate(testUpdate);
 
 SimpleTest.waitForExplicitFinish();
 
