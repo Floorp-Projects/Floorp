@@ -141,7 +141,7 @@
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
                                "loadstart", "durationchange", "timeupdate", "progress",
                                "playing", "waiting", "canplaythrough", "seeking",
-                               "seeked", "emptied"],
+                               "seeked", "emptied", "loadedmetadata"],
 
                 controlFader  : {
                                     name : "controls", // shorthand for debugging
@@ -172,6 +172,7 @@
                 firstFrameShown : false,
                 lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
+                isAudioOnly : false,
 
                 /*
                  * Set the initial state of the controls. The binding is normally created along
@@ -195,6 +196,13 @@
                     this.durationChange(duration);
                     this.showPosition(currentTime, duration);
 
+                    // If we have metadata, check if this is a <video> without video data.
+                    if (this.video.readyState >= this.video.HAVE_META_DATA) {
+                        if (this.video instanceof HTMLVideoElement &&
+                            (this.video.videoWidth == 0 || this.videoHeight == 0))
+                            this.isAudioOnly = true;
+                    }
+
                     // If the first frame hasn't loaded, kick off a throbber fade-in.
                     if (this.video.readyState >= this.video.HAVE_CURRENT_DATA)
                         this.firstFrameShown = true;
@@ -213,7 +221,7 @@
 
                 get dynamicControls() {
                     // Don't fade controls for <audio> elements.
-                    var enabled = this.video instanceof HTMLVideoElement;
+                    var enabled = !this.isAudioOnly;
 
                     // Allow tests to explicitly suppress the fading of controls.
                     if (this.video.hasAttribute("mozNoDynamicControls"))
@@ -241,11 +249,21 @@
                         case "volumechange":
                             this.muteButton.setAttribute("muted", this.video.muted);
                             break;
+                        case "loadedmetadata":
+                            // If a <video> doesn't have any video data, treat it as <audio>
+                            // and show the controls (they won't fade back out)
+                            if (this.video instanceof HTMLVideoElement &&
+                                (this.video.videoWidth == 0 || this.video.videoHeight == 0)) {
+                                this.isAudioOnly = true;
+                                this.startFadeIn(this.controlFader);
+                            }
+                            break;
                         case "loadeddata":
                             this.firstFrameShown = true;
                             break;
                         case "loadstart":
                             this.maxCurrentTimeSeen = 0;
+                            this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                             break;
                         case "durationchange":
                             var duration = Math.round(this.video.duration * 1000); // in ms
@@ -522,6 +540,7 @@
             var video = this.parentNode;
             this.Utils.video = video;
             this.Utils.videocontrols = this;
+            this.Utils.isAudioOnly = (video instanceof HTMLAudioElement);
 
             this.Utils.controlFader.element  = document.getAnonymousElementByAttribute(this, "class", "controlBar");
             this.Utils.throbberFader.element = document.getAnonymousElementByAttribute(this, "class", "throbberOverlay");
