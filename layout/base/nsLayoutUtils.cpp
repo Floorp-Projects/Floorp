@@ -3188,11 +3188,8 @@ nsLayoutUtils::InitTextRunContainerForPrinting(nsIContent* aContent,
                                                nsIFrame* aFrame,
                                                nsFrameState aBits)
 {
-  NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::textFrame
-#ifdef MOZ_SVG
-                  || aFrame->GetType() == nsGkAtoms::svgGlyphFrame
-#endif // MOZ_SVG
-                  ,
+  NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::textFrame ||
+                  aFrame->GetType() == nsGkAtoms::svgGlyphFrame,
                   "Wrong frame type!");
 
   nsPresContext* presContext = aFrame->PresContext();
