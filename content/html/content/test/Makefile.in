@@ -130,6 +130,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug347174_xslp.html \
 		347174transformable.xml \
 		347174transform.xsl \
+		test_bug481335.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

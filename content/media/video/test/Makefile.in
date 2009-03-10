@@ -62,8 +62,6 @@ ifdef MOZ_OGG
 _TEST_FILES += \
 		test_access_control.html \
 		file_access_controls.html \
-		test_async_abort_events.html \
-		test_async_load_source_append.html \
 		test_bug448534.html \
 		test_bug461281.html \
 		test_bug468190.html \
@@ -74,14 +72,15 @@ _TEST_FILES += \
 		test_contentDuration4.html \
 		test_contentDuration5.html \
 		test_contentDuration6.html \
+		test_delay_load.html \
 		test_duration1.html \
 		test_ended1.html \
 		test_ended2.html \
 		test_error_on_404.html \
+		test_info_leak.html \
 		test_onloadedmetadata.html \
 		test_load_candidates.html \
-		test_load_coalescing.html \
- 		test_play.html \
+		test_play.html \
 		test_progress1.html \
 		test_progress3.html \
 		test_source.html \
@@ -132,6 +131,7 @@ _TEST_FILES += \
 		test_bug465498.html \
 		test_bug468190_wav.html \
 		test_can_play_type_wave.html \
+		test_paused_after_ended.html \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
 		test_wav_ended2.html \
@@ -170,6 +170,7 @@ ifdef MOZ_OGG
 ifdef MOZ_WAVE
 _TEST_FILES += \
 		test_decoder_disable.html \
+		test_load.html \
 		test_media_selection.html \
 		$(NULL)
 endif

@@ -158,6 +158,14 @@ public:
   virtual nsresult GetNameInternal(nsAString& aName);
 
   /**
+   * Returns enumerated accessible role from native markup (see constants in
+   * nsIAccessibleRole). Doesn't take into account ARIA roles.
+   *
+   * @param aRole  [out] accessible role.
+   */
+  virtual nsresult GetRoleInternal(PRUint32 *aRole);
+
+  /**
    * Return the state of accessible that doesn't take into account ARIA states.
    * Use nsIAccessible::state to get all states for accessible. If
    * second argument is omitted then second bit field of accessible state won't

@@ -15,6 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
       src="chrome://mochikit/content/a11y/accessible/nsIAccessible_states.js"></script>
 
   <script type="application/javascript">
@@ -62,21 +64,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testStates("button_pressed_absent", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
       
       // test aria-pressed state mapping to roles PUSHBUTTON vs TOGGLEBUTTON
-      var aButton = getAccessible("button_pressed_true");
-      if (aButton)
-        is(aButton.finalRole, ROLE_TOGGLE_BUTTON, "Wrong role for togglebutton!");
-      aButton = getAccessible("button_pressed_false");
-      if (aButton)
-        is(aButton.finalRole, ROLE_TOGGLE_BUTTON, "Wrong role for togglebutton!");
-      aButton = getAccessible("button_pressed_empty");
-      if (aButton)
-        is(aButton.finalRole, ROLE_PUSHBUTTON, "Wrong role for button!");
-      aButton = getAccessible("button_pressed_undefined");
-      if (aButton)
-        is(aButton.finalRole, ROLE_PUSHBUTTON, "Wrong role for button!");
-      aButton = getAccessible("button_pressed_absent");
-      if (aButton)
-        is(aButton.finalRole, ROLE_PUSHBUTTON, "Wrong role for button!");
+      testRole("button_pressed_true", ROLE_TOGGLE_BUTTON);
+      testRole("button_pressed_false", ROLE_TOGGLE_BUTTON);
+      testRole("button_pressed_empty", ROLE_PUSHBUTTON);
+      testRole("button_pressed_undefined", ROLE_PUSHBUTTON);
+      testRole("button_pressed_absent", ROLE_PUSHBUTTON);
       
       SimpleTest.finish();
     }

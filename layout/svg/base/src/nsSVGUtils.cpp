@@ -163,6 +163,11 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 static PRBool gSVGEnabled;
 static const char SVG_PREF_STR[] = "svg.enabled";
 
+#ifdef MOZ_SMIL
+static PRBool gSMILEnabled;
+static const char SMIL_PREF_STR[] = "svg.smil.enabled";
+#endif // MOZ_SMIL
+
 static int
 SVGPrefChanged(const char *aPref, void *aClosure)
 {
@@ -195,6 +200,32 @@ NS_SVGEnabled()
   return gSVGEnabled;
 }
 
+#ifdef MOZ_SMIL
+static int
+SMILPrefChanged(const char *aPref, void *aClosure)
+{
+  PRBool prefVal = nsContentUtils::GetBoolPref(SMIL_PREF_STR);
+  gSMILEnabled = prefVal;
+  return 0;
+}
+
+PRBool
+NS_SMILEnabled()
+{
+  static PRBool sInitialized = PR_FALSE;
+  
+  if (!sInitialized) {
+    /* check and register ourselves with the pref */
+    gSMILEnabled = nsContentUtils::GetBoolPref(SMIL_PREF_STR);
+    nsContentUtils::RegisterPrefCallback(SMIL_PREF_STR, SMILPrefChanged, nsnull);
+
+    sInitialized = PR_TRUE;
+  }
+
+  return gSMILEnabled;
+}
+#endif // MOZ_SMIL
+
 static nsIFrame*
 GetFrameForContent(nsIContent* aContent)
 {
@@ -206,6 +237,29 @@ GetFrameForContent(nsIContent* aContent)
     return nsnull;
 
   return nsGenericElement::GetPrimaryFrameFor(aContent, doc);
+}
+
+nsIContent*
+nsSVGUtils::GetParentElement(nsIContent *aContent)
+{
+  // XXXbz I _think_ this is right.  We want to be using the binding manager
+  // that would have attached the binding that gives us our anonymous parent.
+  // That's the binding manager for the document we actually belong to, which
+  // is our owner doc.
+  nsIDocument* ownerDoc = aContent->GetOwnerDoc();
+  nsBindingManager* bindingManager =
+    ownerDoc ? ownerDoc->BindingManager() : nsnull;
+
+  if (bindingManager) {
+    // if we have a binding manager -- do we have an anonymous parent?
+    nsIContent *result = bindingManager->GetInsertionParent(aContent);
+    if (result) {
+      return result;
+    }
+  }
+
+  // otherewise use the explicit one, whether it's null or not...
+  return aContent->GetParent();
 }
 
 float
@@ -386,31 +440,13 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent,
 {
   *aNearestViewportElement = nsnull;
 
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the bindings that gives us our anonymous
-  // ancestors. That's the binding manager for the document we actually belong
-  // to, which is our owner doc.
-  nsIDocument* ownerDoc = aContent->GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
   nsCOMPtr<nsIContent> element = aContent;
   nsCOMPtr<nsIContent> ancestor;
   unsigned short ancestorCount = 0;
 
   while (1) {
 
-    ancestor = nsnull;
-    if (bindingManager) {
-      // check for an anonymous ancestor first
-      ancestor = bindingManager->GetInsertionParent(element);
-    }
-    if (!ancestor) {
-      // if we didn't find an anonymous ancestor, use the explicit one
-      ancestor = element->GetParent();
-    }
+    ancestor = GetParentElement(element);
 
     nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(element);
 
@@ -439,16 +475,6 @@ nsSVGUtils::GetFarthestViewportElement(nsIContent *aContent,
 {
   *aFarthestViewportElement = nsnull;
 
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the bindings that gives us our anonymous
-  // ancestors. That's the binding manager for the document we actually belong
-  // to, which is our owner doc.
-  nsIDocument* ownerDoc = aContent->GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
   nsCOMPtr<nsIContent> element = aContent;
   nsCOMPtr<nsIContent> ancestor;
   nsCOMPtr<nsIDOMSVGElement> SVGElement;
@@ -456,15 +482,7 @@ nsSVGUtils::GetFarthestViewportElement(nsIContent *aContent,
 
   while (1) {
 
-    ancestor = nsnull;
-    if (bindingManager) {
-      // check for an anonymous ancestor first
-      ancestor = bindingManager->GetInsertionParent(element);
-    }
-    if (!ancestor) {
-      // if we didn't find an anonymous ancestor, use the explicit one
-      ancestor = element->GetParent();
-    }
+    ancestor = GetParentElement(element);
 
     nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(element);
 

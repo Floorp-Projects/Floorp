@@ -7884,15 +7884,15 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     PR_REMOVE_LINK(timeout);
 
-    // Release the timeout struct since it's out of the list
-    timeout->Release();
-
     if (isInterval) {
       // Reschedule an interval timeout. Insert interval timeout
       // onto list sorted in deadline order.
-
+      // AddRefs timeout.
       InsertTimeoutIntoList(timeout);
     }
+
+    // Release the timeout struct since it's possibly out of the list
+    timeout->Release();
   }
 
   // Take the dummy timeout off the head of the list

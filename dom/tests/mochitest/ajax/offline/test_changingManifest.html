@@ -71,6 +71,17 @@ function manifestUpdated()
     gCacheContents = contents;
 
     // Now make sure applicationCache.update() does what we expect.
+    applicationCache.onchecking = function() {
+      OfflineTest.is(applicationCache.status, applicationCache.CHECKING,
+                     "CHECKING state during update");
+      gGotChecking = true;
+    };
+    applicationCache.ondownloading = function() {
+      OfflineTest.is(applicationCache.status, applicationCache.DOWNLOADING,
+                     "DOWNLOADING state during update");
+      gGotDownloading = true;
+    };
+
     applicationCache.onupdateready = OfflineTest.priv(manifestUpdatedAgain);
     applicationCache.onnoupdate = failAndFinish;
     applicationCache.oncached = failAndFinish;

@@ -39,6 +39,8 @@
 #define NSNOTIFYADDRLISTENER_H_
 
 #include <windows.h>
+#include <winsock2.h>
+#include <iptypes.h>
 #include "nsINetworkLinkService.h"
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
@@ -74,6 +76,7 @@ protected:
 
     PRPackedBool mLinkUp;
     PRPackedBool mStatusKnown;
+    PRPackedBool mCheckAttempted;
 
     nsresult Shutdown(void);
     nsresult SendEventToUI(const char *aEventID);
@@ -82,6 +85,8 @@ protected:
     DWORD CheckIPAddrTable(void);
     DWORD CheckAdaptersInfo(void);
     DWORD CheckAdaptersAddresses(void);
+    BOOL  CheckIsGateway(PIP_ADAPTER_ADDRESSES aAdapter);
+    BOOL  CheckICSStatus(PWCHAR aAdapterName);
     void  CheckLinkStatus(void);
 
     nsCOMPtr<nsIThread> mThread;

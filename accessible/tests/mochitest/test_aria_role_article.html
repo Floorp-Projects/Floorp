@@ -14,17 +14,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429666
 
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
     function doTest()
     {
       // Test article exposed as document
+      testRole("testArticle", ROLE_DOCUMENT);
+
       var articleAcc = getAccessible("testArticle");
-      if (articleAcc) {
-        is(articleAcc.finalRole, ROLE_DOCUMENT,
-           "Wrong role for article!");
+      if (articleAcc)
         is(articleAcc.name, "Test article", "Wrong name for article!");
-      }
 
       SimpleTest.finish();
     }

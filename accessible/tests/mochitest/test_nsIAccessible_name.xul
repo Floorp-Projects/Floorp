@@ -13,8 +13,11 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.js"></script>
   <script type="application/javascript">
@@ -140,8 +143,7 @@
 
       // Element from anonymous content of direct child of toolbaritem.
       var dropmarkerAcc = textboxAcc.lastChild;
-      is(dropmarkerAcc.finalRole, nsIAccessibleRole.ROLE_PUSHBUTTON,
-         "The last child of autocomplete textbox 'toolbaritem_textbox' should be dropmarker.");
+      testRole(dropmarkerAcc, ROLE_PUSHBUTTON);
       is(dropmarkerAcc.name, "ooospspss",
          "Wrong name for dropmarker of autocomplete textbox 'toolbaritem_textbox'.");
 

@@ -899,33 +899,6 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 
     nsCOMPtr<nsIRDFResource> vol;
 
-#ifdef  XP_MAC
-    StrFileName     fname;
-    HParamBlockRec  pb;
-    for (int16 volNum = 1; ; volNum++)
-    {
-        pb.volumeParam.ioCompletion = NULL;
-        pb.volumeParam.ioVolIndex = volNum;
-        pb.volumeParam.ioNamePtr = (StringPtr)fname;
-        if (PBHGetVInfo(&pb,FALSE) != noErr)
-            break;
-        FSSpec fss(pb.volumeParam.ioVRefNum, fsRtParID, fname);
-        nsCOMPtr<nsILocalFileMac> lf;
-        NS_NewLocalFileWithFSSpec(fss, true, getter_AddRefs(lf));
-
-        nsCOMPtr<nsIURI> furi;
-        NS_NewFileURI(getter_AddRefs(furi), lf); 
-
-        nsXPIDLCString spec;
-        furi->GetSpec(getter_Copies(spec);
-
-        rv = mRDFService->GetResource(spec, getter_AddRefs(vol));
-        if (NS_FAILED(rv)) return rv;
-
-        volumes->AppendElement(vol);
-    }
-#endif
-
 #if defined (XP_WIN) && !defined (WINCE)
 
     PRInt32         driveType;

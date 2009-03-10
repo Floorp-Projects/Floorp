@@ -44,13 +44,20 @@
 
 #$debug = 1;
 
+if ($^O eq 'msys') {
+  $pwdcmd = 'pwd -W';
+}
+else {
+  $pwdcmd = 'pwd';
+}
+
 # Determine various tree path variables
 #
 ($topsrcdir, $ptopsrcdir, $depth, @makefiles) = parse_arguments(@ARGV);
 
-$object_fullpath = `pwd`;
+$object_fullpath = `$pwdcmd`;
 chdir $depth;
-$object_root = `pwd`;
+$object_root = `$pwdcmd`;
 chomp $object_fullpath;
 chomp $object_root;
 
@@ -257,7 +264,7 @@ sub update_makefiles {
       print "ac_file_in = $ac_file_in\n";
       print "srcdir     = $srcdir\n";
       print "top_srcdir = $top_srcdir\n";
-      print "cwd        = " . `pwd` . "\n";
+      print "cwd        = " . `$pwdcmd` . "\n";
     }
 
     # Copy the file and make substitutions.

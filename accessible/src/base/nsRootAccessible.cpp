@@ -164,7 +164,8 @@ NS_IMETHODIMP nsRootAccessible::GetParent(nsIAccessible * *aParent)
 }
 
 /* readonly attribute unsigned long accRole; */
-NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole) 
+nsresult
+nsRootAccessible::GetRoleInternal(PRUint32 *aRole) 
 { 
   if (!mDocument) {
     return NS_ERROR_FAILURE;
@@ -184,7 +185,7 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
     }
   }
 
-  return nsDocAccessibleWrap::GetRole(aRole);
+  return nsDocAccessibleWrap::GetRoleInternal(aRole);
 }
 
 #ifdef MOZ_XUL
@@ -493,8 +494,8 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   PRUint32 role = nsAccUtils::Role(finalFocusAccessible);
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mCurrentARIAMenubar) {  // Entering menus
-      PRUint32 naturalRole; // The natural role is the role that this type of element normally has
-      finalFocusAccessible->GetRole(&naturalRole);
+      // The natural role is the role that this type of element normally has
+      PRUint32 naturalRole = nsAccUtils::RoleInternal(finalFocusAccessible);
       if (role != naturalRole) { // Must be a DHTML menuitem
         nsCOMPtr<nsIAccessible> menuBarAccessible =
           nsAccUtils::GetAncestorWithRole(finalFocusAccessible,

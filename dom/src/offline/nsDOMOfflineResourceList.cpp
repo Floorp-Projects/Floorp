@@ -471,19 +471,20 @@ nsDOMOfflineResourceList::GetStatus(PRUint16 *aStatus)
 
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // If this object is not associated with a cache, return UNCACHED
+  nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
+  if (!appCache) {
+    *aStatus = nsIDOMOfflineResourceList::UNCACHED;
+    return NS_OK;
+  }
+
+
   // If there is an update in process, use its status.
   if (mCacheUpdate) {
     rv = mCacheUpdate->GetStatus(aStatus);
     if (NS_SUCCEEDED(rv) && *aStatus != nsIDOMOfflineResourceList::IDLE) {
       return NS_OK;
     }
-  }
-
-  // If this object is not associated with a cache, return UNCACHED
-  nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
-  if (!appCache) {
-    *aStatus = nsIDOMOfflineResourceList::UNCACHED;
-    return NS_OK;
   }
 
   nsCOMPtr<nsIApplicationCache> activeCache;

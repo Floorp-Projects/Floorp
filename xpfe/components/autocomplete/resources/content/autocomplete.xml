@@ -158,10 +158,6 @@
 
       <!-- if the resulting match string is not at the beginning of the typed string,
            this will optionally autofill like this "bar |>> foobar|" -->
-      <property name="autoFillAfterMatch"
-                onset="this.setAttribute('autofillaftermatch', val); return val;"
-                onget="return this.getAttribute('autofillaftermatch') == 'true';"/>
-
       <property name="completeDefaultIndex"
                 onset="this.setAttribute('completedefaultindex', val); return val;"
                 onget="return this.getAttribute('completedefaultindex') == 'true';"/>
@@ -1136,7 +1132,7 @@
                 this.setTextValue(this.value + resultValue.substr(endPoint));
                 this.mInputElt.setSelectionRange(endPoint, this.value.length);
               } else {
-                if (this.autoFillAfterMatch || this.completeDefaultIndex) {
+                if (this.completeDefaultIndex) {
                   this.setTextValue(this.value + " >> " + resultValue);
                   this.mInputElt.setSelectionRange(entry.length, this.value.length);
                 } else {

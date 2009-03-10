@@ -8,10 +8,13 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/relations.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -95,7 +98,7 @@
         parentOfDocAcc = getAccessible(docAcc.parent, [nsIAccessNode]);
         parentDocAcc = getAccessible(parentOfDocAcc.accessibleDocument,
                                      [nsIAccessible]);
-      } while (parentDocAcc.finalRole != ROLE_CHROME_WINDOW)
+      } while (getRole(parentDocAcc) != ROLE_CHROME_WINDOW)
 
       testRelation(parentDocAcc, RELATION_EMBEDS, docAcc);
 

@@ -33,7 +33,7 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 
-function testStatics() {
+function runTests() {
   function testStatic(id, expect, description) {
     is(document.getElementById(id).contentDocument.title, expect, description);
   }
@@ -46,99 +46,9 @@ function testStatics() {
   testStatic("xhtml3", "Test", "XHTML <title> containing an element");
   testStatic("xul1", "Test", "XUL <window> title attribute");
   testStatic("svg1", "Test", "SVG <title>");
+
+  SimpleTest.finish();
 }
-
-function testDynamics() {
-  var inProgress = {};
-  function testDynamic(id, expect, description, op, checkDOM) {
-    inProgress[description] = true;
-    var frame = document.getElementById(id);
-    var done = false;
-
-    function listener() {
-      inProgress[description] = false;
-      is(frame.contentDocument.title, expect, "'title': " + description);
-      if (typeof(checkDOM) != undefined) {
-        checkDOM(frame.contentDocument, "DOM: " + description);
-      }
-    }
-    frame.contentDocument.addEventListener("DOMTitleChanged", listener, false);
-
-    op(frame.contentDocument);
-  }
-
-  testDynamic("html1", "Hello", "Setting HTML <title> text contents", function(doc){
-      var t = doc.getElementById("t"); t.textContent = "Hello";
-    });
-  testDynamic("html2", "Foo", "Removing HTML <title>", function(doc){
-      var t = doc.getElementById("t"); t.parentNode.removeChild(t);
-    });
-  testDynamic("html3", "Hello", "Appending HTML <title> element to root element", function(doc){
-      var t = doc.createElement("title"); t.textContent = "Hello"; doc.documentElement.appendChild(t);
-    });
-
-  testDynamic("xhtml3", "Hello", "Setting 'title' clears existing <title> contents", function(doc){
-      doc.title = "Hello";
-    }, function(doc, desc) {
-      is(doc.documentElement.firstChild.data, "Hello", desc);
-      is(doc.documentElement.firstChild.nextSibling, null, desc);
-    });
-  // This one does nothing and won't fire an event
-  document.getElementById("xhtml4").contentDocument.title = "Hello";
-  is(document.getElementById("xhtml4").contentDocument.title, "", "Setting 'title' does nothing with no <head>");
-  testDynamic("xhtml5", "Hello", "Setting 'title' works with a <head>", function(doc){
-      doc.title = "Hello";
-    }, function(doc, desc) {
-      var head = doc.documentElement.firstChild;
-      var title = head.firstChild;
-      is(title.tagName.toLowerCase(), "title", desc);
-      is(title.firstChild.data, "Hello", desc);
-      is(title.firstChild.nextSibling, null, desc);
-      is(title.nextSibling, null, desc);
-    });
-  testDynamic("xhtml6", "Hello", "Setting 'title' appends to <head>", function(doc){
-      doc.title = "Hello";
-    }, function(doc, desc) {
-      var head = doc.documentElement.firstChild;
-      is(head.firstChild.tagName.toLowerCase(), "style", desc);
-      var title = head.firstChild.nextSibling;
-      is(title.tagName.toLowerCase(), "title", desc);
-      is(title.firstChild.data, "Hello", desc);
-      is(title.firstChild.nextSibling, null, desc);
-      is(title.nextSibling, null, desc);
-    });
-
-  testDynamic("xul1", "Hello", "Setting XUL <window> title attribute", function(doc){
-      doc.documentElement.setAttribute("title", "Hello");
-    });
-  testDynamic("xul2", "Hello", "Setting 'title' in XUL", function(doc){
-      doc.title = "Hello";
-    }, function(doc, desc) {
-      is(doc.documentElement.getAttribute("title"), "Hello", desc);
-      is(doc.documentElement.firstChild, null, desc);
-    });
-
-  testDynamic("svg1", "Hello", "Setting SVG <title> text contents", function(doc){
-      var t = doc.getElementById("t"); t.textContent = "Hello";
-    });
-  testDynamic("svg2", "", "Removing SVG <title>", function(doc){
-      var t = doc.getElementById("t"); t.parentNode.removeChild(t);
-    });
-
-  function end() {
-    for (description in inProgress) {
-      ok(!inProgress[description], description + ": DOMTitleChange not fired");
-    }
-    SimpleTest.finish();
-  }
-  setTimeout(end, 500);
-}
-
-function runTests() {
-  testStatics();
-  testDynamics();
-}
-
 </script>
 </pre>
 </body>

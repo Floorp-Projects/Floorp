@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <title>Deferred tree</title>
+    <!--
+    PURPOSE: If a SVG subdocument is created dynamically, any timing-related
+    animation API calls on the subdocument should silently fail until it's
+    been attached to a document.
+    
+    OPERATION: We start with a plain XHTML document, but later a div and an SVG
+    subdocument are created. We attempt an animation API call on the SVG
+    element before attaching it to the XHTML document.
+
+    EXPECTED RESULTS: The animation API call should have no effect.
+    -->
+    <script src="deferred-tree-util.js" type="text/javascript"/>
+    <script>
+        function animate()
+        {
+          // Set up
+          var div = makeDiv();
+          var svg = makeSvg();
+          var target = document.getElementById('tree-container');
+
+          // Trigger a "BindToTree" call on the SVG element
+          div.appendChild(svg);
+
+          // Make an animation api call (should have no effect, if we're sane)
+          svg.setCurrentTime(1.0);
+
+          // Finally, we attach to the document and pause animations.
+          target.appendChild(div);
+
+          // Reftest Snapshot
+          svg.pauseAnimations();
+          document.documentElement.removeAttribute("class");
+        }
+    </script>
+  </head>
+
+  <body onload="animate()">
+    <p id="tree-container"/>
+  </body>
+</html>

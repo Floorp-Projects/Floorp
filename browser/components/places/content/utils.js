@@ -999,6 +999,9 @@ var PlacesUIUtils = {
       if (PlacesUtils.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
         element.className = "menuitem-iconic bookmark-item";
+
+        if (aNode.uri.lastIndexOf("javascript:", 0) == 0)
+          element.setAttribute("bookmarklet", "true");
       }
       else if (PlacesUtils.containerTypes.indexOf(type) != -1) {
         element = document.createElement("menu");

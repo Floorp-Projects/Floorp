@@ -39,7 +39,7 @@
 #include "JpCntx.h"
 
 //This is hiragana 2-char sequence table, the number in each cell represents its frequency category
-char jp2CharContext[83][83] = 
+const char jp2CharContext[83][83] = 
 { 
 { 0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,},
 { 2,4,0,4,0,3,0,4,0,3,4,4,4,2,4,3,3,4,3,2,3,3,4,2,3,3,3,2,4,1,4,3,3,1,5,4,3,4,3,4,3,5,3,0,3,5,4,2,0,3,1,0,3,3,0,3,3,0,1,1,0,4,3,0,3,3,0,4,0,2,0,3,5,5,5,5,4,0,4,1,0,3,4,},
@@ -227,5 +227,3 @@ PRInt32 EUCJPContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
      return (unsigned char)*(str+1) - (unsigned char)0xa1;
   return -1;
 }
-
-

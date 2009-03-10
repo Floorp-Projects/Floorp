@@ -82,10 +82,10 @@ NS_IMPL_ISUPPORTS8(imgRequest, imgILoad,
                    nsIInterfaceRequestor)
 
 imgRequest::imgRequest() : 
-  mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
-  mGotData(PR_FALSE), mImageStatus(imgIRequest::STATUS_NONE),
-  mState(0), mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE),
-  mImageSniffers("image-sniffing-services") 
+  mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0), 
+  mValidator(nsnull), mImageSniffers("image-sniffing-services"), 
+  mIsMultiPartChannel(PR_FALSE), mLoading(PR_FALSE), mProcessing(PR_FALSE),
+  mHadLastPart(PR_FALSE), mGotData(PR_FALSE), mIsCacheable(PR_TRUE)
 {
   /* member initializers and constructor code */
 }
@@ -303,7 +303,7 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
     proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
 
   if (mImage && !HaveProxyWithObserver(proxy) && proxy->HasObserver()) {
-    LOG_MSG(gImgLog, "imgRequest::AddProxy", "resetting animation");
+    LOG_MSG(gImgLog, "imgRequest::NotifyProxyListener", "resetting animation");
 
     mImage->ResetAnimation();
   }
@@ -419,12 +419,14 @@ void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
-  if (mCacheEntry)
-    imgLoader::RemoveFromCache(mCacheEntry);
-  else
-    imgLoader::RemoveFromCache(mKeyURI);
+  if (mIsCacheable) {
+    if (mCacheEntry)
+      imgLoader::RemoveFromCache(mCacheEntry);
+    else
+      imgLoader::RemoveFromCache(mKeyURI);
 
-  mCacheEntry = nsnull;
+    mCacheEntry = nsnull;
+  }
 }
 
 PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
@@ -469,6 +471,15 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
   if (p)
     p->AdjustPriority(delta);
+}
+
+void imgRequest::SetCacheable(PRBool cacheable)
+{
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "cacheable", cacheable);
+  mIsCacheable = cacheable;
+
+  if (!mIsCacheable)
+    mCacheEntry = nsnull;
 }
 
 /** imgILoad methods **/
@@ -1087,9 +1098,11 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", spec.get());
 #endif
 
-  // If we don't still have a cache entry, we don't want to refresh the cache.
-  if (mKeyURI && mCacheEntry)
-    imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
+  if (mIsCacheable) {
+    // If we don't still have a cache entry, we don't want to refresh the cache.
+    if (mKeyURI && mCacheEntry)
+      imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
+  }
 
   return rv;
 }

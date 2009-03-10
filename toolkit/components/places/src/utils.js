@@ -919,84 +919,113 @@ var PlacesUtils = {
     return -1;
   },
 
-  // Returns true if a container has uris in its first level
-  // Has better performances than checking getURLsForContainerNode(node).length
+  /**
+   * Returns a nsNavHistoryContainerResultNode with forced excludeItems and
+   * expandQueries.
+   * @param   aNode
+   *          The node to convert
+   * @param   [optional] excludeItems
+   *          True to hide all items (individual bookmarks). This is used on
+   *          the left places pane so you just get a folder hierarchy.
+   * @param   [optional] expandQueries
+   *          True to make query items expand as new containers. For managing,
+   *          you want this to be false, for menus and such, you want this to
+   *          be true.
+   * @returns A nsINavHistoryContainerResultNode containing the unfiltered
+   *          contents of the container.
+   * @note    The returned container node could be open or closed, we don't
+   *          guarantee its status.
+   */
+  getContainerNodeWithOptions:
+  function PU_getContainerNodeWithOptions(aNode, aExcludeItems, aExpandQueries) {
+    if (!this.nodeIsContainer(aNode))
+      throw Cr.NS_ERROR_INVALID_ARG;
+
+    // excludeItems is inherited by child containers in an excludeItems view.
+    var excludeItems = asQuery(aNode).queryOptions.excludeItems ||
+                       asQuery(aNode.parentResult.root).queryOptions.excludeItems;
+    // expandQueries is inherited by child containers in an expandQueries view.
+    var expandQueries = asQuery(aNode).queryOptions.expandQueries &&
+                        asQuery(aNode.parentResult.root).queryOptions.expandQueries;
+
+    // If our options are exactly what we expect, directly return the node.
+    if (excludeItems == aExcludeItems && expandQueries == aExpandQueries)
+      return aNode;
+
+    // Otherwise, get contents manually.
+    var queries = {}, options = {};
+    this.history.queryStringToQueries(aNode.uri, queries, {}, options);
+    options.value.excludeItems = aExcludeItems;
+    options.value.expandQueries = aExpandQueries;
+    return this.history.executeQueries(queries.value,
+                                       queries.value.length,
+                                       options.value).root;
+  },
+
+  /**
+   * Returns true if a container has uri nodes in its first level.
+   * Has better performance than (getURLsForContainerNode(node).length > 0).
+   * @param aNode
+   *        The container node to search through.
+   * @returns true if the node contains uri nodes, false otherwise.
+   */
   hasChildURIs: function PU_hasChildURIs(aNode) {
     if (!this.nodeIsContainer(aNode))
       return false;
 
-    // in the Library left pane we use excludeItems
-    if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
-      var itemId = PlacesUtils.getConcreteItemId(aNode);
-      var contents = this.getFolderContents(itemId, false, false).root;
-      for (var i = 0; i < contents.childCount; ++i) {
-        var child = contents.getChild(i);
-        if (this.nodeIsURI(child))
-          return true;
-      }
-      return false;
+    var root = this.getContainerNodeWithOptions(aNode, false, true);
+    var oldViewer = root.parentResult.viewer;
+    var wasOpen = root.containerOpen;
+    if (!wasOpen) {
+      root.parentResult.viewer = null;
+      root.containerOpen = true;
     }
 
-    var wasOpen = aNode.containerOpen;
-    if (!wasOpen)
-      aNode.containerOpen = true;
     var found = false;
-    for (var i = 0; i < aNode.childCount && !found; i++) {
-      var child = aNode.getChild(i);
+    for (var i = 0; i < root.childCount && !found; i++) {
+      var child = root.getChild(i);
       if (this.nodeIsURI(child))
         found = true;
     }
-    if (!wasOpen)
-      aNode.containerOpen = false;
+
+    if (!wasOpen) {
+      root.containerOpen = false;
+      root.parentResult.viewer = oldViewer;
+    }
     return found;
   },
 
+  /**
+   * Returns an array containing all the uris in the first level of the
+   * passed in container.
+   * If you only need to know if the node contains uris, use hasChildURIs.
+   * @param aNode
+   *        The container node to search through
+   * @returns array of uris in the first level of the container.
+   */
   getURLsForContainerNode: function PU_getURLsForContainerNode(aNode) {
-    let urls = [];
-    if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
-      // grab manually
-      var itemId = this.getConcreteItemId(aNode);
-      let contents = this.getFolderContents(itemId, false, false).root;
-      for (let i = 0; i < contents.childCount; ++i) {
-        let child = contents.getChild(i);
-        if (this.nodeIsURI(child))
-          urls.push({uri: child.uri, isBookmark: this.nodeIsBookmark(child)});
-      }
-    }
-    else {
-      let result, oldViewer, wasOpen;
-      try {
-        let wasOpen = aNode.containerOpen;
-        result = aNode.parentResult;
-        oldViewer = result.viewer;
-        if (!wasOpen) {
-          result.viewer = null;
-          aNode.containerOpen = true;
-        }
-        for (let i = 0; i < aNode.childCount; ++i) {
-          // Include visible url nodes only
-          let child = aNode.getChild(i);
-          if (this.nodeIsURI(child)) {
-            // If the node contents is visible, add the uri only if its node is
-            // visible. Otherwise follow viewer's collapseDuplicates property,
-            // default to true
-            if ((wasOpen && oldViewer && child.viewIndex != -1) ||
-                (oldViewer && !oldViewer.collapseDuplicates) ||
-                urls.indexOf(child.uri) == -1) {
-              urls.push({ uri: child.uri,
-                          isBookmark: this.nodeIsBookmark(child) });
-            }
-          }
-        }
-        if (!wasOpen)
-          aNode.containerOpen = false;
-      }
-      finally {
-        if (!wasOpen)
-          result.viewer = oldViewer;
-      }
+    var urls = [];
+    if (!this.nodeIsContainer(aNode))
+      return urls;
+
+    var root = this.getContainerNodeWithOptions(aNode, false, true);
+    var oldViewer = root.parentResult.viewer;
+    var wasOpen = root.containerOpen;
+    if (!wasOpen) {
+      root.parentResult.viewer = null;
+      root.containerOpen = true;
     }
 
+   for (var i = 0; i < root.childCount; ++i) {
+      var child = root.getChild(i);
+      if (this.nodeIsURI(child))
+        urls.push({uri: child.uri, isBookmark: this.nodeIsBookmark(child)});
+    }
+
+    if (!wasOpen) {
+      root.containerOpen = false;
+      root.parentResult.viewer = oldViewer;
+    }
     return urls;
   },
 

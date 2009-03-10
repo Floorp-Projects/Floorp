@@ -41,6 +41,11 @@
           events: CLICK_EVENTS
         },
         {
+          ID: "checkbox_mixed",
+          actionName: "cycle",
+          events: CLICK_EVENTS
+        },
+        {
           ID: "combobox_collapsed",
           actionName: "open",
           events: CLICK_EVENTS
@@ -118,11 +123,13 @@
 
   <div id="clickable" onclick="">Clickable text</div>
 
-  <div id="button" role="button">Button</span>
+  <div id="button" role="button">Button</div>
 
-  <div id="checkbox_unchecked" role="checkbox">Checkbox</span>
+  <div id="checkbox_unchecked" role="checkbox">Checkbox</div>
 
-  <div id="checkbox_checked" role="checkbox" aria-checked="true">Checkbox</span>
+  <div id="checkbox_checked" role="checkbox" aria-checked="true">Checkbox</div>
+
+  <div id="checkbox_mixed" role="checkbox" aria-checked="mixed">Checkbox</div>
 
   <div id="combobox_collapsed" role="combobox">
     <div id="option" role="option">Option of collapsed combobox</div>

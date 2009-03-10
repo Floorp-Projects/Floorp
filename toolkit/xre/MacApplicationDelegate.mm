@@ -158,23 +158,17 @@ SetupMacApplicationDelegate()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   FSRef ref;
-  FSSpec spec;
   // The cast is kind of freaky, but apparently it's what all the beautiful people do.
   OSStatus status = FSPathMakeRef((UInt8 *)[filename fileSystemRepresentation], &ref, NULL);
   if (status != noErr) {
     NS_WARNING("FSPathMakeRef in openFile failed, skipping file open");
     return NO;
   }
-  status = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL);
-  if (status != noErr) {
-    NS_WARNING("FSGetCatalogInfo in openFile failed, skipping file open");
-    return NO;
-  }
 
   // Take advantage of the existing "command line" code for Macs.
   nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
   // We don't actually care about Mac filetypes in this context, just pass a placeholder.
-  cmdLine.HandleOpenOneDoc(spec, 'abcd');
+  cmdLine.HandleOpenOneDoc(&ref, 'abcd');
 
   return YES;
 
@@ -190,23 +184,17 @@ SetupMacApplicationDelegate()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   FSRef ref;
-  FSSpec spec;
   // The cast is kind of freaky, but apparently it's what all the beautiful people do.
   OSStatus status = FSPathMakeRef((UInt8 *)[filename fileSystemRepresentation], &ref, NULL);
   if (status != noErr) {
     NS_WARNING("FSPathMakeRef in printFile failed, skipping printing");
     return NO;
   }
-  status = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL);
-  if (status != noErr) {
-    NS_WARNING("FSGetCatalogInfo in printFile failed, skipping printing");
-    return NO;
-  }
 
   // Take advantage of the existing "command line" code for Macs.
   nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
   // We don't actually care about Mac filetypes in this context, just pass a placeholder.
-  cmdLine.HandlePrintOneDoc(spec, 'abcd');
+  cmdLine.HandlePrintOneDoc(&ref, 'abcd');
 
   return YES;
 

@@ -93,6 +93,9 @@ class nsISVGChildFrame;
 
 #define NS_STATE_SVG_PROPAGATE_TRANSFORM 0x00800000
 
+// nsSVGGlyphFrame uses this when the frame is within a non-dynamic PresContext.
+#define NS_STATE_SVG_PRINTING 0x01000000
+
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
  */
@@ -120,6 +123,14 @@ class nsISVGChildFrame;
  * to cairo.h usage) can still query this information.
  */
 PRBool NS_SVGEnabled();
+
+#ifdef MOZ_SMIL
+/*
+ * Checks the smil enabled preference.  Declared as a function to match
+ * NS_SVGEnabled().
+ */
+PRBool NS_SMILEnabled();
+#endif // MOZ_SMIL
 
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK
@@ -181,6 +192,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterProperty, NS_ISVGFILTERPROPERTY_IID)
 class nsSVGUtils
 {
 public:
+  /*
+   * Get the parent element of an nsIContent
+   */
+  static nsIContent *GetParentElement(nsIContent *aContent);
+
   /*
    * Get a font-size (em) of an nsIContent
    */

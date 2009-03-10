@@ -215,6 +215,13 @@ protected:
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
+  const nsTextFragment* GetFragment() const
+  {
+    return !(GetStateBits() & NS_STATE_SVG_PRINTING) ?
+      mContent->GetText() :
+      static_cast<const nsTextFragment*>(PresContext()->PropertyTable()->
+                                           GetProperty(mContent, nsGkAtoms::clonedTextForPrint));
+  }
 
   // Owning pointer, must call gfxTextRunWordCache::RemoveTextRun before deleting
   gfxTextRun *mTextRun;

@@ -1205,7 +1205,7 @@ nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
-  if (!mShell || mFullZoom == aZoom) {
+  if (!mShell || mFullZoom == aZoom || !IsDynamic()) {
     return;
   }
   // Re-fetch the view manager's window dimensions in case there's a deferred
@@ -1646,7 +1646,6 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   unit = val.GetUnit();
   if (unit == eCSSUnit_String) {
     val.GetStringValue(fontfamily);
-    fontfamily.Trim("\"");
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face family name has unexpected unit");

@@ -107,10 +107,6 @@ extern PRLogModuleInfo* gContentSinkLogModuleInfo;
 // 1/2 second fudge factor for window creation
 #define NS_DELAY_FOR_WINDOW_CREATION  500000
 
-// 200 determined empirically to provide good user response without
-// sampling the clock too often.
-#define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200
-
 class nsContentSink : public nsICSSLoaderObserver,
                       public nsIScriptLoaderObserver,
                       public nsSupportsWeakReference,
@@ -362,6 +358,8 @@ protected:
 
   // Switch between intervals when time is exceeded
   PRInt32 mDynamicIntervalSwitchThreshold;
+
+  PRInt32 mMaxTokensDeflectedInLowFreqMode;
 
   PRInt32 mBeginLoadTime;
 

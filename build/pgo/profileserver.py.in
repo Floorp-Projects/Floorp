@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
   automation.initializeProfile(PROFILE_DIRECTORY)
   browserEnv = dict(os.environ)
- 
+
   # These variables are necessary for correct application startup; change
   # via the commandline at your own risk.
   browserEnv["NO_EM_RESTART"] = "1"
@@ -75,7 +75,5 @@ if __name__ == '__main__':
 
   url = "http://localhost:%d/index.html" % PORT
   appPath = os.path.join(SCRIPT_DIR, automation.DEFAULT_APP)
-  (status, start) = automation.runApp(url, browserEnv, appPath, 
-                                      PROFILE_DIRECTORY, {})
+  status = automation.runApp(url, browserEnv, appPath, PROFILE_DIRECTORY, {})
   sys.exit(status)
-
