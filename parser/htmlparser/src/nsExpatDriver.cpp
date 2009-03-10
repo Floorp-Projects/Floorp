@@ -1209,6 +1209,10 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
     aScanner.EndReading(end);
   }
 
+  if (start == end && !aScanner->IsIncremental()) {
+    mInternalState = kEOF;
+  }
+
   aScanner.SetPosition(currentExpatPosition, PR_TRUE);
   aScanner.Mark();
 
