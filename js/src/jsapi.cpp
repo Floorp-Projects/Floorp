@@ -3281,42 +3281,46 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
 }
 
 static JSBool
-GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id,
-                          uintN *attrsp, JSBool *foundp,
-                          JSPropertyOp *getterp, JSPropertyOp *setterp)
+GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                          JSBool own, JSPropertyDescriptor *desc)
 {
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED,
-                            &obj2, &prop)) {
+    if (!LookupPropertyById(cx, obj, id, flags, &obj2, &prop))
         return JS_FALSE;
-    }
 
-    if (!prop || obj != obj2) {
-        *attrsp = 0;
-        *foundp = JS_FALSE;
-        if (getterp)
-            *getterp = NULL;
-        if (setterp)
-            *setterp = NULL;
+    if (!prop || (own && obj != obj2)) {
+        desc->obj = NULL;
+        desc->attrs = 0;
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->storedValue = JSVAL_VOID;
         if (prop)
             OBJ_DROP_PROPERTY(cx, obj2, prop);
         return JS_TRUE;
     }
 
-    *foundp = JS_TRUE;
-    ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, attrsp);
-    if (ok && OBJ_IS_NATIVE(obj)) {
-        JSScopeProperty *sprop = (JSScopeProperty *) prop;
+    desc->obj = obj2;
 
-        if (getterp)
-            *getterp = sprop->getter;
-        if (setterp)
-            *setterp = sprop->setter;
+    ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &desc->attrs);
+    if (ok) {
+        if (OBJ_IS_NATIVE(obj2)) {
+            JSScopeProperty *sprop = (JSScopeProperty *) prop;
+
+            desc->getter = sprop->getter;
+            desc->setter = sprop->setter;
+            desc->storedValue = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
+                                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
+                                : JSVAL_VOID;
+        } else {
+            desc->getter = NULL;
+            desc->setter = NULL;
+            desc->storedValue = JSVAL_VOID;
+        }
     }
-    OBJ_DROP_PROPERTY(cx, obj, prop);
+    OBJ_DROP_PROPERTY(cx, obj2, prop);
     return ok;
 }
 
@@ -3324,11 +3328,24 @@ static JSBool
 GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
                       uintN *attrsp, JSBool *foundp,
                       JSPropertyOp *getterp, JSPropertyOp *setterp)
+
 {
     if (!atom)
         return JS_FALSE;
-    return GetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom),
-                                     attrsp, foundp, getterp, setterp);
+
+    JSPropertyDescriptor desc;
+    if (!GetPropertyAttributesById(cx, obj, ATOM_TO_JSID(atom),
+                                   JSRESOLVE_QUALIFIED, JS_FALSE, &desc)) {
+        return JS_FALSE;
+    }
+
+    *attrsp = desc.attrs;
+    *foundp = (desc.obj != NULL);
+    if (getterp)
+        *getterp = desc.getter;
+    if (setterp)
+        *setterp = desc.setter;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -3389,8 +3406,18 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
                                        JSPropertyOp *setterp)
 {
     CHECK_REQUEST(cx);
-    return GetPropertyAttributesById(cx, obj, id, attrsp, foundp,
-                                     getterp, setterp);
+
+    JSPropertyDescriptor desc;
+    if (!GetPropertyAttributesById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
+        return JS_FALSE;
+
+    *attrsp = desc.attrs;
+    *foundp = (desc.obj != NULL);
+    if (getterp)
+        *getterp = desc.getter;
+    if (setterp)
+        *setterp = desc.setter;
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3545,6 +3572,15 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
     if (ok)
         *vp = LookupResult(cx, obj, *objp, prop);
     return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                             JSPropertyDescriptor *desc)
+{
+    CHECK_REQUEST(cx);
+
+    return GetPropertyAttributesById(cx, obj, id, flags, JS_TRUE, desc);
 }
 
 JS_PUBLIC_API(JSBool)

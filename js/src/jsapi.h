@@ -1731,6 +1731,23 @@ extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
                                uintN flags, JSObject **objp, jsval *vp);
 
+struct JSPropertyDescriptor {
+    JSObject     *obj;
+    uintN        attrs;
+    JSPropertyOp getter;
+    JSPropertyOp setter;
+    jsval        storedValue;
+};
+
+/*
+ * Like JS_GetPropertyAttrsGetterAndSetterById but will return a property on
+ * an object on the prototype chain (returned in objp). If data->obj is null,
+ * then this property was not found on the prototype chain.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                             JSPropertyDescriptor *desc);
+
 extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
 
