@@ -2623,8 +2623,8 @@ static JSFunctionSpec string_methods[] = {
     JS_FS_END
 };
 
-static JSBool
-String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
 
@@ -2850,7 +2850,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, obj, string_functions))
         return NULL;
 
-    proto = JS_InitClass(cx, obj, NULL, &js_StringClass, String, 1,
+    proto = JS_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
                          string_props, string_methods,
                          NULL, string_static_methods);
     if (!proto)
