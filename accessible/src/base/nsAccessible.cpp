@@ -1900,7 +1900,8 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
   if (aContent->GetAttr(kNameSpaceID_None, *aStateMapEntry->attributeName, attribValue)) {
     if (aStateMapEntry->attributeValue == kBoolState) {
       // No attribute value map specified in state map entry indicates state cleared
-      if (attribValue.EqualsLiteral("false")) {
+      if (attribValue.EqualsLiteral("false") ||
+          attribValue.EqualsLiteral("mixed")) {
         *aStateInOut &= ~aStateMapEntry->state;
       }
       else {
@@ -2308,10 +2309,10 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
      return NS_OK;
 
    case eCheckUncheckAction:
-     if (states & nsIAccessibleStates::STATE_MIXED)
-       aName.AssignLiteral("cycle");
-     else if (states & nsIAccessibleStates::STATE_CHECKED)
+     if (states & nsIAccessibleStates::STATE_CHECKED)
        aName.AssignLiteral("uncheck");
+     else if (states & nsIAccessibleStates::STATE_MIXED)
+       aName.AssignLiteral("cycle");
      else
        aName.AssignLiteral("check");
      return NS_OK;
