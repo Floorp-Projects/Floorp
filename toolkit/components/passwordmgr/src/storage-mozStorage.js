@@ -481,6 +481,19 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
     /*
+     * getAllEncryptedLogins
+     *
+     * Not implemented. This interface was added to extract logins from the
+     * legacy storage module without decrypting them. Now that logins are in
+     * mozStorage, if the encrypted data is really needed it can be easily
+     * obtained with SQL and the mozStorage APIs.
+     */
+    getAllEncryptedLogins : function (count) {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+
+    /*
      * removeAllLogins
      *
      * Removes all logins from storage.
