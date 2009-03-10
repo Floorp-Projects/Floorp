@@ -124,6 +124,14 @@ class nsISVGChildFrame;
  */
 PRBool NS_SVGEnabled();
 
+#ifdef MOZ_SMIL
+/*
+ * Checks the smil enabled preference.  Declared as a function to match
+ * NS_SVGEnabled().
+ */
+PRBool NS_SMILEnabled();
+#endif // MOZ_SMIL
+
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK
 

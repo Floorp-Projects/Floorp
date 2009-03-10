@@ -163,6 +163,11 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 static PRBool gSVGEnabled;
 static const char SVG_PREF_STR[] = "svg.enabled";
 
+#ifdef MOZ_SMIL
+static PRBool gSMILEnabled;
+static const char SMIL_PREF_STR[] = "svg.smil.enabled";
+#endif // MOZ_SMIL
+
 static int
 SVGPrefChanged(const char *aPref, void *aClosure)
 {
@@ -194,6 +199,32 @@ NS_SVGEnabled()
 
   return gSVGEnabled;
 }
+
+#ifdef MOZ_SMIL
+static int
+SMILPrefChanged(const char *aPref, void *aClosure)
+{
+  PRBool prefVal = nsContentUtils::GetBoolPref(SMIL_PREF_STR);
+  gSMILEnabled = prefVal;
+  return 0;
+}
+
+PRBool
+NS_SMILEnabled()
+{
+  static PRBool sInitialized = PR_FALSE;
+  
+  if (!sInitialized) {
+    /* check and register ourselves with the pref */
+    gSMILEnabled = nsContentUtils::GetBoolPref(SMIL_PREF_STR);
+    nsContentUtils::RegisterPrefCallback(SMIL_PREF_STR, SMILPrefChanged, nsnull);
+
+    sInitialized = PR_TRUE;
+  }
+
+  return gSMILEnabled;
+}
+#endif // MOZ_SMIL
 
 static nsIFrame*
 GetFrameForContent(nsIContent* aContent)
