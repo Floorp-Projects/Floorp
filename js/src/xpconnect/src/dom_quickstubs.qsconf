@@ -306,6 +306,7 @@ members = [
     'nsIDOMHTMLAnchorElement.href',
     'nsIDOMHTMLAnchorElement.rel',
     'nsIDOMHTMLAnchorElement.target',
+    'nsIDOMHTMLAnchorElement.name',
     'nsIDOMHTMLBaseElement.href',
     'nsIDOMHTMLBaseElement.target',
     'nsIDOMHTMLButtonElement.name',
@@ -416,6 +417,8 @@ members = [
     'nsIDOMHTMLCanvasElement.getContext',
     # 'nsIDOMHTMLCanvasElement.toDataURL',  # uses GetCurrentNativeCallContext
     'nsIDOMNSHTMLAnchorElement.text',
+    'nsIDOMNSHTMLAnchorElement.search',
+    'nsIDOMNSHTMLAnchorElement.hash',
     'nsIDOMNSHTMLDocument.width',
     'nsIDOMNSHTMLDocument.height',
     'nsIDOMNSHTMLDocument.domain',
