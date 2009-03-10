@@ -174,6 +174,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
 #include "imgIContainer.h"
+#include "nsSVGUtils.h"
 #endif // MOZ_SMIL
 
 
@@ -5301,6 +5302,9 @@ nsDocument::GetAnimationController()
   // one and only SVG documents and the like will call this
   if (mAnimationController)
     return mAnimationController;
+  // Refuse to create an Animation Controller if SMIL is disabled
+  if (!NS_SMILEnabled())
+    return nsnull;
 
   mAnimationController = NS_NewSMILAnimationController(this);
   
