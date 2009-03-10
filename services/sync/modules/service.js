@@ -683,7 +683,7 @@ WeaveSvc.prototype = {
    *        True to unconditionally sync all engines
    * @throw Reason for not syncing
    */
-  _sync: function WeaveSvc__sync(useThresh) {
+  _sync: function WeaveSvc__sync(fullSync) {
     let self = yield;
 
     // Use thresholds to determine what to sync only if it's not a full sync
