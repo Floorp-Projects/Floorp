@@ -4205,9 +4205,9 @@ JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp)
 {
+    JSObject *aobj, *obj2;
     uint32 shape;
     int protoIndex;
-    JSObject *obj2;
     JSProperty *prop;
     JSScopeProperty *sprop;
 
@@ -4215,8 +4215,9 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     /* Convert string indices to integers if appropriate. */
     CHECK_FOR_STRING_INDEX(id);
 
-    shape = OBJ_SHAPE(obj);
-    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
+    aobj = js_GetProtoIfDenseArray(cx, obj);
+    shape = OBJ_SHAPE(aobj);
+    protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags,
                                             &obj2, &prop);
     if (protoIndex < 0)
         return JS_FALSE;
@@ -4294,7 +4295,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 
     if (entryp) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        js_FillPropertyCache(cx, obj, shape, 0, protoIndex, obj2, sprop, entryp);
+        js_FillPropertyCache(cx, aobj, shape, 0, protoIndex, obj2, sprop, entryp);
     }
     JS_UNLOCK_OBJ(cx, obj2);
     return JS_TRUE;
