@@ -3296,7 +3296,7 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         desc->attrs = 0;
         desc->getter = NULL;
         desc->setter = NULL;
-        desc->storedValue = JSVAL_VOID;
+        desc->value = JSVAL_VOID;
         if (prop)
             OBJ_DROP_PROPERTY(cx, obj2, prop);
         return JS_TRUE;
@@ -3311,13 +3311,13 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             desc->getter = sprop->getter;
             desc->setter = sprop->setter;
-            desc->storedValue = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
-                                ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
-                                : JSVAL_VOID;
+            desc->value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2))
+                          ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
+                          : JSVAL_VOID;
         } else {
             desc->getter = NULL;
             desc->setter = NULL;
-            desc->storedValue = JSVAL_VOID;
+            desc->value = JSVAL_VOID;
         }
     }
     OBJ_DROP_PROPERTY(cx, obj2, prop);
