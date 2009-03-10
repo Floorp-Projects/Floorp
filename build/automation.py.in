@@ -407,10 +407,10 @@ def environment(env = None, xrePath = DIST_BIN):
 # RUN THE APP #
 ###############
 
-def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
+def processLeakLog(leakLogFile, leakThreshold):
   "Process the leak log."
 
-  if not os.path.exists(LEAK_REPORT_FILE):
+  if not os.path.exists(leakLogFile):
     log.info("WARNING refcount logging is off, so leaks can't be detected!")
   else:
     #                  Per-Inst  Leaked      Total  Rem ...
@@ -420,7 +420,7 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
                         r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
                         r"\d+\s+(?P<numLeaked>-?\d+)")
 
-    leaks = open(LEAK_REPORT_FILE, "r")
+    leaks = open(leakLogFile, "r")
     for line in leaks:
       matches = lineRe.match(line)
       if (matches and
@@ -430,8 +430,7 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
       log.info(line.rstrip())
     leaks.close()
 
-    threshold = leakThreshold
-    leaks = open(LEAK_REPORT_FILE, "r")
+    leaks = open(leakLogFile, "r")
     seenTotal = False
     prefix = "TEST-PASS"
     for line in leaks:
@@ -447,7 +446,7 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
       if "TOTAL" == name:
         seenTotal = True
         # Check for leaks.
-        if bytesLeaked < 0 or bytesLeaked > threshold:
+        if bytesLeaked < 0 or bytesLeaked > leakThreshold:
           prefix = "TEST-UNEXPECTED-FAIL"
           leakLog = "TEST-UNEXPECTED-FAIL | runtests-leaks | leaked" \
                     " %d bytes during test execution" % bytesLeaked
@@ -457,8 +456,8 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
         else:
           leakLog = "TEST-PASS | runtests-leaks | no leaks detected!"
         # Remind the threshold if it is not 0, which is the default/goal.
-        if threshold != 0:
-          leakLog += " (threshold set at %d bytes)" % threshold
+        if leakThreshold != 0:
+          leakLog += " (threshold set at %d bytes)" % leakThreshold
         # Log the information.
         log.info(leakLog)
       else:
