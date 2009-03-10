@@ -64,6 +64,11 @@ const INITIAL_THRESHOLD = 75;
 // threshold each time we do a sync check and don't sync that engine.
 const THRESHOLD_DECREMENT_STEP = 25;
 
+// The following are various error messages for not syncing
+const kSyncWeaveDisabled = "Weave is disabled";
+const kSyncNotLoggedIn = "User is not logged in";
+const kSyncNotScheduled = "Not scheduled to do sync";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
@@ -148,7 +153,7 @@ WeaveSvc.prototype = {
   _keyPair: {},
 
   // Timer object for automagically syncing
-  _scheduleTimer: null,
+  _syncTimer: null,
 
   get username() {
     return Svc.Prefs.get("username", "");
@@ -226,12 +231,6 @@ WeaveSvc.prototype = {
 
   get mostRecentError() { return this._mostRecentError; },
 
-  get schedule() {
-    if (!this.enabled)
-      return 0; // manual/off
-    return Svc.Prefs.get("schedule");
-  },
-
   get locked() { return this._locked; },
   lock: function Svc_lock() {
     if (this._locked)
@@ -241,54 +240,6 @@ WeaveSvc.prototype = {
   },
   unlock: function Svc_unlock() {
     this._locked = false;
-  },
-
-  _setSchedule: function Weave__setSchedule(schedule) {
-    switch (this.schedule) {
-    case 0:
-      this._disableSchedule();
-      break;
-    case 1:
-      this._enableSchedule();
-      break;
-    default:
-      this._log.warn("Invalid Weave scheduler setting: " + schedule);
-      break;
-    }
-  },
-
-  _enableSchedule: function WeaveSvc__enableSchedule() {
-    if (this._scheduleTimer) {
-      this._scheduleTimer.cancel();
-      this._scheduleTimer = null;
-    }
-    this._scheduleTimer = Cc["@mozilla.org/timer;1"].
-      createInstance(Ci.nsITimer);
-    let listener = new Utils.EventListener(Utils.bind2(this, this._onSchedule));
-    this._scheduleTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
-                                         this._scheduleTimer.TYPE_REPEATING_SLACK);
-    this._log.config("Weave scheduler enabled");
-  },
-
-  _disableSchedule: function WeaveSvc__disableSchedule() {
-    if (this._scheduleTimer) {
-      this._scheduleTimer.cancel();
-      this._scheduleTimer = null;
-    }
-    this._log.config("Weave scheduler disabled");
-  },
-
-  _onSchedule: function WeaveSvc__onSchedule() {
-    if (this.enabled) {
-      if (this.locked) {
-        this._log.trace("Skipping scheduled sync; local operation in progress");
-      } else {
-        this._log.info("Running scheduled sync");
-        this._catchAll(
-	  this._notify("sync", "",
-		       this._localLock(this._sync))).async(this);
-      }
-    }
   },
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
@@ -419,9 +370,10 @@ WeaveSvc.prototype = {
     switch (topic) {
       case "nsPref:changed":
         switch (data) {
-          case "enabled": // this works because this.schedule is 0 when disabled
+          case "enabled":
           case "schedule":
-            this._setSchedule(this.schedule);
+            // Potentially we'll want to reschedule syncs
+            this._checkSync();
             break;
         }
         break;
@@ -519,7 +471,6 @@ WeaveSvc.prototype = {
 
       this._loggedIn = false;
 
-      try {
 	if (typeof(user) != 'undefined')
           this.username = user;
 	if (typeof(pass) != 'undefined')
@@ -545,13 +496,7 @@ WeaveSvc.prototype = {
 	}
 
 	this._loggedIn = true;
-	this._setSchedule(this.schedule);
 	self.done(true);
-
-      } catch (e) {
-	this._disableSchedule();
-	throw e;
-      }
     };
     this._catchAll(
       this._localLock(
@@ -560,11 +505,14 @@ WeaveSvc.prototype = {
 
   logout: function WeaveSvc_logout() {
     this._log.info("Logging out");
-    this._disableSchedule();
     this._loggedIn = false;
     this._keyPair = {};
     ID.get('WeaveID').setTempPassword(null); // clear cached password
     ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
+
+    // Cancel the sync timer now that we're logged out
+    this._checkSync();
+
     this._os.notifyObservers(null, "weave:service:logout:finish", "");
   },
 
@@ -699,6 +647,42 @@ WeaveSvc.prototype = {
   _syncThresh: {},
 
   /**
+   * Determine if a sync should run. If so, schedule a repeating sync;
+   * otherwise, cancel future syncs and return a reason.
+   *
+   * @return Reason for not syncing; not-truthy if sync should run
+   */
+  _checkSync: function Weave__checkSync() {
+    let reason = "";
+    if (!this.enabled)
+      reason = kSyncWeaveDisabled;
+    else if (!this._loggedIn)
+      reason = kSyncNotLoggedIn;
+    else if (Svc.Prefs.get("schedule", 0) != 1)
+      reason = kSyncNotScheduled;
+
+    // A truthy reason means we shouldn't continue to sync
+    if (reason) {
+      // Cancel any future syncs
+      if (this._syncTimer) {
+        this._syncTimer.cancel();
+        this._syncTimer = null;
+      }
+      this._log.config("Weave scheduler disabled: " + reason);
+    }
+    // We're good to sync, so schedule a repeating sync if we haven't yet
+    else if (!this._syncTimer) {
+      this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      let listener = new Utils.EventListener(Utils.bind2(this, this.sync));
+      this._syncTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
+                                       Ci.nsITimer.TYPE_REPEATING_SLACK);
+      this._log.config("Weave scheduler enabled");
+    }
+
+    return reason;
+  },
+
+  /**
    * Sync up engines with the server.
    *
    * @param useThresh
@@ -708,13 +692,14 @@ WeaveSvc.prototype = {
   _sync: function WeaveSvc__sync(useThresh) {
     let self = yield;
 
-    if (!this.enabled)
-      return;
-
-    if (!this._loggedIn) {
-      this._disableSchedule();
-      this._mostRecentError = "Can't sync, not logged in.";
-      throw "aborting sync, not logged in";
+    // Make sure we should sync or record why we shouldn't. We always obey the
+    // reason if we're using thresholds (not a full sync); otherwise, allow
+    // "not scheduled" as future syncs have already been canceled by checkSync.
+    let reason = this._checkSync();
+    if (reason && (useThresh || reason != kSyncNotScheduled)) {
+      reason = "Can't sync: " + reason;
+      this._mostRecentError = reason;
+      throw reason;
     }
 
     if (!(yield this._remoteSetup.async(this, self.cb))) {
