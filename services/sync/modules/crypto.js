@@ -58,23 +58,6 @@ function CryptoSvc() {
 CryptoSvc.prototype = {
   _logName: "Crypto",
 
-  __os: null,
-  get _os() {
-    if (!this.__os)
-      this.__os = Cc["@mozilla.org/observer-service;1"]
-        .getService(Ci.nsIObserverService);
-    return this.__os;
-  },
-
-  __crypto: null,
-  get _crypto() {
-    if (!this.__crypto)
-         this.__crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-                         createInstance(Ci.IWeaveCrypto);
-    return this.__crypto;
-  },
-
-
   get defaultAlgorithm() {
     return Utils.prefs.getCharPref("encryption");
   },
@@ -113,7 +96,7 @@ CryptoSvc.prototype = {
           return; // otherwise we'll send the alg changed event twice
       }
       // FIXME: listen to this bad boy somewhere
-      this._os.notifyObservers(null, "weave:encryption:algorithm-changed", "");
+      Svc.Observer.notifyObservers(null, "weave:encryption:algorithm-changed", "");
     } break;
     default:
       this._log.warn("Unknown encryption preference changed - ignoring");
@@ -149,7 +132,7 @@ CryptoSvc.prototype = {
     } else {
       let symkey = identity.bulkKey;
       let iv     = identity.bulkIV;
-      ret = this._crypto.encrypt(data, symkey, iv);
+      ret = Svc.Crypto.encrypt(data, symkey, iv);
     }
 
     self.done(ret);
@@ -167,7 +150,7 @@ CryptoSvc.prototype = {
     } else {
       let symkey = identity.bulkKey;
       let iv     = identity.bulkIV;
-      ret = this._crypto.decrypt(data, symkey, iv);
+      ret = Svc.Crypto.decrypt(data, symkey, iv);
     }
 
     self.done(ret);
@@ -184,8 +167,8 @@ CryptoSvc.prototype = {
 
     this._log.trace("randomKeyGen called. [id=" + identity.realm + "]");
 
-    let symkey = this._crypto.generateRandomKey();
-    let iv     = this._crypto.generateRandomIV();
+    let symkey = Svc.Crypto.generateRandomKey();
+    let iv     = Svc.Crypto.generateRandomIV();
 
     identity.bulkKey = symkey;
     identity.bulkIV  = iv;
@@ -206,12 +189,10 @@ CryptoSvc.prototype = {
 
     // Generate a blob of random data for salting the passphrase used to
     // encrypt the private key.
-    let salt = this._crypto.generateRandomBytes(32);
-    let iv   = this._crypto.generateRandomIV();
+    let salt = Svc.Crypto.generateRandomBytes(32);
+    let iv   = Svc.Crypto.generateRandomIV();
 
-    this._crypto.generateKeypair(identity.password,
-                                 salt, iv,
-                                 pubOut, privOut);
+    Svc.Crypto.generateKeypair(identity.password, salt, iv, pubOut, privOut);
 
     identity.keypairAlg     = "RSA";
     identity.pubkey         = pubOut.value;
@@ -224,7 +205,7 @@ CryptoSvc.prototype = {
     let self = yield;
 
     this._log.trace("wrapKey called. [id=" + identity.realm + "]");
-    let ret = this._crypto.wrapSymmetricKey(data, identity.pubkey);
+    let ret = Svc.Crypto.wrapSymmetricKey(data, identity.pubkey);
 
     self.done(ret);
   },
@@ -233,11 +214,8 @@ CryptoSvc.prototype = {
     let self = yield;
 
     this._log.trace("upwrapKey called. [id=" + identity.realm + "]");
-    let ret = this._crypto.unwrapSymmetricKey(data,
-                                              identity.privkey,
-                                              identity.password,
-                                              identity.passphraseSalt,
-                                              identity.privkeyWrapIV);
+    let ret = Svc.Crypto.unwrapSymmetricKey(data, identity.privkey,
+      identity.password, identity.passphraseSalt, identity.privkeyWrapIV);
     self.done(ret);
   },
 

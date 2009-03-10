@@ -99,12 +99,6 @@ PasswordStore.prototype = {
   __proto__: Store.prototype,
   _logName: "PasswordStore",
 
-  get _loginManager() {
-    let loginManager = Utils.getLoginManager();
-    this.__defineGetter__("_loginManager", function() loginManager);
-    return loginManager;
-  },
-
   _nsLoginInfo: null,
   _init: function PasswordStore_init() {
     Store.prototype._init.call(this);
@@ -140,7 +134,7 @@ PasswordStore.prototype = {
 
   getAllIDs: function PasswordStore__getAllIDs() {
     let items = {};
-    let logins = this._loginManager.getAllLogins({});
+    let logins = Svc.Login.getAllLogins({});
 
     for (let i = 0; i < logins.length; i++) {
       let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
@@ -166,7 +160,7 @@ PasswordStore.prototype = {
       createInstance(Ci.nsIWritablePropertyBag2);
     prop.setPropertyAsAUTF8String("guid", newID);
 
-    this._loginManager.modifyLogin(this._loginItems[oldID], prop);
+    Svc.Login.modifyLogin(this._loginItems[oldID], prop);
   },
 
   itemExists: function PasswordStore__itemExists(id) {
@@ -195,13 +189,13 @@ PasswordStore.prototype = {
 
   create: function PasswordStore__create(record) {
     this._log.debug("Adding login for " + record.hostname);
-    this._loginManager.addLogin(this._nsLoginInfoFromRecord(record));
+    Svc.Login.addLogin(this._nsLoginInfoFromRecord(record));
   },
 
   remove: function PasswordStore__remove(record) {
     this._log.debug("Removing login " + record.id);
     if (record.id in this._loginItems) {
-      this._loginManager.removeLogin(this._loginItems[record.id]);
+      Svc.Login.removeLogin(this._loginItems[record.id]);
       return;
     }
 
@@ -219,11 +213,11 @@ PasswordStore.prototype = {
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
     let newinfo = this._nsLoginInfoFromRecord(record);
-    this._loginManager.modifyLogin(login, newinfo);
+    Svc.Login.modifyLogin(login, newinfo);
   },
 
   wipe: function PasswordStore_wipe() {
-    this._loginManager.removeAllLogins();
+    Svc.Login.removeAllLogins();
   }
 };
 

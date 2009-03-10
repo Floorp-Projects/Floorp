@@ -24,9 +24,9 @@ function FakeLoginManager(fakeLogins) {
 
   let self = this;
 
-  Utils.getLoginManager = function fake_getLoginManager() {
-    // Return a fake nsILoginManager object.
-    return {
+  // Use a fake nsILoginManager object.
+  delete Svc.Login;
+  Svc.Login = {
       removeAllLogins: function() { self.fakeLogins = []; },
       getAllLogins: function() { return self.fakeLogins; },
       addLogin: function(login) {
@@ -34,6 +34,5 @@ function FakeLoginManager(fakeLogins) {
                              "with hostname '" + login.hostname + "'.");
         self.fakeLogins.push(login);
       }
-    };
   };
 }
