@@ -6702,7 +6702,7 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
         JSNative native = fun->u.n.native;
         if (native == js_Array)
             return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
-        if (native == js_String && argc == 1) {
+        if (native == js_String && argc == 1 && !constructing) {
             jsval& v = stackval(0 - argc);
             if (!JSVAL_IS_PRIMITIVE(v))
                 return call_imacro(call_imacros.String);
