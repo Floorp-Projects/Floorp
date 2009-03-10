@@ -66,6 +66,7 @@ protected:
   nsCOMPtr<nsIURI>                 mReferrer;
   nsCOMPtr<nsISupports>            mOwner;
   PRPackedBool                     mInheritOwner;
+  PRPackedBool                     mOwnerIsExplicit;
   PRPackedBool                     mSendReferrer;
   nsDocShellInfoLoadType           mLoadType;
   nsCOMPtr<nsISHEntry>             mSHEntry;
