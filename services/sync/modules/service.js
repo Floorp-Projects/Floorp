@@ -358,7 +358,7 @@ WeaveSvc.prototype = {
     if (Svc.Prefs.get("autoconnect") && this.username) {
       try {
 	if (yield this.login(self.cb))
-	  yield this.sync(self.cb);
+	  yield this.sync(self.cb, true);
       } catch (e) {}
     }
     self.done();
@@ -691,9 +691,21 @@ WeaveSvc.prototype = {
     self.done(ret);
   },
 
-  // These are per-engine
+  /**
+   * Engine scores must meet or exceed this value before we sync them when
+   * using thresholds. These are engine-specific, as different kinds of data
+   * change at different rates, so we store them in a hash by engine name.
+   */
+  _syncThresh: {},
 
-  _sync: function WeaveSvc__sync() {
+  /**
+   * Sync up engines with the server.
+   *
+   * @param useThresh
+   *        True to use thresholds to determine what engines to sync
+   * @throw Reason for not syncing
+   */
+  _sync: function WeaveSvc__sync(useThresh) {
     let self = yield;
 
     if (!this.enabled)
@@ -713,106 +725,76 @@ WeaveSvc.prototype = {
     yield Clients.sync(self.cb);
 
     try {
-      let engines = Engines.getAll();
-      for each (let engine in engines) {
+      for each (let engine in Engines.getAll()) {
+        let name = engine.name;
+
+        // Nothing to do for disabled engines
         if (!engine.enabled)
           continue;
 
-	if (!(yield this._syncEngine.async(this, self.cb, engine))) {
-	  this._mostRecentError = "Failure in " + engine.displayName;
-	  this._log.info("Aborting sync");
-	  break;
-	}
+        // Conditionally reset the threshold for the current engine
+        let resetThresh = Utils.bind2(this, function WeaveSvc__resetThresh(cond)
+          cond ? this._syncThresh[name] = INITIAL_THRESHOLD : undefined);
+
+        // Initialize the threshold if it doesn't exist yet
+        resetThresh(!(name in this._syncThresh));
+
+        // Determine if we should sync if using thresholds
+        if (useThresh) {
+          let score = engine.score;
+          let thresh = this._syncThresh[name];
+          if (score >= thresh)
+            this._log.debug("Syncing " + name + "; " +
+                            "score " + score + " >= thresh " + thresh);
+          else {
+            this._log.debug("Not syncing " + name + "; " +
+                            "score " + score + " < thresh " + thresh);
+
+            // Decrement the threshold by a standard amount with a lower bound of 1
+            this._syncThresh[name] = Math.max(thresh - THRESHOLD_DECREMENT_STEP, 1);
+
+            // No need to sync this engine for now
+            continue;
+          }
+        }
+
+        // If there's any problems with syncing the engine, report the failure
+        if (!(yield this._syncEngine.async(this, self.cb, engine))) {
+          this._mostRecentError = "Failure in " + engine.displayName;
+          this._log.info("Aborting sync");
+          break;
+        }
+
+        // We've successfully synced, so reset the threshold. We do this after
+        // a successful sync so failures can try again on next sync, but this
+        // could trigger too many syncs if the server is having problems.
+        resetThresh(useThresh);
       }
 
-      if (!this._syncError) {
-	Svc.Prefs.set("lastSync", new Date().toString());
-	this._log.info("Sync completed successfully");
-      } else
+      if (this._syncError)
         this._log.warn("Some engines did not sync correctly");
-
+      else {
+        Svc.Prefs.set("lastSync", new Date().toString());
+        this._log.info("Sync completed successfully");
+      }
     } finally {
       this.cancelRequested = false;
       this._syncError = false;
     }
   },
-  sync: function WeaveSvc_sync(onComplete) {
-    this._catchAll(
-      this._notify("sync", "",
-		   this._localLock(this._sync))).async(this, onComplete);
-  },
 
-  // The values that engine scores must meet or exceed before we sync them
-  // as needed.  These are engine-specific, as different kinds of data change
-  // at different rates, so we store them in a hash indexed by engine name.
-  _syncThresholds: {},
-
-  _syncAsNeeded: function WeaveSvc__syncAsNeeded() {
-    let self = yield;
-
-    if (!this.enabled)
-      return;
-
-    try {
-
-      if (!this._loggedIn) {
-	this._disableSchedule();
-	throw "aborting sync, not logged in";
-      }
-
-      let engines = Engines.getAll();
-      for each (let engine in engines) {
-        if (!engine.enabled)
-          continue;
-
-        if (!(engine.name in this._syncThresholds))
-          this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
-
-        let score = engine.score;
-        if (score >= this._syncThresholds[engine.name]) {
-          this._log.debug(engine.name + " score " + score +
-                          " reaches threshold " +
-                          this._syncThresholds[engine.name] + "; syncing");
-          if (!(yield this._syncEngine.async(this, self.cb, engine))) {
-	    this._mostRecentError = "Failure in " + engine.displayName;
-	    this._log.info("Aborting sync");
-	    break;
-	  }
-
-          // Reset the engine's threshold to the initial value.
-          // Note: we do this after syncing the engine so that we'll try again
-          // next time around if syncing fails for some reason.  The upside
-          // of this approach is that we'll sync again as soon as possible;
-          // but the downside is that if the error is caused by the server being
-          // overloaded, we'll contribute to the problem by trying to sync
-          // repeatedly at the maximum rate.
-          this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
-        }
-        else {
-          this._log.debug(engine.name + " score " + score +
-                          " does not reach threshold " +
-                          this._syncThresholds[engine.name] + "; not syncing");
-
-          // Decrement the threshold by the standard amount, and if this puts it
-          // at or below zero, then set it to 1, the lowest possible value, where
-          // it'll stay until there's something to sync (whereupon we'll sync it,
-          // reset the threshold to the initial value, and start over again).
-          this._syncThresholds[engine.name] -= THRESHOLD_DECREMENT_STEP;
-          if (this._syncThresholds[engine.name] <= 0)
-            this._syncThresholds[engine.name] = 1;
-        }
-      }
-
-      if (!this._syncError) {
-	Svc.Prefs.set("lastSync", new Date().toString());
-        this._log.info("Sync completed successfully");
-      } else
-        this._log.warn("Some engines did not sync correctly");
-
-    } finally {
-      this._cancelRequested = false;
-      this._syncError = false;
-    }
+  /**
+   * Do a synchronized sync (only one sync at a time).
+   *
+   * @param onComplete
+   *        Callback when this method completes
+   * @param fullSync
+   *        True to unconditionally sync all engines
+   */
+  sync: function WeaveSvc_sync(onComplete, fullSync) {
+    let useThresh = false; // !fullSync but not doing thresholds yet
+    this._catchAll(this._notify("sync", "", this._localLock(this._sync))).
+      async(this, onComplete, useThresh);
   },
 
   // returns true if sync should proceed
