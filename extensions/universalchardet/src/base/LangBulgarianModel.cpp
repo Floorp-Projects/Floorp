@@ -48,7 +48,7 @@
 //this talbe is modified base on win1251BulgarianCharToOrderMap, so 
 //only number <64 is sure valid
 
-unsigned char Latin5_BulgarianCharToOrderMap[] =
+static const unsigned char Latin5_BulgarianCharToOrderMap[] =
 {
 255,255,255,255,255,255,255,255,255,255,254,255,255,254,255,255,  //00
 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,  //10
@@ -68,7 +68,7 @@ unsigned char Latin5_BulgarianCharToOrderMap[] =
  62,242,243,244, 58,245, 98,246,247,248,249,250,251, 91,252,253,  //f0
 };
 
-unsigned char win1251BulgarianCharToOrderMap[] =
+static const unsigned char win1251BulgarianCharToOrderMap[] =
 {
 255,255,255,255,255,255,255,255,255,255,254,255,255,254,255,255,  //00
 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,  //10
@@ -94,7 +94,7 @@ unsigned char win1251BulgarianCharToOrderMap[] =
 //first 1024 sequences:3.0618%
 //rest  sequences:     0.2992%
 //negative sequences:  0.0020% 
-char BulgarianLangModel[] = 
+static const char BulgarianLangModel[] = 
 {
 0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3,2,3,3,3,3,3,
 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,3,3,3,2,2,3,2,2,1,2,2,
@@ -226,7 +226,7 @@ char BulgarianLangModel[] =
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
 };
 
-SequenceModel Latin5BulgarianModel = 
+const SequenceModel Latin5BulgarianModel = 
 {
   Latin5_BulgarianCharToOrderMap,
   BulgarianLangModel,
@@ -235,7 +235,7 @@ SequenceModel Latin5BulgarianModel =
   "ISO-8859-5"
 };
 
-SequenceModel Win1251BulgarianModel = 
+const SequenceModel Win1251BulgarianModel = 
 {
   win1251BulgarianCharToOrderMap,
   BulgarianLangModel,

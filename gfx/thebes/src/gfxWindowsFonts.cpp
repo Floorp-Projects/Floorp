@@ -492,17 +492,6 @@ public:
         
 };
 
-static void MakeUniqueFontName(nsAString& aName)
-{
-    char buf[50];
-
-    static PRUint32 fontCount = 0;
-    ++fontCount;
-
-    sprintf(buf, "mozfont%8.8x%8.8x", ::GetTickCount(), fontCount);  // slightly retarded, figure something better later...
-    aName.AssignASCII(buf);
-}
-
 /* static */
 FontEntry* 
 FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry, 
@@ -520,7 +509,9 @@ FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
     HANDLE fontRef;
 
     nsAutoString uniqueName;
-    MakeUniqueFontName(uniqueName);
+    rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
+    if (NS_FAILED(rv))
+        return nsnull;
 
     if (isCFF) {
         // Postscript-style glyphs, swizzle name table, load directly

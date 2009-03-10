@@ -45,7 +45,7 @@
 *****************************************************************/
 
 //Character Mapping Table:
-unsigned char Latin7_CharToOrderMap[] =
+static const unsigned char Latin7_CharToOrderMap[] =
 {
 255,255,255,255,255,255,255,255,255,255,254,255,255,254,255,255,  //00
 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,  //10
@@ -67,7 +67,7 @@ unsigned char Latin7_CharToOrderMap[] =
 
 
 
-unsigned char win1253_CharToOrderMap[] =
+static const unsigned char win1253_CharToOrderMap[] =
 {
 255,255,255,255,255,255,255,255,255,255,254,255,255,254,255,255,  //00
 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,  //10
@@ -93,7 +93,7 @@ unsigned char win1253_CharToOrderMap[] =
 //first 1024 sequences:1.7001%
 //rest  sequences:     0.0359%
 //negative sequences:  0.0148% 
-char GreekLangModel[] = 
+static const char GreekLangModel[] = 
 {
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -225,7 +225,7 @@ char GreekLangModel[] =
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 };
 
-SequenceModel Latin7Model = 
+const SequenceModel Latin7Model = 
 {
   Latin7_CharToOrderMap,
   GreekLangModel,
@@ -234,7 +234,7 @@ SequenceModel Latin7Model =
   "ISO-8859-7"
 };
 
-SequenceModel Win1253Model = 
+const SequenceModel Win1253Model = 
 {
   win1253_CharToOrderMap,
   GreekLangModel,

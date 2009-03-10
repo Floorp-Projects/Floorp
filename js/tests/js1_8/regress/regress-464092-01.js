@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Brendan Eich
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,10 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-300079.js';
+var gTestfile = 'regress-464092-01.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 300079;
-var summary = "precompiled functions should inherit from current window's Function.prototype";
+var BUGNUMBER = 464092;
+var summary = 'Do not assert: OBJ_IS_CLONED_BLOCK(obj)';
 var actual = '';
 var expect = '';
 
@@ -53,27 +53,8 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  if (typeof clone == 'undefined') {
-    expect = 'SKIPPED';
-    actual = 'SKIPPED';
-  }
-  else {
-    expect = 'PASSED';
+  let (a) 'b'.replace(/b/g, function() { c = this; }); c.d = 3; c.d;
 
-    f = eval("(function (a) function () a * a)()");
-    g = clone(f, {a: 3});
-    f = null;
-    gc();
-    try {
-      a_squared = g(2);
-      if (a_squared != 9)
-        throw "Unexpected return from g: a_squared == " + a_squared;
-      actual = "PASSED";
-    } catch (e) {
-      actual = "FAILED: " + e;
-    }
-  }
- 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

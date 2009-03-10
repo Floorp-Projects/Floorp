@@ -57,6 +57,7 @@
 #include "jsnum.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsarray.h"
 
 JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj)
@@ -1303,6 +1304,10 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
         if (!scope->table && scope->entryCount >= SCOPE_HASH_THRESHOLD)
             (void) CreateScopeTable(cx, scope, JS_FALSE);
     }
+
+    jsuint index;
+    if (js_IdIsIndex(sprop->id, &index))
+        SCOPE_SET_INDEXED_PROPERTIES(scope);
 
     METER(adds);
     return sprop;

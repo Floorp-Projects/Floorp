@@ -1335,11 +1335,7 @@ var gCSSProperties = {
 		// XXX requires display:block
 		initial_values: [ "2" ],
 		other_values: [ "1", "7" ],
-		invalid_values: [
-			// "0", // not clear whether it's valid or not.
-			// "-1", // not clear whether it's valid or not.
-			"0px", "3px"
-		]
+		invalid_values: [ "0", "-1", "0px", "3px" ]
 	},
 	"outline": {
 		domProp: "outline",
@@ -1764,11 +1760,7 @@ var gCSSProperties = {
 		// XXX requires display:block
 		initial_values: [ "2" ],
 		other_values: [ "1", "7" ],
-		invalid_values: [
-			// "0", // not clear whether it's valid or not.
-			// "-1", // not clear whether it's valid or not.
-			"0px", "3px"
-		]
+		invalid_values: [ "0", "-1", "0px", "3px" ]
 	},
 	"width": {
 		domProp: "width",

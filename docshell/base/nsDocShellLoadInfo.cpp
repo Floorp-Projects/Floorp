@@ -49,6 +49,7 @@
 
 nsDocShellLoadInfo::nsDocShellLoadInfo()
   : mInheritOwner(PR_FALSE),
+    mOwnerIsExplicit(PR_FALSE),
     mSendReferrer(PR_TRUE),
     mLoadType(nsIDocShellLoadInfo::loadNormal)
 {
@@ -115,6 +116,18 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetInheritOwner(PRBool* aInheritOwner)
 NS_IMETHODIMP nsDocShellLoadInfo::SetInheritOwner(PRBool aInheritOwner)
 {
    mInheritOwner = aInheritOwner;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::GetOwnerIsExplicit(PRBool* aOwnerIsExplicit)
+{
+   *aOwnerIsExplicit = mOwnerIsExplicit;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetOwnerIsExplicit(PRBool aOwnerIsExplicit)
+{
+   mOwnerIsExplicit = aOwnerIsExplicit;
    return NS_OK;
 }
 
