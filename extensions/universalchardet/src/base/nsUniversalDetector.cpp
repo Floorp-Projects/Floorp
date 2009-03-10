@@ -184,9 +184,12 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
           if (nsnull == mCharSetProbers[1])
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        mCharSetProbers[2] = new nsLatin1Prober; 
         if (nsnull == mCharSetProbers[2])
-          return NS_ERROR_OUT_OF_MEMORY;
+        {
+          mCharSetProbers[2] = new nsLatin1Prober; 
+          if (nsnull == mCharSetProbers[2])
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
     }
     else
