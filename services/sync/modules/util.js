@@ -502,5 +502,6 @@ Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
 Utils.lazySvc(Svc, 'Login', "@mozilla.org/login-manager;1", Ci.nsILoginManager);
 Utils.lazySvc(Svc, 'Memory', "@mozilla.org/xpcom/memory-service;1", Ci.nsIMemory);
 Utils.lazySvc(Svc, 'Observer', "@mozilla.org/observer-service;1", Ci.nsIObserverService);
+Utils.lazySvc(Svc, 'Private', "@mozilla.org/privatebrowsing;1", Ci.nsIPrivateBrowsingService);
 Utils.lazySvc(Svc, 'Version',
               "@mozilla.org/xpcom/version-comparator;1", Ci.nsIVersionComparator);
