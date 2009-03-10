@@ -84,6 +84,10 @@ def main():
                     action = "append", dest = "extraProfileFiles",
                     default = [],
                     help = "copy specified files/dirs to testing profile")
+  parser.add_option("--symbols-path",
+                    action = "store", type = "string", dest = "symbolsPath",
+                    default = automation.SYMBOLS_PATH,
+                    help = "absolute path to directory containing breakpad symbols")
   options, args = parser.parse_args()
 
   if len(args) != 1:
@@ -136,7 +140,8 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     # and then exit the app
     log.info("REFTEST INFO | runreftest.py | Performing extension manager registration: start.\n")
     status = automation.runApp(None, browserEnv, options.app, profileDir,
-                               extraArgs = ["-silent"])
+                               extraArgs = ["-silent"],
+                               symbolsPath=options.symbolsPath)
     # We don't care to call |processLeakLog()| for this step.
     log.info("\nREFTEST INFO | runreftest.py | Performing extension manager registration: end.")
 
