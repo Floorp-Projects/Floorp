@@ -122,8 +122,6 @@ let Wrap = {
       if (!ret)
         throw "Could not acquire lock";
 
-      Svc.Observer.notifyObservers(null, this._osPrefix + "local-lock:acquired", "");
-
       try {
         args = savedArgs.concat(args);
         args.unshift(this, savedMethod, self.cb);
@@ -134,7 +132,6 @@ let Wrap = {
 
       } finally {
         this.unlock();
-        Svc.Observer.notifyObservers(null, this._osPrefix + "local-lock:released", "");
       }
 
       self.done(ret);
