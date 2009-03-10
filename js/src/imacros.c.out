@@ -254,6 +254,31 @@ static struct {
     },
 };
 static struct {
+    jsbytecode String[39];
+} call_imacros = {
+    {
+/* 0*/  JSOP_DUP,
+/* 1*/  JSOP_DUP,
+/* 2*/  JSOP_GETPROP, 0, COMMON_ATOM_INDEX(valueOf),
+/* 5*/  JSOP_IFPRIMTOP, 0, 16,
+/* 8*/  JSOP_SWAP,
+/* 9*/  JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_STRING),
+/*12*/  JSOP_CALL, 0, 1,
+/*15*/  JSOP_IFPRIMTOP, 0, 18,
+/*18*/  JSOP_GOTO, 0, 4,
+/*21*/  JSOP_POP,
+/*22*/  JSOP_POP,
+/*23*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
+/*26*/  JSOP_CALL, 0, 0,
+/*29*/  JSOP_PRIMTOP,
+/*30*/  JSOP_GOTO, 0, 5,
+/*33*/  JSOP_SWAP,
+/*34*/  JSOP_POP,
+/*35*/  JSOP_CALL, 0, 1,
+/*38*/  JSOP_STOP,
+    },
+};
+static struct {
     jsbytecode apply0[8];
     jsbytecode apply1[12];
     jsbytecode apply2[16];
@@ -713,7 +738,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     2,  /* JSOP_GETELEM */
     3,  /* JSOP_SETELEM */
     0,  /* JSOP_CALLNAME */
-    0,  /* JSOP_CALL */
+    3,  /* JSOP_CALL */
     0,  /* JSOP_NAME */
     0,  /* JSOP_DOUBLE */
     0,  /* JSOP_STRING */

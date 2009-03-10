@@ -294,6 +294,32 @@
 
 .end
 
+.igroup call JSOP_CALL
+
+    .imacro String                          # String this obj
+        dup                                 # String this obj obj
+        dup                                 # String this obj obj obj
+        getprop valueOf                     # String this obj obj valueOf
+        ifprimtop 1                         # String this obj obj valueOf
+        swap                                # String this obj valueOf obj
+        string string                       # String this obj valueOf obj "string"
+        call 1                              # String this obj rval
+        ifprimtop 3                         # String this obj rval
+        goto 2
+1:      pop                                 # String this obj obj
+2:      pop                                 # String this obj
+        callprop toString                   # String this toString obj
+        call 0                              # String this rval
+        primtop                             # String this rval
+        goto 4                              # String this rval
+3:      swap                                # String this rval obj
+        pop                                 # String this rval
+4:      call 1                              # str
+        stop                                # str
+    .end
+
+.end
+
 .igroup apply JSOP_APPLY
     .imacro apply0                          # apply fun this arr
         pick 3                              # fun this arr apply
