@@ -2149,7 +2149,7 @@ class RegExpNativeCompiler {
             }
         }
 
-        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, lir->ins2(LIR_sub, cpend, lir->insImm(2))), 0);
         fails.add(to_fail);
         LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
         LIns* comp_word = useFastCI ?

@@ -4263,7 +4263,7 @@ js_Interpret(JSContext *cx)
                 JSObject *aobj;
                 JSPropCacheEntry *entry;
 
-                aobj = OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+                aobj = js_GetProtoIfDenseArray(cx, obj);
                 if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
                     PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
                     if (!atom) {
@@ -4291,7 +4291,7 @@ js_Interpret(JSContext *cx)
                 }
                 id = ATOM_TO_JSID(atom);
                 if (entry
-                    ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
+                    ? !js_GetPropertyHelper(cx, obj, id, &rval, &entry)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
@@ -4354,7 +4354,7 @@ js_Interpret(JSContext *cx)
                     goto error;
             }
 
-            aobj = OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+            aobj = js_GetProtoIfDenseArray(cx, obj);
             if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
                 PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
                 if (!atom) {
@@ -4399,7 +4399,7 @@ js_Interpret(JSContext *cx)
                 } else
 #endif
                 if (entry
-                    ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
+                    ? !js_GetPropertyHelper(cx, obj, id, &rval, &entry)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
