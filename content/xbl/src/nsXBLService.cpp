@@ -1103,6 +1103,25 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                               nsIContentPolicy::TYPE_XBL,
                               aBoundDocument);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Also make sure that we're same-origin with the bound document
+    // except if the stylesheet is a UA stylesheet. We fake testing
+    // for UA stylesheets by calling CheckLoadURI.
+    nsCOMPtr<nsIURI> principalURI;
+    rv = aOriginPrincipal->GetURI(getter_AddRefs(principalURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (principalURI) {
+      nsresult uaCheckRes =
+        nsContentUtils::GetSecurityManager()->
+        CheckLoadURIWithPrincipal(aBoundDocument->NodePrincipal(),
+                                  principalURI, 0);
+      if (NS_SUCCEEDED(uaCheckRes)) {
+        rv = aBoundDocument->NodePrincipal()->CheckMayLoad(aBindingURI,
+                                                           PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
   }
 
   *aResult = nsnull;
