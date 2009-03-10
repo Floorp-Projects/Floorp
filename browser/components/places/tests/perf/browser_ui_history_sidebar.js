@@ -53,7 +53,6 @@ const Cr = Components.results;
 var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
          getService(Ci.nsIWindowMediator);
 var win = wm.getMostRecentWindow("navigator:browser");
-
 var ios = Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService);
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -61,14 +60,16 @@ var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 
+var sidebar = document.getElementById("sidebar");
+
 function add_visit(aURI, aDate) {
-  var placeID = hs.addVisit(aURI,
+  var visitId = hs.addVisit(aURI,
                             aDate,
                             null, // no referrer
                             hs.TRANSITION_TYPED, // user typed in URL bar
                             false, // not redirect
                             0);
-  return placeID;
+  return visitId;
 }
 
 function add_bookmark(aURI) {
@@ -96,16 +97,17 @@ ptests.push({
   run: function() {
     var self = this;
     var start = Date.now();
-    var sb = document.getElementById("sidebar");
-    sb.addEventListener("load", function(aEvent) {
-      sb.removeEventListener("load", arguments.callee, true);
-      var duration = Date.now() - start;
-      toggleSidebar("viewHistorySidebar", false);
-      self.times.push(duration);
-      if (self.times.length == TEST_REPEAT_COUNT)
-        self.finish();
-      else
-        self.run();
+    sidebar.addEventListener("load", function(aEvent) {
+      sidebar.removeEventListener("load", arguments.callee, true);
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        toggleSidebar("viewHistorySidebar", false);
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
     }, true);
     toggleSidebar("viewHistorySidebar", true);
   },
@@ -122,17 +124,18 @@ ptests.push({
   run: function() {
     var self = this;
     var start = Date.now();
-    var sb = document.getElementById("sidebar");
-    sb.addEventListener("load", function() {
-      var duration = Date.now() - start;
-      sb.removeEventListener("load", arguments.callee, true);
-      sb.contentDocument.getElementById("bysite").doCommand();
-      toggleSidebar("viewHistorySidebar", false);
-      self.times.push(duration);
-      if (self.times.length == TEST_REPEAT_COUNT)
-        self.finish();
-      else
-        self.run();
+    sidebar.addEventListener("load", function() {
+      sidebar.removeEventListener("load", arguments.callee, true);
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        sidebar.contentDocument.getElementById("bysite").doCommand();
+        toggleSidebar("viewHistorySidebar", false);
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
     }, true);
     toggleSidebar("viewHistorySidebar", true);
   },
@@ -149,17 +152,18 @@ ptests.push({
   run: function() {
     var self = this;
     var start = Date.now();
-    var sb = document.getElementById("sidebar");
-    sb.addEventListener("load", function() {
-      var duration = Date.now() - start;
-      sb.removeEventListener("load", arguments.callee, true);
-      sb.contentDocument.getElementById("byday").doCommand();
-      toggleSidebar("viewHistorySidebar", false);
-      self.times.push(duration);
-      if (self.times.length == TEST_REPEAT_COUNT)
-        self.finish();
-      else
-        self.run();
+    sidebar.addEventListener("load", function() {
+      sidebar.removeEventListener("load", arguments.callee, true);
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        sidebar.contentDocument.getElementById("byday").doCommand();
+        toggleSidebar("viewHistorySidebar", false);
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
     }, true);
     toggleSidebar("viewHistorySidebar", true);
   },
@@ -176,17 +180,18 @@ ptests.push({
   run: function() {
     var self = this;
     var start = Date.now();
-    var sb = document.getElementById("sidebar");
-    sb.addEventListener("load", function() {
-      var duration = Date.now() - start;
-      sb.removeEventListener("load", arguments.callee, true);
-      sb.contentDocument.getElementById("byvisited").doCommand();
-      toggleSidebar("viewHistorySidebar", false);
-      self.times.push(duration);
-      if (self.times.length == TEST_REPEAT_COUNT)
-        self.finish();
-      else
-        self.run();
+    sidebar.addEventListener("load", function() {
+      sidebar.removeEventListener("load", arguments.callee, true);
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        sidebar.contentDocument.getElementById("byvisited").doCommand();
+        toggleSidebar("viewHistorySidebar", false);
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
     }, true);
     toggleSidebar("viewHistorySidebar", true);
   },
@@ -203,17 +208,18 @@ ptests.push({
   run: function() {
     var self = this;
     var start = Date.now();
-    var sb = document.getElementById("sidebar");
-    sb.addEventListener("load", function() {
-      var duration = Date.now() - start;
-      sb.removeEventListener("load", arguments.callee, true);
-      sb.contentDocument.getElementById("bylastvisited").doCommand();
-      toggleSidebar("viewHistorySidebar", false);
-      self.times.push(duration);
-      if (self.times.length == TEST_REPEAT_COUNT)
-        self.finish();
-      else
-        self.run();
+    sidebar.addEventListener("load", function() {
+      sidebar.removeEventListener("load", arguments.callee, true);
+      executeSoon(function() {
+        var duration = Date.now() - start;
+        sidebar.contentDocument.getElementById("bylastvisited").doCommand();
+        toggleSidebar("viewHistorySidebar", false);
+        self.times.push(duration);
+        if (self.times.length == TEST_REPEAT_COUNT)
+          self.finish();
+        else
+          self.run();
+      });
     }, true);
     toggleSidebar("viewHistorySidebar", true);
   },
