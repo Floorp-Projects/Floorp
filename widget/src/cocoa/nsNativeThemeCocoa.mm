@@ -1224,6 +1224,8 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
     return;
   }
 
+  aTdi.trackInfo.scrollbar.pressState = 0;
+
   // Only go get these scrollbar button states if we need it. For example, there's no reaon to look up scrollbar button 
   // states when we're only creating a TrackDrawInfo to determine the size of the thumb.
   if (aShouldGetButtonStates) {

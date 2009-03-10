@@ -1487,14 +1487,10 @@ CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 // only after one of the first two.  (css3-fonts only contemplates
 // annotating URLs with formats, but we handle the general case.)
 static void
-SerializeFontSrc(const nsCSSValue& src, nsAString & aResult NS_OUTPARAM)
+AppendSerializedFontSrc(const nsCSSValue& src, nsAString & aResult NS_OUTPARAM)
 {
-  NS_PRECONDITION(src.GetUnit() == eCSSUnit_Null ||
-                  src.GetUnit() == eCSSUnit_Array,
+  NS_PRECONDITION(src.GetUnit() == eCSSUnit_Array,
                   "improper value unit for src:");
-  aResult.Truncate();
-  if (src.GetUnit() != eCSSUnit_Array)
-    return;
 
   const nsCSSValue::Array& sources = *src.GetArrayValue();
   PRUint32 i = 0;
@@ -1574,6 +1570,11 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 
   const nsCSSValue& val = this->*nsCSSFontFaceStyleDecl::Fields[aFontDescID];
 
+  if (val.GetUnit() == eCSSUnit_Null) {
+    // Avoid having to check no-value in the Family and Src cases below.
+    return NS_OK;
+  }
+
   switch (aFontDescID) {
   case eCSSFontDesc_Family: {
       // we don't use AppendCSSValueToString here because it doesn't
@@ -1601,7 +1602,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     return NS_OK;
 
   case eCSSFontDesc_Src:
-    SerializeFontSrc(val, aResult);
+    AppendSerializedFontSrc(val, aResult);
     return NS_OK;
 
   case eCSSFontDesc_UnicodeRange:

@@ -124,6 +124,14 @@ class nsISVGChildFrame;
  */
 PRBool NS_SVGEnabled();
 
+#ifdef MOZ_SMIL
+/*
+ * Checks the smil enabled preference.  Declared as a function to match
+ * NS_SVGEnabled().
+ */
+PRBool NS_SMILEnabled();
+#endif // MOZ_SMIL
+
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK
 
@@ -184,6 +192,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterProperty, NS_ISVGFILTERPROPERTY_IID)
 class nsSVGUtils
 {
 public:
+  /*
+   * Get the parent element of an nsIContent
+   */
+  static nsIContent *GetParentElement(nsIContent *aContent);
+
   /*
    * Get a font-size (em) of an nsIContent
    */

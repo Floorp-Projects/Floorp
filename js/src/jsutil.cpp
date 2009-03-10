@@ -50,6 +50,12 @@
 #    include <windows.h>
 #endif
 
+/*
+ * Checks the assumption that JS_FUNC_TO_DATA_PTR and JS_DATA_TO_FUNC_PTR
+ * macros uses to implement casts between function and data pointers.
+ */
+JS_STATIC_ASSERT(sizeof(void *) == sizeof(void (*)()));
+
 JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 {
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);

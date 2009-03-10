@@ -416,9 +416,11 @@ namespace nanojit
 		if (branch[0] == JMP32) {
             was = branch + *(int32_t*)&branch[1] + 5;
 		    *(int32_t*)&branch[1] = offset - 5;
+            VALGRIND_DISCARD_TRANSLATIONS(&branch[1], sizeof(int32_t));
 		} else if (branch[0] == JCC32) {
             was = branch + *(int32_t*)&branch[2] + 6;
 		    *(int32_t*)&branch[2] = offset - 6;
+            VALGRIND_DISCARD_TRANSLATIONS(&branch[2], sizeof(int32_t));
 		} else
 		    NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
 #else
@@ -427,6 +429,7 @@ namespace nanojit
             mem = &branch[6] + *(int32_t *)&branch[2];
             was = *(intptr_t*)mem;
             *(intptr_t *)mem = intptr_t(targ);
+            VALGRIND_DISCARD_TRANSLATIONS(mem, sizeof(intptr_t));
         } else {
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
         }
@@ -2098,6 +2101,9 @@ namespace nanojit
         Page *p = (Page*)pageTop(eip-1);
         NIns *top = (NIns*) &p->code[0];
         if (eip - n < top) {
+            // We are done with the current page.  Tell Valgrind that new code
+            // has been generated.
+            VALGRIND_DISCARD_TRANSLATIONS(pageTop(p), NJ_PAGE_SIZE);
 			_nIns = pageAlloc(_inExit);
             JMP(eip);
         }

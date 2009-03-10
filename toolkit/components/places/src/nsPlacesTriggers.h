@@ -75,8 +75,8 @@
       "id, url, title, rev_host, visit_count, hidden, typed, favicon_id, " \
       "frecency " \
     ") " \
-    "VALUES (MAX((SELECT IFNULL(MAX(id), 0) FROM moz_places_temp), " \
-                "(SELECT IFNULL(MAX(id), 0) FROM moz_places)) + 1, " \
+    "VALUES (MAX(IFNULL((SELECT MAX(id) FROM moz_places_temp), 0), " \
+                "IFNULL((SELECT MAX(id) FROM moz_places), 0)) + 1," \
             "NEW.url, NEW.title, NEW.rev_host, " \
             "IFNULL(NEW.visit_count, 0), " /* enforce having a value */ \
             "NEW.hidden, NEW.typed, NEW.favicon_id, NEW.frecency);" \
@@ -146,8 +146,8 @@
     "INSERT INTO moz_historyvisits_temp ( " \
       "id, from_visit, place_id, visit_date, visit_type, session " \
     ") " \
-    "VALUES (MAX((SELECT IFNULL(MAX(id), 0) FROM moz_historyvisits_temp), " \
-                "(SELECT IFNULL(MAX(id), 0) FROM moz_historyvisits)) + 1, " \
+    "VALUES (MAX(IFNULL((SELECT MAX(id) FROM moz_historyvisits_temp), 0), " \
+                "IFNULL((SELECT MAX(id) FROM moz_historyvisits), 0)) + 1, " \
             "NEW.from_visit, NEW.place_id, NEW.visit_date, NEW.visit_type, " \
             "NEW.session); " \
     "INSERT OR IGNORE INTO moz_places_temp " \
