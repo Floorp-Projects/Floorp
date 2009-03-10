@@ -30,8 +30,11 @@
         checkboxElem.checked = false;
         testStates(checkboxElem, 0, 0, STATE_CHECKED);
         checkboxElem.indeterminate = true;
-        testStates(checkboxElem, STATE_MIXED, 0, STATE_CHECKED);
+        testStates(checkboxElem, STATE_MIXED, 0);
       }
+
+      testStates("aria_checked_checkbox", STATE_CHECKED);
+      testStates("aria_mixed_checkbox", STATE_MIXED);
 
       // test disabled group and all its descendants to see if they are
       // disabled, too. See bug 429285.
@@ -68,6 +71,14 @@
        aria-expanded="true">combobox</div>
 
   <input type="checkbox" id="check1" value="I agree" checked="true"/>
+
+  <div id="aria_checked_checkbox" role="checkbox" aria-checked="true">
+    I agree
+  </div>
+
+  <div id="aria_mixed_checkbox" role="checkbox" aria-checked="mixed">
+    I might agree
+  </div>
 
   <!-- Test that aria-disabled state gets propagated to all descendants -->
   <div id="group" role="group" aria-disabled="true">
