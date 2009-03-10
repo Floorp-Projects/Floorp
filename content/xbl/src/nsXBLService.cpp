@@ -1074,6 +1074,15 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   return NS_OK;
 }
 
+static PRBool SchemeIs(nsIURI* aURI, const char* aScheme)
+{
+  nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
+  NS_ENSURE_TRUE(baseURI, PR_FALSE);
+
+  PRBool isScheme = PR_FALSE;
+  return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
+}
+
 NS_IMETHODIMP
 nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                                       nsIDocument* aBoundDocument,
@@ -1111,7 +1120,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     rv = aOriginPrincipal->GetURI(getter_AddRefs(principalURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (principalURI) {
+    if (principalURI &&
+        !(gAllowDataURIs && SchemeIs(aBindingURI, "data"))) {
       nsresult uaCheckRes =
         nsContentUtils::GetSecurityManager()->
         CheckLoadURIWithPrincipal(aBoundDocument->NodePrincipal(),
