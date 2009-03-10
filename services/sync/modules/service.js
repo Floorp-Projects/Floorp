@@ -125,30 +125,6 @@ WeaveSvc.prototype = {
   _keyGenEnabled: true,
   _mostRecentError: null,
 
-  __os: null,
-  get _os() {
-    if (!this.__os)
-      this.__os = Cc["@mozilla.org/observer-service;1"]
-        .getService(Ci.nsIObserverService);
-    return this.__os;
-  },
-
-  __dirSvc: null,
-  get _dirSvc() {
-    if (!this.__dirSvc)
-      this.__dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-        getService(Ci.nsIProperties);
-    return this.__dirSvc;
-  },
-
-  __json: null,
-  get _json() {
-    if (!this.__json)
-      this.__json = Cc["@mozilla.org/dom/json;1"].
-        createInstance(Ci.nsIJSON);
-    return this.__json;
-  },
-
   // object for caching public and private keys
   _keyPair: {},
 
@@ -291,7 +267,7 @@ WeaveSvc.prototype = {
     }
 
     Utils.prefs.addObserver("", this, false);
-    this._os.addObserver(this, "quit-application", true);
+    Svc.Observer.addObserver(this, "quit-application", true);
     FaultTolerance.Service; // initialize FT service
 
     if (!this.enabled)
@@ -335,7 +311,7 @@ WeaveSvc.prototype = {
     dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
-    let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
+    let brief = Svc.Directory.get("ProfD", Ci.nsIFile);
     brief.QueryInterface(Ci.nsILocalFile);
     brief.append("weave");
     brief.append("logs");
@@ -513,7 +489,7 @@ WeaveSvc.prototype = {
     // Cancel the sync timer now that we're logged out
     this._checkSync();
 
-    this._os.notifyObservers(null, "weave:service:logout:finish", "");
+    Svc.Observer.notifyObservers(null, "weave:service:logout:finish", "");
   },
 
   // stuff we need to to after login, before we can really do
@@ -863,7 +839,7 @@ WeaveSvc.prototype = {
 
       // XXX Bug 480448: Delete any snapshots from old code
       try {
-        let cruft = this._dirSvc.get("ProfD", Ci.nsIFile);
+        let cruft = Svc.Directory.get("ProfD", Ci.nsIFile);
         cruft.QueryInterface(Ci.nsILocalFile);
         cruft.append("weave");
         cruft.append("snapshots");

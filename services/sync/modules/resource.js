@@ -145,9 +145,7 @@ Resource.prototype = {
   },
 
   _createRequest: function Res__createRequest() {
-    let ios = Cc["@mozilla.org/network/io-service;1"].
-      getService(Ci.nsIIOService);
-    this._lastChannel = ios.newChannel(this.spec, null, null).
+    this._lastChannel = Svc.IO.newChannel(this.spec, null, null).
       QueryInterface(Ci.nsIRequest);
     // Always validate the cache:
     let loadFlags = this._lastChannel.loadFlags;
@@ -268,6 +266,8 @@ function ChannelListener(onComplete, onProgress, logger) {
 }
 ChannelListener.prototype = {
   onStartRequest: function Channel_onStartRequest(channel) {
+    // XXX Bug 482179 Some reason xpconnect makes |channel| only nsIRequest
+    channel.QueryInterface(Ci.nsIHttpChannel);
     this._log.debug(channel.requestMethod + " request for " +
       channel.URI.spec);
     this._data = '';

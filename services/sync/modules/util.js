@@ -78,9 +78,7 @@ let Utils = {
       arg = {path: arg};
 
     let pathParts = arg.path.split("/");
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
-    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    let file = Svc.Directory.get("ProfD", Ci.nsIFile);
     file.QueryInterface(Ci.nsILocalFile);
     for (let i = 0; i < pathParts.length; i++)
       file.append(pathParts[i]);
@@ -89,17 +87,10 @@ let Utils = {
     return file;
   },
 
-  getLoginManager: function getLoginManager() {
-    return Cc["@mozilla.org/login-manager;1"].
-           getService(Ci.nsILoginManager);
-  },
-
   findPassword: function findPassword(realm, username) {
     // fixme: make a request and get the realm ?
     let password;
-    let lm = Cc["@mozilla.org/login-manager;1"]
-             .getService(Ci.nsILoginManager);
-    let logins = lm.findLogins({}, 'chrome://weave', null, realm);
+    let logins = Svc.Login.findLogins({}, 'chrome://weave', null, realm);
 
     for (let i = 0; i < logins.length; i++) {
       if (logins[i].username == username) {
@@ -112,8 +103,7 @@ let Utils = {
 
   setPassword: function setPassword(realm, username, password) {
     // cleanup any existing passwords
-    let lm = Cc["@mozilla.org/login-manager;1"]
-             .getService(Ci.nsILoginManager);
+    let lm = Svc.Login;
     let logins = lm.findLogins({}, 'chrome://weave', null, realm);
     for (let i = 0; i < logins.length; i++)
       lm.removeLogin(logins[i]);
@@ -370,10 +360,7 @@ let Utils = {
   },
 
   getTmp: function Weave_getTmp(name) {
-    let ds = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties);
-
-    let tmp = ds.get("ProfD", Ci.nsIFile);
+    let tmp = Svc.Directory.get("ProfD", Ci.nsIFile);
     tmp.QueryInterface(Ci.nsILocalFile);
 
     tmp.append("weave");
@@ -509,8 +496,11 @@ Utils.EventListener.prototype = {
 let Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
 Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
-Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
 Utils.lazySvc(Svc, 'Crypto', "@labs.mozilla.com/Weave/Crypto;1", Ci.IWeaveCrypto);
+Utils.lazySvc(Svc, 'Directory', "@mozilla.org/file/directory_service;1", Ci.nsIProperties);
+Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
+Utils.lazySvc(Svc, 'Login', "@mozilla.org/login-manager;1", Ci.nsILoginManager);
 Utils.lazySvc(Svc, 'Memory', "@mozilla.org/xpcom/memory-service;1", Ci.nsIMemory);
+Utils.lazySvc(Svc, 'Observer', "@mozilla.org/observer-service;1", Ci.nsIObserverService);
 Utils.lazySvc(Svc, 'Version',
               "@mozilla.org/xpcom/version-comparator;1", Ci.nsIVersionComparator);
