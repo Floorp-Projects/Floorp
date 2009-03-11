@@ -75,9 +75,9 @@ enum Corner
 
 struct BCInfo
 {
-  nsTArray<BCData> mRightBorders;
-  nsTArray<BCData> mBottomBorders;
-  BCData           mLowerRightCorner;
+  nsTArray<BCData*> mRightBorders;
+  nsTArray<BCData*> mBottomBorders;
+  BCData            mLowerRightCorner;
 };
 
 class nsTableCellMap
@@ -230,11 +230,11 @@ public:
 
   void ExpandZeroColSpans();
 
-  void SetNotTopStart(PRUint8    aSide,
-                      nsCellMap& aCellMap,
-                      PRUint32   aYPos,
-                      PRUint32   aXPos,
-                      PRBool     aIsLowerRight = PR_FALSE);
+  BCData* GetBCData(PRUint8     aSide, 
+                    nsCellMap&  aCellMap,
+                    PRUint32    aYPos, 
+                    PRUint32    aXPos,
+                    PRBool      aIsLowerRight = PR_FALSE);
 
   void SetBCBorderEdge(PRUint8       aEdge, 
                        nsCellMap&    aCellMap,
@@ -279,7 +279,7 @@ protected:
   void DeleteRightBottomBorders();
 
   nsTableFrame&               mTableFrame;
-  nsAutoTArray<nsColInfo, 8>  mCols;
+  nsAutoTArray<nsColInfo*, 8> mCols;
   nsCellMap*                  mFirstMap;
   // border collapsing info
   BCInfo*                     mBCInfo;

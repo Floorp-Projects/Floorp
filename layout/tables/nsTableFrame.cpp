@@ -5849,8 +5849,11 @@ nsTableFrame::CalcBCBorders()
             (thisBorder.style == nextBorder.style)) {
           // set the flag on the next border indicating it is not the start of a new segment
           if (iter.mCellMap) {
-            tableCellMap->SetNotTopStart(NS_SIDE_BOTTOM, *iter.mCellMap,
-                                         cellEndRowIndex, cellEndColIndex + 1);
+            BCData* bcData = tableCellMap->GetBCData(NS_SIDE_BOTTOM, *iter.mCellMap, cellEndRowIndex, 
+                                                     cellEndColIndex + 1);
+            if (bcData) {
+              bcData->SetTopStart(PR_FALSE);
+            }
           }
         }
       }
@@ -5992,11 +5995,11 @@ BCMapBorderIterator::SetNewData(PRInt32 aY,
   }
   else if (IsRightMost()) {
     cellData = nsnull;
-    bcData = &tableCellMap->mBCInfo->mRightBorders.ElementAt(aY);
+    bcData = (BCData*)tableCellMap->mBCInfo->mRightBorders.ElementAt(aY);
   }
   else if (IsBottomMost()) {
     cellData = nsnull;
-    bcData = &tableCellMap->mBCInfo->mBottomBorders.ElementAt(aX);
+    bcData = (BCData*)tableCellMap->mBCInfo->mBottomBorders.ElementAt(aX);
   }
   else {
     if (PRUint32(y - fifRowGroupStart) < cellMap->mRows.Length()) { 

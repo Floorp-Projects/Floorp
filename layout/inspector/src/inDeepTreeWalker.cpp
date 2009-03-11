@@ -53,6 +53,18 @@
 
 ////////////////////////////////////////////////////
 
+struct DeepTreeStackItem 
+{
+  DeepTreeStackItem()  { MOZ_COUNT_CTOR(DeepTreeStackItem); }
+  ~DeepTreeStackItem() { MOZ_COUNT_DTOR(DeepTreeStackItem); }
+
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMNodeList> kids;
+  PRUint32 lastIndex;
+};
+
+////////////////////////////////////////////////////
+
 inDeepTreeWalker::inDeepTreeWalker() 
   : mShowAnonymousContent(PR_FALSE),
     mShowSubDocuments(PR_FALSE),
@@ -62,6 +74,9 @@ inDeepTreeWalker::inDeepTreeWalker()
 
 inDeepTreeWalker::~inDeepTreeWalker() 
 { 
+  for (PRInt32 i = mStack.Length() - 1; i >= 0; --i) {
+    delete mStack[i];
+  }
 }
 
 NS_IMPL_ISUPPORTS2(inDeepTreeWalker,
@@ -213,19 +228,20 @@ inDeepTreeWalker::NextNode(nsIDOMNode **_retval)
   nsCOMPtr<nsIDOMNode> next;
   
   while (1) {
-    DeepTreeStackItem& top = mStack.ElementAt(mStack.Length()-1);
-    nsCOMPtr<nsIDOMNodeList> kids = top.kids;
+    DeepTreeStackItem* top = mStack.ElementAt(mStack.Length()-1);
+    nsCOMPtr<nsIDOMNodeList> kids = top->kids;
     PRUint32 childCount;
     kids->GetLength(&childCount);
 
-    if (top.lastIndex == childCount) {
+    if (top->lastIndex == childCount) {
       mStack.RemoveElementAt(mStack.Length()-1);
+      delete top;
       if (mStack.Length() == 0) {
         mCurrentNode = nsnull;
         break;
       }
     } else {
-      kids->Item(top.lastIndex++, getter_AddRefs(next));
+      kids->Item(top->lastIndex++, getter_AddRefs(next));
       PushNode(next);
       break;      
     }
@@ -243,8 +259,8 @@ inDeepTreeWalker::PushNode(nsIDOMNode* aNode)
   mCurrentNode = aNode;
   if (!aNode) return;
 
-  DeepTreeStackItem item;
-  item.node = aNode;
+  DeepTreeStackItem* item = new DeepTreeStackItem();
+  item->node = aNode;
 
   nsCOMPtr<nsIDOMNodeList> kids;
   if (mShowSubDocuments) {
@@ -270,8 +286,8 @@ inDeepTreeWalker::PushNode(nsIDOMNode* aNode)
       aNode->GetChildNodes(getter_AddRefs(kids));
   }
   
-  item.kids = kids;
-  item.lastIndex = 0;
+  item->kids = kids;
+  item->lastIndex = 0;
   mStack.AppendElement(item);
 }
 
