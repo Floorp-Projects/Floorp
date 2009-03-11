@@ -488,6 +488,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # proba
 == 364861-1.html 364861-1-ref.html
 == 364862-1.html 364862-1-ref.html
 == 364968-1.xul 364968-1-ref.html
+== 364989-1.html 364989-1-ref.html
 == 365173-1.html 365173-1-ref.html
 == 366207-1.xul 366207-1-ref.xul
 == 366616-1.xul 366616-1-ref.xul
