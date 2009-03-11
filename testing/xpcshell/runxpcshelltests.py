@@ -85,17 +85,17 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
 
     # get the list of head and tail files from the directory
     testheadfiles = []
-    for f in glob(os.path.join(testdir, "head_*.js")):
+    for f in sorted(glob(os.path.join(testdir, "head_*.js"))):
       if os.path.isfile(f):
         testheadfiles += ['-f', f]
     testtailfiles = []
-    for f in glob(os.path.join(testdir, "tail_*.js")):
+    for f in sorted(glob(os.path.join(testdir, "tail_*.js"))):
       if os.path.isfile(f):
         testtailfiles += ['-f', f]
 
     # now execute each test individually
     # if a single test file was specified, we only want to execute that test
-    testfiles = glob(os.path.join(testdir, "test_*.js"))
+    testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
     if testFile:
       if testFile in [os.path.basename(x) for x in testfiles]:
         testfiles = [os.path.join(testdir, testFile)]
