@@ -62,6 +62,7 @@ _TEST_FILES =\
 		nsIAccessibleEditableText.js \
 		relations.js \
 		role.js \
+		test_accessnode_invalidation.html \
 		test_actions_aria.html \
 		test_actions_inputs.html \
 		test_actions.xul \
@@ -115,7 +116,6 @@ _TEST_FILES =\
 		test_textboxes.xul \
 		testTextboxes.js \
 		treeview.js \
-		test_bug434464.html \
 		z_states_frame.html \
 		z_states_framearticle.html \
 		z_states_framecheckbox.html \
