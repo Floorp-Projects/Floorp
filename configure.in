@@ -121,7 +121,6 @@ PERL_VERSION=5.006
 CAIRO_VERSION=1.6.0
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
-MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.8
 GNOMEVFS_VERSION=2.0
@@ -187,7 +186,6 @@ dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*)
-    MAKE_VERSION=3.79
     if test -z "$CC"; then CC=cl; fi
     if test -z "$CXX"; then CXX=cl; fi
     if test -z "$CPP"; then CPP="cl -E -nologo"; fi
@@ -974,37 +972,24 @@ fi # COMPILE_ENVIRONMENT
 
 dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
+if test -n "$MAKE"; then
+  if test `echo $MAKE | grep -c make.py` != 1; then
+     NOT_PYMAKE=$MAKE
+  fi
+fi
+
 case "$host_os" in
 cygwin*|mingw*|mks*|msvc*)
-    MOZ_PATH_PROGS(MAKE, $MAKE make gmake, :)
+    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE make gmake, :)
     ;;
 *)
-    MOZ_PATH_PROGS(MAKE, $MAKE gmake make, :)
+    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE gmake make, :)
     ;;
 esac
-_make_try=`$MAKE --version 2>/dev/null | grep GNU`
-if test ! "$_make_try"
-then
-	echo
-	echo "*** $MAKE is not GNU Make.  You will not be able to build Mozilla without GNU Make."
-	echo
-	exit 1
+if test "$GMAKE" = ":"; then
+   AC_MSG_ERROR([GNU make not found])
 fi
-dnl Now exit if version if < MAKE_VERSION
-rm -f dummy.mk
-echo 'all: ; @echo $(MAKE_VERSION)' > dummy.mk
-_make_vers=`$MAKE --no-print-directory -f dummy.mk all 2>/dev/null`
-rm -f dummy.mk
-_MAKE_MAJOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $1 }'`
-_MAKE_MINOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $2 }'`
-MAKE_MAJOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $1 }'`
-MAKE_MINOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $2 }'`
-if test "$_MAKE_MAJOR_VERSION" -lt "$MAKE_MAJOR_VERSION" || \
-   test "$_MAKE_MAJOR_VERSION" = "$MAKE_MAJOR_VERSION" -a \
-        "$_MAKE_MINOR_VERSION" -lt "$MAKE_MINOR_VERSION"; then
-   AC_MSG_ERROR([GNU Make $MAKE_VERSION or higher is required to build Mozilla.])
-fi
-AC_SUBST(MAKE)
+AC_SUBST(GMAKE)
 
 if test "$COMPILE_ENVIRONMENT"; then
 
