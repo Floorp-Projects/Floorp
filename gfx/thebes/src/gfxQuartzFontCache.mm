@@ -1429,10 +1429,8 @@ gfxQuartzFontCache::MakePlatformFont(const gfxFontEntry *aProxyEntry,
         // now lookup the Postscript name; this may fail if the font cache is bad
         OSStatus err;
         NSString *psname = NULL;
-        nsAutoString postscriptName;
         err = ATSFontGetPostScriptName(fontRef, kATSOptionFlagsDefault, (CFStringRef*) (&psname));
         if (err == noErr) {
-            GetStringForNSString(psname, postscriptName);
             [psname release];
         } else {
 #ifdef DEBUG
@@ -1461,8 +1459,16 @@ gfxQuartzFontCache::MakePlatformFont(const gfxFontEntry *aProxyEntry,
         NS_ASSERTION(w >= 100 && w <= 900, "bogus font weight value!");
 
         // create the font entry
+        nsAutoString uniqueName;
+
+        nsresult rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
+        if (NS_FAILED(rv)) {
+            delete userFontData;
+            return nsnull;
+        }
+        
         MacOSFontEntry *newFontEntry = 
-            new MacOSFontEntry(postscriptName,
+            new MacOSFontEntry(uniqueName,
                                FMGetFontFromATSFontRef(fontRef),
                                w, aProxyEntry->mStretch, 
                                (PRUint32(aProxyEntry->mItalic) ? 
