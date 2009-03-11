@@ -3227,6 +3227,22 @@ AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat6
 AC_CHECK_FUNCS(flockfile getpagesize)
 AC_CHECK_FUNCS(localtime_r strtok_r)
 
+dnl Windows functions, for mingw.
+AC_TRY_LINK([#include <windows.h>],
+             [SYSTEMTIME st;FILETIME ft;SystemTimeToFileTime(&st,&ft);],
+             ac_cv_have_systemtimetofiletime="yes",
+             ac_cv_have_systemtimetofiletime="no")
+if test "$ac_cv_have_systemtimetofiletime" = "yes"; then
+    AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
+fi
+AC_TRY_LINK([#include <windows.h>],
+             [FILETIME ft;GetSystemTimeAsFileTime(&ft);],
+             ac_cv_have_getsystemtimetasfiletime="yes",
+             ac_cv_have_getsystemtimeasfiletime="no")
+if test "$ac_cv_have_getsystemtimeasfiletime" = "yes"; then
+    AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
+fi
+
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
 if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
@@ -4925,8 +4941,15 @@ MOZ_ARG_ENABLE_BOOL(readline,
 JS_NATIVE_EDITLINE=
 EDITLINE_LIBS=
 
-dnl Conveniently, Win32 sets SKIP_LIBRARY_CHECKS...
-if test -z "$SKIP_LIBRARY_CHECKS"; then
+case "$target" in
+*-wince*|*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+    NO_EDITLINE=1
+    ;;
+*)
+    ;;
+esac
+
+if test -z "$SKIP_LIBRARY_CHECKS" -a test -z "$NO_EDITLINE"; then
   if test -n "$JS_WANT_READLINE"; then
     AC_CHECK_LIB(readline, readline,
                  EDITLINE_LIBS="-lreadline",
