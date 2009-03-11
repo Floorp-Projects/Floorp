@@ -42,9 +42,12 @@
 #include "jsbit.h"              // low-level (NSPR-based) headers next
 #include "jsprf.h"
 #include <math.h>               // standard headers next
-#ifdef _MSC_VER
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
+#ifdef _MSC_VER
 #define alloca _alloca
+#endif
 #endif
 #ifdef SOLARIS
 #include <alloca.h>
