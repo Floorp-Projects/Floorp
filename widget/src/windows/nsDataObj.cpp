@@ -496,7 +496,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)
-         && dfInx < mDataFlavors.Length())) {
+         && dfInx < mDataFlavors.Length()) {
     nsCString& df = mDataFlavors.ElementAt(dfInx);
     if (FormatsMatch(fe, *pFE)) {
       pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
