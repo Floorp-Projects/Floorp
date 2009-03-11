@@ -59,6 +59,10 @@ ClientRecord.prototype = {
     this._WBORec_init(uri);
   },
 
+  // engines.js uses cleartext to determine if records _isEqual
+  // XXX Bug 482669 Implement .equals() for SyncEngine to compare records
+  get cleartext() this.serialize(),
+
   // XXX engines.js calls encrypt/decrypt for all records, so define these:
   encrypt: function ClientRec_encrypt(onComplete) {
     let fn = function ClientRec__encrypt() {let self = yield;};
