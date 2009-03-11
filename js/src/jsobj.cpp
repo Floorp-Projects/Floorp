@@ -5850,6 +5850,20 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+JSBool
+js_IsCallable(JSObject *obj, JSContext *cx)
+{
+    if (!OBJ_IS_NATIVE(obj))
+        return obj->map->ops->call != NULL;
+
+    JS_LOCK_OBJ(cx, obj);
+    JSBool callable = (obj->map->ops == &js_ObjectOps)
+                      ? HAS_FUNCTION_CLASS(obj) || STOBJ_GET_CLASS(obj)->call
+                      : obj->map->ops->call != NULL;
+    JS_UNLOCK_OBJ(cx, obj);
+    return callable;
+}
+
 #ifdef DEBUG
 
 /*
