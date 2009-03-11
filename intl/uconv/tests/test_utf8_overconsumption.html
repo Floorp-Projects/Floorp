@@ -23,7 +23,7 @@ function Inject()
 /** test that UTF-8 decoding resynchronizes after incomplete sequences */
 function test()
 {
-    ok($("display").innerHTML == "All good.", "No overconsumption");
+    is($("display").innerHTML, "All good.", "No overconsumption");
     SimpleTest.finish();
 }
 

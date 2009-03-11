@@ -149,6 +149,9 @@ gfxFontconfigUtils::GetThebesWeight(FcPattern *aPattern)
 /* static */ int
 gfxFontconfigUtils::FcWeightForBaseWeight(PRInt8 aBaseWeight)
 {
+    NS_PRECONDITION(aBaseWeight >= 0 && aBaseWeight <= 10,
+                    "base weight out of range");
+
     switch (aBaseWeight) {
         case 2:
             return FC_WEIGHT_EXTRALIGHT;

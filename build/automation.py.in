@@ -48,6 +48,7 @@ import signal
 import subprocess
 import sys
 import threading
+import glob
 
 """
 Runs the browser from a script, and provides useful utilities
@@ -87,6 +88,7 @@ UNIXISH = not IS_WIN32 and not IS_MAC
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
 #expand IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
+#expand SYMBOLS_PATH = __SYMBOLS_PATH__
 
 ###########
 # LOGGING #
@@ -242,6 +244,7 @@ user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
 user_pref("security.default_personal_cert", "Select Automatically"); // Need to client auth test be w/o any dialogs
 user_pref("network.http.prompt-temp-redirect", false);
+user_pref("svg.smil.enabled", true); // Needed for SMIL mochitests until bug 482402 lands
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
@@ -401,16 +404,35 @@ def environment(env = None, xrePath = DIST_BIN):
   elif IS_WIN32:
     env["PATH"] = env["PATH"] + ";" + ldLibraryPath
 
+  env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
+  env['MOZ_CRASHREPORTER'] = '1'
+
   return env
+
+def checkForCrashes(profileDir, symbolsPath):
+  stackwalkPath = os.environ.get('MINIDUMP_STACKWALK', None)
+
+  foundCrash = False
+  dumps = glob.glob(os.path.join(profileDir, 'minidumps', '*.dmp'))
+  for d in dumps:
+    log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Browser crashed (minidump found)")
+    if symbolsPath and stackwalkPath:
+      nullfd = open(os.devnull, 'w')
+      # eat minidump_stackwalk errors
+      subprocess.call([stackwalkPath, d, symbolsPath], stderr=nullfd)
+      nullfd.close()
+    os.remove(d)
+    foundCrash = True
+  return foundCrash
 
 ###############
 # RUN THE APP #
 ###############
 
-def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
+def processLeakLog(leakLogFile, leakThreshold):
   "Process the leak log."
 
-  if not os.path.exists(LEAK_REPORT_FILE):
+  if not os.path.exists(leakLogFile):
     log.info("WARNING refcount logging is off, so leaks can't be detected!")
   else:
     #                  Per-Inst  Leaked      Total  Rem ...
@@ -420,7 +442,7 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
                         r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
                         r"\d+\s+(?P<numLeaked>-?\d+)")
 
-    leaks = open(LEAK_REPORT_FILE, "r")
+    leaks = open(leakLogFile, "r")
     for line in leaks:
       matches = lineRe.match(line)
       if (matches and
@@ -430,8 +452,7 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
       log.info(line.rstrip())
     leaks.close()
 
-    threshold = leakThreshold
-    leaks = open(LEAK_REPORT_FILE, "r")
+    leaks = open(leakLogFile, "r")
     seenTotal = False
     prefix = "TEST-PASS"
     for line in leaks:
@@ -447,7 +468,7 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
       if "TOTAL" == name:
         seenTotal = True
         # Check for leaks.
-        if bytesLeaked < 0 or bytesLeaked > threshold:
+        if bytesLeaked < 0 or bytesLeaked > leakThreshold:
           prefix = "TEST-UNEXPECTED-FAIL"
           leakLog = "TEST-UNEXPECTED-FAIL | runtests-leaks | leaked" \
                     " %d bytes during test execution" % bytesLeaked
@@ -457,8 +478,8 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
         else:
           leakLog = "TEST-PASS | runtests-leaks | no leaks detected!"
         # Remind the threshold if it is not 0, which is the default/goal.
-        if threshold != 0:
-          leakLog += " (threshold set at %d bytes)" % threshold
+        if leakThreshold != 0:
+          leakLog += " (threshold set at %d bytes)" % leakThreshold
         # Log the information.
         log.info(leakLog)
       else:
@@ -481,7 +502,10 @@ def processLeakLog(LEAK_REPORT_FILE, leakThreshold):
       log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | missing output line for total leaks!")
     leaks.close()
 
-def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utilityPath = DIST_BIN, xrePath = DIST_BIN, certPath = CERTS_SRC_DIR, debuggerInfo = None):
+def runApp(testURL, env, app, profileDir, extraArgs,
+           runSSLTunnel = False, utilityPath = DIST_BIN,
+           xrePath = DIST_BIN, certPath = CERTS_SRC_DIR,
+           debuggerInfo = None, symbolsPath = SYMBOLS_PATH):
   "Run the app, log the duration it took to execute, return the status code."
 
   if IS_TEST_BUILD and runSSLTunnel:
@@ -548,6 +572,9 @@ def runApp(testURL, env, app, profileDir, extraArgs, runSSLTunnel = False, utili
   if status != 0:
     log.info("TEST-UNEXPECTED-FAIL | (automation.py) | Exited with code %d during test run", status)
   log.info("INFO | (automation.py) | Application ran for: %s", str(datetime.now() - startTime))
+
+  if checkForCrashes(profileDir, symbolsPath):
+    status = -1
 
   if IS_TEST_BUILD and runSSLTunnel:
     ssltunnelProcess.kill()

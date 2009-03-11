@@ -20,8 +20,14 @@ function manifestUpdated()
     window.opener.OfflineTest.ok(true, "Unable to fetch unlisted resource, properly associated.");
   }
 
-  window.opener.OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html",
-                                       true);
+  req = new XMLHttpRequest;
+  req.open("GET", "updatingImplicit.html", false);
+  try {
+    req.send(null);
+    window.opener.OfflineTest.ok(true, "Able to fetch listed resource, properly associated.");
+  } catch(ex) {
+    window.opener.OfflineTest.ok(false, "Unable to fetch listed resource, not properly associated.");
+  }
 
   window.opener.implicitLoaded(window, false);
 }
