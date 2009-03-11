@@ -131,73 +131,47 @@ endif
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 # Test file installation
-libs::
-	@$(EXIT_ON_ERROR) \
-	for testdir in $(XPCSHELL_TESTS); do \
-	  $(INSTALL) \
-	    $(srcdir)/$$testdir/*.js \
-	    $(testxpcobjdir)/$(MODULE)/$$testdir; \
-	done
 
-# Path formats on Windows are hard.  We require a topsrcdir formatted so that
-# it may be passed to nsILocalFile.initWithPath (in other words, an absolute
-# path of the form X:\path\to\topsrcdir), which we store in NATIVE_TOPSRCDIR.
-# We require a forward-slashed path to topsrcdir so that it may be combined
-# with a relative forward-slashed path for loading scripts, both dynamically
-# and statically for head/test/tail JS files.  Of course, on non-Windows none
-# of this matters, and things will work correctly because everything's
-# forward-slashed, everywhere, always.
-ifdef CYGWIN_WRAPPER
-NATIVE_TOPSRCDIR   := `cygpath -wa $(topsrcdir)`
-FWDSLASH_TOPSRCDIR := `cygpath -ma $(topsrcdir)`
-else
-FWDSLASH_TOPSRCDIR := $(topsrcdir)
-ifeq ($(HOST_OS_ARCH),WINNT)
-NATIVE_TOPSRCDIR   := $(subst /,\\,$(WIN_TOP_SRC))
-else
-ifeq ($(HOST_OS_ARCH),os2-emx)
-NATIVE_TOPSRCDIR   := $(subst /,\\,$(topsrcdir))
-else
-NATIVE_TOPSRCDIR   := $(topsrcdir)
-endif
-endif
-endif # CYGWIN_WRAPPER
+define _INSTALL_TESTS
+$(INSTALL) $(wildcard $(srcdir)/$(dir)/*.js) $(testxpcobjdir)/$(MODULE)/$(dir)
+
+endef # do not remove the blank line!
+
+SOLO_FILE ?= $(error Specify a test filename in SOLO_FILE when using check-interactive or check-one)
+
+libs::
+	$(foreach dir,$(XPCSHELL_TESTS),$(_INSTALL_TESTS))
 
 testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 
-# Test execution
+# Execute all tests in the $(XPCSHELL_TESTS) directories.
 check::
-	@$(EXIT_ON_ERROR) \
-	for testdir in $(XPCSHELL_TESTS); do \
-	  $(RUN_TEST_PROGRAM) \
-	    $(testxpcsrcdir)/test_all.sh \
-	      $(DIST)/bin/xpcshell \
-	      $(FWDSLASH_TOPSRCDIR) \
-	      $(NATIVE_TOPSRCDIR) \
-	      $(testxpcobjdir)/$(MODULE)/$$testdir; \
-	done
+	$(PYTHON) \
+          $(testxpcsrcdir)/runxpcshelltests.py \
+          $(DIST)/bin/xpcshell \
+          $(topsrcdir) \
+          $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
-# Test execution
+# Execute a single test, specified in $(SOLO_FILE), but don't automatically
+# start the test. Instead, present the xpcshell prompt so the user can
+# attach a debugger and then start the test.
 check-interactive::
-	@$(EXIT_ON_ERROR) \
-	$(RUN_TEST_PROGRAM) \
-	  $(testxpcsrcdir)/test_one.sh \
-	    $(DIST)/bin/xpcshell \
-	    $(FWDSLASH_TOPSRCDIR) \
-	    $(NATIVE_TOPSRCDIR) \
-	    $(testxpcobjdir)/$(MODULE)/$$testdir \
-	    $(SOLO_FILE) 1;
+	$(PYTHON) \
+          $(testxpcsrcdir)/runxpcshelltests.py \
+          --test=$(SOLO_FILE) \
+          --interactive \
+          $(DIST)/bin/xpcshell \
+          $(topsrcdir) \
+          $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
-# Test execution
+# Execute a single test, specified in $(SOLO_FILE)
 check-one::
-	@$(EXIT_ON_ERROR) \
-	$(RUN_TEST_PROGRAM) \
-	  $(testxpcsrcdir)/test_one.sh \
-	    $(DIST)/bin/xpcshell \
-	    $(FWDSLASH_TOPSRCDIR) \
-	    $(NATIVE_TOPSRCDIR) \
-	    $(testxpcobjdir)/$(MODULE)/$$testdir \
-	    $(SOLO_FILE) 0;
+	$(PYTHON) \
+          $(testxpcsrcdir)/runxpcshelltests.py \
+          --test=$(SOLO_FILE) \
+          $(DIST)/bin/xpcshell \
+          $(topsrcdir) \
+          $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
 endif # XPCSHELL_TESTS
 
