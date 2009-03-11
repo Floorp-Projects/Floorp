@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="doUpdate(testUpdate);">
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
@@ -82,8 +82,6 @@ function onmessage(event)
 }
 
 window.addEventListener("message", onmessage, false);
-
-doUpdate(testUpdate);
 
 SimpleTest.waitForExplicitFinish();
 

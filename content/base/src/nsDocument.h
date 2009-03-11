@@ -132,21 +132,10 @@ class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
-struct PLEvent;
 class nsChildContentList;
 #ifdef MOZ_SMIL
 class nsSMILAnimationController;
 #endif // MOZ_SMIL
-
-PR_BEGIN_EXTERN_C
-/* Note that these typedefs declare functions, not pointer to
-   functions.  That's the only way in which they differ from
-   PLHandleEventProc and PLDestroyEventProc. */
-typedef void*
-(EventHandlerFunc)(PLEvent* self);
-typedef void
-(EventDestructorFunc)(PLEvent* self);
-PR_END_EXTERN_C
 
 /**
  * Hashentry using a PRUint32 key and a cheap set of nsIContent* owning

@@ -136,6 +136,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "absolute path to directory containing utility programs (xpcshell, ssltunnel, certutil)")
     defaults["utilityPath"] = automation.DIST_BIN
 
+    self.add_option("--symbols-path",
+                    action = "store", type = "string", dest = "symbolsPath",
+                    help = "absolute path to directory containing breakpad symbols")
+    defaults["symbolsPath"] = automation.SYMBOLS_PATH
+
     self.add_option("--certificate-path",
                     action = "store", type = "string", dest = "certPath",
                     help = "absolute path to directory containing certificate store to use testing profile")
@@ -472,7 +477,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                              utilityPath = options.utilityPath,
                              xrePath = options.xrePath,
                              certPath=options.certPath,
-                             debuggerInfo=debuggerInfo)
+                             debuggerInfo=debuggerInfo,
+                             symbolsPath=options.symbolsPath)
 
   # Server's no longer needed, and perhaps more importantly, anything it might
   # spew to console shouldn't disrupt the leak information table we print next.

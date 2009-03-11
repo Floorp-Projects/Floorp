@@ -190,18 +190,19 @@ SYMBOL_INDEX_NAME = \
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
 	echo building symbol store
-	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
+	$(RM) -rf $(DIST)/crashreporter-symbols
+	$(NSINSTALL) -D $(DIST)/crashreporter-symbols
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
 	  $(MAKE_SYM_STORE_ARGS)                                          \
 	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \
 	  $(DUMP_SYMS_BIN)                                                \
-	  $(DIST)/crashreporter-symbols/$(BUILDID)                        \
+	  $(DIST)/crashreporter-symbols                                   \
 	  $(MAKE_SYM_STORE_PATH) >                                        \
-	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(SYMBOL_INDEX_NAME)
+	  $(DIST)/crashreporter-symbols/$(SYMBOL_INDEX_NAME)
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
-	cd $(DIST)/crashreporter-symbols/$(BUILDID) && \
-          zip -r9D ../../$(SYMBOL_ARCHIVE_BASENAME).zip .
+	cd $(DIST)/crashreporter-symbols && \
+          zip -r9D ../$(SYMBOL_ARCHIVE_BASENAME).zip .
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:

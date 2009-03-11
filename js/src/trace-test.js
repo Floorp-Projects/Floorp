@@ -1239,12 +1239,12 @@ function testContinueWithLabel() {
     var i = 0;
     var j = 20;
     checkiandj :
-    while (i<10) {
-        i+=1;
+    while (i < 10) {
+        i += 1;
         checkj :
-        while (j>10) {
-            j-=1;
-            if ((j%2)==0)
+        while (j > 10) {
+            j -= 1;
+            if ((j % 2) == 0)
             continue checkj;
         }
     }
@@ -4467,6 +4467,62 @@ function testNonStubGetter() {
 }
 testNonStubGetter.expected = "ok";
 test(testNonStubGetter);
+
+function testString() {
+    var q;
+    for (var i = 0; i <= RUNLOOP; ++i) {
+        q = [];
+        q.push(String(void 0));
+        q.push(String(true));
+        q.push(String(5));
+        q.push(String(5.5));
+        q.push(String("5"));
+        q.push(String([5]));
+    }
+    return q.join(",");
+}
+testString.expected = "undefined,true,5,5.5,5,5";
+testString.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1
+};
+test(testString);
+
+function testToStringBeforeValueOf()
+{
+  var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a.push(String(o));
+  return a.join(",");
+}
+testToStringBeforeValueOf.expected = "s,s,s,s,s,s,s,s,s,s";
+testToStringBeforeValueOf.jitstats = {
+  recorderStarted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testToStringBeforeValueOf);
+
+function testNullToString()
+{
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a.push(String(null));
+  for (i = 0; i < 10; i++) {
+    var t = typeof a[i];
+    if (t != "string")
+      a.push(t);
+  }
+  return a.join(",");
+}
+testNullToString.expected = "null,null,null,null,null,null,null,null,null,null";
+testNullToString.jitstats = {
+  recorderStarted: 2,
+  sideExitIntoInterpreter: 2,
+  recorderAborted: 0
+};
+test(testNullToString);
+
 
 /*****************************************************************************
  *                                                                           *

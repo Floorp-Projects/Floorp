@@ -41,11 +41,46 @@
 #include "nsIFormatConverter.h"
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 class nsString;
 class nsDataObj;
-class DataStruct;
+
+//
+// DataStruct
+//
+// Holds a flavor (a mime type) that describes the data and the associated data.
+//
+struct DataStruct
+{
+  DataStruct ( const char* aFlavor )
+    : mDataLen(0), mFlavor(aFlavor), mCacheFileName(nsnull) { }
+  ~DataStruct();
+  
+  const nsCString& GetFlavor() const { return mFlavor; }
+  void SetData( nsISupports* inData, PRUint32 inDataLen );
+  void GetData( nsISupports** outData, PRUint32 *outDataLen );
+  nsIFile * GetFileSpec(const char * aFileName);
+  PRBool IsDataAvailable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
+  
+protected:
+
+  enum {
+    // The size of data over which we write the data to disk rather than
+    // keep it around in memory.
+    kLargeDatasetSize = 1000000        // 1 million bytes
+  };
+  
+  nsresult WriteCache(nsISupports* aData, PRUint32 aDataLen );
+  nsresult ReadCache(nsISupports** aData, PRUint32* aDataLen );
+  
+  nsCOMPtr<nsISupports> mData;   // OWNER - some varient of primitive wrapper
+  PRUint32 mDataLen;
+  const nsCString mFlavor;
+  char *   mCacheFileName;
+
+};
 
 /**
  * XP Transferable wrapper
@@ -67,7 +102,7 @@ protected:
     // get flavors w/out converter
   nsresult GetTransferDataFlavors(nsISupportsArray** aDataFlavorList);
  
-  nsTArray<DataStruct*> * mDataArray;
+  nsTArray<DataStruct> mDataArray;
   nsCOMPtr<nsIFormatConverter> mFormatConv;
 
 };

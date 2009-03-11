@@ -77,4 +77,4 @@ HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == local-1.html local-1-ref.html # bug 468387
-fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html # bug 468387, 480098
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html # bug 468387
