@@ -38,7 +38,7 @@ dnl ***** END LICENSE BLOCK *****
 
 AC_DEFUN(MOZ_PROG_CHECKMSYS,
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-if test `uname -o` = Msys; then
+if test `uname -s | grep -c MINGW 2>/dev/null` != "0"; then
   msyshost=1
 fi
 ])
