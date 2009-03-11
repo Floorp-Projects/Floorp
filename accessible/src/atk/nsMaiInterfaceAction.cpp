@@ -39,6 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMaiInterfaceAction.h"
+
+#include "nsRoleMap.h"
 #include "nsString.h"
 
 void
@@ -122,21 +124,22 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
         nsCOMPtr<nsIAccessible> parentAccessible;
         accWrap->GetParent(getter_AddRefs(parentAccessible));
         if (parentAccessible) {
-          PRUint32 role = nsAccUtils::RoleInternal(parentAccessible);
+          PRUint32 geckoRole = nsAccUtils::RoleInternal(parentAccessible);
+          PRUint32 atkRole = atkRoleMap[geckoRole];
 
-            if (role == ATK_ROLE_MENU_BAR) {
+            if (atkRole == ATK_ROLE_MENU_BAR) {
                 //it is topmenu, change from "Alt+f" to "f;<Alt>f"
                 nsAutoString rightChar;
                 accessKey.Right(rightChar, 1);
                 allKeyBinding = rightChar + NS_LITERAL_STRING(";<Alt>") +
                                 rightChar;
             }
-            else if ((role == ATK_ROLE_MENU) || (role == ATK_ROLE_MENU_ITEM)) {
+            else if ((atkRole == ATK_ROLE_MENU) || (atkRole == ATK_ROLE_MENU_ITEM)) {
                 //it is submenu, change from "s" to "s;<Alt>f:s"
                 nsAutoString allKey = accessKey;
                 nsCOMPtr<nsIAccessible> grandParentAcc = parentAccessible;
 
-                while ((grandParentAcc) && (role != ATK_ROLE_MENU_BAR)) {
+                while ((grandParentAcc) && (atkRole != ATK_ROLE_MENU_BAR)) {
                     nsAutoString grandParentKey;
                     grandParentAcc->GetKeyboardShortcut(grandParentKey);
 
@@ -148,7 +151,8 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
 
                     nsCOMPtr<nsIAccessible> tempAcc = grandParentAcc;
                     tempAcc->GetParent(getter_AddRefs(grandParentAcc));
-                  role = nsAccUtils::RoleInternal(grandParentAcc);
+                  geckoRole = nsAccUtils::RoleInternal(grandParentAcc);
+                  atkRole = atkRoleMap[geckoRole];
                 }
                 allKeyBinding = accessKey + NS_LITERAL_STRING(";<Alt>") +
                                 allKey;
