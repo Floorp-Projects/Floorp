@@ -580,7 +580,7 @@ BookmarksStore.prototype = {
       node.containerOpen = true;
       for (var i = 0; i < node.childCount; i++) {
         let child = node.getChild(i);
-        let foo = this._createMiniRecord(child.itemId);
+        let foo = this._createMiniRecord(child.itemId, true);
         items[foo.id] = foo;
         this._getChildren(child, depthIndex, items);
       }
@@ -600,7 +600,7 @@ BookmarksStore.prototype = {
 
     for (var i = 0; i < parent.childCount; i++) {
       let child = parent.getChild(i);
-      let foo = this._createMiniRecord(child.itemId);
+      let foo = this._createMiniRecord(child.itemId, true);
       items[foo.id] = foo;
     }
 
