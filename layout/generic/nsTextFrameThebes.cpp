@@ -2755,7 +2755,7 @@ protected:
   };
 
   nsCOMPtr<nsITimer> mTimer;
-  nsTArray<FrameData*> mFrames;
+  nsTArray<FrameData> mFrames;
   nsPresContext* mPresContext;
 
 protected:
@@ -2802,8 +2802,7 @@ void nsBlinkTimer::Stop()
 NS_IMPL_ISUPPORTS1(nsBlinkTimer, nsITimerCallback)
 
 void nsBlinkTimer::AddFrame(nsPresContext* aPresContext, nsIFrame* aFrame) {
-  FrameData* frameData = new FrameData(aPresContext, aFrame);
-  mFrames.AppendElement(frameData);
+  mFrames.AppendElement(FrameData(aPresContext, aFrame));
   if (1 == mFrames.Length()) {
     Start();
   }
@@ -2812,11 +2811,10 @@ void nsBlinkTimer::AddFrame(nsPresContext* aPresContext, nsIFrame* aFrame) {
 PRBool nsBlinkTimer::RemoveFrame(nsIFrame* aFrame) {
   PRUint32 i, n = mFrames.Length();
   for (i = 0; i < n; i++) {
-    FrameData* frameData = mFrames.ElementAt(i);
+    FrameData frameData = mFrames.ElementAt(i);
 
-    if (frameData->mFrame == aFrame) {
+    if (frameData.mFrame == aFrame) {
       mFrames.RemoveElementAt(i);
-      delete frameData;
       break;
     }
   }
@@ -2853,12 +2851,12 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
   PRUint32 i, n = mFrames.Length();
   for (i = 0; i < n; i++) {
-    FrameData* frameData = mFrames.ElementAt(i);
+    FrameData frameData = mFrames.ElementAt(i);
 
     // Determine damaged area and tell view manager to redraw it
     // blink doesn't blink outline ... I hope
-    nsRect bounds(nsPoint(0, 0), frameData->mFrame->GetSize());
-    frameData->mFrame->Invalidate(bounds);
+    nsRect bounds(nsPoint(0, 0), frameData.mFrame->GetSize());
+    frameData.mFrame->Invalidate(bounds);
   }
   return NS_OK;
 }
