@@ -490,7 +490,12 @@ nsDOMWindowUtils::ProcessUpdates()
   nsPresContext* presContext = GetPresContext();
   if (!presContext)
     return NS_ERROR_UNEXPECTED;
-  nsIViewManager *viewManager = presContext->GetViewManager();
+
+  nsIPresShell* shell = presContext->GetPresShell();
+  if (!shell)
+    return NS_ERROR_UNEXPECTED;
+
+  nsIViewManager *viewManager = shell->GetViewManager();
   if (!viewManager)
     return NS_ERROR_UNEXPECTED;
   

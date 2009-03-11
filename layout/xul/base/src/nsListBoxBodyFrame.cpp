@@ -567,7 +567,7 @@ nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
     
   // I'd use Composite here, but it doesn't always work.
   // vm->Composite();
-  PresContext()->GetViewManager()->ForceUpdate();
+  PresContext()->GetPresShell()->GetViewManager()->ForceUpdate();
 
   return NS_OK;
 }

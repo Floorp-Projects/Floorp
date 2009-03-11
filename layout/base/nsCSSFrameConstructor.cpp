@@ -8656,7 +8656,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
     NS_ASSERTION(aFrame, "root frame must paint");
   }
 
-  nsIViewManager* viewManager = aPresContext->GetViewManager();
+  nsIViewManager* viewManager = shell->GetViewManager();
 
   // Trigger rendering updates by damaging this frame and any
   // continuations of this frame.
@@ -8732,7 +8732,7 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
     // Wrap this in a DEFERRED view update batch so we don't try to
     // flush out layout here
 
-    nsIViewManager::UpdateViewBatch batch(presContext->GetViewManager());  
+    nsIViewManager::UpdateViewBatch batch(presContext->GetPresShell()->GetViewManager());
     ApplyRenderingChangeToTree(presContext, ancestor,
                                nsChangeHint_RepaintFrame);
     batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
