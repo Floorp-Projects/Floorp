@@ -2236,15 +2236,13 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
 JSObject *
 js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
 {
-    JSObject *callable = JSVAL_IS_PRIMITIVE(*vp) ? NULL : JSVAL_TO_OBJECT(*vp);
+    JSObject *callable = JSVAL_IS_OBJECT(*vp) ? JSVAL_TO_OBJECT(*vp) : NULL;
 
-    if (js_IsCallable(cx, callable)) {
+    if (callable && js_IsCallable(callable, cx)) {
         *vp = OBJECT_TO_JSVAL(callable);
-    } else {
-        callable = js_ValueToFunctionObject(cx, vp, flags);
+        return callable;
     }
-
-    return callable;
+    return js_ValueToFunctionObject(cx, vp, flags);
 }
 
 void

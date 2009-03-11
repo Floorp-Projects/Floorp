@@ -1824,6 +1824,10 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
 static JSString* FASTCALL
 String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
 {
+    /* Make sure we will not call regexp.toString() later. This is not a _FAIL builtin. */
+    if (OBJ_GET_CLASS(cx, regexp) != &js_RegExpClass)
+        return NULL;
+
     jsval vp[4] = {
         JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(repstr)
     };
