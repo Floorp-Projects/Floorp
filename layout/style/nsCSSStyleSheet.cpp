@@ -2171,6 +2171,12 @@ nsCSSStyleSheet::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIURI*)
+nsCSSStyleSheet::GetOriginalURI() const
+{
+  return mInner->mOriginalSheetURI;
+}
+
 nsresult
 NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
 {

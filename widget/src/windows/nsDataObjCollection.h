@@ -49,7 +49,7 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsTPtrArray.h"
+#include "nsAutoPtr.h"
 
 class CEnumFormatEtc;
 class nsITransferable;
@@ -121,13 +121,13 @@ class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, 
     // from nsPIDataObjCollection
     STDMETHODIMP AddDataObject(IDataObject * aDataObj);
     STDMETHODIMP GetNumDataObjects(PRInt32* outNum) { *outNum = mDataObjects.Length(); }
-    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = mDataObjects.SafeElementAt(aItem); }
+    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = mDataObjects.SafeElementAt(aItem, nsRefPtr<IDataObject>()); }
 #endif
 
     // from nsPIDataObjCollection
     void AddDataObject(IDataObject * aDataObj);
     PRInt32 GetNumDataObjects() { return mDataObjects.Length(); }
-    IDataObject* GetDataObjectAt(PRUint32 aItem) { return mDataObjects.SafeElementAt(aItem); }
+    IDataObject* GetDataObjectAt(PRUint32 aItem) { return mDataObjects.SafeElementAt(aItem, nsRefPtr<IDataObject>()); }
 
 		// Return the registered OLE class ID of this object's CfDataObj.
 		CLSID GetClassID() const;
@@ -192,7 +192,7 @@ class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, 
 
 		ULONG        m_cRef;              // the reference count
 
-    nsTArray<nsString*> mDataFlavors;
+    nsTArray<nsString> mDataFlavors;
 
     nsITransferable  * mTransferable; // nsDataObjCollection owns and ref counts nsITransferable, 
                                       // the nsITransferable does know anything about the nsDataObjCollection
@@ -200,7 +200,7 @@ class nsDataObjCollection : public IDataObject, public nsIDataObjCollection //, 
     CEnumFormatEtc   * m_enumFE;      // Ownership Rules: 
                                       // nsDataObjCollection owns and ref counts CEnumFormatEtc,
 
-    nsTPtrArray<IDataObject> mDataObjects;
+    nsTArray<nsRefPtr<IDataObject> > mDataObjects;
 };
 
 

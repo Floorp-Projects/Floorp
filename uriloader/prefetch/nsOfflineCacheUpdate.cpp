@@ -1371,7 +1371,7 @@ nsOfflineCacheUpdate::LoadCompleted()
             mSucceeded = PR_FALSE;
 
             for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
-                AssociateDocument(mDocuments[i]);
+                AssociateDocument(mDocuments[i], mPreviousApplicationCache);
             }
 
             ScheduleImplicit();
@@ -1870,7 +1870,8 @@ nsOfflineCacheUpdate::ScheduleImplicit()
 }
 
 nsresult
-nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
+nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument,
+                                        nsIApplicationCache *aApplicationCache)
 {
     // Check that the document that requested this update was
     // previously associated with an application cache.  If not, it
@@ -1885,8 +1886,18 @@ nsOfflineCacheUpdate::AssociateDocument(nsIDOMDocument *aDocument)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!existingCache) {
-        LOG(("Update %p: associating app cache %s to document %p", this, mClientID.get(), aDocument));
-        rv = container->SetApplicationCache(mApplicationCache);
+#if defined(PR_LOGGING)
+        if (LOG_ENABLED()) {
+            nsCAutoString clientID;
+            if (aApplicationCache) {
+                aApplicationCache->GetClientID(clientID);
+            }
+            LOG(("Update %p: associating app cache %s to document %p",
+                 this, clientID.get(), aDocument));
+        }
+#endif
+
+        rv = container->SetApplicationCache(aApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1923,7 +1934,7 @@ nsOfflineCacheUpdate::Finish()
             }
 
             for (PRInt32 i = 0; i < mDocuments.Count(); i++) {
-                AssociateDocument(mDocuments[i]);
+                AssociateDocument(mDocuments[i], mApplicationCache);
             }
         }
 

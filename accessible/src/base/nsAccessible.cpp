@@ -1723,8 +1723,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       if (PL_strncmp(attrStr, "aria-", 5)) 
         continue; // Not ARIA
       PRUint8 attrFlags = nsAccUtils::GetAttributeCharacteristics(attrAtom);
-      if (attrFlags & ATTR_EXPOSEOBJ)
-        continue; // No need to expose obj attribute -- will be exposed some other way
+      if (attrFlags & ATTR_BYPASSOBJ)
+        continue; // No need to handle exposing as obj attribute here
       if ((attrFlags & ATTR_VALTOKEN) &&
           !nsAccUtils::HasDefinedARIAToken(content, attrAtom))
         continue; // only expose token based attributes if they are defined

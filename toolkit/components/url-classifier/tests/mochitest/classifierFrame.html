@@ -20,10 +20,10 @@ function checkLoads() {
 </script>
 
 <!-- Try loading from a malware javascript URI -->
-<script type="text/javascript" src="http://malware.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
+<script type="text/javascript" src="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
 
-<!-- Try loading from a malware css URI
-<link rel="stylesheet" type="text/css" href="http://malware.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+<!-- Try loading from a malware css URI -->
+<link rel="stylesheet" type="text/css" href="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
 
 <!-- Try loading a marked-as-malware css through an @import from a clean URI -->
 <link rel="stylesheet" type="text/css" href="import.css"></link>

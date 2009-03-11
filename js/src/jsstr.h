@@ -654,6 +654,9 @@ extern JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote);
 
+extern JSBool
+js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
 JS_END_EXTERN_C
 
 #endif /* jsstr_h___ */

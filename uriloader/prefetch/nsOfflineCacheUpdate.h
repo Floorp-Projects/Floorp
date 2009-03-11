@@ -256,7 +256,8 @@ private:
     nsresult NotifyDownloading();
     nsresult NotifyStarted(nsOfflineCacheUpdateItem *aItem);
     nsresult NotifyCompleted(nsOfflineCacheUpdateItem *aItem);
-    nsresult AssociateDocument(nsIDOMDocument *aDocument);
+    nsresult AssociateDocument(nsIDOMDocument *aDocument,
+                               nsIApplicationCache *aApplicationCache);
     nsresult ScheduleImplicit();
     nsresult Finish();
 

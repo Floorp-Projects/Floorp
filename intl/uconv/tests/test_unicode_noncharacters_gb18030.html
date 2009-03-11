@@ -11,13 +11,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445886
   <link rel="stylesheet" type="text/css"
  href="/tests/SimpleTest/test.css">
 </head>
-<body>
+<body onload="Inject()">
 <pre id="test"><script class="testbody" type="text/javascript">
 
 /** Test that unicode non-characters are not discarded **/
 function test()
 {
-    ok($("display").innerHTML == "All good.", "Noncharacters not stripped");
+    is($("display").innerHTML, "All good.", "Noncharacters not stripped");
     SimpleTest.finish();
 }
 
@@ -291,7 +291,6 @@ function Inject()
     test();
 }
 
-  setTimeout(Inject, 100);
   SimpleTest.waitForExplicitFinish();
 </script>
 </pre>

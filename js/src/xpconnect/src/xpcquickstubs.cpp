@@ -211,8 +211,8 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
     if(setterobjp)
         *setterobjp = setterobj;
     return JS_DefinePropertyById(cx, obj, interned_id, JSVAL_VOID,
-                                 (JSPropertyOp)getterobj,
-                                 (JSPropertyOp)setterobj,
+                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, getterobj),
+                                 JS_DATA_TO_FUNC_PTR(JSPropertyOp, setterobj),
                                  attrs);
 }
 
@@ -256,7 +256,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, jsval *vp)
         if(attrs & JSPROP_GETTER)
         {
             JS_SET_RVAL(cx, vp,
-                        OBJECT_TO_JSVAL(reinterpret_cast<JSObject *>(getter)));
+                        OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, getter)));
             return JS_TRUE;
         }
     }
@@ -265,7 +265,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, jsval *vp)
         if(attrs & JSPROP_SETTER)
         {
             JS_SET_RVAL(cx, vp,
-                        OBJECT_TO_JSVAL(reinterpret_cast<JSObject *>(setter)));
+                        OBJECT_TO_JSVAL(JS_FUNC_TO_DATA_PTR(JSObject *, setter)));
             return JS_TRUE;
         }
     }

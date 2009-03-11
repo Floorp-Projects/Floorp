@@ -688,6 +688,15 @@ protected:
   NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult);
 
   /**
+   * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
+   * nsIURI in the out param..
+   *
+   * @return PR_TRUE if we had the attr, PR_FALSE otherwise.
+   */
+  NS_HIDDEN_(PRBool) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
+                                nsIURI** aURI) const;
+
+  /**
    * This method works like GetURIAttr, except that it supports multiple
    * URIs separated by whitespace (one or more U+0020 SPACE characters).
    *

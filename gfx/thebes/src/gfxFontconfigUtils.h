@@ -150,7 +150,8 @@ public:
     static PRUint16 GetThebesWeight(FcPattern *aPattern);
 
     static int GetFcSlant(const gfxFontStyle& aFontStyle);
-    // Returns a precise FC_WEIGHT from CSS weight |aBaseWeight|.
+    // Returns a precise FC_WEIGHT from |aBaseWeight|,
+    // which is a CSS absolute weight / 100.
     static int FcWeightForBaseWeight(PRInt8 aBaseWeight);
 
     static PRBool GetFullnameFromFamilyAndStyle(FcPattern *aFont,
