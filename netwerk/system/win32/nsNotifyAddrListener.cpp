@@ -41,9 +41,9 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <NetCon.h>
-#include <objbase.h>
+#include <winsock2.h>
 #include <iprtrmib.h>
+#include <time.h>
 #include "prmem.h"
 #include "plstr.h"
 #include "nsThreadUtils.h"
@@ -51,7 +51,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsNotifyAddrListener.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 
 #include <iptypes.h>
 #include <iphlpapi.h>
@@ -63,62 +62,48 @@ typedef DWORD (WINAPI *GetAdaptersInfoFunc)(PIP_ADAPTER_INFO, PULONG);
 typedef DWORD (WINAPI *GetIfEntryFunc)(PMIB_IFROW);
 typedef DWORD (WINAPI *GetIpAddrTableFunc)(PMIB_IPADDRTABLE, PULONG, BOOL);
 typedef DWORD (WINAPI *NotifyAddrChangeFunc)(PHANDLE, LPOVERLAPPED);
-typedef void (WINAPI *NcFreeNetconPropertiesFunc)(NETCON_PROPERTIES*);
 
-static HMODULE sIPHelper, sNetshell;
+static HMODULE sIPHelper;
 static GetAdaptersAddressesFunc sGetAdaptersAddresses;
 static GetAdaptersInfoFunc sGetAdaptersInfo;
 static GetIfEntryFunc sGetIfEntry;
 static GetIpAddrTableFunc sGetIpAddrTable;
 static NotifyAddrChangeFunc sNotifyAddrChange;
-static NcFreeNetconPropertiesFunc sNcFreeNetconProperties;
 
-static void InitDynamicLibraries(void)
-{
-    if (!sIPHelper) {
-        sIPHelper = LoadLibraryW(L"iphlpapi.dll");
-        if (sIPHelper) {
-            sGetAdaptersAddresses = (GetAdaptersAddressesFunc)
-                GetProcAddress(sIPHelper, "GetAdaptersAddresses");
-            sGetAdaptersInfo = (GetAdaptersInfoFunc)
-                GetProcAddress(sIPHelper, "GetAdaptersInfo");
-            sGetIfEntry = (GetIfEntryFunc)
-                GetProcAddress(sIPHelper, "GetIfEntry");
-            sGetIpAddrTable = (GetIpAddrTableFunc)
-                GetProcAddress(sIPHelper, "GetIpAddrTable");
-            sNotifyAddrChange = (NotifyAddrChangeFunc)
-                GetProcAddress(sIPHelper, "NotifyAddrChange");
-        }
-    }
-
-    if (!sNetshell) {
-        sNetshell = LoadLibraryW(L"Netshell.dll");
-        if (sNetshell) {
-            sNcFreeNetconProperties = (NcFreeNetconPropertiesFunc)
-                GetProcAddress(sNetshell, "NcFreeNetconProperties");
-        }
-    }
-}
-
-static void FreeDynamicLibraries(void)
+static void InitIPHelperLibrary(void)
 {
     if (sIPHelper)
-    {
-        sGetAdaptersAddresses = nsnull;
-        sGetAdaptersInfo = nsnull;
-        sGetIfEntry = nsnull;
-        sGetIpAddrTable = nsnull;
-        sNotifyAddrChange = nsnull;
+        return;
 
-        FreeLibrary(sIPHelper);
-        sIPHelper = nsnull;
-    }
+    sIPHelper = LoadLibraryW(L"iphlpapi.dll");
+    if (!sIPHelper)
+        return;
 
-    if (sNetshell) {
-        sNcFreeNetconProperties = nsnull;
-        FreeLibrary(sNetshell);
-        sNetshell = nsnull;
-    }
+    sGetAdaptersAddresses = (GetAdaptersAddressesFunc)
+        GetProcAddress(sIPHelper, "GetAdaptersAddresses");
+    sGetAdaptersInfo = (GetAdaptersInfoFunc)
+        GetProcAddress(sIPHelper, "GetAdaptersInfo");
+    sGetIfEntry = (GetIfEntryFunc)
+        GetProcAddress(sIPHelper, "GetIfEntry");
+    sGetIpAddrTable = (GetIpAddrTableFunc)
+        GetProcAddress(sIPHelper, "GetIpAddrTable");
+    sNotifyAddrChange = (NotifyAddrChangeFunc)
+        GetProcAddress(sIPHelper, "NotifyAddrChange");
+}
+
+static void FreeIPHelperLibrary(void)
+{
+    if (!sIPHelper)
+        return;
+
+    sGetAdaptersAddresses = nsnull;
+    sGetAdaptersInfo = nsnull;
+    sGetIfEntry = nsnull;
+    sGetIpAddrTable = nsnull;
+    sNotifyAddrChange = nsnull;
+
+    FreeLibrary(sIPHelper);
+    sIPHelper = nsnull;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsNotifyAddrListener,
@@ -129,28 +114,22 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsNotifyAddrListener,
 nsNotifyAddrListener::nsNotifyAddrListener()
     : mLinkUp(PR_TRUE)  // assume true by default
     , mStatusKnown(PR_FALSE)
-    , mCheckAttempted(PR_FALSE)
     , mShutdownEvent(nsnull)
 {
     mOSVerInfo.dwOSVersionInfoSize = sizeof(mOSVerInfo);
     GetVersionEx(&mOSVerInfo);
-    InitDynamicLibraries();
+    InitIPHelperLibrary();
 }
 
 nsNotifyAddrListener::~nsNotifyAddrListener()
 {
     NS_ASSERTION(!mThread, "nsNotifyAddrListener thread shutdown failed");
-    FreeDynamicLibraries();
+    FreeIPHelperLibrary();
 }
 
 NS_IMETHODIMP
 nsNotifyAddrListener::GetIsLinkUp(PRBool *aIsUp)
 {
-    if (!mCheckAttempted && !mStatusKnown) {
-        mCheckAttempted = PR_TRUE;
-        CheckLinkStatus();
-    }
-
     *aIsUp = mLinkUp;
     return NS_OK;
 }
@@ -339,9 +318,7 @@ nsNotifyAddrListener::CheckIPAddrTable(void)
             for (DWORD i = 0; !linkUp && i < table->dwNumEntries; i++) {
                 if (GetOperationalStatus(table->table[i].dwIndex) >=
                         MIB_IF_OPER_STATUS_CONNECTED &&
-                        table->table[i].dwAddr != 0 &&
-                        // Nor a loopback
-                        table->table[i].dwAddr != 0x0100007F)
+                        table->table[i].dwAddr != 0)
                     linkUp = PR_TRUE;
             }
             mLinkUp = linkUp;
@@ -373,11 +350,7 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
     DWORD ret = sGetAdaptersInfo(0, &adaptersLen);
     if (ret == ERROR_BUFFER_OVERFLOW && adaptersLen > 0) {
         PIP_ADAPTER_INFO adapters = (PIP_ADAPTER_INFO) malloc(adaptersLen);
-        if (!adapters)
-            return ERROR_OUTOFMEMORY;
-
-        ret = sGetAdaptersInfo(adapters, &adaptersLen);
-        if (ret == ERROR_SUCCESS) {
+        if (sGetAdaptersInfo(adapters, &adaptersLen) == ERROR_SUCCESS) {
             PRBool linkUp = PR_FALSE;
             PIP_ADAPTER_INFO ptr;
 
@@ -395,11 +368,9 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
                     else {
                         PIP_ADDR_STRING ipAddr;
                         for (ipAddr = &ptr->IpAddressList; ipAddr && !linkUp;
-                             ipAddr = ipAddr->Next) {
-                            if (PL_strcmp(ipAddr->IpAddress.String, "0.0.0.0")) {
+                             ipAddr = ipAddr->Next)
+                            if (PL_strcmp(ipAddr->IpAddress.String, "0.0.0.0"))
                                 linkUp = PR_TRUE;
-                            }
-                        }
                     }
                 }
             }
@@ -409,106 +380,6 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
         }
     }
     return ret;
-}
-
-BOOL
-nsNotifyAddrListener::CheckIsGateway(PIP_ADAPTER_ADDRESSES aAdapter)
-{
-    if (!aAdapter->FirstUnicastAddress)
-        return FALSE;
-
-    LPSOCKADDR aAddress = aAdapter->FirstUnicastAddress->Address.lpSockaddr;
-    if (!aAddress)
-        return FALSE;
-
-    PSOCKADDR_IN in_addr = (PSOCKADDR_IN)aAddress;
-    PRBool isGateway = (aAddress->sa_family == AF_INET &&
-        in_addr->sin_addr.S_un.S_un_b.s_b1 == 192 &&
-        in_addr->sin_addr.S_un.S_un_b.s_b2 == 168 &&
-        in_addr->sin_addr.S_un.S_un_b.s_b3 == 0 &&
-        in_addr->sin_addr.S_un.S_un_b.s_b4 == 1);
-
-    if (isGateway)
-      isGateway = CheckICSStatus(aAdapter->FriendlyName);
-
-    return isGateway;
-}
-
-BOOL
-nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
-{
-    // This method enumerates all privately shared connections and checks if some
-    // of them has the same name as the one provided in aAdapterName. If such
-    // connection is found in the collection the adapter is used as ICS gateway
-    BOOL isICSGatewayAdapter = FALSE;
-
-    HRESULT hr;
-
-    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-        return FALSE;
-
-    nsRefPtr<INetSharingManager> netSharingManager;
-    hr = CoCreateInstance(
-                CLSID_NetSharingManager,
-                NULL,
-                CLSCTX_INPROC_SERVER,
-                IID_INetSharingManager,
-                getter_AddRefs(netSharingManager));
-
-    nsRefPtr<INetSharingPrivateConnectionCollection> privateCollection;
-    if (SUCCEEDED(hr)) {
-        hr = netSharingManager->get_EnumPrivateConnections(
-                    ICSSC_DEFAULT,
-                    getter_AddRefs(privateCollection));
-    }
-
-    nsRefPtr<IEnumNetSharingPrivateConnection> privateEnum;
-    if (SUCCEEDED(hr)) {
-        nsRefPtr<IUnknown> privateEnumUnknown;
-        hr = privateCollection->get__NewEnum(getter_AddRefs(privateEnumUnknown));
-        if (SUCCEEDED(hr)) {
-            hr = privateEnumUnknown->QueryInterface(
-                        IID_IEnumNetSharingPrivateConnection,
-                        getter_AddRefs(privateEnum));
-        }
-    }
-
-    if (SUCCEEDED(hr)) {
-        ULONG fetched;
-        VARIANT connectionVariant;
-        while (!isICSGatewayAdapter &&
-               SUCCEEDED(hr = privateEnum->Next(1, &connectionVariant, 
-               &fetched)) && 
-               fetched) {
-           if (connectionVariant.vt != VT_UNKNOWN) {
-                VariantClear(&connectionVariant);
-                continue;
-           }
-
-            nsRefPtr<INetConnection> connection;
-            hr = connectionVariant.punkVal->QueryInterface(
-                        IID_INetConnection, 
-                        getter_AddRefs(connection));
-            VariantClear(&connectionVariant);
-
-            NETCON_PROPERTIES *properties;
-            if (SUCCEEDED(hr))
-                hr = connection->GetProperties(&properties);
-
-            if (SUCCEEDED(hr)) {
-                if (!wcscmp(properties->pszwName, aAdapterName))
-                    isICSGatewayAdapter = TRUE;
-                
-                if (sNcFreeNetconProperties)
-                    sNcFreeNetconProperties(properties);
-            }
-        }
-    }
-
-    CoUninitialize();
-
-    return isICSGatewayAdapter;
 }
 
 DWORD
@@ -521,36 +392,28 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void)
     if (!sGetAdaptersAddresses)
         return ERROR_NOT_SUPPORTED;
 
-    ULONG len = 16384;
+    ULONG len = 0;
 
-    PIP_ADAPTER_ADDRESSES addresses = (PIP_ADAPTER_ADDRESSES) malloc(len);
-    if (!addresses)
-        return ERROR_OUTOFMEMORY;
-
-    DWORD ret = sGetAdaptersAddresses(AF_UNSPEC, 0, NULL, addresses, &len);
+    DWORD ret = sGetAdaptersAddresses(AF_UNSPEC, 0, NULL, NULL, &len);
     if (ret == ERROR_BUFFER_OVERFLOW) {
-        free(addresses);
-        addresses = (PIP_ADAPTER_ADDRESSES) malloc(len);
-        if (!addresses)
-            return ERROR_BUFFER_OVERFLOW;
-        ret = sGetAdaptersAddresses(AF_UNSPEC, 0, NULL, addresses, &len);
-    }
+        PIP_ADAPTER_ADDRESSES addresses = (PIP_ADAPTER_ADDRESSES) malloc(len);
+        if (addresses) {
+            ret = sGetAdaptersAddresses(AF_UNSPEC, 0, NULL, addresses, &len);
+            if (ret == ERROR_SUCCESS) {
+                PIP_ADAPTER_ADDRESSES ptr;
+                BOOL linkUp = FALSE;
 
-    if (ret == ERROR_SUCCESS) {
-        PIP_ADAPTER_ADDRESSES ptr;
-        BOOL linkUp = FALSE;
-
-        for (ptr = addresses; !linkUp && ptr; ptr = ptr->Next) {
-            if (ptr->OperStatus == IfOperStatusUp &&
-                    ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK &&
-                    !CheckIsGateway(ptr))
-                linkUp = TRUE;
+                for (ptr = addresses; !linkUp && ptr; ptr = ptr->Next) {
+                    if (ptr->OperStatus == IfOperStatusUp &&
+                            ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK)
+                        linkUp = TRUE;
+                }
+                mLinkUp = linkUp;
+                mStatusKnown = TRUE;
+            }
+            free(addresses);
         }
-        mLinkUp = linkUp;
-        mStatusKnown = TRUE;
     }
-    free(addresses);
-
     return ret;
 }
 

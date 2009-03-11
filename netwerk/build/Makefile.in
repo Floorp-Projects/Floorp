@@ -81,10 +81,6 @@ SHARED_LIBRARY_LIBS = \
 ifeq ($(OS_ARCH),WINNT)
     SHARED_LIBRARY_LIBS += \
         ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-
-    OS_LIBS	+= \
-	    oleaut32.lib \
-	    $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
