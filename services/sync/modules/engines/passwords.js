@@ -182,7 +182,7 @@ PasswordStore.prototype = {
       record.passwordField = login.passwordField;
     } else {
       /* Deleted item */
-      record.cleartext = null;
+      record.payload = null;
     }
     return record;
   },
