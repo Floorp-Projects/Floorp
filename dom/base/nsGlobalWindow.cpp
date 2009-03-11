@@ -8164,10 +8164,10 @@ nsGlobalWindow::GetScrollInfo(nsIScrollableView **aScrollableView)
     return NS_OK;
   }
 
-  nsCOMPtr<nsPresContext> presContext;
-  mDocShell->GetPresContext(getter_AddRefs(presContext));
-  if (presContext) {
-    nsIViewManager* vm = presContext->GetViewManager();
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsIViewManager* vm = presShell->GetViewManager();
     if (vm)
       return vm->GetRootScrollableView(aScrollableView);
   }

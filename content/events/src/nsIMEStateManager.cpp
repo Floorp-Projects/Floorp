@@ -211,8 +211,10 @@ nsIMEStateManager::IsActive(nsPresContext* aPresContext)
     // This root window is not active.
     return PR_FALSE;
   }
-  NS_ENSURE_TRUE(aPresContext->GetPresShell(), PR_FALSE);
-  nsIViewManager* vm = aPresContext->GetViewManager();
+
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_NOT_AVAILABLE);
+  nsIViewManager* vm = shell->GetViewManager();
   NS_ENSURE_TRUE(vm, PR_FALSE);
   nsCOMPtr<nsIViewObserver> observer;
   vm->GetViewObserver(*getter_AddRefs(observer));
@@ -274,7 +276,10 @@ nsIMEStateManager::SetIMEState(nsPresContext*     aPresContext,
 nsIWidget*
 nsIMEStateManager::GetWidget(nsPresContext* aPresContext)
 {
-  nsIViewManager* vm = aPresContext->GetViewManager();
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  NS_ENSURE_TRUE(shell, nsnull);
+
+  nsIViewManager* vm = shell->GetViewManager();
   if (!vm)
     return nsnull;
   nsCOMPtr<nsIWidget> widget = nsnull;
@@ -540,7 +545,10 @@ nsIMEStateManager::OnTextStateFocus(nsPresContext* aPresContext,
   nsINode *editableNode = GetRootEditableNode(aPresContext, aContent);
   if (!editableNode) return NS_OK;
 
-  nsIViewManager* vm = aPresContext->GetViewManager();
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_NOT_AVAILABLE);
+  
+  nsIViewManager* vm = shell->GetViewManager();
   NS_ENSURE_TRUE(vm, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIWidget> widget;
