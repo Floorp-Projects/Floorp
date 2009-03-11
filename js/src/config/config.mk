@@ -83,6 +83,8 @@ check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not
 
 $(foreach x,$(CHECK_VARS),$(check-variable))
 
+core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
+
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
 # build products (typelibs, components, chrome).
 #
@@ -772,7 +774,7 @@ ifeq ($(OS_ARCH),Darwin)
 ifndef NSDISTMODE
 NSDISTMODE=absolute_symlink
 endif
-PWD := $(shell pwd)
+PWD := $(CURDIR)
 endif
 
 ifdef NSINSTALL_BIN
