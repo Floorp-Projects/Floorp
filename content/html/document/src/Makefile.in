@@ -107,7 +107,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../content/src \
 		-I$(srcdir)/../../../../layout/style \
-		-I$(srcdir)/../../../../dom/src/base \
+		-I$(srcdir)/../../../../dom/base \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
