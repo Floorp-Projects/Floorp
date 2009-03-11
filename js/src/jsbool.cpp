@@ -47,7 +47,6 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"

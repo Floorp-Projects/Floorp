@@ -660,9 +660,8 @@ JS_TypeOfValue(JSContext *cx, jsval v)
             {
                 /*
                  * ECMA 262, 11.4.3 says that any native object that implements
-                 * [[Call]] should be of type "function". Note that RegExp and
-                 * Script are both of type "function" for compatibility with
-                 * older SpiderMonkeys.
+                 * [[Call]] should be of type "function". However, RegExp is of
+                 * type "object", not "function", for Web compatibility.
                  */
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if ((ops == &js_ObjectOps)
