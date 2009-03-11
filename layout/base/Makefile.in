@@ -178,7 +178,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/events/src \
 		-I$(srcdir)/../../content/xbl/src \
 		-I$(srcdir)/../../view/src \
-		-I$(srcdir)/../../dom/src/base \
+		-I$(srcdir)/../../dom/base \
 		-I$(srcdir)/../../content/svg/content/src \
 		$(NULL)
 
