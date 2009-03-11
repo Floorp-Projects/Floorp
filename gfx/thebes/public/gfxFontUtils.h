@@ -368,6 +368,9 @@ public:
     static void GetPrefsFontList(const char *aPrefName, 
                                  nsTArray<nsString>& aFontList);
 
+    // generate a unique font name
+    static nsresult MakeUniqueUserFontName(nsAString& aName);
+
 };
 
 // helper class for loading in font info spaced out at regular intervals
