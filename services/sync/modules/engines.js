@@ -229,8 +229,7 @@ SyncEngine.prototype = {
     if (a.depth != b.depth)
       return false;
     // note: sortindex ignored
-    if (a.cleartext == null ||
-        b.cleartext == null)
+    if (a.payload == null || b.payload == null) // deleted items
       return false;
     return Utils.deepEquals(a.cleartext, b.cleartext);
   },
@@ -380,7 +379,7 @@ SyncEngine.prototype = {
 
     // If the incoming item has been deleted, skip step 3
     this._log.trace("Reconcile step 2.5");
-    if (item.cleartext === null) {
+    if (item.payload === null) {
       self.done(true);
       return;
     }
@@ -435,7 +434,7 @@ SyncEngine.prototype = {
       for (let id in this._tracker.changedIDs) {
         let out = this._createRecord(id);
         this._log.trace("Outgoing:\n" + out);
-        if (out.cleartext) // skip deleted records
+        if (out.payload) // skip deleted records
           this._store.createMetaRecords(out.id, meta);
         yield out.encrypt(self.cb, ID.get('WeaveCryptoID').password);
         up.pushData(Svc.Json.decode(out.serialize())); // FIXME: inefficient

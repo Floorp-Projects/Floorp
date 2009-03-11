@@ -118,15 +118,15 @@ WBORecord.prototype = {
   // payload is encoded twice in serialized form, because the
   // server expects a string
   serialize: function WBORec_serialize() {
-    this.payload = Svc.Json.encode(this.payload);
+    this.payload = Svc.Json.encode([this.payload]);
     let ret = Svc.Json.encode(this.data);
-    this.payload = Svc.Json.decode(this.payload);
+    this.payload = Svc.Json.decode(this.payload)[0];
     return ret;
   },
 
   deserialize: function WBORec_deserialize(json) {
     this.data = Svc.Json.decode(json);
-    this.payload = Svc.Json.decode(this.payload);
+    this.payload = Svc.Json.decode(this.payload)[0];
   },
 
   toString: function WBORec_toString() {
