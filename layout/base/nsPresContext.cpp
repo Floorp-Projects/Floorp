@@ -755,7 +755,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       // Re-fetch the view manager's window dimensions in case there's a deferred
       // resize which hasn't affected our mVisibleArea yet
       nscoord oldWidthAppUnits, oldHeightAppUnits;
-      nsIViewManager* vm = GetViewManager();
+      nsIViewManager* vm = mShell->GetViewManager();
       vm->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
       float oldWidthDevPixels = oldWidthAppUnits/oldAppUnitsPerDevPixel;
       float oldHeightDevPixels = oldHeightAppUnits/oldAppUnitsPerDevPixel;
@@ -1211,7 +1211,7 @@ nsPresContext::SetFullZoom(float aZoom)
   // Re-fetch the view manager's window dimensions in case there's a deferred
   // resize which hasn't affected our mVisibleArea yet
   nscoord oldWidthAppUnits, oldHeightAppUnits;
-  GetViewManager()->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
+  mShell->GetViewManager()->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
   float oldWidthDevPixels = oldWidthAppUnits / float(mCurAppUnitsPerDevPixel);
   float oldHeightDevPixels = oldHeightAppUnits / float(mCurAppUnitsPerDevPixel);
   if (mDeviceContext->SetPixelScale(aZoom)) {
@@ -1222,8 +1222,9 @@ nsPresContext::SetFullZoom(float aZoom)
   mSupressResizeReflow = PR_TRUE;
 
   mFullZoom = aZoom;
-  GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
-                                        NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
+  mShell->GetViewManager()->
+    SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
+                        NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
   if (HasCachedStyleData()) {
     MediaFeatureValuesChanged(PR_TRUE);
     RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
