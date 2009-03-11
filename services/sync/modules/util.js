@@ -146,8 +146,15 @@ let Utils = {
   lazySvc: function Weave_lazySvc(dest, prop, cid, iface) {
     let getter = function() {
       delete dest[prop];
-      dest[prop] = Cc[cid].getService(iface);
-      return dest[prop];
+      if (!Cc[cid]) {
+        let log = Log4Moz.repository.getLogger("Service.Util");
+        log.warn("Component " + cid + " requested, but doesn't exist on "
+                 + "this platform.");
+	return null;
+      } else{
+        dest[prop] = Cc[cid].getService(iface);
+        return dest[prop];
+      }
     };
     dest.__defineGetter__(prop, getter);
   },

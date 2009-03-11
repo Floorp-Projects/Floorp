@@ -650,7 +650,8 @@ WeaveSvc.prototype = {
       reason = kSyncNotLoggedIn;
     else if (Svc.IO.offline)
       reason = kSyncNetworkOffline;
-    else if (Svc.Private.privateBrowsingEnabled)
+    else if (Svc.Private && Svc.Private.privateBrowsingEnabled)
+      // Svc.Private doesn't exist on Fennec -- don't assume it's there.
       reason = kSyncInPrivateBrowsing;
     else if (Svc.Prefs.get("schedule", 0) != 1)
       reason = kSyncNotScheduled;
