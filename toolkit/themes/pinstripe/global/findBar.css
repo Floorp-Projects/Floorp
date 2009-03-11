@@ -45,19 +45,16 @@ findbar {
   padding: 0 3px;
 }
 
-.findbar-container > toolbarbutton > .toolbarbutton-text,
-.findbar-container > hbox > toolbarbutton > .toolbarbutton-text {
+.findbar-container > toolbarbutton > .toolbarbutton-text {
   margin: 1px 6px !important;
 }
 
-.findbar-container > toolbarbutton[disabled],
-.findbar-container > hbox > toolbarbutton[disabled] {
+.findbar-container > toolbarbutton[disabled] {
   border-color: #8F8F8F !important;
   color: graytext;
 }
 
-.findbar-container > toolbarbutton:not([disabled]):hover:active,
-.findbar-container > hbox > toolbarbutton:not([disabled]):hover:active {
+.findbar-container > toolbarbutton:not([disabled]):hover:active {
   background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
 }
 

@@ -23,11 +23,9 @@
 }
 
 findbar {
-  -moz-appearance: none !important;
   border-top: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight !important;
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: transparent;
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+  padding-bottom: 1px;
   min-width: 1px;
 }
 
