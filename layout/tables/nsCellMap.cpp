@@ -101,6 +101,13 @@ nsTableCellMap::~nsTableCellMap()
     cellMap = next;
   }
 
+  PRInt32 colCount = mCols.Length();
+  for (PRInt32 colX = 0; colX < colCount; colX++) {
+    nsColInfo* colInfo = mCols.ElementAt(colX);
+    if (colInfo) {
+      delete colInfo;
+    }
+  }
   if (mBCInfo) {
     DeleteRightBottomBorders();
     delete mBCInfo;
@@ -115,12 +122,19 @@ nsTableCellMap::GetRightMostBorder(PRInt32 aRowIndex)
 
   PRInt32 numRows = mBCInfo->mRightBorders.Length();
   if (aRowIndex < numRows) {
-    return &mBCInfo->mRightBorders.ElementAt(aRowIndex);
+    return mBCInfo->mRightBorders.ElementAt(aRowIndex);
   }
 
-  if (!mBCInfo->mRightBorders.SetLength(aRowIndex+1))
-    ABORT1(nsnull);
-  return &mBCInfo->mRightBorders.ElementAt(aRowIndex);
+  BCData* bcData;
+  PRInt32 rowX = numRows;
+
+  do {
+    bcData = new BCData();
+    if (!bcData) ABORT1(nsnull);
+    mBCInfo->mRightBorders.AppendElement(bcData);
+  } while (++rowX <= aRowIndex);
+
+  return bcData;
 }
 
 // Get the bcData holding the border segments of the bottom edge of the table
@@ -131,12 +145,19 @@ nsTableCellMap::GetBottomMostBorder(PRInt32 aColIndex)
 
   PRInt32 numCols = mBCInfo->mBottomBorders.Length();
   if (aColIndex < numCols) {
-    return &mBCInfo->mBottomBorders.ElementAt(aColIndex);
+    return mBCInfo->mBottomBorders.ElementAt(aColIndex);
   }
 
-  if (!mBCInfo->mBottomBorders.SetLength(aColIndex+1))
-    ABORT1(nsnull);
-  return &mBCInfo->mBottomBorders.ElementAt(aColIndex);
+  BCData* bcData;
+  PRInt32 colX = numCols;
+
+  do {
+    bcData = new BCData();
+    if (!bcData) ABORT1(nsnull);
+    mBCInfo->mBottomBorders.AppendElement(bcData);
+  } while (++colX <= aColIndex);
+
+  return bcData;
 }
 
 // delete the borders corresponding to the right and bottom edges of the table
@@ -144,7 +165,22 @@ void
 nsTableCellMap::DeleteRightBottomBorders()
 {
   if (mBCInfo) {
+    PRUint32 numCols = mBCInfo->mBottomBorders.Length();
+    for (PRUint32 colX = 0; colX < numCols; colX++) {
+      BCData* bcData = mBCInfo->mBottomBorders.ElementAt(colX);
+      if (bcData) {
+        delete bcData;
+      }
+    }
     mBCInfo->mBottomBorders.Clear();
+    
+    PRUint32 numRows = mBCInfo->mRightBorders.Length();
+    for (PRUint32 rowX = 0; rowX < numRows; rowX++) {
+      BCData* bcData = mBCInfo->mRightBorders.ElementAt(rowX);
+      if (bcData) {
+        delete bcData;
+      }
+    }
     mBCInfo->mRightBorders.Clear();
   }
 }
@@ -394,7 +430,7 @@ nsTableCellMap::GetColInfoAt(PRInt32 aColIndex)
   if (numColsToAdd > 0) {
     AddColsAtEnd(numColsToAdd);  // XXX this could fail to add cols in theory
   }
-  return &mCols.ElementAt(aColIndex);
+  return mCols.ElementAt(aColIndex);
 }
 
 PRInt32 
@@ -428,12 +464,29 @@ nsTableCellMap::GetDataAt(PRInt32 aRowIndex,
 void 
 nsTableCellMap::AddColsAtEnd(PRUint32 aNumCols)
 {
-  if (!mCols.AppendElements(aNumCols)) {
-    NS_WARNING("Could not AppendElement");
-  }
-  if (mBCInfo) {
-    if (!mBCInfo->mBottomBorders.AppendElements(aNumCols)) {
-      NS_WARNING("Could not AppendElement");
+  PRBool added;
+  // XXX We really should have a way to say "make this voidarray at least
+  // N entries long" to avoid reallocating N times.  On the other hand, the
+  // number of likely allocations here isn't TOO gigantic, and we may not
+  // know about many of them at a time.
+  for (PRUint32 numX = 1; numX <= aNumCols; numX++) {
+    nsColInfo* colInfo = new nsColInfo();
+    if (colInfo) {
+      added = mCols.AppendElement(colInfo) != nsnull;
+      if (!added) {
+        delete colInfo;
+        NS_WARNING("Could not AppendElement");
+      }
+    }
+    if (mBCInfo) {
+      BCData* bcData = new BCData();
+      if (bcData) {
+        added = mBCInfo->mBottomBorders.AppendElement(bcData) != nsnull;
+        if (!added) {
+          delete bcData;
+          NS_WARNING("Could not AppendElement");
+        }
+      }
     }
   }
 }
@@ -446,27 +499,52 @@ nsTableCellMap::RemoveColsAtEnd()
   PRInt32 numCols = GetColCount();
   PRInt32 lastGoodColIndex = mTableFrame.GetIndexOfLastRealCol();
   for (PRInt32 colX = numCols - 1; (colX >= 0) && (colX > lastGoodColIndex); colX--) {
-    nsColInfo& colInfo = mCols.ElementAt(colX);
-    if ((colInfo.mNumCellsOrig <= 0) && (colInfo.mNumCellsSpan <= 0))  {
-      mCols.RemoveElementAt(colX);
+    nsColInfo* colInfo = mCols.ElementAt(colX);
+    if (colInfo) {
+      if ((colInfo->mNumCellsOrig <= 0) && (colInfo->mNumCellsSpan <= 0))  {
 
-      if (mBCInfo) { 
-        PRInt32 count = mBCInfo->mBottomBorders.Length();
-        if (colX < count) {
-          mBCInfo->mBottomBorders.RemoveElementAt(colX);
+        delete colInfo;
+        mCols.RemoveElementAt(colX);
+
+        if (mBCInfo) { 
+          PRInt32 count = mBCInfo->mBottomBorders.Length();
+          if (colX < count) {
+            BCData* bcData = mBCInfo->mBottomBorders.ElementAt(colX);
+            if (bcData) {
+              delete bcData;
+            }
+            mBCInfo->mBottomBorders.RemoveElementAt(colX);
+          }
         }
       }
+      else break; // only remove until we encounter the 1st valid one
     }
-    else break; // only remove until we encounter the 1st valid one
+    else {
+      NS_ERROR("null entry in column info array");
+      mCols.RemoveElementAt(colX);
+    }
   }
 }
 
 void 
 nsTableCellMap::ClearCols()
 {
-  mCols.Clear();
-  if (mBCInfo)
-    mBCInfo->mBottomBorders.Clear();
+  PRInt32 numCols = GetColCount();
+  for (PRInt32 colX = numCols - 1; (colX >= 0);colX--) {
+    nsColInfo* colInfo = mCols.ElementAt(colX);
+    delete colInfo;
+    mCols.RemoveElementAt(colX);
+    if (mBCInfo) { 
+      PRInt32 count = mBCInfo->mBottomBorders.Length();
+      if (colX < count) {
+        BCData* bcData = mBCInfo->mBottomBorders.ElementAt(colX);
+        if (bcData) {
+              delete bcData;
+        }
+        mBCInfo->mBottomBorders.RemoveElementAt(colX);
+      }
+    }
+  }
 }
 void
 nsTableCellMap::InsertRows(nsTableRowGroupFrame&       aParent,
@@ -490,18 +568,19 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame&       aParent,
       Dump("after InsertRows");
 #endif
       if (mBCInfo) {
+        BCData* bcData;
         PRInt32 count = mBCInfo->mRightBorders.Length();
         if (aFirstRowIndex < count) {
           for (PRInt32 rowX = aFirstRowIndex; rowX < aFirstRowIndex + numNewRows; rowX++) {
-            if (!mBCInfo->mRightBorders.InsertElementAt(rowX))
-              ABORT0();
+            bcData = new BCData(); if (!bcData) ABORT0();
+            mBCInfo->mRightBorders.InsertElementAt(rowX, bcData);
           }
         }
         else {
           GetRightMostBorder(aFirstRowIndex); // this will create missing entries
           for (PRInt32 rowX = aFirstRowIndex + 1; rowX < aFirstRowIndex + numNewRows; rowX++) {
-            if (!mBCInfo->mRightBorders.AppendElement())
-              ABORT0();
+            bcData = new BCData(); if (!bcData) ABORT0();
+            mBCInfo->mRightBorders.AppendElement(bcData);
           }
         }
       }
@@ -529,8 +608,13 @@ nsTableCellMap::RemoveRows(PRInt32         aFirstRowIndex,
       aDamageArea.y += (rg) ? rg->GetStartRowIndex() : 0;
       aDamageArea.height = PR_MAX(0, GetRowCount() - aFirstRowIndex);
       if (mBCInfo) {
+        BCData* bcData;
         for (PRInt32 rowX = aFirstRowIndex + aNumRowsToRemove - 1; rowX >= aFirstRowIndex; rowX--) {
           if (PRUint32(rowX) < mBCInfo->mRightBorders.Length()) {
+            bcData = mBCInfo->mRightBorders.ElementAt(rowX);
+            if (bcData) {
+              delete bcData;
+            }
             mBCInfo->mRightBorders.RemoveElementAt(rowX);
           }
         }
@@ -708,7 +792,7 @@ nsTableCellMap::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 {
   PRInt32 colCount = mCols.Length();
   if ((aColIndex >= 0) && (aColIndex < colCount)) {
-    return mCols.ElementAt(aColIndex).mNumCellsOrig;
+    return (mCols.ElementAt(aColIndex))->mNumCellsOrig;
   }
   else {
     NS_ERROR("nsCellMap::GetNumCellsOriginatingInCol - bad col index");
@@ -727,8 +811,8 @@ nsTableCellMap::Dump(char* aString) const
   PRInt32 colCount = mCols.Length();
   printf ("cols array orig/span-> %p", (void*)this);
   for (PRInt32 colX = 0; colX < colCount; colX++) {
-    const nsColInfo& colInfo = mCols.ElementAt(colX);
-    printf ("%d=%d/%d ", colX, colInfo.mNumCellsOrig, colInfo.mNumCellsSpan);
+    nsColInfo* colInfo = mCols.ElementAt(colX);
+    printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
   }
   printf(" cols in cache %d\n", mTableFrame.GetColCache().Length());
   nsCellMap* cellMap = mFirstMap;
@@ -749,32 +833,36 @@ nsTableCellMap::Dump(char* aString) const
      
       printf("\n          ");
       for (colIndex = 0; colIndex < numCols; colIndex++) {
-        BCData& cd = mBCInfo->mBottomBorders.ElementAt(colIndex);
+        BCData* cd = mBCInfo->mBottomBorders.ElementAt(colIndex);
+        if (cd) {
+          if (0 == i) {
+            size = cd->GetTopEdge(owner, segStart);
+            printf("t=%d%X%d ", size, owner, segStart);
+          }
+          else if (1 == i) {
+            size = cd->GetLeftEdge(owner, segStart);
+            printf("l=%d%X%d ", size, owner, segStart);
+          }
+          else {
+            size = cd->GetCorner(side, bevel);
+            printf("c=%d%X%d ", size, side, bevel);
+          }
+        }
+      }
+      BCData* cd = &mBCInfo->mLowerRightCorner;
+      if (cd) {
         if (0 == i) {
-          size = cd.GetTopEdge(owner, segStart);
-          printf("t=%d%X%d ", size, owner, segStart);
+           size = cd->GetTopEdge(owner, segStart);
+           printf("t=%d%X%d ", size, owner, segStart);
         }
         else if (1 == i) {
-          size = cd.GetLeftEdge(owner, segStart);
+          size = cd->GetLeftEdge(owner, segStart);
           printf("l=%d%X%d ", size, owner, segStart);
         }
         else {
-          size = cd.GetCorner(side, bevel);
+          size = cd->GetCorner(side, bevel);
           printf("c=%d%X%d ", size, side, bevel);
         }
-      }
-      BCData& cd = mBCInfo->mLowerRightCorner;
-      if (0 == i) {
-         size = cd.GetTopEdge(owner, segStart);
-         printf("t=%d%X%d ", size, owner, segStart);
-      }
-      else if (1 == i) {
-        size = cd.GetLeftEdge(owner, segStart);
-        printf("l=%d%X%d ", size, owner, segStart);
-      }
-      else {
-        size = cd.GetCorner(side, bevel);
-        printf("c=%d%X%d ", size, side, bevel);
       }
     }
     printf("\n");
@@ -914,7 +1002,7 @@ PRBool nsTableCellMap::ColIsSpannedInto(PRInt32 aColIndex) const
 
   PRInt32 colCount = mCols.Length();
   if ((aColIndex >= 0) && (aColIndex < colCount)) {
-    result = mCols.ElementAt(aColIndex).mNumCellsSpan != 0;
+    result = (mCols.ElementAt(aColIndex))->mNumCellsSpan != 0;
   }
   return result;
 }
@@ -943,15 +1031,14 @@ void nsTableCellMap::ExpandZeroColSpans()
     cellMap = cellMap->GetNextSibling();
   }
 }
-
-void
-nsTableCellMap::SetNotTopStart(PRUint8    aSide,
-                               nsCellMap& aCellMap,
-                               PRUint32   aRowIndex,
-                               PRUint32   aColIndex,
-                               PRBool     aIsLowerRight)
+BCData* 
+nsTableCellMap::GetBCData(PRUint8     aSide, 
+                          nsCellMap&  aCellMap,
+                          PRUint32    aRowIndex, 
+                          PRUint32    aColIndex,
+                          PRBool      aIsLowerRight)
 {
-  if (!mBCInfo || aIsLowerRight) ABORT0();
+  if (!mBCInfo || aIsLowerRight) ABORT1(nsnull);
 
   BCCellData* cellData;
   BCData* bcData = nsnull;
@@ -992,9 +1079,7 @@ nsTableCellMap::SetNotTopStart(PRUint8    aSide,
     }
     break;
   }
-  if (bcData) {
-    bcData->SetTopStart(PR_FALSE);
-  }
+  return bcData;
 }
 
 // store the aSide border segment at coord = (aRowIndex, aColIndex). For top/left, store

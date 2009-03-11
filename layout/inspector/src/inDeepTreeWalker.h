@@ -45,20 +45,7 @@
 #include "nsTArray.h"
 
 class inIDOMUtils;
-
-////////////////////////////////////////////////////
-
-struct DeepTreeStackItem
-{
-  DeepTreeStackItem()  { MOZ_COUNT_CTOR(DeepTreeStackItem); }
-  ~DeepTreeStackItem() { MOZ_COUNT_DTOR(DeepTreeStackItem); }
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMNodeList> kids;
-  PRUint32 lastIndex;
-};
-
-////////////////////////////////////////////////////
+class DeepTreeStackItem;
 
 class inDeepTreeWalker : public inIDeepTreeWalker
 {
@@ -79,7 +66,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mCurrentNode;
   PRUint32 mWhatToShow;
   
-  nsAutoTArray<DeepTreeStackItem, 8> mStack;
+  nsAutoTArray<DeepTreeStackItem*, 8> mStack;
   nsCOMPtr<inIDOMUtils> mDOMUtils;
 };
 
