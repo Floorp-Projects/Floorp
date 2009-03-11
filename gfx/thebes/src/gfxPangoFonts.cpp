@@ -209,7 +209,7 @@ gfxFcFontEntry::AdjustPatternToCSS(FcPattern *aPattern)
 {
     int fontWeight = -1;
     FcPatternGetInteger(aPattern, FC_WEIGHT, 0, &fontWeight);
-    int cssWeight = gfxFontconfigUtils::FcWeightForBaseWeight(mWeight);
+    int cssWeight = gfxFontconfigUtils::FcWeightForBaseWeight(mWeight / 100);
     if (cssWeight != fontWeight) {
         FcPatternDel(aPattern, FC_WEIGHT);
         FcPatternAddInteger(aPattern, FC_WEIGHT, cssWeight);
