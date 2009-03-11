@@ -211,6 +211,8 @@ function ReadTopManifest(aFileURL)
     ReadManifest(url);
 }
 
+// Note: If you materially change the reftest manifest parsing,
+// please keep the parser in print-manifest-dirs.py in sync.
 function ReadManifest(aURL)
 {
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
