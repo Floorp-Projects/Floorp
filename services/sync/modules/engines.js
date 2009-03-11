@@ -164,7 +164,7 @@ Engine.prototype = {
   _wipeClient: function Engine__wipeClient() {
     let self = yield;
 
-    yield this.resetClient(this.cb);
+    yield this.resetClient(self.cb);
 
     this._log.debug("Deleting all local data");
     this._store.wipe();
