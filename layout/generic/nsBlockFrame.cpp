@@ -1509,15 +1509,9 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
 nsresult
 nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 {
-  // we need to calculate if any part of then block itself 
-  // is impacted by a float (bug 19579)
-  aState.GetAvailableSpace();
-
   const nsStyleText* styleText = GetStyleText();
   // See if we can try and avoid marking all the lines as dirty
   PRBool tryAndSkipLines =
-      // There must be no floats.
-      !aState.IsImpactedByFloat() &&
       // The text must be left-aligned.
       (NS_STYLE_TEXT_ALIGN_LEFT == styleText->mTextAlign ||
        (NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign &&
