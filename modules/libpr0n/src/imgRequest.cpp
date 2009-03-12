@@ -85,7 +85,7 @@ imgRequest::imgRequest() :
   mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0), 
   mValidator(nsnull), mImageSniffers("image-sniffing-services"), 
   mIsMultiPartChannel(PR_FALSE), mLoading(PR_FALSE), mProcessing(PR_FALSE),
-  mHadLastPart(PR_FALSE), mGotData(PR_FALSE), mIsInCache(PR_FALSE)
+  mHadLastPart(PR_FALSE), mGotData(PR_FALSE), mIsCacheable(PR_TRUE)
 {
   /* member initializers and constructor code */
 }
@@ -419,15 +419,14 @@ void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
-  if (mIsInCache) {
+  if (mIsCacheable) {
     if (mCacheEntry)
       imgLoader::RemoveFromCache(mCacheEntry);
     else
       imgLoader::RemoveFromCache(mKeyURI);
 
+    mCacheEntry = nsnull;
   }
-
-  mCacheEntry = nsnull;
 }
 
 PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
@@ -474,10 +473,13 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
     p->AdjustPriority(delta);
 }
 
-void imgRequest::SetIsInCache(PRBool incache)
+void imgRequest::SetCacheable(PRBool cacheable)
 {
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "incache", incache);
-  mIsInCache = incache;
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "cacheable", cacheable);
+  mIsCacheable = cacheable;
+
+  if (!mIsCacheable)
+    mCacheEntry = nsnull;
 }
 
 /** imgILoad methods **/
@@ -1096,7 +1098,7 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
   LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", spec.get());
 #endif
 
-  if (mIsInCache) {
+  if (mIsCacheable) {
     // If we don't still have a cache entry, we don't want to refresh the cache.
     if (mKeyURI && mCacheEntry)
       imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
