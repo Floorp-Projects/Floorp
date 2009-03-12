@@ -7820,7 +7820,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                              aChild);
       parentFrame =
         ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
-                                            aContainer, parentFrame,
+                                            container, parentFrame,
                                             &appendAfterFrame);
     }
   }
@@ -7910,7 +7910,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     nsIFrame* firstChild = parentFrame->GetFirstChild(nsnull);
 
     if (firstChild &&
-        nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
+        nsLayoutUtils::IsGeneratedContentFor(container, firstChild,
                                              nsCSSPseudoElements::before)) {
       // Insert the new frames after the last continuation of the :before
       prevSibling = firstChild->GetTailContinuation();
@@ -7989,7 +7989,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     isAppend = PR_TRUE;
     parentFrame =
       ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
-                                          aContainer,
+                                          container,
                                           frameItems.childList->GetParent(),
                                           &appendAfterFrame);
   }
@@ -8004,7 +8004,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
     else {
       // Use more complicated insert logic when inserting
-      InsertFirstLineFrames(state, aContainer, containingBlock, &parentFrame,
+      // XXXbz this method is a no-op, so it's easy for the args being passed
+      // here to make no sense without anyone noticing...  If it ever stops
+      // being a no-op, vet them carefully!
+      InsertFirstLineFrames(state, container, containingBlock, &parentFrame,
                             prevSibling, frameItems);
     }
   }
@@ -8014,7 +8017,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     NS_ASSERTION(!captionItems.childList, "leaking caption frames");
     // Notify the parent frame
     if (isAppend) {
-      AppendFrames(state, aContainer, parentFrame, frameItems,
+      AppendFrames(state, container, parentFrame, frameItems,
                    appendAfterFrame);
     } else {
       state.mFrameManager->InsertFrames(parentFrame,
