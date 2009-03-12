@@ -461,32 +461,32 @@ WeaveSvc.prototype = {
 
       this._loggedIn = false;
 
-        if (typeof(user) != 'undefined')
-          this.username = user;
-        if (typeof(pass) != 'undefined')
-          ID.get('WeaveID').setTempPassword(pass);
-        if (typeof(passp) != 'undefined')
-          ID.get('WeaveCryptoID').setTempPassword(passp);
+      if (typeof(user) != 'undefined')
+        this.username = user;
+      if (typeof(pass) != 'undefined')
+        ID.get('WeaveID').setTempPassword(pass);
+      if (typeof(passp) != 'undefined')
+        ID.get('WeaveCryptoID').setTempPassword(passp);
 
-	if (!this.username) {
-	  this._mostRecentError = "No username set.";
-	  throw "No username set, login failed";
-	}
+      if (!this.username) {
+        this._mostRecentError = "No username set.";
+        throw "No username set, login failed";
+      }
 
-	if (!this.password) {
-	  this._mostRecentError = "No password set.";
-	  throw "No password given or found in password manager";
-	}
+      if (!this.password) {
+        this._mostRecentError = "No password set.";
+        throw "No password given or found in password manager";
+      }
 
-	this._log.debug("Logging in user " + this.username);
+      this._log.debug("Logging in user " + this.username);
 
-	if (!(yield this.verifyLogin(self.cb, this.username, this.password, true))) {
-	  this._mostRecentError = "Login failed. Check your username/password/phrase.";
-	  throw "Login failed";
-	}
+      if (!(yield this.verifyLogin(self.cb, this.username, this.password, true))) {
+        this._mostRecentError = "Login failed. Check your username/password/phrase.";
+        throw "Login failed";
+      }
 
-        this._loggedIn = true;
-        self.done(true);
+      this._loggedIn = true;
+      self.done(true);
     };
     this._catchAll(
       this._localLock(
