@@ -517,6 +517,12 @@ WeaveSvc.prototype = {
     let meta = yield Records.import(self.cb, this.clusterURL +
 				    this.username + "/meta/global");
 
+    // XXX Bug 482878 Old payloads weren't array-wrapped, so migrate by wiping
+    if (meta && meta.payload == null) {
+      this._log.debug("Migrating to minimal payloads by wiping the server");
+      meta = null;
+    }
+
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
 
