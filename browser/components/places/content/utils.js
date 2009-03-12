@@ -1013,7 +1013,7 @@ var PlacesUIUtils = {
       if (PlacesUtils.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
         element.className = "menuitem-iconic bookmark-item";
-        element.setAttribute("scheme", this.guessUrlSchemeForUI(aNode.uri))
+        element.setAttribute("scheme", this.guessUrlSchemeForUI(aNode.uri));
       }
       else if (PlacesUtils.containerTypes.indexOf(type) != -1) {
         element = document.createElement("menu");

@@ -220,7 +220,7 @@
                                              domNode: popup });
             }
             else if (PlacesUtils.nodeIsURI(aChild)) {
-              button.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aChild.uri))
+              button.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aChild.uri));
             }
           }
 
@@ -642,7 +642,7 @@
             PlacesUIUtils.ensureLivemarkStatusMenuItem(element.firstChild);
           }
           else if (PlacesUtils.nodeIsURI(aNode)) {
-            element.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aNode.uri))
+            element.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aNode.uri));
           }
         },
 
