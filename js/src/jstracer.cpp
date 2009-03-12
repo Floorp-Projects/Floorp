@@ -5057,7 +5057,7 @@ TraceRecorder::tableswitch()
         pc += JUMPX_OFFSET_LEN;
         low = GET_JUMPX_OFFSET(pc);
         pc += JUMPX_OFFSET_LEN;
-        high = GET_JUMPX_OFFSET(pc);            
+        high = GET_JUMPX_OFFSET(pc);
     }
 
     /* Really large tables won't fit in a page. This is a conservative check.
