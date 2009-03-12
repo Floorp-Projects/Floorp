@@ -4950,7 +4950,7 @@ TraceRecorder::stringify(jsval& v)
          * what valueOf hint, here.
          */
         JS_ASSERT(JSVAL_IS_NULL(v));
-        return INS_CONSTPTR(cx->runtime->atomState.nullAtom);
+        return INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.nullAtom));
     }
 
     v_ins = lir->insCall(ci, args);
