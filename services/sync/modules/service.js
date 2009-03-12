@@ -241,7 +241,7 @@ WeaveSvc.prototype = {
     return ok;
   },
 
-  onWindowOpened: function Weave__onWindowOpened() {
+  onWindowOpened: function WeaveSvc__onWindowOpened() {
   },
 
   // one-time initialization like setting up observers and the like
@@ -649,7 +649,7 @@ WeaveSvc.prototype = {
    *
    * @return Reason for not syncing; not-truthy if sync should run
    */
-  _checkSync: function Weave__checkSync() {
+  _checkSync: function WeaveSvc__checkSync() {
     let reason = "";
     if (!this.enabled)
       reason = kSyncWeaveDisabled;
@@ -675,7 +675,8 @@ WeaveSvc.prototype = {
     // We're good to sync, so schedule a repeating sync if we haven't yet
     else if (!this._syncTimer) {
       this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      let listener = new Utils.EventListener(Utils.bind2(this, this.sync));
+      let listener = new Utils.EventListener(Utils.bind2(this,
+        function WeaveSvc__checkSyncCallback(timer) this.sync(null, false)));
       this._syncTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
                                        Ci.nsITimer.TYPE_REPEATING_SLACK);
       this._log.config("Weave scheduler enabled");
