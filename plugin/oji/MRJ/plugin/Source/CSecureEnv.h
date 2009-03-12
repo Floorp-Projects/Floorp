@@ -41,7 +41,7 @@
  */
 
 #ifndef CSecureJNI2_h___
-#define CSecureJNI_h___
+#define CSecureJNI2_h___
 
 #include "nsISecureEnv.h"
 #include "nsIThreadManager.h"
