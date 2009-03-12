@@ -4891,10 +4891,8 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
              */
             v = (LOpcode)((int)v & ~LIR64);
             LIns* result = lir->ins2(v, d0, d1);
-            if (!overflowSafe(d0) || !overflowSafe(d1)) {
-                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result),
-                              snapshot(OVERFLOW_EXIT));
-            }
+            if (!result->isconst() && (!overflowSafe(d0) || !overflowSafe(d1)))
+                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, result), snapshot(OVERFLOW_EXIT));
             return lir->ins1(LIR_i2f, result);
         }
         /*
@@ -6513,8 +6511,11 @@ TraceRecorder::record_JSOP_NEG()
             (!JSVAL_IS_DOUBLE(v) || !JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))) &&
             -asNumber(v) == (int)-asNumber(v)) {
             a = lir->ins1(LIR_neg, ::demote(lir, a));
-            lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a), snapshot(OVERFLOW_EXIT));
-            lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)), snapshot(OVERFLOW_EXIT));
+            if (!a->isconst()) {
+                LIns* exit = snapshot(OVERFLOW_EXIT);
+                lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a), exit);
+                lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)), exit);
+            }
             a = lir->ins1(LIR_i2f, a);
         } else {
             a = lir->ins1(LIR_fneg, a);
