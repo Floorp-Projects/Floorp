@@ -821,10 +821,7 @@
             PlacesUIUtils.ensureLivemarkStatusMenuItem(menuitem.firstChild);
           }
           else if (PlacesUtils.nodeIsURI(aNode)) {
-            if (aNode.uri.lastIndexOf("javascript:", 0) == 0)
-              menuitem.setAttribute("bookmarklet", "true");
-            else
-              menuitem.removeAttribute("bookmarklet");
+              menuitem.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aNode.uri))
           }
         },
 

@@ -220,10 +220,7 @@
                                              domNode: popup });
             }
             else if (PlacesUtils.nodeIsURI(aChild)) {
-              if (aChild.uri.lastIndexOf("javascript:", 0) == 0)
-                button.setAttribute("bookmarklet", "true");
-              else
-                button.removeAttribute("bookmarklet");
+              button.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aChild.uri))
             }
           }
 
@@ -645,10 +642,7 @@
             PlacesUIUtils.ensureLivemarkStatusMenuItem(element.firstChild);
           }
           else if (PlacesUtils.nodeIsURI(aNode)) {
-            if (aNode.uri.lastIndexOf("javascript:", 0) == 0)
-              element.setAttribute("bookmarklet", "true");
-            else
-              element.removeAttribute("bookmarklet");
+            element.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(aNode.uri))
           }
         },
 

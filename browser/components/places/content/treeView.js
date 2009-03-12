@@ -925,12 +925,11 @@ PlacesTreeView.prototype = {
       }
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
         properties.push(this._getAtomFor("separator"));
-      else if (itemId != -1) { // bookmark nodes
-        if (PlacesUtils.nodeIsLivemarkContainer(node.parent))
-          properties.push(this._getAtomFor("livemarkItem"));
-        else if (PlacesUtils.nodeIsURI(node)) {
-          if (node.uri.lastIndexOf("javascript:", 0) == 0)
-            properties.push(this._getAtomFor("bookmarklet"));
+      else if (PlacesUtils.nodeIsURI(node)) {
+        properties.push(this._getAtomFor(PlacesUIUtils.guessUrlSchemeForUI(node.uri)));
+        if (itemId != -1) {
+          if (PlacesUtils.nodeIsLivemarkContainer(node.parent))
+            properties.push(this._getAtomFor("livemarkItem"));
         }
       }
 
