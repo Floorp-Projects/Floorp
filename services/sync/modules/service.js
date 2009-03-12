@@ -461,11 +461,11 @@ WeaveSvc.prototype = {
 
       this._loggedIn = false;
 
-	if (typeof(user) != 'undefined')
+        if (typeof(user) != 'undefined')
           this.username = user;
-	if (typeof(pass) != 'undefined')
+        if (typeof(pass) != 'undefined')
           ID.get('WeaveID').setTempPassword(pass);
-	if (typeof(passp) != 'undefined')
+        if (typeof(passp) != 'undefined')
           ID.get('WeaveCryptoID').setTempPassword(passp);
 
 	if (!this.username) {
@@ -485,8 +485,8 @@ WeaveSvc.prototype = {
 	  throw "Login failed";
 	}
 
-	this._loggedIn = true;
-	self.done(true);
+        this._loggedIn = true;
+        self.done(true);
     };
     this._catchAll(
       this._localLock(
