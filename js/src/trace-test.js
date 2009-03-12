@@ -4523,6 +4523,21 @@ testNullToString.jitstats = {
 };
 test(testNullToString);
 
+function testAddNull()
+{
+  var rv;
+  for (var x = 0; x < HOTLOOP + 1; ++x)
+    rv = null + [,,];
+  return rv;
+}
+testAddNull.expected = "null,";
+testAddNull.jitstats = {
+  recorderStarted: 1,
+  sideExitIntoInterpreter: 1,
+  recorderAborted: 0
+};
+test(testAddNull);
+
 
 /*****************************************************************************
  *                                                                           *
