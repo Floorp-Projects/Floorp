@@ -484,7 +484,10 @@ WeaveSvc.prototype = {
         throw "Login failed";
       }
 
+      // Try starting the sync timer now that we're logged in
       this._loggedIn = true;
+      this._checkSync();
+
       self.done(true);
     };
     this._catchAll(this._localLock(this._notify("login", "", fn))).
