@@ -164,10 +164,10 @@ private:
   // Return whether we've seen some data at this point
   PRBool HasTransferredData() const { return mGotData; }
 
-  // Set whether this request is stored in the cache. If it isn't, regardless
-  // of whether this request has a non-null mCacheEntry, this imgRequest won't
-  // try to update or modify the image cache.
-  void SetIsInCache(PRBool cacheable);
+  // Set whether this request is cacheable. By default, all requests are
+  // cacheable, but they might not be if there is already a request with this
+  // key URI in the cache.
+  void SetCacheable(PRBool cacheable);
 
 public:
   NS_DECL_IMGILOAD
@@ -213,7 +213,7 @@ private:
   PRPackedBool mProcessing : 1;
   PRPackedBool mHadLastPart : 1;
   PRPackedBool mGotData : 1;
-  PRPackedBool mIsInCache : 1;
+  PRPackedBool mIsCacheable : 1;
 };
 
 #endif
