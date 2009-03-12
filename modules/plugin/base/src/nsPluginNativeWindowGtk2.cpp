@@ -298,6 +298,7 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
 }
 
 #ifdef MOZ_COMPOSITED_PLUGINS
+#include <dlfcn.h>
 nsresult nsPluginNativeWindowGtk2::CreateXCompositedWindow() {
   NS_ASSERTION(!mSocketWidget,"Already created a socket widget!");
 
@@ -358,6 +359,17 @@ nsresult nsPluginNativeWindowGtk2::CreateXCompositedWindow() {
     XCompositeRedirectWindow (GDK_DISPLAY(),
         (Drawable)window,
         CompositeRedirectManual);
+
+    /* this is a hack to avoid having flash causing a crash when it is unloaded.
+     * libplayback sets up dbus_connection_filters. When flash is unloaded it takes
+     * libplayback with it, however the connection filters are not removed
+     * which causes a crash when dbus tries to execute them. dlopening libplayback
+     * ensures that those functions stay around even after flash is gone. */
+    static void *libplayback_handle;
+    if (!libplayback_handle) {
+      libplayback_handle = dlopen("libplayback-1.so.0", RTLD_NOW);
+    }
+
   }
 
   // Fill out the ws_info structure.
