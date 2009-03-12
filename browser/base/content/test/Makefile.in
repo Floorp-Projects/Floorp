@@ -99,6 +99,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_sanitize-passwordDisabledHosts.js \
                  browser_bug479408.js \
                  browser_bug479408_sample.html \
+                 browser_overflowScroll.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
