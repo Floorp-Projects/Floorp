@@ -43,6 +43,16 @@ class TestNsinstall(unittest.TestCase):
         self.assertEqual(nsinstall([testfile, testdir]), 0)
         self.assert_(os.path.isfile(os.path.join(testdir, "testfile")))
 
+    def test_nsinstall_basic_recursive(self):
+        "Test nsinstall <dir> <dest dir>"
+        sourcedir = self.mkdirs("sourcedir")
+        self.touch("testfile", sourcedir)
+        destdir = self.mkdirs("destdir")
+        self.assertEqual(nsinstall([sourcedir, destdir]), 0)
+        testdir = os.path.join(destdir, "sourcedir")
+        self.assert_(os.path.isdir(testdir))
+        self.assert_(os.path.isfile(os.path.join(testdir, "testfile")))
+
     def test_nsinstall_multiple(self):
         "Test nsinstall <three files> <dest dir>"
         testfiles = [self.touch("testfile1"),
