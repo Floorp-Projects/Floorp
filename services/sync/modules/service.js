@@ -232,7 +232,7 @@ WeaveSvc.prototype = {
     try {
       let iv = Svc.Crypto.generateRandomIV();
       if (iv.length == 24)
-	ok = true;
+        ok = true;
 
     } catch (e) {
       this._log.debug("Crypto check failed: " + e);
@@ -265,7 +265,7 @@ WeaveSvc.prototype = {
     if (!this._checkCrypto()) {
       this.enabled = false;
       this._log.error("Could not load the Weave crypto component. Disabling " +
-		      "Weave, since it will not work correctly.");
+                      "Weave, since it will not work correctly.");
     }
 
     Utils.prefs.addObserver("", this, false);
@@ -288,8 +288,8 @@ WeaveSvc.prototype = {
 
     if (Svc.Prefs.get("autoconnect") && this.username) {
       try {
-	if (yield this.login(self.cb))
-	  yield this.sync(self.cb, true);
+        if (yield this.login(self.cb))
+          yield this.sync(self.cb, true);
       } catch (e) {}
     }
     self.done();
@@ -388,7 +388,7 @@ WeaveSvc.prototype = {
 
       let res = new Resource(this.baseURL + "api/register/chknode/" + username);
       try {
-	yield res.get(self.cb);
+        yield res.get(self.cb);
       } catch (e) { /* we check status below */ }
 
       if (res.lastChannel.responseStatus == 404) {
@@ -420,7 +420,7 @@ WeaveSvc.prototype = {
       yield res.get(self.cb);
 
       if (!isLogin) // restore cluster so verifyLogin has no impact
-	this.clusterURL = cluster;
+        this.clusterURL = cluster;
 
       //Svc.Json.decode(res.data); // throws if not json
       self.done(true);
@@ -447,10 +447,9 @@ WeaveSvc.prototype = {
   },
   verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
                                                        password, passphrase) {
-    this._catchAll(
-      this._localLock(
-	this._notify("verify-passphrase", "", this._verifyPassphrase,
-                     username, password, passphrase))).async(this, onComplete);
+    this._catchAll(this._localLock(this._notify("verify-passphrase", "",
+      this._verifyPassphrase, username, password, passphrase))).
+      async(this, onComplete);
   },
 
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
@@ -488,9 +487,8 @@ WeaveSvc.prototype = {
       this._loggedIn = true;
       self.done(true);
     };
-    this._catchAll(
-      this._localLock(
-	this._notify("login", "", fn))).async(this, onComplete);
+    this._catchAll(this._localLock(this._notify("login", "", fn))).
+      async(this, onComplete);
   },
 
   logout: function WeaveSvc_logout() {
@@ -514,8 +512,8 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = yield Records.import(self.cb, this.clusterURL +
-				    this.username + "/meta/global");
+    let meta = yield Records.import(self.cb, this.clusterURL + this.username +
+                                             "/meta/global");
 
     // XXX Bug 482878 Old payloads weren't array-wrapped, so migrate by wiping
     if (meta && meta.payload == null) {
@@ -535,19 +533,19 @@ WeaveSvc.prototype = {
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.lastResource.lastChannel.responseStatus;
       if (status != 200 && status != 404) {
-	this._mostRecentError = "Unknown error when downloading metadata.";
-	this._log.warn("Unknown error while downloading metadata record. " +
+        this._mostRecentError = "Unknown error when downloading metadata.";
+        this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
-	self.done(false);
-	return;
+        self.done(false);
+        return;
       }
 
       if (!meta)
-	this._log.info("No metadata record, server wipe needed");
+        this._log.info("No metadata record, server wipe needed");
       if (meta && !meta.payload.syncID)
-	this._log.warn("No sync id, server wipe needed");
+        this._log.warn("No sync id, server wipe needed");
       if (Svc.Version.compare(MIN_SERVER_STORAGE_VERSION, remoteVersion) > 0)
-	this._log.info("Server storage version no longer supported, server wipe needed");
+        this._log.info("Server storage version no longer supported, server wipe needed");
 
       reset = true;
       this._log.info("Wiping server data");
@@ -568,8 +566,8 @@ WeaveSvc.prototype = {
       return;
 
     } else if (meta.payload.syncID != Clients.syncID) {
-      this._log.warn("Meta.payload.syncID is " + meta.payload.syncID);
-      this._log.warn(", Clients.syncID is " + Clients.syncID);
+      this._log.warn("Meta.payload.syncID is " + meta.payload.syncID +
+                     ", Clients.syncID is " + Clients.syncID);
       yield this.resetClient(self.cb);
       this._log.info("Reset client because of syncID mismatch.");
       Clients.syncID = meta.payload.syncID;
@@ -588,29 +586,29 @@ WeaveSvc.prototype = {
     }
     if (needKeys) {
       if (PubKeys.lastResource.lastChannel.responseStatus != 404 &&
-	  PrivKeys.lastResource.lastChannel.responseStatus != 404) {
-	this._log.warn("Couldn't download keys from server, aborting sync");
-	this._log.debug("PubKey HTTP response status: " +
-			PubKeys.lastResource.lastChannel.responseStatus);
-	this._log.debug("PrivKey HTTP response status: " +
-			PrivKeys.lastResource.lastChannel.responseStatus);
-	this._mostRecentError = "Can't download keys from server.";
-	self.done(false);
-	return;
+          PrivKeys.lastResource.lastChannel.responseStatus != 404) {
+        this._log.warn("Couldn't download keys from server, aborting sync");
+        this._log.debug("PubKey HTTP response status: " +
+                        PubKeys.lastResource.lastChannel.responseStatus);
+        this._log.debug("PrivKey HTTP response status: " +
+                        PrivKeys.lastResource.lastChannel.responseStatus);
+        this._mostRecentError = "Can't download keys from server.";
+        self.done(false);
+        return;
       }
 
       if (!this._keyGenEnabled) {
-	this._log.warn("Couldn't download keys from server, and key generation" +
-		       "is disabled.  Aborting sync");
-	this._mostRecentError = "No keys. Try syncing from desktop first.";
-	self.done(false);
-	return;
+        this._log.warn("Couldn't download keys from server, and key generation" +
+                       "is disabled.  Aborting sync");
+        this._mostRecentError = "No keys. Try syncing from desktop first.";
+        self.done(false);
+        return;
       }
 
       if (!reset) {
-	this._log.warn("Calling freshStart from !reset case.");
-	yield this._freshStart.async(this, self.cb);
-	this._log.info("Server data wiped to ensure consistency due to missing keys");
+        this._log.warn("Calling freshStart from !reset case.");
+        yield this._freshStart.async(this, self.cb);
+        this._log.info("Server data wiped to ensure consistency due to missing keys");
       }
 
       let pass = yield ID.get('WeaveCryptoID').getPassword(self.cb);
@@ -618,16 +616,16 @@ WeaveSvc.prototype = {
         let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
                                          PrivKeys.defaultKeyUri);
         try {
-	  yield PubKeys.uploadKeypair(self.cb, keys);
+          yield PubKeys.uploadKeypair(self.cb, keys);
           ret = true;
         } catch (e) {
-	  this._mostRecentError = "Could not upload keys.";
+          this._mostRecentError = "Could not upload keys.";
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
-	  // FIXME no lastRequest anymore
+          // FIXME no lastRequest anymore
           //this._log.error(keys.pubkey.lastRequest.responseText);
         }
       } else {
-	this._mostRecentError = "Could not get encryption passphrase.";
+        this._mostRecentError = "Could not get encryption passphrase.";
         this._log.warn("Could not get encryption passphrase");
       }
     }
@@ -809,12 +807,12 @@ WeaveSvc.prototype = {
     try {
       yield engine.sync(self.cb);
       if (!this.cancelRequested)
-	self.done(true);
+        self.done(true);
     }
     catch(e) {
       this._syncError = true;
       if (FaultTolerance.Service.onException(e))
-	self.done(true);
+        self.done(true);
     }
   },
 
