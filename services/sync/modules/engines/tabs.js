@@ -78,6 +78,48 @@ TabEngine.prototype = {
     let self = yield;
     this.resetLastSync();
     this._store.wipe();
+  },
+
+  /* The intent is not to show tabs in the menu if they're already
+   * open locally.  There are a couple ways to interpret this: for
+   * instance, we could do it by removing a tab from the list when
+   * you open it -- but then if you close it, you can't get back to
+   * it.  So the way I'm doing it here is to not show a tab in the menu
+   * if you have a tab open to the same URL, even though this means
+   * that as soon as you navigate anywhere, the original tab will
+   * reappear in the menu.
+   */
+  locallyOpenTabMatchesURL: function TabEngine_localTabMatches(url) {
+    // url should be string, not object
+    /* Some code duplication from _addFirefoxTabsToRecord and
+     * _addFennecTabsToRecord.  Unify? */
+    if (Cc["@mozilla.org/browser/sessionstore;1"])  {
+      let state = this._store._sessionStore.getBrowserState();
+      let session = this._store._json.decode(state);
+      for (let i = 0; i < session.windows.length; i++) {
+        let window = session.windows[i];
+        for (let j = 0; j < window.tabs.length; j++) {
+          let tab = window.tabs[j];
+          if (tab.entries.length > 0) {
+            let tabUrl = tab.entries[tab.entries.length-1].url;
+            if (tabUrl == url) {
+              return true;
+            }
+          }
+        }
+      }
+    } else {
+      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+	.getService(Ci.nsIWindowMediator);
+      let browserWindow = wm.getMostRecentWindow("navigator:browser");
+      for each (let tab in browserWindow.Browser._tabs ) {
+        let tabUrl = tab.browser.contentWindow.location.toString();
+        if (tabUrl == url) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 };
 
@@ -172,9 +214,10 @@ TabStore.prototype = {
     let session = this._json.decode(this._sessionStore.getBrowserState());
     for (let i = 0; i < session.windows.length; i++) {
       let window = session.windows[i];
-      /* For some reason, session store uses one-based array index references,
-        (f.e. in the "selectedWindow" and each tab's "index" properties), so we
-        convert them to and from JavaScript's zero-based indexes as needed. */
+      /* For some reason, session store uses one-based array index
+       references, (f.e. in the "selectedWindow" and each tab's
+       "index" properties), so we convert them to and from
+       JavaScript's zero-based indexes as needed. */
       let windowID = i + 1;
 
       for (let j = 0; j < window.tabs.length; j++) {
@@ -184,9 +227,10 @@ TabStore.prototype = {
 	if (tab.entries.length == 0)
 	  continue;
 	let currentPage = tab.entries[tab.entries.length - 1];
-	/* TODO not always accurate -- if you've hit Back in this tab, then the current
-	 * page might not be the last entry.  Deal with this later.
-	 */
+	/* TODO not always accurate -- if you've hit Back in this tab,
+         * then the current page might not be the last entry. Deal
+         * with this later.
+         */
         this._log.debug("Wrapping a tab with title " + currentPage.title);
         let urlHistory = [];
 	// Include URLs in reverse order; max out at 10, and skip nulls.
@@ -210,8 +254,8 @@ TabStore.prototype = {
       let title = tab.browser.contentDocument.title;
       let url = tab.browser.contentWindow.location.toString();
       let urlHistory = [url];
+      this._log.debug("Wrapping a tab with title " + title);
       // TODO how to get older entries in urlHistory?
-      dump("Making tab with title = " + title + ", url = " + url + "\n");
       record.addTab(title, urlHistory);
     }
   },
