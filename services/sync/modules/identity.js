@@ -122,8 +122,9 @@ Identity.prototype = {
   get userHash() { return Utils.sha1(this.username); },
 
   get password() {
+    // Look up the password then cache it
     if (!this._password)
-      return Utils.findPassword(this.realm, this.username);
+      return this._password = Utils.findPassword(this.realm, this.username);
     return this._password;
   },
   set password(value) {
