@@ -504,15 +504,6 @@ let gDownloadObserver = {
         break;
       case "private-browsing":
         if (aData == "enter" || aData == "exit") {
-          // We need to reset the title here, because otherwise the title of
-          // the download manager would still reflect the progress of current
-          // active downloads, if any, after switchiung the private browsing
-          // mode, even though the downloads will no longer be accessible.
-          // If any download is auto-started after switching the private
-          // browsing mode, the title will be updated as needed by the progress
-          // listener.
-          document.title = document.documentElement.getAttribute("statictitle");
-
           // We might get this notification before the download manager
           // service, so the new database connection might not be ready
           // yet.  Defer this until all private-browsing notifications
