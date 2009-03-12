@@ -18,4 +18,19 @@ function run_test() {
   do_check_eq(x[0], 6);
   do_check_eq(x[1], 8);
   do_check_eq(x[2], 10);
+
+  // make sure reviver isn't called after a failed parse
+  var called = false;
+  function dontCallMe(k, v) {
+    called = true;
+  }
+
+  try {
+    x = JSON.parse('{{{{{{{}}}}', dontCallMe);
+  } catch (e) {
+    if (! (e instanceof SyntaxError))
+      throw("wrong exception");
+  }
+
+  do_check_false(called);
 }
