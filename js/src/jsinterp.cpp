@@ -3262,7 +3262,6 @@ js_Interpret(JSContext *cx)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < fp->script->nslots);
             vp = &fp->slots[slot];
-            GC_POKE(cx, *vp);
             *vp = regs.sp[-1];
           END_CASE(JSOP_FORLOCAL)
 
@@ -5554,7 +5553,6 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
             vp = &fp->argv[slot];
-            GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
           END_SET_CASE(JSOP_SETARG)
 
@@ -5575,7 +5573,6 @@ js_Interpret(JSContext *cx)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < script->nslots);
             vp = &fp->slots[slot];
-            GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
           END_SET_CASE(JSOP_SETLOCAL)
 
