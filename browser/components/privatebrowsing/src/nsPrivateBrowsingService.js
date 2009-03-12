@@ -275,18 +275,6 @@ PrivateBrowsingService.prototype = {
                       getService(Ci.nsIHttpAuthManager);
         authMgr.clearAll();
 
-        // Prevent any SSL sockets from remaining open.  Without this, SSL
-        // websites may fail to load after switching the private browsing mode
-        // because the SSL sockets may still be open while the corresponding
-        // NSS resources have been destroyed by the logoutAndTeardown call
-        // above.  See bug 463256 for more information.
-        let ios = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-        if (!ios.offline) {
-          ios.offline = true;
-          ios.offline = false;
-        }
-
         if (!this._inPrivateBrowsing) {
           // Clear the error console
           let consoleService = Cc["@mozilla.org/consoleservice;1"].
