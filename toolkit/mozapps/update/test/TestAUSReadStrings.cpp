@@ -101,42 +101,9 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   *(++slash) = '\0';
-  // Test success when the ini file exists with both Title and InfoText in the
-  // Strings section and test values for Title and InfoText.
+  // Test success when the ini file exists with both Title and Info in the
+  // Strings section and the values for Title and Info.
   NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings1.ini"), argv[0]);
-  retval = ReadStrings(inifile, &testStrings);
-  if (retval == OK) {
-    if (strcmp(testStrings.title, "Title Test - \xE6\xB5\x8B\xE8\xAF\x95 " \
-                                  "\xE6\xB8\xAC\xE8\xA9\xA6 " \
-                                  "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE " \
-                                  "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 " \
-                                  "\xD0\x98\xD1\x81\xD0\xBF\xD1\x8B\xD1\x82\xD0" \
-                                  "\xB0\xD0\xBD\xD0\xB8\xD0\xB5") != 0) {
-      rv = 21;
-      printf("%s | %s Title ini value incorrect | Test 1\n",
-             UNEXPECTED_FAIL_PREFIX, TEST_NAME);
-    }
-
-    if (strcmp(testStrings.info, "InfoText Test - \xE6\xB5\x8B\xE8\xAF\x95 " \
-                                 "\xE6\xB8\xAC\xE8\xA9\xA6 " \
-                                 "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE " \
-                                 "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 " \
-                                 "\xD0\x98\xD1\x81\xD0\xBF\xD1\x8B\xD1\x82\xD0\xB0" \
-                                 "\xD0\xBD\xD0\xB8\xD0\xB5\xE2\x80\xA6") != 0) {
-      rv = 22;
-      printf("%s | %s InfoText ini value incorrect | Test 1\n",
-             UNEXPECTED_FAIL_PREFIX, TEST_NAME);
-    }
-  }
-  else {
-    printf("%s | %s ReadStrings returned %i | Test 1\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
-    rv = 23;
-  }
-
-  // Test success when the ini file exists with both Title and InfoText in the
-  // Strings section and test values for Title and InfoText.
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings2.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval == OK) {
     if (strcmp(testStrings.title, "Title Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B" \
@@ -145,7 +112,7 @@ int NS_main(int argc, NS_tchar **argv)
                                   "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 " \
                                   "\xE6\xB8\xAC\xE8\xA9\xA6 " \
                                   "\xE6\xB5\x8B\xE8\xAF\x95") != 0) {
-      rv = 24;
+      rv = 21;
       printf("%s | %s Title ini value incorrect | Test 2\n",
              UNEXPECTED_FAIL_PREFIX, TEST_NAME);
     }
@@ -156,7 +123,7 @@ int NS_main(int argc, NS_tchar **argv)
                                  "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 " \
                                  "\xE6\xB8\xAC\xE8\xA9\xA6 " \
                                  "\xE6\xB5\x8B\xE8\xAF\x95\xE2\x80\xA6") != 0) {
-      rv = 25;
+      rv = 22;
       printf("%s | %s Info ini value incorrect | Test 2\n",
              UNEXPECTED_FAIL_PREFIX, TEST_NAME);
     }
@@ -164,25 +131,25 @@ int NS_main(int argc, NS_tchar **argv)
   else {
     printf("%s | %s ReadStrings returned %i | Test 2\n",
            UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
-    rv = 26;
+    rv = 23;
   }
 
-  // Test failure when the ini file exists without Title and with Info and
-  // InfoText in the Strings section.
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
+  // Test failure when the ini file exists without Title and with Info in the
+  // Strings section.
+  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings2.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
-    rv = 27;
+    rv = 24;
     printf("%s | %s ReadStrings returned %i | Test 3\n",
            UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
   }
 
-  // Test failure when the ini file exists with Title and without InfoText and
-  // Info in the Strings section.
-  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings4.ini"), argv[0]);
+  // Test failure when the ini file exists with Title and without Info in the
+  // Strings section.
+  NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
-    rv = 28;
+    rv = 25;
     printf("%s | %s ReadStrings returned %i | Test 4\n",
            UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
   }
@@ -191,7 +158,7 @@ int NS_main(int argc, NS_tchar **argv)
   NS_tsnprintf(inifile, sizeof(inifile), NS_T("%sTestAUSReadStringsBogus.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != READ_ERROR) {
-    rv = 29;
+    rv = 26;
     printf("%s | %s ini file doesn't exist | Test 5\n",
            UNEXPECTED_FAIL_PREFIX, TEST_NAME);
   }
