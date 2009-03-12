@@ -149,7 +149,8 @@ Resource.prototype = {
       QueryInterface(Ci.nsIRequest);
     // Always validate the cache:
     let loadFlags = this._lastChannel.loadFlags;
-    loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE; //VALIDATE_ALWAYS;
+    loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     this._lastChannel.loadFlags = loadFlags;
     this._lastChannel = this._lastChannel.QueryInterface(Ci.nsIHttpChannel);
 
