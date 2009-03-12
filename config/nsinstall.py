@@ -112,16 +112,31 @@ def nsinstall(argv):
   if len(args) < 2:
     p.error('not enough arguments')
 
+  def copy_all_entries(entries, target):
+    for e in entries:
+      dest = os.path.join(target,
+                          os.path.basename(os.path.normpath(e)))
+      handleTarget(e, dest)
+      if options.m:
+        os.chmod(dest, options.m)
+
   # set up handler
   if options.d:
     # we're supposed to create directories
     def handleTarget(srcpath, targetpath):
       # target directory was already created, just use mkdir
-      os.mkdir(dest)
+      os.mkdir(targetpath)
   else:
     # we're supposed to copy files
     def handleTarget(srcpath, targetpath):
-      if options.t:
+      if os.path.isdir(srcpath):
+        os.mkdir(targetpath)
+        entries = [os.path.join(srcpath, e) for e in os.listdir(srcpath)]
+        copy_all_entries(entries, targetpath)
+        # options.t is not relevant for directories
+        if options.m:
+          os.chmod(targetpath, options.m)
+      elif options.t:
         shutil.copy2(srcpath, targetpath)
       else:
         shutil.copy(srcpath, targetpath)
@@ -132,12 +147,7 @@ def nsinstall(argv):
   if not os.path.isdir(target):
     os.makedirs(target)
 
-  for f in args:
-    dest = os.path.join(target,
-                        os.path.basename(os.path.normpath(f)))
-    handleTarget(f, dest)
-    if options.m:
-      os.chmod(dest, options.m)
+  copy_all_entries(args, target)
   return 0
 
 if __name__ == '__main__':
