@@ -1959,6 +1959,7 @@ TraceRecorder::checkForGlobalObjectReallocation()
 static bool
 js_IsLoopExit(jsbytecode* pc, jsbytecode* header)
 {
+    JS_ASSERT(*header == JSOP_LOOP);
     switch (*pc) {
       case JSOP_LT:
       case JSOP_GT:
@@ -2906,15 +2907,15 @@ TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
 JS_REQUIRES_STACK void
 TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 {
-    if (x->isconst()) // no need to guard if condition is constant
-        return;
     if (*pc == JSOP_IFEQ) {
         flipIf(pc, cond);
-        guard(cond, x, BRANCH_EXIT);
+        if (!x->isconst())
+            guard(cond, x, BRANCH_EXIT);
         trackCfgMerges(pc);
     } else if (*pc == JSOP_IFNE) {
         flipIf(pc, cond);
-        guard(cond, x, BRANCH_EXIT);
+        if (!x->isconst())
+            guard(cond, x, BRANCH_EXIT);
     }
 }
 
@@ -5388,11 +5389,9 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
     }
 
     /*
-     * Don't guard if the same path is always taken.  If it isn't, we have to
-     * fuse comparisons and the following branch, because the interpreter does
-     * that.
+     * Fuse the condition and the following branch.
      */
-    if (tryBranchAfterCond && !x->isconst())
+    if (tryBranchAfterCond)
         fuseIf(cx->fp->regs->pc + 1, cond, x);
 
     /*
@@ -5508,11 +5507,9 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     x = lir->ins2(op, l_ins, r_ins);
 
     /*
-     * Don't guard if the same path is always taken.  If it isn't, we have to
-     * fuse comparisons and the following branch, because the interpreter does
-     * that.
+     * Fuse the comparison and the following branch.
      */
-    if (tryBranchAfterCond && !x->isconst())
+    if (tryBranchAfterCond)
         fuseIf(cx->fp->regs->pc + 1, cond, x);
 
     /*
@@ -6177,8 +6174,8 @@ TraceRecorder::record_LeaveFrame()
                    js_AtomToPrintableString(cx, cx->fp->fun->atom),
                    callDepth);
         );
-    if (callDepth-- <= 0)
-        ABORT_TRACE("returned out of a loop we started tracing");
+    JS_ASSERT(callDepth > 0);
+    callDepth--;
 
     // LeaveFrame gets called after the interpreter popped the frame and
     // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
