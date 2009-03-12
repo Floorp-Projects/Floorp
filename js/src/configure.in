@@ -4949,7 +4949,7 @@ case "$target" in
     ;;
 esac
 
-if test -z "$SKIP_LIBRARY_CHECKS" -a test -z "$NO_EDITLINE"; then
+if test -z "$SKIP_LIBRARY_CHECKS" -a -z "$NO_EDITLINE"; then
   if test -n "$JS_WANT_READLINE"; then
     AC_CHECK_LIB(readline, readline,
                  EDITLINE_LIBS="-lreadline",
