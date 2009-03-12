@@ -820,6 +820,9 @@ WeaveSvc.prototype = {
 
   /**
    * Wipe all user data from the server.
+   *
+   * @param onComplete
+   *        Callback when this method completes
    */
   wipeServer: function WeaveSvc_wipeServer(onComplete) {
     let fn = function WeaveSvc__wipeServer() {
@@ -845,21 +848,80 @@ WeaveSvc.prototype = {
   },
 
   /**
-   * Reset the client by getting rid of any local server data and client data.
+   * Wipe all local user data.
+   *
+   * @param onComplete
+   *        Callback when this method completes
    */
-  resetClient: function WeaveSvc_resetClient(onComplete) {
-    let fn = function WeaveSvc__resetClient() {
+  wipeClient: function WeaveSvc_wipeClient(onComplete) {
+    let fn = function WeaveSvc__wipeClient() {
+      let self = yield;
+
+      // Clear out any service data
+      yield this.resetService(self.cb);
+
+      // Fully wipe each engine
+      for each (let engine in [Clients].concat(Engines.getAll()))
+        yield engine.wipeClient(self.cb);
+    };
+    this._catchAll(this._notify("wipe-client", "", fn)).async(this, onComplete);
+  },
+
+  /**
+   * Wipe all remote user data by wiping the server then telling each remote
+   * client to wipe itself.
+   *
+   * @param onComplete
+   *        Callback when this method completes
+   */
+  wipeRemote: function WeaveSvc_wipeRemote(onComplete) {
+    let fn = function WeaveSvc__wipeRemote() {
+      let self = yield;
+
+      // Clear out any server data
+      //yield this.wipeServer(self.cb);
+
+      // Tell the remote machines to wipe themselves
+      this.prepCommand("wipeAll", []);
+    };
+    this._catchAll(this._notify("wipe-remote", "", fn)).async(this, onComplete);
+  },
+
+  /**
+   * Reset local service information like logs, sync times, caches.
+   *
+   * @param onComplete
+   *        Callback when this method completes
+   */
+  resetService: function WeaveSvc__resetService(onComplete) {
+    let fn = function WeaveSvc__resetService() {
       let self = yield;
 
       // First drop old logs to track client resetting behavior
       this.clearLogs();
-      this._log.info("Logs reinitialized for client reset");
+      this._log.info("Logs reinitialized for service reset");
 
       // Pretend we've never synced to the server and drop cached data
       Clients.resetSyncID();
       Svc.Prefs.reset("lastSync");
       for each (let cache in [PubKeys, PrivKeys, CryptoMetas, Records])
         cache.clearCache();
+    };
+    this._catchAll(this._notify("reset-service", "", fn)).async(this, onComplete);
+  },
+
+  /**
+   * Reset the client by getting rid of any local server data and client data.
+   *
+   * @param onComplete
+   *        Callback when this method completes
+   */
+  resetClient: function WeaveSvc_resetClient(onComplete) {
+    let fn = function WeaveSvc__resetClient() {
+      let self = yield;
+
+      // Clear out any service data
+      yield this.resetService(self.cb);
 
       // Have each engine drop any temporary meta data
       for each (let engine in [Clients].concat(Engines.getAll()))
@@ -876,7 +938,7 @@ WeaveSvc.prototype = {
       } catch (e) {
         this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
       }
-    }
+    };
     this._catchAll(this._notify("reset-client", "", fn)).async(this, onComplete);
   },
 
