@@ -3139,7 +3139,6 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
                                            nsIFrame*&               aNewOuterFrame,
                                            nsIFrame*&               aNewInnerFrame)
 {
-  *((int*)0) = 1;
   nsresult rv = NS_OK;
 
 
