@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef nsSOCKSIOLayer_h__
-#define NSSOCKSIOLayer_h__
+#define nsSOCKSIOLayer_h__
 
 #include "prtypes.h"
 #include "prio.h"
