@@ -713,6 +713,22 @@ WeaveSvc.prototype = {
     this._log.debug("Refreshing client list");
     yield Clients.sync(self.cb);
 
+    // Process the incoming commands if we have any
+    if (Clients.getClients()[Clients.clientID].commands) {
+      try {
+        if (!(yield this.processCommands(self.cb)))
+          throw "aborting sync, process commands said so";
+
+        // Repeat remoteSetup in-case the commands forced us to reset
+        if (!(yield this._remoteSetup.async(this, self.cb)))
+          throw "aborting sync, remote setup failed after processing commands";
+      }
+      finally {
+        // Always immediately push back the local client (now without commands)
+        yield Clients.sync(self.cb);
+      }
+    }
+
     try {
       for each (let engine in Engines.getAll()) {
         let name = engine.name;
@@ -958,6 +974,63 @@ WeaveSvc.prototype = {
       commands[entry[0]][attr] = entry[i + 1];
     return commands;
   }, {}),
+
+  /**
+   * Check if the local client has any remote commands and perform them.
+   *
+   * @param onComplete
+   *        Callback when this method completes
+   * @return False to abort sync
+   */
+  processCommands: function WeaveSvc_processCommands(onComplete) {
+    let fn = function WeaveSvc__processCommands() {
+      let self = yield;
+      let info = Clients.getInfo(Clients.clientID);
+      let commands = info.commands;
+
+      // Immediately clear out the commands as we've got them locally
+      delete info.commands;
+      Clients.setInfo(Clients.clientID, info);
+
+      // Process each command in order
+      for each ({command: command, args: args} in commands) {
+        this._log.debug("Processing command: " + command + "(" + args + ")");
+
+        switch (command) {
+          case "resetAll":
+            yield this.resetClient(self.cb);
+            break;
+
+          case "resetEngine": {
+            let engine = Engines.get(args[0]);
+            if (engine != null)
+              yield engine.resetClient(self.cb);
+            else
+              this._log.debug("Cannot reset an unknown engine: " + args[0]);
+            break;
+          }
+          case "wipeAll":
+            yield this.wipeClient(self.cb);
+            break;
+
+          case "wipeEngine": {
+            let engine = Engines.get(args[0]);
+            if (engine != null)
+              yield engine.wipeClient(self.cb);
+            else
+              this._log.debug("Cannot wipe an unknown engine: " + args[0]);
+            break;
+          }
+          default:
+            this._log.debug("Received an unknown command: " + command);
+            break;
+        }
+      }
+
+      self.done(true);
+    };
+    this._notify("process-commands", "", fn).async(this, onComplete);
+  },
 
   /**
    * Prepare to send a command to each remote client. Calling this doesn't
