@@ -53,6 +53,7 @@
            extends="chrome://global/content/bindings/general.xml#basecontrol">
 
     <resources>
+      <stylesheet src="chrome://global/content/textbox.css"/>
       <stylesheet src="chrome://global/skin/textbox.css"/>
       <stylesheet src="chrome://global/skin/dropmarker.css"/>
       <stylesheet src="chrome://global/skin/datetimepicker.css"/>
