@@ -335,7 +335,7 @@ ChromeInputModule.prototype = {
     let dy = dragData.sY - aEvent.screenY;
 
     if (!dragData.dragging && dragData.dragStartTimeout != -1) {
-      if ((Math.abs(dx*dx) + Math.abs(dy*dy)) > 100) {
+      if (dx*dx + dy*dy > 100) {
         clearTimeout(dragData.dragStartTimeout);
         this._dragStart(aEvent.screenX, aEvent.screenY);
       }
@@ -546,7 +546,7 @@ ContentPanningModule.prototype = {
     let dy = dragData.sY - aEvent.screenY;
 
     if (!dragData.dragging && dragData.dragStartTimeout != -1) {
-      if ((Math.abs(dx*dx) + Math.abs(dy*dy)) > 100) {
+      if (dx*dx + dy*dy > 100) {
         clearTimeout(dragData.dragStartTimeout);
         this._dragStart(aEvent.screenX, aEvent.screenY);
       }
