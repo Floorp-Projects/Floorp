@@ -514,7 +514,7 @@ ContentPanningModule.prototype = {
 
   _onMouseDown: function _onMouseDown(aEvent) {
     // if we're in the process of kineticly scrolling, stop and start over
-    if (this.kineticHandle != -1)
+    if (this._kineticData.kineticHandle != -1)
       this._endKinetic(aEvent.screenX, aEvent.screenY);
 
     let dragData = this._dragData;
