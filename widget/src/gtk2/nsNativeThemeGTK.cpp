@@ -341,7 +341,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           if (aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN)
             aFrame = aFrame->GetParent();
 
-          PRBool menuOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
+          PRBool menuOpen = IsOpenButton(aFrame);
           aState->depressed = IsCheckedButton(aFrame) || menuOpen;
           // we must not highlight buttons with open drop down menus on hover.
           aState->inHover = aState->inHover && !menuOpen;
