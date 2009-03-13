@@ -122,7 +122,7 @@ CanvasBrowser.prototype = {
     function resizeAndPaint(self) {
       if (self._maybeZoomToPage) {
         self.zoomToPage();
-        this._maybeZoomToPage = false;
+        self._maybeZoomToPage = false;
       }
       // draw visible area..freeze during pans
       if (!self._isPanning)
