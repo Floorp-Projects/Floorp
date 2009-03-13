@@ -273,7 +273,7 @@ protected:
 
   virtual PRInt32 GetDefaultNamespaceID() const
   {
-    return mIsRegularHTML ? kNameSpaceID_None : kNameSpaceID_XHTML;
+    return kNameSpaceID_XHTML;
   }
 
   nsCOMArray<nsIDOMHTMLMapElement> mImageMaps;
