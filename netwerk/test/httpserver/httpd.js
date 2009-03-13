@@ -2765,8 +2765,7 @@ ServerHandler.prototype =
     // post-processing
     response.setHeader("Connection", "close", false);
     response.setHeader("Server", "httpd.js", false);
-    if (response.getHeader("Date") == undefined)
-        response.setHeader("Date", toDateString(Date.now()), false);
+    response.setHeader("Date", toDateString(Date.now()), false);
 
     var bodyStream = response.bodyInputStream;
 
