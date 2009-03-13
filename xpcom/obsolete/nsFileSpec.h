@@ -316,7 +316,7 @@ class NS_COM_OBSOLETE nsFileSpec
     public:
                                 nsFileSpec();
                                 
-                                // These two meathods take *native* file paths.
+                                // These two methods take *native* file paths.
         NS_EXPLICIT             nsFileSpec(const char* inNativePath, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFileSpec(const nsString& inNativePath, PRBool inCreateDirs = PR_FALSE);
                                 

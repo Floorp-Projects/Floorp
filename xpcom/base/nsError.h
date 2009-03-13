@@ -45,7 +45,7 @@
 /*
  * To add error code to your module, you need to do the following:
  *
- * 1) Add a module offset code.  Add yours to the bottom of the list 
+ * 1) Add a module offset code.  Add yours to the bottom of the list
  *    right below this comment, adding 1.
  *
  * 2) In your module, define a header file which uses one of the
@@ -105,7 +105,7 @@
  * returning codes from other modules that might also use
  * the generic base.
  */
-#define NS_ERROR_MODULE_GENERAL    51  
+#define NS_ERROR_MODULE_GENERAL    51
 
 /**
  * @name Standard Error Handling Macros
@@ -114,14 +114,14 @@
 
 #if defined(NS_STATIC_CHECKING) && defined(__cplusplus)
 inline int NS_FAILED(nsresult _nsresult) {
-  return _nsresult & 0x80000000;
+  return   _nsresult & 0x80000000;
 }
 
 inline int NS_SUCCEEDED(nsresult _nsresult) {
   return !(_nsresult & 0x80000000);
 }
 #else
-#define NS_FAILED(_nsresult) (NS_UNLIKELY((_nsresult) & 0x80000000))
+#define NS_FAILED(_nsresult)    (NS_UNLIKELY((_nsresult) & 0x80000000))
 #define NS_SUCCEEDED(_nsresult) (NS_LIKELY(!((_nsresult) & 0x80000000)))
 #endif
 
@@ -144,13 +144,13 @@ inline int NS_SUCCEEDED(nsresult _nsresult) {
  */
 
 #define NS_ERROR_GENERATE(sev,module,code) \
-    ((nsresult) (((PRUint32)(sev)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))) )
+    ((nsresult) (((PRUint32)(sev)                      <<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))))
 
 #define NS_ERROR_GENERATE_SUCCESS(module,code) \
-    ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_SUCCESS)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))) )
+    ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_SUCCESS)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))))
 
 #define NS_ERROR_GENERATE_FAILURE(module,code) \
-    ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_ERROR)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))) )
+    ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_ERROR)  <<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))))
 
 /**
  * @name Standard Macros for retrieving error bits
@@ -231,7 +231,7 @@ inline int NS_SUCCEEDED(nsresult _nsresult) {
    The first matches:
 
      #define RPC_E_INVALID_PARAMETER          _HRESULT_TYPEDEF_(0x80010010L)
-   
+
    Errors returning this mean that the xpcom proxy code could not create a proxy for
    one of the in paramaters.
 
@@ -241,16 +241,16 @@ inline int NS_SUCCEEDED(nsresult _nsresult) {
 */
 
 /* Returned when a proxy could not be create a proxy for one of the IN parameters
-   This is returned only when the "real" meathod has NOT been invoked. 
+   This is returned only when the "real" method has NOT been invoked.
 */
 
 #define NS_ERROR_PROXY_INVALID_IN_PARAMETER        ((nsresult) 0x80010010L)
 
 /* Returned when a proxy could not be create a proxy for one of the OUT parameters
-   This is returned only when the "real" meathod has ALREADY been invoked. 
+   This is returned only when the "real" method has ALREADY been invoked.
 */
 
-#define NS_ERROR_PROXY_INVALID_OUT_PARAMETER        ((nsresult) 0x80010011L)
+#define NS_ERROR_PROXY_INVALID_OUT_PARAMETER       ((nsresult) 0x80010011L)
 
 
 /*@}*/
@@ -331,4 +331,3 @@ NS_ErrorAccordingToNSPR();
 #endif
 
 #endif
-
