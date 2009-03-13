@@ -546,7 +546,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     ToLowerCase(tmp);
 
     nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
-    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_XHTML);
   }
   else if (mNodeInfoCache[aNodeType]) {
     nodeInfo = mNodeInfoCache[aNodeType];
@@ -559,7 +559,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     nsIAtom *name = parserService->HTMLIdToAtomTag(aNodeType);
     NS_ASSERTION(name, "What? Reverse mapping of id to string broken!!!");
 
-    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_XHTML);
     NS_IF_ADDREF(mNodeInfoCache[aNodeType] = nodeInfo);
   }
 
@@ -581,15 +581,7 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
 
   nsIAtom *name = aNodeInfo->NameAtom();
 
-#ifdef DEBUG
-  if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-    nsAutoString nameStr, lname;
-    name->ToString(nameStr);
-    ToLowerCase(nameStr, lname);
-    NS_ASSERTION(nameStr.Equals(lname), "name should be lowercase by now");
-    NS_ASSERTION(!aNodeInfo->GetPrefixAtom(), "should not have a prefix");
-  }
-#endif
+  NS_ASSERTION(aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML), "Someone is still trying to create HTML elements is no namespace!");
   
   *aResult = CreateHTMLElement(parserService->
                                  HTMLCaseSensitiveAtomTagToId(name),
