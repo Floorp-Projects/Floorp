@@ -8,6 +8,7 @@
 
   <binding id="menulist-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
+      <stylesheet src="chrome://global/content/menulist.css"/>
       <stylesheet src="chrome://global/skin/menulist.css"/>
     </resources>
   </binding>

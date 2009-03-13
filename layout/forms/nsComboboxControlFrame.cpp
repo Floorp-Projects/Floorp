@@ -358,7 +358,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // This is only needed for embedding, the focus may go to 
   // the chrome that is not part of the Gecko system (Bug 83493)
   // XXX this is rather inefficient
-  nsIViewManager* vm = PresContext()->GetViewManager();
+  nsIViewManager* vm = PresContext()->GetPresShell()->GetViewManager();
   if (vm) {
     vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
   }

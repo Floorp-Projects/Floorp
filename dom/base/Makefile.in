@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -43,9 +43,75 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
+LIBRARY_NAME	= jsdombase_s
+LIBXUL_LIBRARY	= 1
+FORCE_STATIC_LIB = 1
 
-EXPORTS=nsPIDOMWindow.h nsPIWindowRoot.h nsIFocusController.h
+XPIDLSRCS = \
+  nsIEntropyCollector.idl \
+  nsIScriptChannel.idl \
+  $(NULL)
+
+EXPORTS = \
+  nsDOMCID.h \
+  nsDOMClassInfoID.h \
+  nsDOMError.h \
+  nsDOMJSUtils.h \
+  nsDOMScriptObjectHolder.h \
+  nsDOMString.h \
+  nsIBaseDOMException.h \
+  nsIDOMClassInfo.h \
+  nsIDOMScriptObjectFactory.h \
+  nsIFocusController.h \
+  nsIJSEventListener.h \
+  nsIJSNativeInitializer.h \
+  nsIScriptContext.h	\
+  nsIScriptExternalNameSet.h \
+  nsIScriptGlobalObject.h \
+  nsIScriptGlobalObjectOwner.h \
+  nsIScriptNameSpaceManager.h \
+  nsIScriptObjectOwner.h \
+  nsIScriptObjectPrincipal.h \
+  nsIScriptRuntime.h \
+  nsIScriptTimeoutHandler.h \
+  nsPIDOMWindow.h \
+  nsPIWindowRoot.h \
+  nsWrapperCache.h \
+  $(NULL)
+
+CPPSRCS =			\
+	nsBarProps.cpp          \
+	nsDOMException.cpp 	\
+	nsDOMWindowUtils.cpp 	\
+	nsJSEnvironment.cpp	\
+	nsJSTimeoutHandler.cpp	\
+	nsFocusController.cpp	\
+	nsGlobalWindow.cpp      \
+	nsGlobalWindowCommands.cpp \
+	nsLocation.cpp		\
+	nsDOMWindowList.cpp	\
+	nsJSUtils.cpp		\
+	nsScreen.cpp		\
+	nsHistory.cpp		\
+	nsMimeTypeArray.cpp	\
+	nsPluginArray.cpp	\
+	nsWindowRoot.cpp	\
+	nsDOMClassInfo.cpp	\
+	nsScriptNameSpaceManager.cpp \
+	nsDOMScriptObjectFactory.cpp \
+	$(NULL)
+
+include $(topsrcdir)/dom/dom-config.mk
+
+ifdef MOZ_JSDEBUGGER
+DEFINES += -DMOZ_JSDEBUGGER
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -D_IMPL_NS_LAYOUT
+ifdef MOZ_X11
+ifdef MOZ_ENABLE_GTK2
+CXXFLAGS += $(TK_CFLAGS)
+LDFLAGS += $(TK_LIBS)
+endif
+endif

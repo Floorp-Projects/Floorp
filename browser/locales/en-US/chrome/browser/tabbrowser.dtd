@@ -9,6 +9,8 @@
 <!ENTITY  reloadAllTabs.accesskey         "A">
 <!ENTITY  reloadTab.label        "Reload Tab">
 <!ENTITY  reloadTab.accesskey         "r">
+<!ENTITY  openTabInNewWindow.label    "Open in a New Window">
+<!ENTITY  openTabInNewWindow.accesskey "W">
 <!ENTITY  listAllTabs.label      "List all tabs">
 <!ENTITY  bookmarkAllTabs.label       "Bookmark All Tabs…">
 <!ENTITY  bookmarkAllTabs.accesskey   "T">

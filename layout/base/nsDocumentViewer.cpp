@@ -2777,7 +2777,7 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
     nsCOMPtr<nsIPresShell> shell = pc->GetPresShell();
     NS_ENSURE_TRUE(shell, NS_OK);
 
-    nsIViewManager::UpdateViewBatch batch(pc->GetViewManager());
+    nsIViewManager::UpdateViewBatch batch(shell->GetViewManager());
     if (!mPrintPreviewZoomed) {
       mOriginalPrintPreviewScale = pc->GetPrintPreviewScale();
       mPrintPreviewZoomed = PR_TRUE;

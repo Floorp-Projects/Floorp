@@ -44,6 +44,8 @@ relativesrcdir  = browser/components/sessionstore/test/browser
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# browser_477657.js is disabled, because it's unreliable (bug 482975).
+
 _BROWSER_TEST_FILES = \
 	browser_248970_a.js \
 	browser_248970_b.js \

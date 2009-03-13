@@ -73,7 +73,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 LOCAL_INCLUDES = \
-		-I$(srcdir)/../base \
+		-I$(topsrcdir)/dom/base \
 		$(NULL)
 
 ifdef NS_MAEMO_LOCATION

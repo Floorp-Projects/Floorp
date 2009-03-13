@@ -257,10 +257,12 @@ nsUnknownContentTypeDialog.prototype = {
 
       // The last directory preference may not exist, which will throw.
       try {
-        var lastDir = prefs.getComplexValue("browser.download.lastDir",
-                            Components.interfaces.nsILocalFile);
+        var lastDir;
         if (inPrivateBrowsing && gDownloadLastDir.path)
           lastDir = gDownloadLastDir.path;
+        else
+          lastDir = prefs.getComplexValue("browser.download.lastDir",
+                          Components.interfaces.nsILocalFile);
         if (isUsableDirectory(lastDir))
           picker.displayDirectory = lastDir;
       }

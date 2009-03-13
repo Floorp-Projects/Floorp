@@ -1081,8 +1081,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 return usage();
             }
 
-            JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]), 
-                              "-e", 1, &rval);
+            JS_EvaluateScriptForPrincipals(cx, obj, gJSPrincipals, argv[i],
+                                           strlen(argv[i]), "-e", 1, &rval);
 
             isInteractive = JS_FALSE;
             break;

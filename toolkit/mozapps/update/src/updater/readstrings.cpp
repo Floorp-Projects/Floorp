@@ -190,7 +190,7 @@ ReadStrings(const NS_tchar *path, StringTable *results)
       results->title[MAX_TEXT_LEN - 1] = 0;
       read |= Title;
     }
-    else if (strcmp(key, "Info") == 0 || strcmp(key, "InfoText") == 0) {
+    else if (strcmp(key, "Info") == 0) {
       strncpy(results->info, token, MAX_TEXT_LEN - 1);
       results->info[MAX_TEXT_LEN - 1] = 0;
       read |= Info;

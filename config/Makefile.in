@@ -154,11 +154,11 @@ clean clobber realclean clobber_all::
 	cd $(MKDEPEND_DIR); $(MAKE) $@
 endif
 
-PYUNITS := unit-Expression.py unit-Preprocessor.py
+PYUNITS := unit-Expression.py unit-Preprocessor.py unit-nsinstall.py
 
-check:: check-preprocessor check-jar-mn
+check:: check-python-modules check-jar-mn
 
-check-preprocessor::
+check-python-modules::
 	@$(EXIT_ON_ERROR) \
 	for test in $(PYUNITS); do \
 	  $(PYTHON) $(srcdir)/tests/$$test ; \
