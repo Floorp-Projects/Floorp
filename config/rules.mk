@@ -146,7 +146,7 @@ testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 
 # Execute all tests in the $(XPCSHELL_TESTS) directories.
 check::
-	$(PYTHON) \
+	$(PYTHON) -u \
           $(testxpcsrcdir)/runxpcshelltests.py \
           $(DIST)/bin/xpcshell \
           $(topsrcdir) \
