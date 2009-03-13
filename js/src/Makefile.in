@@ -507,7 +507,7 @@ endif
 
 export:: jsautocfg.h
 
-ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
+ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
 	touch $@
 else

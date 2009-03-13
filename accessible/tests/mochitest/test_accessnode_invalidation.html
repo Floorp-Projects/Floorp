@@ -7,37 +7,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434464
   <title>Test NSIAccessNode cache invalidation</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
 
   <script type="application/javascript">
     function doTest()
     {
-      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                       getService(Components.interfaces.nsIAccessibleRetrieval);
-
-      var parentElm = document.getElementById("parent");
+      var parentElm = getNode("parent");
       if (!parentElm) {
-        ok(false, "no parent element for paragraph!");
         SimpleTest.finish();
+        return;
       }
 
-      var elm = document.getElementById("para");
+      var elm = getNode("para");
       if (!elm) {
-        ok(false, "no element for paragraph!");
         SimpleTest.finish();
+        return;
       }
 
       // It's currently hidden. Ask for its parent's nsIAccessNode.
-      var parentElmAccNode = null;
-      try {
-        parentElmAccNode = accRetrieval.getAccessibleFor(parentElm).
-                     QueryInterface(Components.interfaces.nsIAccessNode);
-      } catch(e) {}
-
+      var parentElmAccNode = getAccessible(parentElm, [nsIAccessNode]);
       if (!parentElmAccNode) {
-        ok(false, "No accessNode for parent of hidden paragraph!");
         SimpleTest.finish();
+        return;
       }
 
       // Get the paragraph's accessNode.
@@ -49,6 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434464
       if (!elmAccNode) {
         ok(false, "No accessNode for hidden paragraph!");
         SimpleTest.finish();
+        return;
       }
 
       // Now make the paragraph visible. This invalidates the just-retrieved
@@ -60,11 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434464
       window.setTimeout(
         function()
         {
-          var elmAcc = null;
-          try {
-            elmAcc = accRetrieval.getAccessibleFor(elm);
-          } catch(e) {}
-    
+          var elmAcc = getAccessible(elm);
           ok(elmAcc, "No accessible for paragraph after it became visible!");
 
           SimpleTest.finish();

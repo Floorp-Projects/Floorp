@@ -1,0 +1,31 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
+
+html|*.textbox-input {
+  -moz-appearance: none !important;
+  text-align: inherit;
+  text-shadow: inherit;
+}
+
+html|*.textbox-textarea {
+  -moz-appearance: none !important;
+  text-shadow: inherit;
+}
+
+textbox[empty="true"] html|*.textbox-input ,
+textbox[empty="true"] html|*.textbox-textarea {
+  text-align: left;
+  direction: ltr;
+}
+
+textbox[empty="true"][chromedir="rtl"] html|*.textbox-input ,
+textbox[empty="true"][chromedir="rtl"] html|*.textbox-textarea {
+  text-align: right;
+  direction: rtl;
+}
+
+textbox[empty="true"] html|*.textbox-input[emptytextdelay="true"] ,
+textbox[empty="true"] html|*.textbox-textarea[emptytextdelay="true"] {
+  color: transparent !important;
+}
+

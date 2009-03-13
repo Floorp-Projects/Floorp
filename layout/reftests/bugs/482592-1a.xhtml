@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl">
+      <binding id="a">
+        <content>
+          <html:span xmlns:html="http://www.w3.org/1999/xhtml"
+                     id="hasAfter"><children/></html:span>
+        </content>
+      </binding>
+    </bindings>
+    <style>
+      #hasAfter::after { content: "y"; }
+      #l { display: none; } 
+    </style>
+    <script>
+      function doTest() {
+        var l = document.getElementById("l");
+        l.parentNode.insertBefore(document.createTextNode("x"), l);
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <div style="-moz-binding: url(#a)"><span id="l"></span></div>
+  </body>
+</html>

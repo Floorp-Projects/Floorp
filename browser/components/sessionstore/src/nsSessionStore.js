@@ -1671,20 +1671,21 @@ SessionStoreService.prototype = {
     
     if (aOverwriteTabs) {
       this.restoreWindowFeatures(aWindow, winData);
+      delete this._windows[aWindow.__SSi].extData;
     }
     if (winData.cookies) {
       this.restoreCookies(winData.cookies);
     }
     if (winData.extData) {
-      if (aOverwriteTabs  || !this._windows[aWindow.__SSi].extData) {
+      if (!this._windows[aWindow.__SSi].extData) {
         this._windows[aWindow.__SSi].extData = {};
       }
       for (var key in winData.extData) {
         this._windows[aWindow.__SSi].extData[key] = winData.extData[key];
       }
     }
-    if (winData._closedTabs && (root._firstTabs || aOverwriteTabs)) {
-      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs;
+    if (aOverwriteTabs || root._firstTabs) {
+      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs || [];
     }
     
     this.restoreHistoryPrecursor(aWindow, tabs, winData.tabs,

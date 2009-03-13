@@ -230,7 +230,7 @@ static uint32 tracing_enabled = 0;
 #endif
 
 static TM_TLS_INDEX_TYPE tls_index;
-static tm_thread main_thread; /* 0-initialization is correct */
+static PRBool tls_index_initialized = PR_FALSE;
 
 /* FIXME (maybe): This is currently unused; we leak the thread-local data. */
 #if 0
@@ -257,8 +257,16 @@ tm_get_thread(void)
     tm_thread *t;
     tm_thread stack_tm_thread;
 
-    if (!tmlock) {
-        return &main_thread;
+    if (!tls_index_initialized) {
+        /**
+         * Assume that the first call to |malloc| will occur before
+         * there are multiple threads.  (If that's not the case, we
+         * probably need to do the necessary synchronization without
+         * using NSPR primitives.  See discussion in
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=442192
+         */
+        TM_CREATE_TLS_INDEX(tls_index);
+        tls_index_initialized = PR_TRUE;
     }
 
     t = TM_GET_TLS_DATA(tls_index);
@@ -732,7 +740,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
                 if (library) {
                     library_serial = ++library_serial_generator;
                     he = PL_HashTableRawAdd(libraries, hep, hash, library,
-                                            (void*) library_serial);
+                                            NS_INT32_TO_PTR(library_serial));
                 }
                 if (!he) {
                     tmstats.btmalloc_failures++;
@@ -779,7 +787,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
             if (filename) {
                 filename_serial = ++filename_serial_generator;
                 he = PL_HashTableRawAdd(filenames, hep, hash, filename,
-                                        (void*) filename_serial);
+                                        NS_INT32_TO_PTR(filename_serial));
             }
             if (!he) {
                 tmstats.btmalloc_failures++;
@@ -826,7 +834,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
             if (method) {
                 method_serial = ++method_serial_generator;
                 he = PL_HashTableRawAdd(methods, hep, hash, method,
-                                        (void*) method_serial);
+                                        NS_INT32_TO_PTR(method_serial));
             }
             if (!he) {
                 tmstats.btmalloc_failures++;
@@ -1314,17 +1322,8 @@ NS_TraceMallocStartup(int logfd)
 
     atexit(NS_TraceMallocShutdown);
 
-    /*
-     * We only allow one thread until NS_TraceMallocStartup is called.
-     * When it is, we have to initialize tls_index before allocating tmlock
-     * since get_tm_index uses NULL-tmlock to detect tls_index being
-     * uninitialized.
-     */
-    main_thread.suppress_tracing++;
-    TM_CREATE_TLS_INDEX(tls_index);
-    TM_SET_TLS_DATA(tls_index, &main_thread);
     tmlock = PR_NewLock();
-    main_thread.suppress_tracing--;
+    (void) tm_get_thread(); /* ensure index initialization while it's easy */
 
     if (tracing_enabled)
         StartupHooker();
@@ -1959,10 +1958,12 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end, tm_thread *t)
     if (!tracing_enabled || t->suppress_tracing != 0)
         return;
 
-    // XXX Perhaps we should call backtrace() so we can check for
-    // immediate_abort. However, the only current contexts where
-    // immediate_abort will be true do not call free(), so for now,
-    // let's avoid the cost of backtrace().
+    /*
+     * FIXME: Perhaps we should call backtrace() so we can check for
+     * immediate_abort. However, the only current contexts where
+     * immediate_abort will be true do not call free(), so for now,
+     * let's avoid the cost of backtrace().  See bug 478195.
+     */
     TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     tmstats.free_calls++;
     if (!ptr) {
@@ -1997,6 +1998,8 @@ NS_TraceMallocGetStackTrace(void)
     callsite *site;
     int dummy;
     tm_thread *t = tm_get_thread();
+
+    PR_ASSERT(t->suppress_tracing == 0);
 
     site = backtrace(t, 2, &dummy);
     return (nsTMStackTraceID) site;

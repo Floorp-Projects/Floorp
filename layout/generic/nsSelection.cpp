@@ -5134,16 +5134,15 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
 
   if (dx != 0 || dy != 0)
   {
-    nsCOMPtr<nsIPresShell> presShell;
-    GetPresShell(getter_AddRefs(presShell));
-    NS_ASSERTION(presShell, "no pres shell");
+    nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
+    NS_ENSURE_STATE(presShell);
 
     nsWeakView weakView = scrollableView->View();
 
     // Make sure latest bits are available before we scroll them. This flushes
     // pending notifications and thus might destroy stuff (bug 421839).
     // We need to hold a strong ref on the view manager to keep it alive.
-    nsCOMPtr<nsIViewManager> viewManager = aPresContext->GetViewManager();
+    nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
     viewManager->Composite();
 
     if (!weakView.IsAlive()) {

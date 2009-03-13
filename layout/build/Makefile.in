@@ -129,7 +129,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/content/xbl/src/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/content/xul/document/src/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
 	$(DEPTH)/view/src/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/base/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/base/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/json/$(LIB_PREFIX)json_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
@@ -298,7 +298,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/content/events/src \
 		   -I$(topsrcdir)/content/xbl/src \
 		   -I$(topsrcdir)/view/src \
-		   -I$(topsrcdir)/dom/src/base \
+		   -I$(topsrcdir)/dom/base \
 		   -I$(topsrcdir)/dom/src/json \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \

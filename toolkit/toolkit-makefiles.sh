@@ -49,8 +49,6 @@ MAKEFILES_db="
 
 MAKEFILES_dom="
   dom/Makefile
-  dom/public/Makefile
-  dom/public/base/Makefile
   dom/public/coreEvents/Makefile
   dom/interfaces/base/Makefile
   dom/interfaces/canvas/Makefile
@@ -64,8 +62,8 @@ MAKEFILES_dom="
   dom/interfaces/xbl/Makefile
   dom/interfaces/xpath/Makefile
   dom/interfaces/xul/Makefile
+  dom/base/Makefile
   dom/src/Makefile
-  dom/src/base/Makefile
   dom/src/events/Makefile
   dom/src/jsurl/Makefile
   dom/locales/Makefile
