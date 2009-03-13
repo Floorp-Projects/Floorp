@@ -247,9 +247,6 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms);
 extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx);
 
-extern void
-js_PurgeTraceMonitor(JSContext *cx, JSTraceMonitor *tm);
-
 /*
  * Kinds of js_GC invocation.
  */
@@ -342,9 +339,6 @@ extern const JSGCFreeListSet js_GCEmptyFreeListSet;
 
 extern void
 js_RevokeGCLocalFreeLists(JSContext *cx);
-
-extern void
-js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
 
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
