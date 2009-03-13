@@ -1671,7 +1671,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
-                                           kNameSpaceID_None);
+                                           kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   // Make root part
@@ -1699,7 +1699,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   // Make head part
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
-                                           nsnull, kNameSpaceID_None);
+                                           nsnull, kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   mHead = NS_NewHTMLHeadElement(nodeInfo);
@@ -2888,7 +2888,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull, kNameSpaceID_None);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull, kNameSpaceID_XHTML);
 
     result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(result, result);
