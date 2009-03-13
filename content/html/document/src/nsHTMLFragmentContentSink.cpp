@@ -1175,7 +1175,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
       if (!parserService)
         return NS_ERROR_OUT_OF_MEMORY;
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
-                                               kNameSpaceID_None);
+                                               kNameSpaceID_XHTML);
       NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
       rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
