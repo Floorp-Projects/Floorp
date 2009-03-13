@@ -63,12 +63,18 @@ nsHtml5Module::InitializeStatics()
   nsHtml5Tokenizer::initializeStatics();
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
+#ifdef DEBUG
+  sNsHtml5ModuleInitialized = PR_TRUE;
+#endif
 }
 
 // static
 void
 nsHtml5Module::ReleaseStatics()
 {
+#ifdef DEBUG
+  sNsHtml5ModuleInitialized = PR_FALSE;
+#endif
   nsHtml5AttributeName::releaseStatics();
   nsHtml5ElementName::releaseStatics();
   nsHtml5HtmlAttributes::releaseStatics();
@@ -85,6 +91,7 @@ nsHtml5Module::ReleaseStatics()
 already_AddRefed<nsIParser> 
 nsHtml5Module::NewHtml5Parser()
 {
+  NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsIParser* rv = static_cast<nsIParser*> (new nsHtml5Parser());
   NS_ADDREF(rv);
   return rv;
@@ -95,7 +102,11 @@ nsHtml5Module::NewHtml5Parser()
 nsresult 
 nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer, nsIChannel* aChannel)
 {
+  NS_ABORT_IF_FALSE(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
   nsHtml5Parser* parser = static_cast<nsHtml5Parser*> (aParser);
   return parser->Initialize(aDoc, aURI, aContainer, aChannel);
 }
 
+#ifdef DEBUG
+PRBool nsHtml5Module::sNsHtml5ModuleInitialized = PR_FALSE;
+#endif

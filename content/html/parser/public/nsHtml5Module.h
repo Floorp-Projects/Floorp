@@ -47,6 +47,10 @@ class nsHtml5Module
     static void ReleaseStatics();
     static already_AddRefed<nsIParser> NewHtml5Parser();
     static nsresult Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer, nsIChannel* aChannel);
+#ifdef DEBUG
+  private:
+    static PRBool sNsHtml5ModuleInitialized;
+#endif
 };
 
 #endif // nsHtml5Module_h__
