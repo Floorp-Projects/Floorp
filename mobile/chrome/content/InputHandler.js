@@ -89,15 +89,15 @@ function InputHandler() {
   stack.addEventListener("mousemove", this, true);
   stack.addEventListener("click", this, true);
 
-  let content = document.getElementById("browser-canvas");
-  content.addEventListener("keydown", this, true);
-  content.addEventListener("keyup", this, true);
+  let browserCanvas = document.getElementById("browser-canvas");
+  browserCanvas.addEventListener("keydown", this, true);
+  browserCanvas.addEventListener("keyup", this, true);
 
   let prefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
   let allowKinetic = prefsvc.getBoolPref("browser.ui.panning.kinetic");
 
-  this._modules.push(new ChromeInputModule(this));
-  this._modules.push(new ContentPanningModule(this, allowKinetic));
+  this._modules.push(new ChromeInputModule(this, browserCanvas));
+  this._modules.push(new ContentPanningModule(this, browserCanvas, allowKinetic));
   this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this));
 }
@@ -162,10 +162,11 @@ InputHandler.prototype = {
  * Panning code for chrome elements
  */
 
-function ChromeInputModule(owner, useKinetic) {
+function ChromeInputModule(owner, browserCanvas, useKinetic) {
   this._owner = owner;
   if (useKinetic !== undefined)
     this._dragData.useKinetic = useKinetic;
+  this._browserCanvas = browserCanvas;
 }
 
 ChromeInputModule.prototype = {
@@ -252,7 +253,7 @@ ChromeInputModule.prototype = {
 
   _onMouseDown: function _onMouseDown(aEvent) {
     // exit early for events in the content area
-    if (aEvent.target === document.getElementById("browser-canvas")) {
+    if (aEvent.target === this._browserCanvas) {
       return;
     }
 
@@ -384,10 +385,11 @@ ChromeInputModule.prototype = {
  * Kinetic panning code for content
  */
 
-function ContentPanningModule(owner, useKinetic) {
+function ContentPanningModule(owner, browserCanvas, useKinetic) {
   this._owner = owner;
   if (useKinetic !== undefined)
     this._dragData.useKinetic = useKinetic;
+  this._browserCanvas = browserCanvas;
 }
 
 ContentPanningModule.prototype = {
@@ -448,7 +450,7 @@ ContentPanningModule.prototype = {
 
   handleEvent: function handleEvent(aEvent) {
     // exit early for events outside displayed content area
-    if (aEvent.target !== document.getElementById("browser-canvas"))
+    if (aEvent.target !== this._browserCanvas)
       return;
 
     switch (aEvent.type) {
