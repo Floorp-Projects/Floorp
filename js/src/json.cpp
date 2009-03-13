@@ -590,15 +590,18 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 
     if (!js_RemoveRoot(cx->runtime, &jp->objectStack))
         return JS_FALSE;
+
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
-    jsval *v = jp->rootVal;
+    jsval *vp = jp->rootVal;
     JS_free(cx, jp);
 
-    if (!ok)
+    if (!ok) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
+        return JS_FALSE;
+    }
 
     if (!JSVAL_IS_PRIMITIVE(reviver) && js_IsCallable(JSVAL_TO_OBJECT(reviver), cx))
-        ok = Revive(cx, reviver, v);
+        ok = Revive(cx, reviver, vp);
 
     return ok;
 }
