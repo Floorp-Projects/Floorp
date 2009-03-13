@@ -54,7 +54,6 @@ CanvasBrowser.prototype = {
   _visibleBounds:new wsRect(0,0,0,0),
   // during pageload: controls whether we poll document for size changing
   _maybeZoomToPage: false,
-  // suggests to do clipped drawing in flushRegion
   _pageLoading: true,
   // 0,0 to contentW, contentH..is a list of dirty rectangles
   _rgnPage: Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion),
@@ -123,6 +122,7 @@ CanvasBrowser.prototype = {
     function resizeAndPaint(self) {
       if (self._maybeZoomToPage) {
         self.zoomToPage();
+        this._maybeZoomToPage = false;
       }
       // draw visible area..freeze during pans
       if (!self._isPanning)
@@ -398,9 +398,6 @@ CanvasBrowser.prototype = {
 
     if (contentW > canvasW)
       this.zoomLevel = canvasW / contentW;
-
-    if (this._clippedPageDrawing)
-      this._maybeZoomToPage = false;
   },
 
   zoomToElement: function(aElement) {
