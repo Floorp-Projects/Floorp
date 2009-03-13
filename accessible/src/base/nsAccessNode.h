@@ -140,8 +140,7 @@ class nsAccessNode: public nsIAccessNode
     /**
      * Returns true when the accessible is defunct.
      */
-    // Call GetPresShell() since AccessNode obj may be shutdown in it.
-    virtual PRBool IsDefunct() { return !mDOMNode || !GetPresShell().get(); }
+    virtual PRBool IsDefunct() { return !mDOMNode; }
 
     /**
      * Initialize the access node object, add it to the cache.
