@@ -1179,7 +1179,7 @@ specializeTreesToMissingGlobals(JSContext* cx, TreeInfo* root)
 
     ti->typeMap.captureMissingGlobalTypes(cx, *ti->globalSlots, ti->nStackTypes);
     JS_ASSERT(ti->globalSlots->length() == ti->typeMap.length() - ti->nStackTypes);
-   
+
     for (unsigned i = 0; i < root->dependentTrees.length(); i++) {
         ti = (TreeInfo*)root->dependentTrees.data()[i]->vmprivate;
         /* ti can be NULL if we hit the recording tree in emitTreeCall; this is harmless. */
