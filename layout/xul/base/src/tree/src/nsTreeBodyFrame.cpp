@@ -1044,7 +1044,7 @@ nsTreeBodyFrame::AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
   point -= clientOffset;
 
   nsIView* rootView;
-  presContext->GetViewManager()->GetRootView(rootView);
+  presContext->GetPresShell()->GetViewManager()->GetRootView(rootView);
   NS_ASSERTION(closestView && rootView, "No view?");
   point -= closestView->GetOffsetTo(rootView);
 

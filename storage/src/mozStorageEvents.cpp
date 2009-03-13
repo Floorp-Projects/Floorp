@@ -52,6 +52,7 @@
 #include "mozStorageRow.h"
 #include "mozStorageConnection.h"
 #include "mozStorageError.h"
+#include "mozStoragePrivateHelpers.h"
 #include "mozStorageEvents.h"
 
 /**
@@ -425,6 +426,11 @@ private:
       (void)NotifyError(mozIStorageError::ERROR, "");
       return PR_FALSE;
     }
+
+#ifdef DEBUG
+    // Check to make sure that this statement was smart about what it did.
+    CheckAndLogStatementPerformance(aStatement);
+#endif
 
     // If we are done, we need to set our state accordingly while we still
     // hold our lock.  We would have already returned if we were canceled or had

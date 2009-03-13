@@ -207,7 +207,6 @@ public:
       return mDocument;
   }
 
-  nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
 

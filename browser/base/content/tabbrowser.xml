@@ -50,8 +50,6 @@
 %tabBrowserDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
-<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
-%placesDTD;
 ]>
 
 <bindings id="tabBrowserBindings"
@@ -98,7 +96,8 @@
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
-            <xul:menuitem id="context_openTabInWindow" label="&cmd.open_window.label;"
+            <xul:menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
+                          accesskey="&openTabInNewWindow.accesskey;"
                           tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.replaceTabWithWindow(tabbrowser.mContextTab);"/>

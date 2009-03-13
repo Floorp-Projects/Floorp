@@ -151,6 +151,7 @@ EXPORTS
         sqlite3_snprintf
         sqlite3_sql
         sqlite3_step
+        sqlite3_stmt_status
         sqlite3_thread_cleanup
         sqlite3_total_changes
         sqlite3_trace

@@ -1268,25 +1268,37 @@ nsNavHistory::InitStatements()
   // was the original page visited.
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT COALESCE(r_t.visit_date, r.visit_date, v.visit_date) date, "
-        "COALESCE(r_t.visit_type, r.visit_type, v.visit_type) "
-      "FROM ( "
-        "SELECT visit_date, visit_type, from_visit FROM moz_historyvisits_temp "
-        "WHERE place_id = ?1 "
-        "UNION ALL "
-        "SELECT visit_date, visit_type, from_visit FROM moz_historyvisits "
-        "WHERE id NOT IN (SELECT id FROM moz_historyvisits_temp) "
-        "AND place_id = ?1 "
-      ") AS v "
-      "LEFT JOIN moz_historyvisits r ON r.id = v.from_visit "
-        "AND v.visit_type IN ") +
-          nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-            TRANSITION_REDIRECT_TEMPORARY) + NS_LITERAL_CSTRING(
-      "LEFT JOIN moz_historyvisits_temp r_t ON r_t.id = v.from_visit "
-        "AND v.visit_type IN ") +
-          nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-            TRANSITION_REDIRECT_TEMPORARY) + NS_LITERAL_CSTRING(
-      "ORDER BY date DESC LIMIT ") +
+      "SELECT v.visit_date, COALESCE( "
+        "(SELECT r.visit_type FROM moz_historyvisits_temp r "
+          "WHERE v.visit_type IN ") +
+            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
+                                        TRANSITION_REDIRECT_TEMPORARY) +
+            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
+        "(SELECT r.visit_type FROM moz_historyvisits r "
+          "WHERE v.visit_type IN ") +
+            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
+                                        TRANSITION_REDIRECT_TEMPORARY) +
+            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
+        "visit_type) "
+      "FROM moz_historyvisits_temp v "
+      "WHERE v.place_id = ?1 "
+      "UNION ALL "
+      "SELECT v.visit_date, COALESCE( "
+        "(SELECT r.visit_type FROM moz_historyvisits_temp r "
+          "WHERE v.visit_type IN ") +
+            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
+                                        TRANSITION_REDIRECT_TEMPORARY) +
+            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
+        "(SELECT r.visit_type FROM moz_historyvisits r "
+          "WHERE v.visit_type IN ") +
+            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
+                                        TRANSITION_REDIRECT_TEMPORARY) +
+            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
+        "visit_type) "
+      "FROM moz_historyvisits v "
+      "WHERE v.place_id = ?1 "
+        "AND v.id NOT IN (SELECT id FROM moz_historyvisits_temp) "
+      "ORDER BY 1 DESC LIMIT ") +
         nsPrintfCString("%d", mNumVisitsForFrecency),
     getter_AddRefs(mDBVisitsForFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
