@@ -611,7 +611,7 @@ public:
 #define TRACE_ARGS_(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
         TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
-        if (tr_ && !tr_->record_##x args)                                     \
+        if (tr_ && !tr_->wasDeepAborted() && !tr_->record_##x args)           \
             js_AbortRecording(cx, #x);                                        \
     JS_END_MACRO
 
