@@ -1715,7 +1715,7 @@ CloseNativeIterators(JSContext *cx)
 #define NGCHIST 64
 
 static struct GCHist {
-    JSBool      lastDitch;
+    bool        lastDitch;
     JSGCThing   *freeList;
 } gchist[NGCHIST];
 
@@ -1790,15 +1790,21 @@ EnsureLocalFreeList(JSContext *cx)
 
 #endif
 
-static JS_INLINE JSBool
+static JS_INLINE bool
 IsGCThresholdReached(JSRuntime *rt)
 {
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal >= 1)
+        return true;
+#endif
+
     /*
      * Since the initial value of the gcLastBytes parameter is not equal to
      * zero (see the js_InitGC function) the return value is false when
      * the gcBytes value is close to zero at the JS engine start.
      */
-    return rt->gcBytes / rt->gcTriggerFactor >= rt->gcLastBytes / 100;
+    return rt->gcMallocBytes >= rt->gcMaxMallocBytes ||
+           rt->gcBytes / rt->gcTriggerFactor >= rt->gcLastBytes / 100;
 }
 
 void *
@@ -1806,7 +1812,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 {
     JSRuntime *rt;
     uintN flindex;
-    JSBool doGC;
+    bool doGC;
     JSGCThing *thing;
     uint8 *flagp;
     JSGCArenaList *arenaList;
@@ -1867,17 +1873,13 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         return NULL;
     }
 
-    doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke) ||
-           IsGCThresholdReached(rt);
-#ifdef JS_GC_ZEAL
-    doGC = doGC || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke);
-# ifdef JS_TRACER
+#if defined JS_GC_ZEAL && defined JS_TRACER
     if (rt->gcZeal >= 1 && JS_TRACE_MONITOR(cx).useReservedObjects)
         goto testReservedObjects;
-# endif
 #endif
 
     arenaList = &rt->gcArenaList[flindex];
+    doGC = IsGCThresholdReached(rt);
     for (;;) {
         if (doGC
 #ifdef JS_TRACER
@@ -1908,9 +1910,9 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * Refill the local free list by taking several things from the
              * global free list unless we are still at rt->gcMaxMallocBytes
              * barrier or the free list is already populated. The former
-             * happens when GC is canceled due to !gcCallback(cx, JSGC_BEGIN)
-             * or no gcPoke. The latter is caused via allocating new things
-             * in gcCallback(cx, JSGC_END).
+             * happens when GC is canceled due to gcCallback(cx, JSGC_BEGIN)
+             * returning false. The latter is caused via allocating new
+             * things in gcCallback(cx, JSGC_END).
              */
             if (rt->gcMallocBytes >= rt->gcMaxMallocBytes)
                 break;
@@ -1967,7 +1969,7 @@ testReservedObjects:
             if (!a) {
                 if (doGC || JS_ON_TRACE(cx))
                     goto fail;
-                doGC = JS_TRUE;
+                doGC = true;
                 continue;
             }
             a->list = arenaList;
@@ -2100,14 +2102,8 @@ RefillDoubleFreeList(JSContext *cx)
         return NULL;
     }
 
-    if ((rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke) ||
-        IsGCThresholdReached(rt)
-#ifdef JS_GC_ZEAL
-        || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke)
-#endif
-        ) {
+    if (IsGCThresholdReached(rt))
         goto do_gc;
-    }
 
     /*
      * Loop until we find a flag bitmap byte with unset bits indicating free
@@ -2302,11 +2298,7 @@ js_AddAsGCBytes(JSContext *cx, size_t sz)
     rt = cx->runtime;
     if (rt->gcBytes >= rt->gcMaxBytes ||
         sz > (size_t) (rt->gcMaxBytes - rt->gcBytes) ||
-        IsGCThresholdReached(rt)
-#ifdef JS_GC_ZEAL
-        || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke)
-#endif
-        ) {
+        IsGCThresholdReached(rt)) {
         if (JS_ON_TRACE(cx)) {
             /*
              * If we can't leave the trace, signal OOM condition, otherwise
