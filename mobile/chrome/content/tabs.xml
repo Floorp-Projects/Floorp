@@ -80,7 +80,7 @@
     <content>
       <children includes="listheader"/>
       <xul:scrollbox allowevents="true" orient="horizontal" anonid="main-box"
-                     flex="1" style="overflow: auto;">
+                     flex="1">
         <children/>
       </xul:scrollbox>
     </content>
