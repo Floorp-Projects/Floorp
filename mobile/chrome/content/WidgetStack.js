@@ -1293,9 +1293,20 @@ WidgetStack.prototype = {
     // presumably the caller is managing those directly for now.
     if (state.frozen)
       return;
-
-    state.widget.setAttribute("left", state.rect.x + state.offsetLeft);
-    state.widget.setAttribute("top", state.rect.y + state.offsetTop);
+    let w = state.widget;
+    let l = state.rect.x + state.offsetLeft;
+    let t = state.rect.y + state.offsetTop;
+    
+    //cache left/top to avoid calling setAttribute unnessesarily
+    if (state._left != l) {
+      state._left = l;
+      w.setAttribute("left", l);
+    } 
+    
+    if (state._top != t) {
+      state._top = t;
+      w.setAttribute("top", t);
+    }
   },
 
   // constrain translate of rect by dx dy to bounds; return dx dy that can
