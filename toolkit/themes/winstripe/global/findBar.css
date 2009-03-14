@@ -104,25 +104,16 @@ findbar {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
-.findbar-textbox {
-  -moz-appearance: none;
-  border: none;
-  margin: 0px;
-}
-
 .findbar-textbox[status="notfound"] {
-  background-color: #FF6666;
-  color: #FFFFFF;
+  -moz-box-shadow: 0 0 0 1em #f66 inset;
+  color: white;
 }
 
-findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-textbox {
-  background-color: yellow;
+.findbar-textbox[flash="true"] {
+  -moz-box-shadow: 0 0 0 1em yellow inset;
+  color: black;
 }
 
 .find-status-icon[status="wrapped"] {
   list-style-image: url("chrome://global/skin/icons/wrap.png");
-}
-
-.find-field-container {
-  -moz-appearance: textfield;
 }

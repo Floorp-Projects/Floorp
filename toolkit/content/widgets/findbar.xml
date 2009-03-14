@@ -217,10 +217,8 @@
                          tooltiptext="&findCloseButton.tooltip;"
                          oncommand="close();"/>
       <xul:label anonid="find-label" class="findbar-find-fast" control="findbar-textbox"/>
-      <xul:hbox anonid="find-field-container"
-                class="find-field-container findbar-find-fast">
-        <xul:textbox class="findbar-textbox" anonid="findbar-textbox"/>
-      </xul:hbox>
+      <xul:textbox class="findbar-textbox findbar-find-fast" anonid="findbar-textbox"
+                   xbl:inherits="flash"/>
 #ifdef MOZ_WIDGET_GTK2
       <xul:toolbarbutton anonid="find-previous"
                          class="findbar-find-previous tabbable"
