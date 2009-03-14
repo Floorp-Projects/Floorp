@@ -21,14 +21,24 @@ menu-list.txt:
 
 .PHONY: patterns
 
-patterns:
-	touch confidential-failures.txt
+public-failures.txt:
+	touch $@
+
+confidential-failures.txt:
+	touch $@
+
+universe.data:
+	touch $@
+
+confidential-universe.data:
+	touch $@
+
+patterns: confidential-failures.txt confidential-universe.data public-failures.txt universe.data
 	if [[ -e confidential-failures.txt.expanded ]]; then \
 		cp confidential-failures.txt confidential-failures.txt.save; \
 		export TEST_UNIVERSE=$(CURRDIR)/confidential-universe.data && \
 		./pattern-extracter.pl confidential-failures.txt.expanded > confidential-failures.txt; \
 	fi
-	touch public-failures.txt
 	if [[ -e public-failures.txt.expanded ]]; then \
 		cp public-failures.txt public-failures.txt.save; \
 		./pattern-extracter.pl public-failures.txt.expanded > public-failures.txt; \
