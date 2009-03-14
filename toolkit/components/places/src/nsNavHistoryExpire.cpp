@@ -1022,7 +1022,7 @@ nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection
 
 // nsNavHistoryExpire::ExpireInputHistoryParanoid
 //
-//    Deletes dangling input history, decay potentially unused entries
+//    Deletes dangling input history
 
 nsresult
 nsNavHistoryExpire::ExpireInputHistoryParanoid(mozIStorageConnection* aConnection)
@@ -1036,13 +1036,6 @@ nsNavHistoryExpire::ExpireInputHistoryParanoid(mozIStorageConnection* aConnectio
         "WHERE h.id IS NULL "
           "AND h_t.id IS NULL "
       ")"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Decay potentially unused entries (e.g. those that are at 1) to allow
-  // better chances for new entries that will start at 1
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "UPDATE moz_inputhistory "
-      "SET use_count = use_count * .9"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
