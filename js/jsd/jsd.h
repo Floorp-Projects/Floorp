@@ -389,6 +389,12 @@ extern JSDScript*
 jsd_FindJSDScript(JSDContext*  jsdc,
                   JSScript     *script);
 
+extern JSDScript*
+jsd_FindOrCreateJSDScript(JSDContext    *jsdc,
+                          JSContext     *cx,
+                          JSScript      *script,
+                          JSStackFrame  *fp);
+
 extern JSDProfileData*
 jsd_GetScriptProfileData(JSDContext* jsdc, JSDScript *script);
 
