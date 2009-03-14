@@ -39,10 +39,20 @@ findbar {
 .findbar-highlight {
   -moz-appearance: none;
   border: 1px solid #5F5F5F;
-  -moz-border-radius: 10px;
+  -moz-border-radius: 100%;
   background: url("chrome://global/skin/icons/white-gray-gradient.gif") #A09E9D repeat-x top center;
   margin: 0 4px 1px 4px;
   padding: 0 3px;
+  -moz-box-shadow: 0 1px 0 rgba(255,255,255,.3);
+}
+
+.findbar-find-next:focus,
+.findbar-find-previous:focus,
+.findbar-highlight:focus {
+  position: relative;
+  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset,
+                   0 0 4px 1px -moz-mac-focusring,
+                   0 0 2px 1px -moz-mac-focusring;
 }
 
 .findbar-container > toolbarbutton > .toolbarbutton-text {
@@ -64,23 +74,23 @@ findbar {
 }
 
 .findbar-container > checkbox {
-   list-style-image: url("chrome://global/skin/icons/checkbox.png");
-   -moz-image-region: rect(0px 16px 16px 0px);
-   -moz-appearance: none;
-   -moz-margin-start: 7px;
-   padding-top: 2px;
+  list-style-image: url("chrome://global/skin/icons/checkbox.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  -moz-appearance: none;
+  -moz-margin-start: 7px;
+  padding-top: 2px;
 }
 
 .findbar-container > checkbox:hover:active {
-   -moz-image-region: rect(0px 32px 16px 16px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 .findbar-container > checkbox[checked] {
-   -moz-image-region: rect(0px 48px 16px 32px);
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .findbar-container > checkbox[checked]:hover:active {
-   -moz-image-region: rect(0px 64px 16px 48px);
+  -moz-image-region: rect(0px 64px 16px 48px);
 }
 
 .findbar-container > checkbox > .checkbox-check {
@@ -97,44 +107,41 @@ findbar {
 }
 
 .findbar-container > checkbox:focus > .checkbox-label-box > .checkbox-icon {
-  outline: 2px solid #4F8EC9;
-  outline-offset: -2px;
-  -moz-outline-radius: 4px;
+  -moz-border-radius: 4px;
+  -moz-box-shadow: 0 0 0 2px -moz-mac-focusring inset,
+                   0 0 4px -moz-mac-focusring;
 }
 
 .findbar-textbox {
   -moz-appearance: none;
-  border: 3px solid;
-  -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
-  -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
-  -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
-  -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
-  -moz-border-radius: 11.5px;
-  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
-  -moz-background-clip: border !important;
-  padding: 0 8px;
+  -moz-border-radius: 100%;
+  border: 1px solid;
+  -moz-border-top-colors: #666;
+  -moz-border-right-colors: #777;
+  -moz-border-bottom-colors: #777;
+  -moz-border-left-colors: #777;
+  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.3) inset,
+                   0 1px 0 rgba(255,255,255,.3);
+  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 2px center;
+  -moz-background-clip: padding;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-padding-end: 8px;
   -moz-padding-start: 17px;
 }
 
 .findbar-textbox[focused="true"] {
-  outline: 2px solid #4A8BC7;
-  outline-offset: -2px;
-  -moz-outline-radius: 11px;
+  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.3) inset,
+                   0 0 1px -moz-mac-focusring inset,
+                   0 0 4px 1px -moz-mac-focusring,
+                   0 0 2px 1px -moz-mac-focusring;
 }
 
 findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-textbox {
-  -moz-border-top-colors: #5F5F5F #F7E379 #F7E379;
-  -moz-border-bottom-colors: #9F9F9F #F7E379 #F7E379;
-  -moz-border-right-colors: #7F7F7F #F7E379 #F7E379;
-  -moz-border-left-colors: #7F7F7F #F7E379 #F7E379;
   background-color: #F7E379;
 }
 
 .findbar-textbox[status="notfound"] {
-  -moz-border-top-colors: #5F5F5F #FD919B #FD919B;
-  -moz-border-bottom-colors: #9F9F9F #FD919B #FD919B;
-  -moz-border-right-colors: #7F7F7F #FD919B #FD919B;
-  -moz-border-left-colors: #7F7F7F #FD919B #FD919B;
   background-color: #FD919B;
   color: #FFF;
 }
