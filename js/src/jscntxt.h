@@ -1038,10 +1038,6 @@ class JSAutoTempValueRooter
         : mContext(cx) {
         JS_PUSH_TEMP_ROOT_STRING(mContext, str, &mTvr);
     }
-    JSAutoTempValueRooter(JSContext *cx, JSObject *obj)
-        : mContext(cx) {
-        JS_PUSH_TEMP_ROOT_OBJECT(mContext, obj, &mTvr);
-    }
 
     ~JSAutoTempValueRooter() {
         JS_POP_TEMP_ROOT(mContext, &mTvr);
