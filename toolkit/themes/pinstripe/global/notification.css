@@ -57,9 +57,10 @@ notification[type="critical"] .messageImage {
 
 .messageCloseButton {
   -moz-appearance: none;
-  padding: 0;
+  padding: 2px;
   margin: 0 2px;
-  list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  -moz-image-region: rect(2px, 14px, 14px, 2px);
   border: none;
 }
 
@@ -72,11 +73,14 @@ notification[type="critical"] .messageImage {
 }
 
 .messageCloseButton:hover {
-  list-style-image: url("chrome://global/skin/icons/closetab-hover.png") !important;
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
 }
 
 .messageCloseButton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
-
+.messageCloseButton:focus > .toolbarbutton-icon {
+  -moz-border-radius: 100%;
+  -moz-box-shadow: 0 0 3px 3px -moz-mac-focusring;
+}
