@@ -3155,7 +3155,11 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         }
     }
 
-    if (cx->debugHooks->objectHook) {
+    /*
+     * Do not call debug hooks on trace, because we might be in a non-_FAIL
+     * builtin. See bug 481444.
+     */
+    if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
         JS_KEEP_ATOMS(cx->runtime);
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
