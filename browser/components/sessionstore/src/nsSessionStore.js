@@ -1655,6 +1655,11 @@ SessionStoreService.prototype = {
     var newTabCount = winData.tabs.length;
     let tabs = [];
     
+    // make sure that the selected tab won't be closed in order to
+    // prevent unnecessary flickering
+    if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
+      tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
+    
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ? tabbrowser.mTabs[t] : tabbrowser.addTab());
       // when resuming at startup: add additionally requested pages to the end
