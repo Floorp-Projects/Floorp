@@ -2211,10 +2211,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         return NS_OK;
       }
 
-#ifdef WINCE
-      return NS_OK;
-#endif
-
+#ifndef WINCE
       if (isHTML) {
         nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
         isOpen = (ccf && ccf->IsDroppedDown());
@@ -2232,6 +2229,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       // Dropdown button active state doesn't need :hover.
       if (eventState & NS_EVENT_STATE_ACTIVE)
         aState |= DFCS_PUSHED | DFCS_FLAT;
+#endif
 
       return NS_OK;
     }
