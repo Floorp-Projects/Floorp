@@ -80,6 +80,10 @@ function onPageLoad() {
 }
 
 function test() {
+  // XXX test disabled, see bug 483382.
+  finish();
+  return;
+
   var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(Ci.nsIXULRuntime).OS;
 
