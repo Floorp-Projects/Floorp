@@ -284,7 +284,29 @@ jsd_FindJSDScript( JSDContext*  jsdc,
 {
     JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
     return (JSDScript*) JS_HashTableLookup(jsdc->scriptsTable, (void *)script);
-}               
+}
+
+JSDScript *
+jsd_FindOrCreateJSDScript(JSDContext    *jsdc,
+                          JSContext     *cx,
+                          JSScript      *script,
+                          JSStackFrame  *fp)
+{
+    JSDScript *jsdscript;
+    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+
+    jsdscript = jsd_FindJSDScript(jsdc, script);
+    if (jsdscript)
+        return jsdscript;
+
+    // Fallback for unknown scripts: create a new script
+    if (!fp)
+        JS_FrameIterator(cx, &fp);
+    if (fp)
+        jsdscript = _newJSDScript(jsdc, cx, script, JS_GetFrameFunction(cx, fp));
+
+    return jsdscript;
+}
 
 JSDProfileData*
 jsd_GetScriptProfileData(JSDContext* jsdc, JSDScript *script)
