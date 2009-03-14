@@ -47,8 +47,7 @@ XPCSHELL_TESTS	= unit
 
 include $(topsrcdir)/config/rules.mk
 
-# browser_420786.js is disabled, see bug 483382.
-_BROWSER_TEST_FILES = \
+_BROWSER_TEST_FILES = browser_420786.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
