@@ -82,13 +82,51 @@ struct JSStackFrame {
     jsval           rval;           /* function return value */
     JSStackFrame    *down;          /* previous frame */
     void            *annotation;    /* used by Java security */
-    JSObject        *scopeChain;    /* scope chain */
+
+    /*
+     * We can't determine in advance which local variables can live on
+     * the stack and be freed when their dynamic scope ends, and which
+     * will be closed over and need to live in the heap.  So we place
+     * variables on the stack initially, note when they are closed
+     * over, and copy those that are out to the heap when we leave
+     * their dynamic scope.
+     * 
+     * The bytecode compiler produces a tree of block objects
+     * accompanying each JSScript representing those lexical blocks in
+     * the script that have let-bound variables associated with them.
+     * These block objects are never modified, and never become part
+     * of any function's scope chain.  Their parent slots point to the
+     * innermost block that encloses them, or are NULL in the
+     * outermost blocks within a function or in eval or global code.
+     *
+     * When we are in the static scope of such a block, blockChain
+     * points to its compiler-allocated block object; otherwise, it is
+     * NULL.
+     * 
+     * scopeChain is the current scope chain, including 'call' and
+     * 'block' objects for those function calls and lexical blocks
+     * whose static scope we are currently executing in, and 'with'
+     * objects for with statements; the chain is typically terminated
+     * by a global object.  However, as an optimization, the young end
+     * of the chain omits block objects we have not yet cloned.  To
+     * create a closure, we clone the missing blocks from blockChain
+     * (which is always current), place them at the head of
+     * scopeChain, and use that for the closure's scope chain.  If we
+     * never close over a lexical block, we never place a mutable
+     * clone of it on scopeChain.
+     *
+     * This lazy cloning is implemented in js_GetScopeChain, which is
+     * also used in some other cases --- entering 'with' blocks, for
+     * example.
+     */
+    JSObject        *scopeChain;
+    JSObject        *blockChain;
+
     uintN           sharpDepth;     /* array/object initializer depth */
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
     JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
-    JSObject        *blockChain;    /* active compile-time block scopes */
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticDepth */
 #ifdef DEBUG
@@ -140,7 +178,6 @@ typedef struct JSInlineFrame {
 #define JSFRAME_ROOTED_ARGV    0x20 /* frame.argv is rooted by the caller */
 #define JSFRAME_YIELDING       0x40 /* js_Interpret dispatched JSOP_YIELD */
 #define JSFRAME_ITERATOR       0x80 /* trying to get an iterator for for-in */
-#define JSFRAME_POP_BLOCKS    0x100 /* scope chain contains blocks to pop */
 #define JSFRAME_GENERATOR     0x200 /* frame belongs to generator-iterator */
 #define JSFRAME_IMACRO_START  0x400 /* imacro starting -- see jstracer.h */
 
