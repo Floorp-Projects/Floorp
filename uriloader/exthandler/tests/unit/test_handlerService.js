@@ -236,6 +236,8 @@ function run_test() {
   if (haveDefaultHandlersVersion) {
     handlerTypes.push("webcal");
     handlerTypes.push("mailto");
+    handlerTypes.push("irc");
+    handlerTypes.push("ircs");
   }
   var handlers = handlerSvc.enumerate();
   while (handlers.hasMoreElements()) {
