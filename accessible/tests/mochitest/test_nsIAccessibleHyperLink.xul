@@ -65,7 +65,7 @@
       testRole(normalLabelAcc, ROLE_LABEL);
       is(normalLabelAcc.name, "This label should not be a link",
          "Wrong name for normal label!");
-      testStates(normalLabelAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED);
+      testStates(normalLabelAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
 
       SimpleTest.finish();
     }
