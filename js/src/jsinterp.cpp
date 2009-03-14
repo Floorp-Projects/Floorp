@@ -936,24 +936,9 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 
     MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        JSXMLObjectOps *ops;
-
-        ops = (JSXMLObjectOps *) obj->map->ops;
-        obj = ops->getMethod(cx, obj, id, &tvr.u.value);
-        if (!obj) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        vp[1] = OBJECT_TO_JSVAL(obj);
-    } else
-#endif
-    {
-        ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
-        if (!ok)
-            goto out;
-    }
+    ok = js_GetMethod(cx, obj, id, &tvr.u.value, NULL);
+    if (!ok)
+        goto out;
     if (JSVAL_IS_PRIMITIVE(tvr.u.value)) {
         vp[0] = tvr.u.value;
     } else {
@@ -3582,12 +3567,9 @@ js_Interpret(JSContext *cx)
         (rtmp == JSVAL_OBJECT &&                                              \
          (obj2 = JSVAL_TO_OBJECT(rval)) &&                                    \
          OBJECT_IS_XML(cx, obj2))) {                                          \
-        JSXMLObjectOps *ops;                                                  \
-                                                                              \
-        ops = (JSXMLObjectOps *) obj2->map->ops;                              \
         if (JSVAL_IS_OBJECT(rval) && obj2 == JSVAL_TO_OBJECT(rval))           \
             rval = lval;                                                      \
-        if (!ops->equality(cx, obj2, rval, &cond))                            \
+        if (!js_TestXMLEquality(cx, obj2, rval, &cond))                       \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
@@ -3761,10 +3743,7 @@ js_Interpret(JSContext *cx)
             if (!JSVAL_IS_PRIMITIVE(lval) &&
                 (obj2 = JSVAL_TO_OBJECT(lval), OBJECT_IS_XML(cx, obj2)) &&
                 VALUE_IS_XML(cx, rval)) {
-                JSXMLObjectOps *ops;
-
-                ops = (JSXMLObjectOps *) obj2->map->ops;
-                if (!ops->concatenate(cx, obj2, rval, &rval))
+                if (!js_ConcatenateXML(cx, obj2, rval, &rval))
                     goto error;
                 regs.sp--;
                 STORE_OPND(-1, rval);
@@ -4386,22 +4365,8 @@ js_Interpret(JSContext *cx)
             id = ATOM_TO_JSID(atom);
             PUSH(JSVAL_NULL);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
-#if JS_HAS_XML_SUPPORT
-                /* Special-case XML object method lookup, per ECMA-357. */
-                if (OBJECT_IS_XML(cx, obj)) {
-                    JSXMLObjectOps *ops;
-
-                    ops = (JSXMLObjectOps *) obj->map->ops;
-                    obj = ops->getMethod(cx, obj, id, &rval);
-                    if (!obj)
-                        goto error;
-                } else
-#endif
-                if (entry
-                    ? !js_GetPropertyHelper(cx, obj, id, &rval, &entry)
-                    : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
+                if (!js_GetMethod(cx, obj, id, &rval, entry ? &entry : NULL))
                     goto error;
-                }
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
             } else {
@@ -4699,11 +4664,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_CALLELEM)
-            /*
-             * FIXME: JSOP_CALLELEM should call getMethod on XML objects as
-             * CALLPROP does. See bug 362910.
-             */
-            ELEMENT_OP(-1, OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            ELEMENT_OP(-1, js_GetMethod(cx, obj, id, &rval, NULL));
 #if JS_HAS_NO_SUCH_METHOD
             if (JS_UNLIKELY(JSVAL_IS_VOID(rval))) {
                 regs.sp[-2] = regs.sp[-1];

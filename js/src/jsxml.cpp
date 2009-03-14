@@ -133,6 +133,9 @@ const uint32 NAMESPACE_RESERVED_SLOTS = 3;
 const uint32 QNAME_RESERVED_SLOTS = 3;
 
 static JSBool
+GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+static JSBool
 IsQNameClass(JSClass *clasp)
 {
     return clasp == &js_QNameClass.base ||
@@ -3496,9 +3499,6 @@ Descendants(JSContext *cx, JSXML *xml, jsval id)
     return list;
 }
 
-static JSBool
-xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
-
 /* Recursive (JSXML *) parameterized version of Equals. */
 static JSBool
 XMLEquals(JSContext *cx, JSXML *xml, JSXML *vxml, JSBool *bp)
@@ -3556,7 +3556,7 @@ retry:
             xobj = js_GetXMLObject(cx, kid);
             vobj = js_GetXMLObject(cx, vkid);
             ok = xobj && vobj &&
-                 xml_equality(cx, xobj, OBJECT_TO_JSVAL(vobj), bp);
+                 js_TestXMLEquality(cx, xobj, OBJECT_TO_JSVAL(vobj), bp);
             if (!ok || !*bp)
                 break;
         }
@@ -3606,7 +3606,7 @@ Equals(JSContext *cx, JSXML *xml, jsval v, JSBool *bp)
                 vobj = js_GetXMLObject(cx, vxml);
                 if (!vobj)
                     return JS_FALSE;
-                return js_XMLObjectOps.equality(cx, vobj, v, bp);
+                return js_TestXMLEquality(cx, vobj, v, bp);
             }
             if (JSVAL_IS_VOID(v) && xml->xml_kids.length == 0)
                 *bp = JS_TRUE;
@@ -3991,7 +3991,7 @@ GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!nameqn)
         return JS_FALSE;
     if (funid)
-        return js_GetXMLFunction(cx, obj, funid, vp);
+        return GetXMLFunction(cx, obj, funid, vp);
 
     roots[0] = OBJECT_TO_JSVAL(nameqn);
     JS_PUSH_TEMP_ROOT(cx, 1, roots, &tvr);
@@ -4837,7 +4837,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
         if (HasSimpleContent(xml)) {
             /*
              * Search in String.prototype to set found whenever
-             * js_GetXMLFunction returns existing function.
+             * GetXMLFunction returns existing function.
              */
             JS_PUSH_TEMP_ROOT_OBJECT(cx, NULL, &tvr);
             ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_String),
@@ -4927,7 +4927,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
  * FIXME This clashes with the function namespace implementation which also
  * uses native properties. Effectively after xml_lookupProperty any property
  * stored previously using assignments to xml.function::name will be removed.
- * We partially workaround the problem in js_GetXMLFunction. There we take
+ * We partially workaround the problem in GetXMLFunction. There we take
  * advantage of the fact that typically function:: is used to access the
  * functions from XML.prototype. So when js_GetProperty returns a non-function
  * property, we assume that it represents the result of GetProperty setter
@@ -5222,40 +5222,40 @@ again:
 /*
  * 11.2.2.1 Step 3(d) onward.
  */
-static JSObject *
-xml_getMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+JSBool
+js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JSTempValueRooter tvr;
-
     JS_ASSERT(JS_InstanceOf(cx, obj, &js_XMLClass, NULL));
+
+    if (JSID_IS_OBJECT(id)) {
+        jsid funid;
+
+        if (!js_IsFunctionQName(cx, JSID_TO_OBJECT(id), &funid))
+            return JS_FALSE;
+        if (funid != 0)
+            id = funid;
+    }
 
     /*
      * As our callers have a bad habit of passing a pointer to an unrooted
      * local value as vp, we use a proper root here.
      */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
-    if (!js_GetXMLFunction(cx, obj, id, &tvr.u.value))
-        obj = NULL;
-    *vp = tvr.u.value;
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return obj;
+    JSAutoTempValueRooter tvr(cx);
+    JSBool ok = GetXMLFunction(cx, obj, id, tvr.addr());
+    *vp = tvr.value();
+    return ok;
 }
 
-static JSBool
-xml_setMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-    return js_SetProperty(cx, obj, id, vp);
-}
-
-static JSBool
-xml_enumerateValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                    jsval *statep, jsid *idp, jsval *vp)
+JSBool
+js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                      jsval *statep, jsid *idp, jsval *vp)
 {
     JSXML *xml, *kid;
     uint32 length, index;
     JSXMLArrayCursor *cursor;
     JSObject *kidobj;
 
+    JS_ASSERT(JS_InstanceOf(cx, obj, &js_XMLClass, NULL));
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     length = JSXML_LENGTH(xml);
     JS_ASSERT(INT_FITS_IN_JSVAL(length));
@@ -5308,8 +5308,8 @@ xml_enumerateValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return JS_TRUE;
 }
 
-static JSBool
-xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+JSBool
+js_TestXMLEquality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     JSXML *xml, *vxml;
     JSObject *vobj;
@@ -5317,6 +5317,7 @@ xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     JSString *str, *vstr;
     jsdouble d, d2;
 
+    JS_ASSERT(JS_InstanceOf(cx, obj, &js_XMLClass, NULL));
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     vxml = NULL;
     if (!JSVAL_IS_PRIMITIVE(v)) {
@@ -5382,13 +5383,14 @@ xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return ok;
 }
 
-static JSBool
-xml_concatenate(JSContext *cx, JSObject *obj, jsval v, jsval *vp)
+JSBool
+js_ConcatenateXML(JSContext *cx, JSObject *obj, jsval v, jsval *vp)
 {
     JSBool ok;
     JSObject *listobj, *robj;
     JSXML *list, *lxml, *rxml;
 
+    JS_ASSERT(JS_InstanceOf(cx, obj, &js_XMLClass, NULL));
     ok = js_EnterLocalRootScope(cx);
     if (!ok)
         return JS_FALSE;
@@ -5426,8 +5428,8 @@ out:
 }
 
 /* Use js_NewObjectMap so XML objects satisfy OBJ_IS_NATIVE tests. */
-JS_FRIEND_DATA(JSXMLObjectOps) js_XMLObjectOps = {
-  { js_NewObjectMap,            js_DestroyObjectMap,
+JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
+    js_NewObjectMap,            js_DestroyObjectMap,
     xml_lookupProperty,         xml_defineProperty,
     xml_getProperty,            xml_setProperty,
     xml_getAttributes,          xml_setAttributes,
@@ -5438,16 +5440,13 @@ JS_FRIEND_DATA(JSXMLObjectOps) js_XMLObjectOps = {
     NULL,                       xml_hasInstance,
     js_SetProtoOrParent,        js_SetProtoOrParent,
     js_TraceObject,             xml_clear,
-    NULL,                       NULL },
-    xml_getMethod,              xml_setMethod,
-    xml_enumerateValues,        xml_equality,
-    xml_concatenate
+    NULL,                       NULL
 };
 
 static JSObjectOps *
 xml_getObjectOps(JSContext *cx, JSClass *clasp)
 {
-    return &js_XMLObjectOps.base;
+    return &js_XMLObjectOps;
 }
 
 JS_FRIEND_DATA(JSClass) js_XMLClass = {
@@ -5812,7 +5811,7 @@ xml_contains(JSContext *cx, uintN argc, jsval *vp)
         XMLArrayCursorInit(&cursor, &xml->xml_kids);
         while ((kid = (JSXML *) XMLArrayCursorNext(&cursor)) != NULL) {
             kidobj = js_GetXMLObject(cx, kid);
-            if (!kidobj || !xml_equality(cx, kidobj, value, &eq))
+            if (!kidobj || !js_TestXMLEquality(cx, kidobj, value, &eq))
                 break;
             if (eq)
                 break;
@@ -5821,7 +5820,7 @@ xml_contains(JSContext *cx, uintN argc, jsval *vp)
         if (kid && !eq)
             return JS_FALSE;
     } else {
-        if (!xml_equality(cx, obj, value, &eq))
+        if (!js_TestXMLEquality(cx, obj, value, &eq))
             return JS_FALSE;
     }
     *vp = BOOLEAN_TO_JSVAL(eq);
@@ -7995,8 +7994,8 @@ js_FindXMLProperty(JSContext *cx, jsval nameval, JSObject **objp, jsid *idp)
     return JS_FALSE;
 }
 
-JSBool
-js_GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+static JSBool
+GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSObject *target;
     JSXML *xml;
