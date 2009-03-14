@@ -4323,6 +4323,22 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 JSBool
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+             JSPropCacheEntry **entryp)
+{
+    if (obj->map->ops == &js_ObjectOps ||
+        obj->map->ops->getProperty == js_GetProperty) {
+        return js_GetPropertyHelper(cx, obj, id, vp, entryp);
+    }
+    JS_ASSERT_IF(entryp, OBJ_IS_DENSE_ARRAY(cx, obj));
+#if JS_HAS_XML_SUPPORT
+    if (OBJECT_IS_XML(cx, obj))
+        return js_GetXMLMethod(cx, obj, id, vp);
+#endif
+    return OBJ_GET_PROPERTY(cx, obj, id, vp);
+}
+
+JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp)
 {
@@ -5438,18 +5454,7 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     older = JS_SetErrorReporter(cx, NULL);
     id = ATOM_TO_JSID(atom);
     fval = JSVAL_VOID;
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        JSXMLObjectOps *ops;
-
-        ops = (JSXMLObjectOps *) obj->map->ops;
-        obj = ops->getMethod(cx, obj, id, &fval);
-        ok = (obj != NULL);
-    } else
-#endif
-    {
-        ok = OBJ_GET_PROPERTY(cx, obj, id, &fval);
-    }
+    ok = js_GetMethod(cx, obj, id, &fval, NULL);
     if (!ok)
         JS_ClearPendingException(cx);
     JS_SetErrorReporter(cx, older);
