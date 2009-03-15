@@ -404,11 +404,14 @@ nsDOMWorkerXHRProxy::InitInternal()
   }
 
   nsIPrincipal* nodePrincipal = pool->ParentDocument()->NodePrincipal();
+  nsIScriptContext* scriptContext = pool->ScriptGlobalObject()->GetContext();
+  nsCOMPtr<nsPIDOMWindow> ownerWindow =
+    do_QueryInterface( pool->ScriptGlobalObject());
 
   nsRefPtr<nsXMLHttpRequest> xhrConcrete = new nsXMLHttpRequest();
   NS_ENSURE_TRUE(xhrConcrete, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = xhrConcrete->Init(nodePrincipal, nsnull, nsnull,
+  nsresult rv = xhrConcrete->Init(nodePrincipal, scriptContext, ownerWindow,
                                   worker->GetURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
