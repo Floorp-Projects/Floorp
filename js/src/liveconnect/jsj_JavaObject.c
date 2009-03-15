@@ -58,6 +58,7 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsobj.h"
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */
@@ -501,6 +502,10 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     JavaClassDescriptor *class_descriptor;
     JSObject *proto_chain;
     JSBool found_in_proto;
+
+    // This method accesses slots without using the JSAPI and these slots may
+    // be stale if running on trace. Must run in the interpreter here.
+    js_LeaveTrace(cx);
 
     found_in_proto = JS_FALSE;
     member_descriptor = NULL;
