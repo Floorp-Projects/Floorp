@@ -20,24 +20,28 @@ Tests of DOM Worker terminate feature
   var worker = new Worker("terminate_worker.js");
 
   var count = 0;
-  var id;
+  var interval;
 
   function maybeFinish() {
-    if (!count) {
-      clearInterval(id);
-      SimpleTest.finish();
+    if (count) {
+      count = 0;
       return;
     }
-    worker.postMessage("You're terminated!");
-    count = 0;
+
+    clearInterval(interval);
+    SimpleTest.finish();
   }
 
   worker.onmessage = function(event) {
-    count++;
-    if (!id && count == 20) {
-      worker.terminate();
-      id = setInterval(maybeFinish, 2000);
-      maybeFinish();
+    if (event.data == "Still alive!") {
+      count++;
+      if (!interval && count == 20) {
+        worker.terminate();
+      }
+    }
+    else if (event.data == "Closed!") {
+      count = 0;
+      interval = setInterval(maybeFinish, 500);
     }
   };
 
