@@ -219,7 +219,7 @@ function securityOnLoad() {
       // way to tell those apart, and no policy way to establish which organization
       // vetting standards are good enough (that's what EV is for) so we default to
       // treating these certs as domain-validated only.
-      owner = pageInfoBundle.getString("securityNoIdentity");
+      owner = pageInfoBundle.getString("securityNoOwner");
       verifier = security.mapIssuerOrganization(info.cAName ||
                                                 info.cert.issuerCommonName ||
                                                 info.cert.issuerName);
@@ -228,7 +228,7 @@ function securityOnLoad() {
   }
   else {
     // We don't have valid identity credentials.
-    owner = pageInfoBundle.getString("securityNoIdentity");
+    owner = pageInfoBundle.getString("securityNoOwner");
     verifier = pageInfoBundle.getString("notset");
     generalPageIdentityString = owner;
   }
@@ -240,8 +240,6 @@ function securityOnLoad() {
   /* Manage the View Cert button*/
   var viewCert = document.getElementById("security-view-cert");
   if (info.cert) {
-    var viewText = pageInfoBundle.getString("securityCertText");
-    setText("security-view-text", viewText);
     security._cert = info.cert;
     viewCert.collapsed = false;
   }
