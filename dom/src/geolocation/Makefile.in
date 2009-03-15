@@ -81,6 +81,10 @@ CPPSRCS		+= MaemoLocationProvider.cpp
 LOCAL_INCLUDES	+= $(MOZ_LOCATION_CFLAGS)
 endif
 
+ifdef ENABLE_TESTS
+DIRS += test
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_LAYOUT
