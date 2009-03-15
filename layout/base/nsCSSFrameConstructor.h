@@ -415,18 +415,7 @@ private:
                           const nsStyleDisplay*    aDisplay,
                           nsFrameItems&            aFrameItems,
                           nsIFrame**               aNewFrame);
-  
-  /**
-   * Construct some part of a table other than the outer table frame.  This is
-   * the FrameConstructionData callback used for the job.
-   */
-  nsresult ConstructTablePart(nsFrameConstructorState& aState,
-                              FrameConstructionItem&   aItem,
-                              nsIFrame*                aParentFrame,
-                              const nsStyleDisplay*    aDisplay,
-                              nsFrameItems&            aFrameItems,
-                              nsIFrame**               aNewFrame);
-  
+
   /**
    * ConstructTableFrame will construct the outer and inner table frames and
    * return them.  Unless aIsPseudo is PR_TRUE, it will put the inner frame in
@@ -446,35 +435,19 @@ private:
                                nsIFrame*&               aNewOuterFrame,
                                nsIFrame*&               aNewInnerFrame);
 
-  nsresult ConstructTableCaptionFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsIFrame*                aParent,
-                                      nsStyleContext*          aStyleContext,
-                                      PRInt32                  aNameSpaceID,
-                                      nsFrameItems&            aChildItems,
-                                      nsIFrame*&               aNewFrame,
-                                      PRBool*                  aHasPseudoParent);
+  /**
+   * FrameConstructionData callback used for constructing table rows.
+   */
+  nsresult ConstructTableRow(nsFrameConstructorState& aState,
+                             FrameConstructionItem&   aItem,
+                             nsIFrame*                aParentFrame,
+                             const nsStyleDisplay*    aStyleDisplay,
+                             nsFrameItems&            aFrameItems,
+                             nsIFrame**               aNewFrame);
 
-  nsresult ConstructTableRowGroupFrame(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       nsIFrame*                aParent,
-                                       nsStyleContext*          aStyleContext,
-                                       PRInt32                  aNameSpaceID,
-                                       PRBool                   aIsPseudo,
-                                       nsFrameItems&            aChildItems,
-                                       nsIFrame*&               aNewFrame,
-                                       PRBool*                  aHasPseudoParent);
-
-  nsresult ConstructTableColGroupFrame(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       nsIFrame*                aParent,
-                                       nsStyleContext*          aStyleContext,
-                                       PRInt32                  aNameSpaceID,
-                                       PRBool                   aIsPseudo,
-                                       nsFrameItems&            aChildItems,
-                                       nsIFrame*&               aNewFrame,
-                                       PRBool*                  aHasPseudoParent);
-
+  /**
+   * Method used by both ConstructTableRow and pseudo-frame creation.
+   */
   nsresult ConstructTableRowFrame(nsFrameConstructorState& aState,
                                   nsIContent*              aContent,
                                   nsIFrame*                aParent,
@@ -482,19 +455,31 @@ private:
                                   PRInt32                  aNameSpaceID,
                                   PRBool                   aIsPseudo,
                                   nsFrameItems&            aChildItems,
-                                  nsIFrame*&               aNewFrame,
-                                  PRBool*                  aHasPseudoParent);
+                                  nsIFrame*&               aNewFrame);
 
-  nsresult ConstructTableColFrame(nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParent,
-                                  nsStyleContext*          aStyleContext,
-                                  PRInt32                  aNameSpaceID,
-                                  PRBool                   aIsPseudo,
-                                  nsFrameItems&            aChildItems,
-                                  nsIFrame*&               aNewFrame,
-                                  PRBool*                  aHasPseudoParent);
+  /**
+   * FrameConstructionData callback used for constructing table columns.
+   */
+  nsresult ConstructTableCol(nsFrameConstructorState& aState,
+                             FrameConstructionItem&   aItem,
+                             nsIFrame*                aParentFrame,
+                             const nsStyleDisplay*    aStyleDisplay,
+                             nsFrameItems&            aFrameItems,
+                             nsIFrame**               aNewFrame);
 
+  /**
+   * FrameConstructionData callback used for constructing table cells.
+   */
+  nsresult ConstructTableCell(nsFrameConstructorState& aState,
+                              FrameConstructionItem&   aItem,
+                              nsIFrame*                aParentFrame,
+                              const nsStyleDisplay*    aStyleDisplay,
+                              nsFrameItems&            aFrameItems,
+                              nsIFrame**               aNewFrame);
+
+  /**
+   * Method used by both ConstructTableCell and pseudo-frame creation.
+   */
   nsresult ConstructTableCellFrame(nsFrameConstructorState& aState,
                                    nsIContent*              aContent,
                                    nsIFrame*                aParentFrame,
@@ -503,8 +488,7 @@ private:
                                    PRBool                   aIsPseudo,
                                    nsFrameItems&            aChildItems,
                                    nsIFrame*&               aNewCellOuterFrame,
-                                   nsIFrame*&               aNewCellInnerFrame,
-                                   PRBool*                  aHasPseudoParent);
+                                   nsIFrame*&               aNewCellInnerFrame);
 
   nsresult CreatePseudoTableFrame(PRInt32                  aNameSpaceID,
                                   nsFrameConstructorState& aState, 
@@ -603,9 +587,9 @@ private:
   /* Bits that modify the way a FrameConstructionData is handled */
 
   /* If the FCDATA_SKIP_FRAMEMAP bit is set, then the frame created should not
-     be added to the primary frame map.  This flag should not be used with
-     FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add to
-     the frame map. */
+     be added to the primary frame map.  This flag might get ignored when used
+     with FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add
+     to the frame map. */
 #define FCDATA_SKIP_FRAMEMAP 0x1
   /* If the FCDATA_FUNC_IS_DATA_GETTER bit is set, then the mFunc of the
      FrameConstructionData is a getter function that can be used to get the
@@ -636,9 +620,9 @@ private:
      set. */
 #define FCDATA_SUPPRESS_FRAME 0x40
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
-     a scrollframe if its overflow type so requires.  This flag should not be
-     used with FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to
-     the frame map. */
+     a scrollframe if its overflow type so requires.  This flag might override
+     FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to the frame
+     map. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
 #ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
@@ -667,6 +651,9 @@ private:
   /* If FCDATA_IS_LINE_PARTICIPANT is set, the the frame is something that will
      return true for IsFrameOfType(nsIFrame::eLineParticipant) */
 #define FCDATA_IS_LINE_PARTICIPANT 0x4000
+  /* If FCDATA_ALLOW_BLOCK_STYLES is set, allow block styles when processing
+     children.  This should not be used with FCDATA_FUNC_IS_FULL_CTOR. */
+#define FCDATA_ALLOW_BLOCK_STYLES 0x8000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -1118,7 +1105,8 @@ private:
   /* Not static because it does PropagateScrollToViewport.  If this
      changes, make this static */
   const FrameConstructionData*
-    FindDisplayData(const nsStyleDisplay* aDisplay, nsIContent* aContent);
+    FindDisplayData(const nsStyleDisplay* aDisplay, nsIContent* aContent,
+                    nsStyleContext* aStyleContext);
 
   /**
    * Construct a scrollable block frame
