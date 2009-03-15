@@ -653,7 +653,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 
             ops = obj->map->ops;
 #if JS_HAS_XML_SUPPORT
-            if (ops == &js_XMLObjectOps.base) {
+            if (ops == &js_XMLObjectOps) {
                 type = JSTYPE_XML;
             } else
 #endif
@@ -3611,22 +3611,10 @@ JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
     CHECK_REQUEST(cx);
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        JSXMLObjectOps *ops;
-
-        ops = (JSXMLObjectOps *) obj->map->ops;
-        obj = ops->getMethod(cx, obj, id, vp);
-        if (!obj)
-            return JS_FALSE;
-    } else
-#endif
-    {
-        if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
-            return JS_FALSE;
-    }
-
-    *objp = obj;
+    if (!js_GetMethod(cx, obj, id, vp, NULL))
+        return JS_FALSE;
+    if (objp)
+        *objp = obj;
     return JS_TRUE;
 }
 
@@ -5179,27 +5167,14 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
                     jsval *argv, jsval *rval)
 {
-    JSBool ok;
-    jsval fval;
-
     CHECK_REQUEST(cx);
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        JSXMLObjectOps *ops;
-        JSAtom *atom;
 
-        ops = (JSXMLObjectOps *) obj->map->ops;
-        atom = js_Atomize(cx, name, strlen(name), 0);
-        if (!atom)
-            return JS_FALSE;
-        obj = ops->getMethod(cx, obj, ATOM_TO_JSID(atom), &fval);
-        if (!obj)
-            return JS_FALSE;
-    } else
-#endif
-    if (!JS_GetProperty(cx, obj, name, &fval))
-        return JS_FALSE;
-    ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
+    JSAutoTempValueRooter tvr(cx);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
+    JSBool ok = atom &&
+                JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), NULL,
+                                 tvr.addr()) &&
+                js_InternalCall(cx, obj, tvr.value(), argc, argv, rval);
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }

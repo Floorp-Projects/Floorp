@@ -675,6 +675,10 @@ extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+             JSPropCacheEntry **entryp);
+
+extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp);
 
