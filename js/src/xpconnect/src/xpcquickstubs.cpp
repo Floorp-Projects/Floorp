@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jsapi.h"
-#include "jsobj.h"
 #include "jsstr.h"
 #include "jscntxt.h"  /* for error messages */
 #include "nsCOMPtr.h"

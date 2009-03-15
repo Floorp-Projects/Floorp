@@ -265,9 +265,9 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
         jsid idFun = mRuntime->GetStringID(XPCJSRuntime::IDX_FUNCTION);
         jsid idProto = mRuntime->GetStringID(XPCJSRuntime::IDX_PROTOTYPE);
 
-        if(OBJ_GET_PROPERTY(ccx, aGlobal, idObj, &val) &&
+        if(JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
            !JSVAL_IS_PRIMITIVE(val) &&
-           OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
+           JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
            !JSVAL_IS_PRIMITIVE(val))
         {
             mPrototypeJSObject = JSVAL_TO_OBJECT(val);
@@ -277,9 +277,9 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
             NS_ERROR("Can't get globalObject.Object.prototype");
         }
 
-        if(OBJ_GET_PROPERTY(ccx, aGlobal, idFun, &val) &&
+        if(JS_GetPropertyById(ccx, aGlobal, idFun, &val) &&
            !JSVAL_IS_PRIMITIVE(val) &&
-           OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
+           JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
            !JSVAL_IS_PRIMITIVE(val))
         {
             mPrototypeJSFunction = JSVAL_TO_OBJECT(val);

@@ -331,6 +331,29 @@ public:
   static JSBool NativeToString(JSContext *cx, XPCWrappedNative *wrappedNative,
                                uintN argc, jsval *argv, jsval *rval,
                                JSBool isNativeWrapper);
+
+private:
+  /**
+   * Looks up a property on obj. If it exists, then the parameters are filled
+   * in with useful values.
+   *
+   * NB: All parameters must be initialized before the call.
+   */
+  static JSBool GetPropertyAttrs(JSContext *cx, JSObject *obj,
+                                 jsid interned_id, JSObject **objp,
+                                 JSBool wantDetails, uintN flags, uintN *attrsp,
+                                 JSPropertyOp *getterp, JSPropertyOp *setterp,
+                                 jsval *vp);
+
+  /**
+   * Works in conjunction with GetPropertyAttrs to define the looked-up
+   * property on another object, preserving interesting attributes, if
+   * desired.
+   */
+  static JSBool DefineProperty(JSContext *cx, JSObject *obj, jsid interned_id,
+                               JSBool haveDetails, jsval v,
+                               JSPropertyOp getter, JSPropertyOp setter,
+                               uintN attrs);
 };
 
 

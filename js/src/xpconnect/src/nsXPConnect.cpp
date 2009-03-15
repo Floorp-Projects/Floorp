@@ -49,7 +49,6 @@
 #include "nsHashKeys.h"
 #include "jsatom.h"
 #include "jsfun.h"
-#include "jsobj.h"
 #include "jsscript.h"
 #include "nsThreadUtilsInternal.h"
 #include "dom_quickstubs.h"
