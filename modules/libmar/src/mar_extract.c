@@ -48,18 +48,29 @@
 #ifdef XP_WIN
 #include <io.h>
 #include <direct.h>
+#ifdef WINCE
+#include <windows.h>
+#endif
 #endif
 
 /* Ensure that the directory containing this file exists */
 static int mar_ensure_parent_dir(const char *path)
 {
   char *slash = strrchr(path, '/');
+#ifdef WINCE
+  wchar_t wide_path[MAX_PATH];
+#endif
   if (slash)
   {
     *slash = '\0';
     mar_ensure_parent_dir(path);
 #ifdef XP_WIN
+#ifdef WINCE
+    MultiByteToWideChar(CP_ACP, 0, path, -1, wide_path, MAX_PATH);
+    CreateDirectory(wide_path, NULL);
+#else
     _mkdir(path);
+#endif
 #else
     mkdir(path, 0755);
 #endif
@@ -75,7 +86,9 @@ static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
 
   if (mar_ensure_parent_dir(item->name))
     return -1;
-
+#ifdef WINCE 
+  fp = fopen(item->name, "bw");
+#else
 #ifdef XP_WIN
   fd = _open(item->name, _O_BINARY|_O_CREAT|_O_TRUNC|_O_WRONLY, item->flags);
 #else
@@ -85,6 +98,7 @@ static int mar_test_callback(MarFile *mar, const MarItem *item, void *unused) {
     return -1;
 
   fp = fdopen(fd, "wb");
+#endif
   if (!fp)
     return -1;
 
