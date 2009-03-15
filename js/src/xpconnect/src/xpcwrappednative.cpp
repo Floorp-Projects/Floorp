@@ -1231,6 +1231,16 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         return NS_OK;
     }
 
+    // ReparentWrapperIfFound is really only meant to be called from DOM code
+    // which must happen only on the main thread. Bail if we're on some other
+    // thread or have a non-main-thread-only wrapper.
+    if (!XPCPerThreadData::IsMainThread(ccx) ||
+        (wrapper->GetProto() &&
+         !wrapper->GetProto()->ClassIsMainThreadOnly())) {
+        NS_RELEASE(wrapper);
+        return NS_ERROR_FAILURE;
+    }
+
     if(aOldScope != aNewScope)
     {
         // Oh, so now we need to move the wrapper to a different scope.
@@ -1273,28 +1283,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         {   // scoped lock
             XPCAutoLock lock(aOldScope->GetRuntime()->GetMapLock());
 
-            // We only try to fixup the __proto__ JSObject if the wrapper
-            // is directly using that of its XPCWrappedNativeProto.
-
-            if(wrapper->HasProto() &&
-               STOBJ_GET_PROTO(wrapper->GetFlatJSObject()) ==
-               oldProto->GetJSProtoObject())
-            {
-                if(!JS_SetPrototype(ccx, wrapper->GetFlatJSObject(),
-                                    newProto->GetJSProtoObject()))
-                {
-                    // this is bad, very bad
-                    NS_ERROR("JS_SetPrototype failed");
-                    NS_RELEASE(wrapper);
-                    return NS_ERROR_FAILURE;
-                }
-            }
-            else
-            {
-                NS_WARNING("Moving XPConnect wrappedNative to new scope, "
-                           "but can't fixup __proto__");
-            }
-
             oldMap->Remove(wrapper);
 
             if(wrapper->HasProto())
@@ -1325,6 +1313,28 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                          "wrapper already in new scope!");
 
             (void) newMap->Add(wrapper);
+        }
+
+        // We only try to fixup the __proto__ JSObject if the wrapper
+        // is directly using that of its XPCWrappedNativeProto.
+
+        if(wrapper->HasProto() &&
+           STOBJ_GET_PROTO(wrapper->GetFlatJSObject()) ==
+           oldProto->GetJSProtoObject())
+        {
+            if(!JS_SetPrototype(ccx, wrapper->GetFlatJSObject(),
+                                newProto->GetJSProtoObject()))
+            {
+                // this is bad, very bad
+                NS_ERROR("JS_SetPrototype failed");
+                NS_RELEASE(wrapper);
+                return NS_ERROR_FAILURE;
+            }
+        }
+        else
+        {
+            NS_WARNING("Moving XPConnect wrappedNative to new scope, "
+                       "but can't fixup __proto__");
         }
     }
 
