@@ -1271,7 +1271,7 @@ nsDOMWorker::Cancel()
       return;
     }
 
-    Status oldStatus = mStatus;
+    DOMWorkerStatus oldStatus = mStatus;
     mStatus = eCanceled;
     if (oldStatus != eRunning) {
       enforceTimeout = PR_TRUE;
