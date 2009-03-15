@@ -339,18 +339,7 @@ nsDOMWorkerXHR::nsDOMWorkerXHR(nsDOMWorker* aWorker)
 nsDOMWorkerXHR::~nsDOMWorkerXHR()
 {
   if (mXHRProxy) {
-    if (!NS_IsMainThread()) {
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NEW_RUNNABLE_METHOD(nsDOMWorkerXHRProxy, mXHRProxy.get(), Destroy);
-
-      if (runnable) {
-        mXHRProxy = nsnull;
-        NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
-      }
-    }
-    else {
-      mXHRProxy->Destroy();
-    }
+    mXHRProxy->Destroy();
   }
 }
 
@@ -699,12 +688,6 @@ nsDOMWorkerXHR::Send(nsIVariant* aBody)
     return NS_ERROR_ABORT;
   }
 
-  if (mWorker->IsClosing() && !mXHRProxy->mSyncRequest) {
-    // Cheat and don't start this request since we know we'll never be able to
-    // use the data.
-    return NS_OK;
-  }
-
   nsresult rv = mXHRProxy->Send(aBody);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -718,12 +701,6 @@ nsDOMWorkerXHR::SendAsBinary(const nsAString& aBody)
 
   if (mCanceled) {
     return NS_ERROR_ABORT;
-  }
-
-  if (mWorker->IsClosing() && !mXHRProxy->mSyncRequest) {
-    // Cheat and don't start this request since we know we'll never be able to
-    // use the data.
-    return NS_OK;
   }
 
   nsresult rv = mXHRProxy->SendAsBinary(aBody);
