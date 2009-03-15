@@ -702,11 +702,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         if (explicit_output_filename) {
             real_outname = g_strdup(outname);
         } else {
-/* 
- *This combination seems a little strange, what about OS/2?
- * Assume it's some build issue
- */
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2)
             if (!file_basename) {
                 out_basename = xpidl_basename(outname);
             } else {
