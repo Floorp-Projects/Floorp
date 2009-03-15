@@ -134,15 +134,18 @@ wsRect.prototype = {
   get y() { return this._t; },
   get width() { return this._r - this._l; },
   get height() { return this._b - this._t; },
-  get w() { return this.width; },
-  get h() { return this.height; },
-
-  set x(v) { let w = this.w; this._l = v; this._r = v + w; },
-  set y(v) { let h = this.h; this._t = v; this._b = v + h; },
+  set x(v) { 
+    let diff = this._l - v;
+    this._l = v;
+    this._r -= diff; 
+  },
+  set y(v) { 
+    let diff = this._t - v;
+    this._t = v;
+    this._b -= diff;
+  },
   set width(v) { this._r = this._l + v; },
   set height(v) { this._b = this._t + v; },
-  set w(v) { this.w = v; },
-  set h(v) { this.h = v; },
 
   get left() { return this._l; },
   get right() { return this._r; },
@@ -173,7 +176,7 @@ wsRect.prototype = {
   },
 
   clone: function() {
-    return new wsRect(this.x, this.y, this.width, this.height);
+    return new wsRect(this._l, this._t, this.width, this.height);
   },
 
   copyFrom: function(r) {
@@ -554,12 +557,12 @@ WidgetStack.prototype = {
     let dtop = this._viewportBounds.top - oldBounds.top;
     let dbottom = this._viewportBounds.bottom - oldBounds.bottom;
 
-    log2("setViewportBounds dltrb", dleft, dtop, dright, dbottom);
+    //log2("setViewportBounds dltrb", dleft, dtop, dright, dbottom);
 
     // move all vp-relative widgets to be the right offset from the bounds again
     for each (let state in this._widgetState) {
       if (state.vpRelative) {
-        log2("vpRelative widget", state.id, state.rect.x, dleft, dright);
+        //log2("vpRelative widget", state.id, state.rect.x, dleft, dright);
         if (state.vpOffsetXBefore) {
           state.rect.x += dleft;
         } else {
@@ -572,7 +575,7 @@ WidgetStack.prototype = {
           state.rect.y += dbottom;
         }
 
-        log2("vpRelative widget", state.id, state.rect.x, dleft, dright);
+        //log2("vpRelative widget", state.id, state.rect.x, dleft, dright);
         this._commitState(state);
       }
     }
@@ -580,7 +583,7 @@ WidgetStack.prototype = {
     for (let bid in this._barriers) {
       let barrier = this._barriers[bid];
 
-      log2("setViewportBounds: looking at barrier", bid, barrier.vpRelative, barrier.type);
+      //log2("setViewportBounds: looking at barrier", bid, barrier.vpRelative, barrier.type);
 
       if (barrier.vpRelative) {
         if (barrier.type == "vertical") {
@@ -590,7 +593,7 @@ WidgetStack.prototype = {
           } else {
             barrier.x += dright;
           }
-          log2(q += barrier.x);
+          //log2(q += barrier.x);
         } else if (barrier.type == "horizontal") {
           let q = "h barrier moving from " + barrier.y + " to ";
           if (barrier.vpOffsetYBefore) {
@@ -598,7 +601,7 @@ WidgetStack.prototype = {
           } else {
             barrier.y += dbottom;
           }
-          log2(q += barrier.y);
+          //log2(q += barrier.y);
         }
       }
     }
@@ -809,10 +812,10 @@ WidgetStack.prototype = {
   },
 
   _getState: function (wid) {
-    if (!(wid in this._widgetState))
+    let w = this._widgetState[wid]; 
+    if (!w)
       throw "Unknown widget id '" + wid + "'; widget not in stack";
-
-    return this._widgetState[wid];
+    return w; 
   },
 
   _onMouseDown: function (ev) {
@@ -1109,8 +1112,12 @@ WidgetStack.prototype = {
       this._commitState(state);
     }
 
-    if (this._panHandler)
-      this._panHandler.apply(window, [vr.clone(), this._skipViewportUpdates]);
+    /* Do not call panhandler during pans within a transaction.
+     * Those pans always end-up covering up the checkerboard and
+     * do not require sliding out the location bar
+     */
+    if (!this._skipViewportUpdates && this._panHandler)
+      this._panHandler.apply(window, [vr.clone(), dx, dy]);
   },
 
   _dragUpdate: function () {
