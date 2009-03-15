@@ -101,12 +101,15 @@ interface nsIWorkerGlobalScope : nsISupports
   attribute nsIDOMEventListener onerror;
 };
 
-[scriptable, uuid(d30a2f61-86e2-434e-837f-4f1985efa865)]
+[scriptable, uuid(5c55ea4b-e4ac-4ceb-bfeb-46bd5e521b8a)]
 interface nsIWorkerScope : nsIWorkerGlobalScope
 {
   void postMessage(/* in JSObject aMessage */);
 
+  void close();
+
   attribute nsIDOMEventListener onmessage;
+  attribute nsIDOMEventListener onclose;
 };
 
 [scriptable, uuid(b90b7561-b5e2-4545-84b0-280dbaaa94ea)]
