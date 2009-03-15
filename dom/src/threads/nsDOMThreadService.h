@@ -124,12 +124,7 @@ private:
   static void Shutdown();
 
   nsresult Dispatch(nsDOMWorker* aWorker,
-                    nsIRunnable* aRunnable,
-                    PRIntervalTime aTimeoutInterval = 0,
-                    PRBool aClearQueue = PR_FALSE);
-
-  void SetWorkerTimeout(nsDOMWorker* aWorker,
-                        PRIntervalTime aTimeoutInterval);
+                    nsIRunnable* aRunnable);
 
   void WorkerComplete(nsDOMWorkerRunnable* aRunnable);
 
@@ -152,14 +147,6 @@ private:
   void GetAppVersion(nsAString& aAppVersion);
   void GetPlatform(nsAString& aPlatform);
   void GetUserAgent(nsAString& aUserAgent);
-
-  void RegisterPrefCallbacks();
-  void UnregisterPrefCallbacks();
-
-  static int PrefCallback(const char* aPrefName,
-                          void* aClosure);
-
-  static PRUint32 GetWorkerCloseHandlerTimeoutMS();
 
   // Our internal thread pool.
   nsCOMPtr<nsIThreadPool> mThreadPool;
