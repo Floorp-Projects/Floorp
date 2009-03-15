@@ -1549,7 +1549,6 @@ tabbrowser > tabbox {
   -moz-border-radius: 0 0 6px 6px;
   color: #222;
   margin: 0 0 1px;
-  -moz-margin-end: 1px;
   padding: 0 5px;
   border-style: none solid solid;
   border-width: 3px;
