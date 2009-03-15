@@ -373,12 +373,6 @@ nsDOMWorkerTimeout::Cancel()
 void
 nsDOMWorkerTimeout::Suspend()
 {
-#ifdef DEBUG
-  if (mStarted) {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  }
-#endif
-
   AutoSpinlock lock(this);
 
   NS_ASSERTION(!IsSuspendedNoLock(), "Bad state!");
@@ -404,12 +398,6 @@ nsDOMWorkerTimeout::Suspend()
 void
 nsDOMWorkerTimeout::Resume()
 {
-#ifdef DEBUG
-  if (!mSuspendedBeforeStart) {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  }
-#endif
-
   NS_ASSERTION(mTimer, "Impossible to get here without a timer!");
 
   LOG(("Worker [0x%p] resuming timeout [0x%p] with id %u",
