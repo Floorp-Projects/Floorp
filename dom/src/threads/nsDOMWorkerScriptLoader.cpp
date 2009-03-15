@@ -176,9 +176,20 @@ nsDOMWorkerScriptLoader::DoRunLoop(JSContext* aCx)
   nsresult rv = NS_DispatchToMainThread(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  while (!(done || mCanceled)) {
-    JSAutoSuspendRequest asr(aCx);
-    NS_ProcessNextEvent(mTarget);
+  if (!(done || mCanceled)) {
+    // Since we're going to lock up this thread we might as well allow the
+    // thread service to schedule another worker on a new thread.
+    nsDOMThreadService* threadService = nsDOMThreadService::get();
+    PRBool changed = NS_SUCCEEDED(threadService->ChangeThreadPoolMaxThreads(1));
+
+    while (!(done || mCanceled)) {
+      JSAutoSuspendRequest asr(aCx);
+      NS_ProcessNextEvent(mTarget);
+    }
+
+    if (changed) {
+      threadService->ChangeThreadPoolMaxThreads(-1);
+    }
   }
 
   return mCanceled ? NS_ERROR_ABORT : NS_OK;
@@ -608,11 +619,7 @@ nsDOMWorkerScriptLoader::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
   }
 
   nsIDocument* parentDoc = mWorker->Pool()->ParentDocument();
-  if (!parentDoc) {
-    NS_ASSERTION(mWorker->IsCanceled(),
-                 "Null parent document when we're not canceled?!");
-    return rv = NS_ERROR_FAILURE;
-  }
+  NS_ASSERTION(parentDoc, "Null parent document?!");
 
   // Use the regular nsScriptLoader for this grunt work! Should be just fine
   // because we're running on the main thread.
