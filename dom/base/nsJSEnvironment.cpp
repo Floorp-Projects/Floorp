@@ -1854,6 +1854,11 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
 
   const char *charName = AtomToEventHandlerName(aName);
 
+#ifdef DEBUG
+  JSContext* top = nsContentUtils::GetCurrentJSContext();
+  NS_ASSERTION(mContext == top, "Context not properly pushed!");
+#endif
+
   // Event handlers are always shared, and must be bound before use.
   // Therefore we never bother compiling with principals.
   // (that probably means we should avoid JS_CompileUCFunctionForPrincipals!)
