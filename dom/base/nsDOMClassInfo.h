@@ -88,7 +88,7 @@ struct nsExternalDOMClassInfoData : public nsDOMClassInfoData
 };
 
 
-typedef unsigned long PtrBits;
+typedef PRUptrdiff PtrBits;
 
 // To be used with the nsDOMClassInfoData::mCachedClassInfo pointer.
 // The low bit is set when we created a generic helper for an external
