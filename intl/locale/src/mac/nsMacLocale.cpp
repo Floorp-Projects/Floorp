@@ -45,6 +45,7 @@
 #include "prprf.h"
 #include <Script.h>
 #include "nsReadableUtils.h"
+#include "nsXPCOMStrings.h"
 
 struct iso_lang_map
 {
@@ -116,7 +117,9 @@ const iso_lang_map lang_list[] = {
   { "mr", langMarathi, smDevanagari },
   { "mo", langMoldavian, smCyrillic },
   { "ne", langNepali, smDevanagari },
+  { "nb", langNorwegian, smRoman }, // Norwegian Bokmål
   { "no", langNorwegian, smRoman },
+  { "nn", langNynorsk, smRoman },
   { "or", langOriya, smOriya },
   { "om", langOromo, smEthiopic },
   { "ps", langPashto, smArabic },
@@ -231,19 +234,23 @@ nsMacLocale::~nsMacLocale(void)
 NS_IMETHODIMP 
 nsMacLocale::GetPlatformLocale(const nsAString& locale, short* scriptCode, short* langCode, short* regionCode)
 {
-  char  country_code[3];
-  char  lang_code[3];
-  char  region_code[3];
+  char    locale_string[9] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0'};
+  char*   language_code;
+  char*   country_code;
   bool  validCountryFound;
-  int  i;
-  
-  if (!ParseLocaleString(NS_LossyConvertUTF16toASCII(locale).get(), lang_code, country_code, region_code, '-')) {
-    *scriptCode = smRoman;
-    *langCode = langEnglish;
-    *regionCode = verUS;
-    return NS_ERROR_FAILURE;
+  int  i, j;
+
+  // parse the locale
+  const PRUnichar* data;
+  j = NS_StringGetData(locale, &data);
+  for (i = 0; i < 7 && i < j; i++) {
+    locale_string[i] = data[i] == '-' ? '\0' : data[i];
   }
-  
+
+  language_code = locale_string;
+  country_code = locale_string + strlen(locale_string) + 1;
+
+  // convert parsed locale to Mac OS locale
   if (country_code[0]!=0) 
   {
     validCountryFound=false;
@@ -263,12 +270,15 @@ nsMacLocale::GetPlatformLocale(const nsAString& locale, short* scriptCode, short
   }
     
   for(i=0;lang_list[i].iso_code;i++) {
-    if (strcmp(lang_list[i].iso_code, lang_code)==0) {
+    if (strcmp(lang_list[i].iso_code, language_code)==0) {
       *scriptCode = lang_list[i].mac_script_code;
       *langCode = lang_list[i].mac_lang_code;
       return NS_OK;
     }
   }
+  *scriptCode = smRoman;
+  *langCode = langEnglish;
+  *regionCode = verUS;
   return NS_ERROR_FAILURE;
 }
   
@@ -313,48 +323,4 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsA
   }
   
   return NS_ERROR_FAILURE;
-}
-
-//
-// returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC-RR
-PRBool
-nsMacLocale::ParseLocaleString(const char* locale_string, char* language, char* country, char* region, char separator)
-{
-  size_t    len;
-
-  len = strlen(locale_string);
-  if (len==0 || (len!=2 && len!=5 && len!=8))
-    return PR_FALSE;
-  
-  if (len==2) {
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]=0;
-    country[0]=0;
-    region[0]=0;
-  } else if (len==5) {
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]=0;
-    country[0]=locale_string[3];
-    country[1]=locale_string[4];
-    country[2]=0;
-    region[0]=0;
-    if (locale_string[2]!=separator) return PR_FALSE;
-  } else if (len==8) {
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]=0;
-    country[0]=locale_string[3];
-    country[1]=locale_string[4];
-    country[2]=0;
-    region[0]=locale_string[6];
-    region[1]=locale_string[7];
-    region[2]=0;
-    if (locale_string[2]!=separator || locale_string[5]!=separator) return PR_FALSE;
-  } else {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
 }
