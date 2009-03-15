@@ -1430,15 +1430,6 @@ struct JSObjectOps {
     JSSetRequiredSlotOp setRequiredSlot;
 };
 
-struct JSXMLObjectOps {
-    JSObjectOps         base;
-    JSGetMethodOp       getMethod;
-    JSSetMethodOp       setMethod;
-    JSEnumerateValuesOp enumerateValues;
-    JSEqualityOp        equality;
-    JSConcatenateOp     concatenate;
-};
-
 /*
  * Classes that expose JSObjectOps via a non-null getObjectOps class hook may
  * derive a property structure from this struct, return a pointer to it from
