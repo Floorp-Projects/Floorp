@@ -197,7 +197,7 @@ public:
    * 
    */
 
-  enum Status {
+  enum DOMWorkerStatus {
     // This status means that the close handler has not yet been scheduled.
     eRunning = 0,
 
@@ -307,7 +307,7 @@ private:
   PRInt32 mErrorHandlerRecursionCount;
 
   // Always protected by mLock
-  Status mStatus;
+  DOMWorkerStatus mStatus;
 
   // Always protected by mLock
   PRIntervalTime mExpirationTime;
