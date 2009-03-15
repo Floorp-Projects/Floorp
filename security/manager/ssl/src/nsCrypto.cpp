@@ -2263,7 +2263,6 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
 {
   nsNSSShutDownPreventionLock locker;
   char *nickname=nsnull, *cmmfResponse=nsnull;
-  char *retString=nsnull;
   CMMFCertRepContent *certRepContent = nsnull;
   int numResponses = 0;
   nsIX509Cert **certArr = nsnull;
@@ -2382,8 +2381,6 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   //nickname (This way we don't free it twice and avoid crashing.
   //That would be a good thing.
 
-  retString = "";
-
   //Import the root chain into the cert db.
   caPubs = CMMF_CertRepContentGetCAPubs(certRepContent);
   if (caPubs) {
@@ -2440,7 +2437,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
     }
     delete []certArr;
   }
-  aReturn.Assign(NS_ConvertASCIItoUTF16(retString));
+  aReturn.Assign(EmptyString());
   if (nickname) {
     NS_Free(nickname);
   }
