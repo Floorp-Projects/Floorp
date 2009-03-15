@@ -43,7 +43,6 @@
 #include "nsIDOMWorkers.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIPrincipal.h"
-#include "nsITimer.h"
 #include "nsIURI.h"
 #include "nsIXPCScriptable.h"
 
@@ -67,45 +66,39 @@ class nsIEventTarget;
 class nsIScriptGlobalObject;
 class nsIXPConnectWrappedNative;
 
-class nsDOMWorkerScope : public nsDOMWorkerMessageHandler,
-                         public nsIWorkerScope,
-                         public nsIXPCScriptable
+class nsDOMWorkerScope : public nsIWorkerScope,
+                         public nsIDOMEventTarget,
+                         public nsIXPCScriptable,
+                         public nsIClassInfo
 {
-  friend class nsDOMWorker;
-
   typedef nsresult (NS_STDCALL nsDOMWorkerScope::*SetListenerFunc)
     (nsIDOMEventListener*);
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMEVENTTARGET
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIWORKERGLOBALSCOPE
   NS_DECL_NSIWORKERSCOPE
+  NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIXPCSCRIPTABLE
   NS_DECL_NSICLASSINFO
 
   nsDOMWorkerScope(nsDOMWorker* aWorker);
 
-protected:
-  already_AddRefed<nsIXPConnectWrappedNative> GetWrappedNative();
-
 private:
   nsDOMWorker* mWorker;
-  nsIXPConnectWrappedNative* mWrappedNative;
 
   nsRefPtr<nsDOMWorkerNavigator> mNavigator;
 
   PRPackedBool mHasOnerror;
 };
 
-class nsDOMWorker : public nsDOMWorkerMessageHandler,
-                    public nsIWorker,
-                    public nsITimerCallback,
+class nsDOMWorker : public nsIWorker,
                     public nsIJSNativeInitializer,
                     public nsIXPCScriptable
 {
   friend class nsDOMWorkerFeature;
   friend class nsDOMWorkerFunctions;
+  friend class nsDOMWorkerRefPtr;
   friend class nsDOMWorkerScope;
   friend class nsDOMWorkerScriptLoader;
   friend class nsDOMWorkerTimeout;
@@ -124,11 +117,10 @@ class nsDOMWorker : public nsDOMWorkerMessageHandler,
 #endif
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMEVENTTARGET
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIABSTRACTWORKER
   NS_DECL_NSIWORKER
-  NS_DECL_NSITIMERCALLBACK
+  NS_FORWARD_SAFE_NSIDOMEVENTTARGET(mOuterHandler)
   NS_DECL_NSIXPCSCRIPTABLE
 
   static nsresult NewWorker(nsISupports** aNewObject);
@@ -149,13 +141,16 @@ public:
                               jsval* aArgv);
 
   void Cancel();
-  void Kill();
   void Suspend();
   void Resume();
 
-  PRBool IsCanceled();
-  PRBool IsClosing();
-  PRBool IsSuspended();
+  PRBool IsCanceled() {
+    return mCanceled;
+  }
+
+  PRBool IsSuspended() {
+    return mSuspended;
+  }
 
   PRBool SetGlobalForContext(JSContext* aCx);
 
@@ -175,62 +170,6 @@ public:
   nsDOMWorkerScope* GetInnerScope() {
     return mInnerScope;
   }
-
-  void SetExpirationTime(PRIntervalTime aExpirationTime);
-#ifdef DEBUG
-  PRIntervalTime GetExpirationTime();
-#endif
-
-  /**
-   * Use this chart to help figure out behavior during each of the closing
-   * statuses. Details below.
-   * 
-   * +=============+=============+=================+=======================+
-   * |   status    | clear queue | abort execution | close handler timeout |
-   * +=============+=============+=================+=======================+
-   * |   eClosed   |     yes     |       no        |          no           |
-   * +-------------+-------------+-----------------+-----------------------+
-   * | eTerminated |     yes     |       yes       |          no           |
-   * +-------------+-------------+-----------------+-----------------------+
-   * |  eCanceled  |     yes     |       yes       |          yes          |
-   * +-------------+-------------+-----------------+-----------------------+
-   * 
-   */
-
-  enum Status {
-    // This status means that the close handler has not yet been scheduled.
-    eRunning = 0,
-
-    // Inner script called Close() on the worker global scope. Setting this
-    // status causes the worker to clear its queue of events but does not abort
-    // the currently running script. The close handler is also scheduled with
-    // no expiration time. This status may be superseded by 'eTerminated' in
-    // which case the currently running script will be aborted as detailed
-    // below. It may also be superseded by 'eCanceled' at which point the close
-    // handler will be assigned an expiration time. Once the close handler has
-    // completed or timed out the status will be changed to 'eKilled'.
-    eClosed,
-
-    // Outer script called Terminate() on the worker or the worker object was
-    // garbage collected in its outer script. Setting this status causes the
-    // worker to abort immediately, clear its queue of events, and schedules the
-    // close handler with no expiration time. This status may be superseded by
-    // 'eCanceled' at which point the close handler will have an expiration time
-    // assigned. Once the close handler has completed or timed out the status
-    // will be changed to 'eKilled'.
-    eTerminated,
-
-    // Either the user navigated away from the owning page, the owning page fell
-    // out of bfcache, or the user quit the application. Setting this status
-    // causes the worker to abort immediately and schedules the close handler
-    // with an expiration time. Since the page has gone away the worker may not
-    // post any messages. Once the close handler has completed or timed out the
-    // status will be changed to 'eKilled'.
-    eCanceled,
-
-    // The close handler has run and the worker is effectively dead.
-    eKilled
-  };
 
 private:
   ~nsDOMWorker();
@@ -253,6 +192,7 @@ private:
   void CancelTimeoutWithId(PRUint32 aId);
   void SuspendFeatures();
   void ResumeFeatures();
+  void CancelFeatures();
 
   nsIPrincipal* GetPrincipal() {
     return mPrincipal;
@@ -270,13 +210,6 @@ private:
     mURI = aURI;
   }
 
-  nsresult FireCloseRunnable(PRIntervalTime aTimeoutInterval,
-                             PRBool aClearQueue,
-                             PRBool aFromFinalize);
-  nsresult Close();
-
-  nsresult TerminateInternal(PRBool aFromFinalize);
-
 private:
 
   // mParent will live as long as mParentWN but only mParentWN will keep the JS
@@ -286,10 +219,12 @@ private:
 
   PRLock* mLock;
 
+  nsRefPtr<nsDOMWorkerMessageHandler> mInnerHandler;
+  nsRefPtr<nsDOMWorkerMessageHandler> mOuterHandler;
+
   nsRefPtr<nsDOMWorkerPool> mPool;
 
   nsDOMWorkerScope* mInnerScope;
-  nsCOMPtr<nsIXPConnectWrappedNative> mScopeWN;
   JSObject* mGlobal;
 
   PRUint32 mNextTimeoutId;
@@ -306,16 +241,10 @@ private:
 
   PRInt32 mErrorHandlerRecursionCount;
 
-  // Always protected by mLock
-  Status mStatus;
-
-  // Always protected by mLock
-  PRIntervalTime mExpirationTime;
-
-  nsCOMPtr<nsITimer> mKillTimer;
-
+  PRPackedBool mCanceled;
   PRPackedBool mSuspended;
   PRPackedBool mCompileAttempted;
+  PRPackedBool mTerminated;
 };
 
 /**
