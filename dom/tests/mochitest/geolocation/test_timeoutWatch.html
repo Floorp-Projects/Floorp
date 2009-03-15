@@ -7,13 +7,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=455327
   <title>Test for timeout option </title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <script type="text/javascript" src="geolocation_common.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=455327">Mozilla Bug </a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=455327">Mozilla Bug 478911</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -24,20 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=455327
 
 SimpleTest.waitForExplicitFinish();
 
-promptOption = ACCEPT;
-attachPrompt();
-
-ok(navigator.geolocation, "Ensure that the geolocation object is present");
+stop_geolocationProvider();
 
 function successCallback(pos){
   ok(0, "success should have never been called.");
-  removePrompt();
+
+  resume_geolocationProvider();
   SimpleTest.finish();
 }
 
 function errorCallback(err) {
-    removePrompt();
-
     if (err.code == err.POSITION_UNAVAILABLE) {
         // nothing is hooked up to test against.
         SimpleTest.finish();
@@ -45,19 +40,23 @@ function errorCallback(err) {
     }
 
   ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
-  removePrompt();
+
+  resume_geolocationProvider();
+
   SimpleTest.finish();
 }
 
 
 var options = {
-    enableHighAccuracy: true,
+    maximumAge: 1,
     timeout: 100
 };
 
 navigator.geolocation.watchPosition(successCallback,
                                     errorCallback,
                                     options);
+
+setTimeout(clickAccept, 0);
 
 </script>
 </pre>

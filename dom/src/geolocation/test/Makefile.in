@@ -38,27 +38,13 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= dom/tests/mochitest/geolocation
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE         = dom_geolocation_test
+
+ifdef ENABLE_TESTS
+EXTRA_COMPONENTS = TestGeolocationProvider.js
+endif
+
 include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
-		test_manyWindows.html \
-		test_allowCurrent.html \
-		test_allowWatch.html \
-		test_cancelCurrent.html \
-		test_cancelWatch.html \
-		test_clearWatch.html \
-		test_clearWatch_invalid.html \
-		test_timeoutWatch.html \
-		geolocation_common.js  \
-		geolocation.html \
-		test_optional_api_params.html \
-		$(NULL)
-
-
-libs:: 	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
