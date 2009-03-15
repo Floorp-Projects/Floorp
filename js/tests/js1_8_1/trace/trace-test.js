@@ -234,7 +234,7 @@ function check(desc, actual, expected, oldJITstats, expectedJITstats)
         }
       });
   }
-  print(desc, ": FAILED: expected", typeof(expected), 
+  print("TEST-UNEXPECTED-FAIL | trace-test.js |", desc, ": expected", typeof(expected),
         "(", uneval(expected), ")",
         (expectedStats ? " [" + expectedStats + "] " : ""),
         "!= actual",
@@ -1731,8 +1731,8 @@ function testNestedExitStackOuter() {
 testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
 recorderStarted: 5,
-recorderAborted: 2,
-traceTriggered: 11
+recorderAborted: 1,
+traceTriggered: 10
 };
 test(testNestedExitStackOuter);
 
@@ -2637,9 +2637,9 @@ function testWeirdDateParse() {
 }
 testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
 testWeirdDateParse.jitstats = {
-recorderStarted: 7,
+recorderStarted: 8,
 recorderAborted: 1,
-traceCompleted: 6,
+traceCompleted: 7,
 traceTriggered: 14,
 unstableLoopVariable: 3,
 noCompatInnerTrees: 1
@@ -4524,6 +4524,86 @@ function testLambdaCtor() {
 
 testLambdaCtor.expected = true;
 test(testLambdaCtor);
+
+function testNonStubGetter() {
+    let ([] = false) { (this.watch("x", /a/g)); };
+    (function () { (eval("(function(){for each (x in [1, 2, 2]);});"))(); })();
+    this.unwatch("x");
+    return "ok";
+}
+testNonStubGetter.expected = "ok";
+test(testNonStubGetter);
+
+function testString() {
+    var q;
+    for (var i = 0; i <= RUNLOOP; ++i) {
+        q = [];
+        q.push(String(void 0));
+        q.push(String(true));
+        q.push(String(5));
+        q.push(String(5.5));
+        q.push(String("5"));
+        q.push(String([5]));
+    }
+    return q.join(",");
+}
+testString.expected = "undefined,true,5,5.5,5,5";
+testString.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1
+};
+test(testString);
+
+function testToStringBeforeValueOf()
+{
+  var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a.push(String(o));
+  return a.join(",");
+}
+testToStringBeforeValueOf.expected = "s,s,s,s,s,s,s,s,s,s";
+testToStringBeforeValueOf.jitstats = {
+  recorderStarted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testToStringBeforeValueOf);
+
+function testNullToString()
+{
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a.push(String(null));
+  for (i = 0; i < 10; i++) {
+    var t = typeof a[i];
+    if (t != "string")
+      a.push(t);
+  }
+  return a.join(",");
+}
+testNullToString.expected = "null,null,null,null,null,null,null,null,null,null";
+testNullToString.jitstats = {
+  recorderStarted: 2,
+  sideExitIntoInterpreter: 2,
+  recorderAborted: 0
+};
+test(testNullToString);
+
+function testAddNull()
+{
+  var rv;
+  for (var x = 0; x < HOTLOOP + 1; ++x)
+    rv = null + [,,];
+  return rv;
+}
+testAddNull.expected = "null,";
+testAddNull.jitstats = {
+  recorderStarted: 1,
+  sideExitIntoInterpreter: 1,
+  recorderAborted: 0
+};
+test(testAddNull);
+
 
 /*****************************************************************************
  *                                                                           *
