@@ -247,7 +247,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
 
     // check upfront for the existence of the function property
     funid = mRuntime->GetStringID(XPCJSRuntime::IDX_QUERY_INTERFACE);
-    if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
+    if(!JS_GetPropertyById(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nsnull;
 
     // protect fun so that we're sure it's alive when we call it
@@ -364,7 +364,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
     nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
     jsval val;
 
-    return OBJ_GET_PROPERTY(ccx, aJSObj, aName, &val) &&
+    return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
            XPCConvert::JSData2Native(ccx, aResult, val, type, JS_FALSE, 
                                      &NS_GET_IID(nsIVariant), pErr);
 }
@@ -1521,7 +1521,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
             if(param.IsIn())
             {
-                if(!OBJ_SET_PROPERTY(cx, out_obj,
+                if(!JS_SetPropertyById(cx, out_obj,
                         mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
                         &val))
                 {
@@ -1686,7 +1686,7 @@ pre_call_clean_up:
         if(param.IsRetval())
             val = result;
         else if(JSVAL_IS_PRIMITIVE(stackbase[i+2]) ||
-                !OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(stackbase[i+2]),
+                !JS_GetPropertyById(cx, JSVAL_TO_OBJECT(stackbase[i+2]),
                     mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
                     &val))
             HANDLE_OUT_CONVERSION_FAILURE
@@ -1736,7 +1736,7 @@ pre_call_clean_up:
 
             if(param.IsRetval())
                 val = result;
-            else if(!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(stackbase[i+2]),
+            else if(!JS_GetPropertyById(cx, JSVAL_TO_OBJECT(stackbase[i+2]),
                         mRuntime->GetStringID(XPCJSRuntime::IDX_VALUE),
                         &val))
                 HANDLE_OUT_CONVERSION_FAILURE
