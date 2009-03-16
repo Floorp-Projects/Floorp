@@ -655,7 +655,7 @@ class Dumper_Linux(Dumper):
                                 debug_file + ".dbg")
         full_path = os.path.normpath(os.path.join(self.symbol_path,
                                                   rel_path))
-        shutil.copyfile(file_dbg, full_path)
+        shutil.move(file_dbg, full_path)
         # gzip the shipped debug files
         os.system("gzip %s" % full_path)
         print rel_path + ".gz"
