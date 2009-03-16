@@ -52,18 +52,23 @@ interface nsIChannel;
  * list is changed, or a cookie is rejected:
  *
  * topic  : "cookie-changed"
- *          broadcast whenever the cookie list changes in some way. there
- *          are four possible data strings for this notification; one
- *          notification will be broadcast for each change, and will involve
- *          a single cookie.
- * subject: an nsICookie2 interface pointer representing the cookie object
- *          that changed.
+ *          broadcast whenever the cookie list changes in some way. see
+ *          explanation of data strings below.
+ * subject: see below.
  * data   : "deleted"
- *          a cookie was deleted. the subject is the deleted cookie.
+ *          a cookie was deleted. the subject is an nsICookie2 representing
+ *          the deleted cookie.
  *          "added"
- *          a cookie was added. the subject is the added cookie.
+ *          a cookie was added. the subject is an nsICookie2 representing
+ *          the added cookie.
  *          "changed"
- *          a cookie was changed. the subject is the new cookie.
+ *          a cookie was changed. the subject is an nsICookie2 representing
+ *          the new cookie. (note that host, path, and name are invariant
+ *          for a given cookie; other parameters may change.)
+ *          "batch-deleted"
+ *          a batch of cookies was deleted (for instance, as part of a purging
+ *          operation). the subject is an nsIArray of nsICookie2's representing
+ *          the deleted cookies.
  *          "cleared"
  *          the entire cookie list was cleared. the subject is null.
  *          "reload"
