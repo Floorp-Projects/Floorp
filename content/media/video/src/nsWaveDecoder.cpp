@@ -1024,7 +1024,7 @@ nsWaveStateMachine::LoadRIFFChunk()
 PRBool
 nsWaveStateMachine::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
 {
-  NS_ENSURE_ARG_POINTER(aChunkSize);
+  NS_ABORT_IF_FALSE(aChunkSize, "Require aChunkSize argument");
   *aChunkSize = 0;
 
   for (;;) {
