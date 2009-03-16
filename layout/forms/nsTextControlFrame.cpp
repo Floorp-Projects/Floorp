@@ -1386,10 +1386,6 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
 void
 nsTextControlFrame::DelayedEditorInit()
 {
-  // Make sure that editor init doesn't do things that would kill us off
-  // (especially off the script blockers it'll create for its DOM mutations).
-  nsAutoScriptBlocker scriptBlocker;
-
   // Time to mess with our security context... See comments in GetValue()
   // for why this is needed.
   nsCxPusher pusher;
