@@ -40,6 +40,7 @@
 #define nsDateTimeFormatMac_h__
 
 
+#include "nsICharsetConverterManager.h"
 #include "nsCOMPtr.h"
 #include "nsIDateTimeFormat.h"
 
@@ -86,7 +87,12 @@ private:
 
   nsString    mLocale;
   nsString    mAppLocale;
+  nsCString   mCharset;
+  short       mScriptcode;
+  short       mLangcode;
+  short       mRegioncode;
   bool        mUseDefaultLocale;
+  nsCOMPtr <nsIUnicodeDecoder>   mDecoder;
 };
 
 #endif  /* nsDateTimeFormatMac_h__ */
