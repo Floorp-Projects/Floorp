@@ -5454,6 +5454,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
   return ReconstructDocElementHierarchyInternal();
 }
 
+static void
+InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
+
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
 {
@@ -5470,6 +5473,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
     nsIContent *rootContent = mDocument->GetRootContent();
     
     if (rootContent) {
+      // Invalidate the canvas, just to be safe
+      InvalidateCanvasIfNeeded(mPresShell, rootContent);
+
       nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                     nsnull, nsnull, mTempFrameTreeState);
 
@@ -5968,9 +5974,6 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   return (newParent) ? newParent : aParentFrame;
 }
 
-static void
-InvalidateCanvasIfNeeded(nsIFrame* aFrame);
-
 static PRBool
 IsSpecialFramesetChild(nsIContent* aContent)
 {
@@ -6175,31 +6178,23 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     return NS_OK;
   }
 
-  if (NS_FAILED(CreateNeededTablePseudos(items, parentFrame))) {
-    // Pretend this never happened, I gues
-    return NS_OK;
-  }
-
-  // if the container is a table and a caption was appended, it needs to be put in
-  // the outer table frame's additional child list. 
   nsFrameItems frameItems;
-  nsFrameItems captionItems;
+  ConstructFramesFromItemList(state, items, parentFrame, frameItems);
 
-  for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-    nsresult rv =
-      ConstructFramesFromItem(state, iter, parentFrame, frameItems);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
-    // ConstructFramesFromItem will always create at least one frame if it
-    // succeeds.
-    // FIXME: But due to bug 480880, we might not have a frameItems.lastChild
-    // anyway.
-    if (frameItems.lastChild)
-      InvalidateCanvasIfNeeded(frameItems.lastChild);
+  for (PRUint32 i = aNewIndexInContainer, count = aContainer->GetChildCount();
+       i < count;
+       ++i) {
+    // Invalidate now instead of before the WipeContainingBlock call, just in
+    // case we do wipe; in that case we don't need to do this walk at all.
+    // XXXbz does that matter?  Would it make more sense to save some virtual
+    // GetChildAt calls instead and do this during construction of our
+    // FrameConstructionItemList?
+    InvalidateCanvasIfNeeded(mPresShell, aContainer->GetChildAt(i));
   }
 
+  // if the container is a table and a caption was appended, it needs to be put
+  // in the outer table frame's additional child list.
+  nsFrameItems captionItems;
   if (nsGkAtoms::tableFrame == frameType) {
     // Pull out the captions.  Note that we don't want to do that as we go,
     // because processing a single caption can add a whole bunch of things to
@@ -6389,7 +6384,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                        "Unexpected child of document element containing block");
           mDocElementContainingBlock->AppendFrames(nsnull, docElementFrame);
         }
-        InvalidateCanvasIfNeeded(docElementFrame);
+        InvalidateCanvasIfNeeded(mPresShell, aChild);
 #ifdef DEBUG
         if (gReallyNoisyContentUpdates) {
           nsIFrameDebug* fdbg = do_QueryFrame(docElementFrame);
@@ -6596,20 +6591,13 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     return NS_OK;
 
 
-  if (NS_FAILED(CreateNeededTablePseudos(items, parentFrame))) {
-    // Pretend this never happened, I gues
-    return NS_OK;
-  }
-
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
-  
   nsFrameItems frameItems, captionItems;
-  for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-    ConstructFramesFromItem(state, iter, parentFrame, frameItems);
-  }
+  ConstructFramesFromItemList(state, items, parentFrame, frameItems);
+
   if (frameItems.childList) {
-    InvalidateCanvasIfNeeded(frameItems.childList);
+    InvalidateCanvasIfNeeded(mPresShell, aChild);
     
     if (nsGkAtoms::tableCaptionFrame == frameItems.childList->GetType()) {
       NS_ASSERTION(frameItems.childList == frameItems.lastChild ,
@@ -7030,7 +7018,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 #endif // MOZ_XUL
 
   if (childFrame) {
-    InvalidateCanvasIfNeeded(childFrame);
+    InvalidateCanvasIfNeeded(mPresShell, aChild);
     
     // If the frame we are manipulating is a special frame then do
     // something different instead of just inserting newly created
@@ -7351,14 +7339,14 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
  *               was just created for a content node that was inserted.
  */ 
 static void
-InvalidateCanvasIfNeeded(nsIFrame* aFrame)
+InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 {
-  NS_ASSERTION(aFrame, "Must have frame!");
+  NS_PRECONDITION(presShell->GetRootFrame(), "What happened here?");
+  NS_PRECONDITION(presShell->GetPresContext(), "Say what?");
 
-  //  Note that for both in ContentRemoved and ContentInserted the content node
+  //  Note that both in ContentRemoved and ContentInserted the content node
   //  will still have the right parent pointer, so looking at that is ok.
   
-  nsIContent* node = aFrame->GetContent();
   nsIContent* parent = node->GetParent();
   if (parent) {
     // Has a parent; might not be what we want
@@ -7377,31 +7365,17 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
 
   // At this point the node has no parent or it's an HTML <body> child of the
   // root.  We might not need to invalidate in this case (eg we might be in
-  // XHTML or something), but chances are we want to.  Play it safe.  Find the
-  // frame to invalidate and do it.
-  nsIFrame *ancestor = aFrame;
-  const nsStyleBackground *bg;
-  nsPresContext* presContext = aFrame->PresContext();
-  while (!nsCSSRendering::FindBackground(presContext, ancestor, &bg)) {
-    ancestor = ancestor->GetParent();
-    NS_ASSERTION(ancestor, "canvas must paint");
-  }
+  // XHTML or something), but chances are we want to.  Play it safe.
+  // Invalidate the viewport.
 
-  if (ancestor->GetType() == nsGkAtoms::canvasFrame) {
-    // The canvas frame's dimensions are not meaningful; invalidate the
-    // viewport instead.
-    ancestor = ancestor->GetParent();
-  }
+  // Wrap this in a DEFERRED view update batch so we don't try to
+  // flush out layout here
 
-  if (ancestor != aFrame) {
-    // Wrap this in a DEFERRED view update batch so we don't try to
-    // flush out layout here
-
-    nsIViewManager::UpdateViewBatch batch(presContext->GetPresShell()->GetViewManager());
-    ApplyRenderingChangeToTree(presContext, ancestor,
-                               nsChangeHint_RepaintFrame);
-    batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
-  }
+  nsIViewManager::UpdateViewBatch batch(presShell->GetViewManager());
+  ApplyRenderingChangeToTree(presShell->GetPresContext(),
+                             presShell->GetRootFrame(),
+                             nsChangeHint_RepaintFrame);
+  batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 
 nsresult
