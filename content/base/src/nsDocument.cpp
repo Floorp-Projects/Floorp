@@ -3694,26 +3694,26 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
   }
   
   ++mUpdateNestLevel;
-  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
-
   if (aUpdateType == UPDATE_CONTENT_MODEL) {
     nsContentUtils::AddRemovableScriptBlocker();
   }
   else {
     nsContentUtils::AddScriptBlocker();
   }
+  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
 }
 
 void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
+  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
+
   if (aUpdateType == UPDATE_CONTENT_MODEL) {
     nsContentUtils::RemoveRemovableScriptBlocker();
   }
   else {
     nsContentUtils::RemoveScriptBlocker();
   }
-  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
 
   --mUpdateNestLevel;
 
