@@ -144,7 +144,6 @@ class nsHtml5TreeBuilder
     void insertIntoFosterParent(nsIContent* child);
     PRBool isInStack(nsHtml5StackNode* node);
     void pop();
-    PRBool isTainted();
     void appendHtmlElementToDocumentAndPush(nsHtml5HtmlAttributes* attributes);
     void appendHtmlElementToDocumentAndPush();
     void appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes* attributes);
@@ -195,6 +194,7 @@ class nsHtml5TreeBuilder
     PRBool inForeign();
   private:
     void flushCharacters();
+    PRBool charBufferContainsNonWhitespace();
   public:
     static void initializeStatics();
     static void releaseStatics();
