@@ -244,9 +244,21 @@ void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
 
   // Make the source image fill the rectangle completely
   pat->SetMatrix(gfxMatrix().Scale(mRGBWidth/aRect.Width(), mRGBHeight/aRect.Height()));
+
   // Set PAD mode so that when the video is being scaled, we do not sample
   // outside the bounds of the video image.
-  pat->SetExtend(gfxPattern::EXTEND_PAD);
+  gfxPattern::GraphicsExtend extend = gfxPattern::EXTEND_PAD;
+
+  // PAD is too slow with X11 surfaces, so prefer speed over correctness and
+  // use NONE.
+  nsRefPtr<gfxASurface> target = aContext->CurrentSurface();
+  gfxASurface::gfxSurfaceType type = target->GetType();
+  if (type == gfxASurface::SurfaceTypeXlib ||
+      type == gfxASurface::SurfaceTypeXcb) {
+    extend = gfxPattern::EXTEND_NONE;
+  }
+
+  pat->SetExtend(extend);
 
   /* Draw RGB surface onto frame */
   aContext->NewPath();
