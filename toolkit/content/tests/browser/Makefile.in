@@ -15,16 +15,15 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla.org.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#     Boris Zbarsky <bzbarsky@mit.edu>  (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,17 +35,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = toolkit/content/tests/browser
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= test_toolkit_general
-
-XPCSHELL_TESTS = unit
-
-DIRS = browser chrome widgets
-
 include $(topsrcdir)/config/rules.mk
+
+_BROWSER_FILES = \
+  bug471962_testpage_inner.sjs \
+  bug471962_testpage_outer.sjs \
+  browser_bug471962.js \
+  $(NULL)
+
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
