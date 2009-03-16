@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+</head>
+<body>
+<input style="overflow: scroll;-moz-binding:url(#xbl);" type="image"/>
+<script>
+alert('test');
+</script>
+</body>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="xbl" inheritstyle="false">
+<content>
+
+<div xmlns="http://www.w3.org/1999/xhtml" contenteditable="true">
+<style>style {-moz-binding:url(#xbl);</style>
+</div>
+
+<textarea xmlns="http://www.w3.org/1999/xhtml"></textarea>
+
+</content>
+
+</binding>
+
+</bindings>
+</html>
