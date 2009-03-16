@@ -58,8 +58,8 @@ img:-moz-read-write, img:-moz-read-write[usemap], area:-moz-read-write,
 object:-moz-read-write, object:-moz-read-write[usemap], 
 applet:-moz-read-write, hr:-moz-read-write, button:-moz-read-write,
 isindex:-moz-read-write, select:-moz-read-write,
-a:link img, a:visited img, a:active img,
-a[name]:-moz-only-whitespace {
+a:-moz-read-write:link img, a:-moz-read-write:visited img,
+a:-moz-read-write:active img, a:-moz-read-write:-moz-only-whitespace[name] {
   cursor: default;
 }
 
@@ -68,7 +68,8 @@ a[name]:-moz-only-whitespace {
 }
 
 /* Prevent clicking on links from going to link */
-a:link img, a:visited img {
+a:link:-moz-read-write img, a:visited:-moz-read-write img,
+a:active:-moz-read-write img {
   -moz-user-input: none;
 }
 
