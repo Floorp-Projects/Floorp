@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      window.addEventListener("MozReftestInvalidate",
+        function() {
+          var b = document.createElement("body");
+          b.style.background = "green";
+          document.documentElement.appendChild(b);
+          document.documentElement.className = "";
+        }, false);
+    </script>
+  </head>
+  <body style="background: red">
+    <script>
+      document.documentElement.removeChild(document.body);
+    </script>
+  </body>
+</html>
