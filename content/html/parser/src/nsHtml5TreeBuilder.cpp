@@ -2717,7 +2717,7 @@ nsHtml5TreeBuilder::isQuirky(nsIAtom* name, nsString* publicIdentifier, nsString
   if (forceQuirks) {
     return PR_TRUE;
   }
-  if (name != HTML_LOCAL) {
+  if (name != nsHtml5Atoms::html) {
     return PR_TRUE;
   }
   if (!!publicIdentifier) {
@@ -3655,7 +3655,6 @@ nsHtml5TreeBuilder::initializeStatics()
   QUIRKY_PUBLIC_IDS[52] = nsHtml5StringLiterals::___w3o__dtd_w3_html_3_0__;
   QUIRKY_PUBLIC_IDS[53] = nsHtml5StringLiterals::___webtechs__dtd_mozilla_html_2_0__;
   QUIRKY_PUBLIC_IDS[54] = nsHtml5StringLiterals::___webtechs__dtd_mozilla_html__;
-  HTML_LOCAL = nsHtml5Atoms::html;
 }
 
 void
@@ -3663,7 +3662,6 @@ nsHtml5TreeBuilder::releaseStatics()
 {
   ISINDEX_PROMPT.release();
   QUIRKY_PUBLIC_IDS.release();
-  delete HTML_LOCAL;
 }
 
 
