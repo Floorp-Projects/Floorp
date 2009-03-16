@@ -241,6 +241,7 @@ TabStore.prototype = {
 	  if (urlHistory.length >= 10)
 	    break;
 	}
+        // TODO add last-visited date for this tab... but how?
         record.addTab(currentPage.title, urlHistory);
       }
     }
@@ -256,7 +257,9 @@ TabStore.prototype = {
       let urlHistory = [url];
       this._log.debug("Wrapping a tab with title " + title);
       // TODO how to get older entries in urlHistory?
+      // can we use BrowserUI._getHistory somehow?
       record.addTab(title, urlHistory);
+      // TODO add last-visited date for this tab... but how?
     }
   },
 
@@ -335,6 +338,10 @@ TabStore.prototype = {
   }
 
 };
+
+/* TODO let's have TabTracker keep track of open/close switch events
+ * and maintain most-recently used date of each tab...
+ */
 
 function TabTracker() {
   this._TabTracker_init();
