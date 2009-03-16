@@ -38,196 +38,16 @@
 
 #include "nsIServiceManager.h"
 #include "nsDateTimeFormatMac.h"
-#include <Resources.h>
-#include <IntlResources.h>
-#include <DateTimeUtils.h>
-#include <Script.h>
-#include <TextUtils.h>
+#include <CoreFoundation/CFDateFormatter.h>
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
-#include "nsIPlatformCharset.h"
 #include "nsIMacLocale.h"
 #include "nsCRT.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "nsUnicharUtils.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-static Intl1Hndl GetItl1Resource(short scriptcode, short regioncode)
-{
-	long itl1num;
-
-	if (smRoman == scriptcode)
-	{
-		itl1num = regioncode;	// if smRoman, use regioncode to differenciate
-	} else {
-		// get itlb from currenty system script
-		ItlbRecord **ItlbRecordHandle;
-		ItlbRecordHandle = (ItlbRecord **)::GetResource('itlb', scriptcode);
-		
-		// get itl1 number from itlb resource, if possible
-		// otherwise, use the one return from script manager, 
-		// (Script manager won't update itl1 number when the change on the fly )
-		if(ItlbRecordHandle != NULL)
-		{
-			if(*ItlbRecordHandle == NULL)
-				::LoadResource((Handle)ItlbRecordHandle);
-				
-			if(*ItlbRecordHandle != NULL)
-				itl1num = (*ItlbRecordHandle)->itlbDate;
-			else
-				itl1num = ::GetScriptVariable(scriptcode, smScriptDate);
-		} else {	// Use this as fallback
-			itl1num = ::GetScriptVariable(scriptcode, smScriptDate);
-		}
-	}
-	
-	// get itl1 resource 
-	Intl1Hndl Itl1RecordHandle;
-	Itl1RecordHandle = (Intl1Hndl)::GetResource('itl1', itl1num);
-	NS_ASSERTION(Itl1RecordHandle, "failed to get itl1 handle");
-	return Itl1RecordHandle;
-}
-
-static Intl0Hndl GetItl0Resource(short scriptcode, short regioncode)
-{
-	long itl0num;
-
-	if (smRoman == scriptcode)
-	{
-		itl0num = regioncode;	// if smRoman, use regioncode to differenciate
-	} else {
-		// get itlb from currenty system script
-		ItlbRecord **ItlbRecordHandle;
-		ItlbRecordHandle = (ItlbRecord **)::GetResource('itlb', scriptcode);
-		
-		// get itl0 number from itlb resource, if possible
-		// otherwise, use the one return from script manager, 
-		// (Script manager won't update itl1 number when the change on the fly )
-		if(ItlbRecordHandle != NULL)
-		{
-			if(*ItlbRecordHandle == NULL)
-				::LoadResource((Handle)ItlbRecordHandle);
-				
-			if(*ItlbRecordHandle != NULL)
-				itl0num = (*ItlbRecordHandle)->itlbNumber;
-			else
-				itl0num = ::GetScriptVariable(scriptcode, smScriptNumber);
-		} else {	// Use this as fallback
-			itl0num = ::GetScriptVariable(scriptcode, smScriptNumber);
-		}
-	}
-	
-	// get itl0 resource 
-	Intl0Hndl Itl0RecordHandle;
-	Itl0RecordHandle = (Intl0Hndl)::GetResource('itl0', itl0num);
-	NS_ASSERTION(Itl0RecordHandle, "failed to get itl0 handle");
-	return Itl0RecordHandle;
-}
-
-static void AbbrevWeekdayString(DateTimeRec &dateTime, Str255 weekdayString, Intl1Hndl Itl1RecordHandle )
-{
-	Boolean gotit = false;
-	
-	// If we can get itl1Resource, exam it.
-	if(Itl1RecordHandle != NULL )
-	{
-		if(*Itl1RecordHandle == NULL)
-			::LoadResource((Handle)Itl1RecordHandle);
-
-		if(*Itl1RecordHandle == NULL)
-		{
-			weekdayString[0] = 0;
-			return;
-		}
-		// if itl1 resource is in the itl1ExtRec format 
-		// look at the additional table
-		// See IM-Text Appendix B for details
-		if((unsigned short)((*Itl1RecordHandle)->localRtn[0]) == 0xA89F)
-		{	// use itl1ExtRect
-			Itl1ExtRec **Itl1ExtRecHandle;
-			Itl1ExtRecHandle = (Itl1ExtRec **) Itl1RecordHandle;
-			
-			// check abbrevDaysTableLength and abbrevDaysTableOffset
-			if(((*Itl1ExtRecHandle)->abbrevDaysTableLength != 0) &&
-			   ((*Itl1ExtRecHandle)->abbrevDaysTableOffset != 0))
-			{	
-				// use the additional table for abbreviation weekday name
-				// Japanese use it.
-				// Start Pointer access to Handle, no HLock since we don't
-				// call any API here.
-				// Be careful when you debug- don't move memory :)
-				Ptr abTablePt;
-				short itemlen;
-				
-				// Ok, change it back to range [0-6]
-				short weekday = dateTime.dayOfWeek - 1;	
-				
-				abTablePt = (Ptr)(*Itl1ExtRecHandle);
-				abTablePt +=  (*Itl1ExtRecHandle)->abbrevDaysTableOffset;
-				
-				// first 2 byte in the table should be the count.
-				itemlen = (short) *((short*)abTablePt);	
-				abTablePt += 2;	
-				
-				if(weekday < itemlen)
-				{
-					unsigned char len;
-					short i;
-					// iterate till we hit the weekday name we want
-					for(i = 0 ; i < weekday ; i++)	
-					{
-						len = *abTablePt;
-						// shift to the next one. don't forget the len byte itself.
-						abTablePt += len + 1;	
-					}
-					// Ok, we got it, let's copy it.
-					len = *abTablePt;
-					::BlockMoveData(abTablePt,&weekdayString[0] ,len+1);
-					gotit = true;
-				}
-			}
-		}
-		
-		// didn't get it. Either it is not in itl1ExtRect format or it don't have
-		// additional abbreviation table. 
-		// use itl1Rect instead.
-		if(! gotit)
-		{	
-			// get abbreviation length
-			// not the length is not always 3. Some country use longer (say 4)
-			// abbreviation.
-			short abbrLen = (*Itl1RecordHandle)->abbrLen;
-			// Fix  Traditional Chinese problem
-			if(((((*Itl1RecordHandle)->intl1Vers) >> 8) == verTaiwan ) &&
-			   (abbrLen == 4) &&
-			   ((*Itl1RecordHandle)->days[0][0] == 6) && 
-			   ((*Itl1RecordHandle)->days[1][0] == 6) && 
-			   ((*Itl1RecordHandle)->days[2][0] == 6) && 
-			   ((*Itl1RecordHandle)->days[3][0] == 6) && 
-			   ((*Itl1RecordHandle)->days[4][0] == 6) && 
-			   ((*Itl1RecordHandle)->days[5][0] == 6) && 
-			   ((*Itl1RecordHandle)->days[6][0] == 6))
-			{
-				abbrLen = 6;
-			}
-			weekdayString[0] = abbrLen;
-			// copy the weekday name with that abbreviation length
-			::BlockMoveData(&((*Itl1RecordHandle)->days[dateTime.dayOfWeek-1][1]),
-				 &weekdayString[1] , abbrLen);
-			gotit = true;
-		}
-	}
-	else 
-	{	// cannot get itl1 resource, return with null string.
-		weekdayString[0] = 0;
-	}
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
+#include "nsTArray.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatMac, nsIDateTimeFormat)
@@ -256,12 +76,6 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
     }
   }
 
-  mScriptcode = smSystemScript;
-  mLangcode = langEnglish;
-  mRegioncode = verUS;
-  mCharset.AssignLiteral("x-mac-roman");
-  
-
   // get application locale
   nsCOMPtr<nsILocaleService> localeService = 
            do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
@@ -285,34 +99,10 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
     res = locale->GetCategory(category, localeStr);
   }
     
-  // Get a script code and charset name from locale, if available
   if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
     mLocale.Assign(localeStr); // cache locale name
-
-    nsCOMPtr <nsIMacLocale> macLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      res = macLocale->GetPlatformLocale(mLocale, &mScriptcode, &mLangcode, &mRegioncode);
-    }
-
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      nsCAutoString  mappedCharset;
-      res = platformCharset->GetDefaultCharsetForLocale(mLocale, mappedCharset);
-      if (NS_SUCCEEDED(res)) {
-        mCharset = mappedCharset;
-      }
-    }
   }
 
-  // Initialize unicode decoder
-  nsCOMPtr <nsIAtom>                      charsetAtom;
-  nsCOMPtr <nsICharsetConverterManager>  charsetConverterManager;
-  charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res)) {
-    res = charsetConverterManager->GetUnicodeDecoder(mCharset.get(),
-                                                     getter_AddRefs(mDecoder));
-  }
-  
   return res;
 }
 
@@ -323,17 +113,9 @@ nsresult nsDateTimeFormatMac::FormatTime(nsILocale* locale,
                                       const time_t  timetTime, 
                                       nsAString& stringOut)
 {
-  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime(&timetTime), stringOut);
+  struct tm tmTime;
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime_r(&timetTime, &tmTime), stringOut);
 }
-
-#if !TARGET_CARBON
-static void CopyPascalStringToC(StringPtr aSrc, char* aDest)
-{
-  int len = aSrc[0];
-  ::BlockMoveData(aSrc + 1, aDest, len);
-  aDest[len] = '\0';
-}
-#endif
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
 nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale, 
@@ -342,10 +124,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
                                            const struct tm*  tmTime, 
                                            nsAString& stringOut)
 {
-  DateTimeRec macDateTime;
-  Str255 timeString, dateString;
-  int32 dateTime;	
-  nsresult res;
+  nsresult res = NS_OK;
 
   // set up locale data
   (void) Initialize(locale);
@@ -359,7 +138,6 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   // set the default string, in case for API/conversion errors
   CopyASCIItoUTF16(nsDependentCString(asctime(tmTime)), stringOut);
   
-  // convert struct tm to input format of mac toolbox call
   NS_ASSERTION(tmTime->tm_mon >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_mday >= 1, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_hour >= 0, "tm is not set correctly");
@@ -367,89 +145,120 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   NS_ASSERTION(tmTime->tm_sec >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_wday >= 0, "tm is not set correctly");
 
-  macDateTime.year = tmTime->tm_year + 1900;	
-
-  // Mac use 1 for Jan and 12 for Dec
-  // tm use 0 for Jan and 11 for Dec 
-  macDateTime.month = tmTime->tm_mon + 1;	
-  macDateTime.day = tmTime->tm_mday;
-  macDateTime.hour = tmTime->tm_hour;
-  macDateTime.minute = tmTime->tm_min;
-  macDateTime.second = tmTime->tm_sec;
-
-  // Mac use 1 for sunday 7 for saturday
-  // tm use 0 for sunday 6 for saturday 
-  macDateTime.dayOfWeek = tmTime->tm_wday +1 ; 
-
-  ::DateToSeconds( &macDateTime, (unsigned long *) &dateTime);
-  
-  // specify itl if not using a default locale
-  Handle itl1Handle = mUseDefaultLocale ? nil : (Handle) GetItl1Resource(mScriptcode, mRegioncode);
-  Handle itl0Handle = mUseDefaultLocale ? nil : (Handle) GetItl0Resource(mScriptcode, mRegioncode);
-
-  // get time string
-  if (timeFormatSelector != kTimeFormatNone) {
-    // modify itl0 to force 24 hour time cycle !
-    if ( itl0Handle &&
-       (timeFormatSelector == kTimeFormatSecondsForce24Hour || 
-        timeFormatSelector == kTimeFormatNoSecondsForce24Hour)) {
-      Intl0Hndl itl0HandleToModify = (Intl0Hndl) itl0Handle;
-      UInt8 timeCycle = (**itl0HandleToModify).timeCycle;
-      (**itl0HandleToModify).timeCycle = timeCycle24;
-      ::TimeString(dateTime, (timeFormatSelector == kTimeFormatSeconds), timeString, itl0Handle);
-      (**itl0HandleToModify).timeCycle = timeCycle;
-    }
-    else {
-      ::TimeString(dateTime, (timeFormatSelector == kTimeFormatSeconds), timeString, itl0Handle);
-    }
+  // Got the locale for the formatter:
+  CFLocaleRef formatterLocale;
+  if (!locale) {
+    formatterLocale = CFLocaleCopyCurrent();
+  } else {
+    CFStringRef localeStr = CFStringCreateWithCharacters(NULL, mLocale.get(), mLocale.Length());
+    formatterLocale = CFLocaleCreate(NULL, localeStr);
+    CFRelease(localeStr);
   }
-  
-  // get date string
+
+  // Get the date style for the formatter:  
+  CFDateFormatterStyle dateStyle;
   switch (dateFormatSelector) {
     case kDateFormatLong:
-      ::DateString(dateTime, abbrevDate, dateString, itl1Handle);
+      dateStyle = kCFDateFormatterLongStyle;
       break;
     case kDateFormatShort:
-      ::DateString(dateTime, shortDate, dateString, itl0Handle);
+      dateStyle = kCFDateFormatterShortStyle;
       break;
     case kDateFormatYearMonth:
-      dateString[0] =  strftime((char*)&dateString[1],254,"%y/%m",tmTime);
-      break;
     case kDateFormatWeekday:
-      AbbrevWeekdayString(macDateTime, dateString, (Intl1Hndl)itl1Handle);
-      // try fallback if it return with null string.
-      if(dateString[0] == 0) {	//	cannot get weekdayString from itl1 , try fallback
-        dateString[0] =  strftime((char*)&dateString[1],254,"%a",tmTime);
-      }
+      dateStyle = kCFDateFormatterNoStyle; // formats handled below
       break;
+    case kDateFormatNone:
+      dateStyle = kCFDateFormatterNoStyle;
+      break;
+    default:
+      NS_ERROR("Unknown nsDateFormatSelector");
+      res = NS_ERROR_FAILURE;
+      dateStyle = kCFDateFormatterNoStyle;
   }
   
-  // construct a C string
-  char localBuffer[2 * 255 + 2 + 1]; // 2 255-byte-max pascal strings, plus
-                                     // a space and a null.
-  if (dateFormatSelector != kDateFormatNone && timeFormatSelector != kTimeFormatNone) {
-    CopyPascalStringToC(dateString, localBuffer);
-    localBuffer[dateString[0]] = ' ';
-    CopyPascalStringToC(timeString, &(localBuffer[dateString[0] + 1]));
+  // Get the time style for the formatter:
+  CFDateFormatterStyle timeStyle;
+  switch (timeFormatSelector) {
+    case kTimeFormatSeconds:
+    case kTimeFormatSecondsForce24Hour: // 24 hour part fixed below
+      timeStyle = kCFDateFormatterMediumStyle;
+      break;
+    case kTimeFormatNoSeconds:
+    case kTimeFormatNoSecondsForce24Hour: // 24 hour part fixed below
+      timeStyle = kCFDateFormatterShortStyle;
+      break;
+    case kTimeFormatNone:
+      timeStyle = kCFDateFormatterNoStyle;
+      break;
+    default:
+      NS_ERROR("Unknown nsTimeFormatSelector");
+      res = NS_ERROR_FAILURE;
+      timeStyle = kCFDateFormatterNoStyle;
   }
-  else if (dateFormatSelector != kDateFormatNone) {
-    CopyPascalStringToC(dateString, localBuffer);
+  
+  // Create the formatter and fix up its formatting as necessary:
+  CFDateFormatterRef formatter =
+    CFDateFormatterCreate(NULL, formatterLocale, dateStyle, timeStyle);
+  
+  CFRelease(formatterLocale);
+  
+  if (dateFormatSelector == kDateFormatYearMonth ||
+      dateFormatSelector == kDateFormatWeekday) {
+    CFStringRef dateFormat =
+      dateFormatSelector == kDateFormatYearMonth ? CFSTR("yy/MM ") : CFSTR("EEE ");
+    
+    CFStringRef oldFormat = CFDateFormatterGetFormat(formatter);
+    CFMutableStringRef newFormat = CFStringCreateMutableCopy(NULL, 0, oldFormat);
+    CFStringInsert(newFormat, 0, dateFormat);
+    CFDateFormatterSetFormat(formatter, newFormat);
+    CFRelease(newFormat); // note we don't own oldFormat
   }
-  else if (timeFormatSelector != kTimeFormatNone) {
-    CopyPascalStringToC(timeString, localBuffer);
+  
+  if (timeFormatSelector == kTimeFormatSecondsForce24Hour ||
+      timeFormatSelector == kTimeFormatNoSecondsForce24Hour) {
+    // Replace "h" with "H", and remove "a":
+    CFStringRef oldFormat = CFDateFormatterGetFormat(formatter);
+    CFMutableStringRef newFormat = CFStringCreateMutableCopy(NULL, 0, oldFormat);
+    CFIndex replaceCount = CFStringFindAndReplace(newFormat,
+                                                  CFSTR("h"), CFSTR("H"),
+                                                  CFRangeMake(0, CFStringGetLength(newFormat)),	
+                                                  0);
+    NS_ASSERTION(replaceCount == 1, "Unexpected number of \"h\" occurrences");
+    replaceCount = CFStringFindAndReplace(newFormat,
+                                          CFSTR("a"), CFSTR(""),
+                                          CFRangeMake(0, CFStringGetLength(newFormat)),	
+                                          0);
+    NS_ASSERTION(replaceCount == 1, "Unexpected number of \"a\" occurrences");
+    CFDateFormatterSetFormat(formatter, newFormat);
+    CFRelease(newFormat); // note we don't own oldFormat
   }
+  
+  // Now get the formatted date:
+  CFGregorianDate date;
+  date.second = tmTime->tm_sec;
+  date.minute = tmTime->tm_min;
+  date.hour = tmTime->tm_hour;
+  date.day = tmTime->tm_mday;      // Mac is 1-based, tm is 1-based
+  date.month = tmTime->tm_mon + 1; // Mac is 1-based, tm is 0-based
+  date.year = tmTime->tm_year + 1900;
 
-  // convert result to unicode
-  if (mDecoder) {
-    PRInt32 srcLength = (PRInt32) PL_strlen(localBuffer);
-    PRInt32 unicharLength = sizeof(Str255)*2;
-    PRUnichar unichars[sizeof(Str255)*2];   // buffer for combined date and time
+  CFTimeZoneRef timeZone = CFTimeZoneCopySystem(); // tmTime is in local time
+  CFAbsoluteTime absTime = CFGregorianDateGetAbsoluteTime(date, timeZone);
+  CFRelease(timeZone);
 
-    res = mDecoder->Convert(localBuffer, &srcLength, unichars, &unicharLength);
-    if (NS_SUCCEEDED(res)) {
-      stringOut.Assign(unichars, unicharLength);
-    }
+  CFStringRef formattedDate = CFDateFormatterCreateStringWithAbsoluteTime(NULL, formatter, absTime);
+  
+  CFIndex stringLen = CFStringGetLength(formattedDate);
+  
+  nsAutoTArray<UniChar, 256> stringBuffer;
+  if (stringBuffer.SetLength(stringLen + 1)) {
+    CFStringGetCharacters(formattedDate, CFRangeMake(0, stringLen), stringBuffer.Elements());
+    stringOut.Assign(stringBuffer.Elements(), stringLen);
   }
+  
+  CFRelease(formattedDate);
+  CFRelease(formatter);
   
   return res;
 }
