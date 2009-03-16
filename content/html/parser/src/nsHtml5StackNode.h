@@ -68,7 +68,6 @@ class nsHtml5StackNode
     PRBool scoping;
     PRBool special;
     PRBool fosterParenting;
-    PRBool tainted;
   private:
     PRInt32 refcount;
   public:
