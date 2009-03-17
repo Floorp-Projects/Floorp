@@ -105,3 +105,10 @@
 <!ENTITY fennecOpenPrefsButton.label "Details...">
 <!ENTITY fennecPrefsHeader.title "Sync Data with Weave...">
 <!ENTITY fennecPrefsHeader.description "Weave Status Goes Here...">
+<!ENTITY fennecPrefsHeder.status.label "Weave Status: ">
+<!ENTITY fennecPrefs.notImplemented.label "Not yet implemented">
+<!ENTITY fennecPrefs.debug.label "Debug only.">
+<!ENTITY fennecPrefs.turnWeaveOff.label "Turn Weave Off">
+<!ENTITY fennecPrefs.weaveUserAccount.label "Weave User Account">
+<!ENTITY fennecPrefs.youAreUser.label "You are user: ">
+<!ENTITY fennecPrefs.changeUser.label "Change User">
