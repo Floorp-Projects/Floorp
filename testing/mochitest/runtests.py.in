@@ -467,6 +467,9 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       testURL += "?" + "&".join(urlOpts)
 
   browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
+  if options.a11y:
+    browserEnv["XPCOM_MEM_REFCNT_LOG"] = PROFILE_DIRECTORY + "/refcnt.log"
+    browserEnv["XPCOM_MEM_LOG_CLASSES"] = "imgRequest,imgCacheEntry"
 
   if options.fatalAssertions:
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"

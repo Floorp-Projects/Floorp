@@ -128,8 +128,6 @@ static PRBool NewRequestAndEntry(nsIURI *uri, imgRequest **request, imgCacheEntr
   NS_ADDREF(*request);
   NS_ADDREF(*entry);
 
-  imgLoader::SetHasNoProxies(uri, *entry);
-
   return PR_TRUE;
 }
 
@@ -267,8 +265,6 @@ void imgCacheEntry::TouchWithSize(PRInt32 diff)
   // Don't update the cache if we've been removed from it or it doesn't care
   // about our size or usage.
   if (!Evicted() && HasNoProxies()) {
-    // We can't use mKeyURI here, because we're not guaranteed to be updated if
-    // the request has no observers and has thus dropped its reference to us.
     nsCOMPtr<nsIURI> uri;
     mRequest->GetKeyURI(getter_AddRefs(uri));
     imgLoader::CacheEntriesChanged(uri, diff);
@@ -285,8 +281,6 @@ void imgCacheEntry::Touch(PRBool updateTime /* = PR_TRUE */)
   // Don't update the cache if we've been removed from it or it doesn't care
   // about our size or usage.
   if (!Evicted() && HasNoProxies()) {
-    // We can't use mKeyURI here, because we're not guaranteed to be updated if
-    // the request has no observers and has thus dropped its reference to us.
     nsCOMPtr<nsIURI> uri;
     mRequest->GetKeyURI(getter_AddRefs(uri));
     imgLoader::CacheEntriesChanged(uri);
@@ -711,6 +705,27 @@ PRBool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
   if (!cache.Put(spec, entry))
     return PR_FALSE;
 
+  // We can be called to resurrect an evicted entry.
+  if (entry->Evicted())
+    entry->SetEvicted(PR_FALSE);
+
+  // If we're resurrecting an entry with no proxies, put it back in the
+  // tracker and queue.
+  if (entry->HasNoProxies()) {
+    nsresult addrv = NS_OK;
+
+    if (gCacheTracker)
+      addrv = gCacheTracker->AddObject(entry);
+
+    if (NS_SUCCEEDED(addrv)) {
+      imgCacheQueue &queue = GetCacheQueue(key);
+      queue.Push(entry);
+    }
+  }
+
+  nsRefPtr<imgRequest> request(getter_AddRefs(entry->GetRequest()));
+  request->SetIsInCache(PR_TRUE);
+
   return PR_TRUE;
 }
 
@@ -1039,6 +1054,9 @@ PRBool imgLoader::RemoveFromCache(nsIURI *aKey)
 
     entry->SetEvicted(PR_TRUE);
 
+    nsRefPtr<imgRequest> request(getter_AddRefs(entry->GetRequest()));
+    request->SetIsInCache(PR_FALSE);
+
     return PR_TRUE;
   }
   else
@@ -1070,6 +1088,7 @@ PRBool imgLoader::RemoveFromCache(imgCacheEntry *entry)
       }
 
       entry->SetEvicted(PR_TRUE);
+      request->SetIsInCache(PR_FALSE);
 
       return PR_TRUE;
     }
@@ -1269,8 +1288,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     }
 
     // Try to add the new request into the cache.
-    if (!PutIntoCache(aURI, entry))
-      request->SetCacheable(PR_FALSE);
+    PutIntoCache(aURI, entry);
 
   // If we did get a cache hit, use it.
   } else {
@@ -1406,8 +1424,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     NS_RELEASE(pl);
 
     // Try to add the new request into the cache.
-    if (!PutIntoCache(uri, entry))
-      request->SetCacheable(PR_FALSE);
+    PutIntoCache(uri, entry);
   }
 
   // XXX: It looks like the wrong load flags are being passed in...
@@ -1686,8 +1703,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // Try to add the new request into the cache. Note that the entry must be in
   // the cache before the proxies' ownership changes, because adding a proxy
   // changes the caching behaviour for imgRequests.
-  if (!sImgLoader.PutIntoCache(uri, entry))
-    request->SetCacheable(PR_FALSE);
+  sImgLoader.PutIntoCache(uri, entry);
 
   PRUint32 count = mProxies.Count();
   for (PRInt32 i = count-1; i>=0; i--) {
