@@ -194,7 +194,10 @@ CanvasBrowser.prototype = {
     {
       drawls = [updateBounds];
     }
+    this._drawRects(drawls, !clearRegion);
+  },
 
+  _drawRects: function _drawRects(drawls, subtractRects) {
     let oldX = 0;
     let oldY = 0;
     var ctx = this._canvas.getContext("2d");
@@ -203,8 +206,8 @@ CanvasBrowser.prototype = {
 
     // do subtraction separately as it modifies the rect list
     for each (let rect in drawls) {
-      if (!clearRegion)
-        rgn.subtractRect(rect.left, rect.top, rect.width, rect.height);
+      if (subtractRects)
+        this._rgnPage.subtractRect(rect.left, rect.top, rect.width, rect.height);
 
       // ensure that once scaled, the rect has whole pixels
       rect.round(this._zoomLevel);
@@ -351,12 +354,10 @@ CanvasBrowser.prototype = {
     let rectsToDraw = [];
     for (let i = 0; i < rectCount; i++) {
       rgn.getRect(i, outX, outY, outW, outH);
-      if (outW.value > 0 && outH.value > 0) {
-        rectsToDraw.push(new wsRect(Math.floor(this._pageBounds.x + this._screenToPage(outX.value)),
-                                    Math.floor(this._pageBounds.y + this._screenToPage(outY.value)),
-                                    Math.ceil(this._screenToPage(outW.value)),
-                                    Math.ceil(this._screenToPage(outH.value))));
-      }
+      rectsToDraw.push(new wsRect(this._pageBounds.x + this._screenToPage(outX.value),
+                                  this._pageBounds.y + this._screenToPage(outY.value),
+                                  this._screenToPage(outW.value),
+                                  this._screenToPage(outH.value)));
     }
 
     if (rectsToDraw.length > 0)
@@ -384,6 +385,13 @@ CanvasBrowser.prototype = {
   },
 
   _redrawRects: function(rects) {
+    // skip the region logic for basic paints
+    if (!this._pageLoading && rects.length == 1
+        && this._visibleBounds.contains(rects[0])) {
+      this._drawRects(rects, false);
+      return;
+    }
+
     // check to see if the input coordinates are inside the visible destination
     // during pageload clip drawing to the visible viewport
     let realRectCount = 0;
