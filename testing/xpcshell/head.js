@@ -38,9 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This file contains common code that is loaded with each test file.
+/*
+ * This file contains common code that is loaded before each test file(s).
  * See http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
- * for more information
+ * for more information.
  */
 
 var _quit = false;
@@ -92,7 +93,26 @@ function _do_quit() {
   _quit = true;
 }
 
+function _execute_test() {
+  try {
+    do_test_pending();
+    run_test();
+    do_test_finished();
+    _do_main();
+  } catch (e) {
+    _fail = true;
+    dump(e + "\n");
+  }
+
+  if (_fail)
+    dump("*** FAIL ***\n");
+  else
+    dump("*** PASS ***\n");
+}
+
+
 /************** Functions to be used from the tests **************/
+
 
 function do_timeout(delay, expr) {
   var timer = Components.classes["@mozilla.org/timer;1"]
