@@ -200,25 +200,15 @@ nsresult nsMediaDecoder::StopProgress()
 
 void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerate, unsigned char* aRGBBuffer)
 {
+  nsAutoLock lock(mVideoUpdateLock);
+
   if (mRGBWidth != aWidth || mRGBHeight != aHeight) {
     mRGBWidth = aWidth;
     mRGBHeight = aHeight;
     mSizeChanged = PR_TRUE;
-    // Delete buffer so we'll reallocate it
-    mRGB = nsnull;
   }
   mFramerate = aFramerate;
-
-  if (aRGBBuffer) {
-    if (!mRGB) {
-      mRGB = new unsigned char[aWidth * aHeight * 4];
-    }
-    if (mRGB) {
-      memcpy(mRGB.get(), aRGBBuffer, aWidth*aHeight*4);
-    }
-  } else {
-    mRGB = nsnull;
-  }
+  mRGB = aRGBBuffer;
 }
 
 void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
