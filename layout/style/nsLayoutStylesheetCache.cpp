@@ -258,7 +258,8 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSh
     NS_NewCSSLoader(&gCSSLoader);
 
   if (gCSSLoader) {
-    gCSSLoader->LoadSheetSync(aURI, aEnableUnsafeRules, getter_AddRefs(aSheet));
+    gCSSLoader->LoadSheetSync(aURI, aEnableUnsafeRules, PR_TRUE,
+                              getter_AddRefs(aSheet));
   }
 }  
 
