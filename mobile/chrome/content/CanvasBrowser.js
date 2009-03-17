@@ -42,32 +42,50 @@
 
 function CanvasBrowser(canvas) {
   this._canvas = canvas;
+  this._rgnPage = Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion);
+  this._pageBounds = new wsRect(0,0,0,0);
+  this._visibleBounds = new wsRect(0,0,0,0);
 }
 
 CanvasBrowser.prototype = {
   _canvas: null,
   _zoomLevel: 1,
   _browser: null,
-  _pageBounds: new wsRect(0,0,0,0),
+  _pageBounds: null,
   _screenX: 0,
   _screenY: 0,
-  _visibleBounds:new wsRect(0,0,0,0),
+  _visibleBounds: null,
+
   // during pageload: controls whether we poll document for size changing
   _maybeZoomToPage: false,
+
+  // if true, the page is currently loading
   _pageLoading: true,
+
   // 0,0 to contentW, contentH..is a list of dirty rectangles
-  _rgnPage: Cc["@mozilla.org/gfx/region;1"].createInstance(Ci.nsIScriptableRegion),
+  _rgnPage: null,
+
   // used to force paints to not be delayed during panning, otherwise things
   // some things seem to get drawn at the wrong offset, not sure why
   _isPanning: false,
-  
+
+  // if we have an outstanding paint timeout, its value is stored here
+  // for cancelling when we end page loads
+  _drawTimeout: 0,
+
+  // the max right/bottom coords we saw from paint events
+  // while we were loading a page.  If we see something that's bigger than
+  // either, we'll trigger a page zoom.
+  _maxRight: 0,
+  _maxBottom: 0,
+
   get canvasDimensions() {
     if (!this._canvasRect) {
       let canvasRect = this._canvas.getBoundingClientRect();
       this._canvasRect = {
         width: canvasRect.width,
         height: canvasRect.height
-      }
+      };
     }
     return [this._canvasRect.width, this._canvasRect.height];
   },
@@ -84,7 +102,7 @@ CanvasBrowser.prototype = {
     }
     return this._contentDOMWindowUtils;
   },
-  
+
   setCurrentBrowser: function(browser, skipZoom) {
     let currentBrowser = this._browser;
     if (currentBrowser) {
@@ -101,7 +119,7 @@ CanvasBrowser.prototype = {
 
     // start monitoring paint events for this browser
     var self = this;
-    this._paintHandler = function(ev) { self._handleMozAfterPaint(ev); }
+    this._paintHandler = function(ev) { self._handleMozAfterPaint(ev); };
 
     browser.addEventListener("MozAfterPaint", this._paintHandler, false);
 
@@ -110,37 +128,6 @@ CanvasBrowser.prototype = {
     // endLoading(and startLoading in most cases) calls zoom anyway
     if (!skipZoom) {
       self.zoomToPage();
-    }
-  },
-
-  /*Heuristic heaven: Either adds things to a queue + starts timer or paints immediately 
-   * rect has to be all integers
-   */
-  addToRegion: function addToRegion(rect) {
-    this._rgnPage.unionRect(rect.x, rect.y, rect.width, rect.height);
-
-    function resizeAndPaint(self) {
-      if (self._maybeZoomToPage) {
-        self.zoomToPage();
-        self._maybeZoomToPage = false;
-      }
-      // draw visible area..freeze during pans
-      if (!self._isPanning)
-        self.flushRegion(true);
-    }
-    
-    let flushNow = !this._pageLoading && rect.intersects(this._visibleBounds);
-    
-    // TODO: only fire timer if there are paints to be done
-    if (this._pageLoading && !this._drawInterval) {
-      //always flush the first draw
-      flushNow = true;
-      this._maybeZoomToPage = true;
-      this._drawInterval = setInterval(resizeAndPaint, 2000, this);
-    }
-
-    if (flushNow) {
-      resizeAndPaint(this);
     }
   },
 
@@ -155,23 +142,58 @@ CanvasBrowser.prototype = {
     let drawls = [];
     let outX = {}; let outY = {}; let outW = {}; let outH = {};
     let numRects = rgn.numRects;
-    for (let i=0;i<numRects;i++) {
+    let updateBounds = null;
+    let pixelsInRegion = 0;
+    for (let i = 0; i < numRects; i++) {
       rgn.getRect(i, outX, outY, outW, outH);
       let rect = new wsRect(outX.value, outY.value,
                             outW.value, outH.value);
       if (viewingBoundsOnly) {
         //only draw the visible area
-        rect = rect.intersect(this._visibleBounds)
+        rect = rect.intersect(this._visibleBounds);
         if (!rect)
           continue;
       } else {
         clearRegion = true;
       }
-      drawls.push(rect)
+      drawls.push(rect);
+
+      if (updateBounds == null) {
+        updateBounds = rect.clone();
+      } else {
+        updateBounds = updateBounds.union(rect);
+      }
+
+      pixelsInRegion += rect.width * rect.height;
     }
 
+    // if we know that we're going to be clearing the region, we just
+    // do it here; otherwise, we'll subtract the rects we update one by
+    // one as we loop over them
     if (clearRegion)
       this.clearRegion();
+
+    // XXX be smarter about this.  If the number of pixels
+    // touched by each rect in the region is greater than the
+    // number of pixels in the bounds of the region times some factor,
+    // just repaint the bounds.  This uses 90%, based on a totally
+    // random guess.
+    //
+    // The idea is to avoid a bunch of separate thin draws (either vertically
+    // or horizontally), while still getting the region optimization
+    // for things like opposite corners of a page being rendered.
+    //
+    // A possible better optimization would be to extend drawWindow to
+    // take a region instead of a rect, because right now it'll call
+    // Invalidate for each of the draw calls.  Gtk at least will often
+    // process the first one quickly and queue up the rest, which can
+    // lead to some odd looking rendering behaviour.
+
+    if (drawls.length > 1 &&
+        pixelsInRegion > (updateBounds.width * updateBounds.height * 0.90))
+    {
+      drawls = [updateBounds];
+    }
 
     let oldX = 0;
     let oldY = 0;
@@ -180,16 +202,18 @@ CanvasBrowser.prototype = {
     ctx.scale(this._zoomLevel, this._zoomLevel);
 
     // do subtraction separately as it modifies the rect list
-    for each(let rect in drawls) {
-      // avoid subtracting the rect if region was cleared
+    for each (let rect in drawls) {
       if (!clearRegion)
-        rgn.subtractRect(rect.left, rect.top,
-                         rect.width, rect.height);
+        rgn.subtractRect(rect.left, rect.top, rect.width, rect.height);
+
       // ensure that once scaled, the rect has whole pixels
       rect.round(this._zoomLevel);
-      let x = rect.x - this._pageBounds.x
-      let y = rect.y - this._pageBounds.y
+      let x = rect.x - this._pageBounds.x;
+      let y = rect.y - this._pageBounds.y;
+
       // translate is relative, so make up for that
+      // XXX this could introduce some small fp errors, but it's
+      // probably not enough to worry about.
       ctx.translate(x - oldX, y - oldY);
       oldX = x;
       oldY = y;
@@ -217,6 +241,10 @@ CanvasBrowser.prototype = {
     var ctx = this._canvas.getContext("2d");
     ctx.fillStyle = "rgb(255,255,255)";
     ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+
+    this._maxRight = 0;
+    this._maxBottom = 0;
+
     this._pageLoading = true;
   },
 
@@ -227,10 +255,10 @@ CanvasBrowser.prototype = {
     // flush the region, to reduce startPanning delay
     // and to avoid getting a black border in tab thumbnail
     this.flushRegion();
-    
-    if (this._drawInterval) {
-      clearInterval(this._drawInterval);
-      this._drawInterval = null;
+
+    if (this._drawTimeout) {
+      clearTimeout(this._drawTimeout);
+      this._drawTimeout = 0;
     }
   },
 
@@ -238,7 +266,7 @@ CanvasBrowser.prototype = {
   // switch to unoptimized painting mode during panning
   startPanning: function startPanning() {
     this.flushRegion();
-    
+
     // do not delay paints as that causes displaced painting bugs
     this._isPanning = true;
   },
@@ -261,7 +289,7 @@ CanvasBrowser.prototype = {
     pageBounds.left = this._screenToPage(pageBounds.left);
     pageBounds.bottom = Math.ceil(this._screenToPage(pageBounds.bottom));
     pageBounds.right = Math.ceil(this._screenToPage(pageBounds.right));
-        
+
     visibleBounds.top = Math.max(0, this._screenToPage(visibleBounds.top));
     visibleBounds.left = Math.max(0, this._screenToPage(visibleBounds.left));
     visibleBounds.bottom = Math.ceil(this._screenToPage(visibleBounds.bottom));
@@ -277,7 +305,7 @@ CanvasBrowser.prototype = {
       this.contentDOMWindowUtils.clearMozAfterPaintEvents();
     } else
       this.flushRegion();
-    
+
     this._visibleBounds = visibleBounds;
     this._pageBounds = pageBounds;
 
@@ -287,7 +315,7 @@ CanvasBrowser.prototype = {
     this._screenY = bounds.y;
 
     if (boundsSizeChanged) {
-      this._redrawRect(pageBounds);
+      this._redrawRects([pageBounds]);
       return;
     }
 
@@ -302,7 +330,7 @@ CanvasBrowser.prototype = {
     var ctx = this._canvas.getContext("2d");
     let cWidth = this._canvas.width;
     let cHeight = this._canvas.height;
-    
+
     ctx.drawImage(this._canvas,
                   0, 0, cWidth, cHeight,
                   dx, dy, cWidth, cHeight);
@@ -317,48 +345,117 @@ CanvasBrowser.prototype = {
     }
     rgn.setToRect(0, 0, cWidth, cHeight);
     rgn.subtractRect(dx, dy, cWidth, cHeight);
-    
+
     let outX = {}; let outY = {}; let outW = {}; let outH = {};
-    let rectCount = rgn.numRects
-    for (let i = 0;i < rectCount;i++) {
+    let rectCount = rgn.numRects;
+    let rectsToDraw = [];
+    for (let i = 0; i < rectCount; i++) {
       rgn.getRect(i, outX, outY, outW, outH);
       if (outW.value > 0 && outH.value > 0) {
-        this._redrawRect(new wsRect(Math.floor(this._pageBounds.x +this._screenToPage(outX.value)),
-                                    Math.floor(this._pageBounds.y +this._screenToPage(outY.value)),
+        rectsToDraw.push(new wsRect(Math.floor(this._pageBounds.x + this._screenToPage(outX.value)),
+                                    Math.floor(this._pageBounds.y + this._screenToPage(outY.value)),
                                     Math.ceil(this._screenToPage(outW.value)),
                                     Math.ceil(this._screenToPage(outH.value))));
       }
     }
+
+    if (rectsToDraw.length > 0)
+      this._redrawRects(rectsToDraw);
   },
 
   _handleMozAfterPaint: function(aEvent) {
     let cwin = this._browser.contentWindow;
 
-    for (let i = 0; i < aEvent.clientRects.length; i++) {
-      let e = aEvent.clientRects.item(i);
-      let r = new wsRect(e.left + cwin.scrollX,
-                         e.top + cwin.scrollY,
+    let csx = cwin.scrollX;
+    let csy = cwin.scrollY;
+    let clientRects = aEvent.clientRects;
+
+    let rects = [];
+    // loop backwards to avoid xpconnect penalty for .length
+    for (let i = clientRects.length - 1; i >= 0; --i) {
+      let e = clientRects.item(i);
+      let r = new wsRect(e.left + csx,
+                         e.top + csy,
                          e.width, e.height);
-      this._redrawRect(r);
+      rects.push(r);
     }
+
+    this._redrawRects(rects);
   },
 
-  _redrawRect: function(rect) {
+  _redrawRects: function(rects) {
     // check to see if the input coordinates are inside the visible destination
     // during pageload clip drawing to the visible viewport
-    if (this._pageLoading)  {
-      if (rect.bottom > 0 && rect.right > this._visibleBounds.right)
-        this._maybeZoomToPage = true;
-    } 
-    
-    let r2 = this._pageBounds.clone();
-    r2.left = Math.max(r2.left, 0);
-    r2.top = Math.max(r2.top, 0);
-    let dest = rect.intersect(r2);
-    
-    if (dest) {
-      dest.round(1);
-      this.addToRegion(dest);
+    let realRectCount = 0;
+
+    let zeroPageBounds = this._pageBounds.clone();
+    zeroPageBounds.left = Math.max(zeroPageBounds.left, 0);
+    zeroPageBounds.top = Math.max(zeroPageBounds.top, 0);
+
+    // Go through each rect, checking whether it intersects the
+    // visible part of the page bounds.  If it doesn't, skip it.
+    for each (var rect in rects) {
+      if (this._pageLoading)  {
+        // if this rect would push us beyond our known size to the bottom or right,
+        if (rect.bottom > this._maxBottom) {
+          this._maybeZoomToPage = true;
+          this._maxBottom = rect.bottom;
+        }
+
+        if (rect.right > this._maxRight) {
+          this._maybeZoomToPage = true;
+          this._maxRight = rect.right;
+        }
+      }
+
+      rect = rect.intersect(zeroPageBounds);
+
+      if (!rect)
+        continue;
+
+      rect.round(1);
+
+      this._rgnPage.unionRect(rect.x, rect.y, rect.width, rect.height);
+
+      realRectCount++;
+    }
+
+    // did we end up with anything to do?
+    if (realRectCount == 0)
+      return;
+
+    // a little helper function; we might decide to call it right away,
+    // or we might decide to delay it if the page is still loading.
+    function resizeAndPaint(self) {
+      if (self._maybeZoomToPage) {
+        self.zoomToPage();
+        self._maybeZoomToPage = false;
+      }
+      // draw visible area..freeze during pans
+      if (!self._isPanning)
+        self.flushRegion(true);
+
+      if (self._pageLoading) {
+        // kick ourselves off 2s later while we're still loading
+        self._drawTimeout = setTimeout(resizeAndPaint, 2000, self);
+      } else {
+        self._drawTimeout = 0;
+      }
+    }
+
+    let flushNow = !this._pageLoading;
+
+    // page is loading, and we don't have an existing draw here.  Note that
+    // setTimeout is used (and reset in resizeAndPaint)
+    if (this._pageLoading && !this._drawTimeout) {
+      //always flush the first draw
+      flushNow = true;
+      this._maybeZoomToPage = true;
+      this._drawTimeout = setTimeout(resizeAndPaint, 2000, this);
+    }
+
+    if (flushNow) {
+      resizeAndPaint(this);
     }
   },
 
@@ -412,7 +509,11 @@ CanvasBrowser.prototype = {
     ws.beginUpdateBatch();
 
     this.zoomLevel = zoomLevel;
-    
+
+    // uncomment this to force the zoom level to 1.0 on zoom, instead of
+    // doing a real zoom to element
+    //this.zoomLevel = 1.0;
+
     /* If zoomLevel ends up clamped to less than asked for, calculate
      * how many more screen pixels will fit horizontally in addition to
      * element's width. This ensures that more of the webpage is
@@ -524,7 +625,7 @@ CanvasBrowser.prototype = {
   /* ensures that a given content element is visible */
   ensureElementIsVisible: function(aElement) {
     let elRect = this._getPagePosition(aElement);
-    let curRect = this._visibleBounds
+    let curRect = this._visibleBounds;
     let newx = curRect.x;
     let newy = curRect.y;
 
