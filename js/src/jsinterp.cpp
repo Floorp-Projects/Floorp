@@ -6963,7 +6963,7 @@ js_Interpret(JSContext *cx)
         atoms = script->atomMap.vector;
     }
 
-    JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
+    JS_ASSERT((size_t)((fp->imacpc ? fp->imacpc : regs.pc) - script->code) < script->length);
 
 #ifdef JS_TRACER
     /* 
