@@ -136,22 +136,14 @@
 
 <!ENTITY search.label                              "Search:">
 <!ENTITY search.accesskey                          "S">
-<!ENTITY search.collection.label                   "Current Collection Only">
-<!ENTITY search.collection.accesskey               "C">
-<!ENTITY search.allBookmarks.label                 "All Bookmarks">
-<!ENTITY search.allBookmarks.accesskey             "A">
 <!ENTITY search.scopeFolder.label                  "Selected Folder">
-<!ENTITY search.scopeFolder.accesskey              "F">
-<!ENTITY search.scopeAll.label                     "All Bookmarks">
-<!ENTITY search.scopeAll.accesskey                 "A">
-<!ENTITY search.scopeMenu.label                    "Bookmarks Menu">
-<!ENTITY search.scopeMenu.accesskey                "M">
-<!ENTITY search.scopeToolbar.label                 "Bookmarks Toolbar">
-<!ENTITY search.scopeToolbar.accesskey             "T">
+<!ENTITY search.scopeFolder.accesskey              "r">
+<!ENTITY search.scopeBookmarks.label               "Bookmarks">
+<!ENTITY search.scopeBookmarks.accesskey           "k">
 <!ENTITY search.scopeDownloads.label               "Downloads">
 <!ENTITY search.scopeDownloads.accesskey           "D">
 <!ENTITY search.scopeHistory.label                 "History">
-<!ENTITY search.scopeHistory.accesskey             "A">
+<!ENTITY search.scopeHistory.accesskey             "H">
 <!ENTITY search.scopeBarExpanderDown.tooltip       "Show search builder">
 <!ENTITY search.scopeBarExpanderUp.tooltip         "Hide search builder">
 <!ENTITY saveSearch.label                          "Save">
