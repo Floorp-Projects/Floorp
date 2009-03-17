@@ -4146,6 +4146,17 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   return rv;
 }
 
+#ifdef DEBUG
+nsresult
+nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+                           PRInt32 aNamespaceID, PRBool aDocumentDefaultType,
+                           nsIContent** aResult)
+{
+  return nsDocument::CreateElem(aName, aPrefix, aNamespaceID,
+                                aDocumentDefaultType, aResult);
+}
+#endif
+
 nsresult
 nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
