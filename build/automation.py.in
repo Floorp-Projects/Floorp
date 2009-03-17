@@ -441,7 +441,7 @@ def processLeakLog(leakLogFile, leakThreshold):
   # 833 nsTimerImpl        60     120      24726    2 ...
   lineRe = re.compile(r"^\s*\d+\s+(?P<name>\S+)\s+"
                       r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
-                      r"\d+\s+(?P<numLeaked>-?\d+)")
+                      r"-?\d+\s+(?P<numLeaked>-?\d+)")
 
   leaks = open(leakLogFile, "r")
   for line in leaks:
@@ -466,7 +466,9 @@ def processLeakLog(leakLogFile, leakThreshold):
     numLeaked = int(matches.group("numLeaked"))
     if size < 0 or bytesLeaked < 0 or numLeaked < 0:
       log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | negative leaks caught!")
-    if "TOTAL" == name:
+      if name == "TOTAL":
+        seenTotal = True
+    elif name == "TOTAL":
       seenTotal = True
       # Check for leaks.
       if bytesLeaked < 0 or bytesLeaked > leakThreshold:
@@ -485,7 +487,7 @@ def processLeakLog(leakLogFile, leakThreshold):
       log.info(leakLog)
     else:
       if numLeaked != 0:
-        if abs(numLeaked) > 1:
+        if numLeaked > 1:
           instance = "instances"
           rest = " each (%s bytes total)" % matches.group("bytesLeaked")
         else:
