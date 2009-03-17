@@ -547,28 +547,13 @@ static JSFunctionSpec string_functions[] = {
 jschar      js_empty_ucstr[]  = {0};
 JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
-enum string_tinyid {
-    STRING_LENGTH = -1
-};
-
-static JSPropertySpec string_props[] = {
-    {js_length_str,     STRING_LENGTH,
-                        JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED, 0,0},
-    {0,0,0,0,0}
-};
-
 static JSBool
 str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsval v;
     JSString *str;
-    jsint slot;
 
-    if (!JSVAL_IS_INT(id))
-        return JS_TRUE;
-
-    slot = JSVAL_TO_INT(id);
-    if (slot == STRING_LENGTH) {
+    if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
         if (OBJ_GET_CLASS(cx, obj) == &js_StringClass) {
             /* Follow ECMA-262 by fetching intrinsic length of our string. */
             v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
@@ -583,6 +568,7 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
         *vp = INT_TO_JSVAL((jsint) JSSTRING_LENGTH(str));
     }
+
     return JS_TRUE;
 }
 
@@ -621,7 +607,21 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     JSString *str, *str1;
     jsint slot;
 
-    if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
+    if (flags & JSRESOLVE_ASSIGNING)
+        return JS_TRUE;
+
+    if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
+        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+        str = JSVAL_TO_STRING(v);
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, id, INT_TO_JSVAL(17), NULL, NULL,
+                                 JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, NULL)) {
+            return JS_FALSE;
+        }
+        *objp = obj;
+        return JS_TRUE;
+    }
+
+    if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
@@ -2855,7 +2855,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     proto = JS_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
-                         string_props, string_methods,
+                         NULL, string_methods,
                          NULL, string_static_methods);
     if (!proto)
         return NULL;

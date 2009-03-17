@@ -4538,6 +4538,32 @@ testAddNull.jitstats = {
 };
 test(testAddNull);
 
+function testStringLengthNoTinyId()
+{
+  var x = "unset";
+  var t = new String("");
+  for (var i = 0; i < 5; i++)
+    x = t["-1"];
+
+  var r = "t['-1'] is " + x;
+  t["-1"] = "foo";
+  r += " when unset, '" + t["-1"] + "' when set";
+  return r;
+}
+testStringLengthNoTinyId.expected = "t['-1'] is undefined when unset, 'foo' when set";
+test(testStringLengthNoTinyId);
+
+function testLengthInString()
+{
+  var s = new String();
+  var res = "length" in s;
+  for (var i = 0; i < 5; i++)
+    res = res && ("length" in s);
+  return res;
+}
+testLengthInString.expected = true;
+test(testLengthInString);
+
 
 /*****************************************************************************
  *                                                                           *
