@@ -4146,31 +4146,6 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   return rv;
 }
 
-#ifdef DEBUG
-nsresult
-nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
-                           PRInt32 aNamespaceID, PRBool aDocumentDefaultType,
-                           nsIContent** aResult)
-{
-  NS_ASSERTION(!aDocumentDefaultType || IsXHTML() ||
-               aNamespaceID == kNameSpaceID_None,
-               "HTML elements in an HTML document should have "
-               "kNamespaceID_None as their namespace ID.");
-
-  if (IsXHTML() &&
-      (aDocumentDefaultType || aNamespaceID == kNameSpaceID_XHTML)) {
-    nsCAutoString name, lcName;
-    aName->ToUTF8String(name);
-    ToLowerCase(name, lcName);
-    NS_ASSERTION(lcName.Equals(name),
-                 "aName should be lowercase, fix caller.");
-  }
-
-  return nsDocument::CreateElem(aName, aPrefix, aNamespaceID,
-                                aDocumentDefaultType, aResult);
-}
-#endif
-
 nsresult
 nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
