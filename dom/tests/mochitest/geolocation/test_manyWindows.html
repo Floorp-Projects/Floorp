@@ -37,6 +37,8 @@ for(var i = 0; i < numberOfWindows; i++) {
   totalWindows --;
 }
 
+SimpleTest.waitForExplicitFinish();
+
 function checkDone()
 {
     if (totalWindows == 0)
@@ -53,4 +55,3 @@ var timer = setInterval(checkDone, 1000);
 </pre>
 </body>
 </html>
-
