@@ -41,9 +41,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
 
 const FINDSTATE_FIND = 0;
 const FINDSTATE_FIND_AGAIN = 1;
@@ -92,7 +92,7 @@ var Browser = {
         }
         gSidebarVisible = visibleNow;
       }
-      
+
       // move checkerboard
       browserContainer.style.backgroundPosition =  -vr.left + "px " + -vr.top + "px";
 
