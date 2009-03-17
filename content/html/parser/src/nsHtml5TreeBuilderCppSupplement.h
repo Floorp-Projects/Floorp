@@ -68,6 +68,9 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
     formPointer(nsnull),
     headPointer(nsnull),
     mNeedsFlush(PR_FALSE),
+#ifdef DEBUG
+    mActive(PR_FALSE),
+#endif
     mFlushTimer(do_CreateInstance("@mozilla.org/timer;1")),
     mParser(aParser)
 {
@@ -77,7 +80,9 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5Parser* aParser)
 nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 {
   MOZ_COUNT_DTOR(nsHtml5TreeBuilder);
+  NS_ASSERTION(!mActive, "nsHtml5TreeBuilder deleted without ever calling end() on it!");
   mOpQueue.Clear();
+  mFlushTimer->Cancel(); // XXX why is this even necessary? it is, though.
 }
 
 nsIContent*
@@ -252,6 +257,9 @@ nsHtml5TreeBuilder::start(PRBool fragment)
     mParser->GetDocument()->BeginLoad(); // XXX fragment?
   }
   mNeedsFlush = PR_FALSE;
+#ifdef DEBUG
+  mActive = PR_TRUE;
+#endif
 }
 
 void
@@ -259,6 +267,9 @@ nsHtml5TreeBuilder::end()
 {
   mFlushTimer->Cancel();
   Flush();
+#ifdef DEBUG
+  mActive = PR_FALSE;
+#endif
 #ifdef DEBUG_hsivonen
   printf("MAX INSERTION BATCH LEN: %d\n", sInsertionBatchMaxLength);
   printf("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize);
