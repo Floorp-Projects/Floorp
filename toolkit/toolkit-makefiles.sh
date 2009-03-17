@@ -365,6 +365,9 @@ MAKEFILES_netwerk="
   netwerk/cookie/Makefile
   netwerk/cookie/public/Makefile
   netwerk/cookie/src/Makefile
+  netwerk/wifi/Makefile
+  netwerk/wifi/public/Makefile
+  netwerk/wifi/src/Makefile
   netwerk/dns/Makefile
   netwerk/dns/public/Makefile
   netwerk/dns/src/Makefile

@@ -11,14 +11,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Geolocation.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
+ * This is a derivative of work done by Google under a BSD style License.
+ * See: http://gears.googlecode.com/svn/trunk/gears/geolocation/
+ *
  * Contributor(s):
+ *  Doug Turner <dougt@meer.net>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,24 +37,64 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NECKO_CONFIG_H_
-#define _NECKO_CONFIG_H_
+#include "nsIWifiMonitor.h"
+#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+#include "nsAutoLock.h"
+#include "nsIThread.h"
+#include "nsIRunnable.h"
+#include "nsCOMArray.h"
+#include "nsIWifiMonitor.h"
+#include "prmon.h"
+#include "prlog.h"
+#include "nsIObserver.h"
+#include "nsTArray.h"
 
-#undef NECKO_DISK_CACHE
+#ifndef __nsWifiMonitor__
+#define __nsWifiMonitor__
 
-#undef NECKO_SMALL_BUFFERS
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo *gWifiMonitorLog;
+#endif
+#define LOG(args)     PR_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
 
-#undef NECKO_COOKIES
+class nsWifiListener
+{
+ public:
 
-#undef NECKO_WIFI
+  nsWifiListener(nsIWifiListener* aListener)
+  {
+    mListener = aListener;
+    mHasSentData = PR_FALSE;
+  }
+  ~nsWifiListener() {}
+  
+  nsCOMPtr<nsIWifiListener> mListener;
+  PRBool mHasSentData;
+};
 
-#undef NECKO_PROTOCOL_about
-#undef NECKO_PROTOCOL_data
-#undef NECKO_PROTOCOL_file
-#undef NECKO_PROTOCOL_ftp
-#undef NECKO_PROTOCOL_gopher
-#undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_res
-#undef NECKO_PROTOCOL_viewsource
+class nsWifiMonitor : nsIRunnable, nsIWifiMonitor, nsIObserver
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWIFIMONITOR
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIOBSERVER
+
+  nsWifiMonitor();
+
+ private:
+  ~nsWifiMonitor();
+
+  nsresult DoScan();
+
+  PRBool mKeepGoing;
+  nsCOMPtr<nsIThread> mThread;
+
+  nsTArray<nsWifiListener> mListeners;
+
+  PRMonitor* mMonitor;
+
+};
 
 #endif
