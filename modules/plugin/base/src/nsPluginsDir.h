@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPluginsDir_h___
-#define nsPluginsDir_h___
+#ifndef nsPluginsDir_h_
+#define nsPluginsDir_h_
 
 #include "nsError.h"
 #include "nsIFile.h"
@@ -109,4 +109,4 @@ public:
 	short OpenPluginResource(void);
 };
 
-#endif /* nsPluginsDir_h___ */
+#endif /* nsPluginsDir_h_ */
