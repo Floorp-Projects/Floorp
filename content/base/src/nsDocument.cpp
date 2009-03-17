@@ -3494,7 +3494,7 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
     NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
     if (uri) {
       nsCOMPtr<nsICSSStyleSheet> sheet;
-      cssLoader->LoadSheetSync(uri, PR_TRUE, getter_AddRefs(sheet));
+      cssLoader->LoadSheetSync(uri, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
       if (sheet) {
         BeginUpdate(UPDATE_STYLE);
         AddCatalogStyleSheet(sheet);

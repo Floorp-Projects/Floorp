@@ -58,10 +58,10 @@ class nsICSSImportRule;
 class nsIPrincipal;
 
 // IID for the nsICSSLoader interface
-// 0c6d7e76-dddc-4727-b557-7ef531127e11
+// 51735c82-f3d9-4237-9a81-f5bdaf4865c5
 #define NS_ICSS_LOADER_IID     \
-{ 0x0c6d7e76, 0xdddc, 0x4727, \
- { 0xb5, 0x57, 0x7e, 0xf5, 0x31, 0x12, 0x7e, 0x11 } }
+{ 0x51735c82, 0xf3d9, 0x4237, \
+ { 0x9a, 0x81, 0xf5, 0xbd, 0xaf, 0x48, 0x65, 0xc5 } }
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -169,7 +169,6 @@ public:
    * method can be used to load sheets not associated with a document.
    *
    * @param aURL the URL of the sheet to load
-   * @param [out] aSheet the loaded, complete sheet.
    * @param aEnableUnsafeRules whether unsafe rules are enabled for this
    * sheet load
    * Unsafe rules are rules that can violate key Gecko invariants if misused.
@@ -177,6 +176,9 @@ public:
    * styled or we will have severe problems. Therefore unsafe rules should
    * never be enabled for stylesheets controlled by untrusted sites; preferably
    * unsafe rules should only be enabled for agent sheets.
+   * @param aUseSystemPrincipal if true, give the resulting sheet the system
+   * principal no matter where it's being loaded from.
+   * @param [out] aSheet the loaded, complete sheet.
    *
    * NOTE: At the moment, this method assumes the sheet will be UTF-8, but
    * ideally it would allow arbitrary encodings.  Callers should NOT depend on
@@ -187,13 +189,14 @@ public:
    * about the status of child sheets of the returned sheet.
    */
   NS_IMETHOD LoadSheetSync(nsIURI* aURL, PRBool aEnableUnsafeRules,
+                           PRBool aUseSystemPrincipal,
                            nsICSSStyleSheet** aSheet) = 0;
 
   /**
-   * As above, but aEnableUnsafeRules is assumed false.
+   * As above, but aUseSystemPrincipal and aEnableUnsafeRules are assumed false.
    */
   nsresult LoadSheetSync(nsIURI* aURL, nsICSSStyleSheet** aSheet) {
-    return LoadSheetSync(aURL, PR_FALSE, aSheet);
+    return LoadSheetSync(aURL, PR_FALSE, PR_FALSE, aSheet);
   }
 
   /**
