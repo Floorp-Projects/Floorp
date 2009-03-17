@@ -1317,19 +1317,25 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
     growth = (size_t) -1;
 #endif
 
-    if (op == TO_SOURCE) {
-        if (IS_SHARP(he)) {
+    /*
+     * We must check for the sharp bit and skip js_LeaveSharpObject when it is
+     * set even when op is not TO_SOURCE. A script can overwrite the default
+     * toSource implementation and trigger a call, for example, to the
+     * toString method during serialization of the object graph (bug 369696).
+     */
+    if (IS_SHARP(he)) {
 #if JS_HAS_SHARP_VARS
-            nchars = js_strlen(chars);
+        nchars = js_strlen(chars);
 #else
-            chars[0] = '[';
-            chars[1] = ']';
-            chars[2] = 0;
-            nchars = 2;
+        chars[0] = '[';
+        chars[1] = ']';
+        chars[2] = 0;
+        nchars = 2;
 #endif
-            goto make_string;
-        }
+        goto make_string;
+    }
 
+    if (op == TO_SOURCE) {
         /*
          * Always allocate 2 extra chars for closing ']' and terminating 0
          * and then preallocate 1 + extratail to include starting '['.
