@@ -64,6 +64,13 @@ class TestNsinstall(unittest.TestCase):
             self.assert_(os.path.isfile(os.path.join(testdir,
                                                      os.path.basename(f))))
 
+    def test_nsinstall_dir_exists(self):
+        "Test nsinstall <dir> <dest dir>, where <dest dir>/<dir> already exists"
+        srcdir = self.mkdirs("test")
+        destdir = self.mkdirs("testdir/test")
+        self.assertEqual(nsinstall([srcdir, os.path.dirname(destdir)]), 0)
+        self.assert_(os.path.isdir(destdir))
+
     def test_nsinstall_t(self):
         "Test that nsinstall -t works (preserve timestamp)"
         testfile = self.touch("testfile")
