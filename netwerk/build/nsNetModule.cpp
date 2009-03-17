@@ -60,6 +60,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetStrings.h"
 #include "nsDNSPrefetch.h"
+#include "nsAboutProtocolHandler.h"
 
 #include "nsNetCID.h"
 
@@ -179,6 +180,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSi
 #include "nsAboutBlank.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeAboutProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNestedAboutURI)
 
 #ifdef NECKO_PROTOCOL_about
 // about
@@ -1014,6 +1016,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "blank", 
       nsAboutBlank::Create
     },
+    { "Nested about: URI",
+      NS_NESTEDABOUTURI_CID,
+      nsnull,
+      nsNestedAboutURIConstructor },
 #ifdef NECKO_PROTOCOL_about
 #ifdef NS_BUILD_REFCNT_LOGGING
     { "about:bloat", 

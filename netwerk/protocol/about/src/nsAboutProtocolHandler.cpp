@@ -49,9 +49,13 @@
 #include "nsAboutProtocolUtils.h"
 #include "nsNetError.h"
 #include "nsNetUtil.h"
-#include "nsSimpleNestedURI.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
+#include "nsAutoPtr.h"
+#include "nsIWritablePropertyBag2.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
+static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +135,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
         rv = NS_NewURI(getter_AddRefs(inner), spec);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsSimpleNestedURI* outer = new nsSimpleNestedURI(inner);
+        nsSimpleNestedURI* outer = new nsNestedAboutURI(inner, aBaseURI);
         NS_ENSURE_TRUE(outer, NS_ERROR_OUT_OF_MEMORY);
 
         // Take a ref to it in the COMPtr we plan to return
@@ -158,7 +162,22 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     nsresult rv = NS_GetAboutModule(uri, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
-        return aboutMod->NewChannel(uri, result);
+        rv = aboutMod->NewChannel(uri, result);
+        if (NS_SUCCEEDED(rv)) {
+            nsRefPtr<nsNestedAboutURI> aboutURI;
+            rv = uri->QueryInterface(kNestedAboutURICID,
+                                     getter_AddRefs(aboutURI));
+            if (NS_SUCCEEDED(rv) && aboutURI->GetBaseURI()) {
+                nsCOMPtr<nsIWritablePropertyBag2> writableBag =
+                    do_QueryInterface(*result);
+                if (writableBag) {
+                    writableBag->
+                        SetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
+                                               aboutURI->GetBaseURI());
+                }
+            }
+        }
+        return rv;
     }
 
     // mumble...
@@ -243,5 +262,78 @@ nsSafeAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *
 {
     // don't override anything.  
     *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////
+// nsNestedAboutURI implementation
+NS_INTERFACE_MAP_BEGIN(nsNestedAboutURI)
+  if (aIID.Equals(kNestedAboutURICID))
+      foundInterface = static_cast<nsIURI*>(this);
+  else
+NS_INTERFACE_MAP_END_INHERITING(nsSimpleNestedURI)
+
+// nsISerializable
+NS_IMETHODIMP
+nsNestedAboutURI::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv = nsSimpleNestedURI::Read(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool haveBase;
+    rv = aStream->ReadBoolean(&haveBase);
+    if (NS_FAILED(rv)) return rv;
+
+    if (haveBase) {
+        rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(mBaseURI));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNestedAboutURI::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv = nsSimpleNestedURI::Write(aStream);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aStream->WriteBoolean(mBaseURI != nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mBaseURI) {
+        rv = aStream->WriteObject(mBaseURI, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+// nsSimpleURI
+/* virtual */ nsSimpleURI*
+nsNestedAboutURI::StartClone()
+{
+    // Sadly, we can't make use of nsSimpleNestedURI::StartClone here.
+    NS_ENSURE_TRUE(mInnerURI, nsnull);
+
+    nsCOMPtr<nsIURI> innerClone;
+    nsresult rv = mInnerURI->Clone(getter_AddRefs(innerClone));
+    if (NS_FAILED(rv)) {
+        return nsnull;
+    }
+
+    nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);
+    if (url) {
+        url->SetMutable(PR_FALSE);
+    }
+
+    return url;
+}
+
+// nsIClassInfo
+NS_IMETHODIMP
+nsNestedAboutURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+    *aClassIDNoAlloc = kNestedAboutURICID;
     return NS_OK;
 }
