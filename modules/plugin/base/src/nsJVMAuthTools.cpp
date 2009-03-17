@@ -43,9 +43,8 @@
 
 static NS_DEFINE_CID(kHttpAuthManagerCID, NS_HTTPAUTHMANAGER_CID);
 
-//---------------------------------------------------
 // implementation of interface nsIAuthenticationInfo
-// --------------------------------------------------
+
 NS_IMPL_ISUPPORTS1(nsAuthenticationInfoImp, nsIAuthenticationInfo)
 
 nsAuthenticationInfoImp::nsAuthenticationInfoImp(char* username,
@@ -64,24 +63,20 @@ nsAuthenticationInfoImp::~nsAuthenticationInfoImp()
         nsMemory::Free(mPassWord);
 }
 
-/* readonly attribute string username; */
 NS_IMETHODIMP nsAuthenticationInfoImp::GetUsername(const char * *aUsername)
 {
     *aUsername = mUserName;
     return NS_OK;
 }
 
-/* readonly attribute string password; */
 NS_IMETHODIMP nsAuthenticationInfoImp::GetPassword(const char * *aPassword)
 {
     *aPassword = mPassWord;
     return NS_OK;
 }
 
-
-//---------------------------------------------------
 // implementation of interface nsIJVMAuthTools
-// --------------------------------------------------
+
 NS_IMPL_AGGREGATED(nsJVMAuthTools)
 
 nsJVMAuthTools::nsJVMAuthTools(nsISupports* outer)
