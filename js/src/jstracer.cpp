@@ -1206,6 +1206,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->cx = cx;
     this->traceMonitor = &JS_TRACE_MONITOR(cx);
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    this->lexicalBlock = cx->fp->blockChain;
     this->anchor = _anchor;
     this->fragment = _fragment;
     this->lirbuf = _fragment->lirbuf;
@@ -3212,7 +3213,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->callerRegs.sp = fp->slots + fi.s.spdist;
     fp->imacpc = fi.imacpc;
 
-    JS_ASSERT(!(fp->flags & JSFRAME_POP_BLOCKS));
 #ifdef DEBUG
     if (fi.block != fp->blockChain) {
         for (JSObject* obj = fi.block; obj != fp->blockChain; obj = STOBJ_GET_PARENT(obj))
@@ -3952,7 +3952,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         return NULL;
 
 #ifdef DEBUG
-    state.jsframe_pop_blocks_set_on_entry = ((cx->fp->flags & JSFRAME_POP_BLOCKS) != 0);
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(state.global, 0xCD, (globalFrameSize+1)*sizeof(double));
 #endif
@@ -4138,8 +4137,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
        the side exit struct. */
     JSStackFrame* fp = cx->fp;
 
-    JS_ASSERT_IF(fp->flags & JSFRAME_POP_BLOCKS,
-                 calldepth == 0 && state.jsframe_pop_blocks_set_on_entry);
     fp->blockChain = innermost->block;
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
@@ -4214,7 +4211,9 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     // Verify that our state restoration worked
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
         JS_ASSERT(!fp->callee || JSVAL_IS_OBJECT(fp->argv[-1]));
-        JS_ASSERT(!fp->callee || fp->thisp == JSVAL_TO_OBJECT(fp->argv[-1]));
+        JS_ASSERT_IF(fp->callee && fp->thisp != JSVAL_TO_OBJECT(fp->argv[-1]),
+                     !(fp->flags & JSFRAME_COMPUTED_THIS) && !fp->thisp);
+        
     }
 #endif
 #ifdef JS_JIT_SPEW
@@ -9106,9 +9105,6 @@ TraceRecorder::record_JSOP_TYPEOFEXPR()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_ENTERBLOCK()
 {
-    if (cx->fp->flags & JSFRAME_POP_BLOCKS)
-        ABORT_TRACE("can't trace after js_GetScopeChain");
-
     JSScript* script = cx->fp->script;
     JSFrameRegs& regs = *cx->fp->regs;
     JSObject* obj;
@@ -9123,7 +9119,8 @@ TraceRecorder::record_JSOP_ENTERBLOCK()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
-    return true;
+    /* We mustn't exit the lexical block we began recording in.  */
+    return cx->fp->blockChain != lexicalBlock;
 }
 
 JS_REQUIRES_STACK bool
