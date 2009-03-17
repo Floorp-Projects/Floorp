@@ -85,7 +85,7 @@ imgRequest::imgRequest() :
   mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0), 
   mValidator(nsnull), mImageSniffers("image-sniffing-services"), 
   mIsMultiPartChannel(PR_FALSE), mLoading(PR_FALSE), mProcessing(PR_FALSE),
-  mHadLastPart(PR_FALSE), mGotData(PR_FALSE), mIsCacheable(PR_TRUE)
+  mHadLastPart(PR_FALSE), mGotData(PR_FALSE), mIsInCache(PR_FALSE)
 {
   /* member initializers and constructor code */
 }
@@ -419,14 +419,15 @@ void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
-  if (mIsCacheable) {
+  if (mIsInCache) {
+    // mCacheEntry is nulled out when we have no more observers.
     if (mCacheEntry)
       imgLoader::RemoveFromCache(mCacheEntry);
     else
       imgLoader::RemoveFromCache(mKeyURI);
-
-    mCacheEntry = nsnull;
   }
+
+  mCacheEntry = nsnull;
 }
 
 PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
@@ -473,13 +474,10 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
     p->AdjustPriority(delta);
 }
 
-void imgRequest::SetCacheable(PRBool cacheable)
+void imgRequest::SetIsInCache(PRBool incache)
 {
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "cacheable", cacheable);
-  mIsCacheable = cacheable;
-
-  if (!mIsCacheable)
-    mCacheEntry = nsnull;
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "incache", incache);
+  mIsInCache = incache;
 }
 
 /** imgILoad methods **/
@@ -1079,29 +1077,42 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
       return rv;
   }
 
-#if defined(PR_LOGGING)
-  nsCAutoString spec;
-  mKeyURI->GetSpec(spec);
-
-  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", spec.get());
-#endif
-
-  RemoveFromCache();
-
   mChannel = newChannel;
 
-  newChannel->GetOriginalURI(getter_AddRefs(mKeyURI));
+  // Don't make any cache changes if we're going to point to the same thing. We
+  // compare specs and not just URIs here because URIs that compare as
+  // .Equals() might have different hashes.
+  nsCAutoString oldspec;
+  if (mKeyURI)
+    mKeyURI->GetSpec(oldspec);
+  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());
 
-#if defined(PR_LOGGING)
-  mKeyURI->GetSpec(spec);
+  nsCOMPtr<nsIURI> newURI;
+  newChannel->GetOriginalURI(getter_AddRefs(newURI));
+  nsCAutoString newspec;
+  if (newURI)
+    newURI->GetSpec(newspec);
+  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", newspec.get());
 
-  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "new", spec.get());
-#endif
+  if (oldspec != newspec) {
+    if (mIsInCache) {
+      // Remove the cache entry from the cache, but don't null out mCacheEntry
+      // (as imgRequest::RemoveFromCache() does), because we need it to put
+      // ourselves back in the cache.
+      if (mCacheEntry)
+        imgLoader::RemoveFromCache(mCacheEntry);
+      else
+        imgLoader::RemoveFromCache(mKeyURI);
+    }
 
-  if (mIsCacheable) {
-    // If we don't still have a cache entry, we don't want to refresh the cache.
-    if (mKeyURI && mCacheEntry)
-      imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
+    mKeyURI = newURI;
+ 
+    if (mIsInCache) {
+      // If we don't still have a URI or cache entry, we don't want to put
+      // ourselves back into the cache.
+      if (mKeyURI && mCacheEntry)
+        imgLoader::PutIntoCache(mKeyURI, mCacheEntry);
+    }
   }
 
   return rv;
