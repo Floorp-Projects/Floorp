@@ -148,6 +148,13 @@ static JSPropertySpec object_props[] = {
 /* NB: JSSLOT_PROTO and JSSLOT_PARENT are already indexes into object_props. */
 #define JSSLOT_COUNT 2
 
+static inline void
+js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
+{
+    if (!obj->fslots[JSSLOT_PARENT])
+        js_LeaveTrace(cx);
+}
+
 static JSBool
 ReportStrictSlot(JSContext *cx, uint32 slot)
 {
@@ -4097,6 +4104,8 @@ JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
              JSScopeProperty *sprop, jsval *vp)
 {
+    js_LeaveTraceIfGlobalObject(cx, pobj);
+
     JSScope *scope;
     uint32 slot;
     int32 sample;
@@ -4137,6 +4146,8 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
 JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
 {
+    js_LeaveTraceIfGlobalObject(cx, obj);
+
     JSScope *scope;
     uint32 slot;
     int32 sample;
