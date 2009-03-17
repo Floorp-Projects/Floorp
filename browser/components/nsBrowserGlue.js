@@ -808,7 +808,7 @@ BrowserGlue.prototype = {
   },
 
   ensurePlacesDefaultQueriesInitialized: function() {
-    const SMART_BOOKMARKS_VERSION = 1;
+    const SMART_BOOKMARKS_VERSION = 2;
     const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
     const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
@@ -852,8 +852,8 @@ BrowserGlue.prototype = {
         var smart = {queryId: "MostVisited", // don't change this
                      itemId: null,
                      title: placesBundle.GetStringFromName("mostVisitedTitle"),
-                     uri: this._uri("place:queryType=" +
-                                    Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
+                     uri: this._uri("place:redirectsMode=" +
+                                    Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET +
                                     "&sort=" +
                                     Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
                                     "&maxResults=" + MAX_RESULTS),

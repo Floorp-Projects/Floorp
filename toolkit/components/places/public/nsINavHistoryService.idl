@@ -865,7 +865,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(a46c132e-35f3-4e1e-bb3d-4e3043657248)]
+[scriptable, uuid(b3d5de06-f8ef-4433-84c2-b8b237403b2a)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -1028,6 +1028,29 @@ interface nsINavHistoryQueryOptions : nsISupports
    * ones. Does nothing for bookmark queries. Defaults to false.
    */
   attribute boolean includeHidden;
+
+  /**
+   * Include both redirected-from and redirected-to pages into results.
+   */
+  const unsigned short REDIRECTS_MODE_ALL = 0;
+  /**
+   * Query results will not include redirected-to pages, but will include
+   * redirected-from pages.
+   */
+  const unsigned short REDIRECTS_MODE_SOURCE = 1;
+  /**
+   * Query results will not include redirected-from pages but will include
+   * redirected-to pages.
+   */
+  const unsigned short REDIRECTS_MODE_TARGET = 2;
+
+  /**
+   * Defines how redirects should be handled, see REDIRECTS_MODE_* constants
+   * above.
+   * Defaults to REDIRECTS_MODE_ALL.
+   * Note: this option is effective only on QUERY_TYPE_HISTORY.
+   */
+  attribute unsigned short redirectsMode;
 
   /**
    * Separate/group history items based on session information.  Only
