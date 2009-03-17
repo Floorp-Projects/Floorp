@@ -53,13 +53,17 @@ function SignonsStartup() {
   LoadSignons();
 
   // filter the table if requested by caller
-  if (window.arguments && window.arguments[0] &&
-      window.arguments[0].filterString) {
-    document.getElementById("filter").value = window.arguments[0].filterString;
-    _filterPasswords();
-  }
+  if (window.arguments &&
+      window.arguments[0] &&
+      window.arguments[0].filterString)
+    setFilter(window.arguments[0].filterString);
 
   FocusFilterBox();
+}
+
+function setFilter(aFilterString) {
+  document.getElementById("filter").value = aFilterString;
+  _filterPasswords();
 }
 
 var signonsTreeView = {
