@@ -149,6 +149,7 @@ CryptoMeta.prototype = {
   _logName: "Record.CryptoMeta",
 
   _CryptoMeta_init: function CryptoMeta_init(uri) {
+    dump("ASDASD\n\n");
     this._WBORec_init(uri);
     this.data.payload = {
       bulkIV: null,
@@ -167,6 +168,12 @@ CryptoMeta.prototype = {
     let self = yield;
     let wrapped_key;
 
+    // We cache the unwrapped key, as it's expensive to generate
+    if (this._unwrappedKey) {
+      self.done(this._unwrappedKey);
+      return;
+    }
+
     // get the uri to our public key
     let pubkeyUri = privkey.publicKeyUri.spec;
 
@@ -178,9 +185,10 @@ CryptoMeta.prototype = {
     if (!wrapped_key)
       throw "keyring doesn't contain a key for " + pubkeyUri;
 
-    let ret = Svc.Crypto.unwrapSymmetricKey(wrapped_key, privkey.keyData,
-                                        passphrase, privkey.salt, privkey.iv);
-    self.done(ret);
+    this._unwrappedKey =
+      Svc.Crypto.unwrapSymmetricKey(wrapped_key, privkey.keyData, passphrase,
+                                    privkey.salt, privkey.iv);
+    self.done(this._unwrappedKey);
   },
   getKey: function CryptoMeta_getKey(onComplete, privkey, passphrase) {
     this._getKey.async(this, onComplete, privkey, passphrase);
