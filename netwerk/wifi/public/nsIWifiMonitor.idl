@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Geolocation.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Doug Turner <dougt@meer.net>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,24 +34,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NECKO_CONFIG_H_
-#define _NECKO_CONFIG_H_
+#include "nsISupports.idl"
+#include "nsIWifiListener.idl"
 
-#undef NECKO_DISK_CACHE
+[scriptable, uuid(F289701E-D9AF-4685-BC2F-E4226FF7C018)]
+interface nsIWifiMonitor : nsISupports
+{
 
-#undef NECKO_SMALL_BUFFERS
+  /*
+   * startWatching
+   * aListener will be called once, then each time the list of wifi access points change.
+   */
+  void startWatching(in nsIWifiListener aListener);
 
-#undef NECKO_COOKIES
-
-#undef NECKO_WIFI
-
-#undef NECKO_PROTOCOL_about
-#undef NECKO_PROTOCOL_data
-#undef NECKO_PROTOCOL_file
-#undef NECKO_PROTOCOL_ftp
-#undef NECKO_PROTOCOL_gopher
-#undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_res
-#undef NECKO_PROTOCOL_viewsource
-
-#endif
+  /*
+   * stopWatching
+   * cancels all notifications to the |aListener|.
+   */
+  void stopWatching(in nsIWifiListener aListener);
+};

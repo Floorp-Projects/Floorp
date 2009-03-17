@@ -147,6 +147,7 @@ bin/components/necko_res.xpt
 bin/components/necko_socket.xpt
 bin/components/necko_strconv.xpt
 bin/components/necko_viewsource.xpt
+bin/components/necko_wifi.xpt
 bin/components/necko.xpt
 #ifdef OJI
 bin/components/oji.xpt

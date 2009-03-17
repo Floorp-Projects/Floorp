@@ -116,6 +116,14 @@ SHARED_LIBRARY_LIBS += \
 LOCAL_INCLUDES	+= -I$(srcdir)/../cookie/src
 endif
 
+ifdef NECKO_WIFI
+SHARED_LIBRARY_LIBS += \
+		../wifi/src/$(LIB_PREFIX)neckowifi_s.$(LIB_SUFFIX) \
+                $(NULL)
+LOCAL_INCLUDES	+= -I$(srcdir)/../wifi/src
+endif
+
+
 ifdef MOZ_STORAGE
 REQUIRES += storage
 DEFINES += -DNECKO_OFFLINE_CACHE
