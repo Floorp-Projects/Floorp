@@ -130,7 +130,8 @@ def nsinstall(argv):
     # we're supposed to copy files
     def handleTarget(srcpath, targetpath):
       if os.path.isdir(srcpath):
-        os.mkdir(targetpath)
+        if not os.path.exists(targetpath):
+          os.mkdir(targetpath)
         entries = [os.path.join(srcpath, e) for e in os.listdir(srcpath)]
         copy_all_entries(entries, targetpath)
         # options.t is not relevant for directories
