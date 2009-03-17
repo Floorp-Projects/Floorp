@@ -520,6 +520,9 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 extern JSBool
 js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
 
+extern JSBool
+js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
+
 /*
  * JS_LONE_INTERPRET indicates that the compiler should see just the code for
  * the js_Interpret function when compiling jsinterp.cpp. The rest of the code
@@ -587,9 +590,6 @@ js_CountWithBlocks(JSContext *cx, JSStackFrame *fp);
 extern JS_REQUIRES_STACK JSBool
 js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
                JSBool normalUnwind);
-
-extern JSBool
-js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
 
 extern JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp);
