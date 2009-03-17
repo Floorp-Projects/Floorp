@@ -4491,6 +4491,7 @@ MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
+NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
@@ -7836,6 +7837,38 @@ AC_SUBST(NECKO_DISK_CACHE)
 if test "$NECKO_DISK_CACHE"; then
     AC_DEFINE(NECKO_DISK_CACHE)
 fi
+
+dnl
+dnl option to disable necko's wifi scanner
+dnl
+MOZ_ARG_DISABLE_BOOL(necko-wifi,
+[  --disable-necko-wifi   Disable necko wifi scanner],
+    NECKO_WIFI=,
+    NECKO_WIFI=1
+)
+if test "$NECKO_WIFI"; then
+  NECKO_WIFI=
+  if test "$OS_ARCH" = "Linux"; then
+    AC_CHECK_HEADER([iwlib.h])
+    if test "$ac_cv_header_iwlib_h" = "yes"; then
+      NECKO_WIFI=1
+    fi
+  elif test "$OS_ARCH" = "Darwin"; then
+    NECKO_WIFI=1
+  elif test "$OS_ARCH" = "WINNT"; then
+    NECKO_WIFI=1
+  else
+    AC_MSG_ERROR([Necko WiFi scanning not supported on your platform.])
+  fi
+  AC_SUBST(NECKO_WIFI)
+  
+  if test "$NECKO_WIFI"; then
+    AC_DEFINE(NECKO_WIFI)
+  fi
+
+fi
+AC_SUBST(NECKO_WIFI)
+
 
 dnl
 dnl option to minimize size of necko's i/o buffers
