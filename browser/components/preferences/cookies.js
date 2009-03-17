@@ -79,11 +79,10 @@ var gCookiesWindow = {
       this._tree.view.selection.select(0);
 
     if (aInitialLoad) {
-      if ("arguments" in window && window.arguments[0] &&
-          window.arguments[0].filterString) {
-        document.getElementById("filter").value = window.arguments[0].filterString;
-        this.filter();
-      }
+      if ("arguments" in window &&
+          window.arguments[0] &&
+          window.arguments[0].filterString)
+        this.setFilter(window.arguments[0].filterString);
     }
     else {
       if (document.getElementById("filter").value != "")
@@ -885,6 +884,11 @@ var gCookiesWindow = {
       view.selection.select(0);
 
     document.getElementById("cookiesIntro").value = gCookiesWindow._bundle.getString("cookiesFiltered");
+  },
+
+  setFilter: function (aFilterString) {
+    document.getElementById("filter").value = aFilterString;
+    this.filter();
   },
 
   focusFilterBox: function () {
