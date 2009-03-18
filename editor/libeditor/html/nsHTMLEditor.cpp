@@ -3694,7 +3694,8 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
 {
   nsCOMPtr<nsICSSStyleSheet> sheet;
   nsresult rv = GetStyleSheetForURL(aURL, getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
 
   // Enable sheet if already loaded.
   if (sheet)
@@ -3702,7 +3703,8 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
     // Ensure the style sheet is owned by our document.
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocWeak);
     rv = sheet->SetOwningDocument(doc);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
 
     nsCOMPtr<nsIDOMStyleSheet> domSheet(do_QueryInterface(sheet));
     NS_ASSERTION(domSheet, "Sheet not implementing nsIDOMStyleSheet!");
