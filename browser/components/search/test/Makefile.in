@@ -48,6 +48,9 @@ _BROWSER_TEST_FILES = 	  browser_405664.js \
 	                  browser_415700.js \
 	                  testEngine.xml \
 	                  browser_426329.js \
+	                  browser_483086.js \
+	                  483086-1.xml \
+	                  483086-2.xml \
 	                  $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
