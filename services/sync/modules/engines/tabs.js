@@ -431,11 +431,6 @@ TabTracker.prototype = {
   onTabOpened: function TabTracker_onTabOpened(event) {
     // Store a timestamp in the tab to track when it was last used
     //this._log.trace("Tab opened.\n");
-    /*if (Cc["@mozilla.org/browser/sessionstore;1"])  {
-      let ss = Cc["@mozilla.org/browser/sessionstore;1"]
-        .getService(Ci.nsISessionStore);
-      ss.setTabValue(event.target, TAB_TIME_ATTR, event.timeStamp);
-    }*/
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
     //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
     this._score += 50;
@@ -449,11 +444,6 @@ TabTracker.prototype = {
   onTabSelected: function TabTracker_onTabSelected(event) {
     // Update the tab's timestamp
     //this._log.trace("Tab selected.\n");
-    /*if (Cc["@mozilla.org/browser/sessionstore;1"])  {
-      let ss = Cc["@mozilla.org/browser/sessionstore;1"]
-        .getService(Ci.nsISessionStore);
-      ss.setTabValue(event.target, TAB_TIME_ATTR, event.timeStamp);
-    }*/
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
     //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
     this._score += 10;
@@ -467,11 +457,13 @@ TabTracker.prototype = {
     return obj;
   },
 
-  // TODO this hard-coded score is a hack; replace with maybe +25 or +35
-  // per tab open event.
-  // Actually maybe it should just stay this way?  Otherwise we're missing
-  // something really important which is laod-page-in-tab events, which are
-  // a powerful motivation to sync
+  /* Score is pegged to 100, which means tabs are always synced.
+   * Is this the right thing to do?  Or should we be using the score
+   * calculated from tab open/close/select events (see above)?  Note that
+   * we should definitely listen for tabs loading new content if we want to
+   * go that way.  But tabs loading new content happens so often that it
+   * might be easier to just always sync.
+   */
   get score() {
     return 100;
   }
