@@ -1650,10 +1650,15 @@ SessionStoreService.prototype = {
       winData.tabs = [];
     }
     
-    var tabbrowser = aWindow.getBrowser();
+    var tabbrowser = aWindow.gBrowser;
     var openTabCount = aOverwriteTabs ? tabbrowser.browsers.length : -1;
     var newTabCount = winData.tabs.length;
-    let tabs = [];
+    var tabs = [];
+
+    // disable smooth scrolling while adding, moving, removing and selecting tabs
+    var tabstrip = tabbrowser.tabContainer.mTabstrip;
+    var smoothScroll = tabstrip.smoothScroll;
+    tabstrip.smoothScroll = false;
     
     // make sure that the selected tab won't be closed in order to
     // prevent unnecessary flickering
@@ -1695,6 +1700,9 @@ SessionStoreService.prototype = {
     
     this.restoreHistoryPrecursor(aWindow, tabs, winData.tabs,
       (aOverwriteTabs ? (parseInt(winData.selected) || 1) : 0), 0, 0);
+
+    // set smoothScroll back to the original value
+    tabstrip.smoothScroll = smoothScroll;
 
     this._notifyIfAllWindowsRestored();
   },
