@@ -149,7 +149,6 @@ CryptoMeta.prototype = {
   _logName: "Record.CryptoMeta",
 
   _CryptoMeta_init: function CryptoMeta_init(uri) {
-    dump("ASDASD\n\n");
     this._WBORec_init(uri);
     this.data.payload = {
       bulkIV: null,
