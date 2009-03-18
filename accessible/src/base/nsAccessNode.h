@@ -140,7 +140,7 @@ class nsAccessNode: public nsIAccessNode
     /**
      * Returns true when the accessible is defunct.
      */
-    virtual PRBool IsDefunct() { return !mDOMNode; }
+    virtual PRBool IsDefunct();
 
     /**
      * Initialize the access node object, add it to the cache.
