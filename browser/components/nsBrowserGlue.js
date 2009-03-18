@@ -1039,17 +1039,17 @@ GeolocationPrompt.prototype = {
       var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
-        label: browserBundle.GetStringFromName("geolocation.exactLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.exactLocationKey"),
+        label: browserBundle.GetStringFromName("geolocation.tellThem"),
+        accessKey: browserBundle.GetStringFromName("geolocation.tellThemKey"),
         callback: function() request.allow() ,
         },
         {
-        label: browserBundle.GetStringFromName("geolocation.nothingLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.nothingLocationKey"),
+        label: browserBundle.GetStringFromName("geolocation.dontTellThem"),
+        accessKey: browserBundle.GetStringFromName("geolocation.dontTellThemKey"),
         callback: function() request.cancel() ,
         }];
       
-      var message = browserBundle.formatStringFromName("geolocation.requestMessage",
+      var message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
                                                        [request.requestingURI.spec], 1);      
       notificationBox.appendNotification(message,
                                          "geolocation",
