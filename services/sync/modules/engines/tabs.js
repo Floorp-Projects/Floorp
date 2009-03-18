@@ -272,10 +272,19 @@ TabStore.prototype = {
       let title = tab.browser.contentDocument.title;
       let url = tab.browser.contentWindow.location.toString();
       let urlHistory = [url];
-      this._log.debug("Wrapping a tab with title " + title);
-      // TODO how to get older entries in urlHistory?
+
+      // TODO how to get older entries in urlHistory? without session store?
       // can we use BrowserUI._getHistory somehow?
-      record.addTab(title, urlHistory);
+
+      // Get the time the tab was last used
+      /* let lastUsedTimestamp = tab.getAttribute(TAB_TIME_ATTR);
+      if (!lastUsedTimestamp) */
+      // TODO that doesn't work: tab.getAttribute is not a function on Fennec.
+      let lastUsedTimestamp = "0";
+
+      this._log.debug("Wrapping a tab with title " + title);
+      this._log.debug("And timestamp " + lastUsedTimestamp);
+      record.addTab(title, urlHistory, lastUsedTimestamp);
       // TODO add last-visited date for this tab... but how?
     }
   },
@@ -396,6 +405,7 @@ TabTracker.prototype = {
       return;
     }
     //this._log.trace("Registering tab listeners in new window.\n");
+    dump("Tab listeners registered!\n");
     let container = browser.tabContainer;
     container.addEventListener("TabOpen", this.onTabOpened, false);
     container.addEventListener("TabClose", this.onTabClosed, false);
@@ -431,6 +441,7 @@ TabTracker.prototype = {
   onTabOpened: function TabTracker_onTabOpened(event) {
     // Store a timestamp in the tab to track when it was last used
     //this._log.trace("Tab opened.\n");
+    dump("Tab opened.\n");
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
     //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
     this._score += 50;
@@ -443,6 +454,7 @@ TabTracker.prototype = {
 
   onTabSelected: function TabTracker_onTabSelected(event) {
     // Update the tab's timestamp
+    dump("Tab selected.\n");
     //this._log.trace("Tab selected.\n");
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
     //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
