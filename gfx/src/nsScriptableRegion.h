@@ -39,7 +39,6 @@
 
 #include "nsIScriptableRegion.h"
 #include "gfxCore.h"
-#include "nsIRegion.h"
 
 class nsIRegion;
 
@@ -57,5 +56,4 @@ public:
 
 private:
 	nsIRegion* mRegion;
-	nsRegionRectSet *mRectSet;
 };
