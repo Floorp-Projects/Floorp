@@ -1240,7 +1240,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, (int)offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
     cx_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, cx)), "cx");
-    gp_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, global)), "gp");
     eos_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eos)), "eos");
     eor_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eor)), "eor");
     globalObj_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, globalObj)), "globalObj");
@@ -1349,8 +1348,8 @@ TraceRecorder::nativeGlobalOffset(jsval* p) const
 {
     JS_ASSERT(isGlobal(p));
     if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS)
-        return size_t(p - globalObj->fslots) * sizeof(double);
-    return ((p - globalObj->dslots) + JS_INITIAL_NSLOTS) * sizeof(double);
+        return sizeof(InterpState) + size_t(p - globalObj->fslots) * sizeof(double);
+    return sizeof(InterpState) + ((p - globalObj->dslots) + JS_INITIAL_NSLOTS) * sizeof(double);
 }
 
 /* Determine whether a value is a global stack slot */
@@ -1818,7 +1817,7 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
     uint16* gslots = treeInfo->globalSlots->data();
     uint8* m = globalTypeMap;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
+        import(lirbuf->state, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
         m++;
     );
     ptrdiff_t offset = -treeInfo->nativeStackBase;
@@ -1867,7 +1866,8 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx, slot))
         type = JSVAL_DOUBLE;
     treeInfo->typeMap.add(type);
-    import(gp_ins, slot*sizeof(double), vp, type, "global", index, NULL);
+    import(lirbuf->state, sizeof(struct InterpState) + slot*sizeof(double),
+           vp, type, "global", index, NULL);
     specializeTreesToMissingGlobals(cx, treeInfo);
     return true;
 }
@@ -1898,13 +1898,13 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
     LIns* x = nativeFrameTracker.get(p);
     if (!x) {
         if (isGlobal(p))
-            x = writeBack(i, gp_ins, nativeGlobalOffset(p));
+            x = writeBack(i, lirbuf->state, nativeGlobalOffset(p));
         else
             x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p));
         nativeFrameTracker.set(p, x);
     } else {
 #define ASSERT_VALID_CACHE_HIT(base, offset)                                  \
-    JS_ASSERT(base == lirbuf->sp || base == gp_ins);                          \
+    JS_ASSERT(base == lirbuf->sp || base == lirbuf->state);                   \
     JS_ASSERT(offset == ((base == lirbuf->sp)                                 \
         ? -treeInfo->nativeStackBase + nativeStackOffset(p)                   \
         : nativeGlobalOffset(p)));                                            \
@@ -2042,7 +2042,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
         LIns* i = get(vp);
         bool isPromote = isPromoteInt(i);
         if (isPromote && *m == JSVAL_DOUBLE)
-            lir->insStorei(get(vp), gp_ins, nativeGlobalOffset(vp));
+            lir->insStorei(get(vp), lirbuf->state, nativeGlobalOffset(vp));
         else if (!isPromote && *m == JSVAL_INT) {
             debug_only_v(printf("adjusting will fail, %s%d, slot %d\n", vpname, vpnum, m - map);)
             oracle.markGlobalSlotUndemotable(cx, gslots[n]);
@@ -3907,17 +3907,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     unsigned ngslots = ti->globalSlots->length();
     uint16* gslots = ti->globalSlots->data();
-
-    InterpState state;
-
-    state.cx = cx;
-    state.globalObj = globalObj;
-    state.inlineCallCountp = &inlineCallCount;
-    state.innermostNestedGuardp = innermostNestedGuardp;
-    state.outermostTree = ti;
-    state.lastTreeExitGuard = NULL;
-    state.lastTreeCallGuard = NULL;
-    state.rpAtLastTreeCall = NULL;
+    unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
 
     /* Make sure the global object is sane. */
     JS_ASSERT(!ngslots || (OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) == ti->globalShape));
@@ -3928,35 +3918,44 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
         return NULL;
 
+    /* Setup the interpreter state block, which is followed by the native global frame. */
+    InterpState* state = (InterpState*)alloca(sizeof(InterpState) + (globalFrameSize+1)*sizeof(double));
+    state->cx = cx;
+    state->globalObj = globalObj;
+    state->inlineCallCountp = &inlineCallCount;
+    state->innermostNestedGuardp = innermostNestedGuardp;
+    state->outermostTree = ti;
+    state->lastTreeExitGuard = NULL;
+    state->lastTreeCallGuard = NULL;
+    state->rpAtLastTreeCall = NULL;
+
     /* Setup the native global frame. */
-    unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
-    state.global = (double*)alloca((globalFrameSize+1) * sizeof(double));
+    double* global = (double*)(state+1);
 
     /* Setup the native stack frame. */
     double stack_buffer[MAX_NATIVE_STACK_SLOTS];
-    state.stackBase = stack_buffer;
-    double* entry_sp = &stack_buffer[ti->nativeStackBase/sizeof(double)];
-    state.sp = entry_sp;
-    state.eos = state.sp + MAX_NATIVE_STACK_SLOTS;
+    state->stackBase = stack_buffer;
+    state->sp = stack_buffer + (ti->nativeStackBase/sizeof(double));
+    state->eos = stack_buffer + MAX_NATIVE_STACK_SLOTS;
 
     /* Setup the native call stack frame. */
     FrameInfo* callstack_buffer[MAX_CALL_STACK_ENTRIES];
-    state.callstackBase = callstack_buffer;
-    state.rp = callstack_buffer;
-    state.eor = callstack_buffer + MAX_CALL_STACK_ENTRIES;
+    state->callstackBase = callstack_buffer;
+    state->rp = callstack_buffer;
+    state->eor = callstack_buffer + MAX_CALL_STACK_ENTRIES;
 
     void *reserve;
-    state.stackMark = JS_ARENA_MARK(&cx->stackPool);
+    state->stackMark = JS_ARENA_MARK(&cx->stackPool);
     JS_ARENA_ALLOCATE(reserve, &cx->stackPool, MAX_INTERP_STACK_BYTES);
     if (!reserve)
         return NULL;
 
 #ifdef DEBUG
     memset(stack_buffer, 0xCD, sizeof(stack_buffer));
-    memset(state.global, 0xCD, (globalFrameSize+1)*sizeof(double));
+    memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
 #endif
 
-    debug_only(*(uint64*)&state.global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
+    debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
     debug_only_v(printf("entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
                         cx->fp->script->filename,
                         js_FramePCToLineNumber(cx, cx->fp),
@@ -3967,14 +3966,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(ti->nGlobalTypes() == ngslots);
 
     if (ngslots)
-        BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap(), state.global);
+        BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap(), global);
     BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap.data(), stack_buffer);
 
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
 #ifdef EXECUTE_TREE_TIMER
-    state.startTime = rdtsc();
+    state->startTime = rdtsc();
 #endif
 
     /* Set a flag that indicates to the runtime system that we are running in native code
@@ -3983,14 +3982,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
        and eventually triggers the GC. */
     JS_ASSERT(!tm->onTrace);
     tm->onTrace = true;
-    cx->interpState = &state;
+    cx->interpState = state;
 
     debug_only(fflush(NULL);)
     GuardRecord* rec;
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-    SIMULATE_FASTCALL(rec, &state, NULL, u.func);
+    SIMULATE_FASTCALL(rec, state, NULL, u.func);
 #else
-    rec = u.func(&state, NULL);
+    rec = u.func(state, NULL);
 #endif
     VMSideExit* lr = (VMSideExit*)rec->exit;
 
@@ -3998,8 +3997,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
     tm->onTrace = false;
-    LeaveTree(state, lr);
-    return state.innermost;
+    LeaveTree(*state, lr);
+    return state->innermost;
 }
 
 static JS_FORCES_STACK void
@@ -4195,8 +4194,9 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     }
 
     /* write back interned globals */
-    FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, state.global);
-    JS_ASSERT(*(uint64*)&state.global[STOBJ_NSLOTS(state.globalObj)] == 0xdeadbeefdeadbeefLL);
+    double* global = (double*)(&state + 1);
+    FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, global);
+    JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(state.globalObj)] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
 #ifdef DEBUG
