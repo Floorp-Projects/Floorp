@@ -6986,8 +6986,13 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // to wrap here? But that's not always reachable, let's use
   // globalObj for now...
 
-  if (native_parent == doc && (*parentObj = doc->GetJSObject())) {
-    return NS_OK;
+  nsIXPConnectJSObjectHolder *wrapper;
+  if (native_parent == doc &&
+      (wrapper = static_cast<nsIXPConnectJSObjectHolder*>(doc->GetWrapper()))) {
+    wrapper->GetJSObject(parentObj);
+    if(*parentObj) {
+      return NS_OK;
+    }
   }
 
   jsval v;
@@ -8251,10 +8256,6 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Cache the document's JSObject on the document so we can optimize
-  // nsNodeSH::PreCreate() to avoid nested WrapNative() calls.
-  doc->SetJSObject(obj);
-
   nsresult rv = nsNodeSH::PostCreate(wrapper, cx, obj);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -8286,20 +8287,6 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj)
-{
-  nsCOMPtr<nsIDocument> doc = do_QueryWrappedNative(wrapper);
-  if (!doc) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  doc->SetJSObject(nsnull);
-
-  return nsNodeSH::Finalize(wrapper, cx, obj);
 }
 
 // HTMLDocument helper
