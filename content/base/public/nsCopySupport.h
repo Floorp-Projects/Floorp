@@ -70,6 +70,12 @@ class nsCopySupport
     // before[copy,cut,paste] and [copy,cut,paste] events will fire on.
     static nsresult GetClipboardEventTarget(nsISelection *aSel,
                                             nsIDOMNode **aEventTarget);
+
+    // Get the selection as a transferable. Similar to HTMLCopy except does
+    // not deal with the clipboard.
+    static nsresult GetTransferableForSelection(nsISelection * aSelection,
+                                                nsIDocument * aDocument,
+                                                nsITransferable ** aTransferable);
 };
 
 #endif
