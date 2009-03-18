@@ -46,7 +46,7 @@ class nsIRegion;
 [ptr] native nsIRegion(nsIRegion);
 
 
-[scriptable, uuid(82d8f400-5bde-11d3-b033-b27a62766bbc)]
+[scriptable, uuid(4d179656-a5bd-42a6-a937-c81f820dcf2f)]
 interface nsIScriptableRegion : nsISupports
 {
   void init ( ) ;
@@ -186,6 +186,13 @@ interface nsIScriptableRegion : nsISupports
   *
   **/
   void offset ( in long aXOffset, in long aYOffset ) ;
+
+  /**
+   * @return null if there are no rects,
+   * @return flat array of rects,ie [x1,y1,width1,height1,x2...].
+   * The result will contain bogus data if values don't fit in 31 bit
+   **/
+  void getRects();
 
   /**
   * does the region intersect the rectangle?
