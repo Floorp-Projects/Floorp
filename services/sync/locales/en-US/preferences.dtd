@@ -112,3 +112,7 @@
 <!ENTITY fennecPrefs.weaveUserAccount.label "Weave User Account">
 <!ENTITY fennecPrefs.youAreUser.label "You are user: ">
 <!ENTITY fennecPrefs.changeUser.label "Change User">
+
+<!ENTITY tabs.sortBy.date.label "By Date">
+<!ENTITY tabs.sortBy.title.label "By Title">
+<!ENTITY tabs.sortBy.source.label "By Source">
