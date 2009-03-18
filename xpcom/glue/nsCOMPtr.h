@@ -1065,6 +1065,16 @@ class nsCOMPtr<nsISupports>
           mRawPtr = temp;
         }
 
+      already_AddRefed<nsISupports>
+      forget()
+          // return the value of mRawPtr and null out mRawPtr. Useful for
+          // already_AddRefed return values.
+        {
+          nsISupports* temp = 0;
+          swap(temp);
+          return temp;
+        }
+
       void
       forget( nsISupports** rhs NS_OUTPARAM )
           // Set the target of rhs to the value of mRawPtr and null out mRawPtr.
