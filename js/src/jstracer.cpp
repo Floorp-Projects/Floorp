@@ -1201,7 +1201,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
         TreeInfo* ti, unsigned stackSlots, unsigned ngslots, uint8* typeMap,
         VMSideExit* innermostNestedGuard, jsbytecode* outer)
 {
-    JS_ASSERT(!_fragment->vmprivate && ti && cx->fp->regs->pc == (jsbytecode*)_fragment->ip);
+    JS_ASSERT(!_fragment->vmprivate && ti);
 
     this->cx = cx;
     this->traceMonitor = &JS_TRACE_MONITOR(cx);
@@ -1219,9 +1219,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->terminate = false;
     this->wasRootFragment = _fragment == _fragment->root;
     this->outer = outer;
-    this->pendingTraceableNative = NULL;
-    this->pendingBoxedValue = JSVAL_HOLE;
-    this->pendingBoxedIns = NULL;
     
     debug_only_v(printf("recording starting from %s:%u@%u\n",
                         ti->treeFileName, ti->treeLineNumber, ti->treePCOffset);)
@@ -1253,14 +1250,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, stackSlots, ngslots, callDepth, typeMap);
-
-    /* unbox any boxed values we imported as jsvals */
-    if (pendingBoxedIns) {
-        JS_ASSERT(fragment != fragment->root);
-        unbox_jsval(pendingBoxedValue, pendingBoxedIns, snapshot(BRANCH_EXIT));
-        pendingBoxedValue = JSVAL_NULL;
-        pendingBoxedIns = NULL;
-    }
 
     if (fragment == fragment->root) {
         /*
@@ -1749,7 +1738,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         ins = lir->insLoadi(base, offset);
         ins = lir->ins1(LIR_i2f, ins);
     } else {
-        JS_ASSERT_IF(t != JSVAL_BOXED, isNumber(*p) == (t == JSVAL_DOUBLE));
+        JS_ASSERT(t == JSVAL_BOXED || isNumber(*p) == (t == JSVAL_DOUBLE));
         if (t == JSVAL_DOUBLE) {
             ins = lir->insLoad(LIR_ldq, base, offset);
         } else if (t == JSVAL_BOOLEAN) {
@@ -1760,17 +1749,6 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
     }
     checkForGlobalObjectReallocation();
     tracker.set(p, ins);
-
-    /*
-     * If we are attaching a branch to an unbox operation that failed, make a note to unbox
-     * the value as soon as we imported everything.
-     */
-    if (t == JSVAL_BOXED) {
-        JS_ASSERT(!pendingBoxedIns);
-        pendingBoxedValue = *p;
-        pendingBoxedIns = ins;
-    }
-
 #ifdef DEBUG
     char name[64];
     JS_ASSERT(strlen(prefix) < 10);
@@ -2124,14 +2102,9 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Check for a return-value opcode that needs to restart at the next instruction. */
     const JSCodeSpec& cs = js_CodeSpec[*pc];
 
-    /*
-     * When calling a _FAIL native, make the snapshot's pc point to the next
-     * instruction after the CALL or APPLY. Even on failure, a _FAIL native must not
-     * be called again from the interpreter.
-     */
+    /* WARNING: don't return before restoring the original pc if (resumeAfter). */
     bool resumeAfter = (pendingTraceableNative &&
                         JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS);
-
     if (resumeAfter) {
         JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY);
         pc += cs.length;
@@ -2160,15 +2133,13 @@ TraceRecorder::snapshot(ExitType exitType)
     );
     JS_ASSERT(unsigned(m - typemap) == ngslots + stackSlots);
 
-    /*
-     * If we are currently executing a traceable native or we are attaching a second trace
-     * to it, the value on top of the stack is boxed. Make a note of this in the typemap.
-     */
-    if ((pendingTraceableNative && (pendingTraceableNative->flags & JSTN_UNBOX_AFTER)) || pendingBoxedIns)
-        typemap[stackSlots - 1] = JSVAL_BOXED;
-
-    /* Now restore the the original pc (after which early returns are ok). */
+    /* If we are capturing the stack state on a specific instruction, the value on
+       the top of the stack is a boxed value. */
     if (resumeAfter) {
+        if (pendingTraceableNative->flags & JSTN_UNBOX_AFTER)
+            typemap[stackSlots - 1] = JSVAL_BOXED;
+
+        /* Now restore the the original pc (after which early returns are ok). */
         MUST_FLOW_LABEL(restore_pc);
         regs->pc = pc - cs.length;
     } else {
@@ -2259,34 +2230,22 @@ TraceRecorder::snapshot(ExitType exitType)
 
 /* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
    and using the supplied side exit if the conditon doesn't hold. */
-void
+LIns*
 TraceRecorder::guard(bool expected, LIns* cond, LIns* exit)
 {
     if (!cond->isCond()) {
         expected = !expected;
         cond = lir->ins_eq0(cond);
     }
-#ifdef DEBUG
-    LIns* guard =
-#endif
-    lir->insGuard(expected ? LIR_xf : LIR_xt, cond, exit);
-#ifdef DEBUG
-    if (guard) {
-        GuardRecord* lr = guard->record();
-        VMSideExit* e = (VMSideExit*)lr->exit;
-        debug_only_v(printf("    lr=%p exitType=%d\n", (SideExit*)e, e->exitType);)
-    } else {
-        debug_only_v(printf("    redundant guard, eliminated\n");)
-    }
-#endif
+    return lir->insGuard(expected ? LIR_xf : LIR_xt, cond, exit);
 }
 
 /* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected)
    and generate a side exit with type exitType to jump to if the condition does not hold. */
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK LIns*
 TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 {
-    guard(expected, cond, snapshot(exitType));
+    return guard(expected, cond, snapshot(exitType));
 }
 
 /* Try to match the type of a slot to type t. checkType is used to verify that the type of
@@ -2682,12 +2641,14 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
             treeInfo->linkedTrees.addUnique(peer);
         }
+
+        compile(tm);
     } else {
         exit->target = fragment->root;
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exitIns);
+        compile(tm);
     }
 
-    compile(tm);
     if (fragmento->assm()->error() != nanojit::None)
         return false;
 
@@ -2881,7 +2842,6 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
     /* Read back all registers, in case the called tree changed any of them. */
     import(ti, inner_sp_ins, exit->numStackSlots, exit->numGlobalSlots,
            exit->calldepth, getFullTypeMap(exit));
-    JS_ASSERT(!pendingBoxedIns);
     /* Restore sp and rp to their original values (we still have them in a register). */
     if (callDepth > 0) {
         lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
@@ -5942,7 +5902,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
+TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 {
     if (isNumber(v)) {
         // JSVAL_IS_NUMBER(v)
@@ -5953,7 +5913,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
                                                 lir->ins2(LIR_piand, v_ins,
                                                           INS_CONST(JSVAL_TAGMASK)),
                                                 JSVAL_DOUBLE))),
-              exit);
+              MISMATCH_EXIT);
         LIns* args[] = { v_ins };
         v_ins = lir->insCall(&js_UnboxDouble_ci, args);
         return;
@@ -5964,15 +5924,16 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
               lir->ins2i(LIR_eq,
                          lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                          JSVAL_BOOLEAN),
-              exit);
+              MISMATCH_EXIT);
         v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
         return;
       case JSVAL_OBJECT:
         if (JSVAL_IS_NULL(v)) {
             // JSVAL_NULL maps to type JSVAL_TNULL, so insist that v_ins == 0 here.
-            guard(true, lir->ins_eq0(v_ins), exit);
+            guard(true, lir->ins_eq0(v_ins), MISMATCH_EXIT);
         } else {
             // We must guard that v_ins has JSVAL_OBJECT tag but is not JSVAL_NULL.
+            LIns* exit = snapshot(MISMATCH_EXIT);
             guard(true,
                   lir->ins2i(LIR_eq,
                              lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
@@ -5987,7 +5948,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, LIns* exit)
               lir->ins2i(LIR_eq,
                         lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                         JSVAL_STRING),
-              exit);
+              MISMATCH_EXIT);
         v_ins = lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
         return;
     }
@@ -6035,11 +5996,10 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
 
     bool cond = (jsuint(idx) < jsuint(obj->fslots[JSSLOT_ARRAY_LENGTH]) && jsuint(idx) < capacity);
     if (cond) {
-        LIns* exit = snapshot(exitType);
         /* Guard array length */
-        guard(true,
-              lir->ins2(LIR_ult, idx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
-              exit);
+        LIns* exit = guard(true,
+                           lir->ins2(LIR_ult, idx_ins, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)),
+                           exitType)->oprnd2();
         /* dslots must not be NULL */
         guard(false,
               lir->ins_eq0(dslots_ins),
@@ -7613,25 +7573,23 @@ TraceRecorder::record_FastNativeCallComplete()
        because that would cause the interpreter to re-execute the native
        function, which might have side effects.
 
-       Instead, the snapshot() call below sees that we are currently parked on
-       a traceable native's JSOP_CALL instruction, and it will advance the pc
-       to restore by the length of the current opcode.  If the native's return
-       type is jsval, snapshot() will also indicate in the type map that the
-       element on top of the stack is a boxed value which doesn't need to be
-       boxed if the type guard generated by unbox_jsval() fails. */
-
-    LIns* exit = NULL;
+       Instead, snapshot(), which is invoked from unbox_jsval() below, will see
+       that we are currently parked on a traceable native's JSOP_CALL
+       instruction, and it will advance the pc to restore by the length of the
+       current opcode.  If the native's return type is jsval, snapshot() will
+       also indicate in the type map that the element on top of the stack is a
+       boxed value which doesn't need to be boxed if the type guard generated
+       by unbox_jsval() fails. */
 
     if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS) {
 #ifdef DEBUG
         // Keep cx->bailExit null when it's invalid.
         lir->insStorei(INS_CONSTPTR(NULL), cx_ins, (int) offsetof(JSContext, bailExit));
 #endif
-        exit = snapshot(STATUS_EXIT);
         guard(true,
               lir->ins_eq0(
                   lir->insLoad(LIR_ld, cx_ins, (int) offsetof(JSContext, builtinStatus))),
-              exit);
+              STATUS_EXIT);
     }
 
     JS_ASSERT(*cx->fp->regs->pc == JSOP_CALL ||
@@ -7642,7 +7600,7 @@ TraceRecorder::record_FastNativeCallComplete()
 
     bool ok = true;
     if (pendingTraceableNative->flags & JSTN_UNBOX_AFTER) {
-        unbox_jsval(v, v_ins, exit ? exit : snapshot(BRANCH_EXIT));
+        unbox_jsval(v, v_ins);
         set(&v, v_ins);
     } else if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_NEG) {
         /* Already added i2f in functionCall. */
@@ -7758,8 +7716,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 v_ins = lir->insCall(&js_CallGetter_ci, args);
                 guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
                 unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
-                            v_ins,
-                            snapshot(MISMATCH_EXIT));
+                             v_ins);
                 JS_ASSERT(cs.ndefs == 1);
                 stack(-cs.nuses, v_ins);
                 return true;
@@ -7791,7 +7748,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     }
 
     v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
-    unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins, snapshot(BRANCH_EXIT));
+    unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins);
     return true;
 }
 
@@ -7854,7 +7811,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
 
     /* Load the value and guard on its type to unbox it. */
     v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
-    unbox_jsval(*vp, v_ins, snapshot(BRANCH_EXIT));
+    unbox_jsval(*vp, v_ins);
 
     if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
         // Optimize to guard for a hole only after untagging, so we know that
