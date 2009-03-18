@@ -283,9 +283,11 @@
             var xulNode = aEvent.target;
 
             // Calculate positions taking care of arrowscrollbox
-            var sbo = this._scrollBox.scrollBoxObject;
             var eventY = aEvent.layerY;
-            var nodeY = xulNode.boxObject.y - sbo.y;
+            var scrollbox = this._scrollBox;
+            var scrollboxOffset = scrollbox.scrollBoxObject.y -
+                                  (scrollbox.boxObject.y - this.boxObject.y);
+            var nodeY = xulNode.boxObject.y - scrollboxOffset;
             var nodeHeight = xulNode.boxObject.height;
 
             if (!xulNode.node) {
@@ -300,9 +302,8 @@
                       PlacesUtils.nodeIsTagQuery(xulNode.node)) &&
                      !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
               // This is a folder or a tag container.
-              if (eventY - nodeY < nodeHeight * 0.25) {
-                // If the mouse is in the top 25% of the node,
-                // drop above the folder.
+              if (eventY - nodeY < nodeHeight * 0.20) {
+                // If mouse is in the top part of the node, drop above folder.
                 dropPoint.ip = new InsertionPoint(
                                     PlacesUtils.getConcreteItemId(resultNode),
                                     -1,
@@ -311,9 +312,8 @@
                                     xulNode.node.itemId);
                 return dropPoint;
               }
-              else if (eventY - nodeY < nodeHeight * 0.75) {
-                // If the mouse is before the 75 % of the node drop
-                // inside this folder.
+              else if (eventY - nodeY < nodeHeight * 0.80) {
+                // If mouse is in the middle of the node, drop inside folder.
                 dropPoint.ip = new InsertionPoint(
                                     PlacesUtils.getConcreteItemId(xulNode.node),
                                     -1,
