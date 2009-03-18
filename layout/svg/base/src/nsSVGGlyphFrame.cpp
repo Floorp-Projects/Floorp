@@ -299,10 +299,9 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "trying to construct an SVGGlyphFrame for wrong content element");
 
-  nsresult rv = nsLayoutUtils::InitTextRunContainerForPrinting(aContent,
-                                                               this,
-                                                               NS_STATE_SVG_PRINTING);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!PresContext()->IsDynamic()) {
+    AddStateBits(NS_STATE_SVG_PRINTING);
+  }
 
   return nsSVGGlyphFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
