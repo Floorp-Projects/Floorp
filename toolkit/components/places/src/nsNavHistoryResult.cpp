@@ -4283,107 +4283,13 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
                                       aReferringId, aTransitionType, &added));
 
   if (!added && mRootNode->mExpanded) {
-    nsresult rv;
-
     // None of registered query observers has accepted our URI, this means,
     // that a matching query either was not expanded or it does not exist.
-    // If it just was not expanded, we can ignore it, but if it did not
-    // exist, we have to add the query to the right place.
     PRUint32 resultType = mRootNode->mOptions->ResultType();
-    nsNavHistoryResultNode * siteRoot = mRootNode;
-    nsCAutoString dateRange;
-
-    // For day based queries we just check whether the first item is Today,
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
-        resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY) {
-      nsNavHistory* history = nsNavHistory::GetHistoryService();
-      NS_ENSURE_TRUE(history, 0);
-
-      // code borrowed from xpfe/components/history/src/nsGlobalHistory.cpp
-      // pass in a pre-normalized now and a date, and we'll find
-      // the difference since midnight on each of the days.
-      //
-      // USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
-      static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
-
-      dateRange = nsPrintfCString(255,
-        "&beginTime=%lld&endTime=%lld",
-        history->NormalizeTime(
-          nsINavHistoryQuery::TIME_RELATIVE_TODAY, 0),
-        history->NormalizeTime(
-          nsINavHistoryQuery::TIME_RELATIVE_TODAY, USECS_PER_DAY));
-
-      PRBool todayIsMissing = PR_FALSE;
-      PRUint32 childCount;
-      rv = mRootNode->GetChildCount(&childCount);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCAutoString todayLabel;
-      history->GetStringFromName(
-        NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), todayLabel);
-
-      if (!childCount) {
-        todayIsMissing = PR_TRUE;
-      } else {
-        nsCOMPtr<nsINavHistoryResultNode> firstChild;
-        rv = mRootNode->GetChild(0, getter_AddRefs(firstChild));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCAutoString title;
-        rv = firstChild->GetTitle( title);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (todayLabel.Equals(title)) {
-          siteRoot = static_cast<nsNavHistoryResultNode *>(firstChild.get());
-        } else {
-          todayIsMissing = PR_TRUE;
-        }
-      }
-
-      if (todayIsMissing) { // Add "Today"
-        nsCAutoString queryUri;
-        queryUri = nsPrintfCString(255,
-          "place:type=%ld&sort=%ld%s",
-          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY
-            ?nsINavHistoryQueryOptions::RESULTS_AS_URI
-            :nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY,
-          nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
-          dateRange.get());
-
-        nsRefPtr<nsNavHistoryQueryResultNode> todayNode;
-        todayNode = new nsNavHistoryQueryResultNode(todayLabel, 
-                                                    EmptyCString(), queryUri);
-        rv = mRootNode->InsertChildAt( todayNode, 0);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // "Today" was missing or we had day query
-      if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY || 
-          todayIsMissing)
-        return NS_OK; // No more processing necessary
-    }
-
-    if (siteRoot->IsQuery() && siteRoot->GetAsQuery()->mContentsValid &&
-         (resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
-          resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY)) {
-      nsCAutoString host;
-      rv = aURI->GetAsciiHost(host);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCAutoString queryUri;
-      queryUri = nsPrintfCString(255,
-        "place:type=%ld&sort=%ld&domain=%s&domainIsHost=true%s",
-        nsINavHistoryQueryOptions::RESULTS_AS_URI,
-        nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
-        host.get(),
-        dateRange.get());
-
-      nsRefPtr<nsNavHistoryQueryResultNode> siteNode;
-      siteNode = new nsNavHistoryQueryResultNode(host, EmptyCString(), queryUri);
-      rv = siteRoot->GetAsContainer()->InsertSortedChild(
-               siteNode, PR_FALSE, PR_TRUE/*Ignore duplicates*/);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+        resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
+        resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY)
+      mRootNode->GetAsQuery()->Refresh();
   }
 
   return NS_OK;
