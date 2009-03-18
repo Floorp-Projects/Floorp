@@ -903,10 +903,12 @@ void
 nsCertOverrideService::GetHostWithPort(const nsACString & aHostName, PRInt32 aPort, nsACString& _retval)
 {
   nsCAutoString hostPort(aHostName);
-  if (aPort == -1)
+  if (aPort == -1) {
     aPort = 443;
-  hostPort.AppendLiteral(":");
-  hostPort.AppendInt(aPort);
-  
+  }
+  if (!hostPort.IsEmpty()) {
+    hostPort.AppendLiteral(":");
+    hostPort.AppendInt(aPort);
+  }
   _retval.Assign(hostPort);
 }
