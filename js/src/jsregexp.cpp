@@ -2024,7 +2024,7 @@ LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags,
             RESideExit* exit = (RESideExit*)fragment->lastIns->record()->exit;
             if (exit->re_flags == re_flags && 
                 exit->re_length == re_length &&
-                !memcmp(exit->re_chars, re_chars, re_length)) {
+                !memcmp(exit->re_chars, re_chars, re_length * sizeof(jschar))) {
                 return fragment;
             }
         }
