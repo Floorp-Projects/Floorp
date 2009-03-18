@@ -550,6 +550,13 @@ WeaveSvc.prototype = {
       if (Svc.Version.compare(MIN_SERVER_STORAGE_VERSION, remoteVersion) > 0)
         this._log.info("Server storage version no longer supported, server wipe needed");
 
+      if (!this._keyGenEnabled) {
+        this._log.info("...and key generation is disabled.  Not wiping. " +
+                       "Aborting sync.");
+        this._mostRecentError = "Weave needs updating on your desktop browser.";
+        self.done(false);
+        return;
+      }
       reset = true;
       this._log.info("Wiping server data");
       yield this._freshStart.async(this, self.cb);
