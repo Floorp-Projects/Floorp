@@ -140,14 +140,15 @@ CanvasBrowser.prototype = {
 
     let clearRegion = false;
     let drawls = [];
-    let outX = {}; let outY = {}; let outW = {}; let outH = {};
-    let numRects = rgn.numRects;
     let updateBounds = null;
     let pixelsInRegion = 0;
-    for (let i = 0; i < numRects; i++) {
-      rgn.getRect(i, outX, outY, outW, outH);
-      let rect = new wsRect(outX.value, outY.value,
-                            outW.value, outH.value);
+    let inRects = rgn.getRects();
+    if (!inRects)
+      return;
+
+    for (let i = 0; i < inRects.length; i+=4) {
+      let rect = new wsRect(inRects[i], inRects[i+1],
+                            inRects[i+2], inRects[i+3]);
       if (viewingBoundsOnly) {
         //only draw the visible area
         rect = rect.intersect(this._visibleBounds);
@@ -349,19 +350,18 @@ CanvasBrowser.prototype = {
     rgn.setToRect(0, 0, cWidth, cHeight);
     rgn.subtractRect(dx, dy, cWidth, cHeight);
 
-    let outX = {}; let outY = {}; let outW = {}; let outH = {};
-    let rectCount = rgn.numRects;
-    let rectsToDraw = [];
-    for (let i = 0; i < rectCount; i++) {
-      rgn.getRect(i, outX, outY, outW, outH);
-      rectsToDraw.push(new wsRect(this._pageBounds.x + this._screenToPage(outX.value),
-                                  this._pageBounds.y + this._screenToPage(outY.value),
-                                  this._screenToPage(outW.value),
-                                  this._screenToPage(outH.value)));
-    }
+    let rects = rgn.getRects();
+    if (!rects)
+      return;
 
-    if (rectsToDraw.length > 0)
-      this._redrawRects(rectsToDraw);
+    let rectsToDraw = [];
+    for (let i = 0; i < rects.length; i+=4) {
+      rectsToDraw.push(new wsRect(this._pageBounds.x + this._screenToPage(rects[i]),
+                                  this._pageBounds.y + this._screenToPage(rects[i+1]),
+                                  this._screenToPage(rects[i+2]),
+                                  this._screenToPage(rects[i+3])));
+    }
+    this._redrawRects(rectsToDraw);
   },
 
   _handleMozAfterPaint: function(aEvent) {
