@@ -3,14 +3,14 @@
      http://creativecommons.org/licenses/publicdomain/
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:svg="http://www.w3.org/2000/svg">
+      xmlns:svg="http://www.w3.org/2000/svg" reftest-zoom="2">
 <body style="margin:0">
-  <div style="background:lime; width:200px; height:200px; margin:50px; filter:url(#f1)"/>
+  <div style="background:lime; width:100px; height:100px; margin:25px; filter:url(#f1)"/>
   <svg:svg height="0">
     <svg:filter id="f1">
       <svg:feFlood flood-color="black" result="black"/>
       <svg:feComposite in="SourceAlpha" operator="in"/>
-      <svg:feOffset dx="10" dy="10"/>
+      <svg:feOffset dx="5" dy="5"/>
       <svg:feComposite in="SourceGraphic"/>
     </svg:filter>
   </svg:svg>
