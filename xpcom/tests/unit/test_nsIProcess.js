@@ -69,23 +69,27 @@ function test_kill()
                           .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
   
+  do_check_false(process.isRunning);
+
+  try {
+    process.kill();
+    do_throw("Attempting to kill a not-running process should throw");
+  }
+  catch (e) { }
+
   process.run(false, [], 0);
 
-  var rv = process.isRunning;
-
-  if (!rv) {    
-    return false;
-  }
+  do_check_true(process.isRunning);
 
   process.kill();
 
-  rv = process.isRunning;
+  do_check_false(process.isRunning);
 
-  if (rv){
-    return false;
+  try {
+    process.kill();
+    do_throw("Attempting to kill a not-running process should throw");
   }
-  return true;
-
+  catch (e) { }
 }
 
 // test if we can get an exit value from an application that is
@@ -95,20 +99,17 @@ function test_quick()
   var testapp = filePrefix + "TestQuickReturn" + fileSuffix;
   
   var file = Components.classes["@mozilla.org/file/local;1"]
-  .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsILocalFile);
   file.initWithPath(testapp);
   
   var process = Components.classes["@mozilla.org/process/util;1"]
-  .createInstance(Components.interfaces.nsIProcess);
+                          .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
   
   // to get an exit value it must be a blocking process
   process.run(true, [], 0);
-  
-  if (process.exitValue != 42) {
-    return false;
-  }
-  return true;
+
+  do_check_eq(process.exitValue, 42);
 }
 
 // test if an argument can be successfully passed to an application
@@ -118,25 +119,23 @@ function test_arguments()
   var testapp = filePrefix + "TestArguments" + fileSuffix;
   
   var file = Components.classes["@mozilla.org/file/local;1"]
-  .createInstance(Components.interfaces.nsILocalFile);
+                       .createInstance(Components.interfaces.nsILocalFile);
   file.initWithPath(testapp);
   
   var process = Components.classes["@mozilla.org/process/util;1"]
-  .createInstance(Components.interfaces.nsIProcess);
+                          .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
   
   var args= ["mozilla"];
   
   process.run(true, args, args.length);
   
-  if (process.exitValue) {
-    return false;
-  }
-  return true;
+  // exit codes actually seem to be unsigned bytes...
+  do_check_neq(process.exitValue, 255);
 }
 
 function run_test() {
-  do_check_true(test_kill());
-  do_check_true(test_quick());
-  do_check_true(test_arguments());
+  test_kill();
+  test_quick();
+  test_arguments();
 }
