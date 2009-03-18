@@ -50,6 +50,7 @@
 #include "prproces.h"
 #if defined(PROCESSMODEL_WINAPI) 
 #include <windows.h>
+#include <shellapi.h>
 #endif
 
 #define NS_PROCESS_CID \
@@ -73,7 +74,8 @@ private:
   nsCString mTargetPath;
 
 #if defined(PROCESSMODEL_WINAPI) 
-  PROCESS_INFORMATION procInfo;
+  typedef DWORD (WINAPI*GetProcessIdPtr)(HANDLE process);
+  HANDLE mProcess;
 #else
   PRProcess *mProcess;
 #endif
