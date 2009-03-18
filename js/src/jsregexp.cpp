@@ -2349,7 +2349,7 @@ class RegExpNativeCompiler {
     {
         LIns* skip = lirBufWriter->skip(sizeof(GuardRecord) + 
                                         sizeof(RESideExit) + 
-                                        re_length - sizeof(jschar));
+                                        (re_length-1) * sizeof(jschar));
         GuardRecord* guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
         RESideExit* exit = (RESideExit*)(guard+1);
@@ -2357,7 +2357,7 @@ class RegExpNativeCompiler {
         guard->exit->target = fragment;
         exit->re_flags = re->flags;
         exit->re_length = re_length;
-        memcpy(exit->re_chars, re_chars, re_length);
+        memcpy(exit->re_chars, re_chars, re_length * sizeof(jschar));
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
         return guard;
     }
