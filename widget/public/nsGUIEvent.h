@@ -54,6 +54,7 @@
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsTraceRefcnt.h"
+#include "nsITransferable.h"
 
 class nsIRenderingContext;
 class nsIRegion;
@@ -362,6 +363,11 @@ class nsHashKey;
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
 #define NS_QUERY_EDITOR_RECT             (NS_QUERY_CONTENT_EVENT_START + 5)
+// Query for the current state of the content. The particular members of
+// mReply that are set for each query content event will be valid on success.
+#define NS_QUERY_CONTENT_STATE           (NS_QUERY_CONTENT_EVENT_START + 6)
+// Query for the selection in the form of a nsITransferable.
+#define NS_QUERY_SELECTION_AS_TRANSFERABLE (NS_QUERY_CONTENT_EVENT_START + 7)
 
 // Video events
 #ifdef MOZ_MEDIA
@@ -1012,6 +1018,9 @@ public:
     // The return widget has the caret. This is set at all query events.
     nsIWidget* mFocusedWidget;
     PRPackedBool mReversed; // true if selection is reversed (end < start)
+    PRPackedBool mHasSelection; // true if the selection exists
+    // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
+    nsCOMPtr<nsITransferable> mTransferable;
   } mReply;
 };
 
