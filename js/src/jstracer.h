@@ -412,8 +412,6 @@ class TraceRecorder : public avmplus::GCObject {
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
     JSTraceableNative*      pendingTraceableNative;
-    jsval                   pendingBoxedValue;
-    nanojit::LIns*          pendingBoxedIns;
     bool                    terminate;
     jsbytecode*             terminate_pc;
     jsbytecode*             terminate_imacpc;
@@ -433,8 +431,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
 
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
+    JS_REQUIRES_STACK nanojit::LIns* guard(bool expected, nanojit::LIns* cond,
+                                           ExitType exitType);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
@@ -528,7 +527,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool getThis(nanojit::LIns*& this_ins);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
-    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, nanojit::LIns* exit);
+    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
                                       nanojit::LIns* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
