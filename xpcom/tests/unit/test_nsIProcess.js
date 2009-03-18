@@ -134,8 +134,43 @@ function test_arguments()
   do_check_neq(process.exitValue, 255);
 }
 
+var gProcess;
+
+// test if we can get an exit value from an application that is
+// run non-blocking
+function test_nonblocking()
+{
+  var testapp = filePrefix + "TestQuickReturn" + fileSuffix;
+  
+  var file = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(Components.interfaces.nsILocalFile);
+  file.initWithPath(testapp);
+  
+  gProcess = Components.classes["@mozilla.org/process/util;1"]
+                       .createInstance(Components.interfaces.nsIProcess);
+  gProcess.init(file);
+
+  gProcess.run(false, [], 0);
+
+  do_test_pending();
+  do_timeout(100, "check_nonblocking()");
+}
+
+function check_nonblocking()
+{
+  if (gProcess.isRunning) {
+    do_timeout(100, "check_nonblocking()");
+    return;
+  }
+
+  do_check_eq(gProcess.exitValue, 42);
+  do_test_finished();
+}
+
 function run_test() {
   test_kill();
   test_quick();
   test_arguments();
+  if (isWindows)
+    test_nonblocking();
 }
