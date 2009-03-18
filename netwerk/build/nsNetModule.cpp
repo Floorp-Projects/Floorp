@@ -281,7 +281,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleNestedURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIDNService, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
 #include "nsNotifyAddrListener.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNotifyAddrListener, Init)
 #elif defined(MOZ_WIDGET_COCOA)
@@ -1135,7 +1135,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 #endif
 
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     { NS_NETWORK_LINK_SERVICE_CLASSNAME,
       NS_NETWORK_LINK_SERVICE_CID,
       NS_NETWORK_LINK_SERVICE_CONTRACTID,

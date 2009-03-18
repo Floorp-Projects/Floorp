@@ -19,7 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
  *   Steve Meredith <smeredith@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,36 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsNativeConnectionHelper.h"
-#ifdef WINCE
-#include "nsAutodialWinCE.h"
-#else
-#include "nsAutodialWin.h"
+#ifndef nsAutodialWin_h__
+#define nsAutodialWin_h__
+
+#include "nspr.h"
+#include "nscore.h"
+
+#include <windows.h>
+
+
+class nsRASAutodial
+{
+public:
+  
+    // ctor
+    nsRASAutodial();
+
+    // dtor
+    virtual ~nsRASAutodial();
+
+    // Get the autodial info from the OS and init this obj with it. Call it any
+    // time to refresh the object's settings from the OS.
+    nsresult Init();
+
+    // Dial the default RAS dialup connection.
+    nsresult DialDefault(const PRUnichar* hostName);
+
+    // Should we try to dial on network error?
+    PRBool ShouldDialOnNetworkError();
+};
+
+
 #endif
-#include "nsIOService.h"
-
-//-----------------------------------------------------------------------------
-// API typically invoked on the socket transport thread
-//-----------------------------------------------------------------------------
-
-PRBool
-nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
-{
-    if (gIOService->IsLinkUp())
-        return PR_FALSE;
-
-    nsRASAutodial autodial;
-
-    if (autodial.ShouldDialOnNetworkError()) 
-        return NS_SUCCEEDED(autodial.DialDefault(hostName));
-    else
-        return PR_FALSE;
-}
-
-PRBool
-nsNativeConnectionHelper::IsAutodialEnabled()
-{
-    nsRASAutodial autodial;
-
-    return autodial.Init() == NS_OK && autodial.ShouldDialOnNetworkError();
-}
