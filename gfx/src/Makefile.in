@@ -55,6 +55,8 @@ REQUIRES	= xpcom \
 		  view \
 		  unicharutil \
 		  thebes \
+		  js \
+		  xpconnect \
 		  $(NULL)
 
 DIRS        = shared thebes
