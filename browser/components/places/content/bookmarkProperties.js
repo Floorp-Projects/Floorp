@@ -87,6 +87,7 @@
  *     - "feedLocation"
  *     - "siteLocation"
  *     - "folderPicker" - hides both the tree and the menu.
+ *   @ readOnly (Boolean) - optional, states if the panel should be read-only
  *
  * window.arguments[0].performed is set to true if any transaction has
  * been performed by the dialog.
@@ -127,6 +128,7 @@ var BookmarkPropertiesPanel = {
   _defaultInsertionPoint: null,
   _hiddenRows: [],
   _batching: false,
+  _readOnly: false,
 
   /**
    * This method returns the correct label for the dialog's "accept"
@@ -263,6 +265,7 @@ var BookmarkPropertiesPanel = {
       this._title = PlacesUtils.bookmarks.getItemTitle(this._itemId);
       // Don't show folderPicker when editing
       this._hiddenRows.push("folderPicker");
+      this._readOnly = !!dialogInfo.readOnly;
 
       switch (dialogInfo.type) {
         case "bookmark":
@@ -333,6 +336,7 @@ var BookmarkPropertiesPanel = {
     switch (this._action) {
       case ACTION_EDIT:
         this._fillEditProperties();
+        acceptButton.disabled = this._readOnly;
         break;
       case ACTION_ADD:
         this._fillAddProperties();
@@ -358,21 +362,23 @@ var BookmarkPropertiesPanel = {
           .addEventListener("DOMAttrModified", this, false);
     }
 
-    // Listen on uri fields to enable accept button if input is valid
-    if (this._itemType == BOOKMARK_ITEM) {
-      this._element("locationField")
-          .addEventListener("input", this, false);
-    }
-    else if (this._itemType == LIVEMARK_CONTAINER) {
-      this._element("feedLocationField")
-          .addEventListener("input", this, false);
-      this._element("siteLocationField")
-          .addEventListener("input", this, false);
-    }
+    if (!this._readOnly) {
+      // Listen on uri fields to enable accept button if input is valid
+      if (this._itemType == BOOKMARK_ITEM) {
+        this._element("locationField")
+            .addEventListener("input", this, false);
+      }
+      else if (this._itemType == LIVEMARK_CONTAINER) {
+        this._element("feedLocationField")
+            .addEventListener("input", this, false);
+        this._element("siteLocationField")
+            .addEventListener("input", this, false);
+      }
 
-    // Set on document to get the event before an autocomplete popup could
-    // be hidden on Enter.
-    document.addEventListener("keypress", this, true);
+      // Set on document to get the event before an autocomplete popup could
+      // be hidden on Enter.
+      document.addEventListener("keypress", this, true);
+    }
 
     window.sizeToContent();
   },
@@ -464,7 +470,8 @@ var BookmarkPropertiesPanel = {
 
   _fillEditProperties: function BPP__fillEditProperties() {
     gEditItemOverlay.initPanel(this._itemId,
-                               { hiddenRows: this._hiddenRows });
+                               { hiddenRows: this._hiddenRows,
+                                 forceReadOnly: this._readOnly });
   },
 
   _fillAddProperties: function BPP__fillAddProperties() {

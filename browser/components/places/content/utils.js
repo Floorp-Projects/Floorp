@@ -661,13 +661,16 @@ var PlacesUIUtils = {
    *        item identifier for which the properties are to be shown
    * @param aType
    *        item type, either "bookmark" or "folder"
+   * @param [optional] aReadOnly
+   *        states if properties dialog should be readonly
    * @return true if any transaction has been performed.
    */
-  showItemProperties: function PU_showItemProperties(aItemId, aType) {
+  showItemProperties: function PU_showItemProperties(aItemId, aType, aReadOnly) {
     var info = {
       action: "edit",
       type: aType,
-      itemId: aItemId
+      itemId: aItemId,
+      readOnly: aReadOnly
     };
     return this._showBookmarkDialog(info);
   },
