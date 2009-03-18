@@ -194,7 +194,16 @@ NS_IMPL_ISUPPORTS2(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver, ns
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  nsresult rv = NS_OK;
+  // Don't continue to load if the request failed or has been canceled.
+  nsresult rv;
+  nsresult status;
+  rv = aRequest->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(status)) {
+    if (mElement)
+      mElement->NotifyLoadError();
+    return status;
+  }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel &&
