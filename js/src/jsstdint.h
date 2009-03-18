@@ -37,63 +37,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This header provides definitions for the <stdint.h> types we use,
-   even on systems that lack <stdint.h>.  */
+/*
+ * This header provides definitions for the <stdint.h> types we use,
+ * even on systems that lack <stdint.h>.
+ * 
+ * NOTE: This header should only be included in private SpiderMonkey
+ * code; public headers should use only the JS{Int,Uint}N types; see
+ * the comment for them in "jsinttypes.h".
+ *
+ * At the moment, these types are not widely used within SpiderMonkey;
+ * this file is meant to make existing uses portable, and to allow us
+ * to transition portably to using them more, if desired.
+ */
 
 #ifndef jsstdint_h___
 #define jsstdint_h___
 
-#include "js-config.h"
+#include "jsinttypes.h"
 
-/* If we have a working stdint.h, use it.  */
-#if defined(JS_HAVE_STDINT_H)
-#include <stdint.h>
+/* If we have a working stdint.h, then jsinttypes.h has already
+   defined the standard integer types.  Otherwise, define the standard
+   names in terms of the 'JS' types.  */
+#if ! defined(JS_HAVE_STDINT_H)
 
-/* If the configure script was able to find appropriate types for us,
-   use those.  */
-#elif defined(JS_INT8_TYPE)
+typedef JSInt8  int8_t;
+typedef JSInt16 int16_t;
+typedef JSInt32 int32_t;
+typedef JSInt64 int64_t;
 
-typedef signed   JS_INT8_TYPE   int8_t;
-typedef signed   JS_INT16_TYPE  int16_t;
-typedef signed   JS_INT32_TYPE  int32_t;
-typedef signed   JS_INT64_TYPE  int64_t;
-typedef signed   JS_INTPTR_TYPE intptr_t;
+typedef JSUint8  uint8_t;
+typedef JSUint16 uint16_t;
+typedef JSUint32 uint32_t;
+typedef JSUint64 uint64_t;
 
-typedef unsigned JS_INT8_TYPE   uint8_t;
-typedef unsigned JS_INT16_TYPE  uint16_t;
-typedef unsigned JS_INT32_TYPE  uint32_t;
-typedef unsigned JS_INT64_TYPE  uint64_t;
-typedef unsigned JS_INTPTR_TYPE uintptr_t;
-
-#else
-
-/* Microsoft Visual C/C++ has built-in __intN types.  */
-#if defined(JS_HAVE___INTN)
-
-typedef __int8 int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-
-#else
-#error "couldn't find exact-width integer types"
-#endif
-
-/* Microsoft Visual C/C++ defines intptr_t and uintptr_t in <stddef.h>.  */
-#if defined(JS_STDDEF_H_HAS_INTPTR_T)
-#include <stddef.h>
-
-/* Windows Mobile defines intptr_t and uintptr_t in <crtdefs.h>.  Why not?  */
-#elif defined(JS_CRTDEFS_H_HAS_INTPTR_T)
-#include <crtdefs.h>
-
-#else
-#error "couldn't find definitions for intptr_t, uintptr_t"
+/* If JS_STDDEF_H_HAS_INTPTR_T or JS_CRTDEFS_H_HAS_INTPTR_T are
+   defined, then jsinttypes.h included the given header, which
+   introduced definitions for intptr_t and uintptr_t.  Otherwise,
+   define the standard names in terms of the 'JS' types.  */
+#if !defined(JS_STDDEF_H_HAS_INTPTR_T) && !defined(JS_CRTDEFS_H_HAS_INTPTR_T)
+typedef JSIntPtr  intptr_t;
+typedef JSUintPtr uintptr_t;
 #endif
 
 #endif /* JS_HAVE_STDINT_H */

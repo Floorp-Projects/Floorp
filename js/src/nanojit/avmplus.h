@@ -45,6 +45,7 @@
 #endif
 
 #include "jstypes.h"
+#include "jsstdint.h"
 
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
 #ifdef IS_BIG_ENDIAN
