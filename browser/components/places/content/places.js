@@ -667,23 +667,27 @@ var PlacesOrganizer = {
 
     if (aSelectedNode && !PlacesUtils.nodeIsSeparator(aSelectedNode)) {
       detailsDeck.selectedIndex = 1;
-      // Using the concrete itemId is arguably wrong. The bookmarks API
+      // Using the concrete itemId is arguably wrong.  The bookmarks API
       // does allow setting properties for folder shortcuts as well, but since
       // the UI does not distinct between the couple, we better just show
-      // the concrete item properties.
-      if (aSelectedNode.type ==
-          Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-        gEditItemOverlay.initPanel(asQuery(aSelectedNode).folderItemId,
-                                  { hiddenRows: ["folderPicker"],
-                                    forceReadOnly: true });
+      // the concrete item properties for shortcuts to root nodes.
+      var concreteId = PlacesUtils.getConcreteItemId(aSelectedNode);
+      var isRootItem = concreteId != -1 && PlacesUtils.isRootItem(concreteId);
+      var readOnly = isRootItem ||
+                     aSelectedNode.parent.itemId == PlacesUIUtils.leftPaneFolderId;
+      var useConcreteId = isRootItem ||
+                          PlacesUtils.nodeIsTagQuery(aSelectedNode);
+      var itemId = -1;
+      if (concreteId != -1 && useConcreteId)
+        itemId = concreteId;
+      else if (aSelectedNode.itemId != -1)
+        itemId = aSelectedNode.itemId;
+      else
+        itemId = PlacesUtils._uri(aSelectedNode.uri);
 
-      }
-      else {
-        var itemId = PlacesUtils.getConcreteItemId(aSelectedNode);
-        gEditItemOverlay.initPanel(itemId != -1 ? itemId :
-                                   PlacesUtils._uri(aSelectedNode.uri),
-                                   { hiddenRows: ["folderPicker"] });
-      }
+      gEditItemOverlay.initPanel(itemId, { hiddenRows: ["folderPicker"],
+                                           forceReadOnly: readOnly });
+
       this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else if (!aSelectedNode && aNodeList[0]) {
