@@ -22,7 +22,7 @@ interface nsIProcess : nsISupports
 	readonly attribute string processName;
 	readonly attribute unsigned long processSignature;
 	readonly attribute long exitValue;
-	readonly attribute unsigned long isRunning;
+	readonly attribute boolean isRunning;
 };
 
 %{C++

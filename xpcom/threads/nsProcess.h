@@ -71,10 +71,11 @@ private:
   nsCOMPtr<nsIFile> mExecutable;
   PRInt32 mExitValue;
   nsCString mTargetPath;
-  PRProcess *mProcess;
 
 #if defined(PROCESSMODEL_WINAPI) 
   PROCESS_INFORMATION procInfo;
+#else
+  PRProcess *mProcess;
 #endif
 };
 
