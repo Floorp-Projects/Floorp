@@ -73,11 +73,12 @@ NS_IMPL_ISUPPORTS1(nsProcess, nsIProcess)
 
 //Constructor
 nsProcess::nsProcess()
-    : mExitValue(-1),
-      mProcess(nsnull)
+    : mExitValue(-1)
 {
 #if defined(PROCESSMODEL_WINAPI)
     procInfo.dwProcessId = nsnull;
+#else
+    mProcess = nsnull;
 #endif
 }
 
@@ -357,24 +358,31 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsProcess::GetIsRunning(PRUint32 *aIsRunning)
+NS_IMETHODIMP nsProcess::GetIsRunning(PRBool *aIsRunning)
 {
 #if defined(PROCESSMODEL_WINAPI)
-    DWORD ec = 0;
-    BOOL br = GetExitCodeProcess(procInfo.hProcess, &ec);
-    if (!br) {
-        aIsRunning = 0;
+    if (!procInfo.dwProcessId) {
+        *aIsRunning = PR_FALSE;
         return NS_OK;
     }
-    *aIsRunning = (ec == STILL_ACTIVE ? 1 : 0); 
+    DWORD ec = 0;
+    BOOL br = GetExitCodeProcess(procInfo.hProcess, &ec);
+    if (!br)
+        return NS_ERROR_FAILURE;
+    *aIsRunning = (ec == STILL_ACTIVE ? PR_TRUE : PR_FALSE); 
     return NS_OK;
 #elif defined WINCE
     return NS_ERROR_NOT_IMPLEMENTED;   
 #else
+    if (!mProcess) {
+        *aIsRunning = PR_FALSE;
+        return NS_OK;
+    }
     PRUint32 pid;
-    GetPid(&pid);
+    nsresult rv = GetPid(&pid);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (pid)
-        *aIsRunning = (kill(pid, 0) != -1) ? 1 : 0;
+        *aIsRunning = (kill(pid, 0) != -1) ? PR_TRUE : PR_FALSE;
     return NS_OK;        
 #endif
 }
@@ -401,10 +409,9 @@ nsProcess::GetPid(PRUint32 *aPid)
 #elif defined WINCE
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
-    if (!mProcess) {
-        *aPid = 0;
+    if (!mProcess)
         return NS_ERROR_FAILURE;
-    }
+
     struct MYProcess {
         PRUint32 pid;
     };
@@ -429,22 +436,26 @@ nsProcess::GetProcessSignature(PRUint32 *aProcessSignature)
 NS_IMETHODIMP
 nsProcess::Kill()
 {
-    nsresult rv = NS_OK;
 #if defined(PROCESSMODEL_WINAPI)
-    if ( TerminateProcess(procInfo.hProcess, NULL) == 0 ) {
-        rv = NS_ERROR_FAILURE;
-    }
-    else {
-        CloseHandle( procInfo.hProcess );
-        procInfo.dwProcessId = nsnull;
-    }
+    if (!procInfo.dwProcessId)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if ( TerminateProcess(procInfo.hProcess, NULL) == 0 )
+        return NS_ERROR_FAILURE;
+
+    CloseHandle( procInfo.hProcess );
+    CloseHandle( procInfo.hThread );
+    procInfo.dwProcessId = nsnull;
 #else
-    if (mProcess)
-        rv = PR_KillProcess(mProcess) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
-    if (rv == NS_OK)
-        mProcess = nsnull;
+    if (!mProcess)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (PR_KillProcess(mProcess) != PR_SUCCESS)
+        return NS_ERROR_FAILURE;
+
+    mProcess = nsnull;
 #endif  
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
