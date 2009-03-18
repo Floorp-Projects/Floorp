@@ -57,6 +57,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsprf.h"
 #include "prmjtime.h"
 #include "jsutil.h" /* Added by JSIFY */
