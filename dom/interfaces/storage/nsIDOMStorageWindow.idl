@@ -46,9 +46,10 @@
  */
 
 interface nsIDOMStorage;
+interface nsIDOMStorage2;
 interface nsIDOMStorageList;
 
-[scriptable, uuid(55E9C181-2476-47CF-97F8-EFDAAF7B6F7A)]
+[scriptable, uuid(B4F572FB-9BA5-480b-9361-C230863323E4)]
 interface nsIDOMStorageWindow : nsISupports
 {
   /**
@@ -60,4 +61,9 @@ interface nsIDOMStorageWindow : nsISupports
    * Global storage, accessible by domain.
    */
   readonly attribute nsIDOMStorageList globalStorage;
+
+  /**
+   * Local storage for the current browsing context.
+   */
+  readonly attribute nsIDOMStorage2 localStorage;
 };
