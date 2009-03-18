@@ -105,7 +105,7 @@
 <!ENTITY fennecOpenPrefsButton.label "Details...">
 <!ENTITY fennecPrefsHeader.title "Sync Data with Weave...">
 <!ENTITY fennecPrefsHeader.description "Weave Status Goes Here...">
-<!ENTITY fennecPrefsHeder.status.label "Weave Status: ">
+<!ENTITY fennecPrefsHeader.status.label "Weave Status: ">
 <!ENTITY fennecPrefs.notImplemented.label "Not yet implemented">
 <!ENTITY fennecPrefs.debug.label "Debug only.">
 <!ENTITY fennecPrefs.turnWeaveOff.label "Turn Weave Off">
