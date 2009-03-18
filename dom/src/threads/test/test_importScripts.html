@@ -26,6 +26,7 @@ Tests of DOM Worker Threads (Bug 437152)
         worker.postMessage("stop");
         break;
       case "stopped":
+        ok(true, "worker correctly stopped");
         SimpleTest.finish();
         break;
       default:
@@ -47,4 +48,3 @@ Tests of DOM Worker Threads (Bug 437152)
 </pre>
 </body>
 </html>
-
