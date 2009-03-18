@@ -38,9 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScriptableRegion.h"
+#include "nsIRegion.h"
 #include "nsCOMPtr.h"
 
-nsScriptableRegion::nsScriptableRegion(nsIRegion* region) : mRegion(nsnull), mRectSet(nsnull)
+nsScriptableRegion::nsScriptableRegion(nsIRegion* region) : mRegion(nsnull)
 {
 	mRegion = region;
 	NS_IF_ADDREF(mRegion);
@@ -48,10 +49,7 @@ nsScriptableRegion::nsScriptableRegion(nsIRegion* region) : mRegion(nsnull), mRe
 
 nsScriptableRegion::~nsScriptableRegion()
 {
-  if (mRegion) {
-    mRegion->FreeRects(mRectSet);
-    NS_RELEASE(mRegion);
-  }
+	NS_IF_RELEASE(mRegion);
 }
 
 NS_IMPL_ISUPPORTS1(nsScriptableRegion, nsIScriptableRegion)
@@ -150,21 +148,4 @@ NS_IMETHODIMP nsScriptableRegion::GetRegion(nsIRegion** outRgn)
   *outRgn = mRegion;
   NS_IF_ADDREF(*outRgn);
   return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptableRegion::GetRect(PRUint32 aIndex, PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight) {
-  // nsIRegion reuses the GetRects parameter between calls
-  nsresult rv = mRegion->GetRects(&mRectSet);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(aIndex < mRectSet->mNumRects, NS_ERROR_INVALID_ARG);
-  nsRegionRect &rect = mRectSet->mRects[aIndex];
-  *aX = rect.x;
-  *aY = rect.y;
-  *aWidth = rect.width;
-  *aHeight = rect.height;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptableRegion::GetNumRects(PRUint32 *aLength) {
-  return mRegion->GetNumRects(aLength);
 }

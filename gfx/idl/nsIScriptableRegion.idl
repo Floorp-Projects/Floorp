@@ -46,7 +46,7 @@ class nsIRegion;
 [ptr] native nsIRegion(nsIRegion);
 
 
-[scriptable, uuid(dbd0e356-09f5-40b1-99a7-5629c1a45f06)]
+[scriptable, uuid(82d8f400-5bde-11d3-b033-b27a62766bbc)]
 interface nsIScriptableRegion : nsISupports
 {
   void init ( ) ;
@@ -196,24 +196,6 @@ interface nsIScriptableRegion : nsISupports
   **/
 
   boolean containsRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
-
-  /**
-  * returns a rectangle within the region
-  *
-  * @param      aIndex index of the rect to retrieve
-  * @param      aX out parameter for xoffset of bounding rect for region
-  * @param      aY out parameter for yoffset of bounding rect for region
-  * @param      aWidth out parameter for width of bounding rect for region
-  * @param      aHeight out parameter for height of bounding rect for region
-  * @return     void
-  *
-  **/
-  void getRect ( in unsigned long aIndex, out long aX, out long aY, out long aWidth, out long aHeight ) ;
-
-  /**
-   * The number of rectangles that can be retrieved via getRect
-   */
-  readonly attribute unsigned long numRects;
   
   [noscript] readonly attribute nsIRegion region;
   
