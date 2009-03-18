@@ -65,6 +65,11 @@
 #include <signal.h>
 #endif
 
+#ifdef WINCE
+#include <windows.h> // for MultiByteToWideChar
+#include "prmem.h"
+#endif
+
 //-------------------------------------------------------------------//
 // nsIProcess implementation
 //-------------------------------------------------------------------//
