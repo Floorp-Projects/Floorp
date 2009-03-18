@@ -213,7 +213,7 @@ nsIMEStateManager::IsActive(nsPresContext* aPresContext)
   }
 
   nsIPresShell* shell = aPresContext->GetPresShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(shell, PR_FALSE);
   nsIViewManager* vm = shell->GetViewManager();
   NS_ENSURE_TRUE(vm, PR_FALSE);
   nsCOMPtr<nsIViewObserver> observer;
