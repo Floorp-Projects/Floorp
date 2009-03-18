@@ -460,11 +460,12 @@ members = [
 
     # dom/public/idl/storage
     'nsIDOMToString.toString',
-    'nsIDOMStorage.setItem',
-    'nsIDOMStorage.length',
-    'nsIDOMStorage.getItem',
-    'nsIDOMStorage.key',
-    'nsIDOMStorage.removeItem',
+    'nsIDOMStorage2.setItem',
+    'nsIDOMStorage2.length',
+    'nsIDOMStorage2.getItem',
+    'nsIDOMStorage2.key',
+    'nsIDOMStorage2.removeItem',
+    'nsIDOMStorage2.clear',
     'nsIDOMStorageItem.value',
     'nsIDOMStorageWindow.sessionStorage',
     'nsIDOMStorageWindow.globalStorage',

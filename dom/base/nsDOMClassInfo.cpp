@@ -1210,6 +1210,15 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::WANT_DELPROPERTY |
                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
+
+  NS_DEFINE_CLASSINFO_DATA(Storage2, nsStorage2SH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_NEWRESOLVE |
+                           nsIXPCScriptable::WANT_GETPROPERTY |
+                           nsIXPCScriptable::WANT_SETPROPERTY |
+                           nsIXPCScriptable::WANT_DELPROPERTY |
+                           nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
+                           nsIXPCScriptable::WANT_NEWENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(StorageList, nsStorageListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
@@ -3430,6 +3439,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Storage2, nsIDOMStorage2)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage2)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(StorageList, nsIDOMStorageList)
@@ -10494,6 +10507,208 @@ nsStorageSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
+
+// Storage2SH
+
+// One reason we need a newResolve hook is that in order for
+// enumeration of storage object keys to work the keys we're
+// enumerating need to exist on the storage object for the JS engine
+// to find them.
+
+NS_IMETHODIMP
+nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, PRUint32 flags,
+                         JSObject **objp, PRBool *_retval)
+{
+  JSObject *realObj;
+  wrapper->GetJSObject(&realObj);
+
+  // First check to see if the property is defined on our prototype,
+  // after converting id to a string if it's an integer.
+
+  JSString *jsstr = JS_ValueToString(cx, id);
+  if (!jsstr) {
+    return JS_FALSE;
+  }
+
+  JSObject *proto = ::JS_GetPrototype(cx, realObj);
+  JSBool hasProp;
+
+  if (proto &&
+      (::JS_HasUCProperty(cx, proto, ::JS_GetStringChars(jsstr),
+                          ::JS_GetStringLength(jsstr), &hasProp) &&
+       hasProp)) {
+    // We found the property we're resolving on the prototype,
+    // nothing left to do here then.
+
+    return NS_OK;
+  }
+
+  // We're resolving property that doesn't exist on the prototype,
+  // check if the key exists in the storage object.
+
+  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+
+  // GetItem() will return null if the caller can't access the session
+  // storage item.
+  nsAutoString data;
+  nsresult rv = storage->GetItem(nsDependentJSString(jsstr), data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!DOMStringIsNull(data)) {
+    if (!::JS_DefineUCProperty(cx, realObj, ::JS_GetStringChars(jsstr),
+                               ::JS_GetStringLength(jsstr), JSVAL_VOID, nsnull,
+                               nsnull, 0)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *objp = realObj;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStorage2SH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
+{
+  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+
+  nsAutoString val;
+  nsresult rv = NS_OK;
+
+  if (JSVAL_IS_STRING(id)) {
+    // For native wrappers, do not get random names on storage objects.
+    if (ObjectIsNativeWrapper(cx, obj)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    rv = storage->GetItem(nsDependentJSString(id), val);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    PRInt32 n = GetArrayIndexFromId(cx, id);
+    NS_ENSURE_TRUE(n >= 0, NS_ERROR_NOT_AVAILABLE);
+
+    rv = storage->Key(n, val);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  JSAutoRequest ar(cx);
+
+  if (DOMStringIsNull(val)) {
+      *vp = JSVAL_NULL;
+  }
+  else {
+      JSString *str =
+        ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(val.get()),
+                              val.Length());
+      NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+      *vp = STRING_TO_JSVAL(str);
+  }
+
+  return NS_SUCCESS_I_DID_SOMETHING;
+}
+
+NS_IMETHODIMP
+nsStorage2SH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+                          JSContext *cx, JSObject *obj, jsval id,
+                          jsval *vp, PRBool *_retval)
+{
+  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+
+  JSString *key = ::JS_ValueToString(cx, id);
+  NS_ENSURE_TRUE(key, NS_ERROR_UNEXPECTED);
+
+  JSString *value = ::JS_ValueToString(cx, *vp);
+  NS_ENSURE_TRUE(value, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = storage->SetItem(nsDependentJSString(key),
+                                 nsDependentJSString(value));
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_SUCCESS_I_DID_SOMETHING;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsStorage2SH::DelProperty(nsIXPConnectWrappedNative *wrapper,
+                          JSContext *cx, JSObject *obj, jsval id,
+                          jsval *vp, PRBool *_retval)
+{
+  nsCOMPtr<nsIDOMStorage2> storage(do_QueryWrappedNative(wrapper));
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+
+  JSString *key = ::JS_ValueToString(cx, id);
+  NS_ENSURE_TRUE(key, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = storage->RemoveItem(nsDependentJSString(key));
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_SUCCESS_I_DID_SOMETHING;
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                           JSObject *obj, PRUint32 enum_op, jsval *statep,
+                           jsid *idp, PRBool *_retval)
+{
+  nsTArray<nsString> *keys =
+    (nsTArray<nsString> *)JSVAL_TO_PRIVATE(*statep);
+
+  switch (enum_op) {
+    case JSENUMERATE_INIT:
+    {
+      nsCOMPtr<nsPIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+
+      // XXXndeakin need to free the keys afterwards
+      keys = storage->GetKeys();
+      NS_ENSURE_TRUE(keys, NS_ERROR_OUT_OF_MEMORY);
+
+      *statep = PRIVATE_TO_JSVAL(keys);
+
+      if (idp) {
+        *idp = INT_TO_JSVAL(keys->Length());
+      }
+      break;
+    }
+    case JSENUMERATE_NEXT:
+      if (keys->Length() != 0) {
+        nsString& key = keys->ElementAt(0);
+        JSString *str =
+          JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>
+                                                  (key.get()),
+                              key.Length());
+        NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+        JS_ValueToId(cx, STRING_TO_JSVAL(str), idp);
+
+        keys->RemoveElementAt(0);
+
+        break;
+      }
+
+      // Fall through
+    case JSENUMERATE_DESTROY:
+      delete keys;
+
+      *statep = JSVAL_NULL;
+
+      break;
+    default:
+      NS_NOTREACHED("Bad call from the JS engine");
+
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
 
 // StorageList scriptable helper
 
