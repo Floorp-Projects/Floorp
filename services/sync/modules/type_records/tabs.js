@@ -63,10 +63,12 @@ TabSetRecord.prototype = {
     };
   },
 
-  addTab: function TabSetRecord_addTab(title, urlHistory) {
+  addTab: function TabSetRecord_addTab(title, urlHistory, lastUsed) {
     if (!this.cleartext.tabs)
       this.cleartext.tabs = [];
-    this.cleartext.tabs.push( {title: title, urlHistory: urlHistory });
+    this.cleartext.tabs.push( {title: title,
+                               urlHistory: urlHistory,
+                               lastUsed: lastUsed});
   },
 
   getAllTabs: function TabSetRecord_getAllTabs() {
