@@ -9418,11 +9418,22 @@ TraceRecorder::record_JSOP_LENGTH()
     }
 
     JSObject* obj = JSVAL_TO_OBJECT(l);
-    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
-        ABORT_TRACE("only dense arrays supported");
-    if (!guardDenseArray(obj, get(&l)))
-        ABORT_TRACE("OBJ_IS_DENSE_ARRAY but not?!?");
-    LIns* v_ins = lir->ins1(LIR_i2f, stobj_get_fslot(get(&l), JSSLOT_ARRAY_LENGTH));
+    LIns* obj_ins = get(&l);
+    LIns* v_ins;
+    if (OBJ_IS_ARRAY(cx, obj)) {
+        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+            if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
+                JS_NOT_REACHED("OBJ_IS_DENSE_ARRAY but not?!?");
+        } else {
+            if (!guardClass(obj, obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT)))
+                ABORT_TRACE("can't trace length property access on non-array");
+        }
+        v_ins = lir->ins1(LIR_i2f, stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH));
+    } else {
+        if (!OBJ_IS_NATIVE(obj))
+            ABORT_TRACE("can't trace length property access on non-array, non-native object");
+        return getProp(obj, obj_ins);
+    }
     set(&l, v_ins);
     return true;
 }
