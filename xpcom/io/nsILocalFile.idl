@@ -101,9 +101,17 @@ interface nsILocalFile : nsIFile
      */
     attribute PRBool followLinks;  
 
+    const unsigned long DELETE_ON_CLOSE = 0x80000000;
+
     /**
      * Return the result of PR_Open on the file.  The caller is
      * responsible for calling PR_Close on the result.
+     *
+     * @param flags the PR_Open flags from prio.h, plus optionally
+     * DELETE_ON_CLOSE. DELETE_ON_CLOSE may be implemented by removing
+     * the file (by path name) immediately after opening it, so beware
+     * of possible races; the file should be exclusively owned by this
+     * process.
      */
     [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
 

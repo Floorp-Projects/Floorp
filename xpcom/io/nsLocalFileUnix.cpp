@@ -408,6 +408,10 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
     if (! *_retval)
         return NS_ErrorAccordingToNSPR();
 
+    if (flags & DELETE_ON_CLOSE) {
+        PR_Delete(mPath.get());
+    }
+
     return NS_OK;
 }
 
