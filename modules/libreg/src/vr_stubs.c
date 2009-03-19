@@ -222,8 +222,7 @@ int FAR PASCAL _export WEP(int nParam)
  * ------------------------------------------------------------------
  */
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#include <Files.h>
+#if defined(XP_MACOSX)
 
 #ifdef STANDALONE_REGISTRY
 extern XP_File vr_fileOpen(const char *name, const char * mode)

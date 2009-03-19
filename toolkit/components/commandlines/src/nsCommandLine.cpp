@@ -57,7 +57,7 @@
 #include "plstr.h"
 
 #ifdef XP_MACOSX
-#include <CFURL.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include "nsILocalFileMac.h"
 #elif defined(XP_WIN)
 #include <windows.h>

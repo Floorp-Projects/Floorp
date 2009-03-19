@@ -52,8 +52,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  #include <Errors.h>
+
+#if defined(XP_MACOSX)
+#include <Carbon/Carbon.h>
 #endif
 
 #if defined(SUNOS4)
