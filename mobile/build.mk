@@ -45,6 +45,12 @@ tier_app_dirs += \
   mobile \
   $(NULL)
 
+ifdef ENABLE_TESTS
+tier_testharness_dirs += \
+  testing/mochitest \
+  $(NULL)
+endif
+
 installer:
 	@echo "Mobile doesn't have an installer yet."
 	@exit 1
