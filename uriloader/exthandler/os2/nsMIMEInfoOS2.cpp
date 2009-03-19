@@ -543,8 +543,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
   if (NS_FAILED(rv = process->Init(application)))
      return rv;
 
-  PRUint32 pid;
-  if (NS_FAILED(rv = process->Run(PR_FALSE, params, numParams, &pid)))
+  if (NS_FAILED(rv = process->Run(PR_FALSE, params, numParams)))
     return rv;
 
   return NS_OK;
