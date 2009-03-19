@@ -46,7 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = 	  browser_pass.js \
 	                  browser_async.js \
-	                  browser_scope.js \
+	                  browser_privileges.js \
 # Disabled, these are only good for testing the harness' failure reporting
 #	                  browser_fail.js \
 #	                  browser_fail_async_throw.js \
