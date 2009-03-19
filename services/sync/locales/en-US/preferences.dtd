@@ -113,6 +113,7 @@
 <!ENTITY fennecPrefs.youAreUser.label "You are user: ">
 <!ENTITY fennecPrefs.changeUser.label "Change User">
 
-<!ENTITY tabs.sortBy.date.label "By Date">
-<!ENTITY tabs.sortBy.title.label "By Title">
-<!ENTITY tabs.sortBy.source.label "By Source">
+<!ENTITY tabs.sortBy.date.label "Date">
+<!ENTITY tabs.sortBy.title.label "Title">
+<!ENTITY tabs.sortBy.source.label "Source">
+<!ENTITY tabs.sortBy.label "Sort by: ">
