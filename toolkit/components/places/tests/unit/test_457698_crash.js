@@ -54,6 +54,7 @@ var observer = {
   onItemAdded: function(id, folder, index) {
     do_check_true(id > 0);
   },
+  onBeforeItemRemoved: function() {},
   onItemRemoved: function() {},
   onItemChanged: function() {},
   onItemVisited: function() {},
