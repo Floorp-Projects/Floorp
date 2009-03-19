@@ -190,12 +190,8 @@ struct JSTraceableNative {
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_STATUS)
 #define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_INT32_RETRY       _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_NEG)
-#define _JS_CTYPE_INT32_FAIL        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_STATUS)
-#define _JS_CTYPE_UINT32            _JS_CTYPE(uint32,                 _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_UINT32_RETRY      _JS_CTYPE(uint32,                 _JS_I32, --, --, FAIL_NEG)
-#define _JS_CTYPE_UINT32_FAIL       _JS_CTYPE(uint32,                 _JS_I32, --, --, FAIL_STATUS)
+#define _JS_CTYPE_UINT32            _JS_CTYPE(uint32,                 _JS_I32, --, --, INFALLIBLE)
 #define _JS_CTYPE_DOUBLE            _JS_CTYPE(jsdouble,               _JS_F64, "","d", INFALLIBLE)
-#define _JS_CTYPE_DOUBLE_FAIL       _JS_CTYPE(jsdouble,               _JS_F64, --, --, FAIL_STATUS)
 #define _JS_CTYPE_STRING            _JS_CTYPE(JSString *,             _JS_PTR, "","s", INFALLIBLE)
 #define _JS_CTYPE_STRING_RETRY      _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_NULL)
 #define _JS_CTYPE_STRING_FAIL       _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_STATUS)
@@ -286,15 +282,6 @@ struct JSTraceableNative {
                         (_JS_CTYPE_ARGSIZE(at4) << 2) | _JS_CTYPE_RETSIZE(rt),                    \
                         cse, fold)
 
-#define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)            \
-    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
-                        (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
-                         _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4), _JS_CTYPE_TYPE(at5)),          \
-                        (_JS_CTYPE_ARGSIZE(at0) << 12) | (_JS_CTYPE_ARGSIZE(at1) << 10) |         \
-                        (_JS_CTYPE_ARGSIZE(at2) << 8) | (_JS_CTYPE_ARGSIZE(at3) << 6) |           \
-                        (_JS_CTYPE_ARGSIZE(at4) << 4) | (_JS_CTYPE_ARGSIZE(at5) << 2) |           \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
-
 #define JS_DECLARE_CALLINFO(name)  extern const nanojit::CallInfo _JS_CALLINFO(name);
 
 #define _JS_TN_INIT_HELPER_n(n, args)  _JS_TN_INIT_HELPER_##n args
@@ -329,14 +316,6 @@ struct JSTraceableNative {
         _JS_CTYPE_PCH(at0),                                                                       \
     _JS_CTYPE_ACH(at4) _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1)                   \
         _JS_CTYPE_ACH(at0),                                                                       \
-    _JS_CTYPE_FLAGS(rt)
-
-#define _JS_TN_INIT_HELPER_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)            \
-    &_JS_CALLINFO(op),                                                                            \
-    _JS_CTYPE_PCH(at5) _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2)                   \
-        _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                                    \
-    _JS_CTYPE_ACH(at5) _JS_CTYPE_ACH(at4) _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2)                   \
-        _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                                    \
     _JS_CTYPE_FLAGS(rt)
 
 #define JS_DEFINE_TRCINFO_1(name, tn0)                                                            \
