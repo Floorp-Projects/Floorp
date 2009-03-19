@@ -66,6 +66,15 @@ TabSetRecord.prototype = {
   addTab: function TabSetRecord_addTab(title, urlHistory, lastUsed) {
     if (!this.cleartext.tabs)
       this.cleartext.tabs = [];
+    if (!title) {
+      title = "";
+    }
+    if (!lastUsed) {
+      lastUsed = 0;
+    }
+    if (!urlHistory || urlHistory.length == 0) {
+      return;
+    }
     this.cleartext.tabs.push( {title: title,
                                urlHistory: urlHistory,
                                lastUsed: lastUsed});
