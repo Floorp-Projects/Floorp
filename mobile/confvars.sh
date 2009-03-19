@@ -42,7 +42,7 @@ case "$target" in
     MOZ_APP_VERSION=0.11
     ;;
 *)
-    MOZ_APP_VERSION=1.0b1
+    MOZ_APP_VERSION=1.0b2pre
     ;;
 esac
 
