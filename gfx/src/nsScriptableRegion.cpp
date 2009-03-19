@@ -158,13 +158,13 @@ NS_IMETHODIMP nsScriptableRegion::GetRegion(nsIRegion** outRgn)
 
 NS_IMETHODIMP nsScriptableRegion::GetRects() {
   nsAXPCNativeCallContext *ncc = nsnull;
-  nsIXPConnect *xpConnect;
-  nsresult rv = CallGetService(nsIXPConnect::GetCID(), &xpConnect);
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpConnect = do_GetService(nsIXPConnect::GetCID(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = xpConnect->GetCurrentNativeCallContext(&ncc);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (!ncc)
     return NS_ERROR_FAILURE;
   
