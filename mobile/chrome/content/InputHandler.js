@@ -184,10 +184,14 @@ ChromeInputModule.prototype = {
       this.dragging = false;
       this.sX = 0;
       this.sY = 0;
+      this.clearDragStartTimeout();
+      this.targetScrollbox = null;
+    },
+
+    clearDragStartTimeout: function clearDragStartTimeout() {
       if (this.dragStartTimeout != -1)
         clearTimeout(this.dragStartTimeout);
       this.dragStartTimeout = -1;
-      this.targetScrollbox = null;
     }
   },
 
@@ -336,7 +340,7 @@ ChromeInputModule.prototype = {
 
     if (!dragData.dragging && dragData.dragStartTimeout != -1) {
       if (dx*dx + dy*dy > 100) {
-        clearTimeout(dragData.dragStartTimeout);
+        dragData.clearDragStartTimeout();
         this._dragStart(aEvent.screenX, aEvent.screenY);
       }
     }
@@ -405,6 +409,10 @@ ContentPanningModule.prototype = {
       this.dragging = false;
       this.sX = 0;
       this.sY = 0;
+      this.clearDragStartTimeout();
+    },
+
+    clearDragStartTimeout: function clearDragStartTimeout() {
       if (this.dragStartTimeout != -1)
         clearTimeout(this.dragStartTimeout);
       this.dragStartTimeout = -1;
@@ -470,8 +478,10 @@ ContentPanningModule.prototype = {
    * timeouts we may have.
    */
   cancelPending: function cancelPending() {
-    this._dragData.reset();
-    // XXX we should cancel kinetic here as well
+    let dragData = this._dragData;
+    // stop scrolling, pass last coordinate we used
+    this._endKinetic(dragData.sX, dragData.sY);
+    dragData.reset();
   },
 
   _dragStart: function _dragStart(sX, sY) {
@@ -500,7 +510,7 @@ ContentPanningModule.prototype = {
         this._endKinetic(sX, sY);
     }
     else {
-      ws.dragStop(sX, sY);
+      ws.dragStop();
     }
 
     // flush any paints that might be left so that our next pan will be fast
@@ -547,7 +557,7 @@ ContentPanningModule.prototype = {
 
     if (!dragData.dragging && dragData.dragStartTimeout != -1) {
       if (dx*dx + dy*dy > 100) {
-        clearTimeout(dragData.dragStartTimeout);
+        dragData.clearDragStartTimeout();
         this._dragStart(aEvent.screenX, aEvent.screenY);
       }
     }
@@ -579,7 +589,7 @@ ContentPanningModule.prototype = {
     let dx = 0;
     let dy = 0;
     let dt = 0;
-    if (kineticData.kineticInitialVel)
+    if (kineticData.kineticInitialVel != 0)
       return true;
 
     if (!kineticData.momentumBuffer)
@@ -649,10 +659,12 @@ ContentPanningModule.prototype = {
   },
 
   _endKinetic: function _endKinetic(sX, sY) {
-    ws.dragStop(sX, sY);
+    let kineticData = this._kineticData;
+
+    ws.dragStop();
     this._owner.ungrab(this);
     this._dragData.reset();
-    this._kineticData.reset();
+    kineticData.reset();
 
     // Make sure that sidebars don't stay partially open
     // XXX this should live somewhere else
@@ -720,6 +732,7 @@ ContentClickingModule.prototype = {
         }
         else {
           clearTimeout(this._clickTimeout);
+          this.clickTimeout = -1;
           this._sendDoubleClick();
         }
         break;
