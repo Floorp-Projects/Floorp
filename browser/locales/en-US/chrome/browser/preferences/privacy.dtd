@@ -94,8 +94,8 @@
 <!ENTITY  rememberHistory.pre.accesskey  "h">
 <!ENTITY  rememberHistory.post.label     "days">
 
-<!ENTITY  rememberDownloads.label        "Remember download history">
-<!ENTITY  rememberDownloads.accesskey    "d">
+<!ENTITY  rememberDownload.label         "Remember download history">
+<!ENTITY  rememberDownload.accesskey     "d">
 
 <!ENTITY  rememberSearchForm.label       "Remember search and form history">
 <!ENTITY  rememberSearchForm.accesskey   "f">
