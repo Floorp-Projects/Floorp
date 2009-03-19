@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,17 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
+DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
+relativesrcdir  = mobile/chrome
 
 include $(DEPTH)/config/autoconf.mk
-
-DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=browser
-
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
-
 include $(topsrcdir)/config/rules.mk
+
+_BROWSER_FILES = \
+  browser_mainui.js \
+  $(NULL)
+
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
