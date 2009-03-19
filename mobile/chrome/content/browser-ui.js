@@ -256,9 +256,6 @@ var BrowserUI = {
       case TOOLBARSTATE_LOADING:
         this.show(UIMODE_URLVIEW);
         icons.setAttribute("mode", "loading");
-
-        ws.panTo(0, -60, true);
-
         this._favicon.src = "";
         this._faviconLink = null;
         this.updateIcon();
