@@ -54,3 +54,54 @@
 
 <!ENTITY  clearDataSettings.label        "Settings…">
 <!ENTITY  clearDataSettings.accesskey    "t">
+
+<!ENTITY  historyHeader.pre.label          "&brandShortName; will:">
+<!ENTITY  historyHeader.pre.accesskey      "F">
+<!ENTITY  historyHeader.remember.label     "Remember history">
+<!ENTITY  historyHeader.dontremember.label "Never remember history">
+<!ENTITY  historyHeader.custom.label       "Use custom settings for history">
+<!ENTITY  historyHeader.post.label         "">
+
+<!ENTITY  rememberDescription.label      "&brandShortName; will remember your browsing, download, form and search history, and keep cookies from Web sites you visit.">
+
+<!-- LOCALIZATION NOTE (rememberActions.pre.label): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (rememberActions.middle.label): include a starting and trailing space as needed -->
+<!-- LOCALIZATION NOTE (rememberActions.post.label): include a starting space as needed -->
+<!ENTITY  rememberActions.pre.label           "You may want to ">
+<!ENTITY  rememberActions.clearHistory.label  "clear your recent history">
+<!ENTITY  rememberActions.middle.label        ", or ">
+<!ENTITY  rememberActions.removeCookies.label "remove individual cookies">
+<!ENTITY  rememberActions.post.label          ".">
+
+<!ENTITY  dontrememberDescription.label  "&brandShortName; will use the same settings as private browsing, and will not remember any history as you browse the Web.">
+
+<!-- LOCALIZATION NOTE (dontrememberActions.pre.label): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (dontrememberActions.post.label): include a starting space as needed -->
+<!ENTITY  dontrememberActions.pre.label          "You may also want to ">
+<!ENTITY  dontrememberActions.clearHistory.label "clear all current history">
+<!ENTITY  dontrememberActions.post.label         ".">
+
+<!ENTITY  privateBrowsingAutoStart.label "Automatically start &brandShortName; in a private browsing session">
+<!ENTITY  privateBrowsingAutoStart.accesskey "A">
+
+<!-- LOCALIZATION NOTE:
+  The entities rememberHistory.pre.label and rememberHistory.post.label appear on a single
+  line in preferences as follows:
+
+  &rememberHistory.pre.label  [ textbox for number of days ]  &rememberHistory.post.label;
+-->
+<!ENTITY  rememberHistory.pre.label      "Remember my browsing history for at least">
+<!ENTITY  rememberHistory.pre.accesskey  "h">
+<!ENTITY  rememberHistory.post.label     "days">
+
+<!ENTITY  rememberDownloads.label        "Remember download history">
+<!ENTITY  rememberDownloads.accesskey    "d">
+
+<!ENTITY  rememberSearchForm.label       "Remember search and form history">
+<!ENTITY  rememberSearchForm.accesskey   "f">
+
+<!ENTITY  clearOnClose.label             "Clear history when &brandShortName; closes">
+<!ENTITY  clearOnClose.accesskey         "w">
+
+<!ENTITY  clearOnCloseSettings.label     "Settings…">
+<!ENTITY  clearOnCloseSettings.accesskey "t">
