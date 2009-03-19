@@ -49,12 +49,9 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 CONFIG_DIR = instgen
 SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
-APP_VERSION = $(shell cat $(srcdir)/../../config/version.txt)
+APP_VERSION := $(shell cat $(srcdir)/../../config/version.txt)
 DEFINES += -DAPP_VERSION=$(APP_VERSION)
-PRE_RELEASE_SUFFIX = $(shell echo $(APP_VERSION) | \
-  sed -e '/pre/s/.*//g' -e '/[ab][0-9]/!s/.*//g' \
-      -e 's/\(.*[0-9]\)a\([0-9]\+\)/ \1 Alpha \2/g' \
-      -e 's/\(.*[0-9]\)b\([0-9]\+\)/ \1 Beta \2/g')
+PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py $(APP_VERSION))
 DEFINES += -DPRE_RELEASE_SUFFIX="$(PRE_RELEASE_SUFFIX)"
 
 PP_LOCALIZED_FILES = \
