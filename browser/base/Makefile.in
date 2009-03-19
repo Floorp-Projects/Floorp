@@ -55,10 +55,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-PRE_RELEASE_SUFFIX = $(shell cat $(srcdir)/../config/version.txt | \
-  sed -e '/pre/s/.*//g' -e '/[ab][0-9]/!s/.*//g' \
-      -e 's/\(.*[0-9]\)a\([0-9]\+\)/ \1 Alpha \2/g' \
-      -e 's/\(.*[0-9]\)b\([0-9]\+\)/ \1 Beta \2/g')
+PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py \
+                        $(shell cat $(srcdir)/../config/version.txt))
 
 DEFINES += \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
