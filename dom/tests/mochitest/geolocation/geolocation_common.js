@@ -86,10 +86,10 @@ function clickNotificationButton(aBar, aButtonName) {
 
 function clickAccept()
 {
-  clickNotificationButton(getNotificationBox().currentNotification, "Exact Location (within 10 feet)");
+  clickNotificationButton(getNotificationBox().currentNotification, "Tell them");
 }
 
 function clickDeny()
 {
-  clickNotificationButton(getNotificationBox().currentNotification, "Nothing");
+  clickNotificationButton(getNotificationBox().currentNotification, "Don't tell them");
 }
