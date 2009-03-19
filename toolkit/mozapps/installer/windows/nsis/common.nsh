@@ -339,6 +339,11 @@
 #  !insertmacro MOZ_MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_RUN"
 #  !insertmacro MOZ_MUI_LANGUAGEFILE_MULTILANGSTRING_PAGE FINISH "MUI_TEXT_FINISH_SHOWREADME"
 
+; Support for using the existing MUI_TEXT_ABORTWARNING string
+!ifdef MOZ_MUI_CUSTOM_ABORT
+    LangString MOZ_MUI_TEXT_ABORTWARNING 0 "${MUI_TEXT_ABORTWARNING}"
+!endif
+
   !insertmacro MOZ_MUI_LANGUAGEFILE_LANGSTRING_DEFINE MUI_ABORTWARNING "MUI_TEXT_ABORTWARNING"
 
 
@@ -4639,7 +4644,7 @@
       ; Prevent launching the application when a reboot is required and this
       ; executable is the main application executable
       IfFileExists "$EXEDIR\${FileMainEXE}.moz-upgrade" +1 +4
-      MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
       Reboot
       Quit ; Nothing initialized so no need to call OnEndCommon
 
@@ -4656,7 +4661,7 @@
       ; Prevent all operations (e.g. set as default, postupdate, etc.) when a
       ; reboot is required and the executable launched is helper.exe
       IfFileExists "$INSTDIR\${FileMainEXE}.moz-upgrade" +1 +4
-      MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
       Reboot
       Quit ; Nothing initialized so no need to call OnEndCommon
 
@@ -4877,12 +4882,12 @@
 
       ${CanWriteToInstallDir} $R7
       StrCmp $R7 "false" +1 +3
-      MessageBox MB_OK "$R9"
+      MessageBox MB_OK|MB_ICONEXCLAMATION "$R9"
       Abort
 
       ${CheckDiskSpace} $R7
       StrCmp $R7 "false" +1 +3
-      MessageBox MB_OK "$R8"
+      MessageBox MB_OK|MB_ICONEXCLAMATION "$R8"
       Abort
 
       Pop $R7
