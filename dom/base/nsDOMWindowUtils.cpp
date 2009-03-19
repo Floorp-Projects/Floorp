@@ -47,8 +47,6 @@
 #include "nsIFocusController.h"
 #include "nsIEventStateManager.h"
 
-#include "nsIScrollableView.h"
-
 #include "nsContentUtils.h"
 
 #include "nsIFrame.h"
@@ -571,7 +569,7 @@ nsDOMWindowUtils::ElementFromPoint(PRInt32 aX, PRInt32 aY,
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
   NS_ENSURE_STATE(doc);
-
+  
   return doc->ElementFromPointHelper(aX, aY, aIgnoreRootScrollFrame, aFlushLayout,
                                      aReturn);
 }
@@ -736,32 +734,3 @@ nsDOMWindowUtils::SuppressEventHandling(PRBool aSuppress)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetScrollXY(PRBool aFlushLayout, PRInt32* aScrollX, PRInt32* aScrollY)
-{
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
-  NS_ENSURE_STATE(doc);
-
-  if (aFlushLayout) {
-    doc->FlushPendingNotifications(Flush_Layout);
-  }
-
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
-
-  nsIViewManager *viewManager = presShell->GetViewManager();
-  NS_ENSURE_TRUE(viewManager, NS_ERROR_UNEXPECTED);
-
-  nsIScrollableView *view = nsnull;
-  viewManager->GetRootScrollableView(&view);
-  NS_ENSURE_TRUE(view, NS_ERROR_UNEXPECTED);
-
-  nscoord xPos, yPos;
-  nsresult rv = view->GetScrollPosition(xPos, yPos);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(xPos);
-  *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(yPos);
-
-  return NS_OK;
-}
