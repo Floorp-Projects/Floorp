@@ -4851,7 +4851,6 @@ cairo-cocoa)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
     TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
-    TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     ;;
