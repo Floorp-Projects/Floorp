@@ -419,6 +419,19 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                     }
                 }
 
+                const xpc_qsTraceableSpec *ts = entry->traceables;
+                if(ts)
+                {
+                    for(; ts->name; ts++)
+                    {
+                        if(!JS_DefineFunction(
+                               cx, proto, ts->name, ts->native, ts->arity,
+                               flags | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS |
+                                       JSFUN_TRACEABLE))
+                            return JS_FALSE;
+                    }
+                }
+
                 // Next.
                 size_t j = entry->parentInterface;
                 if(j == XPC_QS_NULL_INDEX)
@@ -580,6 +593,14 @@ xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv)
     return JS_FALSE;
 }
 
+void
+xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
+                                   const char *ifaceName,
+                                   const char *memberName)
+{
+    ThrowCallFailed(cx, rv, ifaceName, memberName);
+}
+
 static void
 ThrowBadArg(JSContext *cx, nsresult rv,
             const char *ifaceName, const char *memberName, uintN paramnum)
@@ -612,6 +633,13 @@ void
 xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, uintN paramnum)
 {
     XPCThrower::ThrowBadParam(rv, paramnum, ccx);
+}
+
+void
+xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
+                             const char *ifaceName, const char *memberName)
+{
+    ThrowBadArg(cx, rv, ifaceName, memberName, paramnum);
 }
 
 void

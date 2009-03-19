@@ -58,11 +58,18 @@ struct xpc_qsFunctionSpec {
     uintN arity;
 };
 
+struct xpc_qsTraceableSpec {
+    const char *name;
+    JSNative native;
+    uintN arity;
+};
+
 /** A table mapping interfaces to quick stubs. */
 struct xpc_qsHashEntry {
     nsID iid;
     const xpc_qsPropertySpec *properties;
     const xpc_qsFunctionSpec *functions;
+    const xpc_qsTraceableSpec *traceables;
     // These last two fields index to other entries in the same table.
     // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
     size_t parentInterface;
@@ -106,6 +113,11 @@ xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp);
 JSBool
 xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv);
 
+void
+xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
+                                   const char *ifaceName,
+                                   const char *memberName);
+
 /**
  * Fail after converting a method argument fails.
  *
@@ -116,6 +128,10 @@ xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, uintN paramnum);
 
 void
 xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, uintN paramnum);
+
+void
+xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
+                             const char *ifaceName, const char *memberName);
 
 /**
  * Fail after converting a setter argument fails.
@@ -460,5 +476,13 @@ _iface##_Interface(XPCCallContext& ccx)                                       \
             XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(_iface));       \
     return (_iface_cache);                                                    \
 }
+
+class xpc_qsDependentJSString : public nsDependentString
+{
+public:
+  explicit xpc_qsDependentJSString(JSString *str)
+    : nsDependentString((PRUnichar *)::JS_GetStringChars(str),
+                        ::JS_GetStringLength(str)) { }
+};
 
 #endif /* xpcquickstubs_h___ */
