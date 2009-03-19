@@ -499,6 +499,8 @@ var BrowserUI = {
       case "cmd_openLocation":
       case "cmd_star":
       case "cmd_bookmarks":
+      case "cmd_quit":
+      case "cmd_close":
       case "cmd_menu":
       case "cmd_newTab":
       case "cmd_closeTab":
@@ -569,6 +571,12 @@ var BrowserUI = {
       }
       case "cmd_bookmarks":
         this.showBookmarks();
+        break;
+      case "cmd_quit":
+        goQuitApplication();
+        break;
+      case "cmd_close":
+        close();
         break;
       case "cmd_menu":
         break;

@@ -68,6 +68,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
@@ -101,6 +102,8 @@
     <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- misc -->
+    <command id="cmd_close" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_quit" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -141,6 +144,8 @@
     <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
 
     <!-- misc -->
+    <key id="key_close" key="w" modifiers="accel" command="cmd_close"/>
+    <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
     <key id="key_zoomin" keycode="VK_F7" command="cmd_zoomin"/>
