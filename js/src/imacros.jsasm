@@ -713,6 +713,17 @@
 
 .igroup initelem JSOP_INITELEM
 
+    .imacro initprop                                # obj i val
+        pick 2                                      # i val obj
+        dup                                         # i val obj obj
+        callbuiltin (JSBUILTIN_SetProperty)         # i val obj fun obj
+        pick 4                                      # val obj fun obj i
+        pick 4                                      # obj fun obj i val
+        call 2                                      # obj junk
+        pop                                         # obj
+        stop
+    .end
+
     .imacro initelem                                # obj i val
         pick 2                                      # i val obj
         dup                                         # i val obj obj

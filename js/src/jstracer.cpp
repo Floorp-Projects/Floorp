@@ -7297,7 +7297,9 @@ TraceRecorder::record_JSOP_SETELEM()
         if (!guardNotGlobalObject(obj, obj_ins))
             return false;
 
-        return call_imacro(setelem_imacros.setprop);
+        return call_imacro((*cx->fp->regs->pc == JSOP_INITELEM)
+                           ? initelem_imacros.initprop
+                           : setelem_imacros.setprop);
     }
 
     if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
