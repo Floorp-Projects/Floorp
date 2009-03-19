@@ -221,7 +221,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #endif /* JS_JIT_SPEW */
 
 #define INS_CONST(c)        addName(lir->insImm(c), #c)
-#define INS_CONSTPTR(p)     addName(lir->insImmPtr((void*) (p)), #p)
+#define INS_CONSTPTR(p)     addName(lir->insImmPtr(p), #p)
 #define INS_CONSTFUNPTR(p)  addName(lir->insImmPtr(JS_FUNC_TO_DATA_PTR(void*, p)), #p)
 
 using namespace avmplus;
@@ -5011,7 +5011,7 @@ TraceRecorder::ifop()
                       lir->insLoad(LIR_ldp,
                                    v_ins,
                                    (int)offsetof(JSString, length)),
-                      INS_CONSTPTR(JSSTRING_LENGTH_MASK));
+                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
     } else {
         JS_NOT_REACHED("ifop");
         return false;
@@ -6424,7 +6424,7 @@ TraceRecorder::record_JSOP_NOT()
     JS_ASSERT(JSVAL_IS_STRING(v));
     set(&v, lir->ins_eq0(lir->ins2(LIR_piand,
                                    lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, length)),
-                                   INS_CONSTPTR(JSSTRING_LENGTH_MASK))));
+                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)))));
     return true;
 }
 
@@ -9356,19 +9356,19 @@ TraceRecorder::record_JSOP_LENGTH()
 
         LIns* masked_len_ins = lir->ins2(LIR_piand,
                                          len_ins,
-                                         INS_CONSTPTR(JSSTRING_LENGTH_MASK));
+                                         INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
 
-        LIns *choose_len_ins =
+        LIns* choose_len_ins =
             lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                    len_ins,
-                                                   INS_CONSTPTR(JSSTRFLAG_DEPENDENT))),
+                                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRFLAG_DEPENDENT)))),
                             masked_len_ins,
                             lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                                    len_ins,
-                                                                   INS_CONSTPTR(JSSTRFLAG_PREFIX))),
+                                                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRFLAG_PREFIX)))),
                                             lir->ins2(LIR_piand,
                                                       len_ins,
-                                                      INS_CONSTPTR(JSSTRDEP_LENGTH_MASK)),
+                                                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRDEP_LENGTH_MASK))),
                                             masked_len_ins));
 
         set(&l, lir->ins1(LIR_i2f, choose_len_ins));
