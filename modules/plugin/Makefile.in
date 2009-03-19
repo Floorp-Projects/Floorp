@@ -68,9 +68,6 @@ ifeq ($(OS_ARCH),OS2)
 TOOL_DIRS += default/os2
 ifdef MOZ_OJI
 TOOL_DIRS += os2wrapper
-ifdef ENABLE_TESTS
-TOOL_DIRS += tools/tester/common tools/tester/os2
-endif
 endif
 endif
 
