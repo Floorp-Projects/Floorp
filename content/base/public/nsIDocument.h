@@ -101,8 +101,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x6e467d95, 0x9934, 0x422a, \
- { 0x81, 0x07, 0x3f, 0xff, 0xe1, 0x38, 0xe6, 0x1e } }
+{ 0xdd9bd470, 0x6315, 0x4e67, \
+  { 0xa8, 0x8a, 0x78, 0xbf, 0x92, 0xb4, 0x5a, 0xdf } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -125,7 +125,8 @@ public:
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
       mMayStartLayout(PR_TRUE),
-      mPartID(0)
+      mPartID(0),
+      mJSObject(nsnull)
   {
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
   }
@@ -994,6 +995,16 @@ public:
     mMayStartLayout = aMayStartLayout;
   }
 
+  JSObject* GetJSObject() const
+  {
+    return mJSObject;
+  }
+
+  void SetJSObject(JSObject *aJSObject)
+  {
+    mJSObject = aJSObject;
+  }
+
   // This method should return an addrefed nsIParser* or nsnull. Implementations
   // should transfer ownership of the parser to the caller.
   virtual already_AddRefed<nsIParser> GetFragmentParser() {
@@ -1236,6 +1247,12 @@ protected:
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   PRUint32 mEventsSuppressed;
+
+private:
+  // JSObject cache. Only to be used for performance
+  // optimizations. This will be set once this document is touched
+  // from JS, and it will be unset once the JSObject is finalized.
+  JSObject *mJSObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
