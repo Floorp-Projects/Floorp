@@ -54,6 +54,7 @@
 #include "nsCollationCID.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsDateTimeFormatCID.h"
 #include "nsDebug.h"
 #include "nsEnumeratorUtils.h"
 #include "nsFaviconService.h"
@@ -3002,6 +3003,8 @@ PRBool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 
 // ** Helper class for ConstructQueryString **/
 
+static const PRInt32 MAX_HISTORY_DAYS = 6;
+
 class PlacesSQLQueryBuilder
 {
 public:
@@ -3476,164 +3479,141 @@ nsresult
 PlacesSQLQueryBuilder::SelectAsDay()
 {
   mSkipOrderBy = PR_TRUE;
+  PRBool asDayQuery = 
+    mResultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY;
 
-  PRUint16 resultType =
-    mResultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ?
-    nsINavHistoryQueryOptions::RESULTS_AS_URI :
-    nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY;
+  mQueryString = nsPrintfCString(255,
+    "SELECT null, "
+      "'place:type=%ld&sort=%ld&beginTime='||beginTime||'&endTime='||endTime, "
+      "dayTitle, null, null, endTime, null, null, null, null "
+    "FROM (", // TOUTER BEGIN
+    (asDayQuery
+       ?nsINavHistoryQueryOptions::RESULTS_AS_URI
+       :nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY),
+     nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING);
 
-  // beginTime will become the node's time property, we don't use endTime
-  // because it could overlap, and we use time to sort containers and find
-  // insert position in a result.
-  mQueryString = nsPrintfCString(1024,
-     "SELECT null, "
-       "'place:type=%ld&sort=%ld&beginTime='||beginTime||'&endTime='||endTime, "
-      "dayTitle, null, null, beginTime, null, null, null, null "
-     "FROM (", // TOUTER BEGIN
-     resultType,
-      nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING);
- 
-   nsNavHistory* history = nsNavHistory::GetHistoryService();
-   NS_ENSURE_STATE(history);
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_STATE(history);
 
-  // These are the day containers and catch-all final container.
-  PRInt32 additionalContainers = 3;
-  // We use a guess of the number of months considering all of them 30 days
-  // long, but we split only the last 6 months.
-  PRInt32 monthContainers = PR_MIN(6, (history->mExpireDaysMax/30));
-  PRInt32 numContainers = monthContainers + additionalContainers;
-  for (PRInt32 i = 0; i <= numContainers; i++) {
-    nsCAutoString dateName;
-    // Timeframes are calculated as BeginTime <= container < EndTime.
-    // Notice times can't be relative to now, since to recognize a query we
-    // must ensure it won't change based on the time it is built.
-    // So, to select till now, we really select till start of tomorrow, that is
-    // a fixed timestamp.
-    nsCAutoString sqlFragmentBeginTime;
-    nsCAutoString sqlFragmentEndTime;
-    switch(i) {
-       case 0:
-        // Today
-         history->GetStringFromName(
-          NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), dateName);
-        // From start of today
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','utc')*1000000)");
-        // To now (tomorrow)
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','+1 day','utc')*1000000)");
-         break;
-       case 1:
-        // Yesterday
-         history->GetStringFromName(
-          NS_LITERAL_STRING("finduri-AgeInDays-is-1").get(), dateName);
-        // From start of yesterday
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','-1 day','utc')*1000000)");
-        // To start of today
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','utc')*1000000)");
-        break;
-      case 2:
-        // Last 7 days
-        history->GetAgeInDaysString(7,
-          NS_LITERAL_STRING("finduri-AgeInDays-last-is").get(), dateName);
-        // From start of 7 days ago
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','-7 days','utc')*1000000)");
-        // To now (tomorrow)
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','+1 day','utc')*1000000)");
-        break;
-      case 3:
-        // This month
+  struct Midnight
+  {
+    Midnight() {
+      mNow = NormalizeTimeRelativeToday(PR_Now());  
+    }
+    PRTime Get(PRInt32 aDayOffset) {
+      PRTime result;
+      LL_MUL(result, aDayOffset, USECS_PER_DAY);
+      LL_ADD(result, result, mNow);
+      return result;
+    }
+    PRTime mNow;
+  } midnight;
+
+  nsCAutoString dateParam;
+  nsCAutoString dateName;
+
+  for (PRInt32 i = 0; i <= MAX_HISTORY_DAYS; i++) {
+    dateParam = nsPrintfCString(":dayTitle%d", i);
+    switch (i)
+    {
+      case 0:
         history->GetStringFromName(
-          NS_LITERAL_STRING("finduri-AgeInMonths-is-0").get(), dateName);
-        // From start of this month
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of month','utc')*1000000)");
-        // To now (tomorrow)
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of day','+1 day','utc')*1000000)");
-         break;
-       default:
-        if (i == additionalContainers + 6) {
-          // Older than 6 months
-          history->GetAgeInDaysString(6,
-            NS_LITERAL_STRING("finduri-AgeInMonths-isgreater").get(), dateName);
-          // From start of epoch
-          sqlFragmentBeginTime = NS_LITERAL_CSTRING(
-            "(datetime(0, 'unixepoch')*1000000)");
-          // To start of 6 months ago
-          sqlFragmentEndTime = NS_LITERAL_CSTRING(
-            "(strftime('%s','now','start of day','-6 months','utc')*1000000)");
-          break;
-        }
-        PRInt32 MonthIndex = i - additionalContainers;
-        // Previous months' titles are month's name if inside this year,
-        // month's name and year for previous years.
-        PRExplodedTime tm;
-        PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &tm);
-        PRUint16 currentYear = tm.tm_year;
-        tm.tm_month -= MonthIndex;
-        PR_NormalizeTime(&tm, PR_LocalTimeParameters);
-        // tm_month starts from 0 while GetMonthName expects a 1-based index.
-        history->GetMonthName(tm.tm_month+1, dateName);
-
-        // If the container is for a past year, add the year as suffix.
-        if (tm.tm_year < currentYear)
-          dateName.Append(nsPrintfCString(" %d", tm.tm_year));
-
-        // From start of MonthIndex + 1 months ago
-        sqlFragmentBeginTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of month','-");
-        sqlFragmentBeginTime.AppendInt(MonthIndex);
-        sqlFragmentBeginTime.Append(NS_LITERAL_CSTRING(
-            " months','utc')*1000000)"));
-        // To start of MonthIndex months ago
-        sqlFragmentEndTime = NS_LITERAL_CSTRING(
-          "(strftime('%s','now','start of month','-");
-        sqlFragmentEndTime.AppendInt(MonthIndex - 1);
-        sqlFragmentEndTime.Append(NS_LITERAL_CSTRING(
-            " months','utc')*1000000)"));
+            NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), dateName);
+        break;
+      case 1:
+        history->GetStringFromName(
+            NS_LITERAL_STRING("finduri-AgeInDays-is-1").get(), dateName);
+        break;
+      default:
+        history->GetAgeInDaysString(i, 
+            NS_LITERAL_STRING("finduri-AgeInDays-is").get(), dateName);
         break;
     }
- 
-     nsPrintfCString dayRange(1024,
-        "SELECT '%s' AS dayTitle, "
-               "%s AS beginTime, "
-               "%s AS endTime "
-         "WHERE EXISTS ( "
-           "SELECT id FROM moz_historyvisits_temp "
-          "WHERE visit_date >= %s "
-            "AND visit_date < %s "
+
+    mAddParams.Put(dateParam, dateName);
+
+    PRInt32 fromDayAgo = -i;
+    PRInt32 toDayAgo = -i + 1;
+
+    nsPrintfCString dayRange(1024,
+      "SELECT * "
+      "FROM ( "
+        "SELECT %d dayOrder, "
+               "'%d' dayRange, "
+               "%s dayTitle, " // This will be bound
+               "%llu beginTime, "
+               "%llu endTime "
+        "WHERE EXISTS ( "
+          "SELECT id FROM moz_historyvisits_temp "
+          "WHERE visit_date >= %llu "
+            "AND visit_date < %llu "
             "AND visit_type NOT IN (0,%d) "
             "{QUERY_OPTIONS} "
-          "UNION ALL "
-          "SELECT id FROM moz_historyvisits "
-          "WHERE visit_date >= %s "
-            "AND visit_date < %s "
-             "AND visit_type NOT IN (0,%d) "
-             "{QUERY_OPTIONS} "
-           "LIMIT 1 "
-        ") ",
-      dateName.get(),
-      sqlFragmentBeginTime.get(),
-      sqlFragmentEndTime.get(),
-      sqlFragmentBeginTime.get(),
-      sqlFragmentEndTime.get(),
-       nsINavHistoryService::TRANSITION_EMBED,
-      sqlFragmentBeginTime.get(),
-      sqlFragmentEndTime.get(),
-      nsINavHistoryService::TRANSITION_EMBED);
+          "LIMIT 1 "
+        ") "
+        "OR EXISTS ( "
+          "SELECT * FROM moz_historyvisits "
+          "WHERE visit_date >= %llu "
+            "AND visit_date < %llu "
+            "AND visit_type NOT IN (0,%d) "
+            "{QUERY_OPTIONS} "
+          "LIMIT 1 "
+        ") "
+      "LIMIT 1) TUNION%d UNION ", 
+      i, i, dateParam.get(), 
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo), 
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo),
+      nsINavHistoryService::TRANSITION_EMBED,
+      midnight.Get(fromDayAgo),
+      midnight.Get(toDayAgo),
+      nsINavHistoryService::TRANSITION_EMBED,
+      i);
 
-    mQueryString.Append(dayRange);
-
-    if (i < numContainers)
-        mQueryString.Append(NS_LITERAL_CSTRING(" UNION ALL "));
+    mQueryString.Append( dayRange );
   }
 
-  mQueryString.Append(NS_LITERAL_CSTRING(") ")); // TOUTER END
+  dateParam = nsPrintfCString(":dayTitle%d", MAX_HISTORY_DAYS+1);
+  history->GetAgeInDaysString(MAX_HISTORY_DAYS, 
+    NS_LITERAL_STRING("finduri-AgeInDays-isgreater").get(), dateName);
+
+  mAddParams.Put(dateParam, dateName);
+
+  mQueryString.Append(nsPrintfCString(1024,
+    "SELECT * "
+    "FROM ("
+      "SELECT %d dayOrder, "
+            "'%d+' dayRange, "
+            "%s dayTitle, " // This will be bound
+            "1 beginTime, "
+            "%llu endTime "
+      "WHERE EXISTS ( "
+        "SELECT id FROM moz_historyvisits_temp "
+        "WHERE visit_date < %llu "
+          "AND visit_type NOT IN (0,%d) "
+          "{QUERY_OPTIONS} "
+        "LIMIT 1 "
+      ") "
+      "OR EXISTS ( "
+        "SELECT id FROM moz_historyvisits "
+        "WHERE visit_date < %llu "
+          "AND visit_type NOT IN (0,%d) "
+          "{QUERY_OPTIONS} "
+        "LIMIT 1 "
+      ") "
+      "LIMIT 1) TUNIONLAST "
+    ") TOUTER " // TOUTER END
+    "ORDER BY dayOrder ASC",
+    MAX_HISTORY_DAYS+1,
+    MAX_HISTORY_DAYS+1,
+    dateParam.get(),
+    midnight.Get(-MAX_HISTORY_DAYS),
+    midnight.Get(-MAX_HISTORY_DAYS),
+    nsINavHistoryService::TRANSITION_EMBED,
+    midnight.Get(-MAX_HISTORY_DAYS),
+    nsINavHistoryService::TRANSITION_EMBED
+    ));
 
   return NS_OK;
 }
@@ -4198,7 +4178,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   nsCString queryString;
   PRBool paramsPresent = PR_FALSE;
   nsNavHistory::StringHash addParams;
-  addParams.Init(1);
+  addParams.Init(MAX_HISTORY_DAYS+1);
   nsresult rv = ConstructQueryString(aQueries, aOptions, queryString, 
                                      paramsPresent, addParams);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -4206,6 +4186,11 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 #ifdef DEBUG_FRECENCY
   printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
 #endif
+
+  // Put this in a transaction. Even though we are only reading, this will
+  // speed up the grouped queries to the annotation service for titles and
+  // full text searching.
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   // create statement
   nsCOMPtr<mozIStorageStatement> statement;
@@ -6269,7 +6254,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
       mozStorageStatementScoper scoper(mDBGetTags);
       rv = mDBGetTags->BindStringParameter(0, NS_LITERAL_STRING(" "));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDBGetTags->BindInt64Parameter(1, GetTagsFolder());
+      rv = mDBGetTags->BindInt32Parameter(1, GetTagsFolder());
       NS_ENSURE_SUCCESS(rv, rv);
       rv = mDBGetTags->BindUTF8StringParameter(2, aSet[nodeIndex]->mURI);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -6312,12 +6297,12 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
       
     // stop once we've seen max results
     if (aOptions->MaxResults() > 0 && 
-        (PRUint32)aFiltered->Count() >= aOptions->MaxResults())
+        aFiltered->Count() >= aOptions->MaxResults())
       break;
   }
 
   // de-allocate the matrixes
-  for (PRInt32 i = 0; i < aQueries.Count(); i++) {
+  for (PRUint32 i=0; i < aQueries.Count(); i++) {
     delete terms[i];
     delete includeFolders[i];
     delete excludeFolders[i];
@@ -6693,24 +6678,22 @@ nsNavHistory::TitleForDomain(const nsCString& domain, nsACString& aTitle)
 }
 
 void
-nsNavHistory::GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName,
-                                 nsACString& aResult)
+nsNavHistory::GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, nsACString& aResult)
 {
   nsIStringBundle *bundle = GetBundle();
   if (!bundle)
     aResult.Truncate(0);
-  else {
-    nsAutoString intString;
-    intString.AppendInt(aInt);
-    const PRUnichar* strings[1] = { intString.get() };
-    nsXPIDLString value;
-    nsresult rv = bundle->FormatStringFromName(aName, strings,
-                                               1, getter_Copies(value));
-    if (NS_SUCCEEDED(rv))
-      CopyUTF16toUTF8(value, aResult);
-    else
-      aResult.Truncate(0);
-  }
+
+  nsAutoString intString;
+  intString.AppendInt(aInt);
+  const PRUnichar* strings[1] = { intString.get() };
+  nsXPIDLString value;
+  nsresult rv = bundle->FormatStringFromName(aName, strings,
+                                             1, getter_Copies(value));
+  if (NS_SUCCEEDED(rv))
+    CopyUTF16toUTF8(value, aResult);
+  else
+    aResult.Truncate(0);
 }
 
 void
@@ -6726,24 +6709,6 @@ nsNavHistory::GetStringFromName(const PRUnichar *aName, nsACString& aResult)
     CopyUTF16toUTF8(value, aResult);
   else
     aResult.Truncate(0);
-}
-
-void
-nsNavHistory::GetMonthName(PRInt32 aIndex, nsACString& aResult)
-{
-  nsIStringBundle *bundle = GetDateFormatBundle();
-  if (!bundle)
-    aResult.Truncate(0);
-  else {
-    nsCString name = nsPrintfCString("month.%d.name", aIndex);
-    nsXPIDLString value;
-    nsresult rv = bundle->GetStringFromName(NS_ConvertUTF8toUTF16(name).get(),
-                                            getter_Copies(value));
-    if (NS_SUCCEEDED(rv))
-      CopyUTF16toUTF8(value, aResult);
-    else
-      aResult.Truncate(0);
-  }
 }
 
 // nsNavHistory::SetPageTitleInternal
@@ -7133,7 +7098,7 @@ void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                  nsTArray<nsTArray<nsString>*>* aTerms)
 {
   PRInt32 lastBegin = -1;
-  for (PRInt32 i = 0; i < aQueries.Count(); i++) {
+  for (PRUint32 i=0; i < aQueries.Count(); i++) {
     nsTArray<nsString> *queryTerms = new nsTArray<nsString>();
     PRBool hasSearchTerms;
     if (NS_SUCCEEDED(aQueries[i]->GetHasSearchTerms(&hasSearchTerms)) &&
@@ -7369,7 +7334,7 @@ nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
         else
           weight = mDefaultWeight;
 
-        pointsForSampledVisits += (float)(weight * (bonus / 100.0));
+        pointsForSampledVisits += weight * (bonus / 100.0);
       }
     }
 
@@ -7567,31 +7532,18 @@ nsNavHistory::GetCollation()
 nsIStringBundle *
 nsNavHistory::GetBundle()
 {
-  if (!mBundle) {
-    nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    NS_ENSURE_TRUE(bundleService, nsnull);
-    nsresult rv = bundleService->CreateBundle(
-        "chrome://places/locale/places.properties",
-        getter_AddRefs(mBundle));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-  return mBundle;
-}
+  if (mBundle)
+    return mBundle;
 
-nsIStringBundle *
-nsNavHistory::GetDateFormatBundle()
-{
-  if (!mDateFormatBundle) {
-    nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    NS_ENSURE_TRUE(bundleService, nsnull);
-    nsresult rv = bundleService->CreateBundle(
-        "chrome://global/locale/dateFormat.properties",
-        getter_AddRefs(mDateFormatBundle));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-  return mDateFormatBundle;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  NS_ENSURE_TRUE(bundleService, nsnull);
+  nsresult rv = bundleService->CreateBundle(
+      "chrome://places/locale/places.properties",
+      getter_AddRefs(mBundle));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mBundle;
 }
 
 mozIStorageStatement *
