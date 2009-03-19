@@ -8715,6 +8715,13 @@ nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame
     return PR_FALSE;
   }
 
+  // If aFrame is not the first or last block, then removing it is not
+  // going to affect the splitting.
+  if (aFrame != parent->GetFirstChild(nsnull) &&
+      aFrame->GetLastContinuation()->GetNextSibling()) {
+    return PR_FALSE;
+  }
+
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame: "
