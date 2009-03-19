@@ -136,10 +136,10 @@ struct JSTitle {
 
 #ifdef JS_DEBUG_TITLE_LOCKS
 
-#define SET_OBJ_INFO(obj_, file_, line_)                                       \
-    SET_SCOPE_INFO(OBJ_SCOPE(obj_), file_, line_)
+#define JS_SET_OBJ_INFO(obj_, file_, line_)                                       \
+    JS_SET_SCOPE_INFO(OBJ_SCOPE(obj_), file_, line_)
 
-#define SET_SCOPE_INFO(scope_, file_, line_)                                   \
+#define JS_SET_SCOPE_INFO(scope_, file_, line_)                                   \
     js_SetScopeInfo(scope_, file_, line_)
 
 #endif
@@ -160,14 +160,14 @@ struct JSTitle {
 #define JS_LOCK_OBJ(cx,obj)       ((OBJ_SCOPE(obj)->title.ownercx == (cx))     \
                                    ? (void)0                                   \
                                    : (js_LockObj(cx, obj),                     \
-                                      SET_OBJ_INFO(obj,__FILE__,__LINE__)))
+                                      JS_SET_OBJ_INFO(obj,__FILE__,__LINE__)))
 #define JS_UNLOCK_OBJ(cx,obj)     ((OBJ_SCOPE(obj)->title.ownercx == (cx))     \
                                    ? (void)0 : js_UnlockObj(cx, obj))
 
 #define JS_LOCK_TITLE(cx,title)                                                \
     ((title)->ownercx == (cx) ? (void)0                                        \
      : (js_LockTitle(cx, (title)),                                             \
-        SET_TITLE_INFO(title,__FILE__,__LINE__)))
+        JS_SET_TITLE_INFO(title,__FILE__,__LINE__)))
 
 #define JS_UNLOCK_TITLE(cx,title) ((title)->ownercx == (cx) ? (void)0          \
                                    : js_UnlockTitle(cx, title))
@@ -289,11 +289,11 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
                                                     JS_NO_TIMEOUT)
 #define JS_NOTIFY_REQUEST_DONE(rt)  JS_NOTIFY_CONDVAR((rt)->requestDone)
 
-#ifndef SET_OBJ_INFO
-#define SET_OBJ_INFO(obj,f,l)       ((void)0)
+#ifndef JS_SET_OBJ_INFO
+#define JS_SET_OBJ_INFO(obj,f,l)        ((void)0)
 #endif
-#ifndef SET_TITLE_INFO
-#define SET_TITLE_INFO(title,f,l)   ((void)0)
+#ifndef JS_SET_TITLE_INFO
+#define JS_SET_TITLE_INFO(title,f,l)    ((void)0)
 #endif
 
 #ifdef JS_THREADSAFE

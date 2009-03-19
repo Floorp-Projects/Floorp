@@ -4637,6 +4637,23 @@ testChangingObjectWithLength.jitstats = {
 };
 test(testChangingObjectWithLength);
 
+function testNEWINIT()
+{
+    var a;
+    for (var i = 0; i < 10; ++i)
+        a = [{}];
+    return uneval(a);
+}
+testNEWINIT.expected = "[{}]";
+test(testNEWINIT);
+
+function testNEWINIT_DOUBLE()
+{
+    for (var z = 0; z < 2; ++z) { ({ 0.1: null })}
+    return "ok";
+}
+testNEWINIT_DOUBLE.expected = "ok";
+test(testNEWINIT_DOUBLE);
 
 /*****************************************************************************
  *                                                                           *
