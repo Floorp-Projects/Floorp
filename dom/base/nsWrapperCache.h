@@ -73,7 +73,7 @@ public:
    * including nsIXPConnect, because we don't want to make everyone require
    * JS and XPConnect.
    */
-  nsISupports* GetWrapper() const
+  nsISupports* GetWrapper()
   {
     return reinterpret_cast<nsISupports*>(mWrapperPtrBits & ~kWrapperBitMask);
   }
