@@ -78,6 +78,9 @@ CanvasBrowser.prototype = {
   // either, we'll trigger a page zoom.
   _maxRight: 0,
   _maxBottom: 0,
+  
+  // Tells us to pan to top before first draw 
+  _needToPanToTop: false,
 
   get canvasDimensions() {
     if (!this._canvasRect) {
@@ -238,18 +241,10 @@ CanvasBrowser.prototype = {
   },
 
   startLoading: function startLoading() {
-    // Clear the whole canvas
-    // we clear the whole canvas because the browser's width or height
-    // could be less than the area we end up actually drawing.
-    this.clearRegion();
-    var ctx = this._canvas.getContext("2d");
-    ctx.fillStyle = "rgb(255,255,255)";
-    ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
-
     this._maxRight = 0;
     this._maxBottom = 0;
-
     this._pageLoading = true;
+    this._needToPanToTop = true;
   },
 
   endLoading: function() {
@@ -285,8 +280,6 @@ CanvasBrowser.prototype = {
     this._isPanning = false;
     let pageBounds = bounds.clone();
     let visibleBounds = ws.viewportVisibleRect;
-
-    //should add a divide/multiply func to pageBounds
 
     // do not floor top/left, or the blit below will be off
     pageBounds.top = this._screenToPage(pageBounds.top);
@@ -495,7 +488,14 @@ CanvasBrowser.prototype = {
   },
 
   zoomToPage: function() {
-    //dump("zoom to page\n");
+    let needToPanToTop = this._needToPanToTop;
+    // Ensure pages are panned at the top before zooming/painting
+    // combine the initial pan + zoom into a transaction
+    if (needToPanToTop) {
+      ws.beginUpdateBatch();      
+      this._needToPanToTop = false;
+      ws.panTo(0, 0);
+    }
     // Adjust the zoomLevel to fit the page contents in our window
     // width
     let [contentW, ] = this._contentAreaDimensions;
@@ -503,6 +503,9 @@ CanvasBrowser.prototype = {
 
     if (contentW > canvasW)
       this.zoomLevel = canvasW / contentW;
+    
+    if (needToPanToTop)
+      ws.endUpdateBatch();
   },
 
   zoomToElement: function(aElement) {
