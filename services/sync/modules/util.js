@@ -464,17 +464,37 @@ let Utils = {
     let win = Svc.WinWatcher;
     if (type == "Dialog")
       win = win.activeWindow;
-    win["open" + type].apply(win, this.slice(arguments, 2));
-  },
-
-  openWindow: function Utils_openWindow(name, uri, options, args) {
-    this._openWin(name, "Window", null, "chrome://weave/content/" + uri,
-      "", options || "centerscreen,chrome,dialog,resizable=yes", args);
+    win["open" + type].apply(win, Utils.slice(arguments, 2));
   },
 
   openDialog: function Utils_openDialog(name, uri, options, args) {
-    this._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
+    Utils._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
       options || "centerscreen,chrome,dialog,modal,resizable=yes", args);
+  },
+
+  openLog: function Utils_openLog() {
+    Utils.openWindow("Log", "log.xul");
+  },
+
+  openLogin: function Utils_openLogin() {
+    Utils.openDialog("Login", "login.xul");
+  },
+
+  openShare: function Utils_openShare() {
+    Utils.openDialog("Share", "share.xul");
+  },
+
+  openStatus: function Utils_openStatus() {
+    Utils.openDialog("Status", "status.xul");
+  },
+
+  openWindow: function Utils_openWindow(name, uri, options, args) {
+    Utils._openWin(name, "Window", null, "chrome://weave/content/" + uri,
+      "", options || "centerscreen,chrome,dialog,resizable=yes", args);
+  },
+
+  openWizard: function Utils_openWizard() {
+    Utils.openDialog("Wizard", "wizard.xul");
   },
 
   // assumes an nsIConverterInputStream
