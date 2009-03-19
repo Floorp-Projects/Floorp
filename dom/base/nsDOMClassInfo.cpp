@@ -9892,15 +9892,20 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     do_QueryInterface(pi);
 #endif
 
-  JSObject *proto = ::JS_GetPrototype(cx, obj);
-
-  if (pi && (!plugin_internal ||
-             (!proto || strcmp(JS_GET_CLASS(cx, proto)->name,
-                               NPRUNTIME_JSCLASS_NAME) != 0))
+  // Bail if we don't have a plugin instance or this is an NPRuntime or Java
+  // plugin since the following code is only useful for XPCOM plugins.
+  if (!pi || (plugin_internal && plugin_internal->GetJSObject(cx))
 #ifdef OJI
-      && !java_plugin_instance
+      || java_plugin_instance
 #endif
       ) {
+    return nsHTMLElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                       _retval);
+  }
+
+  JSObject *proto = ::JS_GetPrototype(cx, obj);
+
+  if (!proto || strcmp(STOBJ_GET_CLASS(proto)->name, NPRUNTIME_JSCLASS_NAME)) {
     // This is not an NPRuntime plugin or Java plugin, continue on...
 
     JSString *str = JSVAL_TO_STRING(id);
