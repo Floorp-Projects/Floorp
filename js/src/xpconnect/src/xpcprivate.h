@@ -2248,16 +2248,11 @@ public:
     GetRuntime() const {XPCWrappedNativeScope* scope = GetScope();
                         return scope ? scope->GetRuntime() : nsnull;}
 
-    /**
-     * If Object has a nsWrapperCache it should be passed in. If a cache is
-     * passed in then cache->GetWrapper() must be null.
-     */
     static nsresult
     GetNewOrUsed(XPCCallContext& ccx,
                  nsISupports* Object,
                  XPCWrappedNativeScope* Scope,
                  XPCNativeInterface* Interface,
-                 nsWrapperCache* cache,
                  JSBool isGlobal,
                  XPCWrappedNative** wrapper);
 
@@ -2408,11 +2403,11 @@ protected:
     XPCWrappedNative(); // not implemented
 
     // This ctor is used if this object will have a proto.
-    XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
+    XPCWrappedNative(nsISupports* aIdentity,
                      XPCWrappedNativeProto* aProto);
 
     // This ctor is used if this object will NOT have a proto.
-    XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
+    XPCWrappedNative(nsISupports* aIdentity,
                      XPCWrappedNativeScope* aScope,
                      XPCNativeSet* aSet);
 
