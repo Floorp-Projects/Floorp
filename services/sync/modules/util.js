@@ -468,7 +468,7 @@ let Utils = {
   },
 
   openWindow: function Utils_openWindow(name, uri, options, args) {
-    this._openWin(name, "Window", null, "chrome://weave/content/" + uri, 
+    this._openWin(name, "Window", null, "chrome://weave/content/" + uri,
       "", options || "centerscreen,chrome,dialog,resizable=yes", args);
   },
 
