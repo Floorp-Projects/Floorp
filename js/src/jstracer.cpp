@@ -7163,6 +7163,8 @@ TraceRecorder::record_JSOP_GETELEM()
 
     /* Property access using a string name or something we have to stringify. */
     if (!JSVAL_IS_INT(idx)) {
+        if (!JSVAL_IS_PRIMITIVE(idx))
+            ABORT_TRACE("non-primitive index");
         // If index is not a string, turn it into a string.
         if (!js_InternNonIntElementId(cx, obj, idx, &id))
             ABORT_TRACE("failed to intern non-int element id");
@@ -7296,7 +7298,9 @@ TraceRecorder::record_JSOP_SETELEM()
         if (!guardNotGlobalObject(obj, obj_ins))
             return false;
 
-        return call_imacro(setelem_imacros.setprop);
+        return call_imacro((*cx->fp->regs->pc == JSOP_INITELEM)
+                           ? initelem_imacros.initprop
+                           : setelem_imacros.setprop);
     }
 
     if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
@@ -8026,19 +8030,10 @@ TraceRecorder::record_JSOP_NEWINIT()
     JSProtoKey key = JSProtoKey(GET_INT8(cx->fp->regs->pc));
     JSObject* obj;
     const CallInfo *ci;
-    if (key == JSProto_Array) {
-        if (!js_GetClassPrototype(cx, globalObj, INT_TO_JSID(key), &obj))
-            return false;
-        ci = &js_FastNewArray_ci;
-    } else {
-        jsval v_obj;
-        if (!js_FindClassObject(cx, globalObj, INT_TO_JSID(key), &v_obj))
-            return false;
-        if (JSVAL_IS_PRIMITIVE(v_obj))
-            ABORT_TRACE("primitive Object value");
-        obj = JSVAL_TO_OBJECT(v_obj);
-        ci = &js_Object_tn_ci;
-    }
+
+    if (!js_GetClassPrototype(cx, globalObj, INT_TO_JSID(key), &obj))
+        return false;
+    ci = (key == JSProto_Array) ? &js_FastNewArray_ci : &js_Object_tn_ci;
     LIns* args[] = { INS_CONSTPTR(obj), cx_ins };
     LIns* v_ins = lir->insCall(ci, args);
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
