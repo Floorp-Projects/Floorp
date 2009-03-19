@@ -1142,7 +1142,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         else
         {
             rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope, iface,
-                                                cache, isGlobal,
+                                                isGlobal,
                                                 getter_AddRefs(strongWrapper));
 
             wrapper = strongWrapper;
