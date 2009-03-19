@@ -1022,6 +1022,9 @@ var PlacesStarButton = {
       this.updateState();
   },
 
+  onBeforeItemRemoved: function PSB_onBeforeItemRemoved(aItemId) {
+  },
+
   onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex) {
     if (!this._batching)
       this.updateState();
