@@ -149,6 +149,10 @@ struct pixman_line_fixed
     pixman_point_fixed_t	p1, p2;
 };
 
+/*
+ * Fixed point matrices
+ */
+
 struct pixman_vector
 {
     pixman_fixed_t	vector[3];
@@ -158,6 +162,149 @@ struct pixman_transform
 {
     pixman_fixed_t	matrix[3][3];
 };
+
+/* forward declaration (sorry) */
+struct pixman_box16;
+
+void
+pixman_transform_init_identity(struct pixman_transform *matrix);
+
+pixman_bool_t
+pixman_transform_point_3d (const struct pixman_transform *transform,
+			   struct pixman_vector *vector);
+
+pixman_bool_t
+pixman_transform_point(const struct pixman_transform *transform,
+		       struct pixman_vector *vector);
+
+pixman_bool_t
+pixman_transform_multiply (struct pixman_transform *dst,
+			   const struct pixman_transform *l,
+			   const struct pixman_transform *r);
+
+void
+pixman_transform_init_scale (struct pixman_transform *t,
+			     pixman_fixed_t sx,
+			     pixman_fixed_t sy);
+
+pixman_bool_t
+pixman_transform_scale(struct pixman_transform *forward,
+		       struct pixman_transform *reverse,
+		       pixman_fixed_t sx, pixman_fixed_t sy);
+
+void
+pixman_transform_init_rotate(struct pixman_transform *t,
+			     pixman_fixed_t cos,
+			     pixman_fixed_t sin);
+
+pixman_bool_t
+pixman_transform_rotate(struct pixman_transform *forward,
+			struct pixman_transform *reverse,
+			pixman_fixed_t c, pixman_fixed_t s);
+
+void
+pixman_transform_init_translate(struct pixman_transform *t,
+				pixman_fixed_t tx, pixman_fixed_t ty);
+
+
+pixman_bool_t
+pixman_transform_translate(struct pixman_transform *forward,
+			   struct pixman_transform *reverse,
+			   pixman_fixed_t tx, pixman_fixed_t ty);
+
+pixman_bool_t
+pixman_transform_bounds(const struct pixman_transform *matrix,
+			struct pixman_box16 *b);
+
+
+pixman_bool_t
+pixman_transform_invert (struct pixman_transform *dst,
+			 const struct pixman_transform *src);
+
+pixman_bool_t
+pixman_transform_is_identity(const struct pixman_transform *t);
+
+pixman_bool_t
+pixman_transform_is_scale(const struct pixman_transform *t);
+
+pixman_bool_t
+pixman_transform_is_int_translate(const struct pixman_transform *t);
+
+pixman_bool_t
+pixman_transform_is_inverse (const struct pixman_transform *a,
+			     const struct pixman_transform *b);
+
+
+/*
+ * Floating point matrices
+ */
+struct pixman_f_vector {
+    double  v[3];
+};
+
+struct pixman_f_transform {
+    double  m[3][3];
+};
+
+pixman_bool_t
+pixman_transform_from_pixman_f_transform (struct pixman_transform *t,
+					  const struct pixman_f_transform *ft);
+
+void
+pixman_f_transform_from_pixman_transform (struct pixman_f_transform *ft,
+					  const struct pixman_transform *t);
+
+pixman_bool_t
+pixman_transform_from_pixman_f_transform (struct pixman_transform *t,
+					  const struct pixman_f_transform *ft);
+
+pixman_bool_t
+pixman_f_transform_invert (struct pixman_f_transform *dst,
+			   const struct pixman_f_transform *src);
+
+pixman_bool_t
+pixman_f_transform_point (const struct pixman_f_transform *t,
+			  struct pixman_f_vector *v);
+
+void
+pixman_f_transform_point_3d (const struct pixman_f_transform *t,
+			     struct pixman_f_vector	*v);
+
+
+void
+pixman_f_transform_multiply (struct pixman_f_transform *dst,
+			     const struct pixman_f_transform *l,
+			     const struct pixman_f_transform *r);
+
+void
+pixman_f_transform_init_scale (struct pixman_f_transform *t, double sx, double sy);
+
+pixman_bool_t
+pixman_f_transform_scale (struct pixman_f_transform *forward,
+			  struct pixman_f_transform *reverse,
+			  double sx, double sy);
+
+void
+pixman_f_transform_init_rotate (struct pixman_f_transform *t, double cos, double sin);
+
+pixman_bool_t
+pixman_f_transform_rotate (struct pixman_f_transform *forward,
+			   struct pixman_f_transform *reverse,
+			   double c, double s);
+
+void
+pixman_f_transform_init_translate (struct pixman_f_transform *t, double tx, double ty);
+
+pixman_bool_t
+pixman_f_transform_translate (struct pixman_f_transform *forward,
+			      struct pixman_f_transform *reverse,
+			      double tx, double ty);
+
+pixman_bool_t
+pixman_f_transform_bounds (const struct pixman_f_transform *t, struct pixman_box16 *b);
+
+void
+pixman_f_transform_init_identity (struct pixman_f_transform *t);
 
 /* Don't blame me, blame XRender */
 typedef enum
@@ -436,9 +583,6 @@ pixman_bool_t pixman_fill               (uint32_t           *bits,
 					 int                 height,
 					 uint32_t            _xor);
 
-pixman_bool_t pixman_transform_point_3d (pixman_transform_t *transform,
-					 pixman_vector_t    *vector);
-
 int           pixman_version            (void);
 const char*   pixman_version_string     (void);
 
@@ -504,7 +648,9 @@ struct pixman_indexed
 #define PIXMAN_TYPE_YUY2	6
 #define PIXMAN_TYPE_YV12	7
 
-#define PIXMAN_FORMAT_COLOR(f)	(PIXMAN_FORMAT_TYPE(f) & 2)
+#define PIXMAN_FORMAT_COLOR(f)				\
+	(PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ARGB ||	\
+	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ABGR)
 
 /* 32bpp formats */
 typedef enum {

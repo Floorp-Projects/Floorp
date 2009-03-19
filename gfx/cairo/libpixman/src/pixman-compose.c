@@ -543,12 +543,12 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 #ifndef PIXMAN_FB_ACCESSORS
 
-#define SCANLINE_BUFFER_LENGTH 2048
+#define SCANLINE_BUFFER_LENGTH 8192
 
 void
 pixman_composite_rect_general (const FbComposeData *data)
 {
-    uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
+    uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     const pixman_format_code_t srcFormat = data->src->type == BITS ? data->src->bits.format : 0;
     const pixman_format_code_t maskFormat = data->mask && data->mask->type == BITS ? data->mask->bits.format : 0;
     const pixman_format_code_t destFormat = data->dest->type == BITS ? data->dest->bits.format : 0;
@@ -557,10 +557,10 @@ pixman_composite_rect_general (const FbComposeData *data)
     const int destWide = PIXMAN_FORMAT_16BPC(destFormat);
     const int wide = srcWide || maskWide || destWide;
     const int Bpp = wide ? 8 : 4;
-    uint8_t *scanline_buffer = (uint8_t*)_scanline_buffer;
+    uint8_t *scanline_buffer = stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
 
-    if (data->width * Bpp > SCANLINE_BUFFER_LENGTH * sizeof(uint32_t))
+    if (data->width * Bpp > SCANLINE_BUFFER_LENGTH)
     {
 	scanline_buffer = pixman_malloc_abc (data->width, 3, Bpp);
 
@@ -589,7 +589,7 @@ pixman_composite_rect_general (const FbComposeData *data)
 						    wide);
     }
 
-    if ((void*)scanline_buffer != (void*)_scanline_buffer)
+    if (scanline_buffer != stack_scanline_buffer)
 	free (scanline_buffer);
 }
 
