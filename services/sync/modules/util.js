@@ -442,6 +442,41 @@ let Utils = {
     return [stream, file];
   },
 
+  /**
+   * Open/reshow a window/dialog based on its name and type.
+   *
+   * @param name
+   *        Name of the window/dialog to reshow if already open
+   * @param type
+   *        Opening behavior: "Window" or "Dialog"
+   * @param args
+   *        More arguments go here depending on the type
+   */
+  _openWin: function Utils__openWin(name, type /*, args... */) {
+    // Just re-show the window if it's already open
+    let openedWindow = Svc.WinMediator.getMostRecentWindow("Weave:" + name);
+    if (openedWindow) {
+      openedWindow.focus();
+      return;
+    }
+
+    // Open up the window/dialog!
+    let win = Svc.WinWatcher;
+    if (type == "Dialog")
+      win = win.activeWindow;
+    win["open" + type].apply(win, this.slice(arguments, 2));
+  },
+
+  openWindow: function Utils_openWindow(name, uri, options, args) {
+    this._openWin(name, "Window", null, "chrome://weave/content/" + uri, 
+      "", options || "centerscreen,chrome,dialog,resizable=yes", args);
+  },
+
+  openDialog: function Utils_openDialog(name, uri, options, args) {
+    this._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
+      options || "centerscreen,chrome,dialog,modal,resizable=yes", args);
+  },
+
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};
@@ -449,6 +484,14 @@ let Utils = {
       ret += str.value;
     }
     return ret;
+  },
+
+  slice: function Utils_slice(array, start, end) {
+    let args = [start];
+    if (end !== undefined)
+      args.push(end);
+
+    return Array.prototype.slice.apply(array, args);
   },
 
   bind2: function Async_bind2(object, method) {
@@ -503,12 +546,15 @@ Utils.EventListener.prototype = {
 let Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
 Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
-Utils.lazySvc(Svc, 'Crypto', "@labs.mozilla.com/Weave/Crypto;1", Ci.IWeaveCrypto);
-Utils.lazySvc(Svc, 'Directory', "@mozilla.org/file/directory_service;1", Ci.nsIProperties);
-Utils.lazySvc(Svc, 'IO', "@mozilla.org/network/io-service;1", Ci.nsIIOService);
-Utils.lazySvc(Svc, 'Login', "@mozilla.org/login-manager;1", Ci.nsILoginManager);
-Utils.lazySvc(Svc, 'Memory', "@mozilla.org/xpcom/memory-service;1", Ci.nsIMemory);
-Utils.lazySvc(Svc, 'Observer', "@mozilla.org/observer-service;1", Ci.nsIObserverService);
-Utils.lazySvc(Svc, 'Private', "@mozilla.org/privatebrowsing;1", Ci.nsIPrivateBrowsingService);
-Utils.lazySvc(Svc, 'Version',
-              "@mozilla.org/xpcom/version-comparator;1", Ci.nsIVersionComparator);
+[["Crypto", "@labs.mozilla.com/Weave/Crypto;1", "IWeaveCrypto"],
+ ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
+ ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
+ ["Login", "@mozilla.org/login-manager;1", "nsILoginManager"],
+ ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
+ ["Observer", "@mozilla.org/observer-service;1", "nsIObserverService"],
+ ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
+ ["Prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
+ ["Version", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
+ ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
+ ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
+].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], Ci[lazy[2]]));

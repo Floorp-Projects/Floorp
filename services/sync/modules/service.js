@@ -104,7 +104,6 @@ Cu.import("resource://weave/identity.js", Weave);
 Cu.import("resource://weave/stores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
 Cu.import("resource://weave/oauth.js", Weave);
-Cu.import("resource://weave/service.js", Weave); // ??
 Cu.import("resource://weave/engines/clientData.js", Weave);
 
 Utils.lazy(Weave, 'Service', WeaveSvc);
