@@ -4647,6 +4647,14 @@ function testNEWINIT()
 testNEWINIT.expected = "[{}]";
 test(testNEWINIT);
 
+function testNEWINIT_DOUBLE()
+{
+    for (var z = 0; z < 2; ++z) { ({ 0.1: null })}
+    return "ok";
+}
+testNEWINIT_DOUBLE.expected = "ok";
+test(testNEWINIT_DOUBLE);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
