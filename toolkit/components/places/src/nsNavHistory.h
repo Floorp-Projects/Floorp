@@ -62,6 +62,7 @@
 #endif
 #include "nsIBrowserHistory.h"
 #include "nsICollation.h"
+#include "nsIDateTimeFormat.h"
 #include "nsIGlobalHistory.h"
 #include "nsIGlobalHistory3.h"
 #include "nsIDownloadHistory.h"
@@ -241,12 +242,10 @@ public:
    * objects for places components.
    */
   nsIStringBundle* GetBundle();
-  nsIStringBundle* GetDateFormatBundle();
   nsICollation* GetCollation();
   void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
   void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName,
                           nsACString& aResult);
-  void GetMonthName(PRInt32 aIndex, nsACString& aResult);
 
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDaysMax == 0 || InPrivateBrowsingMode(); }
@@ -633,7 +632,6 @@ protected:
 
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsCOMPtr<nsIStringBundle> mDateFormatBundle;
   nsCOMPtr<nsICollation> mCollation;
 
   // annotation service : MAY BE NULL!
