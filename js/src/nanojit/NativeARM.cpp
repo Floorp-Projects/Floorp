@@ -898,6 +898,45 @@ Assembler::LD32_nochk(Register r, int32_t imm)
     LDR_nochk(r,PC,offset);
 }
 
+void
+Assembler::asm_ldr_chk(Register d, Register b, int32_t off, bool chk)
+{
+    if (IsFpReg(d)) {
+        FLDD_chk(d,b,off,chk);
+        return;
+    }
+
+    if (off > -4096 && off < 4096) {
+        if (chk) underrunProtect(4);
+        *(--_nIns) = (NIns)( COND_AL | ((off < 0 ? 0x51 : 0x59)<<20) | (b<<16) | (d<<12) | ((off < 0 ? -off : off)&0xFFF) );
+    } else {
+        if (chk) underrunProtect(4+LD32_size);
+        NanoAssert(b != IP);
+        *(--_nIns) = (NIns)( COND_AL | (0x79<<20) | (b<<16) | (d<<12) | IP );
+        LD32_nochk(IP, off);
+    }
+
+    asm_output("ldr %s, [%s, #%d]",gpn(d),gpn(b),(off));
+}
+
+void
+Assembler::asm_ld_imm(Register d, int32_t imm)
+{
+    if (imm == 0) {
+        EOR(d, d, d);
+    } else if (isS8(imm) || isU8(imm)) {
+        underrunProtect(4);
+        if (imm < 0)
+            *(--_nIns) = (NIns)( COND_AL | 0x3E<<20 | d<<12 | (imm^0xFFFFFFFF)&0xFF );
+        else
+            *(--_nIns) = (NIns)( COND_AL | 0x3B<<20 | d<<12 | imm&0xFF );
+        asm_output("ld  %s,0x%x",gpn(d), imm);
+    } else {
+        underrunProtect(LD32_size);
+        LD32_nochk(d, imm);
+        asm_output("ld  %s,0x%x",gpn(d), imm);
+    }
+}
 
 // Branch to target address _t with condition _c, doing underrun
 // checks (_chk == 1) or skipping them (_chk == 0).
@@ -998,7 +1037,7 @@ Assembler::asm_sub_imm(Register rd, Register rn, int32_t imm, int stat)
             ALUi(AL, sub, stat, rd, rn, 0xff);
         } else {
             /* more than 510 */
-            NanoAssert(r != IP);
+            NanoAssert(rn != IP);
             ALUr(AL, sub, stat, rd, rn, IP);
             LD32_nochk(IP, imm);
         }
@@ -1010,7 +1049,7 @@ Assembler::asm_sub_imm(Register rd, Register rn, int32_t imm, int stat)
             ALUi(AL, add, stat, rd, rn, 0xff);
         } else {
             /* less than -510 */
-            NanoAssert(r != IP);
+            NanoAssert(rn != IP);
             ALUr(AL, add, stat, rd, rn, IP);
             LD32_nochk(IP, -imm);
         }
