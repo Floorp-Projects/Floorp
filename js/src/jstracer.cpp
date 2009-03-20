@@ -136,8 +136,10 @@ static const char tagChar[]  = "OIDISIBI";
 #define MAX_BRANCHES 16
 
 #ifdef JS_JIT_SPEW
-#define ABORT_TRACE(msg)   do { debug_only_v(fprintf(stdout, "abort: %d: %s\n", __LINE__, msg);)  return false; } while (0)
+#define debug_only_a(x) if (js_verboseAbort || js_verboseDebug ) { x; }
+#define ABORT_TRACE(msg)   do { debug_only_a(fprintf(stdout, "abort: %d: %s\n", __LINE__, msg);)  return false; } while (0)
 #else
+#define debug_only_a(x)
 #define ABORT_TRACE(msg)   return false
 #endif
 
@@ -222,7 +224,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #endif /* JS_JIT_SPEW */
 
 #define INS_CONST(c)        addName(lir->insImm(c), #c)
-#define INS_CONSTPTR(p)     addName(lir->insImmPtr((void*) (p)), #p)
+#define INS_CONSTPTR(p)     addName(lir->insImmPtr(p), #p)
 #define INS_CONSTFUNPTR(p)  addName(lir->insImmPtr(JS_FUNC_TO_DATA_PTR(void*, p)), #p)
 
 using namespace avmplus;
@@ -246,6 +248,7 @@ static bool did_we_check_sse2 = false;
 #ifdef JS_JIT_SPEW
 bool js_verboseDebug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 bool js_verboseStats = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "stats");
+bool js_verboseAbort = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "abort");
 #endif
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
@@ -635,16 +638,22 @@ static LIns* demote(LirWriter *out, LInsp i)
 
 static bool isPromoteInt(LIns* i)
 {
-    jsdouble d;
-    return isi2f(i) || i->isconst() ||
-        (i->isconstq() && (d = i->constvalf()) == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d));
+    if (isi2f(i) || i->isconst())
+        return true;
+    if (!i->isconstq())
+        return false;
+    jsdouble d = i->constvalf();
+    return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
 }
 
 static bool isPromoteUint(LIns* i)
 {
-    jsdouble d;
-    return isu2f(i) || i->isconst() ||
-        (i->isconstq() && (d = i->constvalf()) == (jsdouble)(jsuint)d && !JSDOUBLE_IS_NEGZERO(d));
+    if (isu2f(i) || i->isconst())
+        return true;
+    if (!i->isconstq())
+        return false;
+    jsdouble d = i->constvalf();
+    return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
 }
 
 static bool isPromote(LIns* i)
@@ -4456,7 +4465,7 @@ js_AbortRecording(JSContext* cx, const char* reason)
 
 #ifdef DEBUG
     TreeInfo* ti = tm->recorder->getTreeInfo();
-    debug_only_v(printf("Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
+    debug_only_a(printf("Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
                         ti->treeFileName,
                         ti->treeLineNumber,
                         ti->treePCOffset,
@@ -5006,7 +5015,7 @@ TraceRecorder::ifop()
                       lir->insLoad(LIR_ldp,
                                    v_ins,
                                    (int)offsetof(JSString, length)),
-                      INS_CONSTPTR(JSSTRING_LENGTH_MASK));
+                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
     } else {
         JS_NOT_REACHED("ifop");
         return false;
@@ -6419,7 +6428,7 @@ TraceRecorder::record_JSOP_NOT()
     JS_ASSERT(JSVAL_IS_STRING(v));
     set(&v, lir->ins_eq0(lir->ins2(LIR_piand,
                                    lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, length)),
-                                   INS_CONSTPTR(JSSTRING_LENGTH_MASK))));
+                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)))));
     return true;
 }
 
@@ -7218,7 +7227,7 @@ SetProperty(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static int32 FASTCALL
+static JSBool FASTCALL
 SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
     JSAutoTempValueRooter tvr(cx, v);
@@ -7249,7 +7258,7 @@ SetElement(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static int32 FASTCALL
+static JSBool FASTCALL
 SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
 {
     JSAutoTempIdRooter idr(cx);
@@ -9351,19 +9360,19 @@ TraceRecorder::record_JSOP_LENGTH()
 
         LIns* masked_len_ins = lir->ins2(LIR_piand,
                                          len_ins,
-                                         INS_CONSTPTR(JSSTRING_LENGTH_MASK));
+                                         INS_CONSTPTR(reinterpret_cast<void *>(JSSTRING_LENGTH_MASK)));
 
-        LIns *choose_len_ins =
+        LIns* choose_len_ins =
             lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                    len_ins,
-                                                   INS_CONSTPTR(JSSTRFLAG_DEPENDENT))),
+                                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRFLAG_DEPENDENT)))),
                             masked_len_ins,
                             lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                                    len_ins,
-                                                                   INS_CONSTPTR(JSSTRFLAG_PREFIX))),
+                                                                   INS_CONSTPTR(reinterpret_cast<void *>(JSSTRFLAG_PREFIX)))),
                                             lir->ins2(LIR_piand,
                                                       len_ins,
-                                                      INS_CONSTPTR(JSSTRDEP_LENGTH_MASK)),
+                                                      INS_CONSTPTR(reinterpret_cast<void *>(JSSTRDEP_LENGTH_MASK))),
                                             masked_len_ins));
 
         set(&l, lir->ins1(LIR_i2f, choose_len_ins));
