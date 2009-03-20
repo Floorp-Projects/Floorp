@@ -6763,11 +6763,20 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
         JSNative native = fun->u.n.native;
         if (native == js_Array)
             return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
-        if (native == js_String && argc == 1 && !constructing) {
-            jsval& v = stackval(0 - argc);
+        if (native == js_String && argc == 1) {
+            jsval& v = stackval(-1);
             if (!JSVAL_IS_PRIMITIVE(v))
                 return call_imacro(call_imacros.String);
-            set(&fval, stringify(v));
+            LIns* v_ins = stringify(v);
+            if (constructing) {
+                LIns *proto_ins;
+                if (!getClassPrototype(FUN_OBJECT(fun), proto_ins))
+                    return false;
+                LIns *args[] = { v_ins, proto_ins, cx_ins };
+                v_ins = lir->insCall(&js_String_tn_ci, args);
+                guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
+            }
+            set(&fval, v_ins);
             return true;
         }
     }
