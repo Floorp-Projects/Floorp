@@ -254,7 +254,7 @@ endif
 
 ######################################################################
 
-.PHONY: all build install test-install clean
+.PHONY: all build install clean
 
 all: build # default target
 
@@ -265,14 +265,6 @@ install: build
 	mkdir -p $(platformdir)/components
 	cp $(idl_typelib) $(destdir)/components
 	cp $(so_target) $(platformdir)/components
-
-# gross hack to get around component registration for xpcshell tests
-test-install: install
-	ln -sf `pwd`/$(destdir)/defaults/preferences/sync.js $(sdkdir)/bin/defaults/pref/sync.js # fixme!!
-	ln -sf `pwd`/$(destdir)/components/$(idl_typelib) $(sdkdir)/bin/components/$(idl_typelib)
-	ln -sf `pwd`/$(platformdir)/components/$(so_target) $(sdkdir)/bin/components/$(so_target)
-	rm -f $(sdkdir)/bin/components/compreg.dat
-	rm -f $(sdkdir)/bin/components/xpti.dat
 
 clean: 
 	rm -f $(so_target) $(so_target_i386) $(so_target_ppc) \

@@ -1,5 +1,3 @@
-version(180);
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -31,9 +29,6 @@ let provider = {
 };
 ds.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
-do_bind_resource(do_get_file("modules"), "weave");
-do_bind_resource(do_get_file("tests"), "tests");
-
 function loadInSandbox(aUri) {
   var sandbox = Components.utils.Sandbox(this);
   var request = Components.
@@ -41,8 +36,9 @@ function loadInSandbox(aUri) {
                 createInstance();
 
   request.open("GET", aUri, false);
+  request.overrideMimeType("application/javascript");
   request.send(null);
-  Components.utils.evalInSandbox(request.responseText, sandbox);
+  Components.utils.evalInSandbox(request.responseText, sandbox, "1.8");
 
   return sandbox;
 }
