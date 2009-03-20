@@ -43,7 +43,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsIDOMSVGPointList.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 
 class nsSVGPointList : public nsSVGValue,
@@ -88,7 +88,7 @@ public:
 protected:
   void ReleasePoints();
   
-  nsAutoVoidArray mPoints;
+  nsAutoTArray<nsIDOMSVGPoint*, 8> mPoints;
 };
 
 

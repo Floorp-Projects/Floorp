@@ -59,7 +59,7 @@
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULTemplateBuilder.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsUnicharUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMClassInfo.h"
@@ -152,7 +152,7 @@ protected:
                            nsIXULTemplateResult *aResult,
                            nsTemplateQuerySet* aQuerySet,
                            PRInt32* aDelta,
-                           nsAutoVoidArray& open);
+                           nsTArray<PRInt32>& open);
 
     /**
      * Close a container row, removing the container's childrem from
@@ -1522,7 +1522,7 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
                                 nsIXULTemplateResult *aResult,
                                 PRInt32* aDelta)
 {
-    nsAutoVoidArray open;
+    nsAutoTArray<PRInt32, 8> open;
     PRInt32 count = 0;
 
     PRInt32 rulecount = mQuerySets.Length();
@@ -1534,8 +1534,8 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
 
     // Now recursively deal with any open sub-containers that just got
     // inserted. We need to do this back-to-front to avoid skewing offsets.
-    for (PRInt32 i = open.Count() - 1; i >= 0; --i) {
-        PRInt32 index = NS_PTR_TO_INT32(open[i]);
+    for (PRInt32 i = open.Length() - 1; i >= 0; --i) {
+        PRInt32 index = open[i];
 
         nsTreeRows::Subtree* child =
             mRows.EnsureSubtreeFor(aSubtree, index);
@@ -1566,7 +1566,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                                          nsIXULTemplateResult* aResult,
                                          nsTemplateQuerySet* aQuerySet,
                                          PRInt32* aDelta,
-                                         nsAutoVoidArray& open)
+                                         nsTArray<PRInt32>& open)
 {
     PRInt32 count = *aDelta;
     
@@ -1674,7 +1674,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                 PRBool isOpen = PR_FALSE;
                 IsContainerOpen(nextresult, &isOpen);
                 if (isOpen) {
-                    if (!open.AppendElement(NS_INT32_TO_PTR(count)))
+                    if (open.AppendElement(count) == nsnull)
                         return NS_ERROR_OUT_OF_MEMORY;
                 }
 

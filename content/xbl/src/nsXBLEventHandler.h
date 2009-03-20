@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 class nsIAtom;
 class nsIContent;
@@ -125,7 +125,7 @@ private:
   PRBool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, PRUint32 aCharCode,
                                 PRBool aIgnoreShiftKey);
 
-  nsVoidArray mProtoHandlers;
+  nsTArray<nsXBLPrototypeHandler*> mProtoHandlers;
   nsCOMPtr<nsIAtom> mEventType;
   PRUint8 mPhase;
   PRUint8 mType;

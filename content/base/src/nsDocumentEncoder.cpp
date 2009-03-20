@@ -76,6 +76,7 @@
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
+#include "nsTArray.h"
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
@@ -109,9 +110,9 @@ protected:
                                nsIDOMNode* aNode, 
                                nsAString& aString,
                                PRInt32 aDepth);
-  nsresult SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
+  nsresult SerializeRangeContextStart(const nsTArray<nsIDOMNode*>& aAncestorArray,
                                       nsAString& aString);
-  nsresult SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
+  nsresult SerializeRangeContextEnd(const nsTArray<nsIDOMNode*>& aAncestorArray,
                                     nsAString& aString);
 
   nsresult FlushText(nsAString& aString, PRBool aForce);
@@ -139,11 +140,11 @@ protected:
   PRUint32          mEndDepth;
   PRInt32           mStartRootIndex;
   PRInt32           mEndRootIndex;
-  nsAutoVoidArray   mCommonAncestors;
-  nsAutoVoidArray   mStartNodes;
-  nsAutoVoidArray   mStartOffsets;
-  nsAutoVoidArray   mEndNodes;
-  nsAutoVoidArray   mEndOffsets;
+  nsAutoTArray<nsIDOMNode*, 8> mCommonAncestors;
+  nsAutoTArray<nsIContent*, 8> mStartNodes;
+  nsAutoTArray<PRInt32, 8>     mStartOffsets;
+  nsAutoTArray<nsIContent*, 8> mEndNodes;
+  nsAutoTArray<PRInt32, 8>     mEndOffsets;
   PRPackedBool      mHaltRangeHint;  
   PRPackedBool      mIsCopying;  // Set to PR_TRUE only while copying
   PRPackedBool      mNodeIsContainer;
@@ -542,18 +543,18 @@ static PRInt32 IndexOf(nsIDOMNode* aParent, nsIDOMNode* aChild)
   return parent->IndexOf(child);
 }
 
-static inline PRInt32 GetIndex(nsVoidArray& aIndexArray)
+static inline PRInt32 GetIndex(nsTArray<PRInt32>& aIndexArray)
 {
-  PRInt32 count = aIndexArray.Count();
+  PRInt32 count = aIndexArray.Length();
 
   if (count) {
-    return (PRInt32)aIndexArray.ElementAt(count - 1);
+    return aIndexArray.ElementAt(count - 1);
   }
 
   return 0;
 }
 
-static nsresult GetNextNode(nsIDOMNode* aNode, nsVoidArray& aIndexArray,
+static nsresult GetNextNode(nsIDOMNode* aNode, nsTArray<PRInt32>& aIndexArray,
                             nsIDOMNode*& aNextNode,
                             nsRangeIterationDirection& aDirection)
 {
@@ -567,7 +568,7 @@ static nsresult GetNextNode(nsIDOMNode* aNode, nsVoidArray& aIndexArray,
     ChildAt(aNode, 0, aNextNode);
     NS_ENSURE_TRUE(aNextNode, NS_ERROR_FAILURE);
 
-    aIndexArray.AppendElement((void *)0);
+    aIndexArray.AppendElement(0);
 
     aDirection = kDirectionIn;
   } else if (aDirection == kDirectionIn) {
@@ -582,15 +583,15 @@ static nsresult GetNextNode(nsIDOMNode* aNode, nsVoidArray& aIndexArray,
     aNode->GetParentNode(getter_AddRefs(parent));
     NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
-    PRInt32 count = aIndexArray.Count();
+    PRInt32 count = aIndexArray.Length();
 
     if (count) {
-      PRInt32 indx = (PRInt32)aIndexArray.ElementAt(count - 1);
+      PRInt32 indx = aIndexArray.ElementAt(count - 1);
 
       ChildAt(parent, indx + 1, aNextNode);
 
       if (aNextNode)
-        aIndexArray.ReplaceElementAt((void *)(indx + 1), count - 1);
+        aIndexArray.ElementAt(count - 1) = indx + 1;
       else
         aIndexArray.RemoveElementAt(count - 1);
     } else {
@@ -600,7 +601,7 @@ static nsresult GetNextNode(nsIDOMNode* aNode, nsVoidArray& aIndexArray,
         ChildAt(parent, indx + 1, aNextNode);
 
         if (aNextNode)
-          aIndexArray.AppendElement((void *)(indx + 1));
+          aIndexArray.AppendElement(indx + 1);
       }
     }
 
@@ -670,12 +671,12 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
   // get start and end nodes for this recursion level
   nsCOMPtr<nsIContent> startNode, endNode;
   PRInt32 start = mStartRootIndex - aDepth;
-  if (start >= 0 && start <= mStartNodes.Count())
-    startNode = static_cast<nsIContent *>(mStartNodes[start]);
+  if (start >= 0 && start <= mStartNodes.Length())
+    startNode = mStartNodes[start];
 
   PRInt32 end = mEndRootIndex - aDepth;
-  if (end >= 0 && end <= mEndNodes.Count())
-    endNode = static_cast<nsIContent *>(mEndNodes[end]);
+  if (end >= 0 && end <= mEndNodes.Length())
+    endNode = mEndNodes[end];
 
   if ((startNode != content) && (endNode != content))
   {
@@ -728,9 +729,9 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
       nsCOMPtr<nsIDOMNode> childAsNode;
       PRInt32 startOffset = 0, endOffset = -1;
       if (startNode == content && mStartRootIndex >= aDepth)
-        startOffset = NS_PTR_TO_INT32(mStartOffsets[mStartRootIndex - aDepth]);
+        startOffset = mStartOffsets[mStartRootIndex - aDepth];
       if (endNode == content && mEndRootIndex >= aDepth)
-        endOffset = NS_PTR_TO_INT32(mEndOffsets[mEndRootIndex - aDepth]) ;
+        endOffset = mEndOffsets[mEndRootIndex - aDepth];
       // generated content will cause offset values of -1 to be returned.  
       PRInt32 j;
       PRUint32 childCount = content->GetChildCount();
@@ -777,14 +778,14 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
 }
 
 nsresult
-nsDocumentEncoder::SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
+nsDocumentEncoder::SerializeRangeContextStart(const nsTArray<nsIDOMNode*>& aAncestorArray,
                                               nsAString& aString)
 {
-  PRInt32 i = aAncestorArray.Count();
+  PRInt32 i = aAncestorArray.Length();
   nsresult rv = NS_OK;
 
   while (i > 0) {
-    nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(--i);
+    nsIDOMNode *node = aAncestorArray.ElementAt(--i);
 
     if (!node)
       break;
@@ -801,15 +802,15 @@ nsDocumentEncoder::SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
 }
 
 nsresult
-nsDocumentEncoder::SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
+nsDocumentEncoder::SerializeRangeContextEnd(const nsTArray<nsIDOMNode*>& aAncestorArray,
                                             nsAString& aString)
 {
   PRInt32 i = 0;
-  PRInt32 count = aAncestorArray.Count();
+  PRInt32 count = aAncestorArray.Length();
   nsresult rv = NS_OK;
 
   while (i < count) {
-    nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(i++);
+    nsIDOMNode *node = aAncestorArray.ElementAt(i++);
 
     if (!node)
       break;
@@ -1256,11 +1257,11 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   // where all the cells are in the same table.
 
   // leaf of ancestors might be text node.  If so discard it.
-  PRInt32 count = mCommonAncestors.Count();
+  PRInt32 count = mCommonAncestors.Length();
   PRInt32 i;
   nsCOMPtr<nsIDOMNode> node;
   if (count > 0)
-    node = static_cast<nsIDOMNode *>(mCommonAncestors.ElementAt(0));
+    node = mCommonAncestors.ElementAt(0);
 
   if (node && IsTextNode(node)) 
   {
@@ -1275,13 +1276,13 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   i = count;
   while (i > 0)
   {
-    node = static_cast<nsIDOMNode *>(mCommonAncestors.ElementAt(--i));
+    node = mCommonAncestors.ElementAt(--i);
     SerializeNodeStart(node, 0, -1, aContextString);
   }
   //i = 0; guaranteed by above
   while (i < count)
   {
-    node = static_cast<nsIDOMNode *>(mCommonAncestors.ElementAt(i++));
+    node = mCommonAncestors.ElementAt(i++);
     SerializeNodeEnd(node, aContextString);
   }
 

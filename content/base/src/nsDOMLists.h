@@ -47,7 +47,6 @@
 
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMNameList.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsString.h"
 

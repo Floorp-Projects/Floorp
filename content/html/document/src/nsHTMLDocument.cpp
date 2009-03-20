@@ -2083,9 +2083,7 @@ nsHTMLDocument::Close()
   if (mParser && mWriteState == eDocumentOpened) {
     mPendingScripts.RemoveElement(GenerateParserKey());
 
-    mWriteState = mPendingScripts.Count() == 0
-                  ? eDocumentClosed
-                  : ePendingClose;
+    mWriteState = mPendingScripts.IsEmpty() ? eDocumentClosed : ePendingClose;
 
     ++mWriteLevel;
     rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
@@ -2150,7 +2148,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   void *key = GenerateParserKey();
   if (mWriteState == eDocumentClosed ||
       (mWriteState == ePendingClose &&
-       mPendingScripts.IndexOf(key) == kNotFound)) {
+       !mPendingScripts.Contains(key))) {
     mWriteState = eDocumentClosed;
     mParser->Terminate();
     NS_ASSERTION(!mParser, "mParser should have been null'd out");
@@ -2370,7 +2368,7 @@ nsHTMLDocument::ScriptExecuted(nsIScriptElement *aScript)
   }
 
   mPendingScripts.RemoveElement(aScript);
-  if (mPendingScripts.Count() == 0 && mWriteState == ePendingClose) {
+  if (mPendingScripts.IsEmpty() && mWriteState == ePendingClose) {
     // The last pending script just finished, terminate our parser now.
     mWriteState = eDocumentClosed;
   }

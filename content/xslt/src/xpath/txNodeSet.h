@@ -44,7 +44,6 @@
 #define txNodeSet_h__
 
 #include "txExprResult.h"
-#include "nsVoidArray.h"
 #include "txError.h"
 #include "txXPathNode.h"
 

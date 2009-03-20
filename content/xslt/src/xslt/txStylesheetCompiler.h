@@ -45,6 +45,7 @@
 #include "txIXPathContext.h"
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"
+#include "nsTArray.h"
 
 extern PRBool
 TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID);
@@ -57,6 +58,7 @@ class txNamespaceMap;
 class txToplevelItem;
 class txPushNewContext;
 class txStylesheetCompiler;
+class txInScopeVariable;
 
 class txElementContext : public TxObject
 {
@@ -68,7 +70,7 @@ public:
     PRBool mForwardsCompatibleParsing;
     nsString mBaseURI;
     nsRefPtr<txNamespaceMap> mMappings;
-    nsVoidArray mInstructionNamespaces;
+    nsTArray<PRInt32> mInstructionNamespaces;
     PRInt32 mDepth;
 };
 
@@ -169,8 +171,8 @@ public:
 
 protected:
     nsRefPtr<txACompileObserver> mObserver;
-    nsVoidArray mInScopeVariables;
-    nsVoidArray mChildCompilerList;
+    nsTArray<txInScopeVariable*> mInScopeVariables;
+    nsTArray<txStylesheetCompiler*> mChildCompilerList;
     // embed info, target information is the ID
     nsString mTarget;
     enum 
@@ -189,7 +191,7 @@ protected:
 private:
     txInstruction** mNextInstrPtr;
     txListIterator mToplevelIterator;
-    nsVoidArray mGotoTargetPointers;
+    nsTArray<txInstruction**> mGotoTargetPointers;
 };
 
 struct txStylesheetAttr
