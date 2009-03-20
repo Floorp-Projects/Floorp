@@ -7678,6 +7678,7 @@ nsNavHistory::GetDBInvalidFrecencies()
   // only from moz_places since temp will be synched there sometimes.  
   // Notice that frecency is invalidated as frecency = -visit_count
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "/* do not warn (bug 482351) */ "
       "SELECT * FROM ( "
         "SELECT id, visit_count, hidden, typed, frecency, url "
         "FROM ( "
