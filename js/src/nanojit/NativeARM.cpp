@@ -58,20 +58,15 @@ namespace nanojit
 {
 
 #ifdef NJ_VERBOSE
-const char* regNames[] = {"r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","FP","IP","SP","LR","PC",
+const char* regNames[] = {"r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","fp","ip","sp","lr","pc",
                           "d0","d1","d2","d3","d4","d5","d6","d7","s14"};
+const char* condNames[] = {"eq","ne","cs","cc","mi","pl","vs","vc","hi","ls","ge","lt","gt","le",""/*al*/,"nv"};
+const char* shiftNames[] = { "lsl", "lsl", "lsr", "lsr", "asr", "asr", "ror", "ror" };
 #endif
 
 const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
 const Register Assembler::retRegs[] = { R0, R1 };
 const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
-
-const char *ccName(ConditionCode cc)
-{
-    const char *ccNames[] = { "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
-                              "hi", "ls", "ge", "lt", "gt", "le", "al", "nv" };
-    return ccNames[(int)cc];
-}
 
 void
 Assembler::nInit(AvmCore*)
@@ -88,9 +83,9 @@ Assembler::genPrologue()
     // NJ_RESV_OFFSET is space at the top of the stack for us
     // to use for parameter passing (8 bytes at the moment)
     uint32_t stackNeeded = STACK_GRANULARITY * _activation.highwatermark + NJ_STACK_OFFSET;
+    uint32_t savingCount = 2;
 
     uint32_t savingMask = rmask(FP) | rmask(LR);
-    uint32_t savingCount = 2;
 
     if (!_thisfrag->lirbuf->explicitSavedRegs) {
         for (int i = 0; i < NumSavedRegs; ++i)
@@ -267,8 +262,8 @@ Assembler::asm_call(LInsp ins)
             } else if (r == R3) {
                 // to use R3 gets complicated; we need to move the high dword
                 // into R3, and the low dword on the stack.
-                STR_preindex(Scratch, SP, -4);
-                FMRDL(Scratch, sr);
+                STR_preindex(IP, SP, -4);
+                FMRDL(IP, sr);
                 FMRDH(r, sr);
             } else {
                 asm_pusharg(arg);
@@ -479,8 +474,8 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
         if (isS8(d >> 2)) {
             FLDD(r, FP, d);
         } else {
-            FLDD(r, Scratch, 0);
-            arm_ADDi(Scratch, FP, d);
+            FLDD(r, IP, 0);
+            arm_ADDi(IP, FP, d);
         }
     } else {
         LDR(r, FP, d);
@@ -502,8 +497,8 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
             if (isS8(d >> 2)) {
                 FSTD(rr, FP, d);
             } else {
-                FSTD(rr, Scratch, 0);
-                arm_ADDi(Scratch, FP, d);
+                FSTD(rr, IP, 0);
+                arm_ADDi(IP, FP, d);
             }
         } else {
             STR(rr, FP, d);
@@ -533,8 +528,8 @@ Assembler::asm_load64(LInsp ins)
 
     if (rr != UnknownReg) {
         if (!isS8(offset >> 2) || (offset&3) != 0) {
-            FLDD(rr,Scratch,0);
-            arm_ADDi(Scratch, rb, offset);
+            FLDD(rr,IP,0);
+            arm_ADDi(IP, rb, offset);
         } else {
             FLDD(rr,rb,offset);
         }
@@ -564,10 +559,10 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     if (value->isconstq()) {
         const int32_t* p = (const int32_t*) (value-2);
 
-        STR(Scratch, rb, dr);
-        LD32_nochk(Scratch, p[0]);
-        STR(Scratch, rb, dr+4);
-        LD32_nochk(Scratch, p[1]);
+        STR(IP, rb, dr);
+        LD32_nochk(IP, p[0]);
+        STR(IP, rb, dr+4);
+        LD32_nochk(IP, p[1]);
 
         return;
     }
@@ -581,14 +576,14 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     intptr_t baseOffset = dr;
 
     if (!isS8(dr)) {
-        baseReg = Scratch;
+        baseReg = IP;
         baseOffset = 0;
     }
 
     FSTD(rv, baseReg, baseOffset);
 
     if (!isS8(dr)) {
-        arm_ADDi(Scratch, rb, dr);
+        arm_ADDi(IP, rb, dr);
     }
 
     // if it's a constant, make sure our baseReg/baseOffset location
@@ -655,10 +650,10 @@ Assembler::asm_quad(LInsp ins)
         // instead do the equivalent directly.
         //asm_mmq(FP, d, PC, -16);
 
-        STR(Scratch, FP, d+4);
-        LDR(Scratch, PC, -20);
-        STR(Scratch, FP, d);
-        LDR(Scratch, PC, -16);
+        STR(IP, FP, d+4);
+        LDR(IP, PC, -20);
+        STR(IP, FP, d);
+        LDR(IP, PC, -16);
 
         *(--_nIns) = (NIns) p[1];
         *(--_nIns) = (NIns) p[0];
@@ -674,10 +669,10 @@ Assembler::asm_quad(LInsp ins)
     freeRsrcOf(ins, false);
     if (d) {
         underrunProtect(LD32_size * 2 + 8);
-        STR(Scratch, FP, d+4);
-        LD32_nochk(Scratch, p[1]);
-        STR(Scratch, FP, d);
-        LD32_nochk(Scratch, p[0]);
+        STR(IP, FP, d+4);
+        LD32_nochk(IP, p[1]);
+        STR(IP, FP, d);
+        LD32_nochk(IP, p[0]);
     }
 #endif
 
@@ -727,9 +722,9 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
 
     // XXX maybe figure out if we can use LDRD/STRD -- hard to
     // ensure right register allocation
-    STR(Scratch, rd, dd+4);
+    STR(IP, rd, dd+4);
     STR(t, rd, dd);
-    LDR(Scratch, rs, ds+4);
+    LDR(IP, rs, ds+4);
     LDR(t, rs, ds);
 }
 
@@ -750,13 +745,13 @@ Assembler::asm_pusharg(LInsp arg)
         int d = findMemFor(arg);
 
         if (!quad) {
-            STR_preindex(Scratch, SP, -4);
-            LDR(Scratch, FP, d);
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d);
         } else {
-            STR_preindex(Scratch, SP, -4);
-            LDR(Scratch, FP, d+4);
-            STR_preindex(Scratch, SP, -4);
-            LDR(Scratch, FP, d);
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d+4);
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d);
         }
     }
 }
@@ -982,13 +977,13 @@ Assembler::asm_add_imm(Register rd, Register rn, int32_t imm)
     } else {
         // add scratch to rn, after loading the value into scratch.
 
-        // make sure someone isn't trying to use Scratch as an operand
-        NanoAssert(rn != Scratch);
+        // make sure someone isn't trying to use IP as an operand
+        NanoAssert(rn != IP);
 
-        *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (Scratch));
-        asm_output("add %s,%s,%s",gpn(rd),gpn(rn),gpn(Scratch));
+        *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (IP));
+        asm_output("add %s,%s,%s",gpn(rd),gpn(rn),gpn(IP));
 
-        LD32_nochk(Scratch, imm);
+        LD32_nochk(IP, imm);
     }
 }
 
