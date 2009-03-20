@@ -291,7 +291,7 @@ int main(int argc, char** argv)
   nsIAtom* li = NS_NewAtom("li");
 
   nsCOMPtr<nsINodeInfo> ni;
-  myDoc->NodeInfoManager()->GetNodeInfo(li, nsnull, kNameSpaceID_None,
+  myDoc->NodeInfoManager()->GetNodeInfo(li, nsnull, kNameSpaceID_XHTML,
                                         getter_AddRefs(ni));
 
   rv = NS_NewHTMLLIElement(&container,ni);
