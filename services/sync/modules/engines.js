@@ -67,10 +67,27 @@ Utils.lazy(this, 'Engines', EngineManagerSvc);
 
 function EngineManagerSvc() {
   this._engines = {};
+  this._log = Log4Moz.repository.getLogger("Service.Engines");
+  this._log.level = Log4Moz.Level[Svc.Prefs.get(
+    "log.logger.service.engines", "Debug")];
 }
 EngineManagerSvc.prototype = {
   get: function EngMgr_get(name) {
-    return this._engines[name];
+    // Return an array of engines if we have an array of names
+    if (name.constructor.name == "Array") {
+      let engines = [];
+      name.forEach(function(name) {
+        let engine = this.get(name);
+        if (engine)
+          engines.push(engine);
+      }, this);
+      return engines;
+    }
+
+    let engine = this._engines[name];
+    if (!engine)
+      this._log.debug("Could not get engine: " + name);
+    return engine;
   },
   getAll: function EngMgr_getAll() {
     let ret = [];

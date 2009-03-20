@@ -847,8 +847,10 @@ WeaveSvc.prototype = {
    *
    * @param onComplete
    *        Callback when this method completes
+   * @param engines [optional]
+   *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeServer: function WeaveSvc_wipeServer(onComplete) {
+  wipeServer: function WeaveSvc_wipeServer(onComplete, engines) {
     let fn = function WeaveSvc__wipeServer() {
       let self = yield;
 
@@ -861,6 +863,10 @@ WeaveSvc.prototype = {
       let allCollections = Svc.Json.decode(res.data);
       for each (let name in allCollections) {
         try {
+          // If we have a list of engines, make sure it's one we want
+          if (engines && engines.indexOf(name) == -1)
+            continue;
+
           yield new Resource(userURL + name).delete(self.cb);
         }
         catch(ex) {
@@ -876,16 +882,26 @@ WeaveSvc.prototype = {
    *
    * @param onComplete
    *        Callback when this method completes
+   * @param engines [optional]
+   *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeClient: function WeaveSvc_wipeClient(onComplete) {
+  wipeClient: function WeaveSvc_wipeClient(onComplete, engines) {
     let fn = function WeaveSvc__wipeClient() {
       let self = yield;
 
-      // Clear out any service data
-      yield this.resetService(self.cb);
+      // If we don't have any engines, reset the service and wipe all engines
+      if (!engines) {
+        // Clear out any service data
+        yield this.resetService(self.cb);
+
+        engines = [Clients].concat(Engines.getAll());
+      }
+      // Convert the array of names into engines
+      else
+        engines = Engines.get(engines);
 
       // Fully wipe each engine
-      for each (let engine in [Clients].concat(Engines.getAll()))
+      for each (let engine in engines)
         yield engine.wipeClient(self.cb);
     };
     this._catchAll(this._notify("wipe-client", "", fn)).async(this, onComplete);
@@ -897,13 +913,21 @@ WeaveSvc.prototype = {
    *
    * @param onComplete
    *        Callback when this method completes
+   * @param engines [optional]
+   *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeRemote: function WeaveSvc_wipeRemote(onComplete) {
+  wipeRemote: function WeaveSvc_wipeRemote(onComplete, engines) {
     let fn = function WeaveSvc__wipeRemote() {
       let self = yield;
 
       // Clear out any server data
-      //yield this.wipeServer(self.cb);
+      //yield this.wipeServer(self.cb, engines);
+
+      // Only wipe the engines provided
+      if (engines) {
+        engines.forEach(function(e) this.prepCommand("wipeEngine", [e]), this);
+        return;
+      }
 
       // Tell the remote machines to wipe themselves
       this.prepCommand("wipeAll", []);
@@ -939,16 +963,26 @@ WeaveSvc.prototype = {
    *
    * @param onComplete
    *        Callback when this method completes
+   * @param engines [optional]
+   *        Array of engine names to reset. If not given, all engines are used.
    */
-  resetClient: function WeaveSvc_resetClient(onComplete) {
+  resetClient: function WeaveSvc_resetClient(onComplete, engines) {
     let fn = function WeaveSvc__resetClient() {
       let self = yield;
 
-      // Clear out any service data
-      yield this.resetService(self.cb);
+      // If we don't have any engines, reset everything including the service
+      if (!engines) {
+        // Clear out any service data
+        yield this.resetService(self.cb);
+
+        engines = [Clients].concat(Engines.getAll());
+      }
+      // Convert the array of names into engines
+      else
+        engines = Engines.get(engines);
 
       // Have each engine drop any temporary meta data
-      for each (let engine in [Clients].concat(Engines.getAll()))
+      for each (let engine in engines)
         yield engine.resetClient(self.cb);
 
       // XXX Bug 480448: Delete any snapshots from old code
@@ -1004,31 +1038,22 @@ WeaveSvc.prototype = {
       for each ({command: command, args: args} in commands) {
         this._log.debug("Processing command: " + command + "(" + args + ")");
 
+        let engines = [args[0]];
         switch (command) {
           case "resetAll":
-            yield this.resetClient(self.cb);
+            engines = null;
+            // Fallthrough
+          case "resetEngine":
+            yield this.resetClient(self.cb, engines);
             break;
 
-          case "resetEngine": {
-            let engine = Engines.get(args[0]);
-            if (engine != null)
-              yield engine.resetClient(self.cb);
-            else
-              this._log.debug("Cannot reset an unknown engine: " + args[0]);
-            break;
-          }
           case "wipeAll":
-            yield this.wipeClient(self.cb);
+            engines = null;
+            // Fallthrough
+          case "wipeEngine":
+            yield this.wipeClient(self.cb, engines);
             break;
 
-          case "wipeEngine": {
-            let engine = Engines.get(args[0]);
-            if (engine != null)
-              yield engine.wipeClient(self.cb);
-            else
-              this._log.debug("Cannot wipe an unknown engine: " + args[0]);
-            break;
-          }
           default:
             this._log.debug("Received an unknown command: " + command);
             break;
