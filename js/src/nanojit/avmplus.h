@@ -332,7 +332,6 @@ namespace avmplus {
             sse2 = true;
             use_cmov = true;
 #endif
-            tree_opt = 0;
         }
         
         uint32_t tree_opt:1;
@@ -343,10 +342,32 @@ namespace avmplus {
         uint32_t verbose_exits:1;
         uint32_t show_stats:1;
 
-        #if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
-		bool sse2;
-		bool use_cmov;
-		#endif
+#if defined (AVMPLUS_IA32) || defined(AVMPLUS_AMD64)
+        bool sse2;
+        bool use_cmov;
+#endif
+
+#if defined (AVMPLUS_ARM)
+        // whethergenerate VFP instructions
+# if defined (NJ_FORCE_SOFTFLOAT)
+        static const bool vfp = false;
+# else
+        bool vfp;
+# endif
+
+        // whether generate ARMv6t2 instructions (MOVT/MOVW)
+# if defined (NJ_FORCE_NO_ARM_V6T2)
+        static const bool v6t2 = false;
+# else
+        bool v6t2;
+# endif
+#endif
+
+#if defined (NJ_FORCE_SOFTFLOAT)
+        static const bool soft_float = true;
+#else
+        bool soft_float;
+#endif
     };
 
     static const int kstrconst_emptyString = 0;

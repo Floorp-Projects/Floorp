@@ -240,9 +240,7 @@ js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, uint32 globalShape);
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
 static bool nesting_enabled = true;
-#if defined(NANOJIT_IA32)
-static bool did_we_check_sse2 = false;
-#endif
+static bool did_we_check_processor_features = false;
 
 #ifdef JS_JIT_SPEW
 bool js_verboseDebug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
@@ -569,25 +567,22 @@ js_AttemptCompilation(JSTraceMonitor* tm, JSObject* globalObj, jsbytecode* pc)
     }
 }
 
-#if defined(NJ_SOFTFLOAT)
 JS_DEFINE_CALLINFO_1(static, DOUBLE,    i2f, INT32,                 1, 1)
 JS_DEFINE_CALLINFO_1(static, DOUBLE,    u2f, UINT32,                1, 1)
-#endif
 
 static bool isi2f(LInsp i)
 {
     if (i->isop(LIR_i2f))
         return true;
 
-#if defined(NJ_SOFTFLOAT)
-    if (i->isop(LIR_qjoin) &&
+    if (nanojit::AvmCore::config.soft_float &&
+        i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_call) &&
         i->oprnd2()->isop(LIR_callh))
     {
         if (i->oprnd1()->callInfo() == &i2f_ci)
             return true;
     }
-#endif
 
     return false;
 }
@@ -597,25 +592,25 @@ static bool isu2f(LInsp i)
     if (i->isop(LIR_u2f))
         return true;
 
-#if defined(NJ_SOFTFLOAT)
-    if (i->isop(LIR_qjoin) &&
+    if (nanojit::AvmCore::config.soft_float &&
+        i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_call) &&
         i->oprnd2()->isop(LIR_callh))
     {
         if (i->oprnd1()->callInfo() == &u2f_ci)
             return true;
     }
-#endif
 
     return false;
 }
 
 static LInsp iu2fArg(LInsp i)
 {
-#if defined(NJ_SOFTFLOAT)
-    if (i->isop(LIR_qjoin))
+    if (nanojit::AvmCore::config.soft_float &&
+        i->isop(LIR_qjoin))
+    {
         return i->oprnd1()->arg(0);
-#endif
+    }
 
     return i->oprnd1();
 }
@@ -674,8 +669,7 @@ static bool overflowSafe(LIns* i)
             ((c->constval() > 0)));
 }
 
-#if defined(NJ_SOFTFLOAT)
-/* soft float */
+/* soft float support */
 
 JS_DEFINE_CALLINFO_1(static, DOUBLE,    fneg, DOUBLE,               1, 1)
 JS_DEFINE_CALLINFO_2(static, INT32,     fcmpeq, DOUBLE, DOUBLE,     1, 1)
@@ -828,8 +822,6 @@ public:
         return out->insCall(ci, args);
     }
 };
-
-#endif // NJ_SOFTFLOAT
 
 class FuncFilter: public LirWriter
 {
@@ -1235,9 +1227,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
     debug_only_v(lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);)
-#ifdef NJ_SOFTFLOAT
-    lir = float_filter = new (&gc) SoftFloatFilter(lir);
-#endif
+    if (nanojit::AvmCore::config.soft_float)
+        lir = float_filter = new (&gc) SoftFloatFilter(lir);
+    else
+        float_filter = 0;
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir = func_filter = new (&gc) FuncFilter(lir);
@@ -1322,9 +1315,7 @@ TraceRecorder::~TraceRecorder()
     delete cse_filter;
     delete expr_filter;
     delete func_filter;
-#ifdef NJ_SOFTFLOAT
     delete float_filter;
-#endif
     delete lir_buf_writer;
 }
 
@@ -4528,16 +4519,139 @@ js_CheckForSSE2()
 }
 #endif
 
+#if defined(NANOJIT_ARM)
+
+#if defined(_MSC_VER) && defined(WINCE)
+
+// these come in from jswince.asm
+extern "C" int js_arm_try_armv6t2_op();
+extern "C" int js_arm_try_vfp_op();
+
+static bool
+js_arm_check_armv6t2() {
+    bool ret = false;
+    __try {
+        js_arm_try_armv6t2_op();
+        ret = true;
+    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+        ret = false;
+    }
+    return ret;
+}
+
+static bool
+js_arm_check_vfp() {
+    bool ret = false;
+    __try {
+        js_arm_try_vfp_op();
+        ret = true;
+    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+        ret = false;
+    }
+    return ret;
+}
+
+#elif defined(__GNUC__) && defined(AVMPLUS_LINUX)
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <string.h>
+#include <elf.h>
+
+static bool arm_has_v7 = false;
+static bool arm_has_v6 = false;
+static bool arm_has_vfp = false;
+static bool arm_has_neon = false;
+static bool arm_has_iwmmxt = false;
+static bool arm_tests_initialized = false;
+
+static void
+arm_read_auxv() {
+    int fd;
+    Elf32_auxv_t aux;
+
+    fd = open("/proc/self/auxv", O_RDONLY);
+    if (fd > 0) {
+        while (read(fd, &aux, sizeof(Elf32_auxv_t))) {
+            if (aux.a_type == AT_HWCAP) {
+                uint32_t hwcap = aux.a_un.a_val;
+                if (getenv("ARM_FORCE_HWCAP"))
+                    hwcap = strtoul(getenv("ARM_FORCE_HWCAP"), NULL, 0);
+                // hardcode these values to avoid depending on specific versions
+                // of the hwcap header, e.g. HWCAP_NEON
+                arm_has_vfp = (hwcap & 64) != 0;
+                arm_has_iwmmxt = (hwcap & 512) != 0;
+                // this flag is only present on kernel 2.6.29
+                arm_has_neon = (hwcap & 4096) != 0;
+            } else if (aux.a_type == AT_PLATFORM) {
+                const char *plat = (const char*) aux.a_un.a_val;
+                if (getenv("ARM_FORCE_PLATFORM"))
+                    plat = getenv("ARM_FORCE_PLATFORM");
+                if (strncmp(plat, "v7l", 3) == 0) {
+                    arm_has_v7 = true;
+                    arm_has_v6 = true;
+                } else if (strncmp(plat, "v6l", 3) == 0) {
+                    arm_has_v6 = true;
+                }
+            }
+        }
+        close (fd);
+
+        // if we don't have 2.6.29, we have to do this hack; set
+        // the env var to trust HWCAP.
+        if (!getenv("ARM_TRUST_HWCAP") && arm_has_v7)
+            arm_has_neon = true;
+    }
+
+    arm_tests_initialized = true;
+}
+
+static bool
+js_arm_check_armv6t2() {
+    if (!arm_tests_initialized)
+        arm_read_auxv();
+
+    return arm_has_v7;
+}
+
+static bool
+js_arm_check_vfp() {
+    if (!arm_tests_initialized)
+        arm_read_auxv();
+
+    return arm_has_vfp;
+}
+
+#else
+#warning Not sure how to check for armv6t2 and vfp on your platform, assuming neither present.
+static bool
+js_arm_check_armv6t2() { return false; }
+static void
+js_arm_check_vfp() { return false; }
+#endif
+
+#endif /* NANOJIT_ARM */
+
 void
 js_InitJIT(JSTraceMonitor *tm)
 {
+    if (!did_we_check_processor_features) {
 #if defined NANOJIT_IA32
-    if (!did_we_check_sse2) {
         avmplus::AvmCore::config.use_cmov =
         avmplus::AvmCore::config.sse2 = js_CheckForSSE2();
-        did_we_check_sse2 = true;
-    }
 #endif
+#if defined NANOJIT_ARM
+        avmplus::AvmCore::config.vfp = js_arm_check_vfp();
+        avmplus::AvmCore::config.soft_float = !avmplus::AvmCore::config.vfp;
+        avmplus::AvmCore::config.v6t2 = js_arm_check_armv6t2();
+#endif
+        did_we_check_processor_features = true;
+    }
+
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);

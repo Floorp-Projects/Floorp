@@ -58,28 +58,8 @@ namespace nanojit
 
 const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 
-// If NJ_ARM_VFP is defined, then VFP is assumed to
-// be present.  If it's not defined, then softfloat
-// is used, and NJ_SOFTFLOAT is defined.
-// When nanojit is used as part of Mozilla's JavaScript engine, this is
-// #defined or left #undefined by js/src/configure.in.
-//#define NJ_ARM_VFP
-
-// Assume ARMv6T2 or higher
-#define NJ_ARM_HAVE_MOVW
-
-#ifdef NJ_ARM_VFP
-
-// only d0-d7; we'll use d7 as s14-s15 for i2f/u2f/etc.
+// only d0-d6 are actually used; we'll use d7 as s14-s15 for i2f/u2f/etc.
 #define NJ_VFP_MAX_REGISTERS            8
-
-#else
-
-#define NJ_VFP_MAX_REGISTERS            0
-#define NJ_SOFTFLOAT
-
-#endif
-
 #define NJ_MAX_REGISTERS                (11 + NJ_VFP_MAX_REGISTERS)
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_MAX_PARAMETERS               16
@@ -127,11 +107,7 @@ typedef enum {
     LastFloatReg = 22,
         
     FirstReg = 0,
-#ifdef NJ_ARM_VFP
     LastReg = 23,
-#else
-    LastReg = 10,
-#endif
     UnknownReg = 31,
 
     // special value referring to S14
@@ -216,6 +192,7 @@ verbose_only( extern const char* shiftNames[]; )
     void asm_cmpi(Register, int32_t imm);                               \
     void asm_ldr_chk(Register d, Register b, int32_t off, bool chk);    \
     void asm_ld_imm(Register d, int32_t imm);                           \
+    void asm_arm_farg(LInsp arg, Register rlo, Register rhi); \
     int* _nSlot;                                                        \
     int* _nExitSlot;
 
@@ -764,8 +741,15 @@ enum {
 
 #define FMRDH(_Rd,_Dn) do {                                             \
         underrunProtect(4);                                             \
-        NanoAssert(IsGpReg(_Rd) && IsFpReg(_Dm));                       \
+        NanoAssert(IsGpReg(_Rd) && IsFpReg(_Dn));                       \
         *(--_nIns) = (NIns)( COND_AL | (0xE3<<20) | (FpRegNum(_Dn)<<16) | ((_Rd)<<12) | (0xB<<8) | (1<<4) ); \
+        asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
+    } while (0)
+
+#define FMRDL(_Rd,_Dn) do {                                             \
+        underrunProtect(4);                                             \
+        NanoAssert(IsGpReg(_Rd) && IsFpReg(_Dn));                       \
+        *(--_nIns) = (NIns)( COND_AL | (0xE1<<20) | (FpRegNum(_Dn)<<16) | ((_Rd)<<12) | (0xB<<8) | (1<<4) ); \
         asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
     } while (0)
 

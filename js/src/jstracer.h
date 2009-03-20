@@ -397,9 +397,7 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
     nanojit::LirWriter*     func_filter;
-#ifdef NJ_SOFTFLOAT
     nanojit::LirWriter*     float_filter;
-#endif
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
