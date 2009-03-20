@@ -51,6 +51,7 @@
  * PRInt64   -> INTEGER (use mozStorageInteger)
  * double    -> FLOAT (use mozStorageFloat)
  * nsString  -> TEXT (use mozStorageText)
+ * nsCString -> TEXT (use mozStorageUTF8Text)
  * PRUint8[] -> BLOB (use mozStorageBlob)
  * nsnull    -> NULL (use mozStorageNull)
  */
@@ -249,6 +250,38 @@ struct variant_text_traits<nsString>
   }
 };
 
+template < >
+struct variant_traits<nsCString>
+{
+  static inline PRUint16 type() { return nsIDataType::VTYPE_UTF8STRING; }
+};
+template < >
+struct variant_storage_traits<nsCString>
+{
+  typedef const nsACString & ConstructorType;
+  typedef nsCString StorageType;
+  static inline StorageType storage_conversion(ConstructorType aText)
+  {
+    return StorageType(aText);
+  }
+};
+template < >
+struct variant_text_traits<nsCString>
+{
+  static inline nsresult asUTF8String(const nsCString &aValue,
+                                      nsACString &_result)
+  {
+    _result = aValue;
+    return NS_OK;
+  }
+  static inline nsresult asString(const nsCString &aValue,
+                                  nsAString &_result)
+  {
+    CopyUTF8toUTF16(aValue, _result);
+    return NS_OK;
+  }
+};
+
 /**
  * BLOB types
  */
@@ -348,6 +381,7 @@ private:
 typedef mozStorageVariant<PRInt64> mozStorageInteger;
 typedef mozStorageVariant<double> mozStorageFloat;
 typedef mozStorageVariant<nsString> mozStorageText;
+typedef mozStorageVariant<nsCString> mozStorageUTF8Text;
 typedef mozStorageVariant<PRUint8[]> mozStorageBlob;
 typedef mozStorageVariant_base mozStorageNull;
 
