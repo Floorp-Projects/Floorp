@@ -48,6 +48,8 @@
 #endif
 
 #if defined(AVMPLUS_LINUX)
+#include <signal.h>
+#include <setjmp.h>
 #include <asm/unistd.h>
 extern "C" void __clear_cache(char *BEG, char *END);
 #endif
@@ -196,9 +198,8 @@ Assembler::asm_call(LInsp ins)
     uint32_t roffset = 0;
 
     // skip return type
-#ifdef NJ_ARM_VFP
     ArgSize rsize = (ArgSize)(atypes & 3);
-#endif
+
     atypes >>= 2;
 
     bool arg0IsInt32FollowedByFloat = false;
@@ -219,8 +220,7 @@ Assembler::asm_call(LInsp ins)
     }
 #endif
 
-#ifdef NJ_ARM_VFP
-    if (rsize == ARGSIZE_F) {
+    if (AvmCore::config.vfp && rsize == ARGSIZE_F) {
         NanoAssert(ins->opcode() == LIR_fcall);
         NanoAssert(callRes);
 
@@ -239,7 +239,6 @@ Assembler::asm_call(LInsp ins)
             STR(R1, FP, d+4);
         }
     }
-#endif
 
     BL((NIns*)(call->_address));
 
@@ -252,50 +251,35 @@ Assembler::asm_call(LInsp ins)
         // pre-assign registers R0-R3 for arguments (if they fit)
 
         Register r = (i + roffset) < 4 ? argRegs[i+roffset] : UnknownReg;
-#ifdef NJ_ARM_VFP
         if (sz == ARGSIZE_F) {
+            Register rlo = UnknownReg;
+            Register rhi = UnknownReg;
+
 #ifdef UNDER_CE
             if (r >= R0 && r <= R2) {
-                // we can use up r0/r1, r1/r2, r2/r3 without anything special
+                rlo = r;
+                rhi = nextreg(r);
                 roffset++;
-                FMRRD(r, nextreg(r), sr);
             } else if (r == R3) {
-                // to use R3 gets complicated; we need to move the high dword
-                // into R3, and the low dword on the stack.
-                STR_preindex(IP, SP, -4);
-                FMRDL(IP, sr);
-                FMRDH(r, sr);
-            } else {
-                asm_pusharg(arg);
+                rlo = r;
+                rhi = UnknownReg;
             }
 #else
             if (r == R0 || r == R2) {
+                rlo = r;
+                rhi = nextreg(r);
                 roffset++;
             } else if (r == R1) {
-                r = R2;
-                roffset++;
-            } else {
-                r = UnknownReg;
-            }
-
-            // XXX move this into asm_farg
-            Register sr = findRegFor(arg, FpRegs);
-
-            if (r != UnknownReg) {
-                // stick it into our scratch fp reg, and then copy into the base reg
-                //fprintf (stderr, "FMRRD: %d %d <- %d\n", r, nextreg(r), sr);
-                FMRRD(r, nextreg(r), sr);
-            } else {
-                asm_pusharg(arg);
+                rlo = R2;
+                rhi = nextreg(r);
+                roffset += 2;
             }
 #endif
+
+            asm_arm_farg(arg, rlo, rhi);
         } else {
             asm_arg(sz, arg, r);
         }
-#else
-        NanoAssert(sz == ARGSIZE_LO || sz == ARGSIZE_Q);
-        asm_arg(sz, arg, r);
-#endif
 
         // Under CE, arg0IsInt32FollowedByFloat will always be false
         if (i == 0 && arg0IsInt32FollowedByFloat)
@@ -306,23 +290,22 @@ Assembler::asm_call(LInsp ins)
 void
 Assembler::nMarkExecute(Page* page, int flags)
 {
-	NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
+    NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
 #ifdef UNDER_CE
-	static const DWORD kProtFlags[4] = 
-	{
-		PAGE_READONLY,			// 0
-		PAGE_READWRITE,			// PAGE_WRITE
-		PAGE_EXECUTE_READ,		// PAGE_EXEC
-		PAGE_EXECUTE_READWRITE	// PAGE_EXEC|PAGE_WRITE
-	};
-	DWORD prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
+    static const DWORD kProtFlags[4] = {
+        PAGE_READONLY,          // 0
+        PAGE_READWRITE,         // PAGE_WRITE
+        PAGE_EXECUTE_READ,      // PAGE_EXEC
+        PAGE_EXECUTE_READWRITE  // PAGE_EXEC|PAGE_WRITE
+    };
+    DWORD prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
     DWORD dwOld;
     BOOL res = VirtualProtect(page, NJ_PAGE_SIZE, prot, &dwOld);
-	if (!res)
-	{
-		// todo: we can't abort or assert here, we have to fail gracefully.
-		NanoAssertMsg(false, "FATAL ERROR: VirtualProtect() failed\n");
-	}
+    if (!res)
+    {
+        // todo: we can't abort or assert here, we have to fail gracefully.
+        NanoAssertMsg(false, "FATAL ERROR: VirtualProtect() failed\n");
+    }
 #endif
 #ifdef AVMPLUS_PORTING_API
     NanoJIT_PortAPI_MarkExecutable(page, (void*)((char*)page+NJ_PAGE_SIZE), flags);
@@ -366,9 +349,8 @@ Assembler::nRegisterResetAll(RegAlloc& a)
         rmask(R0) | rmask(R1) | rmask(R2) | rmask(R3) | rmask(R4) |
         rmask(R5) | rmask(R6) | rmask(R7) | rmask(R8) | rmask(R9) |
         rmask(R10);
-#ifdef NJ_ARM_VFP
-    a.free |= FpRegs;
-#endif
+    if (AvmCore::config.vfp)
+        a.free |= FpRegs;
 
     debug_only(a.managed = a.free);
 }
@@ -520,29 +502,29 @@ Assembler::asm_load64(LInsp ins)
 
     freeRsrcOf(ins, false);
 
-#ifdef NJ_ARM_VFP
-    Register rb = findRegFor(base, GpRegs);
+    if (AvmCore::config.vfp) {
+        Register rb = findRegFor(base, GpRegs);
 
-    NanoAssert(rb != UnknownReg);
-    NanoAssert(rr == UnknownReg || IsFpReg(rr));
+        NanoAssert(rb != UnknownReg);
+        NanoAssert(rr == UnknownReg || IsFpReg(rr));
 
-    if (rr != UnknownReg) {
-        if (!isS8(offset >> 2) || (offset&3) != 0) {
-            FLDD(rr,IP,0);
-            ADDi(IP, rb, offset);
+        if (rr != UnknownReg) {
+            if (!isS8(offset >> 2) || (offset&3) != 0) {
+                FLDD(rr,IP,0);
+                ADDi(IP, rb, offset);
+            } else {
+                FLDD(rr,rb,offset);
+            }
         } else {
-            FLDD(rr,rb,offset);
+            asm_mmq(FP, d, rb, offset);
         }
+
+        // *(FP+dr) <- *(rb+db)
     } else {
+        NanoAssert(resv->reg == UnknownReg && d != 0);
+        Register rb = findRegFor(base, GpRegs);
         asm_mmq(FP, d, rb, offset);
     }
-
-    // *(FP+dr) <- *(rb+db)
-#else
-    NanoAssert(resv->reg == UnknownReg && d != 0);
-    Register rb = findRegFor(base, GpRegs);
-    asm_mmq(FP, d, rb, offset);
-#endif
 
     //asm_output(">>> load64");
 }
@@ -552,55 +534,56 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 {
     //asm_output("<<< store64 (dr: %d)", dr);
 
-#ifdef NJ_ARM_VFP
-    //Reservation *valResv = getresv(value);
-    Register rb = findRegFor(base, GpRegs);
+    if (AvmCore::config.vfp) {
+        //Reservation *valResv = getresv(value);
+        Register rb = findRegFor(base, GpRegs);
 
-    if (value->isconstq()) {
-        const int32_t* p = (const int32_t*) (value-2);
+        if (value->isconstq()) {
+            const int32_t* p = (const int32_t*) (value-2);
 
-        // XXX use another reg, get rid of dependency
-        STR(IP, rb, dr);
-        LD32_nochk(IP, p[0]);
-        STR(IP, rb, dr+4);
-        LD32_nochk(IP, p[1]);
+            // XXX use another reg, get rid of dependency
+            STR(IP, rb, dr);
+            LD32_nochk(IP, p[0]);
+            STR(IP, rb, dr+4);
+            LD32_nochk(IP, p[1]);
 
-        return;
+            return;
+        }
+
+        Register rv = findRegFor(value, FpRegs);
+
+        NanoAssert(rb != UnknownReg);
+        NanoAssert(rv != UnknownReg);
+
+        Register baseReg = rb;
+        intptr_t baseOffset = dr;
+
+        if (!isS8(dr)) {
+            baseReg = IP;
+            baseOffset = 0;
+        }
+
+        FSTD(rv, baseReg, baseOffset);
+
+        if (!isS8(dr)) {
+            ADDi(IP, rb, dr);
+        }
+
+        // if it's a constant, make sure our baseReg/baseOffset location
+        // has the right value
+        if (value->isconstq()) {
+            const int32_t* p = (const int32_t*) (value-2);
+
+            underrunProtect(12);
+
+            asm_quad_nochk(rv, p);
+        }
+    } else {
+        int da = findMemFor(value);
+        Register rb = findRegFor(base, GpRegs);
+        asm_mmq(rb, dr, FP, da);
     }
 
-    Register rv = findRegFor(value, FpRegs);
-
-    NanoAssert(rb != UnknownReg);
-    NanoAssert(rv != UnknownReg);
-
-    Register baseReg = rb;
-    intptr_t baseOffset = dr;
-
-    if (!isS8(dr)) {
-        baseReg = IP;
-        baseOffset = 0;
-    }
-
-    FSTD(rv, baseReg, baseOffset);
-
-    if (!isS8(dr)) {
-        ADDi(IP, rb, dr);
-    }
-
-    // if it's a constant, make sure our baseReg/baseOffset location
-    // has the right value
-    if (value->isconstq()) {
-        const int32_t* p = (const int32_t*) (value-2);
-
-        underrunProtect(12);
-
-        asm_quad_nochk(rv, p);
-    }
-#else
-    int da = findMemFor(value);
-    Register rb = findRegFor(base, GpRegs);
-    asm_mmq(rb, dr, FP, da);
-#endif
     //asm_output(">>> store64");
 }
 
@@ -641,38 +624,37 @@ Assembler::asm_quad(LInsp ins)
 
     const int32_t* p = (const int32_t*) (ins-2);
 
-#ifdef NJ_ARM_VFP
     freeRsrcOf(ins, false);
 
-    if (rr == UnknownReg) {
-        underrunProtect(LD32_size * 2 + 8);
+    if (AvmCore::config.vfp) {
+        if (rr == UnknownReg) {
+            underrunProtect(LD32_size * 2 + 8);
 
-        // asm_mmq might spill a reg, so don't call it;
-        // instead do the equivalent directly.
-        //asm_mmq(FP, d, PC, -16);
+            // asm_mmq might spill a reg, so don't call it;
+            // instead do the equivalent directly.
+            //asm_mmq(FP, d, PC, -16);
 
-        // XXX use another reg, get rid of dependency
-        STR(IP, FP, d);
-        LD32_nochk(IP, p[0]);
-        STR(IP, FP, d+4);
-        LD32_nochk(IP, p[1]);
+            // XXX use another reg, get rid of dependency
+            STR(IP, FP, d);
+            LD32_nochk(IP, p[0]);
+            STR(IP, FP, d+4);
+            LD32_nochk(IP, p[1]);
+        } else {
+            if (d)
+                FSTD(rr, FP, d);
+
+            underrunProtect(16);
+            asm_quad_nochk(rr, p);
+        }
     } else {
-        if (d)
-            FSTD(rr, FP, d);
-
-        underrunProtect(16);
-        asm_quad_nochk(rr, p);
+        if (d) {
+            underrunProtect(LD32_size * 2 + 8);
+            STR(IP, FP, d+4);
+            LD32_nochk(IP, p[1]);
+            STR(IP, FP, d);
+            LD32_nochk(IP, p[0]);
+        }
     }
-#else
-    freeRsrcOf(ins, false);
-    if (d) {
-        underrunProtect(LD32_size * 2 + 8);
-        STR(IP, FP, d+4);
-        LD32_nochk(IP, p[1]);
-        STR(IP, FP, d);
-        LD32_nochk(IP, p[0]);
-    }
-#endif
 
     //asm_output("<<< asm_quad");
 }
@@ -784,7 +766,7 @@ Assembler::nativePageSetup()
 void
 Assembler::underrunProtect(int bytes)
 {
-	NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
+    NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
     intptr_t u = bytes + sizeof(PageHeader)/sizeof(NIns) + 8;
     if ( (samepage(_nIns,_nSlot) && (((intptr_t)_nIns-u) <= intptr_t(_nSlot+1))) ||
          (!samepage((intptr_t)_nIns-u,_nIns)) )
@@ -880,14 +862,15 @@ Assembler::LD32_nochk(Register r, int32_t imm)
         return;
     }
 
+    if (AvmCore::config.v6t2) {
+        // We can just emit a movw/movt pair
+        // the movt is only necessary if the high 16 bits are nonzero
+        if (((imm >> 16) & 0xFFFF) != 0)
+            MOVT(r, (imm >> 16) & 0xFFFF);
+        MOVW(r, imm & 0xFFFF);
+        return;
+    }
 
-#ifdef NJ_ARM_HAVE_MOVW
-    // We can just emit a movw/movt pair
-    // the movt is only necessary if the high 16 bits are nonzero
-    if (((imm >> 16) & 0xFFFF) != 0)
-        MOVT(r, (imm >> 16) & 0xFFFF);
-    MOVW(r, imm & 0xFFFF);
-#else
     // We should always reach the const pool, since it's on the same page (<4096);
     // if we can't, someone didn't underrunProtect enough.
 
@@ -902,7 +885,6 @@ Assembler::LD32_nochk(Register r, int32_t imm)
     asm_output("  (%d(PC) = 0x%x)", offset, imm);
 
     LDR_nochk(r,PC,offset);
-#endif
 }
 
 void
@@ -1642,59 +1624,6 @@ Assembler::asm_int(LInsp ins)
         LDi(rr, val);
 }
 
-#if 0
-void
-Assembler::asm_quad(LInsp ins)
-{
-    Reservation *rR = getresv(ins);
-    Register rr = rR->reg;
-    if (rr != UnknownReg)
-    {
-        // @todo -- add special-cases for 0 and 1
-        _allocator.retire(rr);
-        rR->reg = UnknownReg;
-        NanoAssert((rmask(rr) & FpRegs) != 0);
-
-        const double d = ins->constvalf();
-        const uint64_t q = ins->constvalq();
-        if (rmask(rr) & XmmRegs) {
-            if (q == 0.0) {
-                // test (int64)0 since -0.0 == 0.0
-                SSE_XORPDr(rr, rr);
-            } else if (d == 1.0) {
-                // 1.0 is extremely frequent and worth special-casing!
-                static const double k_ONE = 1.0;
-                LDSDm(rr, &k_ONE);
-            } else {
-                findMemFor(ins);
-                const int d = disp(rR);
-                SSE_LDQ(rr, d, FP);
-            }
-        } else {
-            if (q == 0.0) {
-                // test (int64)0 since -0.0 == 0.0
-                FLDZ();
-            } else if (d == 1.0) {
-                FLD1();
-            } else {
-                findMemFor(ins);
-                int d = disp(rR);
-                FLDQ(d,FP);
-            }
-        }
-    }
-
-    // @todo, if we used xor, ldsd, fldz, etc above, we don't need mem here
-    int d = disp(rR);
-    freeRsrcOf(ins, false);
-    if (d) {
-        const int32_t* p = (const int32_t*) (ins-2);
-        STi(FP,d+4,p[1]);
-        STi(FP,d,p[0]);
-    }
-}
-#endif
-
 void
 Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
 {
@@ -1742,5 +1671,69 @@ Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
     }
 }
 
+void
+Assembler::asm_arm_farg(LInsp arg, Register rlo, Register rhi)
+{
+    if (AvmCore::config.vfp) {
+        Register sr = findRegFor(arg, FpRegs);
+
+        if (rlo != UnknownReg && rhi != UnknownReg) {
+            NanoAssert(sr != UnknownReg);
+            FMRRD(rlo, rhi, sr);
+        } else if (rlo != UnknownReg && rhi == UnknownReg) {
+            NanoAssert(sr != UnknownReg);
+            STR_preindex(IP, SP, -4);
+            FMRDL(IP, sr);
+            FMRDH(rhi, sr);
+        } else {
+            asm_pusharg(arg);
+        }
+
+        return;
+    }
+
+    NanoAssert(arg->opcode() == LIR_qjoin || arg->opcode() == LIR_quad);
+
+    if (rlo != UnknownReg && rhi != UnknownReg) {
+        if (arg->opcode() == LIR_qjoin) {
+            LIns* lo = arg->oprnd1();
+            LIns* hi = arg->oprnd2();
+
+            findSpecificRegFor(lo, rlo);
+            findSpecificRegFor(hi, rhi);
+        } else {
+            // LIR_quad
+            const int32_t* p = (const int32_t*) (arg-2);
+
+            underrunProtect(LD32_size * 2 + 8);
+            LD32_nochk(rhi, p[1]);
+            LD32_nochk(rlo, p[0]);
+        }
+    } else if (rlo != UnknownReg && rhi == UnknownReg) {
+        if (arg->opcode() == LIR_qjoin) {
+            LIns* lo = arg->oprnd1();
+            LIns* hi = arg->oprnd2();
+
+            int d = findMemFor(hi);
+
+            findSpecificRegFor(lo, rlo);
+
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d);
+        } else {
+            // LIR_quad
+            const int32_t* p = (const int32_t*) (arg-2);
+
+            underrunProtect(LD32_size * 2 + 8);
+            STR_preindex(IP, SP, -4);
+            LD32_nochk(IP, p[1]);
+            LD32_nochk(rlo, p[0]);
+        }
+    } else {
+        asm_pusharg(arg);
+    }
 }
+
+}
+
 #endif /* FEATURE_NANOJIT */
