@@ -167,8 +167,8 @@ private:
      */
     void SetChildIndex(PRInt32 aIndexPos, PRInt32 aChildIndex)
     {
-        if (aIndexPos > 0) {
-            mPossibleIndexes.EnsureLengthAtLeast(aIndexPos+1);
+        if (aIndexPos >= 0 &&
+            mPossibleIndexes.EnsureLengthAtLeast(aIndexPos+1)) {
             mPossibleIndexes.ElementAt(aIndexPos) = aChildIndex;
         }
     }
