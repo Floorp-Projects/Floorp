@@ -4658,6 +4658,40 @@ function testNEWINIT_DOUBLE()
 testNEWINIT_DOUBLE.expected = "ok";
 test(testNEWINIT_DOUBLE);
 
+function testIntOverflow() {
+    // int32_max - 7
+    var ival = 2147483647 - 7;
+    for (var i = 0; i < 30; i++) {
+        ival += 2;
+    }
+    return (ival < 2147483647);
+}
+testIntOverflow.expected = false;
+testIntOverflow.jitstats = {
+    recorderStarted: 2,
+    recorderAborted: 0,
+    traceCompleted: 2,
+    traceTriggered: 2,
+};
+test(testIntOverflow);
+
+function testIntUnderflow() {
+    // int32_min + 8
+    var ival = -2147483648 + 8;
+    for (var i = 0; i < 30; i++) {
+        ival -= 2;
+    }
+    return (ival > -2147483648);
+}
+testIntUnderflow.expected = false;
+testIntUnderflow.jitstats = {
+    recorderStarted: 2,
+    recorderAborted: 0,
+    traceCompleted: 2,
+    traceTriggered: 2,
+};
+test(testIntUnderflow);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
