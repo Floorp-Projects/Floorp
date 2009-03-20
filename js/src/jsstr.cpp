@@ -607,21 +607,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     JSString *str, *str1;
     jsint slot;
 
-    if (flags & JSRESOLVE_ASSIGNING)
-        return JS_TRUE;
-
-    if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-        str = JSVAL_TO_STRING(v);
-        if (!OBJ_DEFINE_PROPERTY(cx, obj, id, INT_TO_JSVAL(17), NULL, NULL,
-                                 JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, NULL)) {
-            return JS_FALSE;
-        }
-        *objp = obj;
-        return JS_TRUE;
-    }
-
-    if (!JSVAL_IS_INT(id))
+    if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
@@ -2861,6 +2847,13 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
     STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE,
                    STRING_TO_JSVAL(cx->runtime->emptyString));
+    if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                                 JSVAL_VOID, NULL, NULL,
+                                 JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
+                                 NULL)) {
+        return JS_FALSE;
+    }
+
     return proto;
 }
 
