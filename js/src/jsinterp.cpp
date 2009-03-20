@@ -5085,7 +5085,6 @@ js_Interpret(JSContext *cx)
             if (!cx->rval2set) {
                 op2 = js_GetOpcode(cx, script, regs.pc + JSOP_SETCALL_LENGTH);
                 if (op2 != JSOP_DELELEM) {
-                    JS_ASSERT(!(js_CodeSpec[op2].format & JOF_DEL));
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_BAD_LEFTSIDE_OF_ASS);
                     goto error;
