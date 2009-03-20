@@ -64,11 +64,11 @@
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 
-typedef struct {
+struct NameSpaceDecl {
   nsString mPrefix;
   nsString mURI;
   nsIDOMElement* mOwner;
-} NameSpaceDecl;
+};
 
 nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 {
@@ -346,7 +346,7 @@ nsXMLContentSerializer::PushNameSpaceDecl(const nsAString& aPrefix,
   // we pop the stack
   decl->mOwner = aOwner;
 
-  mNameSpaceStack.AppendElement((void*)decl);
+  mNameSpaceStack.AppendElement(decl);
   return NS_OK;
 }
 
@@ -355,9 +355,9 @@ nsXMLContentSerializer::PopNameSpaceDeclsFor(nsIDOMElement* aOwner)
 {
   PRInt32 index, count;
 
-  count = mNameSpaceStack.Count();
+  count = mNameSpaceStack.Length();
   for (index = count - 1; index >= 0; index--) {
-    NameSpaceDecl* decl = (NameSpaceDecl*)mNameSpaceStack.ElementAt(index);
+    NameSpaceDecl* decl = mNameSpaceStack.ElementAt(index);
     if (decl->mOwner != aOwner) {
       break;
     }
@@ -411,10 +411,10 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
   // later (so in a more outer scope) see it bound to aURI we can't reuse it.
   PRBool haveSeenOurPrefix = PR_FALSE;
 
-  PRInt32 count = mNameSpaceStack.Count();
+  PRInt32 count = mNameSpaceStack.Length();
   PRInt32 index = count - 1;
   while (index >= 0) {
-    NameSpaceDecl* decl = (NameSpaceDecl*)mNameSpaceStack.ElementAt(index);
+    NameSpaceDecl* decl = mNameSpaceStack.ElementAt(index);
     // Check if we've found a prefix match
     if (aPrefix.Equals(decl->mPrefix)) {
 
@@ -464,8 +464,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       PRBool prefixOK = PR_TRUE;
       PRInt32 index2;
       for (index2 = count-1; index2 > index && prefixOK; --index2) {
-        NameSpaceDecl* decl2 =
-          (NameSpaceDecl*)mNameSpaceStack.ElementAt(index2);
+        NameSpaceDecl* decl2 = mNameSpaceStack.ElementAt(index2);
         prefixOK = (decl2->mPrefix != decl->mPrefix);
       }
       

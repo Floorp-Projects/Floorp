@@ -82,12 +82,11 @@ nsXMLNameSpaceMap::nsXMLNameSpaceMap()
 nsresult
 nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
 {
-  PRInt32 count = mNameSpaces.Count();
+  PRUint32 count = mNameSpaces.Length();
   nsNameSpaceEntry *foundEntry = nsnull;
 
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
-                                         (mNameSpaces.FastElementAt(i));
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsNameSpaceEntry *entry = mNameSpaces.ElementAt(i);
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -101,7 +100,7 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
     foundEntry = new nsNameSpaceEntry(aPrefix);
     NS_ENSURE_TRUE(foundEntry, NS_ERROR_OUT_OF_MEMORY);
 
-    if (!mNameSpaces.AppendElement(foundEntry)) {
+    if (mNameSpaces.AppendElement(foundEntry) == nsnull) {
       delete foundEntry;
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -126,11 +125,10 @@ nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 void
 nsXMLNameSpaceMap::RemovePrefix(nsIAtom *aPrefix)
 {
-  PRInt32 count = mNameSpaces.Count();
+  PRUint32 count = mNameSpaces.Length();
 
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
-                                         (mNameSpaces.FastElementAt(i));
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsNameSpaceEntry *entry = mNameSpaces.ElementAt(i);
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -144,11 +142,10 @@ nsXMLNameSpaceMap::RemovePrefix(nsIAtom *aPrefix)
 PRInt32
 nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 {
-  PRInt32 count = mNameSpaces.Count();
+  PRUint32 count = mNameSpaces.Length();
 
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
-                                         (mNameSpaces.FastElementAt(i));
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsNameSpaceEntry *entry = mNameSpaces.ElementAt(i);
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -166,11 +163,10 @@ nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 nsIAtom*
 nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
 {
-  PRInt32 count = mNameSpaces.Count();
+  PRUint32 count = mNameSpaces.Length();
 
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsNameSpaceEntry *entry = static_cast<nsNameSpaceEntry*>
-                                         (mNameSpaces.FastElementAt(i));
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsNameSpaceEntry *entry = mNameSpaces.ElementAt(i);
 
     NS_ASSERTION(entry, "null entry in namespace map!");
 
@@ -182,14 +178,11 @@ nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
   return nsnull;
 }
 
-static PRBool DeleteEntry(void *aElement, void *aData)
-{
-  delete static_cast<nsNameSpaceEntry*>(aElement);
-  return PR_TRUE;
-}
-
 void
 nsXMLNameSpaceMap::Clear()
 {
-  mNameSpaces.EnumerateForwards(DeleteEntry, nsnull);
+  for (PRUint32 i = 0, len = mNameSpaces.Length(); i < len; ++i) {
+    delete mNameSpaces[i];
+  }
+  mNameSpaces.Clear();
 }

@@ -48,7 +48,6 @@
 class nsIAtom;
 class nsIDocument;
 class nsPresContext;
-class nsVoidArray;
 class nsIDOMEvent;
 class nsIContent;
 class nsIEventListenerManager;

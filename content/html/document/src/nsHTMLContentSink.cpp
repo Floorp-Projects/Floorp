@@ -94,7 +94,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsICookieService.h"
-#include "nsVoidArray.h"
 #include "nsTArray.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -247,7 +246,7 @@ protected:
 
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
 
-  nsAutoVoidArray mContextStack;
+  nsAutoTArray<SinkContext*, 8> mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
@@ -1550,7 +1549,7 @@ HTMLContentSink::~HTMLContentSink()
     mNotificationTimer->Cancel();
   }
 
-  PRInt32 numContexts = mContextStack.Count();
+  PRInt32 numContexts = mContextStack.Length();
 
   if (mCurrentContext == mHeadContext && numContexts > 0) {
     // Pop off the second html context if it's not done earlier
@@ -1559,7 +1558,7 @@ HTMLContentSink::~HTMLContentSink()
 
   PRInt32 i;
   for (i = 0; i < numContexts; i++) {
-    SinkContext* sc = (SinkContext*)mContextStack.ElementAt(i);
+    SinkContext* sc = mContextStack.ElementAt(i);
     if (sc) {
       sc->End();
       if (sc == mCurrentContext) {
@@ -1923,8 +1922,8 @@ HTMLContentSink::EndContext(PRInt32 aPosition)
   MOZ_TIMER_START(mWatch);
   NS_PRECONDITION(mCurrentContext && aPosition > -1, "non-existing context");
 
-  PRInt32 n = mContextStack.Count() - 1;
-  SinkContext* sc = (SinkContext*) mContextStack.ElementAt(n);
+  PRUint32 n = mContextStack.Length() - 1;
+  SinkContext* sc = mContextStack.ElementAt(n);
 
   const SinkContext::Node &bottom = mCurrentContext->mStack[0];
   
@@ -1985,10 +1984,10 @@ HTMLContentSink::CloseHTML()
 
   if (mHeadContext) {
     if (mCurrentContext == mHeadContext) {
-      PRInt32 numContexts = mContextStack.Count();
+      PRUint32 numContexts = mContextStack.Length();
 
       // Pop off the second html context if it's not done earlier
-      mCurrentContext = (SinkContext*)mContextStack.ElementAt(--numContexts);
+      mCurrentContext = mContextStack.ElementAt(--numContexts);
       mContextStack.RemoveElementAt(numContexts);
     }
 
@@ -2832,11 +2831,12 @@ HTMLContentSink::CloseHeadContext()
     mCurrentContext->FlushTextAndRelease();
   }
 
-  NS_ASSERTION(mContextStack.Count() > 0, "Stack should not be empty");
-  
-  PRInt32 n = mContextStack.Count() - 1;
-  mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
-  mContextStack.RemoveElementAt(n);
+  if (!mContextStack.IsEmpty())
+  {
+    PRUint32 n = mContextStack.Length() - 1;
+    mCurrentContext = mContextStack.ElementAt(n);
+    mContextStack.RemoveElementAt(n);
+  }
 }
 
 void
@@ -3070,9 +3070,9 @@ HTMLContentSink::IsMonolithicContainer(nsHTMLTag aTag)
 void
 HTMLContentSink::UpdateChildCounts()
 {
-  PRInt32 numContexts = mContextStack.Count();
-  for (PRInt32 i = 0; i < numContexts; i++) {
-    SinkContext* sc = (SinkContext*)mContextStack.ElementAt(i);
+  PRUint32 numContexts = mContextStack.Length();
+  for (PRUint32 i = 0; i < numContexts; i++) {
+    SinkContext* sc = mContextStack.ElementAt(i);
 
     sc->UpdateChildCounts();
   }

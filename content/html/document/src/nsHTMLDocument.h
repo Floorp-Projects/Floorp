@@ -47,6 +47,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptElement.h"
 #include "jsapi.h"
+#include "nsTArray.h"
 
 #include "pldhash.h"
 #include "nsIHttpChannel.h"
@@ -342,7 +343,7 @@ protected:
   // finishes processing that script.
   PRUint32 mWriteLevel;
 
-  nsSmallVoidArray mPendingScripts;
+  nsAutoTArray<nsIScriptElement*, 1> mPendingScripts;
 
   // Load flags of the document's channel
   PRUint32 mLoadFlags;
