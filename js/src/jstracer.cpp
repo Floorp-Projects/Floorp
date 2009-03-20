@@ -950,7 +950,7 @@ public:
         } else if (ci == &js_BoxDouble_ci) {
             JS_ASSERT(s0->isQuad());
             if (isi2f(s0)) {
-                LIns* args2[] = { s0->oprnd1(), args[1] };
+                LIns* args2[] = { iu2fArg(s0), args[1] };
                 return out->insCall(&js_BoxInt32_ci, args2);
             }
             if (s0->isCall() && s0->callInfo() == &js_UnboxDouble_ci)
