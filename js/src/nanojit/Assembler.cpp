@@ -602,7 +602,11 @@ namespace nanojit
 			Register s = resv->reg = registerAlloc(prefer);
 			_allocator.addActive(s, i);
             if ((rmask(r) & GpRegs) && (rmask(s) & GpRegs)) {
+#ifdef NANOJIT_ARM
+				MOV(r, s);
+#else
     			MR(r, s);
+#endif
             } 
             else {
 				asm_nongp_copy(r, s);
