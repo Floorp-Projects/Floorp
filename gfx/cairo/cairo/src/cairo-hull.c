@@ -200,7 +200,7 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
 
     if (num_hull > ARRAY_LENGTH (hull_stack)) {
 	hull = _cairo_malloc_ab (num_hull, sizeof (cairo_hull_t));
-	if (hull == NULL)
+	if (unlikely (hull == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     } else {
 	hull = hull_stack;

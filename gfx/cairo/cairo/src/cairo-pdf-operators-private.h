@@ -68,6 +68,7 @@ typedef struct _cairo_pdf_operators {
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_pdf_operators_use_font_subset_t use_font_subset;
     void *use_font_subset_closure;
+    cairo_bool_t use_actual_text;
     cairo_bool_t in_text_object; /* inside BT/ET pair */
 
     /* PDF text state */
@@ -114,6 +115,10 @@ _cairo_pdf_operators_set_stream (cairo_pdf_operators_t 	 *pdf_operators,
 cairo_private void
 _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operators,
 					      cairo_matrix_t 	    *cairo_to_pdf);
+
+cairo_private void
+_cairo_pdf_operators_enable_actual_text (cairo_pdf_operators_t *pdf_operators,
+					 cairo_bool_t 	  	enable);
 
 cairo_private cairo_status_t
 _cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators);

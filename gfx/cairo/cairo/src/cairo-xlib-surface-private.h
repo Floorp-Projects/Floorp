@@ -85,7 +85,8 @@ struct _cairo_xlib_surface {
 
     unsigned int clip_dirty;
     cairo_bool_t have_clip_rects;
-    XRectangle embedded_clip_rects[4];
+    cairo_bool_t gc_has_clip_rects;
+    XRectangle embedded_clip_rects[8];
     XRectangle *clip_rects;
     int num_clip_rects;
 
