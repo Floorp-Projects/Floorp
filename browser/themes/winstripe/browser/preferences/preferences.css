@@ -147,6 +147,14 @@ radio[pane=paneAdvanced][selected="true"] {
   padding: 0px;
 }
 
+/* Advanced Pane */
+
+/* Adding padding-bottom prevents the bottom of the tabpanel from being cutoff
+   when browser.preferences.animateFadeIn = true */
+#advancedPrefs {
+  padding-bottom: 8px;
+}
+
 /* bottom-most box containing a groupbox in a prefpane. Prevents the bottom
    of the groupbox from being cutoff */
 .bottomBox {
