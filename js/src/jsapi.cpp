@@ -3580,7 +3580,7 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 {
     CHECK_REQUEST(cx);
 
-    return GetPropertyAttributesById(cx, obj, id, flags, JS_TRUE, desc);
+    return GetPropertyAttributesById(cx, obj, id, flags, JS_FALSE, desc);
 }
 
 JS_PUBLIC_API(JSBool)
