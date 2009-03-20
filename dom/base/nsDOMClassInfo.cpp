@@ -637,8 +637,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(DocumentFragment, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(DocumentFragment, nsDocumentFragmentSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_FINALIZE)
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Attr, nsAttributeSH,
@@ -7117,7 +7118,29 @@ nsNodeSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   return NS_OK;
 }
- 
+
+// DocumentFragment helper.
+
+NS_IMETHODIMP
+nsDocumentFragmentSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
+                                 JSContext *cx, JSObject *obj)
+{
+  nsINode* node = static_cast<nsINode*>(wrapper->Native());
+  node->SetWrapper(wrapper);
+
+  return nsDOMGenericSH::PostCreate(wrapper, cx, obj);
+}
+
+NS_IMETHODIMP
+nsDocumentFragmentSH::Finalize(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *obj)
+{
+  nsINode* node = static_cast<nsINode*>(wrapper->Native());
+  node->ClearWrapper();
+
+  return NS_OK;
+}
+
 // EventReceiver helper
 
 // static
