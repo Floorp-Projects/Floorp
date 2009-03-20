@@ -1,13 +1,14 @@
 <!ENTITY restorepage.tabtitle       "Restore Session">
-<!ENTITY restorepage.pagetitle      "Would you like to restore your session?">
-<!-- LOCALIZATION NOTE: If "closed unexpectedly" sounds too awkward in the translation,
-                        you may translate "crash" instead (even though it's IT-speak) -->
-<!ENTITY restorepage.issueDesc      "Your previous &brandShortName; session closed unexpectedly. We sincerely apologize for the inconvenience. You can restore the tabs and windows from your previous session, or start a new session if they are no longer needed.">
-<!ENTITY restorepage.remedies       "If &brandShortName; closes repeatedly:">
-<!ENTITY restorepage.dueToChrome    "Try disabling any recently added extensions in the Add-ons Manager.">
-<!ENTITY restorepage.dueToContent   "Try restoring your session without any Web pages you suspect might be causing the problem:">
 
-<!ENTITY restorepage.restoreButton  "Restore Previous Session">
+<!-- LOCALIZATION NOTE: The title is intended to be apologetic and disarming, expressing dismay
+     and regret that we are unable to restore the session for the user -->
+<!ENTITY restorepage.errorTitle     "Well, this is embarassing.">
+<!ENTITY restorepage.problemDesc    "&brandShortName; is having trouble recovering your windows and tabs. This is usually caused by a recently opened web page.">
+<!ENTITY restorepage.tryThis        "You can try:">
+<!ENTITY restorepage.restoreSome    "Removing one or more tabs that you think may be causing the problem">
+<!ENTITY restorepage.startNew       "Starting an entirely new browsing session">
+
+<!ENTITY restorepage.tryagainButton "Restore">
 <!ENTITY restorepage.restore.access "R">
 <!ENTITY restorepage.cancelButton   "Start New Session">
 <!ENTITY restorepage.cancel.access  "S">
