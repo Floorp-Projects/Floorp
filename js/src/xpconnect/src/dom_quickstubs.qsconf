@@ -71,8 +71,6 @@ members = [
     # These do not need quick stubs.
     #'nsIDOMWindow.document',
     'nsIDOMWindow.getSelection',
-    'nsIDOMWindow.scrollByLines',
-    'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
     'nsIDOMScreen.width',
