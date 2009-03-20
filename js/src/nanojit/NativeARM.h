@@ -457,29 +457,25 @@ enum {
 #define CMP(_l,_r)  ALUr(AL, cmp, 1, 0, _l, _r)
 
 // MOV
-#define MOV(_d,_s)  do {                                                 \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0xD<<21) | ((_d)<<12) | (_s) ); \
-        asm_output("mov %s,%s",gpn(_d),gpn(_s)); } while (0)
 
+#define MOV_cond(_d,_s,_cond) ALUr(_cond, mov, 0, _d, 0, _s)
 
-#define MOV_cond(_d,_s,_cond,_nm)  do {                                  \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( ((_cond)<<28) | (0xD<<21) | ((_d)<<12) | (_s) ); \
-        asm_output(_nm " %s,%s",gpn(_d),gpn(_s)); } while (0)
+#define MOV(dr,sr)   MOV_cond(dr, sr, AL)
+#define MOVEQ(dr,sr) MOV_cond(dr, sr, EQ)
+#define MOVNE(dr,sr) MOV_cond(dr, sr, NE)
+#define MOVLT(dr,sr) MOV_cond(dr, sr, LT)
+#define MOVLE(dr,sr) MOV_cond(dr, sr, LE)
+#define MOVGT(dr,sr) MOV_cond(dr, sr, GT)
+#define MOVGE(dr,sr) MOV_cond(dr, sr, GE)
+#define MOVCC(dr,sr) MOV_cond(dr, sr, CC)
+#define MOVLS(dr,sr) MOV_cond(dr, sr, LS)
+#define MOVHI(dr,sr) MOV_cond(dr, sr, HI)
+#define MOVCS(dr,sr) MOV_cond(dr, sr, CS)
+#define MOVVC(dr,sr) MOV_cond(dr, sr, VC) // overflow clear
+#define MOVNC(dr,sr) MOV_cond(dr, sr, CC) // carry clear
 
-#define MOVEQ(dr,sr) MOV_cond(dr, sr, EQ, "moveq")
-#define MOVNE(dr,sr) MOV_cond(dr, sr, NE, "movne")
-#define MOVL(dr,sr)  MOV_cond(dr, sr, LT, "movlt")
-#define MOVLE(dr,sr) MOV_cond(dr, sr, LE, "movle")
-#define MOVG(dr,sr)  MOV_cond(dr, sr, GT, "movgt")
-#define MOVGE(dr,sr) MOV_cond(dr, sr, GE, "movge")
-#define MOVB(dr,sr)  MOV_cond(dr, sr, CC, "movcc")
-#define MOVBE(dr,sr) MOV_cond(dr, sr, LS, "movls")
-#define MOVA(dr,sr)  MOV_cond(dr, sr, HI, "movcs")
-#define MOVAE(dr,sr) MOV_cond(dr, sr, CS, "movhi")
-#define MOVNO(dr,sr) MOV_cond(dr, sr, VC, "movvc") // overflow clear
-#define MOVNC(dr,sr) MOV_cond(dr, sr, CC, "movcc") // carry clear
+// for Assembler.cpp compatibility
+#define MR(d,s) MOV(d,s)
 
 #define LDR_chk(_d,_b,_off,_chk) do {                                   \
         if (IsFpReg(_d)) {                                              \
