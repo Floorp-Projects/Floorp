@@ -229,8 +229,8 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
 {
     nsresult rv = NS_OK;
     PRInt32 i;
-    for (i = mInScopeVariables.Count() - 1; i >= 0; --i) {
-        ++(static_cast<txInScopeVariable*>(mInScopeVariables[i]))->mLevel;
+    for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
+        ++mInScopeVariables[i]->mLevel;
     }
 
     // Update the elementcontext if we have special attributes
@@ -287,7 +287,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
                     return NS_ERROR_XSLT_PARSE_FAILURE;
 
                 if (!mElementContext->mInstructionNamespaces.
-                        AppendElement(NS_INT32_TO_PTR(namespaceID))) {
+                        AppendElement(namespaceID)) {
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
             }
@@ -318,10 +318,9 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
 
     // Find the right elementhandler and execute it
     MBool isInstruction = MB_FALSE;
-    PRInt32 count = mElementContext->mInstructionNamespaces.Count();
+    PRInt32 count = mElementContext->mInstructionNamespaces.Length();
     for (i = 0; i < count; ++i) {
-        if (NS_PTR_TO_INT32(mElementContext->mInstructionNamespaces[i]) ==
-            aNamespaceID) {
+        if (mElementContext->mInstructionNamespaces[i] == aNamespaceID) {
             isInstruction = MB_TRUE;
             break;
         }
@@ -381,9 +380,8 @@ txStylesheetCompiler::endElement()
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 i;
-    for (i = mInScopeVariables.Count() - 1; i >= 0; --i) {
-        txInScopeVariable* var =
-            static_cast<txInScopeVariable*>(mInScopeVariables[i]);
+    for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
+        txInScopeVariable* var = mInScopeVariables[i];
         if (!--(var->mLevel)) {
             nsAutoPtr<txInstruction> instr(new txRemoveVariable(var->mName));
             NS_ENSURE_TRUE(instr, NS_ERROR_OUT_OF_MEMORY);
@@ -544,7 +542,7 @@ txStylesheetCompiler::ensureNewElementContext()
 nsresult
 txStylesheetCompiler::maybeDoneCompiling()
 {
-    if (!mDoneWithThisStylesheet || mChildCompilerList.Count()) {
+    if (!mDoneWithThisStylesheet || !mChildCompilerList.IsEmpty()) {
         return NS_OK;
     }
     
@@ -647,8 +645,8 @@ txStylesheetCompilerState::~txStylesheetCompilerState()
     }
     
     PRInt32 i;
-    for (i = mInScopeVariables.Count() - 1; i >= 0; --i) {
-        delete static_cast<txInScopeVariable*>(mInScopeVariables[i]);
+    for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
+        delete mInScopeVariables[i];
     }
 }
 
@@ -755,7 +753,7 @@ txStylesheetCompilerState::openInstructionContainer(txInstructionContainer* aCon
 void
 txStylesheetCompilerState::closeInstructionContainer()
 {
-    NS_ASSERTION(mGotoTargetPointers.Count() == 0,
+    NS_ASSERTION(mGotoTargetPointers.IsEmpty(),
                  "GotoTargets still exists, did you forget to add txReturn?");
     mNextInstrPtr = 0;
 }
@@ -770,9 +768,9 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction> aInstruction)
     *mNextInstrPtr = aInstruction.forget();
     mNextInstrPtr = newInstr->mNext.StartAssignment();
     
-    PRInt32 i, count = mGotoTargetPointers.Count();
+    PRUint32 i, count = mGotoTargetPointers.Length();
     for (i = 0; i < count; ++i) {
-        *static_cast<txInstruction**>(mGotoTargetPointers[i]) = newInstr;
+        *mGotoTargetPointers[i] = newInstr;
     }
     mGotoTargetPointers.Clear();
 
@@ -811,7 +809,7 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
     // step forward before calling the observer in case of syncronous loading
     mToplevelIterator.next();
 
-    if (!mChildCompilerList.AppendElement(compiler)) {
+    if (mChildCompilerList.AppendElement(compiler) == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -844,7 +842,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
         new txStylesheetCompiler(aURI, mStylesheet, &iter, observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    if (!mChildCompilerList.AppendElement(compiler)) {
+    if (mChildCompilerList.AppendElement(compiler) == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -859,7 +857,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
 nsresult
 txStylesheetCompilerState::addGotoTarget(txInstruction** aTargetPointer)
 {
-    if (!mGotoTargetPointers.AppendElement(aTargetPointer)) {
+    if (mGotoTargetPointers.AppendElement(aTargetPointer) == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     
@@ -1162,7 +1160,7 @@ txElementContext::txElementContext(const nsAString& aBaseURI)
       mMappings(new txNamespaceMap),
       mDepth(0)
 {
-    mInstructionNamespaces.AppendElement(NS_INT32_TO_PTR(kNameSpaceID_XSLT));
+    mInstructionNamespaces.AppendElement(kNameSpaceID_XSLT);
 }
 
 txElementContext::txElementContext(const txElementContext& aOther)

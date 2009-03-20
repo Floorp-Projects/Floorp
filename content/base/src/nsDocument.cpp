@@ -2821,11 +2821,10 @@ nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
     }
 #endif
 
-    PRInt32 n = mCharSetObservers.Count();
+    PRInt32 n = mCharSetObservers.Length();
 
     for (PRInt32 i = 0; i < n; i++) {
-      nsIObserver* observer =
-        static_cast<nsIObserver *>(mCharSetObservers.ElementAt(i));
+      nsIObserver* observer = mCharSetObservers.ElementAt(i);
 
       observer->Observe(static_cast<nsIDocument *>(this), "charset",
                         NS_ConvertASCIItoUTF16(aCharSetID).get());

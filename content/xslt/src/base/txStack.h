@@ -39,9 +39,9 @@
 #ifndef txStack_h___
 #define txStack_h___
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
-class txStack : private nsVoidArray
+class txStack : private nsTArray<void*>
 {
 public:
     /**
@@ -53,7 +53,7 @@ public:
     inline void* peek()
     {
         NS_ASSERTION(!isEmpty(), "peeking at empty stack");
-        return ElementAt(Count() - 1);
+        return !isEmpty() ? ElementAt(Length() - 1) : nsnull;
     }
 
     /**
@@ -64,8 +64,7 @@ public:
      */
     inline nsresult push(void* aObject)
     {
-        return InsertElementAt(aObject, Count()) ? NS_OK :
-                                                   NS_ERROR_OUT_OF_MEMORY;
+        return AppendElement(aObject) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
 
     /**
@@ -76,10 +75,14 @@ public:
      */
     inline void* pop()
     {
+        void* object = nsnull;
         NS_ASSERTION(!isEmpty(), "popping from empty stack");
-        const PRInt32 count = Count() - 1;
-        void* object = ElementAt(count);
-        RemoveElementsAt(count, 1);
+        if (!isEmpty())
+        {
+            const PRUint32 count = Length() - 1;
+            object = ElementAt(count);
+            RemoveElementAt(count);
+        }
         return object;
     }
 
@@ -90,7 +93,7 @@ public:
      */
     inline PRBool isEmpty()
     {
-        return (Count() <= 0);
+        return IsEmpty();
     }
 
     /**
@@ -100,7 +103,7 @@ public:
      */
     inline PRInt32 size()
     {
-        return Count();
+        return Length();
     }
 
 private:
@@ -128,7 +131,7 @@ public:
      */
     inline PRBool hasNext()
     {
-        return (mPosition < mStack->Count());
+        return (mPosition < mStack->Length());
     }
 
     /**
@@ -138,7 +141,7 @@ public:
      */
     inline void* next()
     {
-        if (mPosition == mStack->Count()) {
+        if (mPosition == mStack->Length()) {
             return nsnull;
         }
         return mStack->ElementAt(mPosition++);
@@ -146,7 +149,7 @@ public:
 
 private:
     txStack* mStack;
-    PRInt32 mPosition;
+    PRUint32 mPosition;
 };
 
 #endif /* txStack_h___ */

@@ -49,7 +49,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
@@ -150,7 +150,7 @@ public:
   nsCOMPtr<nsIContent> mRoot;
   nsCOMPtr<nsIParser> mParser;
 
-  nsVoidArray* mContentStack;
+  nsTArray<nsIContent*>* mContentStack;
 
   PRUnichar* mText;
   PRInt32 mTextLength;
@@ -210,9 +210,9 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
 
   if (nsnull != mContentStack) {
     // there shouldn't be anything here except in an error condition
-    PRInt32 indx = mContentStack->Count();
+    PRInt32 indx = mContentStack->Length();
     while (0 < indx--) {
-      nsIContent* content = (nsIContent*)mContentStack->ElementAt(indx);
+      nsIContent* content = mContentStack->ElementAt(indx);
       NS_RELEASE(content);
     }
     delete mContentStack;
@@ -680,9 +680,9 @@ nsIContent*
 nsHTMLFragmentContentSink::GetCurrentContent()
 {
   if (nsnull != mContentStack) {
-    PRInt32 indx = mContentStack->Count() - 1;
+    PRInt32 indx = mContentStack->Length() - 1;
     if (indx >= 0)
-      return (nsIContent *)mContentStack->ElementAt(indx);
+      return mContentStack->ElementAt(indx);
   }
   return nsnull;
 }
@@ -691,11 +691,11 @@ PRInt32
 nsHTMLFragmentContentSink::PushContent(nsIContent *aContent)
 {
   if (nsnull == mContentStack) {
-    mContentStack = new nsVoidArray();
+    mContentStack = new nsTArray<nsIContent*>();
   }
 
-  mContentStack->AppendElement((void *)aContent);
-  return mContentStack->Count();
+  mContentStack->AppendElement(aContent);
+  return mContentStack->Length();
 }
 
 nsIContent*
@@ -703,9 +703,9 @@ nsHTMLFragmentContentSink::PopContent()
 {
   nsIContent* content = nsnull;
   if (nsnull != mContentStack) {
-    PRInt32 indx = mContentStack->Count() - 1;
+    PRInt32 indx = mContentStack->Length() - 1;
     if (indx >= 0) {
-      content = (nsIContent *)mContentStack->ElementAt(indx);
+      content = mContentStack->ElementAt(indx);
       mContentStack->RemoveElementAt(indx);
     }
   }

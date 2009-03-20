@@ -49,6 +49,7 @@
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsHashSets.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOM3Document.h"
@@ -1099,7 +1100,7 @@ protected:
   nsCString mReferrer;
   nsString mLastModified;
 
-  nsVoidArray mCharSetObservers;
+  nsTArray<nsIObserver*> mCharSetObservers;
 
   PLDHashTable *mSubDocuments;
 

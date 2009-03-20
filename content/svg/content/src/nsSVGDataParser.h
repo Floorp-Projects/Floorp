@@ -39,7 +39,6 @@
 #define __NS_SVGDATAPARSER_H__
 
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 
 //----------------------------------------------------------------------
 // helper macros

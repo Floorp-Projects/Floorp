@@ -57,7 +57,6 @@
 #include "nsIAtom.h"
 #include "nsDoubleHashtable.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
 #include "txCore.h"
 #include "nsAutoPtr.h"
 
