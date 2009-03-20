@@ -236,6 +236,7 @@ nsNavBookmarks::InitStatements()
   // This is a LEFT OUTER JOIN with moz_places since folders does not have
   // a reference into that table.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "/* do not warn (bug 482353) */ "
       "SELECT * FROM ( "
         "SELECT h.id, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, "
