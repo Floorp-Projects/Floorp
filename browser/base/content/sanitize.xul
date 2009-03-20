@@ -54,7 +54,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
             title="&sanitizeDialog2.title;"
-            style="width: &window.width;;"
+            style="width: &dialog.width;;"
             ondialogaccept="gSanitizePromptDialog.sanitize();">
 
   <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();">
@@ -78,7 +78,7 @@
           }
           
           var bundleBrowser = document.getElementById("bundleBrowser");
-          document.documentElement.getButton("accept").label = bundleBrowser.getString("sanitizeButton2");
+          document.documentElement.getButton("accept").label = bundleBrowser.getString("sanitizeButtonOK");
         },
       
         checkPrefs : function ()
@@ -199,36 +199,36 @@
     <groupbox orient="vertical">
       <caption label="&historySection.label;"/>
       <hbox id="SanitizeDurationBox" align="center">
-        <label value="&clearDuration.label;" control="sanitizeDurationChoice"
-               accesskey="&clearDuration.accesskey;" id="sanitizeDurationLabel"/>
+        <label value="&clearTimeDuration.label;" control="sanitizeDurationChoice"
+               accesskey="&clearTimeDuration.accesskey;" id="sanitizeDurationLabel"/>
         <menulist id="sanitizeDurationChoice"
                   preference="privacy.sanitize.timeSpan">
           <menupopup>
-            <menuitem label="&clearDuration.lastHour;" value="1"/>
-            <menuitem label="&clearDuration.last2Hours;" value="2"/>
-            <menuitem label="&clearDuration.last4Hours;" value="3"/>
-            <menuitem label="&clearDuration.today;" value="4"/>
+            <menuitem label="&clearTimeDuration.lastHour;" value="1"/>
+            <menuitem label="&clearTimeDuration.last2Hours;" value="2"/>
+            <menuitem label="&clearTimeDuration.last4Hours;" value="3"/>
+            <menuitem label="&clearTimeDuration.today;" value="4"/>
             <menuseparator/>
-            <menuitem label="&clearDuration.everything;" value="0"/>
+            <menuitem label="&clearTimeDuration.everything;" value="0"/>
           </menupopup>
         </menulist>
-        <label value="&clearDuration.suffix;" flex="1"/>
+        <label value="&clearTimeDuration.suffix;" flex="1"/>
       </hbox>
       <hbox>
         <vbox style="width: &column.width;">
           <checkbox id="history-checkbox"
-                    label="&itemVisitedPages.label;"
-                    accesskey="&itemVisitedPages.accesskey;"
+                    label="&itemBrowsingHistory.label;"
+                    accesskey="&itemBrowsingHistory.accesskey;"
                     preference="privacy.cpd.history"
                     oncommand="gSanitizePromptDialog.updateDownloadHistory();"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
           <checkbox id="downloads-checkbox"
-                    label="&itemDownloadList.label;"
-                    accesskey="&itemDownloadList.accesskey;"
+                    label="&itemDownloadHistory.label;"
+                    accesskey="&itemDownloadHistory.accesskey;"
                     preference="privacy.cpd.downloads"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadDownloads();"/>
-          <checkbox label="&itemFormSearchEntries.label;"
-                    accesskey="&itemFormSearchEntries.accesskey;"
+          <checkbox label="&itemFormSearchHistory.label;"
+                    accesskey="&itemFormSearchHistory.accesskey;"
                     preference="privacy.cpd.formdata"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
         </vbox>
@@ -241,8 +241,8 @@
                     accesskey="&itemActiveLogins.accesskey;"
                     preference="privacy.cpd.sessions"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox label="&itemWebCache.label;"
-                    accesskey="&itemWebCache.accesskey;"
+          <checkbox label="&itemCache.label;"
+                    accesskey="&itemCache.accesskey;"
                     preference="privacy.cpd.cache"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
         </vbox>
@@ -255,8 +255,8 @@
                   accesskey="&itemPasswords.accesskey;"
                   preference="privacy.cpd.passwords"
                   onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        <checkbox label="&itemSiteSettings.label;"
-                  accesskey="&itemSiteSettings.accesskey;"
+        <checkbox label="&itemSitePreferences.label;"
+                  accesskey="&itemSitePreferences.accesskey;"
                   preference="privacy.cpd.siteSettings"
                   onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       </vbox>
