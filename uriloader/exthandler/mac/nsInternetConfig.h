@@ -38,7 +38,7 @@
 #ifndef __NS_INTERNETCONFIG_H__
 #define __NS_INTERNETCONFIG_H__
 
-#include <InternetConfig.h>
+#include <Carbon/Carbon.h>
 #include "prtypes.h"
 #include "nsError.h"
 

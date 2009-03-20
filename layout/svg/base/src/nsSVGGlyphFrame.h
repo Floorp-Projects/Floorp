@@ -218,9 +218,7 @@ protected:
   const nsTextFragment* GetFragment() const
   {
     return !(GetStateBits() & NS_STATE_SVG_PRINTING) ?
-      mContent->GetText() :
-      static_cast<const nsTextFragment*>(PresContext()->PropertyTable()->
-                                           GetProperty(mContent, nsGkAtoms::clonedTextForPrint));
+      mContent->GetText() : nsLayoutUtils::GetTextFragmentForPrinting(this);
   }
 
   // Owning pointer, must call gfxTextRunWordCache::RemoveTextRun before deleting

@@ -92,7 +92,7 @@ const CACHE_INVALIDATION_DELAY = 1000;
 
 // Current cache version. This should be incremented if the format of the cache
 // file is modified.
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
@@ -1055,7 +1055,17 @@ Engine.prototype = {
   // The name of the charset used to submit the search terms.
   _queryCharset: null,
   // A URL string pointing to the engine's search form.
-  _searchForm: null,
+  __searchForm: null,
+  get _searchForm() {
+    return this.__searchForm;
+  },
+  set _searchForm(aValue) {
+    if (/^https?:/i.test(aValue))
+      this.__searchForm = aValue;
+    else
+      LOG("_searchForm: Invalid URL dropped for " + this._name ||
+          "the current engine");
+  },
   // The URI object from which the engine was retrieved.
   // This is null for local plugins, and is used for error messages and logging.
   _uri: null,
@@ -1983,7 +1993,7 @@ Engine.prototype = {
     this._hidden = aJson.hidden || null;
     this._type = aJson.type || SEARCH_TYPE_MOZSEARCH;
     this._queryCharset = aJson.queryCharset || DEFAULT_QUERY_CHARSET;
-    this._searchForm = aJson.searchForm;
+    this.__searchForm = aJson.__searchForm;
     this.__installLocation = aJson._installLocation || SEARCH_APP_DIR;
     this._updateInterval = aJson._updateInterval || null;
     this._updateURL = aJson._updateURL || null;
@@ -2015,7 +2025,7 @@ Engine.prototype = {
       _name: this._name,
       description: this.description,
       filePath: this._file.QueryInterface(Ci.nsILocalFile).persistentDescriptor,
-      searchForm: this.searchForm,
+      __searchForm: this.__searchForm,
       _iconURL: this._iconURL,
       _urls: [url._serializeToJSON() for each(url in this._urls)] 
     };

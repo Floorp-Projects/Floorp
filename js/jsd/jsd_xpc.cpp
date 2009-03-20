@@ -2723,7 +2723,7 @@ jsdService::InsertFilter (jsdIFilter *filter, jsdIFilter *after)
     if (jsds_FindFilter (filter))
         return NS_ERROR_INVALID_ARG;
 
-    FilterRecord *rec = new FilterRecord;
+    FilterRecord *rec = PR_NEWZAP (FilterRecord);
     if (!rec)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2765,7 +2765,7 @@ jsdService::AppendFilter (jsdIFilter *filter)
     NS_ENSURE_ARG_POINTER (filter);
     if (jsds_FindFilter (filter))
         return NS_ERROR_INVALID_ARG;
-    FilterRecord *rec = new FilterRecord;
+    FilterRecord *rec = PR_NEWZAP (FilterRecord);
 
     if (!jsds_SyncFilter (rec, filter)) {
         PR_Free (rec);

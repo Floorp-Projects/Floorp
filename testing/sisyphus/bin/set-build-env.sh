@@ -272,6 +272,11 @@ for step in step1; do # dummy loop for handling exits
             ;;
         -jprof)
             ;;
+        -narcissus)
+            export XCFLAGS="-DNARCISSUS=1"
+            export CFLAGS="-DNARCISSUS=1"
+            export CXXFLAGS="-DNARCISSUS=1"
+            ;;
     esac
 
     if [[ ! -d $BUILDTREE ]]; then

@@ -1265,7 +1265,7 @@ nsSocketTransport::RecoverFromError()
         }
     }
 
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     // If not trying next address, try to make a connection using dialup. 
     // Retry if that connection is made.
     if (!tryAgain) {

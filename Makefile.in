@@ -162,16 +162,16 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 # need to pass arch flags for universal builds
 ifdef UNIVERSAL_BINARY
-MAKE_SYM_STORE_ARGS := -a "ppc i386" --vcs-info
+MAKE_SYM_STORE_ARGS := -c -a "ppc i386" --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/universal
 else
-MAKE_SYM_STORE_ARGS := -a $(OS_TEST) --vcs-info
+MAKE_SYM_STORE_ARGS := -c -a $(OS_TEST) --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
 DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 endif
 ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
-MAKE_SYM_STORE_ARGS := --vcs-info
+MAKE_SYM_STORE_ARGS := -c --vcs-info
 DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif

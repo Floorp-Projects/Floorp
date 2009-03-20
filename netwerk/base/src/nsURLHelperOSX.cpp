@@ -45,7 +45,7 @@
 #include "nsILocalFile.h"
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
-#include <Files.h>
+#include <Carbon/Carbon.h>
 
 static nsTArray<nsCString> *gVolumeList = nsnull;
 

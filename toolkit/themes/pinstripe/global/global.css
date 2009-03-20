@@ -311,6 +311,10 @@ notification > button:hover:active {
   background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
 }
 
+notification > button:focus {
+  -moz-box-shadow: 0 0 3px 3px -moz-mac-focusring;
+}
+
 /* :::::: autoscroll popup ::::: */
 
 .autoscroller {

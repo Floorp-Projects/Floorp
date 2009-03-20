@@ -45,7 +45,7 @@
 #include "nsILocalFile.h"
 
 #ifdef XP_MACOSX
-#include <Types.h>
+#include <Carbon/Carbon.h>
 #include "nsILocalFileMac.h"
 #include "prenv.h"
 #endif

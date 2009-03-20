@@ -108,6 +108,7 @@ CSRCS	= \
 	pixman-edge.c \
 	pixman-edge-accessors.c \
 	pixman-image.c \
+	pixman-matrix.c \
 	pixman-pict.c \
 	pixman-region16.c \
 	pixman-region32.c \

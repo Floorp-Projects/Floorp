@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,7 +64,22 @@ private:
 
 protected:
   nsresult ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI, nsCString& aName);
-  nsresult GetDefaultIcon(nsIChannel** aChannel);
+
+  /**
+   * Obtains a new channel to be used to get a favicon from the database.  This
+   * method is asynchronous.
+   *
+   * @param aURI
+   *        The URI the channel will be created for.  This is the URI that is
+   *        set as the original URI on the channel.
+   * @param aAnnotationURI
+   *        The URI that holds the data needed to get the favicon from the
+   *        database.
+   * @returns (via _channel) the channel that will obtain the favicon data.
+   */
+  nsresult NewFaviconChannel(nsIURI *aURI,
+                             nsIURI *aAnnotationURI,
+                             nsIChannel **_channel);
 };
 
 #endif /* nsAnnoProtocolHandler_h___ */

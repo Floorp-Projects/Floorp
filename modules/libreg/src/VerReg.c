@@ -77,7 +77,7 @@
 #include "VerReg.h"
 
 #if defined(XP_MACOSX)
-#include <Folders.h>
+#include <Carbon/Carbon.h>
 #endif
 
 /* -------- local defines --------------- 

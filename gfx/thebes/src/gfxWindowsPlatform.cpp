@@ -204,7 +204,7 @@ gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
     if (aFontEntry->SupportsLangGroup(data->mLangGroup) &&
         aFontEntry->MatchesGenericFamily(data->mGenericFamily))
 #endif
-        data->mStringArray.AppendElement(aFontFamily->mName);
+    data->mStringArray.AppendElement(aFontFamily->Name());
 
     return PL_DHASH_NEXT;
 }
@@ -465,7 +465,7 @@ gfxWindowsPlatform::ResolveFontName(const nsAString& aFontName,
     if (mFonts.Get(keyName, &ff) ||
         mFontSubstitutes.Get(keyName, &ff) ||
         mFontAliases.Get(keyName, &ff)) {
-        aAborted = !(*aCallback)(ff->mName, aClosure);
+        aAborted = !(*aCallback)(ff->Name(), aClosure);
         // XXX If the font has font link, we should add the linked font.
         return NS_OK;
     }

@@ -348,7 +348,6 @@ struct InterpState
 {
     double        *sp;                  // native stack pointer, stack[0] is spbase[0]
     void          *rp;                  // call stack pointer
-    double        *global;              // global frame pointer
     JSContext     *cx;                  // current VM context handle
     double        *eos;                 // first unusable word after the native stack
     void          *eor;                 // first unusable word after the call stack
@@ -382,6 +381,7 @@ class TraceRecorder : public avmplus::GCObject {
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
+    JSObject*               lexicalBlock;
     Tracker                 tracker;
     Tracker                 nativeFrameTracker;
     char*                   entryTypeMap;
@@ -401,7 +401,6 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LirWriter*     float_filter;
 #endif
     nanojit::LIns*          cx_ins;
-    nanojit::LIns*          gp_ins;
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
     nanojit::LIns*          globalObj_ins;
@@ -536,8 +535,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
                                                 nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins,
                                                 ExitType exitType);
-    JS_REQUIRES_STACK bool guardElemOp(JSObject* obj, nanojit::LIns* obj_ins, jsid id,
-                                       size_t op_offset, jsval* vp);
+    JS_REQUIRES_STACK bool guardNotGlobalObject(JSObject* obj, nanojit::LIns* obj_ins);
     void clearFrameSlotsFromCache();
     JS_REQUIRES_STACK bool guardCallee(jsval& callee);
     JS_REQUIRES_STACK bool getClassPrototype(JSObject* ctor, nanojit::LIns*& proto_ins);
@@ -611,7 +609,7 @@ public:
 #define TRACE_ARGS_(x,args)                                                   \
     JS_BEGIN_MACRO                                                            \
         TraceRecorder* tr_ = TRACE_RECORDER(cx);                              \
-        if (tr_ && !tr_->record_##x args)                                     \
+        if (tr_ && !tr_->wasDeepAborted() && !tr_->record_##x args)           \
             js_AbortRecording(cx, #x);                                        \
     JS_END_MACRO
 

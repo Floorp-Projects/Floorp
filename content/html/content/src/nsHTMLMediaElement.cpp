@@ -194,7 +194,16 @@ NS_IMPL_ISUPPORTS2(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver, ns
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  nsresult rv = NS_OK;
+  // Don't continue to load if the request failed or has been canceled.
+  nsresult rv;
+  nsresult status;
+  rv = aRequest->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(status)) {
+    if (mElement)
+      mElement->NotifyLoadError();
+    return status;
+  }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel &&
@@ -318,7 +327,7 @@ void nsHTMLMediaElement::AbortExistingLoads()
   mLoadWaitStatus = NOT_WAITING;
 
   // Set a new load ID. This will cause events which were enqueued
-  // with a differnet load ID to silently be cancelled.
+  // with a different load ID to silently be cancelled.
   mCurrentLoadID++;
 
   if (mDecoder) {
@@ -704,8 +713,10 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
 
 nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
+    mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING),
+    mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
     mMediaSize(-1,-1),
     mBegun(PR_FALSE),
@@ -716,11 +727,11 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
     mMuted(PR_FALSE),
     mIsDoneAddingChildren(!aFromParser),
     mPlayingBeforeSeek(PR_FALSE),
+    mPausedBeforeFreeze(PR_FALSE),
     mWaitingFired(PR_FALSE),
     mIsBindingToTree(PR_FALSE),
-    mLoadWaitStatus(NOT_WAITING),
-    mIsLoadingFromSrcAttribute(PR_FALSE),
     mIsRunningLoadMethod(PR_FALSE),
+    mIsLoadingFromSrcAttribute(PR_FALSE),
     mDelayingLoadEvent(PR_FALSE),
     mIsRunningSelectResource(PR_FALSE)
 {
@@ -1252,80 +1263,72 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
+#ifdef DEBUG
+static const char* gReadyStateToString[] = {
+  "HAVE_NOTHING",
+  "HAVE_METADATA",
+  "HAVE_CURRENT_DATA",
+  "HAVE_FUTURE_DATA",
+  "HAVE_ENOUGH_DATA"
+};
+#endif
+
 void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 {
   nsMediaReadyState oldState = mReadyState;
+  mReadyState = aState;
+
+  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY || 
+      oldState == mReadyState) {
+    return;
+  }
+
+  LOG(PR_LOG_DEBUG, ("Ready state changed to %s", gReadyStateToString[aState]));
 
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
-  if (mPlayingBeforeSeek && oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+  if (mPlayingBeforeSeek &&
+      oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
   }
- 
-  mReadyState = aState;
-  if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
-    switch (mReadyState) {
-    case nsIDOMHTMLMediaElement::HAVE_NOTHING:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_NOTHING"));
-      }
-      break;
 
-    case nsIDOMHTMLMediaElement::HAVE_METADATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_METADATA"));
-      }
-      break;
+  if (oldState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
+      mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA && 
+      !mLoadedFirstFrame)
+  {
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadeddata"));
+    mLoadedFirstFrame = PR_TRUE;
+  }
 
-    case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_CURRENT_DATA"));
-        mWaitingFired = PR_FALSE;
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_METADATA &&
-          !mLoadedFirstFrame) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadeddata"));
-        mLoadedFirstFrame = PR_TRUE;
-      }
-      break;
- 
-    case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_FUTURE_DATA"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
-        if (IsPotentiallyPlaying()) {
-          DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
-        }
-      }
-      break;
- 
-    case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
-      if (oldState != mReadyState) {
-        LOG(PR_LOG_DEBUG, ("Ready state changed to HAVE_ENOUGH_DATA"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
-      }
-      if (mAutoplaying &&
-          mPaused &&
-          HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
-          mAutoplayEnabled) {
-        mPaused = PR_FALSE;
-        if (mDecoder) {
-          mDecoder->Play();
-        }
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-          IsPotentiallyPlaying()) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
-      }
-      if (oldState <= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
-        DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
-      }
-      break;
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
+    mWaitingFired = PR_FALSE;
+  }
+
+  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA && 
+      mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
+  }
+
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
+      mAutoplaying &&
+      mPaused &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
+      mAutoplayEnabled) {
+    mPaused = PR_FALSE;
+    if (mDecoder) {
+      mDecoder->Play();
     }
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
+  }
+  
+  if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA && 
+      mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
+      IsPotentiallyPlaying()) {
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
+  }
+
+  if (oldState < nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
+      mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
   }
 }
 

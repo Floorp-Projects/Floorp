@@ -1002,7 +1002,8 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow,
       if (IsChromeURI(uri)) {
         // Reload the sheet.
         nsCOMPtr<nsICSSStyleSheet> newSheet;
-        rv = aCSSLoader->LoadSheetSync(uri, PR_TRUE, getter_AddRefs(newSheet));
+        rv = aCSSLoader->LoadSheetSync(uri, PR_TRUE, PR_TRUE,
+                                       getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
           rv = newAgentSheets.AppendObject(newSheet) ? NS_OK : NS_ERROR_FAILURE;

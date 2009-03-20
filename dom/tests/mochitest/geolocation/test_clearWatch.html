@@ -1,19 +1,18 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=
+https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 -->
 <head>
   <title>Test for watchPosition and clearWatch</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <script type="text/javascript" src="geolocation_common.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478911">Mozilla Bug 478911</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -21,71 +20,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var numCallbacks = 5;
-var callbackCounter = new Array(numCallbacks);
-var watchID = new Array(numCallbacks);
-
+var watchID;
+var hasBeenCleared = false;
 function failureCallback(error)
 {
-  ok(error.code == error.POSITION_UNAVAILABLE, "Failure was something other than position unavailable");
-  removePrompt();
-  SimpleTest.finish();
+  ok(0, "we should not be seeing failures from this watchPosition");
 }
 
-// define success callbacks
-for(var i = 0; i < numCallbacks; i++) {
-  eval("function successCallback" + i + "(position) {" +
-          "callbackCounter[" + i + "]++;" +
-          "success_callback(position);" +
-       "}"
-  );
-}
-
-function registerWatches() {
-  for(var i = 0; i < numCallbacks; i++) {
-    watchID[i] = eval("navigator.geolocation.watchPosition(successCallback"
-                       + i + ", failureCallback, null);"
-    );
+function successCallback(position) {
+  if (hasBeenCleared == true) {
+    // we should not be called here
+    ok(0, "successCallback was called after clear");
   }
 }
 
-function clearWatches() {
-  for(var i = 0; i < numCallbacks; i++)
-    navigator.geolocation.clearWatch(watchID[i]);
+function clearWatch() {
+  navigator.geolocation.clearWatch(watchID);
+  hasBeenCleared = true;
 }
 
 function testAccepted() {
-  clearWatches();
-  setTimeout(clearAll, timeout); // now clear flags
-}
-
-function clearAll() {
-  for(var i = 0; i < numCallbacks; i++)
-    callbackCounter[i] = 0;
-  setTimeout(testCleared, timeout); // check to see if watches were cleared
-}
-
-function testCleared() {
-  removePrompt();
   SimpleTest.finish();
 }
-
 
 
 /** Test for Bug  **/
 
 SimpleTest.waitForExplicitFinish();
 
-attachPrompt();
+watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
 
-ok(navigator.geolocation, "Ensure that the geolocation object is present");
+setTimeout(clickAccept, 10);
 
-promptOption = ACCEPT;
-
-registerWatches();
+setTimeout(clearWatch, 50);
 
 // wait for position changes
-setTimeout(testAccepted, timeout);
+setTimeout(testAccepted, 1000);
 
 </script>
 </pre>

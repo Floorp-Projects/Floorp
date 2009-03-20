@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsJVMAuthTools_h___
-#define nsJVMAuthTools_h___
+#ifndef nsJVMAuthTools_h_
+#define nsJVMAuthTools_h_
 
 #include "nsAgg.h"
 #include "nsIJVMAuthTools.h"
@@ -68,4 +68,4 @@ public:
     virtual ~nsJVMAuthTools(void);
 };
 
-#endif // nsJVMAuthTools_h___
+#endif // nsJVMAuthTools_h_

@@ -3182,12 +3182,12 @@ static void DeleteTextFragment(void* aObject, nsIAtom* aPropertyName,
   delete static_cast<nsTextFragment*>(aPropertyValue);
 }
 
-
-/* static */ nsresult
-nsLayoutUtils::InitTextRunContainerForPrinting(nsIContent* aContent,
-                                               nsIFrame* aFrame,
-                                               nsFrameState aBits)
+/* static */ nsTextFragment*
+nsLayoutUtils::GetTextFragmentForPrinting(const nsIFrame* aFrame)
 {
+  nsPresContext* presContext = aFrame->PresContext();
+  NS_PRECONDITION(!presContext->IsDynamic(),
+                  "Shouldn't call this with dynamic PresContext");
 #ifdef MOZ_SVG
   NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::textFrame ||
                   aFrame->GetType() == nsGkAtoms::svgGlyphFrame,
@@ -3197,27 +3197,25 @@ nsLayoutUtils::InitTextRunContainerForPrinting(nsIContent* aContent,
                   "Wrong frame type!");
 #endif // MOZ_SVG
 
-  nsPresContext* presContext = aFrame->PresContext();
-  if (presContext->IsDynamic()) {
-    return NS_OK;
-  }
-  
-  if (!presContext->PropertyTable()->
-        GetProperty(aContent, nsGkAtoms::clonedTextForPrint)) {
-    nsTextFragment* frag = new nsTextFragment();
-    NS_ENSURE_TRUE(frag, NS_ERROR_OUT_OF_MEMORY);
-    *frag = *aContent->GetText();
+  nsIContent* content = aFrame->GetContent();
+  nsTextFragment* frag =
+    static_cast<nsTextFragment*>(presContext->PropertyTable()->
+      GetProperty(content, nsGkAtoms::clonedTextForPrint));
+
+  if (!frag) {
+    frag = new nsTextFragment();
+    NS_ENSURE_TRUE(frag, nsnull);
+    *frag = *content->GetText();
     nsresult rv = presContext->PropertyTable()->
-                    SetProperty(aContent, nsGkAtoms::clonedTextForPrint, frag,
+                    SetProperty(content, nsGkAtoms::clonedTextForPrint, frag,
                                 DeleteTextFragment, nsnull);
     if (NS_FAILED(rv)) {
       delete frag;
-      return rv;
+      return nsnull;
     }
   }
 
-  aFrame->AddStateBits(aBits);
-  return NS_OK;
+  return frag;
 }
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,

@@ -1792,7 +1792,7 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
         nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
         if (!pistorage)
             return NS_ERROR_FAILURE;
-        pistorage->Init(NS_ConvertUTF8toUTF16(currentDomain), PR_FALSE);
+        pistorage->InitAsSessionStorage(aURI);
 
         if (!mStorages.Put(currentDomain, newstorage))
             return NS_ERROR_OUT_OF_MEMORY;
@@ -3950,11 +3950,11 @@ nsDocShell::DoGetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
 NS_IMETHODIMP
 nsDocShell::Repaint(PRBool aForce)
 {
-    nsCOMPtr<nsPresContext> context;
-    GetPresContext(getter_AddRefs(context));
-    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-    nsIViewManager* viewManager = context->GetViewManager();
+    nsIViewManager* viewManager = presShell->GetViewManager();
     NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
     // what about aForce ?

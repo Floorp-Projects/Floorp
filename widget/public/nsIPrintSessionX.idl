@@ -39,7 +39,7 @@
 #include "nsIPrintSession.idl"
 
 %{ C++
-#include <PMApplication.h>
+#include <Carbon/Carbon.h>
 %}
 
 /**

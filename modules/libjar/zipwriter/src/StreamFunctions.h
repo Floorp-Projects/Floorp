@@ -47,8 +47,8 @@
 /*
  * ZIP file data is stored little-endian. These are helper functions to read and
  * write little endian data to/from a char buffer.
- * The off argument is incremented according to the number of bytes consumed
- * from the buffer.
+ * The off argument, where present, is incremented according to the number of
+ * bytes consumed from the buffer.
  */
 inline NS_HIDDEN_(void) WRITE8(char* buf, PRUint32* off, PRUint8 val)
 {
@@ -88,6 +88,14 @@ inline NS_HIDDEN_(PRUint32) READ32(char* buf, PRUint32* off)
   val |= ((PRUint32)buf[(*off)++] & 0xff) << 16;
   val |= ((PRUint32)buf[(*off)++] & 0xff) << 24;
   return val;
+}
+
+inline NS_HIDDEN_(PRUint32) PEEK32(unsigned char *buf)
+{
+  return (PRUint32)( (buf [0]      ) |
+                     (buf [1] <<  8) |
+                     (buf [2] << 16) |
+                     (buf [3] << 24) );
 }
 
 NS_HIDDEN_(nsresult) ZW_ReadData(nsIInputStream *aStream, char *aBuffer, PRUint32 aCount);

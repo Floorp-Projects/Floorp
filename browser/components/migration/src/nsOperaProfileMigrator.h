@@ -74,10 +74,10 @@ public:
   typedef nsresult(*prefConverter)(void*, nsIPrefBranch*);
 
   struct PrefTransform {
-    char*         sectionName;
-    char*         keyName;
+    const char*   sectionName;
+    const char*   keyName;
     PrefType      type;
-    char*         targetPrefName;
+    const char*   targetPrefName;
     prefConverter prefSetterFunc;
     PRBool        prefHasValue;
     union {

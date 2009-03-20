@@ -1430,15 +1430,6 @@ struct JSObjectOps {
     JSSetRequiredSlotOp setRequiredSlot;
 };
 
-struct JSXMLObjectOps {
-    JSObjectOps         base;
-    JSGetMethodOp       getMethod;
-    JSSetMethodOp       setMethod;
-    JSEnumerateValuesOp enumerateValues;
-    JSEqualityOp        equality;
-    JSConcatenateOp     concatenate;
-};
-
 /*
  * Classes that expose JSObjectOps via a non-null getObjectOps class hook may
  * derive a property structure from this struct, return a pointer to it from
@@ -2503,7 +2494,7 @@ JS_EncodeString(JSContext *cx, JSString *str);
 typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
 
 /*
- * JSON.stringify as specificed by ES3.1 (draft)
+ * JSON.stringify as specified by ES3.1 (draft)
  */
 JS_PUBLIC_API(JSBool)
 JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
@@ -2516,7 +2507,7 @@ JS_PUBLIC_API(JSBool)
 JS_TryJSON(JSContext *cx, jsval *vp);
 
 /*
- * JSON.parse as specificed by ES3.1 (draft)
+ * JSON.parse as specified by ES3.1 (draft)
  */
 JS_PUBLIC_API(JSONParser *)
 JS_BeginJSONParse(JSContext *cx, jsval *vp);

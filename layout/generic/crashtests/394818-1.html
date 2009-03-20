@@ -1,0 +1,13 @@
+<html class="reftest-wait"><head>
+</head><body>
+<iframe></iframe><iframe></iframe>
+<script>
+window.frames[0].focus();
+function doe() {
+document.body.setAttribute('onbeforecopy','document.removeChild(document.documentElement)');
+document.body.setAttribute('style','display:none');
+document.documentElement.removeAttribute("class");
+}
+setTimeout(doe, 100);
+</script>
+</body></html>

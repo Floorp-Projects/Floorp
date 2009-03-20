@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPluginSafety_h__
-#define nsPluginSafety_h__
+#ifndef nsPluginSafety_h_
+#define nsPluginSafety_h_
 
 #include "npapi.h"
 #include "nsIPluginHost.h"
@@ -125,5 +125,4 @@ PR_END_MACRO
 
 #endif // CALL_SAFETY_ON
 
-#endif //nsPluginSafety_h__
-
+#endif //nsPluginSafety_h_

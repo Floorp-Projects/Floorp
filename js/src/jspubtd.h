@@ -145,7 +145,6 @@ typedef struct JSPropertySpec    JSPropertySpec;
 typedef struct JSObject          JSObject;
 typedef struct JSObjectMap       JSObjectMap;
 typedef struct JSObjectOps       JSObjectOps;
-typedef struct JSXMLObjectOps    JSXMLObjectOps;
 typedef struct JSRuntime         JSRuntime;
 typedef struct JSRuntime         JSTaskState;   /* XXX deprecated name */
 typedef struct JSScript          JSScript;
@@ -296,10 +295,6 @@ typedef void
  * a JSClass *clasp parameter to JS_NewObject, etc.  Most host objects do not
  * need to implement the larger JSObjectOps, and can share the common JSScope
  * code and data used by the native (js_ObjectOps, see jsobj.c) ops.
- *
- * Further extension to preserve API compatibility: if this function returns
- * a pointer to JSXMLObjectOps.base, not to JSObjectOps, then the engine calls
- * extended hooks needed for E4X.
  */
 typedef JSObjectOps *
 (* JSGetObjectOps)(JSContext *cx, JSClass *clasp);

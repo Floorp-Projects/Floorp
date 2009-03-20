@@ -243,7 +243,6 @@ static PRBool gNoisyContentUpdates = PR_FALSE;
 static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 static PRBool gVerifyFastFindFrame = PR_FALSE;
-static PRBool gTablePseudoFrame = PR_FALSE;
 
 struct FrameCtorDebugFlags {
   const char* name;
@@ -254,8 +253,7 @@ static FrameCtorDebugFlags gFlags[] = {
   { "content-updates",              &gNoisyContentUpdates },
   { "really-noisy-content-updates", &gReallyNoisyContentUpdates },
   { "noisy-inline",                 &gNoisyInlineConstruction },
-  { "fast-find-frame",              &gVerifyFastFindFrame },
-  { "table-pseudo",                 &gTablePseudoFrame },
+  { "fast-find-frame",              &gVerifyFastFindFrame }
 };
 
 #define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
@@ -811,236 +809,6 @@ nsAbsoluteItems::AddChild(nsIFrame* aChild)
   nsFrameItems::AddChild(aChild);
 }
 
-// Structures used to record the creation of pseudo table frames where 
-// the content belongs to some ancestor. 
-// PseudoFrames are necessary when the childframe cannot be the direct
-// ancestor of the content based parent frame. The amount of necessary pseudo
-// frames is limited as the worst case would be table frame nested directly
-// into another table frame. So the member structures of nsPseudoFrames can be
-// viewed as a ring buffer where you start with the necessary frame type and
-// add higher frames as long as necessary to fit into the initial parent frame.
-// mLowestType is some sort of stack pointer which shows the start of the
-// ringbuffer. The insertion of pseudo frames can happen between every
-// two frames so we need to push and pop the pseudo frame data when children
-// of a frame are created.
-// The colgroup frame is special as it can harbour only col children.
-// Once all children of given frame are known, the pseudo frames can be
-// processed that means attached to the corresponding parent frames.
-// The behaviour is in general described at
-// http://www.w3.org/TR/CSS21/tables.html#anonymous-boxes
-// however there are implementation details that extend the CSS 2.1
-// specification:
-// 1. every table frame is wrapped in an outer table frame, which is always a
-//    pseudo frame.
-// 2. the outer table frame will be also created to hold a caption.
-// 3. each table cell will have a pseudo inner table cell frame.
-// 4. a colgroup frame is created between a column and a table
-// 5. a rowgroup frame is created between a row and a table
-// A table frame can only have rowgroups or column groups as children.
-// A outer table frame can only have one caption and one table frame
-// as children.
-// Every table even if all table frames are specified will require the
-// creation of two types of pseudo frames: the outer table frame and the inner
-// table cell frames.
-
-struct nsPseudoFrameData {
-  nsIFrame*    mFrame; // created pseudo frame
-  nsFrameItems mChildList;  // child frames pending to be added to the pseudo
-  nsFrameItems mChildList2; // child frames pending to be added to the pseudo
-
-  nsPseudoFrameData();
-  nsPseudoFrameData(nsPseudoFrameData& aOther);
-  void Reset();
-#ifdef DEBUG
-  void Dump();
-#endif
-};
-
-struct nsPseudoFrames {
-  nsPseudoFrameData mTableOuter; 
-  nsPseudoFrameData mTableInner;  
-  nsPseudoFrameData mRowGroup;   
-  nsPseudoFrameData mColGroup;
-  nsPseudoFrameData mRow;   
-  nsPseudoFrameData mCellOuter;
-  nsPseudoFrameData mCellInner;
-
-  // the frame type of the most descendant pseudo frame, no AddRef
-  nsIAtom*          mLowestType;
-
-  nsPseudoFrames();
-  nsPseudoFrames& operator=(const nsPseudoFrames& aOther);
-  void Reset(nsPseudoFrames* aSave = nsnull);
-  PRBool IsEmpty() { return (!mLowestType && !mColGroup.mFrame); }
-#ifdef DEBUG
-  void Dump();
-#endif
-};
-
-nsPseudoFrameData::nsPseudoFrameData()
-: mFrame(nsnull), mChildList(), mChildList2()
-{}
-
-nsPseudoFrameData::nsPseudoFrameData(nsPseudoFrameData& aOther)
-: mFrame(aOther.mFrame), mChildList(aOther.mChildList), 
-  mChildList2(aOther.mChildList2)
-{}
-
-void
-nsPseudoFrameData::Reset()
-{
-  mFrame = nsnull;
-  mChildList.childList  = mChildList.lastChild  = nsnull;
-  mChildList2.childList = mChildList2.lastChild = nsnull;
-}
-
-#ifdef DEBUG
-void
-nsPseudoFrameData::Dump()
-{
-  nsIFrame* main = nsnull;
-  nsIFrame* second = nsnull;
-  printf("        %p\n", static_cast<void*>(mFrame));
-  main = mChildList.childList;
-
- 
-  second = mChildList2.childList;
-  while (main || second) {
-    printf("          %p   %p\n", static_cast<void*>(main),
-           static_cast<void*>(second));
-    if (main)
-      main = main->GetNextSibling();
-    if (second)
-      second = second->GetNextSibling();
-  }
-}
-#endif
-nsPseudoFrames::nsPseudoFrames() 
-: mTableOuter(), mTableInner(), mRowGroup(), mColGroup(), 
-  mRow(), mCellOuter(), mCellInner(), mLowestType(nsnull)
-{}
-
-nsPseudoFrames& nsPseudoFrames::operator=(const nsPseudoFrames& aOther)
-{
-  mTableOuter = aOther.mTableOuter;
-  mTableInner = aOther.mTableInner;
-  mColGroup   = aOther.mColGroup;
-  mRowGroup   = aOther.mRowGroup;
-  mRow        = aOther.mRow;
-  mCellOuter  = aOther.mCellOuter;
-  mCellInner  = aOther.mCellInner;
-  mLowestType = aOther.mLowestType;
-
-  return *this;
-}
-void
-nsPseudoFrames::Reset(nsPseudoFrames* aSave) 
-{
-  if (aSave) {
-    *aSave = *this;
-  }
-
-  mTableOuter.Reset();
-  mTableInner.Reset();
-  mColGroup.Reset();
-  mRowGroup.Reset();
-  mRow.Reset();
-  mCellOuter.Reset();
-  mCellInner.Reset();
-  mLowestType = nsnull;
-}
-
-#ifdef DEBUG
-void
-nsPseudoFrames::Dump()
-{
-  if (IsEmpty()) {
-    // check that it is really empty, warn otherwise
-    NS_ASSERTION(!mTableOuter.mFrame,    "Pseudo Outer Table Frame not empty");
-    NS_ASSERTION(!mTableOuter.mChildList.childList, "Pseudo Outer Table Frame has primary children");
-    NS_ASSERTION(!mTableOuter.mChildList2.childList,"Pseudo Outer Table Frame has secondary children");
-    NS_ASSERTION(!mTableInner.mFrame,    "Pseudo Inner Table Frame not empty");
-    NS_ASSERTION(!mTableInner.mChildList.childList, "Pseudo Inner Table Frame has primary children");
-    NS_ASSERTION(!mTableInner.mChildList2.childList,"Pseudo Inner Table Frame has secondary children");
-    NS_ASSERTION(!mColGroup.mFrame,      "Pseudo Colgroup Frame not empty");
-    NS_ASSERTION(!mColGroup.mChildList.childList,   "Pseudo Colgroup Table Frame has primary children");
-    NS_ASSERTION(!mColGroup.mChildList2.childList,  "Pseudo Colgroup Table Frame has secondary children");
-    NS_ASSERTION(!mRowGroup.mFrame,      "Pseudo Rowgroup Frame not empty");
-    NS_ASSERTION(!mRowGroup.mChildList.childList,   "Pseudo Rowgroup Frame has primary children");
-    NS_ASSERTION(!mRowGroup.mChildList2.childList,  "Pseudo Rowgroup Frame has secondary children");
-    NS_ASSERTION(!mRow.mFrame,           "Pseudo Row Frame not empty");
-    NS_ASSERTION(!mRow.mChildList.childList,        "Pseudo Row Frame has primary children");
-    NS_ASSERTION(!mRow.mChildList2.childList,       "Pseudo Row Frame has secondary children");
-    NS_ASSERTION(!mCellOuter.mFrame,     "Pseudo Outer Cell Frame not empty");
-    NS_ASSERTION(!mCellOuter.mChildList.childList,  "Pseudo Outer Cell Frame has primary children");
-    NS_ASSERTION(!mCellOuter.mChildList2.childList, "Pseudo Outer Cell Frame has secondary children");
-    NS_ASSERTION(!mCellInner.mFrame,     "Pseudo Inner Cell Frame not empty");
-    NS_ASSERTION(!mCellInner.mChildList.childList,  "Pseudo Inner Cell Frame has primary children");
-    NS_ASSERTION(!mCellInner.mChildList2.childList, "Pseudo inner Cell Frame has secondary children");
-  }
-  else {
-    if (mTableOuter.mFrame || mTableOuter.mChildList.childList || mTableOuter.mChildList2.childList) {
-      if (nsGkAtoms::tableOuterFrame == mLowestType) {
-        printf("LOW OuterTable\n");
-      }
-      else {
-        printf("    OuterTable\n");
-      }
-      mTableOuter.Dump();
-    }
-    if (mTableInner.mFrame || mTableInner.mChildList.childList || mTableInner.mChildList2.childList) {
-      if (nsGkAtoms::tableFrame == mLowestType) {
-        printf("LOW InnerTable\n");
-      }
-      else {
-        printf("    InnerTable\n");
-      }
-      mTableInner.Dump();
-    }
-    if (mColGroup.mFrame || mColGroup.mChildList.childList || mColGroup.mChildList2.childList) {
-      if (nsGkAtoms::tableColGroupFrame == mLowestType) {
-        printf("LOW ColGroup\n");
-      }
-      else {
-        printf("    ColGroup\n");
-      }
-      mColGroup.Dump();
-    }
-    if (mRowGroup.mFrame || mRowGroup.mChildList.childList || mRowGroup.mChildList2.childList) {
-      if (nsGkAtoms::tableRowGroupFrame == mLowestType) {
-        printf("LOW RowGroup\n");
-      }
-      else {
-        printf("    RowGroup\n");
-      }
-      mRowGroup.Dump();
-    }
-    if (mRow.mFrame || mRow.mChildList.childList || mRow.mChildList2.childList) {
-      if (nsGkAtoms::tableRowFrame == mLowestType) {
-        printf("LOW Row\n");
-      }
-      else {
-        printf("    Row\n");
-      }
-      mRow.Dump();
-    }
-    
-    if (mCellOuter.mFrame || mCellOuter.mChildList.childList || mCellOuter.mChildList2.childList) {
-      if (IS_TABLE_CELL(mLowestType)) {
-        printf("LOW OuterCell\n");
-      }
-      else {
-        printf("    OuterCell\n");
-      }
-      mCellOuter.Dump();
-    }
-    if (mCellInner.mFrame || mCellInner.mChildList.childList || mCellInner.mChildList2.childList) {
-      printf("    InnerCell\n");
-      mCellInner.Dump();
-    }
-  }
-}
-#endif
 // -----------------------------------------------------------
 
 // Structure for saving the existing state when pushing/poping containing
@@ -1095,7 +863,6 @@ public:
   PRPackedBool              mHavePendingPopupgroup;
 
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
-  nsPseudoFrames            mPseudoFrames;
   // These bits will be added to the state bits of any frame we construct
   // using this state.
   nsFrameState              mAdditionalStateBits; 
@@ -1217,7 +984,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
                         HasTransform()),
     mHavePendingPopupgroup(PR_FALSE),
     mFrameState(aHistoryState),
-    mPseudoFrames(),
     mAdditionalStateBits(0)
 {
 #ifdef MOZ_XUL
@@ -1247,7 +1013,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
     mHavePendingPopupgroup(PR_FALSE),
-    mPseudoFrames(),
     mAdditionalStateBits(0)
 {
 #ifdef MOZ_XUL
@@ -2181,22 +1946,37 @@ TextIsOnlyWhitespace(nsIContent* aContent)
 // cols never have any children at all.
 
 static PRBool
-IsTableRelated(nsIAtom* aParentType,
-               PRBool   aIncludeSpecial)
+IsTableRelated(nsIAtom* aParentType)
 {
-  if ((nsGkAtoms::tableFrame         == aParentType)  ||
-      (nsGkAtoms::tableRowGroupFrame == aParentType)  ||
-      (nsGkAtoms::tableRowFrame      == aParentType)) {
-    return PR_TRUE;
+  return
+    nsGkAtoms::tableFrame         == aParentType ||
+    nsGkAtoms::tableRowGroupFrame == aParentType ||
+    nsGkAtoms::tableRowFrame      == aParentType ||
+    nsGkAtoms::tableCaptionFrame  == aParentType ||
+    nsGkAtoms::tableColGroupFrame == aParentType ||
+    nsGkAtoms::tableColFrame      == aParentType ||
+    IS_TABLE_CELL(aParentType);
+}
+
+/* static */
+nsCSSFrameConstructor::ParentType
+nsCSSFrameConstructor::GetParentType(nsIFrame* aParentFrame)
+{
+  nsIAtom* type = aParentFrame->GetType();
+  if (type == nsGkAtoms::tableFrame) {
+    return eTypeTable;
   }
-  else if (aIncludeSpecial && 
-           ((nsGkAtoms::tableCaptionFrame  == aParentType)  ||
-            (nsGkAtoms::tableColGroupFrame == aParentType)  ||
-            (nsGkAtoms::tableColFrame      == aParentType)  ||
-            IS_TABLE_CELL(aParentType))) {
-    return PR_TRUE;
+  if (type == nsGkAtoms::tableRowGroupFrame) {
+    return eTypeRowGroup;
   }
-  else return PR_FALSE;
+  if (type == nsGkAtoms::tableRowFrame) {
+    return eTypeRow;
+  }
+  if (type == nsGkAtoms::tableColGroupFrame) {
+    return eTypeColGroup;
+  }
+
+  return eTypeBlock;
 }
            
 static nsIFrame*
@@ -2228,881 +2008,21 @@ GetCaptionAdjustedParent(nsIFrame*        aParentFrame,
   }
   return haveCaption;
 }
-   
-static nsresult 
-ProcessPseudoFrame(nsPseudoFrameData& aPseudoData,
-                   nsIFrame*&         aParent)
-{
-  nsresult rv = NS_OK;
 
-  aParent = aPseudoData.mFrame;
-  nsFrameItems* items = &aPseudoData.mChildList;
-  if (items && items->childList) {
-    rv = aParent->SetInitialChildList(nsnull, items->childList);
-    if (NS_FAILED(rv)) return rv;
-  }
-  aPseudoData.Reset();
-  return rv;
-}
-
-static nsresult 
-ProcessPseudoRowGroupFrame(nsPseudoFrameData& aPseudoData,
-                           nsIFrame*&         aParent)
-{
-  nsresult rv = NS_OK;
-
-  aParent = aPseudoData.mFrame;
-  nsFrameItems* items = &aPseudoData.mChildList;
-  if (items && items->childList) {
-    nsTableRowGroupFrame* rgFrame = nsTableFrame::GetRowGroupFrame(aParent);
-    rv = rgFrame->SetInitialChildList(nsnull, items->childList);
-    if (NS_FAILED(rv)) return rv;
-  }
-  aPseudoData.Reset();
-  return rv;
-}
-
-static nsresult 
-ProcessPseudoTableFrame(nsPseudoFrames& aPseudoFrames,
-                        nsIFrame*&      aParent)
-{
-  nsresult rv = NS_OK;
-
-  // process the col group frame, if it exists
-  if (aPseudoFrames.mColGroup.mFrame) {
-    rv = ProcessPseudoFrame(aPseudoFrames.mColGroup, aParent);
-  }
-
-  // process the inner table frame
-  rv = ProcessPseudoFrame(aPseudoFrames.mTableInner, aParent);
-
-  // process the outer table frame
-  aParent = aPseudoFrames.mTableOuter.mFrame;
-  nsFrameItems* items = &aPseudoFrames.mTableOuter.mChildList;
-  if (items && items->childList) {
-    rv = aParent->SetInitialChildList(nsnull, items->childList);
-    if (NS_FAILED(rv)) return rv;
-  }
-  nsFrameItems* captions = &aPseudoFrames.mTableOuter.mChildList2;
-  if (captions && captions->childList) {
-    rv = aParent->SetInitialChildList(nsGkAtoms::captionList, captions->childList);
-  }
-  aPseudoFrames.mTableOuter.Reset();
-  return rv;
-}
-
-static nsresult 
-ProcessPseudoCellFrame(nsPseudoFrames& aPseudoFrames,
-                       nsIFrame*&      aParent)
-{
-  nsresult rv = NS_OK;
-
-  rv = ProcessPseudoFrame(aPseudoFrames.mCellInner, aParent);
-  if (NS_FAILED(rv)) return rv;
-  rv = ProcessPseudoFrame(aPseudoFrames.mCellOuter, aParent);
-  return rv;
-}
-
-// limit the processing up to the frame type indicated by aHighestType.
-// make a complete processing when aHighestType is null
-static nsresult 
-ProcessPseudoFrames(nsFrameConstructorState& aState,
-                    nsIAtom*        aHighestType,
-                    nsIFrame*&      aHighestFrame)
-{
-  nsresult rv = NS_OK;
-
-  aHighestFrame = nsnull;
-
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-    printf("*** ProcessPseudoFrames enter***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-
-  if (nsGkAtoms::tableFrame == pseudoFrames.mLowestType) {
-    if (pseudoFrames.mColGroup.mFrame) {
-      rv = ProcessPseudoFrame(pseudoFrames.mColGroup, aHighestFrame);
-      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
-    }
-    rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-    if (nsGkAtoms::tableOuterFrame == aHighestType) return rv;
-    
-    if (pseudoFrames.mCellOuter.mFrame) {
-      rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
-      if (IS_TABLE_CELL(aHighestType)) return rv;
-    }
-    if (pseudoFrames.mRow.mFrame) {
-      rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-      if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mRowGroup.mFrame) {
-      rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-      if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
-    }
-  }
-  else if (nsGkAtoms::tableRowGroupFrame == pseudoFrames.mLowestType) {
-    rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-    if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
-    if (pseudoFrames.mColGroup.mFrame) {
-      nsIFrame* colGroupHigh;
-      rv = ProcessPseudoFrame(pseudoFrames.mColGroup, colGroupHigh);
-      if (aHighestFrame &&
-          nsGkAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
-          !pseudoFrames.mTableInner.mFrame) {
-        // table frames are special they can have two types of pseudo frames as
-        // children that need to be processed in one pass, we only need to link
-        // them if the parent is not a pseudo where the link is already done
-        // We sort this later out inside nsTableFrame.
-        colGroupHigh->SetNextSibling(aHighestFrame); 
-      }
-      aHighestFrame = colGroupHigh;
-      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mTableOuter.mFrame) {
-      rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-      if (nsGkAtoms::tableOuterFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mCellOuter.mFrame) {
-      rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
-      if (IS_TABLE_CELL(aHighestType)) return rv;
-    }
-    if (pseudoFrames.mRow.mFrame) {
-      rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-      if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
-    }
-  }
-  else if (nsGkAtoms::tableRowFrame == pseudoFrames.mLowestType) {
-    rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-    if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
-
-    if (pseudoFrames.mRowGroup.mFrame) {
-      rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-      if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mColGroup.mFrame) {
-      nsIFrame* colGroupHigh;
-      rv = ProcessPseudoFrame(pseudoFrames.mColGroup, colGroupHigh);
-      if (aHighestFrame &&
-          nsGkAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
-          !pseudoFrames.mTableInner.mFrame) {
-        // table frames are special they can have two types of pseudo frames as
-        // children that need to be processed in one pass, we only need to link
-        // them if the parent is not a pseudo where the link is already done
-        // We sort this later out inside nsTableFrame.
-        colGroupHigh->SetNextSibling(aHighestFrame); 
-      }
-      aHighestFrame = colGroupHigh;
-      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mTableOuter.mFrame) {
-      rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-      if (nsGkAtoms::tableOuterFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mCellOuter.mFrame) {
-      rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
-      if (IS_TABLE_CELL(aHighestType)) return rv;
-    }
-  }
-  else if (IS_TABLE_CELL(pseudoFrames.mLowestType)) {
-    rv = ProcessPseudoCellFrame(pseudoFrames, aHighestFrame);
-    if (IS_TABLE_CELL(aHighestType)) return rv;
-
-    if (pseudoFrames.mRow.mFrame) {
-      rv = ProcessPseudoFrame(pseudoFrames.mRow, aHighestFrame);
-      if (nsGkAtoms::tableRowFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mRowGroup.mFrame) {
-      rv = ProcessPseudoRowGroupFrame(pseudoFrames.mRowGroup, aHighestFrame);
-      if (nsGkAtoms::tableRowGroupFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mColGroup.mFrame) {
-      nsIFrame* colGroupHigh;
-      rv = ProcessPseudoFrame(pseudoFrames.mColGroup, colGroupHigh);
-      if (aHighestFrame &&
-          nsGkAtoms::tableRowGroupFrame == aHighestFrame->GetType() &&
-          !pseudoFrames.mTableInner.mFrame) {
-        // table frames are special they can have two types of pseudo frames as
-        // children that need to be processed in one pass, we only need to link
-        // them if the parent is not a pseudo where the link is already done
-        // We sort this later out inside nsTableFrame.
-        colGroupHigh->SetNextSibling(aHighestFrame); 
-      }
-      aHighestFrame = colGroupHigh;
-      if (nsGkAtoms::tableColGroupFrame == aHighestType) return rv;
-    }
-    if (pseudoFrames.mTableOuter.mFrame) {
-      rv = ProcessPseudoTableFrame(pseudoFrames, aHighestFrame);
-    }
-  }
-  else if (pseudoFrames.mColGroup.mFrame) { 
-    // process the col group frame
-    rv = ProcessPseudoFrame(pseudoFrames.mColGroup, aHighestFrame);
-  }
-
-  return rv;
-}
-
-static nsresult 
-ProcessPseudoFrames(nsFrameConstructorState& aState,
-                    nsFrameItems&   aItems)
-{
-
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-    printf("*** ProcessPseudoFrames complete enter***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
- 
-  nsIFrame* highestFrame;
-  nsresult rv = ProcessPseudoFrames(aState, nsnull, highestFrame);
-  if (highestFrame) {
-    aItems.AddChild(highestFrame);
-  }
- 
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-    printf("*** ProcessPseudoFrames complete leave, highestframe:%p***\n",
-           static_cast<void*>(highestFrame));
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  aState.mPseudoFrames.Reset();
-  return rv;
-}
-
-static nsresult 
-ProcessPseudoFrames(nsFrameConstructorState& aState,
-                    nsIAtom*        aHighestType)
-{
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-    printf("*** ProcessPseudoFrames limited enter highest:");
-    if (nsGkAtoms::tableOuterFrame == aHighestType) 
-      printf("OuterTable");
-    else if (nsGkAtoms::tableFrame == aHighestType) 
-      printf("InnerTable");
-    else if (nsGkAtoms::tableColGroupFrame == aHighestType) 
-      printf("ColGroup");
-    else if (nsGkAtoms::tableRowGroupFrame == aHighestType) 
-      printf("RowGroup");
-    else if (nsGkAtoms::tableRowFrame == aHighestType) 
-      printf("Row");
-    else if (IS_TABLE_CELL(aHighestType)) 
-      printf("Cell");
-    else 
-      NS_ASSERTION(PR_FALSE, "invalid call to ProcessPseudoFrames ");
-    printf("***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
- 
-  nsIFrame* highestFrame;
-  nsresult rv = ProcessPseudoFrames(aState, aHighestType, highestFrame);
-
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-    printf("*** ProcessPseudoFrames limited leave:%p***\n",
-           static_cast<void*>(highestFrame));
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::CreatePseudoTableFrame(PRInt32                  aNameSpaceID,
-                                              nsFrameConstructorState& aState, 
-                                              nsIFrame*                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* parentFrame = (aState.mPseudoFrames.mCellInner.mFrame) 
-                          ? aState.mPseudoFrames.mCellInner.mFrame : aParentFrameIn;
-  if (!parentFrame) return rv;
-
-  nsStyleContext *parentStyle;
-  nsRefPtr<nsStyleContext> childStyle;
-
-  parentStyle = parentFrame->GetStyleContext(); 
-  nsIContent* parentContent = parentFrame->GetContent();   
-
-  // Thankfully, the parent can't change display type without causing
-  // frame reconstruction, so this won't need to change.
-  nsIAtom *pseudoType;
-  if (parentStyle->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE)
-    pseudoType = nsCSSAnonBoxes::inlineTable;
-  else
-    pseudoType = nsCSSAnonBoxes::table;
-
-  // create the SC for the inner table which will be the parent of the outer table's SC
-  childStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
-                                                             pseudoType,
-                                                             parentStyle);
-
-  nsPseudoFrameData& pseudoOuter = aState.mPseudoFrames.mTableOuter;
-  nsPseudoFrameData& pseudoInner = aState.mPseudoFrames.mTableInner;
-
-  // construct the pseudo outer and inner as part of the pseudo frames
-  nsFrameItems items;
-  rv = ConstructTableFrame(aState, parentContent,
-                           parentFrame, childStyle, aNameSpaceID,
-                           PR_TRUE, items, pseudoOuter.mFrame, 
-                           pseudoInner.mFrame);
-
-  if (NS_FAILED(rv)) return rv;
-
-  // set pseudo data for the newly created frames
-  pseudoOuter.mChildList.AddChild(pseudoInner.mFrame);
-  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableFrame;
-
-  // set pseudo data for the parent
-  if (aState.mPseudoFrames.mCellInner.mFrame) {
-    aState.mPseudoFrames.mCellInner.mChildList.AddChild(pseudoOuter.mFrame);
-  }
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-     printf("*** CreatePseudoTableFrame ***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::CreatePseudoRowGroupFrame(PRInt32                  aNameSpaceID,
-                                                 nsFrameConstructorState& aState, 
-                                                 nsIFrame*                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* parentFrame = (aState.mPseudoFrames.mTableInner.mFrame) 
-                          ? aState.mPseudoFrames.mTableInner.mFrame : aParentFrameIn;
-  if (!parentFrame) return rv;
-
-  nsStyleContext *parentStyle;
-  nsRefPtr<nsStyleContext> childStyle;
-
-  parentStyle = parentFrame->GetStyleContext();
-  nsIContent* parentContent = parentFrame->GetContent();
-
-  childStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
-                                                             nsCSSAnonBoxes::tableRowGroup, 
-                                                             parentStyle);
-
-  nsPseudoFrameData& pseudo = aState.mPseudoFrames.mRowGroup;
-
-  // construct the pseudo row group as part of the pseudo frames
-  PRBool pseudoParent;
-  nsFrameItems items;
-  rv = ConstructTableRowGroupFrame(aState, parentContent,
-                                   parentFrame, childStyle, aNameSpaceID,
-                                   PR_TRUE, items, pseudo.mFrame, &pseudoParent);
-  if (NS_FAILED(rv)) return rv;
-
-  // set pseudo data for the newly created frames
-  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableRowGroupFrame;
-
-  // set pseudo data for the parent
-  if (aState.mPseudoFrames.mTableInner.mFrame) {
-    aState.mPseudoFrames.mTableInner.mChildList.AddChild(pseudo.mFrame);
-  }
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-     printf("*** CreatePseudoRowGroupFrame ***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  return rv;
-}
-
-nsresult 
-nsCSSFrameConstructor::CreatePseudoColGroupFrame(PRInt32                  aNameSpaceID,
-                                                 nsFrameConstructorState& aState, 
-                                                 nsIFrame*                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* parentFrame = (aState.mPseudoFrames.mTableInner.mFrame) 
-                          ? aState.mPseudoFrames.mTableInner.mFrame : aParentFrameIn;
-  if (!parentFrame) return rv;
-
-  nsStyleContext *parentStyle;
-  nsRefPtr<nsStyleContext> childStyle;
-
-  parentStyle = parentFrame->GetStyleContext();
-  nsIContent* parentContent = parentFrame->GetContent();
-
-  childStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
-                                                             nsCSSAnonBoxes::tableColGroup, 
-                                                             parentStyle);
-
-  nsPseudoFrameData& pseudo = aState.mPseudoFrames.mColGroup;
-
-  // construct the pseudo col group as part of the pseudo frames
-  PRBool pseudoParent;
-  nsFrameItems items;
-  rv = ConstructTableColGroupFrame(aState, parentContent,
-                                   parentFrame, childStyle, aNameSpaceID,
-                                   PR_TRUE, items, pseudo.mFrame, &pseudoParent);
-  if (NS_FAILED(rv)) return rv;
-  ((nsTableColGroupFrame*)pseudo.mFrame)->SetColType(eColGroupAnonymousCol);
-
-  // Do not set  aState.mPseudoFrames.mLowestType here as colgroup frame will
-  // be always below a table frame but we can not descent any further as col
-  // frames can not have children and will not wrap table foreign frames.
-
-  // set pseudo data for the parent
-  if (aState.mPseudoFrames.mTableInner.mFrame) {
-    aState.mPseudoFrames.mTableInner.mChildList.AddChild(pseudo.mFrame);
-  }
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-     printf("*** CreatePseudoColGroupFrame ***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::CreatePseudoRowFrame(PRInt32                  aNameSpaceID,
-                                            nsFrameConstructorState& aState, 
-                                            nsIFrame*                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* parentFrame = aParentFrameIn;
-  if (aState.mPseudoFrames.mRowGroup.mFrame) {
-    parentFrame = (nsIFrame*) nsTableFrame::GetRowGroupFrame(aState.mPseudoFrames.mRowGroup.mFrame);
-  }
-  if (!parentFrame) return rv;
-
-  nsStyleContext *parentStyle;
-  nsRefPtr<nsStyleContext> childStyle;
-
-  parentStyle = parentFrame->GetStyleContext();
-  nsIContent* parentContent = parentFrame->GetContent();
-
-  childStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
-                                                             nsCSSAnonBoxes::tableRow, 
-                                                             parentStyle);
-
-  nsPseudoFrameData& pseudo = aState.mPseudoFrames.mRow;
-
-  // construct the pseudo row as part of the pseudo frames
-  PRBool pseudoParent;
-  nsFrameItems items;
-  rv = ConstructTableRowFrame(aState, parentContent,
-                              parentFrame, childStyle, aNameSpaceID,
-                              PR_TRUE, items, pseudo.mFrame, &pseudoParent);
-  if (NS_FAILED(rv)) return rv;
-
-  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableRowFrame;
-
-  // set pseudo data for the parent
-  if (aState.mPseudoFrames.mRowGroup.mFrame) {
-    aState.mPseudoFrames.mRowGroup.mChildList.AddChild(pseudo.mFrame);
-  }
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-     printf("*** CreatePseudoRowFrame ***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::CreatePseudoCellFrame(PRInt32                  aNameSpaceID,
-                                             nsFrameConstructorState& aState, 
-                                             nsIFrame*                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* parentFrame = (aState.mPseudoFrames.mRow.mFrame) 
-                          ? aState.mPseudoFrames.mRow.mFrame : aParentFrameIn;
-  if (!parentFrame) return rv;
-
-  nsStyleContext *parentStyle;
-  nsRefPtr<nsStyleContext> childStyle;
-
-  parentStyle = parentFrame->GetStyleContext();
-  nsIContent* parentContent = parentFrame->GetContent();
-
-  childStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
-                                                             nsCSSAnonBoxes::tableCell, 
-                                                             parentStyle);
-
-  nsPseudoFrameData& pseudoOuter = aState.mPseudoFrames.mCellOuter;
-  nsPseudoFrameData& pseudoInner = aState.mPseudoFrames.mCellInner;
-
-  // construct the pseudo outer and inner as part of the pseudo frames
-  PRBool pseudoParent;
-  nsFrameItems items;
-  rv = ConstructTableCellFrame(aState, parentContent, parentFrame, childStyle,
-                               aNameSpaceID, PR_TRUE, items,
-                               pseudoOuter.mFrame, pseudoInner.mFrame,
-                               &pseudoParent);
-  if (NS_FAILED(rv)) return rv;
-
-  // set pseudo data for the newly created frames
-  pseudoOuter.mChildList.AddChild(pseudoInner.mFrame);
-  // give it nsGkAtoms::tableCellFrame, if it is really nsGkAtoms::bcTableCellFrame, it will match later
-  aState.mPseudoFrames.mLowestType = nsGkAtoms::tableCellFrame;
-
-  // set pseudo data for the parent
-  if (aState.mPseudoFrames.mRow.mFrame) {
-    aState.mPseudoFrames.mRow.mChildList.AddChild(pseudoOuter.mFrame);
-  }
-#ifdef DEBUG
-  if (gTablePseudoFrame) {
-     printf("*** CreatePseudoCellFrame ***\n");
-    aState.mPseudoFrames.Dump();
-  }
-#endif
-  return rv;
-}
-
-// called if the parent is not a table
-nsresult 
-nsCSSFrameConstructor::GetPseudoTableFrame(PRInt32                  aNameSpaceID,
-                                           nsFrameConstructorState& aState, 
-                                           nsIFrame&                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-  nsIAtom* parentFrameType = aParentFrameIn.GetType();
-
-  if (pseudoFrames.IsEmpty()) {
-    PRBool created = PR_FALSE;
-    if (nsGkAtoms::tableRowGroupFrame == parentFrameType) { // row group parent
-      rv = CreatePseudoRowFrame(aNameSpaceID, aState, &aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-      created = PR_TRUE;
-    }
-    if (created || (nsGkAtoms::tableRowFrame == parentFrameType)) { // row parent
-      rv = CreatePseudoCellFrame(aNameSpaceID, aState, &aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-    }
-    rv = CreatePseudoTableFrame(aNameSpaceID, aState, &aParentFrameIn);
-  }
-  else {
-    if (!pseudoFrames.mTableInner.mFrame) { 
-      if (pseudoFrames.mRowGroup.mFrame && !(pseudoFrames.mRow.mFrame)) {
-        rv = CreatePseudoRowFrame(aNameSpaceID, aState);
-        if (NS_FAILED(rv)) return rv;
-      }
-      if (pseudoFrames.mRow.mFrame && !(pseudoFrames.mCellOuter.mFrame)) {
-        rv = CreatePseudoCellFrame(aNameSpaceID, aState);
-        if (NS_FAILED(rv)) return rv;
-      }
-      CreatePseudoTableFrame(aNameSpaceID, aState);
-    }
-  }
-  return rv;
-}
-
-// called if the parent is not a col group
-nsresult 
-nsCSSFrameConstructor::GetPseudoColGroupFrame(PRInt32                  aNameSpaceID,
-                                              nsFrameConstructorState& aState, 
-                                              nsIFrame&                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-  nsIAtom* parentFrameType = aParentFrameIn.GetType();
-
-  if (pseudoFrames.IsEmpty()) {
-    PRBool created = PR_FALSE;
-    if (nsGkAtoms::tableRowGroupFrame == parentFrameType) {  // row group parent
-      rv = CreatePseudoRowFrame(aNameSpaceID, aState, &aParentFrameIn);
-      created = PR_TRUE;
-    }
-    if (created || (nsGkAtoms::tableRowFrame == parentFrameType)) { // row parent
-      rv = CreatePseudoCellFrame(aNameSpaceID, aState, &aParentFrameIn);
-      created = PR_TRUE;
-    }
-    if (created || IS_TABLE_CELL(parentFrameType) || // cell parent
-        (nsGkAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
-        !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
-      rv = CreatePseudoTableFrame(aNameSpaceID, aState, &aParentFrameIn);
-    }
-    rv = CreatePseudoColGroupFrame(aNameSpaceID, aState, &aParentFrameIn);
-  }
-  else {
-    if (!pseudoFrames.mColGroup.mFrame) {
-      if (!pseudoFrames.mTableInner.mFrame) {
-        if (pseudoFrames.mRowGroup.mFrame && !(pseudoFrames.mRow.mFrame)) {
-          rv = CreatePseudoRowFrame(aNameSpaceID, aState);
-        }
-        if (pseudoFrames.mRow.mFrame && !(pseudoFrames.mCellOuter.mFrame)) {
-          rv = CreatePseudoCellFrame(aNameSpaceID, aState);
-        }
-        if (pseudoFrames.mCellOuter.mFrame && !(pseudoFrames.mTableOuter.mFrame)) {
-          rv = CreatePseudoTableFrame(aNameSpaceID, aState);
-        }
-      }
-      rv = CreatePseudoColGroupFrame(aNameSpaceID, aState);
-    }
-  }
-  return rv;
-}
-
-// called if the parent is not a row group
-nsresult 
-nsCSSFrameConstructor::GetPseudoRowGroupFrame(PRInt32                  aNameSpaceID,
-                                              nsFrameConstructorState& aState, 
-                                              nsIFrame&                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-  nsIAtom* parentFrameType = aParentFrameIn.GetType();
-
-  if (!pseudoFrames.mLowestType) {
-    PRBool created = PR_FALSE;
-    if (nsGkAtoms::tableRowFrame == parentFrameType) {  // row parent
-      rv = CreatePseudoCellFrame(aNameSpaceID, aState, &aParentFrameIn);
-      created = PR_TRUE;
-    }
-    if (created || IS_TABLE_CELL(parentFrameType) || // cell parent
-        (nsGkAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
-        !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
-      rv = CreatePseudoTableFrame(aNameSpaceID, aState, &aParentFrameIn);
-    }
-    rv = CreatePseudoRowGroupFrame(aNameSpaceID, aState, &aParentFrameIn);
-  }
-  else {
-    if (!pseudoFrames.mRowGroup.mFrame) { 
-      if (pseudoFrames.mRow.mFrame && !(pseudoFrames.mCellOuter.mFrame)) {
-        rv = CreatePseudoCellFrame(aNameSpaceID, aState);
-      }
-      if (pseudoFrames.mCellOuter.mFrame && !(pseudoFrames.mTableOuter.mFrame)) {
-        rv = CreatePseudoTableFrame(aNameSpaceID, aState);
-      }
-      rv = CreatePseudoRowGroupFrame(aNameSpaceID, aState);
-    }
-  }
-  return rv;
-}
-
-// called if the parent is not a row
-nsresult
-nsCSSFrameConstructor::GetPseudoRowFrame(PRInt32                  aNameSpaceID,
-                                         nsFrameConstructorState& aState, 
-                                         nsIFrame&                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-  nsIAtom* parentFrameType = aParentFrameIn.GetType();
-
-  if (!pseudoFrames.mLowestType) {
-    PRBool created = PR_FALSE;
-    if (IS_TABLE_CELL(parentFrameType) || // cell parent
-       (nsGkAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
-        !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
-      rv = CreatePseudoTableFrame(aNameSpaceID, aState, &aParentFrameIn);
-      created = PR_TRUE;
-    }
-    if (created || (nsGkAtoms::tableFrame == parentFrameType)) { // table parent
-      rv = CreatePseudoRowGroupFrame(aNameSpaceID, aState, &aParentFrameIn);
-    }
-    rv = CreatePseudoRowFrame(aNameSpaceID, aState, &aParentFrameIn);
-  }
-  else {
-    if (!pseudoFrames.mRow.mFrame) { 
-      if (pseudoFrames.mCellOuter.mFrame && !pseudoFrames.mTableOuter.mFrame) {
-        rv = CreatePseudoTableFrame(aNameSpaceID, aState);
-      }
-      if (pseudoFrames.mTableInner.mFrame && !(pseudoFrames.mRowGroup.mFrame)) {
-        rv = CreatePseudoRowGroupFrame(aNameSpaceID, aState);
-      }
-      rv = CreatePseudoRowFrame(aNameSpaceID, aState);
-    }
-  }
-  return rv;
-}
-
-// called if the parent is not a cell or block
-nsresult 
-nsCSSFrameConstructor::GetPseudoCellFrame(PRInt32                  aNameSpaceID,
-                                          nsFrameConstructorState& aState, 
-                                          nsIFrame&                aParentFrameIn)
-{
-  nsresult rv = NS_OK;
-
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-  nsIAtom* parentFrameType = aParentFrameIn.GetType();
-
-  if (!pseudoFrames.mLowestType) {
-    PRBool created = PR_FALSE;
-    if (nsGkAtoms::tableFrame == parentFrameType) { // table parent
-      rv = CreatePseudoRowGroupFrame(aNameSpaceID, aState, &aParentFrameIn);
-      created = PR_TRUE;
-    }
-    if (created || (nsGkAtoms::tableRowGroupFrame == parentFrameType)) { // row group parent
-      rv = CreatePseudoRowFrame(aNameSpaceID, aState, &aParentFrameIn);
-      created = PR_TRUE;
-    }
-    rv = CreatePseudoCellFrame(aNameSpaceID, aState, &aParentFrameIn);
-  }
-  else if (!pseudoFrames.mCellOuter.mFrame) { 
-    if (pseudoFrames.mTableInner.mFrame && !(pseudoFrames.mRowGroup.mFrame)) {
-      rv = CreatePseudoRowGroupFrame(aNameSpaceID, aState);
-    }
-    if (pseudoFrames.mRowGroup.mFrame && !(pseudoFrames.mRow.mFrame)) {
-      rv = CreatePseudoRowFrame(aNameSpaceID, aState);
-    }
-    rv = CreatePseudoCellFrame(aNameSpaceID, aState);
-  }
-  return rv;
-}
-
-nsresult 
-nsCSSFrameConstructor::CreateRequiredPseudoFrames(PRInt32                  aNameSpaceID,
-                                                  nsIFrame&                aParentFrameIn,
-                                                  nsIAtom*                 aChildFrameType,
-                                                  nsFrameConstructorState& aState,
-                                                  nsIFrame*&               aParentFrame,
-                                                  PRBool&                  aIsPseudoParent)
-{
-  nsresult rv = NS_OK;
-
-  nsIAtom* parentFrameType = aParentFrameIn.GetType();
-  nsIFrame* pseudoParentFrame = nsnull;
-  nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
-  aParentFrame = &aParentFrameIn;
-  aIsPseudoParent = PR_FALSE;
-
-  nsFrameState savedStateBits  = aState.mAdditionalStateBits;
-  aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
-
-  if (nsGkAtoms::tableCaptionFrame == aChildFrameType) { // caption child
-    if (nsGkAtoms::tableOuterFrame != parentFrameType) { // need pseudo table parent
-      rv = GetPseudoTableFrame(aNameSpaceID, aState, aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-      pseudoParentFrame = pseudoFrames.mTableOuter.mFrame;
-    }
-  }
-  else if (nsGkAtoms::tableColGroupFrame == aChildFrameType) { // col group child
-    if (nsGkAtoms::tableFrame != parentFrameType) { // need pseudo table parent
-      rv = GetPseudoTableFrame(aNameSpaceID, aState, aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-      pseudoParentFrame = pseudoFrames.mTableInner.mFrame;
-    }
-  }
-  else if (nsGkAtoms::tableColFrame == aChildFrameType) { // col child
-    if (nsGkAtoms::tableColGroupFrame != parentFrameType) { // need pseudo col group parent
-      rv = GetPseudoColGroupFrame(aNameSpaceID, aState, aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-      pseudoParentFrame = pseudoFrames.mColGroup.mFrame;
-    }
-  }
-  else if (nsGkAtoms::tableRowGroupFrame == aChildFrameType) { // row group child
-    // XXX can this go away?
-    if (nsGkAtoms::tableFrame != parentFrameType) {
-      // trees allow row groups to contain row groups, so don't create pseudo frames
-        rv = GetPseudoTableFrame(aNameSpaceID, aState, aParentFrameIn);
-        if (NS_FAILED(rv)) return rv;
-        pseudoParentFrame = pseudoFrames.mTableInner.mFrame;
-     }
-  }
-  else if (nsGkAtoms::tableRowFrame == aChildFrameType) { // row child
-    if (nsGkAtoms::tableRowGroupFrame != parentFrameType) { // need pseudo row group parent
-      rv = GetPseudoRowGroupFrame(aNameSpaceID, aState, aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-      pseudoParentFrame = pseudoFrames.mRowGroup.mFrame;
-    }
-  }
-  else if (IS_TABLE_CELL(aChildFrameType)) { // cell child
-    if (nsGkAtoms::tableRowFrame != parentFrameType) { // need pseudo row parent
-      rv = GetPseudoRowFrame(aNameSpaceID, aState, aParentFrameIn);
-      if (NS_FAILED(rv)) return rv;
-      pseudoParentFrame = pseudoFrames.mRow.mFrame;
-    }
-  }
-#ifdef DEBUG
-  else {
-    NS_ERROR("Unexpected frame type in CreateRequiredPseudoFrames");
-  }
-#endif
-  
-  if (pseudoParentFrame) {
-    aParentFrame = pseudoParentFrame;
-    aIsPseudoParent = PR_TRUE;
-  }
-
-  aState.mAdditionalStateBits = savedStateBits;
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
-                                         nsIContent*                  aChildContent,
-                                         nsIFrame* &                  aParentFrame,
+void
+nsCSSFrameConstructor::AdjustParentFrame(nsIFrame* &                  aParentFrame,
                                          const FrameConstructionData* aFCData,
-                                         PRInt32                      aNameSpaceID,
-                                         nsStyleContext*              aStyleContext,
-                                         nsFrameItems* &              aFrameItems,
-                                         nsFrameConstructorSaveState& aSaveState,
-                                         PRBool&                      aCreatedPseudo)
+                                         nsStyleContext*              aStyleContext)
 {
   NS_PRECONDITION(aStyleContext, "Must have child's style context");
-  NS_PRECONDITION(aFrameItems, "Must have frame items to work with");
   NS_PRECONDITION(aFCData, "Must have frame construction data");
-
-  aCreatedPseudo = PR_FALSE;
-  if (!aParentFrame) {
-    // Nothing to do here
-    return NS_OK;
-  }
 
   PRBool tablePart = ((aFCData->mBits & FCDATA_IS_TABLE_PART) != 0);
 
-  nsIAtom* parentType = aParentFrame->GetType();
-  NS_ASSERTION(parentType != nsGkAtoms::tableOuterFrame,
-               "Shouldn't be happening");
- 
-  // If our parent is a table, table-row-group, or table-row, and
-  // we're not table-related in any way, we have to create table
-  // pseudo-frames so that we have a table cell to live in.
-  if (IsTableRelated(parentType, PR_FALSE) && !tablePart) {
-    nsFrameState savedStateBits  = aState.mAdditionalStateBits;
-    aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
-    nsresult rv = GetPseudoCellFrame(aNameSpaceID, aState, *aParentFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    aState.mAdditionalStateBits = savedStateBits;
-
-    NS_ASSERTION(aState.mPseudoFrames.mCellInner.mFrame,
-                 "Must have inner cell frame now!");
-
-    aParentFrame = aState.mPseudoFrames.mCellInner.mFrame;
-    aFrameItems = &aState.mPseudoFrames.mCellInner.mChildList;
-    // We pushed an anonymous table cell.  The inner block of this
-    // needs to become the float containing block.
-    aState.PushFloatContainingBlock(aParentFrame, aSaveState);
-    aCreatedPseudo = PR_TRUE;
-
-    // Now it might be that we had existing pseudo-frames and in particular an
-    // existing pseudo-cell (so that the pseudo cell we just got is not the
-    // lowest pseudo-frame).  If that's the case, we need to process everythign
-    // below that cell, so that our later siblings don't see those
-    // pseudo-frames.
-    if (aState.mPseudoFrames.mTableOuter.mFrame) {
-      ProcessPseudoFrames(aState, nsGkAtoms::tableOuterFrame);
-    }
+  if (tablePart && aStyleContext->GetStyleDisplay()->mDisplay ==
+      NS_STYLE_DISPLAY_TABLE_CAPTION) {
+    aParentFrame = AdjustCaptionParentFrame(aParentFrame);
   }
-  return NS_OK;
 }
 
 // Pull all the captions present in aItems out  into aCaptions
@@ -3129,357 +2049,175 @@ PullOutCaptionFrames(nsFrameItems& aItems, nsFrameItems& aCaptions)
 // associated with revising the pseudo frame mechanism. The long term solution
 // of having frames handle page-break-before/after will solve the problem. 
 nsresult
-nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
-                                           nsIContent*              aContent,
-                                           nsIFrame*                aContentParent,
-                                           nsStyleContext*          aStyleContext,
-                                           PRInt32                  aNameSpaceID,
-                                           PRBool                   aIsPseudo,
-                                           nsFrameItems&            aChildItems,
-                                           nsIFrame*&               aNewOuterFrame,
-                                           nsIFrame*&               aNewInnerFrame)
+nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
+                                      FrameConstructionItem&   aItem,
+                                      nsIFrame*                aParentFrame,
+                                      const nsStyleDisplay*    aDisplay,
+                                      nsFrameItems&            aFrameItems,
+                                      nsIFrame**               aNewFrame)
 {
-  nsresult rv = NS_OK;
+  NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE ||
+                  aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE,
+                  "Unexpected call");
 
+  nsIContent* const content = aItem.mContent;
+  nsStyleContext* const styleContext = aItem.mStyleContext;
+  const PRUint32 nameSpaceID = aItem.mNameSpaceID;
+  
+  nsresult rv = NS_OK;
 
   // create the pseudo SC for the outer table as a child of the inner SC
   nsRefPtr<nsStyleContext> outerStyleContext;
   outerStyleContext = mPresShell->StyleSet()->
-    ResolvePseudoStyleFor(aContent, nsCSSAnonBoxes::tableOuter, aStyleContext);
+    ResolvePseudoStyleFor(content, nsCSSAnonBoxes::tableOuter, styleContext);
 
   // Create the outer table frame which holds the caption and inner table frame
+  nsIFrame* newFrame;
 #ifdef MOZ_MATHML
-  if (kNameSpaceID_MathML == aNameSpaceID)
-    aNewOuterFrame = NS_NewMathMLmtableOuterFrame(mPresShell,
-                                                  outerStyleContext);
+  if (kNameSpaceID_MathML == nameSpaceID)
+    newFrame = NS_NewMathMLmtableOuterFrame(mPresShell, outerStyleContext);
   else
 #endif
-    aNewOuterFrame = NS_NewTableOuterFrame(mPresShell, outerStyleContext);
+    newFrame = NS_NewTableOuterFrame(mPresShell, outerStyleContext);
 
-  NS_ASSERTION(!IsTableRelated(aContentParent->GetType(), PR_TRUE) ||
-               aContentParent->GetType() == nsGkAtoms::tableCaptionFrame,
-               "Unexpected parent frame for table");
-
-  nsIFrame* geometricParent = aState.GetGeometricParent
-                                (outerStyleContext->GetStyleDisplay(),
-                                 aContentParent);
+  nsIFrame* geometricParent =
+    aState.GetGeometricParent(outerStyleContext->GetStyleDisplay(),
+                              aParentFrame);
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned  
-  InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, aNewOuterFrame);  
-  nsHTMLContainerFrame::CreateViewForFrame(aNewOuterFrame, PR_FALSE);
+  InitAndRestoreFrame(aState, content, geometricParent, nsnull, newFrame);  
+  nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
   // Create the inner table frame
+  nsIFrame* innerFrame;
 #ifdef MOZ_MATHML
-  if (kNameSpaceID_MathML == aNameSpaceID)
-    aNewInnerFrame = NS_NewMathMLmtableFrame(mPresShell, aStyleContext);
+  if (kNameSpaceID_MathML == nameSpaceID)
+    innerFrame = NS_NewMathMLmtableFrame(mPresShell, styleContext);
   else
 #endif
-    aNewInnerFrame = NS_NewTableFrame(mPresShell, aStyleContext);
+    innerFrame = NS_NewTableFrame(mPresShell, styleContext);
  
-  InitAndRestoreFrame(aState, aContent, aNewOuterFrame, nsnull,
-                      aNewInnerFrame);
+  InitAndRestoreFrame(aState, content, newFrame, nsnull, innerFrame);
 
-  if (!aIsPseudo) {
-    // Put the newly created frames into the right child list
-    aNewOuterFrame->SetInitialChildList(nsnull, aNewInnerFrame);
+  // Put the newly created frames into the right child list
+  newFrame->SetInitialChildList(nsnull, innerFrame);
 
-    rv = aState.AddChild(aNewOuterFrame, aChildItems, aContent,
-                         aStyleContext, aContentParent);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (!mRootElementFrame) {
-      // The frame we're constructing will be the root element frame.
-      // Set mRootElementFrame before processing children.
-      mRootElementFrame = aNewOuterFrame;
-    }
-
-    nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aStyleContext, aNewInnerFrame,
-                         PR_TRUE, childItems, PR_FALSE);
-    // XXXbz what about cleaning up?
-    if (NS_FAILED(rv)) return rv;
-
-    nsFrameItems captionItems;
-    PullOutCaptionFrames(childItems, captionItems);
-
-    // Set the inner table frame's initial primary list 
-    aNewInnerFrame->SetInitialChildList(nsnull, childItems.childList);
-
-    // Set the outer table frame's secondary childlist lists
-    if (captionItems.childList) {
-        aNewOuterFrame->SetInitialChildList(nsGkAtoms::captionList,
-                                            captionItems.childList);
-    }
- }
-
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aState,
-                                                  nsIContent*              aContent,
-                                                  nsIFrame*                aParentFrameIn,
-                                                  nsStyleContext*          aStyleContext,
-                                                  PRInt32                  aNameSpaceID,
-                                                  nsFrameItems&            aChildItems,
-                                                  nsIFrame*&               aNewFrame,
-                                                  PRBool*                  aHasPseudoParent)
-
-{
-  if (!aParentFrameIn) return NS_ERROR_UNEXPECTED;
-
-  nsIFrame* parentFrame = aParentFrameIn;
-  *aHasPseudoParent = PR_FALSE;
-  // this frame may have a pseudo parent
-  CreateRequiredPseudoFrames(aNameSpaceID, *aParentFrameIn,
-                             nsGkAtoms::tableCaptionFrame, aState, parentFrame,
-                             *aHasPseudoParent);
-  if (!*aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-    ProcessPseudoFrames(aState, aChildItems);
+  rv = aState.AddChild(newFrame, aFrameItems, content, styleContext,
+                       aParentFrame);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  aNewFrame = NS_NewTableCaptionFrame(mPresShell, aStyleContext);
-  if (NS_UNLIKELY(!aNewFrame)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!mRootElementFrame) {
+    // The frame we're constructing will be the root element frame.
+    // Set mRootElementFrame before processing children.
+    mRootElementFrame = newFrame;
   }
-  InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
 
   nsFrameItems childItems;
-  nsresult rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame,
-                                PR_TRUE, childItems, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-  aNewFrame->SetInitialChildList(nsnull, childItems.childList);
-  if (*aHasPseudoParent) {
-    aState.mPseudoFrames.mTableOuter.mChildList2.AddChild(aNewFrame);
+  if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
+    rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
+                                     innerFrame, childItems);
+  } else {
+    rv = ProcessChildren(aState, content, styleContext, innerFrame,
+                         PR_TRUE, childItems, PR_FALSE);
   }
-  
+  // XXXbz what about cleaning up?
+  if (NS_FAILED(rv)) return rv;
+
+  nsFrameItems captionItems;
+  PullOutCaptionFrames(childItems, captionItems);
+
+  // Set the inner table frame's initial primary list 
+  innerFrame->SetInitialChildList(nsnull, childItems.childList);
+
+  // Set the outer table frame's secondary childlist lists
+  if (captionItems.childList) {
+    newFrame->SetInitialChildList(nsGkAtoms::captionList,
+                                  captionItems.childList);
+  }
+
+  *aNewFrame = newFrame;
   return rv;
 }
 
-
 nsresult
-nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aState,
-                                                   nsIContent*              aContent,
-                                                   nsIFrame*                aParentFrameIn,
-                                                   nsStyleContext*          aStyleContext,
-                                                   PRInt32                  aNameSpaceID,
-                                                   PRBool                   aIsPseudo,
-                                                   nsFrameItems&            aChildItems,
-                                                   nsIFrame*&               aNewFrame, 
-                                                   PRBool*                  aHasPseudoParent)
+nsCSSFrameConstructor::ConstructTableRow(nsFrameConstructorState& aState,
+                                         FrameConstructionItem&   aItem,
+                                         nsIFrame*                aParentFrame,
+                                         const nsStyleDisplay*    aDisplay,
+                                         nsFrameItems&            aFrameItems,
+                                         nsIFrame**               aNewFrame)
 {
-  if (!aParentFrameIn) return NS_ERROR_UNEXPECTED;
+  NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW,
+                  "Unexpected call");
+  nsIContent* const content = aItem.mContent;
+  nsStyleContext* const styleContext = aItem.mStyleContext;
+  const PRUint32 nameSpaceID = aItem.mNameSpaceID;
 
-  nsIFrame* parentFrame = aParentFrameIn;
-  *aHasPseudoParent = PR_FALSE;
-  if (!aIsPseudo) {
-    // this frame may have a pseudo parent
-    CreateRequiredPseudoFrames(aNameSpaceID, *aParentFrameIn,
-                               nsGkAtoms::tableRowGroupFrame, aState,
-                               parentFrame, *aHasPseudoParent);
-    if (!*aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aChildItems);
-    }
-    if (!aIsPseudo && *aHasPseudoParent &&
-        aState.mPseudoFrames.mRowGroup.mFrame) {
-      ProcessPseudoFrames(aState, nsGkAtoms::tableRowGroupFrame);
-    }
-  }
-
-  const nsStyleDisplay* styleDisplay = aStyleContext->GetStyleDisplay();
-
-  aNewFrame = NS_NewTableRowGroupFrame(mPresShell, aStyleContext);
-
-  nsIFrame* scrollFrame = nsnull;
-  if (styleDisplay->IsScrollableOverflow()) {
-    // Create an area container for the frame
-    BuildScrollFrame(aState, aContent, aStyleContext, aNewFrame, parentFrame,
-                     scrollFrame);
-
-  } 
-  else {
-    if (NS_UNLIKELY(!aNewFrame)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-    nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
-  }
-
-  if (!aIsPseudo) {
-    nsFrameItems childItems;
-    nsresult rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame,
-                                  PR_TRUE, childItems, PR_FALSE);
-    
-    if (NS_FAILED(rv)) return rv;
-
-    aNewFrame->SetInitialChildList(nsnull, childItems.childList);
-    if (*aHasPseudoParent) {
-      nsIFrame* child = (scrollFrame) ? scrollFrame : aNewFrame;
-      aState.mPseudoFrames.mTableInner.mChildList.AddChild(child);
-    }
-  } 
-
-  // if there is a scroll frame, use it as the one constructed
-  if (scrollFrame) {
-    aNewFrame = scrollFrame;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructTableColGroupFrame(nsFrameConstructorState& aState,
-                                                   nsIContent*              aContent,
-                                                   nsIFrame*                aParentFrameIn,
-                                                   nsStyleContext*          aStyleContext,
-                                                   PRInt32                  aNameSpaceID,
-                                                   PRBool                   aIsPseudo,
-                                                   nsFrameItems&            aChildItems,
-                                                   nsIFrame*&               aNewFrame, 
-                                                   PRBool*                  aHasPseudoParent)
-{
-  if (!aParentFrameIn) return NS_ERROR_UNEXPECTED;
-
-  nsIFrame* parentFrame = aParentFrameIn;
-  *aHasPseudoParent = PR_FALSE;
-  if (!aIsPseudo) {
-    // this frame may have a pseudo parent
-    CreateRequiredPseudoFrames(aNameSpaceID, *aParentFrameIn,
-                               nsGkAtoms::tableColGroupFrame, aState,
-                               parentFrame, *aHasPseudoParent);
-    if (!*aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aChildItems);
-    }
-    if (!aIsPseudo && *aHasPseudoParent &&
-        aState.mPseudoFrames.mColGroup.mFrame) {
-      ProcessPseudoFrames(aState, nsGkAtoms::tableColGroupFrame);
-    }
-  }
-
-  aNewFrame = NS_NewTableColGroupFrame(mPresShell, aStyleContext);
-  if (NS_UNLIKELY(!aNewFrame)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-
-  if (!aIsPseudo) {
-    nsFrameItems childItems;
-    nsresult rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame,
-                                  PR_TRUE, childItems, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-    aNewFrame->SetInitialChildList(nsnull, childItems.childList);
-    if (*aHasPseudoParent) {
-      aState.mPseudoFrames.mTableInner.mChildList.AddChild(aNewFrame);
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
-                                              nsIContent*              aContent,
-                                              nsIFrame*                aParentFrameIn,
-                                              nsStyleContext*          aStyleContext,
-                                              PRInt32                  aNameSpaceID,
-                                              PRBool                   aIsPseudo,
-                                              nsFrameItems&            aChildItems,
-                                              nsIFrame*&               aNewFrame,
-                                              PRBool*                  aHasPseudoParent)
-{
-  if (!aParentFrameIn) return NS_ERROR_UNEXPECTED;
-
-  nsIFrame* parentFrame = aParentFrameIn;
-  *aHasPseudoParent = PR_FALSE;
-  if (!aIsPseudo) {
-    // this frame may have a pseudo parent
-    CreateRequiredPseudoFrames(aNameSpaceID, *aParentFrameIn,
-                               nsGkAtoms::tableRowFrame, aState, parentFrame,
-                               *aHasPseudoParent);
-    if (!*aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aChildItems);
-    }
-    if (!aIsPseudo && *aHasPseudoParent && aState.mPseudoFrames.mRow.mFrame) {
-      ProcessPseudoFrames(aState, nsGkAtoms::tableRowFrame);
-    }
-  }
-
+  nsIFrame* newFrame;
 #ifdef MOZ_MATHML
-  if (kNameSpaceID_MathML == aNameSpaceID)
-    aNewFrame = NS_NewMathMLmtrFrame(mPresShell, aStyleContext);
+  if (kNameSpaceID_MathML == nameSpaceID)
+    newFrame = NS_NewMathMLmtrFrame(mPresShell, styleContext);
   else
 #endif
-    aNewFrame = NS_NewTableRowFrame(mPresShell, aStyleContext);
+    newFrame = NS_NewTableRowFrame(mPresShell, styleContext);
 
-  if (NS_UNLIKELY(!aNewFrame)) {
+  if (NS_UNLIKELY(!newFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
-  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, PR_FALSE);
-  if (!aIsPseudo) {
-    nsFrameItems childItems;
-    nsresult rv = ProcessChildren(aState, aContent, aStyleContext, aNewFrame,
-                                  PR_TRUE, childItems, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+  InitAndRestoreFrame(aState, content, aParentFrame, nsnull, newFrame);
+  nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
 
-    aNewFrame->SetInitialChildList(nsnull, childItems.childList);
-    if (*aHasPseudoParent) {
-      aState.mPseudoFrames.mRowGroup.mChildList.AddChild(aNewFrame);
-    }
+  nsFrameItems childItems;
+  nsresult rv;
+  if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
+    rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                                     childItems);
+  } else {
+    rv = ProcessChildren(aState, content, styleContext, newFrame,
+                         PR_TRUE, childItems, PR_FALSE);
   }
+  if (NS_FAILED(rv)) return rv;
+
+  newFrame->SetInitialChildList(nsnull, childItems.childList);
+  aFrameItems.AddChild(newFrame);
+  *aNewFrame = newFrame;
 
   return NS_OK;
 }
-      
+
 nsresult
-nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
-                                              nsIContent*              aContent,
-                                              nsIFrame*                aParentFrameIn,
-                                              nsStyleContext*          aStyleContext,
-                                              PRInt32                  aNameSpaceID,
-                                              PRBool                   aIsPseudo,
-                                              nsFrameItems&            aChildItems,
-                                              nsIFrame*&               aNewFrame,
-                                              PRBool*                  aHasPseudoParent)
+nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
+                                         FrameConstructionItem&   aItem,
+                                         nsIFrame*                aParentFrame,
+                                         const nsStyleDisplay*    aStyleDisplay,
+                                         nsFrameItems&            aFrameItems,
+                                         nsIFrame**               aNewFrame)
 {
-  if (!aParentFrameIn || !aStyleContext) return NS_ERROR_UNEXPECTED;
+  nsIContent* const content = aItem.mContent;
+  nsStyleContext* const styleContext = aItem.mStyleContext;
 
-  nsIFrame* parentFrame = aParentFrameIn;
-  *aHasPseudoParent = PR_FALSE;
-  if (!aIsPseudo) {
-    // this frame may have a pseudo parent
-    CreateRequiredPseudoFrames(aNameSpaceID, *aParentFrameIn,
-                               nsGkAtoms::tableColFrame, aState, parentFrame,
-                               *aHasPseudoParent);
-    if (!*aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aChildItems);
-    }
-  }
-
-  nsTableColFrame* colFrame = NS_NewTableColFrame(mPresShell, aStyleContext);
-  aNewFrame = colFrame;
+  nsTableColFrame* colFrame = NS_NewTableColFrame(mPresShell, styleContext);
   if (NS_UNLIKELY(!aNewFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
+  InitAndRestoreFrame(aState, content, aParentFrame, nsnull, colFrame);
+
+  NS_ASSERTION(colFrame->GetStyleContext() == styleContext,
+               "Unexpected style context");
 
   // construct additional col frames if the col frame has a span > 1
   PRInt32 span = colFrame->GetSpan();
-  nsIFrame* lastCol = aNewFrame;
-  nsStyleContext* styleContext = nsnull;
+  nsIFrame* lastCol = colFrame;
   for (PRInt32 spanX = 1; spanX < span; spanX++) {
-    // The same content node should always resolve to the same style context.
-    if (1 == spanX)
-      styleContext = aNewFrame->GetStyleContext();
     nsTableColFrame* newCol = NS_NewTableColFrame(mPresShell, styleContext);
     if (NS_UNLIKELY(!newCol)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, newCol, PR_FALSE);
+    InitAndRestoreFrame(aState, content, aParentFrame, nsnull, newCol,
+                        PR_FALSE);
     lastCol->SetNextSibling(newCol);
     lastCol->SetNextContinuation(newCol);
     newCol->SetPrevContinuation(lastCol);
@@ -3487,120 +2225,115 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
     lastCol = newCol;
   }
 
-  if (!aIsPseudo && *aHasPseudoParent) {
-      aState.mPseudoFrames.mColGroup.mChildList.AddChild(aNewFrame);
-  }
+  aFrameItems.AddChild(colFrame);
+  *aNewFrame = colFrame;
   
   return NS_OK;
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
-                                               nsIContent*              aContent,
-                                               nsIFrame*                aParentFrameIn,
-                                               nsStyleContext*          aStyleContext,
-                                               PRInt32                  aNameSpaceID,
-                                               PRBool                   aIsPseudo,
-                                               nsFrameItems&            aChildItems,
-                                               nsIFrame*&               aNewCellOuterFrame,
-                                               nsIFrame*&               aNewCellInnerFrame,
-                                               PRBool*                  aHasPseudoParent)
+nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
+                                          FrameConstructionItem&   aItem,
+                                          nsIFrame*                aParentFrame,
+                                          const nsStyleDisplay*    aDisplay,
+                                          nsFrameItems&            aFrameItems,
+                                          nsIFrame**               aNewFrame)
 {
-  if (!aParentFrameIn) return NS_ERROR_UNEXPECTED;
+  NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL,
+                  "Unexpected call");
 
-  nsIFrame* parentFrame = aParentFrameIn;
-  *aHasPseudoParent = PR_FALSE;
-  if (!aIsPseudo) {
-    // this frame may have a pseudo parent
-    // use nsGkAtoms::tableCellFrame which will match if it is really nsGkAtoms::bcTableCellFrame
-    CreateRequiredPseudoFrames(aNameSpaceID, *aParentFrameIn,
-                               nsGkAtoms::tableCellFrame, aState, parentFrame,
-                               *aHasPseudoParent);
-    if (!*aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aChildItems);
-    }
-    if (!aIsPseudo && *aHasPseudoParent && aState.mPseudoFrames.mCellOuter.mFrame) {
-      ProcessPseudoFrames(aState, nsGkAtoms::tableCellFrame);
-    }
-  }
+  nsIContent* const content = aItem.mContent;
+  nsStyleContext* const styleContext = aItem.mStyleContext;
+  const PRUint32 nameSpaceID = aItem.mNameSpaceID;
+
+  PRBool borderCollapse = IsBorderCollapse(aParentFrame);
+  nsIFrame* newFrame;
 #ifdef MOZ_MATHML
   // <mtable> is border separate in mathml.css and the MathML code doesn't implement
   // border collapse. For those users who style <mtable> with border collapse,
-  // give them the default non-MathML table frames that understand border collpase.
+  // give them the default non-MathML table frames that understand border collapse.
   // This won't break us because MathML table frames are all subclasses of the default
   // table code, and so we can freely mix <mtable> with <mtr> or <tr>, <mtd> or <td>.
   // What will happen is just that non-MathML frames won't understand MathML attributes
   // and will therefore miss the special handling that the MathML code does.
-  if (kNameSpaceID_MathML == aNameSpaceID && !IsBorderCollapse(parentFrame))
-    aNewCellOuterFrame = NS_NewMathMLmtdFrame(mPresShell, aStyleContext);
+  if (kNameSpaceID_MathML == nameSpaceID && !borderCollapse)
+    newFrame = NS_NewMathMLmtdFrame(mPresShell, styleContext);
   else
 #endif
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.    
-    aNewCellOuterFrame = NS_NewTableCellFrame(mPresShell, aStyleContext,
-                                              IsBorderCollapse(parentFrame));
+    newFrame = NS_NewTableCellFrame(mPresShell, styleContext, borderCollapse);
 
-  if (NS_UNLIKELY(!aNewCellOuterFrame)) {
+  if (NS_UNLIKELY(!newFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Initialize the table cell frame
-  InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewCellOuterFrame);
-  nsHTMLContainerFrame::CreateViewForFrame(aNewCellOuterFrame, PR_FALSE);
+  InitAndRestoreFrame(aState, content, aParentFrame, nsnull, newFrame);
+  nsHTMLContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
   
   // Resolve pseudo style and initialize the body cell frame
   nsRefPtr<nsStyleContext> innerPseudoStyle;
   innerPseudoStyle = mPresShell->StyleSet()->
-    ResolvePseudoStyleFor(aContent,
-                          nsCSSAnonBoxes::cellContent, aStyleContext);
+    ResolvePseudoStyleFor(content, nsCSSAnonBoxes::cellContent, styleContext);
 
   // Create a block frame that will format the cell's content
   PRBool isBlock;
+  nsIFrame* cellInnerFrame;
 #ifdef MOZ_MATHML
-  if (kNameSpaceID_MathML == aNameSpaceID) {
-    aNewCellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
+  if (kNameSpaceID_MathML == nameSpaceID) {
+    cellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
     isBlock = PR_FALSE;
   }
   else
 #endif
   {
-    aNewCellInnerFrame = NS_NewBlockFormattingContext(mPresShell,
-                                                      innerPseudoStyle);
+    cellInnerFrame = NS_NewBlockFormattingContext(mPresShell, innerPseudoStyle);
     isBlock = PR_TRUE;
   }
 
-
-  if (NS_UNLIKELY(!aNewCellInnerFrame)) {
-    aNewCellOuterFrame->Destroy();
-    aNewCellOuterFrame = nsnull;
+  if (NS_UNLIKELY(!cellInnerFrame)) {
+    newFrame->Destroy();
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  InitAndRestoreFrame(aState, aContent, aNewCellOuterFrame, nsnull, aNewCellInnerFrame);
+  InitAndRestoreFrame(aState, content, newFrame, nsnull, cellInnerFrame);
 
-  if (!aIsPseudo) {
+  nsFrameItems childItems;
+  nsresult rv;
+  if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
+    // Need to push ourselves as a float containing block.
+    // XXXbz it might be nice to work on getting the parent
+    // FrameConstructionItem down into ProcessChildren and just making use of
+    // the push there, but that's a bit of work.
+    nsFrameConstructorSaveState floatSaveState;
+    if (!isBlock) { /* MathML case */
+      aState.PushFloatContainingBlock(nsnull, floatSaveState);
+    } else {
+      aState.PushFloatContainingBlock(cellInnerFrame, floatSaveState);
+    }
+
+    rv = ConstructFramesFromItemList(aState, aItem.mChildItems, cellInnerFrame,
+                                     childItems);
+  } else {
     // Process the child content
-    nsFrameItems childItems;
-    nsresult rv = ProcessChildren(aState, aContent, aStyleContext,
-                                  aNewCellInnerFrame, PR_TRUE, childItems, isBlock);
-
-    if (NS_FAILED(rv)) {
-      // Clean up
-      // XXXbz kids of this stuff need to be cleaned up too!
-      aNewCellInnerFrame->Destroy();
-      aNewCellInnerFrame = nsnull;
-      aNewCellOuterFrame->Destroy();
-      aNewCellOuterFrame = nsnull;
-      return rv;
-    }
-
-    aNewCellInnerFrame->SetInitialChildList(nsnull, childItems.childList);
-    aNewCellOuterFrame->SetInitialChildList(nsnull, aNewCellInnerFrame);
-    if (*aHasPseudoParent) {
-      aState.mPseudoFrames.mRow.mChildList.AddChild(aNewCellOuterFrame);
-    }
+    rv = ProcessChildren(aState, content, styleContext, cellInnerFrame,
+                         PR_TRUE, childItems, isBlock);
   }
+  
+  if (NS_FAILED(rv)) {
+    // Clean up
+    // XXXbz kids of this stuff need to be cleaned up too!
+    cellInnerFrame->Destroy();
+    newFrame->Destroy();
+    return rv;
+  }
+
+  cellInnerFrame->SetInitialChildList(nsnull, childItems.childList);
+  newFrame->SetInitialChildList(nsnull, cellInnerFrame);
+  aFrameItems.AddChild(newFrame);
+  *aNewFrame = newFrame;
 
   return NS_OK;
 }
@@ -3871,13 +2604,24 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   {
     PRBool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE);
     if (docElemIsTable) {
-      nsIFrame* innerTableFrame;
+      // We're going to call the right function ourselves, so no need to give a
+      // function to this FrameConstructionData.
+
+      // XXXbz on the other hand, if we converted this whole function to
+      // FrameConstructionData/Item, then we'd need the right function
+      // here... but would probably be able to get away with less code in this
+      // function in general.
+      static const FrameConstructionData rootTableData = { 0, nsnull };
+      nsRefPtr<nsStyleContext> extraRef(styleContext);
+      FrameConstructionItem item(&rootTableData, aDocElement,
+                                 aDocElement->Tag(), kNameSpaceID_None,
+                                 extraRef.forget());
+
       nsFrameItems frameItems;
       // if the document is a table then just populate it.
-      rv = ConstructTableFrame(aState, aDocElement,
-                               aParentFrame, styleContext,
-                               kNameSpaceID_None, PR_FALSE, frameItems,
-                               contentFrame, innerTableFrame);
+      rv = ConstructTable(aState, item, aParentFrame,
+                          styleContext->GetStyleDisplay(),
+                          frameItems, &contentFrame);
       if (NS_FAILED(rv))
         return rv;
       if (!contentFrame || !frameItems.childList)
@@ -4796,15 +3540,9 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
                                           nsIContent*              aContent,
                                           nsIFrame*                aParentFrame,
                                           nsStyleContext*          aStyleContext,
-                                          nsFrameItems&            aFrameItems,
-                                          PRBool                   aPseudoParent)
+                                          nsFrameItems&            aFrameItems)
 {
   NS_PRECONDITION(aData, "Must have frame construction data");
-
-  // process pending pseudo frames. whitespace doesn't have an effect.
-  if (!aPseudoParent && !aState.mPseudoFrames.IsEmpty() &&
-      !TextIsOnlyWhitespace(aContent))
-    ProcessPseudoFrames(aState, aFrameItems);
 
   nsIFrame* newFrame = (*aData->mFunc.mCreationFunc)(mPresShell, aStyleContext);
 
@@ -5074,8 +3812,7 @@ nsresult
 nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
                                                       nsFrameConstructorState& aState,
                                                       nsIFrame* aParentFrame,
-                                                      nsFrameItems& aFrameItems,
-                                                      PRBool aHasPseudoParent)
+                                                      nsFrameItems& aFrameItems)
 {
   const FrameConstructionData* data = aItem.mFCData;
   NS_ASSERTION(data, "Must have frame construction data");
@@ -5089,7 +3826,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 #define CHECK_ONLY_ONE_BIT(_bit1, _bit2)               \
   NS_ASSERTION(!(bits & _bit1) || !(bits & _bit2),     \
                "Only one of these bits should be set")
-  CHECK_ONLY_ONE_BIT(FCDATA_SKIP_FRAMEMAP, FCDATA_MAY_NEED_SCROLLFRAME);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_FORCE_NULL_ABSPOS_CONTAINER);
 #ifdef MOZ_MATHML
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_WRAP_KIDS_IN_BLOCKS);
@@ -5100,14 +3836,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_FORCE_VIEW);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR,
                      FCDATA_DISALLOW_GENERATED_CONTENT);
+  CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_ALLOW_BLOCK_STYLES);
   CHECK_ONLY_ONE_BIT(FCDATA_MAY_NEED_SCROLLFRAME, FCDATA_FORCE_VIEW);
 #undef CHECK_ONLY_ONE_BIT
-
-  // Process pseudo-frames now if this is not a table part.
-  if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty() &&
-      !(bits & FCDATA_IS_TABLE_PART)) {
-    ProcessPseudoFrames(aState, aFrameItems); 
-  }
 
   nsStyleContext* const styleContext = aItem.mStyleContext;
   const nsStyleDisplay* display = styleContext->GetStyleDisplay();
@@ -5192,12 +3923,16 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
     }
 
-    // Process the child frames.  Don't allow block styles; anything that's a
-    // special HTML or MathML or XUL frame but wants those should do its own
-    // ProcessChildren.
-    rv = ProcessChildren(aState, content, styleContext, newFrame,
-                         !(bits & FCDATA_DISALLOW_GENERATED_CONTENT),
-                         childItems, PR_FALSE);
+    if (bits & FCDATA_USE_CHILD_ITEMS) {
+      rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                                       childItems);
+    } else {
+      // Process the child frames.
+      rv = ProcessChildren(aState, content, styleContext, newFrame,
+                           !(bits & FCDATA_DISALLOW_GENERATED_CONTENT),
+                           childItems,
+                           (bits & FCDATA_ALLOW_BLOCK_STYLES) != 0);
+    }
 
 #ifdef MOZ_XUL
     // More icky XUL stuff
@@ -5282,11 +4017,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
   NS_ASSERTION(creator,
                "How can that happen if we have nodes to construct frames for?");
 
-  // save the incoming pseudo frame state, so that we don't end up
-  // with those pseudoframes in aChildItems
-  nsPseudoFrames priorPseudoFrames; 
-  aState.mPseudoFrames.Reset(&priorPseudoFrames);
-
   for (PRUint32 i=0; i < count; i++) {
     nsIContent* content = newAnonymousItems[i];
     NS_ASSERTION(content, "null anonymous content?");
@@ -5300,14 +4030,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       ConstructFrame(aState, content, aParentFrame, aChildItems);
     }
   }
-
-  // process the current pseudo frame state
-  if (!aState.mPseudoFrames.IsEmpty()) {
-    ProcessPseudoFrames(aState, aChildItems);
-  }
-
-  // restore the incoming pseudo frame state
-  aState.mPseudoFrames = priorPseudoFrames;
 
   return NS_OK;
 }
@@ -5745,8 +4467,11 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
 
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
-                                       nsIContent* aContent)
+                                       nsIContent* aContent,
+                                       nsStyleContext* aStyleContext)
 {
+  PR_STATIC_ASSERT(eParentTypeCount < (1 << (32 - FCDATA_PARENT_TYPE_OFFSET)));
+
   // The style system ensures that floated and positioned frames are
   // block-level.
   NS_ASSERTION(!(aDisplay->IsFloating() ||
@@ -5789,32 +4514,64 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     return &sNonScrollableBlockData;
   }
 
-  // Handle various inlines
-  if (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay ||
-      NS_STYLE_DISPLAY_MARKER == aDisplay->mDisplay) {
+  static const FrameConstructionDataByInt sDisplayData[] = {
     // To keep the hash table small don't add inline frames (they're
     // typically things like FONT and B), because we can quickly
     // find them if we need to.
     // XXXbz the "quickly" part is a bald-faced lie!
-    static const FrameConstructionData sInlineData =
+    { NS_STYLE_DISPLAY_INLINE,
       FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMEMAP | FCDATA_IS_INLINE |
                        FCDATA_IS_LINE_PARTICIPANT,
-                       &nsCSSFrameConstructor::ConstructInline);
-    return &sInlineData;
-  }
+                       &nsCSSFrameConstructor::ConstructInline) },
+    { NS_STYLE_DISPLAY_MARKER,
+      FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMEMAP | FCDATA_IS_INLINE |
+                       FCDATA_IS_LINE_PARTICIPANT,
+                       &nsCSSFrameConstructor::ConstructInline) },
+    { NS_STYLE_DISPLAY_TABLE,
+      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
+    { NS_STYLE_DISPLAY_INLINE_TABLE,
+      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
+    { NS_STYLE_DISPLAY_TABLE_CAPTION,
+      FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                  FCDATA_ALLOW_BLOCK_STYLES | FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                  NS_NewTableCaptionFrame) },
+    { NS_STYLE_DISPLAY_TABLE_ROW_GROUP,
+      FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                  FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                  NS_NewTableRowGroupFrame) },
+    { NS_STYLE_DISPLAY_TABLE_HEADER_GROUP,
+      FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                  FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                  NS_NewTableRowGroupFrame) },
+    { NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP,
+      FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                  FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                  NS_NewTableRowGroupFrame) },
+    { NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP,
+      FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                  FCDATA_DISALLOW_OUT_OF_FLOW |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                  NS_NewTableColGroupFrame) },
+    { NS_STYLE_DISPLAY_TABLE_COLUMN,
+      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeColGroup),
+                       &nsCSSFrameConstructor::ConstructTableCol) },
+    { NS_STYLE_DISPLAY_TABLE_ROW,
+      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
+                       &nsCSSFrameConstructor::ConstructTableRow) },
+    { NS_STYLE_DISPLAY_TABLE_CELL,
+      FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                       FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
+                       &nsCSSFrameConstructor::ConstructTableCell) }
+  };
 
-  if (NS_STYLE_DISPLAY_TABLE == aDisplay->mDisplay ||
-      NS_STYLE_DISPLAY_INLINE_TABLE == aDisplay->mDisplay) {
-    static const FrameConstructionData sTableData =
-      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable);
-    return &sTableData;
-  }
-
-  static const FrameConstructionData sTablePartData =
-    FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP,
-                     &nsCSSFrameConstructor::ConstructTablePart);
-  return &sTablePartData;
-  
+  return FindDataByInt(aDisplay->mDisplay, aContent, aStyleContext,
+                       sDisplayData, NS_ARRAY_LENGTH(sDisplayData));
 }
 
 nsresult
@@ -5883,101 +4640,6 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
                         aFrameItems, aDisplay->IsPositioned());
 }
 
-
-nsresult
-nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
-                                      FrameConstructionItem&   aItem,
-                                      nsIFrame*                aParentFrame,
-                                      const nsStyleDisplay*    aDisplay,
-                                      nsFrameItems&            aFrameItems,
-                                      nsIFrame**               aNewFrame)
-{
-  NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE ||
-                  aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE,
-                  "Unexpected call");
-  
-  nsIFrame* innerTable;
-  return ConstructTableFrame(aState, aItem.mContent, aParentFrame,
-                             aItem.mStyleContext, aItem.mNameSpaceID,
-                             PR_FALSE, aFrameItems, *aNewFrame, innerTable);
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructTablePart(nsFrameConstructorState& aState,
-                                          FrameConstructionItem&   aItem,
-                                          nsIFrame*                aParentFrame,
-                                          const nsStyleDisplay*    aDisplay,
-                                          nsFrameItems&            aFrameItems,
-                                          nsIFrame**               aNewFrame)
-{
-  nsIContent* const content = aItem.mContent;
-  nsStyleContext* const styleContext = aItem.mStyleContext;
-  PRInt32 namespaceID = aItem.mNameSpaceID;
-
-  nsresult  rv = NS_ERROR_UNEXPECTED;
-  PRBool hasPseudoParent;
-
-  // Use the 'display' property to choose a frame type
-  switch (aDisplay->mDisplay) {
-  case NS_STYLE_DISPLAY_TABLE_CAPTION:
-  {
-    // aParentFrame may be an inner table frame rather than an outer frame 
-    // In this case we need to get the outer frame.
-    nsIFrame* parentFrame = AdjustCaptionParentFrame(aParentFrame);
-    rv = ConstructTableCaptionFrame(aState, content, parentFrame,
-                                    styleContext, namespaceID, aFrameItems,
-                                    *aNewFrame, &hasPseudoParent);
-    break;
-  }
-
-  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
-  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
-    rv = ConstructTableRowGroupFrame(aState, content, aParentFrame,
-                                     styleContext, namespaceID, PR_FALSE,
-                                     aFrameItems, *aNewFrame, &hasPseudoParent);
-    break;
-
-  case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-    rv = ConstructTableColGroupFrame(aState, content, aParentFrame,
-                                     styleContext, namespaceID,
-                                     PR_FALSE, aFrameItems, *aNewFrame,
-                                     &hasPseudoParent);
-    break;
-   
-  case NS_STYLE_DISPLAY_TABLE_COLUMN:
-    rv = ConstructTableColFrame(aState, content, aParentFrame,
-                                styleContext, namespaceID, PR_FALSE,
-                                aFrameItems, *aNewFrame, &hasPseudoParent);
-    break;
-
-  case NS_STYLE_DISPLAY_TABLE_ROW:
-    rv = ConstructTableRowFrame(aState, content, aParentFrame,
-                                styleContext, namespaceID, PR_FALSE,
-                                aFrameItems, *aNewFrame, &hasPseudoParent);
-    break;
-  
-  case NS_STYLE_DISPLAY_TABLE_CELL:
-  {
-    nsIFrame* innerTable;
-    rv = ConstructTableCellFrame(aState, content, aParentFrame,
-                                 styleContext, namespaceID,
-                                 PR_FALSE, aFrameItems, *aNewFrame,
-                                 innerTable, &hasPseudoParent);
-    break;
-  }
-  
-  default:
-    NS_NOTREACHED("How did we get here?");
-    break;
-  }
-
-  if (NS_SUCCEEDED(rv) && !hasPseudoParent) {
-    aFrameItems.AddChild(*aNewFrame);
-  }
-
-  return rv;
-}
 
 nsresult 
 nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState,
@@ -6461,6 +5123,8 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
   AddFrameConstructionItems(aState, aContent, aParentFrame, items);
 
   for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
+    NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
+                 "This is not going to work");
     nsresult rv =
       ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -6594,7 +5258,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
     // And general display types
     if (!data) {
-      data = FindDisplayData(display, aContent);
+      data = FindDisplayData(display, aContent, styleContext);
     }
 
     NS_ASSERTION(data, "Should have frame construction data now");
@@ -6723,22 +5387,13 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
                                                nsFrameItems& aFrameItems)
 {
   nsIFrame* adjParentFrame = aParentFrame;
-  nsFrameItems* frameItems = &aFrameItems;
-  PRBool pseudoParent = PR_FALSE;
   nsStyleContext* styleContext = aItem.mStyleContext;
-  nsFrameConstructorSaveState pseudoSaveState;
-  nsresult rv = AdjustParentFrame(aState, aItem.mContent, adjParentFrame,
-                                  aItem.mFCData, aItem.mNameSpaceID,
-                                  styleContext, frameItems, pseudoSaveState,
-                                  pseudoParent);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  AdjustParentFrame(adjParentFrame, aItem.mFCData, styleContext);
 
   if (aItem.mIsText) {
     return ConstructTextFrame(aItem.mFCData, aState, aItem.mContent,
                               adjParentFrame, styleContext,
-                              *frameItems, pseudoParent);
+                              aFrameItems);
   }
 
   // If the page contains markup that overrides text direction, and
@@ -6763,6 +5418,11 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // NS_FRAME_GENERATED_CONTENT.
     aState.mAdditionalStateBits |= NS_FRAME_GENERATED_CONTENT;
 
+    // Note that we're not necessarily setting this property on the primary
+    // frame for the content for which this is generated content.  We might be
+    // setting it on a table pseudo-frame inserted under that instead.  That's
+    // OK, though; we just need to do the property set so that the content will
+    // get cleaned up when the frame is destroyed.
     aParentFrame->SetProperty(styleContext->GetPseudoType(),
                               aItem.mContent, DestroyContent);
 
@@ -6772,8 +5432,8 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
   }
 
   // XXXbz maybe just inline ConstructFrameFromItemInternal here or something?
-  rv = ConstructFrameFromItemInternal(aItem, aState, adjParentFrame,
-                                      *frameItems, pseudoParent);
+  nsresult rv = ConstructFrameFromItemInternal(aItem, aState, adjParentFrame,
+                                               aFrameItems);
 
   aState.mAdditionalStateBits = savedStateBits;
 
@@ -6794,6 +5454,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
   return ReconstructDocElementHierarchyInternal();
 }
 
+static void
+InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
+
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
 {
@@ -6810,6 +5473,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
     nsIContent *rootContent = mDocument->GetRootContent();
     
     if (rootContent) {
+      // Invalidate the canvas, just to be safe
+      InvalidateCanvasIfNeeded(mPresShell, rootContent);
+
       nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                     nsnull, nsnull, mTempFrameTreeState);
 
@@ -6946,7 +5612,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     // positioned child frames.
     const nsStyleDisplay* disp = frame->GetStyleDisplay();
 
-    if (disp->IsPositioned() && !IsTableRelated(frame->GetType(), PR_TRUE)) {
+    if (disp->IsPositioned() && !IsTableRelated(frame->GetType())) {
       // Find the outermost wrapped block under this frame
       for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
@@ -7308,9 +5974,6 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   return (newParent) ? newParent : aParentFrame;
 }
 
-static void
-InvalidateCanvasIfNeeded(nsIFrame* aFrame);
-
 static PRBool
 IsSpecialFramesetChild(nsIContent* aContent)
 {
@@ -7515,40 +6178,33 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     return NS_OK;
   }
 
-  // if the container is a table and a caption was appended, it needs to be put in
-  // the outer table frame's additional child list. 
   nsFrameItems frameItems;
-  nsFrameItems captionItems;
+  ConstructFramesFromItemList(state, items, parentFrame, frameItems);
 
-  for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-    nsresult rv =
-      ConstructFramesFromItem(state, iter, parentFrame, frameItems);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
-    // ConstructFramesFromItem will always create at least one frame if it
-    // succeeds.
-    // FIXME: But due to bug 480880, we might not have a frameItems.lastChild
-    // anyway.
-    if (frameItems.lastChild)
-      InvalidateCanvasIfNeeded(frameItems.lastChild);
+  for (PRUint32 i = aNewIndexInContainer, count = aContainer->GetChildCount();
+       i < count;
+       ++i) {
+    // Invalidate now instead of before the WipeContainingBlock call, just in
+    // case we do wipe; in that case we don't need to do this walk at all.
+    // XXXbz does that matter?  Would it make more sense to save some virtual
+    // GetChildAt calls instead and do this during construction of our
+    // FrameConstructionItemList?
+    InvalidateCanvasIfNeeded(mPresShell, aContainer->GetChildAt(i));
   }
 
+  // if the container is a table and a caption was appended, it needs to be put
+  // in the outer table frame's additional child list.
+  nsFrameItems captionItems;
   if (nsGkAtoms::tableFrame == frameType) {
     // Pull out the captions.  Note that we don't want to do that as we go,
     // because processing a single caption can add a whole bunch of things to
     // the frame items due to pseudoframe processing.  So we'd have to pull
     // captions from a list anyway; might as well do that here.
+    // XXXbz this is no longer true; we could pull captions directly out of the
+    // FrameConstructionItemList now.
     PullOutCaptionFrames(frameItems, captionItems);
   }
   
-
-  // process the current pseudo frame state
-  if (!state.mPseudoFrames.IsEmpty()) {
-    ProcessPseudoFrames(state, frameItems);
-  }
-
   if (haveFirstLineStyle && parentFrame == containingBlock) {
     // It's possible that some of the new frames go into a
     // first-line frame. Look at them and see...
@@ -7728,7 +6384,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                        "Unexpected child of document element containing block");
           mDocElementContainingBlock->AppendFrames(nsnull, docElementFrame);
         }
-        InvalidateCanvasIfNeeded(docElementFrame);
+        InvalidateCanvasIfNeeded(mPresShell, aChild);
 #ifdef DEBUG
         if (gReallyNoisyContentUpdates) {
           nsIFrameDebug* fdbg = do_QueryFrame(docElementFrame);
@@ -7820,7 +6476,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                              aChild);
       parentFrame =
         ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
-                                            aContainer, parentFrame,
+                                            container, parentFrame,
                                             &appendAfterFrame);
     }
   }
@@ -7910,7 +6566,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     nsIFrame* firstChild = parentFrame->GetFirstChild(nsnull);
 
     if (firstChild &&
-        nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
+        nsLayoutUtils::IsGeneratedContentFor(container, firstChild,
                                              nsCSSPseudoElements::before)) {
       // Insert the new frames after the last continuation of the :before
       prevSibling = firstChild->GetTailContinuation();
@@ -7937,13 +6593,11 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
-  
   nsFrameItems frameItems, captionItems;
-  for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-    ConstructFramesFromItem(state, iter, parentFrame, frameItems);
-  }
+  ConstructFramesFromItemList(state, items, parentFrame, frameItems);
+
   if (frameItems.childList) {
-    InvalidateCanvasIfNeeded(frameItems.childList);
+    InvalidateCanvasIfNeeded(mPresShell, aChild);
     
     if (nsGkAtoms::tableCaptionFrame == frameItems.childList->GetType()) {
       NS_ASSERTION(frameItems.childList == frameItems.lastChild ,
@@ -7952,10 +6606,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       frameItems = nsFrameItems();
     }
   }
-
-  // process the current pseudo frame state
-  if (!state.mPseudoFrames.IsEmpty())
-    ProcessPseudoFrames(state, frameItems);
 
   // If the parent of our current prevSibling is different from the frame we'll
   // actually use as the parent, then the calculated insertion point is now
@@ -7989,7 +6639,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     isAppend = PR_TRUE;
     parentFrame =
       ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
-                                          aContainer,
+                                          container,
                                           frameItems.childList->GetParent(),
                                           &appendAfterFrame);
   }
@@ -8004,7 +6654,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
     else {
       // Use more complicated insert logic when inserting
-      InsertFirstLineFrames(state, aContainer, containingBlock, &parentFrame,
+      // XXXbz this method is a no-op, so it's easy for the args being passed
+      // here to make no sense without anyone noticing...  If it ever stops
+      // being a no-op, vet them carefully!
+      InsertFirstLineFrames(state, container, containingBlock, &parentFrame,
                             prevSibling, frameItems);
     }
   }
@@ -8014,7 +6667,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     NS_ASSERTION(!captionItems.childList, "leaking caption frames");
     // Notify the parent frame
     if (isAppend) {
-      AppendFrames(state, aContainer, parentFrame, frameItems,
+      AppendFrames(state, container, parentFrame, frameItems,
                    appendAfterFrame);
     } else {
       state.mFrameManager->InsertFrames(parentFrame,
@@ -8365,7 +7018,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 #endif // MOZ_XUL
 
   if (childFrame) {
-    InvalidateCanvasIfNeeded(childFrame);
+    InvalidateCanvasIfNeeded(mPresShell, aChild);
     
     // If the frame we are manipulating is a special frame then do
     // something different instead of just inserting newly created
@@ -8656,7 +7309,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
     NS_ASSERTION(aFrame, "root frame must paint");
   }
 
-  nsIViewManager* viewManager = aPresContext->GetViewManager();
+  nsIViewManager* viewManager = shell->GetViewManager();
 
   // Trigger rendering updates by damaging this frame and any
   // continuations of this frame.
@@ -8686,14 +7339,14 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
  *               was just created for a content node that was inserted.
  */ 
 static void
-InvalidateCanvasIfNeeded(nsIFrame* aFrame)
+InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 {
-  NS_ASSERTION(aFrame, "Must have frame!");
+  NS_PRECONDITION(presShell->GetRootFrame(), "What happened here?");
+  NS_PRECONDITION(presShell->GetPresContext(), "Say what?");
 
-  //  Note that for both in ContentRemoved and ContentInserted the content node
+  //  Note that both in ContentRemoved and ContentInserted the content node
   //  will still have the right parent pointer, so looking at that is ok.
   
-  nsIContent* node = aFrame->GetContent();
   nsIContent* parent = node->GetParent();
   if (parent) {
     // Has a parent; might not be what we want
@@ -8712,31 +7365,17 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
 
   // At this point the node has no parent or it's an HTML <body> child of the
   // root.  We might not need to invalidate in this case (eg we might be in
-  // XHTML or something), but chances are we want to.  Play it safe.  Find the
-  // frame to invalidate and do it.
-  nsIFrame *ancestor = aFrame;
-  const nsStyleBackground *bg;
-  nsPresContext* presContext = aFrame->PresContext();
-  while (!nsCSSRendering::FindBackground(presContext, ancestor, &bg)) {
-    ancestor = ancestor->GetParent();
-    NS_ASSERTION(ancestor, "canvas must paint");
-  }
+  // XHTML or something), but chances are we want to.  Play it safe.
+  // Invalidate the viewport.
 
-  if (ancestor->GetType() == nsGkAtoms::canvasFrame) {
-    // The canvas frame's dimensions are not meaningful; invalidate the
-    // viewport instead.
-    ancestor = ancestor->GetParent();
-  }
+  // Wrap this in a DEFERRED view update batch so we don't try to
+  // flush out layout here
 
-  if (ancestor != aFrame) {
-    // Wrap this in a DEFERRED view update batch so we don't try to
-    // flush out layout here
-
-    nsIViewManager::UpdateViewBatch batch(presContext->GetViewManager());  
-    ApplyRenderingChangeToTree(presContext, ancestor,
-                               nsChangeHint_RepaintFrame);
-    batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
-  }
+  nsIViewManager::UpdateViewBatch batch(presShell->GetViewManager());
+  ApplyRenderingChangeToTree(presShell->GetPresContext(),
+                             presShell->GetRootFrame(),
+                             nsChangeHint_RepaintFrame);
+  batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 
 nsresult
@@ -10076,6 +8715,13 @@ nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame
     return PR_FALSE;
   }
 
+  // If aFrame is not the first or last block, then removing it is not
+  // going to affect the splitting.
+  if (aFrame != parent->GetFirstChild(nsnull) &&
+      aFrame->GetLastContinuation()->GetNextSibling()) {
+    return PR_FALSE;
+  }
+
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame: "
@@ -10266,32 +8912,269 @@ nsCSSFrameConstructor::ShouldHaveSpecialBlockStyle(nsIContent* aContent,
     ShouldHaveFirstLineStyle(aContent, aStyleContext);
 }
 
+/* static */
+const nsCSSFrameConstructor::PseudoParentData
+nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
+  { // Cell
+    FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                     FCDATA_USE_CHILD_ITEMS |
+                     FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
+                     &nsCSSFrameConstructor::ConstructTableCell),
+    &nsCSSAnonBoxes::tableCell
+  },
+  { // Row
+    FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                     FCDATA_USE_CHILD_ITEMS |
+                     FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
+                     &nsCSSFrameConstructor::ConstructTableRow),
+    &nsCSSAnonBoxes::tableRow
+  },
+  { // Row group
+    FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                NS_NewTableRowGroupFrame),
+    &nsCSSAnonBoxes::tableRowGroup
+  },
+  { // Column group
+    FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMEMAP |
+                FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_USE_CHILD_ITEMS |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                NS_NewTableColGroupFrame),
+    &nsCSSAnonBoxes::tableColGroup
+  },
+  { // Table
+    FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMEMAP | FCDATA_USE_CHILD_ITEMS,
+                     &nsCSSFrameConstructor::ConstructTable),
+    &nsCSSAnonBoxes::table
+  }
+};
+
+/*
+ * This function works as follows: we walk through the child list (aItems) and
+ * find items that cannot have aParentFrame as their parent.  We wrap
+ * continuous runs of such items into a FrameConstructionItem for a frame that
+ * gets them closer to their desired parents.  For example, a run of non-row
+ * children of a row-group will get wrapped in a row.  When we later construct
+ * the frame for this wrapper (in this case for the row), it'll be the correct
+ * parent for the cells in the set of items we wrapped or we'll wrap cells
+ * around everything else.  At the end of this method, aItems is guaranteed to
+ * contain only items for frames that can be direct kids of aParentFrame.
+ */
+nsresult
+nsCSSFrameConstructor::CreateNeededTablePseudos(FrameConstructionItemList& aItems,
+                                                nsIFrame* aParentFrame)
+{
+  ParentType ourParentType = GetParentType(aParentFrame);
+  if (aItems.AllWantParentType(ourParentType)) {
+    // Nothing to do here
+    return NS_OK;
+  }
+
+  FCItemIterator iter(aItems);
+  do {
+    NS_ASSERTION(!iter.IsDone(), "How did that happen?");
+
+    // Advance to the next item that wants a different parent type.
+    while (iter.item().DesiredParentType() == ourParentType) {
+      iter.Next();
+      if (iter.IsDone()) {
+        // Nothing else to do here; we're finished
+        return NS_OK;
+      }
+    }
+
+    NS_ASSERTION(!iter.IsDone() &&
+                 iter.item().DesiredParentType() != ourParentType,
+                 "Why did we stop?");
+
+    // Now we're pointing to the first child that wants a different parent
+    // type.  Except for generated content, we should have already enforced the
+    // fact that no such items are whitespace (either in this method when
+    // constructing wrapping items, or when constructing the original
+    // FrameConstructionItemList).
+    NS_ASSERTION(aParentFrame->IsGeneratedContentFrame() ||
+                 !iter.item().mIsText ||
+                 !iter.item().mContent->TextIsOnlyWhitespace(),
+                 "Why do we have whitespace under a known-table parent?");
+
+    // Now try to figure out what kids we can group together.  We can generally
+    // group everything that has a different desired parent type from us.  Two
+    // exceptions to this:
+    // 1) If our parent type is table, we can't group columns with anything
+    //    else other than whitespace.
+    // 2) Whitespace that lies between two things we can group should
+    //    be dropped, even if we can't group them with each other.
+    // XXXbz it's not clear to me that rule 2 is a good one, it's not called
+    // for by the (admittedly vague) spec, and in fact it leads to some pretty
+    // crappy behavior if you have some inlines and whitespace as kids of a
+    // table-row, say, but it's more or less what we used to do.  More
+    // precisely, we shipped all whitespace out to the nearest block parent of
+    // the whole mess, sort of.  In any case this aspect of things, and in fact
+    // this whole function might need changes as the spec here gets
+    // clarified...  I happen to think we should not drop whitespace that comes
+    // between things that want a block parent.
+
+    FCItemIterator endIter(iter); /* iterator to find the end of the group */
+    ParentType groupingParentType = endIter.item().DesiredParentType();
+    // If we decide to, we could optimize this by checking whether
+    // aItems.AllWantParentType(groupingParentType) and if so just setting
+    // endIter to the end of the list, which is an O(1) operation.  That
+    // requires not dropping whitespace between items that want a block parent,
+    // though, per the XXX comment above, since a whole bunch of spans and
+    // whitespace would test true to all wanting a block parent.
+    do {
+      endIter.Next();
+      if (endIter.IsDone()) {
+        break;
+      }
+
+      if (!aParentFrame->IsGeneratedContentFrame() &&
+          endIter.item().IsWhitespace()) {
+        // Whitespace coming after some groupable items
+        FCItemIterator textSkipIter(endIter);
+        do {
+          textSkipIter.Next();
+        } while (!textSkipIter.IsDone() && textSkipIter.item().IsWhitespace());
+
+        PRBool trailingSpace = textSkipIter.IsDone();
+        if (// Trailing whitespace we can't handle
+            (trailingSpace && ourParentType != eTypeBlock) ||
+            // Whitespace before kids needing wrapping
+            (!trailingSpace &&
+             textSkipIter.item().DesiredParentType() != ourParentType)) {
+          // Drop all the whitespace here so that |endIter| now points to the
+          // same thing as |textSkipIter|.  This doesn't affect where |iter|
+          // points, since that's guaranted to point to before endIter.
+          do {
+            endIter.DeleteItem();
+          } while (endIter != textSkipIter);
+
+          NS_ASSERTION(endIter.IsDone() == trailingSpace,
+                       "endIter == skipIter now!");
+          if (trailingSpace) {
+            break; // The loop advancing endIter
+          }
+        }
+      }
+
+      ParentType itemParentType = endIter.item().DesiredParentType();
+
+      if (itemParentType == ourParentType) {
+        break;
+      }
+
+      if (ourParentType == eTypeTable &&
+          (itemParentType == eTypeColGroup) !=
+          (groupingParentType == eTypeColGroup)) {
+        // Either we started with columns and now found something else, or vice
+        // versa.  In any case, end the grouping.
+        break;
+      }
+    } while (1);
+
+    NS_ASSERTION(iter != endIter, "How did that happen?");
+
+    // Now group together all the items between iter and endIter.  The right
+    // parent type to use depends on ourParentType.
+    ParentType wrapperType;
+    switch (ourParentType) {
+      case eTypeBlock:
+        wrapperType = eTypeTable;
+        break;
+      case eTypeRow:
+        // The parent type for a cell is eTypeBlock, since that's what a cell
+        // looks like to its kids.
+        wrapperType = eTypeBlock;
+        break;
+      case eTypeRowGroup:
+        wrapperType = eTypeRow;
+        break;
+      case eTypeTable:
+        // Either colgroup or rowgroup, depending on what we're grouping.
+        wrapperType = groupingParentType == eTypeColGroup ?
+          eTypeColGroup : eTypeRowGroup;
+        break;
+      default:
+        NS_NOTREACHED("Colgroups should be suppresing non-col child items");
+        break;
+    }
+
+    const PseudoParentData& pseudoData = sPseudoParentData[wrapperType];
+    nsIAtom* pseudoType = *pseudoData.mPseudoType;
+    nsStyleContext* parentStyle = aParentFrame->GetStyleContext();
+    nsIContent* parentContent = aParentFrame->GetContent();
+
+    if (pseudoType == nsCSSAnonBoxes::table &&
+        parentStyle->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE) {
+      pseudoType = nsCSSAnonBoxes::inlineTable;
+    }
+
+    nsRefPtr<nsStyleContext> wrapperStyle =
+      mPresShell->StyleSet()->ResolvePseudoStyleFor(parentContent,
+                                                    pseudoType,
+                                                    parentStyle);
+    FrameConstructionItem* newItem =
+      new FrameConstructionItem(&pseudoData.mFCData,
+                                // Use the content of our parent frame
+                                parentContent,
+                                // Lie about the tag; it doesn't matter anyway
+                                pseudoType,
+                                // The namespace does matter, however; it needs
+                                // to match that of our first child item to
+                                // match the old behavior
+                                iter.item().mNameSpaceID,
+                                wrapperStyle.forget());
+
+    if (!newItem) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Here we're cheating a tad... technically, table-internal items should be
+    // inline if aParentFrame is inline, but they'll get wrapped in an
+    // inline-table in the end, so it'll all work out.  In any case, arguably
+    // we don't need to maintain this state at this point... but it's better
+    // to, I guess.
+    newItem->mIsAllInline = newItem->mHasInlineEnds =
+      newItem->mStyleContext->GetStyleDisplay()->IsInlineOutside();
+
+    // Eat up all items between |iter| and |endIter| and put them in our wrapper
+    // Advances |iter| to point to |endIter|.
+    iter.AppendItemsToList(endIter, newItem->mChildItems);
+
+    iter.InsertItem(newItem);
+
+    // Now |iter| points to the item that was the first one we didn't wrap;
+    // loop and see whether we need to skip it or wrap it in something
+    // different.
+  } while (!iter.IsDone());
+
+  return NS_OK;
+}
+
 nsresult
 nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                                    FrameConstructionItemList& aItems,
                                                    nsIFrame* aParentFrame,
                                                    nsFrameItems& aFrameItems)
 {
-  // save the incoming pseudo frame state
-  nsPseudoFrames priorPseudoFrames;
-  aState.mPseudoFrames.Reset(&priorPseudoFrames);
+  nsresult rv = CreateNeededTablePseudos(aItems, aParentFrame);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+  for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
+    NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
+                 "Needed pseudos didn't get created; expect bad things");
+  }
+#endif
 
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
-    nsresult rv =
-      ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
+    rv = ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   NS_ASSERTION(!aState.mHavePendingPopupgroup,
                "Should have proccessed it by now");
-
-  // process the current pseudo frame state
-  if (!aState.mPseudoFrames.IsEmpty()) {
-    ProcessPseudoFrames(aState, aFrameItems);
-  }
-
-  // restore the incoming pseudo frame state
-  aState.mPseudoFrames = priorPseudoFrames;
 
   return NS_OK;
 }
@@ -10403,9 +9286,21 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     rv = WrapFramesInFirstLineFrame(aState, aContent, aFrame, aFrameItems);
   }
 
-  nsIContent *badKid;
-  if (aFrame->IsBoxFrame() &&
-      (badKid = AnyKidsNeedBlockParent(aFrameItems.childList))) {
+  // We might end up with first-line frames that change
+  // AnyKidsNeedBlockParent() without changing itemsToConstruct, but that
+  // should never happen for cases whan aFrame->IsBoxFrame().
+  NS_ASSERTION(!haveFirstLineStyle || !aFrame->IsBoxFrame(),
+               "Shouldn't have first-line style if we're a box");
+  NS_ASSERTION(!aFrame->IsBoxFrame() ||
+               itemsToConstruct.AnyItemsNeedBlockParent() ==
+                 (AnyKidsNeedBlockParent(aFrameItems.childList) != nsnull),
+               "Something went awry in our block parent calculations");
+
+  if (aFrame->IsBoxFrame() && itemsToConstruct.AnyItemsNeedBlockParent()) {
+    // XXXbz we could do this on the FrameConstructionItemList level,
+    // no?  And if we cared we could look through the item list
+    // instead of groveling through the framelist here..
+    nsIContent *badKid = AnyKidsNeedBlockParent(aFrameItems.childList);
     nsAutoString parentTag, kidTag;
     aContent->Tag()->ToString(parentTag);
     badKid->Tag()->ToString(kidTag);
@@ -11554,8 +10449,8 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   // Process the child content
   nsFrameItems childItems;
-  nsresult rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                            newFrame, childItems);
+  nsresult rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                                            childItems);
   if (NS_FAILED(rv)) {
     // Clean up?
     return rv;
@@ -12533,4 +11428,96 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
   }
 
   return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////
+// nsCSSFrameConstructor::FrameConstructionItemList methods //
+//////////////////////////////////////////////////////////////
+void
+nsCSSFrameConstructor::FrameConstructionItemList::
+AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta)
+{
+  NS_PRECONDITION(aDelta == 1 || aDelta == -1, "Unexpected delta");
+  mItemCount += aDelta;
+  if (aItem->mIsAllInline) {
+    mInlineCount += aDelta;
+  }
+  if (aItem->mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
+    mLineParticipantCount += aDelta;
+  }
+  mDesiredParentCounts[aItem->DesiredParentType()] += aDelta;
+}
+
+////////////////////////////////////////////////////////////////////////
+// nsCSSFrameConstructor::FrameConstructionItemList::Iterator methods //
+////////////////////////////////////////////////////////////////////////
+void
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::AppendItemToList(FrameConstructionItemList& aTargetList)
+{
+  NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
+  NS_PRECONDITION(!IsDone(), "should not be done");
+
+  FrameConstructionItem* item = ToItem(mCurrent);
+  Next();
+  PR_REMOVE_LINK(item);
+  PR_APPEND_LINK(item, &aTargetList.mItems);
+
+  mList.AdjustCountsForItem(item, -1);
+  aTargetList.AdjustCountsForItem(item, 1);
+}
+
+void
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::AppendItemsToList(const Iterator& aEnd,
+                            FrameConstructionItemList& aTargetList)
+{
+  NS_ASSERTION(&aTargetList != &mList, "Unexpected call");
+  NS_PRECONDITION(mEnd == aEnd.mEnd, "end iterator for some other list?");
+
+  if (!AtStart() || !aEnd.IsDone() || !aTargetList.IsEmpty()) {
+    do {
+      AppendItemToList(aTargetList);
+    } while (*this != aEnd);
+    return;
+  }
+
+  // move over the list of items
+  PR_INSERT_AFTER(&aTargetList.mItems, &mList.mItems);
+  PR_REMOVE_LINK(&mList.mItems);
+
+  // Copy over the various counters
+  aTargetList.mInlineCount = mList.mInlineCount;
+  aTargetList.mLineParticipantCount = mList.mLineParticipantCount;
+  aTargetList.mItemCount = mList.mItemCount;
+  memcpy(aTargetList.mDesiredParentCounts, mList.mDesiredParentCounts,
+         sizeof(aTargetList.mDesiredParentCounts));
+
+  // reset mList
+  new (&mList) FrameConstructionItemList();
+
+  // Point ourselves to aEnd, as advertised
+  mCurrent = mEnd = &mList.mItems;
+  NS_POSTCONDITION(*this == aEnd, "How did that happen?");
+}
+
+void
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::InsertItem(FrameConstructionItem* aItem)
+{
+  // Just insert the item before us.  There's no magic here.
+  PR_INSERT_BEFORE(aItem, mCurrent);
+  mList.AdjustCountsForItem(aItem, 1);
+
+  NS_POSTCONDITION(PR_NEXT_LINK(aItem) == mCurrent, "How did that happen?");
+}
+
+void
+nsCSSFrameConstructor::FrameConstructionItemList::Iterator::DeleteItem()
+{
+  FrameConstructionItem* item = ToItem(mCurrent);
+  Next();
+  PR_REMOVE_LINK(item);
+  mList.AdjustCountsForItem(item, -1);
+  delete item;
 }

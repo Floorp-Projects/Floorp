@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>hi</title>
+<script>
+
+var count = 0;
+
+
+function test() {
+}
+
+test.prototype =
+{
+  onChange: function (accessPoints)
+  {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var d = document.getElementById("d");
+    d.innerHTML = "";
+
+    for (var i=0; i<accessPoints.length; i++) {
+      var a = accessPoints[i];
+      d.innerHTML = d.innerHTML + "<p>" + a.mac + " " + a.ssid + " " + a.signal + "</p>";
+    }
+                                         
+                                         
+    var c = document.getElementById("c");
+    c.innerHTML = "<p>" + count++ + "</p>";
+
+  },
+
+  onError: function (value) {
+     alert("error: " +value);
+  },
+
+  QueryInterface: function(iid) {
+        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+        if (iid.equals(Components.interfaces.nsIWifiListener) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+   },
+}
+
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var listener = new test();
+  var wifi_service = Components.classes["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
+              
+  wifi_service.startWatching(listener);
+
+
+
+</script>
+</head>
+
+<body>
+<div id="d"><p></p></div>
+<div id="c"><p></p></div>
+</body>
+</html>

@@ -408,6 +408,9 @@ Bookmark.prototype = {
     // bookmark object doesn't exist at this point
   },
 
+  onBeforeItemRemoved : function bm_obir(aId) {
+  },
+
   onItemRemoved : function bm_oir(aId, aFolder, aIndex) {
     if (this._id == aId)
       this._events.dispatch("remove", aId);
@@ -562,6 +565,9 @@ BookmarkFolder.prototype = {
     // handle this folder events
     if (this._id == aFolder)
       this._events.dispatch("addchild", aId);
+  },
+
+  onBeforeItemRemoved : function bmf_oir(aId) {
   },
 
   onItemRemoved : function bmf_oir(aId, aFolder, aIndex) {

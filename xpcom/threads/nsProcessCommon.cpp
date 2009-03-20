@@ -55,15 +55,19 @@
 
 #include <stdlib.h>
 
-#if defined(XP_WIN)
+#if defined(PROCESSMODEL_WINAPI)
 #include "prmem.h"
 #include "nsString.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
-#include <windows.h>
 #else
 #include <sys/types.h>
 #include <signal.h>
+#endif
+
+#ifdef WINCE
+#include <windows.h> // for MultiByteToWideChar
+#include "prmem.h"
 #endif
 
 //-------------------------------------------------------------------//
@@ -76,19 +80,14 @@ nsProcess::nsProcess()
     : mExitValue(-1),
       mProcess(nsnull)
 {
-#if defined(PROCESSMODEL_WINAPI)
-    procInfo.dwProcessId = nsnull;
-#endif
 }
 
 //Destructor
 nsProcess::~nsProcess()
 {
 #if defined(PROCESSMODEL_WINAPI)
-    if (procInfo.dwProcessId) {
-        CloseHandle( procInfo.hProcess );
-        CloseHandle( procInfo.hThread );
-    }
+    if (mProcess)
+        CloseHandle(mProcess);
 #else
     if (mProcess) 
         PR_DetachProcess(mProcess);
@@ -100,7 +99,7 @@ nsProcess::Init(nsIFile* executable)
 {
     //Prevent re-initializing if already attached to process
 #if defined(PROCESSMODEL_WINAPI)
-    if (procInfo.dwProcessId)
+    if (mProcess)
         return NS_ERROR_ALREADY_INITIALIZED;
 #else
     if (mProcess)
@@ -244,6 +243,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
 {
     NS_ENSURE_TRUE(mExecutable, NS_ERROR_NOT_INITIALIZED);
     PRStatus status = PR_SUCCESS;
+    mExitValue = -1;
 
     // make sure that when we allocate we have 1 greater than the
     // count since we need to null terminate the list for the argv to
@@ -265,41 +265,44 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
     my_argv[count+1] = NULL;
 
 #if defined(PROCESSMODEL_WINAPI)
-    STARTUPINFOW startupInfo;
     BOOL retVal;
     PRUnichar *cmdLine;
 
-    if (assembleCmdLine(my_argv, &cmdLine) == -1) {
+    if (count > 0 && assembleCmdLine(my_argv + 1, &cmdLine) == -1) {
         nsMemory::Free(my_argv);
         return NS_ERROR_FILE_EXECUTION_FAILED;    
     }
 
-    ZeroMemory(&startupInfo, sizeof(startupInfo));
-    startupInfo.cb = sizeof(startupInfo);
-
-    /* The CREATE_NO_WINDOW flag is important to prevent console
-     * windows from appearing.  This makes behavior the same on all
-     * platforms.  This won't work on win9x, however.  The flag will
-     * not have any effect on non-console applications.
+    /* The SEE_MASK_NO_CONSOLE flag is important to prevent console windows
+     * from appearing. This makes behavior the same on all platforms. The flag
+     * will not have any effect on non-console applications.
      */
+    PRInt32 numChars = MultiByteToWideChar(CP_ACP, 0, my_argv[0], -1, NULL, 0); 
+    PRUnichar* wideFile = (PRUnichar *) PR_MALLOC(numChars * sizeof(PRUnichar));
+    MultiByteToWideChar(CP_ACP, 0, my_argv[0], -1, wideFile, numChars); 
 
-    retVal = CreateProcessW(NULL,
-                            // const_cast<char*>(mTargetPath.get()),
-                            cmdLine,
-                            NULL,  /* security attributes for the new
-                                    * process */
-                            NULL,  /* security attributes for the primary
-                                    * thread in the new process */
-                            FALSE,  /* inherit handles */
-                            CREATE_NO_WINDOW, /* creation flags */
-                            NULL,  /* env */
-                            NULL,  /* current drive and directory */
-                            &startupInfo,
-                            &procInfo
-                           );
-    PR_Free( cmdLine );
+    SHELLEXECUTEINFOW sinfo;
+    memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
+    sinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+    sinfo.hwnd   = NULL;
+    sinfo.lpFile = wideFile;
+    sinfo.nShow  = SW_SHOWNORMAL;
+    sinfo.fMask  = SEE_MASK_FLAG_DDEWAIT |
+                   SEE_MASK_NO_CONSOLE |
+                   SEE_MASK_NOCLOSEPROCESS;
+
+    if (count > 0)
+        sinfo.lpParameters = cmdLine;
+
+    retVal = ShellExecuteExW(&sinfo);
+    mProcess = sinfo.hProcess;
+
+    PR_Free(wideFile);
+    if (count > 0)
+        PR_Free( cmdLine );
+
     if (blocking) {
- 
+
         // if success, wait for process termination. the early returns and such
         // are a bit ugly but preserving the logic of the nspr code I copied to 
         // minimize our risk abit.
@@ -308,20 +311,19 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
             DWORD dwRetVal;
             unsigned long exitCode;
 
-            dwRetVal = WaitForSingleObject(procInfo.hProcess, INFINITE);
+            dwRetVal = WaitForSingleObject(mProcess, INFINITE);
             if (dwRetVal == WAIT_FAILED) {
                 nsMemory::Free(my_argv);
                 return NS_ERROR_FAILURE;
             }
-            if (GetExitCodeProcess(procInfo.hProcess, &exitCode) == FALSE) {
+            if (GetExitCodeProcess(mProcess, &exitCode) == FALSE) {
                 mExitValue = exitCode;
                 nsMemory::Free(my_argv);
-               return NS_ERROR_FAILURE;
+                return NS_ERROR_FAILURE;
             }
             mExitValue = exitCode;
-            CloseHandle(procInfo.hProcess);
-            CloseHandle(procInfo.hThread);
-            procInfo.dwProcessId = nsnull;
+            CloseHandle(mProcess);
+            mProcess = NULL;
         }
         else
             status = PR_FAILURE;
@@ -357,24 +359,39 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsProcess::GetIsRunning(PRUint32 *aIsRunning)
+NS_IMETHODIMP nsProcess::GetIsRunning(PRBool *aIsRunning)
 {
 #if defined(PROCESSMODEL_WINAPI)
-    DWORD ec = 0;
-    BOOL br = GetExitCodeProcess(procInfo.hProcess, &ec);
-    if (!br) {
-        aIsRunning = 0;
+    if (!mProcess) {
+        *aIsRunning = PR_FALSE;
         return NS_OK;
     }
-    *aIsRunning = (ec == STILL_ACTIVE ? 1 : 0); 
+    DWORD ec = 0;
+    BOOL br = GetExitCodeProcess(mProcess, &ec);
+    if (!br)
+        return NS_ERROR_FAILURE;
+    if (ec == STILL_ACTIVE) {
+        *aIsRunning = PR_TRUE;
+    }
+    else {
+        *aIsRunning = PR_FALSE;
+        mExitValue = ec;
+        CloseHandle(mProcess);
+        mProcess = NULL;
+    }
     return NS_OK;
 #elif defined WINCE
     return NS_ERROR_NOT_IMPLEMENTED;   
 #else
+    if (!mProcess) {
+        *aIsRunning = PR_FALSE;
+        return NS_OK;
+    }
     PRUint32 pid;
-    GetPid(&pid);
+    nsresult rv = GetPid(&pid);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (pid)
-        *aIsRunning = (kill(pid, 0) != -1) ? 1 : 0;
+        *aIsRunning = (kill(pid, 0) != -1) ? PR_TRUE : PR_FALSE;
     return NS_OK;        
 #endif
 }
@@ -394,17 +411,25 @@ NS_IMETHODIMP
 nsProcess::GetPid(PRUint32 *aPid)
 {
 #if defined(PROCESSMODEL_WINAPI)
-    if (!procInfo.dwProcessId)
+    if (!mProcess)
         return NS_ERROR_FAILURE;
-    *aPid = procInfo.dwProcessId;
+    HMODULE kernelDLL = ::LoadLibraryW(L"kernel32.dll");
+    if (!kernelDLL)
+        return NS_ERROR_NOT_IMPLEMENTED;
+    GetProcessIdPtr getProcessId = (GetProcessIdPtr)GetProcAddress(kernelDLL, "GetProcessId");
+    if (!getProcessId) {
+        FreeLibrary(kernelDLL);
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    *aPid = getProcessId(mProcess);
+    FreeLibrary(kernelDLL);
     return NS_OK;
 #elif defined WINCE
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
-    if (!mProcess) {
-        *aPid = 0;
+    if (!mProcess)
         return NS_ERROR_FAILURE;
-    }
+
     struct MYProcess {
         PRUint32 pid;
     };
@@ -429,27 +454,44 @@ nsProcess::GetProcessSignature(PRUint32 *aProcessSignature)
 NS_IMETHODIMP
 nsProcess::Kill()
 {
-    nsresult rv = NS_OK;
 #if defined(PROCESSMODEL_WINAPI)
-    if ( TerminateProcess(procInfo.hProcess, NULL) == 0 ) {
-        rv = NS_ERROR_FAILURE;
-    }
-    else {
-        CloseHandle( procInfo.hProcess );
-        procInfo.dwProcessId = nsnull;
-    }
+    if (!mProcess)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if ( TerminateProcess(mProcess, NULL) == 0 )
+        return NS_ERROR_FAILURE;
+
+    CloseHandle( mProcess );
+    mProcess = NULL;
 #else
-    if (mProcess)
-        rv = PR_KillProcess(mProcess) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
-    if (rv == NS_OK)
-        mProcess = nsnull;
+    if (!mProcess)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (PR_KillProcess(mProcess) != PR_SUCCESS)
+        return NS_ERROR_FAILURE;
+
+    mProcess = nsnull;
 #endif  
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsProcess::GetExitValue(PRInt32 *aExitValue)
 {
+#if defined(PROCESSMODEL_WINAPI)
+    if (mProcess) {
+        DWORD ec = 0;
+        BOOL br = GetExitCodeProcess(mProcess, &ec);
+        if (!br)
+            return NS_ERROR_FAILURE;
+        // If we have an exit code then the process has ended, clean it up.
+        if (ec != STILL_ACTIVE) {
+            mExitValue = ec;
+            CloseHandle(mProcess);
+            mProcess = NULL;
+        }
+    }
+#endif
     *aExitValue = mExitValue;
     
     return NS_OK;

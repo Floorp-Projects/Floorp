@@ -404,7 +404,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
       (*EsdAudioClose)();
     } else {
       while (audio_len > 0) {
-        size_t written = write(fd, audio, audio_len);
+        ssize_t written = write(fd, audio, audio_len);
         if (written <= 0)
           break;
         audio += written;

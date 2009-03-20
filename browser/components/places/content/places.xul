@@ -421,22 +421,28 @@
           <vbox id="searchModifiers" hidden="true">
             <toolbar id="organizerScopeBar" class="chromeclass-toolbar" align="center">
               <label id="scopeBarTitle" value="&search.label;"/>
-              <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar"
-                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeFolder.label;"/>
               <toolbarbutton id="scopeBarAll" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeAll.label;"
-                             checked="true"/>
+                             label="&search.scopeBookmarks.label;"
+                             accesskey="&search.scopeBookmarks.accesskey;"/>
               <!--
               <toolbarbutton id="scopeBarDownloads" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeDownloads.label;"/>
+                             label="&search.scopeDownloads.label;"
+                             accesskey="&search.scopeDownloads.accesskey;"/>
               -->
               <toolbarbutton id="scopeBarHistory" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                             label="&search.scopeHistory.label;"/>
-              <spacer flex="1"/>
+                             label="&search.scopeHistory.label;"
+                             accesskey="&search.scopeHistory.accesskey;"/>
+              <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             accesskey="&search.scopeFolder.accesskey;"
+                             emptytitle="&search.scopeFolder.label;" flex="1"/>
+              <!-- The folder scope button should flex but not take up more room
+                   than its label needs.  The only simple way to do that is to
+                   set a really big flex on the spacer, e.g., 2^31 - 1. -->
+              <spacer flex="2147483647"/>
               <button id="saveSearch" class="small" 
                        label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
                        command="OrganizerCommand_search:save"/>

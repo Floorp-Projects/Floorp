@@ -811,6 +811,21 @@ var PlacesUtils = {
   },
 
   /**
+   * Checks if aItemId is a root.
+   *
+   *   @param aItemId
+   *          item id to look for.
+   *   @returns true if aItemId is a root, false otherwise.
+   */
+  isRootItem: function PU_isRootItem(aItemId) {
+    return aItemId == PlacesUtils.bookmarksMenuFolderId ||
+           aItemId == PlacesUtils.toolbarFolderId ||
+           aItemId == PlacesUtils.unfiledBookmarksFolderId ||
+           aItemId == PlacesUtils.tagsFolderId ||
+           aItemId == PlacesUtils.placesRootId;
+  },
+
+  /**
    * Set the POST data associated with a bookmark, if any.
    * Used by POST keywords.
    *   @param aBookmarkId

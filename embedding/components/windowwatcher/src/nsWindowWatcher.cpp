@@ -943,7 +943,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     if (piStorage){
       storage = piStorage->Clone();
       newDocShell->AddSessionStorage(
-        NS_ConvertUTF16toUTF8(piStorage->Domain()),
+        piStorage->Domain(),
         storage);
     }
   }

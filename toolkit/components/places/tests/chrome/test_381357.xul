@@ -59,6 +59,7 @@ var observer =
       SimpleTest.finish();
     }
   },
+  onBeforeItemRemoved: function(itemId){},
   onItemRemoved: function(itemId, folder, index){},
   onItemChanged: function(itemId, property, isAnnotationProperty, value){},
   onItemVisited: function(itemId, aVisitID, time){},

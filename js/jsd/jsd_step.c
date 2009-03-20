@@ -76,7 +76,7 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
     if(script)
     {
         JSD_LOCK_SCRIPTS(jsdc);
-        jsdscript = jsd_FindJSDScript(jsdc, script);
+        jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, script, fp);
         JSD_UNLOCK_SCRIPTS(jsdc);
         if(jsdscript)
             funName = JSD_GetScriptFunctionName(jsdc, jsdscript);
@@ -136,7 +136,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
     if (jsscript)
     {
         JSD_LOCK_SCRIPTS(jsdc);
-        jsdscript = jsd_FindJSDScript(jsdc, jsscript);
+        jsdscript = jsd_FindOrCreateJSDScript(jsdc, cx, jsscript, fp);
         JSD_UNLOCK_SCRIPTS(jsdc);
     
         if (jsdscript)

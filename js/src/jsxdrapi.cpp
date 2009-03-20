@@ -42,6 +42,7 @@
 
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsdhash.h"
 #include "jsprf.h"

@@ -403,9 +403,7 @@
           </rows>
         </grid>
         <spacer flex="1"/>
-        <hbox align="center"><!-- Cert button -->
-          <description id="security-view-text" class="fieldLabel"
-                 control="security-view-cert" flex="1"/>
+        <hbox pack="end"><!-- Cert button -->
           <button id="security-view-cert" label="&securityView.certView;"
                   accesskey="&securityView.accesskey;"
                   oncommand="security.viewCert();"/>

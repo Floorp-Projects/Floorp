@@ -359,6 +359,8 @@ TaggingService.prototype = {
         this._bms.getItemType(aItemId) == this._bms.TYPE_FOLDER)
       this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
   },
+  onBeforeItemRemoved: function(aItemId) {
+  },
   onItemRemoved: function(aItemId, aFolderId, aIndex){
     if (aFolderId == this._bms.tagsFolder && this._tagFolders[aItemId])
       delete this._tagFolders[aItemId];
