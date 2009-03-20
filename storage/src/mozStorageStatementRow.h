@@ -60,9 +60,6 @@ public:
     // nsIXPCScriptable interface
     NS_DECL_NSIXPCSCRIPTABLE
 protected:
-    sqlite3_stmt* NativeStatement() {
-        return mStatement->GetNativeStatementPointer();
-    }
 
     mozStorageStatement *mStatement;
 

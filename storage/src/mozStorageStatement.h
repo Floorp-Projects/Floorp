@@ -78,7 +78,7 @@ public:
     /**
      * Obtains the native statement pointer.
      */
-    inline sqlite3_stmt *NativeStatement() { return mDBStatement; }
+    inline sqlite3_stmt *nativeStatement() { return mDBStatement; }
 
 private:
     ~mozStorageStatement();

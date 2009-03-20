@@ -613,13 +613,6 @@ mozStorageStatement::ExecuteAsync(mozIStorageStatementCallback *aCallback,
     return mDBConnection->ExecuteAsync(stmts, 1, aCallback, _stmt);
 }
 
-/* [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer(); */
-sqlite3_stmt*
-mozStorageStatement::GetNativeStatementPointer()
-{
-    return mDBStatement;
-}
-
 /* readonly attribute long state; */
 NS_IMETHODIMP
 mozStorageStatement::GetState(PRInt32 *_retval)
