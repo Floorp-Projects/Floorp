@@ -46,8 +46,6 @@
 #include "jsapi.h"
 #include "jsdate.h"
 
-#include "sqlite3.h"
-
 /*************************************************************************
  ****
  **** mozStorageStatementRow
@@ -100,34 +98,55 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
         PRUint32 idx;
         nsresult rv = mStatement->GetColumnIndex(jsid, &idx);
         NS_ENSURE_SUCCESS(rv, rv);
-        int ctype = sqlite3_column_type(NativeStatement(), idx);
+        PRInt32 type;
+        rv = mStatement->GetTypeOfIndex(idx, &type);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (ctype == SQLITE_INTEGER || ctype == SQLITE_FLOAT) {
-            double dval = sqlite3_column_double(NativeStatement(), idx);
+        if (type == mozIStorageValueArray::VALUE_TYPE_INTEGER ||
+            type == mozIStorageValueArray::VALUE_TYPE_FLOAT) {
+            double dval;
+            rv = mStatement->GetDouble(idx, &dval);
+            NS_ENSURE_SUCCESS(rv, rv);
             if (!JS_NewNumberValue(cx, dval, vp)) {
                 *_retval = PR_FALSE;
                 return NS_OK;
             }
-        } else if (ctype == SQLITE_TEXT) {
-            JSString *str = JS_NewUCStringCopyN(cx,
-                                                (jschar*) sqlite3_column_text16(NativeStatement(), idx),
-                                                sqlite3_column_bytes16(NativeStatement(), idx)/2);
+        }
+        else if (type == mozIStorageValueArray::VALUE_TYPE_TEXT) {
+            PRUint32 bytes;
+            const jschar *sval = reinterpret_cast<const jschar *>(
+                mStatement->AsSharedWString(idx, &bytes)
+            );
+            JSString *str = JS_NewUCStringCopyN(cx, sval, bytes / 2);
             if (!str) {
                 *_retval = PR_FALSE;
                 return NS_OK;
             }
             *vp = STRING_TO_JSVAL(str);
-        } else if (ctype == SQLITE_BLOB) {
-            JSString *str = JS_NewStringCopyN(cx,
-                                              (char*) sqlite3_column_blob(NativeStatement(), idx),
-                                              sqlite3_column_bytes(NativeStatement(), idx));
-            if (!str) {
+        }
+        else if (type == mozIStorageValueArray::VALUE_TYPE_BLOB) {
+            PRUint32 length;
+            const PRUint8 *blob = mStatement->AsSharedBlob(idx, &length);
+            JSObject *obj = JS_NewArrayObject(cx, length, nsnull);
+            if (!obj) {
                 *_retval = PR_FALSE;
                 return NS_OK;
             }
-        } else if (ctype == SQLITE_NULL) {
+            *vp = OBJECT_TO_JSVAL(obj);
+
+            // Copy the blob over to the JS array.
+            for (PRUint32 i = 0; i < length; i++) {
+                jsval val = INT_TO_JSVAL(blob[i]);
+                if (!JS_SetElement(cx, obj, i, &val)) {
+                    *_retval = PR_FALSE;
+                    return NS_OK;
+                }
+            }
+        }
+        else if (type == mozIStorageValueArray::VALUE_TYPE_NULL) {
             *vp = JSVAL_NULL;
-        } else {
+        }
+        else {
             NS_ERROR("sqlite3_column_type returned unknown column type, what's going on?");
         }
     }
