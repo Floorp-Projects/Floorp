@@ -1497,17 +1497,17 @@ Assembler::asm_cmov(LInsp ins)
     const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
     switch (condval->opcode()) {
         // note that these are all opposites...
-        case LIR_eq:    MOVNE(rr, iffalsereg);   break;
-        case LIR_ov:    MOVNO(rr, iffalsereg);   break;
-        case LIR_cs:    MOVNC(rr, iffalsereg);   break;
-        case LIR_lt:    MOVGE(rr, iffalsereg);   break;
-        case LIR_le:    MOVG(rr, iffalsereg);    break;
-        case LIR_gt:    MOVLE(rr, iffalsereg);   break;
-        case LIR_ge:    MOVL(rr, iffalsereg);    break;
-        case LIR_ult:   MOVAE(rr, iffalsereg);   break;
-        case LIR_ule:   MOVA(rr, iffalsereg);    break;
-        case LIR_ugt:   MOVBE(rr, iffalsereg);   break;
-        case LIR_uge:   MOVB(rr, iffalsereg);    break;
+        case LIR_eq:    MOVNE(rr, iffalsereg);  break;
+        case LIR_ov:    MOVVC(rr, iffalsereg);  break;
+        case LIR_cs:    MOVNC(rr, iffalsereg);  break;
+        case LIR_lt:    MOVGE(rr, iffalsereg);  break;
+        case LIR_le:    MOVGT(rr, iffalsereg);  break;
+        case LIR_gt:    MOVLE(rr, iffalsereg);  break;
+        case LIR_ge:    MOVLT(rr, iffalsereg);  break;
+        case LIR_ult:   MOVCS(rr, iffalsereg);  break;
+        case LIR_ule:   MOVHI(rr, iffalsereg);  break;
+        case LIR_ugt:   MOVLS(rr, iffalsereg);  break;
+        case LIR_uge:   MOVCC(rr, iffalsereg);  break;
         default: debug_only( NanoAssert(0) );   break;
     }
     /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
