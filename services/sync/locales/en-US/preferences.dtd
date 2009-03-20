@@ -69,14 +69,8 @@
 <!ENTITY resetClientDataButton.label        "Reset Client Data">
 <!ENTITY resetClientDataButton.description  "Delete all locally stored bookmarks and history data">
 
-<!ENTITY resetSyncMetaButton.label          "Reset Sync Metadata...">
-<!ENTITY resetSyncMetaButton.description    "Reset local sync data and do a fresh sync">
-<!ENTITY eraseLocalDataButton.label         "Erase Local Data...">
-<!ENTITY eraseLocalDataButton.description   "Erase all local data and restart with server data">
 <!ENTITY eraseServerDataButton.label        "Erase Server Data...">
 <!ENTITY eraseServerDataButton.description  "Erase all data on the server and send local data">
-<!ENTITY eraseRemoteDataButton.label        "Erase Other Clients...">
-<!ENTITY eraseRemoteDataButton.description  "Erase all remote data and restart with local data">
 
 <!ENTITY logsCaption.label                  "Logs">
 <!ENTITY openActivityLogButton.label        "Open...">

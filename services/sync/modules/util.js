@@ -137,8 +137,7 @@ let Utils = {
   lazy2: function Weave_lazy2(dest, prop, fn) {
     let getter = function() {
       delete dest[prop];
-      dest[prop] = ctr();
-      return dest[prop];
+      return dest[prop] = fn();
     };
     dest.__defineGetter__(prop, getter);
   },
@@ -464,7 +463,7 @@ let Utils = {
     let win = Svc.WinWatcher;
     if (type == "Dialog")
       win = win.activeWindow;
-    win["open" + type].apply(win, Utils.slice(arguments, 2));
+    win["open" + type].apply(win, Array.slice(arguments, 2));
   },
 
   openDialog: function Utils_openDialog(name, uri, options, args) {
@@ -488,6 +487,10 @@ let Utils = {
     Utils.openWindow("Status", "status.xul");
   },
 
+  openSync: function Utils_openSync() {
+    Utils.openWindow("Sync", "pick-sync.xul");
+  },
+
   openWindow: function Utils_openWindow(name, uri, options, args) {
     Utils._openWin(name, "Window", null, "chrome://weave/content/" + uri,
       "", options || "centerscreen,chrome,dialog,resizable=yes", args);
@@ -504,14 +507,6 @@ let Utils = {
       ret += str.value;
     }
     return ret;
-  },
-
-  slice: function Utils_slice(array, start, end) {
-    let args = [start];
-    if (end !== undefined)
-      args.push(end);
-
-    return Array.prototype.slice.apply(array, args);
   },
 
   bind2: function Async_bind2(object, method) {
