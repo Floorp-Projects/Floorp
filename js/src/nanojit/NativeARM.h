@@ -208,7 +208,9 @@ verbose_only( extern const char* shiftNames[]; )
     void nativePageReset();                                             \
     void nativePageSetup();                                             \
     void asm_quad_nochk(Register, const int32_t*);                      \
-    void asm_add_imm(Register, Register, int32_t);                      \
+    void asm_add_imm(Register, Register, int32_t, int stat = 0);        \
+    void asm_sub_imm(Register, Register, int32_t, int stat = 0);        \
+    void asm_cmpi(Register, int32_t imm);                               \
     int* _nSlot;                                                        \
     int* _nExitSlot;
 
@@ -299,6 +301,26 @@ enum {
             asm_output("%s%s%s %s, %s, #0x%X", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), (imm));\
     } while (0)
 
+// ALU operation with register and rotated 8-bit immediate arguments
+//  S   - bit, 0 or 1, whether the CPSR register is updated
+//  rd  - destination register
+//  rl  - first (left) operand register
+//  imm - immediate (max 8 bits)
+//  rot - rotation to apply to imm
+#define ALUi_rot(cond, op, S, rd, rl, imm, rot) do {\
+        underrunProtect(4);\
+        NanoAssert(isU8(imm));\
+        *(--_nIns) = (NIns) ((cond)<<28 | OP_IMM | (ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (rot)<<8 | (imm));\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+            asm_output("%s%s%s %s, #0x%X, %d", #op, condNames[cond], (S)?"s":"", gpn(rd), (imm), (rot)*2);\
+        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+            NanoAssert(S==1);\
+            asm_output("%s%s %s, #0x%X, %d", #op, condNames[cond], gpn(rl), (imm), (rot)*2);\
+        } else\
+            asm_output("%s%s%s %s, %s, #0x%X, %d", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), (imm), (rot)*2);\
+    } while (0)
+
+
 // ALU operation with two register arguments
 //  S   - bit, 0 or 1, whether the CPSR register is updated
 //  rd  - destination register
@@ -316,7 +338,7 @@ enum {
             asm_output("%s%s%s %s, %s, %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr));\
     } while (0)
 
-// ALU operator with two register arguments, with rr operated on by a shift and shift immediate
+// ALU operation with two register arguments, with rr operated on by a shift and shift immediate
 //  S   - bit, 0 or 1, whether the CPSR register is updated
 //  rd  - destination register
 //  rl  - first (left) operand register
@@ -336,12 +358,24 @@ enum {
             asm_output("%s%s%s %s, %s, %s, %s #%d", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr), shiftNames[sh], (imm));\
     } while (0)
 
-
-
-
-
-
-
+// ALU operation with two register arguments, with rr operated on by a shift and shift register
+//  S   - bit, 0 or 1, whether the CPSR register is updated
+//  rd  - destination register
+//  rl  - first (left) operand register
+//  rr  - first (left) operand register
+//  sh  - a ShiftOperator
+//  rs  - shift operand register
+#define ALUr_shr(cond, op, S, rd, rl, rr, sh, rs) do {\
+        underrunProtect(4);\
+        *(--_nIns) = (NIns) ((cond)<<28 |(ARM_##op)<<21 | (S)<<20 | (rl)<<16 | (rd)<<12 | (rs)<<8 | (sh)<<4 | (rr));\
+        if (ARM_##op == ARM_mov || ARM_##op == ARM_mvn)\
+            asm_output("%s%s%s %s, %s, %s %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rr), shiftNames[sh], gpn(rs));\
+        else if (ARM_##op >= ARM_tst && ARM_##op <= ARM_cmn) {\
+            NanoAssert(S==1);\
+            asm_output("%s%s  %s, %s, %s %s", #op, condNames[cond], gpn(rl), gpn(rr), shiftNames[sh], gpn(rs));\
+        } else\
+            asm_output("%s%s%s %s, %s, %s, %s %s", #op, condNames[cond], (S)?"s":"", gpn(rd), gpn(rl), gpn(rr), shiftNames[sh], gpn(rs));\
+    } while (0)
 
 // _d = _l OR _r
 #define ORR(_d,_l,_r) ALUr(AL, orr, 0, _d, _l, _r)
@@ -361,60 +395,23 @@ enum {
 // _d = _l ^ _imm
 #define EORi(_d,_l,_imm) ALUi(AL, eor, 0, _d, _l, _imm)
 
-// _d = _n + _m
-#define arm_ADD(_d,_n,_m) do {                                          \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | ((_n)<<16) | ((_d)<<12) | (_m)); \
-        asm_output("add %s,%s+%s",gpn(_d),gpn(_n),gpn(_m)); } while(0)
+// _d = _l + _r; update flags
+#define ADD(_d,_l,_r) ALUr(AL, add, 1, _d, _l, _r)
 
-// _l = _l + _r
-#define ADD(_l,_r)   arm_ADD(_l,_l,_r)
+// _d = _l + _r; update flags if _stat == 1
+#define ADDs(_d,_l,_r,_stat) ALUr(AL, add, _stat, _d, _l, _r)
 
-// Note that this sometimes converts negative immediate values to a to a sub.
-// _d = _r + _imm
-#define arm_ADDi(_d,_n,_imm)   asm_add_imm(_d,_n,_imm)
-#define ADDi(_r,_imm)  arm_ADDi(_r,_r,_imm)
+// _d = _l + _imm; update flags
+#define ADDi(_d,_l,_imm) asm_add_imm(_d, _l, _imm, 1)
 
-// _l = _l - _r
-#define SUB(_l,_r)  do {                                                \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (1<<22) | ((_l)<<16) | ((_l)<<12) | (_r)); \
-        asm_output("sub %s,%s",gpn(_l),gpn(_r)); } while(0)
+// _d = _l + _imm; update flags if _stat == 1
+#define ADDis(_d,_l,_imm,_stat) asm_add_imm(_d, _l, _imm, _stat)
 
-// _r = _r - _imm
-#define SUBi(_r,_imm)  do {                                             \
-        if ((_imm)>-256 && (_imm)<256) {                                \
-            underrunProtect(4);                                         \
-            if ((_imm)>=0)  *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<22) | ((_r)<<16) | ((_r)<<12) | ((_imm)&0xFF) ); \
-            else            *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | ((_r)<<16) | ((_r)<<12) | ((-(_imm))&0xFF) ); \
-        } else {                                                        \
-            if ((_imm)>=0) {                                            \
-                if ((_imm)<=510) {                                      \
-                    underrunProtect(8);                                 \
-                    int rem = (_imm) - 255;                             \
-                    NanoAssert(rem<256);                                \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<22) | ((_r)<<16) | ((_r)<<12) | (rem&0xFF) ); \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<22) | ((_r)<<16) | ((_r)<<12) | (0xFF) ); \
-                } else {                                                \
-                    underrunProtect(4+LD32_size);                       \
-                    *(--_nIns) = (NIns)( COND_AL | (1<<22) | ((_r)<<16) | ((_r)<<12) | (IP)); \
-                    LD32_nochk(IP, _imm);                          \
-                }                                                       \
-            } else {                                                    \
-                if ((_imm)>=-510) {                                     \
-                    underrunProtect(8);                                 \
-                    int rem = -(_imm) - 255;                            \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | ((_r)<<16) | ((_r)<<12) | ((rem)&0xFF) ); \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | ((_r)<<16) | ((_r)<<12) | (0xFF) ); \
-                } else {                                                \
-                    underrunProtect(4+LD32_size);                       \
-                    *(--_nIns) = (NIns)( COND_AL | (1<<23) | ((_r)<<16) | ((_r)<<12) | (IP)); \
-                    LD32_nochk(IP, -(_imm)); \
-                }                                                       \
-            }                                                           \
-        }                                                               \
-        asm_output("sub %s,%d",gpn(_r),(_imm));                        \
-    } while (0)
+// _d = _l - _r; update flags
+#define SUB(_d,_l,_r) ALUr(AL, sub, 1, _d, _l, _r)
+
+// _d = _l - _imm; update flags
+#define SUBi(_d,_l,_imm)  asm_sub_imm(_d, _l, _imm, 1)
 
 // _l = _l * _r
 #define MUL(_l,_r)  do {                                                \
@@ -422,106 +419,42 @@ enum {
         *(--_nIns) = (NIns)( COND_AL | (_l)<<16 | (_l)<<8 | 0x90 | (_r) ); \
         asm_output("mul %s,%s",gpn(_l),gpn(_r)); } while(0)
 
+// _d = 0 - _r
+#define RSBS(_d,_r) ALUi(AL, rsb, 1, _d, _r, 0)
 
-// RSBS
-// _r = -_r
-#define NEG(_r) do {                                                    \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL |  (0x27<<20) | ((_r)<<16) | ((_r)<<12) ); \
-        asm_output("neg %s",gpn(_r)); } while(0)
+// _d = ~_r (one's compliment)
+#define MVN(_d,_r) ALUr(AL, mvn, 0, _d, 0, _r)
 
-// MVNS
-// _r = !_r
-#define NOT(_r) do {                                                    \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL |  (0x1F<<20) | ((_r)<<12) |  (_r) ); \
-        asm_output("mvn %s",gpn(_r)); } while(0)
+// MOVS _d, _r, LSR <_s>
+// _d = _r >> _s
+#define SHR(_d,_r,_s) ALUr_shr(AL, mov, 1, _d, 0, _r, LSR_reg, _s)
 
-// MOVS _r, _r, LSR <_s>
-// _r = _r >> _s
-#define SHR(_r,_s) do {                                                 \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x1B<<20) | ((_r)<<12) | ((_s)<<8) | (LSR_reg<<4) | (_r) ); \
-        asm_output("shr %s,%s",gpn(_r),gpn(_s)); } while(0)
+// MOVS _d, _r, LSR #_imm
+// _d = _r >> _imm
+#define SHRi(_d,_r,_imm)  ALUr_shi(AL, mov, 1, _d, 0, _r, LSR_imm, _imm)
 
-// MOVS _r, _r, LSR #_imm
-// _r = _r >> _imm
-#define SHRi(_r,_imm) do {                                              \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x1B<<20) | ((_r)<<12) | ((_imm)<<7) | (LSR_imm<<4) | (_r) ); \
-        asm_output("shr %s,%d",gpn(_r),_imm); } while(0)
-
-// MOVS _r, _r, ASR <_s>
-// _r = _r >> _s
-#define SAR(_r,_s) do {                                                 \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x1B<<20) | ((_r)<<12) | ((_s)<<8) | (ASR_reg<<4) | (_r) ); \
-        asm_output("asr %s,%s",gpn(_r),gpn(_s)); } while(0)
-
+// MOVS _d, _r, ASR <_s>
+// _d = _r >> _s
+#define SAR(_d,_r,_s) ALUr_shr(AL, mov, 1, _d, 0, _r, ASR_reg, _s)
 
 // MOVS _r, _r, ASR #_imm
-// _r = _r >> _imm
-#define SARi(_r,_imm) do {                                              \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x1B<<20) | ((_r)<<12) | ((_imm)<<7) | (ASR_imm<<4) | (_r) ); \
-        asm_output("asr %s,%d",gpn(_r),_imm); } while(0)
+// _d = _r >> _imm
+#define SARi(_d,_r,_imm) ALUr_shi(AL, mov, 1, _d, 0, _r, ASR_imm, _imm)
 
-// MOVS _r, _r, LSL <_s>
-// _r = _r << _s
-#define SHL(_r,_s) do {                                                 \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x1B<<20) | ((_r)<<12) | ((_s)<<8) | (LSL_reg<<4) | (_r) ); \
-        asm_output("lsl %s,%s",gpn(_r),gpn(_s)); } while(0)
+// MOVS _d, _r, LSL <_s>
+// _d = _r << _s
+#define SHL(_d, _r, _s) ALUr_shr(AL, mov, 1, _d, 0, _r, LSL_reg, _s)
 
-// MOVS _r, _r, LSL #_imm
-// _r = _r << _imm
-#define SHLi(_r,_imm) do {                                              \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x1B<<20) | ((_r)<<12) | ((_imm)<<7) | (LSL_imm<<4) | (_r) ); \
-        asm_output("lsl %s,%d",gpn(_r),(_imm)); } while(0)
+// MOVS _d, _r, LSL #_imm
+// _d = _r << _imm
+#define SHLi(_d, _r, _imm) ALUr_shi(AL, mov, 1, _d, 0, _r, LSL_imm, _imm)
                     
 // TST
-#define TEST(_d,_s) do {                                                \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x11<<20) | ((_d)<<16) | (_s) ); \
-        asm_output("test %s,%s",gpn(_d),gpn(_s)); } while(0)
-
-#define TSTi(_d,_imm) do {                                              \
-        underrunProtect(4);                                             \
-        NanoAssert(((_imm) & 0xff) == (_imm));                          \
-        *(--_nIns) = (NIns)( COND_AL | OP_IMM | (0x11<<20) | ((_d) << 16) | (0xF<<12) | ((_imm) & 0xff) ); \
-        asm_output("tst %s,#0x%x", gpn(_d), _imm);                     \
-    } while (0);
+#define TEST(_l,_r)     ALUr(AL, tst, 1, 0, _l, _r)
+#define TSTi(_d,_imm)   ALUi(AL, tst, 1, 0, _d, _imm)
 
 // CMP
-#define CMP(_l,_r)  do {                                                \
-        underrunProtect(4);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x015<<20) | ((_l)<<16) | (_r) ); \
-        asm_output("cmp %s,%s",gpn(_l),gpn(_r)); } while(0)
-
-// CMP (or CMN)
-#define CMPi(_r,_imm)  do {                                             \
-        if (_imm<0) {                                                   \
-            if ((_imm)>-256) {                                          \
-                underrunProtect(4);                                     \
-                *(--_nIns) = (NIns)( COND_AL | (0x37<<20) | ((_r)<<16) | (-(_imm)) ); \
-            } else {                                                      \
-                underrunProtect(4+LD32_size);                           \
-                *(--_nIns) = (NIns)( COND_AL | (0x17<<20) | ((_r)<<16) | (IP) ); \
-                LD32_nochk(IP, (_imm));                            \
-            }                                                           \
-        } else {                                                        \
-            if ((_imm)<256) {                                           \
-                underrunProtect(4);                                     \
-                *(--_nIns) = (NIns)( COND_AL | (0x035<<20) | ((_r)<<16) | ((_imm)&0xFF) ); \
-            } else {                                                    \
-                underrunProtect(4+LD32_size);                           \
-                *(--_nIns) = (NIns)( COND_AL | (0x015<<20) | ((_r)<<16) | (IP) ); \
-                LD32_nochk(IP, (_imm));                            \
-            }                                                           \
-        }                                                               \
-        asm_output("cmp %s,0x%x",gpn(_r),(_imm));                      \
-    } while(0)
+#define CMP(_l,_r)  ALUr(AL, cmp, 1, 0, _l, _r)
 
 // MOV
 #define MOV(_d,_s)  do {                                                 \
