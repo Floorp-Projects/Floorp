@@ -45,9 +45,7 @@ interface nsISimpleEnumerator;
 interface mozIStorageStatementCallback;
 interface mozIStoragePendingStatement;
 
-[ptr] native sqlite3stmtptr(struct sqlite3_stmt);
-
-[scriptable, uuid(4a712295-d076-4007-9c78-8c0e15373b9f)]
+[scriptable, uuid(471e161a-af46-4eb3-adf6-f6b0c41fe81c)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Finalizes a statement so you can successfully close a database connection.
@@ -200,8 +198,6 @@ interface mozIStorageStatement : mozIStorageValueArray {
   const long MOZ_STORAGE_STATEMENT_EXECUTING = 2;
 
   readonly attribute long state;
-
-  [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer();
 
   /**
    * Escape a string for SQL LIKE search.

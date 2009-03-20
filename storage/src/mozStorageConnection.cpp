@@ -398,7 +398,8 @@ mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
     int rc = SQLITE_OK;
     nsTArray<sqlite3_stmt *> stmts(aNumStatements);
     for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
-        sqlite3_stmt *old_stmt = aStatements[i]->GetNativeStatementPointer();
+        sqlite3_stmt *old_stmt =
+            static_cast<mozStorageStatement *>(aStatements[i])->nativeStatement();
         if (!old_stmt) {
           rc = SQLITE_MISUSE;
           break;
