@@ -485,7 +485,7 @@ let Utils = {
   },
 
   openStatus: function Utils_openStatus() {
-    Utils.openDialog("Status", "status.xul");
+    Utils.openWindow("Status", "status.xul");
   },
 
   openWindow: function Utils_openWindow(name, uri, options, args) {
