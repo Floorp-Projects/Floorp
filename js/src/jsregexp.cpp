@@ -4896,7 +4896,7 @@ regexp_test(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-static jsint FASTCALL
+static JSBool FASTCALL
 Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
 {
     jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(str) };
