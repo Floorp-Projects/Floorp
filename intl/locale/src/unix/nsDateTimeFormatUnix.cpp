@@ -209,7 +209,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
         PL_strncpy(fmtD, "%x", NSDATETIME_FORMAT_BUFFER_LEN);
         break; 
       case kDateFormatYearMonth:
-        PL_strncpy(fmtD, "%y/%m", NSDATETIME_FORMAT_BUFFER_LEN);
+        PL_strncpy(fmtD, "%Y/%m", NSDATETIME_FORMAT_BUFFER_LEN);
         break; 
       case kDateFormatWeekday:
         PL_strncpy(fmtD, "%a", NSDATETIME_FORMAT_BUFFER_LEN);
