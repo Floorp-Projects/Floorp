@@ -40,7 +40,6 @@
 #include "xpcprivate.h"
 #include "nsDOMError.h"
 #include "jsdbgapi.h"
-#include "jsobj.h"    // For OBJ_GET_PROPERTY.
 #include "jscntxt.h"  // For JSAutoTempValueRooter.
 #include "XPCWrapper.h"
 #include "nsIDOMWindow.h"
@@ -705,8 +704,8 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   JSBool ok = isSet
-              ? OBJ_SET_PROPERTY(cx, wrappedObj, asId, vp)
-              : OBJ_GET_PROPERTY(cx, wrappedObj, asId, vp);
+              ? JS_SetPropertyById(cx, wrappedObj, asId, vp)
+              : JS_GetPropertyById(cx, wrappedObj, asId, vp);
   if (!ok) {
     return JS_FALSE;
   }
@@ -715,7 +714,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     JSObject *newProto = STOBJ_GET_PROTO(wrappedObj);
 
     // If code is trying to set obj.__proto__ and we're on obj's
-    // prototype chain, then the OBJ_SET_PROPERTY above will do the
+    // prototype chain, then the JS_GetPropertyById above will do the
     // wrong thing if wrappedObj still delegates to Object.prototype.
     // However, it's hard to figure out if wrappedObj still does
     // delegate to Object.prototype so check to see if proto changed as a

@@ -132,7 +132,7 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
     // "migrated" is "yes" for all valid Seamonkey profiles. It is only "no"
     // for 4.x profiles. 
     char migratedStr[3];
-    errCode = NR_RegGetEntryString(reg, profileKey, "migrated",
+    errCode = NR_RegGetEntryString(reg, profileKey, (char *)"migrated",
                                    migratedStr, sizeof(migratedStr));
     if ((errCode != REGERR_OK && errCode != REGERR_BUFTOOSMALL) ||
         strcmp(migratedStr, "no") == 0)
@@ -142,13 +142,13 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
     REGINFO regInfo;
     regInfo.size = sizeof(REGINFO);
 
-    if (NR_RegGetEntryInfo(reg, profileKey, "directory", &regInfo))
+    if (NR_RegGetEntryInfo(reg, profileKey, (char *)"directory", &regInfo))
       continue;
 
     nsCAutoString dirStr;
     dirStr.SetLength(regInfo.entryLength);
 
-    errCode = NR_RegGetEntryString(reg, profileKey, "directory",
+    errCode = NR_RegGetEntryString(reg, profileKey, (char *)"directory",
                                    dirStr.BeginWriting(), regInfo.entryLength);
     // Remove trailing \0
     dirStr.SetLength(regInfo.entryLength-1);

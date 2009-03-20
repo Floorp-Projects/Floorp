@@ -757,6 +757,12 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
     const char **argNames;
     nsContentUtils::GetEventArgNames(kNameSpaceID_XUL, aName, &argCount,
                                      &argNames);
+
+    nsCxPusher pusher;
+    if (!pusher.Push((JSContext*)context->GetNativeContext())) {
+      return NS_ERROR_FAILURE;
+    }
+
     rv = context->CompileEventHandler(aName, argCount, argNames,
                                       aBody, aURL, aLineNo,
                                       SCRIPTVERSION_DEFAULT,  // for now?

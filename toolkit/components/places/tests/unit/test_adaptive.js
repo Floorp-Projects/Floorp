@@ -177,6 +177,15 @@ function setCountRank(aURI, aCount, aRank, aSearch)
   }
 }
 
+/**
+ * Decay the adaptive entries by sending the daily idle topic
+ */
+function doAdaptiveDecay()
+{
+  for (let i = 0; i < 10; i++)
+    obs.notifyObservers(null, "idle-daily", null);
+}
+
 let uri1 = uri("http://site.tld/1");
 let uri2 = uri("http://site.tld/2");
 
@@ -311,7 +320,27 @@ let tests = [
     observer.runCount = c1 + c2;
     setCountRank(uri1, c1, c2, s2);
     setCountRank(uri2, c1, c1, s2);
-  }
+  },
+  function() {
+    prepTest("10 same count, same rank, same term, decay first; exact match");
+    observer.uriA = uri2;
+    observer.uriB = uri1;
+    observer.search = s1;
+    observer.runCount = c1 + c1;
+    setCountRank(uri1, c1, c1, s1);
+    doAdaptiveDecay();
+    setCountRank(uri2, c1, c1, s1);
+  },
+  function() {
+    prepTest("11 same count, same rank, same term, decay second; exact match");
+    observer.uriA = uri1;
+    observer.uriB = uri2;
+    observer.search = s1;
+    observer.runCount = c1 + c1;
+    setCountRank(uri2, c1, c1, s1);
+    doAdaptiveDecay();
+    setCountRank(uri1, c1, c1, s1);
+  },
 ];
 
 /**

@@ -174,6 +174,18 @@ function populateDB(aArray) {
                                        referrer, qdata.transType,
                                        qdata.isRedirect, qdata.sessionID);
         do_check_true(visitId > 0);
+        if (qdata.title && !qdata.isDetails) {
+          // Set the page title synchronously, otherwise setPageTitle is LAZY.
+          let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+                   getService(Ci.nsPIPlacesDatabase).
+                   DBConnection;
+          let stmt = db.createStatement("UPDATE moz_places_view " +
+                                        "SET title = :title WHERE url = :url");
+          stmt.params.title = qdata.title;
+          stmt.params.url = qdata.uri;
+          stmt.execute();
+          stmt.finalize();
+        }
       }
 
       if (qdata.isDetails) {
@@ -445,4 +457,57 @@ function check_no_bookmarks() {
   root.containerOpen = true;
   do_check_eq(root.childCount, 0);
   root.containerOpen = false;
+}
+
+/**
+ * Dumps the rows of a table out to the console.
+ *
+ * @param aName
+ *        The name of the table or view to output.
+ */
+function dump_table(aName)
+{
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
+  let stmt = db.createStatement("SELECT * FROM " + aName);
+
+  dump("\n*** Printing data from " + aName + ":\n");
+  let count = 0;
+  while (stmt.executeStep()) {
+    let columns = stmt.numEntries;
+
+    if (count == 0) {
+      // print the column names
+      for (let i = 0; i < columns; i++)
+        dump(stmt.getColumnName(i) + "\t");
+      dump("\n");
+    }
+
+    // print the row
+    for (let i = 0; i < columns; i++) {
+      switch (stmt.getTypeOfIndex(i)) {
+        case Ci.mozIStorageValueArray.VALUE_TYPE_NULL:
+          dump("NULL\t");
+          break;
+        case Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER:
+          dump(stmt.getInt64(i) + "\t");
+          break;
+        case Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT:
+          dump(stmt.getDouble(i) + "\t");
+          break;
+        case Ci.mozIStorageValueArray.VALUE_TYPE_TEXT:
+          dump(stmt.getString(i) + "\t");
+          break;
+      }
+    }
+    dump("\n");
+
+    count++;
+  }
+  dump("*** There were a total of " + count + " rows of data.\n\n");
+
+  stmt.reset();
+  stmt.finalize();
+  stmt = null;
 }

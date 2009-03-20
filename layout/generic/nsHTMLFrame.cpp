@@ -203,7 +203,7 @@ CanvasFrame::Init(nsIContent*      aContent,
 {
   nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mViewManager = PresContext()->GetViewManager();
+  mViewManager = PresContext()->GetPresShell()->GetViewManager();
 
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);

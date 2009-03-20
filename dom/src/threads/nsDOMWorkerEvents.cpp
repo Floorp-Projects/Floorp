@@ -283,10 +283,17 @@ nsDOMWorkerMessageEvent::GetData(nsAString& aData)
   rv = cc->GetRetValPtr(&retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mCachedJSVal) {
+  if (mHaveCachedJSVal) {
+    cc->SetReturnValueWasSet(PR_TRUE);
     *retval = mCachedJSVal;
-    return cc->SetReturnValueWasSet(PR_TRUE);
+    return NS_OK;
   }
+
+  if (mHaveAttemptedConversion) {
+    // Don't try to convert again if the first time around we saw an error.
+    return NS_ERROR_FAILURE;
+  }
+  mHaveAttemptedConversion = PR_TRUE;
 
   JSContext* cx;
   rv = cc->GetJSContext(&cx);
@@ -328,8 +335,16 @@ nsDOMWorkerMessageEvent::GetData(nsAString& aData)
     mCachedJSVal = primitive;
   }
 
+  // We no longer need to hold this copy of the data around.
+  mData.Truncate();
+
+  // Now that everything has succeeded we'll set this flag so that we return the
+  // cached jsval in the future.
+  mHaveCachedJSVal = PR_TRUE;
+
   *retval = mCachedJSVal;
-  return cc->SetReturnValueWasSet(PR_TRUE);
+  cc->SetReturnValueWasSet(PR_TRUE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

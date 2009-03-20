@@ -1213,6 +1213,93 @@ fbCompositeSrc_8888xx888 (pixman_op_t op,
 }
 
 static void
+fbCompositeSrcScaleNearest (pixman_op_t op,
+		      pixman_image_t * pSrc,
+		      pixman_image_t * pMask,
+		      pixman_image_t * pDst,
+		      int16_t      xSrc,
+		      int16_t      ySrc,
+		      int16_t      xMask,
+		      int16_t      yMask,
+		      int16_t      xDst,
+		      int16_t      yDst,
+		      uint16_t     width,
+		      uint16_t     height)
+{
+    uint32_t       *dst;
+    uint32_t       *src;
+    int             dstStride, srcStride;
+    int             i, j;
+    pixman_vector_t v;
+
+    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dst, 1);
+    /* pass in 0 instead of xSrc and ySrc because xSrc and ySrc need to be
+     * transformed from destination space to source space */
+    fbComposeGetStart (pSrc, 0, 0, uint32_t, srcStride, src, 1);
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed(xSrc) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed(ySrc) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (pSrc->common.transform, &v))
+        return;
+
+    /* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
+    v.vector[0] -= pixman_fixed_e;
+    v.vector[1] -= pixman_fixed_e;
+
+    for (j = 0; j < height; j++) {
+        pixman_fixed_t vx = v.vector[0];
+        pixman_fixed_t vy = v.vector[1];
+        for (i = 0; i < width; ++i) {
+            pixman_bool_t inside_bounds;
+            uint32_t result;
+            int x, y;
+            x = vx >> 16;
+            y = vy >> 16;
+
+            /* apply the repeat function */
+            switch (pSrc->common.repeat) {
+                case PIXMAN_REPEAT_NORMAL:
+                    x = MOD (x, pSrc->bits.width);
+                    y = MOD (y, pSrc->bits.height);
+                    inside_bounds = TRUE;
+                    break;
+
+                case PIXMAN_REPEAT_PAD:
+                    x = CLIP (x, 0, pSrc->bits.width-1);
+                    y = CLIP (y, 0, pSrc->bits.height-1);
+                    inside_bounds = TRUE;
+                    break;
+
+                case PIXMAN_REPEAT_REFLECT:
+                case PIXMAN_REPEAT_NONE:
+                default:
+                    inside_bounds = (x >= 0 && x < pSrc->bits.width && y >= 0 && y < pSrc->bits.height);
+                    break;
+            }
+
+            if (inside_bounds) {
+                //XXX: we should move this multiplication out of the loop
+                result = READ(pSrc, src + y * srcStride + x);
+            } else {
+                result = 0;
+            }
+            WRITE(pDst, dst + i, result);
+
+            /* adjust the x location by a unit vector in the x direction:
+             * this is equivalent to transforming x+1 of the destination point to source space */
+            vx += pSrc->common.transform->matrix[0][0];
+        }
+        /* adjust the y location by a unit vector in the y direction
+         * this is equivalent to transforming y+1 of the destination point to source space */
+        v.vector[1] += pSrc->common.transform->matrix[1][1];
+        dst += dstStride;
+    }
+}
+
+static void
 pixman_walk_composite_region (pixman_op_t op,
 			      pixman_image_t * pSrc,
 			      pixman_image_t * pMask,
@@ -1859,7 +1946,27 @@ pixman_image_composite (pixman_op_t      op,
     if(op == PIXMAN_OP_DST)
         return;
 
-    if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
+    if (pSrc->type == BITS
+        && srcTransform
+        && !pMask
+        && op == PIXMAN_OP_SRC
+        && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
+        && (pSrc->common.filter == PIXMAN_FILTER_NEAREST)
+        && PIXMAN_FORMAT_BPP(pDst->bits.format) == 32
+        && pSrc->bits.format == pDst->bits.format
+        && pSrc->common.src_clip == &(pSrc->common.full_region)
+        && !pSrc->common.read_func && !pSrc->common.write_func
+        && !pDst->common.read_func && !pDst->common.write_func)
+    {
+        /* ensure that the transform matrix only has a scale */
+        if (pSrc->common.transform->matrix[0][1] == 0 &&
+            pSrc->common.transform->matrix[1][0] == 0 &&
+            pSrc->common.transform->matrix[2][0] == 0 &&
+            pSrc->common.transform->matrix[2][1] == 0 &&
+            pSrc->common.transform->matrix[2][2] == pixman_fixed_1) {
+            func = fbCompositeSrcScaleNearest;
+        }
+    } else if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
@@ -1992,7 +2099,59 @@ pixman_bool_t pixman_have_vmx (void) {
     return have_vmx;
 }
 
-#else
+#elif defined (__linux__)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <linux/auxvec.h>
+#include <asm/cputable.h>
+
+pixman_bool_t pixman_have_vmx (void)
+{
+    if (!initialized) {
+	char fname[64];
+	unsigned long buf[64];
+	ssize_t count = 0;
+	pid_t pid;
+	int fd, i;
+
+	pid = getpid();
+	snprintf(fname, sizeof(fname)-1, "/proc/%d/auxv", pid);
+
+	fd = open(fname, O_RDONLY);
+	if (fd >= 0) {
+	    for (i = 0; i <= (count / sizeof(unsigned long)); i += 2) {
+		/* Read more if buf is empty... */
+		if (i == (count / sizeof(unsigned long))) {
+		    count = read(fd, buf, sizeof(buf));
+		    if (count <= 0)
+			break;
+		    i = 0;
+		}
+
+		if (buf[i] == AT_HWCAP) {
+		    have_vmx = !!(buf[i+1] & PPC_FEATURE_HAS_ALTIVEC);
+		    initialized = TRUE;
+		    break;
+		} else if (buf[i] == AT_NULL) {
+		    break;
+		}
+	    }
+	    close(fd);
+	}
+    }
+    if (!initialized) {
+	/* Something went wrong. Assume 'no' rather than playing
+	   fragile tricks with catching SIGILL. */
+	have_vmx = FALSE;
+	initialized = TRUE;
+    }
+
+    return have_vmx;
+}
+#else /* !__APPLE__ && !__linux__ */
 #include <signal.h>
 #include <setjmp.h>
 

@@ -33,3 +33,5 @@
 skip-if(MOZ_WIDGET_TOOLKIT!="windows") != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
 
 == 470711-1.xul 470711-1-ref.xul
+
+== box-shadow-styling.html box-shadow-styling-ref.html

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=434464
+-->
+<head>
+  <title>Test NSIAccessNode cache invalidation</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var parentElm = getNode("parent");
+      if (!parentElm) {
+        SimpleTest.finish();
+        return;
+      }
+
+      var elm = getNode("para");
+      if (!elm) {
+        SimpleTest.finish();
+        return;
+      }
+
+      // It's currently hidden. Ask for its parent's nsIAccessNode.
+      var parentElmAccNode = getAccessible(parentElm, [nsIAccessNode]);
+      if (!parentElmAccNode) {
+        SimpleTest.finish();
+        return;
+      }
+
+      // Get the paragraph's accessNode.
+      var elmAccNode = null;
+      try {
+        elmAccNode = parentElmAccNode.firstChildNode;
+      } catch(e) {}
+
+      if (!elmAccNode) {
+        ok(false, "No accessNode for hidden paragraph!");
+        SimpleTest.finish();
+        return;
+      }
+
+      // Now make the paragraph visible. This invalidates the just-retrieved
+      // AccessNode. An nsIAccessible should then be retrievable.
+      elm.style.display = "block";
+
+      // Now, get an accessible for it. Use a timeout so the layout engine can
+      // catch up.
+      window.setTimeout(
+        function()
+        {
+          var elmAcc = getAccessible(elm);
+          ok(elmAcc, "No accessible for paragraph after it became visible!");
+
+          SimpleTest.finish();
+        },
+      200);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=434464">Mozilla Bug 434464</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="parent"><p style="display: none;" id="para">I'm hidden initially, but then made visible.</p></div>
+</body>
+</html>

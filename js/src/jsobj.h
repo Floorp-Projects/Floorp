@@ -675,6 +675,10 @@ extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+             JSPropCacheEntry **entryp);
+
+extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp);
 
@@ -791,13 +795,9 @@ extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
 
-/* TODO: bug 481218. This returns false for functions */
-static JS_INLINE JSBool
-js_IsCallable(JSContext *cx, JSObject *obj)
-{
-   return (obj && ((obj->map->ops == &js_ObjectOps) ? OBJ_GET_CLASS(cx, obj)->call
-                                                    : obj->map->ops->call));
-}
+/* Infallible, therefore cx is last parameter instead of first. */
+extern JSBool
+js_IsCallable(JSObject *obj, JSContext *cx);
 
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);

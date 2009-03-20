@@ -85,11 +85,6 @@
 // sensible 16x16 icons are under 1024 bytes.
 #define OPTIMIZED_FAVICON_SIZE 1024
 
-// Favicons bigger than this size should not be saved to the db to avoid
-// bloating it with large image blobs.
-// This still allows us to accept a favicon even if we cannot optimize it.
-#define MAX_FAVICON_SIZE 10240
-
 /**
  * The maximum time we will keep a favicon around.  We always ask the cache, if
  * we can, but default to this value if we do not get a time back, or the time
@@ -1144,6 +1139,18 @@ nsFaviconService::FinalizeStatements() {
   }
 
   return NS_OK;
+}
+
+nsresult
+nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
+                                      mozIStorageStatementCallback *aCallback)
+{
+  NS_ASSERTION(aCallback, "Doesn't make sense to call this without a callback");
+  nsresult rv = BindStatementURI(mDBGetData, 0, aFaviconURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStoragePendingStatement> pendingStatement;
+  return mDBGetData->ExecuteAsync(aCallback, getter_AddRefs(pendingStatement));
 }
 
 NS_IMPL_ISUPPORTS4(FaviconLoadListener,

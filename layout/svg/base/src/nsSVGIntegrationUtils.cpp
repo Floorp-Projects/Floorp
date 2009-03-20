@@ -209,15 +209,6 @@ public:
                      const nsIntRect* aDirtyRect)
   {
     nsIRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
-    gfxContext* gfxCtx = aContext->GetGfxContext();
-
-    // We're expected to paint with 1 unit equal to 1 CSS pixel. But
-    // mInnerList->Paint expects 1 unit to equal 1 device pixel. So
-    // adjust.
-    gfxFloat scale =
-      nsPresContext::AppUnitsToFloatCSSPixels(aTarget->PresContext()->AppUnitsPerDevPixel());
-    gfxCtx->Scale(scale, scale);
-
     nsIRenderingContext::AutoPushTranslation push(ctx, -mOffset.x, -mOffset.y);
     nsRect dirty;
     if (aDirtyRect) {

@@ -666,8 +666,19 @@ static struct {
     },
 };
 static struct {
+    jsbytecode initprop[15];
     jsbytecode initelem[15];
 } initelem_imacros = {
+    {
+/* 0*/  JSOP_PICK, 2,
+/* 2*/  JSOP_DUP,
+/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetProperty) & 0xff00) >> 8, ((JSBUILTIN_SetProperty) & 0xff),
+/* 6*/  JSOP_PICK, 4,
+/* 8*/  JSOP_PICK, 4,
+/*10*/  JSOP_CALL, 0, 2,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
     {
 /* 0*/  JSOP_PICK, 2,
 /* 2*/  JSOP_DUP,

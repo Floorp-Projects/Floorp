@@ -452,7 +452,7 @@
               <menupopup id="goPopup"
                          type="places"
                          onpopupshowing="HistoryMenu.onPopupShowing(this);"
-                         place="place:type=0&amp;sort=4&amp;maxResults=10"
+                         place="place:redirectsMode=2&amp;sort=4&amp;maxResults=10"
                          tooltip="btTooltip">
                 <menuitem id="historyMenuBack"
                           label="&backCmd.label;"

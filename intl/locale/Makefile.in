@@ -49,6 +49,9 @@ DIRS		= public idl src
 
 ifdef ENABLE_TESTS
 DIRS		+= tests
+ifneq (,$(filter mac cocoa windows, $(MOZ_WIDGET_TOOLKIT)))
+DIRS		+= tests_multilocale
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

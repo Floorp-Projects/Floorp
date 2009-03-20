@@ -37,7 +37,10 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(6e4bc25e-f056-4c6c-b27e-89152ca91834)]
+interface nsIDOMStorage2;
+interface nsIPrincipal;
+
+[scriptable, uuid(9efc2081-218f-4622-837b-40bdb870a1c8)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -55,4 +58,11 @@ interface nsIDOMStorageManager : nsISupports
    * with the "offline-app" permission will be removed from the database.
    */
   void clearOfflineApps();
+
+  /**
+   * Returns instance of localStorage object for aURI's origin.
+   * This method ensures there is always only a single instance
+   * for a single origin.
+   */
+  nsIDOMStorage2 getLocalStorageForPrincipal(in nsIPrincipal aPrincipal);
 };

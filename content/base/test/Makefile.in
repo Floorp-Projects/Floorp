@@ -227,6 +227,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_NodeIterator_mutations_1.xhtml \
 		test_NodeIterator_mutations_2.html \
 		test_bug28293.html \
+		test_bug28293.xhtml \
 		file_bug28293.sjs \
 		test_bug445225.html \
 		file_bug445225_multipart.txt \

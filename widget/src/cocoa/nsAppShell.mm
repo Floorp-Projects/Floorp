@@ -69,42 +69,62 @@ extern PRInt32             gXULModalLevel;
 
 static PRBool gAppShellMethodsSwizzled = PR_FALSE;
 // List of current Cocoa app-modal windows (nested if more than one).
-static nsCocoaAppModalWindowList *gCocoaAppModalWindowList = NULL;
+nsCocoaAppModalWindowList *gCocoaAppModalWindowList = NULL;
 
-nsCocoaAppModalWindowList::~nsCocoaAppModalWindowList()
-{
-  nsCocoaAppModalWindowListItem *listItem = mList;
-  while (listItem) {
-    nsCocoaAppModalWindowListItem *prev = listItem->mPrev;
-    delete listItem;
-    listItem = prev;
-  }
-}
-
-nsresult nsCocoaAppModalWindowList::Push(NSWindow *aWindow, NSModalSession aSession)
+// Push a Cocoa app-modal window onto the top of our list.
+nsresult nsCocoaAppModalWindowList::PushCocoa(NSWindow *aWindow, NSModalSession aSession)
 {
   NS_ENSURE_STATE(aWindow && aSession);
-  nsCocoaAppModalWindowListItem *newListItem = new nsCocoaAppModalWindowListItem;
-  newListItem->mWindow = aWindow;
-  newListItem->mSession = aSession;
-  newListItem->mPrev = mList;
-  mList = newListItem;
+  mList.AppendElement(nsCocoaAppModalWindowListItem(aWindow, aSession));
   return NS_OK;
 }
 
-// This always pops the top item in the list -- aWindow and aSession are just
-// used to check that it's what we expect it to be.
-nsresult nsCocoaAppModalWindowList::Pop(NSWindow *aWindow, NSModalSession aSession)
+// Pop the topmost Cocoa app-modal window off our list.  aWindow and aSession
+// are just used to check that it's what we expect it to be.
+nsresult nsCocoaAppModalWindowList::PopCocoa(NSWindow *aWindow, NSModalSession aSession)
 {
   NS_ENSURE_STATE(aWindow && aSession);
-  NS_ASSERTION(mList && (mList->mWindow == aWindow) && (mList->mSession == aSession),
-               "Pop() called without matching call to Push()!");
-  nsCocoaAppModalWindowListItem *listItem = mList;
-  if (listItem) {
-    mList = mList->mPrev;
-    delete listItem;
+
+  for (int i = mList.Length(); i > 0; --i) {
+    nsCocoaAppModalWindowListItem &item = mList.ElementAt(i - 1);
+    if (item.mSession) {
+      NS_ASSERTION((item.mWindow == aWindow) && (item.mSession == aSession),
+                   "PopCocoa() called without matching call to PushCocoa()!");
+      mList.RemoveElementAt(i - 1);
+      return NS_OK;
+    }
   }
+
+  NS_ERROR("PopCocoa() called without matching call to PushCocoa()!");
+  return NS_ERROR_FAILURE;
+}
+
+// Push a Gecko-modal window onto the top of our list.
+nsresult nsCocoaAppModalWindowList::PushGecko(NSWindow *aWindow, nsCocoaWindow *aWidget)
+{
+  NS_ENSURE_STATE(aWindow && aWidget);
+  mList.AppendElement(nsCocoaAppModalWindowListItem(aWindow, aWidget));
   return NS_OK;
+}
+
+// Pop the topmost Gecko-modal window off our list.  aWindow and aWidget are
+// just used to check that it's what we expect it to be.
+nsresult nsCocoaAppModalWindowList::PopGecko(NSWindow *aWindow, nsCocoaWindow *aWidget)
+{
+  NS_ENSURE_STATE(aWindow && aWidget);
+
+  for (int i = mList.Length(); i > 0; --i) {
+    nsCocoaAppModalWindowListItem &item = mList.ElementAt(i - 1);
+    if (item.mWidget) {
+      NS_ASSERTION((item.mWindow == aWindow) && (item.mWidget == aWidget),
+                   "PopGecko() called without matching call to PushGecko()!");
+      mList.RemoveElementAt(i - 1);
+      return NS_OK;
+    }
+  }
+
+  NS_ERROR("PopGecko() called without matching call to PushGecko()!");
+  return NS_ERROR_FAILURE;
 }
 
 // The "current session" is normally the "session" corresponding to the
@@ -119,20 +139,31 @@ nsresult nsCocoaAppModalWindowList::Pop(NSWindow *aWindow, NSModalSession aSessi
 // ProcessNextNativeEvent() below.
 NSModalSession nsCocoaAppModalWindowList::CurrentSession()
 {
-  NSModalSession currentSession = nil;
   if (![NSApp _isRunningAppModal])
     return nil;
 
-  nsCocoaAppModalWindowListItem *listItem = mList;
-  while (listItem) {
-    if ([listItem->mWindow isVisible]) {
-      currentSession = listItem->mSession;
+  NSModalSession currentSession = nil;
+
+  for (int i = mList.Length(); i > 0; --i) {
+    nsCocoaAppModalWindowListItem &item = mList.ElementAt(i - 1);
+    if (item.mSession && [item.mWindow isVisible]) {
+      currentSession = item.mSession;
       break;
     }
-    listItem = listItem->mPrev;
   }
 
   return currentSession;
+}
+
+// Has a Gecko modal dialog popped up over a Cocoa app-modal dialog?
+PRBool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
+{
+  if (mList.IsEmpty())
+    return PR_FALSE;
+
+  nsCocoaAppModalWindowListItem &topItem = mList.ElementAt(mList.Length() - 1);
+
+  return (topItem.mWidget != nsnull);
 }
 
 // AppShellDelegate
@@ -497,6 +528,19 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
   if (mTerminated)
     return PR_FALSE;
 
+  // We don't want any native events to be processed here (via Gecko) while
+  // Cocoa is displaying an app-modal dialog (as opposed to a window-modal
+  // "sheet" or a Gecko-modal dialog).  Otherwise Cocoa event-processing loops
+  // may be interrupted, and inappropriate events may get through to the
+  // browser window(s) underneath.  This resolves bmo bugs 419668 and 420967.
+  //
+  // But we need more complex handling (we need to make an exception) if a
+  // Gecko modal dialog is running above the Cocoa app-modal dialog -- for
+  // which see below.
+  if ([NSApp _isRunningAppModal] &&
+      (!gCocoaAppModalWindowList || !gCocoaAppModalWindowList->GeckoModalAboveCocoaModal()))
+    return PR_FALSE;
+
   PRBool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
   NSDate* waitUntil = nil;
@@ -566,36 +610,15 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
                                           untilDate:waitUntil
                                              inMode:currentMode
                                             dequeue:YES])) {
-        // If we're in a Cocoa app-modal session and the app-modal dialog is
-        // still visible, send the event to the session.  This ensures that
-        // inappropriate events won't get through to the browser window(s)
-        // below, and that bmo bugs 419668 and 420967 will stay fixed.  It
-        // also ensures that an app-modal session won't be starved of native
-        // events if it's "interrupted" by a Gecko-modal dialog -- which fixes
-        // bmo bugs 436473 and 442442.  (We used to fix bmo bugs 419668 and
-        // 420967 by refusing to process any native events here (in
-        // ProcessNextNativeEvent()) whenever [NSApp _isRunningAppModal] was
-        // true.  That was the patch for bug 419668.)
+        // If we're in a Cocoa app-modal session that's been interrupted by a
+        // Gecko-modal dialog, send the event to the Cocoa app-modal dialog's
+        // session.  This ensures that the app-modal session won't be starved
+        // of events, and fixes bugs 463473 and 442442.  (The case of an
+        // ordinary Cocoa app-modal dialog has been dealt with above.)
         //
-        // If the "current" Cocoa app-modal session is no longer visible but
-        // a nested one still is, send the event to the top-most visible
-        // session.  This ensures (as it needs to) that all Cocoa app-modal
-        // sessions will be dealt with before any Gecko-modal session(s).
-        //
-        // If no app-modal dialog is visible but we're still in a Cocoa
-        // app-modal session, process the event as if we were in a
-        // window-modal (aka doc-modal) session (i.e. a "sheet").
-        //
-        // The second and third options are needed needed because a Cocoa
-        // app-modal session can be "interrupted" by a Gecko modal dialog
-        // (which normally uses a sheet).  This prevents the Cocoa app-modal
-        // session from ending until the Gecko modal dialog terminates.  If
-        // (when this happens) we continue sending events to the (seemingly
-        // current) Cocoa app-modal session, system events (like mouse and
-        // keyboard events) will either be sent to the wrong Cocoa app-modal
-        // session (if they're nested), or they won't get through to the
-        // Gecko-modal dialog beneath (or to the other browser windows), and
-        // the browser will appear to hang.
+        // Otherwise (if we're in an ordinary Gecko-modal dialog, or if we're
+        // otherwise not in a Gecko main event loop), process the event as
+        // expected.
         NSModalSession currentAppModalSession = nil;
         if (gCocoaAppModalWindowList)
           currentAppModalSession = gCocoaAppModalWindowList->CurrentSession();
@@ -914,20 +937,20 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 @implementation NSApplication (MethodSwizzling)
 
 // Called if and only if a Cocoa app-modal session is beginning.  Always call
-// gCocoaAppModalWindowList->Push() here (if gCocoaAppModalWindowList is
+// gCocoaAppModalWindowList->PushCocoa() here (if gCocoaAppModalWindowList is
 // non-nil).
 - (NSModalSession)nsAppShell_NSApplication_beginModalSessionForWindow:(NSWindow *)aWindow
 {
   NSModalSession session =
     [self nsAppShell_NSApplication_beginModalSessionForWindow:aWindow];
   if (gCocoaAppModalWindowList)
-    gCocoaAppModalWindowList->Push(aWindow, session);
+    gCocoaAppModalWindowList->PushCocoa(aWindow, session);
   return session;
 }
 
 // Called to end any Cocoa modal session (app-modal or otherwise).  Only call
-// gCocoaAppModalWindowList->Pop() when an app-modal session is ending (and
-// when gCocoaAppModalWindowList is non-nil).
+// gCocoaAppModalWindowList->PopCocoa() when an app-modal session is ending
+// (and when gCocoaAppModalWindowList is non-nil).
 - (void)nsAppShell_NSApplication_endModalSession:(NSModalSession)aSession
 {
   BOOL wasRunningAppModal = [NSApp _isRunningAppModal];
@@ -935,7 +958,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   [self nsAppShell_NSApplication_endModalSession:aSession];
   if (gCocoaAppModalWindowList &&
       wasRunningAppModal && (prevAppModalWindow != [NSApp modalWindow]))
-    gCocoaAppModalWindowList->Pop(prevAppModalWindow, aSession);
+    gCocoaAppModalWindowList->PopCocoa(prevAppModalWindow, aSession);
 }
 
 @end

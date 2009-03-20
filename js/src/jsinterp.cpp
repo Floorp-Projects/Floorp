@@ -45,6 +45,7 @@
 #include <string.h>
 #include <math.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsprf.h"
@@ -663,11 +664,9 @@ js_FreeStack(JSContext *cx, void *mark)
 JSObject *
 js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *obj, *cursor, *clonedChild, *parent;
-    JSTempValueRooter tvr;
+    JSObject *sharedBlock = fp->blockChain;
 
-    obj = fp->blockChain;
-    if (!obj) {
+    if (!sharedBlock) {
         /*
          * Don't force a call object for a lightweight function call, but do
          * insist that there is a call object for a heavyweight function call.
@@ -679,70 +678,115 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         return fp->scopeChain;
     }
 
+    /* We don't handle cloning blocks on trace.  */
+    js_LeaveTrace(cx);
+
     /*
      * We have one or more lexical scopes to reflect into fp->scopeChain, so
      * make sure there's a call object at the current head of the scope chain,
      * if this frame is a call frame.
+     *
+     * Also, identify the innermost compiler-allocated block we needn't clone.
      */
+    JSObject *limitBlock, *limitClone;
     if (fp->fun && !fp->callobj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
                   OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
         if (!js_GetCallObject(cx, fp))
             return NULL;
+
+        /* We know we must clone everything on blockChain.  */ 
+        limitBlock = limitClone = NULL;
+    } else {
+        /*
+         * scopeChain includes all blocks whose static scope we're within that
+         * have already been cloned.  Find the innermost such block.  Its
+         * prototype should appear on blockChain; we'll clone blockChain up
+         * to, but not including, that prototype.
+         */
+        limitClone = fp->scopeChain;
+        while (OBJ_GET_CLASS(cx, limitClone) == &js_WithClass)
+            limitClone = OBJ_GET_PARENT(cx, limitClone);
+        JS_ASSERT(limitClone);
+
+        /* 
+         * It may seem like we don't know enough about limitClone to be able
+         * to just grab its prototype as we do here, but it's actually okay.
+         *
+         * If limitClone is a block object belonging to this frame, then its
+         * prototype is the innermost entry in blockChain that we have already
+         * cloned, and is thus the place to stop when we clone below.
+         *
+         * Otherwise, there are no blocks for this frame on scopeChain, and we
+         * need to clone the whole blockChain.  In this case, limitBlock can
+         * point to any object known not to be on blockChain, since we simply
+         * loop until we hit limitBlock or NULL.  If limitClone is a block, it
+         * isn't a block from this function, since blocks can't be nested
+         * within themselves on scopeChain (recursion is dynamic nesting, not
+         * static nesting).  If limitClone isn't a block, its prototype won't
+         * be a block either.  So we can just grab limitClone's prototype here
+         * regardless of its type or which frame it belongs to.
+         */
+        limitBlock = OBJ_GET_PROTO(cx, limitClone);
+
+        /* If the innermost block has already been cloned, we are done. */
+        if (limitBlock == sharedBlock)
+            return fp->scopeChain;
     }
 
     /*
-     * Clone the block chain. To avoid recursive cloning we set the parent of
-     * the cloned child after we clone the parent. In the following loop when
-     * clonedChild is null it indicates the first iteration when no special GC
-     * rooting is necessary. On the second and the following iterations we
-     * have to protect cloned so far chain against the GC during cloning of
-     * the cursor object.
+     * Special-case cloning the innermost block; this doesn't have enough in
+     * common with subsequent steps to include in the loop.
+     * 
+     * We pass fp->scopeChain and not null even if we override the parent slot
+     * later as null triggers useless calculations of slot's value in
+     * js_NewObject that js_CloneBlockObject calls.
      */
-    cursor = obj;
-    clonedChild = NULL;
+    JSObject *innermostNewChild
+        = js_CloneBlockObject(cx, sharedBlock, fp->scopeChain, fp);
+    if (!innermostNewChild)
+        return NULL;
+    JSAutoTempValueRooter tvr(cx, innermostNewChild);
+
+    /*
+     * Clone our way towards outer scopes until we reach the innermost
+     * enclosing function, or the innermost block we've already cloned.
+     */
+    JSObject *newChild = innermostNewChild;
     for (;;) {
-        parent = OBJ_GET_PARENT(cx, cursor);
+        JS_ASSERT(OBJ_GET_PROTO(cx, newChild) == sharedBlock);
+        sharedBlock = OBJ_GET_PARENT(cx, sharedBlock);
+
+        /* Sometimes limitBlock will be NULL, so check that first.  */
+        if (sharedBlock == limitBlock || !sharedBlock)
+            break;
+
+        /* As in the call above, we don't know the real parent yet.  */
+        JSObject *clone
+            = js_CloneBlockObject(cx, sharedBlock, fp->scopeChain, fp);
+        if (!clone)
+            return NULL;
 
         /*
-         * We pass fp->scopeChain and not null even if we override the parent
-         * slot later as null triggers useless calculations of slot's value in
-         * js_NewObject that js_CloneBlockObject calls.
+         * Avoid OBJ_SET_PARENT overhead as newChild cannot escape to
+         * other threads.
          */
-        cursor = js_CloneBlockObject(cx, cursor, fp->scopeChain, fp);
-        if (!cursor) {
-            if (clonedChild)
-                JS_POP_TEMP_ROOT(cx, &tvr);
-            return NULL;
-        }
-        if (!clonedChild) {
-            /*
-             * The first iteration. Check if other follow and root obj if so
-             * to protect the whole cloned chain against GC.
-             */
-            obj = cursor;
-            if (!parent)
-                break;
-            JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
-        } else {
-            /*
-             * Avoid OBJ_SET_PARENT overhead as clonedChild cannot escape to
-             * other threads.
-             */
-            STOBJ_SET_PARENT(clonedChild, cursor);
-            if (!parent) {
-                JS_ASSERT(tvr.u.value == OBJECT_TO_JSVAL(obj));
-                JS_POP_TEMP_ROOT(cx, &tvr);
-                break;
-            }
-        }
-        clonedChild = cursor;
-        cursor = parent;
+        STOBJ_SET_PARENT(newChild, clone);
+        newChild = clone;
     }
-    fp->flags |= JSFRAME_POP_BLOCKS;
-    fp->scopeChain = obj;
-    fp->blockChain = NULL;
-    return obj;
+
+    /*
+     * If we found a limit block belonging to this frame, then we should have
+     * found it in blockChain.
+     */
+    JS_ASSERT_IF(limitBlock && 
+                 OBJ_GET_CLASS(cx, limitBlock) == &js_BlockClass && 
+                 OBJ_GET_PRIVATE(cx, limitClone) == fp,
+                 sharedBlock);
+
+    /* Place our newly cloned blocks at the head of the scope chain.  */
+    fp->scopeChain = innermostNewChild;
+    return fp->scopeChain;
 }
 
 JSBool
@@ -936,24 +980,9 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 
     MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        JSXMLObjectOps *ops;
-
-        ops = (JSXMLObjectOps *) obj->map->ops;
-        obj = ops->getMethod(cx, obj, id, &tvr.u.value);
-        if (!obj) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        vp[1] = OBJECT_TO_JSVAL(obj);
-    } else
-#endif
-    {
-        ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
-        if (!ok)
-            goto out;
-    }
+    ok = js_GetMethod(cx, obj, id, &tvr.u.value, NULL);
+    if (!ok)
+        goto out;
     if (JSVAL_IS_PRIMITIVE(tvr.u.value)) {
         vp[0] = tvr.u.value;
     } else {
@@ -2685,12 +2714,14 @@ js_Interpret(JSContext *cx)
     JS_BEGIN_MACRO                                                            \
         regs.pc += (n);                                                       \
         op = (JSOp) *regs.pc;                                                 \
-        if (op == JSOP_NOP) {                                                 \
-            op = (JSOp) *++regs.pc;                                           \
-        } else if (op == JSOP_LOOP) {                                         \
+        if ((n) <= 0) {                                                       \
             CHECK_BRANCH();                                                   \
-            MONITOR_BRANCH();                                                 \
-            op = (JSOp) *regs.pc;                                             \
+            if (op == JSOP_NOP) {                                             \
+                op = (JSOp) *++regs.pc;                                       \
+            } else if (op == JSOP_LOOP) {                                     \
+                MONITOR_BRANCH();                                             \
+                op = (JSOp) *regs.pc;                                         \
+            }                                                                 \
         }                                                                     \
         DO_OP();                                                              \
     JS_END_MACRO
@@ -3262,7 +3293,6 @@ js_Interpret(JSContext *cx)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < fp->script->nslots);
             vp = &fp->slots[slot];
-            GC_POKE(cx, *vp);
             *vp = regs.sp[-1];
           END_CASE(JSOP_FORLOCAL)
 
@@ -3583,12 +3613,9 @@ js_Interpret(JSContext *cx)
         (rtmp == JSVAL_OBJECT &&                                              \
          (obj2 = JSVAL_TO_OBJECT(rval)) &&                                    \
          OBJECT_IS_XML(cx, obj2))) {                                          \
-        JSXMLObjectOps *ops;                                                  \
-                                                                              \
-        ops = (JSXMLObjectOps *) obj2->map->ops;                              \
         if (JSVAL_IS_OBJECT(rval) && obj2 == JSVAL_TO_OBJECT(rval))           \
             rval = lval;                                                      \
-        if (!ops->equality(cx, obj2, rval, &cond))                            \
+        if (!js_TestXMLEquality(cx, obj2, rval, &cond))                       \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
@@ -3762,10 +3789,7 @@ js_Interpret(JSContext *cx)
             if (!JSVAL_IS_PRIMITIVE(lval) &&
                 (obj2 = JSVAL_TO_OBJECT(lval), OBJECT_IS_XML(cx, obj2)) &&
                 VALUE_IS_XML(cx, rval)) {
-                JSXMLObjectOps *ops;
-
-                ops = (JSXMLObjectOps *) obj2->map->ops;
-                if (!ops->concatenate(cx, obj2, rval, &rval))
+                if (!js_ConcatenateXML(cx, obj2, rval, &rval))
                     goto error;
                 regs.sp--;
                 STORE_OPND(-1, rval);
@@ -4387,22 +4411,8 @@ js_Interpret(JSContext *cx)
             id = ATOM_TO_JSID(atom);
             PUSH(JSVAL_NULL);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
-#if JS_HAS_XML_SUPPORT
-                /* Special-case XML object method lookup, per ECMA-357. */
-                if (OBJECT_IS_XML(cx, obj)) {
-                    JSXMLObjectOps *ops;
-
-                    ops = (JSXMLObjectOps *) obj->map->ops;
-                    obj = ops->getMethod(cx, obj, id, &rval);
-                    if (!obj)
-                        goto error;
-                } else
-#endif
-                if (entry
-                    ? !js_GetPropertyHelper(cx, obj, id, &rval, &entry)
-                    : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
+                if (!js_GetMethod(cx, obj, id, &rval, entry ? &entry : NULL))
                     goto error;
-                }
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
             } else {
@@ -4700,11 +4710,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_CALLELEM)
-            /*
-             * FIXME: JSOP_CALLELEM should call getMethod on XML objects as
-             * CALLPROP does. See bug 362910.
-             */
-            ELEMENT_OP(-1, OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            ELEMENT_OP(-1, js_GetMethod(cx, obj, id, &rval, NULL));
 #if JS_HAS_NO_SUCH_METHOD
             if (JS_UNLIKELY(JSVAL_IS_VOID(rval))) {
                 regs.sp[-2] = regs.sp[-1];
@@ -5554,7 +5560,6 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
             vp = &fp->argv[slot];
-            GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
           END_SET_CASE(JSOP_SETARG)
 
@@ -5575,7 +5580,6 @@ js_Interpret(JSContext *cx)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < script->nslots);
             vp = &fp->slots[slot];
-            GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
           END_SET_CASE(JSOP_SETLOCAL)
 
@@ -6744,50 +6748,57 @@ js_Interpret(JSContext *cx)
                 regs.sp++;
             }
 
+#ifdef DEBUG
+            JS_ASSERT(fp->blockChain == OBJ_GET_PARENT(cx, obj));
+
             /*
-             * If this frame had to reflect the compile-time block chain into
-             * the runtime scope chain, we can't optimize block scopes out of
-             * runtime any longer, because an outer block that parents obj has
-             * been cloned onto the scope chain.  To avoid re-cloning such a
-             * parent and accumulating redundant clones via js_GetScopeChain,
-             * we must clone each block eagerly on entry, and push it on the
-             * scope chain, until this frame pops.
+             * The young end of fp->scopeChain may omit blocks if we
+             * haven't closed over them, but if there are any closure
+             * blocks on fp->scopeChain, they'd better be (clones of)
+             * ancestors of the block we're entering now; anything
+             * else we should have popped off fp->scopeChain when we
+             * left its static scope.
              */
-            if (fp->flags & JSFRAME_POP_BLOCKS) {
-                JS_ASSERT(!fp->blockChain);
-                obj = js_CloneBlockObject(cx, obj, fp->scopeChain, fp);
-                if (!obj)
-                    goto error;
-                fp->scopeChain = obj;
-            } else {
-                JS_ASSERT(!fp->blockChain ||
-                          OBJ_GET_PARENT(cx, obj) == fp->blockChain);
-                fp->blockChain = obj;
+            obj2 = fp->scopeChain;
+            while ((clasp = OBJ_GET_CLASS(cx, obj2)) == &js_WithClass)
+                obj2 = OBJ_GET_PARENT(cx, obj2);
+            if (clasp == &js_BlockClass &&
+                OBJ_GET_PRIVATE(cx, obj2) == fp) {
+                JSObject *youngestProto = OBJ_GET_PROTO(cx, obj2);
+                JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
+                parent = obj;
+                while ((parent = OBJ_GET_PARENT(cx, parent)) != youngestProto)
+                    JS_ASSERT(parent);
             }
+#endif
+
+            fp->blockChain = obj;
           END_CASE(JSOP_ENTERBLOCK)
 
           BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
           BEGIN_CASE(JSOP_LEAVEBLOCK)
           {
 #ifdef DEBUG
-             uintN blockDepth = OBJ_BLOCK_DEPTH(cx,
-                                                fp->blockChain
-                                                ? fp->blockChain
-                                                : fp->scopeChain);
-
-             JS_ASSERT(blockDepth <= StackDepth(script));
+            JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
+            uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain);
+             
+            JS_ASSERT(blockDepth <= StackDepth(script));
 #endif
-            if (fp->blockChain) {
-                JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
-                fp->blockChain = OBJ_GET_PARENT(cx, fp->blockChain);
-            } else {
-                /*
-                 * This block was cloned into fp->scopeChain, so clear its
-                 * private data and sync its locals to their property slots.
-                 */
+            /*
+             * If we're about to leave the dynamic scope of a block that has
+             * been cloned onto fp->scopeChain, clear its private data, move
+             * its locals from the stack into the clone, and pop it off the
+             * chain.
+             */
+            obj = fp->scopeChain;
+            if (OBJ_GET_PROTO(cx, obj) == fp->blockChain) {
+                JS_ASSERT (OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
                 if (!js_PutBlockObject(cx, JS_TRUE))
                     goto error;
             }
+
+            /* Pop the block chain, too.  */
+            fp->blockChain = OBJ_GET_PARENT(cx, fp->blockChain);
 
             /*
              * We will move the result of the expression to the new topmost
@@ -6955,7 +6966,7 @@ js_Interpret(JSContext *cx)
         atoms = script->atomMap.vector;
     }
 
-    JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
+    JS_ASSERT((size_t)((fp->imacpc ? fp->imacpc : regs.pc) - script->code) < script->length);
 
 #ifdef JS_TRACER
     /* 

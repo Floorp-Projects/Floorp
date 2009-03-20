@@ -401,25 +401,45 @@ case $testtype in
             if ! grep -q $jsfile $excludetestsfile; then
 
                 version=`shellfileversion $jsfile`
-                
+
                 subsuitetestdir=`dirname $jsfile`
                 suitetestdir=`dirname $subsuitetestdir`
                 echo "JavaScriptTest: Begin Test $jsfile"
-                if eval $TIMECOMMAND timed_run.py $TEST_JSEACH_TIMEOUT \"$jsfile\" \
-                    $EXECUTABLE_DRIVER \
-                    $executable -v $version \
-                    -S 524288 \
-                    $gczealshell \
-                    $splitobjects \
-                    $jitshell \
-                    -f ./shell.js \
-                    -f $suitetestdir/shell.js \
-                    -f $subsuitetestdir/shell.js \
-                    -f ./$jsfile \
-                    -f ./js-test-driver-end.js; then
-                    true
+                if [[ -z "$NARCISSUS" ]]; then
+                    if eval $TIMECOMMAND timed_run.py $TEST_JSEACH_TIMEOUT \"$jsfile\" \
+                        $EXECUTABLE_DRIVER \
+                        $executable -v $version \
+                        -S 524288 \
+                        $gczealshell \
+                        $splitobjects \
+                        $jitshell \
+                        -f ./shell.js \
+                        -f $suitetestdir/shell.js \
+                        -f $subsuitetestdir/shell.js \
+                        -f ./$jsfile \
+                        -f ./js-test-driver-end.js; then
+                        true
+                    else
+                        rc=$?
+                    fi
                 else
-                    rc=$?
+                    if eval $TIMECOMMAND timed_run.py $TEST_JSEACH_TIMEOUT \"$jsfile\" \
+                        $EXECUTABLE_DRIVER \
+                        $executable -v $version \
+                        -S 524288 \
+                        $gczealshell \
+                        $splitobjects \
+                        $jitshell \
+                        -f $NARCISSUS \
+                        -e "evaluate\(\'load\(\\\"./shell.js\\\"\)\'\)" \
+                        -e "evaluate\(\'load\(\\\"$suitetestdir/shell.js\\\"\)\'\)" \
+                        -e "evaluate\(\'load\(\\\"$subsuitetestdir/shell.js\\\"\)\'\)" \
+                        -e "evaluate\(\'load\(\\\"./$jsfile\\\"\)\'\)" \
+                        -e "evaluate\(\'load\(\\\"./js-test-driver-end.js\\\"\)\'\)"; then
+                        true
+                    else
+                        rc=$?
+                    fi
                 fi
                 if [[ $rc == 99 ]]; then
                     # note that this loop is executing in a sub-process

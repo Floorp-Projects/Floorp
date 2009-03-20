@@ -58,6 +58,9 @@ Var InstallType
 Var AddStartMenuSC
 Var AddQuickLaunchSC
 Var AddDesktopSC
+Var PageName
+
+!define AbortSurveyURL "http://www.kampyle.com/feedback_form/ff-feedback-form.php?site_code=8166124&form_id=12116&url="
 
 ; Other included files may depend upon these includes!
 ; The following includes are provided by NSIS.
@@ -72,6 +75,7 @@ Var AddDesktopSC
 !insertmacro GetParameters
 !insertmacro GetSize
 !insertmacro StrFilter
+!insertmacro WordFind
 !insertmacro WordReplace
 
 ; The following includes are custom.
@@ -129,7 +133,8 @@ ShowInstDetails nevershow
 ################################################################################
 # Modern User Interface - MUI
 
-!define MUI_ABORTWARNING
+!define MOZ_MUI_CUSTOM_ABORT
+!define MUI_CUSTOMFUNCTION_ABORT "CustomAbort"
 !define MUI_ICON setup.ico
 !define MUI_UNICON setup.ico
 !define MUI_WELCOMEPAGE_TITLE_3LINES
@@ -478,20 +483,93 @@ Section "-InstallEndCleanup"
 SectionEnd
 
 ################################################################################
+# Install Abort Survey Functions
+
+Function CustomAbort
+  ${If} "${AB_CD}" == "en-US"
+  ${AndIf} "$PageName" != ""
+  ${AndIf} ${FileExists} "$EXEDIR\nonlocalized\distribution\distribution.ini"
+    ReadINIStr $0 "$EXEDIR\nonlocalized\distribution\distribution.ini" "Global" "about"
+    ClearErrors
+    ${WordFind} "$0" "Funnelcake" "E#" $1
+    ${Unless} ${Errors}
+      ; Yes = fill out the survey and exit, No = don't fill out survey and exit,
+      ; Cancel = don't exit.
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION \
+                 "Would you like to tell us why you are canceling this installation?" \
+                 IDYes +1 IDNO CustomAbort_finish
+      ${If} "$PageName" == "Welcome"
+          GetFunctionAddress $0 AbortSurveyWelcome
+      ${ElseIf} "$PageName" == "Options"
+          GetFunctionAddress $0 AbortSurveyOptions
+      ${ElseIf} "$PageName" == "Directory"
+          GetFunctionAddress $0 AbortSurveyDirectory
+      ${ElseIf} "$PageName" == "Shortcuts"
+          GetFunctionAddress $0 AbortSurveyShortcuts
+      ${ElseIf} "$PageName" == "StartMenu"
+          GetFunctionAddress $0 AbortSurveyStartMenu
+      ${ElseIf} "$PageName" == "Summary"
+          GetFunctionAddress $0 AbortSurveySummary
+      ${EndIf}
+      ClearErrors
+      ${GetParameters} $1
+      ${GetOptions} "$1" "/UAC:" $2
+      ${If} ${Errors}
+        Call $0
+      ${Else}
+        UAC::ExecCodeSegment $0
+      ${EndIf}
+      
+      CustomAbort_finish:
+      Return
+    ${EndUnless}
+  ${EndIf}
+
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(MOZ_MUI_TEXT_ABORTWARNING)" \
+             IDYES +1 IDNO +2
+  Return
+  Abort
+FunctionEnd
+
+Function AbortSurveyWelcome
+  ExecShell "open" "${AbortSurveyURL}step1"
+FunctionEnd
+
+Function AbortSurveyOptions
+  ExecShell "open" "${AbortSurveyURL}step2"
+FunctionEnd
+
+Function AbortSurveyDirectory
+  ExecShell "open" "${AbortSurveyURL}step3"
+FunctionEnd
+
+Function AbortSurveyShortcuts
+  ExecShell "open" "${AbortSurveyURL}step4"
+FunctionEnd
+
+Function AbortSurveyStartMenu
+  ExecShell "open" "${AbortSurveyURL}step5"
+FunctionEnd
+
+Function AbortSurveySummary
+  ExecShell "open" "${AbortSurveyURL}step6"
+FunctionEnd
+
+################################################################################
 # Helper Functions
 
 Function CheckExistingInstall
   ; If there is a pending file copy from a previous uninstall don't allow
   ; installing until after the system has rebooted.
   IfFileExists "$INSTDIR\${FileMainEXE}.moz-upgrade" +1 +4
-  MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
   Reboot
   Quit
 
   ; If there is a pending file deletion from a previous uninstall don't allow
   ; installing until after the system has rebooted.
   IfFileExists "$INSTDIR\${FileMainEXE}.moz-delete" +1 +4
-  MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UNINSTALL)" IDNO +2
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION "$(WARN_RESTART_REQUIRED_UNINSTALL)" IDNO +2
   Reboot
   Quit
 
@@ -564,6 +642,7 @@ BrandingText " "
 # Page pre, show, and leave functions
 
 Function preWelcome
+  StrCpy $PageName "Welcome"
   ${If} ${FileExists} "$EXEDIR\localized\distribution\modern-wizard.bmp"
     Delete "$PLUGINSDIR\modern-wizard.bmp"
     CopyFiles /SILENT "$EXEDIR\localized\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
@@ -571,6 +650,7 @@ Function preWelcome
 FunctionEnd
 
 Function preOptions
+  StrCpy $PageName "Options"
   ${If} ${FileExists} "$EXEDIR\localized\distribution\modern-header.bmp"
   ${AndIf} $hHeaderBitmap == ""
     Delete "$PLUGINSDIR\modern-header.bmp"
@@ -613,6 +693,7 @@ Function leaveOptions
 FunctionEnd
 
 Function preDirectory
+  StrCpy $PageName "Directory"
   ${PreDirectoryCommon}
 FunctionEnd
 
@@ -621,6 +702,7 @@ Function leaveDirectory
 FunctionEnd
 
 Function preShortcuts
+  StrCpy $PageName "Shortcuts"
   ${CheckCustomCommon}
   !insertmacro MUI_HEADER_TEXT "$(SHORTCUTS_PAGE_TITLE)" "$(SHORTCUTS_PAGE_SUBTITLE)"
   !insertmacro MUI_INSTALLOPTIONS_DISPLAY "shortcuts.ini"
@@ -637,6 +719,7 @@ Function leaveShortcuts
 FunctionEnd
 
 Function preStartMenu
+  StrCpy $PageName "StartMenu"
   ; With the Unicode installer the path to the application's Start Menu
   ; directory relative to the Start Menu's Programs directory is written to the
   ; shortcuts log ini file and is used to set the default Start Menu directory.
@@ -676,6 +759,7 @@ Function leaveStartMenu
 FunctionEnd
 
 Function preSummary
+  StrCpy $PageName "Summary"
   ; Setup the summary.ini file for the Custom Summary Page
   WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "3"
 
@@ -764,6 +848,7 @@ FunctionEnd
 ; When we add an optional action to the finish page the cancel button is
 ; enabled. This disables it and leaves the finish button as the only choice.
 Function preFinish
+  StrCpy $PageName ""
   ${EndInstallLog} "${BrandFullName}"
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
 FunctionEnd
@@ -772,6 +857,7 @@ FunctionEnd
 # Initialization Functions
 
 Function .onInit
+  StrCpy $PageName ""
   StrCpy $LANGUAGE 0
   ${SetBrandNameVars} "$EXEDIR\localized\distribution\setup.ini"
 

@@ -1,0 +1,21 @@
+== infer-first-row.html 3x3-ref.html
+== infer-first-row-and-table.html 3x3-ref.html
+== infer-second-row.html 3x3-ref.html
+== infer-second-row-and-table.html 3x3-ref.html
+== infer-table-around-headers-footers-1.html 3x3-ref.html
+== infer-table-around-headers-footers-2.html 3x3-ref.html
+== infer-table-around-headers-footers-3.html 3x3-ref.html
+== infer-rows-inside-rowgroups.html 3x3-ref.html
+== infer-table-row-cell.html 3x3-ref.html # Or should it be?  Spec is unclear.
+== infer-table.html 3x3-ref.html
+!= 3-tables-ref.html 3x3-ref.html
+== blocks-divide-tables-1.html 3-tables-ref.html
+== blocks-divide-tables-2.html 3-tables-ref.html
+== infer-cells-1.html 3-tables-ref.html
+== infer-cells-2.html 3x3-ref.html
+== infer-cells-3.html 3x3-ref.html
+== infer-cells-4.html 3x3-ref.html
+== cols-test-1.html 3x3-cols-ref.html
+== cols-test-2.html 3x3-cols-ref.html
+== cols-test-3.html 3x3-cols-ref.html
+== white-space-1.html white-space-1-ref.html

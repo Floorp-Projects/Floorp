@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463039
   <title>Test for Bug 463039</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <script type="text/javascript" src="geolocation_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -21,9 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463039
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 463039 **/
-
-ok(navigator.geolocation, "Should have geolocation");
-
 
 // there are no watches, so this should always throw
 for (x=-10; x<10; x++) {

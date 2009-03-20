@@ -43,6 +43,7 @@
  */
 #include <string.h>     /* for memcpy */
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsarena.h"
 #include "jsapi.h"
@@ -104,9 +105,8 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 #if JS_HAS_XML_SUPPORT
         uintN flags = JSVAL_TO_INT(STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_FLAGS));
         if ((flags & JSITER_FOREACH) && OBJECT_IS_XML(cx, iterable)) {
-            ((JSXMLObjectOps *) iterable->map->ops)->
-                enumerateValues(cx, iterable, JSENUMERATE_DESTROY, &state,
-                                NULL, NULL);
+            js_EnumerateXMLValues(cx, iterable, JSENUMERATE_DESTROY, &state,
+                                  NULL, NULL);
         } else
 #endif
             OBJ_ENUMERATE(cx, iterable, JSENUMERATE_DESTROY, &state, NULL);
@@ -143,8 +143,7 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
     ok =
 #if JS_HAS_XML_SUPPORT
          ((flags & JSITER_FOREACH) && OBJECT_IS_XML(cx, obj))
-         ? ((JSXMLObjectOps *) obj->map->ops)->
-               enumerateValues(cx, obj, JSENUMERATE_INIT, &state, NULL, NULL)
+         ? js_EnumerateXMLValues(cx, obj, JSENUMERATE_INIT, &state, NULL, NULL)
          :
 #endif
            OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, NULL);
@@ -233,9 +232,8 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     ok =
 #if JS_HAS_XML_SUPPORT
          (foreach && OBJECT_IS_XML(cx, iterable))
-         ? ((JSXMLObjectOps *) iterable->map->ops)->
-               enumerateValues(cx, iterable, JSENUMERATE_NEXT, &state,
-                               &id, rval)
+         ? js_EnumerateXMLValues(cx, iterable, JSENUMERATE_NEXT, &state,
+                                 &id, rval)
          :
 #endif
            OBJ_ENUMERATE(cx, iterable, JSENUMERATE_NEXT, &state, &id);
@@ -377,17 +375,8 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         *vp = OBJECT_TO_JSVAL(iterobj);
     } else {
         atom = cx->runtime->atomState.iteratorAtom;
-#if JS_HAS_XML_SUPPORT
-        if (OBJECT_IS_XML(cx, obj)) {
-            if (!js_GetXMLFunction(cx, obj, ATOM_TO_JSID(atom), vp))
-                goto bad;
-        } else
-#endif
-        {
-            if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp))
-                goto bad;
-        }
-
+        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), vp, NULL))
+            goto bad;
         if (JSVAL_IS_VOID(*vp)) {
           default_iter:
             /*
@@ -486,10 +475,8 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
      */
     if (obj == origobj && OBJECT_IS_XML(cx, obj)) {
         if (foreach) {
-            JSXMLObjectOps *xmlops = (JSXMLObjectOps *) obj->map->ops;
-
-            if (!xmlops->enumerateValues(cx, obj, JSENUMERATE_NEXT, &state,
-                                         &id, rval)) {
+            if (!js_EnumerateXMLValues(cx, obj, JSENUMERATE_NEXT, &state,
+                                       &id, rval)) {
                 return JS_FALSE;
             }
         } else {
@@ -786,6 +773,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.flags = (fp->flags & ~JSFRAME_ROOTED_ARGV) | JSFRAME_GENERATOR;
     gen->frame.dormantNext = NULL;
     gen->frame.xmlNamespace = NULL;
+    /* JSOP_GENERATOR appears in the prologue, outside all blocks.  */
+    JS_ASSERT(!fp->blockChain);
     gen->frame.blockChain = NULL;
 
     /* Note that gen is newborn. */

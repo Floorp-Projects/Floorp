@@ -1299,9 +1299,13 @@ tabpanels {
   opacity: 0.0;
 }
 
+.tabs-alltabs-button {
+  margin-bottom: 1px;
+}
+
 .tabs-alltabs-button > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
-  margin: 2px 0 2px;
+  margin: 2px 0 1px;
 }
 
 /* Sidebar */

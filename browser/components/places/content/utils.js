@@ -661,13 +661,16 @@ var PlacesUIUtils = {
    *        item identifier for which the properties are to be shown
    * @param aType
    *        item type, either "bookmark" or "folder"
+   * @param [optional] aReadOnly
+   *        states if properties dialog should be readonly
    * @return true if any transaction has been performed.
    */
-  showItemProperties: function PU_showItemProperties(aItemId, aType) {
+  showItemProperties: function PU_showItemProperties(aItemId, aType, aReadOnly) {
     var info = {
       action: "edit",
       type: aType,
-      itemId: aItemId
+      itemId: aItemId,
+      readOnly: aReadOnly
     };
     return this._showBookmarkDialog(info);
   },
@@ -982,6 +985,20 @@ var PlacesUIUtils = {
   },
 
   /**
+   * Helper for guessing scheme from an url string.
+   * Used to avoid nsIURI overhead in frequently called UI functions.
+   *
+   * @param aUrlString the url to guess the scheme from.
+   * 
+   * @return guessed scheme for this url string.
+   *
+   * @note this is not supposed be perfect, so use it only for UI purposes.
+   */
+  guessUrlSchemeForUI: function PUU_guessUrlSchemeForUI(aUrlString) {
+    return aUrlString.substr(0, aUrlString.indexOf(":"));
+  },
+
+  /**
    * Helper for the toolbar and menu views
    */
   createMenuItemForNode:
@@ -999,9 +1016,7 @@ var PlacesUIUtils = {
       if (PlacesUtils.uriTypes.indexOf(type) != -1) {
         element = document.createElement("menuitem");
         element.className = "menuitem-iconic bookmark-item";
-
-        if (aNode.uri.lastIndexOf("javascript:", 0) == 0)
-          element.setAttribute("bookmarklet", "true");
+        element.setAttribute("scheme", this.guessUrlSchemeForUI(aNode.uri));
       }
       else if (PlacesUtils.containerTypes.indexOf(type) != -1) {
         element = document.createElement("menu");

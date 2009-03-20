@@ -39,6 +39,7 @@
 #define nsAboutProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsSimpleNestedURI.h"
 
 class nsCString;
 class nsIAboutModule;
@@ -71,5 +72,37 @@ private:
     ~nsSafeAboutProtocolHandler() {}
 };
 
+
+// Class to allow us to propagate the base URI to about:blank correctly
+class nsNestedAboutURI : public nsSimpleNestedURI {
+public:
+    nsNestedAboutURI(nsIURI* aInnerURI, nsIURI* aBaseURI)
+        : nsSimpleNestedURI(aInnerURI)
+        , mBaseURI(aBaseURI)
+    {}
+
+    // For use only from deserialization
+    nsNestedAboutURI() : nsSimpleNestedURI() {}
+
+    virtual ~nsNestedAboutURI() {}
+
+    // Override QI so we can QI to our CID as needed
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+    // Override StartClone(), the nsISerializable methods, and
+    // GetClassIDNoAlloc; this last is needed to make our nsISerializable impl
+    // work right.
+    virtual nsSimpleURI* StartClone();
+    NS_IMETHOD Read(nsIObjectInputStream* aStream);
+    NS_IMETHOD Write(nsIObjectOutputStream* aStream);
+    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc);
+
+    nsIURI* GetBaseURI() const {
+        return mBaseURI;
+    }
+
+protected:
+    nsCOMPtr<nsIURI> mBaseURI;
+};
 
 #endif /* nsAboutProtocolHandler_h___ */

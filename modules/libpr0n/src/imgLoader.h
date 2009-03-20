@@ -168,7 +168,6 @@ private: // data
   NS_DECL_OWNINGTHREAD
 
   nsRefPtr<imgRequest> mRequest;
-  nsCOMPtr<nsIURI> mKeyURI;
   PRUint32 mDataSize;
   PRInt32 mTouchedTime;
   PRInt32 mExpiryTime;

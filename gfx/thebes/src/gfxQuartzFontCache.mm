@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <Carbon.h>
+#include <Carbon/Carbon.h>
 
 #import <AppKit/AppKit.h>
 

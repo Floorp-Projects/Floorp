@@ -1,19 +1,35 @@
 /* ..... page navigation ..... */
 
 .home-arrow {
-  list-style-image: url("moz-icon://stock/gtk-goto-first?size=menu");
+  list-style-image: url("moz-icon://stock/gtk-goto-first-ltr?size=menu");
+}
+
+.home-arrow[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-goto-first-rtl?size=menu");
 }
 
 .end-arrow {
-  list-style-image: url("moz-icon://stock/gtk-goto-last?size=menu");
+  list-style-image: url("moz-icon://stock/gtk-goto-last-ltr?size=menu");
+}
+
+.end-arrow[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-goto-last-rtl?size=menu");
 }
 
 .left-arrow {
-  list-style-image: url("moz-icon://stock/gtk-go-back?size=menu");
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
+}
+
+.left-arrow[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
 .right-arrow {
-  list-style-image: url("moz-icon://stock/gtk-go-forward?size=menu");
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
+}
+
+.right-arrow[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
 /* ..... orientation ..... */

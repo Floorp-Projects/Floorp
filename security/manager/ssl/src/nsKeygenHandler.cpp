@@ -170,7 +170,7 @@ done:
 }
 
 typedef struct curveNameTagPairStr {
-    char *curveName;
+    const char *curveName;
     SECOidTag curveOidTag;
 } CurveNameTagPair;
 
@@ -258,7 +258,7 @@ static CurveNameTagPair nameTagPair[] =
 };
 
 SECKEYECParams * 
-decode_ec_params(char *curve)
+decode_ec_params(const char *curve)
 {
     SECKEYECParams *ecparams;
     SECOidData *oidData = NULL;

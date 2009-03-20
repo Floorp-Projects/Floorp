@@ -52,14 +52,12 @@
    entirely too much GC.  */
 #undef JS_GC_ZEAL
 
-/* Define to 1 if the public SpiderMonkey headers may assume that the
-   system <stdint.h> is present and useable.  Otherwise, they should
-   include "jsstdint.h", which uses values guessed at configuration
-   time.  */
+/* Define to 1 if the standard <stdint.h> header is present and
+   useable.  See jstypes.h and jsstdint.h.  */
 #undef JS_HAVE_STDINT_H
 
-/* Define to 1 if the public SpiderMonkey headers may assume that the
-   N-byte __intN types are defined by the compiler.  */
+/* Define to 1 if the N-byte __intN types are defined by the
+   compiler.  */
 #undef JS_HAVE___INTN
 
 /* Define to 1 if #including <stddef.h> provides definitions for

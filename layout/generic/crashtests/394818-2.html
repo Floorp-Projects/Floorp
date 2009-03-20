@@ -1,0 +1,16 @@
+<html class="reftest-wait"><head><script>
+  function load() {
+    window.frames[0].focus();
+    setTimeout("load2();", 100);
+  }
+  function load2() {
+    document.body.setAttribute('style','display: inline');
+    document.documentElement.removeAttribute("class");
+  }
+  function beforeCopy() {
+    document.removeChild(document.documentElement);
+  }
+</script></head>
+<body onload="load();" 
+      onbeforecopy="beforeCopy();"><iframe></iframe></body>
+</html>

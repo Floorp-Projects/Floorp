@@ -123,6 +123,16 @@
      { 0xa7, 0x85, 0x85, 0xc3, 0x94, 0x01, 0x25, 0x03 }  \
 }
 
+// component inheriting from the nested simple URI component and also
+// carrying along its base URI
+#define NS_NESTEDABOUTURI_CID                            \
+{ /* 2f277c00-0eaf-4ddb-b936-41326ba48aae */             \
+     0x2f277c00,                                         \
+     0x0eaf,                                             \
+     0x4ddb,                                             \
+     { 0xb9, 0x36, 0x41, 0x32, 0x6b, 0xa4, 0x8a, 0xae }  \
+}
+
 // component implementing nsIStandardURL, nsIURI, nsIURL, nsISerializable,
 // and nsIClassInfo.
 #define NS_STANDARDURL_CLASSNAME \
@@ -799,6 +809,21 @@
     0x11d6,                                            \
     { 0xa6, 0x18, 0x00, 0x10, 0xa4, 0x01, 0xeb, 0x10 } \
 }
+
+/******************************************************************************
+ * netwerk/wifi classes
+ */
+#ifdef NECKO_WIFI
+#define NS_WIFI_MONITOR_CLASSNAME  "WIFI_MONITOR"
+#define NS_WIFI_MONITOR_CONTRACTID "@mozilla.org/wifi/monitor;1"
+
+#define NS_WIFI_MONITOR_COMPONENT_CID                  \
+{  0x3FF8FB9F,                                         \
+   0xEE63,                                             \
+   0x48DF,                                             \
+   { 0x89, 0xF0, 0xDA, 0xCE, 0x02, 0x42, 0xFD, 0x82 }  \
+}
+#endif
 
 /******************************************************************************
  * netwerk/streamconv classes

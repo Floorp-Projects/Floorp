@@ -50,6 +50,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsatom.h"
@@ -649,7 +650,7 @@ jsdouble js_NaN;
  * to 53 bit mantissa.
  * On Alpha platform this is handled via Compiler option.
  */
-#define FIX_FPU() _control87(MCW_EM | PC_53, MCW_EM | MCW_PC)
+#define FIX_FPU() _control87(_MCW_EM | _PC_53, _MCW_EM | _MCW_PC)
 
 #else
 

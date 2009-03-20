@@ -63,13 +63,7 @@
 #include "prenv.h"
 #ifdef XP_MACOSX
 #include <CoreServices/CoreServices.h>
-#include <Folders.h>
-#include <Files.h>
-#include <Memory.h>
-#include <Processes.h>
-#include <Gestalt.h>
-#include <CFURL.h>
-#include <InternetConfig.h>
+#include <Carbon/Carbon.h>
 #endif
 #elif defined(XP_OS2)
 #define MAX_PATH _MAX_PATH

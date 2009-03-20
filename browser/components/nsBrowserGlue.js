@@ -808,7 +808,7 @@ BrowserGlue.prototype = {
   },
 
   ensurePlacesDefaultQueriesInitialized: function() {
-    const SMART_BOOKMARKS_VERSION = 1;
+    const SMART_BOOKMARKS_VERSION = 2;
     const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
     const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
@@ -852,8 +852,8 @@ BrowserGlue.prototype = {
         var smart = {queryId: "MostVisited", // don't change this
                      itemId: null,
                      title: placesBundle.GetStringFromName("mostVisitedTitle"),
-                     uri: this._uri("place:queryType=" +
-                                    Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
+                     uri: this._uri("place:redirectsMode=" +
+                                    Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET +
                                     "&sort=" +
                                     Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
                                     "&maxResults=" + MAX_RESULTS),
@@ -1039,17 +1039,17 @@ GeolocationPrompt.prototype = {
       var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
-        label: browserBundle.GetStringFromName("geolocation.exactLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.exactLocationKey"),
+        label: browserBundle.GetStringFromName("geolocation.tellThem"),
+        accessKey: browserBundle.GetStringFromName("geolocation.tellThemKey"),
         callback: function() request.allow() ,
         },
         {
-        label: browserBundle.GetStringFromName("geolocation.nothingLocation"),
-        accessKey: browserBundle.GetStringFromName("geolocation.nothingLocationKey"),
+        label: browserBundle.GetStringFromName("geolocation.dontTellThem"),
+        accessKey: browserBundle.GetStringFromName("geolocation.dontTellThemKey"),
         callback: function() request.cancel() ,
         }];
       
-      var message = browserBundle.formatStringFromName("geolocation.requestMessage",
+      var message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
                                                        [request.requestingURI.spec], 1);      
       notificationBox.appendNotification(message,
                                          "geolocation",

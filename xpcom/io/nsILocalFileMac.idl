@@ -40,8 +40,8 @@
 #include "nsILocalFile.idl"
 
 %{C++
-#include <Files.h>
-#include <CFURL.h>
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 %}
 
       native OSType(OSType);

@@ -1650,10 +1650,20 @@ SessionStoreService.prototype = {
       winData.tabs = [];
     }
     
-    var tabbrowser = aWindow.getBrowser();
+    var tabbrowser = aWindow.gBrowser;
     var openTabCount = aOverwriteTabs ? tabbrowser.browsers.length : -1;
     var newTabCount = winData.tabs.length;
-    let tabs = [];
+    var tabs = [];
+
+    // disable smooth scrolling while adding, moving, removing and selecting tabs
+    var tabstrip = tabbrowser.tabContainer.mTabstrip;
+    var smoothScroll = tabstrip.smoothScroll;
+    tabstrip.smoothScroll = false;
+    
+    // make sure that the selected tab won't be closed in order to
+    // prevent unnecessary flickering
+    if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
+      tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
     
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ? tabbrowser.mTabs[t] : tabbrowser.addTab());
@@ -1671,24 +1681,28 @@ SessionStoreService.prototype = {
     
     if (aOverwriteTabs) {
       this.restoreWindowFeatures(aWindow, winData);
+      delete this._windows[aWindow.__SSi].extData;
     }
     if (winData.cookies) {
       this.restoreCookies(winData.cookies);
     }
     if (winData.extData) {
-      if (aOverwriteTabs  || !this._windows[aWindow.__SSi].extData) {
+      if (!this._windows[aWindow.__SSi].extData) {
         this._windows[aWindow.__SSi].extData = {};
       }
       for (var key in winData.extData) {
         this._windows[aWindow.__SSi].extData[key] = winData.extData[key];
       }
     }
-    if (winData._closedTabs && (root._firstTabs || aOverwriteTabs)) {
-      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs;
+    if (aOverwriteTabs || root._firstTabs) {
+      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs || [];
     }
     
     this.restoreHistoryPrecursor(aWindow, tabs, winData.tabs,
       (aOverwriteTabs ? (parseInt(winData.selected) || 1) : 0), 0, 0);
+
+    // set smoothScroll back to the original value
+    tabstrip.smoothScroll = smoothScroll;
 
     this._notifyIfAllWindowsRestored();
   },
@@ -1761,6 +1775,26 @@ SessionStoreService.prototype = {
       browser.parentNode.__SS_data = aTabData[t];
     }
     
+    // Determine if we can optimize & load visible tabs first
+    let tabScrollBoxObject = tabbrowser.tabContainer.mTabstrip.scrollBoxObject;
+    let tabBoxObject = aTabs[0].boxObject;
+    let maxVisibleTabs = Math.ceil(tabScrollBoxObject.width / tabBoxObject.width);
+
+    // make sure we restore visible tabs first, if there are enough
+    if (maxVisibleTabs < aTabs.length && aSelectTab > 1) {
+      let firstVisibleTab = 0;
+      if (aTabs.length - maxVisibleTabs > aSelectTab) {
+        // aSelectTab is leftmost since we scroll to it when possible
+        firstVisibleTab = aSelectTab - 1;
+      } else {
+        // aSelectTab is rightmost or no more room to scroll right
+        firstVisibleTab = aTabs.length - maxVisibleTabs;
+      }
+      aTabs = aTabs.splice(firstVisibleTab, maxVisibleTabs).concat(aTabs);
+      aTabData = aTabData.splice(firstVisibleTab, maxVisibleTabs).concat(aTabData);
+      aSelectTab -= firstVisibleTab;
+    }
+
     // make sure to restore the selected tab first (if any)
     if (aSelectTab-- && aTabs[aSelectTab]) {
         aTabs.unshift(aTabs.splice(aSelectTab, 1)[0]);

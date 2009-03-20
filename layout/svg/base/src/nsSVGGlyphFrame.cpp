@@ -299,10 +299,9 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "trying to construct an SVGGlyphFrame for wrong content element");
 
-  nsresult rv = nsLayoutUtils::InitTextRunContainerForPrinting(aContent,
-                                                               this,
-                                                               NS_STATE_SVG_PRINTING);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!PresContext()->IsDynamic()) {
+    AddStateBits(NS_STATE_SVG_PRINTING);
+  }
 
   return nsSVGGlyphFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
@@ -449,11 +448,11 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   SetMatrixPropagation(PR_FALSE);
-  CharacterIterator iter(this, PR_TRUE);
   
   gfxRect extent = gfxRect(0, 0, 0, 0);
 
   if (SetupCairoStrokeGeometry(tmpCtx)) {
+    CharacterIterator iter(this, PR_TRUE);
     gfxFloat strokeWidth = tmpCtx->CurrentLineWidth();
     AddCharactersToPath(&iter, tmpCtx);
     tmpCtx->SetLineWidth(strokeWidth);
@@ -461,6 +460,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
     extent = tmpCtx->GetUserStrokeExtent();
   }
   if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+    CharacterIterator iter(this, PR_TRUE);
     AddBoundingBoxesToPath(&iter, tmpCtx);
     tmpCtx->IdentityMatrix();
     extent = extent.Union(tmpCtx->GetUserPathExtent());

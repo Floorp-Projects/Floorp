@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      window.addEventListener("MozReftestInvalidate",
+        function() {
+          document.documentElement.removeChild(document.body);
+          document.documentElement.className = "";
+        }, false);
+    </script>
+  </head>
+  <body style="background: green">
+  </body>
+</html>

@@ -66,7 +66,6 @@ CPPSRCS		= \
 		nsIFileTest.cpp \
 		TestCallTemplates.cpp \
 		TestINIParser.cpp \
-		TestVersionComparator.cpp \
 		TestRacingServiceManager.cpp \
 		TestRegistrationOrder.cpp \
 		TestThreadPoolListener.cpp \
@@ -173,8 +172,6 @@ endif
 abs_srcdir = $(shell cd $(srcdir) && pwd)
 
 check::
-	@echo "Running TestVersionComparator tests"
-	@$(RUN_TEST_PROGRAM) $(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
 	@echo "Running XPIDL tests"
 	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl
 	@if grep Notscriptable TestScriptable.h | grep -q NS_SCRIPTABLE ; then \
