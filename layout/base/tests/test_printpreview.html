@@ -1,0 +1,165 @@
+<html>
+<head>
+  <title>Test for print preview</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    table {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body onload="setTimeout(runTests, 0);">
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var gWbp;
+var ctx1;
+var ctx2;
+var counter = 0;
+
+function printpreview() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  var listener = {
+    onLocationChange: function(webProgress, request, location) { },
+    onProgressChange: function(webProgress, request, curSelfProgress, 
+                               maxSelfProgress, curTotalProgress,
+                               maxTotalProgress) { },
+    onSecurityChange: function(webProgress, request, state) { },
+    onStateChange: function(webProgress, request, stateFlags, status) { },
+    onStatusChange: function(webProgress, request, status, message) { },
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIWebProgessListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+            return this;
+      throw Components.results.NS_NOINTERFACE;
+    }
+  }
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref('print.show_print_progress', false);
+  //XXX I would have thought this would work, instead I'm forced to use prefs service
+  gWbp.globalPrintSettings.showPrintProgress = false; 
+  gWbp.printPreview(gWbp.globalPrintSettings, null, listener);
+  prefs.clearUserPref('print.show_print_progress');
+}
+
+function exitprintpreview() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+   .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
+}
+
+function runTests()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                               .getService(Components.interfaces.nsIPrintSettingsService);
+
+  try {
+     var printerEnumerator = Components.classes["@mozilla.org/gfx/printerenumerator;1"]
+                             .getService(Components.interfaces.nsIPrinterEnumerator);
+  } catch(e) {
+     //don't try to test on Mac, since the print preview code doesn't work there
+     SimpleTest.finish();
+     return;
+  }
+
+  if (printService.defaultPrinterName != '') {
+    startTest1();
+  } else {
+    todo(false, "No printer seems installed on this machine, that is necessary for this test");
+    SimpleTest.finish();
+  }
+}
+
+function compareCanvases() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIDOMWindowUtils)
+               .compareCanvases(document.getElementsByTagName("canvas")[0],
+                                document.getElementsByTagName("canvas")[1],
+                                {}) == 0;
+}
+
+function addHTMLContent(parent) {
+  var n = parent.ownerDocument.createElement("div");
+  parent.appendChild(n);
+  var s = "<iframe width='500' height='40' src='data:text/plain,ThisIsAnIframeCreatedDuringPrintPreview'></iframe>";
+  s += "<table>";
+  for (var i = 1; i < 501; ++i) {
+    s += "<tr><td>Cell A" + i + "</td><td>Cell B" + i + "</td><td>Cell C" + i + "</td></tr>";
+  }
+  s += "</table>";
+  n.innerHTML = s;
+}
+
+function startTest1() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ctx1 = document.getElementsByTagName("canvas")[0].getContext("2d");
+  ctx2 = document.getElementsByTagName("canvas")[1].getContext("2d");
+  window.frames[0].document.body.innerHTML = "<div> </div><div>" + counter + " timers</div><div> </div>";
+
+  // Note this timeout is needed so that we can check that timers run
+  // after print preview, but not during it.
+  window.frames[0].counter = counter;
+  window.frames[0].counterTimeout = "document.body.firstChild.nextSibling.innerHTML = ++counter + ' timers';" +
+                                    "window.setTimeout(counterTimeout, 0);";
+  window.frames[0].setTimeout(window.frames[0].counterTimeout, 0);
+  window.frames[0].document.body.firstChild.innerHTML = "Print preview";
+
+  printpreview();
+  ctx1.drawWindow(window.frames[0], 0, 0, 300, 300, "rgb(256,256,256)");
+  window.frames[0].document.body.firstChild.innerHTML = "Galley presentation";
+  window.frames[0].document.body.firstChild.innerHTML +=
+    "<div style='color: red;'>This is not for print preview!</div>";
+  window.frames[0].document.body.firstChild.lastChild.firstChild.data += " Really!";
+
+  // Add some elements.
+  addHTMLContent(window.frames[0].document.body.lastChild);
+  // Delete them.
+  window.frames[0].document.body.lastChild.innerHTML = "";
+  // And readd.
+  addHTMLContent(window.frames[0].document.body.lastChild);
+
+  setTimeout(finalizeTest1, 1000);
+}
+
+function finalizeTest1() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ctx2.drawWindow(window.frames[0], 0, 0, 300, 300, "rgb(256,256,256)");
+  exitprintpreview();
+  ok(compareCanvases(), "Canvas should be the same!");
+  is(window.frames[0].document.body.firstChild.nextSibling.textContent, "0 timers", "Timers shouldn't have run yet!");
+  is(window.frames[0].counter, 0, "Timers shouldn't have run yet!");
+  counter = window.frames[0].counter;
+  // This timeout is needed so that we can check that timers do run after
+  // print preview.
+  setTimeout(runTest2, 1000);
+}
+
+function runTest2() {
+  isnot(window.frames[0].document.body.firstChild.nextSibling.textContent, "0 timers", "Timers should have run!");
+  isnot(window.frames[0].counter, 0, "Timers should have run!");
+  counter = window.frames[0].counter;
+  window.frames[0].counterTimeout = "";
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+<iframe height="200" width="600"></iframe>
+<table>
+<tr><th>Print preview canvas before mutations</th><th>Print preview canvas after mutations</th></tr>
+<tr>
+<td><canvas height="300" width="300"></canvas></td>
+<td><canvas height="300" width="300"></canvas></td>
+</tr></table>
+</canvas>
+</pre>
+</body>
+</html>

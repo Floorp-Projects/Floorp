@@ -50,46 +50,22 @@
 /**
  * Converts a SQLite return code to an nsresult return code.
  *
- * @param srv The SQLite return code.
- * @return The corresponding nsresult code.
+ * @param aSQLiteResultCode
+ *        The SQLite return code to convert.
+ * @returns the corresponding nsresult code for aSQLiteResultCode.
  */
-static nsresult
-ConvertResultCode(int srv)
-{
-    switch (srv) {
-        case SQLITE_OK:
-        case SQLITE_ROW:
-        case SQLITE_DONE:
-            return NS_OK;
-        case SQLITE_CORRUPT:
-        case SQLITE_NOTADB:
-            return NS_ERROR_FILE_CORRUPTED;
-        case SQLITE_PERM:
-        case SQLITE_CANTOPEN:
-            return NS_ERROR_FILE_ACCESS_DENIED;
-        case SQLITE_BUSY:
-            return NS_ERROR_STORAGE_BUSY;
-        case SQLITE_LOCKED:
-            return NS_ERROR_FILE_IS_LOCKED;
-        case SQLITE_READONLY:
-            return NS_ERROR_FILE_READ_ONLY;
-        case SQLITE_IOERR:
-            return NS_ERROR_STORAGE_IOERR;
-        case SQLITE_FULL:
-        case SQLITE_TOOBIG:
-            return NS_ERROR_FILE_NO_DEVICE_SPACE;
-        case SQLITE_NOMEM:
-            return NS_ERROR_OUT_OF_MEMORY;
-        case SQLITE_MISUSE:
-            return NS_ERROR_UNEXPECTED;
-        case SQLITE_ABORT:
-        case SQLITE_INTERRUPT:
-            return NS_ERROR_ABORT;
-    }
+nsresult ConvertResultCode(int aSQLiteResultCode);
 
-    // generic error
-    return NS_ERROR_FAILURE;
-}
+/**
+ * Checks the performance of a SQLite statement and logs a warning with
+ * NS_WARNING.  Currently this only checks the number of sort operations done
+ * on a statement, and if more than zero have been done, the statement can be
+ * made faster with the careful use of an index.
+ *
+ * @param aStatement
+ *        The sqlite3_stmt object to check.
+ */
+void CheckAndLogStatementPerformance(sqlite3_stmt *aStatement);
 
 #endif // _MOZSTORAGEPRIVATEHELPERS_H_
 

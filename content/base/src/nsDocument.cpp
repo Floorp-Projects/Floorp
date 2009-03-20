@@ -3494,7 +3494,7 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
     NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
     if (uri) {
       nsCOMPtr<nsICSSStyleSheet> sheet;
-      cssLoader->LoadSheetSync(uri, PR_TRUE, getter_AddRefs(sheet));
+      cssLoader->LoadSheetSync(uri, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
       if (sheet) {
         BeginUpdate(UPDATE_STYLE);
         AddCatalogStyleSheet(sheet);
@@ -3694,26 +3694,26 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
   }
   
   ++mUpdateNestLevel;
-  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
-
   if (aUpdateType == UPDATE_CONTENT_MODEL) {
     nsContentUtils::AddRemovableScriptBlocker();
   }
   else {
     nsContentUtils::AddScriptBlocker();
   }
+  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
 }
 
 void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
+  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
+
   if (aUpdateType == UPDATE_CONTENT_MODEL) {
     nsContentUtils::RemoveRemovableScriptBlocker();
   }
   else {
     nsContentUtils::RemoveScriptBlocker();
   }
-  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
 
   --mUpdateNestLevel;
 

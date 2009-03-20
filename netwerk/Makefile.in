@@ -54,6 +54,13 @@ DIRS		= \
 		cache \
 		protocol \
 		system \
+        $(NULL)
+
+ifdef NECKO_WIFI
+DIRS 		+= wifi
+endif
+
+DIRS		+= \
 		build \
 		locales \
 		$(NULL)

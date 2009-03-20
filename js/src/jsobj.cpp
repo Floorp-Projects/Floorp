@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
@@ -147,6 +148,13 @@ static JSPropertySpec object_props[] = {
 
 /* NB: JSSLOT_PROTO and JSSLOT_PARENT are already indexes into object_props. */
 #define JSSLOT_COUNT 2
+
+static inline void
+js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
+{
+    if (!obj->fslots[JSSLOT_PARENT])
+        js_LeaveTrace(cx);
+}
 
 static JSBool
 ReportStrictSlot(JSContext *cx, uint32 slot)
@@ -1682,7 +1690,7 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
 }
 
 #ifdef JS_TRACER
-static int32 FASTCALL
+static JSBool FASTCALL
 Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id;
@@ -1728,7 +1736,7 @@ obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-static int32 FASTCALL
+static JSBool FASTCALL
 Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
@@ -3155,7 +3163,11 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         }
     }
 
-    if (cx->debugHooks->objectHook) {
+    /*
+     * Do not call debug hooks on trace, because we might be in a non-_FAIL
+     * builtin. See bug 481444.
+     */
+    if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
         JS_KEEP_ATOMS(cx->runtime);
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
@@ -4093,6 +4105,8 @@ JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
              JSScopeProperty *sprop, jsval *vp)
 {
+    js_LeaveTraceIfGlobalObject(cx, pobj);
+
     JSScope *scope;
     uint32 slot;
     int32 sample;
@@ -4133,6 +4147,8 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
 JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
 {
+    js_LeaveTraceIfGlobalObject(cx, obj);
+
     JSScope *scope;
     uint32 slot;
     int32 sample;
@@ -4320,6 +4336,22 @@ JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return js_GetPropertyHelper(cx, obj, id, vp, NULL);
+}
+
+JSBool
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
+             JSPropCacheEntry **entryp)
+{
+    if (obj->map->ops == &js_ObjectOps ||
+        obj->map->ops->getProperty == js_GetProperty) {
+        return js_GetPropertyHelper(cx, obj, id, vp, entryp);
+    }
+    JS_ASSERT_IF(entryp, OBJ_IS_DENSE_ARRAY(cx, obj));
+#if JS_HAS_XML_SUPPORT
+    if (OBJECT_IS_XML(cx, obj))
+        return js_GetXMLMethod(cx, obj, id, vp);
+#endif
+    return OBJ_GET_PROPERTY(cx, obj, id, vp);
 }
 
 JSBool
@@ -5438,18 +5470,7 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     older = JS_SetErrorReporter(cx, NULL);
     id = ATOM_TO_JSID(atom);
     fval = JSVAL_VOID;
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        JSXMLObjectOps *ops;
-
-        ops = (JSXMLObjectOps *) obj->map->ops;
-        obj = ops->getMethod(cx, obj, id, &fval);
-        ok = (obj != NULL);
-    } else
-#endif
-    {
-        ok = OBJ_GET_PROPERTY(cx, obj, id, &fval);
-    }
+    ok = js_GetMethod(cx, obj, id, &fval, NULL);
     if (!ok)
         JS_ClearPendingException(cx);
     JS_SetErrorReporter(cx, older);
@@ -5848,6 +5869,20 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
             return obj2;
     }
     return obj;
+}
+
+JSBool
+js_IsCallable(JSObject *obj, JSContext *cx)
+{
+    if (!OBJ_IS_NATIVE(obj))
+        return obj->map->ops->call != NULL;
+
+    JS_LOCK_OBJ(cx, obj);
+    JSBool callable = (obj->map->ops == &js_ObjectOps)
+                      ? HAS_FUNCTION_CLASS(obj) || STOBJ_GET_CLASS(obj)->call
+                      : obj->map->ops->call != NULL;
+    JS_UNLOCK_OBJ(cx, obj);
+    return callable;
 }
 
 #ifdef DEBUG

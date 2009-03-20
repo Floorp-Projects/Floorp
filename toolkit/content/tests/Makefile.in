@@ -47,6 +47,6 @@ MODULE		= test_toolkit_general
 
 XPCSHELL_TESTS = unit
 
-DIRS = chrome widgets
+DIRS = browser chrome widgets
 
 include $(topsrcdir)/config/rules.mk

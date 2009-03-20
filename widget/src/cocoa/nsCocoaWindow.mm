@@ -47,6 +47,7 @@
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsWindowMap.h"
+#include "nsAppShell.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIBaseWindow.h"
@@ -65,13 +66,17 @@
 #include "gfxPlatform.h"
 #include "lcms.h"
 
+// defined in nsAppShell.mm
+extern nsCocoaAppModalWindowList *gCocoaAppModalWindowList;
+
 PRInt32 gXULModalLevel = 0;
+
 // In principle there should be only one app-modal window at any given time.
 // But sometimes, despite our best efforts, another window appears above the
 // current app-modal window.  So we need to keep a linked list of app-modal
 // windows.  (A non-sheet window that appears above an app-modal window is
 // also made app-modal.)  See nsCocoaWindow::SetModal().
-nsCocoaWindowList *gAppModalWindowList = NULL;
+nsCocoaWindowList *gGeckoAppModalWindowList = NULL;
 
 PRBool gCocoaWindowMethodsSwizzled = PR_FALSE;
 
@@ -517,6 +522,8 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
   nsCocoaWindow *aParent = static_cast<nsCocoaWindow*>(mParent);
   if (aState) {
     ++gXULModalLevel;
+    if (gCocoaAppModalWindowList)
+      gCocoaAppModalWindowList->PushGecko(mWindow, this);
     // When a non-sheet window gets "set modal", make the window(s) that it
     // appears over behave as they should.  We can't rely on native methods to
     // do this, for the following reason:  The OS runs modal non-sheet windows
@@ -540,14 +547,16 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
       nsCocoaWindowList *windowList = new nsCocoaWindowList;
       if (windowList) {
         windowList->window = this; // Don't ADDREF
-        windowList->prev = gAppModalWindowList;
-        gAppModalWindowList = windowList;
+        windowList->prev = gGeckoAppModalWindowList;
+        gGeckoAppModalWindowList = windowList;
       }
     }
   }
   else {
     --gXULModalLevel;
     NS_ASSERTION(gXULModalLevel >= 0, "Mismatched call to nsCocoaWindow::SetModal(PR_FALSE)!");
+    if (gCocoaAppModalWindowList)
+      gCocoaAppModalWindowList->PopGecko(mWindow, this);
     if (mWindowType != eWindowType_sheet) {
       while (aParent) {
         if (--aParent->mNumModalDescendents == 0) {
@@ -561,10 +570,10 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
         NS_ASSERTION(aParent->mNumModalDescendents >= 0, "Widget hierarchy changed while modal!");
         aParent = static_cast<nsCocoaWindow*>(aParent->mParent);
       }
-      if (gAppModalWindowList) {
-        NS_ASSERTION(gAppModalWindowList->window == this, "Widget hierarchy changed while modal!");
-        nsCocoaWindowList *saved = gAppModalWindowList;
-        gAppModalWindowList = gAppModalWindowList->prev;
+      if (gGeckoAppModalWindowList) {
+        NS_ASSERTION(gGeckoAppModalWindowList->window == this, "Widget hierarchy changed while modal!");
+        nsCocoaWindowList *saved = gGeckoAppModalWindowList;
+        gGeckoAppModalWindowList = gGeckoAppModalWindowList->prev;
         delete saved; // "window" not ADDREFed
       }
       if (mWindowType == eWindowType_popup)
@@ -1908,7 +1917,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
       if (delegate && [delegate isKindOfClass:[WindowDelegate class]]) {
         nsCocoaWindow *widget = [(WindowDelegate *)delegate geckoWidget];
         if (widget) {
-          if (gAppModalWindowList && (widget != gAppModalWindowList->window))
+          if (gGeckoAppModalWindowList && (widget != gGeckoAppModalWindowList->window))
             return;
           if (widget->HasModalDescendents())
             return;
@@ -2377,7 +2386,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
       if (delegate && [delegate isKindOfClass:[WindowDelegate class]]) {
         nsCocoaWindow *widget = [(WindowDelegate *)delegate geckoWidget];
         if (widget) {
-          if (gAppModalWindowList && (widget != gAppModalWindowList->window))
+          if (gGeckoAppModalWindowList && (widget != gGeckoAppModalWindowList->window))
             return;
           if (widget->HasModalDescendents())
             return;

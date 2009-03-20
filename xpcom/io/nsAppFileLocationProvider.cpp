@@ -49,10 +49,7 @@
 #include "nsCRT.h"
 
 #if defined(XP_MACOSX)
-#include <Folders.h>
-#include <Script.h>
-#include <Processes.h>
-#include <Gestalt.h>
+#include <Carbon/Carbon.h>
 #include "nsILocalFileMac.h"
 #elif defined(XP_OS2)
 #define INCL_DOSPROCESS

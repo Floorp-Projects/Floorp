@@ -1,7 +1,7 @@
 == aspect-ratio-1a.html aspect-ratio-1-ref.html
 == aspect-ratio-1b.html aspect-ratio-1-ref.html
-== aspect-ratio-2a.html aspect-ratio-2-ref.html
-== aspect-ratio-2b.html aspect-ratio-2-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == aspect-ratio-2a.html aspect-ratio-2-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == aspect-ratio-2b.html aspect-ratio-2-ref.html
 == aspect-ratio-3a.html aspect-ratio-3-ref.html
 == aspect-ratio-3b.html aspect-ratio-3-ref.html
 == basic-1.html basic-1-ref.html
@@ -9,4 +9,4 @@
 == canvas-1b.html basic-1-ref.html
 == empty-1a.html empty-1-ref.html
 == empty-1b.html empty-1-ref.html
-== zoomed-1.html zoomed-1-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == zoomed-1.html zoomed-1-ref.html

@@ -1,19 +1,18 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=
+https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 -->
 <head>
   <title>Test for watchPosition </title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <script type="text/javascript" src="geolocation_common.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478911">Mozilla Bug 478911</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -21,42 +20,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var numCallbacks = 5;
-var callbackCounter = new Array(numCallbacks);
-var watchID = new Array(numCallbacks);
+var watchID;
 
-function failureCallback(error)
-{
-  ok(error.code == error.POSITION_UNAVAILABLE, "Failure was something other than position unavailable");
-  removePrompt();
+function failureCallback(error) {
+  ok(error.code == error.PERMISSION_DENIED, "Ensure that the error was PERMISSION_DENIED");
   SimpleTest.finish();
 }
 
-// define success callbacks
-for(var i = 0; i < numCallbacks; i++) {
-  eval("function successCallback" + i + "(position) {" +
-          "callbackCounter[" + i + "]++;" +
-          "success_callback(position);" +
-       "}"
-  );
-}
-
-function registerWatches() {
-  for(var i = 0; i < numCallbacks; i++) {
-    watchID[i] = eval("navigator.geolocation.watchPosition(successCallback"
-                       + i + ", failureCallback, null);"
-    );
-  }
-}
-
-function clearWatches() {
-  for(var i = 0; i < numCallbacks; i++)
-    navigator.geolocation.clearWatch(watchID[i]);
-}
-
-function testDeclined() {
-  clearWatches();
-  removePrompt();
+function successCallback(position){
+  ok(0, "Success was called when it shouldn't have been.  major problem");
   SimpleTest.finish();
 }
 
@@ -64,16 +36,10 @@ function testDeclined() {
 
 SimpleTest.waitForExplicitFinish();
 
-attachPrompt();
+watchID = navigator.geolocation.getCurrentPosition(successCallback, failureCallback, null);
 
-ok(navigator.geolocation, "Ensure that the geolocation object is present");
-
-promptOption = DECLINE;
-
-registerWatches();
-
-// wait for position changes
-setTimeout(testDeclined, timeout);
+// click deny
+setTimeout(clickDeny, 50);
 
 </script>
 </pre>

@@ -85,7 +85,6 @@ interface nsIDOMStorage : nsISupports
    *
    * @param key key to set
    * @param data data to associate with the key
-   * @returns found item or null if the key was not found
    */
   void setItem(in DOMString key, in DOMString data);
 

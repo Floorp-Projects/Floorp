@@ -164,14 +164,10 @@ PlacesController.prototype = {
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_show:info":
       var selectedNode = this._view.selectedNode;
-      if (selectedNode) {
-        if (PlacesUtils.nodeIsFolder(selectedNode) ||
-            (PlacesUtils.nodeIsQuery(selectedNode) &&
-             selectedNode.itemId != -1) ||
-            (PlacesUtils.nodeIsBookmark(selectedNode) &&
-            !PlacesUtils.nodeIsLivemarkItem(selectedNode)))
-          return true;
-      }
+      if (selectedNode &&
+          PlacesUtils.getConcreteItemId(selectedNode) != -1  &&
+          !PlacesUtils.nodeIsLivemarkItem(selectedNode))
+        return true;
       return false;
     case "placesCmd_reloadMicrosummary":
       var selectedNode = this._view.selectedNode;
@@ -662,11 +658,19 @@ PlacesController.prototype = {
     if (!node)
       return;
 
-    if (PlacesUtils.nodeIsFolder(node))
-      PlacesUIUtils.showItemProperties(node.itemId, "folder");
-    else if (PlacesUtils.nodeIsBookmark(node) ||
-             PlacesUtils.nodeIsQuery(node))
-      PlacesUIUtils.showItemProperties(node.itemId, "bookmark");
+    var itemType = PlacesUtils.nodeIsFolder(node) ||
+                   PlacesUtils.nodeIsTagQuery(node) ? "folder" : "bookmark";
+    var concreteId = PlacesUtils.getConcreteItemId(node);
+    var isRootItem = PlacesUtils.isRootItem(concreteId);
+    var itemId = node.itemId;
+    if (isRootItem || PlacesUtils.nodeIsTagQuery(node)) {
+      // If this is a root or the Tags query we use the concrete itemId to catch
+      // the correct title for the node.
+      itemId = concreteId;
+    }
+
+    PlacesUIUtils.showItemProperties(itemId, itemType,
+                                     isRootItem /* read only */);
   },
 
   /**

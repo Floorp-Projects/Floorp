@@ -75,6 +75,7 @@ CPPSRCS = \
   mozStorageError.cpp \
   mozStorageEvents.cpp \
   mozStorageStatementJSHelper.cpp \
+  mozStoragePrivateHelpers.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

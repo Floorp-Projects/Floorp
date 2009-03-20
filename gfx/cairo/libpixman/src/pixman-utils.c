@@ -31,38 +31,6 @@
 #include "pixman-mmx.h"
 #include "pixman-sse2.h"
 
-PIXMAN_EXPORT pixman_bool_t
-pixman_transform_point_3d (pixman_transform_t *transform,
-			   pixman_vector_t *vector)
-{
-    pixman_vector_t		result;
-    int				i, j;
-    pixman_fixed_32_32_t	partial;
-    pixman_fixed_48_16_t	v;
-
-    for (j = 0; j < 3; j++)
-    {
-	v = 0;
-	for (i = 0; i < 3; i++)
-	{
-	    partial = ((pixman_fixed_48_16_t) transform->matrix[j][i] *
-		       (pixman_fixed_48_16_t) vector->vector[i]);
-	    v += partial >> 16;
-	}
-
-	if (v > pixman_max_fixed_48_16 || v < pixman_min_fixed_48_16)
-	    return FALSE;
-
-	result.vector[j] = (pixman_fixed_48_16_t) v;
-    }
-
-    if (!result.vector[2])
-	return FALSE;
-
-    *vector = result;
-    return TRUE;
-}
-
 #if defined(USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 __attribute__((__force_align_arg_pointer__))
 #endif

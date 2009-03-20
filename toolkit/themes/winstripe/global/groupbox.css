@@ -44,19 +44,11 @@
 /* ::::: groupbox ::::: */
 
 groupbox {
-  margin: 5px;
-  border: 1px solid ThreeDShadow;
-  -moz-border-radius: 5px;
-  padding: 5px;
-}
-
-groupbox:-moz-system-metric(windows-classic) {
-  border-width: 2px;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDHighlight;
-  -moz-border-radius: 0px;
+  -moz-appearance: groupbox;
+  border: 2px groove ThreeDFace;
+  -moz-border-radius: 3px;
+  margin: 3px;
+  padding: 3px 3px 6px 3px;
 }
 
 .groupbox-body {
@@ -64,8 +56,7 @@ groupbox:-moz-system-metric(windows-classic) {
 }
 
 caption {
-  margin: 0px 6px 2px 6px;
-  padding: 0px 3px;
+  margin: 0px 6px 0px 6px;
   background-color: -moz-Dialog;
 }
 
@@ -73,9 +64,7 @@ tabpanels caption {
   -moz-appearance: tabpanel;
 }
 
+/* !important is needed to override label in global.css */
 .caption-text {
-  margin-top: 0;
-  margin-bottom: 0;
-  -moz-margin-start: 1px;
-  -moz-margin-end: 2px;
+  margin: 0 2px !important;
 }

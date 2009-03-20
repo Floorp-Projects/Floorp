@@ -55,7 +55,7 @@
 #define jstypes_h___
 
 #include <stddef.h>
-#include "jsstdint.h"
+#include "js-config.h"
 
 /***********************************************************************
 ** MACROS:      JS_EXTERN_API
@@ -279,52 +279,9 @@
 # include "jsautocfg.h" /* Use auto-detected configuration */
 #endif
 
+#include "jsinttypes.h"
+
 JS_BEGIN_EXTERN_C
-
-/************************************************************************
-** TYPES:       JSUint8
-**              JSInt8
-** DESCRIPTION:
-**  The int8 types are known to be 8 bits each. There is no type that
-**      is equivalent to a plain "char".
-************************************************************************/
-
-typedef uint8_t JSUint8;
-typedef int8_t JSInt8;
-
-/************************************************************************
-** TYPES:       JSUint16
-**              JSInt16
-** DESCRIPTION:
-**  The int16 types are known to be 16 bits each.
-************************************************************************/
-
-typedef uint16_t JSUint16;
-typedef int16_t JSInt16;
-
-/************************************************************************
-** TYPES:       JSUint32
-**              JSInt32
-** DESCRIPTION:
-**  The int32 types are known to be 32 bits each.
-************************************************************************/
-
-typedef uint32_t JSUint32;
-typedef int32_t JSInt32;
-
-/************************************************************************
-** TYPES:       JSUint64
-**              JSInt64
-** DESCRIPTION:
-**  The int64 types are known to be 64 bits each. Care must be used when
-**      declaring variables of type JSUint64 or JSInt64. Different hardware
-**      architectures and even different compilers have varying support for
-**      64 bit values. The only guaranteed portability requires the use of
-**      the JSLL_ macros (see jslong.h).
-************************************************************************/
-
-typedef uint64_t JSUint64;
-typedef int64_t JSInt64;
 
 /************************************************************************
 ** TYPES:       JSUintn
@@ -367,7 +324,7 @@ typedef ptrdiff_t JSPtrdiff;
 **  A type for pointer difference. Variables of this type are suitable
 **      for storing a pointer or pointer sutraction.
 ************************************************************************/
-typedef uintptr_t JSUptrdiff;
+typedef JSUintPtr JSUptrdiff;
 
 /************************************************************************
 ** TYPES:       JSBool
@@ -392,8 +349,8 @@ typedef JSUint8 JSPackedBool;
 /*
 ** A JSWord is an integer that is the same size as a void*
 */
-typedef intptr_t JSWord;
-typedef uintptr_t JSUword;
+typedef JSIntPtr JSWord;
+typedef JSUintPtr JSUword;
 
 #include "jsotypes.h"
 

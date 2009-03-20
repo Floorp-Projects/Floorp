@@ -768,7 +768,8 @@ static nsIFrame*
 GetActiveSelectionFrame(nsIFrame* aFrame)
 {
   nsIView* mouseGrabber;
-  aFrame->PresContext()->GetViewManager()->GetMouseEventGrabber(mouseGrabber);
+  aFrame->PresContext()->GetPresShell()->
+    GetViewManager()->GetMouseEventGrabber(mouseGrabber);
   if (mouseGrabber) {
     nsIFrame* activeFrame = nsLayoutUtils::GetFrameFor(mouseGrabber);
     if (activeFrame) {
@@ -7020,7 +7021,7 @@ struct DR_State
   PRBool      mIndentUndisplayedFrames;
   PRBool      mDisplayPixelErrors;
   nsTArray<DR_Rule*>          mWildRules;
-  nsTArray<DR_FrameTypeInfo*> mFrameTypeTable;
+  nsTArray<DR_FrameTypeInfo>  mFrameTypeTable;
   // reflow specific state
   nsTArray<DR_FrameTreeNode*> mFrameTreeLeaves;
 };
@@ -7072,7 +7073,6 @@ struct DR_FrameTypeInfo
 {
   DR_FrameTypeInfo(nsIAtom* aFrmeType, const char* aFrameNameAbbrev, const char* aFrameName);
   ~DR_FrameTypeInfo() { 
-      MOZ_COUNT_DTOR(DR_FrameTypeInfo);
       PRInt32 numElements;
       numElements = mRules.Length();
       for (PRInt32 i = numElements - 1; i >= 0; i--) {
@@ -7084,6 +7084,8 @@ struct DR_FrameTypeInfo
   char        mNameAbbrev[16];
   char        mName[32];
   nsTArray<DR_Rule*> mRules;
+private:
+  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&); // NOT USED
 };
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 
@@ -7093,7 +7095,6 @@ DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType,
   mType = aFrameType;
   strcpy(mNameAbbrev, aFrameNameAbbrev);
   strcpy(mName, aFrameName);
-  MOZ_COUNT_CTOR(DR_FrameTypeInfo);
 }
 
 struct DR_FrameTreeNode
@@ -7174,10 +7175,6 @@ DR_State::~DR_State()
   numElements = mFrameTreeLeaves.Length();
   for (i = numElements - 1; i >= 0; i--) {
     delete mFrameTreeLeaves.ElementAt(i);
-  }
-  numElements = mFrameTypeTable.Length();
-  for (i = numElements - 1; i >= 0; i--) {
-    delete mFrameTypeTable.ElementAt(i);
   }
 }
 
@@ -7309,7 +7306,7 @@ void DR_State::AddFrameTypeInfo(nsIAtom* aFrameType,
                                 const char* aFrameNameAbbrev,
                                 const char* aFrameName)
 {
-  mFrameTypeTable.AppendElement(new DR_FrameTypeInfo(aFrameType, aFrameNameAbbrev, aFrameName));
+  mFrameTypeTable.AppendElement(DR_FrameTypeInfo(aFrameType, aFrameNameAbbrev, aFrameName));
 }
 
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
@@ -7317,12 +7314,12 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(nsIAtom* aFrameType)
   PRInt32 numEntries = mFrameTypeTable.Length();
   NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
-    DR_FrameTypeInfo* info = mFrameTypeTable.ElementAt(i);
-    if (info && (info->mType == aFrameType)) {
-      return info;
+    DR_FrameTypeInfo& info = mFrameTypeTable.ElementAt(i);
+    if (info.mType == aFrameType) {
+      return &info;
     }
   }
-  return mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
+  return &mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
 }
 
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
@@ -7330,12 +7327,12 @@ DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(char* aFrameName)
   PRInt32 numEntries = mFrameTypeTable.Length();
   NS_ASSERTION(numEntries != 0, "empty FrameTypeTable");
   for (PRInt32 i = 0; i < numEntries; i++) {
-    DR_FrameTypeInfo* info = mFrameTypeTable.ElementAt(i);
-    if (info && ((strcmp(aFrameName, info->mName) == 0) || (strcmp(aFrameName, info->mNameAbbrev) == 0))) {
-      return info;
+    DR_FrameTypeInfo& info = mFrameTypeTable.ElementAt(i);
+    if ((strcmp(aFrameName, info.mName) == 0) || (strcmp(aFrameName, info.mNameAbbrev) == 0)) {
+      return &info;
     }
   }
-  return mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
+  return &mFrameTypeTable.ElementAt(numEntries - 1); // return unknown frame type
 }
 
 void DR_State::InitFrameTypeTable()
@@ -7475,7 +7472,7 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   
   DR_FrameTreeNode* lastLeaf = nsnull;
   if(mFrameTreeLeaves.Length())
-    lastLeaf = (DR_FrameTreeNode*)mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Length() - 1);
+    lastLeaf = mFrameTreeLeaves.ElementAt(mFrameTreeLeaves.Length() - 1);
   if (lastLeaf) {
     for (parentNode = lastLeaf; parentNode && (parentNode->mFrame != parentFrame); parentNode = parentNode->mParent) {
     }

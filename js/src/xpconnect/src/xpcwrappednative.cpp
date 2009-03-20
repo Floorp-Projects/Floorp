@@ -1231,6 +1231,16 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         return NS_OK;
     }
 
+    // ReparentWrapperIfFound is really only meant to be called from DOM code
+    // which must happen only on the main thread. Bail if we're on some other
+    // thread or have a non-main-thread-only wrapper.
+    if (!XPCPerThreadData::IsMainThread(ccx) ||
+        (wrapper->GetProto() &&
+         !wrapper->GetProto()->ClassIsMainThreadOnly())) {
+        NS_RELEASE(wrapper);
+        return NS_ERROR_FAILURE;
+    }
+
     if(aOldScope != aNewScope)
     {
         // Oh, so now we need to move the wrapper to a different scope.
@@ -1273,28 +1283,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         {   // scoped lock
             XPCAutoLock lock(aOldScope->GetRuntime()->GetMapLock());
 
-            // We only try to fixup the __proto__ JSObject if the wrapper
-            // is directly using that of its XPCWrappedNativeProto.
-
-            if(wrapper->HasProto() &&
-               STOBJ_GET_PROTO(wrapper->GetFlatJSObject()) ==
-               oldProto->GetJSProtoObject())
-            {
-                if(!JS_SetPrototype(ccx, wrapper->GetFlatJSObject(),
-                                    newProto->GetJSProtoObject()))
-                {
-                    // this is bad, very bad
-                    NS_ERROR("JS_SetPrototype failed");
-                    NS_RELEASE(wrapper);
-                    return NS_ERROR_FAILURE;
-                }
-            }
-            else
-            {
-                NS_WARNING("Moving XPConnect wrappedNative to new scope, "
-                           "but can't fixup __proto__");
-            }
-
             oldMap->Remove(wrapper);
 
             if(wrapper->HasProto())
@@ -1325,6 +1313,28 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                          "wrapper already in new scope!");
 
             (void) newMap->Add(wrapper);
+        }
+
+        // We only try to fixup the __proto__ JSObject if the wrapper
+        // is directly using that of its XPCWrappedNativeProto.
+
+        if(wrapper->HasProto() &&
+           STOBJ_GET_PROTO(wrapper->GetFlatJSObject()) ==
+           oldProto->GetJSProtoObject())
+        {
+            if(!JS_SetPrototype(ccx, wrapper->GetFlatJSObject(),
+                                newProto->GetJSProtoObject()))
+            {
+                // this is bad, very bad
+                NS_ERROR("JS_SetPrototype failed");
+                NS_RELEASE(wrapper);
+                return NS_ERROR_FAILURE;
+            }
+        }
+        else
+        {
+            NS_WARNING("Moving XPConnect wrappedNative to new scope, "
+                       "but can't fixup __proto__");
         }
     }
 
@@ -2145,9 +2155,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                        "Expected either enough arguments or an optional argument");
           jsval arg = i < argc ? argv[i] : JSVAL_NULL;
           if(JSVAL_IS_PRIMITIVE(arg) ||
-             !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(arg),
-                               rt->GetStringID(XPCJSRuntime::IDX_VALUE),
-                               &src))
+             !JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(arg),
+                                 rt->GetStringID(XPCJSRuntime::IDX_VALUE),
+                                 &src))
           {
               ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
               goto done;
@@ -2326,7 +2336,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                                "Expected either enough arguments or an optional argument");
                   jsval arg = i < argc ? argv[i] : JSVAL_NULL;
                   if(JSVAL_IS_PRIMITIVE(arg) ||
-                     !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(arg),
+                     !JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(arg),
                          rt->GetStringID(XPCJSRuntime::IDX_VALUE), &src))
                   {
                       ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, ccx);
@@ -2524,7 +2534,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         {
             // we actually assured this before doing the invoke
             NS_ASSERTION(JSVAL_IS_OBJECT(argv[i]), "out var is not object");
-            if(!OBJ_SET_PROPERTY(ccx, JSVAL_TO_OBJECT(argv[i]),
+            if(!JS_SetPropertyById(ccx, JSVAL_TO_OBJECT(argv[i]),
                         rt->GetStringID(XPCJSRuntime::IDX_VALUE), &v))
             {
                 ThrowBadParam(NS_ERROR_XPC_CANT_SET_OUT_VAL, i, ccx);

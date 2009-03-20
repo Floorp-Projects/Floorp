@@ -181,8 +181,7 @@
 #endif
 
 #if defined (XP_MACOSX)
-#include <Processes.h>
-#include <Events.h>
+#include <Carbon/Carbon.h>
 #endif
 
 #ifdef DEBUG

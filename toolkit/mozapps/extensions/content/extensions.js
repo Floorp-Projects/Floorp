@@ -2115,6 +2115,7 @@ function updateOptionalViews() {
   var elements = ctr.GetElements();
   var showLocales = false;
   var showUpdates = false;
+  var showThemes = false;
   var showInstalls = gInstalling;
   gPendingActions = false;
 
@@ -2123,12 +2124,14 @@ function updateOptionalViews() {
 
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    if (!showLocales) {
+    if (!showLocales || !showThemes) {
       var typeArc = gRDF.GetResource(PREFIX_NS_EM + "type");
       var type = ds.GetTarget(e, typeArc, true);
       if (type && type instanceof Components.interfaces.nsIRDFInt) {
         if (type.Value & nsIUpdateItem.TYPE_LOCALE)
           showLocales = true;
+        else if (type.Value & nsIUpdateItem.TYPE_THEME)
+          showThemes = true;
       }
     }
 
@@ -2167,6 +2170,7 @@ function updateOptionalViews() {
   document.getElementById("locales-view").hidden = !showLocales;
   document.getElementById("updates-view").hidden = !showUpdates;
   document.getElementById("installs-view").hidden = !showInstalls;
+  document.getElementById("themes-view").hidden = !showThemes;
   updateVisibilityFlags();
 
   // fall back to the previously selected view or "search" since "installs" became hidden

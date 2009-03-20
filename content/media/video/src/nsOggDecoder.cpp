@@ -128,8 +128,11 @@ public:
   class FrameData {
   public:
     FrameData() :
+      mVideoHeader(nsnull),
       mVideoWidth(0),
       mVideoHeight(0),
+      mUVWidth(0),
+      mUVHeight(0),
       mDecodedFrameTime(0.0),
       mTime(0.0)
     {
@@ -139,6 +142,10 @@ public:
     ~FrameData()
     {
       MOZ_COUNT_DTOR(FrameData);
+
+      if (mVideoHeader) {
+        oggplay_callback_info_unlock_item(mVideoHeader);
+      }
     }
 
     // Write the audio data from the frame to the Audio stream.
@@ -151,12 +158,21 @@ public:
       aStream->Write(mAudioData.Elements(), length);
     }
 
+    void SetVideoHeader(OggPlayDataHeader* aVideoHeader)
+    {
+      NS_ABORT_IF_FALSE(!mVideoHeader, "Frame already owns a video header");
+      mVideoHeader = aVideoHeader;
+      oggplay_callback_info_lock_item(mVideoHeader);
+    }
+
     // The position in the stream where this frame ended, in bytes
     PRInt64 mEndStreamPosition;
-    nsAutoArrayPtr<unsigned char> mVideoData;
+    OggPlayDataHeader* mVideoHeader;
     nsTArray<float> mAudioData;
     int mVideoWidth;
     int mVideoHeight;
+    int mUVWidth;
+    int mUVHeight;
     float mDecodedFrameTime;
     float mTime;
     OggPlayStreamInfo mState;
@@ -323,7 +339,7 @@ protected:
   // (RGB for video, float for sound, etc).The decoder monitor must be
   // acquired in the scope of calls to these functions. They must be
   // called only when the current state > DECODING_METADATA.
-  void HandleVideoData(FrameData* aFrame, int aTrackNum, OggPlayVideoData* aVideoData);
+  void HandleVideoData(FrameData* aFrame, int aTrackNum, OggPlayDataHeader* aVideoHeader);
   void HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize);
 
   // These methods can only be called on the decoding thread.
@@ -563,7 +579,7 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
       oggplay_callback_info_get_type(info[mVideoTrack]) == OGGPLAY_YUV_VIDEO) {
     OggPlayDataHeader** headers = oggplay_callback_info_get_headers(info[mVideoTrack]);
     videoTime = ((float)oggplay_callback_info_get_presentation_time(headers[0]))/1000.0;
-    HandleVideoData(frame, mVideoTrack, oggplay_callback_info_get_video_data(headers[0]));
+    HandleVideoData(frame, mVideoTrack, headers[0]);
   }
 
   if (mAudioTrack != -1 &&
@@ -594,8 +610,8 @@ nsOggDecodeStateMachine::FrameData* nsOggDecodeStateMachine::NextFrame()
   return frame;
 }
 
-void nsOggDecodeStateMachine::HandleVideoData(FrameData* aFrame, int aTrackNum, OggPlayVideoData* aVideoData) {
-  if (!aVideoData)
+void nsOggDecodeStateMachine::HandleVideoData(FrameData* aFrame, int aTrackNum, OggPlayDataHeader* aVideoHeader) {
+  if (!aVideoHeader)
     return;
 
   int y_width;
@@ -611,31 +627,9 @@ void nsOggDecodeStateMachine::HandleVideoData(FrameData* aFrame, int aTrackNum, 
 
   aFrame->mVideoWidth = y_width;
   aFrame->mVideoHeight = y_height;
-  aFrame->mVideoData = new unsigned char[y_width * y_height * 4];
-  if (!aFrame->mVideoData) {
-    return;
-  }
-
-  OggPlayYUVChannels yuv;
-  OggPlayRGBChannels rgb;
-      
-  yuv.ptry = aVideoData->y;
-  yuv.ptru = aVideoData->u;
-  yuv.ptrv = aVideoData->v;
-  yuv.uv_width = uv_width;
-  yuv.uv_height = uv_height;
-  yuv.y_width = y_width;
-  yuv.y_height = y_height;
-      
-  rgb.ptro = aFrame->mVideoData;
-  rgb.rgb_width = aFrame->mVideoWidth;
-  rgb.rgb_height = aFrame->mVideoHeight;
-
-#ifdef IS_BIG_ENDIAN
-  oggplay_yuv2argb(&yuv, &rgb);
-#else
-  oggplay_yuv2bgr(&yuv, &rgb);
-#endif
+  aFrame->mUVWidth = uv_width;
+  aFrame->mUVHeight = uv_height;
+  aFrame->SetVideoHeader(aVideoHeader);
 }
 
 void nsOggDecodeStateMachine::HandleAudioData(FrameData* aFrame, OggPlayAudioData* aAudioData, int aSize) {
@@ -719,12 +713,35 @@ void nsOggDecodeStateMachine::PlayFrame() {
 void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
 {
   //  NS_ASSERTION(PR_InMonitor(mDecoder->GetMonitor()), "PlayVideo() called without acquiring decoder monitor");
-  if (aFrame) {
-    if (aFrame->mVideoData) {
-      nsAutoLock lock(mDecoder->mVideoUpdateLock);
+  if (aFrame && aFrame->mVideoHeader) {
+    OggPlayVideoData* videoData = oggplay_callback_info_get_video_data(aFrame->mVideoHeader);
 
-      mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight, mFramerate, aFrame->mVideoData);
-    }
+    OggPlayYUVChannels yuv;
+    yuv.ptry = videoData->y;
+    yuv.ptru = videoData->u;
+    yuv.ptrv = videoData->v;
+    yuv.uv_width = aFrame->mUVWidth;
+    yuv.uv_height = aFrame->mUVHeight;
+    yuv.y_width = aFrame->mVideoWidth;
+    yuv.y_height = aFrame->mVideoHeight;
+
+    size_t size = aFrame->mVideoWidth * aFrame->mVideoHeight * 4;
+    nsAutoArrayPtr<unsigned char> buffer(new unsigned char[size]);
+    if (!buffer)
+      return;
+
+    OggPlayRGBChannels rgb;
+    rgb.ptro = buffer;
+    rgb.rgb_width = aFrame->mVideoWidth;
+    rgb.rgb_height = aFrame->mVideoHeight;
+
+#ifdef IS_BIG_ENDIAN
+    oggplay_yuv2argb(&yuv, &rgb);
+#else
+    oggplay_yuv2bgr(&yuv, &rgb);
+#endif
+
+    mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight, mFramerate, buffer.forget());
   }
 }
 
@@ -1186,10 +1203,7 @@ void nsOggDecodeStateMachine::LoadOggHeaders(nsChannelReader* aReader)
         int y_width;
         int y_height;
         oggplay_get_video_y_size(mPlayer, i, &y_width, &y_height);
-        {
-          nsAutoLock lock(mDecoder->mVideoUpdateLock);
-          mDecoder->SetRGBData(y_width, y_height, mFramerate, nsnull);
-        }
+        mDecoder->SetRGBData(y_width, y_height, mFramerate, nsnull);
       }
       else if (mAudioTrack == -1 && oggplay_get_track_type(mPlayer, i) == OGGZ_CONTENT_VORBIS) {
         mAudioTrack = i;

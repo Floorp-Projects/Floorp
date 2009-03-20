@@ -73,6 +73,10 @@ if [[ -n "$TEST_MOZILLA_HG" ]]; then
 
     cd $TEST_MOZILLA_HG_LOCAL
     hg pull
+    if [[ "$OSID" == "nt" ]]; then
+        # remove spurious lock file
+        rm -f $TEST_MOZILLA_HG_LOCAL/.hg/wlock.lnk
+    fi
     hg update -C
     echo "`hg root` id `hg id`"
 fi
@@ -89,6 +93,10 @@ if [[ -n "$TEST_MOZILLA_HG" ]]; then
 
     cd mozilla
     hg pull
+    if [[ "$OSID" == "nt" ]]; then
+        # remove spurious lock file
+        rm -f $TEST_MOZILLA_HG/.hg/wlock.lnk
+    fi
     hg update -C
 
     hg update -r $TEST_MOZILLA_HG_REV
@@ -182,7 +190,7 @@ case $product in
 
         case $branch in
             1.9.1|1.9.2)
-                
+
                 # XXX need to generalize the mobile-browser repository
                 if [[ ! -d mobile/.hg ]]; then
                     if ! hg clone http://hg.mozilla.org/mobile-browser $BUILDTREE/mozilla/mobile; then
@@ -192,13 +200,17 @@ case $product in
 
                 cd mobile
                 hg pull
+                if [[ "$OSID" == "nt" ]]; then
+                    # remove spurious lock file
+                    rm -f .hg/wlock.lnk
+                fi
                 hg update -C
 
                 # XXX need to deal with mobile revisions from different repositories
 
                 cd ../
 
-                # do not use mozilla-build on windows systems as we 
+                # do not use mozilla-build on windows systems as we
                 # must use the cygwin python with the cygwin mercurial.
 
                 if ! python client.py checkout; then

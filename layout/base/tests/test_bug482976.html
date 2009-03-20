@@ -1,0 +1,85 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482976
+-->
+<head>
+  <title>Test for Bug 482976</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=482976">Mozilla Bug 482976</a>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var gWbp;
+function printpreview() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  var listener = {
+    onLocationChange: function(webProgress, request, location) { },
+    onProgressChange: function(webProgress, request, curSelfProgress, 
+                               maxSelfProgress, curTotalProgress,
+                               maxTotalProgress) { },
+    onSecurityChange: function(webProgress, request, state) { },
+    onStateChange: function(webProgress, request, stateFlags, status) { },
+    onStatusChange: function(webProgress, request, status, message) { },
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIWebProgessListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+            return this;
+      throw Components.results.NS_NOINTERFACE;
+    }
+  }
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref('print.show_print_progress', false);
+  //XXX I would have thought this would work, instead I'm forced to use prefs service
+  gWbp.globalPrintSettings.showPrintProgress = false; 
+  gWbp.printPreview(gWbp.globalPrintSettings, null, listener);
+  prefs.clearUserPref('print.show_print_progress');
+}
+
+function exitprintpreview() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+   .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
+}
+
+function run1()
+{
+/** Test for Bug 482976 **/
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                               .getService(Components.interfaces.nsIPrintSettingsService);
+
+  try {
+     var printerEnumerator = Components.classes["@mozilla.org/gfx/printerenumerator;1"]
+                             .getService(Components.interfaces.nsIPrinterEnumerator);
+  } catch(e) {
+     //don't try to test on Mac, since the print preview code doesn't work there
+     SimpleTest.finish();
+     return;
+  }
+
+  if (printService.defaultPrinterName != '') {
+    printpreview();
+    ok(gWbp.doingPrintPreview, "Should be doing print preview");
+    exitprintpreview();
+    ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore");
+    SimpleTest.finish();
+  } else {
+    todo(false, "No printer seems installed on this machine, that is necessary for this test");
+    SimpleTest.finish();
+  }
+}
+
+</script>
+<iframe onload="SimpleTest.waitForExplicitFinish(); setTimeout(run1, 0); this.removeAttribute('onload')"
+        src="data:text/html,<q>"></iframe>
+</pre>
+</body>
+</html>

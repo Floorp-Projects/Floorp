@@ -230,6 +230,20 @@ var PlacesOrganizer = {
       this.location = node.uri;
     }
 
+    // Update the selected folder title where it appears in the UI: the folder
+    // scope button, "Find in <current collection>" command, and the search box
+    // emptytext.  They must be updated even if the selection hasn't changed --
+    // specifically when node's title changes.  In that case a selection event
+    // is generated, this method is called, but the selection does not change.
+    var folderButton = document.getElementById("scopeBarFolder");
+    var folderTitle = node.title || folderButton.getAttribute("emptytitle");
+    folderButton.setAttribute("label", folderTitle);
+    var cmd = document.getElementById("OrganizerCommand_find:current");
+    var label = PlacesUIUtils.getFormattedString("findInPrefix", [folderTitle]);
+    cmd.setAttribute("label", label);
+    if (PlacesSearchBox.filterCollection == "collection")
+      PlacesSearchBox.updateCollectionTitle(folderTitle);
+
     // When we invalidate a container we use suppressSelectionEvent, when it is
     // unset a select event is fired, in many cases the selection did not really
     // change, so we should check for it, and return early in such a case. Note
@@ -266,20 +280,8 @@ var PlacesOrganizer = {
 
     // Enable or disable the folder scope button.
     var folderButton = document.getElementById("scopeBarFolder");
-    folderButton.disabled = !PlacesUtils.nodeIsFolder(aNode) ||
-                            itemId == PlacesUIUtils.allBookmarksFolderId;
-    if (!folderButton.disabled) {
-      // XXXadw When bug 469436 is fixed, set folder scope button label here
-
-      // Update the label of the "Find in <current collection>" command.
-      // The label is not currently displayed anywhere, but for consistency
-      // we'll update it anyway.  To be totally thorough we should also listen
-      // for changes in the selected folder's title.
-      var cmd = document.getElementById("OrganizerCommand_find:current");
-      var label = PlacesUIUtils.getFormattedString("findInPrefix",
-                                                   [aNode.title]);
-      cmd.setAttribute("label", label);
-    }
+    folderButton.hidden = !PlacesUtils.nodeIsFolder(aNode) ||
+                          itemId == PlacesUIUtils.allBookmarksFolderId;
   },
 
   /**
@@ -665,23 +667,27 @@ var PlacesOrganizer = {
 
     if (aSelectedNode && !PlacesUtils.nodeIsSeparator(aSelectedNode)) {
       detailsDeck.selectedIndex = 1;
-      // Using the concrete itemId is arguably wrong. The bookmarks API
+      // Using the concrete itemId is arguably wrong.  The bookmarks API
       // does allow setting properties for folder shortcuts as well, but since
       // the UI does not distinct between the couple, we better just show
-      // the concrete item properties.
-      if (aSelectedNode.type ==
-          Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
-        gEditItemOverlay.initPanel(asQuery(aSelectedNode).folderItemId,
-                                  { hiddenRows: ["folderPicker"],
-                                    forceReadOnly: true });
+      // the concrete item properties for shortcuts to root nodes.
+      var concreteId = PlacesUtils.getConcreteItemId(aSelectedNode);
+      var isRootItem = concreteId != -1 && PlacesUtils.isRootItem(concreteId);
+      var readOnly = isRootItem ||
+                     aSelectedNode.parent.itemId == PlacesUIUtils.leftPaneFolderId;
+      var useConcreteId = isRootItem ||
+                          PlacesUtils.nodeIsTagQuery(aSelectedNode);
+      var itemId = -1;
+      if (concreteId != -1 && useConcreteId)
+        itemId = concreteId;
+      else if (aSelectedNode.itemId != -1)
+        itemId = aSelectedNode.itemId;
+      else
+        itemId = PlacesUtils._uri(aSelectedNode.uri);
 
-      }
-      else {
-        var itemId = PlacesUtils.getConcreteItemId(aSelectedNode);
-        gEditItemOverlay.initPanel(itemId != -1 ? itemId :
-                                   PlacesUtils._uri(aSelectedNode.uri),
-                                   { hiddenRows: ["folderPicker"] });
-      }
+      gEditItemOverlay.initPanel(itemId, { hiddenRows: ["folderPicker"],
+                                           forceReadOnly: readOnly });
+
       this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else if (!aSelectedNode && aNodeList[0]) {
@@ -765,13 +771,13 @@ var PlacesOrganizer = {
     if (infoBox.getAttribute("minimal") == "true") {
       infoBox.removeAttribute("minimal");
       infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("lesslabel");
-      infoBoxExpanderLabel.setAttribute("accesskey", infoBoxExpanderLabel.getAttribute("lessaccesskey"));
+      infoBoxExpanderLabel.accessKey = infoBoxExpanderLabel.getAttribute("lessaccesskey");
       infoBoxExpander.className = "expander-up";
     }
     else {
       infoBox.setAttribute("minimal", "true");
       infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("morelabel");
-      infoBoxExpanderLabel.setAttribute("accesskey", infoBoxExpanderLabel.getAttribute("moreaccesskey"));
+      infoBoxExpanderLabel.accessKey = infoBoxExpanderLabel.getAttribute("moreaccesskey");
       infoBoxExpander.className = "expander-down";
     }
   },
@@ -957,8 +963,11 @@ var PlacesSearchBox = {
     this.searchFilter.setAttribute("collection", collectionName);
 
     var newGrayText = null;
-    if (collectionName == "collection")
-      newGrayText = PlacesOrganizer._places.selectedNode.title;
+    if (collectionName == "collection") {
+      newGrayText = PlacesOrganizer._places.selectedNode.title ||
+                    document.getElementById("scopeBarFolder").
+                      getAttribute("emptytitle");
+    }
     this.updateCollectionTitle(newGrayText);
     return collectionName;
   },
@@ -1518,10 +1527,10 @@ var PlacesQueryBuilder = {
       scopeButtonId = "scopeBarHistory";
       break;
     case "collection":
-      // The folder scope button can only become disabled upon selecting a new
+      // The folder scope button can only become hidden upon selecting a new
       // folder in the left pane, and the disabled state will remain unchanged
       // until a new folder is selected.  See PO__setScopeForNode().
-      if (!document.getElementById("scopeBarFolder").disabled) {
+      if (!document.getElementById("scopeBarFolder").hidden) {
         filterCollection = "collection";
         scopeButtonId = "scopeBarFolder";
         folders.push(PlacesUtils.getConcreteItemId(

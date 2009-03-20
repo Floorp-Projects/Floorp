@@ -1,20 +1,19 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=
+https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 -->
 <head>
   <title>Test for many windows </title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <script type="text/javascript" src="geolocation_common.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank"
-href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Crash in Multiple Windows</a>
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=478911">Crash in Multiple Windows</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -24,9 +23,7 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Crash in Multiple Windows</
 
 /** Test for Bug  **/
 
-ok(navigator.geolocation, "Ensure that the geolocation object is present");
-
-var numberOfWindows = 20;  // 20 seems to be the default max popups during the mochitest run
+var numberOfWindows = 2;  // 20 seems to be the default max popups during the mochitest run
 var totalWindows = numberOfWindows;
 
 var windows = new Array(numberOfWindows);
@@ -39,6 +36,8 @@ for(var i = 0; i < numberOfWindows; i++) {
   windows[i].close();
   totalWindows --;
 }
+
+SimpleTest.waitForExplicitFinish();
 
 function checkDone()
 {
@@ -56,4 +55,3 @@ var timer = setInterval(checkDone, 1000);
 </pre>
 </body>
 </html>
-

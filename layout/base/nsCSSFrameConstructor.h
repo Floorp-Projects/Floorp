@@ -68,6 +68,7 @@ class nsStyleChangeList;
 class nsIFrame;
 struct nsGenConInitializer;
 class ChildIterator;
+class nsICSSAnonBoxPseudo;
 
 struct nsFindFrameHint
 {
@@ -321,6 +322,9 @@ private:
   ResolveStyleContext(nsStyleContext* aParentStyleContext,
                       nsIContent* aContent);
 
+  // Construct a frame for aContent and put it in aFrameItems.  This should
+  // only be used in cases when it's known that the frame won't need table
+  // pseudo-frame construction and the like.
   nsresult ConstructFrame(nsFrameConstructorState& aState,
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
@@ -415,145 +419,61 @@ private:
                           const nsStyleDisplay*    aDisplay,
                           nsFrameItems&            aFrameItems,
                           nsIFrame**               aNewFrame);
-  
+
   /**
-   * Construct some part of a table other than the outer table frame.  This is
-   * the FrameConstructionData callback used for the job.
+   * FrameConstructionData callback used for constructing table rows.
    */
-  nsresult ConstructTablePart(nsFrameConstructorState& aState,
+  nsresult ConstructTableRow(nsFrameConstructorState& aState,
+                             FrameConstructionItem&   aItem,
+                             nsIFrame*                aParentFrame,
+                             const nsStyleDisplay*    aStyleDisplay,
+                             nsFrameItems&            aFrameItems,
+                             nsIFrame**               aNewFrame);
+
+  /**
+   * FrameConstructionData callback used for constructing table columns.
+   */
+  nsresult ConstructTableCol(nsFrameConstructorState& aState,
+                             FrameConstructionItem&   aItem,
+                             nsIFrame*                aParentFrame,
+                             const nsStyleDisplay*    aStyleDisplay,
+                             nsFrameItems&            aFrameItems,
+                             nsIFrame**               aNewFrame);
+
+  /**
+   * FrameConstructionData callback used for constructing table cells.
+   */
+  nsresult ConstructTableCell(nsFrameConstructorState& aState,
                               FrameConstructionItem&   aItem,
                               nsIFrame*                aParentFrame,
-                              const nsStyleDisplay*    aDisplay,
+                              const nsStyleDisplay*    aStyleDisplay,
                               nsFrameItems&            aFrameItems,
                               nsIFrame**               aNewFrame);
-  
-  /**
-   * ConstructTableFrame will construct the outer and inner table frames and
-   * return them.  Unless aIsPseudo is PR_TRUE, it will put the inner frame in
-   * the child list of the outer frame, and will put any pseudo frames it had
-   * to create into aChildItems.  The newly-created outer frame will either be
-   * in aChildItems or a descendant of a pseudo in aChildItems (unless it's
-   * positioned or floated, in which case its placeholder will be in
-   * aChildItems).
-   */ 
-  nsresult ConstructTableFrame(nsFrameConstructorState& aState,
-                               nsIContent*              aContent,
-                               nsIFrame*                aContentParent,
-                               nsStyleContext*          aStyleContext,
-                               PRInt32                  aNameSpaceID,
-                               PRBool                   aIsPseudo,
-                               nsFrameItems&            aChildItems,
-                               nsIFrame*&               aNewOuterFrame,
-                               nsIFrame*&               aNewInnerFrame);
-
-  nsresult ConstructTableCaptionFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsIFrame*                aParent,
-                                      nsStyleContext*          aStyleContext,
-                                      PRInt32                  aNameSpaceID,
-                                      nsFrameItems&            aChildItems,
-                                      nsIFrame*&               aNewFrame,
-                                      PRBool*                  aHasPseudoParent);
-
-  nsresult ConstructTableRowGroupFrame(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       nsIFrame*                aParent,
-                                       nsStyleContext*          aStyleContext,
-                                       PRInt32                  aNameSpaceID,
-                                       PRBool                   aIsPseudo,
-                                       nsFrameItems&            aChildItems,
-                                       nsIFrame*&               aNewFrame,
-                                       PRBool*                  aHasPseudoParent);
-
-  nsresult ConstructTableColGroupFrame(nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       nsIFrame*                aParent,
-                                       nsStyleContext*          aStyleContext,
-                                       PRInt32                  aNameSpaceID,
-                                       PRBool                   aIsPseudo,
-                                       nsFrameItems&            aChildItems,
-                                       nsIFrame*&               aNewFrame,
-                                       PRBool*                  aHasPseudoParent);
-
-  nsresult ConstructTableRowFrame(nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParent,
-                                  nsStyleContext*          aStyleContext,
-                                  PRInt32                  aNameSpaceID,
-                                  PRBool                   aIsPseudo,
-                                  nsFrameItems&            aChildItems,
-                                  nsIFrame*&               aNewFrame,
-                                  PRBool*                  aHasPseudoParent);
-
-  nsresult ConstructTableColFrame(nsFrameConstructorState& aState,
-                                  nsIContent*              aContent,
-                                  nsIFrame*                aParent,
-                                  nsStyleContext*          aStyleContext,
-                                  PRInt32                  aNameSpaceID,
-                                  PRBool                   aIsPseudo,
-                                  nsFrameItems&            aChildItems,
-                                  nsIFrame*&               aNewFrame,
-                                  PRBool*                  aHasPseudoParent);
-
-  nsresult ConstructTableCellFrame(nsFrameConstructorState& aState,
-                                   nsIContent*              aContent,
-                                   nsIFrame*                aParentFrame,
-                                   nsStyleContext*          aStyleContext,
-                                   PRInt32                  aNameSpaceID,
-                                   PRBool                   aIsPseudo,
-                                   nsFrameItems&            aChildItems,
-                                   nsIFrame*&               aNewCellOuterFrame,
-                                   nsIFrame*&               aNewCellInnerFrame,
-                                   PRBool*                  aHasPseudoParent);
-
-  nsresult CreatePseudoTableFrame(PRInt32                  aNameSpaceID,
-                                  nsFrameConstructorState& aState, 
-                                  nsIFrame*                aParentFrameIn = nsnull);
-
-  nsresult CreatePseudoRowGroupFrame(PRInt32                  aNameSpaceID,
-                                     nsFrameConstructorState& aState, 
-                                     nsIFrame*                aParentFrameIn = nsnull);
-
-  nsresult CreatePseudoColGroupFrame(PRInt32                  aNameSpaceID,
-                                     nsFrameConstructorState& aState, 
-                                     nsIFrame*                aParentFrameIn = nsnull);
-
-  nsresult CreatePseudoRowFrame(PRInt32                  aNameSpaceID,
-                                nsFrameConstructorState& aState, 
-                                nsIFrame*                aParentFrameIn = nsnull);
-
-  nsresult CreatePseudoCellFrame(PRInt32                  aNameSpaceID,
-                                 nsFrameConstructorState& aState, 
-                                 nsIFrame*                aParentFrameIn = nsnull);
-
-  nsresult GetPseudoTableFrame(PRInt32                  aNameSpaceID,
-                               nsFrameConstructorState& aState, 
-                               nsIFrame&                aParentFrameIn);
-
-  nsresult GetPseudoColGroupFrame(PRInt32                  aNameSpaceID,
-                                  nsFrameConstructorState& aState, 
-                                  nsIFrame&                aParentFrameIn);
-
-  nsresult GetPseudoRowGroupFrame(PRInt32                  aNameSpaceID,
-                                  nsFrameConstructorState& aState, 
-                                  nsIFrame&                aParentFrameIn);
-
-  nsresult GetPseudoRowFrame(PRInt32                  aNameSpaceID,
-                             nsFrameConstructorState& aState, 
-                             nsIFrame&                aParentFrameIn);
-
-  nsresult GetPseudoCellFrame(PRInt32                  aNameSpaceID,
-                              nsFrameConstructorState& aState, 
-                              nsIFrame&                aParentFrameIn);
-
-  nsresult CreateRequiredPseudoFrames(PRInt32                  aNameSpaceID,
-                                      nsIFrame&                aParentFrameIn,
-                                      nsIAtom*                 aChildFrameType,
-                                      nsFrameConstructorState& aState,
-                                      nsIFrame*&               aParentFrame,
-                                      PRBool&                  aIsPseudoParent);
 
 private:
+  /* An enum of possible parent types for anonymous table object construction */
+  enum ParentType {
+    eTypeBlock = 0, /* This includes all non-table-related frames */
+    eTypeRow,
+    eTypeRowGroup,
+    eTypeColGroup,
+    eTypeTable,
+    eParentTypeCount
+  };
+
+  /* 3 bits is enough to handle our ParentType values */
+#define FCDATA_PARENT_TYPE_OFFSET 29
+  /* Macro to get the desired parent type out of an mBits member of
+     FrameConstructionData */
+#define FCDATA_DESIRED_PARENT_TYPE(_bits)           \
+  ParentType((_bits) >> FCDATA_PARENT_TYPE_OFFSET)
+  /* Macro to create FrameConstructionData bits out of a desired parent type */
+#define FCDATA_DESIRED_PARENT_TYPE_TO_BITS(_type)     \
+  (((PRUint32)(_type)) << FCDATA_PARENT_TYPE_OFFSET)
+
+  /* Get the parent type that aParentFrame has. */
+  static ParentType GetParentType(nsIFrame* aParentFrame);
+
   /* A constructor function that just creates an nsIFrame object.  The caller
      is responsible for initializing the object, adding it to frame lists,
      constructing frames for the children, etc.
@@ -603,9 +523,9 @@ private:
   /* Bits that modify the way a FrameConstructionData is handled */
 
   /* If the FCDATA_SKIP_FRAMEMAP bit is set, then the frame created should not
-     be added to the primary frame map.  This flag should not be used with
-     FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add to
-     the frame map. */
+     be added to the primary frame map.  This flag might get ignored when used
+     with FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add
+     to the frame map. */
 #define FCDATA_SKIP_FRAMEMAP 0x1
   /* If the FCDATA_FUNC_IS_DATA_GETTER bit is set, then the mFunc of the
      FrameConstructionData is a getter function that can be used to get the
@@ -636,9 +556,9 @@ private:
      set. */
 #define FCDATA_SUPPRESS_FRAME 0x40
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
-     a scrollframe if its overflow type so requires.  This flag should not be
-     used with FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to
-     the frame map. */
+     a scrollframe if its overflow type so requires.  This flag might override
+     FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to the frame
+     map. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
 #ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
@@ -667,6 +587,14 @@ private:
   /* If FCDATA_IS_LINE_PARTICIPANT is set, the the frame is something that will
      return true for IsFrameOfType(nsIFrame::eLineParticipant) */
 #define FCDATA_IS_LINE_PARTICIPANT 0x4000
+  /* If FCDATA_ALLOW_BLOCK_STYLES is set, allow block styles when processing
+     children.  This should not be used with FCDATA_FUNC_IS_FULL_CTOR. */
+#define FCDATA_ALLOW_BLOCK_STYLES 0x8000
+  /* If FCDATA_USE_CHILD_ITEMS is set, then use the mChildItems in the relevant
+     FrameConstructionItem instead of trying to process the content's children.
+     This can be used with or without FCDATA_FUNC_IS_FULL_CTOR.
+     The child items might still need table pseudo processing. */
+#define FCDATA_USE_CHILD_ITEMS 0x10000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -706,6 +634,16 @@ private:
     const FrameConstructionData mData;
   };
 
+  /* Structure that has a FrameConstructionData and style context pseudo-type
+     for a table pseudo-frame */
+  struct PseudoParentData {
+    const FrameConstructionData mFCData;
+    nsICSSAnonBoxPseudo * const * const mPseudoType;
+  };
+  /* Array of such structures that we use to properly construct table
+     pseudo-frames as needed */
+  static const PseudoParentData sPseudoParentData[eParentTypeCount];
+
   /* A function that takes an integer, content, style context, and array of
      FrameConstructionDataByInts and finds the appropriate frame construction
      data to use and returns it.  This can return null if none of the integers
@@ -737,6 +675,7 @@ private:
       mItemCount(0)
     {
       PR_INIT_CLIST(&mItems);
+      memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
     }
 
     ~FrameConstructionItemList() {
@@ -762,6 +701,9 @@ private:
       NS_ASSERTION(!IsEmpty(), "Someone forgot to check IsEmpty()");
       return ToItem(PR_LIST_TAIL(&mItems))->mHasInlineEnds;
     }
+    PRBool AllWantParentType(ParentType aDesiredParentType) const {
+      return mDesiredParentCounts[aDesiredParentType] == mItemCount;
+    }
 
     FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
@@ -775,6 +717,7 @@ private:
       if (item) {
         PR_APPEND_LINK(item, &mItems);
         ++mItemCount;
+        ++mDesiredParentCounts[item->DesiredParentType()];
       } else {
         // Clean up the style context
         nsRefPtr<nsStyleContext> sc(aStyleContext);
@@ -787,24 +730,72 @@ private:
 
     class Iterator;
     friend class Iterator;
+
     class Iterator {
     public:
       Iterator(FrameConstructionItemList& list) :
         mCurrent(PR_NEXT_LINK(&list.mItems)),
-        mEnd(&list.mItems)
+        mEnd(&list.mItems),
+        mList(list)
+      {}
+      Iterator(const Iterator& aOther) :
+        mCurrent(aOther.mCurrent),
+        mEnd(aOther.mEnd),
+        mList(aOther.mList)
       {}
 
+      PRBool operator==(const Iterator& aOther) const {
+        NS_ASSERTION(mEnd == aOther.mEnd, "Iterators for different lists?");
+        return mCurrent == aOther.mCurrent;
+      }
+      PRBool operator!=(const Iterator& aOther) const {
+        return !(*this == aOther);
+      }
+
       operator FrameConstructionItem& () {
+        return item();
+      }
+
+      FrameConstructionItem& item() {
         return *FrameConstructionItemList::ToItem(mCurrent);
       }
       PRBool IsDone() const { return mCurrent == mEnd; }
+      PRBool AtStart() const { return mCurrent == PR_NEXT_LINK(mEnd); }
       void Next() {
         NS_ASSERTION(!IsDone(), "Should have checked IsDone()!");
         mCurrent = PR_NEXT_LINK(mCurrent);
       }
+
+      // Remove the item pointed to by this iterator from its current list and
+      // Append it to aTargetList.  This iterator is advanced to point to the
+      // next item in its list.  aIter must not be done.  aOther must not be
+      // the list this iterator is iterating over..
+      void AppendItemToList(FrameConstructionItemList& aTargetList);
+
+      // As above, but moves all items starting with this iterator until we
+      // get to aEnd; the item pointed to by aEnd is not stolen.  This method
+      // might have optimizations over just looping and doing StealItem for
+      // some special cases.  After this method returns, this iterator will
+      // point to the item aEnd points to now; aEnd is not modified.
+      // aTargetList must not be the list this iterator is iterating over.
+      void AppendItemsToList(const Iterator& aEnd,
+                             FrameConstructionItemList& aTargetList);
+
+      // Insert aItem in this iterator's list right before the item pointed to
+      // by this iterator.  After the insertion, this iterator will continue to
+      // point to the item it now points to (the one just after the
+      // newly-inserted item).  This iterator is allowed to be done; in that
+      // case this call just appends the given item to the list.
+      void InsertItem(FrameConstructionItem* aItem);
+
+      // Delete the item pointed to by this iterator, and point ourselves to
+      // the next item in the list.
+      void DeleteItem();
+
     private:
       PRCList* mCurrent;
       PRCList* mEnd;
+      FrameConstructionItemList& mList;
     };
 
   private:
@@ -812,10 +803,15 @@ private:
       return static_cast<FrameConstructionItem*>(item);
     }
 
+    // Adjust our various counts for aItem being added or removed.  aDelta
+    // should be either +1 or -1 depending on which is happening.
+    void AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta);
+
     PRCList mItems;
     PRUint32 mInlineCount;
     PRUint32 mLineParticipantCount;
     PRUint32 mItemCount;
+    PRUint32 mDesiredParentCounts[eParentTypeCount];
   };
 
   typedef FrameConstructionItemList::Iterator FCItemIterator;
@@ -843,6 +839,13 @@ private:
         mContent->UnbindFromTree();
         NS_RELEASE(mContent);
       }
+    }
+
+    ParentType DesiredParentType() {
+      return FCDATA_DESIRED_PARENT_TYPE(mFCData->mBits);
+    }
+    PRBool IsWhitespace() const {
+      return mIsText && mContent->TextIsOnlyWhitespace();
     }
 
     // The FrameConstructionData to use.
@@ -875,7 +878,6 @@ private:
     PRPackedBool mIsPopup;
 
     // Child frame construction items.
-    // Only used for inline frame items for now.
     FrameConstructionItemList mChildItems;
 
   private:
@@ -883,37 +885,28 @@ private:
   };
 
   /**
-   * Function to adjust aParentFrame and aFrameItems to deal with table
-   * pseudo-frames that may have to be inserted.
-   * @param aState the nsFrameConstructorState we're using.
-   * @param aChildContent the content node we want to construct a frame for
+   * Function to create the table pseudo items we need.
+   * @param aItems the child frame construction items before pseudo creation
+   * @param aParentFrame the parent frame we're creating pseudos for
+   */
+  nsresult CreateNeededTablePseudos(FrameConstructionItemList& aItems,
+                                    nsIFrame* aParentFrame);
+
+  /**
+   * Function to adjust aParentFrame to deal with captions.
    * @param aParentFrame the frame we think should be the parent.  This will be
-   *        adjusted to point to a pseudo-frame if needed.
+   *        adjusted to point to the right parent frame.
    * @param aFCData the FrameConstructionData that would be used for frame
    *        construction.
-   * @param aNameSpaceID namespace that will be used for frame construction
    * @param aStyleContext the style context for aChildContent
-   * @param aFrameItems the framelist we think we need to put the child frame
-   *        into.  If we have to construct pseudo-frames, we'll modify the
-   *        pointer to point to the list the child frame should go into.
-   * @param aSaveState the nsFrameConstructorSaveState we can use for pushing a
-   *        float containing block if we have to do it.
-   * @param aCreatedPseudo whether we had to create a pseudo-parent
-   * @return NS_OK on success, NS_ERROR_OUT_OF_MEMORY and such as needed.
    */
   // XXXbz this function should really go away once we rework pseudo-frame
   // handling to be better. This should simply be part of the job of
   // GetGeometricParent, and stuff like the frameitems and parent frame should
   // be kept track of in the state...
-  nsresult AdjustParentFrame(nsFrameConstructorState&     aState,
-                             nsIContent*                  aChildContent,
-                             nsIFrame* &                  aParentFrame,
-                             const FrameConstructionData* aFCData,
-                             PRInt32                      aNameSpaceID,
-                             nsStyleContext*              aStyleContext,
-                             nsFrameItems* &              aFrameItems,
-                             nsFrameConstructorSaveState& aSaveState,
-                             PRBool&                      aCreatedPseudo);
+  void AdjustParentFrame(nsIFrame* &                  aParentFrame,
+                         const FrameConstructionData* aFCData,
+                         nsStyleContext*              aStyleContext);
 
   // END TABLE SECTION
 
@@ -963,8 +956,7 @@ private:
                               nsIContent*              aContent,
                               nsIFrame*                aParentFrame,
                               nsStyleContext*          aStyleContext,
-                              nsFrameItems&            aFrameItems,
-                              PRBool                   aPseudoParent);
+                              nsFrameItems&            aFrameItems);
 
   void AddPageBreakItem(nsIContent* aContent,
                         nsStyleContext* aMainStyleContext,
@@ -999,13 +991,11 @@ private:
                          newly-constructed frame.
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
-     @param aHasPseudoParent whether aParentFrame is a table pseudo-frame.
   */
   nsresult ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
                                           nsFrameConstructorState& aState,
                                           nsIFrame* aParentFrame,
-                                          nsFrameItems& aFrameItems,
-                                          PRBool aHasPseudoParent);
+                                          nsFrameItems& aFrameItems);
 
   // possible flags for AddFrameConstructionItemInternal's aFlags argument
   /* Allow xbl:base to affect the tag/namespace used. */
@@ -1118,7 +1108,8 @@ private:
   /* Not static because it does PropagateScrollToViewport.  If this
      changes, make this static */
   const FrameConstructionData*
-    FindDisplayData(const nsStyleDisplay* aDisplay, nsIContent* aContent);
+    FindDisplayData(const nsStyleDisplay* aDisplay, nsIContent* aContent,
+                    nsStyleContext* aStyleContext);
 
   /**
    * Construct a scrollable block frame
@@ -1346,9 +1337,8 @@ private:
                              FrameConstructionItem& aParentItem);
 
   /**
-   * Construct frames for the given item list and put the resulting frames in
-   * aFrameItems.  This function will save pseudoframes on entry and restore on
-   * exit.
+   * Construct frames for the given item list and parent frame, and put the
+   * resulting frames in aFrameItems.
    */
   nsresult ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                        FrameConstructionItemList& aItems,

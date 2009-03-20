@@ -56,6 +56,6 @@ public:
 	NS_DECL_NSISCRIPTABLEREGION
 
 private:
-  nsIRegion* mRegion;
-  nsRegionRectSet *mRectSet;
+	nsIRegion* mRegion;
+	nsRegionRectSet *mRectSet;
 };

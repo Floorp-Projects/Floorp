@@ -77,7 +77,7 @@
               onpageshow="gCheckingPage.onPageShow();">
     <label>&updateCheck.label;</label>
     <separator class="thin"/>
-    <progressmeter id="checkingProgress" mode="undetermined"/>
+    <progressmeter id="checkingProgress" mode="undetermined" hidden="true"/>
   </wizardpage>
   
   <wizardpage id="noupdatesfound" pageid="noupdatesfound"
@@ -93,7 +93,7 @@
               onpageshow="gIncompatibleCheckPage.onPageShow();">
     <label>&incompatibleCheck.label;</label>
     <separator class="thin"/>
-    <progressmeter id="incompatibleCheckProgress" mode="undetermined"/>
+    <progressmeter id="incompatibleCheckProgress" mode="undetermined" hidden="true"/>
   </wizardpage>
 
   <wizardpage id="updatesfound" pageid="updatesfound" next="license"
@@ -165,7 +165,7 @@
     </hbox>
     <separator class="thin"/>
     <hbox id="downloadStatusProgress">
-      <progressmeter id="downloadProgress" mode="undetermined" flex="1"/>
+      <progressmeter id="downloadProgress" mode="undetermined" flex="1" hidden="true"/>
       <button id="pauseButton" oncommand="gDownloadingPage.onPause();"
               paused="false"/>
     </hbox>

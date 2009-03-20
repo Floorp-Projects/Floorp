@@ -71,6 +71,7 @@
                   completeselectedindex="true"
                   autocompletesearch="history"
                   enablehistory="true"
+                  class="uri-element"
                   oninput="doEnabling();"/>
         <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
       </hbox>

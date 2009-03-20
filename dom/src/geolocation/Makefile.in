@@ -73,12 +73,20 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 LOCAL_INCLUDES = \
-		-I$(srcdir)/../base \
+		-I$(topsrcdir)/dom/base \
 		$(NULL)
 
 ifdef NS_MAEMO_LOCATION
 CPPSRCS		+= MaemoLocationProvider.cpp
 LOCAL_INCLUDES	+= $(MOZ_LOCATION_CFLAGS)
+endif
+
+ifdef WINCE
+CPPSRCS         += WinMobileLocationProvider.cpp
+endif
+
+ifdef ENABLE_TESTS
+DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -51,6 +51,7 @@
 #include "jsscan.h"
 #include "jsstr.h"
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsutil.h"
 
 #include "json.h"
@@ -434,8 +435,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 
     JSObject *obj;
 
-    if (!JSVAL_IS_PRIMITIVE(*vp) && !JS_ObjectIsFunction(cx, obj = JSVAL_TO_OBJECT(*vp)) &&
-        !js_IsCallable(cx, obj)) {
+    if (!JSVAL_IS_PRIMITIVE(*vp) && !js_IsCallable(obj = JSVAL_TO_OBJECT(*vp), cx)) {
         jsval propValue = JSVAL_VOID;
         JSAutoTempValueRooter tvr(cx, 1, &propValue);
         
@@ -591,16 +591,18 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 
     if (!js_RemoveRoot(cx->runtime, &jp->objectStack))
         return JS_FALSE;
+
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
+    jsval *vp = jp->rootVal;
     JS_free(cx, jp);
 
-    if (!ok)
+    if (!ok) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-
-    if (reviver && !JSVAL_IS_PRIMITIVE(reviver) &&
-        (JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(reviver)) || js_IsCallable(cx, JSVAL_TO_OBJECT(reviver)))) {
-        ok = Revive(cx, reviver, jp->rootVal);
+        return JS_FALSE;
     }
+
+    if (!JSVAL_IS_PRIMITIVE(reviver) && js_IsCallable(JSVAL_TO_OBJECT(reviver), cx))
+        ok = Revive(cx, reviver, vp);
 
     return ok;
 }

@@ -42,6 +42,7 @@
  */
 #include "jslibmath.h"
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsdtoa.h"
 #include "jsprf.h"
 #include "jsutil.h" /* Added by JSIFY */

@@ -53,6 +53,7 @@ DIRS	+= \
 	general \
 	whatwg \
 	geolocation \
+	localstorage \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

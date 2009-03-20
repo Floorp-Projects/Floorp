@@ -58,7 +58,7 @@
 # define INCL_DOS
 # include <os2.h>
 #elif defined(XP_MACOSX)
-# include <CFBundle.h>
+# include <CoreFoundation/CoreFoundation.h>
 # include <unistd.h>
 # include <dirent.h>
 #elif defined(XP_UNIX)

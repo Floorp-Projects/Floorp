@@ -306,7 +306,8 @@ nsTextAttrsMgr::FindEndOffsetInSubtree(const nsTPtrArray<nsITextAttr>& aTextAttr
     return PR_FALSE;
 
   nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(aCurrNode));
-  NS_ENSURE_STATE(currElm);
+  if (!currElm)
+    return PR_FALSE;
 
   // If the given text attribute (pointed by nsTextAttr object) changes its
   // value on the traversed element then fit the end of range.
@@ -362,7 +363,8 @@ nsTextAttrsMgr::FindStartOffsetInSubtree(const nsTPtrArray<nsITextAttr>& aTextAt
   }
 
   nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(aCurrNode));
-  NS_ENSURE_STATE(currElm);
+  if (!currElm)
+    return PR_FALSE;
 
   // If the given text attribute (pointed by nsTextAttr object) changes its
   // value on the traversed element then fit the start of range.

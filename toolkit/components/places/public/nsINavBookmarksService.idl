@@ -57,7 +57,7 @@ interface nsINavHistoryBatchCallback;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(f9828ba8-9c70-4d95-b926-60d9e4378d7d)]
+[scriptable, uuid(a3544e1e-36a8-404a-9b30-918abf8e005e)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -87,6 +87,15 @@ interface nsINavBookmarkObserver : nsISupports
    */
   void onItemAdded(in long long aItemId, in long long aFolder,
                    in long aIndex);
+
+  /**
+   * Notify this observer that an item is about to be removed.  Called before
+   * the actual removal will take place.
+   *
+   * @param aItemId
+   *        The id of the bookmark to be removed.
+   */
+  void onBeforeItemRemoved(in long long aItemId);
 
   /**
    * Notify this observer that an item was removed.  Called after the actual

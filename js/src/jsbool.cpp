@@ -41,13 +41,13 @@
  * JS boolean implementation.
  */
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
