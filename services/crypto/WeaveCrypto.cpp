@@ -396,6 +396,12 @@ WeaveCrypto::GenerateKeypair(const nsACString& aPassphrase,
   SECKEYPublicKey  *pubKey  = nsnull;
   PK11SlotInfo     *slot    = nsnull;
   PK11RSAGenParams rsaParams;
+  // Attributes for the private key. We're just going to wrap and extract the
+  // value, so they're not critical. The _PUBLIC attribute just indicates the
+  // object can be accessed without being logged into the token.
+  PK11AttrFlags attrFlags = (PK11_ATTR_SESSION |
+                             PK11_ATTR_PUBLIC |
+                             PK11_ATTR_SENSITIVE);
 
 
   rsaParams.keySizeInBits = mKeypairBits; // 1024, 2048, etc.
@@ -409,16 +415,10 @@ WeaveCrypto::GenerateKeypair(const nsACString& aPassphrase,
   }
 
   // Generate the keypair.
-  // XXX isSensitive sets PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE
-  //     Might want to use PK11_GenerateKeyPairWithFlags and not set
-  //     CKA_PRIVATE, since that may trigger a master password entry, which is
-  //     kind of pointless for session objects...
-  privKey = PK11_GenerateKeyPair(slot,
+  privKey = PK11_GenerateKeyPairWithFlags(slot,
                                 CKM_RSA_PKCS_KEY_PAIR_GEN,
                                 &rsaParams, &pubKey,
-                                PR_FALSE, // isPerm
-                                PR_TRUE,  // isSensitive
-                                nsnull);  // wincx
+                                attrFlags, nsnull);
 
   if (!privKey) {
     NS_WARNING("PK11_GenerateKeyPair failed");
