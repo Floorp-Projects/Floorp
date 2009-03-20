@@ -65,6 +65,9 @@ const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 // #defined or left #undefined by js/src/configure.in.
 //#define NJ_ARM_VFP
 
+// Assume ARMv6T2 or higher
+#define NJ_ARM_HAVE_MOVW
+
 #ifdef NJ_ARM_VFP
 
 // only d0-d7; we'll use d7 as s14-s15 for i2f/u2f/etc.
@@ -482,6 +485,28 @@ enum {
 
 // _d = #_imm
 #define LDi(_d,_imm) asm_ld_imm(_d,_imm)
+
+// MOVW and MOVT are ARMv6T2 or newer only
+
+// MOVW -- writes _imm into _d, zero-extends.
+#define MOVW_cond(_cond,_d,_imm) do {                                   \
+        NanoAssert(isU16(_imm) || isS16(_imm));                         \
+        underrunProtect(4);                                             \
+        *(--_nIns) = (NIns)( (_cond)<<28 | 3<<24 | 0<<20 | (((_imm)>>12)&0xf)<<16 | (_d)<<12 | (_imm)&0xfff ); \
+        asm_output("movw%s %s, #0x%x", condNames[_cond], gpn(_d), (_imm)); \
+    } while (0)
+
+#define MOVW(_d,_imm) MOVW_cond(AL, _d, _imm)
+
+// MOVT -- writes _imm into top halfword of _d, does not affect bottom halfword
+#define MOVT_cond(_cond,_d,_imm) do {                                   \
+        NanoAssert(isU16(_imm) || isS16(_imm));                         \
+        underrunProtect(4);                                             \
+        *(--_nIns) = (NIns)( (_cond)<<28 | 3<<24 | 4<<20 | (((_imm)>>12)&0xf)<<16 | (_d)<<12 | (_imm)&0xfff ); \
+        asm_output("movt%s %s, #0x%x", condNames[_cond], gpn(_d), (_imm)); \
+    } while (0)
+
+#define MOVT(_d,_imm) MOVT_cond(AL, _d, _imm)
 
 // i386 compat, for Assembler.cpp
 #define MR(d,s) MOV(d,s)
