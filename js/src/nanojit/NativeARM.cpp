@@ -1478,7 +1478,7 @@ Assembler::asm_ld(LInsp ins)
 void
 Assembler::asm_cmov(LInsp ins)
 {
-    LOpcode op = ins->opcode();
+    NanoAssert(ins->opcode() == LIR_cmov);
     LIns* condval = ins->oprnd1();
     NanoAssert(condval->isCmp());
 
@@ -1488,31 +1488,27 @@ Assembler::asm_cmov(LInsp ins)
     LIns* iftrue = values->oprnd1();
     LIns* iffalse = values->oprnd2();
 
-    NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
+    NanoAssert(!iftrue->isQuad() && !iffalse->isQuad());
 
     const Register rr = prepResultReg(ins, GpRegs);
 
     // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
     // (This is true on Intel, is it true on all architectures?)
     const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
-    if (op == LIR_cmov) {
-        switch (condval->opcode()) {
-            // note that these are all opposites...
-            case LIR_eq:    MOVNE(rr, iffalsereg);   break;
-            case LIR_ov:    MOVNO(rr, iffalsereg);   break;
-            case LIR_cs:    MOVNC(rr, iffalsereg);   break;
-            case LIR_lt:    MOVGE(rr, iffalsereg);   break;
-            case LIR_le:    MOVG(rr, iffalsereg);    break;
-            case LIR_gt:    MOVLE(rr, iffalsereg);   break;
-            case LIR_ge:    MOVL(rr, iffalsereg);    break;
-            case LIR_ult:   MOVAE(rr, iffalsereg);   break;
-            case LIR_ule:   MOVA(rr, iffalsereg);    break;
-            case LIR_ugt:   MOVBE(rr, iffalsereg);   break;
-            case LIR_uge:   MOVB(rr, iffalsereg);    break;
-            default: debug_only( NanoAssert(0) );   break;
-        }
-    } else if (op == LIR_qcmov) {
-        NanoAssert(0);
+    switch (condval->opcode()) {
+        // note that these are all opposites...
+        case LIR_eq:    MOVNE(rr, iffalsereg);   break;
+        case LIR_ov:    MOVNO(rr, iffalsereg);   break;
+        case LIR_cs:    MOVNC(rr, iffalsereg);   break;
+        case LIR_lt:    MOVGE(rr, iffalsereg);   break;
+        case LIR_le:    MOVG(rr, iffalsereg);    break;
+        case LIR_gt:    MOVLE(rr, iffalsereg);   break;
+        case LIR_ge:    MOVL(rr, iffalsereg);    break;
+        case LIR_ult:   MOVAE(rr, iffalsereg);   break;
+        case LIR_ule:   MOVA(rr, iffalsereg);    break;
+        case LIR_ugt:   MOVBE(rr, iffalsereg);   break;
+        case LIR_uge:   MOVB(rr, iffalsereg);    break;
+        default: debug_only( NanoAssert(0) );   break;
     }
     /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
     asm_cmp(condval);
