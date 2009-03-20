@@ -559,6 +559,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     if (value->isconstq()) {
         const int32_t* p = (const int32_t*) (value-2);
 
+        // XXX use another reg, get rid of dependency
         STR(IP, rb, dr);
         LD32_nochk(IP, p[0]);
         STR(IP, rb, dr+4);
@@ -644,20 +645,17 @@ Assembler::asm_quad(LInsp ins)
     freeRsrcOf(ins, false);
 
     if (rr == UnknownReg) {
-        underrunProtect(12);
+        underrunProtect(LD32_size * 2 + 8);
 
         // asm_mmq might spill a reg, so don't call it;
         // instead do the equivalent directly.
         //asm_mmq(FP, d, PC, -16);
 
-        STR(IP, FP, d+4);
-        LDR(IP, PC, -20);
+        // XXX use another reg, get rid of dependency
         STR(IP, FP, d);
-        LDR(IP, PC, -16);
-
-        *(--_nIns) = (NIns) p[1];
-        *(--_nIns) = (NIns) p[0];
-        JMP_nochk(_nIns+2);
+        LD32_nochk(IP, p[0]);
+        STR(IP, FP, d+4);
+        LD32_nochk(IP, p[1]);
     } else {
         if (d)
             FSTD(rr, FP, d);
@@ -712,7 +710,7 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     // put it in an FPU reg just to load & store it.
 
     // Don't use this with PC-relative loads; the registerAlloc might
-    // end up spilling a reg (and this the offset could end up being
+    // end up spilling a reg (and thus the offset could end up being
     // bogus)!
     NanoAssert(rs != PC);
 
@@ -988,7 +986,7 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
         *(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | 0x0 );
     }
 
-    asm_output("%s %p", _c == AL ? "jmp" : "b(cnd)", (void*)(_t));
+    asm_output("b%s %p", condNames[_c], (void*)(_t));
 }
 
 void
