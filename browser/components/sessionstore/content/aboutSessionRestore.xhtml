@@ -52,7 +52,7 @@
     <title>&restorepage.tabtitle;</title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
-    <link rel="icon" type="image/png" href="chrome://global/skin/icons/question-16.png"/>
+    <link rel="icon" type="image/png" href="chrome://global/skin/icons/warning-16.png"/>
 
     <script type="application/javascript" src="chrome://browser/content/aboutSessionRestore.js"/>
   </head>
@@ -64,7 +64,7 @@
     
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText">&restorepage.pagetitle;</h1>
+        <h1 id="errorTitleText">&restorepage.errorTitle;</h1>
       </div>
       
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
@@ -72,20 +72,21 @@
       
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText">&restorepage.issueDesc;</p>
+          <p id="errorShortDescText">&restorepage.problemDesc;</p>
         </div>
 
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc">
-          <p>&restorepage.remedies;</p>
+          <p>&restorepage.tryThis;</p>
           <ul>
-            <li>&restorepage.dueToChrome;</li>
-            <li>&restorepage.dueToContent;</li>
+            <li>&restorepage.restoreSome;</li>
+            <li>&restorepage.startNew;</li>
           </ul>
         </div>
 
         <!-- Short Description -->
         <div id="errorTrailerDesc">
+          <p>&nbsp;</p>
           <tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                 id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
                 onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
@@ -106,11 +107,11 @@
         <button id="errorCancel" label="&restorepage.cancelButton;"
                 accesskey="&restorepage.cancel.access;"
                 oncommand="startNewSession();"/>
-        <button id="errorTryAgain" label="&restorepage.restoreButton;"
+        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
 #else
-        <button id="errorTryAgain" label="&restorepage.restoreButton;"
+        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
         <button id="errorCancel" label="&restorepage.cancelButton;"
