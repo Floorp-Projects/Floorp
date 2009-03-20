@@ -106,7 +106,7 @@ Assembler::genPrologue()
     verbose_only( verbose_output("         patch entry"); )
     NIns *patchEntry = _nIns;
 
-    MR(FP, SP);
+    MOV(FP, SP);
     PUSH_mask(savingMask);
     return patchEntry;
 }
@@ -134,7 +134,7 @@ Assembler::nFragExit(LInsp guard)
     }
 
     // pop the stack frame first
-    MR(SP, FP);
+    MOV(SP, FP);
 
 #ifdef NJ_VERBOSE
     if (_frago->core()->config.show_stats) {
@@ -165,10 +165,10 @@ Assembler::genEpilogue()
 
     POP_mask(savingMask); // regs
 
-    MR(SP,FP);
+    MOV(SP,FP);
 
     // this is needed if we jump here from nFragExit
-    MR(R0,R2); // return LinkRecord*
+    MOV(R0,R2); // return LinkRecord*
 
     return _nIns;
 }
@@ -878,7 +878,7 @@ void
 Assembler::LD32_nochk(Register r, int32_t imm)
 {
     if (imm == 0) {
-        XOR(r, r);
+        EOR(r, r, r);
         return;
     }
 
@@ -1107,6 +1107,7 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
                 case LIR_fgt: cc = LE; break;
                 case LIR_fle: cc = HI; break;
                 case LIR_fge: cc = LT; break;
+                default: NanoAssert(0); break;
             }
         } else {
             switch (condop) {
@@ -1115,6 +1116,7 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
                 case LIR_fgt: cc = GT; break;
                 case LIR_fle: cc = LS; break;
                 case LIR_fge: cc = GE; break;
+                default: NanoAssert(0); break;
             }
         }
 
@@ -1227,7 +1229,7 @@ Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
     // If the target we are looping to is in a different fragment, we have to restore
     // SP since we will target fragEntry and not loopEntry.
     if (ins->record()->exit->target != _thisfrag)
-        MR(SP,FP);
+        MOV(SP,FP);
 }
 
 void
@@ -1242,6 +1244,7 @@ Assembler::asm_fcond(LInsp ins)
         case LIR_fgt: SET(r,GT,LE); break;
         case LIR_fle: SET(r,LS,HI); break;
         case LIR_fge: SET(r,GE,LT); break;
+        default: NanoAssert(0); break;
     }
 
     asm_fcmp(ins);
@@ -1330,11 +1333,11 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_mul)
             MUL(rr, rb);
         else if (op == LIR_and)
-            AND(rr, rb);
+            AND(rr, rr, rb);
         else if (op == LIR_or)
-            OR(rr, rb);
+            ORR(rr, rr, rb);
         else if (op == LIR_xor)
-            XOR(rr, rb);
+            EOR(rr, rr, rb);
         else if (op == LIR_lsh)
             SHL(rr, rb);
         else if (op == LIR_rsh)
@@ -1350,11 +1353,11 @@ Assembler::asm_arith(LInsp ins)
         else if (op == LIR_sub)
                     SUBi(rr, c);
         else if (op == LIR_and)
-            ANDi(rr, c);
+            ANDi(rr, rr, c);
         else if (op == LIR_or)
-            ORi(rr, c);
+            ORRi(rr, rr, c);
         else if (op == LIR_xor)
-            XORi(rr, c);
+            EORi(rr, rr, c);
         else if (op == LIR_lsh)
             SHLi(rr, c);
         else if (op == LIR_rsh)
@@ -1366,7 +1369,7 @@ Assembler::asm_arith(LInsp ins)
     }
 
     if (rr != ra)
-        MR(rr,ra);
+        MOV(rr,ra);
 }
 
 void
@@ -1389,7 +1392,7 @@ Assembler::asm_neg_not(LInsp ins)
         NEG(rr);
 
     if ( rr != ra )
-        MR(rr,ra);
+        MOV(rr,ra);
 }
 
 void
@@ -1446,17 +1449,17 @@ Assembler::asm_cmov(LInsp ins)
     if (op == LIR_cmov) {
         switch (condval->opcode()) {
             // note that these are all opposites...
-            case LIR_eq:    MRNE(rr, iffalsereg);   break;
-            case LIR_ov:    MRNO(rr, iffalsereg);   break;
-            case LIR_cs:    MRNC(rr, iffalsereg);   break;
-            case LIR_lt:    MRGE(rr, iffalsereg);   break;
-            case LIR_le:    MRG(rr, iffalsereg);    break;
-            case LIR_gt:    MRLE(rr, iffalsereg);   break;
-            case LIR_ge:    MRL(rr, iffalsereg);    break;
-            case LIR_ult:   MRAE(rr, iffalsereg);   break;
-            case LIR_ule:   MRA(rr, iffalsereg);    break;
-            case LIR_ugt:   MRBE(rr, iffalsereg);   break;
-            case LIR_uge:   MRB(rr, iffalsereg);    break;
+            case LIR_eq:    MOVNE(rr, iffalsereg);   break;
+            case LIR_ov:    MOVNO(rr, iffalsereg);   break;
+            case LIR_cs:    MOVNC(rr, iffalsereg);   break;
+            case LIR_lt:    MOVGE(rr, iffalsereg);   break;
+            case LIR_le:    MOVG(rr, iffalsereg);    break;
+            case LIR_gt:    MOVLE(rr, iffalsereg);   break;
+            case LIR_ge:    MOVL(rr, iffalsereg);    break;
+            case LIR_ult:   MOVAE(rr, iffalsereg);   break;
+            case LIR_ule:   MOVA(rr, iffalsereg);    break;
+            case LIR_ugt:   MOVBE(rr, iffalsereg);   break;
+            case LIR_uge:   MOVB(rr, iffalsereg);    break;
             default: debug_only( NanoAssert(0) );   break;
         }
     } else if (op == LIR_qcmov) {
@@ -1533,7 +1536,7 @@ Assembler::asm_short(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     int32_t val = ins->imm16();
     if (val == 0)
-        XOR(rr,rr);
+        EOR(rr,rr,rr);
     else
         LDi(rr, val);
 }
@@ -1544,7 +1547,7 @@ Assembler::asm_int(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     int32_t val = ins->imm32();
     if (val == 0)
-        XOR(rr,rr);
+        EOR(rr,rr,rr);
     else
         LDi(rr, val);
 }
@@ -1632,7 +1635,7 @@ Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
                         }
                     } else {
                         // it must be in a saved reg
-                        MR(r, rA->reg);
+                        MOV(r, rA->reg);
                     }
                 } else {
                     // this is the last use, so fine to assign it
