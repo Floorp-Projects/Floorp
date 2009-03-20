@@ -4630,7 +4630,7 @@ js_arm_check_vfp() {
 #warning Not sure how to check for armv6t2 and vfp on your platform, assuming neither present.
 static bool
 js_arm_check_armv6t2() { return false; }
-static void
+static bool
 js_arm_check_vfp() { return false; }
 #endif
 
