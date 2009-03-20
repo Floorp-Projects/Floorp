@@ -57,6 +57,8 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
+#include "cairo-xlib-surface-private.h"
+
 #include <fontconfig/fontconfig.h>
 
 static int
@@ -110,7 +112,7 @@ get_integer_default (Display    *dpy,
 
     v = XGetDefault (dpy, "Xft", option);
     if (v) {
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
 	if (FcNameConstant ((FcChar8 *) v, value))
 	    return TRUE;
 #endif
@@ -123,7 +125,15 @@ get_integer_default (Display    *dpy,
     return FALSE;
 }
 
-/* Old versions of fontconfig didn't have these options */
+#ifndef FC_RGBA_UNKNOWN
+#define FC_RGBA_UNKNOWN	    0
+#define FC_RGBA_RGB	    1
+#define FC_RGBA_BGR	    2
+#define FC_RGBA_VRGB	    3
+#define FC_RGBA_VBGR	    4
+#define FC_RGBA_NONE	    5
+#endif
+
 #ifndef FC_HINT_NONE
 #define FC_HINT_NONE        0
 #define FC_HINT_SLIGHT      1
@@ -131,20 +141,10 @@ get_integer_default (Display    *dpy,
 #define FC_HINT_FULL        3
 #endif
 
-/* Fontconfig version older than 2.6 didn't have these options */
-#ifndef FC_LCD_FILTER
-#define FC_LCD_FILTER	"lcdfilter"
-#endif
-/* Some Ubuntu versions defined FC_LCD_FILTER without defining the following */
-#ifndef FC_LCD_NONE
-#define FC_LCD_NONE	0
-#define FC_LCD_DEFAULT	1
-#define FC_LCD_LIGHT	2
-#define FC_LCD_LEGACY	3
-#endif
 
 static void
-_cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *info)
+_cairo_xlib_init_screen_font_options (Display *dpy,
+				      cairo_xlib_screen_info_t *info)
 {
     cairo_bool_t xft_hinting;
     cairo_bool_t xft_antialias;
@@ -317,15 +317,17 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
     free (info);
 }
 
-cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
+cairo_status_t
+_cairo_xlib_screen_info_get (cairo_xlib_display_t *display,
+			     Screen *screen,
+			     cairo_xlib_screen_info_t **out)
 {
     cairo_xlib_screen_info_t *info = NULL, **prev;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed) {
 	CAIRO_MUTEX_UNLOCK (display->mutex);
-	return NULL;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
     }
 
     for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
@@ -347,36 +349,41 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
 	info = _cairo_xlib_screen_info_reference (info);
     } else {
 	info = malloc (sizeof (cairo_xlib_screen_info_t));
-	if (info != NULL) {
-	    CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
-	    CAIRO_MUTEX_INIT (info->mutex);
-	    info->display = _cairo_xlib_display_reference (display);
-	    info->screen = screen;
-	    info->has_render = FALSE;
-	    _cairo_font_options_init_default (&info->font_options);
-	    memset (info->gc, 0, sizeof (info->gc));
-	    info->gc_needs_clip_reset = 0;
+	if (unlikely (info == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	    _cairo_array_init (&info->visuals,
-			       sizeof (cairo_xlib_visual_info_t*));
+	CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
+	CAIRO_MUTEX_INIT (info->mutex);
+	info->display = _cairo_xlib_display_reference (display);
+	info->screen = screen;
+	info->has_render = FALSE;
+	info->has_font_options = FALSE;
+	memset (info->gc, 0, sizeof (info->gc));
+	info->gc_needs_clip_reset = 0;
 
-	    if (screen) {
-		Display *dpy = display->display;
-		int event_base, error_base;
+	_cairo_array_init (&info->visuals,
+			   sizeof (cairo_xlib_visual_info_t*));
 
-		info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
-			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
-		_cairo_xlib_init_screen_font_options (dpy, info);
-	    }
+	if (screen) {
+	    Display *dpy = display->display;
+	    int event_base, error_base;
 
-	    CAIRO_MUTEX_LOCK (display->mutex);
-	    info->next = display->screens;
-	    display->screens = info;
-	    CAIRO_MUTEX_UNLOCK (display->mutex);
+	    info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
+		    (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
 	}
+
+	/* Small window of opportunity for two screen infos for the same
+	 * Screen - just wastes a little bit of memory but should not cause
+	 * any corruption.
+	 */
+	CAIRO_MUTEX_LOCK (display->mutex);
+	info->next = display->screens;
+	display->screens = info;
+	CAIRO_MUTEX_UNLOCK (display->mutex);
     }
 
-    return info;
+    *out = info;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -396,7 +403,9 @@ depth_to_index (int depth)
 }
 
 GC
-_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
+_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info,
+			   int depth,
+			   unsigned int *dirty)
 {
     GC gc;
     cairo_bool_t needs_reset;
@@ -411,7 +420,7 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
     CAIRO_MUTEX_UNLOCK (info->mutex);
 
     if (needs_reset)
-	XSetClipMask(info->display->display, gc, None);
+	*dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
 
     return gc;
 }
@@ -473,7 +482,7 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 					     XScreenNumberOfScreen (info->screen),
 					     visual->visualid,
 					     &ret);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     CAIRO_MUTEX_LOCK (info->mutex);
@@ -494,11 +503,33 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 	status = _cairo_array_append (&info->visuals, &ret);
     CAIRO_MUTEX_UNLOCK (info->mutex);
 
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_xlib_visual_info_destroy (dpy, ret);
 	return status;
     }
 
     *out = ret;
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_font_options_t *
+_cairo_xlib_screen_get_font_options (cairo_xlib_screen_info_t *info)
+{
+    if (info->has_font_options)
+	return &info->font_options;
+
+    CAIRO_MUTEX_LOCK (info->mutex);
+    if (! info->has_font_options) {
+	Display *dpy = info->display->display;
+
+	_cairo_font_options_init_default (&info->font_options);
+
+	if (info->screen != NULL)
+	    _cairo_xlib_init_screen_font_options (dpy, info);
+
+	info->has_font_options = TRUE;
+    }
+    CAIRO_MUTEX_UNLOCK (info->mutex);
+
+    return &info->font_options;
 }

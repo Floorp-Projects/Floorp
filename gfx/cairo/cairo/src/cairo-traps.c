@@ -140,7 +140,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
 	                               new_size, sizeof (cairo_trapezoid_t));
     }
 
-    if (new_traps == NULL) {
+    if (unlikely (new_traps == NULL)) {
 	traps->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return FALSE;
     }
@@ -615,30 +615,37 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     int i, box_count;
     cairo_int_status_t status;
 
-    for (i = 0; i < traps->num_traps; i++)
-	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
-	      && traps->traps[i].right.p1.x == traps->traps[i].right.p2.x
-	      && _cairo_fixed_is_integer(traps->traps[i].top)
-	      && _cairo_fixed_is_integer(traps->traps[i].bottom)
-	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.x)
-	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x))) {
+    if (traps->num_traps == 0) {
+	_cairo_region_init (region);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    for (i = 0; i < traps->num_traps; i++) {
+	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
+	    traps->traps[i].right.p1.x != traps->traps[i].right.p2.x ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].top)          ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].bottom)       ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
+	{
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
+    }
 
-    if (traps->num_traps > ARRAY_LENGTH(stack_boxes)) {
-	boxes = _cairo_malloc_ab (traps->num_traps, sizeof(cairo_box_int_t));
+    if (traps->num_traps > ARRAY_LENGTH (stack_boxes)) {
+	boxes = _cairo_malloc_ab (traps->num_traps, sizeof (cairo_box_int_t));
 
-	if (boxes == NULL)
+	if (unlikely (boxes == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     box_count = 0;
 
     for (i = 0; i < traps->num_traps; i++) {
-	int x1 = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
-	int y1 = _cairo_fixed_integer_part(traps->traps[i].top);
-	int x2 = _cairo_fixed_integer_part(traps->traps[i].right.p1.x);
-	int y2 = _cairo_fixed_integer_part(traps->traps[i].bottom);
+	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
+	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
+	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
+	int y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
 
 	/* XXX: Sometimes we get degenerate trapezoids from the tesellator;
 	 * skip these.
@@ -659,7 +666,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     if (boxes != stack_boxes)
 	free (boxes);
 
-    if (status)
+    if (unlikely (status))
 	_cairo_region_fini (region);
 
     return status;
@@ -698,15 +705,15 @@ _cairo_traps_path (const cairo_traps_t *traps,
 	_sanitize_trap (&trap);
 
 	status = _cairo_path_fixed_move_to (path, trap.left.p1.x, trap.top);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_line_to (path, trap.right.p1.x, trap.top);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_line_to (path, trap.right.p2.x, trap.bottom);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_line_to (path, trap.left.p2.x, trap.bottom);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_close_path (path);
-	if (status) return status;
+	if (unlikely (status)) return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
