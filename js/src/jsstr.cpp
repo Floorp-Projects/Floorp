@@ -2630,9 +2630,27 @@ js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         *rval = STRING_TO_JSVAL(str);
         return JS_TRUE;
     }
-    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, STRING_TO_JSVAL(str));
+    obj->fslots[JSSLOT_PRIVATE] = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
+
+#ifdef JS_TRACER
+
+JSObject* FASTCALL
+js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* obj = js_NewNativeObject(cx, &js_StringClass, proto, JSSLOT_PRIVATE + 1);
+    if (!obj)
+        return NULL;
+
+    obj->fslots[JSSLOT_PRIVATE] = STRING_TO_JSVAL(str);
+    return obj;
+}
+
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0, 0)
+
+#endif /* !JS_TRACER */
 
 static JSBool
 str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
@@ -2845,8 +2863,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
                          NULL, string_static_methods);
     if (!proto)
         return NULL;
-    STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE,
-                   STRING_TO_JSVAL(cx->runtime->emptyString));
+    proto->fslots[JSSLOT_PRIVATE] = STRING_TO_JSVAL(cx->runtime->emptyString);
     if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                                  JSVAL_VOID, NULL, NULL,
                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
