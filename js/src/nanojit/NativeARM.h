@@ -129,7 +129,6 @@ typedef enum {
 #else
     LastReg = 10,
 #endif
-    Scratch = IP,
     UnknownReg = 31,
 
     // special value referring to S14
@@ -156,8 +155,6 @@ typedef enum {
     NV = 0xF  // NeVer
 } ConditionCode;
 
-const char *ccName(ConditionCode cc);
-
 typedef int RegisterMask;
 typedef struct _FragInfo {
     RegisterMask    needRestoring;
@@ -175,7 +172,7 @@ static const RegisterMask GpRegs = 0x07FF;
 static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 
 #define IsFpReg(_r)     ((rmask(_r) & (FpRegs | (1<<D7))) != 0)
-#define IsGpReg(_r)     ((rmask(_r) & (GpRegs | (1<<Scratch))) != 0)
+#define IsGpReg(_r)     ((rmask(_r) & (GpRegs | (1<<IP))) != 0)
 #define FpRegNum(_fpr)  ((_fpr) - FirstFloatReg)
 
 #define firstreg()      R0
@@ -191,6 +188,8 @@ static Register nextreg(Register r) {
 #define imm2register(c) (Register)(c-1)
 
 verbose_only( extern const char* regNames[]; )
+verbose_only( extern const char* condNames[]; )
+verbose_only( extern const char* shiftNames[]; )
 
 // abstract to platform specific calls
 #define nExtractPlatformFlags(x)    0
@@ -286,10 +285,10 @@ typedef enum {
             asm_output("and %s,%d",gpn(_r),(_imm));}                   \
         else if ((_imm)<0 && (_imm)>-256) {                             \
             underrunProtect(8);                                         \
-            *(--_nIns) = (NIns)( COND_AL | ((_r)<<16) | ((_r)<<12) | (Scratch) ); \
-            asm_output("and %s,%s",gpn(_r),gpn(Scratch));              \
-            *(--_nIns) = (NIns)( COND_AL | (0x3E<<20) | ((Scratch)<<12) | (((_imm)^0xFFFFFFFF)&0xFF) ); \
-            asm_output("mvn %s,%d",gpn(Scratch),(_imm));}              \
+            *(--_nIns) = (NIns)( COND_AL | ((_r)<<16) | ((_r)<<12) | (IP) ); \
+            asm_output("and %s,%s",gpn(_r),gpn(IP));              \
+            *(--_nIns) = (NIns)( COND_AL | (0x3E<<20) | ((IP)<<12) | (((_imm)^0xFFFFFFFF)&0xFF) ); \
+            asm_output("mvn %s,%d",gpn(IP),(_imm));}              \
         else NanoAssert(0);                                             \
     } while (0)
 
@@ -343,8 +342,8 @@ typedef enum {
                     *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<22) | ((_r)<<16) | ((_r)<<12) | (0xFF) ); \
                 } else {                                                \
                     underrunProtect(4+LD32_size);                       \
-                    *(--_nIns) = (NIns)( COND_AL | (1<<22) | ((_r)<<16) | ((_r)<<12) | (Scratch)); \
-                    LD32_nochk(Scratch, _imm);                          \
+                    *(--_nIns) = (NIns)( COND_AL | (1<<22) | ((_r)<<16) | ((_r)<<12) | (IP)); \
+                    LD32_nochk(IP, _imm);                          \
                 }                                                       \
             } else {                                                    \
                 if ((_imm)>=-510) {                                     \
@@ -354,8 +353,8 @@ typedef enum {
                     *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | ((_r)<<16) | ((_r)<<12) | (0xFF) ); \
                 } else {                                                \
                     underrunProtect(4+LD32_size);                       \
-                    *(--_nIns) = (NIns)( COND_AL | (1<<23) | ((_r)<<16) | ((_r)<<12) | (Scratch)); \
-                    LD32_nochk(Scratch, -(_imm)); \
+                    *(--_nIns) = (NIns)( COND_AL | (1<<23) | ((_r)<<16) | ((_r)<<12) | (IP)); \
+                    LD32_nochk(IP, -(_imm)); \
                 }                                                       \
             }                                                           \
         }                                                               \
@@ -453,8 +452,8 @@ typedef enum {
                 *(--_nIns) = (NIns)( COND_AL | (0x37<<20) | ((_r)<<16) | (-(_imm)) ); \
             } else {                                                      \
                 underrunProtect(4+LD32_size);                           \
-                *(--_nIns) = (NIns)( COND_AL | (0x17<<20) | ((_r)<<16) | (Scratch) ); \
-                LD32_nochk(Scratch, (_imm));                            \
+                *(--_nIns) = (NIns)( COND_AL | (0x17<<20) | ((_r)<<16) | (IP) ); \
+                LD32_nochk(IP, (_imm));                            \
             }                                                           \
         } else {                                                        \
             if ((_imm)<256) {                                           \
@@ -462,8 +461,8 @@ typedef enum {
                 *(--_nIns) = (NIns)( COND_AL | (0x035<<20) | ((_r)<<16) | ((_imm)&0xFF) ); \
             } else {                                                    \
                 underrunProtect(4+LD32_size);                           \
-                *(--_nIns) = (NIns)( COND_AL | (0x015<<20) | ((_r)<<16) | (Scratch) ); \
-                LD32_nochk(Scratch, (_imm));                            \
+                *(--_nIns) = (NIns)( COND_AL | (0x015<<20) | ((_r)<<16) | (IP) ); \
+                LD32_nochk(IP, (_imm));                            \
             }                                                           \
         }                                                               \
         asm_output("cmp %s,0x%x",gpn(_r),(_imm));                      \
@@ -503,8 +502,8 @@ typedef enum {
         } else {                                                        \
             if (_chk) underrunProtect(4+LD32_size);                     \
             NanoAssert((_b) != IP);                                     \
-            *(--_nIns) = (NIns)( COND_AL | (0x79<<20) | ((_b)<<16) | ((_d)<<12) | Scratch ); \
-            LD32_nochk(Scratch, _off);                                  \
+            *(--_nIns) = (NIns)( COND_AL | (0x79<<20) | ((_b)<<16) | ((_d)<<12) | IP ); \
+            LD32_nochk(IP, _off);                                  \
         }                                                               \
         asm_output("ldr %s, [%s, #%d]",gpn(_d),gpn(_b),(_off));        \
     } while(0)
@@ -625,8 +624,8 @@ typedef enum {
 #define PUSHm(_off,_b)  do {                                            \
         NanoAssert( (int)(_off)>0 );                                    \
         underrunProtect(8);                                             \
-        *(--_nIns) = (NIns)( COND_AL | (0x92<<20) | (SP<<16) | (1<<(Scratch)) ); \
-        *(--_nIns) = (NIns)( COND_AL | (0x59<<20) | ((_b)<<16) | ((Scratch)<<12) | ((_off)&0xFFF) ); \
+        *(--_nIns) = (NIns)( COND_AL | (0x92<<20) | (SP<<16) | (1<<(IP)) ); \
+        *(--_nIns) = (NIns)( COND_AL | (0x59<<20) | ((_b)<<16) | ((IP)<<12) | ((_off)&0xFFF) ); \
         asm_output("push %d(%s)",(_off),gpn(_b)); } while (0)
 
 #define POPr(_r) do {                                                   \
@@ -691,8 +690,8 @@ typedef enum {
     underrunProtect(8);                                                 \
     *(--_nIns) = (NIns)( (_opp<<28) | (1<<21) | ((_r)<<16) | ((_r)<<12) | (_r) ); \
     *(--_nIns) = (NIns)( (_cond<<28) | (0x3A<<20) | ((_r)<<12) | (1) ); \
-    asm_output("mov%s %s, #1", ccName(_cond), gpn(r), gpn(r));          \
-    asm_output("eor%s %s, %s", ccName(_opp), gpn(r), gpn(r));           \
+    asm_output("mov%s %s, #1", condNames[_cond], gpn(r), gpn(r));       \
+    asm_output("eor%s %s, %s", condNames[_opp], gpn(r), gpn(r));        \
     } while (0)
 
 
