@@ -62,16 +62,19 @@ CRT_OBJ_DIR=./$(shell basename "$(WIN32_CRT_SRC_DIR)")
 libs:: $(CRT_OBJ_DIR)/build/intel/mozcrt19.dll
 	$(INSTALL) $< $(FINAL_TARGET)
 
+define EXTRACT_CMD
+cd $(CRT_OBJ_DIR)/intel/$(i)_lib && lib "-extract:..\\build\\intel\\$(i)_obj\\unhandld.obj" eh.lib
+
+endef
+
 # patch if necessary
 $(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/crtsp1.diff
 	rm -rf $(CRT_OBJ_DIR)
 	cp -R "$(WIN32_CRT_SRC_DIR)" .
-	# per http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=1189363&SiteID=1
-	for i in dll mt xdll xmt; do \
-	  pushd $(CRT_OBJ_DIR)/intel/$${i}_lib && lib -extract:..\\build\\intel\\$${i}_obj\\unhandld.obj eh.lib && popd; \
-	done
-	# truly awful
-	#XXX: get ed into mozillabuild, bug 415123
+# per http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=1189363&SiteID=1
+	$(foreach i,dll mt xdll xmt,$(EXTRACT_CMD))
+# truly awful
+#XXX: get ed into mozillabuild, bug 415123
 	$(PERL) $(srcdir)/apply-ed-patches.pl $(srcdir)/crtsp1.diff \
 	$(CRT_OBJ_DIR) $(srcdir)/ed.exe
 
@@ -82,7 +85,7 @@ $(CRT_OBJ_DIR)/build/intel/mozcrt19.dll: \
 	$(srcdir)/qr.h $(srcdir)/rb.h $(CRT_OBJ_DIR)
 # this pretty much sucks, but nmake and make don't play well together
 	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
-	#XXX: these don't link right for some reason
+#XXX: these don't link right for some reason
 	rm $(CRT_OBJ_DIR)/build/intel/{libcmt,libcpmt}.lib
 else
 # Using a pre-built DLL, so just install it.
