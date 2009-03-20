@@ -71,6 +71,8 @@ typedef struct _skip_list {
     skip_elt_t *chains[MAX_LEVEL];
     skip_elt_t *freelists[MAX_FREELIST_LEVEL];
     int		max_level;
+    struct pool *pool;
+    char pool_embedded[1024];
 } cairo_skip_list_t;
 
 /* Initialize a new skip list. The compare function accepts a pointer
@@ -83,8 +85,8 @@ typedef struct _skip_list {
  */
 cairo_private void
 _cairo_skip_list_init (cairo_skip_list_t		*list,
-		cairo_skip_list_compare_t	 compare,
-		size_t			 elt_size);
+		       cairo_skip_list_compare_t	 compare,
+		       size_t			 elt_size);
 
 
 /* Deallocate resources associated with a skip list and all elements

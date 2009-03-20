@@ -5872,7 +5872,6 @@ if test -n "$MOZ_TREE_FREETYPE"; then
    AC_SUBST(MOZ_TREE_FREETYPE)
    MOZ_ENABLE_CAIRO_FT=1       
    FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-   FC_FONT_FEATURE="#define CAIRO_DISABLE_FONTCONFIG 1"
    FT2_CFLAGS="-I${topsrcdir}/modules/freetype2/include"
    CAIRO_FT_CFLAGS="-I${topsrcdir}/modules/freetype2/include"
    FT2_LIBS="${LIBXUL_DIST}/lib/freetype2.lib"
@@ -7543,6 +7542,7 @@ if test "$MOZ_TREE_CAIRO"; then
         PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
@@ -7566,6 +7566,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
         OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
@@ -7575,6 +7576,7 @@ if test "$MOZ_TREE_CAIRO"; then
         PKG_CHECK_MODULES(CAIRO_FT, fontconfig freetype2)
         BEOS_SURFACE_FEATURE="#define CAIRO_HAS_BEOS_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)

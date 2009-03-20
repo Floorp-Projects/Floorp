@@ -45,6 +45,24 @@
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/renderproto.h>
 
+/* We require Render >= 0.6.  The following defines were only added in
+ * 0.10.  Make sure they are defined.
+ */
+
+/* Filters included in 0.10 */
+#ifndef FilterConvolution
+#define FilterConvolution		    "convolution"
+#endif
+
+/* Extended repeat attributes included in 0.10 */
+#ifndef RepeatNone
+#define RepeatNone                          0
+#define RepeatNormal                        1
+#define RepeatPad                           2
+#define RepeatReflect                       3
+#endif
+
+
 #else /* !CAIRO_HAS_XLIB_XRENDER_SURFACE */
 
 /* Provide dummy symbols and macros to get it compile and take the fallback

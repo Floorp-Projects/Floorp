@@ -15,7 +15,7 @@ var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
 ctx.rect(0, 0, 20, 20);
-todo(ctx.isPointInPath(0, 0) === true, "ctx.isPointInPath(0, 0) === true");
+ok(ctx.isPointInPath(0, 0) === true, "ctx.isPointInPath(0, 0) === true");
 ok(ctx.isPointInPath(10, 0) === true, "ctx.isPointInPath(10, 0) === true");
 ok(ctx.isPointInPath(20, 0) === true, "ctx.isPointInPath(20, 0) === true");
 ok(ctx.isPointInPath(20, 10) === true, "ctx.isPointInPath(20, 10) === true");
