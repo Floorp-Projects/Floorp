@@ -51,7 +51,7 @@ function getScrollboxFromElement(elem) {
         scrollbox = elem.scrollBoxObject;
         break;
       }
-      else {
+      else if (elem.boxObject) {
         scrollbox = elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
         break;
       }
