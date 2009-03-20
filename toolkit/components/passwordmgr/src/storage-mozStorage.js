@@ -1115,12 +1115,7 @@ LoginManagerStorage_mozStorage.prototype = {
         // Memoize the statements
         if (!wrappedStmt) {
             this.log("Creating new statement for query: " + query);
-            let stmt = this._dbConnection.createStatement(query);
-
-            wrappedStmt = Cc["@mozilla.org/storage/statement-wrapper;1"].
-                          createInstance(Ci.mozIStorageStatementWrapper);
-            wrappedStmt.initialize(stmt);
-            this._dbStmts[query] = wrappedStmt;
+            this._dbStmts[query] = this._dbConnection.createStatement(query);
         }
         // Replace parameters, must be done 1 at a time
         if (params)
@@ -1359,7 +1354,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
         // Finalize all statements to free memory, avoid errors later
         for (let i = 0; i < this._dbStmts.length; i++)
-            this._dbStmts[i].statement.finalize();
+            this._dbStmts[i].finalize();
         this._dbStmts = [];
 
         // Close the connection, ignore 'already closed' error
