@@ -63,9 +63,6 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     }
     // According to the ARM EABI, integral types that are smaller than a word
     // are to be sign/zero-extended to a full word and treated as 4-byte values.
-    // NOTE: on ARM/CE, char is signed, but PRunichar is unsigned.
-    PR_STATIC_ASSERT(char(0xFF) < 0);
-    PR_STATIC_ASSERT(PRUnichar(0xFFFF) == PRUint32(0xFFFF));
 
     switch(s->type)
     {
@@ -81,7 +78,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
       case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
       case nsXPTType::T_BOOL   : *((PRInt32*) d) = s->val.b;           break;
       case nsXPTType::T_CHAR   : *((PRInt32*) d) = s->val.c;           break;
-      case nsXPTType::T_WCHAR  : *((PRUint32*)d) = s->val.wc;          break;
+      case nsXPTType::T_WCHAR  : *((PRInt32*) d) = s->val.wc;          break;
       default:
         // all the others are plain pointer types
         *((void**)d) = s->val.p;
