@@ -211,6 +211,7 @@ nsNavBookmarks::InitStatements()
   // NOTE: Do not modify the ORDER BY segment of the query, as certain
   // features depend on it. See bug 398914 for an example.
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "/* do not warn (bug 482346) */ "
       "SELECT b.id "
       "FROM moz_bookmarks b "
       "JOIN ( "
