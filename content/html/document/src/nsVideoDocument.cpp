@@ -108,7 +108,7 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   // make content
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nsnull,
-                                           kNameSpaceID_None);
+                                           kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   nsRefPtr<nsHTMLMediaElement> element =
