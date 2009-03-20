@@ -211,6 +211,8 @@ verbose_only( extern const char* shiftNames[]; )
     void asm_add_imm(Register, Register, int32_t, int stat = 0);        \
     void asm_sub_imm(Register, Register, int32_t, int stat = 0);        \
     void asm_cmpi(Register, int32_t imm);                               \
+    void asm_ldr_chk(Register d, Register b, int32_t off, bool chk);    \
+    void asm_ld_imm(Register d, int32_t imm);                           \
     int* _nSlot;                                                        \
     int* _nExitSlot;
 
@@ -458,62 +460,33 @@ enum {
 
 // MOV
 
-#define MOV_cond(_d,_s,_cond) ALUr(_cond, mov, 0, _d, 0, _s)
+#define MOV_cond(_cond,_d,_s) ALUr(_cond, mov, 0, _d, 0, _s)
 
-#define MOV(dr,sr)   MOV_cond(dr, sr, AL)
-#define MOVEQ(dr,sr) MOV_cond(dr, sr, EQ)
-#define MOVNE(dr,sr) MOV_cond(dr, sr, NE)
-#define MOVLT(dr,sr) MOV_cond(dr, sr, LT)
-#define MOVLE(dr,sr) MOV_cond(dr, sr, LE)
-#define MOVGT(dr,sr) MOV_cond(dr, sr, GT)
-#define MOVGE(dr,sr) MOV_cond(dr, sr, GE)
-#define MOVCC(dr,sr) MOV_cond(dr, sr, CC)
-#define MOVLS(dr,sr) MOV_cond(dr, sr, LS)
-#define MOVHI(dr,sr) MOV_cond(dr, sr, HI)
-#define MOVCS(dr,sr) MOV_cond(dr, sr, CS)
-#define MOVVC(dr,sr) MOV_cond(dr, sr, VC) // overflow clear
-#define MOVNC(dr,sr) MOV_cond(dr, sr, CC) // carry clear
+#define MOV(dr,sr)   MOV_cond(AL, dr, sr)
+#define MOVEQ(dr,sr) MOV_cond(EQ, dr, sr)
+#define MOVNE(dr,sr) MOV_cond(NE, dr, sr)
+#define MOVLT(dr,sr) MOV_cond(LT, dr, sr)
+#define MOVLE(dr,sr) MOV_cond(LE, dr, sr)
+#define MOVGT(dr,sr) MOV_cond(GT, dr, sr)
+#define MOVGE(dr,sr) MOV_cond(GE, dr, sr)
+#define MOVCC(dr,sr) MOV_cond(CC, dr, sr)
+#define MOVLS(dr,sr) MOV_cond(LS, dr, sr)
+#define MOVHI(dr,sr) MOV_cond(HI, dr, sr)
+#define MOVCS(dr,sr) MOV_cond(CS, dr, sr)
+#define MOVVC(dr,sr) MOV_cond(VC, dr, sr) // overflow clear
+#define MOVNC(dr,sr) MOV_cond(CC, dr, sr) // carry clear
 
-// for Assembler.cpp compatibility
-#define MR(d,s) MOV(d,s)
+// _d = [_b+off]
+#define LDR(_d,_b,_off)        asm_ldr_chk(_d,_b,_off,1)
+#define LDR_nochk(_d,_b,_off)  asm_ldr_chk(_d,_b,_off,0)
 
-#define LDR_chk(_d,_b,_off,_chk) do {                                   \
-        if (IsFpReg(_d)) {                                              \
-            FLDD_chk(_d,_b,_off,_chk);                                  \
-        } else if ((_off) > -4096 && (_off) < 4096) {                   \
-            if (_chk) underrunProtect(4);                               \
-            *(--_nIns) = (NIns)( COND_AL | (((_off) < 0 ? 0x51 : 0x59)<<20) | ((_b)<<16) | ((_d)<<12) | (((_off) < 0 ? -(_off) : (_off))&0xFFF) ); \
-        } else {                                                        \
-            if (_chk) underrunProtect(4+LD32_size);                     \
-            NanoAssert((_b) != IP);                                     \
-            *(--_nIns) = (NIns)( COND_AL | (0x79<<20) | ((_b)<<16) | ((_d)<<12) | IP ); \
-            LD32_nochk(IP, _off);                                  \
-        }                                                               \
-        asm_output("ldr %s, [%s, #%d]",gpn(_d),gpn(_b),(_off));        \
-    } while(0)
-
-#define LDR(_d,_b,_off)        LDR_chk(_d,_b,_off,1)
-#define LDR_nochk(_d,_b,_off)  LDR_chk(_d,_b,_off,0)
+// _d = #_imm
+#define LDi(_d,_imm) asm_ld_imm(_d,_imm)
 
 // i386 compat, for Assembler.cpp
-#define LD(reg,offset,base)    LDR_chk(reg,base,offset,1)
+#define MR(d,s) MOV(d,s)
+#define LD(reg,offset,base)    asm_ldr_chk(reg,base,offset,1)
 #define ST(base,offset,reg)    STR(reg,base,offset)
-
-#define LDi(_d,_imm) do {                                               \
-        if ((_imm) == 0) {                                              \
-            EOR(_d,_d,_d);                                              \
-        } else if (isS8((_imm)) || isU8((_imm))) {                      \
-            underrunProtect(4);                                         \
-            if ((_imm)<0)   *(--_nIns) = (NIns)( COND_AL | (0x3E<<20) | ((_d)<<12) | (((_imm)^0xFFFFFFFF)&0xFF) ); \
-            else            *(--_nIns) = (NIns)( COND_AL | (0x3B<<20) | ((_d)<<12) | ((_imm)&0xFF) ); \
-            asm_output("ld  %s,0x%x",gpn((_d)),(_imm));                \
-        } else {                                                        \
-            underrunProtect(LD32_size);                                 \
-            LD32_nochk(_d, (_imm));                                     \
-            asm_output("ld  %s,0x%x",gpn((_d)),(_imm));                \
-        }                                                               \
-    } while(0)
-
 
 // load 8-bit, zero extend (aka LDRB) note, only 5-bit offsets (!) are
 // supported for this, but that's all we need at the moment.
