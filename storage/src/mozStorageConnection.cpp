@@ -415,6 +415,11 @@ mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
         if (rc != SQLITE_OK)
             break;
 
+#ifdef PR_LOGGING
+        PR_LOG(gStorageLog, PR_LOG_NOTICE,
+               ("Cloned statement 0x%p to 0x%p", old_stmt, new_stmt));
+#endif
+
         // Transfer the bindings
         rc = sqlite3_transfer_bindings(old_stmt, new_stmt);
         if (rc != SQLITE_OK)
