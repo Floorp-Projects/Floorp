@@ -1,5 +1,5 @@
 let Httpd = {};
-Cu.import("resource://tests/lib/httpd.js", Httpd);
+Cu.import("resource://harness/modules/httpd.js", Httpd);
 
 function httpd_setup (handlers) {
   let server = new Httpd.nsHttpServer();

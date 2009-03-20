@@ -9,7 +9,7 @@ Function.prototype.async = Async.sugar;
 
 let logger;
 let Httpd = {};
-Cu.import("resource://tests/lib/httpd.js", Httpd);
+Cu.import("resource://harness/modules/httpd.js", Httpd);
 
 function server_open(metadata, response) {
   let body = "This path exists";
