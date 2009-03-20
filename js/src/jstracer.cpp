@@ -135,8 +135,10 @@ static const char tagChar[]  = "OIDISIBI";
 #define MAX_BRANCHES 16
 
 #ifdef JS_JIT_SPEW
-#define ABORT_TRACE(msg)   do { debug_only_v(fprintf(stdout, "abort: %d: %s\n", __LINE__, msg);)  return false; } while (0)
+#define debug_only_a(x) if (js_verboseAbort || js_verboseDebug ) { x; }
+#define ABORT_TRACE(msg)   do { debug_only_a(fprintf(stdout, "abort: %d: %s\n", __LINE__, msg);)  return false; } while (0)
 #else
+#define debug_only_a(x)
 #define ABORT_TRACE(msg)   return false
 #endif
 
@@ -245,6 +247,7 @@ static bool did_we_check_sse2 = false;
 #ifdef JS_JIT_SPEW
 bool js_verboseDebug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 bool js_verboseStats = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "stats");
+bool js_verboseAbort = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "abort");
 #endif
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
@@ -4461,7 +4464,7 @@ js_AbortRecording(JSContext* cx, const char* reason)
 
 #ifdef DEBUG
     TreeInfo* ti = tm->recorder->getTreeInfo();
-    debug_only_v(printf("Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
+    debug_only_a(printf("Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
                         ti->treeFileName,
                         ti->treeLineNumber,
                         ti->treePCOffset,
