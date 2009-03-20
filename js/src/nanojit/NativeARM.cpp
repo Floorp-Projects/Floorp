@@ -100,7 +100,7 @@ Assembler::genPrologue()
 
     // Make room on stack for what we are doing
     if (amt)
-        SUBi(SP, amt);
+        SUBi(SP, SP, amt);
 
     verbose_only( verbose_outputf("         %p:",_nIns); )
     verbose_only( verbose_output("         patch entry"); )
@@ -475,7 +475,7 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
             FLDD(r, FP, d);
         } else {
             FLDD(r, IP, 0);
-            arm_ADDi(IP, FP, d);
+            ADDi(IP, FP, d);
         }
     } else {
         LDR(r, FP, d);
@@ -498,7 +498,7 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
                 FSTD(rr, FP, d);
             } else {
                 FSTD(rr, IP, 0);
-                arm_ADDi(IP, FP, d);
+                ADDi(IP, FP, d);
             }
         } else {
             STR(rr, FP, d);
@@ -529,7 +529,7 @@ Assembler::asm_load64(LInsp ins)
     if (rr != UnknownReg) {
         if (!isS8(offset >> 2) || (offset&3) != 0) {
             FLDD(rr,IP,0);
-            arm_ADDi(IP, rb, offset);
+            ADDi(IP, rb, offset);
         } else {
             FLDD(rr,rb,offset);
         }
@@ -583,7 +583,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     FSTD(rv, baseReg, baseOffset);
 
     if (!isS8(dr)) {
-        arm_ADDi(IP, rb, dr);
+        ADDi(IP, rb, dr);
     }
 
     // if it's a constant, make sure our baseReg/baseOffset location
@@ -739,7 +739,7 @@ Assembler::asm_pusharg(LInsp arg)
             STR_preindex(argRes->reg, SP, -4);
         } else {
             FSTD(argRes->reg, SP, 0);
-            SUBi(SP, 8);
+            SUBi(SP, SP, 8);
         }
     } else {
         int d = findMemFor(arg);
@@ -945,9 +945,8 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 }
 
 void
-Assembler::asm_add_imm(Register rd, Register rn, int32_t imm)
+Assembler::asm_add_imm(Register rd, Register rn, int32_t imm, int stat)
 {
-
     int rot = 16;
     uint32_t immval;
     bool pos;
@@ -968,22 +967,53 @@ Assembler::asm_add_imm(Register rd, Register rn, int32_t imm)
     rot &= 0xf;
 
     if (immval < 256) {
-        underrunProtect(4);
-        if (pos)
-            *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (rot << 8) | immval );
-        else
-            *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<22) | (rn<<16) | (rd<<12) | (rot << 8) | immval );
-        asm_output("add %s,%s,%d",gpn(rd),gpn(rn),imm);
-    } else {
+        if (pos) {
+            ALUi_rot(AL, add, stat, rd, rn, immval, rot);
+        } else {
+            ALUi_rot(AL, sub, stat, rd, rn, immval, rot);
+        }
+   } else {
         // add scratch to rn, after loading the value into scratch.
-
         // make sure someone isn't trying to use IP as an operand
         NanoAssert(rn != IP);
-
-        *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (IP));
-        asm_output("add %s,%s,%s",gpn(rd),gpn(rn),gpn(IP));
-
+        ALUr(AL, add, stat, rd, rn, IP);
         LD32_nochk(IP, imm);
+    }
+}
+
+void
+Assembler::asm_sub_imm(Register rd, Register rn, int32_t imm, int stat)
+{
+    if (imm > -256 && imm < 256) {
+        if (imm >= 0)
+            ALUi(AL, sub, stat, rd, rn, imm);
+        else
+            ALUi(AL, add, stat, rd, rn, -imm);
+    } else if (imm >= 0) {
+        if (imm <= 510) {
+            /* between 0 and 510, inclusive */
+            int rem = imm - 255;
+            NanoAssert(rem < 256);
+            ALUi(AL, sub, stat, rd, rn, rem & 0xff);
+            ALUi(AL, sub, stat, rd, rn, 0xff);
+        } else {
+            /* more than 510 */
+            NanoAssert(r != IP);
+            ALUr(AL, sub, stat, rd, rn, IP);
+            LD32_nochk(IP, imm);
+        }
+    } else {
+        if (imm >= -510) {
+            /* between -510 and -1, inclusive */
+            int rem = -imm - 255;
+            ALUi(AL, add, stat, rd, rn, rem & 0xff);
+            ALUi(AL, add, stat, rd, rn, 0xff);
+        } else {
+            /* less than -510 */
+            NanoAssert(r != IP);
+            ALUr(AL, add, stat, rd, rn, IP);
+            LD32_nochk(IP, -imm);
+        }
     }
 }
 
@@ -1205,16 +1235,39 @@ Assembler::asm_cmp(LIns *cond)
             Register r = findRegFor(lhs, GpRegs);
             TEST(r,r);
             // No 64-bit immediates so fall-back to below
-        }
-        else if (!rhs->isQuad()) {
+        } else if (!rhs->isQuad()) {
             Register r = getBaseReg(lhs, c, GpRegs);
-            CMPi(r, c);
+            asm_cmpi(r, c);
+        } else {
+            NanoAssert(0);
         }
     } else {
         findRegFor2(GpRegs, lhs, rA, rhs, rB);
         Register ra = rA->reg;
         Register rb = rB->reg;
         CMP(ra, rb);
+    }
+}
+
+void
+Assembler::asm_cmpi(Register r, int32_t imm)
+{
+    if (imm < 0) {
+        if (imm > -256) {
+            ALUi(AL, cmn, 1, 0, r, -imm);
+        } else {
+            underrunProtect(4 + LD32_size);
+            CMP(r, IP);
+            LD32_nochk(IP, imm);
+        }
+    } else {
+        if (imm < 256) {
+            ALUi(AL, cmp, 1, 0, r, imm);
+        } else {
+            underrunProtect(4 + LD32_size);
+            CMP(r, IP);
+            LD32_nochk(IP, imm);
+        }
     }
 }
 
@@ -1321,55 +1374,53 @@ Assembler::asm_arith(LInsp ins)
     if (rA == 0 || (ra = rA->reg) == UnknownReg)
         ra = findSpecificRegFor(lhs, rr);
     // else, rA already has a register assigned.
+    NanoAssert(ra != UnknownReg);
 
     if (forceReg) {
         if (lhs == rhs)
             rb = ra;
 
         if (op == LIR_add || op == LIR_addp)
-            ADD(rr, rb);
+            ADDs(rr, ra, rb, 1);
         else if (op == LIR_sub)
-            SUB(rr, rb);
+            SUB(rr, ra, rb);
         else if (op == LIR_mul)
             MUL(rr, rb);
         else if (op == LIR_and)
-            AND(rr, rr, rb);
+            AND(rr, ra, rb);
         else if (op == LIR_or)
-            ORR(rr, rr, rb);
+            ORR(rr, ra, rb);
         else if (op == LIR_xor)
-            EOR(rr, rr, rb);
+            EOR(rr, ra, rb);
         else if (op == LIR_lsh)
-            SHL(rr, rb);
+            SHL(rr, ra, rb);
         else if (op == LIR_rsh)
-            SAR(rr, rb);
+            SAR(rr, ra, rb);
         else if (op == LIR_ush)
-            SHR(rr, rb);
+            SHR(rr, ra, rb);
         else
             NanoAssertMsg(0, "Unsupported");
     } else {
         int c = rhs->constval();
         if (op == LIR_add || op == LIR_addp)
-            ADDi(rr, c);
+            ADDi(rr, ra, c);
         else if (op == LIR_sub)
-                    SUBi(rr, c);
+            SUBi(rr, ra, c);
         else if (op == LIR_and)
-            ANDi(rr, rr, c);
+            ANDi(rr, ra, c);
         else if (op == LIR_or)
-            ORRi(rr, rr, c);
+            ORRi(rr, ra, c);
         else if (op == LIR_xor)
-            EORi(rr, rr, c);
+            EORi(rr, ra, c);
         else if (op == LIR_lsh)
-            SHLi(rr, c);
+            SHLi(rr, ra, c);
         else if (op == LIR_rsh)
-            SARi(rr, c);
+            SARi(rr, ra, c);
         else if (op == LIR_ush)
-            SHRi(rr, c);
+            SHRi(rr, ra, c);
         else
             NanoAssertMsg(0, "Unsupported");
     }
-
-    if (rr != ra)
-        MOV(rr,ra);
 }
 
 void
@@ -1385,14 +1436,12 @@ Assembler::asm_neg_not(LInsp ins)
     if (rA == 0 || (ra=rA->reg) == UnknownReg)
         ra = findSpecificRegFor(lhs, rr);
     // else, rA already has a register assigned.
+    NanoAssert(ra != UnknownReg);
 
     if (op == LIR_not)
-        NOT(rr);
+        MVN(rr, ra);
     else
-        NEG(rr);
-
-    if ( rr != ra )
-        MOV(rr,ra);
+        RSBS(rr, ra);
 }
 
 void
