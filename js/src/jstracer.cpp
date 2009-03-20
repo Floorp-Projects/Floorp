@@ -7223,7 +7223,7 @@ SetProperty(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static int32 FASTCALL
+static JSBool FASTCALL
 SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
     JSAutoTempValueRooter tvr(cx, v);
@@ -7254,7 +7254,7 @@ SetElement(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static int32 FASTCALL
+static JSBool FASTCALL
 SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
 {
     JSAutoTempIdRooter idr(cx);

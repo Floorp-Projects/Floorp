@@ -1689,7 +1689,7 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
 }
 
 #ifdef JS_TRACER
-static int32 FASTCALL
+static JSBool FASTCALL
 Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id;
@@ -1735,7 +1735,7 @@ obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-static int32 FASTCALL
+static JSBool FASTCALL
 Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
