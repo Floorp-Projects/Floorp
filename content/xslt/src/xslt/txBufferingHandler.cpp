@@ -345,7 +345,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix,
 
 txResultBuffer::~txResultBuffer()
 {
-    for (PRUint32 i, len = mTransactions.Length(); i < len; ++i) {
+    for (PRUint32 i = 0, len = mTransactions.Length(); i < len; ++i) {
         delete mTransactions[i];
     }
 }
@@ -468,7 +468,7 @@ txResultBuffer::flushToHandler(txAXMLEventHandler** aHandler)
     Holder data = { aHandler, NS_OK };
     mStringValue.BeginReading(data.mIter);
 
-    for (PRUint32 i, len = mTransactions.Length(); i < len; ++i) {
+    for (PRUint32 i = 0, len = mTransactions.Length(); i < len; ++i) {
         if (!flushTransaction(mTransactions[i], &data)) {
             break;
         }
