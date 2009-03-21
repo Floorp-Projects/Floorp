@@ -685,6 +685,30 @@
 
 .end
 
+.igroup callelem JSOP_CALLELEM
+
+    .imacro callprop                                # obj name
+        swap                                        # name obj
+        dup                                         # name obj obj
+        callbuiltin (JSBUILTIN_GetProperty)         # name obj fun obj
+        pick 3                                      # obj fun obj name
+        call 1                                      # obj propval
+        swap                                        # propval obj
+        stop
+    .end
+
+    .imacro callelem                                # obj i
+        swap                                        # i obj
+        dup                                         # i obj obj
+        callbuiltin (JSBUILTIN_GetElement)          # i obj fun obj
+        pick 3                                      # obj fun obj i
+        call 1                                      # obj propval
+        swap                                        # propval obj
+        stop
+    .end
+
+.end
+
 .igroup setelem JSOP_SETELEM
 
     .imacro setprop                                 # obj name val
