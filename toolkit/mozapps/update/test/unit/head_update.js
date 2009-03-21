@@ -186,7 +186,7 @@ xhr.prototype = {
 function remove_dirs_and_files () {
   var fileLocator = AUS_Cc["@mozilla.org/file/directory_service;1"]
                       .getService(AUS_Ci.nsIProperties);
-  var dir = fileLocator.get("XCurProcD", AUS_Ci.nsIFile);
+  var dir = fileLocator.get("GreD", AUS_Ci.nsIFile);
 
   var file = dir.clone();
   file.append("active-update.xml");

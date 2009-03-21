@@ -46,16 +46,4 @@ MODULE		 = test_intl_strres
 
 XPCSHELL_TESTS	 = unit
 
-EXPORT_RESOURCE	= \
-		$(srcdir)/strres.properties \
-		$(srcdir)/397093.properties \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
-

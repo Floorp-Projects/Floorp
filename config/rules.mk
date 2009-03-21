@@ -147,6 +147,9 @@ SOLO_FILE ?= $(error Specify a test filename in SOLO_FILE when using check-inter
 
 libs::
 	$(foreach dir,$(XPCSHELL_TESTS),$(_INSTALL_TESTS))
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl \
+          $(testxpcobjdir)/all-test-dirs.list \
+          $(addprefix $(MODULE)/,$(XPCSHELL_TESTS))
 
 testxpcsrcdir = $(topsrcdir)/testing/xpcshell
 
@@ -155,7 +158,6 @@ check::
 	$(PYTHON) -u \
           $(testxpcsrcdir)/runxpcshelltests.py \
           $(DIST)/bin/xpcshell \
-          $(topsrcdir) \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
 # Execute a single test, specified in $(SOLO_FILE), but don't automatically
@@ -167,7 +169,6 @@ check-interactive::
           --test=$(SOLO_FILE) \
           --interactive \
           $(DIST)/bin/xpcshell \
-          $(topsrcdir) \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
 # Execute a single test, specified in $(SOLO_FILE)
@@ -176,7 +177,6 @@ check-one::
           $(testxpcsrcdir)/runxpcshelltests.py \
           --test=$(SOLO_FILE) \
           $(DIST)/bin/xpcshell \
-          $(topsrcdir) \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
 endif # XPCSHELL_TESTS
