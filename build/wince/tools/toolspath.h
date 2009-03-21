@@ -11,7 +11,7 @@
 #define WCE_INC  VC_PATH "ce\\include"
 
 #ifndef SHUNT_LIB
-#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/" MOZCE_DEVENV
+#define SHUNT_LIB ""
 #endif
 
 #ifndef SHUNT_INC

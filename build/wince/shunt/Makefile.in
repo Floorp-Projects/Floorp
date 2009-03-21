@@ -44,7 +44,15 @@ MODULE = shunt
 TOPSRCDIR = $(topsrcdir)
 OBJDIR = $(DEPTH)
 
+export NO_SHUNT = 1
+
 include $(DEPTH)/config/autoconf.mk
+
+MODULE = mozce_shunt
+LIBRARY_NAME = mozce_shunt
+FORCE_SHARED_LIB= 1
+DIST_INSTALL = 1
+
 
 EXPORTS = include/windows.h \
   include/ymath.h \
@@ -60,32 +68,8 @@ EXPORTS = include/windows.h \
 
 DIRS += include/sys
 
-BUILD_SWITCH = -Build
-REBUILD_SWITCH = -Rebuild
-CLEAN_SWITCH = -clean
+CPPSRCS = map.cpp
 
-MOZCE_DEVENV=vs$(MOZ_MSVCVERSION)
-
-MOZCE_SHUNT_SLN=$(TOPSRCDIR)/build/wince/shunt/build/$(MOZCE_DEVENV)/mozce_shunt_static.sln
-MOZCE_SHUNT_BUILDDIR=$(srcdir)/build/vs$(MOZ_MSVCVERSION)
-
-MOZCE_PROJECT="Release|Windows Mobile 6 Professional SDK (ARMV4I)"
+DEFINES += -DMOZCE_SHUNT_EXPORTS
 
 include $(topsrcdir)/config/rules.mk
-
-
-$(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.lib:: $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.dll
-
-
-$(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.dll:
-	devenv $(MOZCE_SHUNT_SLN) $(BUILD_SWITCH) $(MOZCE_PROJECT)
-
-libs:: $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.dll $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.lib
-	$(INSTALL) $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.dll  $(DIST)/bin
-	$(INSTALL) $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.lib  $(DIST)/lib
-
-install:: $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.dll $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.lib
-	$(SYSINSTALL) $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.dll  $(DESTDIR)$(bindir)
-	$(SYSINSTALL) $(MOZCE_SHUNT_BUILDDIR)/mozce_shunt.lib  $(DESTDIR)$(libdir)
-
-
