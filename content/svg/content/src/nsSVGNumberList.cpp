@@ -373,19 +373,19 @@ nsSVGNumberList::RemoveElementAt(PRInt32 index)
 nsresult
 nsSVGNumberList::InsertElementAt(nsIDOMSVGNumber* aElement, PRInt32 index)
 {
-  nsresult rv;
-  WillModify();
-  NS_ADDREF(aElement);
-
   // The SVG specs state that 'if newItem is already in a list, it
   // is removed from its previous list before it is inserted into this
   // list':
   //  aElement->SetListOwner(this);
   
-  if (mNumbers.InsertElementAt(index, aElement))
-    NS_ADD_SVGVALUE_OBSERVER(aElement);
+  if (!mNumbers.InsertElementAt(index, aElement)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  WillModify();
+  NS_ADDREF(aElement);
+  NS_ADD_SVGVALUE_OBSERVER(aElement);
   DidModify();
-  return rv;
+  return NS_OK;
 }
 
 
