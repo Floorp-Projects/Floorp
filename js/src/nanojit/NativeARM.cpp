@@ -449,18 +449,21 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 void
 Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
-    (void)resv;
-    int d = findMemFor(i);
-
-    if (IsFpReg(r)) {
-        if (isS8(d >> 2)) {
-            FLDD(r, FP, d);
-        } else {
-            FLDD(r, IP, 0);
-            ADDi(IP, FP, d);
-        }
+    if (i->isop(LIR_alloc)) {
+        asm_add_imm(r, FP, disp(resv));
     } else {
-        LDR(r, FP, d);
+        int d = findMemFor(i);
+
+        if (IsFpReg(r)) {
+            if (isS8(d >> 2)) {
+                FLDD(r, FP, d);
+            } else {
+                FLDD(r, IP, 0);
+                ADDi(IP, FP, d);
+            }
+        } else {
+            LDR(r, FP, d);
+        }
     }
 
     verbose_only(
@@ -1640,7 +1643,7 @@ Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
                         // load it into the arg reg
                         int d = findMemFor(p);
                         if (p->isop(LIR_alloc)) {
-                            LEA(r, d, FP);
+                            asm_add_imm(r, FP, d);
                         } else {
                             LD(r, d, FP);
                         }
