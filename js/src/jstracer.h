@@ -404,11 +404,13 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          globalObj_ins;
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
+    nanojit::LIns*          invokevp_ins;
     bool                    deepAborted;
     bool                    trashSelf;
     Queue<nanojit::Fragment*> whichTreesToTrash;
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
+    JSTraceableNative*      generatedTraceableNative;
     JSTraceableNative*      pendingTraceableNative;
     bool                    terminate;
     jsbytecode*             terminate_pc;
@@ -540,6 +542,10 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* vp);
     JS_REQUIRES_STACK bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
                                                    bool constructing);
+    JS_REQUIRES_STACK bool emitNativeCall(JSTraceableNative* known, uintN argc,
+                                          nanojit::LIns* args[]);
+    JS_REQUIRES_STACK bool callTraceableNative(JSFunction* fun, uintN argc, bool constructing);
+    JS_REQUIRES_STACK bool callNative(JSFunction* fun, uintN argc, bool constructing);
     JS_REQUIRES_STACK bool functionCall(bool constructing, uintN argc);
 
     JS_REQUIRES_STACK void trackCfgMerges(jsbytecode* pc);

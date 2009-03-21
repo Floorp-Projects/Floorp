@@ -121,8 +121,8 @@ struct JSFunction {
 #ifdef JS_TRACER
 /* MSVC demands the intermediate (void *) cast here. */
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
-    {name, JS_DATA_TO_FUNC_PTR(JSNative, trcinfo), nargs,                     \
-     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRACEABLE, 0}
+    JS_FN(name, JS_DATA_TO_FUNC_PTR(JSNative, trcinfo), nargs,                \
+          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRACEABLE)
 #else
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
     JS_FN(name, fastcall, nargs, flags)

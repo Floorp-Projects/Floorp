@@ -1220,6 +1220,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->terminate = false;
     this->wasRootFragment = _fragment == _fragment->root;
     this->outer = outer;
+    this->generatedTraceableNative = new JSTraceableNative();
+    JS_ASSERT(generatedTraceableNative);
     
     debug_only_v(printf("recording starting from %s:%u@%u\n",
                         ti->treeFileName, ti->treeLineNumber, ti->treePCOffset);)
@@ -1317,6 +1319,7 @@ TraceRecorder::~TraceRecorder()
     delete func_filter;
     delete float_filter;
     delete lir_buf_writer;
+    delete generatedTraceableNative;
 }
 
 void TraceRecorder::removeFragmentoReferences()
@@ -6714,77 +6717,75 @@ TraceRecorder::newArray(JSObject *ctor, uint32 argc, jsval *argv, jsval *rval)
 }
 
 JS_REQUIRES_STACK bool
-TraceRecorder::functionCall(bool constructing, uintN argc)
+TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[])
 {
+    bool constructing = known->flags & JSTN_CONSTRUCTOR;
+
+    if (JSTN_ERRTYPE(known) == FAIL_STATUS) {
+        // This needs to capture the pre-call state of the stack. So do not set
+        // pendingTraceableNative before taking this snapshot.
+        JS_ASSERT(!pendingTraceableNative);
+
+        // Take snapshot for deep LeaveTree and store it in cx->bailExit.
+        LIns* rec_ins = snapshot(DEEP_BAIL_EXIT);
+        GuardRecord* rec = (GuardRecord *) rec_ins->payload();
+        JS_ASSERT(rec->exit);
+        lir->insStorei(INS_CONSTPTR(rec->exit), cx_ins, offsetof(JSContext, bailExit));
+
+        // Tell nanojit not to discard or defer stack writes before this call.
+        lir->insGuard(LIR_xbarrier, rec_ins, rec_ins);
+    }
+
+    LIns* res_ins = lir->insCall(known->builtin, args);
+    if (!constructing)
+        rval_ins = res_ins;
+    switch (JSTN_ERRTYPE(known)) {
+      case FAIL_NULL:
+        guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
+        break;
+      case FAIL_NEG:
+        res_ins = lir->ins1(LIR_i2f, res_ins);
+        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(0)), OOM_EXIT);
+        break;
+      case FAIL_VOID:
+        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+        break;
+      case FAIL_COOKIE:
+        guard(false, lir->ins2(LIR_eq, res_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
+        break;
+      default:;
+    }
+
+    set(&stackval(0 - (2 + argc)), res_ins);
+
+    if (!constructing) {
+        /*
+         * The return value will be processed by FastNativeCallComplete since
+         * we have to know the actual return value type for calls that return
+         * jsval (like Array_p_pop).
+         */
+        pendingTraceableNative = known;
+    }
+
+    return true;
+}
+
+/*
+ * Check whether we have a specialized implementation for this fast native invocation.
+ */
+JS_REQUIRES_STACK bool
+TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructing)
+{
+    JSTraceableNative* known = FUN_TRCINFO(fun);
+    JS_ASSERT(known && (JSFastNative)fun->u.n.native == known->native);
+
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
 
     jsval& fval = stackval(0 - (2 + argc));
-    JS_ASSERT(&fval >= StackBase(fp));
+    jsval& tval = stackval(0 - (1 + argc));
 
-    if (!VALUE_IS_FUNCTION(cx, fval))
-        ABORT_TRACE("callee is not a function");
-
-    jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
-
-    /*
-     * If callee is not constant, it's a shapeless call and we have to guard
-     * explicitly that we will get this callee again at runtime.
-     */
-    if (!get(&fval)->isconst() && !guardCallee(fval))
-        return false;
-
-    /*
-     * Require that the callee be a function object, to avoid guarding on its
-     * class here. We know if the callee and this were pushed by JSOP_CALLNAME
-     * or JSOP_CALLPROP that callee is a *particular* function, since these hit
-     * the property cache and guard on the object (this) in which the callee
-     * was found. So it's sufficient to test here that the particular function
-     * is interpreted, not guard on that condition.
-     *
-     * Bytecode sequences that push shapeless callees must guard on the callee
-     * class being Function and the function being interpreted.
-     */
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
-
-    if (FUN_INTERPRETED(fun)) {
-        if (constructing) {
-            LIns* args[] = { get(&fval), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_NewInstance_ci, args);
-            guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
-            set(&tval, tv_ins);
-        }
-        return interpretedFunctionCall(fval, fun, argc, constructing);
-    }
-
-    if (FUN_SLOW_NATIVE(fun)) {
-        JSNative native = fun->u.n.native;
-        if (native == js_Array)
-            return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
-        if (native == js_String && argc == 1) {
-            jsval& v = stackval(-1);
-            if (!JSVAL_IS_PRIMITIVE(v))
-                return call_imacro(call_imacros.String);
-            LIns* v_ins = stringify(v);
-            if (constructing) {
-                LIns *proto_ins;
-                if (!getClassPrototype(FUN_OBJECT(fun), proto_ins))
-                    return false;
-                LIns *args[] = { v_ins, proto_ins, cx_ins };
-                v_ins = lir->insCall(&js_String_tn_ci, args);
-                guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
-            }
-            set(&fval, v_ins);
-            return true;
-        }
-    }
-
-    if (!(fun->flags & JSFUN_TRACEABLE))
-        ABORT_TRACE("untraceable native");
-
-    JSTraceableNative* known = FUN_TRCINFO(fun);
-    JS_ASSERT(known && (JSFastNative)fun->u.n.native == known->native);
 
     LIns* args[5];
     do {
@@ -6875,65 +6876,116 @@ TraceRecorder::functionCall(bool constructing, uintN argc)
 next_specialization:;
     } while ((known++)->flags & JSTN_MORE);
 
-    if (!constructing)
-        ABORT_TRACE("unknown native");
-    if (!(fun->flags & JSFUN_TRACEABLE) && FUN_CLASP(fun))
-        ABORT_TRACE("can't trace native constructor");
-    ABORT_TRACE("can't trace unknown constructor");
+    return false;
 
 success:
 #if defined _DEBUG
     JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
 #endif
 
-    if (JSTN_ERRTYPE(known) == FAIL_STATUS) {
-        // This needs to capture the pre-call state of the stack. So do not set
-        // pendingTraceableNative before taking this snapshot.
-        JS_ASSERT(!pendingTraceableNative);
+    return emitNativeCall(known, argc, args);
+}
 
-        // Take snapshot for deep LeaveTree and store it in cx->bailExit.
-        LIns* rec_ins = snapshot(DEEP_BAIL_EXIT);
-        GuardRecord* rec = (GuardRecord *) rec_ins->payload();
-        JS_ASSERT(rec->exit);
-        lir->insStorei(INS_CONSTPTR(rec->exit), cx_ins, offsetof(JSContext, bailExit));
-
-        // Tell nanojit not to discard or defer stack writes before this call.
-        lir->insGuard(LIR_xbarrier, rec_ins, rec_ins);
+bool
+TraceRecorder::callNative(JSFunction* fun, uintN argc, bool constructing)
+{
+    if (fun->flags & JSFUN_TRACEABLE) {
+        if (callTraceableNative(fun, argc, constructing))
+            return true;
     }
 
-    LIns* res_ins = lir->insCall(known->builtin, args);
-    if (!constructing)
-        rval_ins = res_ins;
-    switch (JSTN_ERRTYPE(known)) {
-      case FAIL_NULL:
-        guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
-        break;
-      case FAIL_NEG:
-      {
-        res_ins = lir->ins1(LIR_i2f, res_ins);
-        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(0)), OOM_EXIT);
-        break;
-      }
-      case FAIL_VOID:
-        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
-        break;
-      case FAIL_COOKIE:
-        guard(false, lir->ins2(LIR_eq, res_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
-        break;
-      default:;
-    }
-    set(&fval, res_ins);
+    if (!(fun->flags & JSFUN_FAST_NATIVE))
+        ABORT_TRACE("untraceable slow native");
 
-    if (!constructing) {
-        /*
-         * The return value will be processed by FastNativeCallComplete since
-         * we have to know the actual return value type for calls that return
-         * jsval (like Array_p_pop).
-         */
-        pendingTraceableNative = known;
+    jsval* vp = &stackval(0 - (2 + argc));
+    invokevp_ins = lir->insAlloc((2 + argc) * sizeof(jsval));
+
+    /*
+     * For a very long argument list we might run out of LIR space, so better check while
+     * looping over the argument list.
+     */
+    for (jsint n = 0; n < jsint(2 + argc) && !lirbuf->outOMem(); ++n) {
+        LIns* i = get(&vp[n]);
+        box_jsval(vp[n], i);
+        lir->insStorei(i, invokevp_ins, n * sizeof(jsval));
     }
 
-    return true;
+    LIns* args[] = { invokevp_ins, lir->insImm(argc), cx_ins };
+
+    CallInfo* ci = (CallInfo*) lir->skip(sizeof(struct CallInfo))->payload();
+    ci->_address = uintptr_t(fun->u.n.native);
+    ci->_argtypes = ARGSIZE_LO | ARGSIZE_LO << 2 | ARGSIZE_LO << 4 | ARGSIZE_LO << 6;
+    ci->_cse = ci->_fold = 0;
+    ci->_abi = ABI_CDECL;
+#ifdef DEBUG
+    ci->_name = "JSFastNative";
+#endif
+
+    // Generate a JSTraceableNative structure on the fly.
+    generatedTraceableNative->builtin = ci;
+    generatedTraceableNative->native = (JSFastNative)fun->u.n.native;
+    generatedTraceableNative->flags = FAIL_STATUS | JSTN_UNBOX_AFTER;
+    generatedTraceableNative->prefix = generatedTraceableNative->argtypes = NULL;
+
+    // argc is the original argc here. It is used to calculate where to place the return value.
+    return emitNativeCall(generatedTraceableNative, argc, args);
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::functionCall(bool constructing, uintN argc)
+{
+    jsval& fval = stackval(0 - (2 + argc));
+    JS_ASSERT(&fval >= StackBase(cx->fp));
+
+    if (!VALUE_IS_FUNCTION(cx, fval))
+        ABORT_TRACE("callee is not a function");
+
+    jsval& tval = stackval(0 - (1 + argc));
+
+    /*
+     * If callee is not constant, it's a shapeless call and we have to guard
+     * explicitly that we will get this callee again at runtime.
+     */
+    if (!get(&fval)->isconst() && !guardCallee(fval))
+        return false;
+
+    /*
+     * Require that the callee be a function object, to avoid guarding on its
+     * class here. We know if the callee and this were pushed by JSOP_CALLNAME
+     * or JSOP_CALLPROP that callee is a *particular* function, since these hit
+     * the property cache and guard on the object (this) in which the callee
+     * was found. So it's sufficient to test here that the particular function
+     * is interpreted, not guard on that condition.
+     *
+     * Bytecode sequences that push shapeless callees must guard on the callee
+     * class being Function and the function being interpreted.
+     */
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
+
+    if (FUN_INTERPRETED(fun)) {
+        if (constructing) {
+            LIns* args[] = { get(&fval), cx_ins };
+            LIns* tv_ins = lir->insCall(&js_NewInstance_ci, args);
+            guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
+            set(&tval, tv_ins);
+        }
+        return interpretedFunctionCall(fval, fun, argc, constructing);
+    }
+
+    if (FUN_SLOW_NATIVE(fun)) {
+        JSNative native = fun->u.n.native;
+        if (native == js_Array)
+            return newArray(FUN_OBJECT(fun), argc, &tval + 1, &fval);
+        if (native == js_String && argc == 1 && !constructing) {
+            jsval& v = stackval(0 - argc);
+            if (!JSVAL_IS_PRIMITIVE(v))
+                return call_imacro(call_imacros.String);
+            set(&fval, stringify(v));
+            return true;
+        }
+    }
+
+    return callNative(fun, argc, constructing);
 }
 
 JS_REQUIRES_STACK bool
@@ -7265,7 +7317,7 @@ JS_DEFINE_TRCINFO_1(GetElement,
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GETELEM()
 {
-    bool call = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc) == JSOP_CALLELEM;
+    bool call = *cx->fp->regs->pc == JSOP_CALLELEM;
 
     jsval& idx = stackval(-1);
     jsval& lval = stackval(-2);
@@ -7709,6 +7761,12 @@ TraceRecorder::record_FastNativeCallComplete()
 {
     JS_ASSERT(pendingTraceableNative);
 
+    JS_ASSERT(*cx->fp->regs->pc == JSOP_CALL ||
+              *cx->fp->regs->pc == JSOP_APPLY);
+
+    jsval& v = stackval(-1);
+    LIns* v_ins = get(&v);
+
     /* At this point the generated code has already called the native function
        and we can no longer fail back to the original pc location (JSOP_CALL)
        because that would cause the interpreter to re-execute the native
@@ -7727,17 +7785,40 @@ TraceRecorder::record_FastNativeCallComplete()
         // Keep cx->bailExit null when it's invalid.
         lir->insStorei(INS_CONSTPTR(NULL), cx_ins, (int) offsetof(JSContext, bailExit));
 #endif
+        LIns* status = lir->insLoad(LIR_ld, cx_ins, (int) offsetof(JSContext, builtinStatus));
+        if (pendingTraceableNative == generatedTraceableNative) {
+            LIns* ok_ins = v_ins;
+
+            /*
+             * If we run a generic traceable native, the return value is in the argument
+             * vector. The actual return value of the fast native is a JSBool indicated
+             * the error status.
+             */
+            v_ins = lir->insLoad(LIR_ld, invokevp_ins, 0);
+            set(&v, v_ins);
+
+            /*
+             * If this is a generic traceable native invocation, propagate the boolean return
+             * value of the fast native into builtinStatus. If the return value (v_ins)
+             * is true, status' == status. Otherwise status' = status | JSBUILTIN_ERROR.
+             * We calculate (rval&1)^1, which is 1 if rval is JS_FALSE (error), and then
+             * shift that by 1 which is JSBUILTIN_ERROR.
+             */
+            JS_STATIC_ASSERT((1 - JS_TRUE) << 1 == 0);
+            JS_STATIC_ASSERT((1 - JS_FALSE) << 1 == JSBUILTIN_ERROR);
+            status = lir->ins2(LIR_or,
+                               status,
+                               lir->ins2i(LIR_lsh,
+                                          lir->ins2i(LIR_xor,
+                                                     lir->ins2i(LIR_and, ok_ins, 1),
+                                                     1),
+                                          1));
+            lir->insStorei(status, cx_ins, (int) offsetof(JSContext, builtinStatus));
+        }
         guard(true,
-              lir->ins_eq0(
-                  lir->insLoad(LIR_ld, cx_ins, (int) offsetof(JSContext, builtinStatus))),
+              lir->ins_eq0(status),
               STATUS_EXIT);
     }
-
-    JS_ASSERT(*cx->fp->regs->pc == JSOP_CALL ||
-              *cx->fp->regs->pc == JSOP_APPLY);
-
-    jsval& v = stackval(-1);
-    LIns* v_ins = get(&v);
 
     bool ok = true;
     if (pendingTraceableNative->flags & JSTN_UNBOX_AFTER) {
