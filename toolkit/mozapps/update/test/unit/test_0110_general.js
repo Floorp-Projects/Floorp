@@ -77,7 +77,7 @@ function run_test() {
   testFile.append("text1");
   testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 
-  var binDir = fileLocator.get("XCurProcD", AUS_Ci.nsIFile);
+  var binDir = fileLocator.get("GreD", AUS_Ci.nsIFile);
 
   // The updater binary file
   gUpdater = binDir.clone();

@@ -44,7 +44,7 @@ function checkFile() {
   // This is where we expect the output
   var tempFile = Components.classes["@mozilla.org/file/local;1"].
     createInstance(Components.interfaces.nsILocalFile);
-  tempFile = HandlerServiceTest._dirSvc.get("CurProcD", Components.interfaces.nsIFile);
+  tempFile = do_get_cwd();
   tempFile.append(kOutputFile);
 
   if (!tempFile.exists())
@@ -102,7 +102,7 @@ function run_test() {
   localHandler.name = "Test Local Handler App";
 
   // WriteArgument will just dump its arguments to a file for us.
-  var processDir = HandlerServiceTest._dirSvc.get("CurProcD", Components.interfaces.nsIFile);
+  var processDir = do_get_cwd();
   var exe = processDir.clone();
   exe.append("WriteArgument");
 
@@ -123,9 +123,12 @@ function run_test() {
   // The Write Argument file needs to know where its libraries are, so
   // just force the path variable
   // For mac
-  envSvc.set("DYLD_LIBRARY_PATH", processDir.path);
-  // For Linux/Windows
-  envSvc.set("LD_LIBRARY_PATH", processDir.path);
+  var greDir = HandlerServiceTest._dirSvc.get("GreD", Components.interfaces.nsIFile);
+
+  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
+  // For Linux
+  envSvc.set("LD_LIBRARY_PATH", greDir.path);
+  //XXX: handle windows
 
   // Now tell it where we want the file.
   envSvc.set("WRITE_ARGUMENT_FILE", outFile.path);
