@@ -1384,6 +1384,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
   {
     aPosResolve[nPosResolve].visualIndex = kNotFound;
     aPosResolve[nPosResolve].visualLeftTwips = kNotFound;
+    aPosResolve[nPosResolve].visualWidth = kNotFound;
   }
 
   for (i = 0; i < runCount; i++) {
@@ -1468,6 +1469,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
           if (subRunLength == 1) {
             posResolve->visualIndex = visualStart;
             posResolve->visualLeftTwips = xOffset;
+            posResolve->visualWidth = width;
           }
           /*
            * Otherwise, we need to measure the width of the run's part
@@ -1479,25 +1481,53 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
            * from the start of the run up to (and inclduing) the character before the index.
            */
           else {
+            /*
+             * Here is a description of how the width of the current character
+             * (posResolve->visualWidth) is calculated:
+             *
+             * LTR (current char: "P"):
+             *    S A M P L E          (logical index: 3, visual index: 3)
+             *    ^ (visualLeftPart)
+             *    ^ (visualRightSide)
+             *    visualLeftLength == 3
+             *    ^^^^^^ (subWidth)
+             *    ^^^^^^^^ (aprocessor.GetWidth() -- with visualRightSide)
+             *          ^^ (posResolve->visualWidth)
+             *
+             * RTL (current char: "M"):
+             *    E L P M A S          (logical index: 2, visual index: 3)
+             *        ^ (visualLeftPart)
+             *          ^ (visualRightSide)
+             *    visualLeftLength == 3
+             *    ^^^^^^ (subWidth)
+             *    ^^^^^^^^ (aprocessor.GetWidth() -- with visualRightSide)
+             *          ^^ (posResolve->visualWidth)
+             */
             nscoord subWidth;
             // The position in the text where this run's "left part" begins.
-            const PRUnichar* visualLeftPart;
+            const PRUnichar* visualLeftPart, *visualRightSide;
             if (level & 1) {
               // One day, son, this could all be replaced with mBidiEngine.GetVisualIndex ...
               posResolve->visualIndex = visualStart + (subRunLength - (posResolve->logicalIndex + 1 - start));
               // Skipping to the "left part".
               visualLeftPart = aText + posResolve->logicalIndex + 1;
+              // Skipping to the right side of the current character
+              visualRightSide = visualLeftPart - 1;
             }
             else {
               posResolve->visualIndex = visualStart + (posResolve->logicalIndex - start);
               // Skipping to the "left part".
               visualLeftPart = aText + start;
+              // In LTR mode this is the same as visualLeftPart
+              visualRightSide = visualLeftPart;
             }
             // The delta between the start of the run and the left part's end.
             PRInt32 visualLeftLength = posResolve->visualIndex - visualStart;
             aprocessor.SetText(visualLeftPart, visualLeftLength, nsBidiDirection(level & 1));
             subWidth = aprocessor.GetWidth();
+            aprocessor.SetText(visualRightSide, visualLeftLength + 1, nsBidiDirection(level & 1));
             posResolve->visualLeftTwips = xOffset + subWidth;
+            posResolve->visualWidth = aprocessor.GetWidth() - subWidth;
           }
         }
       }
