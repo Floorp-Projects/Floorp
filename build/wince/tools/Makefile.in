@@ -44,6 +44,7 @@ VPATH = @srcdir@
 TOPSRCDIR = $(topsrcdir)
 OBJDIR = $(shell cd $(DEPTH); pwd -W)
 CFLAGS += -DHAVE_SHUNT
+MOZCE_NOT_CONFIGURE=1
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/build/wince/tools/Makefile
