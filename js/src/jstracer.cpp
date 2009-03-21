@@ -6897,6 +6897,9 @@ TraceRecorder::callNative(JSFunction* fun, uintN argc, bool constructing)
     if (!(fun->flags & JSFUN_FAST_NATIVE))
         ABORT_TRACE("untraceable slow native");
 
+    if (constructing)
+        ABORT_TRACE("untraceable fast native constructor");
+
     jsval* vp = &stackval(0 - (2 + argc));
     invokevp_ins = lir->insAlloc((2 + argc) * sizeof(jsval));
 
