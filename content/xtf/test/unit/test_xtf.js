@@ -40,7 +40,7 @@ function run_test() {
   const nsIXTFPrivate        = C_i.nsIXTFPrivate;
   const nsIDOMParser         = C_i.nsIDOMParser;
   const nsIDOMEventTarget    = C_i.nsIDOMEventTarget;
-  do_load_module("/content/xtf/test/unit/xtfComponent.js");
+  do_load_module("xtfComponent.js");
   const xtfClass = "@mozilla.org/xtf/element-factory;1?namespace=";
 
   do_check_true(xtfClass + "xtf-tests;foo" in Components.classes);

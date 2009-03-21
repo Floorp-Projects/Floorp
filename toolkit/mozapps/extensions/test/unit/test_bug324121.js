@@ -40,7 +40,7 @@
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 // Get the HTTP server.
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 var testserver;
 
 var next_test = null;
@@ -142,7 +142,7 @@ var updateListener = {
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
-  const dataDir = do_get_file("toolkit/mozapps/extensions/test/unit/data");
+  const dataDir = do_get_file("data");
 
   // Create and configure the HTTP server.
   testserver = new nsHttpServer();

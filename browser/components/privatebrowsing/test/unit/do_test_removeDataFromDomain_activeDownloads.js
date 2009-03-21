@@ -116,7 +116,7 @@ function do_test()
   // the active downloads array.
 
   // Copy the empty downloads database to our profile directory
-  let downloads = do_get_file("toolkit/components/downloads/test/downloads.empty.sqlite");
+  let downloads = do_get_file("downloads.empty.sqlite");
   downloads.copyTo(dirSvc.get("ProfD", Ci.nsIFile), "downloads.sqlite");
 
   // Open the database

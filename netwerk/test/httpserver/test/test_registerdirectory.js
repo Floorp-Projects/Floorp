@@ -316,7 +316,7 @@ var testsDirectory;
 
 function run_test()
 {
-  testsDirectory = do_get_file("netwerk/test/httpserver/test/");
+  testsDirectory = do_get_cwd();
 
   srv = createServer();
   srv.start(4444);

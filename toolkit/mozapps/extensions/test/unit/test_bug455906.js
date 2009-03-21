@@ -37,7 +37,7 @@
  */
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 
 var ADDONS = [{
   // Tests how the blocklist affects a disabled add-on
@@ -265,14 +265,14 @@ function run_test() {
 
   // Copy the initial blocklist into the profile to check add-ons start in the
   // right state.
-  var blocklist = do_get_file("toolkit/mozapps/extensions/test/unit/data/bug455906_start.xml")
+  var blocklist = do_get_file("data/bug455906_start.xml")
   blocklist.copyTo(gProfD, "blocklist.xml");
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupEM();
 
   gTestserver = new nsHttpServer();
-  gTestserver.registerDirectory("/data/", do_get_file("toolkit/mozapps/extensions/test/unit/data"));
+  gTestserver.registerDirectory("/data/", do_get_file("data"));
   gTestserver.start(4444);
 
   do_test_pending();

@@ -131,9 +131,15 @@ endif
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 # Test file installation
+ifdef NSINSTALL_BIN
+# nsinstall in moztools can't recursively copy directories, so use nsinstall.py
+TEST_INSTALLER = $(PYTHON) $(topsrcdir)/config/nsinstall.py
+else
+TEST_INSTALLER = $(INSTALL)
+endif
 
 define _INSTALL_TESTS
-$(INSTALL) $(wildcard $(srcdir)/$(dir)/*.js) $(testxpcobjdir)/$(MODULE)/$(dir)
+$(TEST_INSTALLER) $(wildcard $(srcdir)/$(dir)/*) $(testxpcobjdir)/$(MODULE)/$(dir)
 
 endef # do not remove the blank line!
 

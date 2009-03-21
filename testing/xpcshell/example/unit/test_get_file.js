@@ -1,3 +1,5 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Command Line tests.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Robert Strong <robert_bugzila@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Ted Mielczarek <ted.mielczarek@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,10 +37,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var subscriptLoaded = false;
+
 function run_test() {
-  var clClass = Components.classes["@mozilla.org/toolkit/command-line;1"];
-  var commandLine = clClass.createInstance();
-  var urlFile = do_get_file("toolkit/components/commandlines/test/unit/data/test_bug410156.desktop");
-  var uri = commandLine.resolveURI(urlFile.path);
-  do_check_eq(uri.spec, "http://www.bug410156.com/");
+  var lf = do_get_file("file.txt");
+  do_check_true(lf.exists());
+  do_check_true(lf.isFile());
+  // check that allowNonexistent works
+  lf = do_get_file("file.txt.notfound", true);
+  do_check_false(lf.exists());
+  // check that we can get a file from a subdirectory
+  lf = do_get_file("subdir/file.txt");
+  do_check_true(lf.exists());
+  do_check_true(lf.isFile());
+  // and that we can get a handle to a directory itself
+  lf = do_get_file("subdir/");
+  do_check_true(lf.exists());
+  do_check_true(lf.isDirectory());
+  // check that we can go up a level
+  lf = do_get_file("..");
+  do_check_true(lf.exists());
+  lf.append("unit");
+  lf.append("file.txt");
+  do_check_true(lf.exists());
+  // check that do_get_cwd works
+  lf = do_get_cwd();
+  do_check_true(lf.exists());
+  do_check_true(lf.isDirectory());
 }

@@ -62,7 +62,7 @@ function uri_in_db(aURI) {
 // main
 function run_test() {
   // test import history
-  var file = do_get_file("toolkit/components/places/tests/unit/history_import_test.dat");
+  var file = do_get_file("history_import_test.dat");
   gh.importHistory(file);
   var uri1 = uri("http://www.mozilla.org/");
   do_check_true(uri_in_db(uri1));

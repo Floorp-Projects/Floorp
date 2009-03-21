@@ -37,7 +37,7 @@
  */
 
 var MANIFESTS = [
-  do_get_file("chrome/test/unit/data/test_bug401153.manifest")
+  do_get_file("data/test_bug401153.manifest")
 ];
 
 registerManifests(MANIFESTS);
@@ -106,7 +106,7 @@ function test_failed_mapping(namespace)
 
 function run_test()
 {
-  var data = gIOS.newFileURI(do_get_file("chrome/test/unit/data")).spec;
+  var data = gIOS.newFileURI(do_get_file("data")).spec;
   test_succeeded_mapping("test1", data + "test1/");
   test_succeeded_mapping("test3", "jar:" + data + "test3.jar!/resources/");
   test_failed_mapping("test4");

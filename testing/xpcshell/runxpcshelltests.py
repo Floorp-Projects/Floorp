@@ -41,16 +41,19 @@ from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
-def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interactive=False):
+def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None,
+             interactive=False):
   """Run the tests in |testdirs| using the |xpcshell| executable.
   If provided, |xrePath| is the path to the XRE to use. If provided,
   |testFile| indicates a single test to run. |interactive|, if set to True,
   indicates to provide an xpcshell prompt instead of automatically executing
   the test."""
+  testharnessdir = os.path.dirname(os.path.abspath(__file__))
   xpcshell = os.path.abspath(xpcshell)
+  # we assume that httpd.js lives in components/ relative to xpcshell
+  httpdJSPath = os.path.join(os.path.dirname(xpcshell), "components", "httpd.js").replace("\\", "/");
+
   env = dict(os.environ)
-  env["NATIVE_TOPSRCDIR"] = os.path.normpath(topsrcdir)
-  env["TOPSRCDIR"] = topsrcdir
   # Make assertions fatal
   env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
@@ -64,8 +67,8 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
     env["LD_LIBRARY_PATH"] = xrePath
   args = [xpcshell, '-g', xrePath, '-j', '-s']
 
-  testharnessdir = os.path.dirname(os.path.abspath(sys.argv[0]))
-  headfiles = ['-f', os.path.join(testharnessdir, 'head.js')]
+  headfiles = ['-f', os.path.join(testharnessdir, 'head.js'),
+               '-e', 'function do_load_httpd_js() {load("%s");}' % httpdJSPath]
   tailfiles = ['-f', os.path.join(testharnessdir, 'tail.js')]
   if not interactive:
     tailfiles += ['-e', '_execute_test();']
@@ -82,6 +85,7 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
   for testdir in testdirs:
     if singleDir and singleDir != os.path.basename(testdir):
       continue
+    testdir = os.path.abspath(testdir)
 
     # get the list of head and tail files from the directory
     testheadfiles = []
@@ -109,10 +113,12 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
         pstdout = None
         pstderr = None
         interactiveargs = ['-e', 'print("To start the test, type _execute_test();")', '-i']
-      proc = Popen(args + headfiles + testheadfiles
-                   + ['-f', test]
-                   + tailfiles + testtailfiles + interactiveargs,
-                   stdout=pstdout, stderr=pstderr, env=env)
+      full_args = args + headfiles + testheadfiles \
+                  + ['-f', test] \
+                  + tailfiles + testtailfiles + interactiveargs
+      #print "args: %s" % full_args
+      proc = Popen(full_args, stdout=pstdout, stderr=pstderr,
+                   env=env, cwd=testdir)
       stdout, stderr = proc.communicate()
 
       if interactive:

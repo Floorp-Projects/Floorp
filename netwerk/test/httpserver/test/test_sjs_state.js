@@ -46,7 +46,7 @@ var srv;
 function run_test()
 {
   srv = createServer();
-  var sjsDir = do_get_file("netwerk/test/httpserver/test/data/sjs/");
+  var sjsDir = do_get_file("data/sjs/");
   srv.registerDirectory("/", sjsDir);
   srv.registerContentType("sjs", "sjs");
   srv.registerPathHandler("/path-handler", pathHandler);
