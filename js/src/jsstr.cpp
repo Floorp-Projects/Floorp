@@ -166,16 +166,6 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     n = ln + rn;
     s[n] = 0;
 
-#ifdef JS_TRACER
-    /*
-     * Lame hack to avoid trying to deep-bail (@js_ReportAllocationOverflow)
-     * when called directly from trace.  Instead, retry from the interpreter.
-     * See bug 477351.
-     */
-    if (n > JSSTRING_LENGTH_MASK && JS_ON_TRACE(cx) && !cx->bailExit)
-        return NULL;
-#endif
-
     str = js_NewString(cx, s, n);
     if (!str) {
         /* Out of memory: clean up any space we (re-)allocated. */
@@ -793,24 +783,6 @@ String_p_toString(JSContext* cx, JSObject* obj)
     jsval v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
-}
-
-static JSString* FASTCALL
-String_p_substring(JSContext* cx, JSString* str, int32 begin, int32 end)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-
-    size_t length = JSSTRING_LENGTH(str);
-    return SubstringTail(cx, str, length, begin, end);
-}
-
-static JSString* FASTCALL
-String_p_substring_1(JSContext* cx, JSString* str, int32 begin)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-
-    size_t length = JSSTRING_LENGTH(str);
-    return SubstringTail(cx, str, length, begin, length);
 }
 #endif
 
@@ -1474,32 +1446,6 @@ str_match(JSContext *cx, uintN argc, jsval *vp)
     return StringMatchHelper(cx, argc, vp, js_GetCurrentBytecodePC(cx));
 }
 
-#ifdef JS_TRACER
-static jsval FASTCALL
-String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
-{
-    jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
-    JSAutoTempValueRooter tvr(cx, 3, vp);
-    if (!StringMatchHelper(cx, 1, vp, pc)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
-        return JSVAL_VOID;
-    }
-    return vp[0];
-}
-
-static jsval FASTCALL
-String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
-{
-    jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
-    JSAutoTempValueRooter tvr(cx, 3, vp);
-    if (!StringMatchHelper(cx, 1, vp, pc)) {
-        cx->builtinStatus |= JSBUILTIN_ERROR;
-        return JSVAL_VOID;
-    }
-    return vp[0];
-}
-#endif
-
 static JSBool
 str_search(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -1802,50 +1748,6 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     return js_StringReplaceHelper(cx, argc, lambda, repstr, vp);
 }
 
-#ifdef JS_TRACER
-static JSString* FASTCALL
-String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
-{
-    /* Make sure we will not call regexp.toString() later. This is not a _FAIL builtin. */
-    if (OBJ_GET_CLASS(cx, regexp) != &js_RegExpClass)
-        return NULL;
-
-    jsval vp[4] = {
-        JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(repstr)
-    };
-    if (!js_StringReplaceHelper(cx, 2, NULL, repstr, vp))
-        return NULL;
-    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
-    return JSVAL_TO_STRING(vp[0]);
-}
-
-static JSString* FASTCALL
-String_p_replace_str2(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr)
-{
-    jsval vp[4] = {
-        JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(patstr), STRING_TO_JSVAL(repstr)
-    };
-    if (!js_StringReplaceHelper(cx, 2, NULL, repstr, vp))
-        return NULL;
-    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
-    return JSVAL_TO_STRING(vp[0]);
-}
-
-static JSString* FASTCALL
-String_p_replace_str3(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr,
-                      JSString* flagstr)
-{
-    jsval vp[5] = {
-        JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(patstr), STRING_TO_JSVAL(repstr),
-        STRING_TO_JSVAL(flagstr)
-    };
-    if (!js_StringReplaceHelper(cx, 3, NULL, repstr, vp))
-        return NULL;
-    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
-    return JSVAL_TO_STRING(vp[0]);
-}
-#endif
-
 JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp)
@@ -2147,19 +2049,6 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
-#ifdef JS_TRACER
-static JSObject* FASTCALL
-String_p_split(JSContext* cx, JSString* str, JSString* sepstr)
-{
-    // FIXME: Avoid building and then parsing this array.
-    jsval vp[4] = { JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(sepstr), JSVAL_VOID };
-    if (!str_split(cx, 2, vp))
-        return NULL;
-    JS_ASSERT(JSVAL_IS_OBJECT(vp[0]));
-    return JSVAL_TO_OBJECT(vp[0]);
-}
-#endif
-
 #if JS_HAS_PERL_SUBSTR
 static JSBool
 str_substr(JSContext *cx, uintN argc, jsval *vp)
@@ -2237,39 +2126,6 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
 
     return JS_TRUE;
 }
-
-#ifdef JS_TRACER
-static JSString* FASTCALL
-String_p_concat_1int(JSContext* cx, JSString* str, int32 i)
-{
-    // FIXME: should be able to use stack buffer and avoid istr...
-    JSString* istr = js_NumberToString(cx, i);
-    if (!istr)
-        return NULL;
-    return js_ConcatStrings(cx, str, istr);
-}
-
-static JSString* FASTCALL
-String_p_concat_2str(JSContext* cx, JSString* str, JSString* a, JSString* b)
-{
-    str = js_ConcatStrings(cx, str, a);
-    if (str)
-        return js_ConcatStrings(cx, str, b);
-    return NULL;
-}
-
-static JSString* FASTCALL
-String_p_concat_3str(JSContext* cx, JSString* str, JSString* a, JSString* b, JSString* c)
-{
-    str = js_ConcatStrings(cx, str, a);
-    if (str) {
-        str = js_ConcatStrings(cx, str, b);
-        if (str)
-            return js_ConcatStrings(cx, str, c);
-    }
-    return NULL;
-}
-#endif
 
 static JSBool
 str_slice(JSContext *cx, uintN argc, jsval *vp)
@@ -2521,32 +2377,13 @@ JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,         
 
 JS_DEFINE_TRCINFO_1(str_toString,
     (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
-JS_DEFINE_TRCINFO_2(str_substring,
-    (4, (static, STRING_RETRY,      String_p_substring, CONTEXT, THIS_STRING, INT32, INT32,   1, 1)),
-    (3, (static, STRING_RETRY,      String_p_substring_1, CONTEXT, THIS_STRING, INT32,        1, 1)))
 JS_DEFINE_TRCINFO_1(str_charAt,
     (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
 JS_DEFINE_TRCINFO_2(str_charCodeAt,
     (1, (extern, DOUBLE,            js_String_p_charCodeAt0, THIS_STRING,                     1, 1)),
     (2, (extern, DOUBLE,            js_String_p_charCodeAt, THIS_STRING, DOUBLE,              1, 1)))
-JS_DEFINE_TRCINFO_4(str_concat,
-    (3, (static, STRING_RETRY,      String_p_concat_1int, CONTEXT, THIS_STRING, INT32,        1, 1)),
-    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)),
-    (4, (static, STRING_RETRY,      String_p_concat_2str, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
-    (5, (static, STRING_RETRY,      String_p_concat_3str, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
-JS_DEFINE_TRCINFO_2(str_match,
-    (4, (static, JSVAL_FAIL,        String_p_match, CONTEXT, THIS_STRING, PC, REGEXP,         1, 1)),
-    (4, (static, JSVAL_FAIL,        String_p_match_obj, CONTEXT, THIS, PC, REGEXP,            1, 1)))
-JS_DEFINE_TRCINFO_3(str_replace,
-    (4, (static, STRING_RETRY,      String_p_replace_str, CONTEXT, THIS_STRING, REGEXP, STRING, 1, 1)),
-    (4, (static, STRING_RETRY,      String_p_replace_str2, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
-    (5, (static, STRING_RETRY,      String_p_replace_str3, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
-JS_DEFINE_TRCINFO_1(str_split,
-    (3, (static, OBJECT_RETRY,      String_p_split, CONTEXT, THIS_STRING, STRING,             0, 0)))
-JS_DEFINE_TRCINFO_1(str_toLowerCase,
-    (2, (extern, STRING_RETRY,      js_toLowerCase, CONTEXT, THIS_STRING,                     1, 1)))
-JS_DEFINE_TRCINFO_1(str_toUpperCase,
-    (2, (extern, STRING_RETRY,      js_toUpperCase, CONTEXT, THIS_STRING,                     1, 1)))
+JS_DEFINE_TRCINFO_1(str_concat,
+    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)))
 
 #define GENERIC           JSFUN_GENERIC_NATIVE
 #define PRIMITIVE         JSFUN_THISP_PRIMITIVE
@@ -2562,9 +2399,9 @@ static JSFunctionSpec string_methods[] = {
     JS_TN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING, str_toString_trcinfo),
     JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
     JS_FN(js_toJSON_str,       str_toString,          0,JSFUN_THISP_STRING),
-    JS_TN("substring",         str_substring,         2,GENERIC_PRIMITIVE, str_substring_trcinfo),
-    JS_TN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE, str_toLowerCase_trcinfo),
-    JS_TN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE, str_toUpperCase_trcinfo),
+    JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
+    JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
+    JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
     JS_TN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE, str_charAt_trcinfo),
     JS_TN("charCodeAt",        str_charCodeAt,        1,GENERIC_PRIMITIVE, str_charCodeAt_trcinfo),
     JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
@@ -2577,10 +2414,10 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("localeCompare",     str_localeCompare,     1,GENERIC_PRIMITIVE),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_TN("match",             str_match,             1,GENERIC_PRIMITIVE, str_match_trcinfo),
+    JS_FN("match",             str_match,             1,GENERIC_PRIMITIVE),
     JS_FN("search",            str_search,            1,GENERIC_PRIMITIVE),
-    JS_TN("replace",           str_replace,           2,GENERIC_PRIMITIVE, str_replace_trcinfo),
-    JS_TN("split",             str_split,             2,GENERIC_PRIMITIVE, str_split_trcinfo),
+    JS_FN("replace",           str_replace,           2,GENERIC_PRIMITIVE),
+    JS_FN("split",             str_split,             2,GENERIC_PRIMITIVE),
 #if JS_HAS_PERL_SUBSTR
     JS_FN("substr",            str_substr,            2,GENERIC_PRIMITIVE),
 #endif
