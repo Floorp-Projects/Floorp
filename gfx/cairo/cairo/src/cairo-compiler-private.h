@@ -165,6 +165,7 @@
 #define snprintf _snprintf
 #define popen _popen
 #define pclose _pclose
+#define hypot _hypot
 #endif
 
 #ifdef _MSC_VER
