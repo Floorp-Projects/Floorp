@@ -58,7 +58,7 @@ function run_test() {
   const resProt = ioService.getProtocolHandler("resource")
                            .QueryInterface(C_i.nsIResProtocolHandler);
 
-  var curdir = do_get_file("js/src/xpconnect/tests/unit");
+  var curdir = do_get_cwd();
   var curURI = ioService.newFileURI(curdir);
   resProt.setSubstitution("test", curURI);
 

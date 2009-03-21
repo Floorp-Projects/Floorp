@@ -1,5 +1,5 @@
 function run_test() {
-  var testBundle = do_get_file("modules/libjar/zipwriter/test/unit/data/test_bug446708");
+  var testBundle = do_get_file("data/test_bug446708");
 
   RecursivelyZipDirectory(testBundle);
 }

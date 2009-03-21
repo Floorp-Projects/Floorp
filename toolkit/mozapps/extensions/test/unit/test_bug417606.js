@@ -53,7 +53,7 @@ var BROWSE_SEARCH_URLS = [
   ["odd=search:with&weird\"characters", SEARCH + "odd%3Dsearch%3Awith%26weird%22characters" ]
 ];
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 var server;
 var addonRepo;
 
@@ -171,7 +171,7 @@ function run_test()
   restartEM();
 
   server = new nsHttpServer();
-  server.registerDirectory("/", do_get_file("toolkit/mozapps/extensions/test/unit/data"));
+  server.registerDirectory("/", do_get_file("data"));
   server.start(4444);
 
   // Point the addons repository to the test server

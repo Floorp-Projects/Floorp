@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 let manifests = [
-  do_get_file("chrome/test/unit/data/test_no_remote_registration.manifest"),
+  do_get_file("data/test_no_remote_registration.manifest"),
 ];
 registerManifests(manifests);
 

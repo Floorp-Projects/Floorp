@@ -171,53 +171,40 @@ function do_test_finished() {
     _do_quit();
 }
 
-function do_import_script(topsrcdirRelativePath) {
-  var scriptPath = environment["TOPSRCDIR"];
-  if (scriptPath.charAt(scriptPath.length - 1) != "/")
-    scriptPath += "/";
-  scriptPath += topsrcdirRelativePath;
+function do_get_file(path, allowNonexistent) {
+  try {
+    let lf = Components.classes["@mozilla.org/file/directory_service;1"]
+      .getService(Components.interfaces.nsIProperties)
+      .get("CurWorkD", Components.interfaces.nsILocalFile);
 
-  load(scriptPath);
+    let bits = path.split("/");
+    for (let i = 0; i < bits.length; i++) {
+      if (bits[i]) {
+        if (bits[i] == "..")
+          lf = lf.parent;
+        else
+          lf.append(bits[i]);
+      }
+    }
+
+    if (!allowNonexistent) {
+      if (!lf.exists()) {
+        print(lf.path + " doesn't exist\n");
+      }
+      do_check_true(lf.exists());
+    }
+
+    return lf;
+  }
+  catch(ex) {
+    do_throw(ex.toString(), Components.stack.caller);
+  }
+  return null;
 }
 
-function do_get_file(path, allowInexistent) {
-  var comps = path.split("/");
-  try {
-    // The following always succeeds on Windows because we use cygpath with
-    // the -a (absolute) modifier to generate NATIVE_TOPSRCDIR.
-    var lf = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-    lf.initWithPath(environment["NATIVE_TOPSRCDIR"]);
-  } catch (e) {
-    // Relative -- and not-Windows per above
-    lf = Components.classes["@mozilla.org/file/directory_service;1"]
-                   .getService(Components.interfaces.nsIProperties)
-                   .get("CurWorkD", Components.interfaces.nsILocalFile);
-
-    // We can't use appendRelativePath because it's not supposed to work with
-    // paths containing "..", and this path might contain "..".
-    var topsrcdirComps = environment["NATIVE_TOPSRCDIR"].split("/");
-    Array.prototype.unshift.apply(comps, topsrcdirComps);
-  }
-
-  for (var i = 0, sz = comps.length; i < sz; i++) {
-    // avoids problems if either path ended with /
-    if (comps[i].length > 0) {
-      if (comps[i] == "..")
-        lf = lf.parent;
-      else
-        lf.append(comps[i]);
-    }
-  }
-
-  if (!allowInexistent) {
-    if (!lf.exists()) {
-      print(lf.path + " doesn't exist\n");
-    }
-    do_check_true(lf.exists());
-  }
-
-  return lf;
+// do_get_cwd() isn't exactly self-explanatory, so provide a helper
+function do_get_cwd() {
+  return do_get_file("");
 }
 
 function do_load_module(path) {

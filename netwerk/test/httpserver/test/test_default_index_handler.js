@@ -49,7 +49,7 @@ function run_test()
   srv = createServer();
   srv.registerDirectory("/", dir);
 
-  var nameDir = do_get_file("netwerk/test/httpserver/test/data/name-scheme/");
+  var nameDir = do_get_file("data/name-scheme/");
   srv.registerDirectory("/bar/", nameDir);
 
   srv.start(4444);

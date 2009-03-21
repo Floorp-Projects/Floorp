@@ -49,7 +49,7 @@ function run_test()
   // directory.  This will trigger DATABASE_STATUS_UPGRADED (CREATE is not
   // sufficient since there will be no entires to update frecencies for, which
   // causes us to get the bookmarks service in the first place).
-  let dbFile = do_get_file("toolkit/components/places/tests/unit/bug476292.sqlite");
+  let dbFile = do_get_file("bug476292.sqlite");
   let profD = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
              get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);

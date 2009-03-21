@@ -247,9 +247,9 @@ function remove_dirs_and_files () {
  *          toolkit/mozapps/update/test/unit/
  */
 function start_httpserver(aRelativeDirName) {
-  do_import_script("netwerk/test/httpserver/httpd.js");
+  do_load_httpd_js();
   gTestserver = new nsHttpServer();
-  gTestserver.registerDirectory("/data/", do_get_file("toolkit/mozapps/update/test/unit/" + aRelativeDirName));
+  gTestserver.registerDirectory("/data/", do_get_file(aRelativeDirName));
   gTestserver.start(4444);
 }
 

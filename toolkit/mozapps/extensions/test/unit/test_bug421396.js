@@ -160,14 +160,14 @@ var InstallLocation = {
 
   getItemLocation: function(id) {
     if (id == TESTID) {
-      var file = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug421396");
+      var file = do_get_file("data/test_bug421396");
       if (INSTALLED)
         return file;
       // If we are simulating after the extension is "removed" then return the
       // empty undeletable directory.
       return new RestrictedPath(file, true);
     }
-    var file = do_get_file("toolkit/mozapps/extensions/test");
+    var file = do_get_cwd();
     file.append("INVALIDNAME");
     file.append(id);
     return file;

@@ -45,7 +45,7 @@ const INSTALLERROR_SOFTBLOCKED           = -10;
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 // Get the HTTP server.
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 var testserver;
 
 // This allows the EM to attempt to display errors to the user without failing
@@ -159,12 +159,12 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9");
 
   // Install the blocklist
-  var blocklist = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug463819.xml");
+  var blocklist = do_get_file("data/test_bug463819.xml");
   blocklist.copyTo(gProfD, "blocklist.xml");
 
   // Create and configure the HTTP server.
   testserver = new nsHttpServer();
-  testserver.registerDirectory("/", do_get_file("toolkit/mozapps/extensions/test/unit/data"));
+  testserver.registerDirectory("/", do_get_file("data"));
   testserver.start(4444);
 
   startupEM();

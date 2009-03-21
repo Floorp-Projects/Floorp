@@ -37,7 +37,7 @@
 
 // This file tests the download manager backend
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 
 function createURI(aObj)
 {
@@ -90,7 +90,7 @@ if (!profileDir) {
  */
 function importDownloadsFile(aFName)
 {
-  var file = do_get_file("toolkit/components/downloads/test/unit/" + aFName);
+  var file = do_get_file(aFName);
   var newFile = dirSvc.get("ProfD", Ci.nsIFile);
   if (/\.rdf$/i.test(aFName))
     file.copyTo(newFile, "downloads.rdf");

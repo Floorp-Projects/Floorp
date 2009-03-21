@@ -284,8 +284,7 @@ if (!profileDir) {
 
 // nsIFiles...
 var PROFDIR = profileDir;
-var DATADIR = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
-                         "signons-00.txt").parent;
+var DATADIR = do_get_file("data/");
 // string versions...
 var OUTDIR = PROFDIR.path;
 var INDIR = DATADIR.path;

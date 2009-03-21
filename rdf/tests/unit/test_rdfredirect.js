@@ -1,4 +1,4 @@
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 
 function getRDFService()
 {
@@ -10,7 +10,7 @@ var server1, server2;
 
 function run_test()
 {
-  var samplefile = do_get_file('rdf/tests/unit/sample.rdf');
+  var samplefile = do_get_file('sample.rdf');
   
   server1 = new nsHttpServer();
   server1.registerPathHandler("/sample-xs.rdf", xsRedirect);

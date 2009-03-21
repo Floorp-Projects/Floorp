@@ -66,8 +66,7 @@ var testdesc = "Corrupt database and backup"
 
 var filename = "signons-c.sqlite";
 // copy corrupt db to output directory
-var corruptDB = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
-                            "corruptDB.sqlite");
+var corruptDB = do_get_file("data/corruptDB.sqlite");
 
 var cfile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
 cfile.initWithPath(OUTDIR);

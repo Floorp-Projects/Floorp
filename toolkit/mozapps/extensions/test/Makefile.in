@@ -39,9 +39,8 @@ DEPTH = ../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-ADDONSRC = $(srcdir)/unit/addons
+ADDONSRC = $(srcdir)/addons
 TESTROOT = $(shell cd $(DEPTH) && pwd)/_tests/xpcshell/$(MODULE)
-TESTPROFILE = $(TESTROOT)/profile
 TESTXPI = $(TESTROOT)/unit/addons
 relativesrcdir  = toolkit/mozapps/extensions/test
 
@@ -69,13 +68,11 @@ include $(topsrcdir)/config/rules.mk
 
 libs::
 	rm -rf $(TESTXPI)
-	mkdir -p $(TESTXPI)
+	$(NSINSTALL) -D $(TESTXPI)
 	if [ -d $(ADDONSRC) ]; then \
 		$(EXIT_ON_ERROR) \
 		for dir in $(ADDONSRC)/*; do \
-			if [ "$$dir" != "$(ADDONSRC)/CVS" ]; then \
-				base=`basename $$dir` ; \
-				(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
-			fi \
+			base=`basename $$dir` ; \
+			(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
 		done \
 	fi

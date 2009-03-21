@@ -2,7 +2,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const path = "modules/libjar/test/unit/data/test_bug333423.zip";
+const path = "data/test_bug333423.zip";
 
 function test_relative_sub() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -23,7 +23,7 @@ function test_relative_base() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
 
-  var base = ios.newFileURI(do_get_file("netwerk/Makefile.in"));
+  var base = ios.newFileURI(do_get_file("data/empty"));
   var uri = ios.newURI("jar:../" + path + "!/", null, base);
 
   // This is the URI we expect to see.

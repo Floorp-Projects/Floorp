@@ -1,7 +1,7 @@
 // This testcase verifies that channels can't be reopened
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=372486
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 
 const NS_ERROR_IN_PROGRESS = 0x804b000f;
 const NS_ERROR_ALREADY_OPENED = 0x804b0049;
@@ -118,7 +118,7 @@ function test_http_channel() {
 }
 
 function test_file_channel() {
-  var file = do_get_file("netwerk/test/Makefile.in");
+  var file = do_get_file("data/test_readline1.txt");
   test_channel(function() {
     return new_file_channel(file);
   });

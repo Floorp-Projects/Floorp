@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TESTDIR = "toolkit/components/places/tests/unit/";
- 
 // Get services
 try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -85,7 +83,7 @@ function run_test() {
   var iconName = "favicon-normal16.png";
   var iconURI = uri("http://places.test/" + iconName);
   var iconMimeType = "image/png";
-  var iconFile = do_get_file(TESTDIR + iconName);
+  var iconFile = do_get_file(iconName);
   var iconData = readFileData(iconFile);
   do_check_eq(iconData.length, 286);
   iconsvc.setFaviconData(iconURI,

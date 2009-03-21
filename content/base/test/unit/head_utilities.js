@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const gBasePath = "content/base/test/unit/";
 const nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
 const replacementChar = Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER;
 
@@ -45,7 +44,7 @@ function loadContentFile(aFile, aCharset) {
     if(aCharset == undefined)
         aCharset = 'UTF-8';
 
-    var file = do_get_file(gBasePath+aFile);
+    var file = do_get_file(aFile);
     var ios = Components.classes['@mozilla.org/network/io-service;1']
             .getService(Components.interfaces.nsIIOService);
     var chann = ios.newChannelFromURI ( ios.newFileURI (file) );

@@ -71,7 +71,7 @@ function run_test() {
   ps.setIntPref("browser.places.smartBookmarksVersion", -1);
 
   // import bookmarks from corrupt file
-  var corruptBookmarksFile = do_get_file("browser/components/places/tests/unit/bookmarks.corrupt.html");
+  var corruptBookmarksFile = do_get_file("bookmarks.corrupt.html");
   try {
     ies.importHTMLFromFile(corruptBookmarksFile, true);
   } catch(ex) { do_throw("couldn't import corrupt bookmarks file: " + ex); }
