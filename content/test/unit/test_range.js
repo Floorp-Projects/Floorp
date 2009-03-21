@@ -257,7 +257,7 @@ function getParsedDocument(aPath) {
  * Run the extraction tests.
  */
 function run_extract_test() {
-  var filePath = "/content/test/unit/test_delete_range.xml";
+  var filePath = "test_delete_range.xml";
   var doc = getParsedDocument(filePath);
   var tests = doc.getElementsByTagName("test");
 
@@ -409,7 +409,7 @@ function run_extract_test() {
  * Miscellaneous tests not covered above.
  */
 function run_miscellaneous_tests() {
-  var filePath = "/content/test/unit/test_delete_range.xml";
+  var filePath = "test_delete_range.xml";
   var doc = getParsedDocument(filePath);
   var tests = doc.getElementsByTagName("test");
 

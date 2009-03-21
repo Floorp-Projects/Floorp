@@ -73,7 +73,7 @@ if (!profileDir) {
 
 function importDatabaseFile(aFName)
 {
-  var file = do_get_file("toolkit/components/downloads/test/schema_migration/" + aFName);
+  var file = do_get_file(aFName);
   var newFile = dirSvc.get("ProfD", Ci.nsIFile);
   file.copyTo(newFile, "downloads.sqlite");
 }

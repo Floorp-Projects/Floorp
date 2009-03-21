@@ -51,10 +51,10 @@ XPCSHELL_TESTS = \
                  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-XPCSHELL_TESTS += unit/win
+XPCSHELL_TESTS += unit_win
 else
 ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
-XPCSHELL_TESTS += unit/unix
+XPCSHELL_TESTS += unit_unix
 endif
 endif
 

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
  
 function run_test() {
-  var file = do_get_file("js/src/xpconnect/tests/unit/syntax_error.jsm");
+  var file = do_get_file("syntax_error.jsm");
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
   var uri = ios.newFileURI(file);

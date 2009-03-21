@@ -89,7 +89,7 @@ function setup_profile() {
   // Set up the profile with some existing extensions
   // Not nice to copy the extensions datasource in, but bringing up the EM to
   // create it properly will invalidate the test
-  var source = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug356370.rdf");
+  var source = do_get_file("data/test_bug356370.rdf");
   source.copyTo(gProfD, "extensions.rdf");
 
   // Must programmatically generate the cache since it depends on the mimetimes
@@ -103,7 +103,7 @@ function setup_profile() {
   var addon = gProfD.clone();
   addon.append("extensions");
   addon.append("bug356370_1@tests.mozilla.org");
-  source = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug356370_1.rdf");
+  source = do_get_file("data/test_bug356370_1.rdf");
   addon.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
   source.copyTo(addon, "install.rdf");
   write_cache_line(foStream, "app-profile", "bug356370_1@tests.mozilla.org",
@@ -112,7 +112,7 @@ function setup_profile() {
   addon = gProfD.clone();
   addon.append("extensions");
   addon.append("bug356370_2@tests.mozilla.org");
-  source = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug356370_2.rdf");
+  source = do_get_file("data/test_bug356370_2.rdf");
   addon.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
   source.copyTo(addon, "install.rdf");
   write_cache_line(foStream, "app-profile", "bug356370_2@tests.mozilla.org",
@@ -121,7 +121,7 @@ function setup_profile() {
   addon = gProfD.clone();
   addon.append("extensions");
   addon.append("bug356370_4@tests.mozilla.org");
-  source = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug356370_4.rdf");
+  source = do_get_file("data/test_bug356370_4.rdf");
   addon.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
   source.copyTo(addon, "install.rdf");
 
