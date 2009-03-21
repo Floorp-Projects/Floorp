@@ -1255,6 +1255,13 @@ const PRInt32 nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
+  eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED,
+  eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY,
+  eCSSKeyword__moz_disable_resampling, NS_STYLE_IMAGE_RENDERING_DISABLE_RESAMPLING,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
   eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED,
   eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL,

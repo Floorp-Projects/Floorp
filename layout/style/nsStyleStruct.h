@@ -1510,6 +1510,7 @@ struct nsStyleSVG {
   PRUint8          mColorInterpolation; // [inherited] see nsStyleConsts.h
   PRUint8          mColorInterpolationFilters; // [inherited] see nsStyleConsts.h
   PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
+  PRUint8          mImageRendering;   // [inherited] see nsStyleConsts.h
   PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
   PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
   PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
