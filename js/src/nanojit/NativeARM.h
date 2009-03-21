@@ -535,11 +535,15 @@ enum {
         asm_output("str %s, [%s], %d", gpn(_d), gpn(_n), (_off));      \
     } while(0)
 
-
+// There isn't really a LEA on ARM; this basically computes _r = _b + #_d, either as a
+//    ADD _r, _b, #_d   (if _d < 256)
+// or as a if (_d <= 1020)
+//    MOV _r, #(_d>>2)
+//    ADD _r, _b, _r << 2
 #define LEA(_r,_d,_b) do {                                              \
         NanoAssert((_d)<=1020);                                         \
         NanoAssert(((_d)&3)==0);                                        \
-        if (_b!=SP) NanoAssert(0);                                      \
+        NanoAssert((_b) == FP);                                         \
         if ((_d)<256) {                                                 \
             underrunProtect(4);                                         \
             *(--_nIns) = (NIns)( COND_AL | (0x28<<20) | ((_b)<<16) | ((_r)<<12) | ((_d)&0xFF) ); \
