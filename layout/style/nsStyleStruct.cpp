@@ -768,6 +768,7 @@ nsStyleSVG::nsStyleSVG()
     mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
     mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
     mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
+    mImageRendering          = NS_STYLE_IMAGE_RENDERING_AUTO;
     mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
     mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
     mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
@@ -816,6 +817,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mColorInterpolation = aSource.mColorInterpolation;
   mColorInterpolationFilters = aSource.mColorInterpolationFilters;
   mFillRule = aSource.mFillRule;
+  mImageRendering = aSource.mImageRendering;
   mPointerEvents = aSource.mPointerEvents;
   mShapeRendering = aSource.mShapeRendering;
   mStrokeLinecap = aSource.mStrokeLinecap;
@@ -875,6 +877,7 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mColorInterpolation    != aOther.mColorInterpolation    ||
        mColorInterpolationFilters != aOther.mColorInterpolationFilters ||
        mFillRule              != aOther.mFillRule              ||
+       mImageRendering        != aOther.mImageRendering        ||
        mShapeRendering        != aOther.mShapeRendering        ||
        mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
        mStrokeLinecap         != aOther.mStrokeLinecap         ||
