@@ -1503,3 +1503,33 @@ js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
     }
     return NULL;
 }
+
+jsbytecode*
+js_GetCurrentBytecodePC(JSContext* cx)
+{
+    jsbytecode *pc, *imacpc;
+
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(cx)) {
+        pc = cx->bailExit->pc;
+        imacpc = cx->bailExit->imacpc;
+    } else
+#endif
+    {
+        JS_ASSERT_NOT_ON_TRACE(cx);  /* for static analysis */
+        JSStackFrame* fp = cx->fp;
+        if (fp && fp->regs) {
+            pc = fp->regs->pc;
+            imacpc = fp->imacpc;
+        } else {
+            return NULL;
+        }
+    }
+
+    /*
+     * If we are inside GetProperty_tn or similar, return a pointer to the
+     * current instruction in the script, not the CALL instruction in the
+     * imacro, for the benefit of callers doing bytecode inspection.
+     */
+    return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
+}
