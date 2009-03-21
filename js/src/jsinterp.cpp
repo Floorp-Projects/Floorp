@@ -563,6 +563,9 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
 
+    JS_ASSERT(nslots != 0);
+    js_LeaveTrace(cx);
+
     if (!cx->stackPool.first.next) {
         int64 *timestamp;
 
