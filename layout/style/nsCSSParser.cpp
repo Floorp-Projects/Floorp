@@ -5494,6 +5494,9 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_flood_opacity:
     return ParseVariant(aValue, VARIANT_HN, nsnull);
+  case eCSSProperty_image_rendering:
+    return ParseVariant(aValue, VARIANT_AHK,
+                        nsCSSProps::kImageRenderingKTable);
   case eCSSProperty_lighting_color:
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_marker_end:

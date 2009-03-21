@@ -662,7 +662,7 @@ nsThebesImage::Draw(gfxContext*        aContext,
               deviceToImage.xx >= 1.0 && deviceToImage.yy >= 1.0 &&
               deviceToImage.xy == 0.0 && deviceToImage.yx == 0.0;
             if (!isDownscale) {
-                pattern->SetFilter(0);
+                pattern->SetFilter(gfxPattern::FILTER_FAST);
             }
             break;
         }
