@@ -4202,35 +4202,6 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     return JS_TRUE;
 }
 
-static jsbytecode*
-js_GetCurrentBytecodePC(JSContext* cx)
-{
-    jsbytecode *pc, *imacpc;
-
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx)) {
-        pc = cx->bailExit->pc;
-        imacpc = cx->bailExit->imacpc;
-    } else
-#endif
-    {
-        JS_ASSERT_NOT_ON_TRACE(cx);  /* for static analysis */
-        if (cx->fp && cx->fp->regs) {
-            pc = cx->fp->regs->pc;
-            imacpc = cx->fp->imacpc;
-        } else {
-            return NULL;
-        }
-    }
-
-    /*
-     * If we are inside GetProperty_tn or similar, return a pointer to the
-     * current instruction in the script, not the CALL instruction in the
-     * imacro, for the benefit of callers doing bytecode inspection.
-     */
-    return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
-}
-
 JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                      JSPropCacheEntry **entryp)

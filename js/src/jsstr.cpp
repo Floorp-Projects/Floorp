@@ -1471,11 +1471,7 @@ StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc)
 static JSBool
 str_match(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSStackFrame *fp;
-
-    for (fp = js_GetTopStackFrame(cx); fp && !fp->regs; fp = fp->down)
-        JS_ASSERT(!fp->script);
-    return StringMatchHelper(cx, argc, vp, fp ? fp->regs->pc : NULL);
+    return StringMatchHelper(cx, argc, vp, js_GetCurrentBytecodePC(cx));
 }
 
 #ifdef JS_TRACER

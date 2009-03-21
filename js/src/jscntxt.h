@@ -1388,6 +1388,9 @@ js_InvokeOperationCallback(JSContext *cx);
 extern JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
 
+extern jsbytecode*
+js_GetCurrentBytecodePC(JSContext* cx);
+
 #ifdef JS_TRACER
 /*
  * Reconstruct the JS stack and clear cx->onTrace. We must be currently
