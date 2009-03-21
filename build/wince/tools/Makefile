@@ -35,6 +35,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# this file is used directly during configure as well as included from Makefile.in
+
 DEVENV_FLAG=-
 
 CC=cl -O2
@@ -43,7 +45,7 @@ MOZCE_DEVENV=vs$(MOZ_MSVCVERSION)
 
 MOZCE_TOOLS_DIR=$(TOPSRCDIR)/build/wince/tools
 
-ifdef VPATH
+ifdef MOZCE_NOT_CONFIGURE
 MOZCE_TOOLS_BIN_DIR=$(OBJDIR)/build/wince/tools
 else
 # if we're building the tools in configure, we want them to go directly to the sdk 
@@ -90,15 +92,15 @@ CFLAGS	+= -DSHUNT_LIB='"$(OBJDIR)/dist/lib"'
 endif
 CFLAGS += -DEBUG -Zi
 
-EXPORTS =$(MOZCE_TOOLS_BIN_DIR)/arm-wince-as.exe \
-	 $(MOZCE_TOOLS_BIN_DIR)/arm-wince-gcc.exe \
-	 $(MOZCE_TOOLS_BIN_DIR)/arm-wince-lib.exe \
-	 $(MOZCE_TOOLS_BIN_DIR)/arm-wince-link.exe \
-	 $(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe 
+SDK_TOOLS = $(MOZCE_TOOLS_BIN_DIR)/arm-wince-as.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-gcc.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-lib.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-link.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe 
 
 all: libs export
 
-libs: $(EXPORTS)
+libs: $(SDK_TOOLS)
 
 clean: clobber
 
@@ -127,6 +129,6 @@ $(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c $(M
 	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-res.c
 
 
-export:: $(EXPORTS)
+export:: $(SDK_TOOLS)
 	mkdir -p $(OBJDIR)/dist/sdk/bin
 	cp $^ $(OBJDIR)/dist/sdk/bin
