@@ -239,7 +239,6 @@ js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, uint32 globalShape);
 #endif
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
-static bool nesting_enabled = true;
 static bool did_we_check_processor_features = false;
 
 #ifdef JS_JIT_SPEW
@@ -1204,6 +1203,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 {
     JS_ASSERT(!_fragment->vmprivate && ti);
 
+    /* Reset the fragment state we care about in case we got a recycled fragment. */
+    _fragment->lastIns = NULL;
+
     this->cx = cx;
     this->traceMonitor = &JS_TRACE_MONITOR(cx);
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
@@ -1217,7 +1219,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->deepAborted = false;
     this->trashSelf = false;
     this->global_dslots = this->globalObj->dslots;
-    this->terminate = false;
+    this->loop = true; /* default assumption is we are compiling a loop */
     this->wasRootFragment = _fragment == _fragment->root;
     this->outer = outer;
     this->generatedTraceableNative = new JSTraceableNative();
@@ -1962,55 +1964,6 @@ TraceRecorder::checkForGlobalObjectReallocation()
     }
 }
 
-/* Determine whether the current branch instruction terminates the loop. */
-static bool
-js_IsLoopExit(jsbytecode* pc, jsbytecode* header)
-{
-    switch (*pc) {
-      case JSOP_LT:
-      case JSOP_GT:
-      case JSOP_LE:
-      case JSOP_GE:
-      case JSOP_NE:
-      case JSOP_EQ:
-        /* These ops try to dispatch a JSOP_IFEQ or JSOP_IFNE that follows. */
-        JS_ASSERT(js_CodeSpec[*pc].length == 1);
-        pc++;
-        break;
-
-      default:
-        for (;;) {
-            if (*pc == JSOP_AND || *pc == JSOP_OR)
-                pc += GET_JUMP_OFFSET(pc);
-            else if (*pc == JSOP_ANDX || *pc == JSOP_ORX)
-                pc += GET_JUMPX_OFFSET(pc);
-            else
-                break;
-        }
-    }
-
-    switch (*pc) {
-      case JSOP_IFEQ:
-      case JSOP_IFNE:
-        /*
-         * Forward jumps are usually intra-branch, but for-in loops jump to the
-         * trailing enditer to clean up, so check for that case here.
-         */
-        if (pc[GET_JUMP_OFFSET(pc)] == JSOP_ENDITER)
-            return true;
-        return pc + GET_JUMP_OFFSET(pc) == header;
-
-      case JSOP_IFEQX:
-      case JSOP_IFNEX:
-        if (pc[GET_JUMPX_OFFSET(pc)] == JSOP_ENDITER)
-            return true;
-        return pc + GET_JUMPX_OFFSET(pc) == header;
-
-      default:;
-    }
-    return false;
-}
-
 /* Determine whether the current branch is a loop edge (taken or not taken). */
 static JS_REQUIRES_STACK bool
 js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
@@ -2099,8 +2052,6 @@ TraceRecorder::snapshot(ExitType exitType)
     JSStackFrame* fp = cx->fp;
     JSFrameRegs* regs = fp->regs;
     jsbytecode* pc = regs->pc;
-    if (exitType == BRANCH_EXIT && js_IsLoopExit(pc, (jsbytecode*)fragment->root->ip))
-        exitType = LOOP_EXIT;
 
     /* Check for a return-value opcode that needs to restart at the next instruction. */
     const JSCodeSpec& cs = js_CodeSpec[*pc];
@@ -2489,13 +2440,6 @@ checktype_fail_2:
     return false;
 }
 
-/* Check whether the current pc location is the loop header of the loop this recorder records. */
-JS_REQUIRES_STACK bool
-TraceRecorder::isLoopHeader(JSContext* cx) const
-{
-    return cx->fp->regs->pc == fragment->root->ip;
-}
-
 /* Compile the current fragment. */
 JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
@@ -2566,9 +2510,16 @@ js_JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stabl
 }
 
 /* Complete and compile a trace and link it to the existing tree if appropriate. */
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK void
 TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
 {
+    /*
+     * We should have arrived back at the loop header, and hence we don't want to be in an imacro
+     * here and the opcode should be either JSOP_LOOP, or in case this loop was blacklisted in the
+     * meantime JSOP_NOP.
+     */
+    JS_ASSERT((*cx->fp->regs->pc == JSOP_LOOP || *cx->fp->regs->pc == JSOP_NOP) && !cx->fp->imacpc);
+
     bool stable;
     LIns* exitIns;
     Fragment* peer;
@@ -2583,28 +2534,29 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         debug_only_v(printf("Blacklisted: stack depth mismatch, possible recursion.\n");)
         js_Blacklist(fragment->root);
         trashSelf = true;
-        return false;
+        return;
     }
 
     JS_ASSERT(exit->numStackSlots == treeInfo->nStackTypes);
 
     peer_root = getLoop(traceMonitor, fragment->root->ip, treeInfo->globalShape);
     JS_ASSERT(peer_root != NULL);
+
     stable = deduceTypeStability(peer_root, &peer, demote);
 
-    #if DEBUG
+#if DEBUG
     if (!stable)
         AUDIT(unstableLoopVariable);
-    #endif
+#endif
 
     if (trashSelf) {
         debug_only_v(printf("Trashing tree from type instability.\n");)
-        return false;
+        return;
     }
 
     if (stable && demote) {
         JS_ASSERT(fragment->kind == LoopTrace);
-        return false;
+        return;
     }
 
     if (!stable) {
@@ -2627,15 +2579,6 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
             uexit->exit = exit;
             uexit->next = treeInfo->unstableExits;
             treeInfo->unstableExits = uexit;
-
-            /*
-             * If we walked out of a loop, this exit is wrong. We need to back
-             * up to the if operation.
-             */
-            if (walkedOutOfLoop()) {
-                exit->pc = terminate_pc;
-                exit->imacpc = terminate_imacpc;
-            }
         } else {
             JS_ASSERT(peer->code());
             exit->target = peer;
@@ -2644,16 +2587,14 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
             treeInfo->linkedTrees.addUnique(peer);
         }
-
-        compile(tm);
     } else {
         exit->target = fragment->root;
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exitIns);
-        compile(tm);
     }
+    compile(tm);
 
     if (fragmento->assm()->error() != nanojit::None)
-        return false;
+        return;
 
     joinEdgesToEntry(fragmento, peer_root);
 
@@ -2672,7 +2613,6 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
                         cx->fp->script->filename,
                         js_FramePCToLineNumber(cx, cx->fp),
                         FramePCOffset(cx->fp));)
-    return true;
 }
 
 JS_REQUIRES_STACK void
@@ -2878,55 +2818,88 @@ TraceRecorder::trackCfgMerges(jsbytecode* pc)
 /* Invert the direction of the guard if this is a loop edge that is not
    taken (thin loop). */
 JS_REQUIRES_STACK void
-TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
+TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
 {
+    ExitType exitType;
     if (js_IsLoopEdge(pc, (jsbytecode*)fragment->root->ip)) {
-        switch (*pc) {
-          case JSOP_IFEQ:
-          case JSOP_IFEQX:
-            if (!cond)
-                return;
-            break;
-          case JSOP_IFNE:
-          case JSOP_IFNEX:
-            if (cond)
-                return;
-            break;
-          default:
-            JS_NOT_REACHED("flipIf");
-        }
-        /* We are about to walk out of the loop, so terminate it with
-           an inverse loop condition. */
-        debug_only_v(printf("Walking out of the loop, terminating it anyway.\n");)
-        cond = !cond;
-        terminate = true;
-        /* If when we get to closeLoop the tree is decided to be type unstable, we need to
-           reverse this logic because the loop won't be closed after all.  Store the real
-           value of the IP the interpreter expects, so we can use it in our final LIR_x.
+        exitType = LOOP_EXIT;
+
+        /*
+         * If we are about to walk out of the loop, generate code for the inverse loop
+         * condition, pretending we recorded the case that stays on trace.
          */
-        if (*pc == JSOP_IFEQX || *pc == JSOP_IFNEX)
-            pc += GET_JUMPX_OFFSET(pc);
-        else
-            pc += GET_JUMP_OFFSET(pc);
-        terminate_pc = pc;
-        terminate_imacpc = cx->fp->imacpc;
+        if ((*pc == JSOP_IFEQ || *pc == JSOP_IFEQX) == cond) {
+            JS_ASSERT(*pc == JSOP_IFNE || *pc == JSOP_IFNEX || *pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
+            debug_only_v(printf("Walking out of the loop, terminating it anyway.\n");)
+            cond = !cond;
+        }
+
+        /*
+         * Conditional guards do not have to be emitted if the condition is constant. We
+         * make a note whether the loop condition is true or false here, so we later know
+         * whether to emit a loop edge or a loop end.
+         */
+        if (x->isconst()) {
+            loop = (x->constval() == cond);
+            return;
+        }
+    } else {
+        exitType = BRANCH_EXIT;
     }
+    if (!x->isconst())
+        guard(cond, x, exitType);
 }
 
 /* Emit code for a fused IFEQ/IFNE. */
 JS_REQUIRES_STACK void
 TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 {
-    if (x->isconst()) // no need to guard if condition is constant
-        return;
-    if (*pc == JSOP_IFEQ) {
-        flipIf(pc, cond);
-        guard(cond, x, BRANCH_EXIT);
-        trackCfgMerges(pc);
-    } else if (*pc == JSOP_IFNE) {
-        flipIf(pc, cond);
-        guard(cond, x, BRANCH_EXIT);
+    if (*pc == JSOP_IFEQ || *pc == JSOP_IFNE) {
+        emitIf(pc, cond, x);
+        if (*pc == JSOP_IFEQ)
+            trackCfgMerges(pc);
     }
+}
+
+/* Check whether we have reached the end of the trace. */
+JS_REQUIRES_STACK bool
+TraceRecorder::checkTraceEnd(jsbytecode *pc)
+{
+    if (js_IsLoopEdge(pc, (jsbytecode*)fragment->root->ip)) {
+        /*
+         * If we compile a loop, the trace should have a zero stack balance at the loop
+         * edge. Currently we are parked on a comparison op or IFNE/IFEQ, so advance
+         * pc to the loop header and adjust the stack pointer and pretend we have
+         * reached the loop header.
+         */
+        if (loop) {
+            JS_ASSERT(!cx->fp->imacpc && (pc == cx->fp->regs->pc || pc == cx->fp->regs->pc + 1));
+            bool fused = pc != cx->fp->regs->pc;
+            JSFrameRegs orig = *cx->fp->regs;
+
+            cx->fp->regs->pc = (jsbytecode*)fragment->root->ip;
+            cx->fp->regs->sp -= fused ? 2 : 1;
+
+            bool demote = false;
+            closeLoop(traceMonitor, demote);
+
+            *cx->fp->regs = orig;
+
+            /*
+             * If compiling this loop generated new oracle information which will likely
+             * lead to a different compilation result, immediately trigger another
+             * compiler run. This is guaranteed to converge since the oracle only
+             * accumulates adverse information but never drops it (except when we
+             * flush it during garbage collection.)
+             */
+            if (demote)
+                js_AttemptCompilation(traceMonitor, globalObj, outer);
+        } else {
+            endLoop(traceMonitor);
+        }
+        return false;
+    }
+    return true;
 }
 
 bool
@@ -3556,42 +3529,6 @@ static JS_REQUIRES_STACK VMSideExit*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
                VMSideExit** innermostNestedGuardp);
 
-static JS_REQUIRES_STACK bool
-js_CloseLoop(JSContext* cx)
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    Fragmento* fragmento = tm->fragmento;
-    TraceRecorder* r = tm->recorder;
-    JS_ASSERT(fragmento && r);
-    bool walkedOutOfLoop = r->walkedOutOfLoop();
-
-    if (fragmento->assm()->error()) {
-        js_AbortRecording(cx, "Error during recording");
-        return false;
-    }
-
-    bool demote = false;
-    Fragment* f = r->getFragment();
-    TreeInfo* ti = r->getTreeInfo();
-    uint32 globalShape = ti->globalShape;
-    SlotList* globalSlots = ti->globalSlots;
-    r->closeLoop(tm, demote);
-
-    /*
-     * If js_DeleteRecorder flushed the code cache, we can't rely on f any more.
-     */
-    if (!js_DeleteRecorder(cx))
-        return false;
-
-    /*
-     * If we just walked out of a thin loop, we can't immediately start the
-     * compiler again here since we didn't return to the loop header.
-     */
-    if (demote && !walkedOutOfLoop)
-        return js_RecordTree(cx, tm, f, NULL, globalShape, globalSlots);
-    return false;
-}
-
 JS_REQUIRES_STACK bool
 js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
@@ -3601,117 +3538,118 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
         return false; /* we stay away from shared global objects */
     }
 #endif
+
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     TreeInfo* ti = r->getTreeInfo();
+
     /* Process deep abort requests. */
     if (r->wasDeepAborted()) {
         js_AbortRecording(cx, "deep abort requested");
         return false;
     }
-    /* If we hit our own loop header, close the loop and compile the trace. */
-    if (r->isLoopHeader(cx))
-        return js_CloseLoop(cx);
-    /* does this branch go to an inner loop? */
+
+    JS_ASSERT(r->getFragment() && !r->getFragment()->lastIns);
+
+    /* Does this branch go to an inner loop? */
     Fragment* f = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc, ti->globalShape);
-    if (nesting_enabled && f) {
-
-        /* Cannot handle treecalls with callDepth > 0 and argc > nargs, see bug 480244. */
-        if (r->getCallDepth() > 0 && 
-            cx->fp->argc > cx->fp->fun->nargs) {
-            js_AbortRecording(cx, "Can't call inner tree with extra args in pending frame");
-            return false;
-        }
-
-        /* Make sure inner tree call will not run into an out-of-memory condition. */
-        if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-            !js_ReplenishReservedPool(cx, tm)) {
-            js_AbortRecording(cx, "Couldn't call inner tree (out of memory)");
-            return false;
-        }
-
-        /* Make sure the shape of the global object still matches (this might flush
-           the JIT cache). */
-        JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
-        uint32 globalShape = -1;
-        SlotList* globalSlots = NULL;
-        if (!js_CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
-            js_AbortRecording(cx, "Couldn't call inner tree (prep failed)");
-            return false;
-        }
-
-        debug_only_v(printf("Looking for type-compatible peer (%s:%d@%d)\n",
-                            cx->fp->script->filename,
-                            js_FramePCToLineNumber(cx, cx->fp),
-                            FramePCOffset(cx->fp));)
-
-        /* Find an acceptable peer, make sure our types fit. */
-        Fragment* empty;
-        bool success = false;
-
-        f = r->findNestedCompatiblePeer(f, &empty);
-        if (f && f->code())
-            success = r->adjustCallerTypes(f);
-
-        if (!success) {
-            AUDIT(noCompatInnerTrees);
-
-            jsbytecode* outer = (jsbytecode*)tm->recorder->getFragment()->root->ip;
-            js_AbortRecording(cx, "No compatible inner tree");
-
-            f = empty;
-            if (!f) {
-                f = getAnchor(tm, cx->fp->regs->pc, globalShape);
-                if (!f) {
-                    js_FlushJITCache(cx);
-                    return false;
-                }
-            }
-            return js_RecordTree(cx, tm, f, outer, globalShape, globalSlots);
-        }
-
-        r->prepareTreeCall(f);
-        VMSideExit* innermostNestedGuard = NULL;
-        VMSideExit* lr = js_ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
-        if (!lr || r->wasDeepAborted()) {
-            if (!lr)
-                js_AbortRecording(cx, "Couldn't call inner tree");
-            return false;
-        }
-        jsbytecode* outer = (jsbytecode*)tm->recorder->getFragment()->root->ip;
-        switch (lr->exitType) {
-          case LOOP_EXIT:
-            /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
-            if (innermostNestedGuard) {
-                js_AbortRecording(cx, "Inner tree took different side exit, abort current "
-                                      "recording and grow nesting tree");
-                return js_AttemptToExtendTree(cx, innermostNestedGuard, lr, outer);
-            }
-            /* emit a call to the inner tree and continue recording the outer tree trace */
-            r->emitTreeCall(f, lr);
-            return true;
-        case UNSTABLE_LOOP_EXIT:
-            /* abort recording so the inner loop can become type stable. */
-            js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
-            return js_AttemptToStabilizeTree(cx, lr, outer);
-        case BRANCH_EXIT:
-            /* abort recording the outer tree, extend the inner tree */
-            js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
-            return js_AttemptToExtendTree(cx, lr, NULL, outer);
-        default:
-            debug_only_v(printf("exit_type=%d\n", lr->exitType);)
-            js_AbortRecording(cx, "Inner tree not suitable for calling");
-            return false;
-        }
+    if (!f) {
+        /* Not an inner loop we can call, abort trace. */
+        AUDIT(returnToDifferentLoopHeader);
+        JS_ASSERT(!cx->fp->imacpc);
+        debug_only_v(printf("loop edge to %d, header %d\n",
+                            cx->fp->regs->pc - cx->fp->script->code,
+                            (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
+        js_AbortRecording(cx, "Loop edge does not return to header");
+        return false;
     }
 
-    /* not returning to our own loop header, not an inner loop we can call, abort trace */
-    AUDIT(returnToDifferentLoopHeader);
-    JS_ASSERT(!cx->fp->imacpc);
-    debug_only_v(printf("loop edge to %d, header %d\n",
-                 cx->fp->regs->pc - cx->fp->script->code,
-                 (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
-    js_AbortRecording(cx, "Loop edge does not return to header");
-    return false;
+    /* Cannot handle treecalls with callDepth > 0 and argc > nargs, see bug 480244. */
+    if (r->getCallDepth() > 0 && cx->fp->argc > cx->fp->fun->nargs) {
+        js_AbortRecording(cx, "Can't call inner tree with extra args in pending frame");
+        return false;
+    }
+
+    /* Make sure inner tree call will not run into an out-of-memory condition. */
+    if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
+        !js_ReplenishReservedPool(cx, tm)) {
+        js_AbortRecording(cx, "Couldn't call inner tree (out of memory)");
+        return false;
+    }
+
+    /* Make sure the shape of the global object still matches (this might flush
+       the JIT cache). */
+    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    uint32 globalShape = -1;
+    SlotList* globalSlots = NULL;
+    if (!js_CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
+        js_AbortRecording(cx, "Couldn't call inner tree (prep failed)");
+        return false;
+    }
+
+    debug_only_v(printf("Looking for type-compatible peer (%s:%d@%d)\n",
+                        cx->fp->script->filename,
+                        js_FramePCToLineNumber(cx, cx->fp),
+                        FramePCOffset(cx->fp));)
+
+    /* Find an acceptable peer, make sure our types fit. */
+    Fragment* empty;
+    bool success = false;
+
+    f = r->findNestedCompatiblePeer(f, &empty);
+    if (f && f->code())
+        success = r->adjustCallerTypes(f);
+
+    if (!success) {
+        AUDIT(noCompatInnerTrees);
+
+        jsbytecode* outer = (jsbytecode*)tm->recorder->getFragment()->root->ip;
+        js_AbortRecording(cx, "No compatible inner tree");
+
+        f = empty;
+        if (!f) {
+            f = getAnchor(tm, cx->fp->regs->pc, globalShape);
+            if (!f) {
+                js_FlushJITCache(cx);
+                return false;
+            }
+        }
+        return js_RecordTree(cx, tm, f, outer, globalShape, globalSlots);
+    }
+
+    r->prepareTreeCall(f);
+    VMSideExit* innermostNestedGuard = NULL;
+    VMSideExit* lr = js_ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
+    if (!lr || r->wasDeepAborted()) {
+        if (!lr)
+            js_AbortRecording(cx, "Couldn't call inner tree");
+        return false;
+    }
+
+    jsbytecode* outer = (jsbytecode*)tm->recorder->getFragment()->root->ip;
+    switch (lr->exitType) {
+      case LOOP_EXIT:
+        /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
+        if (innermostNestedGuard) {
+            js_AbortRecording(cx, "Inner tree took different side exit, abort current "
+                              "recording and grow nesting tree");
+            return js_AttemptToExtendTree(cx, innermostNestedGuard, lr, outer);
+        }
+        /* emit a call to the inner tree and continue recording the outer tree trace */
+        r->emitTreeCall(f, lr);
+        return true;
+      case UNSTABLE_LOOP_EXIT:
+        /* abort recording so the inner loop can become type stable. */
+        js_AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
+        return js_AttemptToStabilizeTree(cx, lr, outer);
+      case BRANCH_EXIT:
+        /* abort recording the outer tree, extend the inner tree */
+        js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
+        return js_AttemptToExtendTree(cx, lr, NULL, outer);
+      default:
+        debug_only_v(printf("exit_type=%d\n", lr->exitType);)
+            js_AbortRecording(cx, "Inner tree not suitable for calling");
+        return false;
+    }
 }
 
 static bool
@@ -4340,11 +4278,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 JS_REQUIRES_STACK JSMonitorRecordingStatus
 TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 {
-    if (tr->lirbuf->outOMem()) {
-        js_AbortRecording(cx, "no more LIR memory");
-        js_FlushJITCache(cx);
-        return JSMRS_STOP;
-    }
+    JS_ASSERT(!tr->fragment->lastIns);
 
     /* Process deepAbort() requests now. */
     if (tr->wasDeepAborted()) {
@@ -4352,49 +4286,17 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return JSMRS_STOP;
     }
 
-    if (tr->walkedOutOfLoop()) {
-        if (!js_CloseLoop(cx))
-            return JSMRS_STOP;
-    } else {
-        /* Clear one-shot state used to communicate between record_JSOP_CALL and post-
-           opcode-case-guts record hook (record_FastNativeCallComplete). */
-        tr->pendingTraceableNative = NULL;
+    /*
+     * Clear one-shot state used to communicate between record_JSOP_CALL and post-
+     * opcode-case-guts record hook (record_FastNativeCallComplete).
+     */
+    tr->pendingTraceableNative = NULL;
 
-        jsbytecode* pc = cx->fp->regs->pc;
-
-        /* If we hit a break, end the loop and generate an always taken loop exit guard.
-           For other downward gotos (like if/else) continue recording. */
-        if (*pc == JSOP_GOTO || *pc == JSOP_GOTOX) {
-            jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
-            if (sn && SN_TYPE(sn) == SRC_BREAK) {
-                AUDIT(breakLoopExits);
-                tr->endLoop(&JS_TRACE_MONITOR(cx));
-                js_DeleteRecorder(cx);
-                return JSMRS_STOP; /* done recording */
-            }
-        }
-
-        /* An explicit return from callDepth 0 should end the loop, not abort it. */
-        if (*pc == JSOP_RETURN && tr->callDepth == 0) {
-            AUDIT(returnLoopExits);
-            tr->endLoop(&JS_TRACE_MONITOR(cx));
-            js_DeleteRecorder(cx);
-            return JSMRS_STOP; /* done recording */
-        }
-
-#ifdef NANOJIT_IA32
-        /* Handle tableswitches specially -- prepare a jump table if needed. */
-        if (*pc == JSOP_TABLESWITCH || *pc == JSOP_TABLESWITCHX) {
-            LIns* guardIns = tr->tableswitch();
-            if (guardIns) {
-                tr->fragment->lastIns = guardIns;
-                tr->compile(&JS_TRACE_MONITOR(cx));
-                js_DeleteRecorder(cx);
-                return JSMRS_STOP;
-            }
-        }
-#endif
-    }
+    debug_only_v(js_Disassemble1(cx, cx->fp->script, cx->fp->regs->pc,
+                                 (cx->fp->imacpc)
+                                 ? 0
+                                 : cx->fp->regs->pc - cx->fp->script->code,
+                                 !cx->fp->imacpc, stdout);)
 
     /* If op is not a break or a return from a loop, continue recording and follow the
        trace. We check for imacro-calling bytecodes inside each switch case to resolve
@@ -4402,15 +4304,9 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 
     bool flag;
     switch (op) {
-      default: goto abort_recording;
+      default: goto stop_recording;
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
       case x:                                                                 \
-        debug_only_v(                                                         \
-            js_Disassemble1(cx, cx->fp->script, cx->fp->regs->pc,             \
-                            (cx->fp->imacpc)                                  \
-                            ? 0                                               \
-                            : cx->fp->regs->pc - cx->fp->script->code,        \
-                            !cx->fp->imacpc, stdout);)                        \
         flag = tr->record_##x();                                              \
         if (JSOP_IS_IMACOP(x))                                                \
             goto imacro;                                                      \
@@ -4419,9 +4315,27 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 # undef OPDEF
     }
 
+    /* Process deepAbort() requests now. */
+    if (tr->wasDeepAborted()) {
+        js_AbortRecording(cx, "deep abort requested");
+        return JSMRS_STOP;
+    }
+
+    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error()) {
+        js_AbortRecording(cx, "error during recording");
+        return JSMRS_STOP;
+    }
+
+    if (tr->lirbuf->outOMem()) {
+        js_AbortRecording(cx, "no more LIR memory");
+        js_FlushJITCache(cx);
+        return JSMRS_STOP;
+    }
+
     if (flag)
         return JSMRS_CONTINUE;
-    goto abort_recording;
+
+    goto stop_recording;
 
   imacro:
     /* We save macro-generated code size also via bool TraceRecorder::record_JSOP_*
@@ -4436,7 +4350,14 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return JSMRS_IMACRO;
     }
 
-  abort_recording:
+  stop_recording:
+    /* If we recorded the end of the trace, destroy the recorder now. */
+    if (tr->fragment->lastIns) {
+        js_DeleteRecorder(cx);
+        return JSMRS_STOP;
+    }
+
+    /* Looks like we encountered an error condition. Abort recording. */
     js_AbortRecording(cx, js_CodeName[op]);
     return JSMRS_STOP;
 }
@@ -5107,15 +5028,11 @@ TraceRecorder::ifop()
     bool cond;
     LIns* x;
 
-    /* No need to guard if condition is constant. */
-    if (v_ins->isconst() || v_ins->isconstq())
-        return true;
-
-    /* No need to guard if type strictly determines true or false value. */
-    if (JSVAL_TAG(v) == JSVAL_OBJECT)
-        return true;
-
-    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+    /* Objects always evaluate to true since we specialize the Null type on trace. */
+    if (JSVAL_TAG(v) == JSVAL_OBJECT) {
+        cond = true;
+        x = lir->insImm(1);
+    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         /* Test for boolean is true, negate later if we are testing for false. */
         cond = JSVAL_TO_PSEUDO_BOOLEAN(v) == JS_TRUE;
         x = lir->ins2i(LIR_eq, v_ins, 1);
@@ -5136,9 +5053,10 @@ TraceRecorder::ifop()
         JS_NOT_REACHED("ifop");
         return false;
     }
-    flipIf(cx->fp->regs->pc, cond);
-    guard(cond, x, BRANCH_EXIT);
-    return true;
+
+    jsbytecode* pc = cx->fp->regs->pc;
+    emitIf(pc, cond, x);
+    return checkTraceEnd(pc);
 }
 
 #ifdef NANOJIT_IA32
@@ -5501,13 +5419,22 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
         cond = !cond;
     }
 
+    jsbytecode* pc = cx->fp->regs->pc;
+
     /*
      * Don't guard if the same path is always taken.  If it isn't, we have to
      * fuse comparisons and the following branch, because the interpreter does
      * that.
      */
-    if (tryBranchAfterCond && !x->isconst())
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
+    if (tryBranchAfterCond)
+        fuseIf(pc + 1, cond, x);
+
+    /*
+     * There is no need to write out the result of this comparison if the trace
+     * ends on this operation.
+     */
+    if ((pc[1] == JSOP_IFNE || pc[1] == JSOP_IFEQ) && !checkTraceEnd(pc + 1))
+        return false;
 
     /*
      * We update the stack after the guard. This is safe since the guard bails
@@ -5516,6 +5443,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
      * calculated and saved on the stack in most cases.
      */
     set(&rval, x);
+
     return true;
 }
 
@@ -5621,13 +5549,22 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     }
     x = lir->ins2(op, l_ins, r_ins);
 
+    jsbytecode* pc = cx->fp->regs->pc;
+
     /*
      * Don't guard if the same path is always taken.  If it isn't, we have to
      * fuse comparisons and the following branch, because the interpreter does
      * that.
      */
-    if (tryBranchAfterCond && !x->isconst())
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
+    if (tryBranchAfterCond)
+        fuseIf(pc + 1, cond, x);
+
+    /*
+     * There is no need to write out the result of this comparison if the trace
+     * ends on this operation.
+     */
+    if ((pc[1] == JSOP_IFNE || pc[1] == JSOP_IFEQ) && !checkTraceEnd(pc + 1))
+        return false;
 
     /*
      * We update the stack after the guard. This is safe since the guard bails
@@ -5636,6 +5573,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
      * calculated and saved on the stack in most cases.
      */
     set(&l, x);
+
     return true;
 }
 
@@ -6282,6 +6220,14 @@ TraceRecorder::record_JSOP_LEAVEWITH()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_RETURN()
 {
+    /* A return from callDepth 0 terminates the current loop. */
+    if (callDepth == 0) {
+        AUDIT(returnLoopExits);
+        endLoop(traceMonitor);
+        return false;
+    }
+
+    /* If we inlined this function call, make the return value available to the caller code. */
     jsval& rval = stackval(-1);
     JSStackFrame *fp = cx->fp;
     if ((cx->fp->flags & JSFRAME_CONSTRUCTING) && JSVAL_IS_PRIMITIVE(rval)) {
@@ -6292,12 +6238,24 @@ TraceRecorder::record_JSOP_RETURN()
     }
     debug_only_v(printf("returning from %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom));)
     clearFrameSlotsFromCache();
+
     return true;
 }
 
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GOTO()
 {
+    /*
+     * If we hit a break, end the loop and generate an always taken loop exit guard.
+     * For other downward gotos (like if/else) continue recording.
+     */
+    jssrcnote* sn = js_GetSrcNote(cx->fp->script, cx->fp->regs->pc);
+
+    if (sn && SN_TYPE(sn) == SRC_BREAK) {
+        AUDIT(breakLoopExits);
+        endLoop(traceMonitor);
+        return false;
+    }
     return true;
 }
 
@@ -8158,7 +8116,13 @@ JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
 #ifdef NANOJIT_IA32
-    return true;
+    /* Handle tableswitches specially -- prepare a jump table if needed. */
+    LIns* guardIns = tableswitch();
+    if (guardIns) {
+        fragment->lastIns = guardIns;
+        compile(&JS_TRACE_MONITOR(cx));
+    }
+    return false;
 #else
     return switchop();
 #endif
@@ -8746,7 +8710,7 @@ TraceRecorder::record_JSOP_DEFLOCALFUN()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_GOTOX()
 {
-    return true;
+    return record_JSOP_GOTO();
 }
 
 JS_REQUIRES_STACK bool
@@ -8795,11 +8759,7 @@ TraceRecorder::record_JSOP_DEFAULTX()
 JS_REQUIRES_STACK bool
 TraceRecorder::record_JSOP_TABLESWITCHX()
 {
-#ifdef NANOJIT_IA32
-    return true;
-#else
-    return switchop();
-#endif
+    return record_JSOP_TABLESWITCH();
 }
 
 JS_REQUIRES_STACK bool
