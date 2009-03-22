@@ -68,141 +68,229 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
-#ifdef JS_THREADSAFE
-#include "prtypes.h"
+static void
+FreeContext(JSContext *cx);
 
-/*
- * The index for JSThread info, returned by PR_NewThreadPrivateIndex.  The
- * index value is visible and shared by all threads, but the data associated
- * with it is private to each thread.
- */
-static PRUintn threadTPIndex;
-static JSBool  tpIndexInited = JS_FALSE;
-
-JS_BEGIN_EXTERN_C
-JSBool
-js_InitThreadPrivateIndex(void (*ptr)(void *))
+static void
+InitThreadData(JSThreadData *data)
 {
-    PRStatus status;
-
-    if (tpIndexInited)
-        return JS_TRUE;
-
-    status = PR_NewThreadPrivateIndex(&threadTPIndex, ptr);
-
-    if (status == PR_SUCCESS)
-        tpIndexInited = JS_TRUE;
-    return status == PR_SUCCESS;
+#ifdef DEBUG
+    /* The data must be already zeroed. */
+    for (size_t i = 0; i != sizeof(*data); ++i)
+        JS_ASSERT(reinterpret_cast<uint8*>(data)[i] == 0);
+#endif
+#ifdef JS_TRACER
+    js_InitJIT(&data->traceMonitor);
+#endif
 }
-JS_END_EXTERN_C
 
-JS_BEGIN_EXTERN_C
-JSBool
-js_CleanupThreadPrivateData()
+static void
+FinishThreadData(JSThreadData *data)
 {
-    if (!tpIndexInited)
-        return JS_TRUE;
-    return PR_SetThreadPrivate(threadTPIndex, NULL) == PR_SUCCESS;
+#ifdef DEBUG
+    /* All GC-related things must be already removed at this point. */
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(data->scriptsToGC); ++i)
+        JS_ASSERT(!data->scriptsToGC[i]);
+#endif
+
+    js_FinishGSNCache(&data->gsnCache);
+    js_FinishPropertyCache(&data->propertyCache);
+#if defined JS_TRACER
+    js_FinishJIT(&data->traceMonitor);
+#endif
 }
-JS_END_EXTERN_C
 
-/*
- * Callback function to delete a JSThread info when the thread that owns it
- * is destroyed.
- */
-void
-js_ThreadDestructorCB(void *ptr)
+static void
+PurgeThreadData(JSContext *cx, JSThreadData *data)
 {
-    JSThread *thread = (JSThread *)ptr;
-
-    if (!thread)
-        return;
+# ifdef JS_TRACER
+    JSTraceMonitor *tm = &data->traceMonitor;
+    tm->reservedDoublePoolPtr = tm->reservedDoublePool;
+    tm->needFlush = JS_TRUE;
 
     /*
-     * Check that this thread properly called either JS_DestroyContext or
-     * JS_ClearContextThread on each JSContext it created or used.
+     * We want to keep tm->reservedObjects after the GC. So we don't purge
+     * them here and rather mark them during the GC, see MarkReservedObjects
+     * in jsgc.cpp.
      */
-    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
-    GSN_CACHE_CLEAR(&thread->gsnCache);
-#if defined JS_TRACER
-    js_FinishJIT(&thread->traceMonitor);
-#endif
-    free(thread);
+# endif
+
+    /* Destroy eval'ed scripts. */
+    js_DestroyScriptsToGC(cx, data);
+
+    js_PurgeGSNCache(&data->gsnCache);
+    js_PurgePropertyCache(cx, &data->propertyCache);
 }
 
-/*
- * Get current thread-local JSThread info, creating one if it doesn't exist.
- * Each thread has a unique JSThread pointer.
- *
- * Since we are dealing with thread-local data, no lock is needed.
- *
- * Return a pointer to the thread local info, NULL if the system runs out
- * of memory, or it failed to set thread private data (neither case is very
- * likely; both are probably due to out-of-memory).  It is up to the caller
- * to report an error, if possible.
- */
-JSThread *
-js_GetCurrentThread(JSRuntime *rt)
+#ifdef JS_THREADSAFE
+
+static JSThread *
+NewThread(jsword id)
 {
-    JSThread *thread;
-
-    thread = (JSThread *)PR_GetThreadPrivate(threadTPIndex);
-    if (!thread) {
-        thread = (JSThread *) malloc(sizeof(JSThread));
-        if (!thread)
-            return NULL;
-#ifdef DEBUG
-        memset(thread, JS_FREE_PATTERN, sizeof(JSThread));
-#endif
-        if (PR_FAILURE == PR_SetThreadPrivate(threadTPIndex, thread)) {
-            free(thread);
-            return NULL;
-        }
-
-        JS_INIT_CLIST(&thread->contextList);
-        thread->id = js_CurrentThreadId();
-        thread->gcMallocBytes = 0;
-#ifdef JS_TRACER
-        memset(&thread->traceMonitor, 0, sizeof(thread->traceMonitor));
-        js_InitJIT(&thread->traceMonitor);
-#endif
-        memset(thread->scriptsToGC, 0, sizeof thread->scriptsToGC);
-
-        /*
-         * js_InitContextThread initializes the remaining fields as necessary.
-         */
-    }
+    JS_ASSERT(js_CurrentThreadId() == id);
+    JSThread *thread = (JSThread *) calloc(1, sizeof(JSThread));
+    if (!thread)
+        return NULL;
+    JS_INIT_CLIST(&thread->contextList);
+    thread->id = id;
+    InitThreadData(&thread->data);
     return thread;
 }
 
-/*
- * Sets current thread as owning thread of a context by assigning the
- * thread-private info to the context.
- */
-void
-js_InitContextThread(JSContext *cx, JSThread *thread)
+static void
+DestroyThread(JSThread *thread)
 {
-    JS_ASSERT(CURRENT_THREAD_IS_ME(thread));
+    /* The thread must have zero contexts. */
+    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+    FinishThreadData(&thread->data);
+    free(thread);
+}
+
+JSBool
+js_InitContextThread(JSContext *cx)
+{
     JS_ASSERT(!cx->thread);
-    JS_ASSERT(cx->requestDepth == 0);
+    jsword id = js_CurrentThreadId();
+    JSRuntime *rt = cx->runtime;
+    JS_LOCK_GC(rt);
 
     /*
-     * Clear caches on each transition from 0 to 1 context active on the
-     * current thread. See bug 425828.
+     * We must not race with a GC that accesses cx->thread for JSContext
+     * instances on all threads, see bug 476934.
      */
-    if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
-        memset(&thread->gsnCache, 0, sizeof thread->gsnCache);
-        memset(&thread->propertyCache, 0, sizeof thread->propertyCache);
-#ifdef DEBUG
-        memset(&thread->evalCacheMeter, 0, sizeof thread->evalCacheMeter);
-#endif
+    js_WaitForGC(rt);
+    JSThreadsHashEntry *entry = (JSThreadsHashEntry *)
+                                JS_DHashTableOperate(&rt->threads,
+                                                     (const void *) id,
+                                                     JS_DHASH_LOOKUP);
+    JSThread *thread;
+    if (JS_DHASH_ENTRY_IS_BUSY(&entry->base)) {
+        thread = entry->thread;
+        JS_ASSERT(thread->id == id);
+    } else {
+        JS_UNLOCK_GC(rt);
+        thread = NewThread(id);
+        if (!thread)
+            return false;
+        JS_LOCK_GC(rt);
+        js_WaitForGC(rt);
+        entry = (JSThreadsHashEntry *)
+                JS_DHashTableOperate(&rt->threads, (const void *) id,
+                                     JS_DHASH_ADD);
+        if (!entry) {
+            JS_UNLOCK_GC(rt);
+            DestroyThread(thread);
+            return false;
+        }
+
+        /* Another thread cannot initialize entry->thread. */
+        JS_ASSERT(!entry->thread);
+        entry->thread = thread;
     }
 
     JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
     cx->thread = thread;
+    return true;
+}
+
+void
+js_ClearContextThread(JSContext *cx)
+{
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
+    cx->thread = NULL;
+}
+
+static JSBool
+thread_matchEntry(JSDHashTable *table,
+                  const JSDHashEntryHdr *hdr,
+                  const void *key)
+{
+    const JSThreadsHashEntry *entry = (const JSThreadsHashEntry *) hdr;
+
+    return entry->thread->id == (jsword) key;
+}
+
+static const JSDHashTableOps threads_ops = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    JS_DHashVoidPtrKeyStub,
+    thread_matchEntry,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
+
+static JSDHashOperator
+thread_destroyer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
+                 void * /* arg */)
+{
+    JSThreadsHashEntry *entry = (JSThreadsHashEntry *) hdr;
+    JSThread *thread = entry->thread;
+
+    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+    DestroyThread(thread);
+    return JS_DHASH_REMOVE;
+}
+
+static JSDHashOperator
+thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
+              void *arg)
+{
+    JSContext* cx = (JSContext *) arg;
+    JSThread *thread = ((JSThreadsHashEntry *) hdr)->thread;
+
+    if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
+        JS_ASSERT(cx->thread != thread);
+        js_DestroyScriptsToGC(cx, &thread->data);
+        DestroyThread(thread);
+        return JS_DHASH_REMOVE;
+    }
+    PurgeThreadData(cx, &thread->data);
+    return JS_DHASH_NEXT;
 }
 
 #endif /* JS_THREADSAFE */
+
+JSBool
+js_InitThreads(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    if (!JS_DHashTableInit(&rt->threads, &threads_ops, NULL,
+                           sizeof(JSThreadsHashEntry), 4)) {
+        rt->threads.ops = NULL;
+        return false;
+    }
+#else
+    InitThreadData(&rt->threadData);
+#endif
+    return true;
+}
+
+void
+js_FinishThreads(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    if (!rt->threads.ops)
+        return;
+    JS_DHashTableEnumerate(&rt->threads, thread_destroyer, NULL);
+    JS_DHashTableFinish(&rt->threads);
+    rt->threads.ops = NULL;
+#else
+    FinishThreadData(&rt->threadData);
+#endif
+}
+
+void
+js_PurgeThreads(JSContext *cx)
+{
+#ifdef JS_THREADSAFE
+    JS_DHashTableEnumerate(&cx->runtime->threads, thread_purger, cx);
+#else
+    PurgeThreadData(cx, &cx->runtime->threadData);
+#endif
+}
 
 /*
  * JSOPTION_XML and JSOPTION_ANONFUNFIX must be part of the JS version
@@ -260,12 +348,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JSContext *cx;
     JSBool ok, first;
     JSContextCallback cxCallback;
-#ifdef JS_THREADSAFE
-    JSThread *thread = js_GetCurrentThread(rt);
-
-    if (!thread)
-        return NULL;
-#endif
 
     /*
      * We need to initialize the new context fully before adding it to the
@@ -284,7 +366,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 #ifdef JS_THREADSAFE
     cx->gcLocalFreeLists = (JSGCFreeListSet *) &js_GCEmptyFreeListSet;
-    js_InitContextThread(cx, thread);
 #endif
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->version == JSVERSION_DEFAULT);
@@ -299,12 +380,18 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     js_InitRegExpStatics(cx);
     JS_ASSERT(cx->resolveFlags == 0);
 
-    JS_LOCK_GC(rt);
+#ifdef JS_THREADSAFE
+    if (!js_InitContextThread(cx)) {
+        FreeContext(cx);
+        return NULL;
+    }
+#endif
+
+    /*
+     * Here the GC lock is still held after js_InitContextThread took it and
+     * the GC is not running on another thread.
+     */
     for (;;) {
-        /*
-         * Ensure that we don't race with the GC on other threads, bug 478336.
-         */
-        js_WaitForGC(rt);
         if (rt->state == JSRTS_UP) {
             JS_ASSERT(!JS_CLIST_IS_EMPTY(&rt->contextList));
             first = JS_FALSE;
@@ -317,6 +404,15 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             break;
         }
         JS_WAIT_CONDVAR(rt->stateChange, JS_NO_TIMEOUT);
+
+        /*
+         * During the above wait after we are notified about the state change
+         * but before we wake up, another thread could enter the GC from
+         * js_DestroyContext, bug 478336. So we must wait here to ensure that
+         * when we exit the loop with the first flag set to true, that GC is
+         * finished.
+         */
+        js_WaitForGC(rt);
     }
     JS_APPEND_LINK(&cx->link, &rt->contextList);
     JS_UNLOCK_GC(rt);
@@ -403,7 +499,7 @@ DumpEvalCacheMeter(JSContext *cx)
         EVAL_CACHE_METER_LIST(frob)
 #undef frob
     };
-    JSEvalCacheMeter *ecm = &JS_CACHE_LOCUS(cx)->evalCacheMeter;
+    JSEvalCacheMeter *ecm = &JS_THREAD_DATA(cx)->evalCacheMeter;
 
     static AutoFile fp;
     if (!fp) {
@@ -438,9 +534,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JSRuntime *rt;
     JSContextCallback cxCallback;
     JSBool last;
-    JSArgumentFormatMap *map;
-    JSLocalRootStack *lrs;
-    JSLocalRootChunk *lrc;
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
@@ -477,73 +570,99 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     last = (rt->contextList.next == &rt->contextList);
     if (last)
         rt->state = JSRTS_LANDING;
-    JS_UNLOCK_GC(rt);
-
-    if (last) {
+    if (last || mode == JSDCM_FORCE_GC || mode == JSDCM_MAYBE_GC
 #ifdef JS_THREADSAFE
-        /*
-         * If cx is not in a request already, begin one now so that we wait
-         * for any racing GC started on a not-last context to finish, before
-         * we plow ahead and unpin atoms.  Note that even though we begin a
-         * request here if necessary, we end all requests on cx below before
-         * forcing a final GC.  This lets any not-last context destruction
-         * racing in another thread try to force or maybe run the GC, but by
-         * that point, rt->state will not be JSRTS_UP, and that GC attempt
-         * will return early.
-         */
-        if (cx->requestDepth == 0)
-            JS_BeginRequest(cx);
+        || cx->requestDepth != 0
 #endif
-
-        /* Unlock and clear GC things held by runtime pointers. */
-        js_FinishRuntimeNumberState(cx);
-        js_FinishRuntimeStringState(cx);
-
-        /* Unpin all common atoms before final GC. */
-        js_FinishCommonAtoms(cx);
-
-        /* Clear debugging state to remove GC roots. */
-        JS_ClearAllTraps(cx);
-        JS_ClearAllWatchPoints(cx);
-    }
-
-    /* Remove more GC roots in regExpStatics, then collect garbage. */
-    JS_ClearRegExpRoots(cx);
-
-#ifdef JS_THREADSAFE
-    /*
-     * Destroying a context implicitly calls JS_EndRequest().  Also, we must
-     * end our request here in case we are "last" -- in that event, another
-     * js_DestroyContext that was not last might be waiting in the GC for our
-     * request to end.  We'll let it run below, just before we do the truly
-     * final GC and then free atom state.
-     */
-    while (cx->requestDepth != 0)
-        JS_EndRequest(cx);
-#endif
-
-    if (last) {
-        js_GC(cx, GC_LAST_CONTEXT);
-        DUMP_EVAL_CACHE_METER(cx);
-
-        /*
-         * Free the script filename table if it exists and is empty. Do this
-         * after the last GC to avoid finalizers tripping on free memory.
-         */
-        if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
-            js_FinishRuntimeScriptState(rt);
-
-        /* Take the runtime down, now that it has no contexts or atoms. */
-        JS_LOCK_GC(rt);
-        rt->state = JSRTS_DOWN;
-        JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+        ) {
         JS_UNLOCK_GC(rt);
-    } else {
-        if (mode == JSDCM_FORCE_GC)
-            js_GC(cx, GC_NORMAL);
-        else if (mode == JSDCM_MAYBE_GC)
-            JS_MaybeGC(cx);
+
+        if (last) {
+#ifdef JS_THREADSAFE
+            /*
+             * If cx is not in a request already, begin one now so that we wait
+             * for any racing GC started on a not-last context to finish, before
+             * we plow ahead and unpin atoms.  Note that even though we begin a
+             * request here if necessary, we end all requests on cx below before
+             * forcing a final GC.  This lets any not-last context destruction
+             * racing in another thread try to force or maybe run the GC, but by
+             * that point, rt->state will not be JSRTS_UP, and that GC attempt
+             * will return early.
+             */
+            if (cx->requestDepth == 0)
+                JS_BeginRequest(cx);
+#endif
+
+            /* Unlock and clear GC things held by runtime pointers. */
+            js_FinishRuntimeNumberState(cx);
+            js_FinishRuntimeStringState(cx);
+
+            /* Unpin all common atoms before final GC. */
+            js_FinishCommonAtoms(cx);
+
+            /* Clear debugging state to remove GC roots. */
+            JS_ClearAllTraps(cx);
+            JS_ClearAllWatchPoints(cx);
+        }
+
+        /* Remove more GC roots in regExpStatics, then collect garbage. */
+        JS_ClearRegExpRoots(cx);
+
+#ifdef JS_THREADSAFE
+        /*
+         * Destroying a context implicitly calls JS_EndRequest().  Also, we must
+         * end our request here in case we are "last" -- in that event, another
+         * js_DestroyContext that was not last might be waiting in the GC for our
+         * request to end.  We'll let it run below, just before we do the truly
+         * final GC and then free atom state.
+         */
+        while (cx->requestDepth != 0)
+            JS_EndRequest(cx);
+#endif
+
+        if (last) {
+            js_GC(cx, GC_LAST_CONTEXT);
+            DUMP_EVAL_CACHE_METER(cx);
+
+            /*
+             * Free the script filename table if it exists and is empty. Do this
+             * after the last GC to avoid finalizers tripping on free memory.
+             */
+            if (rt->scriptFilenameTable &&
+                rt->scriptFilenameTable->nentries == 0) {
+                js_FinishRuntimeScriptState(rt);
+            }
+
+            /* Take the runtime down, now that it has no contexts or atoms. */
+            JS_LOCK_GC(rt);
+            rt->state = JSRTS_DOWN;
+            JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+        } else {
+            if (mode == JSDCM_FORCE_GC)
+                js_GC(cx, GC_NORMAL);
+            else if (mode == JSDCM_MAYBE_GC)
+                JS_MaybeGC(cx);
+            JS_LOCK_GC(rt);
+            js_WaitForGC(rt);
+        }
     }
+#ifdef JS_THREADSAFE
+    js_ClearContextThread(cx);
+#endif
+    JS_UNLOCK_GC(rt);
+    FreeContext(cx);
+}
+
+static void
+FreeContext(JSContext *cx)
+{
+    JSArgumentFormatMap *map;
+    JSLocalRootStack *lrs;
+    JSLocalRootChunk *lrc;
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!cx->thread);
+#endif
 
     /* Free the stuff hanging off of cx. */
     js_FreeRegExpStatics(cx);
@@ -576,16 +695,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         }
         JS_free(cx, lrs);
     }
-
-#ifdef JS_THREADSAFE
-    /*
-     * Since cx is not on rt->contextList, it cannot be accessed by the GC
-     * running on another thread. Thus, compared with JS_ClearContextThread,
-     * we can safely unlink cx from from JSThread.contextList without taking
-     * the GC lock.
-     */
-    JS_REMOVE_LINK(&cx->threadLinks);
-#endif
 
     /* Finally, free cx itself. */
     free(cx);
