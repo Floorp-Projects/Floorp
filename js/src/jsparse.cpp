@@ -996,29 +996,6 @@ struct BindData {
 };
 
 static JSBool
-BindArg(JSContext *cx, JSAtom *atom, JSTreeContext *tc)
-{
-    const char *name;
-
-    /*
-     * Check for a duplicate parameter name, a "feature" required by ECMA-262.
-     */
-    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
-    if (js_LookupLocal(cx, tc->u.fun, atom, NULL) != JSLOCAL_NONE) {
-        name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), NULL,
-                                         JSREPORT_WARNING | JSREPORT_STRICT,
-                                         JSMSG_DUPLICATE_FORMAL,
-                                         name)) {
-            return JS_FALSE;
-        }
-    }
-
-    return js_AddLocal(cx, tc->u.fun, atom, JSLOCAL_ARG);
-}
-
-static JSBool
 BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
                   JSLocalKind localKind)
 {
@@ -1049,7 +1026,6 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
                      JSTreeContext *tc)
 {
     JSAtomListElement *ale;
-    const char *name;
 
     JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
@@ -1061,19 +1037,11 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     }
 
     if (js_LookupLocal(cx, tc->u.fun, atom, NULL) != JSLOCAL_NONE) {
-        name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
-                                         JSREPORT_WARNING | JSREPORT_STRICT,
-                                         JSMSG_DUPLICATE_FORMAL,
-                                         name)) {
-            return JS_FALSE;
-        }
-    } else {
-        if (!BindLocalVariable(cx, tc->u.fun, atom, JSLOCAL_VAR))
-            return JS_FALSE;
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), NULL,
+                                    JSREPORT_ERROR, JSMSG_DESTRUCT_DUP_ARG);
+        return JS_FALSE;
     }
-    return JS_TRUE;
+    return BindLocalVariable(cx, tc->u.fun, atom, JSLOCAL_VAR);
 }
 #endif /* JS_HAS_DESTRUCTURING */
 
@@ -1130,6 +1098,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSTreeContext funtc;
 #if JS_HAS_DESTRUCTURING
     JSParseNode *item, *list = NULL;
+    bool destructuringArg = false, duplicatedArg = false;
 #endif
 
     /* Make a TOK_FUNCTION node. */
@@ -1254,6 +1223,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 JSParseNode *lhs, *rhs;
                 jsint slot;
 
+                /* See comment below in the TOK_NAME case. */
+                if (duplicatedArg)
+                    goto report_dup_and_destructuring;
+                destructuringArg = true;
+
                 /*
                  * A destructuring formal parameter turns into one or more
                  * local variables initialized from properties of a single
@@ -1304,14 +1278,48 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif /* JS_HAS_DESTRUCTURING */
 
               case TOK_NAME:
-                if (!BindArg(cx, CURRENT_TOKEN(ts).t_atom, &funtc))
+              {
+                /*
+                 * Check for a duplicate parameter name, a "feature" that
+                 * ECMA-262 requires. Still if any argument is a destructuring
+                 * pattern, we will report error either now or later, when we
+                 * find the first pattern.
+                 */
+                JSAtom *atom = CURRENT_TOKEN(ts).t_atom;
+                if (js_LookupLocal(cx, fun, atom, NULL) != JSLOCAL_NONE) {
+#if JS_HAS_DESTRUCTURING
+                    if (destructuringArg)
+                        goto report_dup_and_destructuring;
+                    duplicatedArg = true;
+#endif
+                    const char *name = js_AtomToPrintableString(cx, atom);
+                    if (!name ||
+                        !js_ReportCompileErrorNumber(cx, TS(tc->parseContext),
+                                                     NULL,
+                                                     JSREPORT_WARNING |
+                                                     JSREPORT_STRICT,
+                                                     JSMSG_DUPLICATE_FORMAL,
+                                                     name)) {
+                        return NULL;
+                    }
+                }
+                if (!js_AddLocal(cx, fun, atom, JSLOCAL_ARG))
                     return NULL;
                 break;
+              }
 
               default:
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_MISSING_FORMAL);
                 return NULL;
+
+#if JS_HAS_DESTRUCTURING
+              report_dup_and_destructuring:
+                js_ReportCompileErrorNumber(cx, TS(tc->parseContext), NULL,
+                                            JSREPORT_ERROR,
+                                            JSMSG_DESTRUCT_DUP_ARG);
+                return NULL;
+#endif
             }
         } while (js_MatchToken(cx, ts, TOK_COMMA));
 
