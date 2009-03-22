@@ -72,25 +72,20 @@ typedef struct JSGSNCache {
     uint32          hits;
     uint32          misses;
     uint32          fills;
-    uint32          clears;
+    uint32          purges;
 # define GSN_CACHE_METER(cache,cnt) (++(cache)->cnt)
 #else
 # define GSN_CACHE_METER(cache,cnt) /* nothing */
 #endif
 } JSGSNCache;
 
-#define GSN_CACHE_CLEAR(cache)                                                \
-    JS_BEGIN_MACRO                                                            \
-        (cache)->code = NULL;                                                 \
-        if ((cache)->table.ops) {                                             \
-            JS_DHashTableFinish(&(cache)->table);                             \
-            (cache)->table.ops = NULL;                                        \
-        }                                                                     \
-        GSN_CACHE_METER(cache, clears);                                       \
-    JS_END_MACRO
+#define js_FinishGSNCache(cache) js_PurgeGSNCache(cache)
+
+extern void
+js_PurgeGSNCache(JSGSNCache *cache);
 
 /* These helper macros take a cx as parameter and operate on its GSN cache. */
-#define JS_CLEAR_GSN_CACHE(cx)      GSN_CACHE_CLEAR(&JS_GSN_CACHE(cx))
+#define JS_PURGE_GSN_CACHE(cx)      js_PurgeGSNCache(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
 typedef struct InterpState InterpState;
@@ -125,7 +120,7 @@ struct GlobalState {
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
  * frequencies for all JavaScript code loaded into that runtime.
  */
-typedef struct JSTraceMonitor {
+struct JSTraceMonitor {
     /*
      * Flag set when running (or recording) JIT-compiled code. This prevents
      * both interpreter activation and last-ditch garbage collection when up
@@ -176,7 +171,7 @@ typedef struct JSTraceMonitor {
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
-} JSTraceMonitor;
+};
 
 typedef struct InterpStruct InterpStruct;
 
@@ -206,10 +201,30 @@ typedef struct JSEvalCacheMeter {
 } JSEvalCacheMeter;
 
 # undef ID
-# define DECLARE_EVAL_CACHE_METER   JSEvalCacheMeter evalCacheMeter;
-#else
-# define DECLARE_EVAL_CACHE_METER   /* nothing */
 #endif
+
+struct JSThreadData {
+    /*
+     * The GSN cache is per thread since even multi-cx-per-thread embeddings
+     * do not interleave js_GetSrcNote calls.
+     */
+    JSGSNCache          gsnCache;
+
+    /* Property cache for faster call/get/set invocation. */
+    JSPropertyCache     propertyCache;
+
+#ifdef JS_TRACER
+    /* Trace-tree JIT recorder/interpreter state. */
+    JSTraceMonitor      traceMonitor;
+#endif
+
+    /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
+
+#ifdef JS_EVAL_CACHE_METERING
+    JSEvalCacheMeter    evalCacheMeter;
+#endif
+};
 
 #ifdef JS_THREADSAFE
 
@@ -230,39 +245,29 @@ struct JSThread {
      */
     uint32              gcMallocBytes;
 
-    /*
-     * Store the GSN cache in struct JSThread, not struct JSContext, both to
-     * save space and to simplify cleanup in js_GC.  Any embedding (Firefox
-     * or another Gecko application) that uses many contexts per thread is
-     * unlikely to interleave js_GetSrcNote-intensive loops in the decompiler
-     * among two or more contexts running script in one thread.
-     */
-    JSGSNCache          gsnCache;
-
-    /* Property cache for faster call/get/set invocation. */
-    JSPropertyCache     propertyCache;
-
-#ifdef JS_TRACER
-    /* Trace-tree JIT recorder/interpreter state. */
-    JSTraceMonitor      traceMonitor;
-#endif
-
-    /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
-    JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
-
-    DECLARE_EVAL_CACHE_METER
+    JSThreadData        data;
 };
 
-#define JS_CACHE_LOCUS(cx)      ((cx)->thread)
+#define JS_THREAD_DATA(cx)      (&(cx)->thread->data)
 
+struct JSThreadsHashEntry {
+    JSDHashEntryHdr     base;
+    JSThread            *thread;
+};
+
+/*
+ * The function takes the GC lock and does not release in successful return.
+ * On error (out of memory) the function releases the lock but delegates
+ * the error reporting to the caller.
+ */
+extern JSBool
+js_InitContextThread(JSContext *cx);
+
+/*
+ * On entrance the GC lock must be held and it will be held on exit.
+ */
 extern void
-js_ThreadDestructorCB(void *ptr);
-
-extern void
-js_InitContextThread(JSContext *cx, JSThread *thread);
-
-extern JSThread *
-js_GetCurrentThread(JSRuntime *rt);
+js_ClearContextThread(JSContext *cx);
 
 #endif /* JS_THREADSAFE */
 
@@ -474,6 +479,8 @@ struct JSRuntime {
      * case too.
      */
     PRLock              *debuggerLock;
+
+    JSDHashTable        threads;
 #endif /* JS_THREADSAFE */
     uint32              debuggerMutations;
 
@@ -523,26 +530,9 @@ struct JSRuntime {
     JSNativeEnumerator  *nativeEnumerators;
 
 #ifndef JS_THREADSAFE
-    /*
-     * For thread-unsafe embeddings, the GSN cache lives in the runtime and
-     * not each context, since we expect it to be filled once when decompiling
-     * a longer script, then hit repeatedly as js_GetSrcNote is called during
-     * the decompiler activation that filled it.
-     */
-    JSGSNCache          gsnCache;
+    JSThreadData        threadData;
 
-    /* Property cache for faster call/get/set invocation. */
-    JSPropertyCache     propertyCache;
-
-    /* Trace-tree JIT recorder/interpreter state. */
-    JSTraceMonitor      traceMonitor;
-
-    /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
-    JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
-
-    DECLARE_EVAL_CACHE_METER
-
-#define JS_CACHE_LOCUS(cx)      ((cx)->runtime)
+#define JS_THREAD_DATA(cx)      (&(cx)->runtime->threadData)
 #endif
 
     /*
@@ -652,13 +642,13 @@ struct JSRuntime {
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
-#define JS_GSN_CACHE(cx)        (JS_CACHE_LOCUS(cx)->gsnCache)
-#define JS_PROPERTY_CACHE(cx)   (JS_CACHE_LOCUS(cx)->propertyCache)
-#define JS_TRACE_MONITOR(cx)    (JS_CACHE_LOCUS(cx)->traceMonitor)
-#define JS_SCRIPTS_TO_GC(cx)    (JS_CACHE_LOCUS(cx)->scriptsToGC)
+#define JS_GSN_CACHE(cx)        (JS_THREAD_DATA(cx)->gsnCache)
+#define JS_PROPERTY_CACHE(cx)   (JS_THREAD_DATA(cx)->propertyCache)
+#define JS_TRACE_MONITOR(cx)    (JS_THREAD_DATA(cx)->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    (JS_THREAD_DATA(cx)->scriptsToGC)
 
 #ifdef JS_EVAL_CACHE_METERING
-# define EVAL_CACHE_METER(x)    (JS_CACHE_LOCUS(cx)->evalCacheMeter.x++)
+# define EVAL_CACHE_METER(x)    (JS_THREAD_DATA(cx)->evalCacheMeter.x++)
 #else
 # define EVAL_CACHE_METER(x)    ((void) 0)
 #endif
@@ -1142,22 +1132,14 @@ class JSAutoResolveFlags
 #define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
                                          JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
 
-/*
- * Initialize a library-wide thread private data index, and remember that it
- * has already been done, so that it happens only once ever.  Returns true on
- * success.
- */
 extern JSBool
-js_InitThreadPrivateIndex(void (*ptr)(void *));
+js_InitThreads(JSRuntime *rt);
 
-/*
- * Clean up thread-private data on the current thread. NSPR automatically
- * cleans up thread-private data for every thread except the main thread
- * (see bug 383977) on shutdown. Thus, this function should be called for 
- * exactly those threads that survive JS_ShutDown, including the main thread.
- */
-extern JSBool
-js_CleanupThreadPrivateData();
+extern void
+js_FinishThreads(JSRuntime *rt);
+
+extern void
+js_PurgeThreads(JSContext *cx);
 
 /*
  * Ensures the JSOPTION_XML and JSOPTION_ANONFUNFIX bits of cx->options are

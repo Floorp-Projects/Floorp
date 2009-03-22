@@ -1090,23 +1090,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = 0;
 
-    // Call XPCPerThreadData::GetData to initialize
-    // XPCPerThreadData::gTLSIndex before initializing
-    // JSRuntime::threadTPIndex in JS_NewRuntime.
-    //
-    // XPConnect uses a thread local storage (XPCPerThreadData) indexed by
-    // XPCPerThreadData::gTLSIndex, and SpiderMonkey GC uses a thread local
-    // storage indexed by JSRuntime::threadTPIndex.
-    //
-    // The destructor for XPCPerThreadData::gTLSIndex may access
-    // thread local storage indexed by JSRuntime::threadTPIndex.
-    // Thus, the destructor for JSRuntime::threadTPIndex must be called
-    // later than the one for XPCPerThreadData::gTLSIndex.
-    //
-    // We rely on the implementation of NSPR that calls destructors at
-    // the same order of calling PR_NewThreadPrivateIndex.
-    XPCPerThreadData::GetData(nsnull);
-
     mJSRuntime = JS_NewRuntime(32L * 1024L * 1024L); // pref ?
     if(mJSRuntime)
     {
