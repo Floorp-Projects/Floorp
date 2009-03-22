@@ -320,6 +320,32 @@
 
 .end
 
+.igroup new JSOP_NEW
+
+    .imacro String                          # String this obj
+        dup                                 # String this obj obj
+        dup                                 # String this obj obj obj
+        getprop toString                    # String this obj obj toString
+        ifprimtop 1                         # String this obj obj toString
+        swap                                # String this obj toString obj
+        call 0                              # String this obj rval
+        ifprimtop 3                         # String this obj rval
+        goto 2
+1:      pop                                 # String this obj obj
+2:      pop                                 # String this obj
+        callprop valueOf                    # String this valueOf obj
+        string string                       # String this valueOf obj "string"
+        call 1                              # String this rval
+        primtop                             # String this rval
+        goto 4                              # String this rval
+3:      swap                                # String this rval obj
+        pop                                 # String this rval
+4:      new 1                               # strobj
+        stop                                # strobj
+    .end
+
+.end
+
 .igroup apply JSOP_APPLY
     .imacro apply0                          # apply fun this arr
         pick 3                              # fun this arr apply
