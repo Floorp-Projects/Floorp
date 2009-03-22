@@ -68,20 +68,6 @@ CSRCS =	ntmisc.c \
 	w32shm.c \
 	w95dllmain.c
 else
-ifeq ($(OS_TARGET),WIN16)
-CSRCS =	w16null.c \
-	w16thred.c \
-	w16proc.c \
-	w16fmem.c \
-	w16sock.c \
-	w16mem.c \
-	w16io.c \
-	w16gc.c \
-	w16error.c \
-	w16stdio.c \
-	w16callb.c \
-	ntinrval.c
-endif # win16
 endif # win95
 endif # winnt
 

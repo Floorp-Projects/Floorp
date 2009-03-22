@@ -51,7 +51,7 @@ PRInt32 rc;
 PRInt32 i;
 PRIntn  failed = 0;
 
-PRIntn main(PRIntn argc, char **argv )
+int main(int argc, char **argv)
 {
     /*
     ** Test bitmap things.

@@ -828,7 +828,7 @@ Initialize( PRIntn argc, char **argv )
     return(0);
 }    
 
-PRIntn main( int argc, char **argv )
+int main(int argc, char **argv)
 {
     PR_STDIO_INIT();
     output = PR_GetSpecialFD(PR_StandardError);

@@ -53,14 +53,7 @@ PR_BEGIN_EXTERN_C
 ** to by se. If no number can be formed, se is set to s00, and
 ** zero is returned.
 */
-#if defined(HAVE_WATCOM_BUG_1)
-/* this is a hack to circumvent a bug in the Watcom C/C++ 11.0 compiler
-** When Watcom fixes the bug, remove the special case for Win16
-*/
-PRFloat64 __pascal __loadds __export
-#else
 NSPR_API(PRFloat64)
-#endif
 PR_strtod(const char *s00, char **se);
 
 /*

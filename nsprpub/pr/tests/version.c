@@ -45,7 +45,7 @@
 
 PR_IMPORT(const PRVersionDescription *) libVersionPoint(void);
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRIntn rv = 1;
     PLOptStatus os;

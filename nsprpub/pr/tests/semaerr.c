@@ -40,8 +40,15 @@
 
 #include <stdio.h>
 
+#ifdef SYMBIAN
+#define NO_SUCH_SEM_NAME "c:\\data\\nosuchsem.sem"
+#define SEM_NAME1 "c:\\data\\foo.sem"
+#define EXE_NAME "nspr_tests_semaerr1.exe"
+#else
 #define NO_SUCH_SEM_NAME "/tmp/nosuchsem.sem"
 #define SEM_NAME1 "/tmp/foo.sem"
+#define EXE_NAME "semaerr1"
+#endif
 #define SEM_MODE  0666
 
 static PRBool debug_mode = PR_FALSE;
@@ -110,7 +117,7 @@ int main(int argc, char **argv)
         exit(1);
     }
     child_arg = child_argv;
-    *child_arg++ = "semaerr1";
+    *child_arg++ = EXE_NAME;
     if (debug_mode) {
         *child_arg++ = "-d";
     }

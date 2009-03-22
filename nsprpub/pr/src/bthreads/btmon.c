@@ -211,9 +211,23 @@ PR_IMPLEMENT(PRStatus)
     return( PR_SUCCESS );
 }
 
+/*
+** Return the number of times that the current thread has entered the
+** lock. Returns zero if the current thread has not entered the lock.
+*/
 PR_IMPLEMENT(PRIntn)
     PR_GetMonitorEntryCount(PRMonitor *mon)
 {
-    return( mon->entryCount );
+    return( (mon->cvar->lock->owner == find_thread( NULL )) ?
+            mon->entryCount : 0 );
 }
 
+/*
+** If the current thread is in |mon|, this assertion is guaranteed to
+** succeed.  Otherwise, the behavior of this function is undefined.
+*/
+PR_IMPLEMENT(void)
+    PR_AssertCurrentThreadInMonitor(PRMonitor *mon)
+{
+    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(mon->cvar->lock);
+}

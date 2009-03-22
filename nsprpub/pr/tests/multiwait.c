@@ -665,7 +665,7 @@ static Verbosity ChangeVerbosity(Verbosity verbosity, PRIntn delta)
     return (Verbosity)(verbage += delta);
 }  /* ChangeVerbosity */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PLOptStatus os;
     const char *test_name = NULL;

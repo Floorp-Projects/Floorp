@@ -51,7 +51,7 @@
 
 #if !defined(IRIX)
 
-int main()
+int main(int argc, char **argv)
 {
     printf("This test applies to IRIX only.\n");
     return 0;

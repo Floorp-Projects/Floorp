@@ -65,7 +65,7 @@ void ThreadFunc(void *arg)
     PR_Unlock(lock1);
 }
 
-int main()
+int main(int argc, char **argv)
 {
     PRThread *thread;
     PRIntervalTime start, end;

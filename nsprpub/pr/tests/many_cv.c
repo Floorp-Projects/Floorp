@@ -49,11 +49,11 @@
 
 #include <stdlib.h>
 
-static PRInt32 Random(void)
+static PRInt32 RandomNum(void)
 {
     PRInt32 ran = rand() >> 16;
     return ran;
-}  /* Random */
+}  /* RandomNum */
 
 static void Help(void)
 {
@@ -118,7 +118,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
         PR_Lock(ml);
         for (nl = 0; nl < cvs; ++nl)
         {
-            PRInt32 ran = Random() % 8;
+            PRInt32 ran = RandomNum() % 8;
             if (0 == ran) PR_NotifyAllCondVar(cv[nl]);
             else for (nc = 0; nc < ran; ++nc)
                 PR_NotifyCondVar(cv[nl]);
@@ -140,7 +140,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 }
 
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

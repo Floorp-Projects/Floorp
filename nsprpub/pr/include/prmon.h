@@ -108,6 +108,21 @@ NSPR_API(PRStatus) PR_Notify(PRMonitor *mon);
 */
 NSPR_API(PRStatus) PR_NotifyAll(PRMonitor *mon);
 
+/*
+** PR_ASSERT_CURRENT_THREAD_IN_MONITOR
+** If the current thread is in |mon|, this assertion is guaranteed to
+** succeed.  Otherwise, the behavior of this function is undefined.
+*/
+#if defined(DEBUG) || defined(FORCE_PR_ASSERT)
+#define PR_ASSERT_CURRENT_THREAD_IN_MONITOR(/* PRMonitor* */ mon) \
+    PR_AssertCurrentThreadInMonitor(mon)
+#else
+#define PR_ASSERT_CURRENT_THREAD_IN_MONITOR(/* PRMonitor* */ mon)
+#endif
+
+/* Don't call this function directly. */
+NSPR_API(void) PR_AssertCurrentThreadInMonitor(PRMonitor *mon);
+
 PR_END_EXTERN_C
 
 #endif /* prmon_h___ */

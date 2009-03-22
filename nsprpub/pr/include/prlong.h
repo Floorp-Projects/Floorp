@@ -59,21 +59,10 @@ PR_BEGIN_EXTERN_C
 **      Various interesting constants and static variable
 **      initializer
 ***********************************************************************/
-#if defined(HAVE_WATCOM_BUG_2)
-PRInt64 __pascal __loadds __export
-    LL_MaxInt(void);
-PRInt64 __pascal __loadds __export
-    LL_MinInt(void);
-PRInt64 __pascal __loadds __export
-    LL_Zero(void);
-PRUint64 __pascal __loadds __export
-    LL_MaxUint(void);
-#else
 NSPR_API(PRInt64) LL_MaxInt(void);
 NSPR_API(PRInt64) LL_MinInt(void);
 NSPR_API(PRInt64) LL_Zero(void);
 NSPR_API(PRUint64) LL_MaxUint(void);
-#endif
 
 #if defined(HAVE_LONG_LONG)
 
@@ -83,7 +72,7 @@ NSPR_API(PRUint64) LL_MaxUint(void);
 #define LL_ZERO     0L
 #define LL_MAXUINT  18446744073709551615UL
 #define LL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
-#elif (defined(WIN32) || defined(WIN16)) && !defined(__GNUC__)
+#elif defined(WIN32) && !defined(__GNUC__)
 #define LL_MAXINT   9223372036854775807i64
 #define LL_MININT   (-LL_MAXINT - 1i64)
 #define LL_ZERO     0i64
