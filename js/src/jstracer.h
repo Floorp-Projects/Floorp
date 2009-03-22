@@ -638,13 +638,13 @@ extern void
 js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
-js_FlushScriptFragments(JSContext* cx, JSScript* script);
+js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern void
 js_FlushJITCache(JSContext* cx);
 
 extern void
-js_FlushJITOracle(JSContext* cx);
+js_PurgeJITOracle();
 
 extern JSObject *
 js_GetBuiltinFunction(JSContext *cx, uintN index);

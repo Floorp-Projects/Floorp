@@ -787,8 +787,6 @@ JS_NewRuntime(uint32 maxbytes)
     if (!js_InitDeflatedStringCache(rt))
         goto bad;
 #ifdef JS_THREADSAFE
-    if (!js_InitThreadPrivateIndex(js_ThreadDestructorCB))
-        goto bad;
     rt->gcLock = JS_NEW_LOCK();
     if (!rt->gcLock)
         goto bad;
@@ -817,10 +815,8 @@ JS_NewRuntime(uint32 maxbytes)
 #endif
     if (!js_InitPropertyTree(rt))
         goto bad;
-
-#if !defined JS_THREADSAFE && defined JS_TRACER
-    js_InitJIT(&rt->traceMonitor);
-#endif
+    if (!js_InitThreads(rt))
+        goto bad;
 
     return rt;
 
@@ -849,10 +845,7 @@ JS_DestroyRuntime(JSRuntime *rt)
     }
 #endif
 
-#if !defined JS_THREADSAFE && defined JS_TRACER
-    js_FinishJIT(&rt->traceMonitor);
-#endif
-
+    js_FinishThreads(rt);
     js_FreeRuntimeScriptState(rt);
     js_FinishAtomState(rt);
 
@@ -884,8 +877,6 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_CONDVAR(rt->titleSharingDone);
     if (rt->debuggerLock)
         JS_DESTROY_LOCK(rt->debuggerLock);
-#else
-    GSN_CACHE_CLEAR(&rt->gsnCache);
 #endif
     js_FinishPropertyTree(rt);
     free(rt);
@@ -902,7 +893,6 @@ JS_ShutDown(void)
 
     js_FinishDtoa();
 #ifdef JS_THREADSAFE
-    js_CleanupThreadPrivateData();  /* Fixes bug 464828. */
     js_CleanupLocks();
 #endif
     PRMJ_NowShutdown();
@@ -926,7 +916,7 @@ JS_BeginRequest(JSContext *cx)
 #ifdef JS_THREADSAFE
     JSRuntime *rt;
 
-    JS_ASSERT(cx->thread->id == js_CurrentThreadId());
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     if (!cx->requestDepth) {
         JS_ASSERT(cx->gcLocalFreeLists == &js_GCEmptyFreeListSet);
 
@@ -934,7 +924,6 @@ JS_BeginRequest(JSContext *cx)
         rt = cx->runtime;
         JS_LOCK_GC(rt);
 
-        /* NB: we use cx->thread here, not js_GetCurrentThread(). */
         if (rt->gcThread != cx->thread) {
             while (rt->gcLevel > 0)
                 JS_AWAIT_GC_DONE(rt);
@@ -961,6 +950,7 @@ JS_EndRequest(JSContext *cx)
     JSBool shared;
 
     CHECK_REQUEST(cx);
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     JS_ASSERT(cx->requestDepth > 0);
     JS_ASSERT(cx->outstandingRequests > 0);
     if (cx->requestDepth == 1) {
@@ -2850,19 +2840,6 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT(obj != proto);
-#ifdef DEBUG
-    /*
-     * FIXME: bug 408416. The cycle-detection required for script-writeable
-     * __proto__ lives in js_SetProtoOrParent over in jsobj.c, also known as
-     * js_ObjectOps.setProto. This hook must detect cycles, to prevent scripts
-     * from ilooping SpiderMonkey trivially. But the overhead of detecting
-     * cycles is high enough, and the threat from JS-API-calling C++ code is
-     * low enough, that it's not worth burdening the non-DEBUG callers. Same
-     * goes for JS_SetParent, below.
-     */
-    if (obj->map->ops->setProto)
-        return obj->map->ops->setProto(cx, obj, JSSLOT_PROTO, proto);
-#else
     if (OBJ_IS_NATIVE(obj)) {
         JS_LOCK_OBJ(cx, obj);
         if (!js_GetMutableScope(cx, obj)) {
@@ -2873,7 +2850,6 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
         JS_UNLOCK_OBJ(cx, obj);
         return JS_TRUE;
     }
-#endif
     OBJ_SET_PROTO(cx, obj, proto);
     return JS_TRUE;
 }
@@ -2894,11 +2870,6 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT(obj != parent);
-#ifdef DEBUG
-    /* FIXME: bug 408416, see JS_SetPrototype just above. */
-    if (obj->map->ops->setParent)
-        return obj->map->ops->setParent(cx, obj, JSSLOT_PARENT, parent);
-#endif
     OBJ_SET_PARENT(cx, obj, parent);
     return JS_TRUE;
 }
@@ -5933,25 +5904,17 @@ JS_SetContextThread(JSContext *cx)
 #ifdef JS_THREADSAFE
     JS_ASSERT(cx->requestDepth == 0);
     if (cx->thread) {
-        JS_ASSERT(cx->thread->id == js_CurrentThreadId());
+        JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
         return cx->thread->id;
     }
 
-    JSRuntime *rt = cx->runtime;
-    JSThread *thread = js_GetCurrentThread(rt);
-    if (!thread) {
+    if (!js_InitContextThread(cx)) {
         js_ReportOutOfMemory(cx);
         return -1;
     }
 
-    /*
-     * We must not race with a GC that accesses cx->thread for all threads,
-     * see bug 476934.
-     */
-    JS_LOCK_GC(rt);
-    js_WaitForGC(rt);
-    js_InitContextThread(cx, thread);
-    JS_UNLOCK_GC(rt);
+    /* Here the GC lock is still held after js_InitContextThread took it. */
+    JS_UNLOCK_GC(cx->runtime);
 #endif
     return 0;
 }
@@ -5968,8 +5931,8 @@ JS_ClearContextThread(JSContext *cx)
     JS_ASSERT(cx->requestDepth == 0);
     if (!cx->thread)
         return 0;
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     jsword old = cx->thread->id;
-    JS_ASSERT(old == js_CurrentThreadId());
 
     /*
      * We must not race with a GC that accesses cx->thread for all threads,
@@ -5978,9 +5941,8 @@ JS_ClearContextThread(JSContext *cx)
     JSRuntime *rt = cx->runtime;
     JS_LOCK_GC(rt);
     js_WaitForGC(rt);
-    JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
-    cx->thread = NULL;
-    JS_UNLOCK_GC(cx->runtime);
+    js_ClearContextThread(cx);
+    JS_UNLOCK_GC(rt);
     return old;
 #else
     return 0;
