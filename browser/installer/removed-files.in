@@ -609,6 +609,8 @@ init.d/README
 redo-prebinding.sh
 res/viewer.properties
 res/bloatcycle.html
+res/broken-image.gif
+res/loading-image.gif
 components/browsersearch.xpt
 components/nsResetPref.js
 plugins/Default Plugin.plugin/Contents/Info.plist
