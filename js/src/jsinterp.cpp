@@ -425,8 +425,11 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 JS_STATIC_ASSERT(PCVAL_NULL == 0);
 
 void
-js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
+js_FlushPropertyCache(JSContext *cx)
 {
+    JSPropertyCache *cache;
+
+    cache = &JS_PROPERTY_CACHE(cx);
     if (cache->empty) {
         ASSERT_CACHE_IS_EMPTY(cache);
         return;
@@ -494,7 +497,7 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
 }
 
 void
-js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script)
+js_FlushPropertyCacheForScript(JSContext *cx, JSScript *script)
 {
     JSPropertyCache *cache;
     JSPropCacheEntry *entry;
