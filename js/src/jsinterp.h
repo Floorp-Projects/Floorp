@@ -390,14 +390,11 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
                          JSObject **objp, JSObject **pobjp,
                          JSPropCacheEntry **entryp);
 
-/* The property cache does not need a destructor. */
-#define js_FinishPropertyCache(cache) ((void) 0)
+extern void
+js_FlushPropertyCache(JSContext *cx);
 
 extern void
-js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache);
-
-extern void
-js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script);
+js_FlushPropertyCacheForScript(JSContext *cx, JSScript *script);
 
 extern void
 js_DisablePropertyCache(JSContext *cx);

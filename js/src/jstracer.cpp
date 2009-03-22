@@ -4678,17 +4678,19 @@ TraceRecorder::popAbortStack()
 }
 
 void
-js_PurgeJITOracle()
+js_FlushJITOracle(JSContext* cx)
 {
+    if (!TRACING_ENABLED(cx))
+        return;
     oracle.clear();
 }
 
 JS_REQUIRES_STACK void
-js_PurgeScriptFragments(JSContext* cx, JSScript* script)
+js_FlushScriptFragments(JSContext* cx, JSScript* script)
 {
     if (!TRACING_ENABLED(cx))
         return;
-    debug_only_v(printf("Purging fragments for JSScript %p.\n", (void*)script);)
+    debug_only_v(printf("Flushing fragments for JSScript %p.\n", (void*)script);)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         for (VMFragment **f = &(tm->vmfragments[i]); *f; ) {
