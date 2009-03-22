@@ -302,7 +302,7 @@ WindowDraggingUtils.jsm=19
 XPCOMUtils.jsm=19
 arrow.gif=20
 arrowd.gif=20
-broken-image.gif=20
+broken-image.png=20
 charsetalias.properties=20
 charsetData.properties=20
 contenteditable.css=20
@@ -314,7 +314,7 @@ hiddenWindow.html=20
 html.css=20
 langGroups.properties=20
 language.properties=20
-loading-image.gif=20
+loading-image.png=20
 mathml.css=20
 quirk.css=20
 svg.css=20
@@ -666,7 +666,7 @@ Shortcuts   = 0, %CE11%             ; \Windows\Start Menu\Programs
 [Files.xulrunner.res]
 "arrow.gif",arrow.gif
 "arrowd.gif",arrowd.gif
-"broken-image.gif",broken-image.gif
+"broken-image.png",broken-image.png
 "charsetalias.properties",charsetalias.properties
 "charsetData.properties",charsetData.properties
 "contenteditable.css",contenteditable.css
@@ -678,7 +678,7 @@ Shortcuts   = 0, %CE11%             ; \Windows\Start Menu\Programs
 "html.css",html.css
 "langGroups.properties",langGroups.properties
 "language.properties",language.properties
-"loading-image.gif",loading-image.gif
+"loading-image.png",loading-image.png
 "mathml.css",mathml.css
 "quirk.css",quirk.css
 "svg.css",svg.css
