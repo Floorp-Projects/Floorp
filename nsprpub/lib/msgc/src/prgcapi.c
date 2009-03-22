@@ -269,10 +269,6 @@ PR_IMPLEMENT(void) PR_GetEndFinalizeHook(GCEndFinalizeHook **hook, void **arg)
 #ifdef DEBUG
 #include "prprf.h"
 
-#if defined(WIN16)
-static FILE *tracefile = 0;
-#endif
-
 PR_IMPLEMENT(void) GCTrace(char *fmt, ...)
 {	
     va_list ap;
@@ -281,16 +277,7 @@ PR_IMPLEMENT(void) GCTrace(char *fmt, ...)
     va_start(ap, fmt);
     PR_vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-#if defined(WIN16)
-    if ( tracefile == 0 )
-    {
-        tracefile = fopen( "xxxGCtr", "w" );
-    }
-    fprintf(tracefile, "%s\n", buf );
-    fflush(tracefile);
-#else
     PR_LOG(_pr_msgc_lm, PR_LOG_ALWAYS, ("%s", buf));
-#endif
 }
 #endif
 

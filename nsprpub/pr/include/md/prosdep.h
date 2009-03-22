@@ -54,8 +54,6 @@ PR_BEGIN_EXTERN_C
 #elif defined(WIN95) || defined(WINCE)
 #include "md/_win95.h"
 #include "md/_win32_errors.h"
-#elif defined(WIN16)
-#include "md/_win16.h"
 #elif defined(OS2)
 #include "md/_os2.h"
 #include "md/_os2_errors.h"

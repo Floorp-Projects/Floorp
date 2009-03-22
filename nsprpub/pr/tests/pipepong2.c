@@ -58,7 +58,7 @@
 
 #define NUM_ITERATIONS 10
 
-int main()
+int main(int argc, char **argv)
 {
     PRFileDesc *pipe_read, *pipe_write;
     PRStatus status;

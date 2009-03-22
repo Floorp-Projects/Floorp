@@ -1265,7 +1265,11 @@ NSPR_API(PRFileDesc*)    PR_OpenTCPSocket(PRIntn af);
  *       Specifies the address of the socket in its own communication
  *       space.
  *     PRIntervalTime timeout
- *       Time limit for completion of the connect operation.
+ *       The function uses the lesser of the provided timeout and
+ *       the OS's connect timeout.  In particular, if you specify
+ *       PR_INTERVAL_NO_TIMEOUT as the timeout, the OS's connection
+ *       time limit will be used.
+ *
  * OUTPUTS:
  *     None
  * RETURN: PRStatus

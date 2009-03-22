@@ -69,20 +69,4 @@ PR_IMPLEMENT(void) PL_PrintError(const char *msg)
 	PL_FPrintError(fd, msg);
 }  /* PL_PrintError */
 
-#if defined(WIN16)
-/*
-** libmain() is a required function for win16
-**
-*/
-int CALLBACK LibMain( HINSTANCE hInst, WORD wDataSeg, 
-  WORD cbHeapSize, LPSTR lpszCmdLine )
-{
-return TRUE;
-}
-#endif /* WIN16 */
-
-
-
-
-
 /* plerror.c */

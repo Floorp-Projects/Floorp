@@ -45,6 +45,11 @@
 #endif
 
 #define TEST_FILE_NAME "bigfile2.txt"
+#ifdef WINCE
+#define TEST_FILE_NAME_FOR_CREATEFILE   L"bigfile2.txt"
+#else
+#define TEST_FILE_NAME_FOR_CREATEFILE   TEST_FILE_NAME
+#endif
 
 #define MESSAGE "Hello world!"
 #define MESSAGE_SIZE 13
@@ -89,7 +94,7 @@ int main(int argc, char **argv)
     memset(buf, 0, sizeof(buf));
 
 #ifdef _WIN32
-    hFile = CreateFile(TEST_FILE_NAME, GENERIC_READ, 0, NULL,
+    hFile = CreateFile(TEST_FILE_NAME_FOR_CREATEFILE, GENERIC_READ, 0, NULL,
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "CreateFile failed\n");

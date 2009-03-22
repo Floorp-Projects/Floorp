@@ -45,6 +45,11 @@
 #endif
 
 #define TEST_FILE_NAME "bigfile3.txt"
+#ifdef WINCE
+#define TEST_FILE_NAME_FOR_CREATEFILE   L"bigfile3.txt"
+#else
+#define TEST_FILE_NAME_FOR_CREATEFILE   TEST_FILE_NAME
+#endif
 
 #define MESSAGE "Hello world!"
 #define MESSAGE_SIZE 13
@@ -64,7 +69,7 @@ int main(int argc, char **argv)
     LL_SHL(offset, offset, 32);
 
 #ifdef _WIN32
-    hFile = CreateFile(TEST_FILE_NAME, GENERIC_WRITE, 0, NULL,
+    hFile = CreateFile(TEST_FILE_NAME_FOR_CREATEFILE, GENERIC_WRITE, 0, NULL,
             CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "CreateFile failed\n");

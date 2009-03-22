@@ -62,6 +62,16 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef WINCE
+
+int main(int argc, char **argv)
+{
+    fprintf(stderr, "Invalid/Broken Test for WinCE/WinMobile\n");
+    exit(1);
+}
+
+#else
+
 static void
 clientThreadFunc(void *arg)
 {
@@ -372,3 +382,6 @@ int main(int argc, char **argv)
     PR_Cleanup();
     return 0;
 }
+
+
+#endif   /* ifdef WINCE */

@@ -52,6 +52,13 @@
 #include <string.h>
 #include <signal.h>
 
+#ifdef SYMBIAN
+/* In Open C sched_get_priority_min/max do not work properly, so we undefine
+ * _POSIX_THREAD_PRIORITY_SCHEDULING here.
+ */
+#undef _POSIX_THREAD_PRIORITY_SCHEDULING
+#endif
+
 /*
  * Record whether or not we have the privilege to set the scheduling
  * policy and priority of threads.  0 means that privilege is available.

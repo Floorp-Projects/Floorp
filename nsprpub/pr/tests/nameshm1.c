@@ -104,8 +104,17 @@
 #include <string.h>
 #include <private/primpl.h>
 
+#ifdef SYMBIAN
+#define SEM_NAME1 "c:\\data\\nameshmSEM1"
+#define SEM_NAME2 "c:\\data\\nameshmSEM2"
+#define OPT_NAME "c:\\data\\xxxNSPRshm"
+#define EXE_NAME "nspr_tests_nameshm1.exe"
+#else
 #define SEM_NAME1 "/tmp/nameshmSEM1"
 #define SEM_NAME2 "/tmp/nameshmSEM2"
+#define OPT_NAME "/tmp/xxxNSPRshm"
+#define EXE_NAME "nameshm1"
+#endif
 #define SEM_MODE  0666
 #define SHM_MODE  0666
 
@@ -129,7 +138,7 @@ PRUint32    optDelete = 1;
 PRInt32     optPing = 1000;
 PRUint32    optSize = (10 * 1024 );
 PRInt32     optClientIterations = 3;
-char        optName[NameSize] = "/tmp/xxxNSPRshm";
+char        optName[NameSize] = OPT_NAME;
 
 char buf[1024] = "";
 
@@ -446,7 +455,7 @@ static void ClientServerTest( void )
 
     strcpy( (char*)addr, "FooBar" );
 
-    child_argv[0] = "nameshm1";
+    child_argv[0] = EXE_NAME;
     child_argv[1] = "-C";
     child_argv[2] = "-p";
     sprintf( buf, "%d", optPing );
@@ -530,7 +539,7 @@ static void ClientServerTest( void )
     return;
 } /* end ClientServerTest() */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     {
         /*

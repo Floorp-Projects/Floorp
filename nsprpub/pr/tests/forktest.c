@@ -273,10 +273,7 @@ pid_t PR_UnixFork1(void)
 
 #endif  /* PR_DCETHREADS */
 
-int main(
-int     argc,
-char   *argv[]
-)
+int main(int argc, char **argv)
 {
     pid_t pid;
 	int rv;
