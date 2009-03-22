@@ -113,7 +113,7 @@ static void PrintRand( void *buf, PRIntn size )
 } /* end PrintRand() */
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     {
         /*

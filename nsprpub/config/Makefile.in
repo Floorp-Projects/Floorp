@@ -113,7 +113,7 @@ PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
 ifeq (,$(CROSS_COMPILE)$(filter-out OS2 WINNT,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
-ifeq ($(OS_ARCH),WINCE)
+ifeq (,$(filter-out SYMBIAN WINCE,$(OS_ARCH)))
 TARGETS = $(PROGS)
 else
 PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)

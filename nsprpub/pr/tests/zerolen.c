@@ -56,7 +56,7 @@
 
 #include <stdio.h>
 
-int main()
+int main(int argc, char **argv)
 {
     printf("PASS\n");
     return 0;
@@ -127,6 +127,9 @@ int main()
     char buf[1024];
     PRInt32 nbytes;
     PRIOVec iov;
+#ifdef SYMBIAN
+    int loopcount=0;
+#endif
 
     memset(buf, 0, sizeof(buf)); /* Initialize the buffer. */
     listenSock = PR_NewTCPSocket();
@@ -170,6 +173,9 @@ int main()
     osfd = PR_FileDesc2NativeHandle(acceptSock);
     while ((nbytes = write(osfd, buf, sizeof(buf))) != -1) {
         /* empty loop body */
+#ifdef SYMBIAN
+      if (loopcount++>64) break;
+#endif
     }
     if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {
         fprintf(stderr, "write failed\n");
@@ -203,6 +209,9 @@ int main()
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);
     }
+#ifdef SYMBIAN
+    loopcount = 0;
+#endif
     acceptSock = PR_Accept(listenSock, NULL, PR_INTERVAL_NO_TIMEOUT);
     if (NULL == acceptSock) {
         fprintf(stderr, "PR_Accept failed\n");
@@ -211,6 +220,9 @@ int main()
     osfd = PR_FileDesc2NativeHandle(acceptSock);
     while ((nbytes = write(osfd, buf, sizeof(buf))) != -1) {
         /* empty loop body */
+#ifdef SYMBIAN
+      if (loopcount++>64) break;
+#endif
     }
     if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {
         fprintf(stderr, "write failed\n");
@@ -242,6 +254,9 @@ int main()
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);
     }
+#ifdef SYMBIAN
+    loopcount = 0;
+#endif
     acceptSock = PR_Accept(listenSock, NULL, PR_INTERVAL_NO_TIMEOUT);
     if (NULL == acceptSock) {
         fprintf(stderr, "PR_Accept failed\n");
@@ -250,6 +265,9 @@ int main()
     osfd = PR_FileDesc2NativeHandle(acceptSock);
     while ((nbytes = write(osfd, buf, sizeof(buf))) != -1) {
         /* empty loop body */
+#ifdef SYMBIAN
+      if (loopcount++>64) break;
+#endif
     }
     if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {
         fprintf(stderr, "write failed\n");

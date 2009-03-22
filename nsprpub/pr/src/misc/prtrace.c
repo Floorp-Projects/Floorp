@@ -421,7 +421,7 @@ PR_IMPLEMENT(void)
         ** so that the log thread could run.
         ** I know, it perturbs the universe and may cause
         ** funny things to happen in the optimized builds.
-        ** Take it out, loose data; leave it in risk Heisenberg.
+        ** Take it out, lose data; leave it in risk Heisenberg.
         */
         /* PR_Sleep(0); */
     }

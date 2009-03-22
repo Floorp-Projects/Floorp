@@ -208,8 +208,12 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(win32-target,
     [  --enable-win32-target=\$t
                           Specify win32 flavor. (WIN95 or WINNT)],
-    OS_TARGET=`echo $enableval | tr a-z A-Z`,
-    OS_TARGET=)
+    OS_TARGET=`echo $enableval | tr a-z A-Z`)
+
+AC_ARG_ENABLE(symbian-target,
+    [  --enable-symbian-target=\$t
+                          Specify symbian flavor. (WINSCW or GCCE)],
+    OS_TARGET=`echo $enableval | tr a-z A-Z`)
 
 AC_ARG_ENABLE(debug-rtl,
     [  --enable-debug-rtl      Use the MSVC debug runtime library],
@@ -694,9 +698,6 @@ fi
 # at lesser performance (the Win95 target uses threads; the WinNT target
 # uses fibers).
 #
-# When OS_TARGET=WIN16 is specified, then a Windows 3.11 (16bit) target
-# is built. See: win16_3.11.mk for lots more about the Win16 target.
-#
 # If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
 # cross-compilation.
 #
@@ -794,9 +795,6 @@ if test -z "$OS_TARGET"; then
 fi
 if test "$OS_TARGET" = "WIN95"; then
     OS_RELEASE="4.0"
-fi
-if test "$OS_TARGET" = "WIN16"; then
-    OS_RELEASE=
 fi
 OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
@@ -1632,9 +1630,6 @@ tools are selected during the Xcode/Developer Tools installation.])
     WIN95)
 	    MDCPUCFG_H=_win95.cfg
 	    ;;
-    WIN16)
-	    MDCPUCFG_H=_win16.cfg
-	    ;;
     *)
 	    AC_MSG_ERROR([Missing OS_TARGET for ${target}.  Use --enable-win32-target to set.])
    	;;
@@ -2164,6 +2159,76 @@ mips-sony-newsos*)
     PR_MD_CSRCS=unixware.c
     DSO_LDOPTS=-G
     CPU_ARCH=x86
+    ;;
+
+*-symbian*)
+    AC_ARG_WITH(symbian-sdk,
+    [  --with-symbian-sdk=SYMBIAN_SDK_DIR
+                          The path to the Symbian SDK],
+    SYMBIAN_SDK_DIR=$withval)
+
+    echo -----------------------------------------------------------------------------
+    echo Building with Symbian SDK in: $SYMBIAN_SDK_DIR
+    echo -----------------------------------------------------------------------------
+
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SYMBIAN)
+    AC_DEFINE(__arm__)
+    AC_DEFINE(__SYMBIAN32__)
+    AC_DEFINE(_UNICODE)
+    AC_DEFINE(NDEBUG)
+    AC_DEFINE(__SUPPORT_CPP_EXCEPTIONS__)
+    AC_DEFINE(MOZ_STDERR_TO_STDOUT)
+    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
+    AC_DEFINE(HAVE_SOCKLEN_T)
+    USE_PTHREADS=1
+    LIB_SUFFIX=lib
+    DLL_SUFFIX=dll
+    MKSHLIB=
+    DSO_LDOPTS=
+    DSO_CFLAGS=
+    VISIBILITY_FLAGS=
+    MDCPUCFG_H=_symbian.cfg
+    PR_MD_CSRCS=symbian.c
+    NSINSTALL=nsinstall
+    RANLIB='echo no ranlib '
+    CPU_ARCH=ARM
+    OS_ARCH=SYMBIAN
+    OS_EXE_CFLAGS="$OS_EXE_CFLAGS -D__EXE__"
+    CFLAGS="$CFLAGS -MD -nostdinc"
+    SYMBIAN_SYS_INCLUDE="-I$SYMBIAN_SDK_DIR/Epoc32/include/variant -I$SYMBIAN_SDK_DIR/Epoc32/include -I$SYMBIAN_SDK_DIR/Epoc32/include/stdapis"
+    echo -------------------------------------------------------
+    echo SYMBIAN_SYS_INCLUDE is: $SYMBIAN_SYS_INCLUDE
+    echo -------------------------------------------------------
+    case "$OS_TARGET" in
+    WINSCW)
+        CC=mwccsym2.exe
+        CXX=mwccsym2.exe
+        LD=mwldsym2.exe
+        AR=mwldsym2.exe
+        WINSCW_LD_DIR="\$(SYMBIAN_SDK_DIR)/EPOC32/RELEASE/WINSCW/UDEB"
+        CFLAGS="$CFLAGS -O0 -inline off -wchar_t off -align 4 -warnings on -w nohidevirtual,nounusedexpr -msgstyle gcc -enum int -str pool -exc ms -trigraphs on -nostderr -gccdep -cwd source -i- -I\$(VPATH)"
+        SYMBIAN_SYS_INCLUDE="$SYMBIAN_SYS_INCLUDE -include Symbian_OS_v9.2.hrh"
+        AR_FLAGS="-library -msgstyle gcc -stdlib -subsystem windows -noimplib -o \$@"
+        AC_DEFINE(_DEBUG)
+        AC_DEFINE(__CW32__)
+        AC_DEFINE(__WINS__)
+        AC_DEFINE(__WINSCW__)
+        DEFINES="$DEFINES -U_WIN32"
+	    ;;
+    GCCE)
+        CFLAGS="$CFLAGS -Wall -Wno-unknown-pragmas -fexceptions -march=armv5t -mapcs -pipe -x c -msoft-float"
+        CXXFLAGS="$CXXFLAGS $CFLAGS -Wno-ctor-dtor-privacy"
+        SYMBIAN_SYS_INCLUDE="$SYMBIAN_SYS_INCLUDE -include $SYMBIAN_SDK_DIR/EPOC32/INCLUDE/GCCE/GCCE.h"
+        AC_DEFINE(__GCCE__)
+        AC_DEFINE(__EABI__)
+        DEFINES="$DEFINES -D__PRODUCT_INCLUDE__=$SYMBIAN_SDK_DIR/Epoc32/include/variant/Symbian_OS_v9.2.hrh"
+	    ;;
+    *)
+	    AC_MSG_ERROR([Missing OS_TARGET for ${target}. Set --enable-symbian-target to with 'WINSCW' or 'GCCE'.])
+   	;;
+    esac
+    CFLAGS="$CFLAGS ${SYMBIAN_SYS_INCLUDE}"
     ;;
 
 *-os2*)
@@ -2823,6 +2888,7 @@ AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(VISIBILITY_FLAGS)
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(MACOS_SDK_DIR)
+AC_SUBST(SYMBIAN_SDK_DIR)
 AC_SUBST(NEXT_ROOT)
 AC_SUBST(MT)
 

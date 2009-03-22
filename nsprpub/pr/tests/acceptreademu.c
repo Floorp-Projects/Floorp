@@ -80,7 +80,11 @@ static PRStatus PrintAddress(const PRNetAddr* address)
 static void ConnectingThread(void *arg)
 {
     PRInt32 nbytes;
+#ifdef SYMBIAN
+    char buf[256];
+#else
     char buf[1024];
+#endif
     PRFileDesc *sock;
     PRNetAddr peer_addr, *addr;
 
@@ -209,7 +213,7 @@ static void AcceptingThread(void *arg)
         PL_FPrintError(err_out, "PR_Close (server) failed");
 }  /* AcceptingThread */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRHostEnt he;
     PRStatus status;

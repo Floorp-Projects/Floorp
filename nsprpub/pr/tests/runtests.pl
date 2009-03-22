@@ -333,6 +333,7 @@ $prog = shift;  # Program to test
 "op_filok",
 "op_nofil",
 "parent",
+"parsetm",
 "peek",
 "perf",
 "pipeping",

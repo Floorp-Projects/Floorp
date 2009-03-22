@@ -132,12 +132,6 @@ PL_NewHashTable(PRUint32 n, PLHashFunction keyHash,
     memset(ht, 0, sizeof *ht);
     ht->shift = PL_HASH_BITS - n;
     n = 1 << n;
-#if defined(WIN16)
-    if (n > 16000) {
-        (*allocOps->freeTable)(allocPriv, ht);
-        return 0;
-    }
-#endif  /* WIN16 */
     nb = n * sizeof(PLHashEntry *);
     ht->buckets = (PLHashEntry**)((*allocOps->allocTable)(allocPriv, nb));
     if (!ht->buckets) {
@@ -254,10 +248,6 @@ PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
     n = NBUCKETS(ht);
     if (ht->nentries >= OVERLOADED(n)) {
         oldbuckets = ht->buckets;
-#if defined(WIN16)
-        if (2 * n > 16000)
-            return 0;
-#endif  /* WIN16 */
         nb = 2 * n * sizeof(PLHashEntry *);
         ht->buckets = (PLHashEntry**)
             ((*ht->allocOps->allocTable)(ht->allocPriv, nb));

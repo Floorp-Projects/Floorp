@@ -46,22 +46,6 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_TARGET), WIN16)
-CSRCS = \
-	w16null.c \
-	w16thred.c \
-	w16proc.c \
-    w16fmem.c \
-    w16sock.c \
-    w16mem.c \
-    w16io.c  \
-    w16gc.c  \
-    w16error.c  \
-    w16stdio.c  \
-    w16callb.c \
-    ntinrval.c \
-    $(NULL)
-else
 ifeq (,$(filter-out WIN95 WINCE, $(OS_TARGET)))
 CSRCS =          \
     ntmisc.c \
@@ -96,7 +80,6 @@ CSRCS =          \
     w32rng.c \
     w32shm.c \
     $(NULL)
-endif
 endif
 
 TARGETS	= $(OBJS)

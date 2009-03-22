@@ -65,7 +65,7 @@ static void Other(void *unused)
     if (didit < 5) rv = 1;
 }
 
-PRIntn main ()
+int main(int argc, char **argv)
 {
     PRUint32 elapsed;
     PRThread *thread;
