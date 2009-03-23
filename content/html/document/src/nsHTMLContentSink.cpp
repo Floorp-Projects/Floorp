@@ -2328,7 +2328,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_head:
       rv = OpenHeadContext();
       if (NS_SUCCEEDED(rv)) {
-        rv = AddAttributes(aNode, mHead, PR_TRUE, mHaveSeenHead);
+        rv = AddAttributes(aNode, mHead, PR_FALSE, mHaveSeenHead);
         mHaveSeenHead = PR_TRUE;
       }
       break;

@@ -304,6 +304,7 @@ nsUint32ToContentHashEntry::VisitContent(Visitor* aVisitor)
   }
 }
 
+#define ID_NOT_IN_DOCUMENT ((nsIContent *)2)
 #define NAME_NOT_VALID ((nsBaseContentList*)1)
 
 nsIdentifierMapEntry::~nsIdentifierMapEntry()
@@ -348,9 +349,13 @@ nsIdentifierMapEntry::CreateNameContentList()
 }
 
 nsIContent*
-nsIdentifierMapEntry::GetIdContent()
+nsIdentifierMapEntry::GetIdContent(PRBool* aNotInDocument)
 {
-  return static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  nsIContent* c = static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  if (aNotInDocument) {
+    *aNotInDocument = c == ID_NOT_IN_DOCUMENT;
+  }
+  return c != ID_NOT_IN_DOCUMENT ? c : nsnull;
 }
 
 void
@@ -419,23 +424,28 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
   NS_PRECONDITION(aContent, "Must have content");
   NS_PRECONDITION(mIdContentList.IndexOf(nsnull) < 0,
                   "Why is null in our list?");
+  NS_PRECONDITION(aContent != ID_NOT_IN_DOCUMENT,
+                  "Bogus content pointer");
 
-#ifdef DEBUG
-  nsIContent* currentContent =
-    static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
-#endif
+  nsIContent* currentContent = static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  if (currentContent == ID_NOT_IN_DOCUMENT) {
+    NS_ASSERTION(mIdContentList.Count() == 1, "Bogus count");
+    mIdContentList.ReplaceElementAt(aContent, 0);
+    FireChangeCallbacks(nsnull, aContent);
+    return PR_TRUE;
+  }
 
   // Common case
   if (mIdContentList.Count() == 0) {
     if (!mIdContentList.AppendElement(aContent))
       return PR_FALSE;
-    NS_ASSERTION(currentContent == nsnull, "How did that happen?");
     FireChangeCallbacks(nsnull, aContent);
     return PR_TRUE;
   }
 
-  // We seem to have multiple content nodes for the same id, or XUL is messing
-  // with us.  Search for the right place to insert the content.
+  // We seem to have multiple content nodes for the same id, or we're doing our
+  // top-down registration when the id table is going live.  Search for the
+  // right place to insert the content.
   PRInt32 start = 0;
   PRInt32 end = mIdContentList.Count();
   do {
@@ -447,8 +457,6 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
     nsIContent* curContent = static_cast<nsIContent*>(mIdContentList[cur]);
     if (curContent == aContent) {
       // Already in the list, so already in the right spot.  Get out of here.
-      // XXXbz this only happens because XUL does all sorts of random
-      // UpdateIdTableEntry calls.  Hate, hate, hate!
       return PR_TRUE;
     }
 
@@ -462,10 +470,7 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
   if (!mIdContentList.InsertElementAt(aContent, start))
     return PR_FALSE;
   if (start == 0) {
-    nsIContent* oldContent =
-      static_cast<nsIContent*>(mIdContentList.SafeElementAt(1));
-    NS_ASSERTION(currentContent == oldContent, "How did that happen?");
-    FireChangeCallbacks(oldContent, aContent);
+    FireChangeCallbacks(currentContent, aContent);
   }
   return PR_TRUE;
 }
@@ -486,6 +491,15 @@ nsIdentifierMapEntry::RemoveIdContent(nsIContent* aContent)
                         static_cast<nsIContent*>(mIdContentList.SafeElementAt(0)));
   }
   return mIdContentList.Count() == 0 && !mNameContentList && !mChangeCallbacks;
+}
+
+void
+nsIdentifierMapEntry::FlagIDNotInDocument()
+{
+  NS_ASSERTION(mIdContentList.Count() == 0,
+               "Flagging ID not in document when we have content?");
+  // Note that if this fails that's OK; this is just an optimization
+  mIdContentList.AppendElement(ID_NOT_IN_DOCUMENT);
 }
 
 void
@@ -2293,9 +2307,11 @@ nsDocument::UpdateIdTableEntry(nsIContent *aContent)
   if (!id)
     return;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
+  PRBool liveTable = IdTableIsLive();
+  nsIdentifierMapEntry *entry =
+    liveTable ? mIdentifierMap.PutEntry(id) : mIdentifierMap.GetEntry(id);
 
-  if (entry) { /* True except on OOM */
+  if (entry) {
     entry->AddIdContent(aContent);
   }
 }
@@ -2308,7 +2324,7 @@ nsDocument::RemoveFromIdTable(nsIContent *aContent)
     return;
 
   nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(id);
-  if (!entry) /* Should be false unless we had OOM when adding the entry */
+  if (!entry)
     return;
 
   if (entry->RemoveIdContent(aContent)) {
@@ -2319,51 +2335,35 @@ nsDocument::RemoveFromIdTable(nsIContent *aContent)
 void
 nsDocument::UnregisterNamedItems(nsIContent *aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
-    // non-element nodes are not named items nor can they have children.
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
+    // Text nodes are not named items nor can they have children.
     return;
   }
 
   RemoveFromNameTable(aContent);
   RemoveFromIdTable(aContent);
 
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif
-
-  PRUint32 count;
-  nsIContent * const * kidSlot = aContent->GetChildArray(&count);
-  nsIContent * const * end = kidSlot + count;
-  for (; kidSlot != end; ++kidSlot) {
-    UnregisterNamedItems(*kidSlot);
+  PRUint32 i, count = aContent->GetChildCount();
+  for (i = 0; i < count; ++i) {
+    UnregisterNamedItems(aContent->GetChildAt(i));
   }
-
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
 }
 
 void
 nsDocument::RegisterNamedItems(nsIContent *aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
-    // non-element nodes are not named items nor can they have children.
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
+    // Text nodes are not named items nor can they have children.
     return;
   }
 
   UpdateNameTableEntry(aContent);
   UpdateIdTableEntry(aContent);
 
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif
-
-  PRUint32 count;
-  nsIContent * const * kidSlot = aContent->GetChildArray(&count);
-  nsIContent * const * end = kidSlot + count;
-  for (; kidSlot != end; ++kidSlot) {
-    RegisterNamedItems(*kidSlot);
+  PRUint32 i, count = aContent->GetChildCount();
+  for (i = 0; i < count; ++i) {
+    RegisterNamedItems(aContent->GetChildAt(i));
   }
-
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
 }
 
 void
@@ -2373,18 +2373,10 @@ nsDocument::ContentAppended(nsIDocument* aDocument,
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
-#ifdef DEBUG
-  nsMutationGuard debugMutationGuard;
-#endif
-
-  PRUint32 count;
-  nsIContent * const * kidSlot = aContainer->GetChildArray(&count);
-  nsIContent * const * end = kidSlot + count;
-  for (kidSlot += aNewIndexInContainer; kidSlot != end; ++kidSlot) {
-    RegisterNamedItems(*kidSlot);
+  PRUint32 count = aContainer->GetChildCount();
+  for (PRUint32 i = aNewIndexInContainer; i < count; ++i) {
+    RegisterNamedItems(aContainer->GetChildAt(i));
   }
-
-  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
 }
 
 void
@@ -3762,6 +3754,19 @@ nsDocument::CheckGetElementByIdArg(const nsIAtom* aId)
   return PR_TRUE;
 }
 
+static void
+MatchAllElementsId(nsIContent* aContent, nsIAtom* aId, nsIdentifierMapEntry* aEntry)
+{
+  if (aId == aContent->GetID()) {
+    aEntry->AddIdContent(aContent);
+  }
+
+  PRUint32 i, count = aContent->GetChildCount();
+  for (i = 0; i < count; i++) {
+    MatchAllElementsId(aContent->GetChildAt(i), aId, aEntry);
+  }
+}
+
 nsIdentifierMapEntry*
 nsDocument::GetElementByIdInternal(nsIAtom* aID)
 {
@@ -3775,9 +3780,10 @@ nsDocument::GetElementByIdInternal(nsIAtom* aID)
   if (entry->GetIdContent())
     return entry;
 
-  // Now we have to flush.  It could be that we know nothing about this ID yet
-  // but more content has been added to the document since.  Note that we have
-  // to flush notifications, so that the entry will get updated properly.
+  // Now we have to flush.  It could be that we have a cached "not in
+  // document" or know nothing about this ID yet but more content has been
+  // added to the document since.  Note that we have to flush notifications,
+  // so that the entry will get updated properly.
 
   // Make sure to stash away the current generation so we can check whether
   // the table changes when we flush.
@@ -3792,6 +3798,53 @@ nsDocument::GetElementByIdInternal(nsIAtom* aID)
     entry = mIdentifierMap.PutEntry(aID);
   }
   
+  PRBool isNotInDocument;
+  nsIContent *e = entry->GetIdContent(&isNotInDocument);
+  if (e || isNotInDocument)
+    return entry;
+
+  // Status of this id is unknown, search document
+  nsIContent* root = GetRootContent();
+  if (!IdTableIsLive()) {
+    if (IdTableShouldBecomeLive()) {
+      // Just make sure our table is up to date and call this method again
+      // to look up in the hashtable.
+      if (root) {
+        RegisterNamedItems(root);
+      }
+      return GetElementByIdInternal(aID);
+    }
+
+    if (root) {
+      // No-one should have registered an ID change callback yet. We don't
+      // want to fire one as a side-effect of getElementById! This shouldn't
+      // happen, since if someone called AddIDTargetObserver already for
+      // this ID, we should have filled in this entry with content or
+      // not-in-document.
+      NS_ASSERTION(!entry->HasContentChangeCallback(),
+                   "No callbacks should be registered while we set up this entry");
+      MatchAllElementsId(root, aID, entry);
+      e = entry->GetIdContent();
+    }
+  }
+
+  if (!e) {
+#ifdef DEBUG
+    // No reason to call MatchElementId if !IdTableIsLive, since
+    // we'd have done just that already
+    if (IdTableIsLive() && root && aID != nsGkAtoms::_empty) {
+      nsIContent* eDebug =
+        nsContentUtils::MatchElementId(root, aID);
+      NS_ASSERTION(!eDebug,
+                   "We got null for |e| but MatchElementId found something?");
+    }
+#endif
+    // There is no element with the given id in the document, cache
+    // the fact that it's not in the document
+    entry->FlagIDNotInDocument();
+    return entry;
+  }
+
   return entry;
 }
 
@@ -3810,8 +3863,10 @@ nsDocument::GetElementById(const nsAString& aElementId,
   nsIdentifierMapEntry *entry = GetElementByIdInternal(idAtom);
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIContent *e = entry->GetIdContent();
-  if (!e)
+  PRBool isNotInDocument;
+  nsIContent *e = entry->GetIdContent(&isNotInDocument);
+  NS_ASSERTION(e || isNotInDocument, "Incomplete map entry!");
+  if (isNotInDocument)
     return NS_OK;
 
   return CallQueryInterface(e, aReturn);
