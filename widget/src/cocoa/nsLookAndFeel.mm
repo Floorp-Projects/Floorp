@@ -304,8 +304,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     }
       break;
     case eColor__moz_mac_focusring:
-      //default to lavender if not available
-      res = GetMacBrushColor(kThemeBrushFocusHighlight, aColor, NS_RGB(0x63,0x63,0xCE));
+      aColor = [NSColor currentControlTint] == NSGraphiteControlTint ?
+               NS_RGB(0x5F,0x70,0x82) : NS_RGB(0x53,0x90,0xD2);
       break;
     case eColor__moz_mac_menushadow:
       res = GetMacBrushColor(kThemeBrushBevelActiveDark, aColor, NS_RGB(0x88,0x88,0x88));
