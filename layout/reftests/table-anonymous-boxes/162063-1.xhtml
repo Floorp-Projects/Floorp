@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script type="text/javascript">
+/* <![CDATA[ */
+function boom()
+{
+  var numTest = 17;
+  for (i = 1; i<= numTest; i++) {
+    var target = "target" + i; 
+    var q = document.getElementById(target);
+    remove(q);
+  }
+   document.documentElement.className = "";
+
+}
+
+function remove(n)
+{
+  n.parentNode.removeChild(n);
+}
+/* ]]> */
+</script>
+<title> test for pseudo removal</title>
+</head>
+
+<body onload="boom();">
+ <div style="display:table; border-spacing:10px; background-color:red">
+ <div id="target1">target</div>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:blue">
+ <div id="target2" style="float:left">target</div>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:green">
+ <div id="target3" style="float:right">target</div>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:pink">
+ <div id="target4" style="position:absolute">target</div>
+ </div>
+
+ <div style="display:table; border-spacing:10px; background-color:magenta">
+ <div id="target5" style="position:relative">target</div>
+ </div> 
+ 
+ <div style="display:table; border-spacing:10px; background-color:orange">
+ <div id="target6" style="position:fixed">target</div>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:yellow">
+ <div style="display:table-row;">
+ <div id="target7" style="display:table">target</div>
+ </div> 
+ </div>
+ 
+  <div style="display:table; border-spacing:10px; background-color:silver">
+ <div style="display:table-row;">
+ <div id="target8" style="display:table-caption">target</div>
+ </div> 
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:navy">
+ <div id="target9" style="display:-moz-column">target</div>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:teal">
+ <div id="target10" style="display:-moz-popup">target</div>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:Maroon">
+     <math xmlns="http://www.w3.org/1998/Math/MathML" id="target11">
+        <msup>
+          <mfenced>
+            <mrow>
+              <mi>a</mi>
+              <mo>+</mo>
+              <mi>b</mi>
+            </mrow>
+          </mfenced>
+          <mn>2</mn>
+        </msup>
+    </math>
+ </div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:SkyBlue ">
+  <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" id="target12">
+      <circle cx="150" cy="100" r="50" />
+    </svg>
+</div>
+
+ 
+ <div style="display:table; border-spacing:10px; background-color:Peru">
+  <div style="display:table-row;">
+  <div id="target13" style="display:table-row-group; overflow:scroll">target</div>
+  </div>
+</div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:Tomato">
+  <div style="display:table-row;">
+  <input type="button" value="OK" id="target14"></input>
+  </div>
+</div>
+ 
+ <div style="display:table; border-spacing:10px; background-color:DarkSeaGreen ">
+  <div style="display:table-row;">
+   <div id="target15" style="display:table-column;"/>
+  </div>
+</div>
+
+<div style="display:table; border-spacing:10px; background-color:MistyRose">
+  <div style="display:table-row;">
+   <div id="target16" style="display:table-column-group;"/>
+  </div>
+</div>
+
+<div style="display:table; border-spacing:10px; background-color:Indigo">
+ <div id="target17" style="display:-moz-box">target</div>
+ </div>
+</body>
+</html>

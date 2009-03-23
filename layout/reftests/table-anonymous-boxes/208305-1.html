@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style type="text/css">
+.cell {display:table-cell}
+</style>
+<script type="text/javascript">
+function doTest() {
+ss = document.styleSheets[0];
+ss.cssRules[0].style.display="block";
+}
+</script>
+</head>
+
+<body onload="doTest()">
+<div class="cell">foo</div><div class="cell">bar</div><div class="cell">baz</div>
+</body>
+
+</html>
