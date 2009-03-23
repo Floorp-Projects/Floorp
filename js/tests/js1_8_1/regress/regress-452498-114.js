@@ -62,7 +62,7 @@ function test()
 // (note, this is with -j; I don't know what the glorp! message is about.)
 
 // =====
-  function y([{x: x, x}]){}
+  function y([{x: x, y}]){}
 
 // Assertion failure: UPVAR_FRAME_SKIP(pn->pn_cookie) == (pn->pn_defn ? cg->staticLevel : 0), at ../jsemit.cpp:3547
 
