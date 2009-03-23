@@ -973,26 +973,13 @@ PlacesController.prototype = {
         }
       }
       else if (PlacesUtils.nodeIsDay(node)) {
-        // this is the oldest date
-        // for the last node endDate is end of epoch
-        var beginDate = 0;
-        // this is the newest date
-        // day nodes have time property set to the last day in the interval
-        var endDate = node.time;
-
-        var nodeIdx = 0;
-        var cc = root.childCount;
-
-        // Find index of current day node
-        while (nodeIdx < cc && root.getChild(nodeIdx) != node)
-          ++nodeIdx;
-
-        // We have an older day
-        if (nodeIdx+1 < cc)
-          beginDate = root.getChild(nodeIdx+1).time;
-
-        // we want to exclude beginDate from the removal
-        bhist.removePagesByTimeframe(beginDate+1, endDate);
+        var query = node.getQueries({})[0];
+        var beginTime = query.beginTime;
+        var endTime = query.endTime;
+        NS_ASSERT(query && beginTime && endTime,
+                  "A valid date container query should exist!");
+        // We want to exclude beginTime from the removal
+        bhist.removePagesByTimeframe(beginTime+1, endTime);
       }
     }
 
