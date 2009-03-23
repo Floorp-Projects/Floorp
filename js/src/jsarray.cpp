@@ -1600,7 +1600,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
 
         JS_ASSERT(count < size_t(-1) / sizeof(jsval));
         memcpy(obj->dslots + start, vector, sizeof(jsval) * count);
-        JS_ASSERT(newlen == 0 || obj->dslots[newlen - 1] != JSVAL_HOLE);
+        JS_ASSERT_IF(count != 0, obj->dslots[newlen - 1] != JSVAL_HOLE);
         return JS_TRUE;
     }
 
