@@ -9583,8 +9583,10 @@ TraceRecorder::record_JSOP_LENGTH()
     LIns* v_ins;
     if (OBJ_IS_ARRAY(cx, obj)) {
         if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
-            if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
+            if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
                 JS_NOT_REACHED("OBJ_IS_DENSE_ARRAY but not?!?");
+                return false;
+            }
         } else {
             if (!guardClass(obj, obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT)))
                 ABORT_TRACE("can't trace length property access on non-array");
