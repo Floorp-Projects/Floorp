@@ -306,7 +306,7 @@
             <richpref pref="javascript.options.jit.content" type="bool" title="&javascript.options.jit.content.title;">
               &javascript.options.jit.content.description;
             </richpref>
-            <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;" onsyncfrompreference="Browser.setPluginState(this.value);">
+            <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;" onsynctopreference="Browser.setPluginState(this.value);">
               &plugins.enabled.description;
             </richpref>
 
