@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script language="javascript">
+      function toggleRow(rowId)
+      {
+        var r = document.getElementById(rowId);
+        if (r.style.display == "none")
+          r.style.display = "inline";
+        else
+          r.style.display = "none";
+      }
+
+      function doTest() {
+        toggleRow('row4');
+        document.body.offsetWidth;
+        toggleRow('row4');
+        document.body.offsetWidth;
+        toggleRow('row4');
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <table border="5">
+      <tr>
+        <td>Row 1</td>
+      </tr>
+      <tr>
+        <td>Row 2</td>
+      </tr>
+      <tr>
+        <td>Row 3</td>
+      </tr>
+      <tr>
+        <td id="row4" style="display: none">Row 4</td>
+      </tr>
+    </table>
+  </body>
+</html>
