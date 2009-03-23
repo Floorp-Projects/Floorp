@@ -1948,6 +1948,7 @@ nsXULDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 nsresult
 nsXULDocument::Init()
 {
+    SetIdTableLive();
     mRefMap.Init();
 
     nsresult rv = nsXMLDocument::Init();

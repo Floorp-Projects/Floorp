@@ -3203,8 +3203,16 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
   *aResult = nsnull;
 
   nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
-  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+  nsIdentifierMapEntry *entry;
+  if (IdTableIsLive()) {
+    entry = mIdentifierMap.GetEntry(id);
+    // If we did a lookup and it failed, there are no items with this id
+    if (!entry)
+      return NS_OK;
+  } else {
+    entry = mIdentifierMap.PutEntry(id);
+    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   nsIContent* root = GetRootContent();
   if (!root) {
