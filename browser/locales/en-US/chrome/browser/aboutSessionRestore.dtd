@@ -2,7 +2,7 @@
 
 <!-- LOCALIZATION NOTE: The title is intended to be apologetic and disarming, expressing dismay
      and regret that we are unable to restore the session for the user -->
-<!ENTITY restorepage.errorTitle     "Well, this is embarassing.">
+<!ENTITY restorepage.errorTitle     "Well, this is embarrassing.">
 <!ENTITY restorepage.problemDesc    "&brandShortName; is having trouble recovering your windows and tabs. This is usually caused by a recently opened web page.">
 <!ENTITY restorepage.tryThis        "You can try:">
 <!ENTITY restorepage.restoreSome    "Removing one or more tabs that you think may be causing the problem">
