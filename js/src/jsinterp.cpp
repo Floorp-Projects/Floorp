@@ -169,7 +169,13 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
         tmp = obj;
         for (;;) {
             tmp = OBJ_GET_PROTO(cx, tmp);
-            if (!tmp) {
+
+            /*
+             * We cannot cache properties coming from native objects behind
+             * non-native ones on the prototype chain. The non-natives can
+             * mutate in arbitrary way without changing any shapes.
+             */
+            if (!tmp || !OBJ_IS_NATIVE(tmp)) {
                 PCMETER(cache->noprotos++);
                 *entryp = NULL;
                 return;
