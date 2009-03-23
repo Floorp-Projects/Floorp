@@ -2829,6 +2829,7 @@ HTMLContentSink::CloseHeadContext()
       return;
 
     mCurrentContext->FlushTextAndRelease();
+    mCurrentContext->FlushTags();
   }
 
   if (!mContextStack.IsEmpty())
