@@ -49,11 +49,11 @@ function checkElements(namespaceURI, tagName) {
   is(global.gEBTNNS[namespaceURI][tagName].length, elementCount, text2);
 }
 
-const xhtmlNS = null;
+const xhtmlNS = 'http://www.w3.org/1999/xhtml';
 
 function checkSpansAndScripts () {
-  checkElements(xhtmlNS, 'SPAN');
-  checkElements(xhtmlNS, 'SCRIPT');
+  checkElements(xhtmlNS, 'span');
+  checkElements(xhtmlNS, 'script');
 }
 
 SimpleTest.waitForExplicitFinish();
