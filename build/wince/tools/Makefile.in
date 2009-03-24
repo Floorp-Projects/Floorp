@@ -47,6 +47,10 @@ CFLAGS += -DHAVE_SHUNT
 MOZCE_NOT_CONFIGURE=1
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_MEMORY
+CFLAGS += -DMOZ_MEMORY
+endif
+
 include $(topsrcdir)/build/wince/tools/Makefile
 
 export::
