@@ -3426,7 +3426,7 @@ nsGenericHTMLElement::GetHashFromHrefURI(nsAString& aHash)
 const nsAttrName*
 nsGenericHTMLElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
 {
-  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+  if (!(GetOwnerDoc()->IsCaseSensitive())) {
     nsAutoString lower;
     ToLowerCase(aStr, lower);
     return mAttrsAndChildren.GetExistingAttrNameFromQName(
