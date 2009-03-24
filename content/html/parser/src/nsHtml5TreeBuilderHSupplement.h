@@ -147,5 +147,7 @@
     }
     
     inline void StartLayout() {
-      mParser->StartLayout(PR_FALSE);
+      if (GetDocument()) {
+        mParser->StartLayout(PR_FALSE);
+      }
     }
