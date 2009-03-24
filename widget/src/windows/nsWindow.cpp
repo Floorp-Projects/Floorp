@@ -455,7 +455,10 @@ static BYTE  gLastMouseButton = 0;
 // The last user input event time in microseconds. If there are any pending
 // native toolkit input events it returns the current time. The value is
 // compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
-static PRUint32 gLastInputEventTime = 0;
+#ifdef WINCE
+static
+#endif
+PRUint32 gLastInputEventTime = 0;
 
 static int gTrimOnMinimize = 2; // uninitialized, but still true
 
