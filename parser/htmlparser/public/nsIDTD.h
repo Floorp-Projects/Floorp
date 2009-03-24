@@ -102,8 +102,7 @@ public:
      * @param   anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
-                             nsIParser* aParser) = 0;
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink) = 0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -111,7 +110,10 @@ public:
      * @param   anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer) = 0;
+    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer,
+                          PRBool aCanInterrupt,
+                          PRBool aCountLines,
+                          const nsCString* aCharsetPtr) = 0;
 
     /**
      * Called during model building phase of parse process. Each token
@@ -123,7 +125,7 @@ public:
      * @param   aToken -- token object to be put into content model
      * @return error code (usually 0)
      */
-    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser) = 0;
+    NS_IMETHOD HandleToken(CToken* aToken) = 0;
 
     /**
      * If the parse process gets interrupted midway, this method is
@@ -183,9 +185,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
 #define NS_DECL_NSIDTD \
     NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink, nsIParser* aParser);\
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer);\
-    NS_IMETHOD HandleToken(CToken* aToken, nsIParser* aParser);\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink);\
+    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, PRBool aCanInterrupt, PRBool aCountLines, const nsCString* aCharsetPtr);\
+    NS_IMETHOD HandleToken(CToken* aToken);\
     NS_IMETHOD WillResumeParse();\
     NS_IMETHOD WillInterruptParse();\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\

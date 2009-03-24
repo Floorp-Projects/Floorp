@@ -1531,7 +1531,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
       PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink &&
           mSink->ReadyToCallDidBuildModel(terminated)) {
-        result = mDTD->DidBuildModel(anErrorCode,PR_TRUE,this);
+        result = mDTD->DidBuildModel(anErrorCode,PR_TRUE);
       }
 
       //Ref. to bug 61462.
@@ -2364,7 +2364,13 @@ nsParser::BuildModel()
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
       MOZ_TIMER_START(mDTDTime);
-      result = mDTD->BuildModel(this, theTokenizer);
+      // XXXbenjamn CanInterrupt() and !inDocWrite appear to be redundant.
+      PRBool inDocWrite = !!mParserContext->mPrevContext;
+      result = mDTD->BuildModel(theTokenizer,
+                                // ignore interruptions in document.write
+                                CanInterrupt() && !inDocWrite,
+                                !inDocWrite, // don't count lines in document.write
+                                &mCharset);
       MOZ_TIMER_STOP(mDTDTime);
     }
   } else {
