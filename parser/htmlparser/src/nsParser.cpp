@@ -1508,7 +1508,7 @@ nsParser::WillBuildModel(nsString& aFilename)
   NS_ENSURE_TRUE(mDTD, NS_ERROR_OUT_OF_MEMORY);
 
   nsITokenizer* tokenizer;
-  nsresult rv = mParserContext->GetTokenizer(mDTD, tokenizer);
+  nsresult rv = mParserContext->GetTokenizer(mDTD, mSink, tokenizer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
@@ -1531,7 +1531,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
       PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink &&
           mSink->ReadyToCallDidBuildModel(terminated)) {
-        result = mDTD->DidBuildModel(anErrorCode,PR_TRUE,this);
+        result = mDTD->DidBuildModel(anErrorCode,PR_TRUE,this,mSink);
       }
 
       //Ref. to bug 61462.
@@ -2227,7 +2227,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
     }
 
     if (mDTD) {
-      mDTD->WillResumeParse();
+      mDTD->WillResumeParse(mSink);
       PRBool theIterationIsOk = PR_TRUE;
 
       while (result == NS_OK && theIterationIsOk) {
@@ -2265,7 +2265,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
         // (and cache any data coming in) until the parser is re-enabled.
         if (NS_ERROR_HTMLPARSER_BLOCK == result) {
           if (mDTD) {
-            mDTD->WillInterruptParse();
+            mDTD->WillInterruptParse(mSink);
           }
 
           if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
@@ -2332,7 +2332,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
             result == NS_ERROR_HTMLPARSER_INTERRUPTED) {
           result = (result == NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
           if (mDTD) {
-            mDTD->WillInterruptParse();
+            mDTD->WillInterruptParse(mSink);
           }
         }
       }
@@ -2358,13 +2358,13 @@ nsParser::BuildModel()
 
   nsresult result = NS_OK;
   if (mParserContext) {
-    result = mParserContext->GetTokenizer(mDTD, theTokenizer);
+    result = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
   }
 
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
       MOZ_TIMER_START(mDTDTime);
-      result = mDTD->BuildModel(this, theTokenizer);
+      result = mDTD->BuildModel(this, theTokenizer, nsnull, mSink);
       MOZ_TIMER_STOP(mDTDTime);
     }
   } else {
@@ -2981,7 +2981,7 @@ nsParser::WillTokenize(PRBool aIsFinalChunk)
   }
 
   nsITokenizer* theTokenizer;
-  nsresult result = mParserContext->GetTokenizer(mDTD, theTokenizer);
+  nsresult result = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
   NS_ENSURE_SUCCESS(result, PR_FALSE);
   return NS_SUCCEEDED(theTokenizer->WillTokenize(aIsFinalChunk,
                                                  &mTokenAllocator));
@@ -2999,7 +2999,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
 
   nsresult result = NS_ERROR_NOT_AVAILABLE;
   if (mParserContext) {
-    result = mParserContext->GetTokenizer(mDTD, theTokenizer);
+    result = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
   }
 
   if (NS_SUCCEEDED(result)) {
@@ -3074,7 +3074,7 @@ nsParser::DidTokenize(PRBool aIsFinalChunk)
   }
 
   nsITokenizer* theTokenizer;
-  nsresult rv = mParserContext->GetTokenizer(mDTD, theTokenizer);
+  nsresult rv = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = theTokenizer->DidTokenize(aIsFinalChunk);
