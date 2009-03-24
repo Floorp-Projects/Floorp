@@ -53,9 +53,9 @@ LIBRARY_NAME = mozce_shunt
 FORCE_SHARED_LIB= 1
 DIST_INSTALL = 1
 
-
 EXPORTS = include/windows.h \
   include/ymath.h \
+  include/stdlib.h \
   include/direct.h \
   include/errno.h \
   include/fcntl.h \
@@ -67,6 +67,13 @@ EXPORTS = include/windows.h \
   $(NULL)
 
 DIRS += include/sys
+
+ifdef MOZ_MEMORY
+REQUIRES = jemalloc 
+JEMALLOC_LIB = $(DIST)/lib/jemalloc.lib 
+CFLAGS += -DMOZ_MEMORY
+CXXFLAGS += -DMOZ_MEMORY
+endif
 
 CPPSRCS = map.cpp
 
