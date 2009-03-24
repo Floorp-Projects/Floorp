@@ -181,6 +181,20 @@ static gfxIntSize gSharedSurfaceSize;
 
 #ifdef WINCE_HAVE_SOFTKB
 static PRBool gSoftKeyMenuBar = PR_FALSE;
+static PRBool gSoftKeyboardState = PR_FALSE;
+
+static void ToggleSoftKB(PRBool show)
+{
+  HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
+  if (hWndSIP)
+    ::ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
+
+  hWndSIP = FindWindowW(L"MS_SIPBUTTON", NULL ); 
+  if (hWndSIP)
+    ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
+
+  SHSipPreference(NULL, show ? SIP_UP: SIP_DOWN);
+}
 
 static void CreateSoftKeyMenuBar(HWND wnd)
 {
@@ -196,7 +210,6 @@ static void CreateSoftKeyMenuBar(HWND wnd)
   ZeroMemory(&mbi, sizeof(SHMENUBARINFO));
   mbi.cbSize = sizeof(SHMENUBARINFO);
   mbi.hwndParent = wnd;
-  
   
   //  On windows ce smartphone, events never occur if the
   //  menubar is empty.  This doesn't work: 
@@ -4737,13 +4750,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       if (mEventCallback) {
         PRInt32 fActive = LOWORD(wParam);
 
+#if defined(WINCE_HAVE_SOFTKB)
+        if (mIsTopWidgetWindow && gSoftKeyboardState)
+          ToggleSoftKB(fActive);
+#endif
+
         if (WA_INACTIVE == fActive) {
           gJustGotDeactivate = PR_TRUE;
 #ifndef WINCE
           if (mIsTopWidgetWindow)
             mLastKeyboardLayout = gKbdLayout.GetLayout();
 #endif
+
         } else {
+
           gJustGotActivate = PR_TRUE;
           nsMouseEvent event(PR_TRUE, NS_MOUSE_ACTIVATE, this,
                              nsMouseEvent::eReal);
@@ -4830,7 +4850,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       {
         HIMC hC = ImmGetContext(mWnd);
         ImmSetOpenStatus(hC, FALSE);
-        SetIMEEnabled(nsIWidget::IME_STATUS_DISABLED);        
       }
 #endif
       WCHAR className[kMaxClassNameLength];
@@ -7764,15 +7783,8 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
                    aState == nsIWidget::IME_STATUS_PLUGIN);
 
 #if defined(WINCE_HAVE_SOFTKB)
-  HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
-  if (hWndSIP)
-    ::ShowWindow( hWndSIP, enable? SW_SHOW: SW_HIDE);
-
-  hWndSIP = FindWindowW(L"MS_SIPBUTTON", NULL );  
-  if (hWndSIP)
-    ShowWindow(hWndSIP, enable? SW_SHOW: SW_HIDE); 
-  
-  SHSipPreference(NULL, enable? SIP_UP: SIP_DOWN);
+  gSoftKeyboardState = (aState != nsIWidget::IME_STATUS_DISABLED);
+  ToggleSoftKB(gSoftKeyboardState);
 #endif
 
   if (!enable != !mOldIMC)
