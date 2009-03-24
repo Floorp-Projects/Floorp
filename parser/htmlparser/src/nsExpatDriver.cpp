@@ -803,10 +803,12 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
     localURI.swap(uri);
   }
 
-  nsCOMPtr<nsIContentSink> sink = do_QueryInterface(mSink);
   nsCOMPtr<nsIDocument> doc;
-  if (sink)
-    doc = do_QueryInterface(sink->GetTarget());
+  NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
+               "In nsExpatDriver::OpenInputStreamFromExternalDTD: "
+               "mOriginalSink not the same object as mSink?");
+  if (mOriginalSink)
+    doc = do_QueryInterface(mOriginalSink->GetTarget());
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_DTD,
                                 uri,
@@ -1232,6 +1234,8 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
     return mInternalState;
   }
 
+  mOriginalSink = aSink;
+
   static const XML_Memory_Handling_Suite memsuite =
     {
       (void *(*)(size_t))PR_Malloc,
@@ -1299,9 +1303,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
 NS_IMETHODIMP
 nsExpatDriver::BuildModel(nsIParser* aParser,
-                          nsITokenizer* aTokenizer,
-                          nsITokenObserver* anObserver,
-                          nsIContentSink* aSink)
+                          nsITokenizer* aTokenizer)
 {
   return mInternalState;
 }
@@ -1309,17 +1311,19 @@ nsExpatDriver::BuildModel(nsIParser* aParser,
 NS_IMETHODIMP
 nsExpatDriver::DidBuildModel(nsresult anErrorCode,
                              PRBool aNotifySink,
-                             nsIParser* aParser,
-                             nsIContentSink* aSink)
+                             nsIParser* aParser)
 {
-  // Check for mSink is intentional. This would make sure
+  NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
+               "In nsExpatDriver::DidBuildModel: mOriginalSink not the same object as mSink?");
+  // Check for mOriginalSink is intentional. This would make sure
   // that DidBuildModel() is called only once on the sink.
   nsresult result = NS_OK;
-  if (mSink) {
-    result = aSink->DidBuildModel();
-    mSink = nsnull;
+  if (mOriginalSink) {
+    result = mOriginalSink->DidBuildModel();
+    mOriginalSink = nsnull;
   }
 
+  mSink = nsnull;
   mExtendedSink = nsnull;
 
   return result;
@@ -1334,15 +1338,19 @@ nsExpatDriver::WillTokenize(PRBool aIsFinalChunk,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::WillResumeParse(nsIContentSink* aSink)
+nsExpatDriver::WillResumeParse()
 {
-  return aSink ? aSink->WillResume() : NS_OK;
+  NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
+               "In nsExpatDriver::WillResumeParse: mOriginalSink not the same object as mSink?");
+  return mOriginalSink ? mOriginalSink->WillResume() : NS_OK;
 }
 
 NS_IMETHODIMP
-nsExpatDriver::WillInterruptParse(nsIContentSink* aSink)
+nsExpatDriver::WillInterruptParse()
 {
-  return aSink ? aSink->WillInterrupt() : NS_OK;
+  NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
+               "In nsExpatDriver::WillInterruptParse: mOriginalSink not the same object as mSink?");
+  return mOriginalSink ? mOriginalSink->WillInterrupt() : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1365,6 +1373,12 @@ NS_IMETHODIMP_(PRInt32)
 nsExpatDriver::GetType()
 {
   return NS_IPARSER_FLAG_XML;
+}
+
+NS_IMETHODIMP_(nsITokenizer*)
+nsExpatDriver::CreateTokenizer()
+{
+  return static_cast<nsITokenizer*>(this);
 }
 
 /*************************** Unused methods **********************************/
