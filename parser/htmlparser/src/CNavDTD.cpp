@@ -590,7 +590,7 @@ HasOpenTagOfType(PRInt32 aType, const nsDTDContext& aContext)
 }
 
 nsresult
-CNavDTD::HandleToken(CToken* aToken)
+CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
 {
   if (!aToken) {
     return NS_OK;
