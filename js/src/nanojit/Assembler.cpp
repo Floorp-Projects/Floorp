@@ -55,7 +55,7 @@ extern  "C"	void sync_instruction_memory(caddr_t v, u_int len);
 
 namespace nanojit
 {
-
+	int UseSoftfloat = 0;
 
 	class DeadCodeFilter: public LirFilter
 	{
@@ -602,7 +602,11 @@ namespace nanojit
 			Register s = resv->reg = registerAlloc(prefer);
 			_allocator.addActive(s, i);
             if ((rmask(r) & GpRegs) && (rmask(s) & GpRegs)) {
+#ifdef NANOJIT_ARM
+				MOV(r, s);
+#else
     			MR(r, s);
+#endif
             } 
             else {
 				asm_nongp_copy(r, s);
@@ -1238,7 +1242,6 @@ namespace nanojit
 					asm_arith(ins);
 					break;
 				}
-#ifndef NJ_SOFTFLOAT
 				case LIR_fneg:
 				{
                     countlir_fpu();
@@ -1266,7 +1269,6 @@ namespace nanojit
 					asm_u2f(ins);
 					break;
 				}
-#endif // NJ_SOFTFLOAT
 				case LIR_st:
 				case LIR_sti:
 				{
@@ -1417,7 +1419,6 @@ namespace nanojit
 					break;
 				}
 
-#ifndef NJ_SOFTFLOAT
 				case LIR_feq:
 				case LIR_fle:
 				case LIR_flt:
@@ -1428,7 +1429,6 @@ namespace nanojit
 					asm_fcond(ins);
 					break;
 				}
-#endif
 				case LIR_eq:
                 case LIR_ov:
                 case LIR_cs:
@@ -1446,10 +1446,8 @@ namespace nanojit
 					break;
 				}
 				
-#ifndef NJ_SOFTFLOAT
 				case LIR_fcall:
 				case LIR_fcalli:
-#endif
 #if defined NANOJIT_64BIT
 				case LIR_callh:
 #endif
@@ -1458,7 +1456,6 @@ namespace nanojit
 				{
                     countlir_call();
                     Register rr = UnknownReg;
-#ifndef NJ_SOFTFLOAT
                     if ((op&LIR64))
                     {
                         // fcall or fcalli
@@ -1466,7 +1463,6 @@ namespace nanojit
 						rr = asm_prep_fcall(rR, ins);
                     }
                     else
-#endif
                     {
                         rr = retRegs[0];
 						prepResultReg(ins, rmask(rr));
@@ -1947,13 +1943,12 @@ namespace nanojit
 		for (uint32_t i = 0; i < MAXARGS; i++) {
 			argt >>= 2;
 			ArgSize a = ArgSize(argt&3);
-#ifdef NJ_SOFTFLOAT
-			if (a == ARGSIZE_F) {
+			if (AvmCore::config.soft_float && a == ARGSIZE_F) {
                 sizes[argc++] = ARGSIZE_LO;
                 sizes[argc++] = ARGSIZE_LO;
                 continue;
             }
-#endif
+
             if (a != ARGSIZE_NONE) {
                 sizes[argc++] = a;
             } else {

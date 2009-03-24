@@ -834,12 +834,12 @@ namespace nanojit
 		NIns* at = 0;
 		LOpcode condop = cond->opcode();
 		NanoAssert(cond->isCond());
-#ifndef NJ_SOFTFLOAT
+
 		if (condop >= LIR_feq && condop <= LIR_fge)
 		{
 			return asm_jmpcc(branchOnFalse, cond, targ);
 		}
-#endif
+
 		// produce the branch
 		if (branchOnFalse)
 		{
@@ -973,13 +973,11 @@ namespace nanojit
 		// only want certain regs 
 		Register r = prepResultReg(ins, AllowableFlagRegs);
 		asm_setcc(r, ins);
-#ifdef NJ_ARM_VFP
-		SETE(r);
-#else
+
 		// SETcc only sets low 8 bits, so extend 
 		MOVZX8(r,r);
 		SETNP(r);
-#endif
+
 		asm_fcmp(ins);
 	}
 				
