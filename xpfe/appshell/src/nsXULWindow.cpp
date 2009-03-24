@@ -146,7 +146,9 @@ nsXULWindow::nsXULWindow()
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
-    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
+    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL),
+    // best guess till we have a widget
+    mAppPerDev(nsPresContext::AppUnitsPerCSSPixel()) 
 {
 }
 
@@ -1053,7 +1055,7 @@ PRBool nsXULWindow::LoadPositionFromXUL()
   PRInt32 specX = currX;
   PRInt32 specY = currY;
   nsAutoString posString;
-  PRInt32 appPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
+  PRInt32 appPerDev = AppUnitsPerDevPixel();
 
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenX"), posString);
   if (NS_SUCCEEDED(rv)) {
@@ -1120,7 +1122,7 @@ PRBool nsXULWindow::LoadSizeFromXUL()
   PRInt32 specWidth = currWidth;
   PRInt32 specHeight = currHeight;
   nsAutoString sizeString;
-  PRInt32 appPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
+  PRInt32 appPerDev = AppUnitsPerDevPixel();
 
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("width"), sizeString);
   if (NS_SUCCEEDED(rv)) {
@@ -1463,7 +1465,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   nsAutoString                sizeString;
   nsAutoString                windowElementId;
   nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
-  PRInt32 appPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
+  PRInt32 appPerDev = AppUnitsPerDevPixel();
 
   { // fetch docShellElement's ID and XUL owner document
     nsCOMPtr<nsIDOMDocument> ownerDoc;
@@ -2129,6 +2131,17 @@ NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowser
 //*****************************************************************************
 // nsXULWindow: Accessors
 //*****************************************************************************
+
+PRInt32 nsXULWindow::AppUnitsPerDevPixel()
+{
+  if (mWindow && mWindow->GetDeviceContext()) {
+    mAppPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
+  } else {
+    NS_ERROR("nsXULWindow::AppUnitsPerDevPixel called with no window "
+             "or no dev context");
+  }
+  return mAppPerDev;
+}
 
 //*****************************************************************************
 //*** nsContentShellInfo: Object Management
