@@ -63,7 +63,6 @@ REQUIRES	= \
 
 CPPSRCS		= \
 		nsIFileEnumerator.cpp \
-		nsIFileTest.cpp \
 		TestCallTemplates.cpp \
 		TestINIParser.cpp \
 		TestRacingServiceManager.cpp \
@@ -90,6 +89,7 @@ CPP_UNIT_TESTS = \
                  TestCOMPtr.cpp \
                  TestCOMPtrEq.cpp \
                  TestFactory.cpp \
+                 TestFile.cpp \
                  TestHashtables.cpp \
                  TestID.cpp \
                  TestObserverService.cpp \
