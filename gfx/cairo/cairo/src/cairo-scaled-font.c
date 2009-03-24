@@ -63,7 +63,7 @@
  */
 
 /* XXX: This number is arbitrary---we've never done any measurement of this. */
-#define MAX_GLYPH_PAGES_CACHED 512
+#define MAX_GLYPH_PAGES_CACHED 256
 static cairo_cache_t *cairo_scaled_glyph_page_cache;
 
 #define CAIRO_SCALED_GLYPH_PAGE_SIZE 32
