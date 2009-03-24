@@ -215,8 +215,7 @@
 #else
 #if (defined(MOZ_MORK) && defined(MOZ_XUL))
 #define PLACES_MODULES \
-    MODULE(nsMorkModule)                     \
-    MODULE(nsToolkitHistory)
+    MODULE(nsMorkModule)
 #else
 #define PLACES_MODULES
 #endif
