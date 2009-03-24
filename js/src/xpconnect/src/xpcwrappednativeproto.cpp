@@ -167,7 +167,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
     {
         // Only remove this proto from the map if it is the one in the map.
         ClassInfo2WrappedNativeProtoMap* map = 
-            GetScope()->GetWrappedNativeProtoMap();
+            GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
         if(map->Find(mClassInfo) == this)
             map->Remove(mClassInfo);
     }
@@ -244,8 +244,9 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     if(shared)
     {
-        map = Scope->GetWrappedNativeProtoMap();
-        lock = Scope->GetRuntime()->GetMapLock();
+        JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
+        map = Scope->GetWrappedNativeProtoMap(mainThreadOnly);
+        lock = mainThreadOnly ? nsnull : Scope->GetRuntime()->GetMapLock();
         {   // scoped lock
             XPCAutoLock al(lock);
             proto = map->Find(ClassInfo);
