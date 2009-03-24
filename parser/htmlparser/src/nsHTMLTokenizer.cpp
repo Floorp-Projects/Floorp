@@ -73,19 +73,9 @@ NS_IMPL_ISUPPORTS1(nsHTMLTokenizer, nsITokenizer)
 nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
                                  eParserDocType aDocType,
                                  eParserCommands aCommand,
-                                 nsIHTMLContentSink* aSink)
-  : nsITokenizer(), mTokenDeque(0), mFlags(0)
+                                 PRUint16 aFlags) :
+  nsITokenizer(), mTokenDeque(0), mFlags(aFlags)
 {
-  if (aSink) {
-    PRBool enabled;
-    aSink->IsEnabled(eHTMLTag_frameset, &enabled);
-    if (enabled)
-      mFlags |= NS_IPARSER_FLAG_FRAMES_ENABLED;
-    aSink->IsEnabled(eHTMLTag_script, &enabled);
-    if (enabled)
-      mFlags |= NS_IPARSER_FLAG_SCRIPT_ENABLED;
-  }
-
   if (aParseMode == eDTDMode_full_standards ||
       aParseMode == eDTDMode_almost_standards) {
     mFlags |= NS_IPARSER_FLAG_STRICT_MODE;
