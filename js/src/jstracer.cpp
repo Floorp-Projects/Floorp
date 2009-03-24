@@ -1224,7 +1224,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->outer = outer;
     this->generatedTraceableNative = new JSTraceableNative();
     JS_ASSERT(generatedTraceableNative);
-    
+
     debug_only_v(printf("recording starting from %s:%u@%u\n",
                         ti->treeFileName, ti->treeLineNumber, ti->treePCOffset);)
     debug_only_v(printf("globalObj=%p, shape=%d\n", (void*)this->globalObj, OBJ_SHAPE(this->globalObj));)
