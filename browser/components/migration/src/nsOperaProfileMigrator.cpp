@@ -695,7 +695,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->ReadBytes(length, &buf);
         buf = (char*)nsMemory::Realloc(buf, length+1);
         buf[length] = '\0';
-        mDomainStack.AppendElement((void*)buf);
+        mDomainStack.AppendElement(buf);
       }
       break;
     case END_DOMAIN_SEGMENT:
@@ -704,9 +704,9 @@ nsOperaCookieMigrator::Migrate()
           AddCookieOverride(permissionManager);
 
         // Pop the domain stack
-        PRUint32 count = mDomainStack.Count();
+        PRUint32 count = mDomainStack.Length();
         if (count > 0) {
-          char* segment = (char*)mDomainStack.ElementAt(count - 1);
+          char* segment = mDomainStack.ElementAt(count - 1);
           if (segment) 
             nsMemory::Free(segment);
           mDomainStack.RemoveElementAt(count - 1);
@@ -724,7 +724,7 @@ nsOperaCookieMigrator::Migrate()
         mStream->ReadBytes(length, &buf);
         buf = (char*)nsMemory::Realloc(buf, length+1);
         buf[length] = '\0';
-        mPathStack.AppendElement((void*)buf);
+        mPathStack.AppendElement(buf);
       }
       break;
     case END_PATH_SEGMENT:
@@ -737,9 +737,9 @@ nsOperaCookieMigrator::Migrate()
         // i.e. telling us that we are done processing cookies for "/"
 
         // Pop the path stack
-        PRUint32 count = mPathStack.Count();
+        PRUint32 count = mPathStack.Length();
         if (count > 0) {
-          char* segment = (char*)mPathStack.ElementAt(count - 1);
+          char* segment = mPathStack.ElementAt(count - 1);
           if (segment)
             nsMemory::Free(segment);
           mPathStack.RemoveElementAt(count - 1);
@@ -849,17 +849,17 @@ nsOperaCookieMigrator::Migrate()
   // Make sure the path and domain stacks are clear. 
   char* segment = nsnull;
   PRUint32 i;
-  PRUint32 count = mPathStack.Count();
+  PRUint32 count = mPathStack.Length();
   for (i = 0; i < count; ++i) {
-    segment = (char*)mPathStack.ElementAt(i);
+    segment = mPathStack.ElementAt(i);
     if (segment) {
       nsMemory::Free(segment);
       segment = nsnull;
     }
   }
-  count = mDomainStack.Count();
+  count = mDomainStack.Length();
   for (i = 0; i < count; ++i) {
-    segment = (char*)mDomainStack.ElementAt(i);
+    segment = mDomainStack.ElementAt(i);
     if (segment) {
       nsMemory::Free(segment);
       segment = nsnull;
@@ -923,10 +923,10 @@ nsOperaCookieMigrator::AddCookie(nsICookieManager2* aManager)
 void
 nsOperaCookieMigrator::SynthesizePath(char** aResult)
 {
-  PRUint32 count = mPathStack.Count();
+  PRUint32 count = mPathStack.Length();
   nsCAutoString synthesizedPath("/");
   for (PRUint32 i = 0; i < count; ++i) {
-    synthesizedPath.Append((char*)mPathStack.ElementAt(i));
+    synthesizedPath.Append(mPathStack.ElementAt(i));
     if (i != count-1)
       synthesizedPath.Append("/");
   }
@@ -939,13 +939,13 @@ nsOperaCookieMigrator::SynthesizePath(char** aResult)
 void
 nsOperaCookieMigrator::SynthesizeDomain(char** aResult)
 {
-  PRUint32 count = mDomainStack.Count();
+  PRUint32 count = mDomainStack.Length();
   if (count == 0)
     return;
 
   nsCAutoString synthesizedDomain;
   for (PRInt32 i = (PRInt32)count - 1; i >= 0; --i) {
-    synthesizedDomain.Append((char*)mDomainStack.ElementAt((PRUint32)i));
+    synthesizedDomain.Append(mDomainStack.ElementAt((PRUint32)i));
     if (i != 0)
       synthesizedDomain.Append(".");
   }
