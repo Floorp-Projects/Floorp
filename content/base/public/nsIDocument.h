@@ -1131,13 +1131,6 @@ public:
   }
 
   PRUint32 EventHandlingSuppressed() { return mEventsSuppressed; }
-  
-  /**
-   * Called by nsParser to preload images. Can be removed and code moved
-   * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
-   * parser-module is linked with gklayout-module.
-   */
-  virtual void PreLoadImage(nsIURI* uri);
 protected:
   ~nsIDocument()
   {
