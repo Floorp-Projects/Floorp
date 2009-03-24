@@ -338,7 +338,9 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   * @param  aFilename is the name of the file being parsed.
   * @return error code (almost always 0)
   */
-NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
+NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,
+                                          nsITokenizer* aTokenizer)
+{
   nsresult result=NS_OK;
 
   if(aTokenizer && aParser) {
@@ -547,7 +549,10 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
  * @param
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,
+                                             PRBool aNotifySink,
+                                             nsIParser* aParser)
+{
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
@@ -611,13 +616,20 @@ CViewSourceHTML::GetType() {
   return NS_IPARSER_FLAG_HTML;
 }
 
+NS_IMETHODIMP_(nsITokenizer*)
+CViewSourceHTML::CreateTokenizer()
+{
+  return new nsHTMLTokenizer(mDTDMode, mDocType, mParserCommand, mSink);
+}
+
 /**
  *
  * @update  gess5/18/98
  * @param
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::WillResumeParse()
+{
   nsresult result = NS_OK;
   if(mSink) {
     result = mSink->WillResume();
@@ -631,7 +643,8 @@ NS_IMETHODIMP CViewSourceHTML::WillResumeParse(nsIContentSink* aSink){
  * @param
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::WillInterruptParse()
+{
   nsresult result = NS_OK;
   if(mSink) {
     result = mSink->WillInterrupt();

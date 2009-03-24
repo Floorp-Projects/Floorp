@@ -253,9 +253,7 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 
 nsresult
 CNavDTD::BuildModel(nsIParser* aParser,
-                    nsITokenizer* aTokenizer,
-                    nsITokenObserver* anObserver,
-                    nsIContentSink* aSink)
+                    nsITokenizer* aTokenizer)
 {
   NS_PRECONDITION(mBodyContext != nsnull,
                   "Create a context before calling build model");
@@ -363,8 +361,7 @@ CNavDTD::BuildModel(nsIParser* aParser,
 nsresult
 CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
                               eHTMLTokenTypes aType,
-                              nsIParser* aParser,
-                              nsIContentSink* aSink)
+                              nsIParser* aParser)
 { 
   NS_ASSERTION(mTokenizer, "tokenizer is null! unable to build target.");
   NS_ASSERTION(mTokenAllocator, "unable to create tokens without an allocator.");
@@ -375,16 +372,15 @@ CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
   CToken* target = mTokenAllocator->CreateTokenOfType(aType, aTarget);
   NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
   mTokenizer->PushTokenFront(target);
-  return BuildModel(aParser, mTokenizer, 0, aSink);
+  return BuildModel(aParser, mTokenizer);
 }
 
 nsresult
 CNavDTD::DidBuildModel(nsresult anErrorCode,
                        PRBool aNotifySink,
-                       nsIParser* aParser,
-                       nsIContentSink* aSink)
+                       nsIParser* aParser)
 {
-  if (!aSink) {
+  if (!mSink) {
     return NS_OK;
   }
 
@@ -397,7 +393,7 @@ CNavDTD::DidBuildModel(nsresult anErrorCode,
         // Also note: We ignore the return value of BuildNeglectedTarget, we
         // can't reasonably respond to errors (or requests to block) at this
         // point in the parsing process.
-        BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser, aSink);
+        BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser);
       }
       if (mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
         // Looks like the misplaced contents are not processed yet.
@@ -435,7 +431,7 @@ CNavDTD::DidBuildModel(nsresult anErrorCode,
         result = CloseContainersTo(mBodyContext->Last(), PR_FALSE);
         if (NS_FAILED(result)) {
           //No matter what, you need to call did build model.
-          aSink->DidBuildModel();
+          mSink->DidBuildModel();
           return result;
         }
       } 
@@ -460,7 +456,7 @@ CNavDTD::DidBuildModel(nsresult anErrorCode,
   }
 
   // No matter what, you need to call did build model.
-  return aSink->DidBuildModel(); 
+  return mSink->DidBuildModel(); 
 }
 
 NS_IMETHODIMP_(void) 
@@ -474,6 +470,12 @@ NS_IMETHODIMP_(PRInt32)
 CNavDTD::GetType() 
 { 
   return NS_IPARSER_FLAG_HTML; 
+}
+
+NS_IMETHODIMP_(nsITokenizer*)
+CNavDTD::CreateTokenizer()
+{
+  return new nsHTMLTokenizer(mDTDMode, mDocType, mParserCommand, mSink);
 }
 
 /**
@@ -3152,12 +3154,12 @@ CNavDTD::CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild)
 }
 
 nsresult
-CNavDTD::WillResumeParse(nsIContentSink* aSink)
+CNavDTD::WillResumeParse()
 {
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
 
-  nsresult result = aSink ? aSink->WillResume() : NS_OK;
+  nsresult result = mSink ? mSink->WillResume() : NS_OK;
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
   START_TIMER();
@@ -3166,12 +3168,12 @@ CNavDTD::WillResumeParse(nsIContentSink* aSink)
 }
 
 nsresult
-CNavDTD::WillInterruptParse(nsIContentSink* aSink)
+CNavDTD::WillInterruptParse()
 {
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
 
-  nsresult result = aSink ? aSink->WillInterrupt() : NS_OK;
+  nsresult result = mSink ? mSink->WillInterrupt() : NS_OK;
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
   START_TIMER();
