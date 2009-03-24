@@ -30,6 +30,7 @@
    -   Simon Bünzli <zeniko@gmail.com>
    -   Michael Ventnor <ventnor.bugzilla@yahoo.com.au>
    -   Mark Pilgrim <pilgrim@gmail.com>
+   -   Dão Gottwald <dao@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1482,7 +1483,7 @@
       <method name="removeCurrentTab">
         <body>
           <![CDATA[
-            return this.removeTab(this.mCurrentTab);
+            this.removeTab(this.mCurrentTab);
           ]]>
         </body>
       </method>
@@ -1501,6 +1502,10 @@
         </body>
       </method>
 
+      <field name="_removingTabs">
+        []
+      </field>
+
       <method name="removeTab">
         <parameter name="aTab"/>
         <body>
@@ -1510,6 +1515,12 @@
         </body>
       </method>
 
+      <!-- Tab close requests are ignored if the window is closing anyway,
+           e.g. when holding Ctrl+W. -->
+      <field name="_windowIsClosing">
+        false
+      </field>
+
       <!-- Returns everything that _endRemoveTab needs in an array. -->
       <method name="_beginRemoveTab">
         <parameter name="aTab"/>
@@ -1517,14 +1528,19 @@
         <parameter name="aCloseWindowWithLastTab"/>
         <body>
           <![CDATA[
+            if (this._removingTabs.indexOf(aTab) > -1 || this._windowIsClosing)
+              return null;
+
+            var browser = this.getBrowserForTab(aTab);
+
             if (aFireBeforeUnload) {
-              let ds = this.getBrowserForTab(aTab).docShell;
+              let ds = browser.docShell;
               if (ds.contentViewer && !ds.contentViewer.permitUnload())
                 return null;
             }
 
             var closeWindow = false;
-            var l = this.mTabs.length;
+            var l = this.mTabs.length - this._removingTabs.length;
             if (l == 1) {
               closeWindow = aCloseWindowWithLastTab != null ?
                             aCloseWindowWithLastTab :
@@ -1539,22 +1555,15 @@
               l++;
             }
             if (l == 2) {
-              var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              var tabStripHide = !window.toolbar.visible;
+              let autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
+              let tabStripHide = !window.toolbar.visible;
               if (autohide || tabStripHide)
                 this.setStripVisibilityTo(false);
             }
 
-            if (!closeWindow) {
-              // see notes in addTab
-              let _delayedUpdate = function (aTabContainer) {
-                aTabContainer.adjustTabstrip();
-                aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-              };
-              setTimeout(_delayedUpdate, 0, this.mTabContainer);
-            }
+            this._removingTabs.push(aTab);
 
-            // We're committed to closing the tab now.  
+            // We're committed to closing the tab now.
             // Dispatch a notification.
             // We dispatch it before any teardown so that event listeners can
             // inspect the tab that's about to close.
@@ -1562,29 +1571,23 @@
             evt.initEvent("TabClose", true, false);
             aTab.dispatchEvent(evt);
 
-            var index = aTab._tPos;
-
             // Remove the tab's filter and progress listener.
-            const filter = this.mTabFilters[index];
-            var oldBrowser = this.getBrowserForTab(aTab);
-            oldBrowser.webProgress.removeProgressListener(filter);
-            filter.removeProgressListener(this.mTabListeners[index]);
-            this.mTabFilters.splice(index, 1);
-            this.mTabListeners.splice(index, 1);
+            const filter = this.mTabFilters[aTab._tPos];
+            browser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
 
             // Remove our title change and blocking listeners
-            oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
+            browser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             // We are no longer the primary content area.
-            oldBrowser.setAttribute("type", "content-targetable");
+            browser.setAttribute("type", "content-targetable");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
-            for (let i = 0; i < l; ++i) {
-              let tab = this.mTabs[i];
+            Array.forEach(this.mTabs, function (tab) {
               if ("owner" in tab && tab.owner == aTab)
                 // |tab| is a child of the tab we're removing, make it an orphan
                 tab.owner = null;
-            }
+            });
 
             return [aTab, closeWindow];
           ]]>
@@ -1599,16 +1602,34 @@
               return;
             var [aTab, aCloseWindow] = args;
 
+            // update the UI early for responsiveness
+            aTab.collapsed = true;
+            this.tabContainer._fillTrailingGap();
+            this._blurTab(aTab);
+
+            this._removingTabs.splice(this._removingTabs.indexOf(aTab), 1);
+
+            if (aCloseWindow) {
+              this._windowIsClosing = true;
+              while (this._removingTabs.length)
+                this._endRemoveTab([this._removingTabs[0], false]);
+            } else if (!this._windowIsClosing) {
+              // see notes in addTab
+              function _delayedUpdate(aTabContainer) {
+                aTabContainer.adjustTabstrip();
+                aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+              };
+              setTimeout(_delayedUpdate, 0, this.tabContainer);
+            }
+
+            // We're going to remove the tab and the browser now.
+            // Clean up mTabFilters and mTabListeners now rather than in
+            // _beginRemoveTab, so that their size is always in sync with the
+            // number of tabs and browsers (the xbl destructor depends on this).
+            this.mTabFilters.splice(aTab._tPos, 1);
+            this.mTabListeners.splice(aTab._tPos, 1);
+
             var browser = this.getBrowserForTab(aTab);
-            var length = this.mTabs.length;
-
-            // Get the index of the tab we're removing before unselecting it
-            var currentIndex = this.mTabContainer.selectedIndex;
-            var index = aTab._tPos;
-
-            // clean up the before/afterselected attributes before removing the
-            // tab.  But make sure this happens after we grab currentIndex.
-            aTab._selected = false;
 
             // Because of the way XBL works (fields just set JS
             // properties on the element) and the code we have in place
@@ -1625,53 +1646,72 @@
             if (browser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
-            // Remove the tab
-            this.mTabContainer.removeChild(aTab);
-            // Update our length
-            --length;
-            // invalidate cache, because mTabContainer is about to change
-            this._browsers = null; 
-            this.mPanelContainer.removeChild(browser.parentNode);
+            // Invalidate browsers cache, as the tab is removed from the
+            // tab container.
+            this._browsers = null;
 
-            this.tabContainer._fillTrailingGap();
+            // Remove the tab ...
+            this.tabContainer.removeChild(aTab);
 
-            // Find the tab to select
-            var newIndex = -1;
-            if (currentIndex > index)
-              newIndex = currentIndex-1;
-            else if (currentIndex < index)
-              newIndex = currentIndex;
-            else {
-              if ("owner" in aTab && aTab.owner &&
-                  this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
-                for (let i = 0; i < length; ++i) {
-                  if (this.mTabs[i] == aTab.owner) {
-                    newIndex = i;
-                    break;
-                  }
-                }
-              }
-              if (newIndex == -1)
-                newIndex = (index == length) ? index - 1 : index;
-            }
-
-            // Select the new tab
-            this.selectedTab = this.mTabs[newIndex];
-
-            for (let i = aTab._tPos; i < length; i++)
+            // ... and fix up the _tPos properties immediately.
+            for (let i = aTab._tPos; i < this.mTabs.length; i++)
               this.mTabs[i]._tPos = i;
 
-            this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
-            this.mCurrentTab._selected = true;
+            // update first-tab/last-tab/beforeselected/afterselected attributes
+            this.selectedTab._selected = true;
 
-            this.updateCurrentBrowser();
+            // This will unload the document. An unload handler could remove
+            // dependant tabs, so it's important that the tabbrowser is now in
+            // a consistent state (tab removed, tab positions updated, etc.).
+            // Also, it's important that another tab has been selected before
+            // the panel is removed; otherwise, a random sibling panel can flash.
+            this.mPanelContainer.removeChild(browser.parentNode);
 
-            // see comment above destroy above
+            // As the panel is removed, the removal of a dependent document can
+            // cause the whole window to close. So at this point, it's possible
+            // that the binding is destructed.
+            if (this.mTabBox)
+              this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
+
+            // see comment about destroy above
             browser.focusedWindow = null;
             browser.focusedElement = null;
 
             if (aCloseWindow)
-              closeWindow(true);
+              this._windowIsClosing = closeWindow(true);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_blurTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            if (this.mCurrentTab != aTab)
+              return;
+
+            if (aTab.owner &&
+                this._removingTabs.indexOf(aTab.owner) == -1 &&
+                this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
+              this.selectedTab = aTab.owner;
+              return;
+            }
+
+            var tab = aTab;
+
+            do {
+              tab = tab.nextSibling;
+            } while (tab && this._removingTabs.indexOf(tab) != -1);
+
+            if (!tab) {
+              tab = aTab;
+
+              do {
+                tab = tab.previousSibling;
+              } while (tab && this._removingTabs.indexOf(tab) != -1);
+            }
+
+            this.selectedTab = tab;
           ]]>
         </body>
       </method>

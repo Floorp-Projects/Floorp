@@ -72,9 +72,11 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug432599.js \
                  browser_bug441778.js \
                  browser_bug455852.js \
+                 browser_bug462673.js \
                  browser_discovery.js \
                  discovery.html \
                  moz.png \
+                 test_bug462673.html \
                  browser_getshortcutoruri.js \
                  browser_page_style_menu.js \
                  page_style_sample.html \
