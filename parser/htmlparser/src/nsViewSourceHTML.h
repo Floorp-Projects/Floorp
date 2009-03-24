@@ -134,7 +134,7 @@ private:
 
 protected:
 
-    nsCString           mCharset;
+    nsParser*           mParser;
     nsIHTMLContentSink* mSink;
     PRInt32             mLineNumber;
     nsITokenizer*       mTokenizer; // weak
