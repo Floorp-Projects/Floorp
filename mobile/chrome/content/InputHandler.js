@@ -79,15 +79,14 @@ function InputHandler() {
   /* used to stop everything if mouse leaves window on desktop */
   window.addEventListener("mouseout", this, true);
 
+  /* these handle dragging of both chrome elements and content */
+  window.addEventListener("mousedown", this, true);
+  window.addEventListener("mouseup", this, true);
+  window.addEventListener("mousemove", this, true);
+  window.addEventListener("click", this, true);
+
   let stack = document.getElementById("browser-container");
   stack.addEventListener("DOMMouseScroll", this, true);
-
-  /* these handle dragging of both chrome elements and content */
-  //stack.addEventListener("mouseout", this, true);
-  stack.addEventListener("mousedown", this, true);
-  stack.addEventListener("mouseup", this, true);
-  stack.addEventListener("mousemove", this, true);
-  stack.addEventListener("click", this, true);
 
   let browserCanvas = document.getElementById("browser-canvas");
   browserCanvas.addEventListener("keydown", this, true);
@@ -157,50 +156,106 @@ InputHandler.prototype = {
   }
 };
 
+/**
+ * Drag Data is used by both chrome and content input modules
+ */
+
+function DragData(owner, dragRadius, dragStartTimeoutLength) {
+  this._owner = owner;
+  this._dragRadius = dragRadius;
+  this._dragStartTimeoutLength = dragStartTimeoutLength;
+  this.dragStartTimeout = -1;
+  this.reset();
+}
+
+DragData.prototype = {
+  reset: function reset() {
+    this.dragging = false;
+    this.sX = 0;
+    this.sY = 0;
+    this.lockedX = null;
+    this.lockedY = null;
+
+    this.clearDragStartTimeout();
+  },
+
+  setDragStart: function setDragStart(screenX, screenY) {
+    this.sX = screenX;
+    this.sY = screenY;
+    this.dragStartTimeout = setTimeout(
+      function(dragData, sX, sY) { dragData.clearDragStartTimeout(); dragData._owner._dragStart(sX, sY); },
+      this._dragStartTimeoutLength,
+      this, screenX, screenY);
+  },
+
+  clearDragStartTimeout: function clearDragStartTimeout() {
+    if (this.dragStartTimeout != -1)
+      clearTimeout(this.dragStartTimeout);
+    this.dragStartTimeout = -1;
+  },
+
+  setLockedAxis: function setLockedAxis(sX, sY) {
+    // look at difference from stored coord to lock movement, but only
+    // do it if initial movement is sufficient to detect intent
+    let absX = Math.abs(this.sX - sX);
+    let absY = Math.abs(this.sY - sY);
+
+    // lock panning if we move more than half of the drag radius and that direction
+    // contributed more than 2/3rd to the radial movement
+    if ((absX > (this._dragRadius / 2)) && ((absX * absX) > (2 * absY * absY))) {
+      this.lockedY = this.sY;
+      sY = this.sY;
+    }
+    else if ((absY > (this._dragRadius / 2)) && ((absY * absY) > (2 * absX * absX))) {
+      this.lockedX = this.sX;
+      sX = this.sX;
+    }
+
+    return [sX, sY];
+  },
+
+  lockMouseMove: function lockMouseMove(sX, sY) {
+    if (this.lockedX !== null)
+      sX = this.lockedX;
+    else if (this.lockedY !== null)
+      sY = this.lockedY;
+
+    return [sX, sY];
+  },
+
+  /* returns true if we go ahead and start a drag */
+  detectEarlyDrag: function detectEarlyDrag(sX, sY) {
+    let dx = this.sX - sX;
+    let dy = this.sY - sY;
+
+    if (!this.dragging && this.dragStartTimeout != -1) {
+      if ((dx*dx + dy*dy) > (this._dragRadius * this._dragRadius)) {
+        this.clearDragStartTimeout();
+        this._owner._dragStart(sX, sY);
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 
 /**
  * Panning code for chrome elements
  */
 
-function ChromeInputModule(owner, browserCanvas, useKinetic) {
+function ChromeInputModule(owner, browserCanvas) {
   this._owner = owner;
-  if (useKinetic !== undefined)
-    this._dragData.useKinetic = useKinetic;
   this._browserCanvas = browserCanvas;
+  this._dragData = new DragData(this, 20, 200);
 }
 
 ChromeInputModule.prototype = {
   _owner: null,
   _ignoreNextClick: false,
-
-  _dragData: {
-    dragging: false,
-    sX: 0,
-    sY: 0,
-    dragStartTimeout: -1,
-    targetScrollbox: null,
-
-    reset: function reset() {
-      this.dragging = false;
-      this.sX = 0;
-      this.sY = 0;
-      this.clearDragStartTimeout();
-      this.targetScrollbox = null;
-    },
-
-    clearDragStartTimeout: function clearDragStartTimeout() {
-      if (this.dragStartTimeout != -1)
-        clearTimeout(this.dragStartTimeout);
-      this.dragStartTimeout = -1;
-    }
-  },
-
-  _clickData: {
-    _events : [],
-    reset: function reset() {
-      this._events = [];
-    }
-  },
+  _dragData: null,
+  _clickEvents : [],
+  _targetScrollbox: null,
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -228,31 +283,37 @@ ChromeInputModule.prototype = {
    */
   cancelPending: function cancelPending() {
     this._dragData.reset();
+    this._targetScrollbox = null;
   },
 
   _dragStart: function _dragStart(sX, sY) {
     let dragData = this._dragData;
     dragData.dragging = true;
-    dragData.dragStartTimeout = -1;
+
+    [sX, sY] = dragData.setLockedAxis(sX, sY);
 
     // grab all events until we stop the drag
     ws.dragStart(sX, sY);
 
     // prevent clicks from being sent once we start drag
-    this._clickData.reset();
+    this._clickEvents = [];
   },
 
   _dragStop: function _dragStop(sX, sY) {
     let dragData = this._dragData;
-
-    if (dragData.targetScrollbox)
-      dragData.targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
+    [sX, sY] = dragData.lockMouseMove(sX, sY);
+    if (this._targetScrollbox)
+      this._targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
+    this._targetScrollbox = null;
   },
 
   _dragMove: function _dragMove(sX, sY) {
     let dragData = this._dragData;
-    if (dragData.targetScrollbox)
-      dragData.targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
+    [sX, sY] = dragData.lockMouseMove(sX, sY);
+    if (this._targetScrollbox)
+      this._targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
+    dragData.sX = sX;
+    dragData.sY = sY;
   },
 
   _onMouseDown: function _onMouseDown(aEvent) {
@@ -263,8 +324,8 @@ ChromeInputModule.prototype = {
 
     let dragData = this._dragData;
 
-    dragData.targetScrollbox = getScrollboxFromElement(aEvent.target);
-    if (!dragData.targetScrollbox)
+    this._targetScrollbox = getScrollboxFromElement(aEvent.target);
+    if (!this._targetScrollbox)
       return;
 
     // absorb the event for the scrollable XUL element and make all future events grabbed too
@@ -273,34 +334,27 @@ ChromeInputModule.prototype = {
     aEvent.stopPropagation();
     aEvent.preventDefault();
 
-    dragData.sX = aEvent.screenX;
-    dragData.sY = aEvent.screenY;
-
-    dragData.dragStartTimeout = setTimeout(function(self, sX, sY) { self._dragStart(sX, sY); },
-                                  200, this, aEvent.screenX, aEvent.screenY);
+    dragData.setDragStart(aEvent.screenX, aEvent.screenY);
 
     // store away the event for possible sending later if a drag doesn't happen
-    let clickData = this._clickData;
     let clickEvent = document.createEvent("MouseEvent");
     clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
                               aEvent.view, aEvent.detail,
                               aEvent.screenX, aEvent.screenY, aEvent.clientX, aEvent.clientY,
                               aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
                               aEvent.button, aEvent.relatedTarget);
-    clickData._events.push({event: clickEvent, target: aEvent.target, time: Date.now()});
+    this._clickEvents.push({event: clickEvent, target: aEvent.target, time: Date.now()});
   },
 
   _onMouseUp: function _onMouseUp(aEvent) {
     // only process if original mousedown was on a scrollable element
     let dragData = this._dragData;
-    if (!dragData.targetScrollbox)
+    if (!this._targetScrollbox)
       return;
 
-    let clickData = this._clickData;
-
     // keep an eye out for mouseups that didn't start with a mousedown
-    if (!(clickData._events.length % 2)) {
-      clickData.reset();
+    if (!(this._clickEvents.length % 2)) {
+      this._clickEvents = [];
     }
     else {
       let clickEvent = document.createEvent("MouseEvent");
@@ -309,7 +363,7 @@ ChromeInputModule.prototype = {
                                 aEvent.screenX, aEvent.screenY, aEvent.clientX, aEvent.clientY,
                                 aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
                                 aEvent.button, aEvent.relatedTarget);
-      clickData._events.push({event: clickEvent, target: aEvent.target, time: Date.now()});
+      this._clickEvents.push({event: clickEvent, target: aEvent.target, time: Date.now()});
 
       this._ignoreNextClick = true;
       this._sendSingleClick();
@@ -322,6 +376,7 @@ ChromeInputModule.prototype = {
       this._dragStop(aEvent.screenX, aEvent.screenY);
 
     dragData.reset(); // be sure to reset the timer
+    this._targetScrollbox = null;
     this._owner.ungrab(this);
   },
 
@@ -329,46 +384,39 @@ ChromeInputModule.prototype = {
     let dragData = this._dragData;
 
     // only process if original mousedown was on a scrollable element
-    if (!dragData.targetScrollbox)
+    if (!this._targetScrollbox)
       return;
 
     aEvent.stopPropagation();
     aEvent.preventDefault();
 
-    let dx = dragData.sX - aEvent.screenX;
-    let dy = dragData.sY - aEvent.screenY;
+    let sX = aEvent.screenX;
+    let sY = aEvent.screenY;
 
-    if (!dragData.dragging && dragData.dragStartTimeout != -1) {
-      if (dx*dx + dy*dy > 100) {
-        dragData.clearDragStartTimeout();
-        this._dragStart(aEvent.screenX, aEvent.screenY);
-      }
-    }
+    if (dragData.detectEarlyDrag(sX, sY))
+      return;
+
     if (!dragData.dragging)
       return;
 
-    this._dragMove(aEvent.screenX, aEvent.screenY);
-
-    dragData.sX = aEvent.screenX;
-    dragData.sY = aEvent.screenY;
+    [sX, sY] = dragData.lockMouseMove(sX, sY);
+    this._dragMove(sX, sY);
   },
 
 
   // resend original events with our handler out of the loop
   _sendSingleClick: function _sendSingleClick() {
-    let clickData = this._clickData;
-
     this._owner.grab(this);
     this._owner.stopListening();
 
     // send original mouseDown/mouseUps again
-    this._redispatchChromeMouseEvent(clickData._events[0].event);
-    this._redispatchChromeMouseEvent(clickData._events[1].event);
+    this._redispatchChromeMouseEvent(this._clickEvents[0].event);
+    this._redispatchChromeMouseEvent(this._clickEvents[1].event);
 
     this._owner.startListening();
     this._owner.ungrab(this);
 
-    clickData.reset();
+    this._clickEvents = [];
   },
 
   _redispatchChromeMouseEvent: function _redispatchChromeMouseEvent(aEvent) {
@@ -389,72 +437,46 @@ ChromeInputModule.prototype = {
  * Kinetic panning code for content
  */
 
+function KineticData() {
+  this.kineticHandle = -1;
+  this.reset();
+}
+
+KineticData.prototype = {
+  reset: function reset() {
+    if (this.kineticHandle != -1) {
+      window.clearInterval(this.kineticHandle);
+      this.kineticHandle = -1;
+    }
+
+    this.momentumBuffer = [];
+    this.momentumBufferIndex = 0;
+    this.lastTime = 0;
+    this.kineticDuration = 0;
+    this.kineticDirX = 0;
+    this.kineticDirY = 0;
+    this.kineticStep  = 0;
+    this.kineticStartX  = 0;
+    this.kineticStartY  = 0;
+    this.kineticInitialVel = 0;
+  }
+};
+
 function ContentPanningModule(owner, browserCanvas, useKinetic) {
   this._owner = owner;
   if (useKinetic !== undefined)
-    this._dragData.useKinetic = useKinetic;
+    this._useKinetic = useKinetic;
   this._browserCanvas = browserCanvas;
+  this._dragData = new DragData(this, 20, 200);
+  this._kineticData = new KineticData();
 }
 
 ContentPanningModule.prototype = {
   _owner: null,
-  _dragData: {
-    dragging: false,
-    sX: 0,
-    sY: 0,
-    useKinetic: true,
-    dragStartTimeout: -1,
+  _dragData: null,
 
-    reset: function reset() {
-      this.dragging = false;
-      this.sX = 0;
-      this.sY = 0;
-      this.clearDragStartTimeout();
-    },
-
-    clearDragStartTimeout: function clearDragStartTimeout() {
-      if (this.dragStartTimeout != -1)
-        clearTimeout(this.dragStartTimeout);
-      this.dragStartTimeout = -1;
-    }
-  },
-
-  _kineticData: {
-    // const
-    kineticStepSize: 15,
-    kineticDecelloration: 0.004,
-    momentumBufferSize: 3,
-
-    momentumBuffer: [],
-    momentumBufferIndex: 0,
-    lastTime: 0,
-    kineticDuration: 0,
-    kineticDirX: 0,
-    kineticDirY: 0,
-    kineticHandle : -1,
-    kineticStep : 0,
-    kineticStartX : 0,
-    kineticStartY : 0,
-    kineticInitialVel: 0,
-
-    reset: function reset() {
-      if (this.kineticHandle != -1) {
-        window.clearInterval(this.kineticHandle);
-        this.kineticHandle = -1;
-      }
-
-      this.momentumBuffer = [];
-      this.momentumBufferIndex = 0;
-      this.lastTime = 0;
-      this.kineticDuration = 0;
-      this.kineticDirX = 0;
-      this.kineticDirY = 0;
-      this.kineticStep  = 0;
-      this.kineticStartX  = 0;
-      this.kineticStartY  = 0;
-      this.kineticInitialVel = 0;
-    }
-  },
+  _useKinetic: true,
+  _kineticData: null,
 
   handleEvent: function handleEvent(aEvent) {
     // exit early for events outside displayed content area
@@ -487,7 +509,8 @@ ContentPanningModule.prototype = {
   _dragStart: function _dragStart(sX, sY) {
     let dragData = this._dragData;
     dragData.dragging = true;
-    dragData.dragStartTimeout = -1;
+
+    [sX, sY] = dragData.setLockedAxis(sX, sY);
 
     // grab all events until we stop the drag
     this._owner.grab(this);
@@ -504,7 +527,9 @@ ContentPanningModule.prototype = {
 
     this._owner.ungrab(this);
 
-    if (dragData.useKinetic) {
+    [sX, sY] = dragData.lockMouseMove(sX, sY);
+
+    if (this._useKinetic) {
       // start kinetic scrolling here for canvas only
       if (!this._startKinetic(sX, sY))
         this._endKinetic(sX, sY);
@@ -519,7 +544,10 @@ ContentPanningModule.prototype = {
 
   _dragMove: function _dragMove(sX, sY) {
     let dragData = this._dragData;
+    [sX, sY] = dragData.lockMouseMove(sX, sY);
     ws.dragMove(sX, sY);
+    dragData.sX = sX;
+    dragData.sY = sY;
   },
 
   _onMouseDown: function _onMouseDown(aEvent) {
@@ -527,13 +555,7 @@ ContentPanningModule.prototype = {
     if (this._kineticData.kineticHandle != -1)
       this._endKinetic(aEvent.screenX, aEvent.screenY);
 
-    let dragData = this._dragData;
-
-    dragData.sX = aEvent.screenX;
-    dragData.sY = aEvent.screenY;
-
-    dragData.dragStartTimeout = setTimeout(function(self, sX, sY) { self._dragStart(sX, sY); },
-                                           200, this, aEvent.screenX, aEvent.screenY);
+    this._dragData.setDragStart(aEvent.screenX, aEvent.screenY);
   },
 
   _onMouseUp: function _onMouseUp(aEvent) {
@@ -552,27 +574,23 @@ ContentPanningModule.prototype = {
 
     let dragData = this._dragData;
 
-    let dx = dragData.sX - aEvent.screenX;
-    let dy = dragData.sY - aEvent.screenY;
+    let sX = aEvent.screenX;
+    let sY = aEvent.screenY;
 
-    if (!dragData.dragging && dragData.dragStartTimeout != -1) {
-      if (dx*dx + dy*dy > 100) {
-        dragData.clearDragStartTimeout();
-        this._dragStart(aEvent.screenX, aEvent.screenY);
-      }
-    }
+    if (dragData.detectEarlyDrag(sX, sY))
+      return;
+
     if (!dragData.dragging)
       return;
 
-    this._dragMove(aEvent.screenX, aEvent.screenY);
+    this._dragMove(sX, sY);
 
-    dragData.sX = aEvent.screenX;
-    dragData.sY = aEvent.screenY;
-
-    if (dragData.useKinetic) {
+    if (this._useKinetic) {
       // update our kinetic data
       let kineticData = this._kineticData;
       let t = Date.now();
+      let dx = dragData.sX - sX;
+      let dy = dragData.sY - sY;
       let dt = t - kineticData.lastTime;
       kineticData.lastTime = t;
       let momentumBuffer = { dx: -dx, dy: -dy, dt: dt };
