@@ -70,7 +70,7 @@ public:
   nsHTMLTokenizer(PRInt32 aParseMode = eDTDMode_quirks,
                   eParserDocType aDocType = eHTML_Quirks,
                   eParserCommands aCommand = eViewNormal,
-                  nsIHTMLContentSink* aSink = 0);
+                  PRUint16 aFlags = 0);
   virtual ~nsHTMLTokenizer();
 
 protected:
