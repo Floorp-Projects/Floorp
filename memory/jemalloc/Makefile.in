@@ -49,6 +49,10 @@ MODULE		= jemalloc
 # symbols.
 VISIBILITY_FLAGS=
 
+ifeq (WINCE,$(OS_TARGET))
+DEFINES+= -DMOZCE_SHUNT_H
+endif
+
 ifeq (WINNT,$(OS_TARGET))
 # Two options for Windows, either you build the CRT from source,
 # or you use a pre-built DLL.
