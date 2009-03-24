@@ -1002,6 +1002,7 @@ namespace nanojit
 				}
 			}
 			else {
+				NanoStaticAssert((LIR_xt ^ 1) == LIR_xf);
 				while (c->isop(LIR_eq) && c->oprnd1()->isCmp() && 
 					c->oprnd2()->isconstval(0)) {
 				    // xt(eq(cmp,0)) => xf(cmp)   or   xf(eq(cmp,0)) => xt(cmp)
