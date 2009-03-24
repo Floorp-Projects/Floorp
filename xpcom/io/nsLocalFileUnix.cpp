@@ -921,6 +921,11 @@ nsLocalFile::MoveToNative(nsIFile *newParent, const nsACString &newName)
             rv = NSRESULT_FOR_ERRNO();
         }
     }
+
+    if (NS_SUCCEEDED(rv)) {
+        // Adjust this
+        mPath = newPathName;
+    }
     return rv;
 }
 
