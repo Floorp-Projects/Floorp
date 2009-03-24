@@ -75,7 +75,7 @@ const char* XPCJSRuntime::mStrings[] = {
 struct JSDyingJSObjectData
 {
     JSContext* cx;
-    nsVoidArray* array;
+    nsTArray<nsXPCWrappedJS*>* array;
 };
 
 static JSDHashOperator
@@ -480,7 +480,7 @@ void XPCJSRuntime::RootContextGlobals()
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
-    nsVoidArray* dyingWrappedJSArray;
+    nsTArray<nsXPCWrappedJS*>* dyingWrappedJSArray;
 
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if(self)
@@ -512,8 +512,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     JSDyingJSObjectData data = {cx, dyingWrappedJSArray};
 
                     // Add any wrappers whose JSObjects are to be finalized to
-                    // this array. Note that this is a nsVoidArray because
-                    // we do not want to be changing the refcount of these wrappers.
+                    // this array. Note that we do not want to be changing the
+                    // refcount of these wrappers.
                     // We add them to the array now and Release the array members
                     // later to avoid the posibility of doing any JS GCThing
                     // allocations during the gc cycle.
@@ -547,17 +547,14 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
                 while(1)
                 {
-                    nsXPCWrappedJS* wrapper;
-                    PRInt32 count = dyingWrappedJSArray->Count();
+                    PRUint32 count = dyingWrappedJSArray->Length();
                     if(!count)
                     {
                         dyingWrappedJSArray->Compact();
                         break;
                     }
-                    wrapper = static_cast<nsXPCWrappedJS*>
-                        (dyingWrappedJSArray->ElementAt(count-1));
+                    NS_RELEASE(dyingWrappedJSArray->ElementAt(count-1));
                     dyingWrappedJSArray->RemoveElementAt(count-1);
-                    NS_RELEASE(wrapper);
                 }
 
 
@@ -759,26 +756,21 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // events above.
 
                 // Do any deferred released of native objects.
-                nsVoidArray* array = &self->mNativesToReleaseArray;
+                nsTArray<nsISupports*> &array = self->mNativesToReleaseArray;
 #ifdef XPC_TRACK_DEFERRED_RELEASES
                 printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
-                       array->Count());
+                       array.Length());
 #endif
                 while(1)
                 {
-                    nsISupports* obj;
+                    PRUint32 count = array.Length();
+                    if(!count)
                     {
-                        PRInt32 count = array->Count();
-                        if(!count)
-                        {
-                            array->Compact();
-                            break;
-                        }
-                        obj = reinterpret_cast<nsISupports*>
-                            (array->ElementAt(count-1));
-                        array->RemoveElementAt(count-1);
+                        array.Compact();
+                        break;
                     }
-                    NS_RELEASE(obj);
+                    NS_RELEASE(array[count-1]);
+                    array.RemoveElementAt(count-1);
                 }
 #ifdef XPC_TRACK_DEFERRED_RELEASES
                 printf("XPC - End deferred Releases\n");
@@ -1192,14 +1184,14 @@ XPCJSRuntime::DeferredRelease(nsISupports* obj)
 {
     NS_ASSERTION(obj, "bad param");
 
-    if(!mNativesToReleaseArray.Count())
+    if(mNativesToReleaseArray.IsEmpty())
     {
         // This array sometimes has 1000's
         // of entries, and usually has 50-200 entries. Avoid lots
         // of incremental grows.  We compact it down when we're done.
-        mNativesToReleaseArray.SizeTo(256);
+        mNativesToReleaseArray.SetCapacity(256);
     }
-    return mNativesToReleaseArray.AppendElement(obj);
+    return mNativesToReleaseArray.AppendElement(obj) != nsnull;
 }
 
 /***************************************************************************/
@@ -1241,7 +1233,7 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
 
         XPC_LOG_ALWAYS(("mWrappedJSToReleaseArray @ %x with %d wrappers(s)", \
                          &mWrappedJSToReleaseArray,
-                         mWrappedJSToReleaseArray.Count()));
+                         mWrappedJSToReleaseArray.Length()));
 
         int cxCount = 0;
         JSContext* iter = nsnull;

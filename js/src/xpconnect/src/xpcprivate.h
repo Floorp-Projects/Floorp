@@ -100,7 +100,6 @@
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsDeque.h"
-#include "nsVoidArray.h"
 
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
@@ -784,8 +783,8 @@ private:
     XPCNativeWrapperMap*     mExplicitNativeWrapperMap;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
-    nsVoidArray mWrappedJSToReleaseArray;
-    nsVoidArray mNativesToReleaseArray;
+    nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
+    nsTArray<nsISupports*> mNativesToReleaseArray;
     JSBool mDoingFinalization;
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
