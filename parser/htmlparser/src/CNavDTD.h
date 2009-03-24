@@ -296,7 +296,7 @@ private:
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
     nsresult    BuildNeglectedTarget(eHTMLTags aTarget, eHTMLTokenTypes aType,
-                                     nsIParser* aParser);
+                                     nsIParser* aParser, nsIContentSink* aSink);
 
     nsresult OpenHTML(const nsCParserNode *aNode);
     nsresult OpenBody(const nsCParserNode *aNode);
