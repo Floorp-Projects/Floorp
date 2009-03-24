@@ -234,6 +234,12 @@ CPPSRCS += \
 		jsbuiltins.cpp         \
 		$(NULL)
 
+ifdef WINCE
+# don't need -c
+AS_DASH_C_FLAG =
+ASFILES += jswince.asm
+endif
+
 ifdef DEBUG
 CPPSRCS += TraceTreeDrawer.cpp
 endif
