@@ -103,7 +103,8 @@ public:
      * @return
      */
     NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
-                             nsIParser* aParser) = 0;
+                             nsIParser* aParser,
+                             nsIContentSink* aSink) = 0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -111,7 +112,9 @@ public:
      * @param   anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer) = 0;
+    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
+                          nsITokenObserver* anObserver,
+                          nsIContentSink* aSink) = 0;
 
     /**
      * Called during model building phase of parse process. Each token
@@ -131,7 +134,7 @@ public:
      * @update  gess5/18/98
      * @return ignored
      */
-    NS_IMETHOD WillResumeParse() = 0;
+    NS_IMETHOD WillResumeParse(nsIContentSink* aSink) = 0;
 
     /**
      * If the parse process gets interrupted, this method is called by
@@ -139,7 +142,7 @@ public:
      * @update  gess5/18/98
      * @return ignored
      */
-    NS_IMETHOD WillInterruptParse() = 0;
+    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink) = 0;
 
     /**
      * This method is called to determine whether or not a tag of one
@@ -175,22 +178,19 @@ public:
     NS_IMETHOD_(void) Terminate() = 0;
 
     NS_IMETHOD_(PRInt32) GetType() = 0;
-
-    NS_IMETHOD_(nsITokenizer*) CreateTokenizer() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
 #define NS_DECL_NSIDTD \
     NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink, nsIParser* aParser);\
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer);\
-    NS_IMETHOD HandleToken(CToken* aToken, nsIParser* aParser);\
-    NS_IMETHOD WillResumeParse();\
-    NS_IMETHOD WillInterruptParse();\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink);\
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink);\
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);\
+    NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0);\
+    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD_(void)  Terminate();\
-    NS_IMETHOD_(PRInt32) GetType();\
-    NS_IMETHOD_(nsITokenizer*) CreateTokenizer();
+    NS_IMETHOD_(PRInt32) GetType();
 #endif /* nsIDTD_h___ */
