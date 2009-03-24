@@ -148,6 +148,10 @@ public:
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
+  static nsresult InitDOMJSClass(JSContext *cx, JSObject *obj);
+
+  static JSClass sDOMJSClass;
+
   /**
    * Get our JSClass pointer for the XPCNativeWrapper class
    */
@@ -234,6 +238,9 @@ protected:
             id == sStatus_id       ||
             id == sName_id);
   }
+
+  static JSClass sDOMConstructorProtoClass;
+  static JSFunctionSpec sDOMJSClass_methods[];
 
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
@@ -338,7 +345,11 @@ protected:
   static jsval sJavaMember_id;
 #endif
 
+  static const JSClass *sObjectClass;
   static const JSClass *sXPCNativeWrapperClass;
+
+public:
+  static PRBool sDoSecurityCheckInAddProperty;
 };
 
 typedef nsDOMClassInfo nsDOMGenericSH;
@@ -436,7 +447,7 @@ protected:
   }
 
   static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
-                                JSObject *obj, JSString *str,
+                                JSObject *obj, JSString *str, PRUint32 flags,
                                 PRBool *did_resolve);
 
 public:
