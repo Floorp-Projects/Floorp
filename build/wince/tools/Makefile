@@ -89,6 +89,7 @@ endif
 ifdef VPATH
 CFLAGS	+= -DSHUNT_INC='"$(OBJDIR)/dist/include/mozce_shunt"'
 CFLAGS	+= -DSHUNT_LIB='"$(OBJDIR)/dist/lib"'
+CFLAGS	+= -DJEMALLOC_LIB='"$(OBJDIR)/dist/lib/jemalloc.lib"'
 endif
 CFLAGS += -DEBUG -Zi
 

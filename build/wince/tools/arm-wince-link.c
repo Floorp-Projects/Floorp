@@ -13,7 +13,11 @@ main(int argc, char **argv)
 
   args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
   args[i++] = "/LIBPATH:\"" WCE_CRT "\"";
+  args[i++] = "/NODEFAULTLIB";
 
+#ifdef MOZ_MEMORY
+  args[i++] = JEMALLOC_LIB;
+#endif
 #ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
   if(getenv("NO_SHUNT") == NULL) {
     args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
@@ -25,10 +29,6 @@ main(int argc, char **argv)
   args[i++] = "coredll.lib";
   args[i++] = "ceshell.lib";
   args[i++] = "mmtimer.lib";
-
-  args[i++] = "/NODEFAULTLIB:LIBC";
-  args[i++] = "/NODEFAULTLIB:OLDNAMES";
-  args[i++] = "/NODEFAULTLIB:MSVCRT";
 
   // if -DLL is not passed, then change the entry to 'main'
   while(argv[j]) {
