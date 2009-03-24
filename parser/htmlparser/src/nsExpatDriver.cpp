@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsExpatDriver.h"
-#include "nsIParser.h"
 #include "nsCOMPtr.h"
 #include "nsParserCIID.h"
 #include "CParserContext.h"
@@ -1302,16 +1301,17 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::BuildModel(nsIParser* aParser,
-                          nsITokenizer* aTokenizer)
+nsExpatDriver::BuildModel(nsITokenizer* aTokenizer,
+                          PRBool,// aCanInterrupt,
+                          PRBool,// aCountLines,
+                          const nsCString*)// aCharsetPtr)
 {
   return mInternalState;
 }
 
 NS_IMETHODIMP
 nsExpatDriver::DidBuildModel(nsresult anErrorCode,
-                             PRBool aNotifySink,
-                             nsIParser* aParser)
+                             PRBool aNotifySink)
 {
   NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
                "In nsExpatDriver::DidBuildModel: mOriginalSink not the same object as mSink?");
@@ -1437,7 +1437,7 @@ nsExpatDriver::CopyState(nsITokenizer* aTokenizer)
 }
 
 NS_IMETHODIMP
-nsExpatDriver::HandleToken(CToken* aToken,nsIParser* aParser)
+nsExpatDriver::HandleToken(CToken* aToken)
 {
   return NS_OK;
 }
