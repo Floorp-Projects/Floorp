@@ -64,13 +64,6 @@ const INITIAL_THRESHOLD = 75;
 // threshold each time we do a sync check and don't sync that engine.
 const THRESHOLD_DECREMENT_STEP = 25;
 
-// The following are various error messages for not syncing
-const kSyncWeaveDisabled = "Weave is disabled";
-const kSyncNotLoggedIn = "User is not logged in";
-const kSyncNetworkOffline = "Network is offline";
-const kSyncInPrivateBrowsing = "Private browsing is enabled";
-const kSyncNotScheduled = "Not scheduled to do sync";
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
@@ -109,6 +102,35 @@ Cu.import("resource://weave/engines/clientData.js", Weave);
 Utils.lazy(Weave, 'Service', WeaveSvc);
 
 /*
+ * Service status query system.  See constants defined in constants.js.
+ */
+
+function StatusRecord() {
+  this._init();
+}
+StatusRecord.prototype = {
+  _init: function() {
+    this.server = [];
+    this.sync = null;
+    this.engines = {};
+  },
+
+  addServerStatus: function( statusCode ) {
+    this.server.push(statusCode);
+  },
+
+  setSyncStatus: function( statusCode ) {
+    this.sync = statusCode;
+  },
+
+  setEngineStatus: function( engineName, statusCode ) {
+    this.engines[engineName] = statusCode;
+  }
+};
+
+
+
+/*
  * Service singleton
  * Main entry point into Weave's sync framework
  */
@@ -124,7 +146,11 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   _syncInProgress: false,
   _keyGenEnabled: true,
-  _mostRecentError: null,
+
+  // WEAVE_STATUS_OK, WEAVE_STATUS_FAILED, or WEAVE_STATUS_PARTIAL
+  _weaveStatusCode: null,
+  // More detailed status info:
+  _detailedStatus: null,
 
   // object for caching public and private keys
   _keyPair: {},
@@ -206,7 +232,8 @@ WeaveSvc.prototype = {
   get enabled() { return Svc.Prefs.get("enabled"); },
   set enabled(value) { Svc.Prefs.set("enabled", value); },
 
-  get mostRecentError() { return this._mostRecentError; },
+  get statusCode() { return this._weaveStatusCode; },
+  get detailedStatus() { return this._detailedStatus; },
 
   get locked() { return this._locked; },
   lock: function Svc_lock() {
@@ -217,6 +244,11 @@ WeaveSvc.prototype = {
   },
   unlock: function Svc_unlock() {
     this._locked = false;
+  },
+
+  _setSyncFailure: function WeavSvc__setSyncFailure(code) {
+    this._weaveStatusCode = WEAVE_STATUS_FAILED;
+    this._detailedStatus.setSyncStatus(code);
   },
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
@@ -250,6 +282,8 @@ WeaveSvc.prototype = {
     let self = yield;
     this._initLogs();
     this._log.info("Weave " + WEAVE_VERSION + " initializing");
+
+    this._detailedStatus = new StatusRecord();
 
     // Reset our sync id if we're upgrading, so sync knows to reset local data
     if (WEAVE_VERSION != Svc.Prefs.get("lastversion")) {
@@ -458,6 +492,7 @@ WeaveSvc.prototype = {
       let self = yield;
 
       this._loggedIn = false;
+      this._detailedStatus = new StatusRecord();
 
       if (typeof(user) != 'undefined')
         this.username = user;
@@ -467,19 +502,19 @@ WeaveSvc.prototype = {
         ID.get('WeaveCryptoID').setTempPassword(passp);
 
       if (!this.username) {
-        this._mostRecentError = "No username set.";
+        this._setSyncFailure( LOGIN_FAILED_NO_USERNAME );
         throw "No username set, login failed";
       }
 
       if (!this.password) {
-        this._mostRecentError = "No password set.";
+        this._setSyncFailure( LOGIN_FAILED_NO_PASSWORD );
         throw "No password given or found in password manager";
       }
 
       this._log.debug("Logging in user " + this.username);
 
       if (!(yield this.verifyLogin(self.cb, this.username, this.password, true))) {
-        this._mostRecentError = "Login failed. Check your username/password/phrase.";
+        this._setSyncFailure( LOGIN_FAILED_REJECTED );
         throw "Login failed";
       }
 
@@ -535,7 +570,7 @@ WeaveSvc.prototype = {
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.lastResource.lastChannel.responseStatus;
       if (status != 200 && status != 404) {
-        this._mostRecentError = "Unknown error when downloading metadata.";
+        this._setSyncFailure(METARECORD_DOWNLOAD_FAIL);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
         self.done(false);
@@ -552,7 +587,7 @@ WeaveSvc.prototype = {
       if (!this._keyGenEnabled) {
         this._log.info("...and key generation is disabled.  Not wiping. " +
                        "Aborting sync.");
-        this._mostRecentError = "Weave needs updating on your desktop browser.";
+        this._setSyncFailure(DESKTOP_VERSION_OUT_OF_DATE);
         self.done(false);
         return;
       }
@@ -568,7 +603,7 @@ WeaveSvc.prototype = {
                        "upgrade (" + remoteVersion + " -> " + WEAVE_VERSION + ")");
 
     } else if (Svc.Version.compare(remoteVersion, WEAVE_VERSION) > 0) {
-      this._mostRecentError = "Client needs to be upgraded.";
+      this._setSyncFailure(VERSION_OUT_OF_DATE);
       this._log.warn("Server data is of a newer Weave version, this client " +
                      "needs to be upgraded.  Aborting sync.");
       self.done(false);
@@ -601,7 +636,7 @@ WeaveSvc.prototype = {
                         PubKeys.lastResource.lastChannel.responseStatus);
         this._log.debug("PrivKey HTTP response status: " +
                         PrivKeys.lastResource.lastChannel.responseStatus);
-        this._mostRecentError = "Can't download keys from server.";
+        this._setSyncFailure(KEYS_DOWNLOAD_FAIL);
         self.done(false);
         return;
       }
@@ -609,7 +644,7 @@ WeaveSvc.prototype = {
       if (!this._keyGenEnabled) {
         this._log.warn("Couldn't download keys from server, and key generation" +
                        "is disabled.  Aborting sync");
-        this._mostRecentError = "No keys. Try syncing from desktop first.";
+        this._setSyncFailure(NO_KEYS_NO_KEYGEN);
         self.done(false);
         return;
       }
@@ -628,13 +663,13 @@ WeaveSvc.prototype = {
           yield PubKeys.uploadKeypair(self.cb, keys);
           ret = true;
         } catch (e) {
-          this._mostRecentError = "Could not upload keys.";
+          this._setSyncFailure(KEYS_UPLOAD_FAIL);
           this._log.error("Could not upload keys: " + Utils.exceptionStr(e));
           // FIXME no lastRequest anymore
           //this._log.error(keys.pubkey.lastRequest.responseText);
         }
       } else {
-        this._mostRecentError = "Could not get encryption passphrase.";
+        this._setSyncFailure(SETUP_FAILED_NO_PASSPHRASE);
         this._log.warn("Could not get encryption passphrase");
       }
     }
@@ -709,8 +744,10 @@ WeaveSvc.prototype = {
     // "not scheduled" as future syncs have already been canceled by checkSync.
     let reason = this._checkSync();
     if (reason && (useThresh || reason != kSyncNotScheduled)) {
+      // this is a purposeful abort rather than a failure, so don't set
+      // WEAVE_STATUS_FAILED; instead, leave it as it was.
+      this._detailedStatus.setSyncStatus(reason);
       reason = "Can't sync: " + reason;
-      this._mostRecentError = reason;
       throw reason;
     }
 
@@ -724,8 +761,10 @@ WeaveSvc.prototype = {
     // Process the incoming commands if we have any
     if (Clients.getClients()[Clients.clientID].commands) {
       try {
-        if (!(yield this.processCommands(self.cb)))
+        if (!(yield this.processCommands(self.cb))) {
+          this._detailedStatus.setSyncStatus(ABORT_SYNC_COMMAND);
           throw "aborting sync, process commands said so";
+        }
 
         // Repeat remoteSetup in-case the commands forced us to reset
         if (!(yield this._remoteSetup.async(this, self.cb)))
@@ -773,7 +812,6 @@ WeaveSvc.prototype = {
 
         // If there's any problems with syncing the engine, report the failure
         if (!(yield this._syncEngine.async(this, self.cb, engine))) {
-          this._mostRecentError = "Failure in " + engine.displayName;
           this._log.info("Aborting sync");
           break;
         }
@@ -788,6 +826,7 @@ WeaveSvc.prototype = {
         this._log.warn("Some engines did not sync correctly");
       else {
         Svc.Prefs.set("lastSync", new Date().toString());
+        this._weaveStatusCode = WEAVE_STATUS_OK;
         this._log.info("Sync completed successfully");
       }
     } finally {
@@ -821,6 +860,8 @@ WeaveSvc.prototype = {
     }
     catch(e) {
       this._syncError = true;
+      this._weaveStatusCode = WEAVE_STATUS_PARTIAL;
+      this._detailedStatus.setEngineStatus(engine.name, e);
       if (FaultTolerance.Service.onException(e))
         self.done(true);
     }
