@@ -15,11 +15,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla.org
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Dietrich Ayala <dietrich@mozilla.com>
  *  Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -64,4 +63,3 @@ if (pip.DBConnection.connectionReady) {
   pip.DBConnection.close();
   do_check_false(pip.DBConnection.connectionReady);
 }
-
