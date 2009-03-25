@@ -11,16 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places.
+ * The Original Code is Places unit test code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla.org
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Dietrich Ayala <dietrich@mozilla.com>
- *  Marco Bonardo <mak77@bonardo.net>
+ *   Mark Finkle <mfinkle@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,32 +34,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// put cleanup of the bookmarks test here.
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// Run the event loop to be more like the browser, which normally runs the
-// event loop long before code like this would run.
-// Not doing so could cause us to close the connection before all tasks have
-// been completed, and that would crash badly.
-flush_main_thread_events();
-
-// XPCShell doesn't dispatch quit-application, to ensure cleanup we have to
-// dispatch it after each test run.
-var os = Cc['@mozilla.org/observer-service;1'].
+// Get services.
+let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+let os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
-os.notifyObservers(null, "quit-application-granted", null);
-os.notifyObservers(null, "quit-application", null);
 
-// Run the event loop, since we enqueue some statement finalization.
-flush_main_thread_events();
+let gDummyCreated = false;
+let gDummyAdded = false;
 
-// try to close the connection so we can remove places.sqlite
-var pip = Cc["@mozilla.org/browser/nav-history-service;1"].
-          getService(Ci.nsINavHistoryService).
-          QueryInterface(Ci.nsPIPlacesDatabase);
-if (pip.DBConnection.connectionReady) {
-  pip.commitPendingChanges();
-  pip.finalizeInternalStatements();
-  pip.DBConnection.close();
-  do_check_false(pip.DBConnection.connectionReady);
+let observer = {
+  observe: function(subject, topic, data) {
+    if (topic == "dummy-observer-created")
+      gDummyCreated = true;
+    else if (topic == "dummy-observer-item-added")
+      gDummyAdded = true;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ])
+};
+
+function verify() {
+  do_check_true(gDummyCreated);
+  do_check_true(gDummyAdded);
+  do_test_finished();
 }
 
+// main
+function run_test() {
+  do_load_module("nsDummyObserver.js");
+
+  os.addObserver(observer, "dummy-observer-created", true);
+  os.addObserver(observer, "dummy-observer-item-added", true);
+
+  // Add a bookmark
+  bs.insertBookmark(bs.unfiledBookmarksFolder, uri("http://typed.mozilla.org"),
+                    bs.DEFAULT_INDEX, "bookmark");
+
+  do_test_pending();
+  do_timeout(1000, "verify();");
+}
