@@ -3572,7 +3572,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
             if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
                 return JS_FALSE;
         } else {
-            JS_ASSERT(pn->pn_type != TOK_DEFSHARP);
+            JS_ASSERT_IF(pn->pn_type == TOK_DEFSHARP, pn->pn_kid);
             if (!js_EmitTree(cx, cg, pn))
                 return JS_FALSE;
         }
