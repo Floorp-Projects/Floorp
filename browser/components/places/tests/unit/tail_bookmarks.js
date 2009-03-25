@@ -41,9 +41,7 @@
 // event loop long before code like this would run.
 // Not doing so could cause us to close the connection before all tasks have
 // been completed, and that would crash badly.
-let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-while (tm.mainThread.hasPendingEvents())
-  tm.mainThread.processNextEvent(false);
+flush_main_thread_events();
 
 // XPCShell doesn't dispatch quit-application, to ensure cleanup we have to
 // dispatch it after each test run.
@@ -51,6 +49,9 @@ var os = Cc['@mozilla.org/observer-service;1'].
          getService(Ci.nsIObserverService);
 os.notifyObservers(null, "quit-application-granted", null);
 os.notifyObservers(null, "quit-application", null);
+
+// Run the event loop, since we enqueue some statement finalization.
+flush_main_thread_events();
 
 // try to close the connection so we can remove places.sqlite
 var pip = Cc["@mozilla.org/browser/nav-history-service;1"].
