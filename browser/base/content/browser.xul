@@ -124,11 +124,13 @@
            hidden="true"
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
-      <hbox flex="1" align="top">
-        <image id="editBookmarkPanelStarIcon"/>
-        <vbox flex="1">
-          <label id="editBookmarkPanelTitle" flex="1"/>
-          <description id="editBookmarkPanelDescription" flex="1"/>
+      <row id="editBookmarkPanelHeader" align="center" hidden="true">
+        <vbox align="center">
+          <image id="editBookmarkPanelStarIcon"/>
+        </vbox>
+        <vbox>
+          <label id="editBookmarkPanelTitle"/>
+          <description id="editBookmarkPanelDescription"/>
           <hbox>
             <button id="editBookmarkPanelUndoRemoveButton"
                     hidden="true"
@@ -144,10 +146,9 @@
                     accesskey="&editBookmark.edit.accessKey;"/>
           </hbox>
         </vbox>
-      </hbox>
+      </row>
       <vbox id="editBookmarkPanelContent" flex="1" hidden="true"/>
-      <hbox flex="1" id="editBookmarkPanelBottomButtons">
-        <spacer flex="1"/>
+      <hbox id="editBookmarkPanelBottomButtons" pack="end">
 #ifndef XP_UNIX
         <button id="editBookmarkPanelDoneButton"
                 label="&editBookmark.done.label;"
