@@ -538,7 +538,14 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JSBool last;
 
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    /*
+     * For API compatibility we allow to destroy contexts without a thread in
+     * optimized builds. We assume that the embedding knows that an OOM error
+     * cannot happen in JS_SetContextThread.
+     */
+    JS_ASSERT(cx->thread && CURRENT_THREAD_IS_ME(cx->thread));
+    if (!cx->thread)
+        JS_SetContextThread(cx);
 #endif
     rt = cx->runtime;
 
