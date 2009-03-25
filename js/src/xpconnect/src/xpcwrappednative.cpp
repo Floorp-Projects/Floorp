@@ -301,7 +301,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(), 
                  "XPCWrappedNative::GetNewOrUsed called during GC");
     {
-        nsWrapperCache *cache2;
+        nsWrapperCache *cache2 = nsnull;
         CallQueryInterface(Object, &cache2);
         NS_ASSERTION(!cache == !cache2, "Caller should pass in the cache!");
     }
