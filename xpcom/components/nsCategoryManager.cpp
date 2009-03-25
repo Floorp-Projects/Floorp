@@ -276,7 +276,7 @@ CategoryNode::GetLeaf(const char* aEntryName,
 
   // we only want the non-persistent value
   if (ent && ent->nonpValue) {
-    *_retval = nsCRT::strdup(ent->nonpValue);
+    *_retval = NS_strdup(ent->nonpValue);
     if (*_retval)
       rv = NS_OK;
   }
