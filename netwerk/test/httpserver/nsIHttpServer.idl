@@ -53,7 +53,7 @@ interface nsIHttpServerIdentity;
 /**
  * An interface which represents an HTTP server.
  */
-[scriptable, uuid(71ecfba5-15cf-457f-9642-4b33f6e9baf4)]
+[scriptable, uuid(cea8812e-faa6-4013-9396-f9936cbb74ec)]
 interface nsIHttpServer : nsISupports
 {
   /**
@@ -119,6 +119,24 @@ interface nsIHttpServer : nsISupports
    *   if path does not begin with a "/"
    */
   void registerPathHandler(in string path, in nsIHttpRequestHandler handler);
+
+  /**
+   * Registers a custom prefix handler.
+   *
+   * @param prefix
+   *   the path on the server (beginning and ending with "/") which is to be
+   *   handled by handler; this path must not include a query string or hash
+   *   component. All requests that start with this prefix will be directed to
+   *   the given handler.
+   * @param handler
+   *   an object which will handle any requests for the given path, or null to
+   *   remove any existing handler; if while the server is running the handler
+   *   throws an exception while responding to a request, an HTTP 500 response
+   *   will be returned
+   * @throws NS_ERROR_INVALID_ARG
+   *   if path does not begin with a "/" or does not end with a "/"
+   */
+  void registerPrefixHandler(in string prefix, in nsIHttpRequestHandler handler);
 
   /**
    * Registers a custom error page handler.
