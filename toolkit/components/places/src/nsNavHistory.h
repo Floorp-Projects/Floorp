@@ -82,6 +82,7 @@
 #include "nsTArray.h"
 #include "nsINavBookmarksService.h"
 #include "nsMaybeWeakPtr.h"
+#include "nsCategoryCache.h"
 
 #include "nsNavHistoryExpire.h"
 #include "nsNavHistoryResult.h"
@@ -307,11 +308,7 @@ public:
   // used by other places components to send history notifications (for example,
   // when the favicon has changed)
   void SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
-                                   const nsAString& aValue)
-  {
-    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                        OnPageChanged(aURI, aWhat, aValue));
-  }
+                                   const nsAString& aValue);
 
   // current time optimization
   PRTime GetNow();
@@ -831,6 +828,10 @@ protected:
   PRBool mInPrivateBrowsing;
 
   PRUint16 mDatabaseStatus;
+
+  // Used to enable and disable the observer notifications
+  PRBool mCanFireNotifs;
+  nsCategoryCache<nsINavHistoryObserver> mCacheObservers;
 };
 
 /**
