@@ -1,6 +1,8 @@
 fails == 156888-1.html 156888-1-ref.html # bug 484825
 == 156888-2.html 156888-2-ref.html
 == 162063-1.xhtml about:blank
+== 203923-1.html white-space-1-ref.html
+== 203923-2.html white-space-1-ref.html
 == 208305-1.html 208305-1-ref.html
 == 277995-1.html 277995-1-ref.html
 == 293576-1.html 293576-1-ref.html
