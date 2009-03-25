@@ -1541,17 +1541,14 @@
 
             var closeWindow = false;
             var l = this.mTabs.length - this._removingTabs.length;
+            var newTab;
             if (l == 1) {
               closeWindow = aCloseWindowWithLastTab != null ?
                             aCloseWindowWithLastTab :
                             this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
-              // BrowserOpenTab focuses the location bar. Use it only if that's
-              // really wanted.
-              if (closeWindow)
-                this.addTab("about:blank");
-              else
-                BrowserOpenTab();
+              newTab = this.addTab("about:blank");
+              newTab.collapsed = true;
               l++;
             }
             if (l == 2) {
@@ -1589,7 +1586,7 @@
                 tab.owner = null;
             });
 
-            return [aTab, closeWindow];
+            return [aTab, closeWindow, newTab];
           ]]>
         </body>
       </method>
@@ -1600,7 +1597,7 @@
           <![CDATA[
             if (!args)
               return;
-            var [aTab, aCloseWindow] = args;
+            var [aTab, aCloseWindow, aNewTab] = args;
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
@@ -1620,6 +1617,12 @@
                 aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
               };
               setTimeout(_delayedUpdate, 0, this.tabContainer);
+
+              if (aNewTab) {
+                aNewTab.collapsed = false;
+                if (gURLBar)
+                  gURLBar.focus();
+              }
             }
 
             // We're going to remove the tab and the browser now.
