@@ -6,6 +6,7 @@ fails == 156888-1.html 156888-1-ref.html # bug 484825
 == 208305-1.html 208305-1-ref.html
 == 277995-1.html 277995-1-ref.html
 == 293576-1.html 293576-1-ref.html
+== 302113-1.html 302113-1-ref.html
 == 315146-1.xhtml 315146-1-ref.xhtml
 == 338735-1.html 338735-1-ref.html
 == 339388-1a.html 339388-1-ref.html
