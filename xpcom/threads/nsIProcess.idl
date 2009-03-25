@@ -1,28 +1,90 @@
 #include "nsIFile.idl"
 #include "nsISupports.idl"
 
-[scriptable, uuid(d573f1f3-fcdd-4dbe-980b-4ba79e6718dc)]
+interface nsIObserver;
 
+[scriptable, uuid(d573f1f3-fcdd-4dbe-980b-4ba79e6718dc)]
 interface nsIProcess : nsISupports
 {
-	void init(in nsIFile executable);
-	void initWithPid(in unsigned long pid);
-	
-	void kill();
+  /**
+   * Initialises the process with an executable to be run. Call the run method
+   * to run the executable.
+   * @param executable The executable to run.
+   */
+  void init(in nsIFile executable);
 
-    /** XXX what charset? **/
-        /** Executes the file this object was initialized with
-         * @param blocking Whether to wait until the process terminates before returning or not
-         * @param args An array of arguments to pass to the process
-         * @param count The length of the args array */
-        void run(in boolean blocking, [array, size_is(count)] in string args, in unsigned long count);
+  /**
+   * Not implemented. Will be removed in a future version of this interface.
+   */
+  void initWithPid(in unsigned long pid);
 
-	readonly attribute nsIFile location;
-	readonly attribute unsigned long pid;
-	readonly attribute string processName;
-	readonly attribute unsigned long processSignature;
-	readonly attribute long exitValue;
-	readonly attribute boolean isRunning;
+  /**
+   * Kills the running process. After exiting the process will either have
+   * been killed or a failure will have been returned.
+   */
+  void kill();
+
+  /**
+   * Executes the file this object was initialized with
+   * @param blocking   Whether to wait until the process terminates before
+                       returning or not.
+   * @param args       An array of arguments to pass to the process in the
+   *                   native character set.
+   * @param count      The length of the args array.
+   */
+  void run(in boolean blocking, [array, size_is(count)] in string args,
+           in unsigned long count);
+
+  /**
+   * Not implemented. Will be removed in a future version of this interface.
+   */
+  readonly attribute nsIFile location;
+
+  /**
+   * The process identifier of the currently running process. This will only
+   * be available after the process has started and may not be available on
+   * some platforms.
+   */
+  readonly attribute unsigned long pid;
+
+  /**
+   * Not implemented. Will be removed in a future version of this interface.
+   */
+  readonly attribute string processName;
+  /**
+   * Not implemented. Will be removed in a future version of this interface.
+   */
+  readonly attribute unsigned long processSignature;
+
+  /**
+   * The exit value of the process. This is only valid after the process has
+   * exited.
+   */
+  readonly attribute long exitValue;
+
+  /**
+   * Returns whether the process is currently running or not.
+   */
+  readonly attribute boolean isRunning;
+};
+
+[scriptable, uuid(7d362c71-308e-4724-b1eb-8451fe133026)]
+interface nsIProcess2 : nsIProcess
+{
+  /**
+   * Executes the file this object was initialized with optionally calling
+   * an observer after the process has finished running.
+   * @param args       An array of arguments to pass to the process in the
+   *                   native character set.
+   * @param count      The length of the args array.
+   * @param observer   An observer to notify when the process has completed. It
+   *                   will receive this process instance as the subject and
+   *                   "process-finished" or "process-failed" as the topic. The
+   *                   observer will be notified on the main thread.
+   * @param holdWeak   Whether to use a weak reference to hold the observer.
+   */
+  void runAsync([array, size_is(count)] in string args, in unsigned long count,
+                [optional] in nsIObserver observer, [optional] in boolean holdWeak);
 };
 
 %{C++
