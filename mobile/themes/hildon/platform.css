@@ -64,3 +64,37 @@ richlistitem {
   font-family: "Nokia Sans", sans-serif !important;
   font-size: 16.75pt !important;
 }
+
+/* re-theme radio buttons */
+radiogroup {
+  -moz-box-orient: horizontal;
+}
+
+radio {
+  border: 1px solid #000;
+  border-left: none;
+  background: gray;
+  margin: 0px;
+  padding: 6px;
+  -moz-box-align: center;
+  -moz-appearance: none;
+}
+
+radio .radio-check-box1, .radio-check {
+  display: none;
+}
+
+radio:first-child {
+  border-left: 1px solid #000;
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-bottomleft: 8px;
+}
+
+radio:last-child {
+  -moz-border-radius-topright: 8px;
+  -moz-border-radius-bottomright: 8px;
+}
+
+radio[selected] {
+  background: #fff;
+}
