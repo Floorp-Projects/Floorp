@@ -3821,8 +3821,47 @@ split_setup(JSContext *cx)
  * they're being called for tutorial purposes.
  */
 enum its_tinyid {
-    ITS_COLOR, ITS_HEIGHT, ITS_WIDTH, ITS_FUNNY, ITS_ARRAY, ITS_RDONLY
+    ITS_COLOR, ITS_HEIGHT, ITS_WIDTH, ITS_FUNNY, ITS_ARRAY, ITS_RDONLY,
+    ITS_CUSTOM, ITS_CUSTOMRDONLY
 };
+
+static JSBool
+its_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  jsval *val = (jsval *) JS_GetPrivate(cx, obj);
+  *vp = val ? *val : JSVAL_VOID;
+  return JS_TRUE;
+}
+
+static JSBool
+its_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  jsval *val = (jsval *) JS_GetPrivate(cx, obj);
+  if (val) {
+      *val = *vp;
+      return JS_TRUE;
+  }
+
+  val = new jsval;
+  if (!val) {
+      JS_ReportOutOfMemory(cx);
+      return JS_FALSE;
+  }
+
+  if (!JS_AddRoot(cx, val)) {
+      delete val;
+      return JS_FALSE;
+  }
+
+  if (!JS_SetPrivate(cx, obj, (void*)val)) {
+      JS_RemoveRoot(cx, val);
+      delete val;
+      return JS_FALSE;
+  }
+
+  *val = *vp;
+  return JS_TRUE;
+}
 
 static JSPropertySpec its_props[] = {
     {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       NULL, NULL},
@@ -3831,6 +3870,10 @@ static JSPropertySpec its_props[] = {
     {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE,       NULL, NULL},
     {"array",           ITS_ARRAY,      JSPROP_ENUMERATE,       NULL, NULL},
     {"rdonly",          ITS_RDONLY,     JSPROP_READONLY,        NULL, NULL},
+    {"custom",          ITS_CUSTOM,     JSPROP_ENUMERATE,
+                        its_getter,     its_setter},
+    {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
+                        its_getter,     its_setter},
     {NULL,0,0,NULL,NULL}
 };
 
@@ -4046,12 +4089,19 @@ its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 static void
 its_finalize(JSContext *cx, JSObject *obj)
 {
+    jsval *rootedVal;
     if (its_noisy)
         fprintf(gOutFile, "finalizing it\n");
+    rootedVal = (jsval *) JS_GetPrivate(cx, obj);
+    if (rootedVal) {
+      JS_RemoveRoot(cx, rootedVal);
+      JS_SetPrivate(cx, obj, NULL);
+      delete rootedVal;
+    }
 }
 
 static JSClass its_class = {
-    "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
+    "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE,
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
     (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
     its_convert,      its_finalize,
@@ -4284,11 +4334,11 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 }
 
 JSClass global_class = {
-    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
+    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub,   JS_FinalizeStub,
+    JS_ConvertStub,   its_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -4572,6 +4622,13 @@ main(int argc, char **argv, char **envp)
     if (!JS_DefineProperties(cx, it, its_props))
         return 1;
     if (!JS_DefineFunctions(cx, it, its_methods))
+        return 1;
+
+    if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
+                           its_setter, 0))
+        return 1;
+    if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
+                           its_setter, JSPROP_READONLY))
         return 1;
 
 #ifdef JSDEBUGGER
