@@ -71,9 +71,9 @@ function run_test() {
           deleteMork();
 
           _("Now that places has migrated, check that it calculated frecencies");
-          places.DBConnection.createStatement(
-              "SELECT COUNT(*) FROM moz_places_view WHERE frecency < 0").
-            executeAsync({
+          var stmt = places.DBConnection.createStatement(
+              "SELECT COUNT(*) FROM moz_places_view WHERE frecency < 0");
+          stmt.executeAsync({
               handleResult: function(results) {
                 _("Should always get a result from COUNT(*)");
                 let row = results.getNextRow();
@@ -85,6 +85,7 @@ function run_test() {
               handleCompletion: do_test_finished,
               handleError: do_throw,
             });
+          stmt.finalize();
           break;
       }
     },
