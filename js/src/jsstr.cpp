@@ -241,15 +241,11 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
     return JS_TRUE;
 }
 
-static JSString *
-ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
+inline JSString *
+JSValPtrToString(JSContext *cx, jsval *vp)
 {
     JSObject *obj;
     JSString *str;
-
-    if (arg >= argc)
-        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
-    vp += 2 + arg;
 
     if (JSVAL_IS_OBJECT(*vp)) {
         obj = JSVAL_TO_OBJECT(*vp);
@@ -271,6 +267,19 @@ ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
         JS_ASSERT(JSVAL_IS_VOID(*vp));
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     }
+    return str;
+}
+
+static JSString *
+ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
+{
+    JSString *str;
+
+    if (arg >= argc)
+        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
+
+    vp += 2 + arg;
+    str = JSValPtrToString(cx, vp);
     if (str)
         *vp = STRING_TO_JSVAL(str);
     return str;
@@ -1068,13 +1077,42 @@ js_BoyerMooreHorspool(const jschar *text, jsint textlen,
     return -1;
 }
 
+inline jsint
+str_indexOf_common(const jschar *text, jsint textlen, const jschar *pat,
+                   jsint patlen, jsint start)
+{
+    jsint index, j;
+
+    if (textlen - start >= 512 && (jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2) {
+        index = js_BoyerMooreHorspool(text, textlen, pat, patlen, start);
+        if (index != BMH_BAD_PATTERN)
+            return index;
+    }
+
+    index = -1;
+    j = 0;
+    while (start + j < textlen) {
+        if (text[start + j] == pat[j]) {
+            if (++j == patlen) {
+                index = start;
+                break;
+            }
+        } else {
+            start++;
+            j = 0;
+        }
+    }
+
+    return index;
+}
+
 static JSBool
 str_indexOf(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval t;
     JSString *str, *str2;
     const jschar *text, *pat;
-    jsint i, j, index, textlen, patlen;
+    jsint i, textlen, patlen;
     jsdouble d;
 
     t = vp[1];
@@ -1115,30 +1153,63 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
-    /* XXX tune the BMH threshold (512) */
-    if (textlen - i >= 512 && (jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2) {
-        index = js_BoyerMooreHorspool(text, textlen, pat, patlen, i);
-        if (index != BMH_BAD_PATTERN)
-            goto out;
-    }
+    *vp = INT_TO_JSVAL(str_indexOf_common(text, textlen, pat, patlen, i));
+    return JS_TRUE;
+}
 
-    index = -1;
+#ifdef JS_TRACER
+static int32 FASTCALL
+str_indexOfWithStart_tn(JSString *str, JSString *str2, int32 start)
+{
+    const jschar *text, *pat;
+    jsint textlen, patlen, index;
+
+    text = JSSTRING_CHARS(str);
+    textlen = jsint(JSSTRING_LENGTH(str));
+    pat = JSSTRING_CHARS(str2);
+    patlen = jsint(JSSTRING_LENGTH(str2));
+
+    if (start < 0)
+        start = 0;
+    else if (start > textlen)
+        start = textlen;
+
+    if (patlen == 0)
+        return int32(start);
+
+    index = str_indexOf_common(text, textlen, pat, patlen, start);
+    return int32(index);
+}
+
+static int32 FASTCALL
+str_indexOf_tn(JSString *str, JSString *str2)
+{
+    return str_indexOfWithStart_tn(str, str2, 0);
+}
+#endif
+
+JS_DEFINE_TRCINFO_2(str_indexOf,
+    (3, (static, INT32, str_indexOfWithStart_tn, THIS_STRING, STRING, INT32, 0, 0)),
+    (2, (static, INT32, str_indexOf_tn, THIS_STRING, STRING, 0, 0)))
+
+inline jsint
+str_lastIndexOf_common(const jschar *text, jsint textlen, const jschar *pat,
+                       jsint patlen, jsint start)
+{
+    jsint j;
+
     j = 0;
-    while (i + j < textlen) {
-        if (text[i + j] == pat[j]) {
-            if (++j == patlen) {
-                index = i;
+    while (start >= 0) {
+        /* Don't assume that text is NUL-terminated: it could be dependent. */
+        if (start + j < textlen && text[start + j] == pat[j]) {
+            if (++j == patlen)
                 break;
-            }
         } else {
-            i++;
+            start--;
             j = 0;
         }
     }
-
-out:
-    *vp = INT_TO_JSVAL(index);
-    return JS_TRUE;
+    return start;
 }
 
 static JSBool
@@ -1146,7 +1217,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str, *str2;
     const jschar *text, *pat;
-    jsint i, j, textlen, patlen;
+    jsint i, textlen, patlen;
     jsdouble d;
 
     NORMALIZE_THIS(cx, vp, str);
@@ -1183,20 +1254,45 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
-    j = 0;
-    while (i >= 0) {
-        /* Don't assume that text is NUL-terminated: it could be dependent. */
-        if (i + j < textlen && text[i + j] == pat[j]) {
-            if (++j == patlen)
-                break;
-        } else {
-            i--;
-            j = 0;
-        }
-    }
+    i = str_lastIndexOf_common(text, textlen, pat, patlen, i);
     *vp = INT_TO_JSVAL(i);
     return JS_TRUE;
 }
+
+#ifdef JS_TRACER
+static int32 FASTCALL
+str_lastIndexOfWithStart_tn(JSString *str, JSString *str2, int32 start)
+{
+    const jschar *text, *pat;
+    jsint textlen, patlen, index;
+
+    text = JSSTRING_CHARS(str);
+    textlen = jsint(JSSTRING_LENGTH(str));
+    pat = JSSTRING_CHARS(str2);
+    patlen = jsint(JSSTRING_LENGTH(str2));
+
+    if (start < 0)
+        start = 0;
+    else if (start > textlen)
+        start = textlen;
+
+    if (patlen == 0)
+        return int32(start);
+
+    index = str_lastIndexOf_common(text, textlen, pat, patlen, start);
+    return int32(index);
+}
+
+static int32 FASTCALL
+str_lastIndexOf_tn(JSString *str, JSString *str2)
+{
+    return str_lastIndexOfWithStart_tn(str, str2, int32(JSSTRING_LENGTH(str)));
+}
+#endif
+
+JS_DEFINE_TRCINFO_2(str_lastIndexOf,
+    (3, (static, INT32, str_lastIndexOfWithStart_tn, THIS_STRING, STRING, INT32, 0, 0)),
+    (2, (static, INT32, str_lastIndexOf_tn, THIS_STRING, STRING, 0, 0)))
 
 static JSBool
 js_TrimString(JSContext *cx, jsval *vp, JSBool trimLeft, JSBool trimRight)
@@ -2402,8 +2498,8 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
     JS_TN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE, str_charAt_trcinfo),
     JS_TN("charCodeAt",        str_charCodeAt,        1,GENERIC_PRIMITIVE, str_charCodeAt_trcinfo),
-    JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
-    JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
+    JS_TN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE, str_indexOf_trcinfo),
+    JS_TN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE, str_lastIndexOf_trcinfo),
     JS_FN("trim",              str_trim,              0,GENERIC_PRIMITIVE),
     JS_FN("trimLeft",          str_trimLeft,          0,GENERIC_PRIMITIVE),
     JS_FN("trimRight",         str_trimRight,         0,GENERIC_PRIMITIVE),
