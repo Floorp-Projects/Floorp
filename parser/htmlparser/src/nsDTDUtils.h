@@ -58,7 +58,7 @@
 #include "nsString.h"
 #include "nsIParserNode.h"
 #include "nsFixedSizeAllocator.h"
-#include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsIParserService.h"
 #include "nsReadableUtils.h"
 #include "nsIHTMLContentSink.h"
@@ -444,7 +444,7 @@ public:
 
 protected:
   nsString mTopic;
-  nsVoidArray* mObservers[NS_HTML_TAG_MAX + 1];
+  nsCOMArray<nsIElementObserver>* mObservers[NS_HTML_TAG_MAX + 1];
   friend class nsMatchesTopic;
 };
 
