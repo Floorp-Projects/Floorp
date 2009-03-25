@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,14 +14,12 @@
  *
  * The Original Code is Places.
  *
- * The Initial Developer of the Original Code is
- * Mozilla.org
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Dietrich Ayala <dietrich@mozilla.com>
- *  Marco Bonardo <mak77@bonardo.net>
+ *   Mark Finkle <mfinkle@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,32 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// put cleanup of the bookmarks test here.
+#include "prtypes.h"
+// Call a method on each observer in a category cache, then call the same
+// method on the observer array.
 
-// Run the event loop to be more like the browser, which normally runs the
-// event loop long before code like this would run.
-// Not doing so could cause us to close the connection before all tasks have
-// been completed, and that would crash badly.
-flush_main_thread_events();
-
-// XPCShell doesn't dispatch quit-application, to ensure cleanup we have to
-// dispatch it after each test run.
-var os = Cc['@mozilla.org/observer-service;1'].
-         getService(Ci.nsIObserverService);
-os.notifyObservers(null, "quit-application-granted", null);
-os.notifyObservers(null, "quit-application", null);
-
-// Run the event loop, since we enqueue some statement finalization.
-flush_main_thread_events();
-
-// try to close the connection so we can remove places.sqlite
-var pip = Cc["@mozilla.org/browser/nav-history-service;1"].
-          getService(Ci.nsINavHistoryService).
-          QueryInterface(Ci.nsPIPlacesDatabase);
-if (pip.DBConnection.connectionReady) {
-  pip.commitPendingChanges();
-  pip.finalizeInternalStatements();
-  pip.DBConnection.close();
-  do_check_false(pip.DBConnection.connectionReady);
-}
-
+#define ENUMERATE_OBSERVERS(canFire, cache, array, type, method)               \
+  PR_BEGIN_MACRO                                                               \
+  if (canFire) {                                                               \
+    const nsCOMArray<type> &entries = cache.GetEntries();                      \
+    for (PRInt32 idx = 0; idx < entries.Count(); ++idx)                        \
+        entries[idx]->method;                                                  \
+    ENUMERATE_WEAKARRAY(array, type, method)                                   \
+  }                                                                            \
+  PR_END_MACRO;
