@@ -1,17 +1,10 @@
 /* Invoke unit tests on OS/2 */
 PARSE ARG dist prog parm
 dist=forwardtoback(dist);
+prog=forwardtoback(prog);
 'set BEGINLIBPATH='dist'\bin;%BEGINLIBPATH%'
 'set LIBPATHSTRICT=T'
-if substr(FILESPEC("name",prog),1,5) \= 'test_'
-     then
-	do
-           prog=forwardtoback(prog)
-           prog parm
-           exit
-        end
-     else
-   bash prog parm
+prog parm
 exit
 
 forwardtoback: procedure
