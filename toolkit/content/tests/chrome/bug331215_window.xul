@@ -57,6 +57,7 @@
     function ok(condition, message) {
       window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
     }
+
     function finish() {
       window.close();
       window.opener.wrappedJSObject.SimpleTest.finish();
