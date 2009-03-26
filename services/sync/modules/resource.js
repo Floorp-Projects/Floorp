@@ -91,6 +91,13 @@ Resource.prototype = {
   set headers(value) {
     this._headers = value;
   },
+  setHeader: function Res_setHeader() {
+    if (arguments.length % 2)
+      throw "setHeader only accepts arguments in multiples of 2";
+    for (let i = 0; i < arguments.length; i += 2) {
+      this._headers[arguments[i]] = arguments[i + 1];
+    }
+  },
 
   get uri() {
     return this._uri;
@@ -162,7 +169,7 @@ Resource.prototype = {
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
-      this._lastChannel.setRequestHeader(key, headers[key], true);
+      this._lastChannel.setRequestHeader(key, headers[key], false);
     }
     return this._lastChannel;
   },
@@ -204,12 +211,15 @@ Resource.prototype = {
       yield this.filterUpload(self.cb);
       this._log.trace(action + " Body:\n" + this._data);
 
+      let type = ('Content-Type' in this._headers)?
+        this._headers['Content-Type'] : 'text/plain';
+
       let stream = Cc["@mozilla.org/io/string-input-stream;1"].
         createInstance(Ci.nsIStringInputStream);
       stream.setData(this._data, this._data.length);
 
       channel.QueryInterface(Ci.nsIUploadChannel);
-      channel.setUploadStream(stream, 'text/plain', this._data.length);
+      channel.setUploadStream(stream, type, this._data.length);
     }
 
     let listener = new ChannelListener(self.cb, this._onProgress, this._log);
