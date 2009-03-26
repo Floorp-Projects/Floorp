@@ -240,14 +240,15 @@ PasswordTracker.prototype = {
 
     switch (aData) {
     case 'modifyLogin':
-      aSubject = aSubject.queryElementAt(1, Ci.nsILoginMetaInfo);
+      aSubject = aSubject.QueryInterface(Ci.nsIArray).
+        queryElementAt(1, Ci.nsILoginMetaInfo);
     case 'addLogin':
-    case 'removeLogin': {
-      let metaInfo = aSubject.QueryInterface(Ci.nsILoginMetaInfo);
+    case 'removeLogin':
+      aSubject.QueryInterface(Ci.nsILoginMetaInfo);
       this._score += 15;
-      this._log.debug(aData + ": " + metaInfo.guid);
-      this.addChangedID(metaInfo.guid);
-    } break;
+      this._log.debug(aData + ": " + aSubject.guid);
+      this.addChangedID(aSubject.guid);
+      break;
     case 'removeAllLogins':
       this._log.debug(aData);
       this._score += 50;
