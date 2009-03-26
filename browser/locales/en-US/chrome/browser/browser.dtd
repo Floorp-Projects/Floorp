@@ -100,9 +100,13 @@
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
-<!ENTITY bookmarksSidebarCmd.accesskey  "B">
-<!ENTITY bookmarksSidebarCmd.commandkey "b">
-<!ENTITY bookmarksSidebarWinCmd.commandkey "i">
+<!ENTITY bookmarksButton.accesskey  "B">
+<!ENTITY bookmarksCmd.commandkey "b">
+<!-- LOCALIZATION NOTE (bookmarksSidebarGtkCmd.commandkey): This command
+  -  key should not contain the letters A-F, since these are reserved
+  -  shortcut keys on Linux. -->
+<!ENTITY bookmarksGtkCmd.commandkey "o">
+<!ENTITY bookmarksWinCmd.commandkey "i">
 
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
