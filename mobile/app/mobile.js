@@ -271,3 +271,5 @@ pref("javascript.options.jit.content", false);
 pref("content.max.deflected.tokens", 10);
 pref("content.max.tokenizing.time", 50000);
 
+pref("javascript.options.jit.content", true);
+pref("javascript.options.jit.chrome", true);
