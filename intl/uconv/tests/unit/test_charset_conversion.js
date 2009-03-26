@@ -31,7 +31,7 @@ function run_test()
                                "nsIConverterInputStream",
                                "init");
 
-  dataDir = do_get_file("intl/uconv/tests/unit/data/");
+  dataDir = do_get_file("data/");
 
   test_utf8_1();
   test_utf16_1();

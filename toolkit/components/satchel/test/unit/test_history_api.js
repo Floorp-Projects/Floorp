@@ -43,7 +43,7 @@ function run_test()
   try {
 
   // ===== test init =====
-  var testfile = do_get_file("toolkit/components/satchel/test/unit/formhistory_apitest.sqlite");
+  var testfile = do_get_file("formhistory_apitest.sqlite");
   var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
   // Cleanup from any previous tests or failures.

@@ -401,6 +401,10 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
             flags = OPEN_EXISTING;
     }
 
+    if (osflags & nsILocalFile::DELETE_ON_CLOSE) {
+      flag6 |= FILE_FLAG_DELETE_ON_CLOSE;
+    }
+
     HANDLE file = ::CreateFileW(name.get(), access,
                                 FILE_SHARE_READ|FILE_SHARE_WRITE,
                                 NULL, flags, flag6, NULL);

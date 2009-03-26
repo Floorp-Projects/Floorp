@@ -42,7 +42,7 @@ const PREF_SELECTED_LOCALE = "general.useragent.locale";
 // Disables security checking our updates which haven't been signed
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 
 // This is the data we expect to see sent as part of the update url.
 var EXPECTED = [

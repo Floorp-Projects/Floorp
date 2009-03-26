@@ -59,6 +59,8 @@
 ** Make win16 unit_time interval 300 milliseconds, others get 100
 */
 #define UNIT_TIME  200       /* unit time in milliseconds */
+#elif defined(SYMBIAN)
+#define UNIT_TIME  5000      /* unit time in milliseconds */
 #else
 #define UNIT_TIME  100       /* unit time in milliseconds */
 #endif
@@ -262,7 +264,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     return 0;
 }
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

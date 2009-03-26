@@ -211,6 +211,7 @@ nsNavBookmarks::InitStatements()
   // NOTE: Do not modify the ORDER BY segment of the query, as certain
   // features depend on it. See bug 398914 for an example.
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "/* do not warn (bug 482346) */ "
       "SELECT b.id "
       "FROM moz_bookmarks b "
       "JOIN ( "
@@ -235,6 +236,7 @@ nsNavBookmarks::InitStatements()
   // This is a LEFT OUTER JOIN with moz_places since folders does not have
   // a reference into that table.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "/* do not warn (bug 482353) */ "
       "SELECT * FROM ( "
         "SELECT h.id, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, "

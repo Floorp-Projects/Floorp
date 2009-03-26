@@ -182,8 +182,11 @@ WorkerThreadFunc(void *_listenSock)
         if (debug_mode) DPRINTF("\tServer accepted connection (%d bytes)\n", bytesRead);
         
         PR_AtomicIncrement(&workerThreadsBusy);
+#ifdef SYMBIAN
+        if (workerThreadsBusy == workerThreads && workerThreads<1) {
+#else
         if (workerThreadsBusy == workerThreads) {
-
+#endif
             PR_Lock(workerThreadsLock);
             if (workerThreadsBusy == workerThreads) {
                 PRThread *WorkerThread;
@@ -527,7 +530,7 @@ static void Measure(void (*func)(void), const char *msg)
 }
 
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	/* The command line argument: -d is used to determine if the test is being run
 	in debug mode. The regress tool requires only one line output:PASS or FAIL.
@@ -552,6 +555,7 @@ main(int argc, char **argv)
 	PL_DestroyOptState(opt);
 
  /* main test */
+#ifndef SYMBIAN
     if (debug_mode) {
 		printf("Enter number of iterations: \n");
 		scanf("%d", &_iterations);
@@ -562,7 +566,9 @@ main(int argc, char **argv)
 		printf("Enter size of server data : \n");
 		scanf("%d", &_server_data);
 	}
-	else {
+	else 
+#endif
+	{
 		_iterations = 7;
 		_clients = 7;
 		_client_data = 100;

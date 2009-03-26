@@ -1,0 +1,94 @@
+commit bddef148c243b4f3317165babe068fbea0b0fd2c
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Tue Mar 17 15:14:53 2009 -0400
+
+    wrap source_image
+
+diff --git a/src/cairo-surface.c b/src/cairo-surface.c
+index 456f851..4897e5a 100644
+--- a/src/cairo-surface.c
++++ b/src/cairo-surface.c
+@@ -1264,6 +1264,60 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
+ 					      image, image_rect, image_extra);
+ }
+ 
++struct acquire_source_image_data
++{
++    cairo_surface_t *src;
++    cairo_image_surface_t *image;
++    void *image_extra;
++};
++
++static void
++_wrap_release_source_image (void *data)
++{
++    struct acquire_source_image_data *acquire_data = data;
++    _cairo_surface_release_source_image (acquire_data->src, acquire_data->image, acquire_data->image_extra);
++    free(data);
++}
++
++static cairo_status_t
++_wrap_image (cairo_surface_t *src,
++	     cairo_image_surface_t *image,
++	     void *image_extra,
++	     cairo_image_surface_t **out)
++{
++    static cairo_user_data_key_t wrap_image_key;
++    cairo_surface_t *surface;
++    cairo_status_t status;
++
++    struct acquire_source_image_data *data = malloc(sizeof(*data));
++    data->src = src;
++    data->image = image;
++    data->image_extra = image_extra;
++
++    surface = cairo_image_surface_create_for_data (image->data,
++	    image->format,
++	    image->width,
++	    image->height,
++	    image->stride);
++    status = surface->status;
++    if (status)
++	return status;
++
++    status = _cairo_user_data_array_set_data (&surface->user_data,
++	    &wrap_image_key,
++	    data,
++	    _wrap_release_source_image);
++    if (status) {
++	cairo_surface_destroy (surface);
++	return status;
++    }
++
++    *out = (cairo_image_surface_t *) surface;
++    return CAIRO_STATUS_SUCCESS;
++}
++
++
++
+ /**
+  * _cairo_surface_clone_similar:
+  * @surface: a #cairo_surface_t
+@@ -1342,15 +1396,19 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
+ 	    /* If we failed, try again with an image surface */
+ 	    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
+ 	    if (status == CAIRO_STATUS_SUCCESS) {
+-		status =
++		status = _wrap_image(src, image, image_extra, &image);
++		if (status != CAIRO_STATUS_SUCCESS) {
++		    _cairo_surface_release_source_image (src, image, image_extra);
++		} else {
++		    status =
+ 		    surface->backend->clone_similar (surface, &image->base,
+ 						     src_x, src_y,
+ 						     width, height,
+ 						     clone_offset_x,
+ 						     clone_offset_y,
+ 						     clone_out);
+-
+-		_cairo_surface_release_source_image (src, image, image_extra);
++		    cairo_surface_destroy(&image->base);
++		}
+ 	    }
+ 	}
+     }

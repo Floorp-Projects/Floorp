@@ -4,7 +4,7 @@
 // specified in RFC 2616 section 14.9.3 by letting max-age
 // take precedence
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 const BUGID = "203271";
 
 var httpserver = new nsHttpServer();

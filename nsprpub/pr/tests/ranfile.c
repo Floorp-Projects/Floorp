@@ -104,7 +104,7 @@ extern void SetupMacPrintfLog(char *logFile);
 #endif
 
 /***********************************************************************
-** PRIVATE FUNCTION:    Random
+** PRIVATE FUNCTION:    RandomNum
 ** DESCRIPTION:
 **   Generate a pseudo-random number
 ** INPUTS:      None
@@ -122,7 +122,7 @@ extern void SetupMacPrintfLog(char *logFile);
 **      of the product. Seed is then updated with the return value
 **      promoted to a float-64.
 ***********************************************************************/
-static PRUint32 Random(void)
+static PRUint32 RandomNum(void)
 {
     PRUint32 rv;
     PRUint64 shift;
@@ -132,7 +132,7 @@ static PRUint32 Random(void)
     LL_L2UI(rv, shift);
     seed = (PRFloat64)rv;
     return rv;
-}  /* Random */
+}  /* RandomNum */
 
 /***********************************************************************
 ** PRIVATE FUNCTION:    Thread
@@ -175,9 +175,9 @@ static void PR_CALLBACK Thread(void *arg)
     while (PR_TRUE)
     {
         PRUint32 bytes;
-        PRUint32 minor = (Random() % cd->limit) + 1;
-        PRUint32 random = (Random() % cd->limit) + 1;
-        PRUint32 pages = (Random() % cd->limit) + 10;
+        PRUint32 minor = (RandomNum() % cd->limit) + 1;
+        PRUint32 random = (RandomNum() % cd->limit) + 1;
+        PRUint32 pages = (RandomNum() % cd->limit) + 10;
         while (minor-- > 0)
         {
             cd->problem = sg_okay;
@@ -275,7 +275,7 @@ static PRCondVar *cv;
 **          Random File: Using loops = 2, threads = 10, limit = 57
 **          Random File: [min [avg] max] writes/sec average
 ***********************************************************************/
-int main (int argc,      char   *argv[])
+int main(int argc, char **argv)
 {
     PRLock *ml;
     PRUint32 id = 0;
@@ -357,7 +357,7 @@ int main (int argc,      char   *argv[])
             hammer[active].writes = 0;
             hammer[active].action = sg_go;
             hammer[active].problem = sg_okay;
-            hammer[active].limit = (Random() % limit) + 1;
+            hammer[active].limit = (RandomNum() % limit) + 1;
             hammer[active].timein = PR_IntervalNow();
             hammer[active].thread = PR_CreateThread(
                 PR_USER_THREAD, Thread, &hammer[active],

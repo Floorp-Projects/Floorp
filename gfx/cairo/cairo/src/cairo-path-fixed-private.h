@@ -37,6 +37,7 @@
 #define CAIRO_PATH_FIXED_PRIVATE_H
 
 #include "cairo-types-private.h"
+#include "cairo-compiler-private.h"
 
 enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
@@ -53,9 +54,9 @@ typedef char cairo_path_op_t;
 
 typedef struct _cairo_path_buf {
     struct _cairo_path_buf *next, *prev;
-    int buf_size;
-    int num_ops;
-    int num_points;
+    unsigned int buf_size;
+    unsigned int num_ops;
+    unsigned int num_points;
 
     cairo_path_op_t *op;
     cairo_point_t *points;
@@ -76,5 +77,32 @@ struct _cairo_path_fixed {
     cairo_path_buf_t       *buf_tail;
     cairo_path_buf_fixed_t  buf_head;
 };
+
+cairo_private unsigned long
+_cairo_path_fixed_hash (const cairo_path_fixed_t *path);
+
+cairo_private unsigned long
+_cairo_path_fixed_size (const cairo_path_fixed_t *path);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_equal (const cairo_path_fixed_t *a,
+			 const cairo_path_fixed_t *b);
+
+typedef struct _cairo_path_fixed_iter {
+    cairo_path_buf_t *buf;
+    unsigned int n_op;
+    unsigned int n_point;
+} cairo_path_fixed_iter_t;
+
+cairo_private void
+_cairo_path_fixed_iter_init (cairo_path_fixed_iter_t *iter,
+			     cairo_path_fixed_t *path);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
+				    cairo_box_t *box);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

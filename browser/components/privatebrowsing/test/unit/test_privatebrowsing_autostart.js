@@ -39,6 +39,6 @@
 
 function run_test() {
   PRIVATEBROWSING_CONTRACT_ID = "@mozilla.org/privatebrowsing;1";
-  do_import_script("browser/components/privatebrowsing/test/unit/do_test_privatebrowsing_autostart.js");
+  load("do_test_privatebrowsing_autostart.js");
   do_test();
 }

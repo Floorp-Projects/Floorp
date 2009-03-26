@@ -54,7 +54,7 @@ function getTestDB()
  */
 function getCorruptDB()
 {
-  return do_get_file("storage/test/unit/corruptDB.sqlite");
+  return do_get_file("corruptDB.sqlite");
 }
 
 function cleanup()

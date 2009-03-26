@@ -138,7 +138,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 
     if (array->elements == NULL) {
 	array->elements = malloc (sizeof (char *));
-	if (array->elements == NULL)
+	if (unlikely (array->elements == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	*array->elements = NULL;
@@ -148,7 +148,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     new_elements = _cairo_realloc_ab (*array->elements,
 			              array->size, array->element_size);
 
-    if (new_elements == NULL) {
+    if (unlikely (new_elements == NULL)) {
 	array->size = old_size;
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -279,7 +279,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
     assert (! array->is_snapshot);
 
     status = _cairo_array_allocate (array, num_elements, &dest);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     memcpy (dest, elements, num_elements * array->element_size);
@@ -310,7 +310,7 @@ _cairo_array_allocate (cairo_array_t	 *array,
     assert (! array->is_snapshot);
 
     status = _cairo_array_grow_by (array, num_elements);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     assert (array->num_elements + num_elements <= array->size);
@@ -382,14 +382,18 @@ _cairo_user_data_array_init (cairo_user_data_array_t *array)
 void
 _cairo_user_data_array_fini (cairo_user_data_array_t *array)
 {
-    int i, num_slots;
-    cairo_user_data_slot_t *slots;
+    unsigned int num_slots;
 
     num_slots = array->num_elements;
-    slots = _cairo_array_index (array, 0);
-    for (i = 0; i < num_slots; i++) {
-	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
-	    slots[i].destroy (slots[i].user_data);
+    if (num_slots) {
+	cairo_user_data_slot_t *slots;
+
+	slots = _cairo_array_index (array, 0);
+	do {
+	    if (slots->user_data != NULL && slots->destroy != NULL)
+		slots->destroy (slots->user_data);
+	    slots++;
+	} while (--num_slots);
     }
 
     _cairo_array_fini (array);
@@ -485,8 +489,44 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
     }
 
     status = _cairo_array_append (array, &new_slot);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
+			     cairo_user_data_array_t	*src)
+{
+    /* discard any existing user-data */
+    if (dst->num_elements != 0) {
+	_cairo_user_data_array_fini (dst);
+	_cairo_user_data_array_init (dst);
+    }
+
+    if (src->num_elements == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    return _cairo_array_append_multiple (dst,
+					 _cairo_array_index (src, 0),
+					 src->num_elements);
+}
+
+void
+_cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
+				void (*func) (const void *key,
+					      void *elt,
+					      void *closure),
+				void *closure)
+{
+    cairo_user_data_slot_t *slots;
+    int i, num_slots;
+
+    num_slots = array->num_elements;
+    slots = _cairo_array_index (array, 0);
+    for (i = 0; i < num_slots; i++) {
+	if (slots[i].user_data != NULL)
+	    func (slots[i].key, slots[i].user_data, closure);
+    }
 }

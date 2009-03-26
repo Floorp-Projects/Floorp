@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style type="text/css">
+
+   #tablecell {
+     display: table-cell;
+   }
+   .border { border: 1px solid blue; }
+
+  </style>
+ </head>
+ <body>
+
+   <span class="border">
+      <span id="tablecell">x</span>
+   </span>
+  
+   <script>
+
+   document.body.offsetWidth;
+   document.getElementById("tablecell").removeAttribute("id");
+
+   </script>
+ </body>
+</html>

@@ -354,6 +354,30 @@ public:
 
 typedef nsDOMClassInfo nsDOMGenericSH;
 
+class nsDocumentFragmentSH : public nsDOMGenericSH
+{
+protected:
+  nsDocumentFragmentSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsDocumentFragmentSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj);
+  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDocumentFragmentSH(aData);
+  }
+};
+
+
 // EventProp scriptable helper, this class should be the base class of
 // all objects that should support things like
 // obj.onclick=function{...}
@@ -864,8 +888,6 @@ public:
   NS_IMETHOD GetFlags(PRUint32* aFlags);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
-  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                      JSObject *obj);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

@@ -13,9 +13,16 @@ main(int argc, char **argv)
   char  outputFileArg[1000];
 
   args[i++] = CL_PATH;
-  args[i++] = "/I\"" SHUNT_INC "\"";
-  args[i++] = "/FI\"mozce_shunt.h\"";
 
+#ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
+  if(!getenv("NO_SHUNT")) {
+    args[i++] = "/I\"" SHUNT_INC "\"";
+    args[i++] = "/FI\"mozce_shunt.h\"";
+  }
+#endif
+#ifdef MOZ_MEMORY
+  args[i++] = "/DMOZ_MEMORY";
+#endif
   args[i++] = "/DMOZCE_STATIC_BUILD";
   args[i++] = "/DUNICODE";
   args[i++] = "/D_UNICODE_";
@@ -30,7 +37,6 @@ main(int argc, char **argv)
   args[i++] = "/D_WINDOWS";
   args[i++] = "/DNO_ERRNO";
 
-  args[i++] = "/Zc:wchar_t-";          //
   args[i++] = "/GS-";                  // disable security checks
   args[i++] = "/GR-";                  // disable C++ RTTI
 
@@ -73,16 +79,19 @@ main(int argc, char **argv)
 
       args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
       args[i++] = "/LIBPATH:\"" WCE_CRT "\"";
-      args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
-      args[i++] = "mozce_shunt.lib";
+      args[i++] = "/NODEFAULTLIB";
+#ifdef MOZ_MEMORY
+      args[i++] = JEMALLOC_LIB;
+#endif
+#ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
+      if(!getenv("NO_SHUNT")) {
+	args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
+	args[i++] = "mozce_shunt.lib";
+      }
+#endif
       args[i++] = "winsock.lib";
       args[i++] = "corelibc.lib";
       args[i++] = "coredll.lib";
-
-
-      //args[i++] = "/NODEFAULTLIB:LIBC";
-      args[i++] = "/NODEFAULTLIB:OLDNAMES";
-
     }
 
   args[i] = NULL;

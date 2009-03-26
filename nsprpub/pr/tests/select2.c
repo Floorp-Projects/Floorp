@@ -304,7 +304,7 @@ static void Measure(void (*func)(void), const char *msg)
     if (debug_mode) printf("%40s: %6.2f usec avg, %d msec total\n", msg, d / count, tot);
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	
 	/* The command line argument: -d is used to determine if the test is being run

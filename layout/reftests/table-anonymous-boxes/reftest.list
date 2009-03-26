@@ -1,3 +1,15 @@
+fails == 156888-1.html 156888-1-ref.html # bug 484825
+== 156888-2.html 156888-2-ref.html
+== 162063-1.xhtml about:blank
+== 208305-1.html 208305-1-ref.html
+== 277995-1.html 277995-1-ref.html
+== 293576-1.html 293576-1-ref.html
+== 315146-1.xhtml 315146-1-ref.xhtml
+== 338735-1.html 338735-1-ref.html
+== 339388-1a.html 339388-1-ref.html
+== 339388-1b.html 339388-1-ref.html
+== 373379-1.html 373379-1-ref.html
+== 407115-1.html 407115-1-ref.html
 == infer-first-row.html 3x3-ref.html
 == infer-first-row-and-table.html 3x3-ref.html
 == infer-second-row.html 3x3-ref.html
@@ -18,4 +30,17 @@
 == cols-test-1.html 3x3-cols-ref.html
 == cols-test-2.html 3x3-cols-ref.html
 == cols-test-3.html 3x3-cols-ref.html
+== dynamic-removal-1.html 3x3-ref.html
+== dynamic-removal-2.html 3x3-ref.html
+fails == dynamic-removal-3.html 3x3-ref.html
+== dynamic-removal-4.html 3x3-ref.html
+== dynamic-removal-5.html 3x3-ref.html
+== dynamic-removal-6.html 3x3-ref.html
+== dynamic-removal-7.html 3x3-ref.html
+== dynamic-removal-8.html 3x3-ref.html
+== dynamic-removal-9.html white-space-1-ref.html
+== dynamic-removal-10.html white-space-1-ref.html
+== dynamic-removal-11.html white-space-1-ref.html
+== dynamic-removal-12.html white-space-1-ref.html
+== dynamic-removal-13.html 3x3-ref.html
 == white-space-1.html white-space-1-ref.html

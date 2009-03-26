@@ -49,6 +49,7 @@
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsHashSets.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOM3Document.h"
@@ -256,10 +257,11 @@ public:
   /**
    * Returns the element if we know the element associated with this
    * id. Otherwise returns null.
-   * @param aIsNotInDocument if non-null, we set the output to true
-   * if we know for sure the element is not in the document.
    */
-  nsIContent* GetIdContent(PRBool* aIsNotInDocument = nsnull);
+  nsIContent* GetIdContent();
+  /**
+   * Append all the elements with this id to aElements
+   */
   void AppendAllIdContent(nsCOMArray<nsIContent>* aElements);
   /**
    * This can fire ID change callbacks.
@@ -272,7 +274,6 @@ public:
    * @return true if this map entry should be removed
    */
   PRBool RemoveIdContent(nsIContent* aContent);
-  void FlagIDNotInDocument();
 
   PRBool HasContentChangeCallback() { return mChangeCallbacks != nsnull; }
   void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback, void* aData);
@@ -317,8 +318,7 @@ public:
 private:
   void FireChangeCallbacks(nsIContent* aOldContent, nsIContent* aNewContent);
 
-  // The single element ID_NOT_IN_DOCUMENT, or empty to indicate we
-  // don't know what element(s) have this key as an ID
+  // empty if there are no nodes with this ID
   nsSmallVoidArray mIdContentList;
   // NAME_NOT_VALID if this id cannot be used as a 'name'
   nsBaseContentList *mNameContentList;
@@ -1099,7 +1099,7 @@ protected:
   nsCString mReferrer;
   nsString mLastModified;
 
-  nsVoidArray mCharSetObservers;
+  nsTArray<nsIObserver*> mCharSetObservers;
 
   PLDHashTable *mSubDocuments;
 
@@ -1148,8 +1148,8 @@ protected:
    * 1) Attribute changes affect the table immediately (removing and adding
    *    entries as needed).
    * 2) Removals from the DOM affect the table immediately
-   * 3) Additions to the DOM always update existing entries, but only add new
-   *    ones if IdTableIsLive() is true.
+   * 3) Additions to the DOM always update existing entries for names, and add
+   *    new ones for IDs.
    */
   nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
 
@@ -1190,22 +1190,6 @@ protected:
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
-
-  PRBool IdTableIsLive() const {
-    // live if we've had over 63 misses
-    return (mIdMissCount & 0x40) != 0;
-  }
-  void SetIdTableLive() {
-    mIdMissCount = 0x40;
-  }
-  PRBool IdTableShouldBecomeLive() {
-    NS_ASSERTION(!IdTableIsLive(),
-                 "Shouldn't be called if table is already live!");
-    ++mIdMissCount;
-    return IdTableIsLive();
-  }
-
-  PRUint8 mIdMissCount;
 
   nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
 

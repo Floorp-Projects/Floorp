@@ -197,11 +197,6 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
     NS_ASSERTION(aDBConnection, "No database connection given!");
     NS_ASSERTION(!mDBStatement, "Calling Initialize on an already initialized statement!");
 
-#ifdef PR_LOGGING
-    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Initializing statement '%s'",
-                                        nsPromiseFlatCString(aSQLStatement).get()));
-#endif
-
     sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
@@ -214,6 +209,12 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
 #endif
         return NS_ERROR_FAILURE;
     }
+
+#ifdef PR_LOGGING
+    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Initialized statement '%s' (0x%p)",
+                                        nsPromiseFlatCString(aSQLStatement).get(),
+                                        mDBStatement));
+#endif
 
     mDBConnection = aDBConnection;
     mParamCount = sqlite3_bind_parameter_count (mDBStatement);
@@ -610,13 +611,6 @@ mozStorageStatement::ExecuteAsync(mozIStorageStatementCallback *aCallback,
 {
     mozIStorageStatement * stmts[1] = {this};
     return mDBConnection->ExecuteAsync(stmts, 1, aCallback, _stmt);
-}
-
-/* [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer(); */
-sqlite3_stmt*
-mozStorageStatement::GetNativeStatementPointer()
-{
-    return mDBStatement;
 }
 
 /* readonly attribute long state; */

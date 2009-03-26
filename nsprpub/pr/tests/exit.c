@@ -127,7 +127,7 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 }
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

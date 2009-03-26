@@ -179,6 +179,7 @@ public:
 #ifdef MOZ_SVG
   static const PRInt32 kDominantBaselineKTable[];
   static const PRInt32 kFillRuleKTable[];
+  static const PRInt32 kImageRenderingKTable[];
   static const PRInt32 kPointerEventsKTable[];
   static const PRInt32 kShapeRenderingKTable[];
   static const PRInt32 kStrokeLinecapKTable[];

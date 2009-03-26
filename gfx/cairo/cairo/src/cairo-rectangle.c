@@ -95,29 +95,36 @@ _cairo_box_round_to_rectangle (const cairo_box_t     *box,
     rectangle->height = _cairo_fixed_integer_ceil (box->p2.y) - rectangle->y;
 }
 
-void
-_cairo_rectangle_intersect (cairo_rectangle_int_t *dest, cairo_rectangle_int_t *src)
+cairo_bool_t
+_cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
+			    const cairo_rectangle_int_t *src)
 {
     int x1, y1, x2, y2;
 
-    x1 = MAX (dest->x, src->x);
-    y1 = MAX (dest->y, src->y);
-    x2 = MIN (dest->x + dest->width, src->x + src->width);
-    y2 = MIN (dest->y + dest->height, src->y + src->height);
+    x1 = MAX (dst->x, src->x);
+    y1 = MAX (dst->y, src->y);
+    /* Beware the unsigned promotion, fortunately we have bits to spare
+     * as (CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN) < UINT_MAX
+     */
+    x2 = MIN (dst->x + (int) dst->width,  src->x + (int) src->width);
+    y2 = MIN (dst->y + (int) dst->height, src->y + (int) src->height);
 
     if (x1 >= x2 || y1 >= y2) {
-	dest->x = 0;
-	dest->y = 0;
-	dest->width = 0;
-	dest->height = 0;
+	dst->x = 0;
+	dst->y = 0;
+	dst->width  = 0;
+	dst->height = 0;
+
+	return FALSE;
     } else {
-	dest->x = x1;
-	dest->y = y1;
-	dest->width = x2 - x1;
-	dest->height = y2 - y1;
+	dst->x = x1;
+	dst->y = y1;
+	dst->width  = x2 - x1;
+	dst->height = y2 - y1;
+
+	return TRUE;
     }
 }
-
 
 #define P1x (line->p1.x)
 #define P1y (line->p1.y)
@@ -146,8 +153,8 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 
     cairo_fixed_t xlen, ylen;
 
-    if (_cairo_box_contains_point(box, &line->p1) ||
-	_cairo_box_contains_point(box, &line->p2))
+    if (_cairo_box_contains_point (box, &line->p1) ||
+	_cairo_box_contains_point (box, &line->p2))
 	return TRUE;
 
     xlen = P2x - P1x;
@@ -209,10 +216,31 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 }
 
 cairo_bool_t
-_cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point)
+_cairo_box_contains_point (cairo_box_t *box, const cairo_point_t *point)
 {
     if (point->x < box->p1.x || point->x > box->p2.x ||
 	point->y < box->p1.y || point->y > box->p2.y)
 	return FALSE;
     return TRUE;
+}
+
+void
+_cairo_composite_rectangles_init(
+        cairo_composite_rectangles_t	*rects,
+        int				 all_x,
+        int				 all_y,
+        int				 width,
+        int				 height)
+{
+        rects->src.x = all_x;
+        rects->src.y = all_y;
+        rects->mask.x = all_x;
+        rects->mask.y = all_y;
+        rects->clip.x = all_x;
+        rects->clip.y = all_y;
+        rects->dst.x = all_x;
+        rects->dst.y = all_y;
+
+        rects->width = width;
+        rects->height = height;
 }

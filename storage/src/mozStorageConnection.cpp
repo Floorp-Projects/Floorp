@@ -398,7 +398,8 @@ mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
     int rc = SQLITE_OK;
     nsTArray<sqlite3_stmt *> stmts(aNumStatements);
     for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
-        sqlite3_stmt *old_stmt = aStatements[i]->GetNativeStatementPointer();
+        sqlite3_stmt *old_stmt =
+            static_cast<mozStorageStatement *>(aStatements[i])->nativeStatement();
         if (!old_stmt) {
           rc = SQLITE_MISUSE;
           break;
@@ -414,6 +415,11 @@ mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
                                 NULL);
         if (rc != SQLITE_OK)
             break;
+
+#ifdef PR_LOGGING
+        PR_LOG(gStorageLog, PR_LOG_NOTICE,
+               ("Cloned statement 0x%p to 0x%p", old_stmt, new_stmt));
+#endif
 
         // Transfer the bindings
         rc = sqlite3_transfer_bindings(old_stmt, new_stmt);
