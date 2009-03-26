@@ -110,7 +110,12 @@ size_t gStackChunkSize = 8192;
 
 /* Assume that we can not use more than 5e5 bytes of C stack by default. */
 static size_t gMaxStackSize = 500000;
+
+#ifdef JS_THREADSAFE
+static PRUintn gStackBaseThreadIndex;
+#else
 static jsuword gStackBase;
+#endif
 
 static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 
@@ -314,7 +319,7 @@ ShellOperationCallback(JSContext *cx)
 }
 
 static void
-SetContextOptions(JSContext *cx)
+SetThreadStackLimit(JSContext *cx)
 {
     jsuword stackLimit;
 
@@ -324,13 +329,27 @@ SetContextOptions(JSContext *cx)
          */
         stackLimit = 0;
     } else {
-#if JS_STACK_GROWTH_DIRECTION > 0
-        stackLimit = gStackBase + gMaxStackSize;
+        jsuword stackBase;
+#ifdef JS_THREADSAFE
+        stackBase = (jsuword) PR_GetThreadPrivate(gStackBaseThreadIndex);
 #else
-        stackLimit = gStackBase - gMaxStackSize;
+        stackBase = gStackBase;
+#endif
+        JS_ASSERT(stackBase != 0);
+#if JS_STACK_GROWTH_DIRECTION > 0
+        stackLimit = stackBase + gMaxStackSize;
+#else
+        stackLimit = stackBase - gMaxStackSize;
 #endif
     }
     JS_SetThreadStackLimit(cx, stackLimit);
+
+}
+
+static void
+SetContextOptions(JSContext *cx)
+{
+    SetThreadStackLimit(cx);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
@@ -2974,9 +2993,13 @@ DoScatteredWork(JSContext *cx, ScatterThreadData *td)
 static void
 RunScatterThread(void *arg)
 {
+    int stackDummy;
     ScatterThreadData *td;
     ScatterStatus st;
     JSContext *cx;
+
+    if (PR_FAILURE == PR_SetThreadPrivate(gStackBaseThreadIndex, &stackDummy))
+        return;
 
     td = (ScatterThreadData *)arg;
     cx = td->cx;
@@ -2992,7 +3015,7 @@ RunScatterThread(void *arg)
 
     /* We are good to go. */
     JS_SetContextThread(cx);
-    JS_SetThreadStackLimit(cx, 0);
+    SetThreadStackLimit(cx);
     JS_BeginRequest(cx);
     DoScatteredWork(cx, td);
     JS_EndRequest(cx);
@@ -4572,7 +4595,15 @@ main(int argc, char **argv, char **envp)
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
 #endif
-    gStackBase = (jsuword)&stackDummy;
+
+#ifdef JS_THREADSAFE
+    if (PR_FAILURE == PR_NewThreadPrivateIndex(&gStackBaseThreadIndex, NULL) ||
+        PR_FAILURE == PR_SetThreadPrivate(gStackBaseThreadIndex, &stackDummy)) {
+        return 1;
+    }
+#else
+    gStackBase = (jsuword) &stackDummy;
+#endif
 
 #ifdef XP_OS2
    /* these streams are normally line buffered on OS/2 and need a \n, *
