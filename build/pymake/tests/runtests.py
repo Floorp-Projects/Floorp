@@ -11,6 +11,7 @@ The test file may contain lines at the beginning to alter the default behavior. 
 #T commandline: ['extra', 'params', 'here']
 #T returncode: 2
 #T returncode-on: {'win32': 2}
+#T environment: {'VAR': 'VALUE}
 """
 
 from subprocess import Popen, PIPE, STDOUT
@@ -63,6 +64,8 @@ for makefile in makefiles:
         
     returncode = 0
 
+    env = dict(os.environ)
+
     mdata = open(makefile)
     for line in mdata:
         m = tre.search(line)
@@ -77,13 +80,16 @@ for makefile in makefiles:
         elif key == 'returncode-on':
             if sys.platform in data:
                 returncode = data[sys.platform]
+        elif key == 'environment':
+            for k, v in data.iteritems():
+                env[k] = v
         else:
             print >>sys.stderr, "Unexpected #T key: %s" % key
             sys.exit(1)
 
     mdata.close()
 
-    p = Popen(cline, stdout=PIPE, stderr=STDOUT)
+    p = Popen(cline, stdout=PIPE, stderr=STDOUT, env=env)
     stdout, d = p.communicate()
     if p.returncode != returncode:
         print "FAIL (returncode=%i)" % p.returncode

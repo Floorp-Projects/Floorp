@@ -64,12 +64,12 @@ def call(cline, env, cwd, loc, cb, context, echo):
         return
 
     if argv[0] == command.makepypath:
-        command.main(argv[1:], env, cwd, context, cb)
+        command.main(argv[1:], env, cwd, cb)
         return
 
     if argv[0:2] == [sys.executable.replace('\\', '/'),
                      command.makepypath.replace('\\', '/')]:
-        command.main(argv[2:], env, cwd, context, cb)
+        command.main(argv[2:], env, cwd, cb)
         return
 
     if argv[0].find('/') != -1:
@@ -88,10 +88,6 @@ def statustoresult(status):
         return -sig
 
     return status >>8
-
-def getcontext(jcount):
-    assert jcount > 0
-    return ParallelContext(jcount)
 
 class ParallelContext(object):
     """
@@ -203,6 +199,8 @@ class ParallelContext(object):
                             break
 
                     if found: break
+            else:
+                assert any(len(c.pending) for c in ParallelContext._allcontexts)
 
 def makedeferrable(usercb, **userkwargs):
     def cb(*args, **kwargs):
@@ -210,3 +208,18 @@ def makedeferrable(usercb, **userkwargs):
         return usercb(*args, **kwargs)
 
     return cb
+
+_serialContext = None
+_parallelContext = None
+
+def getcontext(jcount):
+    global _serialContext, _parallelContext
+    if jcount == 1:
+        if _serialContext is None:
+            _serialContext = ParallelContext(1)
+        return _serialContext
+    else:
+        if _parallelContext is None:
+            _parallelContext = ParallelContext(jcount)
+        return _parallelContext
+

@@ -23,10 +23,23 @@ class Location(object):
 
     def __add__(self, data):
         """
-        Returns a new location on the same line offset by
+        Returns a new location offset by
         the specified string.
         """
-        column = self.column
+
+        if data == '':
+            return self
+        
+        skiplines = data.count('\n')
+        line = self.line + skiplines
+        if skiplines:
+            lastnl = data.rfind('\n')
+            assert lastnl != -1
+            data = data[lastnl + 1:]
+            column = 0
+        else:
+            column = self.column
+
         i = 0
         while True:
             j = data.find('\t', i)
@@ -39,9 +52,7 @@ class Location(object):
             column -= column % _tabwidth
             i = j + 1
 
-        if column == self.column:
-            return self
-        return Location(self.path, self.line, column)
+        return Location(self.path, line, column)
 
     def __str__(self):
         return "%s:%s:%s" % (self.path, self.line, self.column)
@@ -73,7 +84,7 @@ def parsecommandlineargs(args):
             stmts.append(Override(a))
 
             vname = vname.strip()
-            vnameexp = data.Expansion.fromstring(vname)
+            vnameexp = data.Expansion.fromstring(vname, "Command-line argument")
 
             stmts.append(SetVariable(vnameexp, token=t,
                                      value=val, valueloc=Location('<command-line>', i, len(vname) + len(t)),
@@ -92,6 +103,8 @@ class Statement(object):
     """
 
 class Override(Statement):
+    __slots__ = ('s',)
+
     def __init__(self, s):
         self.s = s
 
@@ -99,13 +112,17 @@ class Override(Statement):
         makefile.overrides.append(self.s)
 
     def dump(self, fd, indent):
-        print >>fd, indent, "Override: %r" % (self.s,)
+        print >>fd, "%sOverride: %s" % (indent, self.s)
 
 class DummyRule(object):
+    __slots__ = ()
+
     def addcommand(self, r):
         pass
 
 class Rule(Statement):
+    __slots__ = ('targetexp', 'depexp', 'doublecolon')
+
     def __init__(self, targetexp, depexp, doublecolon):
         assert isinstance(targetexp, (data.Expansion, data.StringExpansion))
         assert isinstance(depexp, (data.Expansion, data.StringExpansion))
@@ -140,9 +157,11 @@ class Rule(Statement):
         context.currule = rule
 
     def dump(self, fd, indent):
-        print >>fd, indent, "Rule %s: %s" % (self.targetexp, self.depexp)
+        print >>fd, "%sRule %s: %s" % (indent, self.targetexp, self.depexp)
 
 class StaticPatternRule(Statement):
+    __slots__ = ('targetexp', 'patternexp', 'depexp', 'doublecolon')
+
     def __init__(self, targetexp, patternexp, depexp, doublecolon):
         assert isinstance(targetexp, (data.Expansion, data.StringExpansion))
         assert isinstance(patternexp, (data.Expansion, data.StringExpansion))
@@ -181,9 +200,11 @@ class StaticPatternRule(Statement):
         context.currule = rule
 
     def dump(self, fd, indent):
-        print >>fd, indent, "StaticPatternRule %r: %r: %r" % (self.targetexp, self.patternexp, self.depexp)
+        print >>fd, "%sStaticPatternRule %s: %s: %s" % (indent, self.targetexp, self.patternexp, self.depexp)
 
 class Command(Statement):
+    __slots__ = ('exp',)
+
     def __init__(self, exp):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
@@ -193,9 +214,11 @@ class Command(Statement):
         context.currule.addcommand(self.exp)
 
     def dump(self, fd, indent):
-        print >>fd, indent, "Command %r" % (self.exp,)
+        print >>fd, "%sCommand %s" % (indent, self.exp,)
 
 class SetVariable(Statement):
+    __slots__ = ('vnameexp', 'token', 'value', 'valueloc', 'targetexp', 'source')
+
     def __init__(self, vnameexp, token, value, valueloc, targetexp, source=None):
         assert isinstance(vnameexp, (data.Expansion, data.StringExpansion))
         assert isinstance(value, str)
@@ -253,7 +276,7 @@ class SetVariable(Statement):
             v.set(vname, flavor, self.source, value)
 
     def dump(self, fd, indent):
-        print >>fd, indent, "SetVariable %r value=%r" % (self.vnameexp, self.value)
+        print >>fd, "%sSetVariable<%s> %s %s\n%s %r" % (indent, self.valueloc, self.vnameexp, self.token, indent, self.value)
 
 class Condition(object):
     """
@@ -263,12 +286,13 @@ class Condition(object):
     """
 
 class EqCondition(Condition):
-    expected = True
+    __slots__ = ('exp1', 'exp2', 'expected')
 
     def __init__(self, exp1, exp2):
         assert isinstance(exp1, (data.Expansion, data.StringExpansion))
         assert isinstance(exp2, (data.Expansion, data.StringExpansion))
 
+        self.expected = True
         self.exp1 = exp1
         self.exp2 = exp2
 
@@ -278,14 +302,15 @@ class EqCondition(Condition):
         return (r1 == r2) == self.expected
 
     def __str__(self):
-        return "ifeq (expected=%s) %r %r" % (self.expected, self.exp1, self.exp2)
+        return "ifeq (expected=%s) %s %s" % (self.expected, self.exp1, self.exp2)
 
 class IfdefCondition(Condition):
-    expected = True
+    __slots__ = ('exp', 'expected')
 
     def __init__(self, exp):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
+        self.expected = True
 
     def evaluate(self, makefile):
         vname = self.exp.resolvestr(makefile, makefile.variables)
@@ -297,9 +322,11 @@ class IfdefCondition(Condition):
         return (len(value) > 0) == self.expected
 
     def __str__(self):
-        return "ifdef (expected=%s) %r" % (self.expected, self.exp)
+        return "ifdef (expected=%s) %s" % (self.expected, self.exp)
 
 class ElseCondition(Condition):
+    __slots__ = ()
+
     def evaluate(self, makefile):
         return True
 
@@ -310,6 +337,8 @@ class ConditionBlock(Statement):
     """
     A list of conditions: each condition has an associated list of statements.
     """
+    __slots__ = ('loc', '_groups')
+
     def __init__(self, loc, condition):
         self.loc = loc
         self._groups = []
@@ -340,17 +369,18 @@ class ConditionBlock(Statement):
             i += 1
 
     def dump(self, fd, indent):
-        print >>fd, indent, "ConditionBlock"
+        print >>fd, "%sConditionBlock" % (indent,)
 
-        indent1 = indent + ' '
         indent2 = indent + '  '
         for c, statements in self._groups:
-            print >>fd, indent1, "Condition %s" % (c,)
-            for s in statements:
-                s.dump(fd, indent2)
-        print >>fd, indent, "~ConditionBlock"
+            print >>fd, "%s Condition %s" % (indent, c)
+            statements.dump(fd, indent2)
+            print >>fd, "%s ~Condition" % (indent,)
+        print >>fd, "%s~ConditionBlock" % (indent,)
 
 class Include(Statement):
+    __slots__ = ('exp', 'required')
+
     def __init__(self, exp, required):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
@@ -362,9 +392,11 @@ class Include(Statement):
             makefile.include(f, self.required, loc=self.exp.loc)
 
     def dump(self, fd, indent):
-        print >>fd, indent, "Include %r" % (self.exp,)
+        print >>fd, "%sInclude %s" % (indent, self.exp)
 
 class VPathDirective(Statement):
+    __slots__ = ('exp',)
+
     def __init__(self, exp):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
@@ -388,9 +420,11 @@ class VPathDirective(Statement):
                     makefile.addvpath(pattern, dirs)
 
     def dump(self, fd, indent):
-        print >>fd, indent, "VPath %r" % (self.exp,)
+        print >>fd, "%sVPath %s" % (indent, self.exp)
 
 class ExportDirective(Statement):
+    __slots__ = ('exp', 'single')
+
     def __init__(self, exp, single):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
@@ -405,12 +439,25 @@ class ExportDirective(Statement):
                 raise data.DataError("Exporting all variables is not supported", self.exp.loc)
 
         for v in vlist:
-            makefile.exportedvars.add(v)
+            makefile.exportedvars[v] = True
 
     def dump(self, fd, indent):
-        print >>fd, indent, "Export (single=%s) %r" % (self.single, self.exp)
+        print >>fd, "%sExport (single=%s) %s" % (indent, self.single, self.exp)
+
+class UnexportDirective(Statement):
+    __slots__ = ('exp',)
+
+    def __init__(self, exp):
+        self.exp = exp
+
+    def execute(self, makefile, context):
+        vlist = list(self.exp.resolvesplit(makefile, makefile.variables))
+        for v in vlist:
+            makefile.exportedvars[v] = False
 
 class EmptyDirective(Statement):
+    __slots__ = ('exp',)
+
     def __init__(self, exp):
         assert isinstance(exp, (data.Expansion, data.StringExpansion))
         self.exp = exp
@@ -421,9 +468,11 @@ class EmptyDirective(Statement):
             raise data.DataError("Line expands to non-empty value", self.exp.loc)
 
     def dump(self, fd, indent):
-        print >>fd, indent, "EmptyDirective: %r" % self.exp
+        print >>fd, "%sEmptyDirective: %s" % (indent, self.exp)
 
 class StatementList(list):
+    __slots__ = ()
+
     def append(self, statement):
         assert isinstance(statement, Statement)
         list.append(self, statement)
@@ -435,10 +484,11 @@ class StatementList(list):
         for s in self:
             s.execute(makefile, context)
 
+    def dump(self, fd, indent):
+        for s in self:
+            s.dump(fd, indent)
+
     def __str__(self):
         fd = StringIO()
-        print >>fd, "StatementList"
-        for s in self:
-            s.dump(fd, ' ')
-        print >>fd, "~StatementList"
+        self.dump(fd, '')
         return fd.getvalue()
