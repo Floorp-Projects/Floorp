@@ -210,7 +210,7 @@ PasswordStore.prototype = {
       return;
     }
     let login = this._loginItems[record.id];
-    this._log.trace("Updating " + record.id + " (" + itemId + ")");
+    this._log.trace("Updating " + record.id);
 
     let newinfo = this._nsLoginInfoFromRecord(record);
     Svc.Login.modifyLogin(login, newinfo);
@@ -239,14 +239,15 @@ PasswordTracker.prototype = {
       return;
 
     switch (aData) {
-    case 'addLogin':
     case 'modifyLogin':
-    case 'removeLogin':
+      aSubject = aSubject[1];
+    case 'addLogin':
+    case 'removeLogin': {
       let metaInfo = aSubject.QueryInterface(Ci.nsILoginMetaInfo);
       this._score += 15;
       this._log.debug(aData + ": " + metaInfo.guid);
       this.addChangedID(metaInfo.guid);
-      break;
+    } break;
     case 'removeAllLogins':
       this._log.debug(aData);
       this._score += 50;
