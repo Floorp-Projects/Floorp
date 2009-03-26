@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGValue.h"
-#include "nsIWeakReference.h"
 
 nsSVGValue::nsSVGValue()
     : mModifyNestCount(0)
@@ -52,12 +51,6 @@ nsSVGValue::~nsSVGValue()
 void
 nsSVGValue::ReleaseObservers()
 {
-  PRUint32 count = mObservers.Length();
-  PRUint32 i;
-  for (i = 0; i < count; ++i) {
-    nsIWeakReference* wr = mObservers.ElementAt(i);
-    NS_RELEASE(wr);
-  }
   mObservers.Clear();
 }
 
@@ -99,7 +92,7 @@ nsSVGValue::DidModify(modificationType aModType)
 NS_IMETHODIMP
 nsSVGValue::AddObserver(nsISVGValueObserver* observer)
 {
-  nsIWeakReference* wr = NS_GetWeakReference(observer);
+  nsWeakPtr wr = do_GetWeakReference(observer);
   if (!wr) return NS_ERROR_FAILURE;
 
   // Prevent duplicate observers - needed because geometry can attempt
@@ -107,26 +100,19 @@ nsSVGValue::AddObserver(nsISVGValueObserver* observer)
   // stroke and fill.  Safe, as on a style change we remove both, as
   // the change notification isn't fine grained, and re-add as
   // appropriate.
-  if (mObservers.Contains(wr)) {
-    NS_RELEASE(wr);
-    return NS_OK;
+  if (!mObservers.Contains(wr)) {
+    mObservers.AppendElement(wr);
   }
 
-  mObservers.AppendElement(wr);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGValue::RemoveObserver(nsISVGValueObserver* observer)
 {
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(observer);
+  nsWeakPtr wr = do_GetWeakReference(observer);
   if (!wr) return NS_ERROR_FAILURE;
-  PRInt32 i = mObservers.IndexOf(wr);
-  if (i<0) return NS_ERROR_FAILURE;
-  nsIWeakReference* wr2 = mObservers.ElementAt(i);
-  NS_RELEASE(wr2);
-  mObservers.RemoveElementAt(i);
-  return NS_OK;
+  return mObservers.RemoveElement(wr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
