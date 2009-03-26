@@ -297,10 +297,20 @@ nsTemplateRule::nsTemplateRule(nsIContent* aRuleNode,
     mRuleNode = do_QueryInterface(aRuleNode);
 }
 
+nsTemplateRule::nsTemplateRule(const nsTemplateRule& aOtherRule)
+        : mQuerySet(aOtherRule.mQuerySet),
+          mAction(aOtherRule.mAction),
+          mBindings(nsnull),
+          mConditions(nsnull),
+          mRuleNode(aOtherRule.mRuleNode)
+{
+    MOZ_COUNT_CTOR(nsTemplateRule);
+}
+
 nsTemplateRule::~nsTemplateRule()
 {
     MOZ_COUNT_DTOR(nsTemplateRule);
-
+    
     while (mBindings) {
         Binding* doomed = mBindings;
         mBindings = mBindings->mNext;
