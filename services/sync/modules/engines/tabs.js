@@ -311,7 +311,7 @@ TabStore.prototype = {
     return record;
   },
 
-  changeItemId: function TabStore_changeItemId(oldId, newId) {
+  changeItemID: function TabStore_changeItemId(oldId, newId) {
     if (this._remoteClients[oldId]) {
       let record = this._remoteClients[oldId];
       record.id = newId;
