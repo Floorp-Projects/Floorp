@@ -1,17 +1,26 @@
 <!DOCTYPE html>
-<html>
-  <body style="font-family: monospace">
-    <span style="display: table-row"> 
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        document.normalize();
+        var n = document.getElementById("t").nextSibling;
+        n.parentNode.removeChild(n);
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body style="font-family: monospace" onload="doTest()">
+    <span style="display: table-row">
       <span style="display: table-cell">Row 1, Col 1</span>
       <span style="display: table-cell">Row 1, Col 2</span>
       <span style="display: table-cell">Row 1, Col 3</span>
     </span>
-    <span style="display: table-row"> 
+    <span style="display: table-row" id="t">
       <span style="display: table-cell">Row 22, Col 1</span>
       <span style="display: table-cell">Row 22, Col 2</span>
       <span style="display: table-cell">Row 22, Col 3</span>
-    </span>
-    <span style="display: table-row"> 
+    </span>This is a test<span style="display: table-row">
       <span style="display: table-cell">Row 333, Col 1</span>
       <span style="display: table-cell">Row 333, Col 2</span>
       <span style="display: table-cell">Row 333, Col 3</span>
