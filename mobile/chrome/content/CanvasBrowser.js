@@ -57,7 +57,8 @@ CanvasBrowser.prototype = {
   _visibleBounds: null,
 
   // during pageload: controls whether we poll document for size changing
-  _maybeZoomToPage: false,
+  _lazyWidthChanged: false,
+  _lazyHeightChanged: false,
 
   // if true, the page is currently loading
   _pageLoading: true,
@@ -73,9 +74,9 @@ CanvasBrowser.prototype = {
   // for cancelling when we end page loads
   _drawTimeout: 0,
 
-  // the max right/bottom coords we saw from paint events
+  // the max right coordinate we've seen from paint events
   // while we were loading a page.  If we see something that's bigger than
-  // either, we'll trigger a page zoom.
+  // our width, we'll trigger a page zoom.
   _maxRight: 0,
   _maxBottom: 0,
   
@@ -249,7 +250,8 @@ CanvasBrowser.prototype = {
 
   endLoading: function() {
     this._pageLoading = false;
-    this._maybeZoomToPage = false;
+    this._lazyWidthChanged = false;
+    this._lazyHeightChanged = false;
     this.zoomToPage();
     // flush the region, to reduce startPanning delay
     // and to avoid getting a black border in tab thumbnail
@@ -397,15 +399,15 @@ CanvasBrowser.prototype = {
     // visible part of the page bounds.  If it doesn't, skip it.
     for each (var rect in rects) {
       if (this._pageLoading)  {
-        // if this rect would push us beyond our known size to the bottom or right,
-        if (rect.bottom > this._maxBottom) {
-          this._maybeZoomToPage = true;
-          this._maxBottom = rect.bottom;
-        }
-
+        // if this rect would push us beyond our known size to the right
+        // (since we zoom to page we don't care about bottom/height)
         if (rect.right > this._maxRight) {
-          this._maybeZoomToPage = true;
+          this._lazyWidthChanged = true;
           this._maxRight = rect.right;
+        }
+        if (rect.bottom > this._maxBottom) {
+          this._lazyHeightChanged = true;
+          this._maxBottom = rect.bottom;
         }
       }
 
@@ -428,10 +430,27 @@ CanvasBrowser.prototype = {
     // a little helper function; we might decide to call it right away,
     // or we might decide to delay it if the page is still loading.
     function resizeAndPaint(self) {
-      if (self._maybeZoomToPage) {
-        self.zoomToPage();
-        self._maybeZoomToPage = false;
+      if (self._lazyWidthChanged) {
+        // XXX rather than calling zoomToPage, which can trigger a browser reflow
+        // just zoom to the max width we've seen so far.
+        // we'll make sure to use the real page's bounds when the page finishes loading
+        // but this should work fine for now.
+        //self.zoomToPage();
+        let contentW = self._maxRight;
+        let [canvasW, ] = self.canvasDimensions;
+
+        if (contentW > canvasW)
+          this.zoomLevel = canvasW / contentW;
+
+        self._lazyWidthChanged = false;
+      } else if (self._lazyHeightChanged) {
+
+        // Setting the zoomLevel will call updateViewportSize.
+        // We need to handle height changes seperately.
+        Browser.updateViewportSize();
+        self._lazyHeightChanged = false;
       }
+
       // draw visible area..freeze during pans
       if (!self._isPanning)
         self.flushRegion(true);
@@ -451,7 +470,7 @@ CanvasBrowser.prototype = {
     if (this._pageLoading && !this._drawTimeout) {
       //always flush the first draw
       flushNow = true;
-      this._maybeZoomToPage = true;
+      this._lazyWidthChanged = true;
       this._drawTimeout = setTimeout(resizeAndPaint, 2000, this);
     }
 
