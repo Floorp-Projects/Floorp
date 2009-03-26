@@ -298,10 +298,8 @@ nsHtml5Parser::Parse(nsIURI* aURL, // legacy parameter; ignored
 {
   mObserver = aObserver;
   mRootContextKey = aKey;
+  mCanInterruptParser = PR_TRUE;
   NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
-  mTokenizer->start();
-  mLifeCycle = PARSING;
-  mParser = this;
   return NS_OK;
 }
 
@@ -425,6 +423,7 @@ nsHtml5Parser::Terminate(void)
   if (mTerminated) {
     return NS_OK;
   }
+  mTerminated = PR_TRUE;
   
   // XXX - [ until we figure out a way to break parser-sink circularity ]
   // Hack - Hold a reference until we are completely done...
@@ -458,6 +457,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   NS_ASSERTION(target, "Target did not QI to nsIContent");
   mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, target);
   mFragmentMode = PR_TRUE;
+  mCanInterruptParser = PR_FALSE;
   NS_ASSERTION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
   mTokenizer->start();
   mLifeCycle = PARSING;
@@ -1136,8 +1136,19 @@ void
 nsHtml5Parser::ParseUntilSuspend()
 {
   NS_PRECONDITION((!mNeedsCharsetSwitch), "ParseUntilSuspend called when charset switch needed.");
-  if (mBlocked || (mLifeCycle == TERMINATED)) {
+  if (mBlocked) {
     return;
+  }
+  switch (mLifeCycle) {
+    case TERMINATED:
+      return;
+    case NOT_STARTED:
+      mTokenizer->start();
+      mLifeCycle = PARSING;
+      mParser = this;
+      break;
+    default:
+      break;
   }
   
   WillResumeImpl();
