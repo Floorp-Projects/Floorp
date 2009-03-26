@@ -142,6 +142,12 @@ public:
     nsTemplateRule(nsIContent* aRuleNode,
                    nsIContent* aAction,
                    nsTemplateQuerySet* aQuerySet);
+    /**
+     * The copy-constructor should only be called from nsTArray when appending
+     * a new rule, otherwise things break because the copy constructor expects
+     * mBindings and mConditions to be nsnull.
+     */
+    nsTemplateRule(const nsTemplateRule& aOtherRule);
 
     ~nsTemplateRule();
 
@@ -276,7 +282,7 @@ protected:
 class nsTemplateQuerySet
 {
 protected:
-    nsTArray<nsTemplateRule*> mRules; // rules owned by nsTemplateQuerySet
+    nsTArray<nsTemplateRule> mRules;
 
     // a number which increments for each successive queryset. It is stored so
     // it can be used as an optimization when updating results so that it is
@@ -305,7 +311,6 @@ public:
     ~nsTemplateQuerySet()
     {
         MOZ_COUNT_DTOR(nsTemplateQuerySet);
-        Clear();
     }
 
     PRInt32 Priority() const
@@ -316,16 +321,22 @@ public:
     nsIAtom* GetTag() { return mTag; }
     void SetTag(nsIAtom* aTag) { mTag = aTag; }
 
-    nsresult AddRule(nsTemplateRule *aChild)
+    nsTemplateRule* NewRule(nsIContent* aRuleNode,
+                            nsIContent* aAction,
+                            nsTemplateQuerySet* aQuerySet)
     {
         // nsTemplateMatch stores the index as a 16-bit value,
         // so check to make sure for overflow
         if (mRules.Length() == PR_INT16_MAX)
-            return NS_ERROR_FAILURE;
+            return nsnull;
 
-        if (mRules.AppendElement(aChild) == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        return NS_OK;
+        return mRules.AppendElement(nsTemplateRule(aRuleNode, aAction,
+                                    aQuerySet));
+    }
+    
+    void RemoveRule(nsTemplateRule *aRule)
+    {
+        mRules.RemoveElementAt(aRule - mRules.Elements());
     }
 
     PRInt16 RuleCount() const
@@ -335,15 +346,14 @@ public:
 
     nsTemplateRule* GetRuleAt(PRInt16 aIndex)
     {
-        return mRules[aIndex];
+        if (PRUint32(aIndex) < mRules.Length()) {
+            return &mRules[aIndex];
+        }
+        return nsnull;
     }
 
     void Clear()
     {
-        for (PRInt32 r = mRules.Length() - 1; r >= 0; r--) {
-            nsTemplateRule* rule = mRules[r];
-            delete rule;
-        }
         mRules.Clear();
     }
 };
