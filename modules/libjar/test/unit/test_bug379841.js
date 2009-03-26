@@ -2,7 +2,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const path = "modules/libjar/test/unit/data/test_bug379841.zip";
+const path = "data/test_bug379841.zip";
 // Retrieved time should be within 2 seconds of original file's time.
 const MAX_TIME_DIFF = 2000000;
 

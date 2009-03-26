@@ -113,3 +113,10 @@ libs:: $(_RES_FILES)
 	$(INSTALL) $^ $(DIST)/bin/res
 install:: $(_RES_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
+
+# One of the xpcshell unit tests needs this file, so make sure it winds
+#  up in the test directory.
+libs::
+	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/data
+	$(INSTALL) $(topsrcdir)/netwerk/dns/src/effective_tld_names.dat \
+          $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/

@@ -120,7 +120,9 @@ cairo_status_to_string (cairo_status_t status)
     case CAIRO_STATUS_INVALID_SLANT:
 	return "invalid value for an input #cairo_font_slant_t";
     case CAIRO_STATUS_INVALID_WEIGHT:
-	return "input value for an input #cairo_font_weight_t";
+	return "invalid value for an input #cairo_font_weight_t";
+    case CAIRO_STATUS_INVALID_SIZE:
+	return "invalid value for the size of the input (surface, pattern, etc.)";
     }
 
     return "<unknown error status>";
@@ -287,8 +289,8 @@ _cairo_validate_text_clusters (const char		   *utf8,
 
 	/* Make sure we've got valid UTF-8 for the cluster */
 	status = _cairo_utf8_to_ucs4 (utf8+n_bytes, cluster_bytes, NULL, NULL);
-	if (status)
-	    return CAIRO_STATUS_INVALID_CLUSTERS;
+	if (unlikely (status))
+	    return _cairo_error (CAIRO_STATUS_INVALID_CLUSTERS);
 
 	n_bytes  += cluster_bytes ;
 	n_glyphs += cluster_glyphs;
@@ -296,7 +298,7 @@ _cairo_validate_text_clusters (const char		   *utf8,
 
     if (n_bytes != (unsigned int) utf8_len || n_glyphs != (unsigned int) num_glyphs) {
       BAD:
-	return CAIRO_STATUS_INVALID_CLUSTERS;
+	return _cairo_error (CAIRO_STATUS_INVALID_CLUSTERS);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -382,17 +384,8 @@ _cairo_operator_bounded_by_source (cairo_operator_t op)
 }
 
 
-void
-_cairo_restrict_value (double *value, double min, double max)
-{
-    if (*value < min)
-	*value = min;
-    else if (*value > max)
-	*value = max;
-}
-
 /* This function is identical to the C99 function lround(), except that it
- * performs arithmetic rounding (instead of away-from-zero rounding) and
+ * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
  * has a valid input range of (INT_MIN, INT_MAX] instead of
  * [INT_MIN, INT_MAX]. It is much faster on both x86 and FPU-less systems
  * than other commonly used methods for rounding (lround, round, rint, lrint
@@ -617,17 +610,16 @@ _cairo_lround (double d)
 #include <windows.h>
 #include <io.h>
 
-/* tmpfile() replacment for Windows.
+#if !WINCE
+/* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
- * may fail due to unsufficient privileges.
+ * may fail due to unsufficient privileges. However, this isn't a
+ * problem on Windows CE so we don't use it there.
  */
 FILE *
 _cairo_win32_tmpfile (void)
 {
-#ifdef WINCE // we don't have to worry here about permissions
-    return tmpfile();
-#else
     DWORD path_len;
     WCHAR path_name[MAX_PATH + 1];
     WCHAR file_name[MAX_PATH + 1];
@@ -667,7 +659,112 @@ _cairo_win32_tmpfile (void)
     }
 
     return fp;
-#endif /* WINCE */
 }
+#endif /* !WINCE */
 
 #endif /* _WIN32 */
+
+typedef struct _cairo_intern_string {
+    cairo_hash_entry_t hash_entry;
+    int len;
+    char *string;
+} cairo_intern_string_t;
+
+static cairo_hash_table_t *_cairo_intern_string_ht;
+
+static unsigned long
+_intern_string_hash (const char *str, int len)
+{
+    const signed char *p = (const signed char *) str;
+    unsigned int h = *p;
+
+    for (p += 1; --len; p++)
+	h = (h << 5) - h + *p;
+
+    return h;
+}
+
+static cairo_bool_t
+_intern_string_equal (const void *_a, const void *_b)
+{
+    const cairo_intern_string_t *a = _a;
+    const cairo_intern_string_t *b = _b;
+
+    if (a->len != b->len)
+	return FALSE;
+
+    return memcmp (a->string, b->string, a->len) == 0;
+}
+
+cairo_status_t
+_cairo_intern_string (const char **str_inout, int len)
+{
+    char *str = (char *) *str_inout;
+    cairo_intern_string_t tmpl, *istring;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (len < 0)
+	len = strlen (str);
+    tmpl.hash_entry.hash = _intern_string_hash (str, len);
+    tmpl.len = len;
+    tmpl.string = (char *) str;
+
+    CAIRO_MUTEX_LOCK (_cairo_intern_string_mutex);
+    if (_cairo_intern_string_ht == NULL) {
+	_cairo_intern_string_ht = _cairo_hash_table_create (_intern_string_equal);
+	if (unlikely (_cairo_intern_string_ht == NULL)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
+	}
+    }
+
+    istring = _cairo_hash_table_lookup (_cairo_intern_string_ht,
+					&tmpl.hash_entry);
+    if (istring == NULL) {
+	istring = malloc (sizeof (cairo_intern_string_t) + len + 1);
+	if (likely (istring != NULL)) {
+	    istring->hash_entry.hash = tmpl.hash_entry.hash;
+	    istring->len = tmpl.len;
+	    istring->string = (char *) (istring + 1);
+	    memcpy (istring->string, str, len);
+	    istring->string[len] = '\0';
+
+	    status = _cairo_hash_table_insert (_cairo_intern_string_ht,
+					       &istring->hash_entry);
+	    if (unlikely (status)) {
+		free (istring);
+		goto BAIL;
+	    }
+	} else {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
+	}
+    }
+
+    *str_inout = istring->string;
+
+  BAIL:
+    CAIRO_MUTEX_UNLOCK (_cairo_intern_string_mutex);
+    return status;
+}
+
+static void
+_intern_string_pluck (void *entry, void *closure)
+{
+    _cairo_hash_table_remove (closure, entry);
+    free (entry);
+}
+
+void
+_cairo_intern_string_reset_static_data (void)
+{
+    CAIRO_MUTEX_LOCK (_cairo_intern_string_mutex);
+    if (_cairo_intern_string_ht != NULL) {
+	_cairo_hash_table_foreach (_cairo_intern_string_ht,
+				   _intern_string_pluck,
+				   _cairo_intern_string_ht);
+	_cairo_hash_table_destroy(_cairo_intern_string_ht);
+	_cairo_intern_string_ht = NULL;
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_intern_string_mutex);
+}

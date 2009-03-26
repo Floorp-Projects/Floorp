@@ -59,3 +59,13 @@ body.normal > #errorPageContainer {
 #footerDesc > p {
   font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
 }
+
+#moreInfoText {
+  font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
+  -moz-padding-start: 25px;
+  background: url("moz-icon://stock/gtk-dialog-info?size=menu") no-repeat top left;
+}
+
+body[dir="rtl"] #moreInfoText {
+  background-position: top right;
+}

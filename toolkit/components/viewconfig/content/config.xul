@@ -82,7 +82,7 @@
   <key key="&focusFilter.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
 </keyset>
 <deck id="configDeck" flex="1">
-  <vbox id="warningScreen" flex="1" align="center">
+  <vbox id="warningScreen" flex="1" align="center" style="overflow: auto;">
     <spacer flex="1"/>
     <hbox id="warningBox" align="top">
       <image id="exclam"/>

@@ -52,7 +52,7 @@
 #include "nsMemory.h" // for NS_ARRAY_LENGTH
 
 #include "nspr.h"
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 #include <imagehlp.h>
 // We need a way to know if we are building for WXP (or later), as if we are, we
 // need to use the newer 64-bit APIs. API_VERSION_NUMBER seems to fit the bill.
@@ -196,7 +196,9 @@ struct WalkStackData {
 void PrintError(char *prefix, WalkStackData* data);
 unsigned int WINAPI WalkStackThread(void* data);
 void WalkStackMain64(struct WalkStackData* data);
+#if !defined(_WIN64)
 void WalkStackMain(struct WalkStackData* data);
+#endif
 
 
 // Define these as static pointers so that we can load the DLL on the
@@ -495,6 +497,7 @@ WalkStackMain64(struct WalkStackData* data)
 }
 
 
+#if !defined(_WIN64)
 void
 WalkStackMain(struct WalkStackData* data)
 {
@@ -575,6 +578,7 @@ WalkStackMain(struct WalkStackData* data)
     return;
 
 }
+#endif
 
 unsigned int WINAPI
 WalkStackThread(void* aData)
@@ -611,10 +615,14 @@ WalkStackThread(void* aData)
                 PrintError("ThreadSuspend");
             }
             else {
+#if defined(_WIN64)
+                WalkStackMain64(data);
+#else
                 if (_StackWalk64)
                     WalkStackMain64(data);
                 else
                     WalkStackMain(data);
+#endif
 
                 ret = ::ResumeThread(data->thread);
                 if (ret == -1) {

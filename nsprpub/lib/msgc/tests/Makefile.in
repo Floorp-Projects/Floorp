@@ -46,11 +46,6 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_TARGET), WIN16)
-OS_CFLAGS = $(OS_EXE_CFLAGS)
-W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.$(OBJ_SUFFIX)
-endif
-
 ifeq ($(OS_TARGET), OS2)
 OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
@@ -79,16 +74,10 @@ LIBPLC = -lplc$(NSPR_VERSION)
 LIBGC = -lmsgc$(GC_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET), WIN16)
-  LIBPR = $(dist_libdir)/nspr$(NSPR_VERSION).lib
-  LIBPLC = $(dist_libdir)/plc$(NSPR_VERSION).lib
-  LIBGC= $(dist_libdir)/msgc$(GC_VERSION).lib
-else
   LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
   LIBPR = $(dist_libdir)/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
   LIBPLC = $(dist_libdir)/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
   LIBGC= $(dist_libdir)/libmsgc$(GC_VERSION).$(LIB_SUFFIX)
-endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -266,23 +255,6 @@ else
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET),WIN16)
-	echo system windows >w16link
-	echo name $@  >>w16link
-	echo option map >>w16link
-#	echo option CASEEXACT >>w16link
-	echo option stack=16K >>w16link
-	echo debug $(DEBUGTYPE) all >>w16link
-	echo file >>w16link
-	echo $< ,  >>w16link
-	echo $(W16STDIO) >>w16link
-	echo library  >>w16link
-	echo $(LIBPR),	     >>w16link
-	echo $(LIBPLC),		>>w16link
-	echo $(LIBGC),		 >>w16link
-	echo winsock.lib     >>w16link
-	wlink @w16link.
-else
 	link $(LDOPTS) $< $(LIBGC) $(LIBPLC) $(LIBPR) wsock32.lib -out:$@
 else
 ifeq ($(OS_ARCH),OS2)

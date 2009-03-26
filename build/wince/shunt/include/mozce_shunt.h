@@ -40,12 +40,82 @@
 #define MOZCE_SHUNT_H
 
 #ifdef MOZCE_SHUNT_EXPORTS
+#define _CRTIMP __declspec(dllexport)
 #define MOZCE_SHUNT_API __declspec(dllexport)
+#define MOZCE_SHUNT_IMPORT_API __declspec(dllexport)
 #else
-#define MOZCE_SHUNT_API __declspec(dllimport)
+#define MOZCE_SHUNT_API
+#define MOZCE_SHUNT_IMPORT_API __declspec(dllimport)
 #endif
+
+#ifdef MOZ_MEMORY
+#ifdef __cplusplus
+
+
+#define _NEW_
+void * operator new(size_t _Size);
+void operator delete(void * ptr);
+void *operator new[](size_t size);
+void operator delete[](void *ptr);
+
+extern "C" {
+#endif
+
+extern void* moz_malloc(size_t);
+extern void* moz_valloc(size_t);
+extern void* moz_calloc(size_t, size_t);
+extern void* moz_realloc(void*, unsigned int);
+extern void moz_free(void*);
   
+MOZCE_SHUNT_API void* __cdecl  malloc(size_t);
+MOZCE_SHUNT_API void* __cdecl  valloc(size_t);
+MOZCE_SHUNT_API void* __cdecl  calloc(size_t, size_t);
+MOZCE_SHUNT_API void* __cdecl  realloc(void*, unsigned int);
+MOZCE_SHUNT_API void __cdecl  free(void*);
+
+ 
+MOZCE_SHUNT_API char*
+mozce_strdup(const char*);
+
+MOZCE_SHUNT_API unsigned short* 
+mozce_wcsdup(const unsigned short* );
+
+MOZCE_SHUNT_API char*
+mozce_strndup(const char *, unsigned int);
+
+MOZCE_SHUNT_API unsigned short* 
+mozce_wcsndup(const unsigned short*, unsigned int);
+  
+#ifdef __cplusplus
+}   //extern "C" 
+#endif
+
+
+#undef _strdup
+#undef strdup
+#undef _strndup
+#undef strndup
+#undef _wcsdup
+#undef wcsdup
+#undef _wcsndup
+#undef wcsndup
+
+
+
+#define _strdup mozce_strdup
+#define _strndup mozce_strndup
+
+#define _wcsdup mozce_wcsdup
+#define _wcsndup mozce_wcsndup
+
+#endif
+
 #define strdup  _strdup
+#define strndup _strndup
+#define wcsdup _wcsdup
+#define wcsndup _wcsndup
+
+
 #define strcmpi _stricmp
 #define stricmp _stricmp
 #define wgetcwd _wgetcwd
@@ -60,8 +130,8 @@ extern "C" {
 #endif
 
 /* errno and family */
-extern MOZCE_SHUNT_API int errno;
-MOZCE_SHUNT_API char* strerror(int);
+extern MOZCE_SHUNT_IMPORT_API int errno;
+MOZCE_SHUNT_IMPORT_API char* strerror(int);
 
 /* abort */
 MOZCE_SHUNT_API void abort(void);

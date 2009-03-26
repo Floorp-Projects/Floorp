@@ -66,7 +66,7 @@ var __testsDirectory = null;
 function ParseFile(file) {
   if (typeof(file) == "string") {
     if (!__testsDirectory) {
-      __testsDirectory = do_get_file("content/test/unit/");
+      __testsDirectory = do_get_cwd();
     }
     var fileObj = __testsDirectory.clone();
     fileObj.append(file);

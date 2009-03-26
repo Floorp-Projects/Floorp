@@ -43,14 +43,33 @@
 
 NS_IMPL_ISUPPORTS1(nsIdleServiceWin, nsIIdleService)
 
+
+#ifdef WINCE
+// The last user input event time in microseconds. If there are any pending
+// native toolkit input events it returns the current time. The value is
+// compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
+// DEFINED IN widget/src/windows/nsWindow.cpp
+extern PRUint32 gLastInputEventTime;
+#endif
+
+
 NS_IMETHODIMP
 nsIdleServiceWin::GetIdleTime(PRUint32 *aTimeDiff)
 {
-    LASTINPUTINFO inputInfo;
-    inputInfo.cbSize = sizeof(inputInfo);
-    if (!::GetLastInputInfo(&inputInfo))
-        return NS_ERROR_FAILURE;
+#ifndef WINCE
+  LASTINPUTINFO inputInfo;
+  inputInfo.cbSize = sizeof(inputInfo);
+  if (!::GetLastInputInfo(&inputInfo))
+    return NS_ERROR_FAILURE;
 
-    *aTimeDiff = GetTickCount() - inputInfo.dwTime;
-    return NS_OK;
+  *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(GetTickCount(), inputInfo.dwTime);
+#else
+  // NOTE: nowTime is not necessarily equivalent to GetTickCount() return value
+  //       we need to compare apples to apples - hence the nowTime variable
+  PRUint32 nowTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
+  *aTimeDiff = SAFE_COMPARE_EVEN_WITH_WRAPPING(nowTime, gLastInputEventTime);
+#endif
+
+  return NS_OK;
 }

@@ -731,6 +731,10 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
     if (*_retval)
         return NS_OK;
 
+    if (flags & DELETE_ON_CLOSE) {
+        PR_Delete(mWorkingPath.get());
+    }
+
     return NS_ErrorAccordingToNSPR();
 }
 
@@ -748,8 +752,6 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
 
     return NS_ERROR_FAILURE;
 }
-
-
 
 NS_IMETHODIMP
 nsLocalFile::Create(PRUint32 type, PRUint32 attributes)

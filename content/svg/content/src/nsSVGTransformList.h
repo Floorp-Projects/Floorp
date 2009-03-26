@@ -43,7 +43,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsIDOMSVGTransformList.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
 class nsSVGTransformList : public nsSVGValue,
                            public nsIDOMSVGTransformList,
@@ -87,7 +87,7 @@ protected:
   PRInt32 ParseParameterList(char *paramstr, float *vars, PRInt32 nvars);
   void ReleaseTransforms();
   
-  nsAutoVoidArray mTransforms;
+  nsAutoTArray<nsIDOMSVGTransform*, 8> mTransforms;
 };
 
 

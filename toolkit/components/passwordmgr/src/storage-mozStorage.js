@@ -914,11 +914,15 @@ LoginManagerStorage_mozStorage.prototype = {
 
             // Import logins and disabledHosts
             let logins = legacy.getAllEncryptedLogins({});
+
+            // Wrap in a transaction for better performance.
+            this._dbConnection.beginTransaction();
             for each (let login in logins)
                 this._addLogin(login, true);
             let disabledHosts = legacy.getAllDisabledHosts({});
             for each (let hostname in disabledHosts)
                 this.setLoginSavingEnabled(hostname, false);
+            this._dbConnection.commitTransaction();
         } catch (e) {
             this.log("_importLegacySignons failed: " + e.name + " : " + e.message);
             throw "Import failed";

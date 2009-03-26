@@ -52,7 +52,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-            title="&sanitizePrefs.title;">
+            title="&sanitizePrefs2.title;">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
@@ -76,14 +76,14 @@
     <groupbox orient="horizontal">
       <caption label="&historySection.label;"/>
       <vbox style="width: &column.width;">
-        <checkbox label="&itemVisitedPages.label;"
-                  accesskey="&itemVisitedPages.accesskey;"
+        <checkbox label="&itemBrowsingHistory.label;"
+                  accesskey="&itemBrowsingHistory.accesskey;"
                   preference="privacy.item.history"/>
-        <checkbox label="&itemDownloadList.label;"
-                  accesskey="&itemDownloadList.accesskey;"
+        <checkbox label="&itemDownloadHistory.label;"
+                  accesskey="&itemDownloadHistory.accesskey;"
                   preference="privacy.item.downloads"/>
-        <checkbox label="&itemFormSearchEntries.label;"
-                  accesskey="&itemFormSearchEntries.accesskey;"
+        <checkbox label="&itemFormSearchHistory.label;"
+                  accesskey="&itemFormSearchHistory.accesskey;"
                   preference="privacy.item.formdata"/>
       </vbox>
       <vbox style="width: &column.width;">
@@ -93,8 +93,8 @@
         <checkbox label="&itemActiveLogins.label;"
                   accesskey="&itemActiveLogins.accesskey;"
                   preference="privacy.item.sessions"/>
-        <checkbox label="&itemWebCache.label;"
-                  accesskey="&itemWebCache.accesskey;"
+        <checkbox label="&itemCache.label;"
+                  accesskey="&itemCache.accesskey;"
                   preference="privacy.item.cache"/>
       </vbox>
     </groupbox>
@@ -104,8 +104,8 @@
         <checkbox label="&itemPasswords.label;"
                   accesskey="&itemPasswords.accesskey;"
                   preference="privacy.item.passwords"/>
-        <checkbox label="&itemSiteSettings.label;"
-                  accesskey="&itemSiteSettings.accesskey;"
+        <checkbox label="&itemSitePreferences.label;"
+                  accesskey="&itemSitePreferences.accesskey;"
                   preference="privacy.item.siteSettings"/>
       </vbox>
       <vbox style="width: &column.width;">

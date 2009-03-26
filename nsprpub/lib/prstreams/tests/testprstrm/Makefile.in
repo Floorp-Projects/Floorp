@@ -46,10 +46,6 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_TARGET), WIN16)
-OS_CFLAGS = $(OS_EXE_CFLAGS)
-endif
-
 CXXSRCS =           \
 	testprstrm.cpp    \
 	$(NULL)
@@ -75,10 +71,6 @@ LIBPR = -lnspr$(MOD_MAJOR_VERSION)
 LIBPRSTRMS = -lprstrms$(MOD_MAJOR_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET), WIN16)
-  LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).lib
-  LIBPRSTRMS = $(dist_libdir)/prstrms$(MOD_MAJOR_VERSION).lib
-else
   LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
   ifeq ($(OS_TARGET), WIN95)
     LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
@@ -87,7 +79,6 @@ else
     LIBPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
     LIBPRSTRMS = $(dist_libdir)/libprstrms$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
   endif
-endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -211,23 +202,7 @@ else
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET),WIN16)
-	echo system windows >w16link
-	echo option map >>w16link
-	echo option stack=10K >>w16link
-	echo option heapsize=32K >>w16link
-	echo debug $(DEBUGTYPE) all >>w16link
-	echo name $@  >>w16link
-	echo file >>w16link
-	echo $<  >>w16link
-	echo library  >>w16link
-	echo $(LIBPR),	     >>w16link
-	echo $(LIBPRSTRMS),		 >>w16link
-	echo winsock.lib     >>w16link
-	wlink @w16link.
-else
 	link $(LDOPTS) $< $(LIBPR) $(LIBPRSTRMS) wsock32.lib -out:$@
-endif
 else
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPR) $(LIBPRSTRMS) $(OS_LIBS) $(EXTRA_LIBS)

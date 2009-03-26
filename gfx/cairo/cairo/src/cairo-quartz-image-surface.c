@@ -41,6 +41,7 @@
 
 #define SURFACE_ERROR_NO_MEMORY (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY)))
 #define SURFACE_ERROR_TYPE_MISMATCH (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_SURFACE_TYPE_MISMATCH)))
+#define SURFACE_ERROR_INVALID_SIZE (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_SIZE)))
 #define SURFACE_ERROR_INVALID_FORMAT (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_FORMAT)))
 
 static void
@@ -163,6 +164,8 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     NULL, /* set_clip_region */
@@ -225,10 +228,10 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
     data = image_surface->data;
 
     if (!_cairo_quartz_verify_surface_size(width, height))
-	return SURFACE_ERROR_NO_MEMORY;
+	return SURFACE_ERROR_INVALID_SIZE;
 
     if (width == 0 || height == 0)
-	return SURFACE_ERROR_NO_MEMORY;
+	return SURFACE_ERROR_INVALID_SIZE;
 
     if (format != CAIRO_FORMAT_ARGB32 && format != CAIRO_FORMAT_RGB24)
 	return SURFACE_ERROR_INVALID_FORMAT;

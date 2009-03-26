@@ -39,7 +39,9 @@
 
 #include "cairo-os2-private.h"
 
+#if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>
+#endif
 
 #include <float.h>
 #ifdef BUILD_CAIRO_DLL
@@ -101,7 +103,7 @@ cairo_os2_init (void)
 
     DisableFPUException ();
 
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
     /* Initialize FontConfig */
     FcInit ();
 #endif
@@ -130,16 +132,9 @@ cairo_os2_fini (void)
 
     DisableFPUException ();
 
-    /* Free allocated memories! */
-    /* (Check cairo_debug_reset_static_data () for an example of this!) */
-    _cairo_font_face_reset_static_data ();
-#if CAIRO_HAS_FT_FONT
-    _cairo_ft_font_reset_static_data ();
-#endif
+    cairo_debug_reset_static_data ();
 
-    CAIRO_MUTEX_FINALIZE ();
-
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
 # if HAVE_FCFINI
     /* Uninitialize FontConfig */
     FcFini ();
@@ -777,7 +772,7 @@ cairo_os2_surface_create (HPS hps_client_window,
         (height <= 0))
     {
         /* Invalid window size! */
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
     }
 
     local_os2_surface = (cairo_os2_surface_t *) malloc (sizeof (cairo_os2_surface_t));
@@ -795,6 +790,7 @@ cairo_os2_surface_create (HPS hps_client_window,
                             FALSE);
     if (rc != NO_ERROR) {
         /* Could not create mutex semaphore! */
+        free (local_os2_surface);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
@@ -881,8 +877,9 @@ cairo_os2_surface_create (HPS hps_client_window,
  *
  * Return value: %CAIRO_STATUS_SUCCESS if the surface could be resized,
  * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
- * %CAIRO_STATUS_NO_MEMORY if the new size could not be allocated, for invalid
- * sizes, or if the timeout happened before all the buffers were released
+ * %CAIRO_STATUS_INVALID_SIZE for invalid sizes
+ * %CAIRO_STATUS_NO_MEMORY if the new size could not be allocated, or if the
+ * timeout happened before all the buffers were released
  *
  * Since: 1.4
  **/
@@ -909,7 +906,7 @@ cairo_os2_surface_set_size (cairo_surface_t *surface,
         (new_height <= 0))
     {
         /* Invalid size! */
-        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
     }
 
     /* Allocate memory for new stuffs */
@@ -1326,6 +1323,8 @@ static const cairo_surface_backend_t cairo_os2_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     NULL, /* set_clip_region */

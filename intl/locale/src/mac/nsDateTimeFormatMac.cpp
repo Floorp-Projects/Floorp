@@ -206,7 +206,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   if (dateFormatSelector == kDateFormatYearMonth ||
       dateFormatSelector == kDateFormatWeekday) {
     CFStringRef dateFormat =
-      dateFormatSelector == kDateFormatYearMonth ? CFSTR("yy/MM ") : CFSTR("EEE ");
+      dateFormatSelector == kDateFormatYearMonth ? CFSTR("yyyy/MM ") : CFSTR("EEE ");
     
     CFStringRef oldFormat = CFDateFormatterGetFormat(formatter);
     CFMutableStringRef newFormat = CFStringCreateMutableCopy(NULL, 0, oldFormat);

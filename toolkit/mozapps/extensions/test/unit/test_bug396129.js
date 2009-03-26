@@ -43,7 +43,7 @@ gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 gPrefs.setCharPref("extensions.update.url", "http://localhost:4444/");
 
 // Get the HTTP server.
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 var testserver;
 
 var next_state = null;
@@ -179,7 +179,7 @@ var installListener = {
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9");
 
-  const dataDir = do_get_file("toolkit/mozapps/extensions/test/unit/data");
+  const dataDir = do_get_file("data");
   const addonsDir = do_get_addon("test_bug396129_a_1").parent;
 
   // Create and configure the HTTP server.

@@ -42,7 +42,7 @@
 
 #include "txXMLEventHandler.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsAutoPtr.h"
 
 class txOutputTransaction;
@@ -67,7 +67,7 @@ public:
     nsString mStringValue;
 
 private:
-    nsVoidArray mTransactions;
+    nsTArray<txOutputTransaction*> mTransactions;
 };
 
 class txBufferingHandler : public txAXMLEventHandler

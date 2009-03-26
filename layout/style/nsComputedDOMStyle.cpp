@@ -3873,6 +3873,24 @@ nsComputedDOMStyle::GetDominantBaseline(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetImageRendering(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleSVG* svg = GetStyleSVG();
+
+  if (svg->mImageRendering != NS_STYLE_IMAGE_RENDERING_AUTO) {
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(
+                    svg->mImageRendering, nsCSSProps::kImageRenderingKTable));
+  } else {
+    val->SetIdent(eCSSKeyword_auto);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetPointerEvents(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -4240,6 +4258,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(flood_color,                   FloodColor),
     COMPUTED_STYLE_MAP_ENTRY(flood_opacity,                 FloodOpacity),
     COMPUTED_STYLE_MAP_ENTRY(lighting_color,                LightingColor),
+    COMPUTED_STYLE_MAP_ENTRY(image_rendering,               ImageRendering),
     COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
     COMPUTED_STYLE_MAP_ENTRY(marker_end,                    MarkerEnd),
     COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),

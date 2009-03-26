@@ -56,7 +56,6 @@
 #include "nsIXULTemplateBuilder.h"
 
 #include "nsFixedSizeAllocator.h"
-#include "nsVoidArray.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"

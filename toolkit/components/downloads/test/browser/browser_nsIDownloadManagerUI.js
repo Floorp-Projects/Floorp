@@ -35,6 +35,10 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cr = Components.results;
+
 function test_visibility_open()
 {
   var dmui = Cc["@mozilla.org/download-manager-ui;1"].

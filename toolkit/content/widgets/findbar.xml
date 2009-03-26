@@ -140,6 +140,9 @@
         var win = this.findbar._currentWindow ||
                   this.findbar.browser.contentWindow;
 
+        var shouldHandle = !event.altKey && !event.ctrlKey &&
+                           !event.metaKey && !event.shiftKey;
+
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_RETURN:
             this._handleEnter(event);
@@ -148,12 +151,16 @@
             this._handleTab(event);
             break;
           case KeyEvent.DOM_VK_PAGE_UP:
-            win.scrollByPages(-1);
-            event.preventDefault();
+            if (shouldHandle) {
+              win.scrollByPages(-1);
+              event.preventDefault();
+            }
             break;
           case KeyEvent.DOM_VK_PAGE_DOWN:
-            win.scrollByPages(1);
-            event.preventDefault();
+            if (shouldHandle) {
+              win.scrollByPages(1);
+              event.preventDefault();
+            }
             break;
           case KeyEvent.DOM_VK_UP:
             win.scrollByLines(-1);

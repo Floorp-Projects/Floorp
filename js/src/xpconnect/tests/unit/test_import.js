@@ -92,7 +92,7 @@ function run_test() {
   do_check_true(didThrow);
  
   // try to create a component
-  do_load_module("/js/src/xpconnect/tests/unit/component_import.js");
+  do_load_module("component_import.js");
   const contractID = "@mozilla.org/tests/module-importer;";
   do_check_true((contractID + "1") in Components.classes);
   var foo = Components.classes[contractID + "1"]

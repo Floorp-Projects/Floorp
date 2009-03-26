@@ -408,6 +408,10 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
     if (! *_retval)
         return NS_ErrorAccordingToNSPR();
 
+    if (flags & DELETE_ON_CLOSE) {
+        PR_Delete(mPath.get());
+    }
+
     return NS_OK;
 }
 
@@ -916,6 +920,11 @@ nsLocalFile::MoveToNative(nsIFile *newParent, const nsACString &newName)
         } else {
             rv = NSRESULT_FOR_ERRNO();
         }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        // Adjust this
+        mPath = newPathName;
     }
     return rv;
 }

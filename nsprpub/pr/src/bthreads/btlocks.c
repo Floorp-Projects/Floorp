@@ -114,3 +114,10 @@ PR_IMPLEMENT(PRStatus)
 
     return PR_SUCCESS;
 }
+
+PR_IMPLEMENT(void)
+    PR_AssertCurrentThreadOwnsLock(PRLock *lock)
+{
+    PR_ASSERT(lock != NULL);
+    PR_ASSERT(lock->owner == find_thread( NULL ));
+}

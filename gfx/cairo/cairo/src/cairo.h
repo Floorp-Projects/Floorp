@@ -208,6 +208,7 @@ typedef struct _cairo_user_data_key {
 /**
  * cairo_status_t:
  * @CAIRO_STATUS_SUCCESS: no error has occurred
+ *
  * @CAIRO_STATUS_NO_MEMORY: out of memory
  * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore() called without matching cairo_save()
  * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop
@@ -239,6 +240,12 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
  * @CAIRO_STATUS_INVALID_SLANT: invalid value for an input #cairo_font_slant_t (Since 1.8)
  * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
+ * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for a size (Since 1.10)
+ *
+ * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
+ *   status values defined in this enumeration.  When using this value, note
+ *   that the version of cairo at run-time may have additional status values
+ *   defined than the value of this symbol at compile-time. (Since 1.10)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -250,6 +257,7 @@ typedef struct _cairo_user_data_key {
  **/
 typedef enum _cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
+
     CAIRO_STATUS_NO_MEMORY,
     CAIRO_STATUS_INVALID_RESTORE,
     CAIRO_STATUS_INVALID_POP_GROUP,
@@ -280,8 +288,10 @@ typedef enum _cairo_status {
     CAIRO_STATUS_NEGATIVE_COUNT,
     CAIRO_STATUS_INVALID_CLUSTERS,
     CAIRO_STATUS_INVALID_SLANT,
-    CAIRO_STATUS_INVALID_WEIGHT
-    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
+    CAIRO_STATUS_INVALID_WEIGHT,
+    CAIRO_STATUS_INVALID_SIZE,
+
+    CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
 
 /**
@@ -1875,6 +1885,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2
  * @CAIRO_SURFACE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
+ * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
  * @CAIRO_SURFACE_TYPE_QPAINTER: The surface is of type qpainter
  *
  * #cairo_surface_type_t is used to describe the type of a given
@@ -1915,6 +1926,7 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_OS2,
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
+    CAIRO_SURFACE_TYPE_SCRIPT,
     CAIRO_SURFACE_TYPE_QPAINTER
 } cairo_surface_type_t;
 
@@ -1946,6 +1958,24 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy);
+
+#define CAIRO_MIME_TYPE_JPEG "image/jpeg"
+#define CAIRO_MIME_TYPE_PNG "image/png"
+#define CAIRO_MIME_TYPE_JP2 "image/jp2"
+
+cairo_public void
+cairo_surface_get_mime_data (cairo_surface_t		*surface,
+                             const char			*mime_type,
+                             const unsigned char       **data,
+                             unsigned int		*length);
+
+cairo_public cairo_status_t
+cairo_surface_set_mime_data (cairo_surface_t		*surface,
+                             const char			*mime_type,
+                             const unsigned char	*data,
+                             unsigned int		 length,
+			     cairo_destroy_func_t	 destroy,
+			     void			*closure);
 
 cairo_public void
 cairo_surface_get_font_options (cairo_surface_t      *surface,

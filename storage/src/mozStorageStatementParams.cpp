@@ -43,7 +43,6 @@
 
 #include "mozStorageStatementParams.h"
 
-#include "sqlite3.h"
 
 /*************************************************************************
  ****
@@ -105,35 +104,29 @@ mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSCon
     if (JSVAL_IS_INT(id)) {
         int idx = JSVAL_TO_INT(id);
 
-        *_retval = JSValStorageStatementBinder (cx, mStatement, idx, *vp);
-    } else if (JSVAL_IS_STRING(id)) {
-        sqlite3_stmt *stmt = mStatement->GetNativeStatementPointer();
-
+        PRBool res = JSValStorageStatementBinder(cx, mStatement, idx, *vp);
+        NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
+    }
+    else if (JSVAL_IS_STRING(id)) {
         JSString *str = JSVAL_TO_STRING(id);
         nsCAutoString name(":");
-        name.Append(NS_ConvertUTF16toUTF8(nsDependentString((PRUnichar *)::JS_GetStringChars(str),
-                                                            ::JS_GetStringLength(str))));
+        name.Append(NS_ConvertUTF16toUTF8(::JS_GetStringChars(str),
+                                          ::JS_GetStringLength(str)));
 
         // check to see if there's a parameter with this name
-        if (sqlite3_bind_parameter_index(stmt, name.get()) == 0) {
-            *_retval = PR_FALSE;
-            return NS_ERROR_INVALID_ARG;
-        }
-        
-        *_retval = PR_TRUE;
-        // You can use a named parameter more than once in a statement...
-        int count = sqlite3_bind_parameter_count(stmt);
-        for (int i = 0; (i < count) && (*_retval); i++) {
-            // sqlite indices start at 1
-            const char *pName = sqlite3_bind_parameter_name(stmt, i + 1);
-            if (name.Equals(pName))
-                *_retval = JSValStorageStatementBinder(cx, mStatement, i, *vp);
-        }
-    } else {
-        *_retval = PR_FALSE;
+        PRUint32 index;
+        nsresult rv = mStatement->GetParameterIndex(name, &index);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        PRBool res = JSValStorageStatementBinder(cx, mStatement, index, *vp);
+        NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
+    }
+    else {
+        return NS_ERROR_INVALID_ARG;
     }
 
-    return (*_retval) ? NS_OK : NS_ERROR_INVALID_ARG;
+    *_retval = PR_TRUE;
+    return NS_OK;
 }
 
 /* void preCreate (in nsISupports nativeObj, in JSContextPtr cx, in JSObjectPtr globalObj, out JSObjectPtr parentObj); */
@@ -197,48 +190,35 @@ mozStorageStatementParams::NewResolve(nsIXPConnectWrappedNative *wrapper, JSCont
 {
     NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
-    int idx = -1;
+    PRUint32 idx;
 
     if (JSVAL_IS_INT(id)) {
         idx = JSVAL_TO_INT(id);
-    } else if (JSVAL_IS_STRING(id)) {
+    }
+    else if (JSVAL_IS_STRING(id)) {
         JSString *str = JSVAL_TO_STRING(id);
+        jschar *nameChars = JS_GetStringChars(str);
+        size_t nameLength = JS_GetStringLength(str);
+
         nsCAutoString name(":");
-        name.Append(NS_ConvertUTF16toUTF8(nsDependentString((PRUnichar *)::JS_GetStringChars(str),
-                                                            ::JS_GetStringLength(str))));
+        name.Append(NS_ConvertUTF16toUTF8(nameChars, nameLength));
 
         // check to see if there's a parameter with this name
-        idx = sqlite3_bind_parameter_index(mStatement->GetNativeStatementPointer(), name.get());
-        if (idx == 0) {
-            // nope.
-            fprintf (stderr, "********** mozStorageStatementWrapper: Couldn't find parameter %s\n", name.get());
-            *_retval = PR_FALSE;
-            return NS_OK;
-        } else {
-            // set idx, so that the numbered property also gets defined
-            idx = idx - 1;
-        }
+        nsresult rv = mStatement->GetParameterIndex(name, &idx);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        PRBool success = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                               ::JS_GetStringLength(str),
-                                               JSVAL_VOID,
-                                               nsnull, nsnull, 0);
-        if (!success) {
-            *_retval = PR_FALSE;
-            return NS_ERROR_FAILURE;
-        }
+        PRBool success = JS_DefineUCProperty(cx, obj, nameChars, nameLength,
+                                             JSVAL_VOID, nsnull, nsnull, 0);
+        NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+    }
+    else {
+        // We do not handle other types.
+        return NS_ERROR_UNEXPECTED;
     }
 
-    if (idx == -1) {
-        *_retval = PR_FALSE;
-        return NS_ERROR_FAILURE;
-    }
-
-    // is it out of range?
-    if (idx < 0 || idx >= (int)mParamCount) {
-        *_retval = PR_FALSE;
-        return NS_OK;
-    }
+    // Ensure that our index is within range.
+    if (idx >= mParamCount)
+        return NS_ERROR_INVALID_ARG;
 
     *_retval = ::JS_DefineElement(cx, obj, idx, JSVAL_VOID, nsnull, nsnull, 0);
     if (*_retval)
