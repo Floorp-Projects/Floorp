@@ -42,69 +42,27 @@ _log = logging.getLogger('pymake.parser')
 class SyntaxError(util.MakeError):
     pass
 
-class LazyLocation(object):
-    __slots__ = ('data', 'offset', 'loc')
-
-    def __init__(self, data, offset):
-        self.data = data
-        self.offset = offset
-        self.loc = None
-
-    def _resolve(self):
-        if self.loc is None:
-            self.loc = self.data.resolveloc(self.offset)
-
-        return self.loc
-
-    def __add__(self, o):
-        return self._resolve().__add__(o)
-
-    def __str__(self):
-        return self._resolve().__str__()
-    
 class Data(object):
     """
     A single virtual "line", which can be multiple source lines joined with
     continuations.
     """
 
-    __slots__ = ('data', '_offsets', '_locs')
+    __slots__ = ('data', 'startloc')
 
-    def __init__(self):
-        self.data = ""
-
-        # _offsets and _locs are matched lists
-        self._offsets = []
-        self._locs = []
+    def __init__(self, startloc, data):
+        self.data = data
+        self.startloc = startloc
 
     @staticmethod
-    def fromstring(str, loc):
-        d = Data()
-        d.append(str, loc)
-        return d
+    def fromstring(str, path):
+        return Data(parserdata.Location(path, 1, 0), str)
 
-    def append(self, data, loc):
-        self._offsets.append(len(self.data))
-        self._locs.append(loc)
+    def append(self, data):
         self.data += data
 
-    def resolveloc(self, offset):
-        """
-        Get the location of an offset within data.
-        """
-        if offset is None or offset >= len(self.data):
-            offset = len(self.data) - 1
-
-        if offset == -1:
-            offset = 0
-
-        idx = bisect.bisect_right(self._offsets, offset) - 1
-        loc = self._locs[idx]
-        begin = self._offsets[idx]
-        return loc + self.data[begin:offset]
-
     def getloc(self, offset):
-        return LazyLocation(self, offset)
+        return self.startloc + self.data[:offset]
 
     def skipwhitespace(self, offset):
         """
@@ -142,15 +100,20 @@ class DynamicData(Data):
     """
     If we're reading from a stream, allows reading additional data dynamically.
     """
+    __slots__ = Data.__slots__ + ('lineiter',)
+
     def __init__(self, lineiter, path):
-        Data.__init__(self)
-        self.lineiter = lineiter
-        self.path = path
+        try:
+            lineno, line = lineiter.next()
+            Data.__init__(self, parserdata.Location(path, lineno + 1, 0), line)
+            self.lineiter = lineiter
+        except StopIteration:
+            self.data = None
 
     def readline(self):
         try:
             lineno, line = self.lineiter.next()
-            self.append(line, parserdata.Location(self.path, lineno, 0))
+            self.append(line)
             return True
         except StopIteration:
             return False
@@ -226,7 +189,7 @@ def iterdata(d, offset, tokenlist):
         yield d.data[offset:m.start(0)], m.group(0), m.start(0), m.end(0)
         offset = m.end(0)
 
-def itermakefilechars(d, offset, tokenlist):
+def itermakefilechars(d, offset, tokenlist, ignorecomments=False):
     """
     Iterate over data in makefile syntax. Comments are found at unescaped # characters, and escaped newlines
     are converted to single-space continuations.
@@ -250,6 +213,11 @@ def itermakefilechars(d, offset, tokenlist):
             return
 
         if token == '#':
+            if ignorecomments:
+                yield d.data[offset:end], None, None, None
+                offset = end
+                continue
+
             yield d.data[offset:start], None, None, None
             for s in itermakefilechars(d, end, _emptytokenlist): pass
             return
@@ -379,7 +347,7 @@ def iterdefinechars(d, offset, tokenlist):
             continue
 
         if token == '\n':
-            assert end == len(d.data)
+            assert end == len(d.data), "end: %r len(d.data): %r" % (end, len(d.data))
             d.readline()
             definecount += checkfortoken(end)
             if definecount == 0:
@@ -504,7 +472,9 @@ def parsefile(pathname):
 
         _log.debug("Not using '%s' from the parser cache, mtimes don't match: was %s, now %s", pathname, oldmtime, mtime)
 
-    stmts = parsestream(open(pathname, "rU"), pathname)
+    fd = open(pathname, "rU")
+    stmts = parsestream(fd, pathname)
+    fd.close()
     _parsecache[pathname] = mtime, stmts
     return stmts
 
@@ -525,7 +495,7 @@ def parsestream(fd, filename):
         assert len(condstack) > 0
 
         d = DynamicData(fdlines, filename)
-        if not d.readline():
+        if d.data is None:
             break
 
         if len(d.data) > 0 and d.data[0] == '\t' and currule:
@@ -582,10 +552,11 @@ def parsestream(fd, filename):
                 vname, t, i = parsemakesyntax(d, offset, (), itermakefilechars)
                 vname.rstrip()
 
-                d = DynamicData(fdlines, filename)
-                d.readline()
+                startpos = len(d.data)
+                if not d.readline():
+                    raise SyntaxError("Unterminated define", d.getloc())
 
-                value = _iterflatten(iterdefinechars, d, 0)
+                value = _iterflatten(iterdefinechars, d, startpos)
                 condstack[-1].append(parserdata.SetVariable(vname, value=value, valueloc=d.getloc(0), token='=', targetexp=None))
                 continue
 
@@ -633,7 +604,9 @@ def parsestream(fd, filename):
                 continue
 
             if kword == 'unexport':
-                raise SyntaxError("unexporting variables is not supported", d.getloc(offset))
+                e, token, offset = parsemakesyntax(d, offset, (), itermakefilechars)
+                condstack[-1].append(parserdata.UnexportDirective(e))
+                continue
 
             assert kword is None, "unexpected kword: %r" % (kword,)
 
@@ -808,18 +781,14 @@ def parsemakesyntax(d, startat, stopon, iterfunc):
                     stacktop = ParseStackFrame(_PARSESTATE_FUNCTION, stacktop,
                                                e, tokenlist, function=fn,
                                                openbrace=c, closebrace=closebrace)
-                    di = iterfunc(d, offset, tokenlist)
-                    continue
-
-                e = data.Expansion()
-                tokenlist = TokenList.get((':', c, closebrace, '$'))
-                stacktop = ParseStackFrame(_PARSESTATE_VARNAME, stacktop,
-                                           e, tokenlist,
-                                           openbrace=c, closebrace=closebrace, loc=loc)
-                di = iterfunc(d, offset, tokenlist)
-                continue
+                else:
+                    e = data.Expansion()
+                    tokenlist = TokenList.get((':', c, closebrace, '$'))
+                    stacktop = ParseStackFrame(_PARSESTATE_VARNAME, stacktop,
+                                               e, tokenlist,
+                                               openbrace=c, closebrace=closebrace, loc=loc)
             else:
-                e = data.Expansion.fromstring(c)
+                e = data.Expansion.fromstring(c, loc)
                 stacktop.expansion.appendfunc(functions.VariableRef(loc, e))
                 offset += 1
         elif token in ('(', '{'):
@@ -894,7 +863,11 @@ def parsemakesyntax(d, startat, stopon, iterfunc):
         else:
             assert False, "Unexpected parse state %s" % stacktop.parsestate
 
-        di = iterfunc(d, offset, stacktop.tokenlist)
+        if stacktop.parent is not None and iterfunc == itercommandchars:
+            di = itermakefilechars(d, offset, stacktop.tokenlist,
+                                   ignorecomments=True)
+        else:
+            di = iterfunc(d, offset, stacktop.tokenlist)
 
     if stacktop.parent is not None:
         raise SyntaxError("Unterminated function call", d.getloc(offset))
