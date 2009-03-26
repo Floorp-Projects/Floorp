@@ -273,3 +273,6 @@ pref("content.max.tokenizing.time", 50000);
 
 pref("javascript.options.jit.content", true);
 pref("javascript.options.jit.chrome", true);
+
+pref("dom.max_chrome_script_run_time", 30);
+pref("dom.max_script_run_time", 20);
