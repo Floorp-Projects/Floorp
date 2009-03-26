@@ -125,21 +125,27 @@ let Utils = {
   // lazy load objects from a constructor on first access.  It will
   // work with the global object ('this' in the global context).
   lazy: function Weave_lazy(dest, prop, ctr) {
-    let getter = function() {
+    delete dest[prop];
+    dest.__defineGetter__(prop, Utils.lazyCb(dest, prop, ctr));
+  },
+  lazyCb: function Weave_lazyCb(dest, prop, ctr) {
+    return function() {
       delete dest[prop];
       dest[prop] = new ctr();
       return dest[prop];
     };
-    dest.__defineGetter__(prop, getter);
   },
 
   // like lazy, but rather than new'ing the 3rd arg we use its return value
   lazy2: function Weave_lazy2(dest, prop, fn) {
-    let getter = function() {
+    delete dest[prop];
+    dest.__defineGetter__(prop, Utils.lazyCb2(dest, prop, fn));
+  },
+  lazyCb2: function Weave_lazyCb2(dest, prop, fn) {
+    return function() {
       delete dest[prop];
       return dest[prop] = fn();
     };
-    dest.__defineGetter__(prop, getter);
   },
 
   lazySvc: function Weave_lazySvc(dest, prop, cid, iface) {
@@ -468,7 +474,7 @@ let Utils = {
 
   openDialog: function Utils_openDialog(name, uri, options, args) {
     Utils._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
-      options || "centerscreen,chrome,dialog,modal,resizable=yes", args);
+      options || "centerscreen,chrome,dialog,modal,resizable=no", args);
   },
 
   openLog: function Utils_openLog() {
@@ -497,7 +503,7 @@ let Utils = {
   },
 
   openWizard: function Utils_openWizard() {
-    Utils.openDialog("Wizard", "wizard.xul");
+    Utils.openWindow("Wizard", "wizard.xul");
   },
 
   // assumes an nsIConverterInputStream
