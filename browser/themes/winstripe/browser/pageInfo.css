@@ -141,13 +141,15 @@ groupbox.collapsable caption .caption-icon {
   height: 9px;
   background-repeat: no-repeat;
   background-position: center;
-  -moz-margin-start: 1px;
-  -moz-margin-end: 3px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 2px;
   background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
 groupbox.collapsable[closed="true"] {
   border: none;
+  margin-bottom: 9px;
+  -moz-appearance: none;
 }
 
 groupbox.collapsable[closed="true"] caption .caption-icon { 
@@ -155,12 +157,8 @@ groupbox.collapsable[closed="true"] caption .caption-icon {
 }
 
 groupbox tree { 
-  margin: 0;
+  margin: 0 3px;
   border: none;
-}
-
-groupbox.treebox .groupbox-body { 
-  padding-top: 0;
 }
 
 #securityBox description { 
