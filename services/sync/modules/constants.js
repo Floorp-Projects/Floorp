@@ -40,7 +40,18 @@ const EXPORTED_SYMBOLS = ['WEAVE_VERSION', 'MIN_SERVER_STORAGE_VERSION',
 			  'MODE_CREATE', 'MODE_APPEND', 'MODE_TRUNCATE',
 			  'PERMS_FILE', 'PERMS_PASSFILE', 'PERMS_DIRECTORY',
 			  'ONE_BYTE', 'ONE_KILOBYTE', 'ONE_MEGABYTE',
-                          'CONNECTION_TIMEOUT', 'KEEP_DELTAS'];
+                          'CONNECTION_TIMEOUT', 'KEEP_DELTAS',
+                          'WEAVE_STATUS_OK', 'WEAVE_STATUS_FAILED',
+                          'WEAVE_STATUS_PARTIAL', 'SERVER_LOW_QUOTA',
+                          'SERVER_DOWNTIME', 'SERVER_UNREACHABLE',
+                          'LOGIN_FAILED_NO_USERNAME', 'LOGIN_FAILED_NO_PASSWORD',
+                          'LOGIN_FAILED_REJECTED', 'METARECORD_DOWNLOAD_FAIL',
+                          'VERSION_OUT_OF_DATE', 'DESKTOP_VERSION_OUT_OF_DATE',
+                          'KEYS_DOWNLOAD_FAIL', 'NO_KEYS_NO_KEYGEN', 'KEYS_UPLOAD_FAIL',
+                          'SETUP_FAILED_NO_PASSPHRASE', 'ABORT_SYNC_COMMAND',
+                          'kSyncWeaveDisabled', 'kSyncNotLoggedIn',
+                          'kSyncNetworkOffline', 'kSyncInPrivateBrowsing',
+                          'kSyncNotScheduled'];
 
 const WEAVE_VERSION = "@weave_version@";
 
@@ -68,3 +79,37 @@ const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
 const CONNECTION_TIMEOUT = 30000;
 
 const KEEP_DELTAS = 25;
+
+// Top-level statuses:
+const WEAVE_STATUS_OK = "Sync succeeded.";
+const WEAVE_STATUS_FAILED = "Sync failed.";
+const WEAVE_STATUS_PARTIAL = "Sync partially succeeded but some data not synced.";
+
+// Server statuses (Not mutually exclusive):
+const SERVER_LOW_QUOTA = "Getting close to your Weave server storage quota.";
+const SERVER_DOWNTIME = "Weave server is overloaded, try agian in 30 sec.";
+const SERVER_UNREACHABLE = "Weave server is unreachable.";
+
+// Ways that a sync can fail during setup or login:
+const LOGIN_FAILED_NO_USERNAME = "No username set, login failed";
+const LOGIN_FAILED_NO_PASSWORD = "No password given or found in password manager.";
+const LOGIN_FAILED_REJECTED = "Login rejected.  Check your username/password/passphrase.";
+const METARECORD_DOWNLOAD_FAIL = "Can't download metadata record, HTTP error.";
+const VERSION_OUT_OF_DATE = "This copy of Weave needs to be updated.";
+const DESKTOP_VERSION_OUT_OF_DATE = "Weave needs updating on your desktop browser.";
+const KEYS_DOWNLOAD_FAIL = "Can't download keys from server, HTTP error.";
+const NO_KEYS_NO_KEYGEN = "No keys present on server and keygen disabled; sync from desktop first.";
+const KEYS_UPLOAD_FAIL = "Could not upload keys.";
+const SETUP_FAILED_NO_PASSPHRASE = "Could not get encryption passphrase.";
+
+// Ways that a sync can be disabled
+const kSyncWeaveDisabled = "Weave is disabled";
+const kSyncNotLoggedIn = "User is not logged in";
+const kSyncNetworkOffline = "Network is offline";
+const kSyncInPrivateBrowsing = "Private browsing is enabled";
+const kSyncNotScheduled = "Not scheduled to do sync";
+// If one of these happens, leave the top-level status the same!
+
+// Ways that a sync can be aborted:
+const ABORT_SYNC_COMMAND = "aborting sync, process commands said so";
+
