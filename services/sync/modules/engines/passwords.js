@@ -240,7 +240,7 @@ PasswordTracker.prototype = {
 
     switch (aData) {
     case 'modifyLogin':
-      aSubject = aSubject[1];
+      aSubject = aSubject.queryElementAt(1, Ci.nsILoginMetaInfo);
     case 'addLogin':
     case 'removeLogin': {
       let metaInfo = aSubject.QueryInterface(Ci.nsILoginMetaInfo);
