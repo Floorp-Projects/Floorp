@@ -334,6 +334,7 @@ private:
   nsresult GetColorInterpolation(nsIDOMCSSValue** aValue);
   nsresult GetColorInterpolationFilters(nsIDOMCSSValue** aValue);
   nsresult GetDominantBaseline(nsIDOMCSSValue** aValue);
+  nsresult GetImageRendering(nsIDOMCSSValue** aValue);
   nsresult GetPointerEvents(nsIDOMCSSValue** aValue);
   nsresult GetShapeRendering(nsIDOMCSSValue** aValue);
   nsresult GetTextRendering(nsIDOMCSSValue** aValue);

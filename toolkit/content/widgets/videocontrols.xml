@@ -52,8 +52,8 @@
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <stack flex="1">
-            <vbox class="throbberOverlay">
-                <box class="throbber" flex="1"/>
+            <vbox class="statusOverlay">
+                <box class="statusIcon" flex="1"/>
             </vbox>
 
             <vbox>
@@ -141,8 +141,9 @@
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
                                "loadstart", "durationchange", "timeupdate", "progress",
                                "playing", "waiting", "canplaythrough", "seeking",
-                               "seeked", "emptied", "loadedmetadata"],
+                               "seeked", "emptied", "loadedmetadata", "error"],
 
+                // controlFader holds the fade state for the control bar.
                 controlFader  : {
                                     name : "controls", // shorthand for debugging
                                     element : null,    // the element to fade in/out
@@ -156,8 +157,9 @@
                                     RUNTIME_STEP : 30  // ms
                                 },
 
-                throbberFader : {
-                                    name : "throbber",
+                // statusFader holds the fade state for the status overlay (inc. throbber)
+                statusFader : {
+                                    name : "status",
                                     element : null,
                                     runtime : 0,
                                     fadingIn : false,
@@ -207,7 +209,7 @@
                     if (this.video.readyState >= this.video.HAVE_CURRENT_DATA)
                         this.firstFrameShown = true;
                     else
-                        this.startFadeIn(this.throbberFader);
+                        this.startFadeIn(this.statusFader);
 
                     // We can't determine the exact buffering status, but do know if it's
                     // fully loaded. (If it's still loading, it will fire a progress event
@@ -217,6 +219,15 @@
                         this.bufferBar.setAttribute("value", 100);
                     else
                         this.bufferBar.setAttribute("value", 0);
+
+                    // Set the current status icon. If the video is in an error state,
+                    // show the status overlay now.
+                    if (this.video.error) {
+                        this.statusIcon.setAttribute("type", "error");
+                        this.startFadeIn(this.statusFader, true);
+                    } else {
+                        this.statusIcon.setAttribute("type", "throbber");
+                    }
                 },
 
                 get dynamicControls() {
@@ -225,6 +236,11 @@
 
                     // Allow tests to explicitly suppress the fading of controls.
                     if (this.video.hasAttribute("mozNoDynamicControls"))
+                        enabled = false;
+
+                    // If the video hits an error, suppress controls if it
+                    // hasn't managed to do anything else yet.
+                    if (!this.firstFrameShown && this.video.error)
                         enabled = false;
 
                     return enabled;
@@ -263,6 +279,7 @@
                             break;
                         case "loadstart":
                             this.maxCurrentTimeSeen = 0;
+                            this.statusIcon.setAttribute("type", "throbber");
                             this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                             break;
                         case "durationchange":
@@ -297,17 +314,25 @@
                             break;
                         case "seeking":
                         case "waiting":
-                            this.startFadeIn(this.throbberFader);
+                            this.statusIcon.setAttribute("type", "throbber");
+                            this.startFadeIn(this.statusFader);
                             break;
                         case "seeked":
                             // Normally we'd expect canplaythough to fire, but if we already
                             // have the data cached it shouldn't fire again.
                             if (this.video.readyState == this.video.HAVE_ENOUGH_DATA)
-                                this.startFadeOut(this.throbberFader);
+                                this.startFadeOut(this.statusFader);
                             break;
                         case "playing":
                         case "canplaythrough":
-                            this.startFadeOut(this.throbberFader);
+                            this.startFadeOut(this.statusFader);
+                            break;
+                        case "error":
+                            this.statusIcon.setAttribute("type", "error");
+                            this.startFadeIn(this.statusFader, true);
+                            // If video hasn't shown anything yet, disable the controls.
+                            if (!this.firstFrameShown)
+                                this.startFadeOut(this.controlFader);
                             break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
@@ -322,10 +347,10 @@
                         clearInterval(this.controlFader.timer);
                     if (this.controlFader.delayTimer)
                         clearInterval(this.controlFader.delayTimer);
-                    if (this.throbberFader.timer)
-                        clearInterval(this.throbberFader.timer);
-                    if (this.throbberFader.delayTimer)
-                        clearTimeout(this.throbberFader.delayTimer);
+                    if (this.statusFader.timer)
+                        clearInterval(this.statusFader.timer);
+                    if (this.statusFader.delayTimer)
+                        clearTimeout(this.statusFader.delayTimer);
                     this.log("--- videocontrols terminated ---");
                 },
 
@@ -403,12 +428,12 @@
                     this.startFade(this.controlFader, isMouseOver);
                 },
 
-                startFadeIn : function (fader) {
-                    this.startFade(fader, true);
+                startFadeIn : function (fader, immediate) {
+                    this.startFade(fader, true, immediate);
                 },
 
-                startFadeOut : function (fader) {
-                    this.startFade(fader, false);
+                startFadeOut : function (fader, immediate) {
+                    this.startFade(fader, false, immediate);
                 },
 
                 startFade : function (fader, fadeIn, immediate) {
@@ -543,7 +568,8 @@
             this.Utils.isAudioOnly = (video instanceof HTMLAudioElement);
 
             this.Utils.controlFader.element  = document.getAnonymousElementByAttribute(this, "class", "controlBar");
-            this.Utils.throbberFader.element = document.getAnonymousElementByAttribute(this, "class", "throbberOverlay");
+            this.Utils.statusFader.element = document.getAnonymousElementByAttribute(this, "class", "statusOverlay");
+            this.Utils.statusIcon = document.getAnonymousElementByAttribute(this, "class", "statusIcon");
 
             this.Utils.playButton = document.getAnonymousElementByAttribute(this, "class", "playButton");
             this.Utils.muteButton = document.getAnonymousElementByAttribute(this, "class", "muteButton");

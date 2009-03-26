@@ -40,7 +40,7 @@
 #include "nsSVGLength.h"
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsDOMError.h"
 #include "nsReadableUtils.h"
 #include "nsSVGSVGElement.h"
@@ -93,7 +93,7 @@ protected:
   
   void ReleaseLengths();
   
-  nsAutoVoidArray mLengths;
+  nsAutoTArray<nsISVGLength*, 1> mLengths;
   nsWeakPtr mContext;  // needs to be weak to avoid reference loop
   PRUint8 mCtxType;
 };
@@ -168,11 +168,11 @@ nsSVGLengthList::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 
-  PRInt32 count = mLengths.Count();
+  PRUint32 count = mLengths.Length();
 
-  if (count<=0) return NS_OK;
+  if (count == 0) return NS_OK;
 
-  PRInt32 i = 0;
+  PRUint32 i = 0;
   
   while (1) {
     nsISVGLength* length = ElementAt(i);
@@ -197,7 +197,7 @@ nsSVGLengthList::GetValueString(nsAString& aValue)
 /* readonly attribute unsigned long numberOfItems; */
 NS_IMETHODIMP nsSVGLengthList::GetNumberOfItems(PRUint32 *aNumberOfItems)
 {
-  *aNumberOfItems = mLengths.Count();
+  *aNumberOfItems = mLengths.Length();
   return NS_OK;
 }
 
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
 /* nsIDOMSVGLength getItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGLengthList::GetItem(PRUint32 index, nsIDOMSVGLength **_retval)
 {
-  if (index >= static_cast<PRUint32>(mLengths.Count())) {
+  if (index >= mLengths.Length()) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -266,7 +266,7 @@ nsSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
 /* nsIDOMSVGLengthList removeItem (in unsigned long index); */
 NS_IMETHODIMP nsSVGLengthList::RemoveItem(PRUint32 index, nsIDOMSVGLength **_retval)
 {
-  if (index >= static_cast<PRUint32>(mLengths.Count())) {
+  if (index >= mLengths.Length()) {
     *_retval = nsnull;
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -321,8 +321,8 @@ void
 nsSVGLengthList::ReleaseLengths()
 {
   WillModify();
-  PRInt32 count = mLengths.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
+  PRUint32 count = mLengths.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
     nsISVGLength* length = ElementAt(i);
     length->SetContext(nsnull, 0);
     NS_REMOVE_SVGVALUE_OBSERVER(length);
@@ -335,7 +335,7 @@ nsSVGLengthList::ReleaseLengths()
 nsISVGLength*
 nsSVGLengthList::ElementAt(PRInt32 index)
 {
-  return (nsISVGLength*)mLengths.ElementAt(index);
+  return mLengths.ElementAt(index);
 }
 
 void
@@ -350,7 +350,7 @@ nsSVGLengthList::AppendElement(nsISVGLength* aElement)
   //  aElement->SetListOwner(this);
   
   aElement->SetContext(mContext, mCtxType);
-  mLengths.AppendElement((void*)aElement);
+  mLengths.AppendElement(aElement);
   NS_ADD_SVGVALUE_OBSERVER(aElement);
   DidModify();
 }
@@ -380,7 +380,7 @@ nsSVGLengthList::InsertElementAt(nsISVGLength* aElement, PRInt32 index)
   
   aElement->SetContext(mContext, mCtxType);
   
-  mLengths.InsertElementAt((void*)aElement, index);
+  mLengths.InsertElementAt(index, aElement);
   NS_ADD_SVGVALUE_OBSERVER(aElement);
   DidModify();
 }

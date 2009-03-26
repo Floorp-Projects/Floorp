@@ -222,7 +222,7 @@ function run_test() {
   do_check_true(uri_in_db(referrerURI));
 
   // test to ensure history.dat gets deleted if all history is being cleared
-  var file = do_get_file("toolkit/components/places/tests/unit/history.dat");
+  var file = do_get_file("history.dat");
   var histFile = dirSvc.get("ProfD", Ci.nsIFile);
   file.copyTo(histFile, "history.dat");
   histFile.append("history.dat");

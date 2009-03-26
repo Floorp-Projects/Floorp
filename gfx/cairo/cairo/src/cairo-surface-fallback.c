@@ -79,7 +79,7 @@ _fallback_init (fallback_state_t *state,
     status = _cairo_surface_acquire_dest_image (dst, &state->extents,
 						&state->image, &state->image_rect,
 						&state->image_extra);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* XXX: This NULL value tucked away in state->image is a rather
@@ -103,7 +103,7 @@ _fallback_fini (fallback_state_t *state)
 
 typedef cairo_status_t (*cairo_draw_func_t) (void                          *closure,
 					     cairo_operator_t               op,
-					     cairo_pattern_t               *src,
+					     const cairo_pattern_t         *src,
 					     cairo_surface_t               *dst,
 					     int                            dst_x,
 					     int                            dst_y,
@@ -131,7 +131,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 			   NULL, mask,
 			   extents->x, extents->y,
 			   extents);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
     if (clip && clip->surface)
@@ -139,7 +139,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 						 mask,
 						 extents->x, extents->y,
 						 extents);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
     _cairo_pattern_init_for_surface (mask_pattern, mask);
@@ -156,7 +156,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 static cairo_status_t
 _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 			       cairo_operator_t               op,
-			       cairo_pattern_t               *src,
+			       const cairo_pattern_t         *src,
 			       cairo_draw_func_t              draw_func,
 			       void                          *draw_closure,
 			       cairo_surface_t               *dst,
@@ -169,7 +169,7 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 					     clip,
 					     draw_func, draw_closure,
 					     dst, extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_surface_composite (op,
@@ -190,7 +190,7 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 static cairo_status_t
 _clip_and_composite_combine (cairo_clip_t                  *clip,
 			     cairo_operator_t               op,
-			     cairo_pattern_t               *src,
+			     const cairo_pattern_t         *src,
 			     cairo_draw_func_t              draw_func,
 			     void                          *draw_closure,
 			     cairo_surface_t               *dst,
@@ -226,14 +226,14 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 
     _cairo_pattern_fini (&dst_pattern.base);
 
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
     status = (*draw_func) (draw_closure, op,
 			   src, intermediate,
 			   extents->x, extents->y,
 			   extents);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
     /* Combine that with the clip
@@ -242,7 +242,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 					     intermediate,
 					     extents->x, extents->y,
 					     extents);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
     /* Punch the clip out of the destination
@@ -251,7 +251,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 					     dst,
 					     0, 0,
 					     extents);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
     /* Now add the two results together
@@ -278,7 +278,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
  */
 static cairo_status_t
 _clip_and_composite_source (cairo_clip_t                  *clip,
-			    cairo_pattern_t               *src,
+			    const cairo_pattern_t         *src,
 			    cairo_draw_func_t              draw_func,
 			    void                          *draw_closure,
 			    cairo_surface_t               *dst,
@@ -293,7 +293,7 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 					     clip,
 					     draw_func, draw_closure,
 					     dst, extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* Compute dest' = dest OUT (mask IN clip)
@@ -305,7 +305,7 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 				       extents->x,     extents->y,
 				       extents->width, extents->height);
 
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_MASK_PATTERN;
 
     /* Now compute (src IN (mask IN clip)) ADD dest'
@@ -352,7 +352,7 @@ _cairo_rectangle_empty (const cairo_rectangle_int_t *rect)
 static cairo_status_t
 _clip_and_composite (cairo_clip_t                  *clip,
 		     cairo_operator_t               op,
-		     cairo_pattern_t               *src,
+		     const cairo_pattern_t         *src,
 		     cairo_draw_func_t              draw_func,
 		     void                          *draw_closure,
 		     cairo_surface_t               *dst,
@@ -408,7 +408,7 @@ _clip_and_composite (cairo_clip_t                  *clip,
  */
 static cairo_status_t
 _composite_trap_region (cairo_clip_t            *clip,
-			cairo_pattern_t         *src,
+			const cairo_pattern_t	*src,
 			cairo_operator_t         op,
 			cairo_surface_t         *dst,
 			cairo_region_t          *trap_region,
@@ -439,7 +439,7 @@ _composite_trap_region (cairo_clip_t            *clip,
 	status = _cairo_surface_set_clip_region (dst,
 						 trap_region,
 						 clip_serial);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -480,7 +480,7 @@ typedef struct {
 static cairo_status_t
 _composite_traps_draw_func (void                          *closure,
 			    cairo_operator_t               op,
-			    cairo_pattern_t               *src,
+			    const cairo_pattern_t         *src,
 			    cairo_surface_t               *dst,
 			    int                            dst_x,
 			    int                            dst_y,
@@ -512,7 +512,7 @@ _composite_traps_draw_func (void                          *closure,
 
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
-_clip_and_composite_trapezoids (cairo_pattern_t *src,
+_clip_and_composite_trapezoids (const cairo_pattern_t *src,
 				cairo_operator_t op,
 				cairo_surface_t *dst,
 				cairo_traps_t *traps,
@@ -531,7 +531,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
         return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_get_extents (dst, &extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     status = _cairo_traps_extract_region (traps, &trap_region);
@@ -548,8 +548,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 
         if (has_trap_region) {
             status = _cairo_clip_intersect_to_region (clip, &trap_region);
-
-            if (status)
+            if (unlikely (status))
                 goto out;
 
             _cairo_region_get_extents (&trap_region, &trap_extents);
@@ -559,10 +558,13 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
             _cairo_box_round_to_rectangle (&trap_box, &trap_extents);
         }
 
-        _cairo_rectangle_intersect (&extents, &trap_extents);
-        status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+        if (! _cairo_rectangle_intersect (&extents, &trap_extents)) {
+	    status = CAIRO_STATUS_SUCCESS;
+	    goto out;
+	}
 
-        if (status)
+        status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+        if (unlikely (status))
             goto out;
     } else {
         cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
@@ -576,14 +578,13 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 
             has_clear_region = TRUE;
             status = _cairo_clip_intersect_to_region (clip, &clear_region);
-
-            if (status)
+            if (unlikely (status))
                 goto out;
 
             _cairo_region_get_extents (&clear_region, &extents);
 
             status = _cairo_region_subtract (&clear_region, &clear_region, &trap_region);
-            if (status)
+            if (unlikely (status))
                 goto out;
 
             if (!_cairo_region_not_empty (&clear_region)) {
@@ -595,7 +596,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
         }
     }
 
-    if (status)
+    if (unlikely (status))
         goto out;
 
     if (has_trap_region) {
@@ -632,7 +633,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
              * If we have a clip surface, we set it as the mask; this only works
              * for bounded operators other than SOURCE; for unbounded operators,
              * clip and mask cannot be interchanged. For SOURCE, the operator
-             * as implemented by the backends is different in it's handling
+             * as implemented by the backends is different in its handling
              * of the mask then what we want.
              *
              * CAIRO_INT_STATUS_UNSUPPORTED will be returned if the region has
@@ -668,10 +669,57 @@ out:
     return status;
 }
 
+typedef struct {
+    cairo_path_fixed_t		*path;
+    cairo_fill_rule_t		 fill_rule;
+    double			 tolerance;
+    cairo_antialias_t		 antialias;
+} cairo_composite_spans_fill_info_t;
+
+static cairo_status_t
+_composite_spans_fill_func (void                          *closure,
+			    cairo_operator_t               op,
+			    const cairo_pattern_t         *src,
+			    cairo_surface_t               *dst,
+			    int                            dst_x,
+			    int                            dst_y,
+			    const cairo_rectangle_int_t   *extents)
+{
+    cairo_composite_rectangles_t rects;
+    cairo_composite_spans_fill_info_t *info = closure;
+    cairo_pattern_union_t pattern;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    _cairo_composite_rectangles_init (
+	&rects, extents->x, extents->y,
+	extents->width, extents->height);
+
+    /* The incoming dst_x/y are where we're pretending the origin of
+     * the dst surface is -- *not* the offset of a rectangle where
+     * we'd like to place the result. */
+    rects.dst.x -= dst_x;
+    rects.dst.y -= dst_y;
+
+    /* We're called without a source pattern from
+     * _create_composite_mask_pattern(). */
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
+    if (src == NULL)
+	src = &pattern.base;
+
+    status = _cairo_path_fixed_fill_using_spans (
+	op, src, info->path, dst,
+	info->fill_rule, info->tolerance, info->antialias,
+	&rects);
+
+    _cairo_pattern_fini (&pattern.base);
+    return status;
+}
+
 cairo_status_t
-_cairo_surface_fallback_paint (cairo_surface_t	*surface,
-			       cairo_operator_t	 op,
-			       cairo_pattern_t	*source)
+_cairo_surface_fallback_paint (cairo_surface_t		*surface,
+			       cairo_operator_t		 op,
+			       const cairo_pattern_t	*source)
 {
     cairo_status_t status;
     cairo_rectangle_int_t extents;
@@ -679,20 +727,22 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
     cairo_traps_t traps;
 
     status = _cairo_surface_get_extents (surface, &extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
+
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_box_from_rectangle (&box, &extents);
@@ -714,7 +764,7 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
 static cairo_status_t
 _cairo_surface_mask_draw_func (void                          *closure,
 			       cairo_operator_t               op,
-			       cairo_pattern_t               *src,
+			       const cairo_pattern_t         *src,
 			       cairo_surface_t               *dst,
 			       int                            dst_x,
 			       int                            dst_y,
@@ -741,40 +791,42 @@ _cairo_surface_mask_draw_func (void                          *closure,
 cairo_status_t
 _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
-			      cairo_pattern_t		*source,
-			      cairo_pattern_t		*mask)
+			      const cairo_pattern_t	*source,
+			      const cairo_pattern_t	*mask)
 {
     cairo_status_t status;
     cairo_rectangle_int_t extents, source_extents, mask_extents;
 
     status = _cairo_surface_get_extents (surface, &extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     if (_cairo_operator_bounded_by_mask (op)) {
 	status = _cairo_pattern_get_extents (mask, &mask_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &mask_extents);
+	if (! _cairo_rectangle_intersect (&extents, &mask_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _clip_and_composite (surface->clip, op,
 				  source,
 				  _cairo_surface_mask_draw_func,
-				  mask,
+				  (void *) mask,
 				  surface,
 				  &extents);
 
@@ -784,7 +836,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 cairo_status_t
 _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 				cairo_operator_t	 op,
-				cairo_pattern_t		*source,
+				const cairo_pattern_t	*source,
 				cairo_path_fixed_t	*path,
 				cairo_stroke_style_t	*stroke_style,
 				cairo_matrix_t		*ctm,
@@ -798,20 +850,21 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     cairo_rectangle_int_t extents;
 
     status = _cairo_surface_get_extents (surface, &extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     if (extents.width == 0 || extents.height == 0)
@@ -827,7 +880,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 						ctm, ctm_inverse,
 						tolerance,
 						&traps);
-    if (status)
+    if (unlikely (status))
 	goto FAIL;
 
     status = _clip_and_composite_trapezoids (source,
@@ -846,7 +899,7 @@ FAIL:
 cairo_status_t
 _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
-			      cairo_pattern_t		*source,
+			      const cairo_pattern_t	*source,
 			      cairo_path_fixed_t	*path,
 			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
@@ -858,27 +911,68 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     cairo_rectangle_int_t extents;
 
     status = _cairo_surface_get_extents (surface, &extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
+
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     if (extents.width == 0 || extents.height == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_box_from_rectangle (&box, &extents);
+    /* Ask if the surface would like to render this combination of
+     * op/source/dst/antialias with spans or not, but don't actually
+     * make a renderer yet.  We'll try to hit the region optimisations
+     * in _clip_and_composite_trapezoids() if it looks like the path
+     * is a region. */
+    /* TODO: Until we have a mono scan converter we won't even try
+     * to use spans for CAIRO_ANTIALIAS_NONE. */
+    /* TODO: The region filling code should be lifted from
+     * _clip_and_composite_trapezoids() and given first priority
+     * explicitly before deciding between spans and trapezoids. */
+    if (antialias != CAIRO_ANTIALIAS_NONE &&
+	!_cairo_path_fixed_is_box (path, &box) &&
+	!_cairo_path_fixed_is_region (path) &&
+	_cairo_surface_check_span_renderer (
+	    op, source, surface, antialias, NULL))
+    {
+	cairo_composite_spans_fill_info_t info;
+	info.path = path;
+	info.fill_rule = fill_rule;
+	info.tolerance = tolerance;
+	info.antialias = antialias;
 
+	if (_cairo_operator_bounded_by_mask (op)) {
+	    cairo_rectangle_int_t path_extents;
+
+	    _cairo_path_fixed_approximate_clip_extents (path,
+							&path_extents);
+	    if (! _cairo_rectangle_intersect (&extents, &path_extents))
+		return CAIRO_STATUS_SUCCESS;
+	}
+
+	return _clip_and_composite (
+	    surface->clip, op, source,
+	    _composite_spans_fill_func,
+	    &info,
+	    surface,
+	    &extents);
+    }
+
+    /* Fall back to trapezoid fills. */
+    _cairo_box_from_rectangle (&box, &extents);
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, &box);
 
@@ -886,7 +980,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 					      fill_rule,
 					      tolerance,
 					      &traps);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_traps_fini (&traps);
 	return status;
     }
@@ -912,7 +1006,7 @@ typedef struct {
 static cairo_status_t
 _cairo_surface_old_show_glyphs_draw_func (void                          *closure,
 					  cairo_operator_t               op,
-					  cairo_pattern_t               *src,
+					  const cairo_pattern_t         *src,
 					  cairo_surface_t               *dst,
 					  int                            dst_x,
 					  int                            dst_y,
@@ -973,7 +1067,7 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 cairo_status_t
 _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				     cairo_operator_t		 op,
-				     cairo_pattern_t		*source,
+				     const cairo_pattern_t	*source,
 				     cairo_glyph_t		*glyphs,
 				     int			 num_glyphs,
 				     cairo_scaled_font_t	*scaled_font)
@@ -983,7 +1077,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
     cairo_show_glyphs_info_t glyph_info;
 
     status = _cairo_surface_get_extents (surface, &extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (_cairo_operator_bounded_by_mask (op)) {
@@ -993,14 +1087,15 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 							  glyphs,
 							  num_glyphs,
 							  &glyph_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &glyph_extents);
+	if (! _cairo_rectangle_intersect (&extents, &glyph_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     glyph_info.font = scaled_font;
@@ -1029,20 +1124,18 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     status = _cairo_surface_acquire_source_image (surface,
 						  &image, &image_extra);
-    if (status)
+    if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
     snapshot = cairo_image_surface_create (image->format,
 					   image->width,
 					   image->height);
     if (cairo_surface_status (snapshot)) {
-	_cairo_surface_release_source_image (surface,
-					     image, image_extra);
+	_cairo_surface_release_source_image (surface, image, image_extra);
 	return snapshot;
     }
 
     _cairo_pattern_init_for_surface (&pattern, &image->base);
-
     status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 			               &pattern.base,
 				       NULL,
@@ -1052,43 +1145,35 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 				       0, 0,
 				       image->width,
 				       image->height);
-
     _cairo_pattern_fini (&pattern.base);
-    _cairo_surface_release_source_image (surface,
-					 image, image_extra);
-
-    if (status) {
+    _cairo_surface_release_source_image (surface, image, image_extra);
+    if (unlikely (status)) {
 	cairo_surface_destroy (snapshot);
 	return _cairo_surface_create_in_error (status);
     }
-
-    snapshot->device_transform = surface->device_transform;
-    snapshot->device_transform_inverse = surface->device_transform_inverse;
-
-    snapshot->is_snapshot = TRUE;
 
     return snapshot;
 }
 
 cairo_status_t
-_cairo_surface_fallback_composite (cairo_operator_t	op,
-				   cairo_pattern_t	*src,
-				   cairo_pattern_t	*mask,
-				   cairo_surface_t	*dst,
-				   int			src_x,
-				   int			src_y,
-				   int			mask_x,
-				   int			mask_y,
-				   int			dst_x,
-				   int			dst_y,
-				   unsigned int		width,
-				   unsigned int		height)
+_cairo_surface_fallback_composite (cairo_operator_t		 op,
+				   const cairo_pattern_t	*src,
+				   const cairo_pattern_t	*mask,
+				   cairo_surface_t		*dst,
+				   int				 src_x,
+				   int				 src_y,
+				   int				 mask_x,
+				   int				 mask_y,
+				   int				 dst_x,
+				   int				 dst_y,
+				   unsigned int			 width,
+				   unsigned int			 height)
 {
     fallback_state_t state;
     cairo_status_t status;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
-    if (status) {
+    if (unlikely (status)) {
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 	return status;
@@ -1142,14 +1227,14 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 	if (rects[i].y < y1)
 	    y1 = rects[i].y;
 
-	if ((int)(rects[i].x + rects[i].width) > x2)
+	if ((int) (rects[i].x + rects[i].width) > x2)
 	    x2 = rects[i].x + rects[i].width;
-	if ((int)(rects[i].y + rects[i].height) > y2)
+	if ((int) (rects[i].y + rects[i].height) > y2)
 	    y2 = rects[i].y + rects[i].height;
     }
 
     status = _fallback_init (&state, surface, x1, y1, x2 - x1, y2 - y1);
-    if (status) {
+    if (unlikely (status)) {
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 	return status;
@@ -1159,7 +1244,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
 	offset_rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int_t));
-	if (offset_rects == NULL) {
+	if (unlikely (offset_rects == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
@@ -1188,7 +1273,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 
 cairo_status_t
 _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
-					      cairo_pattern_t	       *pattern,
+					      const cairo_pattern_t    *pattern,
 					      cairo_surface_t	       *dst,
 					      cairo_antialias_t		antialias,
 					      int			src_x,
@@ -1205,7 +1290,7 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     cairo_status_t status;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
-    if (status) {
+    if (unlikely (status)) {
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 	return status;
@@ -1254,12 +1339,12 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       int		*clone_offset_y,
 				       cairo_surface_t **clone_out)
 {
+    cairo_surface_t *new_surface;
+    cairo_surface_pattern_t pattern;
     cairo_status_t status;
-    cairo_surface_t *new_surface = NULL;
-    cairo_t *cr;
 
     new_surface = _cairo_surface_create_similar_scratch (surface,
-							 cairo_surface_get_content (src),
+							 src->content,
 							 width, height);
     if (new_surface->status)
 	return new_surface->status;
@@ -1268,25 +1353,22 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     new_surface->device_transform = src->device_transform;
     new_surface->device_transform_inverse = src->device_transform_inverse;
 
-    /* We can't use _cairo_composite directly, because backends that
-     * implement the "high-level" API may not have it implemented.
-     * (For example, SVG.)  We can fix this by either checking if the
-     * destination supports composite first, or we can make clone a
-     * required "high-level" operation.
-     */
-    cr = cairo_create (new_surface);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface (cr, src, -src_x, -src_y);
-    cairo_paint (cr);
-    status = cairo_status (cr);
-    cairo_destroy (cr);
+    _cairo_pattern_init_for_surface (&pattern, src);
+    cairo_matrix_init_translate (&pattern.base.matrix, src_x, src_y);
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
 
-    if (status == CAIRO_STATUS_SUCCESS) {
-	*clone_offset_x = src_x;
-	*clone_offset_y = src_y;
-	*clone_out = new_surface;
-    } else
+    status = _cairo_surface_paint (new_surface,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base, NULL);
+    _cairo_pattern_fini (&pattern.base);
+
+    if (unlikely (status)) {
 	cairo_surface_destroy (new_surface);
+	return status;
+    }
 
-    return status;
+    *clone_offset_x = src_x;
+    *clone_offset_y = src_y;
+    *clone_out = new_surface;
+    return CAIRO_STATUS_SUCCESS;
 }

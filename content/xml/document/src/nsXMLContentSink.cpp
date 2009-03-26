@@ -58,7 +58,6 @@
 #include "nsIDOMCDATASection.h"
 #include "nsDOMDocumentType.h"
 #include "nsHTMLParts.h"
-#include "nsVoidArray.h"
 #include "nsCRT.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"

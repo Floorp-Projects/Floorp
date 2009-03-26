@@ -78,6 +78,9 @@ typedef PRUint32 PRIntervalTime;
 **  Two reserved constants are defined in the PRIntervalTime namespace.
 **  They are used to indicate that the process should wait no time (return
 **  immediately) or wait forever (never time out), respectively.
+**  Note: PR_INTERVAL_NO_TIMEOUT passed as input to PR_Connect is 
+**  interpreted as use the OS's connect timeout.
+**  
 ***********************************************************************/
 #define PR_INTERVAL_NO_WAIT 0UL
 #define PR_INTERVAL_NO_TIMEOUT 0xffffffffUL

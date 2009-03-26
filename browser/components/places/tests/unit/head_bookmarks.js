@@ -167,7 +167,7 @@ function check_no_bookmarks() {
   root.containerOpen = false;
 }
 
-let gTestDir = do_get_file("browser/components/places/tests/unit/");
+let gTestDir = do_get_cwd();
 const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
 let backup_date = new Date().toLocaleFormat("%Y-%m-%d");
 const FILENAME_BOOKMARKS_JSON = "bookmarks-" + backup_date + ".json";

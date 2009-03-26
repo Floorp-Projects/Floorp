@@ -227,7 +227,7 @@ const checkListener = {
 }
 
 // Get the HTTP server.
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 var testserver;
 var updateItems = [];
 
@@ -323,7 +323,7 @@ function do_check_item(aItem, aVersion, aAddonsEntry) {
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "5", "1.9");
 
-  const dataDir = do_get_file("toolkit/mozapps/extensions/test/unit/data");
+  const dataDir = do_get_file("data");
   const addonsDir = do_get_addon(ADDONS[0].addon).parent;
 
   // Make sure we can actually get our data files.

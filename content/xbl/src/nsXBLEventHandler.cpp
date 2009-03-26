@@ -136,9 +136,8 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
 
   PRBool executed = PR_FALSE;
-  for (PRUint32 i = 0; i < mProtoHandlers.Count(); ++i) {
-    nsXBLPrototypeHandler* handler = static_cast<nsXBLPrototypeHandler*>
-                                                (mProtoHandlers[i]);
+  for (PRUint32 i = 0; i < mProtoHandlers.Length(); ++i) {
+    nsXBLPrototypeHandler* handler = mProtoHandlers[i];
     PRBool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
     if ((trustedEvent ||
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
@@ -154,7 +153,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
 NS_IMETHODIMP
 nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
-  PRUint32 count = mProtoHandlers.Count();
+  PRUint32 count = mProtoHandlers.Length();
   if (count == 0)
     return NS_ERROR_FAILURE;
 

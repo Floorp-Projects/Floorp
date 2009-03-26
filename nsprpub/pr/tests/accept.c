@@ -83,7 +83,7 @@
 
 #define SERVER_MAX_BIND_COUNT        100
 
-#if defined(XP_MAC) || defined(XP_OS2)
+#if defined(XP_MAC) || defined(XP_OS2) || defined(SYMBIAN)
 #define TIMEOUTSECS 10
 #else
 #define TIMEOUTSECS 2

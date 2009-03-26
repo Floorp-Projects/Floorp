@@ -222,7 +222,7 @@ menuitem:not([type]) {
 }
 
 #placesContext_open\:newwindow,
-menuitem[command="cmd_newNavigator"],
+#menu_newNavigator,
 #context-openlink,
 #context-openframe {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
@@ -231,14 +231,14 @@ menuitem[command="cmd_newNavigator"],
 
 #placesContext_open\:newtab,
 #placesContext_openContainer\:tabs,
-menuitem[command="cmd_newNavigatorTab"],
+#menu_newNavigatorTab,
 #context-openlinkintab,
 #context-openframeintab {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 64px 16px 48px);
 }
 
-menuitem[command="Browser:OpenFile"] {
+#menu_openFile {
   list-style-image: url("moz-icon://stock/gtk-open?size=menu");
 }
 
@@ -254,7 +254,7 @@ menuitem[command="Browser:OpenFile"] {
   list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
 }
 
-menuitem[command="Browser:SavePage"],
+#menu_savePage,
 #context-savelink,
 #context-saveimage,
 #context-savevideo,
@@ -264,11 +264,11 @@ menuitem[command="Browser:SavePage"],
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
 }
 
-menuitem[command="cmd_printPreview"] {
+#menu_printPreview {
   list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
 }
 
-menuitem[command="cmd_print"],
+#menu_print,
 #context-printframe {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu");
 }
@@ -277,35 +277,38 @@ menuitem[command="cmd_print"],
   list-style-image: url("moz-icon://stock/gtk-quit?size=menu");
 }
 
-menuitem[command="cmd_undo"],
+#menu_undo,
 #context-undo {
   list-style-image: url("moz-icon://stock/gtk-undo?size=menu");
 }
 
-menuitem[command="cmd_undo"][disabled],
+#menu_undo[disabled],
 #context-undo[disabled] {
   list-style-image: url("moz-icon://stock/gtk-undo?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_redo"] {
+#menu_redo {
   list-style-image: url("moz-icon://stock/gtk-redo?size=menu");
 }
 
-menuitem[command="cmd_redo"][disabled] {
+#menu_redo[disabled] {
   list-style-image: url("moz-icon://stock/gtk-redo?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_cut"],
+#menu_cut,
+#placesContext_cut,
 #context-cut {
   list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
 }
 
-menuitem[command="cmd_cut"][disabled],
+#menu_cut[disabled],
+#placesContext_cut[disabled],
 #context-cut[disabled] {
   list-style-image: url("moz-icon://stock/gtk-cut?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_copy"],
+#menu_copy,
+#placesContext_copy,
 #context-copy,
 #context-copyimage,
 #context-copyvideourl,
@@ -315,32 +318,40 @@ menuitem[command="cmd_copy"],
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
 
-menuitem[command="cmd_copy"][disabled],
+#menu_copy[disabled],
+#placesContext_copy[disabled],
 #context-copy[disabled] {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_paste"],
+#menu_paste,
+#placesContext_paste,
 #context-paste {
   list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
 }
 
-menuitem[command="cmd_paste"][disabled],
+#menu_paste[disabled],
+#placesContext_paste[disabled],
 #context-paste[disabled] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_delete"],
+#menu_delete,
+#placesContext_delete,
+#placesContext_delete_history,
 #context-delete {
   list-style-image: url("moz-icon://stock/gtk-delete?size=menu");
 }
 
-menuitem[command="cmd_delete"][disabled],
+#menu_delete[disabled],
+#placesContext_delete[disabled],
+#placesContext_delete_history[disabled],
 #context-delete[disabled] {
   list-style-image: url("moz-icon://stock/gtk-delete?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_selectAll"] {
+#menu_selectAll,
+#context-selectall {
   list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
 }
 
@@ -356,77 +367,77 @@ menuitem[command="cmd_selectAll"] {
   list-style-image: url("moz-icon://stock/gtk-preferences?size=menu");
 }
 
-menuitem[command="Browser:Stop"],
+#menu_stop,
 #context-stop {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 
-menuitem[command="Browser:Stop"][disabled],
+#menu_stop[disabled],
 #context-stop[disabled] {
   list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
 }
 
+#menu_reload,
 #placesContext_reload,
 #placesContext_reloadMicrosummary,
-menuitem[command="Browser:ReloadOrDuplicate"],
 #context-reload,
 #context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
-menuitem[command="Browser:ReloadOrDuplicate"][disabled],
+#menu_reload[disabled],
 #context-reload[disabled] {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
 
-menuitem[command="cmd_fullZoomEnlarge"] {
+#menu_zoomEnlarge {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
 }
 
-menuitem[command="cmd_fullZoomReduce"] {
+#menu_zoomReduce {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=menu");
 }
 
-menuitem[command="cmd_fullZoomReset"] {
+#menu_zoomReset {
   list-style-image: url("moz-icon://stock/gtk-zoom-100?size=menu");
 }
 
-menuitem[key="goBackKb"],
+#historyMenuBack,
 #context-back {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
 }
 
-menuitem[key="goBackKb"][disabled],
+#historyMenuBack[disabled],
 #context-back[disabled] {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
-menuitem[key="goBackKb"][chromedir="rtl"],
+#historyMenuBack[chromedir="rtl"],
 #context-back[chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
-menuitem[key="goBackKb"][disabled][chromedir="rtl"],
+#historyMenuBack[disabled][chromedir="rtl"],
 #context-back[disabled][chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
 }
 
-menuitem[key="goForwardKb"],
+#historyMenuForward,
 #context-forward {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
 }
 
-menuitem[key="goForwardKb"][disabled],
+#historyMenuForward[disabled],
 #context-forward[disabled] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
-menuitem[key="goForwardKb"][chromedir="rtl"],
+#historyMenuForward[chromedir="rtl"],
 #context-forward[chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
-menuitem[key="goForwardKb"][disabled][chromedir="rtl"],
+#historyMenuForward[disabled][chromedir="rtl"],
 #context-forward[disabled][chromedir="rtl"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
@@ -435,12 +446,12 @@ menuitem[key="goForwardKb"][disabled][chromedir="rtl"],
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
 
-menuitem[command="Browser:ShowAllHistory"] {
+#menu_showAllHistory {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-menuitem[command="Browser:ShowAllBookmarks"] {
+#bookmarksShowAll {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 48px 16px 32px);
 }
@@ -454,7 +465,7 @@ menuitem[command="Browser:ShowAllBookmarks"] {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-menuitem[command="View:PageInfo"],
+#menu_pageInfo,
 #context-viewinfo,
 #context-viewframeinfo {
   list-style-image: url("moz-icon://stock/gtk-info?size=menu");
@@ -469,7 +480,7 @@ menuitem[command="View:PageInfo"],
   list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
 }
 
-menuitem[key="key_openHelp"] {
+#menu_openHelp {
   list-style-image: url("moz-icon://stock/gtk-help?size=menu");
 }
 

@@ -63,7 +63,6 @@ REQUIRES	= \
 
 CPPSRCS		= \
 		nsIFileEnumerator.cpp \
-		nsIFileTest.cpp \
 		TestCallTemplates.cpp \
 		TestINIParser.cpp \
 		TestRacingServiceManager.cpp \
@@ -90,6 +89,7 @@ CPP_UNIT_TESTS = \
                  TestCOMPtr.cpp \
                  TestCOMPtrEq.cpp \
                  TestFactory.cpp \
+                 TestFile.cpp \
                  TestHashtables.cpp \
                  TestID.cpp \
                  TestObserverService.cpp \
@@ -152,6 +152,7 @@ LOCAL_INCLUDES	= \
 
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
+	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(MODULE)/unit
 
 # Copy TestHarness.h into its own module, for ease of setting up includes
 # correctly.

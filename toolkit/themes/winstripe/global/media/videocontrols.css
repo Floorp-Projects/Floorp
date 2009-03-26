@@ -87,13 +87,20 @@
     min-height: 20px;
 }
 
-.throbberOverlay {
+.statusOverlay {
     background-color: rgba(0,0,0,0.55);
 }
 
-.throbber {
-    background: url(chrome://global/skin/media/throbber.png) no-repeat center;
-    height: 36px;
+.statusIcon {
+    margin-bottom: 28px; /* same height as .controlBar, to keep icon centered above it */
     width: 36px;
-    margin-bottom: 28px; /* same height as .controlBar, to keep throbber centered above it */
+    height: 36px;
+}
+
+.statusIcon[type="throbber"] {
+    background: url(chrome://global/skin/media/throbber.png) no-repeat center;
+}
+
+.statusIcon[type="error"] {
+    background: url(chrome://global/skin/media/error.png) no-repeat center;
 }

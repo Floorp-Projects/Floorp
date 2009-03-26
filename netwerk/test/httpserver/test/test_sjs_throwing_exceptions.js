@@ -48,7 +48,7 @@ const PORT = 4444;
 function run_test()
 {
   var srv = createServer();
-  var sjsDir = do_get_file("netwerk/test/httpserver/test/data/sjs/");
+  var sjsDir = do_get_file("data/sjs/");
   srv.registerDirectory("/", sjsDir);
   srv.registerContentType("sjs", "sjs");
   srv.start(PORT);

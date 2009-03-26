@@ -13,7 +13,7 @@
 // Please see RFC 2616 section 13.2.1 6th paragraph for the
 // definition of "explicit expiration time" being used here.
 
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 
 var httpserver = new nsHttpServer();
 var index = 0;

@@ -1887,6 +1887,14 @@ var gCSSProperties = {
 		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
+	"image-rendering": {
+		domProp: null,
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "optimizeSpeed", "optimizeQuality", "-moz-disable-resampling" ],
+		invalid_values: []
+	},
 	"lighting-color": {
 		domProp: null,
 		inherited: false,

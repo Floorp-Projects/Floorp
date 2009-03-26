@@ -558,9 +558,8 @@ PRInt32 nsTreeWalker::IndexOf(nsINode* aParent,
                               nsINode* aChild,
                               PRInt32 aIndexPos)
 {
-    if (aIndexPos >= 0 && aIndexPos < mPossibleIndexes.Count()) {
-        PRInt32 possibleIndex =
-            NS_PTR_TO_INT32(mPossibleIndexes.FastElementAt(aIndexPos));
+    if (aIndexPos >= 0 && aIndexPos < PRInt32(mPossibleIndexes.Length())) {
+        PRInt32 possibleIndex = mPossibleIndexes.ElementAt(aIndexPos);
         if (aChild == aParent->GetChildAt(possibleIndex)) {
             return possibleIndex;
         }

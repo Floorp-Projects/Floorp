@@ -62,9 +62,9 @@ _cairo_region_init_boxes (cairo_region_t *region,
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
 
-    if (count > ARRAY_LENGTH(stack_pboxes)) {
-	pboxes = _cairo_malloc_ab (count, sizeof(pixman_box32_t));
-	if (pboxes == NULL)
+    if (count > ARRAY_LENGTH (stack_pboxes)) {
+	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
+	if (unlikely (pboxes == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -75,7 +75,7 @@ _cairo_region_init_boxes (cairo_region_t *region,
 	pboxes[i].y2 = boxes[i].p2.y;
     }
 
-    if (!pixman_region32_init_rects (&region->rgn, pboxes, count))
+    if (! pixman_region32_init_rects (&region->rgn, pboxes, count))
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (pboxes != stack_pboxes)
@@ -105,43 +105,19 @@ _cairo_region_num_boxes (cairo_region_t *region)
     return pixman_region32_n_rects (&region->rgn);
 }
 
-cairo_int_status_t
-_cairo_region_get_boxes (cairo_region_t *region, int *num_boxes, cairo_box_int_t **boxes)
+cairo_private void
+_cairo_region_get_box (cairo_region_t *region,
+		       int nth_box,
+		       cairo_box_int_t *box)
 {
-    int nboxes;
-    pixman_box32_t *pboxes;
-    cairo_box_int_t *cboxes;
-    int i;
+    pixman_box32_t *pbox;
 
-    pboxes = pixman_region32_rectangles (&region->rgn, &nboxes);
+    pbox = pixman_region32_rectangles (&region->rgn, NULL) + nth_box;
 
-    if (nboxes == 0) {
-	*num_boxes = 0;
-	*boxes = NULL;
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    cboxes = _cairo_malloc_ab (nboxes, sizeof(cairo_box_int_t));
-    if (cboxes == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    for (i = 0; i < nboxes; i++) {
-	cboxes[i].p1.x = pboxes[i].x1;
-	cboxes[i].p1.y = pboxes[i].y1;
-	cboxes[i].p2.x = pboxes[i].x2;
-	cboxes[i].p2.y = pboxes[i].y2;
-    }
-
-    *num_boxes = nboxes;
-    *boxes = cboxes;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-void
-_cairo_region_boxes_fini (cairo_region_t *region, cairo_box_int_t *boxes)
-{
-    free (boxes);
+    box->p1.x = pbox->x1;
+    box->p1.y = pbox->y1;
+    box->p2.x = pbox->x2;
+    box->p2.y = pbox->y2;
 }
 
 /**
@@ -207,7 +183,8 @@ _cairo_region_translate (cairo_region_t *region,
 }
 
 pixman_region_overlap_t
-_cairo_region_contains_rectangle (cairo_region_t *region, cairo_rectangle_int_t *rect)
+_cairo_region_contains_rectangle (cairo_region_t *region,
+				  const cairo_rectangle_int_t *rect)
 {
     pixman_box32_t pbox;
 

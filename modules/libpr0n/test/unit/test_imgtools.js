@@ -2,7 +2,6 @@
  * Tests for imgITools
  */
 
-const TESTDIR = "modules/libpr0n/test/unit/";
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
@@ -145,7 +144,7 @@ testdesc = "test decoding a PNG";
 // 64x64 png, 10698 bytes.
 var imgName = "image1.png";
 var inMimeType = "image/png";
-var imgFile = do_get_file(TESTDIR + imgName);
+var imgFile = do_get_file(imgName);
 
 var istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 10698);
@@ -170,7 +169,7 @@ istream = imgTools.encodeScaledImage(container, "image/jpeg", 16, 16);
 var encodedBytes = streamToArray(istream);
 // Get bytes for exected result
 var refName = "image1png16x16.jpg";
-var refFile = do_get_file(TESTDIR + refName);
+var refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 1081);
 var referenceBytes = streamToArray(istream);
@@ -189,7 +188,7 @@ encodedBytes = streamToArray(istream);
 
 // Get bytes for exected result
 refName = "image1png64x64.jpg";
-refFile = do_get_file(TESTDIR + refName);
+refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 4493);
 referenceBytes = streamToArray(istream);
@@ -205,7 +204,7 @@ testdesc = "test decoding a JPEG";
 // 32x32 jpeg, 3494 bytes.
 imgName = "image2.jpg";
 inMimeType = "image/jpeg";
-imgFile = do_get_file(TESTDIR + imgName);
+imgFile = do_get_file(imgName);
 
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 3494);
@@ -231,7 +230,7 @@ istream = imgTools.encodeScaledImage(container, "image/png", 16, 16);
 encodedBytes = streamToArray(istream);
 // Get bytes for exected result
 refName = isWindows ? "image2jpg16x16-win.png" : "image2jpg16x16.png";
-refFile = do_get_file(TESTDIR + refName);
+refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 948);
 referenceBytes = streamToArray(istream);
@@ -252,7 +251,7 @@ encodedBytes = streamToArray(istream);
 
 // Get bytes for exected result
 refName = isWindows ? "image2jpg32x32-win.png" : "image2jpg32x32.png";
-refFile = do_get_file(TESTDIR + refName);
+refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 3105);
 referenceBytes = streamToArray(istream);
@@ -269,7 +268,7 @@ testdesc = "test decoding a ICO";
 // 16x16 ico, 1406 bytes.
 imgName = "image3.ico";
 inMimeType = "image/x-icon";
-imgFile = do_get_file(TESTDIR + imgName);
+imgFile = do_get_file(imgName);
 
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 1406);
@@ -294,7 +293,7 @@ encodedBytes = streamToArray(istream);
 
 // Get bytes for exected result
 refName = "image3ico32x32.png";
-refFile = do_get_file(TESTDIR + refName);
+refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 2281);
 referenceBytes = streamToArray(istream);
@@ -313,7 +312,7 @@ encodedBytes = streamToArray(istream);
 
 // Get bytes for exected result
 refName = "image3ico16x16.png";
-refFile = do_get_file(TESTDIR + refName);
+refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 330);
 referenceBytes = streamToArray(istream);
@@ -341,11 +340,11 @@ var testData =
 for(var i=0; i<testData.length; ++i) {
     var dict = testData[i];
 
-    var imgFile = do_get_file(TESTDIR + dict["refImage"]);
+    var imgFile = do_get_file(dict["refImage"]);
     var istream = getFileInputStream(imgFile);
     var refBytes = streamToArray(istream);
 
-    imgFile = do_get_file(TESTDIR + dict["preImage"]);
+    imgFile = do_get_file(dict["preImage"]);
     istream = getFileInputStream(imgFile);
 
     var outParam = { value: null };
@@ -379,7 +378,7 @@ testdesc = "test decoding bad favicon (bug 413512)";
 
 imgName = "bug413512.ico";
 inMimeType = "image/x-icon";
-imgFile = do_get_file(TESTDIR + imgName);
+imgFile = do_get_file(imgName);
 
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 17759);

@@ -186,7 +186,7 @@ xhr.prototype = {
 function remove_dirs_and_files () {
   var fileLocator = AUS_Cc["@mozilla.org/file/directory_service;1"]
                       .getService(AUS_Ci.nsIProperties);
-  var dir = fileLocator.get("XCurProcD", AUS_Ci.nsIFile);
+  var dir = fileLocator.get("GreD", AUS_Ci.nsIFile);
 
   var file = dir.clone();
   file.append("active-update.xml");
@@ -247,9 +247,9 @@ function remove_dirs_and_files () {
  *          toolkit/mozapps/update/test/unit/
  */
 function start_httpserver(aRelativeDirName) {
-  do_import_script("netwerk/test/httpserver/httpd.js");
+  do_load_httpd_js();
   gTestserver = new nsHttpServer();
-  gTestserver.registerDirectory("/data/", do_get_file("toolkit/mozapps/update/test/unit/" + aRelativeDirName));
+  gTestserver.registerDirectory("/data/", do_get_file(aRelativeDirName));
   gTestserver.start(4444);
 }
 

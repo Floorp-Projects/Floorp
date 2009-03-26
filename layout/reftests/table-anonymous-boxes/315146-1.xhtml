@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" class="reftest-wait">
+<head>
+	<script type="text/javascript"><![CDATA[
+	function DeleteRow(container) {
+		if (container.firstChild)
+			container.removeChild(container.firstChild);
+	}
+
+	function AddRow(container) {
+		var tr = document.createElement("tr");
+		var td = document.createElement("td");
+		td.appendChild(document.createTextNode("A cell"));
+		tr.appendChild(td);
+		container.appendChild(tr);
+	}
+
+        function doTest() {
+          for (var i = 0; i < 10; ++i) {
+            document.body.offsetWidth;
+            AddRow(document.getElementById('table'));
+            document.body.offsetWidth;
+            DeleteRow(document.getElementById('table'));
+          }
+          document.documentElement.className = '';
+        }
+	]]></script>
+</head>
+<body onload="doTest()">
+<table id="table" border="5"><tr><td>A cell</td></tr></table>
+</body>
+</html>

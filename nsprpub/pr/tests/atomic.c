@@ -47,7 +47,7 @@
  *     result |= !(EXPRESSION);
  */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRInt32 rv, oldval, test, result = 0;
     PRFileDesc *output = PR_GetSpecialFD(PR_StandardOutput);

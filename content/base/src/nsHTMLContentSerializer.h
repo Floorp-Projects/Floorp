@@ -48,6 +48,7 @@
 #include "nsXMLContentSerializer.h"
 #include "nsIEntityConverter.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 class nsIContent;
 class nsIAtom;
@@ -168,7 +169,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
     PRBool isFirstListItem;
   };
 
-  nsAutoVoidArray   mOLStateStack;// Stack to store one olState struct per <OL>.
+  // Stack to store one olState struct per <OL>.
+  nsAutoTArray<olState*, 8> mOLStateStack;
 };
 
 nsresult
