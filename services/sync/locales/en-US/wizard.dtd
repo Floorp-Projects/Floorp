@@ -53,9 +53,9 @@
 <!ENTITY bookmarks.label                  "Bookmarks">
 <!ENTITY history.label                    "Browsing History">
 <!ENTITY cookies.label                    "Cookies">
-<!ENTITY passwords.label                  "Saved Passwords [experimental]">
+<!ENTITY passwords.label                  "Saved Passwords">
 <!ENTITY tabs.label                       "Tabs">
-<!ENTITY formdata.label                   "Saved Form Data [experimental]">
+<!ENTITY forms.label                      "Saved Form Data">
 
 <!ENTITY captcha.label                    "Type the characters you see in the image below:">
 <!ENTITY reloadCaptcha.text               "Reload">
