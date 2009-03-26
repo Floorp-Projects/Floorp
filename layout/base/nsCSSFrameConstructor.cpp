@@ -8746,6 +8746,28 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     }
   }
 
+  // Might need to reconstruct things if this frame's nextSibling is a table
+  // pseudo, since removal of this frame might mean that this pseudo needs to
+  // get merged with the frame's prevSibling.
+  // XXXbz it would be really nice if we had the prevSibling here too, to check
+  // whether this is in fact the case...
+  nsIFrame* nextSibling = inFlowFrame->GetNextSibling();
+  NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
+  if (nextSibling && IsTablePseudo(nextSibling)) {
+#ifdef DEBUG
+    if (gNoisyContentUpdates) {
+      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
+             "frame=");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" has a table pseudo next sibling of different type\n");
+    }
+#endif
+    // Good enough to recreate frames for aFrame's parent's content; even if
+    // aFrame's parent is a table pseudo, that'll be the right content node.
+    *aResult = RecreateFramesForContent(parent->GetContent());
+    return PR_TRUE;
+  }
+
   // We might still need to reconstruct things if the parent of inFlowFrame is
   // special, since in that case the removal of aFrame might affect the
   // splitting of its parent.
@@ -10743,7 +10765,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     return PR_FALSE;
   }
   
-  // Before we go and append the frames, we must check for two
+  // Before we go and append the frames, we must check for three
   // special situations.
 
   // Situation #1 is a XUL frame that contains frames that are required
@@ -10755,7 +10777,30 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     return PR_TRUE;
   }
 
-  // Situation #2 is an inline frame that will now contain block
+  // Situation #2 is a case when table pseudo-frames don't work out right
+  ParentType parentType = GetParentType(aFrame);
+  // If all the kids want a parent of the type that aFrame is, then we're all
+  // set to go.  Indeed, there won't be any table pseudo-frames created between
+  // aFrame and the kids, so those won't need to be merged with any table
+  // pseudo-frames that might already be kids of aFrame.  If aFrame itself is a
+  // table pseudo-frame, then all the kids in this list would have wanted a
+  // frame of that type wrapping them anyway, so putting them inside it is ok.
+  if (!aItems.AllWantParentType(parentType)) {
+    // We might be able to figure out some sort of optimizations here, but they
+    // would have to depend on having a correct aPrevSibling and a correct next
+    // sibling.  For example, we can probably avoid reframing if none of
+    // aFrame, aPrevSibling, and next sibling are table pseudo-frames.  But it
+    // doesn't seem worth it to worry about that for now, especially since we
+    // in fact do not have a reliable aPrevSibling, nor any next sibling, in
+    // this method.
+
+    // Reframing aFrame->GetContent() is good enough, since the content of
+    // table pseudo-frames is the ancestor content.
+    RecreateFramesForContent(aFrame->GetContent());
+    return PR_TRUE;
+  }
+
+  // Situation #3 is an inline frame that will now contain block
   // frames. This is a no-no and the frame construction logic knows
   // how to fix this.  See defition of IsInlineFrame() for what "an
   // inline" is.  Whether we have "a block" is tested for by
