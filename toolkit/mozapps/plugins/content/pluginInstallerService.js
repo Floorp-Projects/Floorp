@@ -113,6 +113,7 @@ InstallerObserver.prototype = {
       channel.asyncOpen(this._downloader, null);
     }
     catch (e) {
+      Components.utils.reportError(e);
       this._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
                              getLocalizedError("error-228"));
       if (resultFile && resultFile.exists())
@@ -180,10 +181,28 @@ InstallerObserver.prototype = {
     try {
       // Make sure the file is executable
       result.permissions = 0770;
-      result.launch();
-      this._fireNotification(nsIXPIProgressDialog.INSTALL_DONE, null);
-      // It would be nice to remove the tempfile, but we don't have
-      // any way to know when it will stop being used :-(
+      var process = Components.classes["@mozilla.org/process/util;1"]
+                              .createInstance(Components.interfaces.nsIProcess2);
+      process.init(result);
+      var self = this;
+      process.runAsync([], 0, {
+        observe: function(subject, topic, data) {
+          if (topic != "process-finished") {
+            Components.utils.reportError("Failed to launch installer");
+            self._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
+                                   getLocalizedError("error-207"));
+          }
+          else if (process.exitValue != 0) {
+            Components.utils.reportError("Installer returned exit code " + process.exitValue);
+            self._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
+                                   getLocalizedError("error-203"));
+          }
+          else {
+            self._fireNotification(nsIXPIProgressDialog.INSTALL_DONE, null);
+          }
+          result.remove(false);
+        }
+      });
     }
     catch (e) {
       Components.utils.reportError(e);
@@ -220,10 +239,6 @@ var PluginInstallService = {
   startPluginInstallation: function (aInstallerPlugins,
                                      aXPIPlugins)
   {
-    this._installerPlugins = [new InstallerObserver(plugin)
-                              for each (plugin in aInstallerPlugins)];
-    this._installersPending = this._installerPlugins.length;
-
     this._xpiPlugins = aXPIPlugins;
 
     if (this._xpiPlugins.length > 0) {
@@ -239,6 +254,12 @@ var PluginInstallService = {
     else {
       this._xpisDone = true;
     }
+
+    // InstallerObserver may finish immediately so we must initialise the
+    // installers after setting the number of installers and xpis pending
+    this._installersPending = aInstallerPlugins.length;
+    this._installerPlugins = [new InstallerObserver(plugin)
+                              for each (plugin in aInstallerPlugins)];
   },
 
   _fireFinishedNotification: function()
