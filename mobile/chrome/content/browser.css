@@ -62,3 +62,7 @@ placetree {
 placelabel {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-label");
 }
+
+checkbox {
+  -moz-binding: url("chrome://browser/content/checkbox.xml#checkbox-radio");
+}

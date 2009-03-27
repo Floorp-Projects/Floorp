@@ -73,8 +73,6 @@ radiogroup {
 radio {
   border: 1px solid #000;
   border-left: none;
-  color: #000;
-  background: gray;
   margin: 0px;
   padding: 6px;
   -moz-box-align: center;
@@ -97,5 +95,6 @@ radio:last-child {
 }
 
 radio[selected] {
-  background: #fff;
+  color: #000;
+  background: gray;
 }

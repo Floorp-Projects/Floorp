@@ -8,6 +8,7 @@ browser.jar:
   content/commandUtil.js               (content/commandUtil.js)
   content/bindings.xml                 (content/bindings.xml)
   content/tabs.xml                     (content/tabs.xml)
+  content/checkbox.xml                 (content/checkbox.xml)
   content/notification.xml             (content/notification.xml)
   content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
