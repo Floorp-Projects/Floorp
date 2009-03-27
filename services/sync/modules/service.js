@@ -566,6 +566,8 @@ WeaveSvc.prototype = {
   createAccount: function WeaveSvc_createAccount(onComplete, username, password, email,
                                                  captchaChallenge, captchaResponse) {
     let fn = function WeaveSvc__createAccount() {
+      let self = yield;
+
       function enc(x) encodeURIComponent(x);
       let message = "uid=" + enc(username) + "&password=" + enc(password) +
         "&mail=" + enc(email) +
@@ -582,7 +584,9 @@ WeaveSvc.prototype = {
       let resp;
       try {
         resp = yield res.post(self.cb, message);
-      } catch (e) {}
+      } catch (e) {
+        this._log.trace("Create account error: " + e);
+      }
 
       if (res.lastChannel.responseStatus != 200 &&
           res.lastChannel.responseStatus != 201)
