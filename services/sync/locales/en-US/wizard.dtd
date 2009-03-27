@@ -65,8 +65,7 @@
 <!ENTITY acceptTerms.label                "I agree to the ">
 <!ENTITY acceptTerms.link                 "Weave Terms of Service">
 
-<!ENTITY final1.description               "Please review and confirm the following settings. If you would like to make any modifications, you may go back and make corrections.">
-<!ENTITY final2.description               "To complete setup, Weave will create your account, encrypt your browser settings and metadata, and perform the initial backup and synchronization with a Weave server hosted by Mozilla Labs.">
+<!ENTITY final1.description               "Weave is now finalizing your installation and performing an initial sync, encrypting your browser settings and uploading them to Mozilla.  Please wait as this process can take several minutes.">
 
 <!ENTITY initialLogin.label               "Signing you in.">
 <!ENTITY initialPrefs.label               "Setting your preferences.">
