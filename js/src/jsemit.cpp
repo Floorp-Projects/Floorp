@@ -6282,8 +6282,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
         }
 
-        JS_ASSERT(pn->pn_type == TOK_XMLLIST || pn->pn_count != 0);
-        switch (pn->pn_head ? pn->pn_head->pn_type : TOK_XMLLIST) {
+        JS_ASSERT(PN_TYPE(pn) == TOK_XMLLIST || pn->pn_count != 0);
+        switch (pn->pn_head ? PN_TYPE(pn->pn_head) : TOK_XMLLIST) {
           case TOK_XMLETAGO:
             JS_ASSERT(0);
             /* FALL THROUGH */

@@ -3754,7 +3754,7 @@ Replace(JSContext *cx, JSXML *xml, uint32 i, jsval v)
             vxml = (JSXML *) JS_GetPrivate(cx, vobj);
     }
 
-    switch (vxml ? vxml->xml_class : JSXML_CLASS_LIMIT) {
+    switch (vxml ? (JSXMLClass) vxml->xml_class : JSXML_CLASS_LIMIT) {
       case JSXML_CLASS_ELEMENT:
         /* OPTION: enforce that descendants have superset namespaces. */
         if (!CheckCycle(cx, xml, vxml))
