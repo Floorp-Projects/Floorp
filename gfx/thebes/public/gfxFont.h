@@ -548,6 +548,7 @@ public:
         gfxFloat strikeoutOffset;
         gfxFloat underlineSize;
         gfxFloat underlineOffset;
+        gfxFloat height;
 
         gfxFloat internalLeading;
         gfxFloat externalLeading;
@@ -864,7 +865,7 @@ public:
     PRBool CanBreakLineBefore(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore();
-    }
+    }    
 
     PRUint32 GetLength() { return mCharacterCount; }
 
@@ -1230,11 +1231,6 @@ public:
         PRBool IsLigatureGroupStart() const {
             return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_LIGATURE_GROUP_START);
         }
-        PRBool IsLigatureContinuation() const {
-            return (mValue & FLAG_IS_SIMPLE_GLYPH) == 0 &&
-                (mValue & (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING)) ==
-                    (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING);
-        }
 
         PRBool CanBreakBefore() const { return (mValue & FLAG_CAN_BREAK_BEFORE) != 0; }
         // Returns FLAG_CAN_BREAK_BEFORE if the setting changed, 0 otherwise
@@ -1371,7 +1367,6 @@ public:
     nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex, PRBool aForceNewRun = PR_FALSE);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
     void SortGlyphRuns();
-    void SanitizeGlyphRuns();
 
     // Call the following glyph-setters during initialization or during reshaping
     // only. It is OK to overwrite existing data for a character.

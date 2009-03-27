@@ -411,8 +411,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 348809-2h.html 348809-2-ref.html
 == 349695-1a.html 349695-1-ref.html
 == 349695-1b.html 349695-1-ref.html
-# fails with CoreText rendering due to clipping of one subpixel-antialiasing pixel at end of text
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 350506-1.html 350506-1-ref.html
+== 350506-1.html 350506-1-ref.html
 == 351641-1a.html 351641-1-ref.html
 == 351641-1b.html 351641-1-ref.html
 == 351641-2a.html 351641-2-ref.html
@@ -674,7 +673,6 @@ random == 387876-2.html 387876-2-ref.html # bug 471630
 == 388026-1.html 388026-1-ref.html
 == 388367-1.html about:blank
 == 388980-1.html 388980-1-ref.html
-== 389074-1.html 389074-1-ref.html
 == 389468-1.html 389468-1-ref.html
 == 389623-1.html 389623-1-ref.html
 == 389636-1.html about:blank  # assertion test
