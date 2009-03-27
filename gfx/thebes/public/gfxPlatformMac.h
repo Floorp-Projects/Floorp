@@ -45,12 +45,9 @@
 #define MAC_OS_X_VERSION_10_4_HEX 0x00001040
 #define MAC_OS_X_VERSION_10_5_HEX 0x00001050
 
-class gfxTextRun;
-
 class THEBES_API gfxPlatformMac : public gfxPlatform {
 public:
     gfxPlatformMac();
-    virtual ~gfxPlatformMac();
 
     static gfxPlatformMac *GetPlatform() {
         return (gfxPlatformMac*) gfxPlatform::GetPlatform();
@@ -96,13 +93,7 @@ public:
 
     // lower threshold on font anti-aliasing
     PRUint32 GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
-
-    // record Unicode cluster boundaries in the text run
-    static void SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString);
-
-    // map a Unicode range (based on char code) to a font language for Preferences
-    static eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
-
+    
 private:
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
@@ -115,12 +106,6 @@ private:
     nsTArray<PRUint32> mCJKPrefLangs;
     PRInt32 mOSXVersion;
     PRUint32 mFontAntiAliasingThreshold;
-
-#ifndef __LP64__
-    // whether to use CoreText instead of ATSUI
-    // NOTE that this must not be changed after startup, once font objects have been created
-    PRBool mUseCoreText;
-#endif
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

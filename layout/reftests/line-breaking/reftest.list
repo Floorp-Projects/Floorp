@@ -3,12 +3,9 @@
 == currency-2.html currency-2-ref.html
 == datetime-1.html datetime-1-ref.html
 == hyphens-1.html hyphens-1-ref.html
-# The following three tests may fail if rendering with Core Text (see bug 389074)
-# due to subpixel glyph positioning differences between the reference cases with <br>
-# and the automatically-wrapped lines in the test file
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == ja-1.html ja-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == ja-2.html ja-2-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == ja-3.html ja-3-ref.html
+== ja-1.html ja-1-ref.html
+== ja-2.html ja-2-ref.html
+== ja-3.html ja-3-ref.html
 == leaders-1.html leaders-1-ref.html
 == markup-src-1.html markup-src-1-ref.html
 == non-breakable-1.html non-breakable-1-ref.html

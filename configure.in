@@ -3147,27 +3147,6 @@ if test ! "$GNU_CXX"; then
 fi
 AC_CHECK_LIB(socket, socket)
 
-dnl ========================================================
-dnl Check whether we can compile code for Core Text
-dnl (Mac OS X 10.5 or later)
-dnl ========================================================
-case "$target" in
-*-darwin*)
-  AC_MSG_CHECKING([for Core Text])
-  AC_TRY_COMPILE([#include <ApplicationServices/ApplicationServices.h>],
-                 [CTLineRef lineRef;],
-                  ac_cv_have_core_text="yes",
-                  ac_cv_have_core_text="no")
-  AC_MSG_RESULT([$ac_cv_have_core_text])
-  if test "$ac_cv_have_core_text" = "yes"; then
-    AC_DEFINE(MOZ_CORETEXT, 1)
-    MOZ_CORETEXT=1
-  fi
-  ;;
-esac
-
-AC_SUBST(MOZ_CORETEXT)
-
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
 
