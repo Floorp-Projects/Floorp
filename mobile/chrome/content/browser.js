@@ -1126,6 +1126,8 @@ ProgressController.prototype = {
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
     }
+    if (!this._isStartup)
+      this._tab.updateThumbnail();
   },
 
   _documentStop: function() {
@@ -1137,8 +1139,6 @@ ProgressController.prototype = {
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
     }
-    if (!this._isStartup)
-      this._tab.updateThumbnail();
   },
 
  // Properties used to cache security state used to update the UI
