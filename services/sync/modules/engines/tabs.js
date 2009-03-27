@@ -226,6 +226,10 @@ TabStore.prototype = {
       let window = enumerator.getNext();
       let tabContainer = window.getBrowser().tabContainer;
       for each (let tabChild in tabContainer.childNodes) {
+        if (!tabChild) {
+          this._log.warn("Undefined item in tabContainer.childNodes.");
+          continue;
+        }
         if (!tabChild.QueryInterface)
           continue;
         let tab = tabChild.QueryInterface(Ci.nsIDOMNode);
