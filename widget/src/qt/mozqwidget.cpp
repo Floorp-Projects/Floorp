@@ -10,6 +10,12 @@ MozQWidget::MozQWidget(nsWindow *receiver, QWidget *parent,
     setAttribute(Qt::WA_QuitOnClose, false);
 }
 
+MozQWidget::~MozQWidget()
+{
+    if (mReceiver)
+        mReceiver->QWidgetDestroyed();
+}
+
 bool MozQWidget::event(QEvent *e)
 {
     nsEventStatus status = nsEventStatus_eIgnore;

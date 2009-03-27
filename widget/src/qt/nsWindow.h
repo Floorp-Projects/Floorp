@@ -208,6 +208,8 @@ public:
     void               LoseFocus();
     qint32             ConvertBorderStyles(nsBorderStyle aStyle);
 
+    void               QWidgetDestroyed();
+
 
     /***** from CommonWidget *****/
 
