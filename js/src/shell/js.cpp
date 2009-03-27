@@ -3559,6 +3559,48 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#ifdef JS_TRACER
+#define MAKE_TCC_FN(_x)                                                 \
+static JSBool                                                           \
+_x(JSContext *cx, uintN argc, jsval *vp) {                              \
+    jsdouble dv = 0;                                                    \
+    for (uintN i = 0; i < argc; i++) {                                  \
+        jsdouble d;                                                     \
+        if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[i], &d))              \
+            return JS_FALSE;                                            \
+        dv += d;                                                        \
+    }                                                                   \
+    return JS_NewNumberValue(cx, dv, vp);                               \
+}
+
+MAKE_TCC_FN(TestCallConv_i_idi)
+MAKE_TCC_FN(TestCallConv_i_iiiiii)
+MAKE_TCC_FN(TestCallConv_i_iidi)
+MAKE_TCC_FN(TestCallConv_i_ididd)
+MAKE_TCC_FN(TestCallConv_d_dd)
+
+static int32 JS_FASTCALL TestCallConv_i_idi_tn(int32 a, jsdouble b, int32 c)
+{ return a + b + c; }
+
+static int32 JS_FASTCALL TestCallConv_i_iiiiii_tn(int32 a, int32 b, int32 c, int32 d, int32 e, int32 f)
+{ return a + b + c + d + e + f; }
+
+static int32 JS_FASTCALL TestCallConv_i_iidi_tn(int32 a, int32 b, jsdouble c, int32 d)
+{ return a + b + c + d; }
+
+static int32 JS_FASTCALL TestCallConv_i_ididd_tn(int32 a, jsdouble c, int32 d, double e, double f)
+{ return a + c + d + e + f; }
+
+static jsdouble JS_FASTCALL TestCallConv_d_dd_tn(jsdouble a, jsdouble b)
+{ return a + b; }
+
+JS_DEFINE_TRCINFO_1(TestCallConv_i_idi, (3, (static, INT32, TestCallConv_i_idi_tn, INT32, DOUBLE, INT32, 0, 0)))
+JS_DEFINE_TRCINFO_1(TestCallConv_i_iiiiii, (6, (static, INT32, TestCallConv_i_iiiiii_tn, INT32, INT32, INT32, INT32, INT32, INT32, 0, 0)))
+JS_DEFINE_TRCINFO_1(TestCallConv_i_iidi, (4, (static, INT32, TestCallConv_i_iidi_tn, INT32, INT32, DOUBLE, INT32, 0, 0)))
+JS_DEFINE_TRCINFO_1(TestCallConv_i_ididd, (5, (static, INT32, TestCallConv_i_ididd_tn, INT32, DOUBLE, INT32, DOUBLE, DOUBLE, 0, 0)))
+JS_DEFINE_TRCINFO_1(TestCallConv_d_dd, (2, (static, DOUBLE, TestCallConv_d_dd_tn, DOUBLE, DOUBLE, 0, 0)))
+#endif
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -3632,6 +3674,13 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("snarf",          Snarf,        0,0,0),
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
+#ifdef JS_TRACER
+    JS_TN("TestCallConv_i_idi", TestCallConv_i_idi_tn, 3, 0, TestCallConv_i_idi_trcinfo),
+    JS_TN("TestCallConv_i_iiiiii", TestCallConv_i_iiiiii_tn, 3, 0, TestCallConv_i_iiiiii_trcinfo),
+    JS_TN("TestCallConv_i_iidi", TestCallConv_i_iidi_tn, 3, 0, TestCallConv_i_iidi_trcinfo),
+    JS_TN("TestCallConv_i_ididd", TestCallConv_i_ididd_tn, 3, 0, TestCallConv_i_ididd_trcinfo),
+    JS_TN("TestCallConv_d_dd", TestCallConv_d_dd_tn, 3, 0, TestCallConv_d_dd_trcinfo),
+#endif
     JS_FS_END
 };
 
@@ -3726,6 +3775,13 @@ static const char *const shell_help_messages[] = {
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
 "  A negative value (default) means that the execution time is unlimited.",
 "elapsed()                Execution time elapsed for the current context.\n",
+#ifdef JS_TRACER
+"TestCallConv_i_idi(a,b,c) Sum arguments",
+"TestCallConv_i_iiiiii(a,b,c,d,e,f) Sum arguments",
+"TestCallConv_i_iidi(a,b,c,d) Sum arguments",
+"TestCallConv_i_ididd(a,b,c,d,e) Sum arguments",
+"TestCallConv_d_dd(a,b) Sum arguments",
+#endif
 };
 
 /* Help messages must match shell functions. */
