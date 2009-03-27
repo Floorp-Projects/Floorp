@@ -37,6 +37,7 @@
 # ***** END LICENSE BLOCK ***** */
 
 import sys, os, os.path
+import tempfile
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
@@ -69,6 +70,12 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
     instead of automatically executing  the test.
   |keepGoing|, if set to True, indicates that if a test fails
     execution should continue."""
+
+  if not testdirs and not manifest:
+    # nothing to test!
+    print >>sys.stderr, "Error: No test dirs or test manifest specified!"
+    return False
+
   testharnessdir = os.path.dirname(os.path.abspath(__file__))
   xpcshell = os.path.abspath(xpcshell)
   # we assume that httpd.js lives in components/ relative to xpcshell
@@ -78,9 +85,27 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
   # Make assertions fatal
   env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
-  if not testdirs and not manifest:
-    # nothing to test!
-    raise Exception("No test dirs or test manifest specified!")
+  # Enable leaks (only) detection to its own log file.
+  # Each test will overwrite it.
+  leakLogFile = os.path.join(tempfile.gettempdir(), "runxpcshelltests_leaks.log")
+  env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
+
+  def processLeakLog(leakLogFile):
+    """Process the leak log."""
+    # For the time being, don't warn (nor "info") if the log file is not there. (Bug 469523)
+    if not os.path.exists(leakLogFile):
+      return
+
+    leaks = open(leakLogFile, "r")
+    leakReport = leaks.read()
+    leaks.close()
+
+    # Only check whether an actual leak was reported.
+    if not "0 TOTAL " in leakReport:
+      return
+
+    # For the time being, simply copy the log. (Bug 469523)
+    print leakReport.rstrip("\n")
 
   if xrePath is None:
     xrePath = os.path.dirname(xpcshell)
@@ -113,6 +138,7 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
   if manifest is not None:
     testdirs = readManifest(os.path.abspath(manifest))
 
+  # Process each test directory individually.
   success = True
   for testdir in testdirs:
     if singleDir and singleDir != os.path.basename(testdir):
@@ -129,7 +155,6 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
       if os.path.isfile(f):
         testtailfiles += ['-f', f]
 
-    # now execute each test individually
     # if a single test file was specified, we only want to execute that test
     testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
     if testFile:
@@ -137,6 +162,8 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
         testfiles = [os.path.join(testdir, testFile)]
       else: # not in this dir? skip it
         continue
+
+    # Now execute each test individually.
     for test in testfiles:
       pstdout = PIPE
       pstderr = STDOUT
@@ -150,6 +177,7 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
                   + tailfiles + testtailfiles + interactiveargs
       proc = Popen(full_args, stdout=pstdout, stderr=pstderr,
                    env=env, cwd=testdir)
+      # |stderr == None| as |pstderr| was either |None| or redirected to |stdout|.
       stdout, stderr = proc.communicate()
 
       if interactive:
@@ -157,16 +185,19 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
         return True
 
       if proc.returncode != 0 or stdout.find("*** PASS") == -1:
-        print """TEST-UNEXPECTED-FAIL | %s | test failed, see log
-  %s.log:
+        print """TEST-UNEXPECTED-FAIL | %s | test failed, see following log:
   >>>>>>>
   %s
-  <<<<<<<""" % (test, test, stdout)
-        if not keepGoing:
-          return False
+  <<<<<<<""" % (test, stdout)
         success = False
       else:
         print "TEST-PASS | %s | all tests passed" % test
+      processLeakLog(leakLogFile)
+      # Remove the leak detection file (here) so it can't "leak" to the next test.
+      os.remove(leakLogFile)
+      if not (success or keepGoing):
+        return False
+
   return success
 
 def main():
