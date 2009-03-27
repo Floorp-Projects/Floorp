@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,17 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is nsCacheDevice.h, released
- * March 9, 2001.
+ * The Original Code is Places.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Beard   <beard@netscape.com>
- *   Gordon Sheridan <gordon@netscape.com>
+ *   Mark Finkle <mfinkle@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,37 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prtypes.h"
+// Call a method on each observer in a category cache, then call the same
+// method the observer array.
 
-#ifndef _nsDiskCache_h_
-#define _nsDiskCache_h_
-
-#include "nsCacheEntry.h"
-
-#ifdef XP_WIN
-#include <winsock.h>  // for htonl/ntohl
-#endif
-
-
-class nsDiskCache {
-public:
-    enum {
-            kCurrentVersion = 0x0001000C      // format = 16 bits major version/16 bits minor version
-    };
-
-    enum { kData, kMetaData };
-
-    // Parameter initval initializes internal state of hash function. Hash values are different
-    // for the same text when different initval is used. It can be any random number.
-    // 
-    // It can be used for generating 64-bit hash value:
-    //   (PRUint64(Hash(key, initval1)) << 32) | Hash(key, initval2)
-    //
-    // It can be also used to hash multiple strings:
-    //   h = Hash(string1, 0);
-    //   h = Hash(string2, h);
-    //   ... 
-    static PLDHashNumber    Hash(const char* key, PLDHashNumber initval=0);
-    static nsresult         Truncate(PRFileDesc *  fd, PRUint32  newEOF);
-};
-
-#endif // _nsDiskCache_h_
+#define ENUMERATE_OBSERVERS(canFire, cache, array, type, method)               \
+  PR_BEGIN_MACRO                                                               \
+  if (canFire) {                                                               \
+    const nsCOMArray<type> &entries = cache.GetEntries();                      \
+    for (PRInt32 idx = 0; idx < entries.Count(); ++idx)                        \
+        entries[idx]->method;                                                  \
+    ENUMERATE_WEAKARRAY(array, type, method)                                   \
+  }                                                                            \
+  PR_END_MACRO;
