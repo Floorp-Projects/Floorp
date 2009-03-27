@@ -79,20 +79,20 @@ public:
                    PRBool aIsStandardFace = PR_FALSE);
 
     PRUint32 Traits() { return mTraits; }
-
-    ATSFontRef GetFontRef();
+    
+    ATSUFontID GetFontID();
     nsresult ReadCMAP();
 
 protected:
     // for use with data fonts
-    MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFontRef,
+    MacOSFontEntry(const nsAString& aPostscriptName, ATSUFontID aFontID,
                    PRUint16 aWeight, PRUint16 aStretch, PRUint32 aItalicStyle,
                    gfxUserFontData *aUserFontData);
 
     PRUint32 mTraits;
 
-    ATSFontRef mATSFontRef;
-    PRPackedBool mATSFontRefInitialized;
+    ATSUFontID mATSUFontID;
+    PRPackedBool mATSUIDInitialized;
     PRPackedBool mStandardFace;
 };
 
