@@ -1059,10 +1059,10 @@ ProgressController.prototype = {
     var location = aLocationURI ? aLocationURI.spec : "";
     let selectedBrowser = Browser.selectedBrowser;
     let lastURI = selectedBrowser.lastURI;
+
     //don't do anything for about:blank or about:firstrun on first display
-    if (!lastURI && (location == "about:blank" || location == "about:firstrun" )) {
+    if (!lastURI && (location == "about:blank" || location == "about:firstrun" ))
       return;
-    }
 
     this._hostChanged = true;
 
@@ -1122,6 +1122,7 @@ ProgressController.prototype = {
     this._tab.setLoading(false);
 
     if (Browser.selectedBrowser == this.browser) {
+      Browser.canvasBrowser.endLoading();
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
     }
@@ -1135,8 +1136,6 @@ ProgressController.prototype = {
       // focus the dom window
       if (this.browser.currentURI.spec != "about:blank")
         this.browser.contentWindow.focus();
-
-      Browser.canvasBrowser.endLoading();
     }
     if (!this._isStartup)
       this._tab.updateThumbnail();
