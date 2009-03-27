@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   Dean Tessman <dean_tessman@hotmail.com>
- *   Ere Maijala <ere@atp.fi>
+ *   Ere Maijala <emaijala@kolumbus.fi>
  *   Mark Hammond <markh@activestate.com>
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Peter Bajusz <hyp-x@inf.bme.hu>
@@ -7917,6 +7917,7 @@ nsWindow::OnIMESelectionChange(void)
 NS_IMETHODIMP
 nsWindow::GetAttention(PRInt32 aCycleCount)
 {
+#ifndef WINCE
   // Got window?
   if (!mWnd)
     return NS_ERROR_NOT_INITIALIZED;
@@ -7942,12 +7943,13 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
   FLASHWINFO flashInfo = { sizeof(FLASHWINFO), flashWnd,
     FLASHW_ALL, aCycleCount > 0 ? aCycleCount : defaultCycleCount, 0 };
   ::FlashWindowEx(&flashInfo);
-
+#endif
   return NS_OK;
 }
 
 void nsWindow::StopFlashing()
 {
+#ifndef WINCE
   HWND flashWnd = mWnd;
   while (HWND ownerWnd = ::GetWindow(flashWnd, GW_OWNER)) {
     flashWnd = ownerWnd;
@@ -7956,6 +7958,7 @@ void nsWindow::StopFlashing()
   FLASHWINFO flashInfo = { sizeof(FLASHWINFO), flashWnd,
     FLASHW_STOP, 0, 0 };
   ::FlashWindowEx(&flashInfo);
+#endif
 }
 
 NS_IMETHODIMP
