@@ -422,7 +422,7 @@ void
 Assembler::asm_qjoin(LIns *ins)
 {
     int d = findMemFor(ins);
-    AvmAssert(d);
+    NanoAssert(d);
     LIns* lo = ins->oprnd1();
     LIns* hi = ins->oprnd2();
 
@@ -438,11 +438,17 @@ Assembler::asm_qjoin(LIns *ins)
 void
 Assembler::asm_store32(LIns *value, int dr, LIns *base)
 {
-    // make sure what is in a register
     Reservation *rA, *rB;
-    findRegFor2(GpRegs, value, rA, base, rB);
-    Register ra = rA->reg;
-    Register rb = rB->reg;
+    Register ra, rb;
+    if (base->isop(LIR_alloc)) {
+        rb = FP;
+        dr += findMemFor(base);
+        ra = findRegFor(value, GpRegs);
+    } else {
+        findRegFor2(GpRegs, value, rA, base, rB);
+        ra = rA->reg;
+        rb = rB->reg;
+    }
     STR(ra, rb, dr);
 }
 
@@ -451,9 +457,22 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(resv));
-    } else {
+    }
+#if 0
+    /* This seriously regresses crypto-aes (by about 50%!), with or
+     * without the S8/U8 check (which ensures that we can do this
+     * const load in one instruction).  I have no idea why, because a
+     * microbenchmark of const mov vs. loading from memory shows that
+     * the mov is faster, though not by much.
+     */
+    else if (i->isconst() && (isS8(i->constval()) || isU8(i->constval()))) {
+        if (!resv->arIndex)
+            reserveFree(i);
+        asm_ld_imm(r, i->constval());
+    }
+#endif
+    else {
         int d = findMemFor(i);
-
         if (IsFpReg(r)) {
             if (isS8(d >> 2)) {
                 FLDD(r, FP, d);
@@ -695,34 +714,6 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     STR(t, rd, dd);
     LDR(IP, rs, ds+4);
     LDR(t, rs, ds);
-}
-
-void
-Assembler::asm_pusharg(LInsp arg)
-{
-    Reservation* argRes = getresv(arg);
-    bool quad = arg->isQuad();
-
-    if (argRes && argRes->reg != UnknownReg) {
-        if (!quad) {
-            STR_preindex(argRes->reg, SP, -4);
-        } else {
-            FSTD(argRes->reg, SP, 0);
-            SUBi(SP, SP, 8);
-        }
-    } else {
-        int d = findMemFor(arg);
-
-        if (!quad) {
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d);
-        } else {
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d+4);
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d);
-        }
-    }
 }
 
 void
@@ -983,7 +974,9 @@ Assembler::asm_add_imm(Register rd, Register rn, int32_t imm, int stat)
         pos = false;
     }
 
-    while (immval && ((immval & 0x3) == 0)) {
+    while (immval > 255 &&
+           immval && ((immval & 0x3) == 0))
+    {
         immval >>= 2;
         rot--;
     }
@@ -1383,10 +1376,10 @@ Assembler::asm_arith(LInsp ins)
         }
         allow &= ~rmask(rb);
     } else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
-        // add alloc+const, use lea
+        // add alloc+const, rr wants the address of the allocated space plus a constant
         Register rr = prepResultReg(ins, allow);
         int d = findMemFor(lhs) + rhs->constval();
-        LEA(rr, d, FP);
+        asm_add_imm(rr, FP, d);
     }
 
     Register rr = prepResultReg(ins, allow);
@@ -1620,49 +1613,67 @@ Assembler::asm_int(LInsp ins)
 }
 
 void
-Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
+Assembler::asm_pusharg(LInsp arg)
 {
-    if (sz == ARGSIZE_Q) {
-        // ref arg - use lea
-        if (r != UnknownReg) {
-            // arg in specific reg
-            int da = findMemFor(p);
-            LEA(r, da, FP);
+    Reservation* argRes = getresv(arg);
+    bool quad = arg->isQuad();
+
+    if (argRes && argRes->reg != UnknownReg) {
+        if (!quad) {
+            STR_preindex(argRes->reg, SP, -4);
         } else {
-            NanoAssert(0); // not supported
-        }
-    } else if (sz == ARGSIZE_LO) {
-        if (r != UnknownReg) {
-            // arg goes in specific register
-            if (p->isconst()) {
-                LDi(r, p->constval());
-            } else {
-                Reservation* rA = getresv(p);
-                if (rA) {
-                    if (rA->reg == UnknownReg) {
-                        // load it into the arg reg
-                        int d = findMemFor(p);
-                        if (p->isop(LIR_alloc)) {
-                            asm_add_imm(r, FP, d);
-                        } else {
-                            LD(r, d, FP);
-                        }
-                    } else {
-                        // it must be in a saved reg
-                        MOV(r, rA->reg);
-                    }
-                } else {
-                    // this is the last use, so fine to assign it
-                    // to the scratch reg, it's dead after this point.
-                    findSpecificRegFor(p, r);
-                }
-            }
-        } else {
-            asm_pusharg(p);
+            FSTD(argRes->reg, SP, 0);
+            SUBi(SP, SP, 8);
         }
     } else {
-        NanoAssert(sz == ARGSIZE_F);
-        asm_farg(p);
+        int d = findMemFor(arg);
+
+        if (!quad) {
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d);
+        } else {
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d+4);
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d);
+        }
+    }
+}
+
+void
+Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
+{
+    // this only handles ARGSIZE_LO; we don't support ARGSIZE_Q,
+    // and ARGSIZE_F is handled by asm_arm_farg
+    NanoAssert(sz == ARGSIZE_LO);
+
+    if (r != UnknownReg) {
+        // arg goes in specific register
+        if (p->isconst()) {
+            LDi(r, p->constval());
+        } else {
+            Reservation* rA = getresv(p);
+            if (rA) {
+                if (rA->reg == UnknownReg) {
+                    // load it into the arg reg
+                    int d = findMemFor(p);
+                    if (p->isop(LIR_alloc)) {
+                        asm_add_imm(r, FP, d);
+                    } else {
+                        LDR(r, FP, d);
+                    }
+                } else {
+                    // it must be in a saved reg
+                    MOV(r, rA->reg);
+                }
+            } else {
+                // this is the last use, so fine to assign it
+                // to the scratch reg, it's dead after this point.
+                findSpecificRegFor(p, r);
+            }
+        }
+    } else {
+        asm_pusharg(p);
     }
 }
 
