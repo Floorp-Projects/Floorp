@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,17 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is nsCacheDevice.h, released
- * March 9, 2001.
+ * The Original Code is Places unit test code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Beard   <beard@netscape.com>
- *   Gordon Sheridan <gordon@netscape.com>
+ *   Mark Finkle <mfinkle@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,37 +34,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-#ifndef _nsDiskCache_h_
-#define _nsDiskCache_h_
+// Get services.
+let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
+let os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
 
-#include "nsCacheEntry.h"
+let gDummyCreated = false;
+let gDummyVisited = false;
 
-#ifdef XP_WIN
-#include <winsock.h>  // for htonl/ntohl
-#endif
+let observer = {
+  observe: function(subject, topic, data) {
+    if (topic == "dummy-observer-created")
+      gDummyCreated = true;
+    else if (topic == "dummy-observer-visited")
+      gDummyVisited = true;
+  },
 
-
-class nsDiskCache {
-public:
-    enum {
-            kCurrentVersion = 0x0001000C      // format = 16 bits major version/16 bits minor version
-    };
-
-    enum { kData, kMetaData };
-
-    // Parameter initval initializes internal state of hash function. Hash values are different
-    // for the same text when different initval is used. It can be any random number.
-    // 
-    // It can be used for generating 64-bit hash value:
-    //   (PRUint64(Hash(key, initval1)) << 32) | Hash(key, initval2)
-    //
-    // It can be also used to hash multiple strings:
-    //   h = Hash(string1, 0);
-    //   h = Hash(string2, h);
-    //   ... 
-    static PLDHashNumber    Hash(const char* key, PLDHashNumber initval=0);
-    static nsresult         Truncate(PRFileDesc *  fd, PRUint32  newEOF);
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
+  ])
 };
 
-#endif // _nsDiskCache_h_
+function verify() {
+  do_check_true(gDummyCreated);
+  do_check_true(gDummyVisited);
+  do_test_finished();
+}
+
+// main
+function run_test() {
+  do_load_module("toolkit/components/places/tests/unit/nsDummyObserver.js");
+
+  os.addObserver(observer, "dummy-observer-created", true);
+  os.addObserver(observer, "dummy-observer-visited", true);
+
+  // Add a visit
+  hs.addVisit(uri("http://typed.mozilla.org"), Date.now(), null,
+              hs.TRANSITION_TYPED, false, 0);
+
+  do_test_pending();
+  do_timeout(1000, "verify();");
+}
