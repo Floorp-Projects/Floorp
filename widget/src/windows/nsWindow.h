@@ -447,8 +447,9 @@ protected:
   // XP and Vista theming support for windows with rounded edges.
   void ClearThemeRegion();
   void SetThemeRegion();
-private:
 
+  void StopFlashing();
+private:
 
 #ifdef DEBUG
   void DebugPrintEvent(nsGUIEvent& aEvent, HWND aWnd);
