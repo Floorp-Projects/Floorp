@@ -1325,8 +1325,8 @@ WidgetStack.prototype = {
     let woverflow = rect.width > bounds.width;
     let hoverflow = rect.height > bounds.height;
     if (woverflow || hoverflow) {
-      intersection = rect.intersect(bounds);
-      newIntersection = rect.clone().translate(dx, dy).intersect(bounds);
+      let intersection = rect.intersect(bounds);
+      let newIntersection = rect.clone().translate(dx, dy).intersect(bounds);
       if (woverflow)
         newX = (newIntersection.width > intersection.width) ? rect.x + dx : rect.x;
       if (hoverflow)
