@@ -238,22 +238,73 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
  *****************************************************************************/
 
 /**
- *  nsDiskCache::Hash(const char * key)
+ *  nsDiskCache::Hash(const char * key, PLDHashNumber initval)
+ *
+ *  See http://burtleburtle.net/bob/hash/evahash.html for more information
+ *  about this hash function.
  *
  *  This algorithm of this method implies nsDiskCacheRecords will be stored
  *  in a certain order on disk.  If the algorithm changes, existing cache
  *  map files may become invalid, and therefore the kCurrentVersion needs
  *  to be revised.
  */
-PLDHashNumber
-nsDiskCache::Hash(const char * key)
+
+static inline void hashmix(PRUint32& a, PRUint32& b, PRUint32& c)
 {
-    PLDHashNumber h = 0;
-    for (const PRUint8* s = (PRUint8*) key; *s != '\0'; ++s)
-        h = PR_ROTATE_LEFT32(h, 4) ^ *s;
-    return (h == 0 ? ULONG_MAX : h);
+  a -= b; a -= c; a ^= (c>>13);
+  b -= c; b -= a; b ^= (a<<8);
+  c -= a; c -= b; c ^= (b>>13);
+  a -= b; a -= c; a ^= (c>>12); 
+  b -= c; b -= a; b ^= (a<<16);
+  c -= a; c -= b; c ^= (b>>5);
+  a -= b; a -= c; a ^= (c>>3);
+  b -= c; b -= a; b ^= (a<<10);
+  c -= a; c -= b; c ^= (b>>15);
 }
 
+PLDHashNumber
+nsDiskCache::Hash(const char * key, PLDHashNumber initval)
+{
+  const PRUint8 *k = reinterpret_cast<const PRUint8*>(key);
+  PRUint32 a, b, c, len, length;
+
+  length = PL_strlen(key);
+  /* Set up the internal state */
+  len = length;
+  a = b = 0x9e3779b9;  /* the golden ratio; an arbitrary value */
+  c = initval;         /* variable initialization of internal state */
+
+  /*---------------------------------------- handle most of the key */
+  while (len >= 12)
+  {
+    a += k[0] + (PRUint32(k[1])<<8) + (PRUint32(k[2])<<16) + (PRUint32(k[3])<<24);
+    b += k[4] + (PRUint32(k[5])<<8) + (PRUint32(k[6])<<16) + (PRUint32(k[7])<<24);
+    c += k[8] + (PRUint32(k[9])<<8) + (PRUint32(k[10])<<16) + (PRUint32(k[11])<<24);
+    hashmix(a, b, c);
+    k += 12; len -= 12;
+  }
+
+  /*------------------------------------- handle the last 11 bytes */
+  c += length;
+  switch(len) {              /* all the case statements fall through */
+    case 11: c += (PRUint32(k[10])<<24);
+    case 10: c += (PRUint32(k[9])<<16);
+    case 9 : c += (PRUint32(k[8])<<8);
+    /* the low-order byte of c is reserved for the length */
+    case 8 : b += (PRUint32(k[7])<<24);
+    case 7 : b += (PRUint32(k[6])<<16);
+    case 6 : b += (PRUint32(k[5])<<8);
+    case 5 : b += k[4];
+    case 4 : a += (PRUint32(k[3])<<24);
+    case 3 : a += (PRUint32(k[2])<<16);
+    case 2 : a += (PRUint32(k[1])<<8);
+    case 1 : a += k[0];
+    /* case 0: nothing left to add */
+  }
+  hashmix(a, b, c);
+
+  return c;
+}
 
 nsresult
 nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
