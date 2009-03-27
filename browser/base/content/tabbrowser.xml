@@ -1962,10 +1962,10 @@
             var uri = this.getBrowserForTab(aEvent.target).currentURI;
             var spec = uri ? uri.spec : "about:blank";
 
-            // We must not set text/x-moz-url data, otherwise trying to deatch
-            // the tab by dropping it on the desktop would result in an
-            // "internet shortcut"
-            dt.mozSetDataAt("text/plain", spec, 0);
+            // We must not set text/x-moz-url or text/plain data here,
+            // otherwise trying to deatch the tab by dropping it on the desktop
+            // may result in an "internet shortcut"
+            dt.mozSetDataAt("text/x-moz-text-internal", spec, 0);
             
             // Set the cursor to an arrow during tab drags.
             dt.mozCursor = "default";
