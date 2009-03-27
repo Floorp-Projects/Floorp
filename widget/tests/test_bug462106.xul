@@ -61,6 +61,7 @@ function initAndRunTests() {
     pb = Cc["@mozilla.org/privatebrowsing;1"].
          getService(Ci.nsIPrivateBrowsingService);
   } catch (e) {
+    ok(true, "no Private Browsing service");
     return;
   }
 
