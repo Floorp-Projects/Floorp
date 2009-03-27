@@ -419,7 +419,7 @@ static jsdouble
 AdjustTime(jsdouble date)
 {
     jsdouble t = DaylightSavingTA(date) + LocalTZA;
-    t = (LocalTZA > 0) ? fmod(t, msPerDay) : -fmod(msPerDay - t, msPerDay);
+    t = (LocalTZA >= 0) ? fmod(t, msPerDay) : -fmod(msPerDay - t, msPerDay);
     return t;
 }
 
