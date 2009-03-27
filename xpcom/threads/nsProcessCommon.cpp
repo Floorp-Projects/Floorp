@@ -427,7 +427,7 @@ nsProcess::RunProcess(PRBool blocking, const char **args, PRUint32 count,
     if (!mProcess)
         return NS_ERROR_FAILURE;
 
-#if not defined WINCE
+#if !defined WINCE
     struct MYProcess {
         PRUint32 pid;
     };
