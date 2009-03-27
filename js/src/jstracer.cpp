@@ -6766,7 +6766,7 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
 
     LIns* this_ins = get(&tval);
 
-    LIns* args[5];
+    LIns* args[nanojit::MAXARGS];
     do {
         if (((known->flags & JSTN_CONSTRUCTOR) != 0) != constructing)
             continue;
