@@ -45,7 +45,6 @@
 #include "nsNavHistory.h"
 #include "nsNavHistoryResult.h" // need for Int64 hashtable
 #include "nsToolkitCompsCID.h"
-#include "nsCategoryCache.h"
 
 class nsIOutputStream;
 
@@ -297,10 +296,6 @@ private:
     nsString mType;
     PRInt32 mIndex;
   };
-
-  // Used to enable and disable the observer notifications
-  PRBool mCanFireNotifs;
-  nsCategoryCache<nsINavBookmarkObserver> mCacheObservers;
 };
 
 struct nsBookmarksUpdateBatcher
