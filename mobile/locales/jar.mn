@@ -8,6 +8,7 @@
   locale/@AB_CD@/browser/search.properties        (%chrome/search.properties)
   locale/@AB_CD@/browser/region.properties        (%chrome/region.properties)
   locale/@AB_CD@/browser/preferences.dtd          (%chrome/preferences.dtd)
+  locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
 # Fennec-specific overrides of generic strings
 * locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
