@@ -115,15 +115,15 @@ StatusRecord.prototype = {
     this.engines = {};
   },
 
-  addServerStatus: function( statusCode ) {
+  addServerStatus: function(statusCode) {
     this.server.push(statusCode);
   },
 
-  setSyncStatus: function( statusCode ) {
+  setSyncStatus: function(statusCode) {
     this.sync = statusCode;
   },
 
-  setEngineStatus: function( engineName, statusCode ) {
+  setEngineStatus: function(engineName, statusCode) {
     this.engines[engineName] = statusCode;
   }
 };
@@ -411,11 +411,11 @@ WeaveSvc.prototype = {
 
   // These are global (for all engines)
 
-  // gets cluster from central LDAP server and sets this.clusterURL
+  // gets cluster from central LDAP server and returns it, or null on error
   findCluster: function WeaveSvc_findCluster(onComplete, username) {
     let fn = function WeaveSvc__findCluster() {
       let self = yield;
-      let ret = false;
+      let ret = null;
 
       this._log.debug("Finding cluster for user " + username);
 
@@ -426,34 +426,57 @@ WeaveSvc.prototype = {
 
       if (res.lastChannel.responseStatus == 404) {
         this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-        this.clusterURL = Svc.Prefs.get("serverURL");
-        ret = true;
-
+        ret = Svc.Prefs.get("serverURL");
       } else if (res.lastChannel.responseStatus == 200) {
         // XXX Bug 480480 Work around the server sending a trailing newline
-        this.clusterURL = 'https://' + res.data.trim() + '/';
-        ret = true;
+        ret = 'https://' + res.data.trim() + '/';
       }
+
+      self.done(ret);
+    };
+    fn.async(this, onComplete);
+  },
+
+  // gets cluster from central LDAP server and sets this.clusterURL
+  setCluster: function WeaveSvc_setCluster(onComplete, username) {
+    let fn = function WeaveSvc__setCluster() {
+      let self = yield;
+      let ret = false;
+
+      let cluster = yield this.findCluster(self.cb, username);
+      if (cluster) {
+        this._log.debug("Saving cluster setting");
+        this.clusterURL = cluster;
+        ret = true;
+      } else
+        this._log.debug("Error setting cluster for user " + username);
+
       self.done(ret);
     };
     fn.async(this, onComplete);
   },
 
   verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password, isLogin) {
-    let user = username, pass = password;
-
     let fn = function WeaveSvc__verifyLogin() {
       let self = yield;
-      this._log.debug("Verifying login for user " + user);
+      this._log.debug("Verifying login for user " + username);
 
-      let cluster = this.clusterURL;
-      yield this.findCluster(self.cb, username);
+      let url = yield this.findCluster(self.cb, username);
+      if (isLogin)
+        this.clusterURL = url;
 
-      let res = new Resource(this.clusterURL + user);
+      if (url[url.length-1] != '/')
+        url += '/';
+      url += "0.3/user/";
+
+      let res = new Resource(url + username);
+      res.authenticator = {
+        onRequest: function(headers) {
+          headers['Authorization'] = 'Basic ' + btoa(username + ':' + password);
+          return headers;
+        }
+      };
       yield res.get(self.cb);
-
-      if (!isLogin) // restore cluster so verifyLogin has no impact
-        this.clusterURL = cluster;
 
       //Svc.Json.decode(res.data); // throws if not json
       self.done(true);
@@ -461,28 +484,27 @@ WeaveSvc.prototype = {
     this._catchAll(this._notify("verify-login", "", fn)).async(this, onComplete);
   },
 
-  _verifyPassphrase: function WeaveSvc__verifyPassphrase(username, password,
-                                                         passphrase) {
-    let self = yield;
-
-    this._log.debug("Verifying passphrase");
-
-    this.username = username;
-    ID.get('WeaveID').setTempPassword(password);
-
-    let id = new Identity('Passphrase Verification', username);
-    id.setTempPassword(passphrase);
-
-    let pubkey = yield PubKeys.getDefaultKey(self.cb);
-    let privkey = yield PrivKeys.get(self.cb, pubkey.PrivKeyUri);
-
-    // fixme: decrypt something here
-  },
   verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
                                                        password, passphrase) {
-    this._catchAll(this._localLock(this._notify("verify-passphrase", "",
-      this._verifyPassphrase, username, password, passphrase))).
-      async(this, onComplete);
+    let fn = function WeaveSvc__verifyPassphrase() {
+      let self = yield;
+
+      this._log.debug("Verifying passphrase");
+
+      this.username = username;
+      ID.get('WeaveID').setTempPassword(password);
+
+      let id = new Identity('Passphrase Verification', username);
+      id.setTempPassword(passphrase);
+
+      let pubkey = yield PubKeys.getDefaultKey(self.cb);
+      let privkey = yield PrivKeys.get(self.cb, pubkey.PrivKeyUri);
+
+      // fixme: decrypt something here
+    };
+    this._catchAll(
+      this._localLock(
+        this._notify("verify-passphrase", "", fn))).async(this, onComplete);
   },
 
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
@@ -539,6 +561,40 @@ WeaveSvc.prototype = {
     this._checkSync();
 
     Svc.Observer.notifyObservers(null, "weave:service:logout:finish", "");
+  },
+
+  createAccount: function WeaveSvc_createAccount(onComplete, username, password, email,
+                                                 captchaChallenge, captchaResponse) {
+    let fn = function WeaveSvc__createAccount() {
+      function enc(x) encodeURIComponent(x);
+      let message = "uid=" + enc(username) + "&password=" + enc(password) +
+        "&mail=" + enc(email) +
+        "&recaptcha_challenge_field=" + enc(captchaChallenge) +
+        "&recaptcha_response_field=" + enc(captchaResponse);
+
+      let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/new';
+      let res = new Weave.Resource(url);
+      res.authenticator = new Weave.NoOpAuthenticator();
+      res.setHeader("Content-Type", "application/x-www-form-urlencoded",
+                    "Content-Length", message.length);
+
+      // fixme: Resource throws on error - it really shouldn't :-/
+      let resp;
+      try {
+        resp = yield res.post(self.cb, message);
+      } catch (e) {}
+
+      if (res.lastChannel.responseStatus != 200 &&
+          res.lastChannel.responseStatus != 201)
+        this._log.info("Failed to create account. " +
+                       "status: " + res.lastChannel.responseStatus + ", " +
+                       "response: " + resp);
+      else
+	this._log.info("Account created: " + resp);
+
+      self.done(res.lastChannel.responseStatus);
+    };
+    fn.async(this, onComplete);
   },
 
   // stuff we need to to after login, before we can really do
