@@ -136,7 +136,7 @@ PlacesController.prototype = {
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
-      return this._canInsert() && this._isClipboardDataPasteable();
+      return this._canInsert(true) && this._isClipboardDataPasteable();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
         var result = this._view.getResult();
@@ -331,9 +331,9 @@ PlacesController.prototype = {
   /**
    * Determines whether or not nodes can be inserted relative to the selection.
    */
-  _canInsert: function PC__canInsert() {
+  _canInsert: function PC__canInsert(isPaste) {
     var ip = this._view.insertionPoint;
-    return ip != null && ip.isTag != true;
+    return ip != null && (isPaste || ip.isTag != true);
   },
 
   /**
@@ -596,7 +596,9 @@ PlacesController.prototype = {
     for (var i = 0; i < aPopup.childNodes.length; ++i) {
       var item = aPopup.childNodes[i];
       if (item.localName != "menuseparator") {
-        item.hidden = (item.getAttribute("hideifnoinsertionpoint") == "true" && noIp) ||
+        // We allow pasting into tag containers, so special case that.
+        item.hidden = (item.getAttribute("hideifnoinsertionpoint") == "true" &&
+                       noIp && !(ip.isTag && item.id == "placesContext_paste")) ||
                       !this._shouldShowMenuItem(item, metadata);
 
         if (!item.hidden) {
@@ -1209,13 +1211,21 @@ PlacesController.prototype = {
         var transactions = [];
         var index = ip.index;
         for (var i = 0; i < items.length; ++i) {
-          // adjusted to make sure that items are given the correct index -
-          // transactions insert differently if index == -1
-          if (ip.index > -1)
-            index = ip.index + i;
-          transactions.push(PlacesUIUtils.makeTransaction(items[i], type.value,
-                                                          ip.itemId, index,
-                                                          true));
+          var txn;
+          if (ip.isTag) {
+            var uri = PlacesUtils._uri(items[i].uri);
+            txn = PlacesUIUtils.ptm.tagURI(uri, [ip.itemId]);
+          } 
+          else {
+            // adjusted to make sure that items are given the correct index
+            // transactions insert differently if index == -1 
+            // transaction will enqueue the item.
+            if (ip.index > -1)
+              index = ip.index + i;
+            txn = PlacesUIUtils.makeTransaction(items[i], type.value,
+                                                ip.itemId, index, true);
+          }
+          transactions.push(txn);
         }
         return transactions;
       }
