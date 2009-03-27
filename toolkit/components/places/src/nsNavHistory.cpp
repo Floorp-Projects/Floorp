@@ -92,7 +92,6 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "nsPlacesTriggers.h"
-#include "nsPlacesMacros.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIIdleService.h"
 #include "nsILivemarkService.h"
@@ -394,9 +393,7 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mNumVisitsForFrecency(10),
                                mTagsFolder(-1),
                                mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED),
-                               mDatabaseStatus(DATABASE_STATUS_OK),
-                               mCanFireNotifs(PR_TRUE),
-                               mCacheObservers("history-observers")
+                               mDatabaseStatus(DATABASE_STATUS_OK)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -2783,7 +2780,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   PRUint32 added = 0;
   if (!hidden && aTransitionType != TRANSITION_EMBED &&
                  aTransitionType != TRANSITION_DOWNLOAD) {
-    ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                         OnVisit(aURI, *aVisitID, aTime, aSessionID,
                                 referringVisitID, aTransitionType, &added));
   }
@@ -4276,7 +4273,7 @@ nsNavHistory::BeginUpdateBatch()
     if (mBatchHasTransaction)
       mDBConn->BeginTransaction();
 
-    ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                         OnBeginUpdateBatch())
   }
   return NS_OK;
@@ -4290,8 +4287,7 @@ nsNavHistory::EndUpdateBatch()
     if (mBatchHasTransaction)
       mDBConn->CommitTransaction();
     mBatchHasTransaction = PR_FALSE;
-    ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
-                        OnEndUpdateBatch())
+    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
   }
   return NS_OK;
 }
@@ -4562,10 +4558,8 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   nsIURI** URIs = &aURI;
   nsresult rv = RemovePages(URIs, 1, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
   // call observers here for the removed url
-  ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnDeleteURI(aURI))
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnDeleteURI(aURI))
   return NS_OK;
 }
 
@@ -4827,7 +4821,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
   // notify observers, finish transaction first
   transaction.Commit();
-  ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                       OnPageChanged(aURI,
                                     nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
                                     EmptyString()))
@@ -5471,7 +5465,7 @@ NS_IMETHODIMP
 nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
                                   PRBool aWholeEntry)
 {
-  ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                       OnPageExpired(aURI, aVisitTime, aWholeEntry));
   return NS_OK;
 }
@@ -6680,14 +6674,6 @@ nsNavHistory::BookmarkIdToResultNode(PRInt64 aBookmarkId, nsNavHistoryQueryOptio
   return RowToResult(stmt, aOptions, aResult);
 }
 
-void
-nsNavHistory::SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
-                                          const nsAString& aValue)
-{
-  ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnPageChanged(aURI, aWhat, aValue));
-}
-
 // nsNavHistory::TitleForDomain
 //
 //    This computes the title for a given domain. Normally, this is just the
@@ -6817,10 +6803,11 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // observers (have to check first if it's bookmarked)
-  ENUMERATE_OBSERVERS(mCanFireNotifs, mCacheObservers, mObservers, nsINavHistoryObserver,
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                       OnTitleChanged(aURI, aTitle))
 
   return NS_OK;
+
 }
 
 nsresult
