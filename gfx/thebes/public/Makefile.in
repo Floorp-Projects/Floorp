@@ -104,4 +104,8 @@ EXPORTS +=	gfxPlatformMac.h \
 
 endif
 
+ifdef MOZ_CORETEXT
+EXPORTS += gfxCoreTextFonts.h
+endif
+
 include $(topsrcdir)/config/rules.mk
