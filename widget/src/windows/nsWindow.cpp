@@ -1886,7 +1886,10 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
 void nsWindow::ClearThemeRegion()
 {
 #ifndef WINCE
-  SetWindowRgn(mWnd, NULL, false);
+  if (nsUXThemeData::sIsVistaOrLater && mTransparencyMode != eTransparencyGlass &&
+      mWindowType == eWindowType_popup && (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel)) {
+    SetWindowRgn(mWnd, NULL, false);
+  }
 #endif
 }
 
