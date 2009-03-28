@@ -1822,6 +1822,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mColor setTitlebarColor:aColor forActiveWindow:aActive];
+  [self redrawTitlebar];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
