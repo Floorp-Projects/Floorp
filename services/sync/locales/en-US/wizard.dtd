@@ -37,7 +37,7 @@
 
 <!ENTITY passphrase.description           "You must also now choose an encryption passphrase that is different from your password. This will be used to protect your data on the server."> 
 <!ENTITY passphrase-more.label            "Learn More">
-<!ENTITY passphrase-more.link             "http://labs.mozilla.com">
+<!ENTITY passphrase-more.link             "https://services.mozilla.com/help/login/">
 
 <!ENTITY reenterPassphrase.label          "Re-enter passphrase:">
 <!ENTITY moreInfo.label                   "More information on choosing a phrase.">
@@ -60,10 +60,6 @@
 <!ENTITY captcha.label                    "Type the characters you see in the image below:">
 <!ENTITY reloadCaptcha.text               "Reload">
 <!ENTITY captchaHint.label                "Letters are not case-sensitive, spaces are optional.">
-
-<!ENTITY terms.label                      "Terms of Service">
-<!ENTITY acceptTerms.label                "I agree to the ">
-<!ENTITY acceptTerms.link                 "Weave Terms of Service">
 
 <!ENTITY final1.description               "Weave is now finalizing your installation and performing an initial sync, encrypting your browser settings and uploading them to Mozilla.  Please wait as this process can take several minutes.">
 
