@@ -39,7 +39,7 @@
 #define nsPluginsDirUtils_h___
 
 #include "nsPluginsDir.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "prmem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
 
     char *mdescDup = PL_strdup(mdesc); // make a dup of intput string we'll change it content
     char anEmptyString[] = "";
-    nsAutoVoidArray tmpMimeTypeArr;
+    nsAutoTArray<char*, 8> tmpMimeTypeArr;
     char delimiters[] = {':',':',';'};
     int mimeTypeVariantCount = 0;
     char *p = mdescDup; // make a dup of intput string we'll change it content
@@ -88,9 +88,9 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
         // fill out the temp array 
         // the order is important, it should be the same in for loop below 
         if (ptrMimeArray[0] != anEmptyString) {
-            tmpMimeTypeArr.AppendElement((void*) ptrMimeArray[0]);
-            tmpMimeTypeArr.AppendElement((void*) ptrMimeArray[1]);
-            tmpMimeTypeArr.AppendElement((void*) ptrMimeArray[2]);
+            tmpMimeTypeArr.AppendElement(ptrMimeArray[0]);
+            tmpMimeTypeArr.AppendElement(ptrMimeArray[1]);
+            tmpMimeTypeArr.AppendElement(ptrMimeArray[2]);
             mimeTypeVariantCount++;
         }
     }
@@ -107,9 +107,9 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
         for (j = i = 0; i < mimeTypeVariantCount; i++) {
             // the order is important, do not change it
            // we can get rid of PL_strdup here, later on code cleanup
-            info.fMimeTypeArray[i]        =  PL_strdup((char*) tmpMimeTypeArr.ElementAt(j++));
-            info.fExtensionArray[i]       =  PL_strdup((char*) tmpMimeTypeArr.ElementAt(j++));
-            info.fMimeDescriptionArray[i] =  PL_strdup((char*) tmpMimeTypeArr.ElementAt(j++));
+            info.fMimeTypeArray[i]        =  PL_strdup(tmpMimeTypeArr.ElementAt(j++));
+            info.fExtensionArray[i]       =  PL_strdup(tmpMimeTypeArr.ElementAt(j++));
+            info.fMimeDescriptionArray[i] =  PL_strdup(tmpMimeTypeArr.ElementAt(j++));
         }
         rv = NS_OK;
     }
