@@ -83,11 +83,6 @@
 <!ENTITY userCheckFailed1.description     "Our server is having problems, and we couldn't check that username. ">
 <!ENTITY userCheckFailed2.description     " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
 
-<!ENTITY finished.description             "Good job. You installed Weave. You can change preferences in the Weave tab...">
-<!ENTITY initialLoginFailed1.description  "Our server is having problems, and we couldn't sign you in. ">
-<!ENTITY initialLoginFailed2.description  " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
-<!ENTITY initialSyncFailed1.description   "Our server is having problems, and we couldn't synchronize your data. ">
-<!ENTITY initialSyncFailed2.description   " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later."> 
 
 <!ENTITY clickHere.text                   "Click here">
 <!ENTITY tryAgain.text                    "Try again">
