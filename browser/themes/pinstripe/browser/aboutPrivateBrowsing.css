@@ -60,12 +60,20 @@ body.normal > #errorPageContainer {
   font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
 }
 
-#moreInfoText {
+#moreInfo {
   font-size: 110%; /* to match the value set in chrome://global/skin/netError.css */
   -moz-padding-start: 25px;
   background: url("chrome://global/skin/icons/information-16.png") no-repeat top left;
 }
 
-body[dir="rtl"] #moreInfoText {
+body[dir="rtl"] #moreInfo {
   background-position: top right;
+}
+
+#moreInfoText {
+  margin-bottom: 0;
+}
+
+#moreInfoLinkContainer {
+  margin-top: 0.5em;
 }
