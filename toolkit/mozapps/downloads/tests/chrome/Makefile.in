@@ -46,6 +46,9 @@ relativesrcdir = toolkit/mozapps/downloads/tests/chrome
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# temporarily disabled test (bug 483200)
+#  test_retention_is_0_closes.xul \
+
 _CHROME_FILES = \
   test_basic_functionality.xul \
   test_cleanup_search.xul \
@@ -57,7 +60,6 @@ _CHROME_FILES = \
   test_multiword_search.xul \
   test_pause_button_state.xul \
   test_removeDownload_updates_ui.xul \
-  test_retention_is_0_closes.xul \
   test_search_clearlist.xul \
   test_search_keys.xul \
   test_select_all.xul \
