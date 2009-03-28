@@ -24,6 +24,7 @@ function runTests() {
   try {
     privateBrowsing = Components.classes["@mozilla.org/privatebrowsing;1"].getService(Components.interfaces.nsIPrivateBrowsingService);
   } catch (e) {
+    ok(true, "no Private Browsing service");
     SimpleTest.finish();
     return;
   }
