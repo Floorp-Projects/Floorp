@@ -106,6 +106,18 @@ bug413093obs.prototype = {
                    getService(Ci.nsIDownloadManagerUI);
         ok(!dmui.visible, "Download Manager UI is not showing");
 
+        // reset the changed config values to default value
+        let prefs = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Ci.nsIPrefService);
+        try {
+          prefs.clearUserPref("browser.download.manager.retention");
+        }
+        catch (err) { }
+        try {
+          prefs.clearUserPref("browser.download.manager.closeWhenDone");
+        }
+        catch (err) { }
+
         SimpleTest.finish();
       });
     }
