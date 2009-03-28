@@ -258,8 +258,8 @@ nsUnknownContentTypeDialog.prototype = {
       // The last directory preference may not exist, which will throw.
       try {
         var lastDir;
-        if (inPrivateBrowsing && gDownloadLastDir.path)
-          lastDir = gDownloadLastDir.path;
+        if (inPrivateBrowsing && gDownloadLastDir.file)
+          lastDir = gDownloadLastDir.file;
         else
           lastDir = prefs.getComplexValue("browser.download.lastDir",
                           Components.interfaces.nsILocalFile);
@@ -292,7 +292,7 @@ nsUnknownContentTypeDialog.prototype = {
 
         // Do not store the last save directory as a pref inside the private browsing mode
         if (inPrivateBrowsing)
-          gDownloadLastDir.path = newDir;
+          gDownloadLastDir.file = newDir;
         else
           prefs.setComplexValue("browser.download.lastDir", Components.interfaces.nsILocalFile, newDir);
 
