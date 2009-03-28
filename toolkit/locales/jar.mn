@@ -57,7 +57,6 @@
   locale/@AB_CD@/global/nsHelperAppDlg.properties       (%chrome/global/nsHelperAppDlg.properties)
   locale/@AB_CD@/global/nsProgressDialog.dtd            (%chrome/global/nsProgressDialog.dtd)
   locale/@AB_CD@/global/nsProgressDialog.properties     (%chrome/global/nsProgressDialog.properties)
-  locale/@AB_CD@/global/history/history.properties      (%chrome/global/history/history.properties)
   locale/@AB_CD@/global/xpinstall/xpinstall.properties  (%chrome/global/xpinstall/xpinstall.properties)
   locale/@AB_CD@/global/crashes.dtd                     (%crashreporter/crashes.dtd)
   locale/@AB_CD@/global/crashes.properties              (%crashreporter/crashes.properties)
