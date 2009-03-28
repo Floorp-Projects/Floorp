@@ -194,7 +194,9 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
         print "TEST-PASS | %s | all tests passed" % test
       processLeakLog(leakLogFile)
       # Remove the leak detection file (here) so it can't "leak" to the next test.
-      os.remove(leakLogFile)
+      # The file is not there if leak logging was not enabled in the xpcshell build.
+      if os.path.exists(leakLogFile):
+        os.remove(leakLogFile)
       if not (success or keepGoing):
         return False
 
