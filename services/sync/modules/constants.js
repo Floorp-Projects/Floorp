@@ -83,7 +83,7 @@ const KEEP_DELTAS = 25;
 // Top-level statuses:
 const WEAVE_STATUS_OK = "Sync succeeded.";
 const WEAVE_STATUS_FAILED = "Sync failed.";
-const WEAVE_STATUS_PARTIAL = "Sync partially succeeded but some data not synced.";
+const WEAVE_STATUS_PARTIAL = "Sync partially succeeded, some data failed to sync.";
 
 // Server statuses (Not mutually exclusive):
 const SERVER_LOW_QUOTA = "Getting close to your Weave server storage quota.";
@@ -91,14 +91,14 @@ const SERVER_DOWNTIME = "Weave server is overloaded, try agian in 30 sec.";
 const SERVER_UNREACHABLE = "Weave server is unreachable.";
 
 // Ways that a sync can fail during setup or login:
-const LOGIN_FAILED_NO_USERNAME = "No username set, login failed";
-const LOGIN_FAILED_NO_PASSWORD = "No password given or found in password manager.";
-const LOGIN_FAILED_REJECTED = "Login rejected.  Check your username/password/passphrase.";
+const LOGIN_FAILED_NO_USERNAME = "No username set, login failed.";
+const LOGIN_FAILED_NO_PASSWORD = "No password set, login failed.";
+const LOGIN_FAILED_REJECTED = "Incorrect username or password.";
 const METARECORD_DOWNLOAD_FAIL = "Can't download metadata record, HTTP error.";
 const VERSION_OUT_OF_DATE = "This copy of Weave needs to be updated.";
 const DESKTOP_VERSION_OUT_OF_DATE = "Weave needs updating on your desktop browser.";
 const KEYS_DOWNLOAD_FAIL = "Can't download keys from server, HTTP error.";
-const NO_KEYS_NO_KEYGEN = "No keys present on server and keygen disabled; sync from desktop first.";
+const NO_KEYS_NO_KEYGEN = "Key generation disabled. Sync from the desktop first.";
 const KEYS_UPLOAD_FAIL = "Could not upload keys.";
 const SETUP_FAILED_NO_PASSPHRASE = "Could not get encryption passphrase.";
 

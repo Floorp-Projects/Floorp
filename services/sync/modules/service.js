@@ -524,19 +524,19 @@ WeaveSvc.prototype = {
         ID.get('WeaveCryptoID').setTempPassword(passp);
 
       if (!this.username) {
-        this._setSyncFailure( LOGIN_FAILED_NO_USERNAME );
+        this._setSyncFailure(LOGIN_FAILED_NO_USERNAME);
         throw "No username set, login failed";
       }
 
       if (!this.password) {
-        this._setSyncFailure( LOGIN_FAILED_NO_PASSWORD );
+        this._setSyncFailure(LOGIN_FAILED_NO_PASSWORD);
         throw "No password given or found in password manager";
       }
 
       this._log.debug("Logging in user " + this.username);
 
       if (!(yield this.verifyLogin(self.cb, this.username, this.password, true))) {
-        this._setSyncFailure( LOGIN_FAILED_REJECTED );
+        this._setSyncFailure(LOGIN_FAILED_REJECTED);
         throw "Login failed";
       }
 
