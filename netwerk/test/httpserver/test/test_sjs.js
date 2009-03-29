@@ -40,7 +40,7 @@
 
 const BASE = "http://localhost:4444";
 
-var sjs = do_get_file("netwerk/test/httpserver/test/data/sjs/cgi.sjs");
+var sjs = do_get_file("data/sjs/cgi.sjs");
 var srv;
 var test;
 var tests = [];

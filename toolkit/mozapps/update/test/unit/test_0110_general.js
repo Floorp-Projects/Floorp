@@ -63,7 +63,7 @@ function run_test() {
 
   // The directory the updates will be applied to is the current working
   // directory (e.g. obj-dir/toolkit/mozapps/update/test) and not dist/bin
-  gTestDir = fileLocator.get("CurWorkD", AUS_Ci.nsIFile);
+  gTestDir = do_get_cwd();
   // The mar files were created with all files in a subdirectory named
   // mar_test... clear it out of the way if it exists and recreate it.
   gTestDir.append("mar_test");
@@ -77,7 +77,7 @@ function run_test() {
   testFile.append("text1");
   testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 
-  var binDir = fileLocator.get("XCurProcD", AUS_Ci.nsIFile);
+  var binDir = fileLocator.get("GreD", AUS_Ci.nsIFile);
 
   // The updater binary file
   gUpdater = binDir.clone();
@@ -211,7 +211,7 @@ function run_test_pt2() {
   do_check_eq(getFileBytes(getTestFile("text1")), "ToBeModified\n");
   do_check_eq(getFileBytes(getTestFile("text2")), "ToBeDeleted\n");
 
-  var refImage = do_get_file("toolkit/mozapps/update/test/unit/data/aus-0110_general_ref_image1.png");
+  var refImage = do_get_file("data/aus-0110_general_ref_image1.png");
   var srcImage = getTestFile("image1.png");
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 
@@ -235,7 +235,7 @@ function run_test_pt4() {
   do_check_false(getTestFile("text2").exists()); // file removed
   do_check_eq(getFileBytes(getTestFile("text3")), "Added\n");
 
-  var refImage = do_get_file("toolkit/mozapps/update/test/unit/data/aus-0110_general_ref_image2.png");
+  var refImage = do_get_file("data/aus-0110_general_ref_image2.png");
   var srcImage = getTestFile("image1.png");
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 

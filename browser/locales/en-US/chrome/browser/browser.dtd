@@ -100,9 +100,13 @@
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
-<!ENTITY bookmarksSidebarCmd.accesskey  "B">
-<!ENTITY bookmarksSidebarCmd.commandkey "b">
-<!ENTITY bookmarksSidebarWinCmd.commandkey "i">
+<!ENTITY bookmarksButton.accesskey  "B">
+<!ENTITY bookmarksCmd.commandkey "b">
+<!-- LOCALIZATION NOTE (bookmarksSidebarGtkCmd.commandkey): This command
+  -  key should not contain the letters A-F, since these are reserved
+  -  shortcut keys on Linux. -->
+<!ENTITY bookmarksGtkCmd.commandkey "o">
+<!ENTITY bookmarksWinCmd.commandkey "i">
 
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
@@ -185,6 +189,8 @@
 <!ENTITY historyMenu.label "History">
 <!ENTITY historyMenu.accesskey "s">
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
+<!-- LOCALIZATION NOTE (historyUndoWindowMenu): see bug 394759 -->
+<!ENTITY historyUndoWindowMenu.label "Recently Closed Windows">
 
 <!ENTITY historyHomeCmd.label "Home">
 <!ENTITY showAllHistoryCmd2.label "Show All History">
@@ -192,6 +198,10 @@
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.emptyText             "Search Bookmarks and History">
+<!ENTITY urlbar.bookmarkhistory.emptyText "Search Bookmarks and History">
+<!ENTITY urlbar.bookmark.emptyText    "Search Bookmarks">
+<!ENTITY urlbar.history.emptyText     "Search History">
+<!ENTITY urlbar.none.emptyText        "Type a Web address">
 <!ENTITY urlbar.accesskey             "d">
 
 <!-- 

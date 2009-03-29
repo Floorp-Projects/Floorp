@@ -440,30 +440,21 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent,
 {
   *aNearestViewportElement = nsnull;
 
-  nsCOMPtr<nsIContent> element = aContent;
-  nsCOMPtr<nsIContent> ancestor;
-  unsigned short ancestorCount = 0;
+  nsIContent *ancestor = GetParentElement(aContent);
 
-  while (1) {
+  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+         ancestor->Tag() != nsGkAtoms::foreignObject) {
 
-    ancestor = GetParentElement(element);
+    nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(ancestor);
 
-    nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(element);
-
-    if (fitToViewBox && (ancestor || ancestorCount)) {
-      // right interface and not the outermost SVG element
-      nsCOMPtr<nsIDOMSVGElement> SVGElement = do_QueryInterface(element);
-      SVGElement.swap(*aNearestViewportElement);
+    if (fitToViewBox) {
+      // right interface
+      nsCOMPtr<nsIDOMSVGElement> element = do_QueryInterface(ancestor);
+      element.swap(*aNearestViewportElement);
       return NS_OK;
     }
 
-    if (!ancestor) {
-      // reached the top of our parent chain
-      break;
-    }
-
-    element = ancestor;
-    ancestorCount++;
+    ancestor = GetParentElement(ancestor);
   }
 
   return NS_OK;
@@ -475,37 +466,24 @@ nsSVGUtils::GetFarthestViewportElement(nsIContent *aContent,
 {
   *aFarthestViewportElement = nsnull;
 
-  nsCOMPtr<nsIContent> element = aContent;
-  nsCOMPtr<nsIContent> ancestor;
-  nsCOMPtr<nsIDOMSVGElement> SVGElement;
-  unsigned short ancestorCount = 0;
+  nsIContent *ancestor = GetParentElement(aContent);
+  nsCOMPtr<nsIDOMSVGElement> element;
 
-  while (1) {
+  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+         ancestor->Tag() != nsGkAtoms::foreignObject) {
 
-    ancestor = GetParentElement(element);
-
-    nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(element);
+    nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(ancestor);
 
     if (fitToViewBox) {
       // right interface
-      SVGElement = do_QueryInterface(element);
+      element = do_QueryInterface(ancestor);
     }
 
-    if (!ancestor) {
-      // reached the top of our parent chain
-      break;
-    }
-
-    element = ancestor;
-    ancestorCount++;
+    ancestor = GetParentElement(ancestor);
   }
 
-  if (ancestorCount == 0 || !SVGElement) {
-    // outermost SVG element or no viewport found
-    return NS_OK;
-  }
+  element.swap(*aFarthestViewportElement);
 
-  SVGElement.swap(*aFarthestViewportElement);
   return NS_OK;
 }
 

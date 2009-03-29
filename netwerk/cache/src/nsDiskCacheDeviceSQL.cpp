@@ -161,10 +161,8 @@ class EvictionObserver
 static PRUint64
 DCacheHash(const char * key)
 {
-  PRUint64 h = 0;
-  for (const PRUint8* s = (PRUint8*) key; *s != '\0'; ++s)
-    h = (h >> (DCACHE_HASH_BITS - 4)) ^ (h << 4) ^ *s;
-  return (h == 0 ? DCACHE_HASH_MAX : h);
+  // initval 0x7416f295 was chosen randomly
+  return (PRUint64(nsDiskCache::Hash(key, 0)) << 32) | nsDiskCache::Hash(key, 0x7416f295);
 }
 
 /******************************************************************************

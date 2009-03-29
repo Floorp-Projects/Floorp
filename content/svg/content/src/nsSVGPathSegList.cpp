@@ -40,7 +40,6 @@
 #include "nsSVGPathSeg.h"
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
-#include "nsVoidArray.h"
 #include "nsCOMArray.h"
 #include "nsDOMError.h"
 #include "nsSVGPathDataParser.h"

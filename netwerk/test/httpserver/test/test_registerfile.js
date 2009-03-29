@@ -46,7 +46,7 @@ function isException(e, code)
     do_throw("unexpected error: " + e);
 }
 
-var file = do_get_file("netwerk/test/httpserver/test/test_registerfile.js");
+var file = do_get_file("test_registerfile.js");
 
 function onStart(ch, cx)
 {
@@ -67,7 +67,7 @@ function run_test()
 
   try
   {
-    srv.registerFile("/foo", do_get_file("netwerk/test/httpserver/"));
+    srv.registerFile("/foo", do_get_cwd());
     throw "registerFile succeeded!";
   }
   catch (e)

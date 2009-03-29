@@ -302,45 +302,25 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     cairo_image_surface_t *image;
     xcb_get_image_reply_t *imagerep;
     int bpp, bytes_per_line;
-    short x1, y1, x2, y2;
+    cairo_rectangle_int_t extents;
     unsigned char *data;
     cairo_format_masks_t masks;
     cairo_format_t format;
 
-    x1 = 0;
-    y1 = 0;
-    x2 = surface->width;
-    y2 = surface->height;
+    extents.x = 0;
+    extents.y = 0;
+    extents.width  = surface->width;
+    extents.height = surface->height;
 
     if (interest_rect) {
-	cairo_rectangle_int_t rect;
-
-	rect.x = interest_rect->x;
-	rect.y = interest_rect->y;
-	rect.width = interest_rect->width;
-	rect.height = interest_rect->height;
-
-	if (rect.x > x1)
-	    x1 = rect.x;
-	if (rect.y > y1)
-	    y1 = rect.y;
-	if (rect.x + rect.width < x2)
-	    x2 = rect.x + rect.width;
-	if (rect.y + rect.height < y2)
-	    y2 = rect.y + rect.height;
-
-	if (x1 >= x2 || y1 >= y2) {
+	if (! _cairo_rectangle_intersect (&extents, interest_rect)) {
 	    *image_out = NULL;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
-    if (image_rect) {
-	image_rect->x = x1;
-	image_rect->y = y1;
-	image_rect->width = x2 - x1;
-	image_rect->height = y2 - y1;
-    }
+    if (image_rect)
+	*image_rect = extents;
 
     /* XXX: This should try to use the XShm extension if available */
 
@@ -350,8 +330,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	imagerep = xcb_get_image_reply(surface->dpy,
 				    xcb_get_image(surface->dpy, XCB_IMAGE_FORMAT_Z_PIXMAP,
 						surface->drawable,
-						x1, y1,
-						x2 - x1, y2 - y1,
+						extents.x, extents.y,
+						extents.width, extents.height,
 						AllPlanes), &error);
 
 	/* If we get an error, the surface must have been a window,
@@ -380,17 +360,17 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 			 surface->depth,
 			 pixmap,
 			 surface->drawable,
-			 x2 - x1, y2 - y1);
+			 extents.width, extents.height);
 	_cairo_xcb_surface_ensure_gc (surface);
 
 	xcb_copy_area (surface->dpy, surface->drawable, pixmap, surface->gc,
-		     x1, y1, 0, 0, x2 - x1, y2 - y1);
+		     extents.x, extents.y, 0, 0, extents.width, extents.height);
 
 	imagerep = xcb_get_image_reply(surface->dpy,
 				    xcb_get_image(surface->dpy, XCB_IMAGE_FORMAT_Z_PIXMAP,
 						pixmap,
-						x1, y1,
-						x2 - x1, y2 - y1,
+						extents.x, extents.y,
+						extents.width, extents.height,
 						AllPlanes), 0);
 	xcb_free_pixmap (surface->dpy, pixmap);
 
@@ -447,8 +427,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (data,
 						 format,
-						 x2 - x1,
-						 y2 - y1,
+						 extents.width,
+						 extents.height,
 						 bytes_per_line);
 	if (image->base.status)
 	    goto FAIL;
@@ -462,8 +442,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_with_masks (data,
 						    &masks,
-						    x2 - x1,
-						    y2 - y1,
+						    extents.width,
+						    extents.height,
 						    bytes_per_line);
 	if (image->base.status)
 	    goto FAIL;
@@ -968,10 +948,10 @@ typedef enum {
  * hit the bug and won't be able to use a core protocol fallback.
  */
 static composite_operation_t
-_categorize_composite_operation (cairo_xcb_surface_t *dst,
-				 cairo_operator_t      op,
-				 cairo_pattern_t      *src_pattern,
-				 cairo_bool_t	       have_mask)
+_categorize_composite_operation (cairo_xcb_surface_t	    *dst,
+				 cairo_operator_t	     op,
+				 const cairo_pattern_t	    *src_pattern,
+				 cairo_bool_t		     have_mask)
 
 {
 #if XXX_BUGGY_REPEAT
@@ -1108,8 +1088,8 @@ _render_operator (cairo_operator_t op)
 
 static cairo_int_status_t
 _cairo_xcb_surface_composite (cairo_operator_t		op,
-			      cairo_pattern_t		*src_pattern,
-			      cairo_pattern_t		*mask_pattern,
+			      const cairo_pattern_t	*src_pattern,
+			      const cairo_pattern_t	*mask_pattern,
 			      void			*abstract_dst,
 			      int			src_x,
 			      int			src_y,
@@ -1397,7 +1377,7 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
 
 static cairo_int_status_t
 _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
-					 cairo_pattern_t	*pattern,
+					 const cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
 					 cairo_antialias_t	antialias,
 					 int			src_x,
@@ -1575,34 +1555,31 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
 		XCB_RENDER_CP_CLIP_MASK, none);
     } else {
-	cairo_box_int_t *boxes;
 	cairo_status_t status;
 	xcb_rectangle_t *rects = NULL;
 	int n_boxes, i;
 
-	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
-        if (status)
-            return status;
+	n_boxes = _cairo_region_num_boxes (region);
 
 	if (n_boxes > 0) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof(xcb_rectangle_t));
-	    if (rects == NULL) {
-                _cairo_region_boxes_fini (region, boxes);
+	    if (rects == NULL)
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-            }
 	} else {
 	    rects = NULL;
 	}
 
 	for (i = 0; i < n_boxes; i++) {
-	    rects[i].x = boxes[i].p1.x;
-	    rects[i].y = boxes[i].p1.y;
-	    rects[i].width = boxes[i].p2.x - boxes[i].p1.x;
-	    rects[i].height = boxes[i].p2.y - boxes[i].p1.y;
+	    cairo_box_int_t box;
+
+	    _cairo_region_get_box (region, i, &box);
+	    
+	    rects[i].x = box.p1.x;
+	    rects[i].y = box.p1.y;
+	    rects[i].width = box.p2.x - box.p1.x;
+	    rects[i].height = box.p2.y - box.p1.y;
 	}
-
-        _cairo_region_boxes_fini (region, boxes);
-
+ 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;
@@ -1642,13 +1619,13 @@ _cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				       cairo_scaled_font_t  *scaled_font);
 
 static cairo_int_status_t
-_cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				 cairo_operator_t     op,
-				 cairo_pattern_t     *src_pattern,
-				 cairo_glyph_t       *glyphs,
-				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font,
-				 int		     *remaining_glyphs);
+_cairo_xcb_surface_show_glyphs (void			*abstract_dst,
+				cairo_operator_t	 op,
+				const cairo_pattern_t	*src_pattern,
+				cairo_glyph_t		*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font,
+				int			*remaining_glyphs);
 
 static cairo_bool_t
 _cairo_xcb_surface_is_similar (void *surface_a,
@@ -1703,6 +1680,8 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_composite,
     _cairo_xcb_surface_fill_rectangles,
     _cairo_xcb_surface_composite_trapezoids,
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_xcb_surface_set_clip_region,
@@ -1752,7 +1731,8 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 				    int			      depth)
 {
     cairo_xcb_surface_t *surface;
-    const xcb_render_query_version_reply_t *r;
+    const xcb_query_extension_reply_t *er;
+    const xcb_render_query_version_reply_t *r = NULL;
 
     surface = malloc (sizeof (cairo_xcb_surface_t));
     if (surface == NULL)
@@ -1784,7 +1764,10 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 	;
     }
 
-    r = xcb_render_util_query_version(dpy);
+    er = xcb_get_extension_data(dpy, &xcb_render_id);
+    if(er && er->present) {
+	r = xcb_render_util_query_version(dpy);
+    }
     if (r) {
 	surface->render_major = r->major_version;
 	surface->render_minor = r->minor_version;
@@ -2436,17 +2419,20 @@ _cairo_xcb_surface_emit_glyphs (cairo_xcb_surface_t *dst,
 	}
     }
 
+    /* We wouldn't want to leak memory, would we? */
+    free(output_glyphs);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				cairo_operator_t     op,
-				cairo_pattern_t     *src_pattern,
-				cairo_glyph_t       *glyphs,
-				int		      num_glyphs,
-				cairo_scaled_font_t *scaled_font,
-				int		     *remaining_glyphs)
+_cairo_xcb_surface_show_glyphs (void			*abstract_dst,
+				cairo_operator_t	 op,
+				const cairo_pattern_t	*src_pattern,
+				cairo_glyph_t		*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font,
+				int			*remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;

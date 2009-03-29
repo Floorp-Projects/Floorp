@@ -61,7 +61,7 @@ const PR_USEC_PER_MSEC = 1000;
 // ZIP times are stored at a 2 second resolution.
 const TIME_RESOLUTION = 2000;
 
-const DATA_DIR = "modules/libjar/zipwriter/test/unit/data/";
+const DATA_DIR = "data/";
 
 var ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1",
                                        "nsIZipWriter");

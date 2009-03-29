@@ -54,15 +54,15 @@
 ** Includes
 ***********************************************************************/
 
-
-#if defined(_PR_DCETHREADS)
-
 #include "prlog.h"
 #include "prinit.h"
 #include "prpdce.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#if defined(_PR_DCETHREADS)
+
 PRIntn failed_already=0;
 PRIntn debug_mode=0;
 

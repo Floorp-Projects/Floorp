@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsbit.h"
 #include "jsprf.h"
 #include "jsutil.h"

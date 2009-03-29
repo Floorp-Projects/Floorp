@@ -162,10 +162,9 @@ PRBool XPCDispTypeInfo::FuncDescArray::BuildFuncDesc(XPCCallContext& ccx, JSObje
                                      XPCDispJSPropertyInfo & propInfo)
 {
     // While this memory is passed out, we're ultimately responsible to free it
-    FUNCDESC* funcDesc = new FUNCDESC;
+    FUNCDESC* funcDesc = mArray.AppendElement();
     if(!funcDesc)
         return PR_FALSE;
-    mArray.AppendElement(funcDesc);
     // zero is reserved
     funcDesc->memid = propInfo.GetMemID();
     funcDesc->lprgscode = 0; // Not used (for 16 bit systems)
@@ -210,12 +209,10 @@ XPCDispTypeInfo::FuncDescArray::FuncDescArray(XPCCallContext& ccx, JSObject* obj
 
 XPCDispTypeInfo::FuncDescArray::~FuncDescArray()
 {
-    PRUint32 size = mArray.Count();
+    PRUint32 size = mArray.Length();
     for(PRUint32 index = 0; index < size; ++index)
     {
-        FUNCDESC* funcDesc = reinterpret_cast<FUNCDESC*>(mArray.ElementAt(index));
-        delete [] funcDesc->lprgelemdescParam;
-        delete funcDesc;
+        delete [] mArray[index].lprgelemdescParam;
     }
 }
 
@@ -435,12 +432,12 @@ void STDMETHODCALLTYPE XPCDispTypeInfo::ReleaseVarDesc(
 XPCDispIDArray::XPCDispIDArray(XPCCallContext& ccx, JSIdArray* array) : 
     mMarked(JS_FALSE), mIDArray(array->length)
 {
+    mIDArray.SetLength(array->length);
+    
     // copy the JS ID Array to our internal array
     for(jsint index = 0; index < array->length; ++index)
     {
-        mIDArray.ReplaceElementAt(reinterpret_cast<void*>
-                                                  (array->vector[index]), 
-                                  index);
+        mIDArray[index] = array->vector[index];
     }   
 }
 
@@ -460,9 +457,7 @@ void XPCDispIDArray::TraceJS(JSTracer* trc)
     // Iterate each of the ID's and mark them
     for(PRInt32 index = 0; index < count; ++index)
     {
-        if(JS_IdToValue(trc->context,
-                        reinterpret_cast<jsid>(mIDArray.ElementAt(index)),
-                        &val))
+        if(JS_IdToValue(trc->context, mIDArray.ElementAt(index), &val))
         {
             JS_CALL_VALUE_TRACER(trc, val, "disp_id_array_element");
         }

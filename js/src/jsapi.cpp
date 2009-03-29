@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsclist.h"
@@ -3544,7 +3545,7 @@ JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 {
     CHECK_REQUEST(cx);
 
-    return GetPropertyAttributesById(cx, obj, id, flags, JS_TRUE, desc);
+    return GetPropertyAttributesById(cx, obj, id, flags, JS_FALSE, desc);
 }
 
 JS_PUBLIC_API(JSBool)

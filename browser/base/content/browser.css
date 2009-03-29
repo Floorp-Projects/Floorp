@@ -56,6 +56,11 @@ toolbar[printpreview="true"] {
   font-weight: bold;
 }
 
+#editBMPanel_tagsSelector {
+  /* override default listbox width from xul.css */
+  width: auto;
+}
+
 menuitem.spell-suggestion {
   font-weight: bold;
 }

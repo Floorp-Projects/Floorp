@@ -79,7 +79,7 @@ mozStorageRow::initialize(sqlite3_stmt *aStatement)
         break;
       case SQLITE_TEXT:
       {
-        nsAutoString str(
+        nsDependentString str(
           static_cast<const PRUnichar *>(sqlite3_column_text16(aStatement, i))
         );
         variant = new mozStorageText(str);

@@ -46,12 +46,6 @@
 #define DIRECTORY_SEPARATOR_STR     "\\"
 #define PATH_SEPARATOR              ';'
 
-#ifdef WIN16
-#define GCPTR __far
-#else
-#define GCPTR
-#endif
-
 /*
 ** Routines for processing command line arguments
 */

@@ -35,22 +35,29 @@
  * ***** END LICENSE BLOCK ***** */
 // nsIProcess unit test
 
-// get the path to {objdir}/dist/bin
-var bindir = Components.classes["@mozilla.org/file/directory_service;1"]
-.getService(Components.interfaces.nsIProperties)
-.get("CurProcD", Components.interfaces.nsIFile);
-
-// the the os
 var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
 
-var filePrefix = "";
-var fileSuffix = "";
+function get_test_program(prog)
+{
+  var progPath = do_get_cwd();
+  progPath.append(prog);
+  if (isWindows)
+    progPath.leafName = progPath.leafName + ".exe";
+  return progPath;
+}
 
-if (isWindows) {
-  filePrefix = bindir.path + "\\";
-  fileSuffix = ".exe";
-} else {
-  filePrefix = bindir.path + "/";
+function set_environment()
+{
+  var envSvc = Components.classes["@mozilla.org/process/environment;1"].
+    getService(Components.interfaces.nsIEnvironment);
+  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].
+    getService(Components.interfaces.nsIProperties);
+  var greDir = dirSvc.get("GreD", Components.interfaces.nsIFile);
+
+  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
+  // For Linux
+  envSvc.set("LD_LIBRARY_PATH", greDir.path);
+  //XXX: handle windows
 }
 
 
@@ -58,17 +65,12 @@ if (isWindows) {
 // and then killed
 function test_kill()
 {
-  var testapp = filePrefix + "TestBlockingProcess" +fileSuffix;
-  print(testapp);
- 
-  var file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath(testapp);
+  var file = get_test_program("TestBlockingProcess");
  
   var process = Components.classes["@mozilla.org/process/util;1"]
                           .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
-  
+
   do_check_false(process.isRunning);
 
   try {
@@ -96,11 +98,7 @@ function test_kill()
 // guaranteed to return an exit value of 42
 function test_quick()
 {
-  var testapp = filePrefix + "TestQuickReturn" + fileSuffix;
-  
-  var file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath(testapp);
+  var file = get_test_program("TestQuickReturn");
   
   var process = Components.classes["@mozilla.org/process/util;1"]
                           .createInstance(Components.interfaces.nsIProcess);
@@ -113,14 +111,10 @@ function test_quick()
 }
 
 // test if an argument can be successfully passed to an application
-// that will return -1 if "mozilla" is not the first argument
+// that will return 0 if "mozilla" is the only argument
 function test_arguments()
 {
-  var testapp = filePrefix + "TestArguments" + fileSuffix;
-  
-  var file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath(testapp);
+  var file = get_test_program("TestArguments");
   
   var process = Components.classes["@mozilla.org/process/util;1"]
                           .createInstance(Components.interfaces.nsIProcess);
@@ -130,47 +124,72 @@ function test_arguments()
   
   process.run(true, args, args.length);
   
-  // exit codes actually seem to be unsigned bytes...
-  do_check_neq(process.exitValue, 255);
+  do_check_eq(process.exitValue, 0);
 }
 
-var gProcess;
-
-// test if we can get an exit value from an application that is
-// run non-blocking
-function test_nonblocking()
+// test if we get notified about a blocking process
+function test_notify_blocking()
 {
-  var testapp = filePrefix + "TestQuickReturn" + fileSuffix;
-  
-  var file = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath(testapp);
-  
-  gProcess = Components.classes["@mozilla.org/process/util;1"]
-                       .createInstance(Components.interfaces.nsIProcess);
-  gProcess.init(file);
+  var file = get_test_program("TestQuickReturn");
 
-  gProcess.run(false, [], 0);
+  var process = Components.classes["@mozilla.org/process/util;1"]
+                          .createInstance(Components.interfaces.nsIProcess2);
+  process.init(file);
 
-  do_test_pending();
-  do_timeout(100, "check_nonblocking()");
+  process.runAsync([], 0, {
+    observe: function(subject, topic, data) {
+      process = subject.QueryInterface(Components.interfaces.nsIProcess);
+      do_check_eq(topic, "process-finished");
+      do_check_eq(process.exitValue, 42);
+      test_notify_nonblocking();
+    }
+  });
 }
 
-function check_nonblocking()
+// test if we get notified about a non-blocking process
+function test_notify_nonblocking()
 {
-  if (gProcess.isRunning) {
-    do_timeout(100, "check_nonblocking()");
-    return;
-  }
+  var file = get_test_program("TestArguments");
 
-  do_check_eq(gProcess.exitValue, 42);
-  do_test_finished();
+  var process = Components.classes["@mozilla.org/process/util;1"]
+                          .createInstance(Components.interfaces.nsIProcess2);
+  process.init(file);
+
+  process.runAsync(["mozilla"], 1, {
+    observe: function(subject, topic, data) {
+      process = subject.QueryInterface(Components.interfaces.nsIProcess);
+      do_check_eq(topic, "process-finished");
+      do_check_eq(process.exitValue, 0);
+      test_notify_killed();
+    }
+  });
+}
+
+// test if we get notified about a killed process
+function test_notify_killed()
+{
+  var file = get_test_program("TestBlockingProcess");
+
+  var process = Components.classes["@mozilla.org/process/util;1"]
+                          .createInstance(Components.interfaces.nsIProcess2);
+  process.init(file);
+
+  process.runAsync([], 0, {
+    observe: function(subject, topic, data) {
+      process = subject.QueryInterface(Components.interfaces.nsIProcess);
+      do_check_eq(topic, "process-finished");
+      do_test_finished();
+    }
+  });
+
+  process.kill();
 }
 
 function run_test() {
+  set_environment();
   test_kill();
   test_quick();
   test_arguments();
-  if (isWindows)
-    test_nonblocking();
+  do_test_pending();
+  test_notify_blocking();
 }

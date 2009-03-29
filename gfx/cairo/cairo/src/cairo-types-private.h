@@ -41,8 +41,10 @@
 
 #include "cairo.h"
 #include "cairo-fixed-type-private.h"
+#include "cairo-reference-count-private.h"
 
 typedef struct _cairo_array cairo_array_t;
+typedef struct _cairo_backend cairo_backend_t;
 typedef struct _cairo_cache cairo_cache_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
@@ -52,6 +54,7 @@ typedef struct _cairo_gstate cairo_gstate_t;
 typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
+typedef struct _cairo_mime_data cairo_mime_data_t;
 typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
@@ -120,9 +123,12 @@ struct _cairo_font_options {
     cairo_hint_metrics_t hint_metrics;
 };
 
+typedef cairo_bool_t (*cairo_cache_predicate_func_t) (const void *entry);
+
 struct _cairo_cache {
     cairo_hash_table_t *hash_table;
 
+    cairo_cache_predicate_func_t predicate;
     cairo_destroy_func_t entry_destroy;
 
     unsigned long max_size;
@@ -249,6 +255,30 @@ typedef struct _cairo_box_int {
     cairo_point_int_t p2;
 } cairo_box_int_t;
 
+
+/* Rectangles that take part in a composite operation.
+ *
+ * This defines four translations that define which pixels of the
+ * source pattern, mask, clip and destination surface take part in a
+ * general composite operation.  The idea is that the pixels at
+ *
+ *	(i,j)+(src.x, src.y) of the source,
+ *      (i,j)+(mask.x, mask.y) of the mask,
+ *      (i,j)+(clip.x, clip.y) of the clip and
+ *      (i,j)+(dst.x, dst.y) of the destination
+ *
+ * all combine together to form the result at (i,j)+(dst.x,dst.y),
+ * for i,j ranging in [0,width) and [0,height) respectively.
+ */
+typedef struct _cairo_composite_rectangles {
+        cairo_point_int_t src;
+        cairo_point_int_t mask;
+        cairo_point_int_t clip;
+        cairo_point_int_t dst;
+        int width;
+        int height;
+} cairo_composite_rectangles_t;
+
 typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
@@ -262,9 +292,7 @@ typedef enum _cairo_clip_mode {
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
-    int clockWise;
-
-    cairo_fixed_t current_x;
+    int dir;
 } cairo_edge_t;
 
 typedef struct _cairo_polygon {
@@ -280,19 +308,25 @@ typedef struct _cairo_polygon {
     cairo_edge_t  edges_embedded[32];
 } cairo_polygon_t;
 
+typedef cairo_warn cairo_status_t
+(*cairo_spline_add_point_func_t) (void *closure,
+				  const cairo_point_t *point);
+
 typedef struct _cairo_spline_knots {
     cairo_point_t a, b, c, d;
 } cairo_spline_knots_t;
+
 typedef struct _cairo_spline {
+    cairo_spline_add_point_func_t add_point_func;
+    void *closure;
+
     cairo_spline_knots_t knots;
 
     cairo_slope_t initial_slope;
     cairo_slope_t final_slope;
 
-    int num_points;
-    int points_size;
-    cairo_point_t *points;
-    cairo_point_t  points_embedded[64];
+    cairo_bool_t has_point;
+    cairo_point_t last_point;
 } cairo_spline_t;
 
 typedef struct _cairo_pen_vertex {
@@ -341,5 +375,13 @@ typedef enum _cairo_image_transparency {
     CAIRO_IMAGE_HAS_ALPHA,
     CAIRO_IMAGE_UNKNOWN
 } cairo_image_transparency_t;
+
+struct _cairo_mime_data {
+    cairo_reference_count_t ref_count;
+    unsigned char *data;
+    unsigned int length;
+    cairo_destroy_func_t destroy;
+    void *closure;
+};
 
 #endif /* CAIRO_TYPES_PRIVATE_H */

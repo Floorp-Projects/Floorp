@@ -43,7 +43,7 @@ var srv, serverBasePath;
 function run_test()
 {
   srv = createServer();
-  serverBasePath = do_get_file("netwerk/test/httpserver/test/");
+  serverBasePath = do_get_cwd();
   srv.registerDirectory("/", serverBasePath);
   srv.setIndexHandler(myIndexHandler);
   srv.start(4444);

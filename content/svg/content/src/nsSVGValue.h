@@ -42,8 +42,10 @@
 #include "nscore.h"
 #include "nsISVGValue.h"
 #include "nsAutoPtr.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsISVGValueObserver.h"
+#include "nsIWeakReference.h"
+#include "nsCOMPtr.h"
 
 class nsSVGValue : public nsISVGValue
 {
@@ -80,7 +82,7 @@ protected:
 private:
   virtual void OnDidModify(){} // hook that will be called before observers are notified
   
-  nsSmallVoidArray mObservers;
+  nsAutoTArray<nsWeakPtr, 1> mObservers;
   PRInt32 mModifyNestCount;
 };
 

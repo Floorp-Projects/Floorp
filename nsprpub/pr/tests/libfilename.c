@@ -80,7 +80,7 @@ static PRStatus RunTest(const char *name, PRFuncPtr addr)
     return PR_SUCCESS;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     char *name;
     PRFuncPtr addr;

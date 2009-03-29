@@ -404,6 +404,16 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
 }
 
 /*
+**  If the current thread owns |lock|, this assertion is guaranteed to
+**  succeed.  Otherwise, the behavior of this function is undefined.
+*/
+PR_IMPLEMENT(void) PR_AssertCurrentThreadOwnsLock(PRLock *lock)
+{
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+    PR_ASSERT(lock->owner == me);
+}
+
+/*
 ** Test and then lock the lock if it's not already locked by some other
 ** thread. Return PR_FALSE if some other thread owned the lock at the
 ** time of the call.

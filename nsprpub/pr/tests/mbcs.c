@@ -142,7 +142,7 @@ static void TraverseDirectory( unsigned char *dir )
 
 } /* end TraverseDirectory() */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     { /* get command line options */
         /*

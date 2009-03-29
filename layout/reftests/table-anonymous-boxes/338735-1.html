@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+  #t {
+    display: none;
+  }
+</style>
+<script lang="JavaScript">
+  function toggleLayer(id) {
+      var s = document.getElementById(id).style;
+      s.display = s.display ? "" : "block";
+  }
+
+  function doTest() {
+    toggleLayer('t');
+    document.body.offsetWidth;
+    toggleLayer('t');
+    document.body.offsetWidth;
+    toggleLayer('t');
+    document.documentElement.className = "";
+  }
+</script>
+</head>
+<body onload="doTest()">
+<table style="width: 100%;" border="5">
+  <tr>
+          <td id="t">First row</td>
+  </tr>
+  <tr>
+          <td>Second row</td>
+  </tr>
+</table>
+</body>
+</html>

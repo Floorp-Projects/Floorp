@@ -148,7 +148,7 @@ protected:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
   void UpdateGraphic();
-  already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
+  already_AddRefed<nsIDOMSVGMatrix> GetUnZoomedTMIncludingOffset();
   nsresult TransformPointFromOuterPx(const nsPoint &aIn, nsPoint* aOut);
   void InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
                            const nsRect& aRect, PRUint32 aFlags);

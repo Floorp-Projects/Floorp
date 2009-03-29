@@ -136,7 +136,7 @@ PlacesController.prototype = {
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
-      return this._canInsert() && this._isClipboardDataPasteable();
+      return this._canInsert(true) && this._isClipboardDataPasteable();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
         var result = this._view.getResult();
@@ -331,9 +331,9 @@ PlacesController.prototype = {
   /**
    * Determines whether or not nodes can be inserted relative to the selection.
    */
-  _canInsert: function PC__canInsert() {
+  _canInsert: function PC__canInsert(isPaste) {
     var ip = this._view.insertionPoint;
-    return ip != null && ip.isTag != true;
+    return ip != null && (isPaste || ip.isTag != true);
   },
 
   /**
@@ -596,7 +596,9 @@ PlacesController.prototype = {
     for (var i = 0; i < aPopup.childNodes.length; ++i) {
       var item = aPopup.childNodes[i];
       if (item.localName != "menuseparator") {
-        item.hidden = (item.getAttribute("hideifnoinsertionpoint") == "true" && noIp) ||
+        // We allow pasting into tag containers, so special case that.
+        item.hidden = (item.getAttribute("hideifnoinsertionpoint") == "true" &&
+                       noIp && !(ip && ip.isTag && item.id == "placesContext_paste")) ||
                       !this._shouldShowMenuItem(item, metadata);
 
         if (!item.hidden) {
@@ -973,26 +975,13 @@ PlacesController.prototype = {
         }
       }
       else if (PlacesUtils.nodeIsDay(node)) {
-        // this is the oldest date
-        // for the last node endDate is end of epoch
-        var beginDate = 0;
-        // this is the newest date
-        // day nodes have time property set to the last day in the interval
-        var endDate = node.time;
-
-        var nodeIdx = 0;
-        var cc = root.childCount;
-
-        // Find index of current day node
-        while (nodeIdx < cc && root.getChild(nodeIdx) != node)
-          ++nodeIdx;
-
-        // We have an older day
-        if (nodeIdx+1 < cc)
-          beginDate = root.getChild(nodeIdx+1).time;
-
-        // we want to exclude beginDate from the removal
-        bhist.removePagesByTimeframe(beginDate+1, endDate);
+        var query = node.getQueries({})[0];
+        var beginTime = query.beginTime;
+        var endTime = query.endTime;
+        NS_ASSERT(query && beginTime && endTime,
+                  "A valid date container query should exist!");
+        // We want to exclude beginTime from the removal
+        bhist.removePagesByTimeframe(beginTime+1, endTime);
       }
     }
 
@@ -1222,13 +1211,21 @@ PlacesController.prototype = {
         var transactions = [];
         var index = ip.index;
         for (var i = 0; i < items.length; ++i) {
-          // adjusted to make sure that items are given the correct index -
-          // transactions insert differently if index == -1
-          if (ip.index > -1)
-            index = ip.index + i;
-          transactions.push(PlacesUIUtils.makeTransaction(items[i], type.value,
-                                                          ip.itemId, index,
-                                                          true));
+          var txn;
+          if (ip.isTag) {
+            var uri = PlacesUtils._uri(items[i].uri);
+            txn = PlacesUIUtils.ptm.tagURI(uri, [ip.itemId]);
+          } 
+          else {
+            // adjusted to make sure that items are given the correct index
+            // transactions insert differently if index == -1 
+            // transaction will enqueue the item.
+            if (ip.index > -1)
+              index = ip.index + i;
+            txn = PlacesUIUtils.makeTransaction(items[i], type.value,
+                                                ip.itemId, index, true);
+          }
+          transactions.push(txn);
         }
         return transactions;
       }

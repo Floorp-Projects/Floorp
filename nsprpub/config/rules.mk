@@ -109,7 +109,7 @@ ifdef LIBRARY_NAME
 ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 
 #
-# Win95, Win16, and OS/2 require library names conforming to the 8.3 rule.
+# Win95 and OS/2 require library names conforming to the 8.3 rule.
 # other platforms do not.
 #
 ifeq (,$(filter-out WIN95 WINCE OS2,$(OS_TARGET)))
@@ -318,6 +318,10 @@ ifeq ($(OS_TARGET), OS2)
 $(IMPORT_LIBRARY): $(MAPFILE)
 	rm -f $@
 	$(IMPLIB) $@ $(MAPFILE)
+else
+ifeq (,$(filter-out WIN95 WINCE,$(OS_TARGET)))
+$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+endif
 endif
 
 $(SHARED_LIBRARY): $(OBJS) $(RES) $(MAPFILE)

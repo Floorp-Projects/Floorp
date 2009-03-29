@@ -26,7 +26,7 @@ const tests =
  [dt("no-NO").has("30. juni"), "month name in no-NO"],
  [dt("sv-SE").has("30 jun"), "month name in sv-SE"],
  [dt("kok").has("\u091C\u0942\u0928"), "month name in kok"],
- [dt("gu-IN").has("\u0A9C\u0AC2\u0AA8"), "month name in gu-IN"],
+ [dt("ta-IN").has("\u0B9C\u0BC2\u0BA9\u0BCD"), "month name in ta-IN"],
  [dt("ab-CD").length > 0, "fallback for ab-CD"]
 ];
 

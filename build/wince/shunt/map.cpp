@@ -36,11 +36,78 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "stdlib.h"
-#include "Windows.h"
  
-#include "mozce_shunt.h"
+#include "include/mozce_shunt.h"
 #include "time_conversions.h"
+#include <stdlib.h>
+#include "Windows.h"
+
+#ifdef MOZ_MEMORY
+void * operator new(size_t _Size)
+{
+   void *p =  moz_malloc(_Size);
+   return (p);
+}
+
+void operator delete(void * ptr)
+{
+  moz_free(ptr);  
+}
+void *operator new[](size_t size)
+{
+  void* p = moz_malloc(size);
+  return (p);
+}
+void operator delete[](void *ptr)
+{
+  moz_free(ptr);
+}
+
+MOZCE_SHUNT_API char*
+mozce_strndup( const char *src, size_t len ) {
+  char* dst = (char*)moz_malloc(len + 1);
+  if(dst)
+    strncpy(dst, src, len + 1);
+  return dst;
+}
+
+
+MOZCE_SHUNT_API char*
+mozce_strdup(const char *src ) {
+  size_t len = strlen(src);
+  return mozce_strndup(src, len );
+}
+
+MOZCE_SHUNT_API unsigned short* 
+mozce_wcsndup( const unsigned short *src, size_t len ) {
+  wchar_t* dst = (wchar_t*)moz_malloc(sizeof(wchar_t) * (len + 1));
+  if(dst)
+    wcsncpy(dst, src, len + 1);
+  return dst;
+}
+
+MOZCE_SHUNT_API unsigned short* 
+mozce_wcsdup( const unsigned short *src ) {
+  size_t len = wcslen(src);
+  return mozce_wcsndup(src, len);
+}
+MOZCE_SHUNT_API void* __cdecl malloc(size_t size) {
+  return moz_malloc(size);
+}
+MOZCE_SHUNT_API void* __cdecl valloc(size_t size) {
+  return moz_valloc(size);
+}
+MOZCE_SHUNT_API void* __cdecl  calloc(size_t size, size_t num) {
+  return moz_calloc(size, num);
+}
+MOZCE_SHUNT_API void* __cdecl  realloc(void* ptr, size_t size) {
+  return moz_realloc(ptr, size);
+}
+MOZCE_SHUNT_API void __cdecl  free(void* ptr) {
+  return moz_free(ptr);
+}
+
+#endif
 
 ////////////////////////////////////////////////////////
 //  Environment Variable Stuff
@@ -324,12 +391,12 @@ MOZCE_SHUNT_API unsigned int ExpandEnvironmentStringsW(const unsigned short* lpS
 //  errno
 ////////////////////////////////////////////////////////
 
-MOZCE_SHUNT_API char* strerror(int inErrno)
+MOZCE_SHUNT_IMPORT_API char* strerror(int inErrno)
 {
   return "Unknown Error";
 }
 
-MOZCE_SHUNT_API int errno = 0;
+MOZCE_SHUNT_IMPORT_API int errno = 0;
 
 
 ////////////////////////////////////////////////////////

@@ -41,7 +41,7 @@
 
 function run_test()
 {
-  var file = do_get_file("toolkit/components/satchel/test/unit/formhistory.dat");
+  var file = do_get_file("formhistory.dat");
   var formhistFile = dirSvc.get("ProfD", Ci.nsIFile);
   file.copyTo(formhistFile, "formhistory.dat");
   formhistFile.append("formhistory.dat");

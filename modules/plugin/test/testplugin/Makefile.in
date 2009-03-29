@@ -67,6 +67,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nptest_gtk2.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += nptest_os2.cpp
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += nptest_qt.cpp
 endif

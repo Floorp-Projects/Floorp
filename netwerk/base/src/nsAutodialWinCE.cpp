@@ -36,7 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <objbase.h>
+
+#ifdef WINCE_WINDOWS_MOBILE
 #include <connmgr.h>
+#endif
 
 #include "nsAutodialWinCE.h"
 
@@ -66,6 +69,7 @@ nsRASAutodial::Init()
 
 nsresult nsRASAutodial::DialDefault(const PRUnichar* /* hostName */)
 {
+#ifdef WINCE_WINDOWS_MOBILE
   HANDLE connectionHandle;
 
   // Make the connection to the new network
@@ -101,10 +105,17 @@ nsresult nsRASAutodial::DialDefault(const PRUnichar* /* hostName */)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 PRBool
 nsRASAutodial::ShouldDialOnNetworkError()
 {
+#ifdef WINCE_WINDOWS_MOBILE
   return PR_TRUE;
+#else
+  return PR_FALSE;
+#endif
 }

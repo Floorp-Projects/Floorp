@@ -1263,6 +1263,11 @@ statusbarpanel#statusbar-display {
   font-size: 130%;
 }
 
+#editBookmarkPanelHeader,
+#editBookmarkPanelContent {
+  margin-bottom: .5em;
+}
+
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
 #editBMPanel_folderTree {
   min-width: 27em;

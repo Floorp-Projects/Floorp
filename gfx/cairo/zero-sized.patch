@@ -1,0 +1,39 @@
+diff --git a/src/cairo-image-surface.c b/src/cairo-image-surface.c
+index e9e544d..cde68a1 100644
+--- a/src/cairo-image-surface.c
++++ b/src/cairo-image-surface.c
+@@ -324,8 +324,8 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
+     cairo_surface_t *surface;
+     pixman_image_t *pixman_image;
+ 
+-    pixman_image = pixman_image_create_bits (pixman_format, width, height,
+-					     (uint32_t *) data, stride);
++    pixman_image = pixman_image_create_bits (pixman_format, width ? width : 1, height ? height : 1,
++					     (uint32_t *) data, stride ? stride : 4);
+ 
+     if (unlikely (pixman_image == NULL))
+ 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+diff --git a/src/cairo-xlib-surface.c b/src/cairo-xlib-surface.c
+index f86a133..ddcb600 100644
+--- a/src/cairo-xlib-surface.c
++++ b/src/cairo-xlib-surface.c
+@@ -675,7 +675,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
+ 
+ 	pixmap = XCreatePixmap (surface->dpy,
+ 				surface->drawable,
+-				extents.width, extents.height,
++				extents.width <= 0 ? 1 : extents.width,
++				extents.height <= 0 ? 1 : extents.height,
+ 				surface->depth);
+ 	if (pixmap) {
+ 	    XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
+@@ -686,7 +687,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
+ 	    ximage = XGetImage (surface->dpy,
+ 				pixmap,
+ 				0, 0,
+-				extents.width, extents.height,
++				extents.width <= 0 ? 1 : extents.width,
++				extents.height <= 0 ? 1 : extents.height,
+ 				AllPlanes, ZPixmap);
+ 
+ 	    XFreePixmap (surface->dpy, pixmap);

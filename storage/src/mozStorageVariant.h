@@ -40,9 +40,11 @@
 #ifndef __mozStorageVariant_h__
 #define __mozStorageVariant_h__
 
-#include "nsIVariant.h"
-#include "nsTArray.h"
 #include <utility>
+
+#include "nsIVariant.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 /**
  * This class is used by the storage module whenever an nsIVariant needs to be
@@ -51,11 +53,10 @@
  * PRInt64   -> INTEGER (use mozStorageInteger)
  * double    -> FLOAT (use mozStorageFloat)
  * nsString  -> TEXT (use mozStorageText)
+ * nsCString -> TEXT (use mozStorageUTF8Text)
  * PRUint8[] -> BLOB (use mozStorageBlob)
  * nsnull    -> NULL (use mozStorageNull)
  */
-
-#define NO_CONVERSION return NS_ERROR_CANNOT_CONVERT_DATA;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Base Class
@@ -64,46 +65,11 @@ class mozStorageVariant_base : public nsIVariant
 {
 public:
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetDataType(PRUint16 *_type)
-  {
-    *_type = nsIDataType::VTYPE_EMPTY;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetAsInt32(PRInt32 *_integer) { NO_CONVERSION }
-  NS_IMETHOD GetAsInt64(PRInt64 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsDouble(double *) { NO_CONVERSION }
-  NS_IMETHOD GetAsAUTF8String(nsACString &) { NO_CONVERSION }
-  NS_IMETHOD GetAsAString(nsAString &) { NO_CONVERSION }
-  NS_IMETHOD GetAsArray(PRUint16 *, nsIID *, PRUint32 *, void **) { NO_CONVERSION }
-  NS_IMETHOD GetAsInt8(PRUint8 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsInt16(PRInt16 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsUint8(PRUint8 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsUint16(PRUint16 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsUint32(PRUint32 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsUint64(PRUint64 *) { NO_CONVERSION }
-  NS_IMETHOD GetAsFloat(float *) { NO_CONVERSION }
-  NS_IMETHOD GetAsBool(PRBool *) { NO_CONVERSION }
-  NS_IMETHOD GetAsChar(char *) { NO_CONVERSION }
-  NS_IMETHOD GetAsWChar(PRUnichar *) { NO_CONVERSION }
-  NS_IMETHOD GetAsID(nsID *) { NO_CONVERSION }
-  NS_IMETHOD GetAsDOMString(nsAString &) { NO_CONVERSION }
-  NS_IMETHOD GetAsString(char **) { NO_CONVERSION }
-  NS_IMETHOD GetAsWString(PRUnichar **) { NO_CONVERSION }
-  NS_IMETHOD GetAsISupports(nsISupports **) { NO_CONVERSION }
-  NS_IMETHOD GetAsInterface(nsIID **, void **) { NO_CONVERSION }
-  NS_IMETHOD GetAsACString(nsACString &) { NO_CONVERSION }
-  NS_IMETHOD GetAsStringWithSize(PRUint32 *, char **) { NO_CONVERSION }
-  NS_IMETHOD GetAsWStringWithSize(PRUint32 *, PRUnichar **) { NO_CONVERSION }
+  NS_DECL_NSIVARIANT
 
 protected:
   virtual ~mozStorageVariant_base() { }
 };
-NS_IMPL_THREADSAFE_ISUPPORTS1(
-  mozStorageVariant_base,
-  nsIVariant
-)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Traits
@@ -125,6 +91,8 @@ struct variant_storage_traits
   typedef DataType StorageType;
   static inline StorageType storage_conversion(ConstructorType aData) { return aData; }
 };
+
+#define NO_CONVERSION return NS_ERROR_CANNOT_CONVERT_DATA;
 
 template <typename DataType>
 struct variant_integer_traits
@@ -156,6 +124,8 @@ struct variant_blob_traits
   static inline nsresult asArray(StorageType, PRUint16 *, PRUint32 *, void **)
   { NO_CONVERSION }
 };
+
+#undef NO_CONVERSION
 
 /**
  * INTEGER types
@@ -245,6 +215,38 @@ struct variant_text_traits<nsString>
                                   nsAString &_result)
   {
     _result = aValue;
+    return NS_OK;
+  }
+};
+
+template < >
+struct variant_traits<nsCString>
+{
+  static inline PRUint16 type() { return nsIDataType::VTYPE_UTF8STRING; }
+};
+template < >
+struct variant_storage_traits<nsCString>
+{
+  typedef const nsACString & ConstructorType;
+  typedef nsCString StorageType;
+  static inline StorageType storage_conversion(ConstructorType aText)
+  {
+    return StorageType(aText);
+  }
+};
+template < >
+struct variant_text_traits<nsCString>
+{
+  static inline nsresult asUTF8String(const nsCString &aValue,
+                                      nsACString &_result)
+  {
+    _result = aValue;
+    return NS_OK;
+  }
+  static inline nsresult asString(const nsCString &aValue,
+                                  nsAString &_result)
+  {
+    CopyUTF8toUTF16(aValue, _result);
     return NS_OK;
   }
 };
@@ -348,6 +350,7 @@ private:
 typedef mozStorageVariant<PRInt64> mozStorageInteger;
 typedef mozStorageVariant<double> mozStorageFloat;
 typedef mozStorageVariant<nsString> mozStorageText;
+typedef mozStorageVariant<nsCString> mozStorageUTF8Text;
 typedef mozStorageVariant<PRUint8[]> mozStorageBlob;
 typedef mozStorageVariant_base mozStorageNull;
 

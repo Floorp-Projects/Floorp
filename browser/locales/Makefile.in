@@ -65,7 +65,7 @@ endif
 
 
 run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
-_ABS_DIST := $(shell cd $(DIST) && pwd)
+_ABS_DIST := $(call core_abspath,$(DIST))
 
 ifdef MOZ_BRANDING_DIRECTORY
 SUBMAKEFILES += \
@@ -81,8 +81,7 @@ AB = $(firstword $(subst -, ,$(AB_CD)))
 
 APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
-PWD := $(shell pwd)
-core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
+PWD := $(CURDIR)
 
 # These are defaulted to be compatible with the files the wget-en-US target
 # pulls. You may override them if you provide your own files. You _must_

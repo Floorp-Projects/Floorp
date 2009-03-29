@@ -227,8 +227,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   if (aType == eContext_Galley) {
     mMedium = nsGkAtoms::screen;
   } else {
-    SetBackgroundImageDraw(PR_FALSE);
-    SetBackgroundColorDraw(PR_FALSE);
     mMedium = nsGkAtoms::print;
     mPaginated = PR_TRUE;
   }
@@ -1983,11 +1981,6 @@ static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (!chromeEventHandler)
     return PR_FALSE;
 
-  nsCOMPtr<nsIEventListenerManager> manager;
-  chromeEventHandler->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
-  if (manager && manager->MayHavePaintEventListener())
-    return PR_TRUE;
-
   nsCOMPtr<nsINode> node = do_QueryInterface(chromeEventHandler);
   if (node)
     return MayHavePaintEventListener(node->GetOwnerDoc()->GetInnerWindow());
@@ -1995,6 +1988,11 @@ static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(chromeEventHandler);
   if (window)
     return MayHavePaintEventListener(window);
+
+  nsCOMPtr<nsIEventListenerManager> manager;
+  chromeEventHandler->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  if (manager && manager->MayHavePaintEventListener())
+    return PR_TRUE;
 
   return PR_FALSE;
 }

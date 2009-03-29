@@ -131,7 +131,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     cairo_image_surface_t *surface;
 
     surface = malloc (sizeof (cairo_image_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base, &_cairo_image_surface_backend,
@@ -203,7 +203,7 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 }
 
 /* A mask consisting of N bits set to 1. */
-#define MASK(N) ((1 << (N))-1)
+#define MASK(N) ((1UL << (N))-1)
 
 void
 _pixman_format_to_masks (pixman_format_code_t	 format,
@@ -325,9 +325,9 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
     pixman_image_t *pixman_image;
 
     pixman_image = pixman_image_create_bits (pixman_format, width ? width : 1, height ? height : 1,
-					     (uint32_t *) data, stride);
+					     (uint32_t *) data, stride ? stride : 4);
 
-    if (pixman_image == NULL)
+    if (unlikely (pixman_image == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
@@ -731,7 +731,7 @@ _cairo_image_surface_finish (void *abstract_surface)
 void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface)
 {
-    surface->owns_data = 1;
+    surface->owns_data = TRUE;
 }
 
 static cairo_status_t
@@ -806,11 +806,12 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
 
 static cairo_status_t
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
-				 const cairo_matrix_t	*matrix)
+				 const cairo_matrix_t	*matrix,
+				 double xc, double yc)
 {
     pixman_transform_t pixman_transform;
 
-    _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform);
+    _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform, xc, yc);
 
     if (! pixman_image_set_transform (surface->pixman_image, &pixman_transform))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -862,12 +863,14 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface,
 
 static cairo_status_t
 _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
-				     cairo_surface_attributes_t *attributes)
+				     cairo_surface_attributes_t *attributes,
+				     double xc, double yc)
 {
     cairo_int_status_t status;
 
-    status = _cairo_image_surface_set_matrix (surface, &attributes->matrix);
-    if (status)
+    status = _cairo_image_surface_set_matrix (surface, &attributes->matrix,
+					      xc, yc);
+    if (unlikely (status))
 	return status;
 
     switch (attributes->extend) {
@@ -886,7 +889,7 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
     }
 
     status = _cairo_image_surface_set_filter (surface, attributes->filter);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -939,8 +942,8 @@ _pixman_operator (cairo_operator_t op)
 
 static cairo_int_status_t
 _cairo_image_surface_composite (cairo_operator_t	op,
-				cairo_pattern_t		*src_pattern,
-				cairo_pattern_t		*mask_pattern,
+				const cairo_pattern_t	*src_pattern,
+				const cairo_pattern_t	*mask_pattern,
 				void			*abstract_dst,
 				int			src_x,
 				int			src_y,
@@ -965,17 +968,21 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 					      (cairo_surface_t **) &src,
 					      (cairo_surface_t **) &mask,
 					      &src_attr, &mask_attr);
-    if (status)
+    if (unlikely (status))
 	return status;
 
-    status = _cairo_image_surface_set_attributes (src, &src_attr);
-    if (status)
-      goto CLEANUP_SURFACES;
+    status = _cairo_image_surface_set_attributes (src, &src_attr,
+						  dst_x + width / 2.,
+						  dst_y + height / 2.);
+    if (unlikely (status))
+	goto CLEANUP_SURFACES;
 
     if (mask)
     {
-	status = _cairo_image_surface_set_attributes (mask, &mask_attr);
-	if (status)
+	status = _cairo_image_surface_set_attributes (mask, &mask_attr,
+						      dst_x + width / 2.,
+						      dst_y + height / 2.);
+	if (unlikely (status))
 	    goto CLEANUP_SURFACES;
 
 	pixman_image_composite (_pixman_operator (op),
@@ -1044,7 +1051,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     if (num_rects > ARRAY_LENGTH (stack_rects)) {
 	pixman_rects = _cairo_malloc_ab (num_rects, sizeof (pixman_rectangle16_t));
-	if (pixman_rects == NULL)
+	if (unlikely (pixman_rects == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1057,10 +1064,11 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     /* XXX: pixman_fill_rectangles() should be implemented */
     if (! pixman_image_fill_rectangles (_pixman_operator (op),
-				       surface->pixman_image,
-				       &pixman_color,
-				       num_rects,
-				       pixman_rects)) {
+					surface->pixman_image,
+					&pixman_color,
+					num_rects,
+					pixman_rects))
+    {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1070,9 +1078,17 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     return status;
 }
 
+static cairo_format_t
+_cairo_mask_format_from_antialias (cairo_antialias_t antialias)
+{
+    if (antialias == CAIRO_ANTIALIAS_NONE)
+	return CAIRO_FORMAT_A1;
+    return CAIRO_FORMAT_A8;
+}
+
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
-					   cairo_pattern_t	*pattern,
+					   const cairo_pattern_t *pattern,
 					   void			*abstract_dst,
 					   cairo_antialias_t	antialias,
 					   int			src_x,
@@ -1087,13 +1103,10 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     cairo_surface_attributes_t	attributes;
     cairo_image_surface_t	*dst = abstract_dst;
     cairo_image_surface_t	*src;
-    cairo_int_status_t		status;
-    pixman_image_t		*mask;
-    pixman_format_code_t	 format;
-    uint32_t			*mask_data;
+    cairo_int_status_t		 status;
+    cairo_image_surface_t	*mask = NULL;
     pixman_trapezoid_t		 stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
     pixman_trapezoid_t		*pixman_traps = stack_traps;
-    int				 mask_stride;
     int				 i;
 
     if (height == 0 || width == 0)
@@ -1102,7 +1115,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     /* Convert traps to pixman traps */
     if (num_traps > ARRAY_LENGTH (stack_traps)) {
 	pixman_traps = _cairo_malloc_ab (num_traps, sizeof (pixman_trapezoid_t));
-	if (pixman_traps == NULL)
+	if (unlikely (pixman_traps == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1148,47 +1161,29 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
-    if (status)
+    if (unlikely (status))
 	goto finish;
 
-    status = _cairo_image_surface_set_attributes (src, &attributes);
-    if (status)
+    status = _cairo_image_surface_set_attributes (src, &attributes,
+						  dst_x + width / 2.,
+						  dst_y + height / 2.);
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
-    switch (antialias) {
-    case CAIRO_ANTIALIAS_NONE:
-	format = PIXMAN_a1;
-	mask_stride = ((width + 31) / 8) & ~0x03;
-	break;
-    case CAIRO_ANTIALIAS_GRAY:
-    case CAIRO_ANTIALIAS_SUBPIXEL:
-    case CAIRO_ANTIALIAS_DEFAULT:
-    default:
-	format = PIXMAN_a8;
-	mask_stride = (width + 3) & ~3;
-	break;
-    }
-
-    /* The image must be initially transparent */
-    mask_data = calloc (mask_stride, height);
-    if (mask_data == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    mask = (cairo_image_surface_t *)
+	cairo_image_surface_create (
+	    _cairo_mask_format_from_antialias (antialias),
+	    width, height);
+    status = mask->base.status;
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
-    }
 
-    mask = pixman_image_create_bits (format, width, height,
-				     mask_data, mask_stride);
-    if (mask == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto CLEANUP_IMAGE_DATA;
-    }
-
-    pixman_add_trapezoids (mask, - dst_x, - dst_y,
+    pixman_add_trapezoids (mask->pixman_image, - dst_x, - dst_y,
 			   num_traps, pixman_traps);
 
     pixman_image_composite (_pixman_operator (op),
 			    src->pixman_image,
-			    mask,
+			    mask->pixman_image,
 			    dst->pixman_image,
 			    src_x + attributes.x_offset,
 			    src_y + attributes.y_offset,
@@ -1198,15 +1193,13 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 
     if (! _cairo_operator_bounded_by_mask (op))
 	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
-								 &attributes, src->width, src->height,
+								 &attributes,
+								 src->width, src->height,
 								 width, height,
 								 src_x, src_y,
 								 0, 0,
 								 dst_x, dst_y, width, height);
-    pixman_image_unref (mask);
-
- CLEANUP_IMAGE_DATA:
-    free (mask_data);
+    cairo_surface_destroy (&mask->base);
 
  CLEANUP_SOURCE:
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
@@ -1216,6 +1209,216 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	free (pixman_traps);
 
     return status;
+}
+
+typedef struct _cairo_image_surface_span_renderer {
+    cairo_span_renderer_t base;
+
+    cairo_operator_t op;
+    const cairo_pattern_t *pattern;
+    cairo_antialias_t antialias;
+
+    cairo_image_surface_t *src;
+    cairo_surface_attributes_t src_attributes;
+    cairo_image_surface_t *mask;
+    cairo_image_surface_t *dst;
+
+    cairo_composite_rectangles_t composite_rectangles;
+} cairo_image_surface_span_renderer_t;
+
+static cairo_status_t
+_cairo_image_surface_span_renderer_render_row (
+    void				*abstract_renderer,
+    int					 y,
+    const cairo_half_open_span_t	*spans,
+    unsigned				 num_spans)
+{
+    cairo_image_surface_span_renderer_t *renderer = abstract_renderer;
+    int xmin = renderer->composite_rectangles.mask.x;
+    int xmax = xmin + renderer->composite_rectangles.width;
+    uint8_t *row;
+    int prev_x = xmin;
+    int prev_alpha = 0;
+    unsigned i;
+
+    /* Make sure we're within y-range. */
+    y -= renderer->composite_rectangles.mask.y;
+    if (y < 0 || y >= renderer->composite_rectangles.height)
+	return CAIRO_STATUS_SUCCESS;
+
+    row = (uint8_t*)(renderer->mask->data) + y*(size_t)renderer->mask->stride - xmin;
+
+    /* Find the first span within x-range. */
+    for (i=0; i < num_spans && spans[i].x < xmin; i++) {}
+    if (i>0)
+	prev_alpha = spans[i-1].coverage;
+
+    /* Set the intermediate spans. */
+    for (; i < num_spans; i++) {
+	int x = spans[i].x;
+
+	if (x >= xmax)
+	    break;
+
+	if (prev_alpha != 0) {
+	    /* We implement setting rendering the most common single
+	     * pixel wide span case to avoid the overhead of a memset
+	     * call.  Open coding setting longer spans didn't show a
+	     * noticeable improvement over memset. */
+	    if (x == prev_x + 1) {
+		row[prev_x] = prev_alpha;
+	    }
+	    else {
+		memset(row + prev_x, prev_alpha, x - prev_x);
+	    }
+	}
+
+	prev_x = x;
+	prev_alpha = spans[i].coverage;
+    }
+
+    if (prev_alpha != 0 && prev_x < xmax) {
+	memset(row + prev_x, prev_alpha, xmax - prev_x);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_image_surface_span_renderer_destroy (void *abstract_renderer)
+{
+    cairo_image_surface_span_renderer_t *renderer = abstract_renderer;
+    if (!renderer) return;
+
+    if (renderer->src != NULL) {
+	_cairo_pattern_release_surface (renderer->pattern,
+					&renderer->src->base,
+					&renderer->src_attributes);
+    }
+
+    if (renderer->mask != NULL)
+	cairo_surface_destroy (&renderer->mask->base);
+
+    free (renderer);
+}
+
+static cairo_status_t
+_cairo_image_surface_span_renderer_finish (void *abstract_renderer)
+{
+    cairo_image_surface_span_renderer_t *renderer = abstract_renderer;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (renderer->src == NULL || renderer->mask == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    status = cairo_surface_status (&renderer->mask->base);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	cairo_composite_rectangles_t *rects = &renderer->composite_rectangles;
+	cairo_image_surface_t *src = renderer->src;
+	cairo_image_surface_t *dst = renderer->dst;
+	cairo_surface_attributes_t *src_attributes = &renderer->src_attributes;
+	int width = rects->width;
+	int height = rects->height;
+
+	pixman_image_composite (_pixman_operator (renderer->op),
+				src->pixman_image,
+				renderer->mask->pixman_image,
+				dst->pixman_image,
+				rects->src.x + src_attributes->x_offset,
+				rects->src.y + src_attributes->y_offset,
+				0, 0,		/* mask.x, mask.y */
+				rects->dst.x, rects->dst.y,
+				width, height);
+
+	if (! _cairo_operator_bounded_by_mask (renderer->op))
+	    status = _cairo_surface_composite_shape_fixup_unbounded (
+		&dst->base,
+		src_attributes,
+		src->width, src->height,
+		rects->width, rects->height,
+		rects->src.x, rects->src.y,
+		0, 0,		/* mask.x, mask.y */
+		rects->dst.x, rects->dst.y,
+		rects->width, rects->height);
+    }
+    if (status != CAIRO_STATUS_SUCCESS)
+	return _cairo_span_renderer_set_error (abstract_renderer,
+					       status);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t
+_cairo_image_surface_check_span_renderer (cairo_operator_t	  op,
+					  const cairo_pattern_t  *pattern,
+					  void			 *abstract_dst,
+					  cairo_antialias_t	  antialias,
+					  const cairo_composite_rectangles_t *rects)
+{
+    (void) op;
+    (void) pattern;
+    (void) abstract_dst;
+    (void) antialias;
+    (void) rects;
+    return TRUE;
+}
+
+static cairo_span_renderer_t *
+_cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
+					   const cairo_pattern_t  *pattern,
+					   void			*abstract_dst,
+					   cairo_antialias_t	 antialias,
+					   const cairo_composite_rectangles_t *rects)
+{
+    cairo_image_surface_t *dst = abstract_dst;
+    cairo_image_surface_span_renderer_t *renderer
+	= calloc(1, sizeof(*renderer));
+    cairo_status_t status;
+    int width = rects->width;
+    int height = rects->height;
+
+    if (renderer == NULL)
+	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
+
+    renderer->base.destroy = _cairo_image_surface_span_renderer_destroy;
+    renderer->base.finish = _cairo_image_surface_span_renderer_finish;
+    renderer->base.render_row =
+	_cairo_image_surface_span_renderer_render_row;
+    renderer->op = op;
+    renderer->pattern = pattern;
+    renderer->antialias = antialias;
+    renderer->dst = dst;
+
+    renderer->composite_rectangles = *rects;
+
+    status = _cairo_pattern_acquire_surface (
+	renderer->pattern, &renderer->dst->base,
+	rects->src.x, rects->src.y,
+	width, height,
+	(cairo_surface_t **) &renderer->src,
+	&renderer->src_attributes);
+    if (status)
+	goto unwind;
+
+    status = _cairo_image_surface_set_attributes (
+	renderer->src, &renderer->src_attributes,
+	rects->dst.x + width/2, rects->dst.y + height/2);
+    if (status)
+	goto unwind;
+
+    /* TODO: support rendering to A1 surfaces (or: go add span
+     * compositing to pixman.) */
+    renderer->mask = (cairo_image_surface_t *)
+	cairo_image_surface_create (CAIRO_FORMAT_A8,
+				    width, height);
+
+    status = cairo_surface_status (&renderer->mask->base);
+
+ unwind:
+    if (status != CAIRO_STATUS_SUCCESS) {
+	_cairo_image_surface_span_renderer_destroy (renderer);
+	return _cairo_span_renderer_create_in_error (status);
+    }
+    return &renderer->base;
 }
 
 cairo_int_status_t
@@ -1293,6 +1496,8 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     _cairo_image_surface_composite,
     _cairo_image_surface_fill_rectangles,
     _cairo_image_surface_composite_trapezoids,
+    _cairo_image_surface_create_span_renderer,
+    _cairo_image_surface_check_span_renderer,
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_image_surface_set_clip_region,
@@ -1319,34 +1524,40 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
 /* A convenience function for when one needs to coerce an image
  * surface to an alternate format. */
 cairo_image_surface_t *
-_cairo_image_surface_clone (cairo_image_surface_t	*surface,
-			    cairo_format_t		 format)
+_cairo_image_surface_coerce (cairo_image_surface_t	*surface,
+			     cairo_format_t		 format)
 {
     cairo_image_surface_t *clone;
+    cairo_surface_pattern_t pattern;
     cairo_status_t status;
-    cairo_t *cr;
-    double x, y;
+
+    status = surface->base.status;
+    if (unlikely (status))
+	return (cairo_image_surface_t *)_cairo_surface_create_in_error (status);
+
+    if (surface->format == format)
+	return (cairo_image_surface_t *)cairo_surface_reference(&surface->base);
 
     clone = (cairo_image_surface_t *)
-	cairo_image_surface_create (format,
-				    surface->width, surface->height);
+	cairo_image_surface_create (format, surface->width, surface->height);
+    if (unlikely (clone->base.status))
+	return clone;
 
-    cairo_surface_get_device_offset (&surface->base, &x, &y);
-    cairo_surface_set_device_offset (&clone->base, x, y);
-    clone->transparency = CAIRO_IMAGE_UNKNOWN;
+    _cairo_pattern_init_for_surface (&pattern, &surface->base);
+    status = _cairo_surface_paint (&clone->base,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base, NULL);
+    _cairo_pattern_fini (&pattern.base);
 
-    /* XXX Use _cairo_surface_composite directly */
-    cr = cairo_create (&clone->base);
-    cairo_set_source_surface (cr, &surface->base, 0, 0);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_paint (cr);
-    status = cairo_status (cr);
-    cairo_destroy (cr);
-
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (&clone->base);
-	return (cairo_image_surface_t *) _cairo_surface_create_in_error (status);
+	return (cairo_image_surface_t *)_cairo_surface_create_in_error (status);
     }
+
+    clone->base.device_transform =
+	surface->base.device_transform;
+    clone->base.device_transform_inverse =
+	surface->base.device_transform_inverse;
 
     return clone;
 }

@@ -1057,13 +1057,14 @@
         <body>
           <![CDATA[
           var controller = this.mInput.controller;
+          var matchCount = this._matchCount;
+          var existingItemsCount = this.richlistbox.childNodes.length;
 
           // Process maxRows per chunk to improve performance and user experience
           for (let i = 0; i < this.maxRows; i++) {
-            if (this._currentIndex >= this._matchCount)
+            if (this._currentIndex >= matchCount)
               return;
 
-            var existingItemsCount = this.richlistbox.childNodes.length;
             var item;
 
             // trim the leading/trailing whitespace

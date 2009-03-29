@@ -190,20 +190,27 @@
 #endif
 #endif
 
+#ifndef MOZ_MEMORY_WINCE
 #include <sys/types.h>
 
 #include <errno.h>
+#include <stdlib.h>
+#endif
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #ifdef MOZ_MEMORY_WINDOWS
+#ifndef MOZ_MEMORY_WINCE
 #include <cruntime.h>
 #include <internal.h>
-#include <windows.h>
 #include <io.h>
+#else
+#include <crtdefs.h>
+#define SIZE_MAX UINT_MAX
+#endif
+#include <windows.h>
 
 #pragma warning( disable: 4267 4996 4146 )
 
@@ -215,12 +222,19 @@
 #define	PATH_MAX MAX_PATH
 #define	vsnprintf _vsnprintf
 
+#ifndef NO_TLS
 static unsigned long tlsIndex = 0xffffffff;
+#endif 
 
 #define	__thread
+#ifdef MOZ_MEMORY_WINCE
+#define	_pthread_self() GetCurrentThreadId()
+#else
 #define	_pthread_self() __threadid()
+#endif
 #define	issetugid() 0
 
+#ifndef MOZ_MEMORY_WINCE
 /* use MSVC intrinsics */
 #pragma intrinsic(_BitScanForward)
 static __forceinline int
@@ -248,6 +262,40 @@ getenv(const char *name)
 
 	return (NULL);
 }
+#else
+
+static void abort() { 
+	DebugBreak();  
+        exit(-3); 
+}
+
+static int errno = 0;
+#define ENOMEM          12
+#define EINVAL          22
+
+static char *
+getenv(const char *name)
+{
+	return (NULL);
+}
+
+static int
+ffs(int x)
+{
+        int ret;
+
+        if (x == 0)
+                return 0;
+        ret = 2;
+        if ((x & 0x0000ffff) == 0) { ret += 16; x >>= 16;}
+        if ((x & 0x000000ff) == 0) { ret += 8;  x >>= 8;}
+        if ((x & 0x0000000f) == 0) { ret += 4;  x >>= 4;}
+        if ((x & 0x00000003) == 0) { ret += 2;  x >>= 2;}
+        ret -= (x & 1);
+
+        return (ret);
+}
+#endif
 
 typedef unsigned char uint8_t;
 typedef unsigned uint32_t;
@@ -447,8 +495,11 @@ static const bool __isthreaded = true;
  * Size and alignment of memory chunks that are allocated by the OS's virtual
  * memory system.
  */
+#ifdef MOZ_MEMORY_WINCE
+#define	CHUNK_2POW_DEFAULT	21
+#else
 #define	CHUNK_2POW_DEFAULT	20
-
+#endif
 /* Maximum number of dirty pages per arena. */
 #define	DIRTY_MAX_DEFAULT	(1U << 10)
 
@@ -1323,6 +1374,17 @@ umax2s(uintmax_t x, char *s)
 static void
 wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 {
+#ifdef MOZ_MEMORY_WINCE
+       wchar_t buf[1024];
+#define WRT_PRINT(s) \
+       MultiByteToWideChar(CP_ACP, 0, s, -1, buf, 1024); \
+       OutputDebugStringW(buf)
+
+       WRT_PRINT(p1);
+       WRT_PRINT(p2);
+       WRT_PRINT(p3);
+       WRT_PRINT(p4);
+#else
 #if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_WINDOWS)
 #define	_write	write
 #endif
@@ -1330,6 +1392,8 @@ wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 	_write(STDERR_FILENO, p2, (unsigned int) strlen(p2));
 	_write(STDERR_FILENO, p3, (unsigned int) strlen(p3));
 	_write(STDERR_FILENO, p4, (unsigned int) strlen(p4));
+#endif
+
 }
 
 #define _malloc_message malloc_message
@@ -1361,7 +1425,9 @@ void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY_WINCE)
+	InitializeCriticalSection(mutex);
+#elif defined(MOZ_MEMORY_WINDOWS)
 	if (__isthreaded)
 		if (! __crtInitCritSecAndSpinCount(mutex, _CRT_SPINCOUNT))
 			return (true);
@@ -1423,7 +1489,9 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY_WINCE)
+	InitializeCriticalSection(lock);
+#elif defined(MOZ_MEMORY_WINDOWS)
 	if (__isthreaded)
 		if (! __crtInitCritSecAndSpinCount(lock, _CRT_SPINCOUNT))
 			return (true);
@@ -1704,6 +1772,7 @@ _getprogname(void)
 static void
 malloc_printf(const char *format, ...)
 {
+#ifndef WINCE
 	char buf[4096];
 	va_list ap;
 
@@ -1711,6 +1780,7 @@ malloc_printf(const char *format, ...)
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	_malloc_message(buf, "", "", "");
+#endif
 }
 #endif
 
@@ -1765,6 +1835,9 @@ base_pages_alloc_mmap(size_t minsize)
 #endif
 		pfd = -1;
 	base_pages = pages_map(NULL, csize, pfd);
+#ifdef MOZ_MEMORY_WINCE
+	pages_commit(base_pages, csize);
+#endif
 	if (base_pages == NULL) {
 		ret = true;
 		goto RETURN;
@@ -2093,23 +2166,28 @@ static void *
 pages_map(void *addr, size_t size, int pfd)
 {
 	void *ret;
-
+#if defined(MOZ_MEMORY_WINCE)
+	ret = VirtualAlloc(addr, size, MEM_RESERVE, PAGE_NOACCESS);
+#elif defined(MOZ_MEMORY_WINDOWS)
 	ret = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE,
 	    PAGE_READWRITE);
-
+#endif
 	return (ret);
 }
 
 static void
 pages_unmap(void *addr, size_t size)
 {
-
+#ifdef MOZ_MEMORY_WINCE
+	VirtualFree(addr, size, MEM_RELEASE);
+#else
 	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
 		_malloc_message(_getprogname(),
 		    ": (malloc) Error in VirtualFree()\n", "", "");
 		if (opt_abort)
 			abort();
 	}
+#endif
 }
 #elif (defined(MOZ_MEMORY_DARWIN))
 static void *
@@ -2266,7 +2344,7 @@ malloc_rtree_new(unsigned bits)
 		height++;
 	assert(height * bits_per_level >= bits);
 
-	ret = base_calloc(1, sizeof(malloc_rtree_t) + (sizeof(unsigned) *
+	ret = (malloc_rtree_t*)base_calloc(1, sizeof(malloc_rtree_t) + (sizeof(unsigned) *
 	    (height - 1)));
 	if (ret == NULL)
 		return (NULL);
@@ -2280,7 +2358,7 @@ malloc_rtree_new(unsigned bits)
 	for (i = 1; i < height; i++)
 		ret->level2bits[i] = bits_per_level;
 
-	ret->root = base_calloc(1, sizeof(void *) << ret->level2bits[0]);
+	ret->root = (void**)base_calloc(1, sizeof(void *) << ret->level2bits[0]);
 	if (ret->root == NULL) {
 		/*
 		 * We leak the rtree here, since there's no generic base
@@ -2307,7 +2385,7 @@ malloc_rtree_get(malloc_rtree_t *rtree, uintptr_t key)
 	    i++, lshift += bits, node = child) {
 		bits = rtree->level2bits[i];
 		subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
-		child = node[subkey];
+		child = (void**)node[subkey];
 		if (child == NULL) {
 			malloc_spin_unlock(&rtree->lock);
 			return (NULL);
@@ -2336,9 +2414,9 @@ malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
 	    i++, lshift += bits, node = child) {
 		bits = rtree->level2bits[i];
 		subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
-		child = node[subkey];
+		child = (void**)node[subkey];
 		if (child == NULL) {
-			child = base_calloc(1, sizeof(void *) <<
+			child = (void**)base_calloc(1, sizeof(void *) <<
 			    rtree->level2bits[i+1]);
 			if (child == NULL) {
 				malloc_spin_unlock(&rtree->lock);
@@ -2425,7 +2503,9 @@ chunk_alloc_mmap(size_t size, bool pagefile)
 			 */
 		}
 	}
-
+#ifdef MOZ_MEMORY_WINCE
+	pages_commit(ret, size);
+#endif
 RETURN:
 #endif
 #ifdef MALLOC_PAGEFILE
@@ -2779,7 +2859,7 @@ choose_arena(void)
 	}
 
 #  ifdef MOZ_MEMORY_WINDOWS
-	ret = TlsGetValue(tlsIndex);
+	ret = (arena_t*)TlsGetValue(tlsIndex);
 #  else
 	ret = arenas_map;
 #  endif
@@ -3324,7 +3404,7 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 		key.bits = size | CHUNK_MAP_KEY;
 		mapelm = arena_avail_tree_nsearch(&arena->runs_avail, &key);
 		if (mapelm != NULL) {
-			arena_chunk_t *run_chunk = CHUNK_ADDR2BASE(mapelm);
+			arena_chunk_t *run_chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
 			size_t pageind = ((uintptr_t)mapelm -
 			    (uintptr_t)run_chunk->map) /
 			    sizeof(arena_chunk_map_t);
@@ -4056,13 +4136,13 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 	assert((offset & pagesize_mask) == 0);
 	assert(offset < alloc_size);
 	if (offset == 0)
-		arena_run_trim_tail(arena, chunk, ret, alloc_size, size, false);
+		arena_run_trim_tail(arena, chunk, (arena_run_t*)ret, alloc_size, size, false);
 	else {
 		size_t leadsize, trailsize;
 
 		leadsize = alignment - offset;
 		if (leadsize > 0) {
-			arena_run_trim_head(arena, chunk, ret, alloc_size,
+			arena_run_trim_head(arena, chunk, (arena_run_t*)ret, alloc_size,
 			    alloc_size - leadsize);
 			ret = (void *)((uintptr_t)ret + leadsize);
 		}
@@ -4071,7 +4151,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 		if (trailsize != 0) {
 			/* Trim trailing space. */
 			assert(trailsize < alloc_size);
-			arena_run_trim_tail(arena, chunk, ret, size + trailsize,
+			arena_run_trim_tail(arena, chunk, (arena_run_t*)ret, size + trailsize,
 			    size, false);
 		}
 	}
@@ -4349,7 +4429,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 			/* Switch runcur. */
 			if (bin->runcur->nfree > 0) {
 				arena_chunk_t *runcur_chunk =
-				    CHUNK_ADDR2BASE(bin->runcur);
+				    (arena_chunk_t*)CHUNK_ADDR2BASE(bin->runcur);
 				size_t runcur_pageind =
 				    (((uintptr_t)bin->runcur -
 				    (uintptr_t)runcur_chunk)) >> pagesize_2pow;
@@ -4936,7 +5016,9 @@ huge_palloc(size_t alignment, size_t size)
 		 * again.
 		 */
 	} while (ret == NULL);
-
+#ifdef MOZ_MEMORY_WINCE
+	pages_commit(ret, chunk_size);
+#endif
 	/* Insert node into huge. */
 	node->addr = ret;
 #ifdef MALLOC_DECOMMIT
@@ -5393,7 +5475,7 @@ malloc_print_stats(void)
  * implementation has to take pains to avoid infinite recursion during
  * initialization.
  */
-#if (defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_DARWIN))
+#if (defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_DARWIN)) && !defined(MOZ_MEMORY_WINCE)
 #define	malloc_init() false
 #else
 static inline bool
@@ -5407,7 +5489,7 @@ malloc_init(void)
 }
 #endif
 
-#ifndef MOZ_MEMORY_WINDOWS
+#if !defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_WINCE) 
 static
 #endif
 bool
@@ -6007,8 +6089,9 @@ malloc_shutdown()
 #  define ZONE_INLINE
 #endif
 
-/* Mangle standard interfaces on Darwin, in order to avoid linking problems. */
-#ifdef MOZ_MEMORY_DARWIN
+/* Mangle standard interfaces on Darwin and Windows CE, 
+   in order to avoid linking problems. */
+#if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_WINCE)
 #define	malloc(a)	moz_malloc(a)
 #define	valloc(a)	moz_valloc(a)
 #define	calloc(a, b)	moz_calloc(a, b)
@@ -6816,7 +6899,7 @@ reserve_min_set(size_t min)
 			size_t i, n;
 
 			n = size >> opt_chunk_2pow;
-			chunks = imalloc(n * sizeof(void *));
+			chunks = (void**)imalloc(n * sizeof(void *));
 			if (chunks == NULL)
 				return (true);
 			for (i = 0; i < n; i++) {

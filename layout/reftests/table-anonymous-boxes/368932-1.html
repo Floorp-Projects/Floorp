@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript">
+    function doTest() {
+      for (var i = 0; i < 10; ++i) {
+        // clear target element's content
+        document.getElementById("target-table").innerHTML = "";
+        // clone and append new row
+        cloned_row = document.getElementById("row-template").cloneNode(true);
+        document.getElementById("target-table").appendChild(cloned_row);
+        document.body.offsetWidth;
+      }
+    }
+    </script>
+</head>
+<body onload="doTest()">
+    <table><tr id="row-template"><td>cloning material</td></tr></table>
+    <table id="target-table"><tr><td>target table</td></tr></table>
+</body>
+</html>

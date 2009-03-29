@@ -57,7 +57,7 @@
 
 #define NUM_ITERATIONS 10
 
-int main()
+int main(int argc, char **argv)
 {
     char buf[1024];
     size_t nBytes;

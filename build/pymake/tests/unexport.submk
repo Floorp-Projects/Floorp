@@ -1,0 +1,15 @@
+# -@- Mode: Makefile -@- 
+
+unexport VAR1
+
+all:
+	env
+	test "$(VAR1)" = "val1"
+	test "$(origin VAR1)" = "environment"
+	test "$(VAR2)" = "" # VAR2
+	test "$(VAR3)" = "val3"
+	test "$(ENVVAR)" = ""
+	$(MAKE) -f $(TESTPATH)/unexport.submk subt
+
+subt:
+	test "$(VAR1)" = ""

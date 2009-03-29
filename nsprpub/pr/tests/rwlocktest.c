@@ -72,7 +72,7 @@ PRFileDesc  *errhandle;
 #define	DEFAULT_LOOP_CNT	100
 #define	TEST_ARRAY_SIZE		100
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRInt32 cnt;
 	PRStatus rc;

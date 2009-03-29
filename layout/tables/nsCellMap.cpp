@@ -1619,17 +1619,17 @@ PRBool nsCellMap::CellsSpanOut(nsTArray<nsTableRowFrame*>& aRows) const
   PRInt32 numNewRows = aRows.Length();
   for (PRInt32 rowX = 0; rowX < numNewRows; rowX++) {
     nsIFrame* rowFrame = (nsIFrame *) aRows.ElementAt(rowX);
-    nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
-    while (cellFrame) {
-      if (IS_TABLE_CELL(cellFrame->GetType())) {
+    nsIFrame* childFrame = rowFrame->GetFirstChild(nsnull);
+    while (childFrame) {
+      nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
+      if (cellFrame) {
         PRBool zeroSpan;
-        PRInt32 rowSpan = GetRowSpanForNewCell((nsTableCellFrame*) cellFrame,
-                                               rowX, zeroSpan);
+        PRInt32 rowSpan = GetRowSpanForNewCell(cellFrame, rowX, zeroSpan);
         if (rowX + rowSpan > numNewRows) {
           return PR_TRUE;
         }
       }
-      cellFrame = cellFrame->GetNextSibling();
+      childFrame = childFrame->GetNextSibling();
     }
   }
   return PR_FALSE;
@@ -1796,8 +1796,9 @@ nsCellMap::ExpandWithRows(nsTableCellMap&             aMap,
     nsIFrame* cFrame = rFrame->GetFirstChild(nsnull);
     PRInt32 colIndex = 0;
     while (cFrame) {
-      if (IS_TABLE_CELL(cFrame->GetType())) {
-        AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea, &colIndex);
+      nsTableCellFrame *cellFrame = do_QueryFrame(cFrame);
+      if (cellFrame) {
+        AppendCell(aMap, cellFrame, rowX, PR_FALSE, aDamageArea, &colIndex);
       }
       cFrame = cFrame->GetNextSibling();
     }
@@ -2257,8 +2258,9 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap&             aMap,
       nsTableRowFrame* rFrame = aRowsToInsert->ElementAt(newRowX);
       nsIFrame* cFrame = rFrame->GetFirstChild(nsnull);
       while (cFrame) {
-        if (IS_TABLE_CELL(cFrame->GetType())) {
-          AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea);
+        nsTableCellFrame *cellFrame = do_QueryFrame(cFrame);
+        if (cellFrame) {
+          AppendCell(aMap, cellFrame, rowX, PR_FALSE, aDamageArea);
         }
         cFrame = cFrame->GetNextSibling();
       }

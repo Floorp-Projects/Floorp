@@ -2083,9 +2083,7 @@ nsHTMLDocument::Close()
   if (mParser && mWriteState == eDocumentOpened) {
     mPendingScripts.RemoveElement(GenerateParserKey());
 
-    mWriteState = mPendingScripts.Count() == 0
-                  ? eDocumentClosed
-                  : ePendingClose;
+    mWriteState = mPendingScripts.IsEmpty() ? eDocumentClosed : ePendingClose;
 
     ++mWriteLevel;
     rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
@@ -2150,7 +2148,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   void *key = GenerateParserKey();
   if (mWriteState == eDocumentClosed ||
       (mWriteState == ePendingClose &&
-       mPendingScripts.IndexOf(key) == kNotFound)) {
+       !mPendingScripts.Contains(key))) {
     mWriteState = eDocumentClosed;
     mParser->Terminate();
     NS_ASSERTION(!mParser, "mParser should have been null'd out");
@@ -2370,7 +2368,7 @@ nsHTMLDocument::ScriptExecuted(nsIScriptElement *aScript)
   }
 
   mPendingScripts.RemoveElement(aScript);
-  if (mPendingScripts.Count() == 0 && mWriteState == ePendingClose) {
+  if (mPendingScripts.IsEmpty() && mWriteState == ePendingClose) {
     // The last pending script just finished, terminate our parser now.
     mWriteState = eDocumentClosed;
   }
@@ -3205,16 +3203,8 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
   *aResult = nsnull;
 
   nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
-  nsIdentifierMapEntry *entry;
-  if (IdTableIsLive()) {
-    entry = mIdentifierMap.GetEntry(id);
-    // If we did a lookup and it failed, there are no items with this id
-    if (!entry)
-      return NS_OK;
-  } else {
-    entry = mIdentifierMap.PutEntry(id);
-    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-  }
+  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
+  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   nsIContent* root = GetRootContent();
   if (!root) {

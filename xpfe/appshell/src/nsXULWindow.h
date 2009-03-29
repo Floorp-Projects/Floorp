@@ -150,6 +150,7 @@ protected:
    void       SetContentScrollbarVisibility(PRBool aVisible);
    PRBool     GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(PRUint32 aDirtyFlags);
+   PRInt32    AppUnitsPerDevPixel();
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
@@ -177,6 +178,8 @@ protected:
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
    PRUint32                mPersistentAttributesMask;
    PRUint32                mChromeFlags;
+   PRUint32                mAppPerDev; // sometimes needed when we can't get
+                                       // it from the widget
    nsString                mTitle;
 
    nsCOMArray<nsIWeakReference> mTargetableShells; // targetable shells only

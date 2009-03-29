@@ -65,7 +65,7 @@ threadmain(void *_id)
 
 }
 
-main()
+int main(int argc, char **argv)
 {
     int index;
     PRThread *a[THREADS];

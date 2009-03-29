@@ -56,13 +56,15 @@ class nsPIDOMStorage : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMSTORAGE_IID)
 
-  virtual void Init(const nsAString &aDomain, PRBool aUseDB) = 0;
+  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal) = 0;
+  virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded) = 0;
+  virtual nsresult InitAsSessionStorage(nsIURI* aURI) = 0;
 
   virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
 
   virtual nsTArray<nsString> *GetKeys() = 0;
 
-  virtual const nsString &Domain() = 0;
+  virtual const nsCString &Domain() = 0;
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal) = 0;
 };
 

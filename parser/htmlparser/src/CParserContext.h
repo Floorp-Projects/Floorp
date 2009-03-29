@@ -63,28 +63,27 @@ class CParserContext {
 public:
    enum eContextType {eCTNone,eCTURL,eCTString,eCTStream};
 
-   CParserContext(nsScanner* aScanner,
+   CParserContext(CParserContext* aPrevContext,
+                  nsScanner* aScanner,
                   void* aKey = 0,
                   eParserCommands aCommand = eViewNormal,
                   nsIRequestObserver* aListener = 0,
-                  nsIDTD* aDTD = 0,
                   eAutoDetectResult aStatus = eUnknownDetect,
                   PRBool aCopyUnused = PR_FALSE);
 
     ~CParserContext();
 
-    nsresult GetTokenizer(PRInt32 aType,
+    nsresult GetTokenizer(nsIDTD* aDTD,
                           nsIContentSink* aSink,
                           nsITokenizer*& aTokenizer);
     void  SetMimeType(const nsACString& aMimeType);
 
     nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
                                    // why is mRequest strongly referenced? see bug 102376.
-    nsCOMPtr<nsIDTD>     mDTD;
     nsCOMPtr<nsIRequestObserver> mListener;
-    void*                mKey;
+    void* const          mKey;
     nsCOMPtr<nsITokenizer> mTokenizer;
-    CParserContext*      mPrevContext;
+    CParserContext* const mPrevContext;
     nsAutoPtr<nsScanner> mScanner;
 
     nsCString            mMimeType;
