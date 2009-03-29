@@ -4740,28 +4740,6 @@ testNewString.jitstats = {
 };
 test(testNewString);
 
-function testStringIndexOf()
-{
-  var passed = true;
-  var str = "foo";
-  for (var i = 0; passed && i < 5; i++)
-    passed = str.indexOf("f") == 0;
-  for (var i = 0; passed && i < 5; i++)
-    passed = str.indexOf("f", 1) == -1;
-  for (var i = 0; passed && i < 5; i++)
-    passed = str.lastIndexOf("o") == 2;
-  for (var i = 0; passed && i < 5; i++)
-    passed = str.lastIndexOf("o", 1) == 1;
-  return passed;
-}
-testStringIndexOf.expected = true;
-testStringIndexOf.jitstats = {
-  recorderStarted:  4,
-  recorderAborted: 0,
-  traceCompleted: 4,
-  sideExitIntoInterpreter: 4
-};
-test(testStringIndexOf);
 
 /*****************************************************************************
  *                                                                           *
