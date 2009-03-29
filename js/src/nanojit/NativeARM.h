@@ -192,12 +192,10 @@ verbose_only( extern const char* shiftNames[]; )
     void asm_cmpi(Register, int32_t imm);                               \
     void asm_ldr_chk(Register d, Register b, int32_t off, bool chk);    \
     void asm_ld_imm(Register d, int32_t imm);                           \
-    void asm_arm_farg(LInsp arg, Register rlo, Register rhi); \
+    void asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd);        \
     int* _nSlot;                                                        \
     int* _nExitSlot;
 
-
-#define asm_farg(i) NanoAssert(false)
 
 //printf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
 
@@ -523,7 +521,7 @@ enum {
         underrunProtect(4);                                             \
         if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x52<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
         else            *(--_nIns) = (NIns)( COND_AL | (0x5A<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
-        asm_output("str %s, [%s, #%d]", gpn(_d), gpn(_n), (_off));      \
+        asm_output("str %s, [%s, #%d]!", gpn(_d), gpn(_n), (_off));     \
     } while(0)
 
 // [Rd] = Rn ; Rd += _off
@@ -532,29 +530,8 @@ enum {
         underrunProtect(4);                                             \
         if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x40<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
         else            *(--_nIns) = (NIns)( COND_AL | (0x48<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
-        asm_output("str %s, [%s], %d", gpn(_d), gpn(_n), (_off));      \
+        asm_output("str %s, [%s]!, %d", gpn(_d), gpn(_n), (_off));      \
     } while(0)
-
-// There isn't really a LEA on ARM; this basically computes _r = _b + #_d, either as a
-//    ADD _r, _b, #_d   (if _d < 256)
-// or as a if (_d <= 1020)
-//    MOV _r, #(_d>>2)
-//    ADD _r, _b, _r << 2
-#define LEA(_r,_d,_b) do {                                              \
-        NanoAssert((_d)<=1020);                                         \
-        NanoAssert(((_d)&3)==0);                                        \
-        NanoAssert((_b) == FP);                                         \
-        if ((_d)<256) {                                                 \
-            underrunProtect(4);                                         \
-            *(--_nIns) = (NIns)( COND_AL | (0x28<<20) | ((_b)<<16) | ((_r)<<12) | ((_d)&0xFF) ); \
-        } else {                                                        \
-            underrunProtect(8);                                         \
-            *(--_nIns) = (NIns)( COND_AL | (0x4<<21) | ((_b)<<16) | ((_r)<<12) | (2<<7)| (_r) ); \
-            *(--_nIns) = (NIns)( COND_AL | (0x3B<<20) | ((_r)<<12) | (((_d)>>2)&0xFF) ); \
-        }                                                               \
-        asm_output("lea %s, %d(SP)", gpn(_r), _d);                     \
-    } while(0)
-
 
 //#define RET()   underrunProtect(1); *(--_nIns) = 0xc3;    asm_output("ret")
 //#define NOP()     underrunProtect(1); *(--_nIns) = 0x90;  asm_output("nop")
