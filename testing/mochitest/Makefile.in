@@ -117,11 +117,11 @@ endif
 PKG_STAGE = $(DIST)/test-package-stage
 
 stage-package:
-	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/plugins
+	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins
 	@(cd $(DEPTH)/_tests/testing/mochitest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/mochitest && tar -xf -)
 	@(cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_BINS)) | (cd $(PKG_STAGE)/bin && tar -xf -)
 	@(cd $(DIST)/bin/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
 	@(cd $(topsrcdir)/build/pgo/certs && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/certs && tar -xf -)
 ifdef MOZ_PLUGINS
-	@(cd $(DIST)/bin/plugins && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PLUGINS)) | (cd $(PKG_STAGE)/plugins && tar -xf -)
+	@(cd $(DIST)/bin/plugins && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_PLUGINS)) | (cd $(PKG_STAGE)/bin/plugins && tar -xf -)
 endif

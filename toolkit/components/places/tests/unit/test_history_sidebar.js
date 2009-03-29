@@ -37,11 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
+var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+var ps = Cc["@mozilla.org/preferences-service;1"].
+         getService(Ci.nsIPrefBranch);
 
 /**
  * Adds a test URI visit to the database, and checks for a valid place ID.
@@ -52,205 +54,254 @@ try {
  *        The referring URI for the given URI.  This can be null.
  * @returns the place id for aURI.
  */
-function add_visit(aURI, aDayOffset) {
-  var placeID = histsvc.addVisit(aURI,
-                                 (Date.now() + aDayOffset*86400000) * 1000,
-                                 null,
-                                 histsvc.TRANSITION_TYPED, // user typed in URL bar
-                                 false, // not redirect
-                                 0);
-  do_check_true(placeID > 0);
-  return placeID;
+function add_normalized_visit(aURI, aTime, aDayOffset) {
+  var dateObj = new Date(aTime);
+  // Normalize to midnight
+  dateObj.setHours(0);
+  dateObj.setMinutes(0);
+  dateObj.setSeconds(0);
+  dateObj.setMilliseconds(0);
+  // Substract aDayOffset
+  var PRTimeWithOffset = (dateObj.getTime() + aDayOffset * 86400000) * 1000;
+  print("Adding visit to " + aURI.spec + " at " + new Date(PRTimeWithOffset/1000));
+  var visitId = hs.addVisit(aURI,
+                            PRTimeWithOffset,
+                            null,
+                            hs.TRANSITION_TYPED, // user typed in URL bar
+                            false, // not redirect
+                            0);
+  do_check_true(visitId > 0);
+  return visitId;
 }
 
-// Can I rely on en-US locales during units tests?
-var dayLabels = 
-[ 
-  "Today", 
-  "Yesterday", 
-  "2 days ago", 
-  "3 days ago",
-  "4 days ago",
-  "5 days ago",
-  "6 days ago",
-  "Older than 6 days"
+var nowObj = new Date();
+// This test relies on en-US locale
+// Offset is number of days
+var containers = [
+  { label: "Today",               offset: 0                     },
+  { label: "Yesterday",           offset: -1                    },
+  { label: "Last 7 days",         offset: -3                    },
+  { label: "This month",          offset: -8                    },
+  { label: "",                    offset: -nowObj.getDate()-1   },
+  { label: "Older than 6 months", offset: -nowObj.getDate()-186 },
 ];
 
-// Fills history and checks if date labels are correct for partially filled history
+/**
+ * Fills history and checks containers' labels.
+ */
 function fill_history() {
-  const checkOlderOffset = 4;
-
-  // add visits for the older days
-  for (var i=checkOlderOffset; i<dayLabels.length; i++)
-  {
+  print("\n\n*** TEST Fill History\n");
+  // We can't use "now" because our hardcoded offsets would be invalid for some
+  // date.  So we hardcode a date.
+  for (var i = 0; i < containers.length; i++) {
+    var container = containers[i];
     var testURI = uri("http://mirror"+i+".mozilla.com/b");
-    add_visit(testURI, -i);
+    add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     var testURI = uri("http://mirror"+i+".mozilla.com/a");
-    add_visit(testURI, -i);
+    add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     var testURI = uri("http://mirror"+i+".google.com/b");
-    add_visit(testURI, -i);
+    add_normalized_visit(testURI, nowObj.getTime(), container.offset);
     var testURI = uri("http://mirror"+i+".google.com/a");
-    add_visit(testURI, -i);
+    add_normalized_visit(testURI, nowObj.getTime(), container.offset);
   }
 
-  var options = histsvc.getNewQueryOptions();
+  var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_SITE_QUERY;
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
+  var query = hs.getNewQuery();
+
+  var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, dayLabels.length - checkOlderOffset);
 
-  for (var i=checkOlderOffset; i<dayLabels.length; i++)
-  {
-    var node = root.getChild(i-checkOlderOffset);
-    do_check_eq(node.title, dayLabels[i]);
+  var cc = root.childCount;
+  print("Found containers:");
+  for (var i = 0; i < cc; i++) {
+    var container = containers[i];
+    var node = root.getChild(i);
+    print(node.title);
+    if (container.label)
+      do_check_eq(node.title, container.label);
   }
-
-
-  // When I close the root container here, it would generate a warning
-  // on next call to addVisit.
-  root.containerOpen = false;
-  
-  // add visits for the most recent days
-  for (var i=0; i<checkOlderOffset; i++)
-  {
-    var testURI = uri("http://mirror"+i+".mozilla.com/d");
-    add_visit(testURI, -i);
-    var testURI = uri("http://mirror"+i+".mozilla.com/c");
-    add_visit(testURI, -i);
-    var testURI = uri("http://mirror"+i+".google.com/d");
-    add_visit(testURI, -i);
-    var testURI = uri("http://mirror"+i+".google.com/c");
-    add_visit(testURI, -i);
-  }
-
+  do_check_eq(cc, containers.length);
   root.containerOpen = false;
 }
 
+/**
+ * Queries history grouped by date and site, checking containers' labels and
+ * children.
+ */
 function test_RESULTS_AS_DATE_SITE_QUERY() {
-
-  var options = histsvc.getNewQueryOptions();
+  print("\n\n*** TEST RESULTS_AS_DATE_SITE_QUERY\n");
+  var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_SITE_QUERY;
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
+  var query = hs.getNewQuery();
+  var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, dayLabels.length);
-
-  // Now we check whether we have all the labels
-  for (var i=0; i<dayLabels.length; i++)
-  {
-    var node = root.getChild(i);
-    do_check_eq(node.title, dayLabels[i]);
-  }
 
   // Check one of the days
-  var dayNode = root.getChild(4).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var dayNode = root.getChild(0)
+                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayNode.containerOpen = true;
   do_check_eq(dayNode.childCount, 2);
 
   // Items should be sorted by host
-  var site1 = dayNode.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(site1.title, "mirror4.google.com");
+  var site1 = dayNode.getChild(0)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(site1.title, "mirror0.google.com");
 
-  var site2 = dayNode.getChild(1).QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(site2.title, "mirror4.mozilla.com");
+  var site2 = dayNode.getChild(1)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(site2.title, "mirror0.mozilla.com");
 
   site1.containerOpen = true;
   do_check_eq(site1.childCount, 2);
 
   // Inside of host sites are sorted by title
   var site1visit = site1.getChild(0);
-  do_check_eq(site1visit.uri, "http://mirror4.google.com/a");
+  do_check_eq(site1visit.uri, "http://mirror0.google.com/a");
+
+  // Bug 473157: changing sorting mode should not affect the containers
+  result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
+
+  // Check one of the days
+  var dayNode = root.getChild(0)
+                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  dayNode.containerOpen = true;
+  do_check_eq(dayNode.childCount, 2);
+
+  // Hosts are still sorted by title
+  var site1 = dayNode.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(site1.title, "mirror0.google.com");
+
+  var site2 = dayNode.getChild(1).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(site2.title, "mirror0.mozilla.com");
+
+  site1.containerOpen = true;
+  do_check_eq(site1.childCount, 2);
+
+  // But URLs are now sorted by title descending
+  var site1visit = site1.getChild(0);
+  do_check_eq(site1visit.uri, "http://mirror0.google.com/b");
 
   site1.containerOpen = false;
   dayNode.containerOpen = false;
   root.containerOpen = false;
-
 }
 
+/**
+ * Queries history grouped by date, checking containers' labels and children.
+ */
 function test_RESULTS_AS_DATE_QUERY() {
-
-  var options = histsvc.getNewQueryOptions();
+  print("\n\n*** TEST RESULTS_AS_DATE_QUERY\n");
+  var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_QUERY;
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
+  var query = hs.getNewQuery();
+  var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, dayLabels.length);
 
-  // Now we check whether we have all the labels
-  for (var i=0; i<dayLabels.length; i++)
-  {
+  var cc = root.childCount;
+  do_check_eq(cc, containers.length);
+  print("Found containers:");
+  for (var i = 0; i < cc; i++) {
+    var container = containers[i];
     var node = root.getChild(i);
-    do_check_eq(node.title, dayLabels[i]);
+    print(node.title);
+    if (container.label)
+      do_check_eq(node.title, container.label);
   }
 
   // Check one of the days
-  var dayNode = root.getChild(3).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var dayNode = root.getChild(0)
+                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayNode.containerOpen = true;
   do_check_eq(dayNode.childCount, 4);
-  do_check_eq(dayNode.title, "3 days ago");
 
-  // Items should be sorted title
+  // Items should be sorted by title
   var visit1 = dayNode.getChild(0);
-  do_check_eq(visit1.uri, "http://mirror3.google.com/c");
+  do_check_eq(visit1.uri, "http://mirror0.google.com/a");
 
   var visit2 = dayNode.getChild(3);
-  do_check_eq(visit2.uri, "http://mirror3.mozilla.com/d");
+  do_check_eq(visit2.uri, "http://mirror0.mozilla.com/b");
+
+  // Bug 473157: changing sorting mode should not affect the containers
+  result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
+
+  // Check one of the days
+  var dayNode = root.getChild(0)
+                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  dayNode.containerOpen = true;
+  do_check_eq(dayNode.childCount, 4);
+
+  // But URLs are now sorted by title descending
+  var visit1 = dayNode.getChild(0);
+  do_check_eq(visit1.uri, "http://mirror0.mozilla.com/b");
+
+  var visit2 = dayNode.getChild(3);
+  do_check_eq(visit2.uri, "http://mirror0.google.com/a");
 
   dayNode.containerOpen = false;
   root.containerOpen = false;
 }
 
+/**
+ * Queries history grouped by site, checking containers' labels and children.
+ */
 function test_RESULTS_AS_SITE_QUERY() {
-
+  print("\n\n*** TEST RESULTS_AS_SITE_QUERY\n");
   // add a bookmark with a domain not in the set of visits in the db
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-  bmsvc.insertBookmark(bmsvc.toolbarFolder, uri("http://foobar"),
-                       bmsvc.DEFAULT_INDEX, "");
+  bs.insertBookmark(bs.toolbarFolder, uri("http://foobar"),
+                    bs.DEFAULT_INDEX, "");
 
-  var options = histsvc.getNewQueryOptions();
+  var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_SITE_QUERY;
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
+  var query = hs.getNewQuery();
+  var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, dayLabels.length*2);
+  do_check_eq(root.childCount, containers.length * 2);
 
-  // We include this here, so that maintainer knows what is the expected result
-  var expectedResult = 
-  [
+/* Expected results:
     "mirror0.google.com",
     "mirror0.mozilla.com",
     "mirror1.google.com",
     "mirror1.mozilla.com",
     "mirror2.google.com",
     "mirror2.mozilla.com",
-    "mirror3.google.com",
+    "mirror3.google.com",  <== We check for this site (index 6)
     "mirror3.mozilla.com",
     "mirror4.google.com",
     "mirror4.mozilla.com",
-    "mirror5.google.com",   // We check for this site
+    "mirror5.google.com",
     "mirror5.mozilla.com",
-    "mirror6.google.com",
-    "mirror6.mozilla.com",
-    "mirror7.google.com",
-    "mirror7.mozilla.com"
-  ];
+    ...
+*/
 
   // Items should be sorted by host
-  var siteNode = root.getChild(dayLabels.length+2).QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(siteNode.title,  expectedResult[dayLabels.length+2] );
+  var siteNode = root.getChild(6)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(siteNode.title, "mirror3.google.com");
 
   siteNode.containerOpen = true;
   do_check_eq(siteNode.childCount, 2);
 
   // Inside of host sites are sorted by title
+  var visitNode = siteNode.getChild(0);
+  do_check_eq(visitNode.uri, "http://mirror3.google.com/a");
+
+  // Bug 473157: changing sorting mode should not affect the containers
+  result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
+  var siteNode = root.getChild(6)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(siteNode.title, "mirror3.google.com");
+
+  siteNode.containerOpen = true;
+  do_check_eq(siteNode.childCount, 2);
+
+  // But URLs are now sorted by title descending
   var visit = siteNode.getChild(0);
-  do_check_eq(visit.uri, "http://mirror5.google.com/a");
+  do_check_eq(visit.uri, "http://mirror3.google.com/b");
 
   siteNode.containerOpen = false;
   root.containerOpen = false;
@@ -258,6 +309,11 @@ function test_RESULTS_AS_SITE_QUERY() {
 
 // main
 function run_test() {
+  // Increase history limit to 1 year
+  ps.setIntPref("browser.history_expire_days", 365);
+
+  // Cleanup.
+  bh.removeAllPages();
 
   fill_history();
   test_RESULTS_AS_DATE_SITE_QUERY();

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGValue.h"
-#include "nsIWeakReference.h"
 
 nsSVGValue::nsSVGValue()
     : mModifyNestCount(0)
@@ -52,27 +51,20 @@ nsSVGValue::~nsSVGValue()
 void
 nsSVGValue::ReleaseObservers()
 {
-  PRInt32 count = mObservers.Count();
-  PRInt32 i;
-  for (i = 0; i < count; ++i) {
-    nsIWeakReference* wr = static_cast<nsIWeakReference*>(mObservers.ElementAt(i));
-    NS_RELEASE(wr);
-  }
-  while (i)
-    mObservers.RemoveElementAt(--i);
+  mObservers.Clear();
 }
 
 void
 nsSVGValue::NotifyObservers(SVGObserverNotifyFunction f,
                             modificationType aModType)
 {
-  PRInt32 count = mObservers.Count();
+  PRInt32 count = mObservers.Length();
 
   // Since notification might cause the listeners to remove themselves
   // from the observer list (mod_die), walk backwards through the list
   // to catch everyone.
   for (PRInt32 i = count - 1; i >= 0; i--) {
-    nsIWeakReference* wr = static_cast<nsIWeakReference*>(mObservers.ElementAt(i));
+    nsIWeakReference* wr = mObservers.ElementAt(i);
     nsCOMPtr<nsISVGValueObserver> observer = do_QueryReferent(wr);
     if (observer)
        (static_cast<nsISVGValueObserver*>(observer)->*f)(this, aModType);
@@ -100,7 +92,7 @@ nsSVGValue::DidModify(modificationType aModType)
 NS_IMETHODIMP
 nsSVGValue::AddObserver(nsISVGValueObserver* observer)
 {
-  nsIWeakReference* wr = NS_GetWeakReference(observer);
+  nsWeakPtr wr = do_GetWeakReference(observer);
   if (!wr) return NS_ERROR_FAILURE;
 
   // Prevent duplicate observers - needed because geometry can attempt
@@ -108,26 +100,19 @@ nsSVGValue::AddObserver(nsISVGValueObserver* observer)
   // stroke and fill.  Safe, as on a style change we remove both, as
   // the change notification isn't fine grained, and re-add as
   // appropriate.
-  if (mObservers.IndexOf((void*)wr) >= 0) {
-    NS_RELEASE(wr);
-    return NS_OK;
+  if (!mObservers.Contains(wr)) {
+    mObservers.AppendElement(wr);
   }
 
-  mObservers.AppendElement((void*)wr);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGValue::RemoveObserver(nsISVGValueObserver* observer)
 {
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(observer);
+  nsWeakPtr wr = do_GetWeakReference(observer);
   if (!wr) return NS_ERROR_FAILURE;
-  PRInt32 i = mObservers.IndexOf((void*)wr);
-  if (i<0) return NS_ERROR_FAILURE;
-  nsIWeakReference* wr2 = static_cast<nsIWeakReference*>(mObservers.ElementAt(i));
-  NS_RELEASE(wr2);
-  mObservers.RemoveElementAt(i);
-  return NS_OK;
+  return mObservers.RemoveElement(wr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

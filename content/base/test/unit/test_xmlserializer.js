@@ -40,7 +40,7 @@ function xmlEncode(aFile, aFlags, aCharset) {
     if(aFlags == undefined) aFlags = 0;
     if(aCharset == undefined) aCharset = "UTF-8";
 
-    var doc = do_parse_document(gBasePath+aFile, "text/xml");
+    var doc = do_parse_document(aFile, "text/xml");
 
     var encoder = Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/xml"]
                    .createInstance(nsIDocumentEncoder);

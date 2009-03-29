@@ -1,0 +1,19 @@
+# -*- Mode: Makefile -*-
+
+$(info MAKEFLAGS = '$(MAKEFLAGS)')
+$(info MAKE = '$(MAKE)')
+$(info value MAKE = "$(value MAKE)")
+
+all:
+	env
+	test "$(MAKELEVEL)" = "1"
+	echo "value(MAKE)" '$(value MAKE)'
+	echo "value(MAKE_COMMAND)" = '$(value MAKE_COMMAND)'
+	test "$(origin CVAR)" = "command line"
+	test "$(CVAR)" = "c val=spac\ed"
+	test "$(origin EVAR)" = "environment"
+	test "$(EVAR)" = "eval"
+	test "$(OVAL)" = "cline"
+	test "$(OVAL2)" = "cline2"
+	test "$(ALLVAR)" = "allspecific"
+	@echo TEST-PASS

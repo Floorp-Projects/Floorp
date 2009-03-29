@@ -68,12 +68,16 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
                  browser_bug420160.js \
-                 browser_bug432599.js \
+                 browser_bug424101.js \
                  browser_bug427559.js \
+                 browser_bug432599.js \
                  browser_bug441778.js \
+                 browser_bug455852.js \
+                 browser_bug462673.js \
                  browser_discovery.js \
                  discovery.html \
                  moz.png \
+                 test_bug462673.html \
                  browser_getshortcutoruri.js \
                  browser_page_style_menu.js \
                  page_style_sample.html \
@@ -99,6 +103,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_sanitize-passwordDisabledHosts.js \
                  browser_bug479408.js \
                  browser_bug479408_sample.html \
+                 browser_scope.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

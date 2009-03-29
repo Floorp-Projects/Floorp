@@ -48,7 +48,7 @@
 #ifdef NO_NSPR_10_SUPPORT
 
 /* nothing to do */
-int main()
+int main(int argc, char **argv)
 {
     printf("PASS\n");
     return 0;
@@ -58,7 +58,7 @@ int main()
 
 #include "prtypes.h"  /* which includes protypes.h */
 
-int main()
+int main(int argc, char **argv)
 {
     /*
      * Compilation fails if any of these integer types are not

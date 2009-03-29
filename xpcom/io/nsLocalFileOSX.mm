@@ -1467,6 +1467,10 @@ NS_IMETHODIMP nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileD
   if (! *_retval)
     return NS_ErrorAccordingToNSPR();
 
+  if (flags & DELETE_ON_CLOSE) {
+    PR_Delete(path.get());
+  }
+
   return NS_OK;
 }
 

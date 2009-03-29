@@ -127,7 +127,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
 	cairo_destroy (cr);
 
-	if (status) {
+	if (unlikely (status)) {
 	    cairo_surface_destroy (meta_surface);
 	    return status;
 	}
@@ -152,7 +152,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
 	    cairo_surface_destroy (null_surface);
 	    status = analysis_surface->status;
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    _cairo_analysis_surface_set_ctm (analysis_surface,
@@ -162,7 +162,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
 
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    _cairo_box_to_doubles (&bbox, &x1, &y1, &x2, &y2);
@@ -187,7 +187,6 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
     if (info & CAIRO_SCALED_GLYPH_INFO_SURFACE) {
 	cairo_surface_t	*surface;
-	cairo_status_t status = CAIRO_STATUS_SUCCESS;
 	cairo_format_t format;
 	int width, height;
 
@@ -216,7 +215,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y));
 	status = _cairo_meta_surface_replay (meta_surface, surface);
 
-	if (status) {
+	if (unlikely (status)) {
 	    cairo_surface_destroy(surface);
 	    return status;
 	}
@@ -233,7 +232,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
 	status = _cairo_meta_surface_get_path (meta_surface, path);
 
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_path_fixed_destroy (path);
 	    return status;
 	}
@@ -337,64 +336,14 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 					  cairo_scaled_font_t        **scaled_font);
 
 static cairo_status_t
-_cairo_user_scaled_font_get_implementation (cairo_toy_font_face_t *toy_face,
-					    cairo_font_face_t **font_face_out)
+_cairo_user_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
+				      cairo_font_face_t      **font_face)
 {
-    static cairo_user_data_key_t twin_font_face_key;
-
-    cairo_font_face_t *face;
-    cairo_status_t status;
-
-    face = cairo_font_face_get_user_data (&toy_face->base,
-					  &twin_font_face_key);
-    if (!face) {
-	face = _cairo_font_face_twin_create (cairo_toy_font_face_get_slant (&toy_face->base),
-					     cairo_toy_font_face_get_weight (&toy_face->base));
-
-	status = cairo_font_face_set_user_data (&toy_face->base,
-						&twin_font_face_key,
-						face,
-						(cairo_destroy_func_t) cairo_font_face_destroy);
-
-	if (status) {
-	    cairo_font_face_destroy (face);
-	    return status;
-	}
-    }
-
-    *font_face_out = face;
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_font_face_twin_create_for_toy (toy_face, font_face);
 }
 
-static cairo_status_t
-_cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
-				    const cairo_matrix_t      *font_matrix,
-				    const cairo_matrix_t      *ctm,
-				    const cairo_font_options_t *font_options,
-				    cairo_scaled_font_t	     **font)
-{
-    cairo_font_face_t *face;
-    cairo_status_t status;
-
-    status = _cairo_user_scaled_font_get_implementation (toy_face, &face);
-    if (status)
-	return status;
-
-    status = _cairo_user_font_face_scaled_font_create (face,
-						       font_matrix,
-						       ctm,
-						       font_options,
-						       font);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-const cairo_scaled_font_backend_t _cairo_user_scaled_font_backend = {
+static const cairo_scaled_font_backend_t _cairo_user_scaled_font_backend = {
     CAIRO_FONT_TYPE_USER,
-    _cairo_user_scaled_font_get_implementation,
-    _cairo_user_scaled_font_create_toy,	/* create_toy */
     NULL,	/* scaled_font_fini */
     _cairo_user_scaled_glyph_init,
     _cairo_user_text_to_glyphs,
@@ -421,7 +370,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
     font_face->immutable = TRUE;
 
     user_scaled_font = malloc (sizeof (cairo_user_scaled_font_t));
-    if (user_scaled_font == NULL)
+    if (unlikely (user_scaled_font == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_scaled_font_init (&user_scaled_font->base,
@@ -429,7 +378,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 				      font_matrix, ctm, options,
 				      &_cairo_user_scaled_font_backend);
 
-    if (status) {
+    if (unlikely (status)) {
 	free (user_scaled_font);
 	return status;
     }
@@ -516,10 +465,10 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
     return status;
 }
 
-static const cairo_font_face_backend_t _cairo_user_font_face_backend = {
+const cairo_font_face_backend_t _cairo_user_font_face_backend = {
     CAIRO_FONT_TYPE_USER,
+    _cairo_user_font_face_create_for_toy,
     NULL,	/* destroy */
-    NULL,       /* direct implementation */
     _cairo_user_font_face_scaled_font_create
 };
 

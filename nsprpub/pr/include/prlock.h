@@ -116,6 +116,26 @@ NSPR_API(void) PR_Lock(PRLock *lock);
 ***********************************************************************/
 NSPR_API(PRStatus) PR_Unlock(PRLock *lock);
 
+/***********************************************************************
+** MACRO:    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK
+** DESCRIPTION:
+**  If the current thread owns |lock|, this assertion is guaranteed to
+**  succeed.  Otherwise, the behavior of this function is undefined.
+** INPUTS:      PRLock *lock
+**              Lock to assert ownership of.
+** OUTPUTS:     void
+** RETURN:      None
+***********************************************************************/
+#if defined(DEBUG) || defined(FORCE_PR_ASSERT)
+#define PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(/* PrLock* */ lock) \
+    PR_AssertCurrentThreadOwnsLock(lock)
+#else
+#define PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(/* PrLock* */ lock)
+#endif
+
+/* Don't call this function directly. */
+NSPR_API(void) PR_AssertCurrentThreadOwnsLock(PRLock *lock);
+
 PR_END_EXTERN_C
 
 #endif /* prlock_h___ */

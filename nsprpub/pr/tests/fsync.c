@@ -55,7 +55,7 @@ static void Help(void)
     PR_fprintf(err, "\t-h   This message and nothing else\n");
 }  /* Help */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     PLOptStatus os;

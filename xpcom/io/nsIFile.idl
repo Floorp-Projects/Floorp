@@ -170,6 +170,7 @@ interface nsIFile : nsISupports
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *  If 'this' is a file, and the destination file already exists, moveTo
      *  will replace the old file.
+     *  This object is updated to refer to the new file.
      *
      *  moveTo will NOT resolve aliases/shortcuts during the copy.
      *  moveTo will do the right thing and allow copies across volumes.

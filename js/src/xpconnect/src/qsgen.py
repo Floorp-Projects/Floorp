@@ -749,14 +749,19 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     if customMethodCall is not None:
         f.write("%s\n" % customMethodCall['code'])
         f.write("#ifdef DEBUG\n")
+        f.write("    nsresult debug_rv;\n")
         f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
                 % member.iface.name);
         prefix = 'debug_'
     else:
+        if not rvdeclared:
+            f.write("    nsresult rv;\n")
+            rvdeclared = True
         prefix = ''
 
     resultname = prefix + 'result'
     selfname = prefix + 'self'
+    nsresultname = prefix + 'rv'
 
     # Prepare out-parameter.
     if isMethod or isGetter:
@@ -776,10 +781,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         else:
             args = "arg0"
 
-    if not rvdeclared:
-        f.write("    nsresult rv;\n")
-        rvdeclared = True
-    f.write("    rv = %s->%s(%s);\n" % (selfname, comName, args))
+    f.write("    %s = %s->%s(%s);\n" % (nsresultname, selfname, comName, args))
 
     if customMethodCall is None:
         # Check for errors.
@@ -800,7 +802,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                     "JSVAL_TO_OBJECT(%s), id);\n" % thisval)
     else:
         if isMethod or isGetter:
-            f.write("    NS_ASSERTION(xpc_qsSameResult(debug_result, result),\n"
+            f.write("    NS_ASSERTION(NS_SUCCEEDED(debug_rv) && "
+                    "xpc_qsSameResult(debug_result, result),\n"
                     "                 \"Got the wrong answer from the custom "
                     "method call!\");\n")
         f.write("#endif\n")
@@ -894,15 +897,17 @@ traceableArgumentConversionTemplates = {
     'double':
           "    jsdouble ${name} = ${argVal};\n",
     '[astring]':
-          "    xpc_qsDependentJSString ${name}(${argVal});\n",
+          "    XPCReadableJSStringWrapper ${name}(${argVal});\n",
     '[domstring]':
-          "    xpc_qsDependentJSString ${name}(${argVal});\n",
+          "    XPCReadableJSStringWrapper ${name}(${argVal});\n",
     '[cstring]':
-          "    xpc_qsDependentJSString ${name}_utf16(${argVal});\n"
-          "    NS_ConvertUTF16toUTF8 ${name}(${name}_utf16);\n",
+          "    NS_ConvertUTF16toUTF8 ${name}("
+          "(const PRUnichar *)JS_GetStringChars(${argVal}), "
+          "JS_GetStringLength(${argVal}));\n",
     'string':
-          "    xpc_qsDependentJSString ${name}_utf16(${argVal});\n"
-          "    NS_ConvertUTF16toUTF8 ${name}_utf8(${name}_utf16);\n"
+          "    NS_ConvertUTF16toUTF8 ${name}_utf8("
+          "(const PRUnichar *)JS_GetStringChars(${argVal}), "
+          "JS_GetStringLength(${argVal}));\n"
           "    const char *${name} = ${name}_utf8.get();\n",
     'wstring':
           "    const PRUnichar *${name} = JS_GetStringChars({argVal});\n",
@@ -966,48 +971,47 @@ traceableResultConvTemplates = {
     'void':
         "    return JSVAL_VOID;\n",
     'short':
-        "    return int32(${result});\n",
+        "    return int32(result);\n",
     'unsigned short':
-        "    return uint32(${result});\n",
+        "    return uint32(result);\n",
     'long':
-        "    return int32(${result});\n",
+        "    return int32(result);\n",
     'unsigned long':
-        "    return uint32(${result});\n",
+        "    return uint32(result);\n",
     'boolean':
-        "    return ${result} ? JS_TRUE : JS_FALSE;\n",
+        "    return result ? JS_TRUE : JS_FALSE;\n",
     '[domstring]':
         "    jsval rval;\n"
-        "    if (!xpc_qsStringToJsval(cx, ${result}, &rval)) {\n"
+        "    if (!xpc_qsStringToJsval(cx, result, &rval)) {\n"
         "        JS_ReportOutOfMemory(cx);\n${errorStr}"
         "    return rval;\n",
     '[astring]':
         "    jsval rval;\n"
-        "    if (!xpc_qsStringToJsval(cx, ${result}, &rval)) {\n"
+        "    if (!xpc_qsStringToJsval(cx, result, &rval)) {\n"
         "        JS_ReportOutOfMemory(cx);\n${errorStr}"
         "    return rval;\n",
     }
 
-def writeTraceableResultConv(f, type, paramNum, result):
+def writeTraceableResultConv(f, type, paramNum):
     typeName = getBuiltinOrNativeTypeName(type)
     if typeName is not None:
         template = traceableResultConvTemplates.get(typeName)
         if template is not None:
-            values = { 'result': result,
-                       'errorStr': getFailureString(
+            values = { 'errorStr': getFailureString(
                                    getTraceInfoDefaultReturn(type), 2) }
             f.write(substitute(template, values))
             return
         # else fall through; this type isn't supported yet
     elif isInterfaceType(type):
         if isVariantType(type):
-            f.write("    JSBool ok = xpc_qsVariantToJsval(ccx, %s, %d, "
-                    "tvr.addr());\n" % (result, paramNum))
+            f.write("    JSBool ok = xpc_qsVariantToJsval(ccx, result, %d, "
+                    "tvr.addr());\n" % paramNum)
         else:
             f.write("    AutoMarkingNativeInterfacePtr resultiface(ccx, "
                     "%s_Interface(ccx));\n" % type.name)
-            f.write("    JSBool ok = xpc_qsXPCOMObjectToJsval(ccx, %s, "
-                    "xpc_qsGetWrapperCache(%s), resultiface, tvr.addr());\n"
-                    % (result, result))
+            f.write("    JSBool ok = xpc_qsXPCOMObjectToJsval(ccx, result, "
+                    "xpc_qsGetWrapperCache(result), resultiface, tvr.addr());"
+                    "\n")
         f.write("    if (!ok) {\n");
         writeFailure(f, getTraceInfoDefaultReturn(type), 2)
         f.write("    return *tvr.addr();\n")
@@ -1017,7 +1021,7 @@ def writeTraceableResultConv(f, type, paramNum, result):
     f.write("    !; // TODO - Convert `result` to jsval, store in rval.\n")
     f.write("    return xpc_qsThrow(cx, NS_ERROR_UNEXPECTED); // FIXME\n")
 
-def writeTraceableQuickStub(f, member, stubName):
+def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     assert member.traceable
 
     traceInfo = {
@@ -1026,6 +1030,8 @@ def writeTraceableQuickStub(f, member, stubName):
         }
 
     haveCcx = isInterfaceType(member.realtype) or anyParamRequiresCcx(member)
+
+    customMethodCall = customMethodCalls.get(stubName, None)
 
     # Write the function
     f.write("static %sFASTCALL\n" % getTraceType(member.type))
@@ -1045,8 +1051,10 @@ def writeTraceableQuickStub(f, member, stubName):
         f.write("    XPCCallContext ccx(JS_CALLER, cx, obj, callee);\n")
 
     # Get the 'self' pointer.
-    selfName = "self"
-    f.write("    %s *%s;\n" % (member.iface.name, selfName))
+    if customMethodCall is None or not 'thisType' in customMethodCall:
+        f.write("    %s *self;\n" % member.iface.name)
+    else:
+        f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
     f.write("    xpc_qsTempRoot tvr(cx);\n")
     if haveCcx:
@@ -1070,36 +1078,53 @@ def writeTraceableQuickStub(f, member, stubName):
                                                       haveCcx, rvdeclared)
         argNames.append(argName)
 
+    if customMethodCall is not None:
+        f.write("%s\n" % customMethodCall['code'])
+        f.write("#ifdef DEBUG\n")
+        f.write("    nsresult debug_rv;\n")
+        f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
+                % member.iface.name);
+        prefix = 'debug_'
+    else:
+        if not rvdeclared:
+            f.write("    nsresult rv;\n")
+            rvdeclared = True
+        prefix = ''
+
+    resultname = prefix + 'result'
+    selfname = prefix + 'self'
+    nsresultname = prefix + 'rv'
+
     # Prepare out-parameter.
-    resultName = "_retval"
-    writeResultDecl(f, member.realtype, resultName)
+    writeResultDecl(f, member.realtype, resultname)
 
     # Call the method.
     comName = header.methodNativeName(member)
     if not isVoidType(member.realtype):
-        argNames.append(outParamForm(resultName, member.realtype))
+        argNames.append(outParamForm(resultname, member.realtype))
     args = ', '.join(argNames)
 
-    if not rvdeclared:
-        f.write("    nsresult ")
-        rvdeclared = True
-    else:
-        f.write("    ")
-    f.write("rv = %s->%s(%s);\n" % (selfName, comName, args))
+    f.write("    %s = %s->%s(%s);\n" % (nsresultname, selfname, comName, args))
 
-    # Check for errors.
-    f.write("    if (NS_FAILED(rv)) {\n")
-    if haveCcx:
-        f.write("        xpc_qsThrowMethodFailedWithCcx(ccx, rv);\n")
+    if customMethodCall is None:
+        # Check for errors.
+        f.write("    if (NS_FAILED(rv)) {\n")
+        if haveCcx:
+            f.write("        xpc_qsThrowMethodFailedWithCcx(ccx, rv);\n")
+        else:
+            # XXX Replace with a real error message!
+            f.write("        xpc_qsThrowMethodFailedWithDetails(cx, rv, "
+                    "\"%s\", \"%s\");\n" % (member.iface.name, member.name))
+        writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
     else:
-        # XXX Replace with a real error message!
-        f.write("        xpc_qsThrowMethodFailedWithDetails(cx, rv, \"%s\", "
-                "\"%s\");\n" % (member.iface.name, member.name))
-    writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
+        f.write("    NS_ASSERTION(NS_SUCCEEDED(debug_rv) && "
+                "xpc_qsSameResult(debug_result, result),\n"
+                "                 \"Got the wrong answer from the custom "
+                "method call!\");\n")
+        f.write("#endif\n")
 
     # Convert the return value.
-    writeTraceableResultConv(f, member.realtype, len(member.params) + 1,
-                             resultName)
+    writeTraceableResultConv(f, member.realtype, len(member.params) + 1)
 
     # Epilog.
     f.write("}\n\n")
@@ -1132,10 +1157,10 @@ def writeMethodStub(f, customMethodCalls, method):
     fs = '{"%s", %s, %d}' % (method.name, stubName, len(method.params))
     return fs
 
-def writeTraceableStub(f, method):
+def writeTraceableStub(f, customMethodCalls, method):
     """ Write a method stub to `f`. Return an xpc_qsTraceableSpec initializer. """
     stubName = method.iface.name + '_' + header.methodNativeName(method)
-    writeTraceableQuickStub(f, method, stubName)
+    writeTraceableQuickStub(f, customMethodCalls, method, stubName)
     fs = '{"%s", %s, %d}' % (method.name,
                              "JS_DATA_TO_FUNC_PTR(JSNative, %s_trcinfo)" % stubName,
                              len(method.params))
@@ -1153,7 +1178,7 @@ def writeStubsForInterface(f, customMethodCalls, iface):
         elif member.kind == 'method':
             fs = writeMethodStub(f, customMethodCalls, member)
             if member.traceable:
-                ts = writeTraceableStub(f, member)
+                ts = writeTraceableStub(f, customMethodCalls, member)
                 tracespecs.append(ts)
             else:
                 funcspecs.append(fs)

@@ -1,0 +1,46 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage basic test</title>
+
+<script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function startTest()
+{
+  var url = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";
+  var ios = Components.classes["@mozilla.org/network/io-service;1"]
+    .getService(Components.interfaces.nsIIOService);
+  var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+    .getService(Components.interfaces.nsIScriptSecurityManager);
+  var dsm = Components.classes["@mozilla.org/dom/storagemanager;1"]
+    .getService(Components.interfaces.nsIDOMStorageManager);
+
+  var uri = ios.newURI(url, "", null);
+  var principal = ssm.getCodebasePrincipal(uri);
+  var storage = dsm.getLocalStorageForPrincipal(principal);
+  
+  storage.wrappedJSObject.setItem("chromekey", "chromevalue");
+  
+  var aframe = document.getElementById("aframe");
+  aframe.onload = function()
+  {
+    is(storage.wrappedJSObject.getItem("chromekey"), "chromevalue");
+    is(aframe.contentDocument.getElementById("data").innerHTML, "chromevalue");
+    SimpleTest.finish();
+  }
+  aframe.src = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";  
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+  <iframe src="" id="aframe"></iframe>
+</body>
+</html>

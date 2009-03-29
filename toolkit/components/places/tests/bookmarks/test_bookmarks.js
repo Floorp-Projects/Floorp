@@ -71,6 +71,8 @@ var observer = {
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
   },
+  onBeforeItemRemoved: function(id) {
+  },
   onItemRemoved: function(id, folder, index) {
     this._itemRemovedId = id;
     this._itemRemovedFolder = folder;

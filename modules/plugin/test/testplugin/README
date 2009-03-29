@@ -1,0 +1,38 @@
+= Instructions for using the test plugin =
+
+== MIME type ==
+
+The test plugin registers itself for the MIME type "application/x-test".
+
+== Rendering ==
+
+By default, the plugin fills its rectangle with gray, with a black border, and
+renders the user-agent string (obtained from NPN_UserAgent) centered in black.
+
+The test plugin supports the following parameters:
+
+* drawmode="solid"
+The plugin will draw a solid color instead of the default rendering described
+above. The default solid color is completely transparent black (i.e., nothing).
+
+* color
+This specifies the color to use for drawmode="solid". The value should be 8 hex
+digits, 2 per channel in AARRGGBB format.
+
+== NPRuntime testing ==
+
+The test plugin object supports the following scriptable method:
+
+* identifierToStringTest(ident)
+Converts a string, int32 or double parameter 'ident' to an NPIdentifier and
+then to a string, which is returned.
+
+== Private browsing ==
+
+The test plugin object supports the following scriptable methods:
+
+* queryPrivateModeState
+Returns the value of NPN_GetValue(NPNVprivateModeBool).
+
+* lastReportedPrivateModeState
+Returns the last value set by NPP_SetValue(NPNVprivateModeBool).

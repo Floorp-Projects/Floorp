@@ -55,7 +55,7 @@
 
 static int failed_already = 0;
 
-int main( int argc, char* argv[] )
+int main(int argc, char **argv)
 {
     double num;
     double num1;

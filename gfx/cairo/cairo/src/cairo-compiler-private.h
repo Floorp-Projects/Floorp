@@ -139,6 +139,23 @@
 #define cairo_const
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
+#define _CAIRO_BOOLEAN_EXPR(expr)                   \
+ __extension__ ({                               \
+   int _cairo_boolean_var_;                         \
+   if (expr)                                    \
+      _cairo_boolean_var_ = 1;                      \
+   else                                         \
+      _cairo_boolean_var_ = 0;                      \
+   _cairo_boolean_var_;                             \
+})
+#define likely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 1))
+#define unlikely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 0))
+#else
+#define likely(expr) (expr)
+#define unlikely(expr) (expr)
+#endif
+
 #ifndef __GNUC__
 #undef __attribute__
 #define __attribute__(x)
@@ -147,11 +164,37 @@
 #if (defined(__WIN32__) && !defined(__WINE__)) || defined(_MSC_VER)
 #define snprintf _snprintf
 #define popen _popen
+#define pclose _pclose
+#define hypot _hypot
 #endif
 
 #ifdef _MSC_VER
 #undef inline
 #define inline __inline
+#endif
+
+#if defined(_MSC_VER) && !defined(WINCE)
+/* When compiling with /Gy and /OPT:ICF identical functions will be folded in together.
+   The CAIRO_ENSURE_UNIQUE macro ensures that a function is always unique and
+   will never be folded into another one. Something like this might eventually
+   be needed for GCC but it seems fine for now. */
+#define CAIRO_ENSURE_UNIQUE                       \
+    do {                                          \
+	char func[] = __FUNCTION__;               \
+	char file[] = __FILE__;                   \
+	__asm {                                   \
+	    __asm jmp __internal_skip_line_no     \
+	    __asm _emit (__LINE__ & 0xff)         \
+	    __asm _emit ((__LINE__>>8) & 0xff)    \
+	    __asm _emit ((__LINE__>>16) & 0xff)   \
+	    __asm _emit ((__LINE__>>24) & 0xff)   \
+	    __asm lea eax, func                   \
+	    __asm lea eax, file                   \
+	    __asm __internal_skip_line_no:        \
+	};                                        \
+    } while (0)
+#else
+#define CAIRO_ENSURE_UNIQUE    do { } while (0)
 #endif
 
 #ifdef __STRICT_ANSI__

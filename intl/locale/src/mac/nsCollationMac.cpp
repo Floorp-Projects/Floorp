@@ -35,10 +35,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include <Carbon/Carbon.h>
+
 #include "nsCollationMac.h"
-#include <Resources.h>
-#include <TextUtils.h>
-#include <Script.h>
 #include "prmem.h"
 #include "prmon.h"
 #include "nsIServiceManager.h"

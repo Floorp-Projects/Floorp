@@ -37,25 +37,80 @@
 # ***** END LICENSE BLOCK ***** */
 
 import sys, os, os.path
+import tempfile
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
-def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interactive=False):
+def readManifest(manifest):
+  """Given a manifest file containing a list of test directories,
+  return a list of absolute paths to the directories contained within."""
+  manifestdir = os.path.dirname(manifest)
+  testdirs = []
+  try:
+    f = open(manifest, "r")
+    for line in f:
+      dir = line.rstrip()
+      path = os.path.join(manifestdir, dir)
+      if os.path.isdir(path):
+        testdirs.append(path)
+    f.close()
+  except:
+    pass # just eat exceptions
+  return testdirs
+
+def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
+             manifest=None, interactive=False, keepGoing=False):
   """Run the tests in |testdirs| using the |xpcshell| executable.
-  If provided, |xrePath| is the path to the XRE to use. If provided,
-  |testFile| indicates a single test to run. |interactive|, if set to True,
-  indicates to provide an xpcshell prompt instead of automatically executing
-  the test."""
+  |xrePath|, if provided, is the path to the XRE to use.
+  |testFile|, if provided, indicates a single test to run.
+  |manifeest|, if provided, is a file containing a list of
+    test directories to run.
+  |interactive|, if set to True, indicates to provide an xpcshell prompt
+    instead of automatically executing  the test.
+  |keepGoing|, if set to True, indicates that if a test fails
+    execution should continue."""
+
+  if not testdirs and not manifest:
+    # nothing to test!
+    print >>sys.stderr, "Error: No test dirs or test manifest specified!"
+    return False
+
+  testharnessdir = os.path.dirname(os.path.abspath(__file__))
   xpcshell = os.path.abspath(xpcshell)
+  # we assume that httpd.js lives in components/ relative to xpcshell
+  httpdJSPath = os.path.join(os.path.dirname(xpcshell), "components", "httpd.js").replace("\\", "/");
+
   env = dict(os.environ)
-  env["NATIVE_TOPSRCDIR"] = os.path.normpath(topsrcdir)
-  env["TOPSRCDIR"] = topsrcdir
   # Make assertions fatal
   env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
+  # Enable leaks (only) detection to its own log file.
+  # Each test will overwrite it.
+  leakLogFile = os.path.join(tempfile.gettempdir(), "runxpcshelltests_leaks.log")
+  env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
+
+  def processLeakLog(leakLogFile):
+    """Process the leak log."""
+    # For the time being, don't warn (nor "info") if the log file is not there. (Bug 469523)
+    if not os.path.exists(leakLogFile):
+      return
+
+    leaks = open(leakLogFile, "r")
+    leakReport = leaks.read()
+    leaks.close()
+
+    # Only check whether an actual leak was reported.
+    if not "0 TOTAL " in leakReport:
+      return
+
+    # For the time being, simply copy the log. (Bug 469523)
+    print leakReport.rstrip("\n")
+
   if xrePath is None:
     xrePath = os.path.dirname(xpcshell)
+  else:
+    xrePath = os.path.abspath(xrePath)
   if sys.platform == 'win32':
     env["PATH"] = env["PATH"] + ";" + xrePath
   elif sys.platform == 'osx':
@@ -64,8 +119,8 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
     env["LD_LIBRARY_PATH"] = xrePath
   args = [xpcshell, '-g', xrePath, '-j', '-s']
 
-  testharnessdir = os.path.dirname(os.path.abspath(sys.argv[0]))
-  headfiles = ['-f', os.path.join(testharnessdir, 'head.js')]
+  headfiles = ['-f', os.path.join(testharnessdir, 'head.js'),
+               '-e', 'function do_load_httpd_js() {load("%s");}' % httpdJSPath]
   tailfiles = ['-f', os.path.join(testharnessdir, 'tail.js')]
   if not interactive:
     tailfiles += ['-e', '_execute_test();']
@@ -79,9 +134,16 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
     bits = testFile.split('/', 1)
     singleDir = bits[0]
     testFile = bits[1]
+
+  if manifest is not None:
+    testdirs = readManifest(os.path.abspath(manifest))
+
+  # Process each test directory individually.
+  success = True
   for testdir in testdirs:
     if singleDir and singleDir != os.path.basename(testdir):
       continue
+    testdir = os.path.abspath(testdir)
 
     # get the list of head and tail files from the directory
     testheadfiles = []
@@ -93,7 +155,6 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
       if os.path.isfile(f):
         testtailfiles += ['-f', f]
 
-    # now execute each test individually
     # if a single test file was specified, we only want to execute that test
     testfiles = sorted(glob(os.path.join(testdir, "test_*.js")))
     if testFile:
@@ -101,6 +162,8 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
         testfiles = [os.path.join(testdir, testFile)]
       else: # not in this dir? skip it
         continue
+
+    # Now execute each test individually.
     for test in testfiles:
       pstdout = PIPE
       pstderr = STDOUT
@@ -109,10 +172,12 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
         pstdout = None
         pstderr = None
         interactiveargs = ['-e', 'print("To start the test, type _execute_test();")', '-i']
-      proc = Popen(args + headfiles + testheadfiles
-                   + ['-f', test]
-                   + tailfiles + testtailfiles + interactiveargs,
-                   stdout=pstdout, stderr=pstderr, env=env)
+      full_args = args + headfiles + testheadfiles \
+                  + ['-f', test] \
+                  + tailfiles + testtailfiles + interactiveargs
+      proc = Popen(full_args, stdout=pstdout, stderr=pstderr,
+                   env=env, cwd=testdir)
+      # |stderr == None| as |pstderr| was either |None| or redirected to |stdout|.
       stdout, stderr = proc.communicate()
 
       if interactive:
@@ -120,15 +185,22 @@ def runTests(xpcshell, topsrcdir, testdirs, xrePath=None, testFile=None, interac
         return True
 
       if proc.returncode != 0 or stdout.find("*** PASS") == -1:
-        print """TEST-UNEXPECTED-FAIL | %s | test failed, see log
-  %s.log:
+        print """TEST-UNEXPECTED-FAIL | %s | test failed, see following log:
   >>>>>>>
   %s
-  <<<<<<<""" % (test, test, stdout)
+  <<<<<<<""" % (test, stdout)
+        success = False
+      else:
+        print "TEST-PASS | %s | all tests passed" % test
+      processLeakLog(leakLogFile)
+      # Remove the leak detection file (here) so it can't "leak" to the next test.
+      # The file is not there if leak logging was not enabled in the xpcshell build.
+      if os.path.exists(leakLogFile):
+        os.remove(leakLogFile)
+      if not (success or keepGoing):
         return False
 
-      print "TEST-PASS | %s | all tests passed" % test
-  return True
+  return success
 
 def main():
   """Process command line arguments and call runTests() to do the real work."""
@@ -137,22 +209,36 @@ def main():
                     action="store", type="string", dest="xrePath", default=None,
                     help="absolute path to directory containing XRE (probably xulrunner)")
   parser.add_option("--test",
-                    action="store", type="string", dest="testFile", default=None,
-                    help="single test filename to test")
+                    action="store", type="string", dest="testFile",
+                    default=None, help="single test filename to test")
   parser.add_option("--interactive",
                     action="store_true", dest="interactive", default=False,
                     help="don't automatically run tests, drop to an xpcshell prompt")
+  parser.add_option("--keep-going",
+                    action="store_true", dest="keepGoing", default=False,
+                    help="continue running tests past the first failure")
+  parser.add_option("--manifest",
+                    action="store", type="string", dest="manifest",
+                    default=None, help="Manifest of test directories to use")
   options, args = parser.parse_args()
 
-  if len(args) < 3:
-    print >>sys.stderr, "Usage: %s <path to xpcshell> <topsrcdir> <test dirs>" % sys.argv[0]
+  if len(args) < 2 and options.manifest is None or \
+     (len(args) < 1 and options.manifest is not None):
+    print >>sys.stderr, """Usage: %s <path to xpcshell> <test dirs>
+  or: %s --manifest=test.manifest <path to xpcshell>""" % (sys.argv[0],
+                                                           sys.argv[0])
     sys.exit(1)
 
   if options.interactive and not options.testFile:
     print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
     sys.exit(1)
 
-  if not runTests(args[0], args[1], args[2:], xrePath=options.xrePath, testFile=options.testFile, interactive=options.interactive):
+  if not runTests(args[0], testdirs=args[1:],
+                  xrePath=options.xrePath,
+                  testFile=options.testFile,
+                  interactive=options.interactive,
+                  keepGoing=options.keepGoing,
+                  manifest=options.manifest):
     sys.exit(1)
 
 if __name__ == '__main__':

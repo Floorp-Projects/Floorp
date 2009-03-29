@@ -477,12 +477,4 @@ _iface##_Interface(XPCCallContext& ccx)                                       \
     return (_iface_cache);                                                    \
 }
 
-class xpc_qsDependentJSString : public nsDependentString
-{
-public:
-  explicit xpc_qsDependentJSString(JSString *str)
-    : nsDependentString((PRUnichar *)::JS_GetStringChars(str),
-                        ::JS_GetStringLength(str)) { }
-};
-
 #endif /* xpcquickstubs_h___ */

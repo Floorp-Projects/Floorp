@@ -1230,15 +1230,15 @@ private:
   nsresult RecreateFramesForContent(nsIContent*      aContent);
 
   // If removal of aFrame from the frame tree requires reconstruction of some
-  // containing block (either of aFrame or of its parent) due to {ib} splits,
-  // recreate the relevant containing block.  The return value indicates
-  // whether this happened.  If this method returns true, *aResult is the
-  // return value of ReframeContainingBlock.  If this method returns false, the
-  // value of *aResult is no affected.  aFrame and aResult must not be null.
-  // aFrame must be the result of a GetPrimaryFrameFor() call (which means its
-  // parent is also not null).
-  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame,
-                                                  nsresult* aResult);
+  // containing block (either of aFrame or of its parent) due to {ib} splits or
+  // table pseudo-frames, recreate the relevant frame subtree.  The return value
+  // indicates whether this happened.  If this method returns true, *aResult is
+  // the return value of ReframeContainingBlock or RecreateFramesForContent.
+  // If this method returns false, the value of *aResult is no affected.
+  // aFrame and aResult must not be null.  aFrame must be the result of a
+  // GetPrimaryFrameFor() call (which means its parent is also not null).
+  PRBool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
+                                               nsresult* aResult);
 
   nsresult CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
                                            nsPresContext*  aPresContext,

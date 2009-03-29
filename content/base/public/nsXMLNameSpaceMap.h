@@ -39,9 +39,19 @@
 #ifndef nsXMLNameSpaceMap_h_
 #define nsXMLNameSpaceMap_h_
 
-#include "nsVoidArray.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsCOMPtr.h"
+#include "nsIAtom.h"
 
-class nsIAtom;
+struct nsNameSpaceEntry
+{
+  nsNameSpaceEntry(nsIAtom *aPrefix)
+    : prefix(aPrefix) {}
+
+  nsCOMPtr<nsIAtom> prefix;
+  PRInt32 nameSpaceID;
+};
 
 /**
  * nsXMLNameSpaceMap contains a set of prefixes which are mapped onto
@@ -94,7 +104,7 @@ public:
 private:
   nsXMLNameSpaceMap() NS_HIDDEN;  // use Create() to create new instances
 
-  nsVoidArray mNameSpaces;
+  nsTArray<nsNameSpaceEntry> mNameSpaces;
 };
 
 #endif

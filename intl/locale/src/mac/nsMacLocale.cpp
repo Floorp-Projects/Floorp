@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <Carbon/Carbon.h>
+
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
@@ -43,7 +45,6 @@
 #include "nsMacLocale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
-#include <Script.h>
 #include "nsReadableUtils.h"
 #include "nsXPCOMStrings.h"
 

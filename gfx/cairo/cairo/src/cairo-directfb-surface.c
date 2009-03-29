@@ -455,7 +455,7 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
 
     format = _cairo_format_from_content (content);
     surface = calloc (1, sizeof (cairo_directfb_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface->dfb = source->dfb;
@@ -549,6 +549,7 @@ _cairo_directfb_surface_release_source_image (void                  *abstract_su
                                               cairo_image_surface_t *image,
                                               void                  *image_extra)
 {
+    cairo_directfb_surface_t *surface = abstract_surface;
     IDirectFBSurface *buffer = image_extra;
 
     D_DEBUG_AT (CairoDFB_Acquire,
@@ -702,8 +703,8 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 #if DFB_COMPOSITE || DFB_COMPOSITE_TRAPEZOIDS
 static cairo_int_status_t
 _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
-                             cairo_pattern_t             *src_pattern,
-                             cairo_pattern_t             *mask_pattern,
+                             const cairo_pattern_t       *src_pattern,
+                             const cairo_pattern_t       *mask_pattern,
                              cairo_operator_t             op,
                              int *src_x,             int *src_y,
                              int *mask_x,            int *mask_y,
@@ -732,7 +733,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (mask_pattern->type != CAIRO_PATTERN_TYPE_SOLID) {
-	    cairo_pattern_t *tmp;
+	    const cairo_pattern_t *tmp;
 	    int              tmp_x, tmp_y;
 
 	    if (src_pattern->type != CAIRO_PATTERN_TYPE_SOLID ||
@@ -760,11 +761,6 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     } else {
 	color = _cairo_stock_color (CAIRO_STOCK_WHITE);
     }
-
-    /* XXX DirectFB currently does not support filtering, so force NEAREST
-     * in order to hit optimisations inside core.
-    */
-    src_pattern->filter = CAIRO_FILTER_NEAREST;
 
     status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
 					     *src_x, *src_y, width, height,
@@ -842,7 +838,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 
 static void
 _directfb_finish_composite (cairo_directfb_surface_t   *dst,
-                            cairo_pattern_t            *src_pattern,
+                            const cairo_pattern_t      *src_pattern,
                             cairo_surface_t            *src,
                             cairo_surface_attributes_t *src_attr)
 {
@@ -892,8 +888,8 @@ _directfb_categorize_operation (cairo_surface_attributes_t *src_attr)
 
 static cairo_int_status_t
 _cairo_directfb_surface_composite (cairo_operator_t  op,
-                                   cairo_pattern_t  *src_pattern,
-                                   cairo_pattern_t  *mask_pattern,
+                                   const cairo_pattern_t  *src_pattern,
+                                   const cairo_pattern_t  *mask_pattern,
                                    void             *abstract_dst,
                                    int  src_x,  int  src_y,
                                    int  mask_x, int  mask_y,
@@ -1160,7 +1156,7 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
 #if DFB_COMPOSITE_TRAPEZOIDS
 static cairo_int_status_t
 _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
-                                              cairo_pattern_t   *pattern,
+                                              const cairo_pattern_t   *pattern,
                                               void              *abstract_dst,
                                               cairo_antialias_t  antialias,
                                               int  src_x,   int  src_y,
@@ -1303,18 +1299,16 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 		__FUNCTION__, surface, region);
 
     if (region) {
-	cairo_box_int_t *boxes;
 	int              n_boxes;
 	cairo_status_t   status;
 	int              i;
 
 	surface->has_clip = TRUE;
 
-	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
+	n_boxes = _cairo_region_num_boxes (region);
+
 	if (n_boxes == 0)
 	    return CAIRO_STATUS_SUCCESS;
-	if (status)
-	    return status;
 
 	if (surface->n_clips != n_boxes) {
 	    if (surface->clips)
@@ -1323,7 +1317,6 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	    surface->clips = _cairo_malloc_ab (n_boxes, sizeof (DFBRegion));
 	    if (!surface->clips) {
 		surface->n_clips = 0;
-		_cairo_region_boxes_fini (region, boxes);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 
@@ -1331,13 +1324,15 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	}
 
 	for (i = 0; i < n_boxes; i++) {
-	    surface->clips[i].x1 = boxes[i].p1.x;
-	    surface->clips[i].y1 = boxes[i].p1.y;
-	    surface->clips[i].x2 = boxes[i].p2.x - 1;
-	    surface->clips[i].y2 = boxes[i].p2.y - 1;
-	}
+	    cairo_box_int_t box;
 
-	_cairo_region_boxes_fini (region, boxes);
+	    _cairo_region_get_box (region, i, &box);
+	    
+	    surface->clips[i].x1 = box.p1.x;
+	    surface->clips[i].y1 = box.p1.y;
+	    surface->clips[i].x2 = box.p2.x - 1;
+	    surface->clips[i].y2 = box.p2.y - 1;
+	}
     } else {
 	surface->has_clip = FALSE;
 	if (surface->clips) {
@@ -1432,7 +1427,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
     D_DEBUG_AT (CairoDFB_Font, "%s( %p [%d] )\n", __FUNCTION__, glyphs, num_glyphs );
 
-    _cairo_cache_freeze (scaled_font->glyphs);
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     if (scaled_font->surface_private) {
 	cache = scaled_font->surface_private;
@@ -1450,7 +1445,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 					  CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					  &scaled_glyph);
 	if (status) {
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return status;
 	}
 
@@ -1463,7 +1458,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	default:
 	    D_DEBUG_AT (CairoDFB_Font,
 			"  -> Unsupported font format %d!\n", img->format);
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
@@ -1501,7 +1496,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	    /* Remember glyph location */
 	    rect = malloc (sizeof (DFBRectangle));
 	    if (rect == NULL) {
-		_cairo_cache_thaw (scaled_font->glyphs);
+		_cairo_scaled_font_thaw_cache (scaled_font);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 	    *rect = rects[n];
@@ -1521,7 +1516,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     }
 
     if (n == 0) {
-	_cairo_cache_thaw (scaled_font->glyphs);
+	_cairo_scaled_font_thaw_cache (scaled_font);
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
@@ -1531,7 +1526,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
     /* XXX query maximum surface size */
     if (w > 2048 || h > 2048) {
-	_cairo_cache_thaw (scaled_font->glyphs);
+	_cairo_scaled_font_thaw_cache (scaled_font);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -1548,7 +1543,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 						    w, h,
 						    &new_cache);
 	    if (status) {
-		_cairo_cache_thaw (scaled_font->glyphs);
+		_cairo_scaled_font_thaw_cache (scaled_font);
 		return status;
 	    }
 
@@ -1563,7 +1558,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
 	status = _directfb_allocate_font_cache (surface->dfb, w, h, &cache);
 	if (status) {
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return status;
 	}
 
@@ -1578,7 +1573,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	if (cache->dfbsurface->Lock (cache->dfbsurface,
 				     DSLF_WRITE, (void *)&data, &pitch))
 	{
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
@@ -1644,7 +1639,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	cache->dfbsurface->Unlock (cache->dfbsurface);
     }
 
-    _cairo_cache_thaw (scaled_font->glyphs);
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     cache->x = x;
     cache->y = y;
@@ -1686,13 +1681,14 @@ _cairo_directfb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 }
 
 static cairo_int_status_t
-_cairo_directfb_surface_show_glyphs (void                *abstract_dst,
-                                     cairo_operator_t     op,
-                                     cairo_pattern_t     *pattern,
-                                     cairo_glyph_t       *glyphs,
-                                     int                  num_glyphs,
-                                     cairo_scaled_font_t *scaled_font,
-				     int		 *remaining_glyphs)
+_cairo_directfb_surface_show_glyphs (void		    *abstract_dst,
+                                     cairo_operator_t	     op,
+                                     const cairo_pattern_t  *pattern,
+                                     cairo_glyph_t	    *glyphs,
+                                     int		     num_glyphs,
+                                     cairo_scaled_font_t    *scaled_font,
+				     int		    *remaining_glyphs,
+				     cairo_rectangle_int_t  *extents)
 {
     cairo_directfb_surface_t    *dst = abstract_dst;
     cairo_directfb_font_cache_t *cache;
@@ -1817,6 +1813,8 @@ _cairo_directfb_surface_backend = {
 #else
         NULL,/*composite_trapezoids*/
 #endif
+        NULL, /* create_span_renderer */
+        NULL, /* check_span_renderer */
         NULL, /* copy_page */
         NULL, /* show_page */
         _cairo_directfb_surface_set_clip_region,/* set_clip_region */

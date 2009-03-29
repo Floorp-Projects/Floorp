@@ -1,0 +1,42 @@
+Storage Module Style Guidelines
+
+These guidelines should be followed for all new code in this module.  Reviewers
+will be enforcing them, so please obey them!
+
+* All code should be contained within the namespace Mozilla::Storage at a
+  minimum.  The use of namespaces is strongly encouraged.
+
+* The indentation level to use in source code is two spaces.  No tabs, please!
+
+* All files should have the following emacs and vim mode lines:
+  -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+  vim: sw=2 ts=2 sts=2 et :
+
+* All functions that are not XPCOM should start with a lowercase letter.
+
+* Function arguments that are not out parameters should be prefixed with a (for
+  pArameter), and use CamelCase.
+
+* Function arguments that are out parameters should be prefixed with an
+  underscore and have a descriptive name.
+
+* Function declarations should include javadoc style comments.
+
+* For function implementations, each argument should be on its own line.
+
+* All variables should use camelCase.
+
+* The use of bool is encouraged whenever the variable does not have the
+  potential to go through xpconnect.
+
+* For pointer variable types, include a space after the type before the asterisk
+  and no space between the asterisk and variable name.
+
+* If any part of an if-else block requires braces, all blocks need braces.
+
+* Every else should be on a newline after a brace.
+
+* Bracing should start on the line after a function and class definition.
+
+* If a return value is not going to be checked, the return value should be
+  explicitly casted to void (C style cast).

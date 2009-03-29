@@ -40,6 +40,7 @@
 
 #include "sqlite3.h"
 
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsError.h"
 
@@ -92,6 +93,12 @@ CheckAndLogStatementPerformance(sqlite3_stmt *aStatement)
   if (count <= 0)
     return;
 
+  const char *sql = sqlite3_sql(aStatement);
+
+  // Check to see if this is marked to not warn
+  if (strstr(sql, "/* do not warn (bug "))
+    return;
+
   nsCAutoString message;
   message.AppendInt(count);
   if (count == 1)
@@ -99,8 +106,9 @@ CheckAndLogStatementPerformance(sqlite3_stmt *aStatement)
   else
     message.Append(" sort operations have ");
   message.Append("occurred for the SQL statement '");
-  message.Append(sqlite3_sql(aStatement));
-  message.Append("'.  This may indicate an opportunity to improve performance "
-                 "through the careful use of indexes.");
+  nsPrintfCString address("0x%p", aStatement);
+  message.Append(address);
+  message.Append("'.  See https://developer.mozilla.org/En/Storage/Warnings "
+                 "details.");
   NS_WARNING(message.get());
 }

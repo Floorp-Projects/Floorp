@@ -176,6 +176,7 @@ INSTALLED_HEADERS = \
 		jsgc.h \
 		jshash.h \
 		jsinterp.h \
+		jsinttypes.h \
 		jsiter.h \
 		jslock.h \
 		jslong.h \
@@ -196,7 +197,6 @@ INSTALLED_HEADERS = \
 		jsscope.h \
 		jsscript.h \
 		jsstaticcheck.h \
-		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
 		jstypes.h \

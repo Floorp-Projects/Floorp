@@ -92,7 +92,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
       break; 
     case kDateFormatYearMonth:
       UniQueryLocaleItem( locObj, DATESEP, &pString);
-      UniStrcat( uFmtD, (UniChar*)L"%y");
+      UniStrcat( uFmtD, (UniChar*)L"%Y");
       UniStrcat( uFmtD, pString);
       UniStrcat( uFmtD, (UniChar*)L"%m");
       UniFreeMem(pString);

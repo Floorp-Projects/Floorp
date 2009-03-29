@@ -15,7 +15,7 @@ project if you wish. Each sample plugin contains a readme file describing it.
 
 ===============================================================
 
-Plugin developers might find it useful for debugging purporsed to turn
+Plugin developers might find it useful for debugging purposes to turn
 off the exception catching mechanism currently implemented in Mozilla 
 on Windows. To do this add the following line into your prefs.js file:
 user_pref("plugin.dont_try_safe_calls", true);

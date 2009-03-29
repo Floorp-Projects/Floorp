@@ -37,7 +37,7 @@
  */
 
 var MANIFESTS = [
-  do_get_file("chrome/test/unit/data/test_bug399707.manifest")
+  do_get_file("data/test_bug399707.manifest")
 ];
 
 registerManifests(MANIFESTS);
@@ -82,7 +82,7 @@ var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
 chromeReg.checkForNewChrome();
 
-var target = gIOS.newFileURI(do_get_file("chrome/test/unit/data"));
+var target = gIOS.newFileURI(do_get_file("data"));
 target = target.spec + "test/test.xul";
 
 function test_succeeded_mapping(namespace)
