@@ -427,7 +427,7 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
     if (*walker) {
       outStream->Write(*walker, strlen(*walker), &writeAmount);
       outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
-      PR_Free(*walker);
+      NS_Free(*walker);
     }
   }
   PR_Free(valueArray);
