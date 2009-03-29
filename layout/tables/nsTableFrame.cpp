@@ -390,13 +390,13 @@ void nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
                                        nsIContent*     aContent, 
                                        nsIAtom*        aAttribute)
 {
-  if (IS_TABLE_CELL(aFrame->GetType())) {
+  nsTableCellFrame *cellFrame = do_QueryFrame(aFrame);
+  if (cellFrame) {
     if ((nsGkAtoms::rowspan == aAttribute) || 
         (nsGkAtoms::colspan == aAttribute)) {
       nsTableCellMap* cellMap = GetCellMap();
       if (cellMap) {
         // for now just remove the cell from the map and reinsert it
-        nsTableCellFrame* cellFrame = (nsTableCellFrame*)aFrame;
         PRInt32 rowIndex, colIndex;
         cellFrame->GetRowIndex(rowIndex);
         cellFrame->GetColIndex(colIndex);
@@ -1052,8 +1052,8 @@ void nsTableFrame::RemoveRows(nsTableRowFrame& aFirstRowFrame,
   PRBool stopTelling = PR_FALSE;
   for (nsIFrame* kidFrame = aFirstFrame.FirstChild(); (kidFrame && !stopAsking);
        kidFrame = kidFrame->GetNextSibling()) {
-    if (IS_TABLE_CELL(kidFrame->GetType())) {
-      nsTableCellFrame* cellFrame = (nsTableCellFrame*)kidFrame;
+    nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
+    if (cellFrame) {
       stopTelling = tableFrame->CellChangedWidth(*cellFrame, cellFrame->GetPass1MaxElementWidth(), 
                                                  cellFrame->GetMaximumWidth(), PR_TRUE);
     }
@@ -1131,8 +1131,9 @@ nsTableFrame::CollectRows(nsIFrame*                   aFrame,
   if (rgFrame) {
     nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     while (childFrame) {
-      if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
-        aCollection.AppendElement(static_cast<nsTableRowFrame*>(childFrame));
+      nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
+      if (rowFrame) {
+        aCollection.AppendElement(rowFrame);
         numRows++;
       }
       else {
@@ -1600,8 +1601,8 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
     nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
     // find the row that was inserted first
     while (childFrame) {
-      if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
-        nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
+      nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
+      if (rowFrame) {
         if (rowFrame->IsFirstInserted()) {
           rowFrame->SetFirstInserted(PR_FALSE);
           // damage the table from the 1st row inserted to the end of the table
@@ -3756,25 +3757,27 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
 {
   nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aKidFrame);
   if (rgFrame) {
-    nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
-    while (rowFrame) {
-      if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
-        printf("row(%d)=%p ", ((nsTableRowFrame*)rowFrame)->GetRowIndex(), rowFrame);
-        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
-        while (cellFrame) {
-          if (IS_TABLE_CELL(cellFrame->GetType())) {
+    nsIFrame* cFrame = rgFrame->GetFirstChild(nsnull);
+    while (cFrame) {
+      nsTableRowFrame *rowFrame = do_QueryFrame(cFrame);
+      if (rowFrame) {
+        printf("row(%d)=%p ", rowFrame->GetRowIndex(), rowFrame);
+        nsIFrame* childFrame = cFrame->GetFirstChild(nsnull);
+        while (childFrame) {
+          nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
+          if (cellFrame) {
             PRInt32 colIndex;
-            ((nsTableCellFrame*)cellFrame)->GetColIndex(colIndex);
-            printf("cell(%d)=%p ", colIndex, cellFrame);
+            cellFrame->GetColIndex(colIndex);
+            printf("cell(%d)=%p ", colIndex, childFrame);
           }
-          cellFrame = cellFrame->GetNextSibling();
+          childFrame = childFrame->GetNextSibling();
         }
         printf("\n");
       }
       else {
         DumpRowGroup(rowFrame);
       }
-      rowFrame = rowFrame->GetNextSibling();
+      cFrame = cFrame->GetNextSibling();
     }
   }
 }

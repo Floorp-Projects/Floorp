@@ -89,7 +89,7 @@
 #include "nsRDFCID.h"
 #include "nsXULContentUtils.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsGkAtoms.h"
@@ -2027,15 +2027,9 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
                                                getter_AddRefs(aQuerySet->mCompiledQuery));
 
             if (aQuerySet->mCompiledQuery) {
-                nsTemplateRule* rule = new nsTemplateRule(aTemplate, rulenode, aQuerySet);
+                nsTemplateRule* rule = aQuerySet->NewRule(aTemplate, rulenode, aQuerySet);
                 if (! rule)
                     return NS_ERROR_OUT_OF_MEMORY;
-
-                rv = aQuerySet->AddRule(rule);
-                if (NS_FAILED(rv)) {
-                    delete rule;
-                    return rv;
-                }
 
                 rule->SetVars(mRefVariable, memberVariable);
 
@@ -2065,7 +2059,7 @@ nsXULTemplateBuilder::CompileExtendedQuery(nsIContent* aRuleElement,
     // a <conditions> child, an <action> child, and a <bindings> child.
     nsresult rv;
 
-    nsTemplateRule* rule = new nsTemplateRule(aRuleElement, aActionElement, aQuerySet);
+    nsTemplateRule* rule = aQuerySet->NewRule(aRuleElement, aActionElement, aQuerySet);
     if (! rule)
          return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2082,13 +2076,7 @@ nsXULTemplateBuilder::CompileExtendedQuery(nsIContent* aRuleElement,
     rv = CompileConditions(rule, conditions);
     // If the rule compilation failed, then we have to bail.
     if (NS_FAILED(rv)) {
-        delete rule;
-        return rv;
-    }
-
-    rv = aQuerySet->AddRule(rule);
-    if (NS_FAILED(rv)) {
-        delete rule;
+        aQuerySet->RemoveRule(rule);
         return rv;
     }
 
@@ -2222,15 +2210,9 @@ nsXULTemplateBuilder::CompileSimpleQuery(nsIContent* aRuleElement,
         return NS_OK;
     }
 
-    nsTemplateRule* rule = new nsTemplateRule(aRuleElement, aRuleElement, aQuerySet);
+    nsTemplateRule* rule = aQuerySet->NewRule(aRuleElement, aRuleElement, aQuerySet);
     if (! rule)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = aQuerySet->AddRule(rule);
-    if (NS_FAILED(rv)) {
-        delete rule;
-        return rv;
-    }
 
     rule->SetVars(mRefVariable, memberVariable);
 
@@ -2488,15 +2470,15 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule,
     // Crawl the content tree of a "simple" rule, adding a variable
     // assignment for any attribute whose value is "rdf:".
 
-    nsAutoVoidArray elements;
+    nsAutoTArray<nsIContent*, 8> elements;
 
-    if (!elements.AppendElement(aElement))
+    if (elements.AppendElement(aElement) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    while (elements.Count()) {
+    while (elements.Length()) {
         // Pop the next element off the stack
-        PRUint32 i = (PRUint32)(elements.Count() - 1);
-        nsIContent* element = static_cast<nsIContent*>(elements[i]);
+        PRUint32 i = elements.Length() - 1;
+        nsIContent* element = elements[i];
         elements.RemoveElementAt(i);
 
         // Iterate through its attributes, looking for substitutions
@@ -2521,7 +2503,7 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule,
         count = element->GetChildCount();
 
         while (count-- > 0) {
-            if (!elements.AppendElement(element->GetChildAt(count)))
+            if (elements.AppendElement(element->GetChildAt(count)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
     }

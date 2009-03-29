@@ -7,10 +7,10 @@ const isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
 function getLinkFile()
 {
   if (isWindows) {
-    return do_get_file("netwerk/test/unit/test_link.url");
+    return do_get_file("test_link.url");
   }
   if (isLinux) {
-    return do_get_file("netwerk/test/unit/test_link.desktop");
+    return do_get_file("test_link.desktop");
   }
   do_throw("Unexpected platform");
   return null;

@@ -9,10 +9,12 @@
 
 
 const STORAGE_TYPE = "mozStorage";
+const ENCTYPE_BASE64 = 0;
+const ENCTYPE_SDR = 1;
 
 // Current schema version used by storage-mozStorage.js. This will need to be
 // kept in sync with the version there (or else the tests fail).
-const CURRENT_SCHEMA = 2;
+const CURRENT_SCHEMA = 3;
 
 function run_test() {
 
@@ -25,6 +27,14 @@ function getGUIDforID(conn, id) {
     var guid = stmt.getString(0);
     stmt.finalize();
     return guid;
+}
+
+function getEncTypeForID(conn, id) {
+    var stmt = conn.createStatement("SELECT encType from moz_logins WHERE id = " + id);
+    stmt.executeStep();
+    var encType = stmt.row.encType;
+    stmt.finalize();
+    return encType;
 }
 
 var storage;
@@ -48,6 +58,13 @@ testuser2.init("http://test.org", "http://test.org", null,
 var testuser3 = new nsLoginInfo;
 testuser3.init("http://test.gov", "http://test.gov", null,
                "testuser3", "testpass3", "u3", "p3");
+var testuser4 = new nsLoginInfo;
+testuser4.init("http://test.gov", "http://test.gov", null,
+               "testuser1", "testpass2", "u4", "p4");
+var testuser5 = new nsLoginInfo;
+testuser5.init("http://test.gov", "http://test.gov", null,
+               "testuser2", "testpass1", "u5", "p5");
+
 
 /* ========== 1 ========== */
 testnum++;
@@ -99,7 +116,7 @@ LoginTest.deleteFile(OUTDIR, "signons-v999-2.sqlite.corrupt");
 
 /* ========== 3 ========== */
 testnum++;
-testdesc = "Test upgrade from v1 storage"
+testdesc = "Test upgrade from v1->v2 storage"
 
 LoginTest.copyFile("signons-v1.sqlite");
 // Sanity check the test file.
@@ -155,6 +172,63 @@ do_check_true(isGUID.test(guid));
 dbConnection.close();
 
 LoginTest.deleteFile(OUTDIR, "signons-v1v2.sqlite");
+
+/* ========== 5 ========== */
+testnum++;
+testdesc = "Test upgrade from v2->v3 storage"
+
+LoginTest.copyFile("signons-v2.sqlite");
+// Sanity check the test file.
+dbConnection = LoginTest.openDB("signons-v2.sqlite");
+do_check_eq(2, dbConnection.schemaVersion);
+
+storage = LoginTest.reloadStorage(OUTDIR, "signons-v2.sqlite");
+
+// Check to see that we added the correct encType to the logins.
+do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
+let encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64];
+for (let i = 0; i < encTypes.length; i++)
+    do_check_eq(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+dbConnection.close();
+
+// Ensure that call to getAllLogins will reencrypt
+LoginTest.checkStorageData(storage, ["https://disabled.net"],
+    [testuser1, testuser2, testuser4, testuser5]);
+
+LoginTest.deleteFile(OUTDIR, "signons-v2.sqlite");
+
+/* ========== 6 ========== */
+testnum++;
+testdesc = "Test upgrade v3->v2 storage";
+// This is the case where a v3 DB has been accessed with v2 code, and now we
+// are upgrading it again. Any logins added by the v2 code must be properly
+// upgraded.
+
+LoginTest.copyFile("signons-v2v3.sqlite");
+// Sanity check the test file.
+dbConnection = LoginTest.openDB("signons-v2v3.sqlite");
+do_check_eq(2, dbConnection.schemaVersion);
+encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64, null];
+for (let i = 0; i < encTypes.length; i++)
+    do_check_eq(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+
+// Reload storage, check that the new login now has encType=1, others untouched
+storage = LoginTest.reloadStorage(OUTDIR, "signons-v2v3.sqlite");
+do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
+
+encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64, ENCTYPE_SDR];
+for (let i = 0; i < encTypes.length; i++)
+    do_check_eq(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+
+// Sanity check that the data gets migrated
+LoginTest.checkStorageData(storage, ["https://disabled.net"],
+    [testuser1, testuser2, testuser4, testuser5, testuser3]);
+encTypes = [ENCTYPE_SDR, ENCTYPE_SDR, ENCTYPE_SDR, ENCTYPE_SDR, ENCTYPE_SDR];
+for (let i = 0; i < encTypes.length; i++)
+    do_check_eq(encTypes[i], getEncTypeForID(dbConnection, i + 1));
+dbConnection.close();
+
+LoginTest.deleteFile(OUTDIR, "signons-v2v3.sqlite");
 
 
 } catch (e) {

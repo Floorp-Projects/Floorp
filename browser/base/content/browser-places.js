@@ -174,6 +174,13 @@ var StarUI = {
 
     this._blockCommands(); // un-done in the popuphiding handler
 
+    // Move the header (star, title, possibly a button) into the grid,
+    // so that it aligns nicely with the other items (bug 484022).
+    var rows = this._element("editBookmarkPanelGrid").lastChild;
+    var header = this._element("editBookmarkPanelHeader");
+    rows.insertBefore(header, rows.firstChild);
+    header.hidden = false;
+
     var bundle = this._element("bundle_browser");
 
     // Set panel title:
@@ -1020,6 +1027,9 @@ var PlacesStarButton = {
   onItemAdded: function PSB_onItemAdded(aItemId, aFolder, aIndex) {
     if (!this._batching && !this._starred)
       this.updateState();
+  },
+
+  onBeforeItemRemoved: function PSB_onBeforeItemRemoved(aItemId) {
   },
 
   onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex) {

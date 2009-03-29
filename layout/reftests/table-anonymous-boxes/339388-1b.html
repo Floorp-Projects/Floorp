@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      function doTest() {
+        var n = document.getElementById("n");
+        for (var i = 0; i < 5; ++i) {
+          n.style.position = "absolute";
+          document.body.offsetWidth;
+          n.style.position = "";
+          document.body.offsetWidth;
+        }
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+
+  <body onload="doTest()">
+    <table border="5">
+      <tr>
+        <td id="n">TD</td>
+      </tr>
+    </table>
+  </body>
+</html>

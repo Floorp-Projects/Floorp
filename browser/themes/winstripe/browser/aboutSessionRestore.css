@@ -37,7 +37,7 @@
 %endif
 
 #errorPageContainer {
-  background-image: url("chrome://global/skin/icons/question-48.png");
+  background-image: url("chrome://global/skin/icons/warning-large.png");
 }
 
 #tabList {

@@ -4,7 +4,9 @@
 #include "nsIObserverService.h"
 
 #include <objbase.h>
+#ifdef WINCE_WINDOWS_MOBILE
 #include <connmgr.h>
+#endif
 
 // pulled from the header so that we do not get multiple define errors during link
 static const GUID nal_DestNetInternet =
@@ -16,24 +18,32 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsNotifyAddrListener,
                               nsITimerCallback)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
+#ifdef wINCE_WINDOWS_MOBILE
     : mLinkUp(PR_FALSE)  // assume false by default
     , mStatusKnown(PR_FALSE)
+#else
+    : mLinkUp(PR_TRUE)  // assume true by default on non-WinMo
+    , mStatusKnown(PR_TRUE)
+#endif
     , mConnectionHandle(NULL)
 {
 }
 
 nsNotifyAddrListener::~nsNotifyAddrListener()
 {
+#ifdef WINCE_WINDOWS_MOBILE
   if (mConnectionHandle)
     ConnMgrReleaseConnection(mConnectionHandle, 0);
 
   if (mTimer)
     mTimer->Cancel();
+#endif
 }
 
 nsresult
 nsNotifyAddrListener::Init(void)
 {
+#ifdef WINCE_WINDOWS_MOBILE
   CONNMGR_CONNECTIONINFO conn_info;
   memset(&conn_info, 0, sizeof(conn_info));
   
@@ -52,6 +62,7 @@ nsNotifyAddrListener::Init(void)
       mTimer->InitWithCallback(this,
                                15*1000, // every 15 seconds
                                nsITimer::TYPE_REPEATING_SLACK);
+#endif
   return NS_OK;
 }
 
@@ -72,6 +83,7 @@ nsNotifyAddrListener::GetLinkStatusKnown(PRBool *aIsUp)
 NS_IMETHODIMP
 nsNotifyAddrListener::Notify(nsITimer* aTimer)
 {
+#ifdef WINCE_WINDOWS_MOBILE
   DWORD status;
   HRESULT result = ConnMgrConnectionStatus(mConnectionHandle, &status);
 
@@ -101,5 +113,6 @@ nsNotifyAddrListener::Notify(nsITimer* aTimer)
   observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this),
                                    NS_NETWORK_LINK_TOPIC,
                                    NS_ConvertASCIItoUTF16(event).get());
+#endif
   return NS_OK;
 }

@@ -38,7 +38,7 @@
 %endif
 
 #errorPageContainer {
-  background-image: url("moz-icon://stock/gtk-dialog-question?size=dialog");
+  background-image: url("moz-icon://stock/gtk-dialog-warning?size=dialog");
 }
 
 #tabList {

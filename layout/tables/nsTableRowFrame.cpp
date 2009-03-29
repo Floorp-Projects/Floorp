@@ -143,6 +143,10 @@ nsTableRowFrame::SetPctHeight(float  aPctValue,
 
 /* ----------- nsTableRowFrame ---------- */
 
+NS_QUERYFRAME_HEAD(nsTableRowFrame)
+  NS_QUERYFRAME_ENTRY(nsTableRowFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext)
 {
@@ -206,9 +210,10 @@ nsTableRowFrame::AppendFrames(nsIAtom*        aListName,
   nsTableFrame *tableFrame =  nsTableFrame::GetTableFrame(this);
   for (nsIFrame* childFrame = aFrameList; childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    if (IS_TABLE_CELL(childFrame->GetType())) {
+    nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
+    if (cellFrame) {
       // Add the cell to the cell map
-      tableFrame->AppendCell((nsTableCellFrame&)*childFrame, GetRowIndex());
+      tableFrame->AppendCell(*cellFrame, GetRowIndex());
     }
   }
 
@@ -238,8 +243,9 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
   nsTArray<nsTableCellFrame*> cellChildren;
   for (nsIFrame* childFrame = aFrameList; childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    if (IS_TABLE_CELL(childFrame->GetType())) {
-      cellChildren.AppendElement(static_cast<nsTableCellFrame*>(childFrame));
+    nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
+    if (cellFrame) {
+      cellChildren.AppendElement(cellFrame);
     }
   }
   // insert the cells into the cell map
@@ -267,8 +273,8 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
-    if (IS_TABLE_CELL(aOldFrame->GetType())) {
-      nsTableCellFrame* cellFrame = (nsTableCellFrame*)aOldFrame;
+    nsTableCellFrame *cellFrame = do_QueryFrame(aOldFrame);
+    if (cellFrame) {
       PRInt32 colIndex;
       cellFrame->GetColIndex(colIndex);
       // remove the cell from the cell map
@@ -334,8 +340,9 @@ nsTableRowFrame::GetFirstCell()
 {
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (IS_TABLE_CELL(childFrame->GetType())) {
-      return (nsTableCellFrame*)childFrame;
+    nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
+    if (cellFrame) {
+      return cellFrame;
     }
     childFrame = childFrame->GetNextSibling();
   }
@@ -363,8 +370,8 @@ nsTableRowFrame::DidResize()
                                      desiredSize.height);
 
   while (childFrame) {
-    if (IS_TABLE_CELL(childFrame->GetType())) {
-      nsTableCellFrame* cellFrame = (nsTableCellFrame*)childFrame;
+    nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
+    if (cellFrame) {
       nscoord cellHeight = mRect.height + GetHeightOfRowsSpannedBelowFirst(*cellFrame, *tableFrame);
 
       // resize the cell's height
@@ -535,9 +542,10 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame;
        kidFrame = kidFrame->GetNextSibling()) {
-    if (IS_TABLE_CELL(kidFrame->GetType())) {
-      nscoord availWidth = ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth();
-      nsSize desSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
+    nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
+    if (cellFrame) {
+      nscoord availWidth = cellFrame->GetPriorAvailWidth();
+      nsSize desSize = cellFrame->GetDesiredSize();
       if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !GetPrevInFlow()) {
         CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
       }
@@ -546,9 +554,9 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
        if (!kidFrame->GetFirstChild(nsnull)->GetFirstChild(nsnull))
          ascent = desSize.height;
        else
-         ascent = ((nsTableCellFrame *)kidFrame)->GetCellBaseline();
+         ascent = cellFrame->GetCellBaseline();
       nscoord descent = desSize.height - ascent;
-      UpdateHeight(desSize.height, ascent, descent, tableFrame, (nsTableCellFrame*)kidFrame);
+      UpdateHeight(desSize.height, ascent, descent, tableFrame, cellFrame);
     }
   }
   return GetHeight();
@@ -808,8 +816,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
   // Reflow each of our existing cell frames
   for (nsIFrame* kidFrame = iter.First(); kidFrame; kidFrame = iter.Next()) {
-    nsIAtom* frameType = kidFrame->GetType();
-    if (!IS_TABLE_CELL(frameType)) {
+    nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
+    if (!cellFrame) {
       // XXXldb nsCSSFrameConstructor needs to enforce this!
       NS_NOTREACHED("yikes, a non-row child");
 
@@ -824,8 +832,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
       continue;
     }
-
-    nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(kidFrame);
 
     // See if we should only reflow the dirty child frames
     PRBool doReflowChild = PR_TRUE;
@@ -1193,9 +1199,8 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 
     nsIFrame* kidFrame = iter.First();
     while (kidFrame) {
-      nsIAtom* frameType = kidFrame->GetType();
-      if (IS_TABLE_CELL(frameType)) {
-        nsTableCellFrame* cellFrame = (nsTableCellFrame*)kidFrame;
+      nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
+      if (cellFrame) {
         PRInt32 cellColIndex;
         cellFrame->GetColIndex(cellColIndex);
         PRInt32 cellColSpan = tableFrame->GetEffectiveColSpan(*cellFrame);
@@ -1324,8 +1329,8 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
   nsTableCellFrame* priorCell = nsnull;
   for (nsIFrame* child = mFrames.FirstChild(); child;
        child = child->GetNextSibling()) {
-    if (!IS_TABLE_CELL(child->GetType())) {
-      nsTableCellFrame* cellFrame = (nsTableCellFrame*)child;
+    nsTableCellFrame *cellFrame = do_QueryFrame(child);
+    if (cellFrame) {
       PRInt32 colIndex;
       cellFrame->GetColIndex(colIndex);
       if (colIndex < aColIndex) {
@@ -1355,9 +1360,10 @@ nsTableRowFrame::GetNextRow() const
 {
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
-    if (nsGkAtoms::tableRowFrame == childFrame->GetType()) {
+    nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
+    if (rowFrame) {
 	  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay, "wrong display type on rowframe");
-      return (nsTableRowFrame*)childFrame;
+      return rowFrame;
     }
     childFrame = childFrame->GetNextSibling();
   }
@@ -1415,12 +1421,11 @@ void nsTableRowFrame::InitHasCellWithStyleHeight(nsTableFrame* aTableFrame)
   nsTableIterator iter(*this);
 
   for (nsIFrame* kidFrame = iter.First(); kidFrame; kidFrame = iter.Next()) {
-    nsIAtom* frameType = kidFrame->GetType();
-    if (!IS_TABLE_CELL(frameType)) {
+    nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
+    if (!cellFrame) {
       NS_NOTREACHED("Table row has a non-cell child.");
       continue;
     }
-    nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(kidFrame);
     // Ignore row-spanning cells
     if (aTableFrame->GetEffectiveRowSpan(*cellFrame) == 1 &&
         cellFrame->GetStylePosition()->mHeight.GetUnit() != eStyleUnit_Auto) {

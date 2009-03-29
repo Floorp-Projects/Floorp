@@ -435,15 +435,14 @@ DISPID XPCDispNameArray::Find(const nsAString &target) const
 inline
 PRUint32 XPCDispIDArray::Length() const
 {
-    return mIDArray.Count();
+    return mIDArray.Length();
 }
 
 inline
 jsval XPCDispIDArray::Item(JSContext* cx, PRUint32 index) const
 {
     jsval val;
-    if(!JS_IdToValue(cx, 
-                     reinterpret_cast<jsid>(mIDArray.ElementAt(index)), &val))
+    if(!JS_IdToValue(cx, mIDArray.ElementAt(index), &val))
         return JSVAL_NULL;
     return val;
 }
@@ -466,7 +465,7 @@ JSBool XPCDispIDArray::IsMarked() const
 inline
 FUNCDESC* XPCDispTypeInfo::FuncDescArray::Get(PRUint32 index) 
 {
-    return reinterpret_cast<FUNCDESC*>(mArray[index]);
+    return &mArray[index];
 }
 
 inline
@@ -477,7 +476,7 @@ void XPCDispTypeInfo::FuncDescArray::Release(FUNCDESC *)
 inline
 PRUint32 XPCDispTypeInfo::FuncDescArray::Length() const 
 {
-    return mArray.Count();
+    return mArray.Length();
 }
 
 inline

@@ -4263,6 +4263,10 @@ if test "$MOZ_MEMORY"; then
     DLLFLAGS="$DLLFLAGS -MANIFEST:NO"
     export DLLFLAGS
     ;;
+  *wince)
+    AC_DEFINE(MOZ_MEMORY_WINCE)
+    AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
@@ -5052,7 +5056,6 @@ AC_SUBST(BUILD_OFFICIAL)
 AC_SUBST(MOZ_MILESTONE_RELEASE)
 
 dnl win32 options
-AC_SUBST(MOZ_PROFILE)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)

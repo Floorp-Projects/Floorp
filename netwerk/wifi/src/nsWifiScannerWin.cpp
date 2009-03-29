@@ -43,7 +43,7 @@
 
 #include <ntddndis.h>
 #include "winioctl.h"
-
+#include "stdlib.h"
 
 #include "nsAutoPtr.h"
 #include "nsWifiMonitor.h"

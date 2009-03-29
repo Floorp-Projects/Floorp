@@ -373,7 +373,7 @@ var gUpdates = {
    * checkForUpdates      null          downloading   foreground  --        downloading
    */
   get startPage() {
-    if (window.arguments) {
+    if ("arguments" in window && window.arguments[0]) {
       var arg0 = window.arguments[0];
       if (arg0 instanceof CoI.nsIUpdate) {
         // If the first argument is a nsIUpdate object, we are notifying the
@@ -465,6 +465,7 @@ var gCheckingPage = {
    * Initialize
    */
   onPageShow: function() {
+    document.getElementById("checkingProgress").hidden = false;
     gUpdates.wiz.getButton("cancel").hidden = false;
     gUpdates.setButtons(null, null, null, false);
     this._checker = CoC["@mozilla.org/updates/update-checker;1"].
@@ -498,6 +499,7 @@ var gCheckingPage = {
      * See nsIUpdateCheckListener
      */
     onCheckComplete: function(request, updates, updateCount) {
+      document.getElementById("checkingProgress").hidden = true;
       gUpdates.wiz.getButton("cancel").hidden = true;
       var aus = CoC["@mozilla.org/updates/update-service;1"].
                 getService(CoI.nsIApplicationUpdateService);
@@ -518,6 +520,7 @@ var gCheckingPage = {
      */
     onError: function(request, update) {
       LOG("gCheckingPage", "onError - proceeding to error page");
+      document.getElementById("checkingProgress").hidden = true;
       gUpdates.wiz.getButton("cancel").hidden = true;
       gUpdates.setUpdate(update);
       gUpdates.wiz.currentPage = document.getElementById("errors");
@@ -630,6 +633,7 @@ var gIncompatibleCheckPage = {
     gUpdates.setButtons(null, null, null, false);
     gUpdates.wiz.getButton("cancel").focus();
     this._pBar = document.getElementById("incompatibleCheckProgress");
+    this._pBar.hidden = false;
     this._totalCount = this.addons.length;
 
     var em = CoC["@mozilla.org/extensions/manager;1"].
@@ -659,6 +663,7 @@ var gIncompatibleCheckPage = {
           "incompatible add-ons");
     }
 
+    this._pBar.hidden = true;
     gUpdates.wiz.getButton("cancel").hidden = true;
     gUpdates.wiz.canAdvance = true;
     gUpdates.wiz.advance();
@@ -1026,6 +1031,7 @@ var gDownloadingPage = {
     this._downloadName = document.getElementById("downloadName");
     this._downloadStatus = document.getElementById("downloadStatus");
     this._downloadProgress = document.getElementById("downloadProgress");
+    this._downloadProgress.hidden = false;
     this._downloadThrobber = document.getElementById("downloadThrobber");
     this._pauseButton = document.getElementById("pauseButton");
     this._label_downloadStatus = this._downloadStatus.textContent;
@@ -1332,6 +1338,7 @@ var gDownloadingPage = {
           u.isCompleteUpdate) {
         // Verification error of complete patch, informational text is held in
         // the update object.
+        this._downloadProgress.hidden = true;
         gUpdates.wiz.currentPage = document.getElementById("errors");
       }
       else {
@@ -1356,12 +1363,14 @@ var gDownloadingPage = {
       return;
     case CoR.NS_OK:
       LOG("gDownloadingPage", "onStopRequest - patch verification succeeded");
+      this._downloadProgress.hidden = true;
       gUpdates.wiz.canAdvance = true;
       gUpdates.wiz.advance();
       break;
     default:
       LOG("gDownloadingPage", "onStopRequest - transfer failed");
       // Some kind of transfer error, die.
+      this._downloadProgress.hidden = true;
       gUpdates.wiz.currentPage = document.getElementById("errors");
       break;
     }

@@ -76,7 +76,6 @@ class nsIDOMNamedNodeMap;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
-class nsVoidArray;
 class nsINodeInfo;
 class nsIControllers;
 class nsIDOMNSFeatureFactory;

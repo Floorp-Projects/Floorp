@@ -154,7 +154,7 @@
 #endif
 
 #ifdef XP_MACOSX
-#include <Events.h>
+#include <Carbon/Carbon.h>
 #endif
 
 //#define DEBUG_DOCSHELL_FOCUS
@@ -260,9 +260,36 @@ PrintDocTreeAll(nsIDocShellTreeItem* aItem)
 }
 #endif
 
+static PRUint32 gMayNeedFocusSuppression = 0;
+
+class nsSuppressUserFocus
+{
+public:
+  nsSuppressUserFocus() : mActive(PR_FALSE) {}
+  ~nsSuppressUserFocus() {
+    if (mActive) {
+      NS_ASSERTION(gMayNeedFocusSuppression,
+                   "Trying to unsuppress too much!");
+      --gMayNeedFocusSuppression;
+    }
+  }
+  void MaybeSuppress()
+  {
+    if (!mActive) {
+      mActive = PR_TRUE;
+      ++gMayNeedFocusSuppression;
+    }
+  }
+private:
+  PRBool mActive;
+};
+
 static nsIDocument*
 EventHandlingSuppressed(nsPIDOMEventTarget* aTarget)
 {
+  if (!gMayNeedFocusSuppression) {
+    return nsnull;
+  }
   nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
   nsCOMPtr<nsIDocument> doc;
   if (node) {
@@ -992,6 +1019,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   nsMouseWheelTransaction::OnEvent(aEvent);
 
+  nsSuppressUserFocus userFocus;
+
   switch (aEvent->message) {
   case NS_MOUSE_BUTTON_DOWN:
     switch (static_cast<nsMouseEvent*>(aEvent)->button) {
@@ -1084,6 +1113,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #ifdef DEBUG_smaug
       printf("nsEventStateManager::PreHandleEvent, NS_GOTFOCUS \n");
 #endif
+      userFocus.MaybeSuppress();
       // This is called when a child widget has received focus.
       // We need to take care of sending a blur event for the previously
       // focused content and document, then dispatching a focus
@@ -1248,6 +1278,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #ifdef DEBUG_smaug
       printf("nsEventStateManager::PreHandleEvent, NS_LOSTFOCUS \n");
 #endif
+      userFocus.MaybeSuppress();
       // Hide the caret if it's visible.
       if (mPresContext) {
         nsIPresShell *presShell = mPresContext->GetPresShell();
@@ -1347,6 +1378,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #ifdef DEBUG_smaug
       printf("nsEventStateManager::PreHandleEvent, NS_ACTIVATE \n");
 #endif
+      userFocus.MaybeSuppress();
       // If we have a focus controller, and if it has a focused window and a
       // focused element in its focus memory, then restore the focus to those
       // objects.
@@ -1437,6 +1469,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #ifdef DEBUG_smaug
       printf("nsEventStateManager::PreHandleEvent, NS_DEACTIVATE \n");
 #endif
+      userFocus.MaybeSuppress();
       EnsureDocument(aPresContext);
 
       nsIMEStateManager::OnDeactivate(aPresContext);

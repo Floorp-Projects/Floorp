@@ -4851,7 +4851,6 @@ cairo-cocoa)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
     TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
-    TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     ;;
@@ -5873,7 +5872,6 @@ if test -n "$MOZ_TREE_FREETYPE"; then
    AC_SUBST(MOZ_TREE_FREETYPE)
    MOZ_ENABLE_CAIRO_FT=1       
    FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-   FC_FONT_FEATURE="#define CAIRO_DISABLE_FONTCONFIG 1"
    FT2_CFLAGS="-I${topsrcdir}/modules/freetype2/include"
    CAIRO_FT_CFLAGS="-I${topsrcdir}/modules/freetype2/include"
    FT2_LIBS="${LIBXUL_DIST}/lib/freetype2.lib"
@@ -6589,6 +6587,10 @@ if test "$MOZ_MEMORY"; then
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS -MANIFEST:NO"
     export DLLFLAGS
+    ;;
+  *wince)
+    AC_DEFINE(MOZ_MEMORY_WINCE)
+    AC_DEFINE(MOZ_MEMORY_WINDOWS)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7544,6 +7546,7 @@ if test "$MOZ_TREE_CAIRO"; then
         PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
@@ -7567,6 +7570,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
         OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
@@ -7576,6 +7580,7 @@ if test "$MOZ_TREE_CAIRO"; then
         PKG_CHECK_MODULES(CAIRO_FT, fontconfig freetype2)
         BEOS_SURFACE_FEATURE="#define CAIRO_HAS_BEOS_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)
@@ -8062,7 +8067,6 @@ AC_SUBST(BUILD_OFFICIAL)
 AC_SUBST(MOZ_MILESTONE_RELEASE)
 
 dnl win32 options
-AC_SUBST(MOZ_PROFILE)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)

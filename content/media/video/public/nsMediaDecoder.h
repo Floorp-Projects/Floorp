@@ -246,15 +246,12 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
-  // Set the RGB width, height and framerate. The passed RGB buffer is
-  // copied to the mRGB buffer. This also allocates the mRGB buffer if
-  // needed.
-  // This is the only nsMediaDecoder method that may be called 
-  // from threads other than the main thread.
-  // It must be called with the mVideoUpdateLock held.
-  void SetRGBData(PRInt32 aWidth, 
-                  PRInt32 aHeight, 
-                  float aFramerate, 
+  // Set the RGB width, height and framerate. Ownership of the passed RGB
+  // buffer is transferred to the decoder.  This is the only nsMediaDecoder
+  // method that may be called from threads other than the main thread.
+  void SetRGBData(PRInt32 aWidth,
+                  PRInt32 aHeight,
+                  float aFramerate,
                   unsigned char* aRGBBuffer);
 
   /**

@@ -44,7 +44,7 @@ function run_test()
   extension.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
   extension.append("bug424107@tests.mozilla.org");
   extension.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
-  var sourcerdf = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug424107_1.rdf");
+  var sourcerdf = do_get_file("data/test_bug424107_1.rdf");
   sourcerdf.copyTo(extension, "install.rdf");
   
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "5", "1.9");
@@ -62,7 +62,7 @@ function run_test()
 
   // Install a new version
   extension.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
-  sourcerdf = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug424107_2.rdf");
+  sourcerdf = do_get_file("data/test_bug424107_2.rdf");
   sourcerdf.copyTo(extension, "install.rdf");
 
   restartEM();

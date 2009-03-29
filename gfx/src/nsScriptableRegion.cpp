@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Patrick Beard
+ *   Taras Glek
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,6 +40,9 @@
 
 #include "nsScriptableRegion.h"
 #include "nsCOMPtr.h"
+#include "nsIXPConnect.h"
+#include "nsServiceManagerUtils.h"
+#include "jsapi.h"
 
 nsScriptableRegion::nsScriptableRegion(nsIRegion* region) : mRegion(nsnull), mRectSet(nsnull)
 {
@@ -152,19 +156,49 @@ NS_IMETHODIMP nsScriptableRegion::GetRegion(nsIRegion** outRgn)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::GetRect(PRUint32 aIndex, PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight) {
-  // nsIRegion reuses the GetRects parameter between calls
-  nsresult rv = mRegion->GetRects(&mRectSet);
+NS_IMETHODIMP nsScriptableRegion::GetRects() {
+  nsAXPCNativeCallContext *ncc = nsnull;
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpConnect = do_GetService(nsIXPConnect::GetCID(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(aIndex < mRectSet->mNumRects, NS_ERROR_INVALID_ARG);
-  nsRegionRect &rect = mRectSet->mRects[aIndex];
-  *aX = rect.x;
-  *aY = rect.y;
-  *aWidth = rect.width;
-  *aHeight = rect.height;
-  return NS_OK;
-}
 
-NS_IMETHODIMP nsScriptableRegion::GetNumRects(PRUint32 *aLength) {
-  return mRegion->GetNumRects(aLength);
+  rv = xpConnect->GetCurrentNativeCallContext(&ncc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!ncc)
+    return NS_ERROR_FAILURE;
+  
+  jsval *retvalPtr;
+  ncc->GetRetValPtr(&retvalPtr);
+  
+  rv = mRegion->GetRects(&mRectSet);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!mRectSet->mNumRects) {
+    *retvalPtr = JSVAL_NULL;
+    ncc->SetReturnValueWasSet(PR_TRUE);
+    return NS_OK;
+  }
+
+  JSContext *cx = nsnull;
+  
+  rv = ncc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  JSObject *destArray = JS_NewArrayObject(cx, mRectSet->mNumRects*4, NULL);
+  *retvalPtr = OBJECT_TO_JSVAL(destArray);
+  ncc->SetReturnValueWasSet(PR_TRUE);
+  
+  for(PRUint32 i = 0; i < mRectSet->mNumRects; i++) {
+    nsRegionRect &rect = mRectSet->mRects[i];
+    int n = i*4;
+    // This will contain bogus data if values don't fit in 31 bit
+    JS_DefineElement(cx, destArray, n, INT_TO_JSVAL(rect.x), NULL, NULL, JSPROP_ENUMERATE);
+    JS_DefineElement(cx, destArray, n+1, INT_TO_JSVAL(rect.y), NULL, NULL, JSPROP_ENUMERATE);
+    JS_DefineElement(cx, destArray, n+2, INT_TO_JSVAL(rect.width), NULL, NULL, JSPROP_ENUMERATE);
+    JS_DefineElement(cx, destArray, n+3, INT_TO_JSVAL(rect.height), NULL, NULL, JSPROP_ENUMERATE);
+  }
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }

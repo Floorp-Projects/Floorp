@@ -2,7 +2,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 function run_test() {
-  do_load_module("/extensions/cookie/test/unit/cookieprompt.js");
+  do_load_module("cookieprompt.js");
 
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);

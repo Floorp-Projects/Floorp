@@ -54,7 +54,6 @@
 #  include "unidef.h"
 #  include "nsIOS2Locale.h"
 #elif defined(XP_MACOSX)
-#  include <Script.h>
 #  include <Carbon/Carbon.h>
 #  include "nsIMacLocale.h"
 #elif defined(XP_UNIX) || defined(XP_BEOS)

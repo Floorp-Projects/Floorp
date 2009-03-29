@@ -145,6 +145,15 @@ PR_IMPLEMENT(PRIntn) PR_GetMonitorEntryCount(PRMonitor *mon)
 }
 
 /*
+** If the current thread is in |mon|, this assertion is guaranteed to
+** succeed.  Otherwise, the behavior of this function is undefined.
+*/
+PR_IMPLEMENT(void) PR_AssertCurrentThreadInMonitor(PRMonitor *mon)
+{
+    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(mon->cvar->lock);
+}
+
+/*
 ** Wait for a notify on the condition variable. Sleep for "ticks" amount
 ** of time (if "tick" is 0 then the sleep is indefinite). While
 ** the thread is waiting it exits the monitors lock (as if it called

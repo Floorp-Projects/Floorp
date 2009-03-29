@@ -45,7 +45,7 @@ const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
 const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 
 // Get the HTTP server.
-do_import_script("netwerk/test/httpserver/httpd.js");
+do_load_httpd_js();
 var testserver;
 var gOSVersion;
 var gBlocklist;

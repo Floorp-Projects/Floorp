@@ -1506,16 +1506,23 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!theme)
     return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
 
-  if (aWidgetType == NS_THEME_TOOLBOX ||
-      aWidgetType == NS_THEME_WIN_MEDIA_TOOLBOX ||
-      aWidgetType == NS_THEME_WIN_COMMUNICATIONS_TOOLBOX ||
-      aWidgetType == NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX ||
-      aWidgetType == NS_THEME_TOOLBAR || 
-      aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
-      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
-      aWidgetType == NS_THEME_TAB_PANELS || aWidgetType == NS_THEME_TAB_PANEL ||
-      aWidgetType == NS_THEME_LISTBOX || aWidgetType == NS_THEME_TREEVIEW || aWidgetType == NS_THEME_MENUITEMTEXT)
-    return NS_OK; // Don't worry about it.
+  switch (aWidgetType) {
+    case NS_THEME_TEXTFIELD:
+    case NS_THEME_TOOLBOX:
+    case NS_THEME_WIN_MEDIA_TOOLBOX:
+    case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX:
+    case NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX:
+    case NS_THEME_TOOLBAR:
+    case NS_THEME_STATUSBAR:
+    case NS_THEME_PROGRESSBAR_CHUNK:
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TAB_PANEL:
+    case NS_THEME_LISTBOX:
+    case NS_THEME_TREEVIEW:
+    case NS_THEME_MENUITEMTEXT:
+      return NS_OK; // Don't worry about it.
+  }
 
   if (aWidgetType == NS_THEME_MENUITEM && IsTopLevelMenu(aFrame))
       return NS_OK; // Don't worry about it for top level menus

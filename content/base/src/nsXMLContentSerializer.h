@@ -47,7 +47,8 @@
 #include "nsIContentSerializer.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
+#include "nsString.h"
 
 class nsIDOMNode;
 class nsIAtom;
@@ -156,7 +157,14 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   void MaybeFlagNewline(nsIDOMNode* aNode);
 
   PRInt32 mPrefixIndex;
-  nsVoidArray mNameSpaceStack;
+  
+  struct NameSpaceDecl {
+    nsString mPrefix;
+    nsString mURI;
+    nsIDOMElement* mOwner;
+  };
+
+  nsTArray<NameSpaceDecl> mNameSpaceStack;
 
   // nsIDocumentEncoder flags
   PRUint32  mFlags;

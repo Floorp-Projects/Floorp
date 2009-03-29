@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsID.h"
 #include "prprf.h"
-#include "prmem.h"
+#include "nsMemory.h"
 
 static const char gIDFormat[] = 
   "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
@@ -122,13 +122,13 @@ PRBool nsID::Parse(const char *aIDStr)
 
 /*
  * Returns an allocated string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
- * format. The string is allocated with PR_Malloc and should be freed by
+ * format. The string is allocated with NS_Alloc and should be freed by
  * the caller.
  */
 
 char *nsID::ToString() const 
 {
-  char *res = (char*)PR_Malloc(NSID_LENGTH); // use PR_Malloc if this is to be freed with nsCRT::free
+  char *res = (char*)NS_Alloc(NSID_LENGTH);
 
   if (res != NULL) {
     PR_snprintf(res, NSID_LENGTH, gIDFormat,

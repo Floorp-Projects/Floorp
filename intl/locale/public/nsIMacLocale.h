@@ -41,7 +41,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include <Script.h>
+#include <Carbon/Carbon.h>
 
 // {E58B24B2-FD1A-11d2-9E8E-0060089FE59B}
 #define NS_IMACLOCALE_IID                \

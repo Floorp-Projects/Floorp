@@ -471,6 +471,7 @@ protected:
     
       
     CParserContext*              mParserContext;
+    nsCOMPtr<nsIDTD>             mDTD;
     nsCOMPtr<nsIRequestObserver> mObserver;
     nsCOMPtr<nsIContentSink>     mSink;
     nsIRunnable*                 mContinueEvent;  // weak ref

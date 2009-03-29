@@ -35,9 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# Usage: |make [EXTRA_TEST_ARGS=...] mochitest*|.
 mochitest:: mochitest-plain mochitest-chrome mochitest-a11y
 
-RUN_MOCHITEST = rm -f ./$@.log && $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done --console-level=INFO  --log-file=./$@.log --file-level=INFO
+RUN_MOCHITEST = rm -f ./$@.log && $(PYTHON) _tests/testing/mochitest/runtests.py --autorun --close-when-done --console-level=INFO --log-file=./$@.log --file-level=INFO $(MOCHITEST_PATH) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
@@ -59,18 +60,19 @@ MOCHITEST_PATH =
 endif
 
 mochitest-plain:
-	$(RUN_MOCHITEST) $(MOCHITEST_PATH)
+	$(RUN_MOCHITEST)
 	$(CHECK_TEST_ERROR)
 
 mochitest-chrome:
-	$(RUN_MOCHITEST) --chrome $(MOCHITEST_PATH)
+	$(RUN_MOCHITEST) --chrome
 	$(CHECK_TEST_ERROR)
 
 mochitest-a11y:
-	$(RUN_MOCHITEST) --a11y $(MOCHITEST_PATH)
+	$(RUN_MOCHITEST) --a11y
 	$(CHECK_TEST_ERROR)
 
-RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py $(1) | tee ./$@.log
+# Usage: |make [EXTRA_TEST_ARGS=...] *test|.
+RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
 reftest:
 	$(call RUN_REFTEST,$(topsrcdir)/layout/reftests/reftest.list)
@@ -85,7 +87,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 PKG_STAGE = $(DIST)/test-package-stage
 
-package-tests: stage-mochitest stage-reftest
+package-tests: stage-mochitest stage-reftest stage-xpcshell
 	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > $(DIST)/$(PKG_PATH)$(TEST_PACKAGE)
 
 make-stage-dir:
@@ -97,5 +99,9 @@ stage-mochitest: make-stage-dir
 stage-reftest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/layout/tools/reftest stage-package
 
+stage-xpcshell: make-stage-dir
+	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
+
 .PHONY: mochitest mochitest-plain mochitest-chrome mochitest-a11y \
-  package-tests make-stage-dir stage-mochitest
+  reftest crashtest package-tests make-stage-dir stage-mochitest \
+  stage-reftest stage-xpcshell

@@ -105,6 +105,9 @@ struct nsBidiPositionResolve
   // Eessentially, this is the X position (relative to the rendering context) where the text was drawn + the font metric of the visual string to the left of the given logical position.
   // If the logical position was not found, set to kNotFound.
   PRInt32 visualLeftTwips;
+  // [out] Visual width of the character, in twips.
+  // If the logical position was not found, set to kNotFound.
+  PRInt32 visualWidth;
 };
 
 class nsBidiPresUtils {

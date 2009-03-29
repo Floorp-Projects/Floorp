@@ -43,6 +43,7 @@
  */
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"

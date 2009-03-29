@@ -59,7 +59,7 @@ typedef FASTCALL uint32_t (*fetchFromRegionProc)(bits_image_t *pict, int x, int 
  * for is when src_clip is false. Since inside_bounds is statically known,
  * the last part of the if statement will normally be optimized away.
  */
-static inline uint32_t
+static force_inline uint32_t
 do_fetch (bits_image_t *pict, int x, int y, fetchPixelProc32 fetch,
 	  pixman_bool_t src_clip,
 	  pixman_bool_t inside_bounds)
@@ -87,343 +87,155 @@ do_fetch (bits_image_t *pict, int x, int y, fetchPixelProc32 fetch,
 /*
  * Fetching Algorithms
  */
-static void
-fbFetchTransformed_Nearest_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+static inline uint32_t
+fetch_nearest (bits_image_t		*pict,
+	       fetchPixelProc32		 fetch,
+	       pixman_bool_t		 affine,
+	       pixman_repeat_t		 repeat,
+	       pixman_bool_t             has_src_clip,
+	       const pixman_vector_t    *v)
 {
-    fetchPixelProc32   fetch;
-    pixman_bool_t src_clip;
-    int x, y, i;
-
-    /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for ( i = 0; i < width; ++i)
+    if (!v->vector[2])
     {
-        if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2])
-            {
-                *(buffer + i) = 0;
-            }
-            else
-            {
-                if (!affine)
-                {
-                    y = MOD(DIV(v.vector[1],v.vector[2]), pict->height);
-                    x = MOD(DIV(v.vector[0],v.vector[2]), pict->width);
-                }
-                else
-                {
-                    y = MOD(v.vector[1]>>16, pict->height);
-                    x = MOD(v.vector[0]>>16, pict->width);
-                }
-
-                *(buffer + i) = do_fetch (pict, x, y, fetch, src_clip, TRUE);
-            }
-        }
-
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
+	return 0;
     }
-}
-
-static void
-fbFetchTransformed_Nearest_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32 fetch;
-    int x, y, i;
-
-    /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i)
+    else
     {
-        if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2])
-            {
-                *(buffer + i) = 0;
-            }
-            else
-            {
-                if (!affine)
-                {
-                    y = CLIP(DIV(v.vector[1], v.vector[2]), 0, pict->height-1);
-                    x = CLIP(DIV(v.vector[0], v.vector[2]), 0, pict->width-1);
-                }
-                else
-                {
-                    y = CLIP(v.vector[1]>>16, 0, pict->height-1);
-                    x = CLIP(v.vector[0]>>16, 0, pict->width-1);
-                }
+	int x, y;
+	pixman_bool_t inside_bounds;
 
-                *(buffer + i) = do_fetch (pict, x, y, fetch, src_clip, TRUE);
-            }
-        }
+	if (!affine)
+	{
+	    x = DIV(v->vector[0], v->vector[2]);
+	    y = DIV(v->vector[1], v->vector[2]);
+	}
+	else
+	{
+	    x = v->vector[0]>>16;
+	    y = v->vector[1]>>16;
+	}
 
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
+	switch (repeat)
+	{
+	case PIXMAN_REPEAT_NORMAL:
+	    x = MOD (x, pict->width);
+	    y = MOD (y, pict->height);
+	    inside_bounds = TRUE;
+	    break;
+	    
+	case PIXMAN_REPEAT_PAD:
+	    x = CLIP (x, 0, pict->width-1);
+	    y = CLIP (y, 0, pict->height-1);
+	    inside_bounds = TRUE;
+	    break;
+	    
+	case PIXMAN_REPEAT_REFLECT: /* FIXME: this should be implemented for images */
+	case PIXMAN_REPEAT_NONE:
+	    inside_bounds = FALSE;
+	    break;
+
+	default:
+	    return 0;
+	}
+
+	return do_fetch (pict, x, y, fetch, has_src_clip, inside_bounds);
     }
 }
 
-static void
-fbFetchTransformed_Nearest_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+static inline uint32_t
+fetch_bilinear (bits_image_t		*pict,
+		fetchPixelProc32	 fetch,
+		pixman_bool_t		 affine,
+		pixman_repeat_t		 repeat,
+		pixman_bool_t		 has_src_clip,
+		const pixman_vector_t   *v)
 {
-    fetchPixelProc32   fetch;
-    pixman_bool_t src_clip;
-    int x, y, i;
-
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i) {
-        if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                if (!affine) {
-                    y = DIV(v.vector[1],v.vector[2]);
-                    x = DIV(v.vector[0],v.vector[2]);
-                } else {
-                    y = v.vector[1]>>16;
-                    x = v.vector[0]>>16;
-                }
-
-                *(buffer + i) = do_fetch (pict, x, y, fetch, src_clip, FALSE);
-            }
-        }
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
-    }
-}
-
-static void
-fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32   fetch;
-    int i;
-
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i) {
-        if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                uint32_t tl, tr, bl, br, r;
-                uint32_t ft, fb;
-
-                if (!affine) {
-                    pixman_fixed_48_16_t div;
-                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-                    x1 = div >> 16;
-                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
-                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-                    y1 = div >> 16;
-                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
-                } else {
-                    x1 = v.vector[0] >> 16;
-                    distx = (v.vector[0] >> 8) & 0xff;
-                    y1 = v.vector[1] >> 16;
-                    disty = (v.vector[1] >> 8) & 0xff;
-                }
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-
-                idistx = 256 - distx;
-                idisty = 256 - disty;
-
-                x1 = MOD (x1, pict->width);
-                x2 = MOD (x2, pict->width);
-                y1 = MOD (y1, pict->height);
-                y2 = MOD (y2, pict->height);
-
-                tl = do_fetch (pict, x1, y1, fetch, src_clip, TRUE);
-                tr = do_fetch (pict, x2, y1, fetch, src_clip, TRUE);
-                bl = do_fetch (pict, x1, y2, fetch, src_clip, TRUE);
-                br = do_fetch (pict, x2, y2, fetch, src_clip, TRUE);
-
-                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                *(buffer + i) = r;
-            }
-        }
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
-    }
-}
-
-static void
-fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32   fetch;
-    int i;
-
-    /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i) {
-        if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                uint32_t tl, tr, bl, br, r;
-                uint32_t ft, fb;
-
-                if (!affine) {
-                    pixman_fixed_48_16_t div;
-                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-                    x1 = div >> 16;
-                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
-                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-                    y1 = div >> 16;
-                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
-                } else {
-                    x1 = v.vector[0] >> 16;
-                    distx = (v.vector[0] >> 8) & 0xff;
-                    y1 = v.vector[1] >> 16;
-                    disty = (v.vector[1] >> 8) & 0xff;
-                }
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-
-                idistx = 256 - distx;
-                idisty = 256 - disty;
-
-                x1 = CLIP (x1, 0, pict->width-1);
-                x2 = CLIP (x2, 0, pict->width-1);
-                y1 = CLIP (y1, 0, pict->height-1);
-                y2 = CLIP (y2, 0, pict->height-1);
-
-                tl = do_fetch(pict, x1, y1, fetch, src_clip, TRUE);
-                tr = do_fetch(pict, x2, y1, fetch, src_clip, TRUE);
-                bl = do_fetch(pict, x1, y2, fetch, src_clip, TRUE);
-                br = do_fetch(pict, x2, y2, fetch, src_clip, TRUE);
-
-                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                *(buffer + i) = r;
-            }
-        }
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
-    }
-}
-
-static void
-fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32   fetch;
-    int i;
-
-    /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i)
+    if (!v->vector[2])
     {
-        if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                uint32_t tl, tr, bl, br, r;
-                uint32_t ft, fb;
+	return 0;
+    }
+    else
+    {
+	int x1, x2, y1, y2, distx, idistx, disty, idisty;
+	uint32_t tl, tr, bl, br, r;
+	uint32_t ft, fb;
+	pixman_bool_t inside_bounds;
+	
+	if (!affine)
+	{
+	    pixman_fixed_48_16_t div;
+	    div = ((pixman_fixed_48_16_t)v->vector[0] << 16)/v->vector[2];
+	    x1 = div >> 16;
+	    distx = ((pixman_fixed_t)div >> 8) & 0xff;
+	    div = ((pixman_fixed_48_16_t)v->vector[1] << 16)/v->vector[2];
+	    y1 = div >> 16;
+	    disty = ((pixman_fixed_t)div >> 8) & 0xff;
+	}
+	else
+	{
+	    x1 = v->vector[0] >> 16;
+	    distx = (v->vector[0] >> 8) & 0xff;
+	    y1 = v->vector[1] >> 16;
+	    disty = (v->vector[1] >> 8) & 0xff;
+	}
+	x2 = x1 + 1;
+	y2 = y1 + 1;
+	
+	idistx = 256 - distx;
+	idisty = 256 - disty;
 
-                if (!affine) {
-                    pixman_fixed_48_16_t div;
-                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-                    x1 = div >> 16;
-                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
-                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-                    y1 = div >> 16;
-                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
-                } else {
-                    x1 = v.vector[0] >> 16;
-                    distx = (v.vector[0] >> 8) & 0xff;
-                    y1 = v.vector[1] >> 16;
-                    disty = (v.vector[1] >> 8) & 0xff;
-                }
-                x2 = x1 + 1;
-                y2 = y1 + 1;
+	switch (repeat)
+	{
+	case PIXMAN_REPEAT_NORMAL:
+	    x1 = MOD (x1, pict->width);
+	    x2 = MOD (x2, pict->width);
+	    y1 = MOD (y1, pict->height);
+	    y2 = MOD (y2, pict->height);
+	    inside_bounds = TRUE;
+	    break;
+	    
+	case PIXMAN_REPEAT_PAD:
+	    x1 = CLIP (x1, 0, pict->width-1);
+	    x2 = CLIP (x2, 0, pict->width-1);
+	    y1 = CLIP (y1, 0, pict->height-1);
+	    y2 = CLIP (y2, 0, pict->height-1);
+	    inside_bounds = TRUE;
+	    break;
+	    
+	case PIXMAN_REPEAT_REFLECT: /* FIXME: this should be implemented for images */
+	case PIXMAN_REPEAT_NONE:
+	    inside_bounds = FALSE;
+	    break;
 
-                idistx = 256 - distx;
-                idisty = 256 - disty;
+	default:
+	    return 0;
+	}
+	
+	tl = do_fetch(pict, x1, y1, fetch, has_src_clip, inside_bounds);
+	tr = do_fetch(pict, x2, y1, fetch, has_src_clip, inside_bounds);
+	bl = do_fetch(pict, x1, y2, fetch, has_src_clip, inside_bounds);
+	br = do_fetch(pict, x2, y2, fetch, has_src_clip, inside_bounds);
+	
+	ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+	fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+	r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+	ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+	fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+	r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+	ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+	fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+	r |= (((ft * idisty + fb * disty)) & 0xff0000);
+	ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+	fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+	r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
 
-                tl = do_fetch(pict, x1, y1, fetch, src_clip, FALSE);
-                tr = do_fetch(pict, x2, y1, fetch, src_clip, FALSE);
-                bl = do_fetch(pict, x1, y2, fetch, src_clip, FALSE);
-                br = do_fetch(pict, x2, y2, fetch, src_clip, FALSE);
-
-                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                *(buffer + i) = r;
-            }
-        }
-
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
+	return r;
     }
 }
 
 static void
-fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
+fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits,
+			       pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
     fetchPixelProc32 fetch;
     int i;
@@ -560,7 +372,8 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
         unit.vector[0] = pict->common.transform->matrix[0][0];
         unit.vector[1] = pict->common.transform->matrix[1][0];
         unit.vector[2] = pict->common.transform->matrix[2][0];
-        affine = v.vector[2] == pixman_fixed_1 && unit.vector[2] == 0;
+
+        affine = (v.vector[2] == pixman_fixed_1 && unit.vector[2] == 0);
     }
     else
     {
@@ -570,46 +383,57 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
     }
 
     /* This allows filtering code to pretend that pixels are located at integer coordinates */
-    adjust (&v, &unit, -(pixman_fixed_1 / 2));
-
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
+	fetchPixelProc32   fetch;
+	pixman_bool_t src_clip;
+	int i;
+
 	/* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
-	adjust (&v, &unit, pixman_fixed_1 / 2 - pixman_fixed_e);
+	adjust (&v, &unit, - pixman_fixed_e);
+
+	fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
 	
-        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
-        {
-            fbFetchTransformed_Nearest_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-        else if (pict->common.repeat == PIXMAN_REPEAT_PAD)
-        {
-            fbFetchTransformed_Nearest_Pad(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-        else
-        {
-            fbFetchTransformed_Nearest_General(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-    } else if (pict->common.filter == PIXMAN_FILTER_BILINEAR	||
+	src_clip = pict->common.src_clip != &(pict->common.full_region);
+	
+	for ( i = 0; i < width; ++i)
+	{
+	    if (!mask || mask[i] & maskBits)
+		*(buffer + i) = fetch_nearest (pict, fetch, affine, pict->common.repeat, src_clip, &v);
+	    
+	    v.vector[0] += unit.vector[0];
+	    v.vector[1] += unit.vector[1];
+	    v.vector[2] += unit.vector[2];
+	}
+    }
+    else if (pict->common.filter == PIXMAN_FILTER_BILINEAR	||
 	       pict->common.filter == PIXMAN_FILTER_GOOD	||
 	       pict->common.filter == PIXMAN_FILTER_BEST)
     {
-        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
-        {
-            fbFetchTransformed_Bilinear_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-        else if (pict->common.repeat == PIXMAN_REPEAT_PAD)
-        {
-            fbFetchTransformed_Bilinear_Pad(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-        else
-        {
-            fbFetchTransformed_Bilinear_General(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
+	pixman_bool_t src_clip;
+	fetchPixelProc32   fetch;
+	int i;
+
+	/* Let the bilinear code pretend that pixels fall on integer coordinaters */
+	adjust (&v, &unit, -(pixman_fixed_1 / 2));
+
+	fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+	src_clip = pict->common.src_clip != &(pict->common.full_region);
+	
+	for (i = 0; i < width; ++i)
+	{
+	    if (!mask || mask[i] & maskBits)
+		*(buffer + i) = fetch_bilinear (pict, fetch, affine, pict->common.repeat, src_clip, &v);
+	    
+	    v.vector[0] += unit.vector[0];
+	    v.vector[1] += unit.vector[1];
+	    v.vector[2] += unit.vector[2];
+	}
     }
     else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
     {
 	/* Round to closest integer, ensuring that 0.5 rounds to 0, not 1 */
-	adjust (&v, &unit, pixman_fixed_1 / 2 - pixman_fixed_e);
+	adjust (&v, &unit, - pixman_fixed_e);
 	
         fbFetchTransformed_Convolution(pict, width, buffer, mask, maskBits, affine, v, unit);
     }

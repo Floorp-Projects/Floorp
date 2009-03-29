@@ -719,13 +719,13 @@ FontEntry::TestCharacterMap(PRUint32 aCh)
                 hasGlyph = PR_TRUE;
         }
 
-        if (hasGlyph) {
-            mCharacterMap.set(aCh);
-            return PR_TRUE;         // jtdcheck -- don't we need to do a ReleaseDC??
-        }
-
         SelectObject(dc, oldFont);
         ReleaseDC(NULL, dc);
+
+        if (hasGlyph) {
+            mCharacterMap.set(aCh);
+            return PR_TRUE;
+        }
     }
 
     return PR_FALSE;
@@ -1014,7 +1014,11 @@ gfxWindowsFont::Measure(gfxTextRun *aTextRun,
     // we need to create a copy in order to avoid getting cached extents
     if (aBoundingBoxType == TIGHT_HINTED_OUTLINE_EXTENTS &&
         mAntialiasOption != CAIRO_ANTIALIAS_NONE) {
-        nsRefPtr<gfxWindowsFont> tempFont =
+        // Not nsRefPtr here as we know this is a transient font instance,
+        // and we won't be putting it in the font cache. So we want to
+        // delete it immediately it goes out of scope, not call
+        // gfxFont::Release which deals with shared, cached font instances.
+        nsAutoPtr<gfxWindowsFont> tempFont =
             new gfxWindowsFont(GetFontEntry(), GetStyle(), CAIRO_ANTIALIAS_NONE);
         if (tempFont) {
             return tempFont->Measure(aTextRun, aStart, aEnd,

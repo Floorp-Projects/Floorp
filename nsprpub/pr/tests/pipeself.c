@@ -106,7 +106,7 @@ static void PongThreadFunc(void *arg)
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
     PRStatus status;
     PRThread *pongThread;
@@ -176,7 +176,7 @@ int main()
         exit(1);
     }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(SYMBIAN)
 	/*
 	 * Test PR_Available for pipes
 	 */

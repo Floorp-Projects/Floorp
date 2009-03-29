@@ -642,11 +642,6 @@ txPushNewContext::txPushNewContext(nsAutoPtr<Expr> aSelect)
 
 txPushNewContext::~txPushNewContext()
 {
-    PRInt32 i;
-    for (i = 0; i < mSortKeys.Count(); ++i)
-    {
-        delete static_cast<SortKey*>(mSortKeys[i]);
-    }
 }
 
 nsresult
@@ -673,12 +668,12 @@ txPushNewContext::execute(txExecutionState& aEs)
     }
 
     txNodeSorter sorter;
-    PRInt32 i, count = mSortKeys.Count();
+    PRUint32 i, count = mSortKeys.Length();
     for (i = 0; i < count; ++i) {
-        SortKey* sort = static_cast<SortKey*>(mSortKeys[i]);
-        rv = sorter.addSortElement(sort->mSelectExpr, sort->mLangExpr,
-                                   sort->mDataTypeExpr, sort->mOrderExpr,
-                                   sort->mCaseOrderExpr,
+        SortKey& sort = mSortKeys[i];
+        rv = sorter.addSortElement(sort.mSelectExpr, sort.mLangExpr,
+                                   sort.mDataTypeExpr, sort.mOrderExpr,
+                                   sort.mCaseOrderExpr,
                                    aEs.getEvalContext());
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -707,27 +702,16 @@ txPushNewContext::addSort(nsAutoPtr<Expr> aSelectExpr,
                           nsAutoPtr<Expr> aOrderExpr,
                           nsAutoPtr<Expr> aCaseOrderExpr)
 {
-    SortKey* sort = new SortKey(aSelectExpr, aLangExpr, aDataTypeExpr,
-                                aOrderExpr, aCaseOrderExpr);
-    NS_ENSURE_TRUE(sort, NS_ERROR_OUT_OF_MEMORY);
-
-    if (!mSortKeys.AppendElement(sort)) {
-        delete sort;
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (SortKey *key = mSortKeys.AppendElement()) {
+        // workaround for not triggering the Copy Constructor
+        key->mSelectExpr = aSelectExpr;
+        key->mLangExpr = aLangExpr;
+        key->mDataTypeExpr = aDataTypeExpr;
+        key->mOrderExpr = aOrderExpr;
+        key->mCaseOrderExpr = aCaseOrderExpr;
+        return NS_OK;
     }
-   
-    return NS_OK;
-}
-
-txPushNewContext::SortKey::SortKey(nsAutoPtr<Expr> aSelectExpr,
-                                   nsAutoPtr<Expr> aLangExpr,
-                                   nsAutoPtr<Expr> aDataTypeExpr,
-                                   nsAutoPtr<Expr> aOrderExpr,
-                                   nsAutoPtr<Expr> aCaseOrderExpr)
-    : mSelectExpr(aSelectExpr), mLangExpr(aLangExpr),
-      mDataTypeExpr(aDataTypeExpr), mOrderExpr(aOrderExpr),
-      mCaseOrderExpr(aCaseOrderExpr)
-{
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult

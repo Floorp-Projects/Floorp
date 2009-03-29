@@ -130,54 +130,95 @@ function test()
     );
   }
 
-  // --- Download progress listener ---
+  // --- Mock nsITransfer implementation ---
 
-  var downloadManager = Cc["@mozilla.org/download-manager;1"].
-                        getService(Ci.nsIDownloadManager);
+  var originalTransferFactory;
+  var mockTransferFactory;
+  var downloadIsSuccessful = true;
 
-  var downloadListener = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadProgressListener]),
-    document: null,
-    onDownloadStateChange: function(aState, aDownload) {
-      switch (aDownload.state) {
-        // The download finished successfully, continue the test
-        case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
-          onDownloadFinished(true);
-          break;
+  const kDownloadCID = "{e3fa9d0a-1dd1-11b2-bdef-8c720b597445}";
+  const kTransferContractID = "@mozilla.org/transfer;1";
+  const kDownloadClassName = "Download";
 
-        // The download finished with a failure, abort the test
-        case Ci.nsIDownloadManager.DOWNLOAD_DIRTY:
-        case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
-        case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
-          onDownloadFinished(false);
-          break;
+  function registerMockTransferFactory() {
+    // This "transfer" object implementation is tailored for this test, and
+    // continues the test when the download is completed.
+    var mockTransfer = {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                             Ci.nsIWebProgressListener2,
+                                             Ci.nsITransfer]),
+
+      // --- nsIWebProgressListener interface functions ---
+
+      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+        // If at least one notification reported an error, the download failed
+        if (aStatus != Cr.NS_OK)
+          downloadIsSuccessful = false;
+
+        // If the download is finished
+        if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
+            (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK))
+          // Continue the test, reporting the success or failure condition
+          onDownloadFinished(downloadIsSuccessful);
+      },
+      onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
+       aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) { },
+      onLocationChange: function(aWebProgress, aRequest, aLocation) { },
+      onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+        // If at least one notification reported an error, the download failed
+        if (aStatus != Cr.NS_OK)
+          downloadIsSuccessful = false;
+      },
+      onSecurityChange: function(aWebProgress, aRequest, aState) { },
+
+      // --- nsIWebProgressListener2 interface functions ---
+
+      onProgressChange64: function(aWebProgress, aRequest, aCurSelfProgress,
+       aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) { },
+      onRefreshAttempted: function(aWebProgress, aRefreshURI, aMillis,
+       aSameURI) { },
+
+      // --- nsITransfer interface functions ---
+
+      init: function(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
+       aTempFile, aCancelable) { }
+    };
+
+    mockTransferFactory = {
+      createInstance: function(aOuter, aIid) {
+        if (aOuter != null)
+          throw Cr.NS_ERROR_NO_AGGREGATION;
+        return mockTransfer.QueryInterface(aIid);
       }
-    },
-    onStateChange: function(aWebProgress, aRequest, aState, aStatus,
-     aDownload) { },
-    onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
-     aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) { },
-    onSecurityChange: function(aWebProgress, aRequest, aState) { }
+    };
+
+    // Preserve the original factory
+    originalTransferFactory = Cm.getClassObject(Cc[kTransferContractID],
+                                                Ci.nsIFactory);
+
+    // Register the mock factory
+    componentRegistrar.registerFactory(
+      Components.ID(kDownloadCID),
+      "Mock Transfer Implementation",
+      kTransferContractID,
+      mockTransferFactory
+    );
   }
 
-  // --- Download Manager UI manual control ---
+  function unregisterMockTransferFactory() {
+    // Free references to the mock factory
+    componentRegistrar.unregisterFactory(
+      Components.ID(kDownloadCID),
+      mockTransferFactory
+    );
 
-  var mainPrefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch);
-
-  const kShowWhenStartingPref = "browser.download.manager.showWhenStarting";
-  const kRetentionPref = "browser.download.manager.retention";
-
-  function tweakDownloadManagerPrefs() {
-    // Prevent the Download Manager UI from showing automatically
-    mainPrefBranch.setBoolPref(kShowWhenStartingPref, false);
-    // Prevent the download from remaining in the Download Manager UI
-    mainPrefBranch.setIntPref(kRetentionPref, 0);
-  }
-
-  function restoreDownloadManagerPrefs() {
-    mainPrefBranch.clearUserPref(kShowWhenStartingPref);
-    mainPrefBranch.clearUserPref(kRetentionPref);
+    // Restore the original factory
+    componentRegistrar.registerFactory(
+      Components.ID(kDownloadCID),
+      kDownloadClassName,
+      kTransferContractID,
+      originalTransferFactory
+    );
   }
 
   // --- Test procedure ---
@@ -229,29 +270,23 @@ function test()
      getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
     destFile.append("testsave_bug471962.html");
 
-    // Wait for the download to finish
-    downloadManager.addListener(downloadListener);
-
-    // Prevent the test from showing the Download Manager UI
-    tweakDownloadManagerPrefs();
-
     // Call the internal save function defined in contentAreaUtils.js, while
     // replacing the file picker component with a mock implementation that
-    // returns the path of the temporary file
+    // returns the path of the temporary file, and the download component with
+    // an implementation that does not depend on the download manager
     registerMockFilePickerFactory();
+    registerMockTransferFactory();
     var docToSave = innerFrame.contentDocument;
     // We call internalSave instead of saveDocument to bypass the history cache
     internalSave(docToSave.location.href, docToSave, null, null,
                  docToSave.contentType, false, null, null,
                  docToSave.referrer ? makeURI(docToSave.referrer) : null,
                  false, null);
+    unregisterMockTransferFactory();
     unregisterMockFilePickerFactory();
   }
 
   function onDownloadFinished(aSuccess) {
-    downloadManager.removeListener(downloadListener);
-    restoreDownloadManagerPrefs();
-
     // Abort the test if the download wasn't successful
     if (!aSuccess) {
       ok(false, "Unexpected failure, the inner frame couldn't be saved!");

@@ -137,7 +137,10 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 
 .autocomplete-richlistitem {
   padding: 1px 2px;
-  border-bottom: 1px solid ThreeDLightShadow;
+}
+
+.autocomplete-richlistitem:not(:first-child) {
+  border-top: 1px solid ThreeDLightShadow;
 }
 
 .ac-site-icon {
