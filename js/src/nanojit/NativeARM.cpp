@@ -54,6 +54,13 @@
 extern "C" void __clear_cache(char *BEG, char *END);
 #endif
 
+// assume EABI, except under CE
+#ifdef UNDER_CE
+#undef NJ_ARM_EABI
+#else
+#define NJ_ARM_EABI
+#endif
+
 #ifdef FEATURE_NANOJIT
 
 namespace nanojit
@@ -175,18 +182,161 @@ Assembler::genEpilogue()
     return _nIns;
 }
 
-/* ARM EABI (used by gcc/linux) calling conventions differ from Windows CE; use these
- * as the default.
+/* gcc/linux use the ARM EABI; Windows CE uses the legacy abi.
  *
- * - double arg following an initial dword arg use r0 for the int arg
- *   and r2/r3 for the double; r1 is skipped
- * - 3 dword args followed by a double arg cause r3 to be skipped,
- *   and the double to be stuck on the stack.
+ * Under EABI:
+ * - doubles are 64-bit aligned both in registers and on the stack.
+ *   If the next available argument register is R1, it is skipped
+ *   and the double is placed in R2:R3.  If R0:R1 or R2:R3 are not
+ *   available, the double is placed on the stack, 64-bit aligned.
+ * - 32-bit arguments are placed in registers and 32-bit aligned
+ *   on the stack.
  *
- * Under Windows CE, the arguments are placed in r0-r3 and then the stack,
- * one dword at a time, with the high order dword of a quad/double coming
- * first.  No registers are skipped as they are in the EABI case.
+ * Under legacy ABI:
+ * - doubles are placed in subsequent arg registers; if the next
+ *   available register is r3, the low order word goes into r3
+ *   and the high order goes on the stack.
+ * - 32-bit arguments are placed in the next available arg register,
+ * - both doubles and 32-bit arguments are placed on stack with 32-bit
+ *   alignment.
  */
+
+void
+Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
+{
+    // should never be called -- the ARM-specific longer form of
+    // asm_arg is used on ARM.
+    NanoAssert(0);
+}
+
+/*
+ * asm_arg will update r and stkd to indicate where the next
+ * argument should go.  If r == UnknownReg, then the argument
+ * is placed on the stack at stkd, and stkd is updated.
+ *
+ * Note that this currently doesn't actually use stkd on input,
+ * except for figuring out alignment; it always pushes to SP.
+ * See TODO in asm_call.
+ */
+void
+Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
+{
+    if (sz == ARGSIZE_F) {
+#ifdef NJ_ARM_EABI
+        NanoAssert(r == UnknownReg || r == R0 || r == R2);
+
+        // if we're about to put this on the stack, make sure the
+        // stack is 64-bit aligned
+        if (r == UnknownReg && (stkd&7) != 0) {
+            SUBi(SP, SP, 4);
+            stkd += 4;
+        }
+#endif
+
+        Reservation* argRes = getresv(arg);
+
+        // handle qjoin first; won't ever show up if VFP is available
+        if (arg->isop(LIR_qjoin)) {
+            asm_arg(ARGSIZE_LO, arg->oprnd1(), r, stkd);
+            asm_arg(ARGSIZE_LO, arg->oprnd2(), r, stkd);
+        } else if (!argRes || argRes->reg == UnknownReg || !AvmCore::config.vfp) {
+            // if we don't have a register allocated,
+            // or we're not vfp, just read from memory.
+            if (arg->isop(LIR_quad)) {
+                const int32_t* p = (const int32_t*) (arg-2);
+
+                // XXX use some load-multiple action here from our const pool?
+                for (int k = 0; k < 2; k++) {
+                    if (r != UnknownReg) {
+                        asm_ld_imm(r, *p++);
+                        r = nextreg(r);
+                        if (r == R4)
+                            r = UnknownReg;
+                    } else {
+                        STR_preindex(IP, SP, -4);
+                        asm_ld_imm(IP, *p++);
+                        stkd += 4;
+                    }
+                }
+            } else {
+                int d = findMemFor(arg);
+
+                for (int k = 0; k < 2; k++) {
+                    if (r != UnknownReg) {
+                        LDR(r, FP, d + k*4);
+                        r = nextreg(r);
+                        if (r == R4)
+                            r = UnknownReg;
+                    } else {
+                        STR_preindex(IP, SP, -4);
+                        LDR(IP, FP, d + k*4);
+                        stkd += 4;
+                    }
+                }
+            }
+        } else {
+            // handle the VFP with-register case
+            Register sr = argRes->reg;
+            if (r != UnknownReg && r < R3) {
+                FMRRD(r, nextreg(r), sr);
+
+                // make sure the next register is correct on return
+                if (r == R0)
+                    r = R2;
+                else
+                    r = UnknownReg;
+            } else if (r == R3) {
+                // legacy ABI only
+                STR_preindex(IP, SP, -4);
+                FMRDL(IP, sr);
+                FMRDH(r, sr);
+                stkd += 4;
+
+                r = UnknownReg;
+            } else {
+                FSTD(sr, SP, 0);
+                SUB(SP, SP, 8);
+                stkd += 8;
+                r = UnknownReg;
+            }
+        }
+    } else if (sz == ARGSIZE_LO) {
+        if (r != UnknownReg) {
+            if (arg->isconst()) {
+                asm_ld_imm(r, arg->constval());
+            } else {
+                Reservation* argRes = getresv(arg);
+                if (argRes) {
+                    if (argRes->reg == UnknownReg) {
+                        // load it into the arg reg
+                        int d = findMemFor(arg);
+                        if (arg->isop(LIR_alloc)) {
+                            asm_add_imm(r, FP, d);
+                        } else {
+                            LDR(r, FP, d);
+                        }
+                    } else {
+                        MOV(r, argRes->reg);
+                    }
+                } else {
+                    findSpecificRegFor(arg, r);
+                }
+            }
+
+            if (r < R3)
+                r = nextreg(r);
+            else
+                r = UnknownReg;
+        } else {
+            int d = findMemFor(arg);
+            STR_preindex(IP, SP, -4);
+            LDR(IP, FP, d);
+            stkd += 4;
+        }
+    } else {
+        NanoAssert(0);
+    }
+}
 
 void
 Assembler::asm_call(LInsp ins)
@@ -202,29 +352,13 @@ Assembler::asm_call(LInsp ins)
 
     atypes >>= 2;
 
-    bool arg0IsInt32FollowedByFloat = false;
-#ifndef UNDER_CE
-    // we need to detect if we have arg0 as LO followed by arg1 as F;
-    // in that case, we need to skip using r1 -- the F needs to be
-    // loaded in r2/r3, at least according to the ARM EABI and gcc 4.2's
-    // generated code.
-    while ((atypes & 3) != ARGSIZE_NONE) {
-        if (((atypes >> 2) & 3) == ARGSIZE_LO &&
-            ((atypes >> 0) & 3) == ARGSIZE_F &&
-            ((atypes >> 4) & 3) == ARGSIZE_NONE)
-        {
-            arg0IsInt32FollowedByFloat = true;
-            break;
-        }
-        atypes >>= 2;
-    }
-#endif
+    // if we're using VFP, and the return type is a double,
+    // it'll come back in R0/R1.  We need to either place it
+    // in the result fp reg, or store it.
 
     if (AvmCore::config.vfp && rsize == ARGSIZE_F) {
         NanoAssert(ins->opcode() == LIR_fcall);
         NanoAssert(callRes);
-
-        //fprintf (stderr, "call ins: %p callRes: %p reg: %d ar: %d\n", ins, callRes, callRes->reg, callRes->arIndex);
 
         Register rr = callRes->reg;
         int d = disp(callRes);
@@ -240,50 +374,37 @@ Assembler::asm_call(LInsp ins)
         }
     }
 
+    // make the call
     BL((NIns*)(call->_address));
 
-    ArgSize sizes[10];
+    ArgSize sizes[MAXARGS];
     uint32_t argc = call->get_sizes(sizes);
+
+    Register r = R0;
+    int stkd = 0;
+
+    // XXX TODO we should go through the args and figure out how much
+    // stack space we'll need, allocate it up front, and then do
+    // SP-relative stores using stkd instead of doing STR_preindex for
+    // every stack write like we currently do in asm_arg.
+
     for(uint32_t i = 0; i < argc; i++) {
         uint32_t j = argc - i - 1;
         ArgSize sz = sizes[j];
         LInsp arg = ins->arg(j);
-        // pre-assign registers R0-R3 for arguments (if they fit)
 
-        Register r = (i + roffset) < 4 ? argRegs[i+roffset] : UnknownReg;
+        NanoAssert(r < R4 || r == UnknownReg);
+
+#ifdef NJ_ARM_EABI
         if (sz == ARGSIZE_F) {
-            Register rlo = UnknownReg;
-            Register rhi = UnknownReg;
-
-#ifdef UNDER_CE
-            if (r >= R0 && r <= R2) {
-                rlo = r;
-                rhi = nextreg(r);
-                roffset++;
-            } else if (r == R3) {
-                rlo = r;
-                rhi = UnknownReg;
-            }
-#else
-            if (r == R0 || r == R2) {
-                rlo = r;
-                rhi = nextreg(r);
-                roffset++;
-            } else if (r == R1) {
-                rlo = R2;
-                rhi = nextreg(r);
-                roffset += 2;
-            }
+            if (r == R1)
+                r = R2;
+            else if (r == R3)
+                r = UnknownReg;
+        }
 #endif
 
-            asm_arm_farg(arg, rlo, rhi);
-        } else {
-            asm_arg(sz, arg, r);
-        }
-
-        // Under CE, arg0IsInt32FollowedByFloat will always be false
-        if (i == 0 && arg0IsInt32FollowedByFloat)
-            roffset = 1;
+        asm_arg(sz, arg, r, stkd);
     }
 }
 
@@ -422,7 +543,7 @@ void
 Assembler::asm_qjoin(LIns *ins)
 {
     int d = findMemFor(ins);
-    AvmAssert(d);
+    NanoAssert(d);
     LIns* lo = ins->oprnd1();
     LIns* hi = ins->oprnd2();
 
@@ -438,11 +559,17 @@ Assembler::asm_qjoin(LIns *ins)
 void
 Assembler::asm_store32(LIns *value, int dr, LIns *base)
 {
-    // make sure what is in a register
     Reservation *rA, *rB;
-    findRegFor2(GpRegs, value, rA, base, rB);
-    Register ra = rA->reg;
-    Register rb = rB->reg;
+    Register ra, rb;
+    if (base->isop(LIR_alloc)) {
+        rb = FP;
+        dr += findMemFor(base);
+        ra = findRegFor(value, GpRegs);
+    } else {
+        findRegFor2(GpRegs, value, rA, base, rB);
+        ra = rA->reg;
+        rb = rB->reg;
+    }
     STR(ra, rb, dr);
 }
 
@@ -451,9 +578,22 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(resv));
-    } else {
+    }
+#if 0
+    /* This seriously regresses crypto-aes (by about 50%!), with or
+     * without the S8/U8 check (which ensures that we can do this
+     * const load in one instruction).  I have no idea why, because a
+     * microbenchmark of const mov vs. loading from memory shows that
+     * the mov is faster, though not by much.
+     */
+    else if (i->isconst() && (isS8(i->constval()) || isU8(i->constval()))) {
+        if (!resv->arIndex)
+            reserveFree(i);
+        asm_ld_imm(r, i->constval());
+    }
+#endif
+    else {
         int d = findMemFor(i);
-
         if (IsFpReg(r)) {
             if (isS8(d >> 2)) {
                 FLDD(r, FP, d);
@@ -695,34 +835,6 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     STR(t, rd, dd);
     LDR(IP, rs, ds+4);
     LDR(t, rs, ds);
-}
-
-void
-Assembler::asm_pusharg(LInsp arg)
-{
-    Reservation* argRes = getresv(arg);
-    bool quad = arg->isQuad();
-
-    if (argRes && argRes->reg != UnknownReg) {
-        if (!quad) {
-            STR_preindex(argRes->reg, SP, -4);
-        } else {
-            FSTD(argRes->reg, SP, 0);
-            SUBi(SP, SP, 8);
-        }
-    } else {
-        int d = findMemFor(arg);
-
-        if (!quad) {
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d);
-        } else {
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d+4);
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d);
-        }
-    }
 }
 
 void
@@ -983,7 +1095,9 @@ Assembler::asm_add_imm(Register rd, Register rn, int32_t imm, int stat)
         pos = false;
     }
 
-    while (immval && ((immval & 0x3) == 0)) {
+    while (immval > 255 &&
+           immval && ((immval & 0x3) == 0))
+    {
         immval >>= 2;
         rot--;
     }
@@ -1383,10 +1497,10 @@ Assembler::asm_arith(LInsp ins)
         }
         allow &= ~rmask(rb);
     } else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
-        // add alloc+const, use lea
+        // add alloc+const, rr wants the address of the allocated space plus a constant
         Register rr = prepResultReg(ins, allow);
         int d = findMemFor(lhs) + rhs->constval();
-        LEA(rr, d, FP);
+        asm_add_imm(rr, FP, d);
     }
 
     Register rr = prepResultReg(ins, allow);
@@ -1617,114 +1731,6 @@ Assembler::asm_int(LInsp ins)
         EOR(rr,rr,rr);
     else
         LDi(rr, val);
-}
-
-void
-Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
-{
-    if (sz == ARGSIZE_Q) {
-        // ref arg - use lea
-        if (r != UnknownReg) {
-            // arg in specific reg
-            int da = findMemFor(p);
-            LEA(r, da, FP);
-        } else {
-            NanoAssert(0); // not supported
-        }
-    } else if (sz == ARGSIZE_LO) {
-        if (r != UnknownReg) {
-            // arg goes in specific register
-            if (p->isconst()) {
-                LDi(r, p->constval());
-            } else {
-                Reservation* rA = getresv(p);
-                if (rA) {
-                    if (rA->reg == UnknownReg) {
-                        // load it into the arg reg
-                        int d = findMemFor(p);
-                        if (p->isop(LIR_alloc)) {
-                            asm_add_imm(r, FP, d);
-                        } else {
-                            LD(r, d, FP);
-                        }
-                    } else {
-                        // it must be in a saved reg
-                        MOV(r, rA->reg);
-                    }
-                } else {
-                    // this is the last use, so fine to assign it
-                    // to the scratch reg, it's dead after this point.
-                    findSpecificRegFor(p, r);
-                }
-            }
-        } else {
-            asm_pusharg(p);
-        }
-    } else {
-        NanoAssert(sz == ARGSIZE_F);
-        asm_farg(p);
-    }
-}
-
-void
-Assembler::asm_arm_farg(LInsp arg, Register rlo, Register rhi)
-{
-    if (AvmCore::config.vfp) {
-        Register sr = findRegFor(arg, FpRegs);
-
-        if (rlo != UnknownReg && rhi != UnknownReg) {
-            NanoAssert(sr != UnknownReg);
-            FMRRD(rlo, rhi, sr);
-        } else if (rlo != UnknownReg && rhi == UnknownReg) {
-            NanoAssert(sr != UnknownReg);
-            STR_preindex(IP, SP, -4);
-            FMRDL(IP, sr);
-            FMRDH(rhi, sr);
-        } else {
-            asm_pusharg(arg);
-        }
-
-        return;
-    }
-
-    NanoAssert(arg->opcode() == LIR_qjoin || arg->opcode() == LIR_quad);
-
-    if (rlo != UnknownReg && rhi != UnknownReg) {
-        if (arg->opcode() == LIR_qjoin) {
-            LIns* lo = arg->oprnd1();
-            LIns* hi = arg->oprnd2();
-
-            findSpecificRegFor(lo, rlo);
-            findSpecificRegFor(hi, rhi);
-        } else {
-            // LIR_quad
-            const int32_t* p = (const int32_t*) (arg-2);
-
-            asm_ld_imm(rhi, p[1]);
-            asm_ld_imm(rlo, p[0]);
-        }
-    } else if (rlo != UnknownReg && rhi == UnknownReg) {
-        if (arg->opcode() == LIR_qjoin) {
-            LIns* lo = arg->oprnd1();
-            LIns* hi = arg->oprnd2();
-
-            int d = findMemFor(hi);
-
-            findSpecificRegFor(lo, rlo);
-
-            STR_preindex(IP, SP, -4);
-            LDR(IP, FP, d);
-        } else {
-            // LIR_quad
-            const int32_t* p = (const int32_t*) (arg-2);
-
-            STR_preindex(IP, SP, -4);
-            asm_ld_imm(IP, p[1]);
-            asm_ld_imm(rlo, p[0]);
-        }
-    } else {
-        asm_pusharg(arg);
-    }
 }
 
 }

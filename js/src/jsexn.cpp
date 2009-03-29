@@ -68,9 +68,6 @@ static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 static void
-exn_finalize(JSContext *cx, JSObject *obj);
-
-static void
 exn_trace(JSTracer *trc, JSObject *obj);
 
 static void
