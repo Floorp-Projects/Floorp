@@ -61,8 +61,11 @@ function add_normalized_visit(aURI, aTime, aDayOffset) {
   dateObj.setMinutes(0);
   dateObj.setSeconds(0);
   dateObj.setMilliseconds(0);
+  // Days where DST changes should be taken in count.
+  var previousDateObj = new Date(dateObj.getTime() + aDayOffset * 86400000);
+  var DSTCorrection = (dateObj.getTimezoneOffset() - previousDateObj.getTimezoneOffset()) * 60 * 1000;
   // Substract aDayOffset
-  var PRTimeWithOffset = (dateObj.getTime() + aDayOffset * 86400000) * 1000;
+  var PRTimeWithOffset = (previousDateObj.getTime() - DSTCorrection) * 1000;
   print("Adding visit to " + aURI.spec + " at " + new Date(PRTimeWithOffset/1000));
   var visitId = hs.addVisit(aURI,
                             PRTimeWithOffset,
