@@ -1,11 +1,10 @@
-The source from this directory was copied from the libfishsound svn
-distribution using the update.sh script. The only changes made
+The source from this directory was copied from the libfishsound-0.9.1
+source distribution using the update.sh script. The only changes made
 were those applied by update.sh and the addition/upate of Makefile.in
 files for the Mozilla build system.
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.
 
-The svn revision number used was r3901.
-
 endian.patch is applied to fix Bug 45269.
+bu481601.patch is applied to fix bug 481601.
