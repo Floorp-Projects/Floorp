@@ -6100,6 +6100,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       // ContentInserted will ignore the passed-in index.
       PRUint32 containerCount = aContainer->GetChildCount();
       for (PRUint32 i = aNewIndexInContainer; i < containerCount; i++) {
+        nsIContent* content = aContainer->GetChildAt(i);
+        if (mPresShell->GetPrimaryFrameFor(content)) {
+          // Already have a frame for this content; a previous ContentInserted
+          // in this loop must have reconstructed its insertion parent.  Skip
+          // it.
+          continue;
+        }
         LAYOUT_PHASE_TEMP_EXIT();
         // Call ContentInserted with this index.
         ContentInserted(aContainer, aContainer->GetChildAt(i), i,
