@@ -281,12 +281,12 @@ nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
   return rv;
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsSVGGlyphFrame::Init(nsIContent* aContent,
                       nsIFrame* aParent,
                       nsIFrame* aPrevInFlow)
 {
+#ifdef DEBUG
   NS_ASSERTION(aParent, "null parent");
 
   nsIFrame* ancestorFrame = nsSVGUtils::GetFirstNonAAncestorFrame(aParent);
@@ -298,6 +298,7 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
 
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "trying to construct an SVGGlyphFrame for wrong content element");
+#endif /* DEBUG */
 
   if (!PresContext()->IsDynamic()) {
     AddStateBits(NS_STATE_SVG_PRINTING);
@@ -305,7 +306,6 @@ nsSVGGlyphFrame::Init(nsIContent* aContent,
 
   return nsSVGGlyphFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
-#endif /* DEBUG */
 
 nsIAtom *
 nsSVGGlyphFrame::GetType() const
