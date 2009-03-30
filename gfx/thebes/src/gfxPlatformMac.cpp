@@ -46,12 +46,17 @@
 #include "gfxAtsuiFonts.h"
 #include "gfxUserFontSet.h"
 
+#ifdef MOZ_CORETEXT
+#include "gfxCoreTextFonts.h"
+#endif
+
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
 #include "nsTArray.h"
+#include "nsUnicodeRange.h"
 
 #include "lcms.h"
 
@@ -59,6 +64,38 @@ gfxPlatformMac::gfxPlatformMac()
 {
     mOSXVersion = 0;
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
+
+#ifndef __LP64__
+    // On 64-bit, we only have CoreText, no ATSUI;
+    // for 32-bit, check whether we can and should use CoreText
+    mUseCoreText = PR_FALSE;
+
+#ifdef MOZ_CORETEXT
+    if (&CTLineCreateWithAttributedString != NULL) {
+        mUseCoreText = PR_TRUE;
+        nsCOMPtr<nsIPrefBranch> prefbranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefbranch) {
+            PRBool enabled;
+            nsresult rv = prefbranch->GetBoolPref("gfx.force_atsui_text", &enabled);
+            if (NS_SUCCEEDED(rv) && enabled)
+                mUseCoreText = PR_FALSE;
+        }
+    }
+#ifdef DEBUG_jonathan
+    printf("Using %s for font & glyph shaping support\n",
+           mUseCoreText ? "CoreText" : "ATSUI");
+#endif
+#endif /* MOZ_CORETEXT */
+
+#endif /* not __LP64__ */
+}
+
+gfxPlatformMac::~gfxPlatformMac()
+{
+#ifdef MOZ_CORETEXT
+    if (mUseCoreText)
+        gfxCoreTextFont::Shutdown();
+#endif
 }
 
 already_AddRefed<gfxASurface>
@@ -120,7 +157,15 @@ gfxPlatformMac::CreateFontGroup(const nsAString &aFamilies,
                                 const gfxFontStyle *aStyle,
                                 gfxUserFontSet *aUserFontSet)
 {
+#ifdef __LP64__
+    return new gfxCoreTextFontGroup(aFamilies, aStyle, aUserFontSet);
+#else
+#ifdef MOZ_CORETEXT
+    if (mUseCoreText)
+        return new gfxCoreTextFontGroup(aFamilies, aStyle, aUserFontSet);
+#endif
     return new gfxAtsuiFontGroup(aFamilies, aStyle, aUserFontSet);
+#endif
 }
 
 gfxFontEntry* 
@@ -167,8 +212,8 @@ gfxPlatformMac::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
                             nsTArray<nsString>& aListOfFonts)
 {
-    gfxQuartzFontCache::SharedFontCache()->
-        GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
+    gfxQuartzFontCache::SharedFontCache()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
+
     return NS_OK;
 }
 
@@ -382,4 +427,68 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
     }
 
     return profile;
+}
+
+void
+gfxPlatformMac::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
+{
+    TextBreakLocatorRef locator;
+    OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakClusterMask,
+                                               &locator);
+    if (status != noErr)
+        return;
+    UniCharArrayOffset breakOffset = 0;
+    UCTextBreakOptions options = kUCTextBreakLeadingEdgeMask;
+    PRUint32 length = aTextRun->GetLength();
+    while (breakOffset < length) {
+        UniCharArrayOffset next;
+        status = UCFindTextBreak(locator, kUCTextBreakClusterMask, options,
+                                 aString, length, breakOffset, &next);
+        if (status != noErr)
+            break;
+        options |= kUCTextBreakIterateMask;
+        PRUint32 i;
+        for (i = breakOffset + 1; i < next; ++i) {
+            gfxTextRun::CompressedGlyph g;
+            // Remember that this character is not the start of a cluster by
+            // setting its glyph data to "not a cluster start", "is a
+            // ligature start", with no glyphs.
+            aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
+        }
+        breakOffset = next;
+    }
+    UCDisposeTextBreakLocator(&locator);
+}
+
+
+eFontPrefLang
+gfxPlatformMac::GetFontPrefLangFor(PRUint8 aUnicodeRange)
+{
+    switch (aUnicodeRange) {
+        case kRangeSetLatin:   return eFontPrefLang_Western;
+        case kRangeCyrillic:   return eFontPrefLang_Cyrillic;
+        case kRangeGreek:      return eFontPrefLang_Greek;
+        case kRangeTurkish:    return eFontPrefLang_Turkish;
+        case kRangeHebrew:     return eFontPrefLang_Hebrew;
+        case kRangeArabic:     return eFontPrefLang_Arabic;
+        case kRangeBaltic:     return eFontPrefLang_Baltic;
+        case kRangeThai:       return eFontPrefLang_Thai;
+        case kRangeKorean:     return eFontPrefLang_Korean;
+        case kRangeJapanese:   return eFontPrefLang_Japanese;
+        case kRangeSChinese:   return eFontPrefLang_ChineseCN;
+        case kRangeTChinese:   return eFontPrefLang_ChineseTW;
+        case kRangeDevanagari: return eFontPrefLang_Devanagari;
+        case kRangeTamil:      return eFontPrefLang_Tamil;
+        case kRangeArmenian:   return eFontPrefLang_Armenian;
+        case kRangeBengali:    return eFontPrefLang_Bengali;
+        case kRangeCanadian:   return eFontPrefLang_Canadian;
+        case kRangeEthiopic:   return eFontPrefLang_Ethiopic;
+        case kRangeGeorgian:   return eFontPrefLang_Georgian;
+        case kRangeGujarati:   return eFontPrefLang_Gujarati;
+        case kRangeGurmukhi:   return eFontPrefLang_Gurmukhi;
+        case kRangeKhmer:      return eFontPrefLang_Khmer;
+        case kRangeMalayalam:  return eFontPrefLang_Malayalam;
+        case kRangeSetCJK:     return eFontPrefLang_CJKSet;
+        default:               return eFontPrefLang_Others;
+    }
 }
