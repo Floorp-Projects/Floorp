@@ -1486,6 +1486,7 @@ gfxTextRun::ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
             }
         }
     }
+    NS_ASSERTION(totalClusterCount > 0, "Ligature involving no clusters??");
     result.mPartAdvance = ligatureWidth*partClusterIndex/totalClusterCount;
     result.mPartWidth = ligatureWidth*partClusterCount/totalClusterCount;
 
@@ -2245,6 +2246,33 @@ gfxTextRun::SortGlyphRuns()
     }
 }
 
+void
+gfxTextRun::SanitizeGlyphRuns()
+{
+    if (mGlyphRuns.Length() <= 1)
+        return;
+
+    // If any glyph run starts with ligature-continuation characters, we need to advance it
+    // to the first "real" character to avoid drawing partial ligature glyphs from wrong font
+    // (seen with U+FEFF in reftest 474417-1, as Core Text eliminates the glyph, which makes
+    // it appear as if a ligature has been formed)
+    PRInt32 i;
+    for (i = mGlyphRuns.Length() - 1; i >= 0; --i) {
+        GlyphRun& run = mGlyphRuns[i];
+        while (mCharacterGlyphs[run.mCharacterOffset].IsLigatureContinuation() &&
+               run.mCharacterOffset < mCharacterCount) {
+            run.mCharacterOffset++;
+        }
+        // if the run has become empty, eliminate it
+        if ((i < mGlyphRuns.Length() - 1 &&
+             run.mCharacterOffset >= mGlyphRuns[i+1].mCharacterOffset) ||
+            (i == mGlyphRuns.Length() - 1 &&
+             run.mCharacterOffset == mCharacterCount)) {
+            mGlyphRuns.RemoveElementAt(i);
+        }
+    }
+}
+
 PRUint32
 gfxTextRun::CountMissingGlyphs()
 {
@@ -2321,6 +2349,13 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 void
 gfxTextRun::RecordSurrogates(const PRUnichar *aString)
 {
+    // !! FIXME !!
+    //
+    // This is called from the platform font implementations when making text runs, but currently it
+    // doesn't do anything because callers do not (consistently, or ever?) set the TEXT_HAS_SURROGATES flag.
+    // However, I have not seen anything that relies on the surrogate flag on glyphs, so perhaps we can
+    // simply eliminate this and remove that flag from gfxTextRunFactory?
+
     if (!(mFlags & gfxTextRunFactory::TEXT_HAS_SURROGATES))
         return;
 
@@ -2409,6 +2444,9 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         PRUint32 end = iter.GetStringEnd();
 #endif
         PRUint32 start = iter.GetStringStart();
+        // These assertions are probably not needed; it's possible for us to assign
+        // different fonts to a base character and a following diacritic.
+        // View http://www.alanwood.net/unicode/cyrillic.html on OS X 10.5 for an example.
         NS_ASSERTION(aSource->IsClusterStart(start),
                      "Started word in the middle of a cluster...");
         NS_ASSERTION(end == aSource->GetLength() || aSource->IsClusterStart(end),

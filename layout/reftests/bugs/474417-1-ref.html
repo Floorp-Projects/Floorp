@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-  <!-- Use the 0-width non-breakable space to force the same kerning behavior
-       as <wbr> -->
-<html>
+  <!-- use monospace to eliminate kerning issues -->
+
+<html style="font-family: monospace;">
   <div style="width: 100em">
-    A&#xFEFF;B
+    AB
   </div>
   <div style="width: 0">
-    A&#xFEFF; B
+    A B
   </div>
 </html>

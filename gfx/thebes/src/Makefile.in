@@ -153,6 +153,10 @@ CPPSRCS	+= \
 CPPSRCS +=      nsUnicodeRange.cpp
 CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 
+ifdef MOZ_CORETEXT
+CPPSRCS += gfxCoreTextFonts.cpp
+endif
+
 CMMSRCS = gfxQuartzFontCache.mm
 
 # Always link with OpenGL/AGL
