@@ -688,6 +688,16 @@ var PlacesOrganizer = {
       gEditItemOverlay.initPanel(itemId, { hiddenRows: ["folderPicker"],
                                            forceReadOnly: readOnly });
 
+      // Dynamically generated queries, like history date containers, have
+      // itemId !=0 and do not exist in history.  For them the panel is
+      // read-only, but empty, since it can't get a valid title for the object.
+      // In such a case we force the title using the selectedNode one, for UI
+      // polishness.
+      if (aSelectedNode.itemId == -1 &&
+          (PlacesUtils.nodeIsDay(aSelectedNode) ||
+           PlacesUtils.nodeIsHost(aSelectedNode)))
+        gEditItemOverlay._element("namePicker").value = aSelectedNode.title;
+
       this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else if (!aSelectedNode && aNodeList[0]) {
