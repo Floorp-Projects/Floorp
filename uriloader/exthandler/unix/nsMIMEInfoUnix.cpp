@@ -40,8 +40,9 @@
 #ifdef MOZ_PLATFORM_HILDON
 #include <glib.h>
 #include <hildon-uri.h>
+#include <hildon-mime.h>
+#include <libosso.h>
 #endif
-
 
 #include "nsMIMEInfoUnix.h"
 #include "nsGNOMERegistry.h"
@@ -50,10 +51,9 @@
 #include "nsDBusHandlerApp.h"
 #endif
 
-
 nsresult
 nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
-{ 
+{
   nsresult rv = nsGNOMERegistry::LoadURL(aURI);
 #ifdef MOZ_PLATFORM_HILDON
   if (NS_FAILED(rv)){
@@ -92,7 +92,7 @@ nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
     return NS_OK;
   }
 #endif
-  
+
   // If we didn't find a VFS handler, fallback.
   return nsMIMEInfoImpl::GetHasDefaultHandler(_retval);
 }
@@ -103,8 +103,12 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
   nsCAutoString nativePath;
   aFile->GetNativePath(nativePath);
 
-  nsCOMPtr<nsIGnomeVFSService> vfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
+#ifdef MOZ_PLATFORM_HILDON
+  if(NS_SUCCEEDED(LaunchDefaultWithDBus(PromiseFlatCString(nativePath).get())))
+    return NS_OK;
+#endif
 
+  nsCOMPtr<nsIGnomeVFSService> vfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
   if (vfs) {
     nsCOMPtr<nsIGnomeVFSMimeApp> app;
     if (NS_SUCCEEDED(vfs->GetAppForMimeType(mType, getter_AddRefs(app))) && app)
@@ -118,6 +122,38 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
 }
 
 #ifdef MOZ_PLATFORM_HILDON
+
+/* This method tries to launch the associated default handler for the given 
+ * mime/file via hildon specific APIs (in this case hildon_mime_open_file* 
+ * which are essetially wrappers to the DBUS mime_open method). 
+ */
+
+nsresult
+nsMIMEInfoUnix::LaunchDefaultWithDBus(const char *aFilePath)
+{
+  const PRInt32 kHILDON_SUCCESS = 1;
+  PRInt32 result = 0;
+  DBusError err;
+  dbus_error_init(&err);
+  
+  DBusConnection *connection = dbus_bus_get(DBUS_BUS_SESSION, &err);
+  if (dbus_error_is_set(&err)) {
+    dbus_error_free(&err);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (nsnull == connection)
+    return NS_ERROR_FAILURE;
+
+  result = hildon_mime_open_file_with_mime_type(connection,
+                                                aFilePath,
+                                                mType.get());
+  if (result != kHILDON_SUCCESS)
+    if (hildon_mime_open_file(connection, aFilePath) != kHILDON_SUCCESS)
+      return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
 
 /* static */ PRBool
 nsMIMEInfoUnix::HandlerExists(const char *aProtocolScheme)
@@ -136,10 +172,10 @@ nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHa
 {
   if (!mPossibleApplications) {
     mPossibleApplications = do_CreateInstance(NS_ARRAY_CONTRACTID);
-    
+
     if (!mPossibleApplications)
       return NS_ERROR_OUT_OF_MEMORY;
-    
+
     GSList *actions = hildon_uri_get_actions(mType.get(), nsnull);
     GSList *actionsPtr = actions;
     while (actionsPtr) {
@@ -155,7 +191,7 @@ nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHa
       nsCString service, objpath, interface;
       app->SetMethod(method);
       app->SetName(NS_ConvertUTF8toUTF16(key));
-      
+
       if (key.FindChar('.', 0) > 0) {
         service.Assign(key);
         objpath.Assign(NS_LITERAL_CSTRING("/")+ key);
@@ -164,13 +200,13 @@ nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHa
       } else {
         service.Assign(NS_LITERAL_CSTRING("com.nokia.")+ key);
         objpath.Assign(NS_LITERAL_CSTRING("/com/nokia/")+ key);
-        interface.Assign(NS_LITERAL_CSTRING("com.nokia.")+ key);  
+        interface.Assign(NS_LITERAL_CSTRING("com.nokia.")+ key);
       }
-      
+
       app->SetService(service);
       app->SetObjectPath(objpath);
       app->SetDBusInterface(interface);
-      
+
       mPossibleApplications->AppendElement(app, PR_FALSE);
     }
     hildon_uri_free_actions(actions);
