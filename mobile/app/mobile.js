@@ -264,7 +264,6 @@ pref("plugins.enabled", true);
 
 #ifdef WINCE
 pref("layout.css.dpi", 96);
-pref("javascript.options.jit.content", false);
 #endif
 
 // content sink control -- controls responsiveness during page load
