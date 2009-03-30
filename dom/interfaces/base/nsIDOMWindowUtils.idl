@@ -320,4 +320,12 @@ interface nsIDOMWindowUtils : nsISupports {
    *               on all windows.  Otherwise, enable them.
    */
   void disableNonTestMouseEvents(in boolean aDisable);
+
+  /**
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
+   */
+  void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
 };
