@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsIFileChannel.h"
 #include "nsILocalFile.h"
+#include "nsCOMArray.h"
 
 #include <Pt.h>
 
@@ -91,7 +92,7 @@ protected:
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;
   PRInt16                mSelectedType;
-	nsCOMPtr <nsISupportsArray> mFiles;
+	nsCOMArray<nsILocalFile> mFiles;
 
 	static char            mLastUsedDirectory[];
 };
