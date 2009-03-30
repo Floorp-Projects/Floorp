@@ -6208,10 +6208,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
+  LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
                           !parentAfterFrame, nsnull)) {
+    LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   nsFrameItems frameItems;
   ConstructFramesFromItemList(state, items, parentFrame, frameItems);
@@ -6621,10 +6624,13 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
+  LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          isAppend && !appendAfterFrame, prevSibling))
+                          isAppend && !appendAfterFrame, prevSibling)) {
+    LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
-
+  }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
