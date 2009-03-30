@@ -499,7 +499,6 @@ struct VMFragment : public Fragment
     uint32 globalShape;
 };
 
-
 static VMFragment*
 getVMFragment(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
 {
@@ -550,17 +549,29 @@ getAnchor(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
 static void
 js_AttemptCompilation(JSTraceMonitor* tm, JSObject* globalObj, jsbytecode* pc)
 {
-    Fragment* f = getLoop(tm, pc, OBJ_SHAPE(globalObj));
-    JS_ASSERT(f->root == f);
     /*
-     * Breath new live into all peer fragments at the designated loop header. If we already
-     * permanently blacklisted the location, undo that.
+     * If we already permanently blacklisted the location, undo that.
      */
+    JS_ASSERT(*(jsbytecode*)pc == JSOP_NOP || *(jsbytecode*)pc == JSOP_LOOP);
+    *(jsbytecode*)pc = JSOP_LOOP;
+
+    /*
+     * Breath new live into all peer fragments at the designated loop header.
+     */
+    Fragment* f = (VMFragment*)getLoop(tm, pc, OBJ_SHAPE(globalObj));
+    if (!f) {
+        /*
+         * If the global object's shape changed, we can't easily find the
+         * corresponding loop header via a hash table lookup. In this
+         * we simply bail here and hope that the fragment has another
+         * outstanding compilation attempt. This case is extremely rare.
+         */
+        return;
+    }
+    JS_ASSERT(f->root == f);
     f = f->first;
     while (f) {
         JS_ASSERT(f->root == f);
-        JS_ASSERT(*(jsbytecode*)f->ip == JSOP_NOP || *(jsbytecode*)f->ip == JSOP_LOOP);
-        *(jsbytecode*)f->ip = JSOP_LOOP;
         --f->recordAttempts;
         f->hits() = HOTLOOP;
         f = f->peer;
