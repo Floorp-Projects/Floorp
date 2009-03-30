@@ -1902,18 +1902,16 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // is not eIFrame or eFrame.  The child documents get a parent widget from
   // logic in nsFrameFrame.  In any case, a child widget is created for the root
   // view of the document.
-  PRBool canCreateScrollbars = PR_FALSE;
-  nsIView* parentView;
+  PRBool canCreateScrollbars = PR_TRUE;
+  nsIView* parentView = nsnull;
   // the top nsPrintObject's widget will always have scrollbars
-  if (frame) {
+  if (frame && frame->GetType() == nsGkAtoms::subDocumentFrame) {
     nsIView* view = frame->GetView();
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     view = view->GetFirstChild();
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     parentView = view;
-  } else {
-    canCreateScrollbars = PR_TRUE;
-    parentView = nsnull;
+    canCreateScrollbars = PR_FALSE;
   }
 
   // create the PresContext
