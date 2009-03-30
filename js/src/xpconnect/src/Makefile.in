@@ -203,11 +203,13 @@ nsXPConnect.$(OBJ_SUFFIX): dom_quickstubs.h
 
 xpcjsruntime.$(OBJ_SUFFIX): dom_quickstubs.h
 
-dom_quickstubs.h dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
-                                     $(srcdir)/qsgen.py \
-                                     $(topsrcdir)/xpcom/idl-parser/header.py \
-                                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
-                                     $(DEPTH)/js/src/mozilla-config.h
+dom_quickstubs.h: dom_quickstubs.cpp
+
+dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
+                    $(srcdir)/qsgen.py \
+                    $(topsrcdir)/xpcom/idl-parser/header.py \
+                    $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                    $(DEPTH)/js/src/mozilla-config.h
 	PYTHONPATH=$(topsrcdir)/xpcom/idl-parser \
 	  $(PYTHON) $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
