@@ -770,7 +770,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                         array.Compact();
                         break;
                     }
-                    nsISupports *obj = array[count-1];
+                    nsISupports* obj = array[count-1];
                     array.RemoveElementAt(count-1);
                     NS_RELEASE(obj);
                 }
