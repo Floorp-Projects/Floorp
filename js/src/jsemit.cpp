@@ -157,8 +157,8 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     jsbytecode *pc;
     JSOp op;
     const JSCodeSpec *cs;
-    uintN extra, depth;
-    intN nuses, ndefs;
+    uintN extra, depth, nuses;
+    intN ndefs;
 
     pc = CG_CODE(cg, target);
     op = (JSOp) *pc;
@@ -177,9 +177,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
             cg->maxStackDepth = depth;
     }
 
-    nuses = cs->nuses;
-    if (nuses < 0)
-        nuses = js_GetVariableStackUseLength(op, pc);
+    nuses = js_GetStackUses(cs, op, pc);
     cg->stackDepth -= nuses;
     JS_ASSERT(cg->stackDepth >= 0);
     if (cg->stackDepth < 0) {
