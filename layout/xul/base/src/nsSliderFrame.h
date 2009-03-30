@@ -47,7 +47,6 @@
 #include "nsIDOMMouseListener.h"
 
 class nsString;
-class nsISupportsArray;
 class nsITimer;
 class nsSliderFrame;
 
