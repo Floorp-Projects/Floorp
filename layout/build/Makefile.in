@@ -194,8 +194,7 @@ endif
 
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
-		../mathml/content/src/$(LIB_PREFIX)gkmathmlcon_s.$(LIB_SUFFIX) \
-		../mathml/base/src/$(LIB_PREFIX)gkmathmlbase_s.$(LIB_SUFFIX) \
+		../mathml/$(LIB_PREFIX)gkmathml_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/mathml/content/src/$(LIB_PREFIX)gkcontentmathml_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
@@ -314,7 +313,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   $(NULL)
 
 ifdef MOZ_MATHML
-LOCAL_INCLUDES	+= -I$(srcdir)/../mathml/content/src
+LOCAL_INCLUDES	+= -I$(srcdir)/../mathml
 endif
 
 ifdef MOZ_SVG
