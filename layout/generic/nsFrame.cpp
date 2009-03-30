@@ -1466,8 +1466,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       dirty.Empty();
     }
     pseudoStackingContext = PR_TRUE;
-  } else {
-    dirty.IntersectRect(dirty, aChild->GetOverflowRect());
   }
 
   if (aBuilder->GetPaintAllFrames()) {
@@ -1476,12 +1474,21 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // No need to descend into aChild to catch placeholders for visible
     // positioned stuff. So see if we can short-circuit frame traversal here.
 
-    // We can stop if aChild's intersection with the dirty area ended up empty.
+    // We can stop if aChild's frame subtree's intersection with the
+    // dirty area is empty.
     // If the child is a scrollframe that we want to ignore, then we need
     // to descend into it because its scrolled child may intersect the dirty
     // area even if the scrollframe itself doesn't.
-    if (dirty.IsEmpty() && aChild != aBuilder->GetIgnoreScrollFrame())
-      return NS_OK;
+    if (aChild != aBuilder->GetIgnoreScrollFrame()) {
+      nsRect childDirty;
+      if (!childDirty.IntersectRect(dirty, aChild->GetOverflowRect()))
+        return NS_OK;
+      // Usually we could set dirty to childDirty now but there's no
+      // benefit, and it can be confusing. It can especially confuse
+      // situations where we're going to ignore a scrollframe's clipping;
+      // we wouldn't want to clip the dirty area to the scrollframe's
+      // bounds in that case.
+    }
 
     // Note that aBuilder->GetRootMovingFrame() is non-null only if we're doing
     // ComputeRepaintRegionForCopy.
