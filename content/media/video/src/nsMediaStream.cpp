@@ -55,10 +55,10 @@
 #include "nsHTMLMediaElement.h"
 #include "nsIDocument.h"
 
-class nsChannelStreamStrategy : public nsMediaStream
+class nsMediaChannelStream : public nsMediaStream
 {
 public:
-  nsChannelStreamStrategy(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  nsMediaChannelStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     nsMediaStream(aDecoder, aChannel, aURI),
     mPosition(0), mCancelled(PR_FALSE)
   {
@@ -104,12 +104,12 @@ protected:
   PRPackedBool mCancelled;
 };
 
-nsresult nsChannelStreamStrategy::Open(nsIStreamListener **aStreamListener)
+nsresult nsMediaChannelStream::Open(nsIStreamListener **aStreamListener)
 {
   return OpenAtOffset(aStreamListener, 0);
 }
 
-nsresult nsChannelStreamStrategy::OpenAtOffset(nsIStreamListener** aStreamListener,
+nsresult nsMediaChannelStream::OpenAtOffset(nsIStreamListener** aStreamListener,
                                                PRInt64 aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -176,7 +176,7 @@ nsresult nsChannelStreamStrategy::OpenAtOffset(nsIStreamListener** aStreamListen
   return NS_OK;
 }
 
-nsresult nsChannelStreamStrategy::Close()
+nsresult nsMediaChannelStream::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   nsAutoLock lock(mLock);
@@ -192,7 +192,7 @@ nsresult nsChannelStreamStrategy::Close()
   return NS_OK;
 }
 
-nsresult nsChannelStreamStrategy::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
+nsresult nsMediaChannelStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
 {
   // The read request pulls from the pipe, not the channels input
   // stream. This allows calling from any thread as the pipe is
@@ -210,25 +210,25 @@ nsresult nsChannelStreamStrategy::Read(char* aBuffer, PRUint32 aCount, PRUint32*
   return rv;
 }
 
-nsresult nsChannelStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset) 
+nsresult nsMediaChannelStream::Seek(PRInt32 aWhence, PRInt64 aOffset) 
 {
   // Default streams cannot be seeked
   return NS_ERROR_FAILURE;
 }
 
-PRInt64 nsChannelStreamStrategy::Tell()
+PRInt64 nsMediaChannelStream::Tell()
 {
   return mPosition;
 }
 
-void nsChannelStreamStrategy::Cancel()
+void nsMediaChannelStream::Cancel()
 {
   mCancelled = PR_TRUE;
   if (mListener)
     mListener->Cancel();
 }
 
-nsIPrincipal* nsChannelStreamStrategy::GetCurrentPrincipal()
+nsIPrincipal* nsMediaChannelStream::GetCurrentPrincipal()
 {
   if (!mListener)
     return nsnull;
@@ -236,20 +236,20 @@ nsIPrincipal* nsChannelStreamStrategy::GetCurrentPrincipal()
   return mListener->GetCurrentPrincipal();
 }
 
-void nsChannelStreamStrategy::Suspend()
+void nsMediaChannelStream::Suspend()
 {
   mChannel->Suspend();
 }
 
-void nsChannelStreamStrategy::Resume()
+void nsMediaChannelStream::Resume()
 {
   mChannel->Resume();
 }
 
-class nsFileStreamStrategy : public nsMediaStream
+class nsMediaFileStream : public nsMediaStream
 {
 public:
-  nsFileStreamStrategy(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  nsMediaFileStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     nsMediaStream(aDecoder, aChannel, aURI)
   {
   }
@@ -306,7 +306,7 @@ private:
   nsRefPtr<nsMediaDecoder> mDecoder;
 };
 
-nsresult nsFileStreamStrategy::Open(nsIStreamListener** aStreamListener)
+nsresult nsMediaFileStream::Open(nsIStreamListener** aStreamListener)
 {
   if (aStreamListener) {
     *aStreamListener = nsnull;
@@ -380,7 +380,7 @@ nsresult nsFileStreamStrategy::Open(nsIStreamListener** aStreamListener)
   return NS_OK;
 }
 
-nsresult nsFileStreamStrategy::Close()
+nsresult nsMediaFileStream::Close()
 {
   nsAutoLock lock(mLock);
   if (mChannel) {
@@ -393,7 +393,7 @@ nsresult nsFileStreamStrategy::Close()
   return NS_OK;
 }
 
-nsresult nsFileStreamStrategy::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
+nsresult nsMediaFileStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
 {
   nsAutoLock lock(mLock);
   if (!mInput)
@@ -401,7 +401,7 @@ nsresult nsFileStreamStrategy::Read(char* aBuffer, PRUint32 aCount, PRUint32* aB
   return mInput->Read(aBuffer, aCount, aBytes);
 }
 
-nsresult nsFileStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset) 
+nsresult nsMediaFileStream::Seek(PRInt32 aWhence, PRInt64 aOffset) 
 {  
   PRUint32 size = 0;
   PRInt64 absoluteOffset = 0;
@@ -427,7 +427,7 @@ nsresult nsFileStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset)
   return rv;
 }
 
-PRInt64 nsFileStreamStrategy::Tell()
+PRInt64 nsMediaFileStream::Tell()
 {
   nsAutoLock lock(mLock);
   if (!mSeekable)
@@ -438,26 +438,26 @@ PRInt64 nsFileStreamStrategy::Tell()
   return offset;
 }
 
-nsIPrincipal* nsFileStreamStrategy::GetCurrentPrincipal()
+nsIPrincipal* nsMediaFileStream::GetCurrentPrincipal()
 {
   return mPrincipal;
 }
 
-void nsFileStreamStrategy::Suspend()
+void nsMediaFileStream::Suspend()
 {
   mChannel->Suspend();
 }
 
-void nsFileStreamStrategy::Resume()
+void nsMediaFileStream::Resume()
 {
   mChannel->Resume();
 }
 
-class nsHttpStreamStrategy : public nsChannelStreamStrategy
+class nsMediaHttpStream : public nsMediaChannelStream
 {
 public:
-  nsHttpStreamStrategy(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
-    nsChannelStreamStrategy(aDecoder, aChannel, aURI),
+  nsMediaHttpStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+    nsMediaChannelStream(aDecoder, aChannel, aURI),
     mAtEOF(PR_FALSE)
   {
   }
@@ -478,7 +478,7 @@ private:
   PRPackedBool mAtEOF;
 };
 
-nsresult nsHttpStreamStrategy::OpenInternal(nsIChannel* aChannel,
+nsresult nsMediaHttpStream::OpenInternal(nsIChannel* aChannel,
                                             PRInt64 aOffset)
 {
   nsAutoLock lock(mLock);
@@ -489,7 +489,7 @@ nsresult nsHttpStreamStrategy::OpenInternal(nsIChannel* aChannel,
 class nsByteRangeEvent : public nsRunnable 
 {
 public:
-  nsByteRangeEvent(nsHttpStreamStrategy* aStrategy, 
+  nsByteRangeEvent(nsMediaHttpStream* aStrategy, 
                    nsIURI* aURI, 
                    PRInt64 aOffset) :
     mStrategy(aStrategy),
@@ -536,14 +536,14 @@ public:
   }
 
 private:
-  nsHttpStreamStrategy* mStrategy;
+  nsMediaHttpStream* mStrategy;
   nsMediaDecoder* mDecoder;
   nsIURI* mURI;
   PRInt64 mOffset;
   nsresult mResult;
 };
 
-nsresult nsHttpStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset)
+nsresult nsMediaHttpStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
   PRInt64 totalBytes = mDecoder->GetStatistics().mTotalBytes;
   {
@@ -652,7 +652,7 @@ nsresult nsHttpStreamStrategy::Seek(PRInt32 aWhence, PRInt64 aOffset)
   return rv;
 }
 
-PRInt64 nsHttpStreamStrategy::Tell()
+PRInt64 nsMediaHttpStream::Tell()
 {
   // Handle the case of a seek to EOF by liboggz
   // (See Seek for details)
@@ -683,13 +683,13 @@ nsMediaStream::Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
   nsMediaStream* stream;
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(channel);
   if (hc) {
-    stream = new nsHttpStreamStrategy(aDecoder, channel, aURI);
+    stream = new nsMediaHttpStream(aDecoder, channel, aURI);
   } else {
     nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(channel);
     if (fc) {
-      stream = new nsFileStreamStrategy(aDecoder, channel, aURI);
+      stream = new nsMediaFileStream(aDecoder, channel, aURI);
     } else {
-      stream = new nsChannelStreamStrategy(aDecoder, channel, aURI);
+      stream = new nsMediaChannelStream(aDecoder, channel, aURI);
     }
   }
   if (!stream)
