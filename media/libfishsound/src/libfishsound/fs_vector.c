@@ -58,7 +58,6 @@ fs_vector_new (FishSoundCmpFunc cmp)
   FishSoundVector * vector;
 
   vector = fs_malloc (sizeof (FishSoundVector));
-  if (vector == NULL) return NULL;
 
   vector->max_elements = 0;
   vector->nr_elements = 0;
@@ -177,8 +176,6 @@ fs_vector_grow (FishSoundVector * vector)
 void *
 fs_vector_insert (FishSoundVector * vector, void * data)
 {
-  if (vector == NULL) return NULL;
-
   if (fs_vector_grow (vector) == NULL)
     return NULL;
 

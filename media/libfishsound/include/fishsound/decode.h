@@ -79,9 +79,7 @@ typedef int (*FishSoundDecoded_FloatIlv) (FishSound * fsound, float ** pcm,
  * \param fsound A FishSound* handle (created with mode FISH_SOUND_DECODE)
  * \param decoded The callback to call
  * \param user_data Arbitrary user data to pass to the callback
- * \retval 0 Success
- * \retval FISH_SOUND_ERR_BAD Not a valid FishSound* handle
- * \retval FISH_SOUND_ERR_OUT_OF_MEMORY Out of memory
+ * \returns 0 on success, -1 on failure
  */
 int fish_sound_set_decoded_float (FishSound * fsound,
 				  FishSoundDecoded_Float decoded,
@@ -93,9 +91,7 @@ int fish_sound_set_decoded_float (FishSound * fsound,
  * \param fsound A FishSound* handle (created with mode FISH_SOUND_DECODE)
  * \param decoded The callback to call
  * \param user_data Arbitrary user data to pass to the callback
- * \retval 0 Success
- * \retval FISH_SOUND_ERR_BAD Not a valid FishSound* handle
- * \retval FISH_SOUND_ERR_OUT_OF_MEMORY Out of memory
+ * \returns 0 on success, -1 on failure
  */
 int fish_sound_set_decoded_float_ilv (FishSound * fsound,
 				      FishSoundDecoded_FloatIlv decoded,
@@ -117,8 +113,6 @@ int fish_sound_set_decoded_float_ilv (FishSound * fsound,
  * callback returning FISH_SOUND_STOP_ERR before any input bytes were consumed.
  * This will occur when PCM is decoded from previously buffered input, and
  * stopping is immediately requested.
- * \retval FISH_SOUND_ERR_BAD Not a valid FishSound* handle
- * \retval FISH_SOUND_ERR_OUT_OF_MEMORY Out of memory
  */
 long fish_sound_decode (FishSound * fsound, unsigned char * buf, long bytes);
 

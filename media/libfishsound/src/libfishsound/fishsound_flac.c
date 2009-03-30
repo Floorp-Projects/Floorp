@@ -141,7 +141,6 @@ fs_flac_write_callback(const FLAC__StreamDecoder *decoder,
   FishSound* fsound = (FishSound*)client_data;
   FishSoundFlacInfo* fi = (FishSoundFlacInfo *)fsound->codec_data;
   int i, j, channels, blocksize, offset;
-  float * ipcm;
 
   channels = frame->header.channels;
   blocksize = frame->header.blocksize;
@@ -159,10 +158,7 @@ fs_flac_write_callback(const FLAC__StreamDecoder *decoder,
 	FishSoundDecoded_FloatIlv dfi;
 	float* retpcm;
 
-        if ((ipcm = realloc(fi->ipcm, sizeof(float) * channels * blocksize)) == NULL)
-          return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-
-	fi->ipcm = ipcm;
+	fi->ipcm = realloc(fi->ipcm, sizeof(float) * channels * blocksize);
 	retpcm = (float*) fi->ipcm;
 	for (i = 0; i < blocksize; i++) {
 	  offset = i * channels;
@@ -177,9 +173,7 @@ fs_flac_write_callback(const FLAC__StreamDecoder *decoder,
 	float *d; /* de-interleave dest */
 
         for (j = 0; j < channels; j++) {
-          if ((ipcm = realloc(fi->pcm_out[j], sizeof(float) * blocksize)) == NULL)
-            return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-	  fi->pcm_out[j] = ipcm;
+	  fi->pcm_out[j] = realloc(fi->pcm_out[j], sizeof(float) * blocksize);
         }
 	for (i = 0; i < blocksize; i++)
 	  for (j = 0; j < channels; j++) {
@@ -237,8 +231,6 @@ static void*
 fs_flac_decode_header (FishSound * fsound, unsigned char *buf, long bytes)
 {
   FishSoundFlacInfo *fi = fsound->codec_data;
-
-  if (bytes < 9) return NULL;
   if (buf[0] != 0x7f) return NULL;
   if (strncmp((char *)buf+1, "FLAC", 4) != 0) return NULL;
   fi->version.major = buf[5];
@@ -260,7 +252,6 @@ fs_flac_decode_header (FishSound * fsound, unsigned char *buf, long bytes)
     return NULL;
   }
 
-#if defined (HAVE_FLAC_1_1_2)
   FLAC__stream_decoder_set_read_callback(fi->fsd, fs_flac_read_callback);
   FLAC__stream_decoder_set_write_callback(fi->fsd, fs_flac_write_callback);
   FLAC__stream_decoder_set_metadata_callback(fi->fsd, fs_flac_meta_callback);
@@ -269,21 +260,6 @@ fs_flac_decode_header (FishSound * fsound, unsigned char *buf, long bytes)
 
   if (FLAC__stream_decoder_init(fi->fsd) != FLAC__STREAM_DECODER_SEARCH_FOR_METADATA)
     return NULL;
-#elif defined (HAVE_FLAC_1_1_3)
-  if (FLAC__stream_decoder_init_stream
-      (fi->fsd,
-       fs_flac_read_callback,
-       NULL, /* seek callback */
-       NULL, /* tell callback */
-       NULL, /* length callback */
-       NULL, /* EOF callback */
-       fs_flac_write_callback,
-       fs_flac_meta_callback,
-       fs_flac_error_callback,
-       fsound
-       ) != FLAC__STREAM_DECODER_SEARCH_FOR_METADATA)
-     return NULL;
-#endif
 
   return fi->fsd;
 }
@@ -304,14 +280,12 @@ fs_flac_decode (FishSound * fsound, unsigned char * buf, long bytes)
 #endif
       return -1;
     }
-    if ((fi->buffer = fs_malloc(sizeof(unsigned char)*bytes)) == NULL)
-      return FISH_SOUND_ERR_OUT_OF_MEMORY;
-
+    fi->buffer = fs_malloc(sizeof(unsigned char)*bytes);
     memcpy(fi->buffer, buf+9, bytes-9);
     fi->bufferlength = bytes-9;
   }
   else if (fi->packetno <= fi->header_packets){
-    unsigned char* tmp;
+    unsigned char* tmp = fs_malloc(sizeof(unsigned char)*(fi->bufferlength+bytes));
 #ifdef DEBUG
     printf("fs_flac_decode: handling header (fi->header_packets = %d)\n",
            fi->header_packets);
@@ -326,14 +300,8 @@ fs_flac_decode (FishSound * fsound, unsigned char * buf, long bytes)
 #ifdef DEBUG
       printf ("fs_flac_decode: got vorbiscomments len %d\n", len);
 #endif
-      if (fish_sound_comments_decode (fsound, buf+4, len) == FISH_SOUND_ERR_OUT_OF_MEMORY) {
-        fi->packetno++;
-        return FISH_SOUND_ERR_OUT_OF_MEMORY;
-      }
+      fish_sound_comments_decode (fsound, buf+4, len);
     }
-
-    if ((tmp = fs_malloc(sizeof(unsigned char)*(fi->bufferlength+bytes))) == NULL)
-      return FISH_SOUND_ERR_OUT_OF_MEMORY;
 
     memcpy(tmp, fi->buffer, fi->bufferlength);
     memcpy(tmp+fi->bufferlength, buf, bytes);
@@ -341,29 +309,17 @@ fs_flac_decode (FishSound * fsound, unsigned char * buf, long bytes)
     fs_free(fi->buffer);
     fi->buffer = tmp;
     if (fi->packetno == fi->header_packets) {
-      if (FLAC__stream_decoder_process_until_end_of_metadata(fi->fsd) == false) {
-        goto dec_err;
-      }
+      FLAC__stream_decoder_process_until_end_of_metadata(fi->fsd);
       fs_free(fi->buffer);
     }
   } else {
     fi->buffer = buf;
     fi->bufferlength = bytes;
-    if (FLAC__stream_decoder_process_single(fi->fsd) == false) {
-      goto dec_err;
-    }
+    FLAC__stream_decoder_process_single(fi->fsd);
   }
   fi->packetno++;
 
   return 0;
-
-dec_err:
-    switch (FLAC__stream_decoder_get_state(fi->fsd)) {
-    case FLAC__STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
-      return FISH_SOUND_ERR_OUT_OF_MEMORY;
-    default:
-      return FISH_SOUND_ERR_GENERIC;
-    }
 }
 #else /* !FS_DECODE */
 
@@ -397,9 +353,7 @@ fs_flac_enc_write_callback(const FLAC__StreamEncoder *encoder,
         printf("fs_flac_enc_write_callback: generating FLAC header packet: "
                "%c%c%c%c\n", buffer[0], buffer[1], buffer[2], buffer[3]);
 #endif
-	if ((fi->buffer = (unsigned char*)fs_malloc(sizeof(unsigned char)*(bytes+9))) == NULL)
-          return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
-
+	fi->buffer = (unsigned char*)malloc(sizeof(unsigned char)*(bytes+9));
 	fi->buffer[0] = 0x7f;
 	fi->buffer[1] = 0x46; /* 'F' */
 	fi->buffer[2] = 0x4c; /* 'L' */
@@ -417,11 +371,7 @@ fs_flac_enc_write_callback(const FLAC__StreamEncoder *encoder,
         /* Make a temporary copy of the metadata header to pass to the user
          * callback.
          */
-	unsigned char* tmp;
-
-        if ((tmp = (unsigned char*)fs_malloc(sizeof(unsigned char)*(bytes+fi->bufferlength))) == NULL)
-          return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
-
+	unsigned char* tmp = (unsigned char*)malloc(sizeof(unsigned char)*(bytes+fi->bufferlength));
 	memcpy (tmp, fi->buffer, fi->bufferlength);
 	memcpy (tmp+fi->bufferlength, buffer, bytes);
 	fs_free(fi->buffer);
@@ -512,8 +462,7 @@ fs_flac_encode_vcentry (const FishSoundComment * comment)
     length += value_len + 1;
   }
 
-  if ((entry = fs_malloc (length)) == NULL)
-    return NULL;
+  entry = fs_malloc (length);
 
   /* We assume that comment->name, value are NUL terminated, as they were
    * produced by our own comments.c */
@@ -533,7 +482,7 @@ static FLAC__StreamMetadata *
 fs_flac_encode_vorbiscomments (FishSound * fsound)
 {
   FishSoundFlacInfo * fi = fsound->codec_data;
-  FLAC__StreamMetadata * metadata = NULL;
+  FLAC__StreamMetadata * metadata;
   const FishSoundComment * comment;
   unsigned int i=0, length=0, total_length;
   FLAC__VCEntry * comments;
@@ -553,13 +502,11 @@ fs_flac_encode_vorbiscomments (FishSound * fsound)
 
   if (length == 0) return NULL;
 
-  if ((comments = (FLAC__VCEntry *)fs_malloc (sizeof(FLAC__VCEntry) * length)) == NULL)
-    goto encode_vc_oom;
+  comments = (FLAC__VCEntry *)fs_malloc (sizeof(FLAC__VCEntry) * length);
   
   for (comment = fish_sound_comment_first (fsound); comment;
        comment = fish_sound_comment_next (fsound, comment)) {
-    if ((comments[i].entry = fs_flac_encode_vcentry (comment)) == NULL) {
-    }
+    comments[i].entry = fs_flac_encode_vcentry (comment);
     comments[i].length = strlen((char *)comments[i].entry);
 
     /* In the generated vorbiscomment data, each entry is preceded by a
@@ -568,9 +515,7 @@ fs_flac_encode_vorbiscomments (FishSound * fsound)
     i++;
   }
 
-  if ((metadata = (FLAC__StreamMetadata *) fs_malloc (sizeof (*metadata))) == NULL)
-    goto encode_vc_oom;
-
+  metadata = (FLAC__StreamMetadata *) fs_malloc (sizeof (*metadata));
   metadata->type = FLAC__METADATA_TYPE_VORBIS_COMMENT;
   metadata->is_last = true;
   metadata->length = total_length;
@@ -582,21 +527,6 @@ fs_flac_encode_vorbiscomments (FishSound * fsound)
   fi->enc_vc_metadata = metadata;
 
   return metadata;
-
-encode_vc_oom:
-  if (metadata != NULL)
-    fs_free (metadata);
-
-  /* Unwind allocated comment entries */
-  for (i--; i >= 0; i--) {
-    if (comments[i].entry != NULL)
-      fs_free (comments[i].entry);
-  }
-
-  if (comments != NULL)
-    fs_free (comments);
-
-  return NULL;
 }
 
 static FishSound *
@@ -609,51 +539,26 @@ fs_flac_enc_headers (FishSound * fsound)
   FLAC__stream_encoder_set_channels(fi->fse, fsound->info.channels);
   FLAC__stream_encoder_set_sample_rate(fi->fse, fsound->info.samplerate);
   FLAC__stream_encoder_set_bits_per_sample(fi->fse, BITS_PER_SAMPLE);
-
-#if defined (HAVE_FLAC_1_1_2)
   FLAC__stream_encoder_set_write_callback(fi->fse, fs_flac_enc_write_callback);
   FLAC__stream_encoder_set_metadata_callback(fi->fse, fs_flac_enc_meta_callback);
   FLAC__stream_encoder_set_client_data(fi->fse, fsound);
-#endif
 
   metadata = fs_flac_encode_vorbiscomments (fsound);
   if (metadata != NULL)
     FLAC__stream_encoder_set_metadata (fi->fse, &metadata, 1);
 
   /* FLAC__stream_encoder_set_total_samples_estimate(fi->fse, ...);*/
-
-#if defined (HAVE_FLAC_1_1_2)
   if (FLAC__stream_encoder_init(fi->fse) != FLAC__STREAM_ENCODER_OK)
     return NULL;
-#elif defined (HAVE_FLAC_1_1_3)
-  if (FLAC__stream_encoder_init_stream
-      (fi->fse,
-       fs_flac_enc_write_callback,
-       NULL, /* seek callback */
-       NULL, /* tell callback */
-       fs_flac_enc_meta_callback,
-       fsound
-       ) != FLAC__STREAM_ENCODER_OK)
-     return NULL;
-
-#endif
 
   return fsound;
-}
-
-static long
-fs_flac_encode_fatal (FishSoundFlacInfo *fi, long err)
-{
-  FLAC__stream_encoder_delete (fi->fse);
-  fi->fse = NULL;
-  return err;
 }
 
 static long
 fs_flac_encode_f (FishSound * fsound, float * pcm[], long frames)
 {
   FishSoundFlacInfo *fi = fsound->codec_data;
-  FLAC__int32 *buffer, *ipcm;
+  FLAC__int32 *buffer;
   float * p, norm = (1 << (BITS_PER_SAMPLE - 1));
   long i;
   int j, channels = fsound->info.channels;
@@ -662,10 +567,7 @@ fs_flac_encode_f (FishSound * fsound, float * pcm[], long frames)
   printf("fs_flac_encode_f: IN, frames = %ld\n", frames);
 #endif
 
-  if ((ipcm = realloc(fi->ipcm, sizeof(FLAC__int32) * channels * frames)) == NULL)
-    return FISH_SOUND_ERR_OUT_OF_MEMORY;
-
-  fi->ipcm = ipcm;
+  fi->ipcm = realloc(fi->ipcm, sizeof(FLAC__int32) * channels * frames);
   buffer = (FLAC__int32*) fi->ipcm;
   for (i = 0; i < frames; i++) {
     for (j = 0; j < channels; j++) {
@@ -679,17 +581,7 @@ fs_flac_encode_f (FishSound * fsound, float * pcm[], long frames)
 
   /* We could have used FLAC__stream_encoder_process() and a more direct
    * conversion loop above, rather than converting and interleaving. */
-  if (FLAC__stream_encoder_process_interleaved(fi->fse, buffer, frames) == false) {
-    switch (FLAC__stream_encoder_get_state (fi->fse)) {
-    case FLAC__STREAM_ENCODER_OK:
-    case FLAC__STREAM_ENCODER_UNINITIALIZED:
-      break;
-    case FLAC__STREAM_ENCODER_MEMORY_ALLOCATION_ERROR:
-      return fs_flac_encode_fatal (fi, FISH_SOUND_ERR_OUT_OF_MEMORY);
-    default:
-      return fs_flac_encode_fatal (fi, FISH_SOUND_ERR_GENERIC);
-    }
-  }
+  FLAC__stream_encoder_process_interleaved(fi->fse, buffer, frames);
 
   fi->packetno++;
 
@@ -700,7 +592,7 @@ static long
 fs_flac_encode_f_ilv (FishSound * fsound, float ** pcm, long frames)
 {
   FishSoundFlacInfo *fi = fsound->codec_data;
-  FLAC__int32 *buffer, *ipcm;
+  FLAC__int32 *buffer;
   float * p = (float*)pcm, norm = (1 << (BITS_PER_SAMPLE - 1));
   long i, length = frames * fsound->info.channels;
 
@@ -708,10 +600,7 @@ fs_flac_encode_f_ilv (FishSound * fsound, float ** pcm, long frames)
   printf("fs_flac_encode_f_ilv: IN, frames = %ld\n", frames);
 #endif
 
-  if ((ipcm = realloc(fi->ipcm, sizeof(FLAC__int32)*fsound->info.channels*frames)) == NULL)
-    return FISH_SOUND_ERR_OUT_OF_MEMORY;
-
-  fi->ipcm = ipcm;
+  fi->ipcm = realloc(fi->ipcm, sizeof(FLAC__int32)*fsound->info.channels*frames);
   buffer = (FLAC__int32*) fi->ipcm;
   for (i=0; i<length; i++)
     buffer[i] = p[i] * norm;
@@ -719,17 +608,7 @@ fs_flac_encode_f_ilv (FishSound * fsound, float ** pcm, long frames)
   if (fi->packetno == 0)
     fs_flac_enc_headers (fsound);
 
-  if (FLAC__stream_encoder_process_interleaved(fi->fse, buffer, frames) == false) {
-    switch (FLAC__stream_encoder_get_state (fi->fse)) {
-    case FLAC__STREAM_ENCODER_OK:
-    case FLAC__STREAM_ENCODER_UNINITIALIZED:
-      break;
-    case FLAC__STREAM_ENCODER_MEMORY_ALLOCATION_ERROR:
-      return fs_flac_encode_fatal (fi, FISH_SOUND_ERR_OUT_OF_MEMORY);
-    default:
-      return fs_flac_encode_fatal (fi, FISH_SOUND_ERR_GENERIC);
-    }
-  }
+  FLAC__stream_encoder_process_interleaved(fi->fse, buffer, frames);
 
   fi->packetno++;
 
@@ -859,7 +738,6 @@ fish_sound_flac_codec (void)
   FishSoundCodec * codec;
 
   codec = (FishSoundCodec *) fs_malloc (sizeof (FishSoundCodec));
-  if (codec == NULL) return NULL;
 
   codec->format.format = FISH_SOUND_FLAC;
   codec->format.name = "Flac (Xiph.Org)";
