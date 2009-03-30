@@ -343,7 +343,36 @@ js_GetVariableBytecodeLength(jsbytecode *pc);
  * or JSOP_NEWARRAY (for such ops, JSCodeSpec.nuses is -1).
  */
 extern uintN
-js_GetVariableStackUseLength(JSOp op, jsbytecode *pc);
+js_GetVariableStackUses(JSOp op, jsbytecode *pc);
+
+/*
+ * Find the number of stack slots defined by JSOP_ENTERBLOCK (for this op,
+ * JSCodeSpec.ndefs is -1).
+ */
+extern uintN
+js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc);
+
+static JS_INLINE uintN
+js_GetStackUses(const JSCodeSpec *cs, JSOp op, jsbytecode *pc)
+{
+    JS_ASSERT(cs == &js_CodeSpec[op]);
+    if (cs->nuses >= 0)
+        return cs->nuses;
+    return js_GetVariableStackUses(op, pc);
+}
+
+static JS_INLINE uintN
+js_GetStackDefs(JSContext *cx, const JSCodeSpec *cs, JSOp op, JSScript *script,
+                jsbytecode *pc)
+{
+    JS_ASSERT(cs == &js_CodeSpec[op]);
+    if (cs->ndefs >= 0)
+        return cs->ndefs;
+
+    /* Only JSOP_ENTERBLOCK has a variable number of stack defs. */
+    JS_ASSERT(op == JSOP_ENTERBLOCK);
+    return js_GetEnterBlockStackDefs(cx, script, pc);
+}
 
 #ifdef DEBUG
 /*
