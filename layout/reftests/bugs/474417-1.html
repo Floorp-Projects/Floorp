@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-  <!-- Use the 0-width non-breakable space to give the same heights as the
-       reference -->
-<html>
-  <div style="width: 100em">
-    A&#xFEFF;<wbr>B
+  <!-- use monospace to eliminate kerning issues -->
+
+<html style="font-family: monospace;">
+  <div style="width: 100em;">
+    A<wbr>B
   </div>
   <div style="width: 0">
-    A&#xFEFF;<wbr>B
+    A<wbr>B
   </div>
 </html>
