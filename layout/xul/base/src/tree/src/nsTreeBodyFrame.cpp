@@ -350,7 +350,7 @@ nsTreeBodyFrame::EnsureBoxObject()
   if (!mTreeBoxObject) {
     nsIContent* parent = GetBaseElement();
     if (parent) {
-      nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(parent->GetDocument());
+      nsIDocument* nsDoc = parent->GetDocument();
       if (!nsDoc) // there may be no document, if we're called from Destroy()
         return;
       nsCOMPtr<nsIBoxObject> box;
