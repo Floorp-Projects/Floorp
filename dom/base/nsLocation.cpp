@@ -242,67 +242,6 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
   return NS_OK;
 }
 
-// Walk up the docshell hierarchy and find a usable base URI. Basically 
-// anything that would allow a relative uri.
-// XXXbz we don't need this for javascript: URIs anymore.  Do we need
-// it for about:blank?  I would think that we don't, and that we can
-// nuke this code.
-nsresult
-nsLocation::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent,
-                              nsIURI ** aUsableURI)
-{
-  if (!aBaseURI || !aParent)
-    return NS_ERROR_FAILURE;
-  NS_ENSURE_ARG_POINTER(aUsableURI);
-
-  *aUsableURI = nsnull;
-  nsresult rv = NS_OK;    
-  nsCOMPtr<nsIDocShell> parentDS = aParent;
-  nsCOMPtr<nsIURI> baseURI = aBaseURI;
-  nsCOMPtr<nsIIOService> ioService =
-    do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-
-  while(NS_SUCCEEDED(rv) && baseURI) {
-    // Check if the current base uri supports relative uris.
-    // We make this check by looking at the protocol flags of
-    // the protocol handler. If the protocol flags has URI_NORELATIVE,
-    // it means that the base uri does not support relative uris.
-    nsCAutoString scheme;
-    baseURI->GetScheme(scheme);
-    nsCOMPtr<nsIProtocolHandler> protocolHandler;
-    // Get the protocol handler for the base uri.
-    ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(protocolHandler));
-    if (!protocolHandler)
-      return NS_ERROR_FAILURE;
-    PRUint32 pFlags; // Is there a default value for the protocol flags?
-    protocolHandler->GetProtocolFlags(&pFlags);
-    if (!(pFlags & nsIProtocolHandler::URI_NORELATIVE)) {
-      *aUsableURI = baseURI;
-      NS_ADDREF(*aUsableURI);
-      return NS_OK;
-    }
-
-    // Get the same type parent docshell
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem(do_QueryInterface(parentDS));
-    if (!docShellAsTreeItem)
-      return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDocShellTreeItem> parentDSTreeItem;
-    docShellAsTreeItem->GetSameTypeParent(getter_AddRefs(parentDSTreeItem));      
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(parentDSTreeItem));
-
-    // Get the parent docshell's uri
-    if (webNav) {
-      rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
-      parentDS = do_QueryInterface(parentDSTreeItem);
-    }
-    else
-      return NS_ERROR_FAILURE;
-  }  // while 
-
-  return rv;
-}
-
-
 nsresult
 nsLocation::GetURI(nsIURI** aURI, PRBool aGetInnermostURI)
 {
@@ -603,22 +542,15 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
                             PRBool aReplace)
 {
   nsresult result;
-  nsCOMPtr<nsIURI> newUri, baseURI;
+  nsCOMPtr<nsIURI> newUri;
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
 
-  // Try to make sure the base url is something that will be useful. 
-  result = FindUsableBaseURI(aBase,  docShell, getter_AddRefs(baseURI));
-  if (!baseURI)  {
-    // If nothing useful was found, just use what you have.
-    baseURI = aBase;
-  }
-
   nsCAutoString docCharset;
   if (NS_SUCCEEDED(GetDocumentCharacterSetForURI(aHref, docCharset)))
-    result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), baseURI);
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), aBase);
   else
-    result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, baseURI);
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, aBase);
 
   if (newUri) {
     /* Check with the scriptContext if it is currently processing a script tag.

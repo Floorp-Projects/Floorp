@@ -4331,9 +4331,6 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   PRUint32 geckoKeyCode = 0;
-  PRUnichar charCode = 0;
-  if ([characters length])
-    charCode = [characters characterAtIndex:0];
 
   switch (keyCode)
   {
@@ -4415,7 +4412,8 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
 
     default:
       // if we haven't gotten the key code already, look at the char code
-      geckoKeyCode = GetGeckoKeyCodeFromChar(charCode);
+      if ([characters length])
+        geckoKeyCode = GetGeckoKeyCodeFromChar([characters characterAtIndex:0]);
   }
 
   return geckoKeyCode;

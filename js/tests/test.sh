@@ -373,15 +373,13 @@ pattern="TEST_BRANCH=($branch|[.][*]), TEST_REPO=($repo|[.][*]), TEST_BUILDTYPE=
 
 if [[ -z "$timeouts" ]]; then
     echo "# exclude tests that time out" >> $excludetestsfile
-#    echo "$pattern .*TEST_EXITSTATUS=TIMED OUT," >> $excludetestsfile
-    egrep "$pattern .*TEST_EXITSTATUS=TIMED OUT," failures.txt | \
+    egrep "$pattern .*TEST_EXITSTATUS=[^,]*TIMED OUT[^,]*," failures.txt | \
         sed 's/.*TEST_ID=\([^,]*\),.*/\1/' | sort -u >> $excludetestsfile
 fi
 
 if [[ -z "$crashes" ]]; then
     echo "# exclude tests that crash" >> $excludetestsfile
-#    echo "$pattern .*TEST_EXITSTATUS=(CRASHED|ABNORMAL)" >> $excludetestsfile
-    egrep "$pattern .*TEST_EXITSTATUS=(CRASHED|ABNORMAL)" failures.txt  | \
+    egrep "$pattern .*TEST_EXITSTATUS=[^,]*(CRASHED|ABNORMAL)[^,]*" failures.txt  | \
         sed 's/.*TEST_ID=\([^,]*\),.*/\1/' | sort -u >> $excludetestsfile
 
 fi

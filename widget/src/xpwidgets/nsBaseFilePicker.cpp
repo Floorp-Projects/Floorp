@@ -124,7 +124,9 @@ NS_IMETHODIMP
 nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIStringBundle> stringBundle;
 
   rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, getter_AddRefs(stringBundle));

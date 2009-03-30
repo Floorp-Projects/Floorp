@@ -233,22 +233,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   if (!kid)
     return NS_OK;
 
-  // GetCanvasTM includes a device pixel to CSS pixel scaling. Since non-SVG
-  // content takes care of this itself, we need to remove this pre-scaling from
-  // the matrix returned by GetTMIncludingOffset before painting our children.
-  float cssPxPerDevPx =
-    PresContext()->AppUnitsToFloatCSSPixels(
-                                PresContext()->AppUnitsPerDevPixel());
-  nsCOMPtr<nsIDOMSVGMatrix> cssPxToDevPxMatrix;
-  NS_NewSVGMatrix(getter_AddRefs(cssPxToDevPxMatrix),
-                  cssPxPerDevPx, 0.0f,
-                  0.0f, cssPxPerDevPx);
-
-  nsCOMPtr<nsIDOMSVGMatrix> localTM = GetTMIncludingOffset();
-
-  // POST-multiply px conversion!
-  nsCOMPtr<nsIDOMSVGMatrix> tm;
-  localTM->Multiply(cssPxToDevPxMatrix, getter_AddRefs(tm));
+  nsCOMPtr<nsIDOMSVGMatrix> tm = GetUnZoomedTMIncludingOffset();
 
   gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(tm);
 
@@ -280,8 +265,8 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
     static_cast<nsSVGElement*>(mContent)->
       GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-    // tm already includes the x,y offset
-    nsSVGUtils::SetClipRect(gfx, localTM, 0.0f, 0.0f, width, height);
+    nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+    nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
   }
 
   gfx->Multiply(matrix);
@@ -301,7 +286,8 @@ nsSVGForeignObjectFrame::TransformPointFromOuterPx(const nsPoint &aIn,
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
+  nsCOMPtr<nsIDOMSVGMatrix> tm = GetUnZoomedTMIncludingOffset();
+
   nsCOMPtr<nsIDOMSVGMatrix> inverse;
   nsresult rv = tm->Inverse(getter_AddRefs(inverse));
   if (NS_FAILED(rv))
@@ -325,8 +311,9 @@ nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
   NS_ASSERTION(*aOutAncestor, "How did we end up without an outer frame?");
 
   /* Return the matrix back to the root, factoring in the x and y offsets. */
-  nsCOMPtr<nsIDOMSVGMatrix> matrix = GetTMIncludingOffset();
-  return nsSVGUtils::ConvertSVGMatrixToThebes(matrix);
+  nsCOMPtr<nsIDOMSVGMatrix> tm = GetUnZoomedTMIncludingOffset();
+
+  return nsSVGUtils::ConvertSVGMatrixToThebes(tm);
 }
  
 NS_IMETHODIMP_(nsIFrame*)
@@ -513,22 +500,6 @@ nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 //----------------------------------------------------------------------
 
 already_AddRefed<nsIDOMSVGMatrix>
-nsSVGForeignObjectFrame::GetTMIncludingOffset()
-{
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
-  if (!ctm)
-    return nsnull;
-
-  nsSVGForeignObjectElement *fO =
-    static_cast<nsSVGForeignObjectElement*>(mContent);
-  float x, y;
-  fO->GetAnimatedLengthValues(&x, &y, nsnull);
-  nsIDOMSVGMatrix* matrix;
-  ctm->Translate(x, y, &matrix);
-  return matrix;
-}
-
-already_AddRefed<nsIDOMSVGMatrix>
 nsSVGForeignObjectFrame::GetCanvasTM()
 {
   if (!GetMatrixPropagation()) {
@@ -563,6 +534,34 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 
 //----------------------------------------------------------------------
 // Implementation helpers
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGForeignObjectFrame::GetUnZoomedTMIncludingOffset()
+{
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+  if (!ctm)
+    return nsnull;
+
+  nsSVGForeignObjectElement *fO =
+    static_cast<nsSVGForeignObjectElement*>(mContent);
+  float x, y;
+  fO->GetAnimatedLengthValues(&x, &y, nsnull);
+  nsCOMPtr<nsIDOMSVGMatrix> localTM;
+  ctm->Translate(x, y, getter_AddRefs(localTM));
+
+  float cssPxPerDevPx =
+    PresContext()->AppUnitsToFloatCSSPixels(
+                                PresContext()->AppUnitsPerDevPixel());
+  nsCOMPtr<nsIDOMSVGMatrix> cssPxToDevPxMatrix;
+  NS_NewSVGMatrix(getter_AddRefs(cssPxToDevPxMatrix),
+                  cssPxPerDevPx, 0.0f,
+                  0.0f, cssPxPerDevPx);
+
+  // POST-multiply px conversion!
+  nsIDOMSVGMatrix* matrix;
+  localTM->Multiply(cssPxToDevPxMatrix, &matrix);
+  return matrix;
+}
 
 void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
 {
@@ -684,10 +683,18 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
     return;
 
   nsPresContext* presContext = PresContext();
-  nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+
+  nsSVGForeignObjectElement *fO =
+    static_cast<nsSVGForeignObjectElement*>(mContent);
+  float x, y;
+  fO->GetAnimatedLengthValues(&x, &y, nsnull);
+  nsCOMPtr<nsIDOMSVGMatrix> localTM;
+  ctm->Translate(x, y, getter_AddRefs(localTM));
+
   nsIntRect r = nsRect::ToOutsidePixels(aRect, presContext->AppUnitsPerDevPixel());
-  float x = r.x, y = r.y, w = r.width, h = r.height;
-  nsRect rect = GetTransformedRegion(x, y, w, h, tm, presContext);
+  nsRect rect = GetTransformedRegion(r.x, r.y, r.width, r.height,
+                                     localTM, presContext);
 
   // XXX invalidate the entire covered region
   // See bug 418063

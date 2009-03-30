@@ -18,23 +18,24 @@ class TestBase(unittest.TestCase):
         unittest.TestCase.assertEqual(self, a, b, "%s got %r expected %r" % (msg, a, b))
 
 class DataTest(TestBase):
-    testdata = (
-        ((("He\tllo", "f", 1, 0),),
-         ((0, "f", 1, 0), (2, "f", 1, 2), (3, "f", 1, 4))),
-        ((("line1 ", "f", 1, 4), ("l\tine2", "f", 2, 11)),
-         ((0, "f", 1, 4), (5, "f", 1, 9), (6, "f", 2, 11), (7, "f", 2, 12), (8, "f", 2, 16))),
-    )
+    testdata = {
+        'oneline':
+            ("He\tllo", "f", 1, 0,
+             ((0, "f", 1, 0), (2, "f", 1, 2), (3, "f", 1, 4))),
+        'twoline':
+            ("line1 \n\tl\tine2", "f", 1, 4,
+             ((0, "f", 1, 4), (5, "f", 1, 9), (6, "f", 1, 10), (7, "f", 2, 0), (8, "f", 2, 4), (10, "f", 2, 8), (13, "f", 2, 11))),
+    }
 
-    def runTest(self):
-        for datas, results in self.testdata:
-            d = pymake.parser.Data()
-            for line, file, lineno, col in datas:
-                d.append(line, pymake.parserdata.Location(file, lineno, col))
-            for pos, file, lineno, col in results:
-                loc = d.getloc(pos)
-                self.assertEqual(loc.path, file, "data file")
-                self.assertEqual(loc.line, lineno, "data line")
-                self.assertEqual(loc.column, col, "data %r col, got %i expected %i" % (d.data, loc.column, col))
+    def runSingle(self, data, filename, line, col, results):
+        d = pymake.parser.Data(pymake.parserdata.Location(filename, line, col),
+                               data)
+        for pos, file, lineno, col in results:
+            loc = d.getloc(pos)
+            self.assertEqual(loc.path, file, "data file offset %i" % pos)
+            self.assertEqual(loc.line, lineno, "data line offset %i" % pos)
+            self.assertEqual(loc.column, col, "data col offset %i" % pos)
+multitest(DataTest)
 
 class TokenTest(TestBase):
     testdata = {
@@ -133,7 +134,6 @@ endef\n""",
         lineiter = enumerate(fd)
 
         d = pymake.parser.DynamicData(lineiter, 'PlainIterTest-data')
-        d.readline()
 
         actual = ''.join( (c for c, t, o, oo in ifunc(d, 0, pymake.parser._emptytokenlist)) )
         self.assertEqual(actual, expected)

@@ -102,11 +102,6 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
 {
   NS_ASSERTION(mOLStateStack.IsEmpty(), "Expected OL State stack to be empty");
-  if (!mOLStateStack.IsEmpty()){
-    for (PRUint32 i = 0; i < mOLStateStack.Length(); i++){
-      delete mOLStateStack[i];
-    }
-  }
 }
 
 NS_IMETHODIMP 
@@ -688,9 +683,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       else
         startAttrVal = 0;
     }
-    olState* state = new olState(startAttrVal, PR_TRUE);
-    if (state)
-      mOLStateStack.AppendElement(state);
+    mOLStateStack.AppendElement(olState(startAttrVal, PR_TRUE));
   }
 
   if (mIsCopying && name == nsGkAtoms::li) {
@@ -790,9 +783,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     /* Though at this point we must always have an state to be deleted as all 
     the OL opening tags are supposed to push an olState object to the stack*/
     if (!mOLStateStack.IsEmpty()) {
-      olState* state = mOLStateStack.ElementAt(mOLStateStack.Length() -1);
       mOLStateStack.RemoveElementAt(mOLStateStack.Length() -1);
-      delete state;
     }
   }
   
@@ -1242,7 +1233,7 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
   olState defaultOLState(0, PR_FALSE);
   olState* state = nsnull;
   if (!mOLStateStack.IsEmpty())
-    state = mOLStateStack.ElementAt(mOLStateStack.Length()-1);
+    state = &mOLStateStack.ElementAt(mOLStateStack.Length()-1);
   /* Though we should never reach to a "state" as null or mOLStateStack.IsEmpty()
   at this point as all LI are supposed to be inside some OL and OL tag should have 
   pushed a state to the olStateStack.*/
@@ -1314,7 +1305,7 @@ nsHTMLContentSerializer::IsFirstChildOfOL(nsIDOMElement* aElement){
     olState defaultOLState(0, PR_FALSE);
     olState* state = nsnull;
     if (!mOLStateStack.IsEmpty())
-      state = mOLStateStack.ElementAt(mOLStateStack.Length()-1);
+      state = &mOLStateStack.ElementAt(mOLStateStack.Length()-1);
     /* Though we should never reach to a "state" as null at this point as 
     all LI are supposed to be inside some OL and OL tag should have pushed
     a state to the mOLStateStack.*/

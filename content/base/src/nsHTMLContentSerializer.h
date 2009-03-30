@@ -170,7 +170,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   };
 
   // Stack to store one olState struct per <OL>.
-  nsAutoTArray<olState*, 8> mOLStateStack;
+  nsAutoTArray<olState, 8> mOLStateStack;
 };
 
 nsresult

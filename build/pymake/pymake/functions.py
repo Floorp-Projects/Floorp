@@ -21,6 +21,9 @@ class Function(object):
         Calls the function
         calls fd.write() with strings
     """
+
+    __slots__ = ('_arguments', 'loc')
+
     def __init__(self, loc):
         self._arguments = []
         self.loc = loc
@@ -45,6 +48,8 @@ class Function(object):
         return len(self._arguments)
 
 class VariableRef(Function):
+    __slots__ = ('vname', 'loc')
+
     def __init__(self, loc, vname):
         self.loc = loc
         assert isinstance(vname, (data.Expansion, data.StringExpansion))
@@ -67,6 +72,9 @@ class VariableRef(Function):
 
 class SubstitutionRef(Function):
     """$(VARNAME:.c=.o) and $(VARNAME:%.c=%.o)"""
+
+    __slots__ = ('loc', 'vname', 'substfrom', 'substto')
+
     def __init__(self, loc, varname, substfrom, substto):
         self.loc = loc
         self.vname = varname
@@ -102,6 +110,8 @@ class SubstFunction(Function):
     minargs = 3
     maxargs = 3
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         s = self._arguments[0].resolvestr(makefile, variables, setting)
         r = self._arguments[1].resolvestr(makefile, variables, setting)
@@ -112,6 +122,8 @@ class PatSubstFunction(Function):
     name = 'patsubst'
     minargs = 3
     maxargs = 3
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         s = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -126,6 +138,8 @@ class StripFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         util.joiniter(fd, self._arguments[0].resolvesplit(makefile, variables, setting))
 
@@ -133,6 +147,8 @@ class FindstringFunction(Function):
     name = 'findstring'
     minargs = 2
     maxargs = 2
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         s = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -146,6 +162,8 @@ class FilterFunction(Function):
     minargs = 2
     maxargs = 2
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         plist = [data.Pattern(p)
                  for p in self._arguments[0].resolvesplit(makefile, variables, setting)]
@@ -157,6 +175,8 @@ class FilteroutFunction(Function):
     name = 'filter-out'
     minargs = 2
     maxargs = 2
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         plist = [data.Pattern(p)
@@ -170,6 +190,8 @@ class SortFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         d = list(self._arguments[0].resolvesplit(makefile, variables, setting))
         d.sort()
@@ -179,6 +201,8 @@ class WordFunction(Function):
     name = 'word'
     minargs = 2
     maxargs = 2
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         n = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -193,6 +217,8 @@ class WordlistFunction(Function):
     name = 'wordlist'
     minargs = 3
     maxargs = 3
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         nfrom = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -215,6 +241,8 @@ class WordsFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         fd.write(str(len(self._arguments[0].resolvesplit(makefile, variables, setting))))
 
@@ -222,6 +250,8 @@ class FirstWordFunction(Function):
     name = 'firstword'
     minargs = 1
     maxargs = 1
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         l = self._arguments[0].resolvesplit(makefile, variables, setting)
@@ -232,6 +262,8 @@ class LastWordFunction(Function):
     name = 'lastword'
     minargs = 1
     maxargs = 1
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         l = self._arguments[0].resolvesplit(makefile, variables, setting)
@@ -263,6 +295,8 @@ class NotDirFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         fd.write(' '.join([pathsplit(path)[1]
                            for path in self._arguments[0].resolvesplit(makefile, variables, setting)]))
@@ -271,6 +305,8 @@ class SuffixFunction(Function):
     name = 'suffix'
     minargs = 1
     maxargs = 1
+
+    __slots__ = Function.__slots__
 
     @staticmethod
     def suffixes(words):
@@ -287,6 +323,8 @@ class BasenameFunction(Function):
     name = 'basename'
     minargs = 1
     maxargs = 1
+
+    __slots__ = Function.__slots__
 
     @staticmethod
     def basenames(words):
@@ -305,6 +343,8 @@ class AddSuffixFunction(Function):
     name = 'addprefix'
     minargs = 2
     maxargs = 2
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         suffix = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -326,6 +366,8 @@ class JoinFunction(Function):
     minargs = 2
     maxargs = 2
 
+    __slots__ = Function.__slots__
+
     @staticmethod
     def iterjoin(l1, l2):
         for i in xrange(0, max(len(l1), len(l2))):
@@ -344,12 +386,16 @@ class WildcardFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         patterns = self._arguments[0].resolvesplit(makefile, variables, setting)
 
         fd.write(' '.join([x.replace('\\','/')
                            for p in patterns
                            for x in glob(makefile.workdir, p)]))
+
+    __slots__ = Function.__slots__
 
 class RealpathFunction(Function):
     name = 'realpath'
@@ -365,6 +411,8 @@ class AbspathFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         assert os.path.isabs(makefile.workdir)
         fd.write(' '.join([os.path.join(makefile.workdir, path).replace('\\', '/')
@@ -374,6 +422,8 @@ class IfFunction(Function):
     name = 'if'
     minargs = 1
     maxargs = 3
+
+    __slots__ = Function.__slots__
 
     def setup(self):
         Function.setup(self)
@@ -393,6 +443,8 @@ class OrFunction(Function):
     minargs = 1
     maxargs = 0
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         for arg in self._arguments:
             r = arg.resolvestr(makefile, variables, setting)
@@ -404,6 +456,8 @@ class AndFunction(Function):
     name = 'and'
     minargs = 1
     maxargs = 0
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         r = ''
@@ -419,6 +473,8 @@ class ForEachFunction(Function):
     name = 'foreach'
     minargs = 3
     maxargs = 3
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         vname = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -440,6 +496,8 @@ class CallFunction(Function):
     name = 'call'
     minargs = 1
     maxargs = 0
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         vname = self._arguments[0].resolvestr(makefile, variables, setting)
@@ -468,6 +526,8 @@ class ValueFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         varname = self._arguments[0].resolvestr(makefile, variables, setting)
 
@@ -495,6 +555,8 @@ class OriginFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         vname = self._arguments[0].resolvestr(makefile, variables, setting)
 
@@ -520,6 +582,8 @@ class FlavorFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         varname = self._arguments[0].resolvestr(makefile, variables, setting)
         
@@ -537,6 +601,8 @@ class ShellFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         #TODO: call this once up-front somewhere and save the result?
         shell, msys = util.checkmsyscompat()
@@ -549,7 +615,7 @@ class ShellFunction(Function):
         stdout, stderr = p.communicate()
 
         stdout = stdout.replace('\r\n', '\n')
-        if len(stdout) > 1 and stdout[-1] == '\n':
+        if stdout.endswith('\n'):
             stdout = stdout[:-1]
         stdout = stdout.replace('\n', ' ')
 
@@ -560,6 +626,8 @@ class ErrorFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         v = self._arguments[0].resolvestr(makefile, variables, setting)
         raise data.DataError(v, self.loc)
@@ -569,6 +637,8 @@ class WarningFunction(Function):
     minargs = 1
     maxargs = 1
 
+    __slots__ = Function.__slots__
+
     def resolve(self, makefile, variables, fd, setting):
         v = self._arguments[0].resolvestr(makefile, variables, setting)
         log.warning(v)
@@ -577,6 +647,8 @@ class InfoFunction(Function):
     name = 'info'
     minargs = 1
     maxargs = 1
+
+    __slots__ = Function.__slots__
 
     def resolve(self, makefile, variables, fd, setting):
         v = self._arguments[0].resolvestr(makefile, variables, setting)

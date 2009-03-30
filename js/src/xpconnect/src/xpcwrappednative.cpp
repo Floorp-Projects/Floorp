@@ -297,8 +297,15 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     nsresult rv;
 
+#ifdef DEBUG
     NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(), 
                  "XPCWrappedNative::GetNewOrUsed called during GC");
+    {
+        nsWrapperCache *cache2 = nsnull;
+        CallQueryInterface(Object, &cache2);
+        NS_ASSERTION(!cache == !cache2, "Caller should pass in the cache!");
+    }
+#endif
 
     nsCOMPtr<nsISupports> identity;
 #ifdef XPC_IDISPATCH_SUPPORT
@@ -568,6 +575,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     }
     else if(wrapper)
     {
+        if(cache)
+            cache->SetWrapper(wrapper);
+
         // Our newly created wrapper is the one that we just added to the table.
         // All is well. Call PostCreate as necessary.
         XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
@@ -598,6 +608,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                 // This would be a good place to tell the wrapper not to remove
                 // itself from the map when it dies... See bug 429442.
 
+                if(cache)
+                    cache->ClearWrapper();
                 wrapper->Release();
                 return rv;
             }
@@ -1138,6 +1150,11 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
 
         mMaybeScope = nsnull;
     }
+
+    nsWrapperCache *cache = nsnull;
+    CallQueryInterface(mIdentity, &cache);
+    if(cache)
+        cache->ClearWrapper();
 
     // This makes IsValid return false from now on...
     mFlatJSObject = nsnull;

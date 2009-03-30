@@ -1545,8 +1545,8 @@ struct JSFunctionSpec {
  * frame when activated.
  */
 #define JS_FN(name,fastcall,nargs,flags)                                      \
-    {name, (JSNative)(fastcall), nargs,                                       \
-     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS, 0}
+    JS_FS(name, (JSNative)(fastcall), nargs,                                  \
+          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS, 0)
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,

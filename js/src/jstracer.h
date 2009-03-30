@@ -155,7 +155,7 @@ public:
 
 #ifdef JS_JIT_SPEW
 extern bool js_verboseDebug;
-#define debug_only_v(x) if (js_verboseDebug) { x; }
+#define debug_only_v(x) if (js_verboseDebug) { x; fflush(stdout); }
 #else
 #define debug_only_v(x)
 #endif
@@ -397,27 +397,25 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
     nanojit::LirWriter*     func_filter;
-#ifdef NJ_SOFTFLOAT
     nanojit::LirWriter*     float_filter;
-#endif
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
     nanojit::LIns*          globalObj_ins;
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
+    nanojit::LIns*          invokevp_ins;
     bool                    deepAborted;
     bool                    trashSelf;
     Queue<nanojit::Fragment*> whichTreesToTrash;
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
+    JSTraceableNative*      generatedTraceableNative;
     JSTraceableNative*      pendingTraceableNative;
-    bool                    terminate;
-    jsbytecode*             terminate_pc;
-    jsbytecode*             terminate_imacpc;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
     jsbytecode*             outer;
+    bool                    loop;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -540,13 +538,19 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool guardCallee(jsval& callee);
     JS_REQUIRES_STACK bool getClassPrototype(JSObject* ctor, nanojit::LIns*& proto_ins);
     JS_REQUIRES_STACK bool newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* vp);
+    JS_REQUIRES_STACK bool newString(JSObject* ctor, jsval& arg, jsval* rval);
     JS_REQUIRES_STACK bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
                                                    bool constructing);
+    JS_REQUIRES_STACK bool emitNativeCall(JSTraceableNative* known, uintN argc,
+                                          nanojit::LIns* args[]);
+    JS_REQUIRES_STACK bool callTraceableNative(JSFunction* fun, uintN argc, bool constructing);
+    JS_REQUIRES_STACK bool callNative(JSFunction* fun, uintN argc, bool constructing);
     JS_REQUIRES_STACK bool functionCall(bool constructing, uintN argc);
 
     JS_REQUIRES_STACK void trackCfgMerges(jsbytecode* pc);
-    JS_REQUIRES_STACK void flipIf(jsbytecode* pc, bool& cond);
+    JS_REQUIRES_STACK void emitIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
     JS_REQUIRES_STACK void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
+    JS_REQUIRES_STACK bool checkTraceEnd(jsbytecode* pc);
 
     bool hasMethod(JSObject* obj, jsid id);
     JS_REQUIRES_STACK bool hasIteratorMethod(JSObject* obj);
@@ -564,9 +568,8 @@ public:
     JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
-    JS_REQUIRES_STACK bool isLoopHeader(JSContext* cx) const;
     JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
-    JS_REQUIRES_STACK bool closeLoop(JSTraceMonitor* tm, bool& demote);
+    JS_REQUIRES_STACK void closeLoop(JSTraceMonitor* tm, bool& demote);
     JS_REQUIRES_STACK void endLoop(JSTraceMonitor* tm);
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
                                             nanojit::Fragment* peer_root);
@@ -590,7 +593,6 @@ public:
 
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
-    bool walkedOutOfLoop() { return terminate; }
     TreeInfo* getTreeInfo() { return treeInfo; }
 
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
@@ -637,13 +639,13 @@ extern void
 js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
-js_FlushScriptFragments(JSContext* cx, JSScript* script);
+js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern void
 js_FlushJITCache(JSContext* cx);
 
 extern void
-js_FlushJITOracle(JSContext* cx);
+js_PurgeJITOracle();
 
 extern JSObject *
 js_GetBuiltinFunction(JSContext *cx, uintN index);

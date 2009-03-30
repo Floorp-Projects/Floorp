@@ -170,7 +170,13 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
         tmp = obj;
         for (;;) {
             tmp = OBJ_GET_PROTO(cx, tmp);
-            if (!tmp) {
+
+            /*
+             * We cannot cache properties coming from native objects behind
+             * non-native ones on the prototype chain. The non-natives can
+             * mutate in arbitrary way without changing any shapes.
+             */
+            if (!tmp || !OBJ_IS_NATIVE(tmp)) {
                 PCMETER(cache->noprotos++);
                 *entryp = NULL;
                 return;
@@ -426,11 +432,8 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 JS_STATIC_ASSERT(PCVAL_NULL == 0);
 
 void
-js_FlushPropertyCache(JSContext *cx)
+js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
 {
-    JSPropertyCache *cache;
-
-    cache = &JS_PROPERTY_CACHE(cx);
     if (cache->empty) {
         ASSERT_CACHE_IS_EMPTY(cache);
         return;
@@ -498,7 +501,7 @@ js_FlushPropertyCache(JSContext *cx)
 }
 
 void
-js_FlushPropertyCacheForScript(JSContext *cx, JSScript *script)
+js_PurgePropertyCacheForScript(JSContext *cx, JSScript *script)
 {
     JSPropertyCache *cache;
     JSPropCacheEntry *entry;
@@ -563,6 +566,9 @@ JS_STATIC_INTERPRET JS_REQUIRES_STACK jsval *
 js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
+
+    JS_ASSERT(nslots != 0);
+    js_LeaveTrace(cx);
 
     if (!cx->stackPool.first.next) {
         int64 *timestamp;
@@ -5086,7 +5092,6 @@ js_Interpret(JSContext *cx)
             if (!cx->rval2set) {
                 op2 = js_GetOpcode(cx, script, regs.pc + JSOP_SETCALL_LENGTH);
                 if (op2 != JSOP_DELELEM) {
-                    JS_ASSERT(!(js_CodeSpec[op2].format & JOF_DEL));
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_BAD_LEFTSIDE_OF_ASS);
                     goto error;

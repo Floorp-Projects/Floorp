@@ -798,6 +798,7 @@ var toolbarDNDObserver =
 
       var direction = window.getComputedStyle(dropTarget.parentNode, null).direction;
       var dropTargetCenter = dropTarget.boxObject.x + (dropTarget.boxObject.width / 2);
+      var dragAfter;
       if (direction == "ltr")
         dragAfter = aEvent.clientX > dropTargetCenter;
       else

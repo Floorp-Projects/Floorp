@@ -3755,7 +3755,7 @@ Replace(JSContext *cx, JSXML *xml, uint32 i, jsval v)
             vxml = (JSXML *) JS_GetPrivate(cx, vobj);
     }
 
-    switch (vxml ? vxml->xml_class : JSXML_CLASS_LIMIT) {
+    switch (vxml ? (JSXMLClass) vxml->xml_class : JSXML_CLASS_LIMIT) {
       case JSXML_CLASS_ELEMENT:
         /* OPTION: enforce that descendants have superset namespaces. */
         if (!CheckCycle(cx, xml, vxml))
@@ -4289,8 +4289,9 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     goto out;
                 attr = (JSXML *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(*vp));
 
-                /* 2(e)(iii). */
-                xml->xml_kids.vector[i] = attr->xml_kids.vector[0];
+                /* 2(e)(iii) - the length check comes from the bug 375406. */
+                if (attr->xml_kids.length != 0)
+                    xml->xml_kids.vector[i] = attr->xml_kids.vector[0];
             }
         }
 

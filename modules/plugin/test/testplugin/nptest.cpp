@@ -118,7 +118,7 @@ NP_GetPluginVersion()
 
 #if defined(XP_UNIX)
 NP_EXPORT(char*) NP_GetMIMEDescription()
-#elif defined(XP_WIN)
+#elif defined(XP_WIN) || defined(XP_OS2)
 char* NP_GetMIMEDescription()
 #endif
 {
@@ -164,7 +164,7 @@ static void fillPluginFunctionTable(NPPluginFuncs* pFuncs)
 
 #if defined(XP_MACOSX)
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs)
-#elif defined(XP_WIN)
+#elif defined(XP_WIN) || defined(XP_OS2)
 NPError OSCALL NP_Initialize(NPNetscapeFuncs* bFuncs)
 #elif defined(XP_UNIX)
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs)
@@ -198,10 +198,10 @@ NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs)
 
 #if defined(XP_MACOSX)
 NP_EXPORT(NPError) NP_GetEntryPoints(NPPluginFuncs* pFuncs)
-#elif defined(XP_WIN)
+#elif defined(XP_WIN) || defined(XP_OS2)
 NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 #endif
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
 {
   fillPluginFunctionTable(pFuncs);
   return NPERR_NO_ERROR;
@@ -210,7 +210,7 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 
 #if defined(XP_UNIX)
 NP_EXPORT(NPError) NP_Shutdown()
-#elif defined(XP_WIN)
+#elif defined(XP_WIN) || defined(XP_OS2)
 NPError OSCALL NP_Shutdown()
 #endif
 {
