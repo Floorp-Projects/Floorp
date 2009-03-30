@@ -4631,3 +4631,9 @@ nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
     } else
         *aFocusController = nsnull;
 }
+
+NS_IMETHODIMP
+nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
+{
+    return nsDocument::GetBoxObjectFor(aElement, aResult);
+}
