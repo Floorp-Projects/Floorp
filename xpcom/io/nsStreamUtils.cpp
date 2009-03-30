@@ -250,6 +250,10 @@ public:
         , mChunkSize(0)
         , mEventInProcess(PR_FALSE)
         , mEventIsPending(PR_FALSE)
+        , mCloseSource(PR_TRUE)
+        , mCloseSink(PR_TRUE)
+        , mCanceled(PR_FALSE)
+        , mCancelStatus(NS_OK)
     {
     }
 
@@ -266,7 +270,9 @@ public:
                    nsIEventTarget *target,
                    nsAsyncCopyCallbackFun callback,
                    void *closure,
-                   PRUint32 chunksize)
+                   PRUint32 chunksize,
+                   PRBool closeSource,
+                   PRBool closeSink)
     {
         mSource = source;
         mSink = sink;
@@ -274,6 +280,8 @@ public:
         mCallback = callback;
         mClosure = closure;
         mChunkSize = chunksize;
+        mCloseSource = closeSource;
+        mCloseSink = closeSink;
 
         mLock = PR_NewLock();
         if (!mLock)
@@ -295,11 +303,28 @@ public:
             return;
 
         nsresult sourceCondition, sinkCondition;
+        nsresult cancelStatus;
+        PRBool canceled;
+        {
+            nsAutoLock lock(mLock);
+            canceled = mCanceled;
+            cancelStatus = mCancelStatus;
+        }
 
         // ok, copy data from source to sink.
         for (;;) {
-            PRUint32 n = DoCopy(&sourceCondition, &sinkCondition);
-            if (NS_FAILED(sourceCondition) || NS_FAILED(sinkCondition) || n == 0) {
+            PRUint32 n;
+            PRBool copyFailed = PR_FALSE;
+            if (!canceled) {
+                n = DoCopy(&sourceCondition, &sinkCondition);
+                copyFailed = NS_FAILED(sourceCondition) ||
+                             NS_FAILED(sinkCondition) || n == 0;
+
+                nsAutoLock lock(mLock);
+                canceled = mCanceled;
+                cancelStatus = mCancelStatus;
+            }
+            if (copyFailed && !canceled) {
                 if (sourceCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSource) {
                     // need to wait for more data from source.  while waiting for
                     // more source data, be sure to observe failures on output end.
@@ -309,6 +334,7 @@ public:
                         mAsyncSink->AsyncWait(this,
                                               nsIAsyncOutputStream::WAIT_CLOSURE_ONLY,
                                               0, nsnull);
+                    break;
                 }
                 else if (sinkCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSink) {
                     // need to wait for more room in the sink.  while waiting for
@@ -320,37 +346,60 @@ public:
                         mAsyncSource->AsyncWait(this,
                                                 nsIAsyncInputStream::WAIT_CLOSURE_ONLY,
                                                 0, nsnull);
+                    break;
                 }
-                else {
+            }
+            if (copyFailed || canceled) {
+                if (mCloseSource) {
                     // close source
                     if (mAsyncSource)
-                        mAsyncSource->CloseWithStatus(sinkCondition);
+                        mAsyncSource->CloseWithStatus(canceled ? cancelStatus :
+                                                                 sinkCondition);
                     else
                         mSource->Close();
-                    mAsyncSource = nsnull;
-                    mSource = nsnull;
+                }
+                mAsyncSource = nsnull;
+                mSource = nsnull;
 
+                if (mCloseSink) {
                     // close sink
                     if (mAsyncSink)
-                        mAsyncSink->CloseWithStatus(sourceCondition);
+                        mAsyncSink->CloseWithStatus(canceled ? cancelStatus :
+                                                               sourceCondition);
                     else
                         mSink->Close();
-                    mAsyncSink = nsnull;
-                    mSink = nsnull;
+                }
+                mAsyncSink = nsnull;
+                mSink = nsnull;
 
-                    // notify state complete...
-                    if (mCallback) {
-                        nsresult status = sourceCondition;
-                        if (NS_SUCCEEDED(status))
-                            status = sinkCondition;
-                        if (status == NS_BASE_STREAM_CLOSED)
-                            status = NS_OK;
-                        mCallback(mClosure, status);
-                    }
+                // notify state complete...
+                if (mCallback) {
+                    nsresult status = sourceCondition;
+                    if (NS_SUCCEEDED(status))
+                        status = sinkCondition;
+                    if (status == NS_BASE_STREAM_CLOSED)
+                        status = NS_OK;
+                    mCallback(mClosure, canceled ? cancelStatus : status);
                 }
                 break;
             }
         }
+    }
+
+    nsresult Cancel(nsresult aReason)
+    {
+        nsAutoLock lock(mLock);
+        if (mCanceled)
+            return NS_ERROR_FAILURE;
+
+        if (NS_SUCCEEDED(aReason)) {
+            NS_WARNING("cancel with non-failure status code");
+            aReason = NS_BASE_STREAM_CLOSED;
+        }
+
+        mCanceled = PR_TRUE;
+        mCancelStatus = aReason;
+        return NS_OK;
     }
 
     NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *source)
@@ -421,6 +470,10 @@ protected:
     PRUint32                       mChunkSize;
     PRPackedBool                   mEventInProcess;
     PRPackedBool                   mEventIsPending;
+    PRPackedBool                   mCloseSource;
+    PRPackedBool                   mCloseSink;
+    PRPackedBool                   mCanceled;
+    nsresult                       mCancelStatus;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsAStreamCopier,
@@ -523,7 +576,10 @@ NS_AsyncCopy(nsIInputStream         *source,
              nsAsyncCopyMode         mode,
              PRUint32                chunkSize,
              nsAsyncCopyCallbackFun  callback,
-             void                   *closure)
+             void                   *closure,
+             PRBool                  closeSource,
+             PRBool                  closeSink,
+             nsISupports           **aCopierCtx)
 {
     NS_ASSERTION(target, "non-null target required");
 
@@ -540,10 +596,27 @@ NS_AsyncCopy(nsIInputStream         *source,
 
     // Start() takes an owning ref to the copier...
     NS_ADDREF(copier);
-    rv = copier->Start(source, sink, target, callback, closure, chunkSize);
+    rv = copier->Start(source, sink, target, callback, closure, chunkSize,
+                       closeSource, closeSink);
+
+    if (aCopierCtx) {
+        *aCopierCtx = static_cast<nsISupports*>(
+                      static_cast<nsIRunnable*>(copier));
+        NS_ADDREF(*aCopierCtx);
+    }
     NS_RELEASE(copier);
 
     return rv;
+}
+
+//-----------------------------------------------------------------------------
+
+NS_COM nsresult
+NS_CancelAsyncCopy(nsISupports *aCopierCtx, nsresult aReason)
+{
+  nsAStreamCopier *copier = static_cast<nsAStreamCopier *>(
+                            static_cast<nsIRunnable *>(aCopierCtx));
+  return copier->Cancel(aReason);
 }
 
 //-----------------------------------------------------------------------------
