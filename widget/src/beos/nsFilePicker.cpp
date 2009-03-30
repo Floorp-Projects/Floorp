@@ -179,7 +179,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 		BList *list = ppanel->OpenRefs();
 		uint32 numfiles = list->CountItems();
 		if ((list) && numfiles >= 1) {
-			nsresult rv = NS_NewISupportsArray(getter_AddRefs(mFiles));
+			nsresult rv;
 			for (uint32 i = 0; i< numfiles; i++) {
 				BPath *path = (BPath *)list->ItemAt(i);
 
@@ -192,7 +192,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 						NS_ENSURE_SUCCESS(rv,rv);
 						rv = file->InitWithNativePath(nsDependentCString(path->Path()));
 						NS_ENSURE_SUCCESS(rv,rv);
-						rv = mFiles->AppendElement(file);
+						rv = mFiles.AppendObject(file);
 						NS_ENSURE_SUCCESS(rv,rv);
 					} else {
 						if (i == 0) mFile.Assign(path->Path());

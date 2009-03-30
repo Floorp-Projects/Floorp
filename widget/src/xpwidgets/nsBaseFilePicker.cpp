@@ -51,7 +51,7 @@
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsILocalFile.h"
 #include "nsEnumeratorUtils.h"
 
@@ -194,9 +194,8 @@ NS_IMETHODIMP nsBaseFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 {
   NS_ENSURE_ARG_POINTER(aFiles);
-  nsCOMPtr <nsISupportsArray> files;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(files));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMArray <nsILocalFile> files;
+  nsresult rv;
 
   // if we get into the base class, the platform
   // doesn't implement GetFiles() yet.
@@ -205,7 +204,7 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   rv = GetFile(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = files->AppendElement(file);
+  rv = files.AppendObject(file);
   NS_ENSURE_SUCCESS(rv,rv);
 
   return NS_NewArrayEnumerator(aFiles, files);
