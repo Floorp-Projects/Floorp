@@ -2027,15 +2027,9 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
                                                getter_AddRefs(aQuerySet->mCompiledQuery));
 
             if (aQuerySet->mCompiledQuery) {
-                nsTemplateRule* rule = new nsTemplateRule(aTemplate, rulenode, aQuerySet);
+                nsTemplateRule* rule = aQuerySet->NewRule(aTemplate, rulenode, aQuerySet);
                 if (! rule)
                     return NS_ERROR_OUT_OF_MEMORY;
-
-                rv = aQuerySet->AddRule(rule);
-                if (NS_FAILED(rv)) {
-                    delete rule;
-                    return rv;
-                }
 
                 rule->SetVars(mRefVariable, memberVariable);
 
@@ -2065,7 +2059,7 @@ nsXULTemplateBuilder::CompileExtendedQuery(nsIContent* aRuleElement,
     // a <conditions> child, an <action> child, and a <bindings> child.
     nsresult rv;
 
-    nsTemplateRule* rule = new nsTemplateRule(aRuleElement, aActionElement, aQuerySet);
+    nsTemplateRule* rule = aQuerySet->NewRule(aRuleElement, aActionElement, aQuerySet);
     if (! rule)
          return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2082,13 +2076,7 @@ nsXULTemplateBuilder::CompileExtendedQuery(nsIContent* aRuleElement,
     rv = CompileConditions(rule, conditions);
     // If the rule compilation failed, then we have to bail.
     if (NS_FAILED(rv)) {
-        delete rule;
-        return rv;
-    }
-
-    rv = aQuerySet->AddRule(rule);
-    if (NS_FAILED(rv)) {
-        delete rule;
+        aQuerySet->RemoveRule(rule);
         return rv;
     }
 
@@ -2222,15 +2210,9 @@ nsXULTemplateBuilder::CompileSimpleQuery(nsIContent* aRuleElement,
         return NS_OK;
     }
 
-    nsTemplateRule* rule = new nsTemplateRule(aRuleElement, aRuleElement, aQuerySet);
+    nsTemplateRule* rule = aQuerySet->NewRule(aRuleElement, aRuleElement, aQuerySet);
     if (! rule)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = aQuerySet->AddRule(rule);
-    if (NS_FAILED(rv)) {
-        delete rule;
-        return rv;
-    }
 
     rule->SetVars(mRefVariable, memberVariable);
 

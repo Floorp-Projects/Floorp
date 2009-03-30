@@ -970,8 +970,8 @@ PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 
     /* The opcodes stack must contain real bytecodes that index js_CodeSpec. */
     ss->offsets[top] = off;
-    ss->opcodes[top] = (op == JSOP_GETPROP2) ? JSOP_GETPROP
-                     : (op == JSOP_GETELEM2) ? JSOP_GETELEM
+    ss->opcodes[top] = (op == JSOP_GETPROP2) ? (jsbytecode) JSOP_GETPROP
+                     : (op == JSOP_GETELEM2) ? (jsbytecode) JSOP_GETELEM
                      : (jsbytecode) op;
     ss->top = ++top;
     AddParenSlop(ss);

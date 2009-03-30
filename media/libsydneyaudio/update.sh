@@ -5,5 +5,3 @@
 cp $1/include/sydney_audio.h include/sydney_audio.h
 cp $1/src/*.c src/
 cp $1/AUTHORS ./AUTHORS
-patch -p3 < 469698_mac_stream_endian.patch
-patch -p3 < 478299_zeromem_sa_stream.patch

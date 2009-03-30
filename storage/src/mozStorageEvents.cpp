@@ -451,6 +451,7 @@ private:
   nsresult BuildAndNotifyResults(sqlite3_stmt *aStatement)
   {
     NS_ASSERTION(mCallback, "Trying to dispatch results without a callback!");
+    PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(mLock);
 
     // At this point, it is safe to not hold the lock and allow for cancelation.
     // We may add an event to the calling thread, but that thread will not end

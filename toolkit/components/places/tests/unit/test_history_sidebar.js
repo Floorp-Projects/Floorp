@@ -161,6 +161,29 @@ function test_RESULTS_AS_DATE_SITE_QUERY() {
   var site1visit = site1.getChild(0);
   do_check_eq(site1visit.uri, "http://mirror0.google.com/a");
 
+  // Bug 473157: changing sorting mode should not affect the containers
+  result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
+
+  // Check one of the days
+  var dayNode = root.getChild(0)
+                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  dayNode.containerOpen = true;
+  do_check_eq(dayNode.childCount, 2);
+
+  // Hosts are still sorted by title
+  var site1 = dayNode.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(site1.title, "mirror0.google.com");
+
+  var site2 = dayNode.getChild(1).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(site2.title, "mirror0.mozilla.com");
+
+  site1.containerOpen = true;
+  do_check_eq(site1.childCount, 2);
+
+  // But URLs are now sorted by title descending
+  var site1visit = site1.getChild(0);
+  do_check_eq(site1visit.uri, "http://mirror0.google.com/b");
+
   site1.containerOpen = false;
   dayNode.containerOpen = false;
   root.containerOpen = false;
@@ -201,6 +224,22 @@ function test_RESULTS_AS_DATE_QUERY() {
 
   var visit2 = dayNode.getChild(3);
   do_check_eq(visit2.uri, "http://mirror0.mozilla.com/b");
+
+  // Bug 473157: changing sorting mode should not affect the containers
+  result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
+
+  // Check one of the days
+  var dayNode = root.getChild(0)
+                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  dayNode.containerOpen = true;
+  do_check_eq(dayNode.childCount, 4);
+
+  // But URLs are now sorted by title descending
+  var visit1 = dayNode.getChild(0);
+  do_check_eq(visit1.uri, "http://mirror0.mozilla.com/b");
+
+  var visit2 = dayNode.getChild(3);
+  do_check_eq(visit2.uri, "http://mirror0.google.com/a");
 
   dayNode.containerOpen = false;
   root.containerOpen = false;
@@ -250,6 +289,19 @@ function test_RESULTS_AS_SITE_QUERY() {
   // Inside of host sites are sorted by title
   var visitNode = siteNode.getChild(0);
   do_check_eq(visitNode.uri, "http://mirror3.google.com/a");
+
+  // Bug 473157: changing sorting mode should not affect the containers
+  result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
+  var siteNode = root.getChild(6)
+                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(siteNode.title, "mirror3.google.com");
+
+  siteNode.containerOpen = true;
+  do_check_eq(siteNode.childCount, 2);
+
+  // But URLs are now sorted by title descending
+  var visit = siteNode.getChild(0);
+  do_check_eq(visit.uri, "http://mirror3.google.com/b");
 
   siteNode.containerOpen = false;
   root.containerOpen = false;

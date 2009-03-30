@@ -5,9 +5,4 @@ the Mozilla build system.
 
 http://svn.annodex.net/libsydneyaudio/trunk
 
-The svn revision number used was r3827.
-
-The patch from Annodex trac ticket #427 (http://trac.annodex.net/ticket/447)
-was applied to fix bug #469698.
-
-Also applied patch for bug 478299.
+The svn revision number used was r3895.

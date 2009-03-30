@@ -1034,7 +1034,7 @@ nsresult
 nsDiskCacheMap::EnsureBuffer(PRUint32 bufSize)
 {
     if (mBufferSize < bufSize) {
-        char * buf = (char *)realloc(mBuffer, bufSize);
+        char * buf = (char *)PR_REALLOC(mBuffer, bufSize);
         if (!buf) {
             mBufferSize = 0;
             return NS_ERROR_OUT_OF_MEMORY;
