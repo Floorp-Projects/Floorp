@@ -449,6 +449,9 @@ KineticData.prototype = {
       this.kineticHandle = -1;
     }
 
+    this.kineticStepSize = 15;
+    this.kineticDecelloration = 0.004;
+    this.momentumBufferSize = 3;
     this.momentumBuffer = [];
     this.momentumBufferIndex = 0;
     this.lastTime = 0;
