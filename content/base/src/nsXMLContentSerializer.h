@@ -52,7 +52,6 @@
 
 class nsIDOMNode;
 class nsIAtom;
-struct NameSpaceDecl;
 
 class nsXMLContentSerializer : public nsIContentSerializer {
  public:
@@ -158,7 +157,14 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   void MaybeFlagNewline(nsIDOMNode* aNode);
 
   PRInt32 mPrefixIndex;
-  nsTArray<NameSpaceDecl*> mNameSpaceStack;
+  
+  struct NameSpaceDecl {
+    nsString mPrefix;
+    nsString mURI;
+    nsIDOMElement* mOwner;
+  };
+
+  nsTArray<NameSpaceDecl> mNameSpaceStack;
 
   // nsIDocumentEncoder flags
   PRUint32  mFlags;

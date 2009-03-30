@@ -71,7 +71,7 @@ DEALINGS IN THE SOFTWARE."""
 
 _log = logging.getLogger('pymake.execution')
 
-def main(args, env, cwd, context, cb):
+def main(args, env, cwd, cb):
     """
     Start a single makefile execution, given a command line, working directory, and environment.
 
@@ -134,17 +134,7 @@ def main(args, env, cwd, context, cb):
 
         logging.basicConfig(level=loglevel, **logkwargs)
 
-        if context is not None and context.jcount > 1 and options.jobcount == 1:
-            _log.debug("-j1 specified, creating new serial execution context")
-            context = process.getcontext(options.jobcount)
-            subcontext = True
-        elif context is None:
-            _log.debug("Creating new execution context, jobcount %s", options.jobcount)
-            context = process.getcontext(options.jobcount)
-            subcontext = True
-        else:
-            _log.debug("Using parent execution context")
-            subcontext = False
+        context = process.getcontext(options.jobcount)
 
         if options.printdir:
             print "make.py[%i]: Entering directory '%s'" % (makelevel, workdir)
@@ -167,9 +157,6 @@ def main(args, env, cwd, context, cb):
                     firsterror = error
 
             if i == len(realtargets):
-                if subcontext:
-                    context.finish()
-
                 if options.printdir:
                     print "make.py[%i]: Leaving directory '%s'" % (makelevel, workdir)
                 sys.stdout.flush()
@@ -188,7 +175,8 @@ def main(args, env, cwd, context, cb):
                     _log.info("make.py[%i]: Restarting makefile parsing", makelevel)
                 makefile = data.Makefile(restarts=restarts, make='%s %s' % (sys.executable.replace('\\', '/'), makepypath.replace('\\', '/')),
                                          makeflags=makeflags, makelevel=makelevel, workdir=workdir,
-                                         context=context, env=env)
+                                         context=context, env=env,
+                                         targets=targets)
 
                 try:
                     overrides.execute(makefile)

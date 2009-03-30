@@ -38,6 +38,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include "cairoint.h"
+#include "cairo-types-private.h"
 
 #include "cairo-qpainter.h"
 #include <memory>
@@ -123,7 +124,8 @@ static cairo_bool_t _qpixmaps_have_no_alpha = FALSE;
 static cairo_int_status_t
 _cairo_qpainter_surface_paint (void *abstract_surface,
                                cairo_operator_t op,
-                               cairo_pattern_t *source);
+                               const cairo_pattern_t *source,
+                               cairo_rectangle_int_t * rect);
 
 /* some debug timing stuff */
 static int g_dump_path = 1;
@@ -281,7 +283,7 @@ typedef struct _qpainter_path_transform {
 
 /* cairo path -> execute in context */
 static cairo_status_t
-_cairo_path_to_qpainterpath_move_to (void *closure, cairo_point_t *point)
+_cairo_path_to_qpainterpath_move_to (void *closure, const cairo_point_t *point)
 {
     qpainter_path_data *pdata = (qpainter_path_data *)closure;
     double x = _cairo_fixed_to_double (point->x);
@@ -298,7 +300,7 @@ _cairo_path_to_qpainterpath_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_path_to_qpainterpath_line_to (void *closure, cairo_point_t *point)
+_cairo_path_to_qpainterpath_line_to (void *closure, const cairo_point_t *point)
 {
     qpainter_path_data *pdata = (qpainter_path_data *)closure;
     double x = _cairo_fixed_to_double (point->x);
@@ -320,7 +322,7 @@ _cairo_path_to_qpainterpath_line_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_path_to_qpainterpath_curve_to (void *closure, cairo_point_t *p0, cairo_point_t *p1, cairo_point_t *p2)
+_cairo_path_to_qpainterpath_curve_to (void *closure, const cairo_point_t *p0, const cairo_point_t *p1, const cairo_point_t *p2)
 {
     qpainter_path_data *pdata = (qpainter_path_data *)closure;
     double x0 = _cairo_fixed_to_double (p0->x);
@@ -636,7 +638,7 @@ _cairo_qpainter_surface_clone_similar (void *abstract_surface,
     cairo_pattern_set_matrix (&upat.base, &tx);
 
     cairo_int_status_t status =
-        _cairo_qpainter_surface_paint (new_surf, CAIRO_OPERATOR_SOURCE, &upat.base);
+        _cairo_qpainter_surface_paint (new_surf, CAIRO_OPERATOR_SOURCE, &upat.base, 0);
 
     _cairo_pattern_fini (&upat.base);
 
@@ -752,7 +754,8 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 	_cairo_traps_fini (&traps);
 
 	if (status == CAIRO_INT_STATUS_SUCCESS) {
-	    cairo_box_int_t *boxes;
+#if 0
+        cairo_box_int_t *boxes;
 	    int n_boxes;
 
 	    QRegion qr;
@@ -772,8 +775,27 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 
 		qr = qr.unite(r);
 	    }
+        _cairo_region_boxes_fini (&region, boxes);
+#else
+        int n_boxes;
 
-	    _cairo_region_boxes_fini (&region, boxes);
+        QRegion qr;
+
+        n_boxes = _cairo_region_num_boxes(&region);
+        for (int i = 0; i < n_boxes; ++i)
+        {
+            cairo_box_int_t box;
+            _cairo_region_get_box(&region, i, &box);
+            QRect r(box.p1.x, box.p1.y, box.p2.x - box.p1.x, box.p2.y - box.p2.y);
+
+            if (0 == i)
+                clip_bounds = r;
+            else
+                clip_bounds = clip_bounds.united(r);
+
+            qr = qr.unite(r);
+        }
+#endif
 	    _cairo_region_fini (&region);
 
 	    qs->p->setClipRegion (qr, Qt::IntersectClip);
@@ -813,7 +835,7 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
  **/
 
 struct PatternToBrushConverter {
-    PatternToBrushConverter (cairo_pattern_t *pattern)
+    PatternToBrushConverter (const cairo_pattern_t *pattern)
       : mBrush(0),
 	mAcquiredImageParent(0)
     {
@@ -1035,7 +1057,7 @@ struct PatternToBrushConverter {
 };
 
 struct PatternToPenConverter {
-    PatternToPenConverter (cairo_pattern_t *source,
+    PatternToPenConverter (const cairo_pattern_t *source,
 			   cairo_stroke_style_t *style)
       : mBrushConverter(source)
     {
@@ -1128,7 +1150,7 @@ struct PatternToPenConverter {
 
 bool
 _cairo_qpainter_fast_fill (cairo_qpainter_surface_t *qs,
-			   cairo_pattern_t *source,
+			   const cairo_pattern_t *source,
 			   cairo_path_fixed_t *path = NULL,
 			   cairo_fill_rule_t fill_rule = CAIRO_FILL_RULE_WINDING,
 			   double tolerance = 0.0,
@@ -1221,8 +1243,10 @@ _cairo_qpainter_fast_fill (cairo_qpainter_surface_t *qs,
 cairo_int_status_t
 _cairo_qpainter_surface_paint (void *abstract_surface,
                                cairo_operator_t op,
-                               cairo_pattern_t *source)
+                               const cairo_pattern_t *source,
+                               cairo_rectangle_int_t *extends)
 {
+    Q_UNUSED(extends);
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] paint op:%s\n", abstract_surface, _opstr(op)));
@@ -1249,12 +1273,14 @@ _cairo_qpainter_surface_paint (void *abstract_surface,
 static cairo_int_status_t
 _cairo_qpainter_surface_fill (void *abstract_surface,
                               cairo_operator_t op,
-                              cairo_pattern_t *source,
+                              const cairo_pattern_t *source,
                               cairo_path_fixed_t *path,
                               cairo_fill_rule_t fill_rule,
                               double tolerance,
-                              cairo_antialias_t antialias)
+                              cairo_antialias_t antialias,
+                              cairo_rectangle_int_t * extends)
 {
+    Q_UNUSED(extends);
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] fill op:%s\n", abstract_surface, _opstr(op)));
@@ -1294,14 +1320,16 @@ _cairo_qpainter_surface_fill (void *abstract_surface,
 static cairo_int_status_t
 _cairo_qpainter_surface_stroke (void *abstract_surface,
                                 cairo_operator_t op,
-                                cairo_pattern_t *source,
+                                const cairo_pattern_t *source,
                                 cairo_path_fixed_t *path,
                                 cairo_stroke_style_t *style,
                                 cairo_matrix_t *ctm,
                                 cairo_matrix_t *ctm_inverse,
                                 double tolerance,
-                                cairo_antialias_t antialias)
+                                cairo_antialias_t antialias,
+                                cairo_rectangle_int_t  *extends)
 {
+    Q_UNUSED(extends);
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] stroke op:%s\n", abstract_surface, _opstr(op)));
@@ -1341,12 +1369,14 @@ _cairo_qpainter_surface_stroke (void *abstract_surface,
 static cairo_int_status_t
 _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
                                      cairo_operator_t op,
-                                     cairo_pattern_t *source,
+                                     const cairo_pattern_t *source,
                                      cairo_glyph_t *glyphs,
                                      int num_glyphs,
                                      cairo_scaled_font_t *scaled_font,
-                                     int *remaining_glyphs)
+                                     int *remaining_glyphs,
+                                     cairo_rectangle_int_t * extends)
 {
+    Q_UNUSED(extends);
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
 #if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
@@ -1388,7 +1418,7 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
 	}
 
         return (cairo_int_status_t)
-               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, (cairo_text_cluster_flags_t)0, scaled_font);
+               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, (cairo_text_cluster_flags_t)0, scaled_font, 0);
     }
 #endif
 
@@ -1398,9 +1428,11 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
 static cairo_int_status_t
 _cairo_qpainter_surface_mask (void *abstract_surface,
                               cairo_operator_t op,
-                              cairo_pattern_t *source,
-                              cairo_pattern_t *mask)
+                              const cairo_pattern_t *source,
+                              const cairo_pattern_t *mask,
+                              cairo_rectangle_int_t  *extends)
 {
+    Q_UNUSED(extends);
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] mask op:%s\n", abstract_surface, _opstr(op)));
@@ -1414,7 +1446,7 @@ _cairo_qpainter_surface_mask (void *abstract_surface,
 
         qs->p->setOpacity (solid_mask->color.alpha);
 
-        result = _cairo_qpainter_surface_paint (abstract_surface, op, source);
+        result = _cairo_qpainter_surface_paint (abstract_surface, op, source, 0);
 
         qs->p->setOpacity (1.0);
 
@@ -1431,8 +1463,8 @@ _cairo_qpainter_surface_mask (void *abstract_surface,
  **/
 static cairo_int_status_t
 _cairo_qpainter_surface_composite (cairo_operator_t op,
-                                   cairo_pattern_t *pattern,
-                                   cairo_pattern_t *mask_pattern,
+                                   const cairo_pattern_t *pattern,
+                                   const cairo_pattern_t *mask_pattern,
                                    void *abstract_surface,
                                    int src_x,
                                    int src_y,
@@ -1526,7 +1558,7 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
  ** Backend struct
  **/
 
-static const struct _cairo_surface_backend cairo_qpainter_surface_backend = {
+static const cairo_surface_backend_t cairo_qpainter_surface_backend = {
     CAIRO_SURFACE_TYPE_QPAINTER,
     _cairo_qpainter_surface_create_similar,
     _cairo_qpainter_surface_finish,
@@ -1539,6 +1571,8 @@ static const struct _cairo_surface_backend cairo_qpainter_surface_backend = {
     _cairo_qpainter_surface_composite, /* composite -- XXX temporary! */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     NULL, /* set_clip_region */
@@ -1560,7 +1594,11 @@ static const struct _cairo_surface_backend cairo_qpainter_surface_backend = {
     NULL, /* snapshot */
     NULL, /* is_similar */
     NULL, /* reset */
-    NULL  /* fill_stroke */
+    NULL, /* fill_stroke */
+    NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
+    NULL, /* has_show_text_glyphs */
+    NULL, /* show_text_glyphs */
 };
 
 #if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)

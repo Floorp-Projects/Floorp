@@ -245,7 +245,7 @@ OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
-# MOZ_PROFILE equivs for win32
+# XXX: What does this? Bug 482434 filed for better explanation.
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 ifdef MOZ_DEBUG
 ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
@@ -863,7 +863,7 @@ RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif
 
 ifeq ($(OS_ARCH),OS2)
-RUN_TEST_PROGRAM = $(topsrcdir)/testing/xpcshell/test_os2.cmd "$(DIST)"
+RUN_TEST_PROGRAM = $(topsrcdir)/build/os2/test_os2.cmd "$(DIST)"
 endif
 
 #

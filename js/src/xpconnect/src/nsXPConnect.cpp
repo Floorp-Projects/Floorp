@@ -1416,8 +1416,9 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {
     // Every element counts.
-    nsVoidArray *va = static_cast<nsVoidArray *>(arg);
-    va->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
+    nsTArray<XPCWrappedNative*> *array =
+        static_cast<nsTArray<XPCWrappedNative*> *>(arg);
+    array->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
     return JS_DHASH_NEXT;
 }
 
@@ -1443,23 +1444,22 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
 
     // First, look through the old scope and find all of the wrappers that
     // we're going to move.
-    nsVoidArray wrappersToMove;
+    nsTArray<XPCWrappedNative*> wrappersToMove;
 
     {   // scoped lock
         XPCAutoLock lock(GetRuntime()->GetMapLock());
         Native2WrappedNativeMap *map = oldScope->GetWrappedNativeMap();
-        wrappersToMove.SizeTo(map->Count());
+        wrappersToMove.SetCapacity(map->Count());
         map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
     }
 
     // Now that we have the wrappers, reparent them to the new scope.
-    for(PRInt32 i = 0, stop = wrappersToMove.Count(); i < stop; ++i)
+    for(PRUint32 i = 0, stop = wrappersToMove.Length(); i < stop; ++i)
     {
         // First, check to see if this wrapper really needs to be
         // reparented.
 
-        XPCWrappedNative *wrapper =
-            static_cast<XPCWrappedNative *>(wrappersToMove[i]);
+        XPCWrappedNative *wrapper = wrappersToMove[i];
         nsISupports *identity = wrapper->GetIdentityObject();
         nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
 

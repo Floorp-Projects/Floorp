@@ -48,6 +48,7 @@
 // by the entire app.
 #define kTextMime                   "text/plain"
 #define kUnicodeMime                "text/unicode"
+#define kMozTextInternal          "text/x-moz-text-internal"  // text data which isn't suppoed to be parsed by other apps.
 #define kHTMLMime                   "text/html"
 #define kAOLMailMime                "AOLMAIL"
 #define kPNGImageMime               "image/png"

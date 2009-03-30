@@ -1,5 +1,7 @@
 #T commandline: ['-j2']
 
+# CAUTION: this makefile is also used by serial-toparallel.mk
+
 define SLOWMAKE
 printf "$@:0:" >>results
 sleep 0.5

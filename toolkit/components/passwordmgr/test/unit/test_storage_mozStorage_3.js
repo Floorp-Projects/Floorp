@@ -8,12 +8,23 @@
 
 
 const STORAGE_TYPE = "mozStorage";
+const ENCTYPE_BASE64 = 0;
+const ENCTYPE_SDR = 1;
 
 function run_test() {
 
 try {
 
 var storage, testnum = 0;
+
+function countBase64Logins(conn) {
+    let stmt = conn.createStatement("SELECT COUNT(1) as numBase64 FROM moz_logins " +
+                                    "WHERE encType = " + ENCTYPE_BASE64);
+    do_check_true(stmt.step());
+    let numBase64 = stmt.row.numBase64;
+    stmt.finalize();
+    return numBase64;
+}
 
 
 /* ========== 1 ========== */
@@ -26,6 +37,8 @@ var dummyuser2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
 var dummyuser3 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
+var dummyuser4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
 
 dummyuser1.init("http://dummyhost.mozilla.org", "", null,
     "testuser1", "testpass1", "put_user_here", "put_pw_here");
@@ -35,6 +48,10 @@ dummyuser2.init("http://dummyhost2.mozilla.org", "", null,
 
 dummyuser3.init("http://dummyhost2.mozilla.org", "", null,
     "testuser3", "testpass3", "put_user3_here", "put_pw3_here");
+
+dummyuser4.init("http://dummyhost4.mozilla.org", "", null,
+    "testuser4", "testpass4", "put_user4_here", "put_pw4_here");
+
 
 LoginTest.deleteFile(OUTDIR, "signons.sqlite");
 
@@ -559,6 +576,77 @@ LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
 testdesc = "[flush and reload for verification]"
 storage = LoginTest.reloadStorage(OUTDIR, "output-451155.sqlite");
 LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
+
+LoginTest.deleteFile(OUTDIR, "output-451155.sqlite");
+
+
+/*
+ * ---------------------- Bug 316984 ----------------------
+ * Ensure that base64 logins are reencrypted upon call to
+ * getAllLogins
+ */
+
+/* ========== 15 ========== */
+testnum++;
+testdesc = "ensure base64 logins are reencrypted on first call to getAllLogins"
+
+// signons-380961-3.txt contains 2 base64 logins & 1 normal
+storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
+                               OUTDIR, "output-316984-1.sqlite");
+
+// Check that we do have 2 base64 logins here.
+let dbConnection = LoginTest.openDB("output-316984-1.sqlite");
+do_check_eq(countBase64Logins(dbConnection), 2);
+
+// This makes a call to getAllLogins which should reencrypt
+LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
+
+// Check that there are 0 base64 logins remaining
+do_check_eq(countBase64Logins(dbConnection), 0);
+
+LoginTest.deleteFile(OUTDIR, "output-316984-1.sqlite");
+
+
+/* ========== 16 ========== */
+testnum++;
+testdesc = "ensure base64 logins are reencrypted when first new login is added"
+
+// signons-380961-3.txt contains 2 base64 logins & 1 normal
+storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
+                               OUTDIR, "output-316984-2.sqlite");
+
+// Check that we do have 2 base64 logins here.
+dbConnection = LoginTest.openDB("output-316984-2.sqlite");
+do_check_eq(countBase64Logins(dbConnection), 2);
+
+// Adding a new user should reencrypt the first time
+storage.addLogin(dummyuser4)
+
+// Check that there are 0 base64 logins remaining
+do_check_eq(countBase64Logins(dbConnection), 0);
+
+LoginTest.deleteFile(OUTDIR, "output-316984-2.sqlite");
+
+
+/* ========== 17 ========== */
+testnum++;
+testdesc = "ensure base64 logins are NOT reencrypted on call to countLogins"
+
+// signons-380961-3.txt contains 2 base64 logins & 1 normal
+storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
+                               OUTDIR, "output-316984-3.sqlite");
+
+// Check that we do have 2 base64 logins here.
+dbConnection = LoginTest.openDB("output-316984-3.sqlite");
+do_check_eq(countBase64Logins(dbConnection), 2);
+
+// countLogins should NOT reencrypt logins
+storage.countLogins("", "", "")
+
+// Check that there are still 2 base64 logins here
+do_check_eq(countBase64Logins(dbConnection), 2);
+
+LoginTest.deleteFile(OUTDIR, "output-316984-3.sqlite");
 
 
 

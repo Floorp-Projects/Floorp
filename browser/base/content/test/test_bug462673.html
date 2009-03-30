@@ -1,0 +1,18 @@
+<html>
+<head>
+<script>
+var w;
+function openIt() {
+  w = window.open("", "window2");
+}
+function closeIt() {
+  if (w) {
+    w.close();
+    w = null;
+  }
+}
+</script>
+</head>
+<body onload="openIt();" onunload="closeIt();">
+</body>
+</html>

@@ -7484,6 +7484,40 @@ nsDocument::SuppressEventHandling(PRUint32 aIncrease)
   EnumerateSubDocuments(SuppressEventHandlingInDocument, &aIncrease);
 }
 
+static void
+FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
+                         PRBool aFireEvents)
+{
+  for (PRUint32 i = 0; i < aDocuments.Length(); ++i) {
+    if (!aDocuments[i]->EventHandlingSuppressed()) {
+      nsPresShellIterator iter(aDocuments[i]);
+      nsCOMPtr<nsIPresShell> shell;
+      while ((shell = iter.GetNextShell())) {
+        shell->FireOrClearDelayedEvents(aFireEvents);
+      }
+    }
+  }
+}
+
+class nsDelayedEventDispatcher : public nsRunnable
+{
+public:
+  nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments)
+  {
+    mDocuments.SwapElements(aDocuments);
+  }
+  virtual ~nsDelayedEventDispatcher() {}
+
+  NS_IMETHOD Run()
+  {
+    FireOrClearDelayedEvents(mDocuments, PR_TRUE);
+    return NS_OK;
+  }
+
+private:
+  nsTArray<nsCOMPtr<nsIDocument> > mDocuments;
+};
+
 static PRBool
 GetAndUnsuppressSubDocuments(nsIDocument* aDocument, void* aData)
 {
@@ -7491,8 +7525,9 @@ GetAndUnsuppressSubDocuments(nsIDocument* aDocument, void* aData)
   if (suppression > 0) {
     static_cast<nsDocument*>(aDocument)->DecreaseEventSuppression();
   }
-  nsCOMArray<nsIDocument>* docs = static_cast<nsCOMArray<nsIDocument>* >(aData);
-  docs->AppendObject(aDocument);
+  nsTArray<nsCOMPtr<nsIDocument> >* docs =
+    static_cast<nsTArray<nsCOMPtr<nsIDocument> >* >(aData);
+  docs->AppendElement(aDocument);
   aDocument->EnumerateSubDocuments(GetAndUnsuppressSubDocuments, docs);
   return PR_TRUE;
 }
@@ -7503,17 +7538,15 @@ nsDocument::UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents)
   if (mEventsSuppressed > 0) {
     --mEventsSuppressed;
   }
-  nsCOMArray<nsIDocument> documents;
-  documents.AppendObject(this);
+
+  nsTArray<nsCOMPtr<nsIDocument> > documents;
+  documents.AppendElement(this);
   EnumerateSubDocuments(GetAndUnsuppressSubDocuments, &documents);
-  for (PRInt32 i = 0; i < documents.Count(); ++i) {
-    if (!documents[i]->EventHandlingSuppressed()) {
-      nsPresShellIterator iter(documents[i]);
-      nsCOMPtr<nsIPresShell> shell;
-      while ((shell = iter.GetNextShell())) {
-        shell->FireOrClearDelayedEvents(aFireEvents);
-      }
-    }
+
+  if (aFireEvents) {
+    NS_DispatchToCurrentThread(new nsDelayedEventDispatcher(documents));
+  } else {
+    FireOrClearDelayedEvents(documents, PR_FALSE);
   }
 }
 

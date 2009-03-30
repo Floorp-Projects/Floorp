@@ -44,7 +44,14 @@ function testActions(aArray, aIndex)
 
   gEventHandler.initialize(accOrElmOrID, elm, events);
 
-  acc.doAction(0);
+  try {
+    acc.doAction(0);
+  }
+  catch (e){
+    ok(false, "doAction(0) failed with: " + e.name);
+    SimpleTest.finish();
+    return;
+  }
 
   window.setTimeout(
     function()
@@ -63,7 +70,7 @@ var gEventHandler =
 {
   initialize: function(aID, aElm, aExpectedEvents)
   {
-    this.ID = aID,
+    this.ID = aID;
     this.element = aElm;
     this.mExpectedEvents = aExpectedEvents;
     this.mFiredEvents = 0;
