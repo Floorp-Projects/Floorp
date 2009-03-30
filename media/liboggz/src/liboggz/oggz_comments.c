@@ -57,9 +57,12 @@
 #define strcasecmp _stricmp
 #endif
 
+/* Ensure comment vector length can be expressed in 32 bits
+ * including space for the trailing NUL */
+#define MAX_COMMENT_LENGTH 0xFFFFFFFE
+#define oggz_comment_clamp(c) MIN((c),MAX_COMMENT_LENGTH)
 
-/* Ensure comment vector length can be expressed in 32 bits */
-static unsigned long
+static size_t
 oggz_comment_len (const char * s)
 {
   size_t len;
@@ -67,7 +70,7 @@ oggz_comment_len (const char * s)
   if (s == NULL) return 0;
 
   len = strlen (s);
-  return (unsigned long) MIN(len, 0xFFFFFFFF);
+  return oggz_comment_clamp(len);
 }
 
 static char *
@@ -82,11 +85,12 @@ oggz_strdup (const char * s)
 }
 
 static char *
-oggz_strdup_len (const char * s, int len)
+oggz_strdup_len (const char * s, size_t len)
 {
   char * ret;
   if (s == NULL) return NULL;
   if (len == 0) return NULL;
+  len = oggz_comment_clamp(len);
   ret = oggz_malloc (len + 1);
   if (!ret) return NULL;
   if (strncpy (ret, s, len) == NULL) {
@@ -173,12 +177,23 @@ oggz_comment_new (const char * name, const char * value)
   OggzComment * comment;
 
   if (!oggz_comment_validate_byname (name, value)) return NULL;
+  /* Ensures that name != NULL, value != NULL, and validates strings */
 
   comment = oggz_malloc (sizeof (OggzComment));
   if (comment == NULL) return NULL;
 
   comment->name = oggz_strdup (name);
+  if (comment->name == NULL) {
+    oggz_free (comment);
+    return NULL;
+  }
+
   comment->value = oggz_strdup (value);
+  if (comment->value == NULL) {
+    oggz_free (comment->name);
+    oggz_free (comment);
+    return NULL;
+  }
 
   return comment;
 }
@@ -217,7 +232,8 @@ _oggz_comment_set_vendor (OGGZ * oggz, long serialno,
 
   if (stream->vendor) oggz_free (stream->vendor);
 
-  stream->vendor = oggz_strdup (vendor_string);
+  if ((stream->vendor = oggz_strdup (vendor_string)) == NULL)
+    return OGGZ_ERR_OUT_OF_MEMORY;
 
   return 0;
 }
@@ -364,9 +380,11 @@ oggz_comment_add (OGGZ * oggz, long serialno, const OggzComment * comment)
       if (!oggz_comment_validate_byname (comment->name, comment->value))
         return OGGZ_ERR_COMMENT_INVALID;
 
-      new_comment = oggz_comment_new (comment->name, comment->value);
+      if ((new_comment = oggz_comment_new (comment->name, comment->value)) == NULL)
+        return OGGZ_ERR_OUT_OF_MEMORY;
 
-      _oggz_comment_add (stream, new_comment);
+      if (_oggz_comment_add (stream, new_comment) == NULL)
+        return OGGZ_ERR_OUT_OF_MEMORY;
 
       return 0;
     } else {
@@ -398,9 +416,11 @@ oggz_comment_add_byname (OGGZ * oggz, long serialno,
       if (!oggz_comment_validate_byname (name, value))
         return OGGZ_ERR_COMMENT_INVALID;
 
-      new_comment = oggz_comment_new (name, value);
+      if ((new_comment = oggz_comment_new (name, value)) == NULL)
+        return OGGZ_ERR_OUT_OF_MEMORY;
 
-      _oggz_comment_add (stream, new_comment);
+      if (_oggz_comment_add (stream, new_comment) == NULL)
+        return OGGZ_ERR_OUT_OF_MEMORY;
 
       return 0;
     } else {
@@ -531,7 +551,8 @@ oggz_comments_decode (OGGZ * oggz, long serialno,
 {
    oggz_stream_t * stream;
    char *c= (char *)comments;
-   int len, i, nb_fields, n;
+   int i, nb_fields, n;
+   size_t len;
    char *end;
    char * name, * value, * nvalue = NULL;
    OggzComment * comment;
@@ -543,16 +564,22 @@ oggz_comments_decode (OGGZ * oggz, long serialno,
    len=readint(c, 0);
 
    c+=4;
-   if (c+len>end) return -1;
+   if (len>(size_t)(end-c)) return -1;
 
    stream = oggz_get_stream (oggz, serialno);
    if (stream == NULL) return OGGZ_ERR_BAD_SERIALNO;
 
    /* Vendor */
-   nvalue = oggz_strdup_len (c, len);
-   if (!nvalue) return -1;
-   _oggz_comment_set_vendor (oggz, serialno, nvalue);
-   if (nvalue) oggz_free (nvalue);
+   if (len > 0) {
+     if ((nvalue = oggz_strdup_len (c, len)) == NULL)
+       return OGGZ_ERR_OUT_OF_MEMORY;
+
+     if (_oggz_comment_set_vendor (oggz, serialno, nvalue) == OGGZ_ERR_OUT_OF_MEMORY)
+       return OGGZ_ERR_OUT_OF_MEMORY;
+
+     oggz_free (nvalue);
+   }
+
 #ifdef DEBUG
    fwrite(c, 1, len, stderr); fputc ('\n', stderr);
 #endif
@@ -560,6 +587,8 @@ oggz_comments_decode (OGGZ * oggz, long serialno,
 
    if (c+4>end) return -1;
 
+   /* This value gets checked effectively by the 'for' condition
+      and the checks within the loop for c running off the end.  */
    nb_fields=readint(c, 0);
    c+=4;
    for (i=0;i<nb_fields;i++) {
@@ -568,7 +597,7 @@ oggz_comments_decode (OGGZ * oggz, long serialno,
       len=readint(c, 0);
 
       c+=4;
-      if (c+len>end) return -1;
+      if (len>(size_t)(end-c)) return -1;
 
       name = c;
       value = oggz_index_len (c, '=', len);
@@ -577,18 +606,30 @@ oggz_comments_decode (OGGZ * oggz, long serialno,
          value++;
 
          n = c+len - value;
-         nvalue = oggz_strdup_len (value, n);
+         if ((nvalue = oggz_strdup_len (value, n)) == NULL)
+           return OGGZ_ERR_OUT_OF_MEMORY;
+
 #ifdef DEBUG
          printf ("oggz_comments_decode: %s -> %s (length %d)\n",
          name, nvalue, n);
 #endif
-         comment = oggz_comment_new (name, nvalue);
-         _oggz_comment_add (stream, comment);
+         if ((comment = oggz_comment_new (name, nvalue)) == NULL)
+           return OGGZ_ERR_OUT_OF_MEMORY;
+
+         if (_oggz_comment_add (stream, comment) == NULL)
+           return OGGZ_ERR_OUT_OF_MEMORY;
+
          oggz_free (nvalue);
       } else {
-         nvalue = oggz_strdup_len (name, len);
-         comment = oggz_comment_new (nvalue, NULL);
-         _oggz_comment_add (stream, comment);
+         if ((nvalue = oggz_strdup_len (name, len)) == NULL)
+           return OGGZ_ERR_OUT_OF_MEMORY;
+
+         if ((comment = oggz_comment_new (nvalue, NULL)) == NULL)
+           return OGGZ_ERR_OUT_OF_MEMORY;
+
+         if (_oggz_comment_add (stream, comment) == NULL)
+           return OGGZ_ERR_OUT_OF_MEMORY;
+
          oggz_free (nvalue);
       }
 
@@ -648,7 +689,9 @@ oggz_comments_encode (OGGZ * oggz, long serialno,
 #endif
 
   /* user comment list length */
-  actual_length += 4;
+  if (accum_length (&actual_length, 4) == 0)
+    return 0;
+
 
   for (comment = oggz_comment_first (oggz, serialno); comment;
        comment = oggz_comment_next (oggz, serialno, comment)) {
@@ -686,7 +729,7 @@ oggz_comments_encode (OGGZ * oggz, long serialno,
     field_length = oggz_comment_len (stream->vendor);
     memcpy (c, stream->vendor, MIN (field_length, remaining));
     c += field_length; remaining -= field_length;
-    if (remaining <= 0 ) return actual_length;
+    if (remaining <= 0) return actual_length;
   }
 
   remaining -= 4;
