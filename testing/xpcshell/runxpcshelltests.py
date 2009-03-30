@@ -60,16 +60,16 @@ def readManifest(manifest):
   return testdirs
 
 def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
-             manifest=None, interactive=False, keepGoing=False):
+             manifest=None, interactive=False):
   """Run the tests in |testdirs| using the |xpcshell| executable.
+
   |xrePath|, if provided, is the path to the XRE to use.
   |testFile|, if provided, indicates a single test to run.
   |manifeest|, if provided, is a file containing a list of
     test directories to run.
   |interactive|, if set to True, indicates to provide an xpcshell prompt
     instead of automatically executing  the test.
-  |keepGoing|, if set to True, indicates that if a test fails
-    execution should continue."""
+  """
 
   if not testdirs and not manifest:
     # nothing to test!
@@ -197,8 +197,6 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testFile=None,
       # The file is not there if leak logging was not enabled in the xpcshell build.
       if os.path.exists(leakLogFile):
         os.remove(leakLogFile)
-      if not (success or keepGoing):
-        return False
 
   return success
 
@@ -214,9 +212,6 @@ def main():
   parser.add_option("--interactive",
                     action="store_true", dest="interactive", default=False,
                     help="don't automatically run tests, drop to an xpcshell prompt")
-  parser.add_option("--keep-going",
-                    action="store_true", dest="keepGoing", default=False,
-                    help="continue running tests past the first failure")
   parser.add_option("--manifest",
                     action="store", type="string", dest="manifest",
                     default=None, help="Manifest of test directories to use")
@@ -237,7 +232,6 @@ def main():
                   xrePath=options.xrePath,
                   testFile=options.testFile,
                   interactive=options.interactive,
-                  keepGoing=options.keepGoing,
                   manifest=options.manifest):
     sys.exit(1)
 
