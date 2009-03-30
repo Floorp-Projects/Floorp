@@ -106,6 +106,9 @@ typedef enum _FishSoundError {
   /** The requested operation is not suitable for this FishSound* handle */
   FISH_SOUND_ERR_INVALID                = -3,
 
+  /** Out of memory */
+  FISH_SOUND_ERR_OUT_OF_MEMORY          = -4,
+
   /** Functionality disabled at build time */
   FISH_SOUND_ERR_DISABLED               = -10,
 

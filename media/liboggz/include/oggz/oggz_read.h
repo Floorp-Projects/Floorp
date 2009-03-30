@@ -158,6 +158,7 @@ int oggz_set_read_page (OGGZ * oggz, long serialno,
  * returning OGGZ_STOP_OK
  * \retval OGGZ_ERR_STOP_ERR Reading was stopped by a user callback
  * returning OGGZ_STOP_ERR
+ * \retval OGGZ_ERR_HOLE_IN_DATA Hole (sequence number gap) detected in input data
  * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 long oggz_read (OGGZ * oggz, long n);
@@ -174,6 +175,8 @@ long oggz_read (OGGZ * oggz, long n);
  * returning OGGZ_STOP_OK
  * \retval OGGZ_ERR_STOP_ERR Reading was stopped by a user callback
  * returning OGGZ_STOP_ERR
+ * \retval OGGZ_ERR_HOLE_IN_DATA Hole (sequence number gap) detected in input data
+ * \retval OGGZ_ERR_OUT_OF_MEMORY Out of memory
  */
 long oggz_read_input (OGGZ * oggz, unsigned char * buf, long n);
 
