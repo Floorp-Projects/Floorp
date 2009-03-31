@@ -6111,8 +6111,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         }
         LAYOUT_PHASE_TEMP_EXIT();
         // Call ContentInserted with this index.
-        ContentInserted(aContainer, aContainer->GetChildAt(i), i,
-                        mTempFrameTreeState);
+        ContentInserted(aContainer, content, i, mTempFrameTreeState);
         LAYOUT_PHASE_TEMP_REENTER();
       }
 
