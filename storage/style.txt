@@ -3,8 +3,11 @@ Storage Module Style Guidelines
 These guidelines should be followed for all new code in this module.  Reviewers
 will be enforcing them, so please obey them!
 
-* All code should be contained within the namespace Mozilla::Storage at a
+* All code should be contained within the namespace mozilla::storage at a
   minimum.  The use of namespaces is strongly encouraged.
+
+* All functions being called in the global namespace should be prefixed with
+  "::" to indicate that they are in the global namespace.
 
 * The indentation level to use in source code is two spaces.  No tabs, please!
 
