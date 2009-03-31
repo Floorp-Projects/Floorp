@@ -64,7 +64,7 @@
                         <box class="backgroundBar"/>
                         <progressmeter class="bufferBar"/>
                         <progressmeter class="progressBar" max="10000"/>
-                        <scale class="scrubber"/>
+                        <scale class="scrubber" movetoclick="true"/>
                     </stack>
                     <button class="muteButton" oncommand="document.getBindingParent(this).Utils.toggleMute();"/>
                 </hbox>
