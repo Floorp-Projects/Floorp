@@ -5863,7 +5863,8 @@ nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
         res = selection->GetRangeAt(i, getter_AddRefs(range));
         if (NS_FAILED(res)) return res;
         nsCOMPtr<nsIDOMNode> startContainer;
-        range->GetStartContainer(getter_AddRefs(startContainer));
+        res = range->GetStartContainer(getter_AddRefs(startContainer));
+        if (NS_FAILED(res)) continue;
         if (!focusNode)
           focusNode = startContainer;
         else if (focusNode != startContainer) {

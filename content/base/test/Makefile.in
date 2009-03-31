@@ -97,6 +97,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug339494.html \
 		test_bug339494.xhtml \
 		test_bug339494.xul \
+		test_bug340571.html \
 		test_bug343596.html \
 		test_bug345339.html \
 		345339_iframe.html \

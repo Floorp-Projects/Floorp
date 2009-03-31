@@ -1315,12 +1315,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->GetIgnoreScrollFrame() == mOuter) {
     // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
     // The scrolled frame shouldn't have its own background/border, so we
-    // can just pass aLists directly. We do need to replace aDirtyRect with
-    // the scrolled area though, since callers may have restricted aDirtyRect
-    // to our bounds.
-    nsRect newDirty = GetScrolledRect(GetScrollPortSize()) +
-        aBuilder->ToReferenceFrame(mScrolledFrame);
-    return mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, newDirty, aLists);
+    // can just pass aLists directly.
+    return mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame,
+                                            aDirtyRect, aLists);
   }
 
   // Now display the scrollbars and scrollcorner. These parts are drawn

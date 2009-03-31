@@ -2386,8 +2386,16 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     PangoContext *pangoContext = gdk_pango_context_get();
 #endif
 
-    if (!theme_is_qt)
-      gdk_display_close(display);
+    PRBool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
+
+    if (!buggyCairoShutdown) {
+      // We should shut down GDK before we shut down libraries it depends on
+      // like Pango and cairo. But if cairo shutdown is buggy, we should
+      // shut down cairo first otherwise it may crash because of dangling
+      // references to Display objects (see bug 469831).
+      if (!theme_is_qt)
+        gdk_display_close(display);
+    }
 
 #if CLEANUP_MEMORY
     // This doesn't take a reference.
@@ -2415,6 +2423,11 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     cairo_debug_reset_static_data();
 #endif // 2.8.0
 #endif // CLEANUP_MEMORY
+
+    if (buggyCairoShutdown) {
+      if (!theme_is_qt)
+        gdk_display_close(display);
+    }
   }
 }
 #endif // MOZ_WIDGET_GTK2

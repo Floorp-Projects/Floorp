@@ -56,7 +56,7 @@
 #include "nsIFileChannel.h"
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 //
 // Native BeOS FileSelector wrapper
@@ -104,7 +104,7 @@ protected:
   nsIUnicodeEncoder*            mUnicodeEncoder;
   nsIUnicodeDecoder*            mUnicodeDecoder;
   PRInt16                       mSelectedType;
-  nsCOMPtr <nsISupportsArray>   mFiles;
+  nsCOMArray<nsILocalFile>      mFiles;
 
 #ifdef FILEPICKER_SAVE_LAST_DIR
   static char                      mLastUsedDirectory[];

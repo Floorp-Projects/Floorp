@@ -52,13 +52,13 @@
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <stack flex="1">
-            <vbox class="statusOverlay">
+            <vbox class="statusOverlay" hidden="true">
                 <box class="statusIcon" flex="1"/>
             </vbox>
 
             <vbox>
                 <spacer flex="1"/>
-                <hbox class="controlBar">
+                <hbox class="controlBar" hidden="true">
                     <button class="playButton" oncommand="document.getBindingParent(this).Utils.togglePause();"/>
                     <stack class="scrubberStack" flex="1">
                         <box class="backgroundBar"/>
@@ -509,12 +509,8 @@
                     //self.log("Fading " + fader.name + " to opacity " + opacity);
 
                     fader.element.style.opacity = opacity;
-
-                    // Use .visibility to ignore mouse clicks when hidden.
-                    if (fader.isVisible)
-                        fader.element.style.visibility = "visible";
-                    else
-                        fader.element.style.visibility = "hidden";
+                    // Hide the element to ignore mouse clicks and reduce throbber CPU usage.
+                    fader.element.setAttribute("hidden", !fader.isVisible);
 
                     // Is the animation done?
                     if (pos == 1) {
@@ -596,8 +592,7 @@
             // (Note: the |controls| attribute is already handled via layout/style/html.css)
             if (!(video.autoplay && video.mozAutoplayEnabled) || !this.Utils.dynamicControls) {
                 var fader = this.Utils.controlFader;
-                fader.element.style.visibility = "visible";
-                fader.element.style.opacity = 1.0;
+                fader.element.setAttribute("hidden", "false");
                 fader.isVisible = true;
                 fader.fadingIn = true;
             }

@@ -98,6 +98,8 @@ let gFunctions = [
   [4, function(n) n==1?0:n==0||n%100>0&&n%100<=10?1:n%100>10&&n%100<20?2:3],
   // 14: Macedonian
   [3, function(n) n%10==1?0:n%10==2?1:2],
+  // 15: Icelandic
+  [2, function(n) n%10==1&&n%100!=11?0:1],
 ];
 
 let PluralForm = {

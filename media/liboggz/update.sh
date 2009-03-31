@@ -5,6 +5,7 @@
 cp $1/config.h ./include/oggz/config.h
 echo "#undef DEBUG" >>./include/oggz/config.h
 cp $1/win32/config.h ./include/oggz/config_win32.h
+echo >>./include/oggz/config_win32.h
 echo "#undef DEBUG" >>./include/oggz/config_win32.h
 cp $1/include/oggz/oggz_write.h ./include/oggz/oggz_write.h
 cp $1/include/oggz/oggz_io.h ./include/oggz/oggz_io.h

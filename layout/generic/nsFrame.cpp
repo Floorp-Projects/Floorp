@@ -1466,8 +1466,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       dirty.Empty();
     }
     pseudoStackingContext = PR_TRUE;
-  } else {
-    dirty.IntersectRect(dirty, aChild->GetOverflowRect());
   }
 
   if (aBuilder->GetPaintAllFrames()) {
@@ -1476,12 +1474,21 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // No need to descend into aChild to catch placeholders for visible
     // positioned stuff. So see if we can short-circuit frame traversal here.
 
-    // We can stop if aChild's intersection with the dirty area ended up empty.
+    // We can stop if aChild's frame subtree's intersection with the
+    // dirty area is empty.
     // If the child is a scrollframe that we want to ignore, then we need
     // to descend into it because its scrolled child may intersect the dirty
     // area even if the scrollframe itself doesn't.
-    if (dirty.IsEmpty() && aChild != aBuilder->GetIgnoreScrollFrame())
-      return NS_OK;
+    if (aChild != aBuilder->GetIgnoreScrollFrame()) {
+      nsRect childDirty;
+      if (!childDirty.IntersectRect(dirty, aChild->GetOverflowRect()))
+        return NS_OK;
+      // Usually we could set dirty to childDirty now but there's no
+      // benefit, and it can be confusing. It can especially confuse
+      // situations where we're going to ignore a scrollframe's clipping;
+      // we wouldn't want to clip the dirty area to the scrollframe's
+      // bounds in that case.
+    }
 
     // Note that aBuilder->GetRootMovingFrame() is non-null only if we're doing
     // ComputeRepaintRegionForCopy.
@@ -1948,6 +1955,9 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // NS_STYLE_USER_SELECT_TOGGLE, need to change this logic
   PRBool useFrameSelection = (selectStyle == NS_STYLE_USER_SELECT_TEXT);
 
+  if (!IsMouseCaptured(aPresContext))
+    CaptureMouse(aPresContext, PR_TRUE);
+
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
   const nsFrameSelection* frameselection = nsnull;
@@ -1956,19 +1966,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   else
     frameselection = shell->ConstFrameSelection();
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-  ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
-  
-  if (!IsMouseCaptured(aPresContext) && offsets.content) {
-    PRInt32 offset;
-    nsIFrame* capturingFrame = frameselection->
-      GetFrameForNodeOffset(offsets.content, offsets.offset, 
-                            nsFrameSelection::HINT(offsets.associateWithNext),
-                            &offset);
-    if (capturingFrame)
-      capturingFrame->CaptureMouse(aPresContext, PR_TRUE);
-  }
-    
   if (frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
 
@@ -1991,6 +1988,9 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     fc->SetMouseDoubleDown(PR_TRUE);
     return HandleMultiplePress(aPresContext, aEvent, aEventStatus, control);
   }
+
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+  ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
 
   if (!offsets.content)
     return NS_ERROR_FAILURE;

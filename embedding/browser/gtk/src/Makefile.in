@@ -126,5 +126,7 @@ $(MARSHAL_FILE).h: $(MARSHAL_FILE).list
 $(MARSHAL_FILE).c: $(MARSHAL_FILE).list $(MARSHAL_FILE).h
 	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $@
 
+gtkmozembed2.$(OBJ_SUFFIX): $(MARSHAL_FILE).h
+
 GARBAGE += $(MARSHAL_FILE).h $(MARSHAL_FILE).c
 

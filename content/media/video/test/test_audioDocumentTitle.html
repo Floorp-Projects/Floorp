@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463830
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463830">Mozilla Bug 463830</a>
 <p id="display"></p>
+<iframe id="i"></iframe>
 <div id="content" style="display: none">
   
 </div>
@@ -28,20 +29,23 @@ var gTestNum = 0;
 
 addLoadEvent(runTest);
 
+var title;
+var i = document.getElementById("i");
+
 function runTest() {
   if (gTestNum == gTests.length) {
     SimpleTest.finish();
     return;
   }
-  var file = gTests[gTestNum].file;
-  var title = gTests[gTestNum].title;
-  var w = window.open(file, "", "width=500,height=300");
-  w.onload =
-    function() {
-      is(w.document.title, title, "Audio doc title incorrect");
-      w.close();
-      setTimeout(runTest, 0);
-    };
+  if (gTestNum == 0) {
+    i.addEventListener("load", function() {
+          is(i.contentDocument.title, title, "Doc title incorrect");
+          setTimeout(runTest, 0);
+        }, false);
+  }
+
+  title = gTests[gTestNum].title;
+  i.src = gTests[gTestNum].file;
   gTestNum++;
 }
 

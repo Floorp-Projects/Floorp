@@ -210,6 +210,9 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
     if(nframes < s->period_size)
       len = nframes;
     frames = snd_pcm_writei(s->output_unit, data, len);
+    if (frames == -EAGAIN || frames == -EINTR)
+      continue;
+
     if (frames < 0) {
       frames = snd_pcm_recover(s->output_unit, frames, 1);
       if (frames < 0) {
@@ -219,8 +222,9 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
       if(frames > 0 && frames < len)
         printf("short write (expected %d, wrote %d)\n", (int)len, (int)frames);
     }
-    nframes -= s->period_size;
-    data = ((unsigned char *)data) + s->period_bytes;
+    nframes -= len;
+
+    data = ((unsigned char *)data) + (unsigned int)snd_pcm_frames_to_bytes(s->output_unit, len);
   }
 
   s->bytes_written += nbytes;
@@ -240,14 +244,20 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
 
 int
 sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
-  snd_pcm_sframes_t avail;
-
+  snd_pcm_status_t *status;
+  snd_pcm_uframes_t avail;
+  int r = 0;
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
 
-  avail = snd_pcm_avail_update(s->output_unit);
+  snd_pcm_status_alloca(&status);
+  if ((r = snd_pcm_status(s->output_unit, status)) < 0) {
+    *size = 0;
+    return SA_ERROR_SYSTEM;
+  }
 
+  avail = snd_pcm_status_get_avail(status);
   *size = snd_pcm_frames_to_bytes(s->output_unit, avail);
 
   return SA_SUCCESS;
@@ -270,17 +280,19 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
     delay = 0;
   }
   else if (snd_pcm_delay (s->output_unit, &delay) != 0) {
-    printf("snd_pcm_delay failed\n");
     delay = 0;
   }
   if (delay < 0) {
+    snd_pcm_forward(s->output_unit, -delay);
     delay = 0;
   }
   if (delay > s->buffer_size) {
-    printf("delay just wrong %d vs %d\n", delay, s->buffer_size);
     delay = s->buffer_size;
   }
 
+  snd_pcm_avail_update(s->output_unit);
+  // delay means audio is 'x' frames behind what we've written. We need to
+  // subtract the delay from the data written to return the actual bytes played.
   s->bytes_played = s->bytes_written - snd_pcm_frames_to_bytes(s->output_unit, delay);
 
   *pos = s->bytes_played;
