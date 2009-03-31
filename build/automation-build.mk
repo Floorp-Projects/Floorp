@@ -24,13 +24,7 @@ endif
 _PROFILE_DIR = $(TARGET_DEPTH)/_profile/pgo
 _SYMBOLS_PATH = $(TARGET_DIST)/crashreporter-symbols
 
-ifneq (,$(filter /%,$(topsrcdir)))
-# $(topsrcdir) is already an absolute pathname.
-ABSOLUTE_TOPSRCDIR = $(topsrcdir)
-else
-# $(topsrcdir) is a relative pathname: prepend the current directory.
-ABSOLUTE_TOPSRCDIR = $(CURDIR)/$(topsrcdir)
-endif
+ABSOLUTE_TOPSRCDIR = $(call core_abspath,$(topsrcdir))
 _CERTS_SRC_DIR = $(ABSOLUTE_TOPSRCDIR)/build/pgo/certs
 
 AUTOMATION_PPARGS = 	\
