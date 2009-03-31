@@ -99,8 +99,8 @@ var descs = [];
 for (var desc in gCSSFontFaceDescriptors)
   descs.push(desc);
 descs = descs.reverse();
-function do_one(l) {
-  if (l.length == 0) {
+function do_one() {
+  if (descs.length == 0) {
     // SimpleTest.finish() is really slow, so we have to disable the
     // slow script dialog for this part
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -116,10 +116,10 @@ function do_one(l) {
 
     return;
   }
-  test_descriptor(l.pop());
-  setTimeout(do_one, 0, l);
+  test_descriptor(descs.pop());
+  SimpleTest.executeSoon(do_one);
 }
-setTimeout(do_one, 0, descs);
+SimpleTest.executeSoon(do_one);
 
 </script>
 </pre>
