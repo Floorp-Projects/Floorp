@@ -257,13 +257,11 @@ class JarMaker(object):
     if self.outputFormat == 'jar':
       #jar
       jarfilepath = jarfile + '.jar'
-      if os.path.isfile(jarfilepath) and \
-            os.path.getsize(jarfilepath) > 0:
-        jf = ZipFile(jarfilepath, 'a', lock = True)
-      else:
-        if not os.path.isdir(os.path.dirname(jarfilepath)):
-          os.makedirs(os.path.dirname(jarfilepath))
-        jf = ZipFile(jarfilepath, 'w', lock = True)
+      try:
+        os.makedirs(os.path.dirname(jarfilepath))
+      except OSError:
+        pass
+      jf = ZipFile(jarfilepath, 'a', lock = True)
       outHelper = self.OutputHelper_jar(jf)
     else:
       outHelper = getattr(self, 'OutputHelper_' + self.outputFormat)(jarfile)
