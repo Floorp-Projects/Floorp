@@ -11,10 +11,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
   <script>
   
   var gLoadedDataCount = 0;
-  
+  var gLog = false;
+  var gTestWindow;
+
   function log(msg) {
-    //document.getElementById('log').innerHTML += "<p>"+msg+"</p>";
-    //dump(msg + "\n");
+    if (gLog) {
+      document.getElementById('log').innerHTML += "<p>"+msg+"</p>";
+      dump(msg + "\n");
+    }
   }
   
   function loadeddata() {
@@ -24,6 +28,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
   function loaded() {
     is(gLoadedDataCount, 5, "onload was not delayed until after metadataloaded");
     log("doc-loaded gLoadedDataCount = " + gLoadedDataCount);
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    gTestWindow.close();
+
     SimpleTest.finish();
   }
   
@@ -50,8 +58,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 /** Test for Bug 479711 **/
 
 var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'load', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
-
-
 
 function listener(evt) {
   log('event ' + evt.target.id + " " + evt.type);
@@ -90,13 +96,11 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var v4 = createVideo("v4");
 v4.load(); // load started while in this document, this doc's load will block until
             // the video's finished loading (in the other document).
-var gTestWindow = window.open("", "testWindow", "width=400,height=400");
+// Opening a new window to do this is a bit annoying, but if we use an iframe here,
+// delaying of the iframe's load event might interfere with the firing of our load event
+// in some confusing way. So it's simpler just to open another window.
+gTestWindow = window.open("", "testWindow", "width=400,height=400");
 gTestWindow.document.body.appendChild(v4);
-v4.addEventListener('load',
-  function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    gTestWindow.close();
-  }, false);
   
 </script>
 </pre>

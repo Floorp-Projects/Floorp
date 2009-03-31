@@ -85,11 +85,11 @@ public:
   OggPlayErrorCode destroy();
   size_t io_read(char* aBuffer, size_t aCount);
   int io_seek(long aOffset, int aWhence);
-  long io_tell();  
+  long io_tell();
   ogg_int64_t duration();
   
 public:
-  nsMediaStream mStream;
+  nsAutoPtr<nsMediaStream> mStream;
 
   // Duration of the media resource. -1 if not known.
   PRInt64 mDuration;

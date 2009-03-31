@@ -184,8 +184,7 @@ LOCAL_INCLUDES += \
 
 ifdef MOZ_MATHML
 LOCAL_INCLUDES += \
-        -I$(srcdir)/../mathml/content/src \
-        -I$(srcdir)/../mathml/base/src
+        -I$(srcdir)/../mathml
 endif
 
 ifdef MOZ_SVG

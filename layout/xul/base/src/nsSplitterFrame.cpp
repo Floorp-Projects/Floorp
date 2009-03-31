@@ -45,7 +45,6 @@
 
 #include "nsSplitterFrame.h"
 #include "nsGkAtoms.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMDocument.h"

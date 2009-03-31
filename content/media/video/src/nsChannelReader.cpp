@@ -39,13 +39,13 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
-#include "nsMediaDecoder.h"
+#include "nsOggDecoder.h"
 #include "nsChannelReader.h"
 #include "nsIScriptSecurityManager.h"
 
 void nsChannelReader::Cancel()
 {
-  mStream.Cancel();
+  mStream->Cancel();
 }
 
 OggPlayErrorCode nsChannelReader::initialise(int aBlock)
@@ -55,18 +55,18 @@ OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 
 OggPlayErrorCode nsChannelReader::destroy()
 {
-  mStream.Close();
+  mStream->Close();
   return E_OGGPLAY_OK;
 }
 
 void nsChannelReader::Suspend()
 {
-  mStream.Suspend();
+  mStream->Suspend();
 }
 
 void nsChannelReader::Resume()
 {
-  mStream.Resume();
+  mStream->Resume();
 }
 
 void nsChannelReader::SetDuration(PRInt64 aDuration)
@@ -77,16 +77,19 @@ void nsChannelReader::SetDuration(PRInt64 aDuration)
 size_t nsChannelReader::io_read(char* aBuffer, size_t aCount)
 {
   PRUint32 bytes = 0;
-  nsresult rv = mStream.Read(aBuffer, aCount, &bytes);
+  nsresult rv = mStream->Read(aBuffer, aCount, &bytes);
   if (!NS_SUCCEEDED(rv)) {
     return static_cast<size_t>(OGGZ_ERR_SYSTEM);
   }
+  nsOggDecoder* decoder =
+    static_cast<nsOggDecoder*>(mStream->Decoder());
+  decoder->NotifyBytesConsumed(bytes);
   return bytes;
 }
 
 int nsChannelReader::io_seek(long aOffset, int aWhence)
 {
-  nsresult rv = mStream.Seek(aWhence, aOffset);
+  nsresult rv = mStream->Seek(aWhence, aOffset);
   if (NS_SUCCEEDED(rv))
     return aOffset;
   
@@ -95,7 +98,7 @@ int nsChannelReader::io_seek(long aOffset, int aWhence)
 
 long nsChannelReader::io_tell()
 {
-  return mStream.Tell();
+  return mStream->Tell();
 }
 
 ogg_int64_t nsChannelReader::duration()
@@ -147,7 +150,8 @@ nsresult nsChannelReader::Init(nsMediaDecoder* aDecoder, nsIURI* aURI,
                                nsIChannel* aChannel,
                                nsIStreamListener** aStreamListener)
 {
-  return mStream.Open(aDecoder, aURI, aChannel, aStreamListener);
+  return nsMediaStream::Open(aDecoder, aURI, aChannel,
+                             getter_Transfers(mStream), aStreamListener);
 }
 
 nsChannelReader::~nsChannelReader()
@@ -172,5 +176,5 @@ nsChannelReader::nsChannelReader() :
 nsIPrincipal*
 nsChannelReader::GetCurrentPrincipal()
 {
-  return mStream.GetCurrentPrincipal();
+  return mStream->GetCurrentPrincipal();
 }

@@ -58,10 +58,6 @@
 #include <unistd.h>
 #include <time.h>
 
-// _atsFontID is private; add it in our new category to NSFont
-@interface NSFont (MozillaCategory)
-- (ATSUFontID)_atsFontID;
-@end
 
 // font info loader constants
 static const PRUint32 kDelayBeforeLoadingCmaps = 8 * 1000; // 8secs
@@ -123,8 +119,8 @@ gfxQuartzFontCache::GenerateFontListKey(const nsAString& aKeyName, nsAString& aR
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, 
                                PRInt32 aWeight, PRUint32 aTraits,
                                PRBool aIsStandardFace)
-    : gfxFontEntry(aPostscriptName), mTraits(aTraits), mATSUFontID(0),
-      mATSUIDInitialized(0), mStandardFace(aIsStandardFace)
+    : gfxFontEntry(aPostscriptName), mTraits(aTraits), mATSFontRef(0),
+      mATSFontRefInitialized(PR_FALSE), mStandardFace(aIsStandardFace)
 {
     mWeight = aWeight;
 
@@ -132,11 +128,11 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     mFixedPitch = (mTraits & NSFixedPitchFontMask ? 1 : 0);
 }
 
-MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSUFontID aFontID,
+MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFontRef,
                                PRUint16 aWeight, PRUint16 aStretch, PRUint32 aItalicStyle,
                                gfxUserFontData *aUserFontData)
-    : gfxFontEntry(aPostscriptName), mATSUFontID(aFontID),
-      mATSUIDInitialized(PR_TRUE), mStandardFace(PR_FALSE)
+    : gfxFontEntry(aPostscriptName), mATSFontRef(aFontRef),
+      mATSFontRefInitialized(PR_TRUE), mStandardFace(PR_FALSE)
 {
     // xxx - stretch is basically ignored for now
 
@@ -151,16 +147,16 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSUFontID aFon
               (mWeight >= 600 ? NSBoldFontMask : NSUnboldFontMask);
 }
 
-ATSUFontID
-MacOSFontEntry::GetFontID() 
+ATSFontRef
+MacOSFontEntry::GetFontRef() 
 {
-    if (!mATSUIDInitialized) {
-        mATSUIDInitialized = PR_TRUE;
+    if (!mATSFontRefInitialized) {
+        mATSFontRefInitialized = PR_TRUE;
         NSString *psname = GetNSStringForString(mName);
-        NSFont *font = [NSFont fontWithName:psname size:0.0];
-        if (font) mATSUFontID = [font _atsFontID];
+        mATSFontRef = ATSFontFindFromPostScriptName(CFStringRef(psname),
+                                                    kATSOptionFlagsDefault);
     }
-    return mATSUFontID; 
+    return mATSFontRef;
 }
 
 // ATSUI requires AAT-enabled fonts to render complex scripts correctly.
@@ -194,12 +190,12 @@ MacOSFontEntry::ReadCMAP()
     ByteCount size, cmapSize;
 
     if (mCmapInitialized) return NS_OK;
-    ATSUFontID fontID = GetFontID();
+    ATSFontRef fontRef = GetFontRef();
 
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
 
-    status = ATSFontGetTable(fontID, 'cmap', 0, 0, 0, &size);
+    status = ATSFontGetTable(fontRef, 'cmap', 0, 0, 0, &size);
     cmapSize = size;
     //printf( "cmap size: %s %d", NS_ConvertUTF16toUTF8(mName).get(), size );
 #if DEBUG
@@ -216,7 +212,7 @@ MacOSFontEntry::ReadCMAP()
         return NS_ERROR_OUT_OF_MEMORY;
     PRUint8 *cmap = buffer.Elements();
 
-    status = ATSFontGetTable(fontID, 'cmap', 0, size, cmap, &size);
+    status = ATSFontGetTable(fontRef, 'cmap', 0, size, cmap, &size);
     NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
 
     nsresult rv = NS_ERROR_FAILURE;
@@ -236,13 +232,13 @@ MacOSFontEntry::ReadCMAP()
             
             // check for mort/morx table, if haven't already
             if (!checkedForMorphTable) {
-                status = ATSFontGetTable(fontID, 'morx', 0, 0, 0, &size);
+                status = ATSFontGetTable(fontRef, 'morx', 0, 0, 0, &size);
                 if (status == noErr) {
                     checkedForMorphTable = PR_TRUE;
                     hasMorphTable = PR_TRUE;
                 } else {
                     // check for a mort table
-                    status = ATSFontGetTable(fontID, 'mort', 0, 0, 0, &size);
+                    status = ATSFontGetTable(fontRef, 'mort', 0, 0, 0, &size);
                     checkedForMorphTable = PR_TRUE;
                     if (status == noErr) {
                         hasMorphTable = PR_TRUE;
@@ -547,11 +543,13 @@ enum {
 
 // returns true if other names were found, false otherwise
 static PRBool ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamilyFunctor, MacOSFamilyEntry *aFamilyEntry,
-                                        NSString *familyName, ATSUFontID fontID, bool useFullName = false)
+                                        NSString *familyName, ATSFontRef aFontRef, bool useFullName = false)
 {
     OSStatus err;
     ItemCount i, nameCount;
     PRBool foundNames = PR_FALSE;
+
+    ATSUFontID fontID = FMGetFontFromATSFontRef(aFontRef);
 
     if (fontID == kATSUInvalidFontID)
         return foundNames;
@@ -619,7 +617,7 @@ MacOSFamilyEntry::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFu
     // read in other family names for the first face in the list
     MacOSFontEntry *fe = mAvailableFonts[0];
 
-    mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontID());
+    mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontRef());
 
     // read in other names for the first face in the list with the assumption
     // that if extra names don't exist in that face then they don't exist in
@@ -632,7 +630,7 @@ MacOSFamilyEntry::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFu
         numFonts = mAvailableFonts.Length();
         for (i = 1; i < numFonts; i++) {
             fe = mAvailableFonts[i];
-            ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontID());
+            ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontRef());
         }
     }
 }
@@ -671,7 +669,7 @@ void SingleFaceFamily::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFam
     MacOSFontEntry *fe = mAvailableFonts[0];
 
     // read in other names, using the full font names as the family names
-    mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontID(), true);    
+    mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, this, familyName, fe->GetFontRef(), true);    
 }
 
 /* gfxQuartzFontCache */
@@ -815,7 +813,7 @@ gfxQuartzFontCache::InitFontList()
     // clean up various minor 10.4 font problems for specific fonts
     if (gfxPlatformMac::GetPlatform()->OSXVersion() < MAC_OS_X_VERSION_10_5_HEX) {
         // Cocoa calls report that italic faces exist for Courier and Helvetica,
-        // even though only bold faces exist so test for this using ATSUI id's (10.5 has proper faces)
+        // even though only bold faces exist so test for this using ATS font refs (10.5 has proper faces)
         EliminateDuplicateFaces(NS_LITERAL_STRING("Courier"));
         EliminateDuplicateFaces(NS_LITERAL_STRING("Helvetica"));
         
@@ -944,8 +942,8 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
     MacOSFontEntry *italic, *nonitalic;
     PRUint32 boldtraits[2] = { 0, NSBoldFontMask };
 
-    // if normal and italic have the same ATSUI id, delete italic
-    // if bold and bold-italic have the same ATSUI id, delete bold-italic
+    // if normal and italic have the same ATS font ref, delete italic
+    // if bold and bold-italic have the same ATS font ref, delete bold-italic
 
     // two iterations, one for normal, one for bold
     for (bold = 0; bold < 2; bold++) {
@@ -973,9 +971,11 @@ gfxQuartzFontCache::EliminateDuplicateFaces(const nsAString& aFamilyName)
                 }
             }
 
-            // if italic face and non-italic face have matching ATSUI id's, 
-            // the italic face is bogus so remove it
-            if (italic && italic->GetFontID() == nonitalic->GetFontID()) {
+            // if italic face and non-italic face have matching ATS refs,
+            // or if the italic returns 0 rather than an actual ATSFontRef,
+            // then the italic face is bogus so remove it
+            if (italic && (italic->GetFontRef() == 0 ||
+                           italic->GetFontRef() == nonitalic->GetFontRef())) {
                 fontlist.RemoveElementAt(italicIndex);
             }
         }
@@ -1334,7 +1334,7 @@ gfxQuartzFontCache::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 // grumble, another non-publised Apple API dependency (found in Webkit code)
 // activated with this value, font will not be found via system lookup routines
-// it can only be used via the created ATSUFontID
+// it can only be used via the created ATSFontRef
 // needed to prevent one doc from finding a font used in a separate doc
 
 enum {

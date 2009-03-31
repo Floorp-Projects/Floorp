@@ -52,30 +52,107 @@
 
 class nsMediaDecoder;
 
-// An abstract class that implements the low level functionality of nsMediaStream to open, close,
-// read and seek in streams. nsMediaStream constructs a concrete implementation of this class based
-// on the channel type to enable efficient seeking, reading and writing optimized for the channel type.
-class nsStreamStrategy 
+/*
+   Provides the ability to open, read and seek into a media stream
+   (audio, video). Handles the underlying machinery to do range
+   requests, etc as needed by the actual stream type. Instances of
+   this class must be created on the main thread. 
+
+   Open, Close and Cancel must be called on the main thread only. Once
+   the stream is open the remaining methods (except for Close and
+   Cancel) may be called on another thread which may be a non main
+   thread. They may not be called on multiple other threads though. In
+   the case of the Ogg Decoder they are called on the Decode thread
+   for example. You must ensure that no threads are calling these
+   methods once Close is called.
+   
+   Instances of this class are explicitly managed. 'delete' it when done.
+*/
+class nsMediaStream 
 {
 public:
- nsStreamStrategy(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  virtual ~nsMediaStream()
+  {
+    PR_DestroyLock(mLock);
+    MOZ_COUNT_DTOR(nsMediaStream);
+  }
+
+  // Close the stream, stop any listeners, channels, etc.
+  // Call on main thread only.
+  virtual nsresult Close() = 0;
+  // Read up to aCount bytes from the stream. The buffer must have
+  // enough room for at least aCount bytes. Stores the number of
+  // actual bytes read in aBytes (0 on end of file). Can be called
+  // from any thread. May read less than aCount bytes if the number of
+  // available bytes is less than aCount. Always check *aBytes after
+  // read, and call again if necessary.
+  virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes) = 0;
+  // Seek to the given bytes offset in the stream. aWhence can be
+  // one of:
+  //   NS_SEEK_SET
+  //   NS_SEEK_CUR
+  //   NS_SEEK_END
+  //
+  // Can be called from any thread.
+  // In the Http strategy case the cancel will cause the http
+  // channel's listener to close the pipe, forcing an i/o error on any
+  // blocked read. This will allow the decode thread to complete the
+  // event.
+  // 
+  // In the case of a seek in progress, the byte range request creates
+  // a new listener. This is done on the main thread via seek
+  // synchronously dispatching an event. This avoids the issue of us
+  // closing the listener but an outstanding byte range request
+  // creating a new one. They run on the same thread so no explicit
+  // synchronisation is required. The byte range request checks for
+  // the cancel flag and does not create a new channel or listener if
+  // we are cancelling.
+  //
+  // The default strategy does not do any seeking - the only issue is
+  // a blocked read which it handles by causing the listener to close
+  // the pipe, as per the http case.
+  //
+  // The file strategy doesn't block for any great length of time so
+  // is fine for a no-op cancel.
+  virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
+  // Report the current offset in bytes from the start of the stream.
+  // Can be called from any thread.
+  virtual PRInt64  Tell() = 0;
+  // Cancels any currently blocking request and forces that request to
+  // return an error. Call on main thread only.
+  virtual void     Cancel() { }
+  // Call on main thread only.
+  virtual nsIPrincipal* GetCurrentPrincipal() = 0;
+  // Suspend any downloads that are in progress. Call on the main thread
+  // only.
+  virtual void     Suspend() = 0;
+  // Resume any downloads that have been suspended. Call on the main thread
+  // only.
+  virtual void     Resume() = 0;
+
+  nsMediaDecoder* Decoder() { return mDecoder; }
+
+  /**
+   * Create a stream, reading data from the 
+   * media resource at the URI. Call on main thread only.
+   * @param aChannel if non-null, this channel is used and aListener
+   * is set to the listener we want for the channel. aURI must
+   * be the URI for the channel, obtained via NS_GetFinalChannelURI.
+   */
+  static nsresult Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
+                       nsIChannel* aChannel, nsMediaStream** aStream,
+                       nsIStreamListener** aListener);
+
+protected:
+  nsMediaStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
     mLock(nsnull)  
   {
-    MOZ_COUNT_CTOR(nsStreamStrategy);
+    MOZ_COUNT_CTOR(nsMediaStream);
     mLock = PR_NewLock();
   }
-
-  virtual ~nsStreamStrategy()
-  {
-    PR_DestroyLock(mLock);
-    MOZ_COUNT_DTOR(nsStreamStrategy);
-  }
-
-  // These methods have the same thread calling requirements 
-  // as those with the same name in nsMediaStream
 
   /**
    * @param aStreamListener if null, the strategy should open mChannel
@@ -84,18 +161,7 @@ public:
    * *aStreamListener to null, if it doesn't need a listener).
    */
   virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
-  virtual nsresult Close() = 0;
-  virtual nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes) = 0;
-  virtual nsresult Seek(PRInt32 aWhence, PRInt64 aOffset) = 0;
-  virtual PRInt64  Tell() = 0;
-  virtual void     Cancel() { }
-  virtual nsIPrincipal* GetCurrentPrincipal() = 0;
-  virtual void     Suspend() = 0;
-  virtual void     Resume() = 0;
 
-  nsMediaDecoder* Decoder() { return mDecoder; }
-
-protected:
   // This is not an nsCOMPointer to prevent a circular reference
   // between the decoder to the media stream object. The stream never
   // outlives the lifetime of the decoder.
@@ -114,84 +180,6 @@ protected:
   // Read or Seek is in progress since it resets various internal
   // values to null.
   PRLock* mLock;
-};
-
-/* 
-   Provides the ability to open, read and seek into a media stream
-   (audio, video). Handles the underlying machinery to do range
-   requests, etc as needed by the actual stream type. Instances of
-   this class must be created on the main thread. 
-
-   Open, Close and Cancel must be called on the main thread only. Once
-   the stream is open the remaining methods (except for Close and
-   Cancel) may be called on another thread which may be a non main
-   thread. They may not be called on multiple other threads though. In
-   the case of the Ogg Decoder they are called on the Decode thread
-   for example. You must ensure that no threads are calling these
-   methods once Close is called.
-*/
-class nsMediaStream
-{
- public:
-  nsMediaStream();
-  ~nsMediaStream();
-
-  /**
-   * Create a channel for the stream, reading data from the 
-   * media resource at the URI. Call on main thread only.
-   * @param aChannel if non-null, this channel is used and aListener
-   * is set to the listener we want for the channel. aURI must
-   * be the URI for the channel, obtained via NS_GetFinalChannelURI.
-   */
-  nsresult Open(nsMediaDecoder* aDecoder, nsIURI* aURI,
-                nsIChannel* aChannel, nsIStreamListener** aListener);
-
-  // Close the stream, stop any listeners, channels, etc.
-  // Call on main thread only.
-  nsresult Close();
-
-  // Read up to aCount bytes from the stream. The buffer must have
-  // enough room for at least aCount bytes. Stores the number of
-  // actual bytes read in aBytes (0 on end of file). Can be called
-  // from any thread. May read less than aCount bytes if the number of
-  // available bytes is less than aCount. Always check *aBytes after
-  // read, and call again if necessary.
-  nsresult Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes);
-
-  // Seek to the given bytes offset in the stream. aWhence can be
-  // one of:
-  //   NS_SEEK_SET
-  //   NS_SEEK_CUR
-  //   NS_SEEK_END
-  //
-  // Can be called from any thread.
-  nsresult Seek(PRInt32 aWhence, PRInt64 aOffset);
-
-  // Report the current offset in bytes from the start of the stream.
-  // Can be called from any thread.
-  PRInt64 Tell();
-
-  // Cancels any currently blocking request and forces that request to
-  // return an error. Call on main thread only.
-  void Cancel();
-
-  // Call on main thread only.
-  nsIPrincipal* GetCurrentPrincipal();
-
-  // Suspend any downloads that are in progress. Call on the main thread
-  // only.
-  void Suspend();
-
-  // Resume any downloads that have been suspended. Call on the main thread
-  // only.
-  void Resume();
-
- private:
-  // Strategy object that is used for the handling seeking, etc
-  // Accessed from any thread. Set on the Open call on the main thread
-  // only. Open is always called first on the main thread before any
-  // other calls from other threads.
-  nsAutoPtr<nsStreamStrategy> mStreamStrategy;
 };
 
 #endif

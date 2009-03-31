@@ -20,6 +20,8 @@
   <script type="application/javascript;version=1.7"><![CDATA[
     function loadTests()
     {
+      window.removeEventListener("load", loadTests, false);
+
       var dir = document.documentElement.getAttribute('directory');
       // Find our chrome dir
       var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -62,7 +64,8 @@
       if ("testPath" in params && params.testPath)
         window.location.href = url + params.testPath;
     }
-    window.addEventListener("load", loadTests, false)
+
+    window.addEventListener("load", loadTests, false);
   ]]>
   </script>
 

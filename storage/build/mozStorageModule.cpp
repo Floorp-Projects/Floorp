@@ -47,8 +47,15 @@
 
 #include "mozStorageCID.h"
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(mozStorageService,
-                                         mozStorageService::GetSingleton)
+namespace mozilla {
+namespace storage {
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Service,
+                                         Service::getSingleton)
+
+} // namespace storage
+} // namespace mozilla
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageStatementWrapper)
 
 static const nsModuleComponentInfo components[] =
@@ -56,7 +63,7 @@ static const nsModuleComponentInfo components[] =
     { "Unified Data Store Service",
       MOZ_STORAGE_SERVICE_CID,
       MOZ_STORAGE_SERVICE_CONTRACTID,
-      mozStorageServiceConstructor
+      mozilla::storage::ServiceConstructor
     },
 
     { "Unified Data Store Scriptable Statement Wrapper",

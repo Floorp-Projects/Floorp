@@ -466,13 +466,16 @@ NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
                         nsIEventTarget        *target,
                         PRBool                 sourceBuffered = PR_TRUE,
                         PRBool                 sinkBuffered = PR_TRUE,
-                        PRUint32               chunkSize = 0)
+                        PRUint32               chunkSize = 0,
+                        PRBool                 closeSource = PR_TRUE,
+                        PRBool                 closeSink = PR_TRUE)
 {
     nsresult rv;
     nsCOMPtr<nsIAsyncStreamCopier> copier =
         do_CreateInstance(NS_ASYNCSTREAMCOPIER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered, chunkSize);
+        rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered,
+                          chunkSize, closeSource, closeSink);
         if (NS_SUCCEEDED(rv)) {
             *result = nsnull;
             copier.swap(*result);

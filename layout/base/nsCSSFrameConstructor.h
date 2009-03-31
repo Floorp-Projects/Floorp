@@ -276,12 +276,6 @@ public:
   nsIFrame* GetDocElementContainingBlock()
     { return mDocElementContainingBlock; }
 
-  // Returns true if we've torn down the frame tree.
-  // Usually this means we've started destroying the presentation, but
-  // we could also have mostly torn it down in preparation for
-  // reconstructing frames for the entire document.
-  PRBool IsDestroyingFrameTree() { return mIsDestroyingFrameTree; }
-
 private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;

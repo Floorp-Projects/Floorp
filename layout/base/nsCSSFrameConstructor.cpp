@@ -47,7 +47,6 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
@@ -90,7 +89,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsIDeviceContext.h"
 #include "nsTextFragment.h"
-#include "nsISupportsArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
 #include "nsLegendFrame.h"
@@ -6100,6 +6098,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       // ContentInserted will ignore the passed-in index.
       PRUint32 containerCount = aContainer->GetChildCount();
       for (PRUint32 i = aNewIndexInContainer; i < containerCount; i++) {
+        nsIContent* content = aContainer->GetChildAt(i);
+        if (mPresShell->GetPrimaryFrameFor(content)) {
+          // Already have a frame for this content; a previous ContentInserted
+          // in this loop must have reconstructed its insertion parent.  Skip
+          // it.
+          continue;
+        }
         LAYOUT_PHASE_TEMP_EXIT();
         // Call ContentInserted with this index.
         ContentInserted(aContainer, aContainer->GetChildAt(i), i,
@@ -6201,10 +6206,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
+  LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
                           !parentAfterFrame, nsnull)) {
+    LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   nsFrameItems frameItems;
   ConstructFramesFromItemList(state, items, parentFrame, frameItems);
@@ -6614,10 +6622,13 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // a special inline frame.
   // If we're appending before :after content, then we're not really
   // appending, so let WipeContainingBlock know that.
+  LAYOUT_PHASE_TEMP_EXIT();
   if (WipeContainingBlock(state, containingBlock, parentFrame, items,
-                          isAppend && !appendAfterFrame, prevSibling))
+                          isAppend && !appendAfterFrame, prevSibling)) {
+    LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
-
+  }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
