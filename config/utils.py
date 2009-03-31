@@ -50,11 +50,9 @@ class LockFile(object):
   This object should not be used directly, but only through
   the lockFile method below.
   '''
-  def __init__(self, lockfile, fd):
+  def __init__(self, lockfile):
     self.lockfile = lockfile
-    self.fd = fd
   def __del__(self):
-    os.close(self.fd)
     os.remove(self.lockfile)
 
 
@@ -102,8 +100,10 @@ def lockFile(lockfile, max_wait = 600):
   # if we get here. we have the lockfile. Convert the os.open file
   # descriptor into a Python file object and record our PID in it
   
-  os.write(fd, "%d\n" % os.getpid())
-  return LockFile(lockfile, fd)
+  f = os.fdopen(fd, "w")
+  f.write("%d\n" % os.getpid())
+  f.close()
+  return LockFile(lockfile)
 
 class pushback_iter(object):
   '''Utility iterator that can deal with pushed back elements.
