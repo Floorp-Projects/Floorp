@@ -236,7 +236,7 @@ static avmplus::AvmCore* core = &s_core;
 
 #ifdef JS_JIT_SPEW
 void
-js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, uint32 globalShape);
+js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape);
 #endif
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
@@ -480,32 +480,36 @@ js_Backoff(Fragment* tree, const jsbytecode* where)
 }
 
 static inline size_t
-fragmentHash(const void *ip, uint32 globalShape)
+fragmentHash(const void *ip, JSObject* globalObj, uint32 globalShape)
 {
     uintptr_t h = HASH_SEED;
     hash_accum(h, uintptr_t(ip), FRAGMENT_TABLE_MASK);
+    hash_accum(h, uintptr_t(globalObj), FRAGMENT_TABLE_MASK);
     hash_accum(h, uintptr_t(globalShape), FRAGMENT_TABLE_MASK);
     return size_t(h);
 }
 
 struct VMFragment : public Fragment
 {
-    VMFragment(const void* _ip, uint32 _globalShape) :
+    VMFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape) :
         Fragment(_ip),
         next(NULL),
+        globalObj(_globalObj),
         globalShape(_globalShape)
     {}
     VMFragment* next;
+    JSObject* globalObj;
     uint32 globalShape;
 };
 
 static VMFragment*
-getVMFragment(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
+getVMFragment(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalShape)
 {
-    size_t h = fragmentHash(ip, globalShape);
+    size_t h = fragmentHash(ip, globalObj, globalShape);
     VMFragment* vf = tm->vmfragments[h];
     while (vf &&
-           ! (vf->globalShape == globalShape &&
+           ! (vf->globalObj == globalObj &&
+              vf->globalShape == globalShape &&
               vf->ip == ip)) {
         vf = vf->next;
     }
@@ -513,18 +517,18 @@ getVMFragment(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
 }
 
 static VMFragment*
-getLoop(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
+getLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalShape)
 {
-    return getVMFragment(tm, ip, globalShape);
+    return getVMFragment(tm, ip, globalObj, globalShape);
 }
 
 static Fragment*
-getAnchor(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
+getAnchor(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalShape)
 {
-    VMFragment *f = new (&gc) VMFragment(ip, globalShape);
+    VMFragment *f = new (&gc) VMFragment(ip, globalObj, globalShape);
     JS_ASSERT(f);
 
-    Fragment *p = getVMFragment(tm, ip, globalShape);
+    Fragment *p = getVMFragment(tm, ip, globalObj, globalShape);
 
     if (p) {
         f->first = p;
@@ -536,7 +540,7 @@ getAnchor(JSTraceMonitor* tm, const void *ip, uint32 globalShape)
     } else {
         /* this is the first fragment */
         f->first = f;
-        size_t h = fragmentHash(ip, globalShape);
+        size_t h = fragmentHash(ip, globalObj, globalShape);
         f->next = tm->vmfragments[h];
         tm->vmfragments[h] = f;
     }
@@ -558,7 +562,7 @@ js_AttemptCompilation(JSTraceMonitor* tm, JSObject* globalObj, jsbytecode* pc)
     /*
      * Breath new live into all peer fragments at the designated loop header.
      */
-    Fragment* f = (VMFragment*)getLoop(tm, pc, OBJ_SHAPE(globalObj));
+    Fragment* f = (VMFragment*)getLoop(tm, pc, globalObj, OBJ_SHAPE(globalObj));
     if (!f) {
         /*
          * If the global object's shape changed, we can't easily find the
@@ -1260,7 +1264,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     cx_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, cx)), "cx");
     eos_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eos)), "eos");
     eor_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eor)), "eor");
-    globalObj_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, globalObj)), "globalObj");
 
     /* If we came from exit, we might not have enough global types. */
     if (ti->globalSlots->length() > ti->nGlobalTypes())
@@ -2552,7 +2555,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
     JS_ASSERT(exit->numStackSlots == treeInfo->nStackTypes);
 
     VMFragment* root = (VMFragment*)fragment->root;
-    peer_root = getLoop(traceMonitor, root->ip, root->globalShape);
+    peer_root = getLoop(traceMonitor, root->ip, root->globalObj, root->globalShape);
     JS_ASSERT(peer_root != NULL);
 
     stable = deduceTypeStability(peer_root, &peer, demote);
@@ -2704,7 +2707,8 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
         }
     }
 
-    debug_only_v(js_DumpPeerStability(traceMonitor, peer_root->ip, peer_root->globalShape);)
+    debug_only_v(js_DumpPeerStability(traceMonitor, peer_root->ip,
+                                      peer_root->globalObj, peer_root->globalShape);)
 }
 
 /* Emit an always-exit guard and compile the tree (used for break statements. */
@@ -2727,7 +2731,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
         return;
 
     VMFragment* root = (VMFragment*)fragment->root;
-    joinEdgesToEntry(tm->fragmento, getLoop(tm, root->ip, root->globalShape));
+    joinEdgesToEntry(tm->fragmento, getLoop(tm, root->ip, root->globalObj, root->globalShape));
 
     /* Note: this must always be done, in case we added new globals on trace and haven't yet 
        propagated those to linked and dependent trees. */
@@ -3031,10 +3035,10 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
         VMFragment* root = (VMFragment*)tm->recorder->getFragment()->root;
         TreeInfo* ti = tm->recorder->getTreeInfo();
         /* Check the global shape matches the recorder's treeinfo's shape. */
-        if (globalShape != root->globalShape) {
+        if (globalObj != root->globalObj || globalShape != root->globalShape) {
             AUDIT(globalShapeMismatchAtEntry);
-            debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
-                                globalShape, root->globalShape);)
+            debug_only_v(printf("Global object/shape mismatch (%p/%u vs. %p/%u), flushing cache.\n",
+                                globalObj, globalShape, root->globalObj, root->globalShape);)
             return false;
         }
         if (shape)
@@ -3049,12 +3053,13 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
         GlobalState &state = tm->globalStates[i];
 
         if (state.globalShape == (uint32) -1) {
+            state.globalObj = globalObj;
             state.globalShape = globalShape;
             JS_ASSERT(state.globalSlots);
             JS_ASSERT(state.globalSlots->length() == 0);
         }
 
-        if (tm->globalStates[i].globalShape == globalShape) {
+        if (state.globalObj == globalObj && state.globalShape == globalShape) {
             if (shape)
                 *shape = globalShape;
             if (slots)
@@ -3299,12 +3304,11 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
 JS_REQUIRES_STACK bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
-              uint32 globalShape, SlotList* globalSlots)
+              JSObject* globalObj, uint32 globalShape, SlotList* globalSlots)
 {
     JS_ASSERT(f->root == f);
 
     /* Make sure the global type map didn't change on us. */
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     if (!js_CheckGlobalObjectShape(cx, tm, globalObj)) {
         js_FlushJITCache(cx);
         return false;
@@ -3316,7 +3320,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     while (f->code() && f->peer)
         f = f->peer;
     if (f->code())
-        f = getAnchor(&JS_TRACE_MONITOR(cx), f->root->ip, globalShape);
+        f = getAnchor(&JS_TRACE_MONITOR(cx), f->root->ip, globalObj, globalShape);
 
     if (!f) {
         js_FlushJITCache(cx);
@@ -3345,7 +3349,8 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
        since we are trying to stabilize something without properly connecting peer edges. */
     #ifdef DEBUG
     TreeInfo* ti_other;
-    for (Fragment* peer = getLoop(tm, f->root->ip, globalShape); peer != NULL; peer = peer->peer) {
+    for (Fragment* peer = getLoop(tm, f->root->ip, globalObj, globalShape); peer != NULL;
+         peer = peer->peer) {
         if (!peer->code() || peer == f)
             continue;
         ti_other = (TreeInfo*)peer->vmprivate;
@@ -3469,7 +3474,7 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer)
                 tail = &uexit->next;
             }
             JS_ASSERT(bound);
-            debug_only_v(js_DumpPeerStability(tm, f->ip, from->globalShape);)
+            debug_only_v(js_DumpPeerStability(tm, f->ip, from->globalObj, from->globalShape);)
             break;
         } else if (undemote) {
             /* The original tree is unconnectable, so trash it. */
@@ -3481,7 +3486,8 @@ js_AttemptToStabilizeTree(JSContext* cx, VMSideExit* exit, jsbytecode* outer)
     if (bound)
         return false;
 
-    return js_RecordTree(cx, tm, from->first, outer, ((VMFragment*)from->root)->globalShape,
+    VMFragment* root = (VMFragment*)from->root;
+    return js_RecordTree(cx, tm, from->first, outer, root->globalObj, root->globalShape,
                          from_ti->globalSlots);
 }
 
@@ -3567,7 +3573,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     VMFragment* root = (VMFragment*)r->getFragment()->root;
 
     /* Does this branch go to an inner loop? */
-    Fragment* f = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc, root->globalShape);
+    Fragment* f = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc,
+                          root->globalObj, root->globalShape);
     if (!f) {
         /* Not an inner loop we can call, abort trace. */
         AUDIT(returnToDifferentLoopHeader);
@@ -3623,13 +3630,13 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 
         f = empty;
         if (!f) {
-            f = getAnchor(tm, cx->fp->regs->pc, globalShape);
+            f = getAnchor(tm, cx->fp->regs->pc, globalObj, globalShape);
             if (!f) {
                 js_FlushJITCache(cx);
                 return false;
             }
         }
-        return js_RecordTree(cx, tm, f, outer, globalShape, globalSlots);
+        return js_RecordTree(cx, tm, f, outer, globalObj, globalShape, globalSlots);
     }
 
     r->prepareTreeCall(f);
@@ -3879,7 +3886,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     /* Setup the interpreter state block, which is followed by the native global frame. */
     InterpState* state = (InterpState*)alloca(sizeof(InterpState) + (globalFrameSize+1)*sizeof(double));
     state->cx = cx;
-    state->globalObj = globalObj;
     state->inlineCallCountp = &inlineCallCount;
     state->innermostNestedGuardp = innermostNestedGuardp;
     state->outermostTree = ti;
@@ -4154,7 +4160,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     /* write back interned globals */
     double* global = (double*)(&state + 1);
     FlushNativeGlobalFrame(cx, ngslots, gslots, globalTypeMap, global);
-    JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(state.globalObj)] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(JS_GetGlobalForObject(cx, cx->fp->scopeChain))] ==
+              0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
 #ifdef DEBUG
@@ -4230,9 +4237,9 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     
     jsbytecode* pc = cx->fp->regs->pc;
 
-    Fragment* f = getLoop(tm, pc, globalShape);
+    Fragment* f = getLoop(tm, pc, globalObj, globalShape);
     if (!f)
-        f = getAnchor(tm, pc, globalShape);
+        f = getAnchor(tm, pc, globalObj, globalShape);
 
     if (!f) {
         js_FlushJITCache(cx);
@@ -4247,7 +4254,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
             return false;
         /* We can give RecordTree the root peer. If that peer is already taken, it will
            walk the peer list and find us a free slot or allocate a new tree if needed. */
-        return js_RecordTree(cx, tm, f->first, NULL, globalShape, globalSlots);
+        return js_RecordTree(cx, tm, f->first, NULL, globalObj, globalShape, globalSlots);
     }
 
     debug_only_v(printf("Looking for compat peer %d@%d, from %p (ip: %p)\n",
@@ -6126,7 +6133,7 @@ TraceRecorder::guardNotGlobalObject(JSObject* obj, LIns* obj_ins)
 {
     if (obj == globalObj)
         ABORT_TRACE("reference aliases global object");
-    guard(false, lir->ins2(LIR_eq, obj_ins, globalObj_ins), MISMATCH_EXIT);
+    guard(false, lir->ins2(LIR_eq, obj_ins, INS_CONSTPTR(globalObj)), MISMATCH_EXIT);
     return true;
 }
 
@@ -7540,7 +7547,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         if (!activeCallOrGlobalSlot(obj, vp))
             return false;
         stack(0, get(vp));
-        stack(1, globalObj_ins);
+        stack(1, INS_CONSTPTR(globalObj));
         return true;
     }
 
@@ -9686,14 +9693,14 @@ TraceRecorder::record_JSOP_LOOP()
 #ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */
 void
-js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, uint32 globalShape)
+js_DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape)
 {
     Fragment* f;
     TreeInfo* ti;
     bool looped = false;
     unsigned length = 0;
 
-    for (f = getLoop(tm, ip, globalShape); f != NULL; f = f->peer) {
+    for (f = getLoop(tm, ip, globalObj, globalShape); f != NULL; f = f->peer) {
         if (!f->vmprivate)
             continue;
         printf("fragment %p:\nENTRY: ", (void*)f);
