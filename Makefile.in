@@ -192,12 +192,12 @@ ifdef MOZ_CRASHREPORTER
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
 	cd $(DIST)/crashreporter-symbols && \
-          zip -r9D ../$(SYMBOL_ARCHIVE_BASENAME).zip .
+          zip -r9D ../"$(SYMBOL_ARCHIVE_BASENAME).zip" .
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip
+	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
 endif
 
 ifeq ($(OS_ARCH),WINNT)
