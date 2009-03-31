@@ -62,7 +62,7 @@ const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-const ORGANIZER_LEFTPANE_VERSION = 6;
+const ORGANIZER_LEFTPANE_VERSION = 5;
 const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
 
 #ifdef XP_MACOSX
@@ -1195,9 +1195,7 @@ var PlacesUIUtils = {
         PlacesUtils.bookmarks.setFolderReadonly(leftPaneRoot, true);
 
         // History Query
-        let uri = PlacesUtils._uri("place:type="+
-                                   Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY +
-                                   "&sort=4");
+        let uri = PlacesUtils._uri("place:sort=4&");
         let title = self.getString("OrganizerQueryHistory");
         let itemId = PlacesUtils.bookmarks.insertBookmark(leftPaneRoot, uri, -1, title);
         PlacesUtils.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,

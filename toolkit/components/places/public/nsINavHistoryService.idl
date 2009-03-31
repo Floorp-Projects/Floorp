@@ -978,7 +978,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This option excludes all URIs and separators from a bookmarks query.
    * This would be used if you just wanted a list of bookmark folders and
    * queries (such as the left pane of the places page).
-   * Defaults to false.
+   * Ignored for queries over history. Defaults to false.
    */
   attribute boolean excludeItems;
 
