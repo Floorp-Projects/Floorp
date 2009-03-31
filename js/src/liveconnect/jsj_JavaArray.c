@@ -48,6 +48,7 @@
 #include <string.h>
 
 #include "jsj_private.h"      /* LiveConnect internals */
+#include "jsobj.h"
 
 /* Shorthands for ASCII (7-bit) decimal and hex conversion. */
 #define JS7_ISDEC(c)    (((c) >= '0') && ((c) <= '9'))

@@ -57,6 +57,7 @@
 #include <string.h>
 
 #include "jsj_private.h"        /* LiveConnect internals */
+#include "jsobj.h"
 
 static JSBool
 JavaClass_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
