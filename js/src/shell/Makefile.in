@@ -56,6 +56,7 @@ LOCAL_INCLUDES += -I$(topsrcdir) -I..
 ifdef _MSC_VER
 ifdef WINCE
 WIN32_EXE_LDFLAGS += -ENTRY:mainACRTStartup
+EXTRA_LIBS += $(JEMALLOC_LIBS)
 endif
 endif
 
