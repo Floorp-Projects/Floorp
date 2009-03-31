@@ -2012,6 +2012,52 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static inline bool
+CreateMapForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* ops)
+{
+    JSObjectMap* map;
+    JSClass* protoclasp;
+    JSClass* clasp = OBJ_GET_CLASS(cx, obj);
+
+    /*
+     * Share proto's map only if it has the same JSObjectOps, and only if
+     * proto's class has the same private and reserved slots as obj's map
+     * and class have.  We assume that if prototype and object are of the
+     * same class, they always have the same number of computed reserved
+     * slots (returned via clasp->reserveSlots); otherwise, prototype and
+     * object classes must have the same (null or not) reserveSlots hook.
+     */
+    if (proto &&
+        ((map = proto->map)->ops == ops &&
+         ((protoclasp = OBJ_GET_CLASS(cx, proto)) == clasp ||
+          (!((protoclasp->flags ^ clasp->flags) &
+             (JSCLASS_HAS_PRIVATE |
+              (JSCLASS_RESERVED_SLOTS_MASK << JSCLASS_RESERVED_SLOTS_SHIFT))) &&
+           protoclasp->reserveSlots == clasp->reserveSlots))))
+    {
+        /* Share the given prototype's map. */
+        obj->map = js_HoldObjectMap(cx, map);
+        obj->dslots = NULL;
+        return true;
+    }
+
+    map = ops->newObjectMap(cx, 1, ops, clasp, obj);
+    if (!map)
+        return false;
+    obj->map = map;
+
+    /* Let ops->newObjectMap set freeslot so as to reserve slots. */
+    uint32 nslots = map->freeslot;
+    JS_ASSERT(nslots >= JSSLOT_PRIVATE);
+    if (nslots > JS_INITIAL_NSLOTS &&
+        !js_ReallocSlots(cx, obj, nslots, JS_TRUE)) {
+        js_DropObjectMap(cx, map, obj);
+        return false;
+    }
+
+    return true;
+}
+
 #ifdef JS_TRACER
 
 static inline JSObject*
@@ -2028,10 +2074,9 @@ NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
     for (unsigned i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
-    JS_ASSERT(!OBJ_GET_CLASS(cx, proto)->getObjectOps);
-    JS_ASSERT(proto->map->ops == &js_ObjectOps);
-    obj->map = js_HoldObjectMap(cx, proto->map);
-    obj->dslots = NULL;
+    if (!CreateMapForObject(cx, obj, proto, &js_ObjectOps))
+        return NULL;
+
     return obj;
 }
 
@@ -3051,9 +3096,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     JSObject *obj;
     JSObjectOps *ops;
-    JSObjectMap *map;
-    JSClass *protoclasp;
-    uint32 nslots, i;
+    uint32 i;
     JSTempValueRooter tvr;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -3128,40 +3171,8 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (proto && !parent)
         STOBJ_SET_PARENT(obj, OBJ_GET_PARENT(cx, proto));
 
-    /*
-     * Share proto's map only if it has the same JSObjectOps, and only if
-     * proto's class has the same private and reserved slots as obj's map
-     * and class have.  We assume that if prototype and object are of the
-     * same class, they always have the same number of computed reserved
-     * slots (returned via clasp->reserveSlots); otherwise, prototype and
-     * object classes must have the same (null or not) reserveSlots hook.
-     */
-    if (proto &&
-        (map = proto->map)->ops == ops &&
-        ((protoclasp = OBJ_GET_CLASS(cx, proto)) == clasp ||
-         (!((protoclasp->flags ^ clasp->flags) &
-            (JSCLASS_HAS_PRIVATE |
-             (JSCLASS_RESERVED_SLOTS_MASK << JSCLASS_RESERVED_SLOTS_SHIFT))) &&
-          protoclasp->reserveSlots == clasp->reserveSlots)))
-    {
-        /* Share the given prototype's map. */
-        obj->map = js_HoldObjectMap(cx, map);
-    } else {
-        map = ops->newObjectMap(cx, 1, ops, clasp, obj);
-        if (!map)
-            goto bad;
-        obj->map = map;
-
-        /* Let ops->newObjectMap set freeslot so as to reserve slots. */
-        nslots = map->freeslot;
-        JS_ASSERT(nslots >= JSSLOT_PRIVATE);
-        if (nslots > JS_INITIAL_NSLOTS &&
-            !js_ReallocSlots(cx, obj, nslots, JS_TRUE)) {
-            js_DropObjectMap(cx, map, obj);
-            obj->map = NULL;
-            goto bad;
-        }
-    }
+    if (!CreateMapForObject(cx, obj, proto, ops))
+        goto bad;
 
     /*
      * Do not call debug hooks on trace, because we might be in a non-_FAIL
