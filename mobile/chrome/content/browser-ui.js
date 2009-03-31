@@ -197,10 +197,7 @@ var BrowserUI = {
     document.getElementById("panel-items").selectedPanel = document.getElementById(id);
   },
 
-  sizeControls : function() {
-    let windowW = window.innerWidth;
-    let windowH = window.innerHeight;
-
+  sizeControls : function(windowW, windowH) {
     let toolbar = document.getElementById("toolbar-main");
     if (!this._toolbarH)
       this._toolbarH = toolbar.boxObject.height;
