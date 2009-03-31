@@ -201,19 +201,7 @@ for (var prop in gCSSProperties)
 props = props.reverse();
 function do_one() {
   if (props.length == 0) {
-    // SimpleTest.finish() is really slow, so we have to disable the
-    // slow script dialog for this part
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"].
-                        getService(Components.interfaces.nsIPrefService);
-    var domBranch = prefService.getBranch("dom.");
-    var oldVal = domBranch.getIntPref("max_script_run_time");
-    domBranch.setIntPref("max_script_run_time", 0);
-
     SimpleTest.finish();
-
-    domBranch.setIntPref("max_script_run_time", oldVal);
-
     return;
   }
   test_property(props.pop());
