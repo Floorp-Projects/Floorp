@@ -123,13 +123,6 @@ var Browser = {
       containerStyle.height = containerStyle.maxHeight = h + "px";
 
       ws.updateSize(w, h);
-
-      if (Browser._isStartup) {
-        // now we can set the viewport to a real size and draw the page
-        ws.endUpdateBatch();
-        Browser._selectedTab.updateThumbnail();
-        Browser._isStartup = false;
-      }
     }
     window.addEventListener("resize", resizeHandler, false);
 
@@ -1125,6 +1118,12 @@ ProgressController.prototype = {
       Browser.canvasBrowser.endLoading();
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
+      if (Browser._isStartup) {
+        // now we can set the viewport to a real size and draw the page
+        ws.endUpdateBatch();
+        Browser._selectedTab.updateThumbnail();
+        Browser._isStartup = false;
+      }
     }
     if (!this._isStartup)
       this._tab.updateThumbnail();
