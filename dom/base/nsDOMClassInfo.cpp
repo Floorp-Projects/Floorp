@@ -137,7 +137,6 @@
 
 // HTMLSelectElement helper includes
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIDOMNSXBLFormControl.h"
 
 // HTMLEmbed/ObjectElement helper includes
 #include "nsIPluginInstance.h"
@@ -2460,7 +2459,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(HTMLSelectElement, nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSXBLFormControl)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 

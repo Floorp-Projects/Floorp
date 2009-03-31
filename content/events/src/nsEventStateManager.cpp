@@ -1688,6 +1688,18 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       handler.OnQueryEditorRect((nsQueryContentEvent*)aEvent);
     }
     break;
+  case NS_QUERY_CONTENT_STATE:
+    {
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQueryContentState(static_cast<nsQueryContentEvent*>(aEvent));
+    }
+    break;
+  case NS_QUERY_SELECTION_AS_TRANSFERABLE:
+    {
+      nsContentEventHandler handler(mPresContext);
+      handler.OnQuerySelectionAsTransferable(static_cast<nsQueryContentEvent*>(aEvent));
+    }
+    break;
   case NS_SELECTION_SET:
     {
       nsContentEventHandler handler(mPresContext);

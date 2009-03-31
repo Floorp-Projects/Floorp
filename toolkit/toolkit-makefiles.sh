@@ -979,8 +979,7 @@ fi
 if [ "$MOZ_MATHML" ]; then
   add_makefiles "
     intl/uconv/ucvmath/Makefile
-    layout/mathml/base/src/Makefile
-    layout/mathml/content/src/Makefile
+    layout/mathml/Makefile
   "
 fi
 

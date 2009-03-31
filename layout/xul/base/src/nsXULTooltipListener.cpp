@@ -339,13 +339,11 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
 
   // get the boxObject of the documentElement of the document the tree is in
   nsCOMPtr<nsIBoxObject> bx;
-  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(sourceNode->GetDocument()));
+  nsIDocument* doc = sourceNode->GetDocument();
   if (doc) {
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
-    nsCOMPtr<nsIDOMElement> docElement;
-    doc->GetDocumentElement(getter_AddRefs(docElement));
-    if (nsDoc && docElement) {
-      nsDoc->GetBoxObjectFor(docElement, getter_AddRefs(bx));
+    nsCOMPtr<nsIDOMElement> docElement = do_QueryInterface(doc->GetRootContent());
+    if (docElement) {
+      doc->GetBoxObjectFor(docElement, getter_AddRefs(bx));
     }
   }
 

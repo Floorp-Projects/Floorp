@@ -583,10 +583,10 @@ var gEditItemOverlay = {
           tagsToAdd.push(tags[i]);
       }
 
-      if (tagsToAdd.length > 0)
-        txns.push(PlacesUIUtils.ptm.tagURI(this._uri, tagsToAdd));
       if (tagsToRemove.length > 0)
         txns.push(PlacesUIUtils.ptm.untagURI(this._uri, tagsToRemove));
+      if (tagsToAdd.length > 0)
+        txns.push(PlacesUIUtils.ptm.tagURI(this._uri, tagsToAdd));
 
       if (txns.length > 0) {
         var aggregate = PlacesUIUtils.ptm.aggregateTransactions("Update tags",

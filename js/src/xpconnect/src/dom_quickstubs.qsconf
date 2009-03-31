@@ -215,7 +215,7 @@ members = [
     #'nsIDOMNSDocument.location',
     'nsIDOMNSDocument.elementFromPoint',
     'nsIDOMNSDocument.activeElement',
-    'nsIDOMNSDocument.getBoxObjectFor',
+    'nsIDOMXULDocument.getBoxObjectFor',
     'nsIDOMXMLDocument.evaluateXPointer',
     'nsIDOMXMLDocument.evaluateFIXptr',
     'nsIDOMNSElement.getClientRects',
