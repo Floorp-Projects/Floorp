@@ -71,9 +71,6 @@
 #include "nsDataHashtable.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsICSSStyleSheet.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsICSSLoader.h"
 
 #ifdef MOZ_VIEW_SOURCE
 #include "nsViewSourceHTML.h"
@@ -224,7 +221,7 @@ public:
   nsresult StartParsing(nsParser *aParser);
   void StopParsing(PRBool aFromDocWrite);
 
-  enum PrefetchType { NONE, SCRIPT, STYLESHEET, IMAGE };
+  enum PrefetchType { SCRIPT, STYLESHEET, IMAGE };
   struct PrefetchEntry {
     PrefetchType type;
     nsString uri;
@@ -294,21 +291,6 @@ private:
   PRBool mTerminated;
 };
 
-/**
- * Used if we need to pass an nsICSSLoaderObserver as parameter,
- * but don't really need its services
- */
-class nsDummyCSSLoaderObserver : public nsICSSLoaderObserver {
-public:
-  NS_IMETHOD
-  StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate, nsresult aStatus) {
-      return NS_OK;
-  }
-  NS_DECL_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS1(nsDummyCSSLoaderObserver, nsICSSLoaderObserver)
-
 class nsPreloadURIs : public nsIRunnable {
 public:
   nsPreloadURIs(nsAutoTArray<nsSpeculativeScriptThread::PrefetchEntry, 5> &aURIs,
@@ -361,6 +343,10 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
     aScriptThread->GetPreloadedURIs();
   for (PRUint32 i = 0, e = aURIs.Length(); i < e; ++i) {
     const nsSpeculativeScriptThread::PrefetchEntry &pe = aURIs[i];
+    if (pe.type != nsSpeculativeScriptThread::SCRIPT) {
+      continue;
+    }
+
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), pe.uri, charset.get(), base);
     if (NS_FAILED(rv)) {
@@ -378,18 +364,7 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
 
     alreadyPreloaded.Put(spec, PR_TRUE);
 
-    switch (pe.type) {
-      case nsSpeculativeScriptThread::SCRIPT:
-        doc->ScriptLoader()->PreloadURI(uri, pe.charset, pe.elementType);
-        break; 
-      case nsSpeculativeScriptThread::IMAGE:
-        doc->PreLoadImage(uri);
-        break;
-      case nsSpeculativeScriptThread::STYLESHEET:
-        nsCOMPtr<nsICSSLoaderObserver> obs = new nsDummyCSSLoaderObserver();
-        doc->CSSLoader()->LoadSheet(uri, doc->NodePrincipal(), obs);
-        break;
-    }
+    doc->ScriptLoader()->PreloadURI(uri, pe.charset, pe.elementType);
   }
 }
 
@@ -578,73 +553,84 @@ nsSpeculativeScriptThread::ProcessToken(CToken *aToken)
         nsAutoString src;
         nsAutoString elementType;
         nsAutoString charset;
-        nsAutoString href;
-        nsAutoString rel;
-        PrefetchType ptype = NONE;
+        PrefetchType ptype = SCRIPT;
 
         switch (tag) {
-          case eHTMLTag_link:
-              ptype = STYLESHEET;
-              break;
-
-          case eHTMLTag_img:
-              ptype = IMAGE;
-              break;
-
-          case eHTMLTag_script:
-              ptype = SCRIPT;
-              break;
-
-          default:
-              break;
-        }
-
-        // We currently handle the following element/attribute combos :
-        //     <link rel="stylesheet" href= charset= type>
-        //     <img src= >
-        //     <script src= charset= type=>
-        if (ptype != NONE) {
-      
-            // 1. loop over all attributes to extract relevant info
-            for (; i < attrs ; ++i) {
+#if 0 // TODO Support stylesheet and image preloading.
+          case eHTMLTag_link: {
+            // If this is a <link rel=stylesheet> find the src.
+            PRBool isRelStylesheet = PR_FALSE;
+            for (; i < attrs; ++i) {
               CAttributeToken *attr = static_cast<CAttributeToken *>(mTokenizer->PopToken());
               NS_ASSERTION(attr->GetTokenType() == eToken_attribute, "Weird token");
-    
+
               if (attr->GetKey().EqualsLiteral("rel")) {
-                rel.Assign(attr->GetValue());
-              } else if (attr->GetKey().EqualsLiteral("href")) {
-                href.Assign(attr->GetValue());
+                if (!attr->GetValue().EqualsLiteral("stylesheet")) {
+                  IF_FREE(attr, &mTokenAllocator);
+                  break;
+                }
+                isRelStylesheet = PR_TRUE;
               } else if (attr->GetKey().EqualsLiteral("src")) {
+                src.Assign(attr->GetValue());
+                if (isRelStylesheet) {
+                  IF_FREE(attr, &mTokenAllocator);
+                  break;
+                }
+              }
+
+              IF_FREE(attr, &mTokenAllocator);
+            }
+
+            if (isRelStylesheet && !src.IsEmpty()) {
+              AddToPrefetchList(src, STYLESHEET);
+            }
+            break;
+          }
+
+          case eHTMLTag_style:
+            ptype = STYLESHEET;
+            /* FALL THROUGH */
+          case eHTMLTag_img:
+            if (tag == eHTMLTag_img)
+              ptype = IMAGE;
+            /* FALL THROUGH */
+#endif
+          case eHTMLTag_script:
+            if (tag == eHTMLTag_script)
+              ptype = SCRIPT;
+
+            for (; i < attrs; ++i) {
+              CAttributeToken *attr = static_cast<CAttributeToken *>(mTokenizer->PopToken());
+              NS_ASSERTION(attr->GetTokenType() == eToken_attribute, "Weird token");
+
+              if (attr->GetKey().EqualsLiteral("src")) {
                 src.Assign(attr->GetValue());
               } else if (attr->GetKey().EqualsLiteral("charset")) {
                 charset.Assign(attr->GetValue());
               } else if (attr->GetKey().EqualsLiteral("type")) {
                 elementType.Assign(attr->GetValue());
               }
-
               IF_FREE(attr, &mTokenAllocator);
             }
 
-            // 2. ensure we have the right kind if it's a link-element
-            if (ptype == STYLESHEET) {
-              if (rel.EqualsLiteral("stylesheet")) {
-                src = href; // src is the important variable below
-              } else {
-                src.Truncate(); // clear src if wrong kind of link
-              }
-            }
-
-            // 3. add to list if we have a valid src
             if (!src.IsEmpty()) {
               AddToPrefetchList(src, charset, elementType, ptype);
             }
-        } else {
-            // Irrelevant tag, but pop and free all its attributes in any case
-            for (; i < attrs ; ++i) {
-              CToken *attr = mTokenizer->PopToken();
-              IF_FREE(attr, &mTokenAllocator);
-            }
+            break;
+
+          default:
+            break;
         }
+
+        for (; i < attrs; ++i) {
+          CToken *attr = mTokenizer->PopToken();
+          if (!attr) {
+            break;
+          }
+          NS_ASSERTION(attr->GetTokenType() == eToken_attribute, "Weird token");
+          IF_FREE(attr, &mTokenAllocator);
+        }
+
         break;
       }
 
