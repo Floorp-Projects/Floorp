@@ -624,7 +624,7 @@ static struct {
     },
 };
 static struct {
-    jsbytecode custom_iter_next[10];
+    jsbytecode custom_iter_next[12];
     jsbytecode native_iter_next[12];
 } nextiter_imacros = {
     {
@@ -632,8 +632,10 @@ static struct {
 /* 1*/  JSOP_DUP,
 /* 2*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(next),
 /* 5*/  JSOP_CALL, 0, 0,
-/* 8*/  JSOP_TRUE,
-/* 9*/  JSOP_STOP,
+/* 8*/  JSOP_DUP,
+/* 9*/  JSOP_HOLE,
+/*10*/  JSOP_STRICTNE,
+/*11*/  JSOP_STOP,
     },
     {
 /* 0*/  JSOP_POP,
