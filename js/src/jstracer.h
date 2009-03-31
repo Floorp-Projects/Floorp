@@ -298,7 +298,6 @@ public:
     unsigned                maxCallDepth;
     TypeMap                 typeMap;
     unsigned                nStackTypes;
-    uint32                  globalShape;
     SlotList*               globalSlots;
     /* Dependent trees must be trashed if this tree dies, and updated on missing global types */
     Queue<nanojit::Fragment*> dependentTrees;
@@ -314,7 +313,6 @@ public:
 #endif
 
     TreeInfo(nanojit::Fragment* _fragment,
-             uint32 _globalShape,
              SlotList* _globalSlots)
       : fragment(_fragment),
         script(NULL),
@@ -322,7 +320,6 @@ public:
         nativeStackBase(0),
         maxCallDepth(0),
         nStackTypes(0),
-        globalShape(_globalShape),
         globalSlots(_globalSlots),
         branchCount(0),
         unstableExits(NULL)
@@ -572,7 +569,7 @@ public:
     JS_REQUIRES_STACK void closeLoop(JSTraceMonitor* tm, bool& demote);
     JS_REQUIRES_STACK void endLoop(JSTraceMonitor* tm);
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
-                                            nanojit::Fragment* peer_root);
+                                            VMFragment* peer_root);
     void blacklist() { fragment->blacklist(); }
     JS_REQUIRES_STACK bool adjustCallerTypes(nanojit::Fragment* f);
     JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f,
