@@ -2056,7 +2056,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
   nsCOMPtr<nsICSSStyleSheet> sheet;
   PRBool syncLoad = (aObserver == nsnull);
   
-  rv = CreateSheet(aURL, nsnull, nsnull, syncLoad, state,
+  rv = CreateSheet(aURL, nsnull, aOriginPrincipal, syncLoad, state,
                    getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
