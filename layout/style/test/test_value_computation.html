@@ -194,8 +194,8 @@ function run_tests() {
   for (var prop in gCSSProperties)
     props.push(prop);
   props = props.reverse();
-  function do_one(l) {
-    if (l.length == 0) {
+  function do_one() {
+    if (props.length == 0) {
       // SimpleTest.finish() is really slow, so we have to disable the
       // slow script dialog for this part
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -211,10 +211,10 @@ function run_tests() {
 
       return;
     }
-    test_property(l.pop());
-    setTimeout(do_one, 0, l);
+    test_property(props.pop());
+    SimpleTest.executeSoon(do_one);
   }
-  setTimeout(do_one, 0, props);
+  SimpleTest.executeSoon(do_one);
 }
 
 load_done();
