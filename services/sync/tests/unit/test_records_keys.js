@@ -9,24 +9,22 @@ try {
 
 Function.prototype.async = Async.sugar;
 
-let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-
 function pubkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
              modified: "2454725.98283",
-             payload: json.encode({type: "pubkey",
+             payload: JSON.stringify({type: "pubkey",
                                    private_key: "http://localhost:8080/privkey",
                                    key_data: "asdfasdfasf..."})};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function privkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234-2",
              modified: "2454725.98283",
-             payload: json.encode({type: "privkey",
+             payload: JSON.stringify({type: "privkey",
                                    public_key: "http://localhost:8080/pubkey",
                                    key_data: "asdfasdfasf..."})};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function async_test() {

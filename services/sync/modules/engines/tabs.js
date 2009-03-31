@@ -97,7 +97,7 @@ TabEngine.prototype = {
      * _addFennecTabsToRecord.  Unify? */
     if (Cc["@mozilla.org/browser/sessionstore;1"])  {
       let state = this._store._sessionStore.getBrowserState();
-      let session = this._store._json.decode(state);
+      let session = JSON.parse(state);
       for (let i = 0; i < session.windows.length; i++) {
         let window = session.windows[i];
         for (let j = 0; j < window.tabs.length; j++) {
@@ -158,7 +158,7 @@ TabStore.prototype = {
       jsonObj[id] = this._remoteClients[id].toJson();
     }
     let [fos] = Utils.open(file, ">");
-    fos.writeString(this._json.encode(jsonObj));
+    fos.writeString(JSON.stringify(jsonObj));
     fos.close();
   },
 
@@ -174,7 +174,7 @@ TabStore.prototype = {
       let [is] = Utils.open(file, "<");
       let json = Utils.readStream(is);
       is.close();
-      let jsonObj = this._json.decode(json);
+      let jsonObj = JSON.parse(json);
       for (let id in jsonObj) {
 	this._remoteClients[id] = new TabSetRecord();
 	this._remoteClients[id].fromJson(jsonObj[id]);
@@ -197,12 +197,6 @@ TabStore.prototype = {
                  .getService(Ci.nsIWindowMediator);
     this.__defineGetter__("_windowMediator", function() { return wm;});
     return this._windowMediator;
-  },
-
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() {return json;});
-    return this._json;
   },
 
   _createLocalClientTabSetRecord: function TabStore__createLocalTabSet() {
@@ -235,7 +229,7 @@ TabStore.prototype = {
         let tab = tabChild.QueryInterface(Ci.nsIDOMNode);
         if (!tab)
           continue;
-        let tabState = this._json.decode(this._sessionStore.getTabState(tab));
+        let tabState = JSON.parse(this._sessionStore.getTabState(tab));
 	// Skip empty (i.e. just-opened, no history yet) tabs:
 	if (tabState.entries.length == 0)
 	  continue;

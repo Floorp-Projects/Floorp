@@ -67,12 +67,6 @@ Tracker.prototype = {
   _logName: "Tracker",
   file: "none",
 
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return json;
-  },
-
   _init: function T__init() {
     this._log = Log4Moz.repository.getLogger(this._logName);
     this._score = 0;
@@ -124,7 +118,7 @@ Tracker.prototype = {
     let file = Utils.getProfileFile(
       {path: "weave/changes/" + this.file + ".json",
        autoCreate: true});
-    let out = this._json.encode(this.changedIDs);
+    let out = JSON.stringify(this.changedIDs);
     let [fos] = Utils.open(file, ">");
     fos.writeString(out);
     fos.close();
@@ -142,7 +136,7 @@ Tracker.prototype = {
       let json = Utils.readStream(is);
       is.close();
 
-      let ids = this._json.decode(json);
+      let ids = JSON.parse(json);
       for (let id in ids) {
         this.changedIDs[id] = 1;
       }

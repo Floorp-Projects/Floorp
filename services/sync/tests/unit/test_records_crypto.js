@@ -11,35 +11,34 @@ try {
 }
 Function.prototype.async = Async.sugar;
 
-let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 let keys, cryptoMeta, cryptoWrap;
 
 function pubkey_handler(metadata, response) {
   let obj = {id: "ignore-me",
              modified: keys.pubkey.modified,
-             payload: json.encode(keys.pubkey.payload)};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+             payload: JSON.stringify(keys.pubkey.payload)};
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function privkey_handler(metadata, response) {
   let obj = {id: "ignore-me-2",
              modified: keys.privkey.modified,
-             payload: json.encode(keys.privkey.payload)};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+             payload: JSON.stringify(keys.privkey.payload)};
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function crypted_resource_handler(metadata, response) {
   let obj = {id: "ignore-me-3",
              modified: cryptoWrap.modified,
-             payload: json.encode(cryptoWrap.payload)};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+             payload: JSON.stringify(cryptoWrap.payload)};
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function crypto_meta_handler(metadata, response) {
   let obj = {id: "ignore-me-4",
              modified: cryptoMeta.modified,
-             payload: json.encode(cryptoMeta.payload)};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+             payload: JSON.stringify(cryptoMeta.payload)};
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function async_test() {

@@ -478,7 +478,7 @@ WeaveSvc.prototype = {
       };
       yield res.get(self.cb);
 
-      //Svc.Json.decode(res.data); // throws if not json
+      //JSON.parse(res.data); // throws if not json
       self.done(true);
     };
     this._catchAll(this._notify("verify-login", "", fn)).async(this, onComplete);
@@ -961,7 +961,7 @@ WeaveSvc.prototype = {
       yield res.get(self.cb);
 
       // Get the array of collections and delete each one
-      let allCollections = Svc.Json.decode(res.data);
+      let allCollections = JSON.parse(res.data);
       for each (let name in allCollections) {
         try {
           // If we have a list of engines, make sure it's one we want
@@ -1198,9 +1198,9 @@ WeaveSvc.prototype = {
     let actionStr = command + "(" + args + ")";
 
     // Convert args into a string to simplify array comparisons
-    let jsonArgs = Svc.Json.encode(args);
+    let jsonArgs = JSON.stringify(args);
     let notDupe = function(action) action.command != command ||
-      Svc.Json.encode(action.args) != jsonArgs;
+      JSON.stringify(action.args) != jsonArgs;
 
     this._log.info("Sending clients: " + actionStr + "; " + commandData.desc);
 

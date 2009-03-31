@@ -566,7 +566,6 @@ Utils.EventListener.prototype = {
 
 let Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
-Utils.lazyInstance(Svc, 'Json', "@mozilla.org/dom/json;1", Ci.nsIJSON);
 [["Crypto", "@labs.mozilla.com/Weave/Crypto;1", "IWeaveCrypto"],
  ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
  ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
