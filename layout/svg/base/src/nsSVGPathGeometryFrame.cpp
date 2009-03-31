@@ -248,25 +248,30 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
 
-  static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(&context);
+  GeneratePath(&context);
+  context.IdentityMatrix();
 
-  gfxRect extent = gfxRect(0, 0, 0, 0);
+  gfxRect extent = context.GetUserPathExtent();
+
+  // Be careful when replacing the following logic to get the fill and stroke
+  // extents independently (instead of computing the stroke extents from the
+  // path extents). You may think that you can just use the stroke extents if
+  // there is both a fill and a stroke. In reality it's necessary to calculate
+  // both the fill and stroke extents, and take the union of the two. There are
+  // two reasons for this:
+  //
+  // # Due to stroke dashing, in certain cases the fill extents could actually
+  //   extend outside the stroke extents.
+  // # If the stroke is very thin, cairo won't paint any stroke, and so the
+  //   stroke bounds that it will return will be empty.
 
   if (SetupCairoStrokeGeometry(&context)) {
-    extent = context.GetUserStrokeExtent();
-  }
-  if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
-    extent = extent.Union(context.GetUserPathExtent());
+    extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
+  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
+    extent = gfxRect(0, 0, 0, 0);
   }
 
   if (!extent.IsEmpty()) {
-    nsCOMPtr<nsIDOMSVGMatrix> ctm;
-    GetCanvasTM(getter_AddRefs(ctm));
-    NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
-
-    gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
-
-    extent = matrix.TransformBounds(extent);
     mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
   }
 
