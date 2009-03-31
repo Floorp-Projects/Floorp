@@ -1116,3 +1116,11 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 482659-1b.html 482659-1-ref.html
 == 482659-1c.html 482659-1-ref.html
 == 482659-1d.html 482659-1-ref.html
+== 486052-1.html 486052-1-ref.html
+== 486052-2a.html 486052-2-ref.html
+== 486052-2b.html 486052-2-ref.html
+== 486052-2c.html 486052-2-ref.html
+== 486052-2d.html 486052-2-ref.html
+== 486052-2e.html 486052-2-ref.html
+== 486052-2f.html 486052-2-ref.html
+== 486052-2g.html 486052-2-ref.html
