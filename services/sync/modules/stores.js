@@ -64,14 +64,6 @@ Store.prototype = {
   // set this property in child object's wrap()!
   _lookup: null,
 
-  __json: null,
-  get _json() {
-    if (!this.__json)
-      this.__json = Cc["@mozilla.org/dom/json;1"].
-        createInstance(Ci.nsIJSON);
-    return this.__json;
-  },
-
   get cache() {
     let cache = new Cache();
     this.__defineGetter__("cache", function() cache);
@@ -284,7 +276,7 @@ SnapshotStore.prototype = {
     let out = {version: this.version,
                GUID: this.GUID,
                snapshot: this.data};
-    out = this._json.encode(out);
+    out = JSON.stringify(out);
 
     let [fos] = Utils.open(file, ">");
     fos.writeString(out);
@@ -300,7 +292,7 @@ SnapshotStore.prototype = {
       let [is] = Utils.open(file, "<");
       let json = Utils.readStream(is);
       is.close();
-      json = this._json.decode(json);
+      json = JSON.parse(json);
 
       if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
         this._log.debug("Read saved snapshot from disk");
@@ -315,7 +307,7 @@ SnapshotStore.prototype = {
   },
 
   serialize: function SStore_serialize() {
-    let json = this._json.encode(this.data);
+    let json = JSON.stringify(this.data);
     json = json.replace(/:{type/g, ":\n\t{type");
     json = json.replace(/}, /g, "},\n  ");
     json = json.replace(/, parentid/g, ",\n\t parentid");

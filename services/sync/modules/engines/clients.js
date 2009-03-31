@@ -178,7 +178,7 @@ ClientStore.prototype = {
     this._log.debug("Saving client list to disk");
     let file = Utils.getProfileFile(
       {path: "weave/meta/clients.json", autoCreate: true});
-    let out = Svc.Json.encode(this._clients);
+    let out = JSON.stringify(this._clients);
     let [fos] = Utils.open(file, ">");
     fos.writeString(out);
     fos.close();
@@ -193,7 +193,7 @@ ClientStore.prototype = {
       let [is] = Utils.open(file, "<");
       let json = Utils.readStream(is);
       is.close();
-      this._clients = Svc.Json.decode(json);
+      this._clients = JSON.parse(json);
     } catch (e) {
       this._log.debug("Failed to load saved client list" + e);
     }

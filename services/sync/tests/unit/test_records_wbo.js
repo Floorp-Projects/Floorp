@@ -9,13 +9,11 @@ try {
 
 Function.prototype.async = Async.sugar;
 
-let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-
 function record_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
              modified: "2454725.98283",
-             payload: json.encode({cheese: "roquefort"})};
-  return httpd_basic_auth_handler(json.encode(obj), metadata, response);
+             payload: JSON.stringify({cheese: "roquefort"})};
+  return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
 function async_test() {

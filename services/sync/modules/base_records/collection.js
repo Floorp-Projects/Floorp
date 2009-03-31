@@ -156,7 +156,7 @@ CollectionIterator.prototype = {
         return;
       let item = this._coll.data[this._idx++];
       let record = new this._coll._recordObj();
-      record.deserialize(Svc.Json.encode(item)); // FIXME: inefficient
+      record.deserialize(JSON.stringify(item)); // FIXME: inefficient
       record.baseUri = this._coll.uri;
 
       self.done(record);

@@ -346,22 +346,16 @@ function JsonFilter() {
   this._log.level = Log4Moz.Level[level];
 }
 JsonFilter.prototype = {
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return this._json;
-  },
-
   beforePUT: function JsonFilter_beforePUT(data) {
     let self = yield;
     this._log.trace("Encoding data as JSON");
-    self.done(this._json.encode(data));
+    self.done(JSON.stringify(data));
   },
 
   afterGET: function JsonFilter_afterGET(data) {
     let self = yield;
     this._log.trace("Decoding JSON data");
-    self.done(this._json.decode(data));
+    self.done(JSON.parse(data));
   }
 };
 
