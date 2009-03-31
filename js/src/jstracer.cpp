@@ -5043,8 +5043,10 @@ TraceRecorder::ifop()
     bool cond;
     LIns* x;
 
-    /* Objects always evaluate to true since we specialize the Null type on trace. */
-    if (JSVAL_TAG(v) == JSVAL_OBJECT) {
+    if (JSVAL_IS_NULL(v)) {
+        cond = false;
+        x = lir->insImm(0);
+    } else if (!JSVAL_IS_PRIMITIVE(v)) {
         cond = true;
         x = lir->insImm(1);
     } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
@@ -5709,6 +5711,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // typically to find Array.prototype methods.
     JSObject* aobj = obj;
     if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        guardDenseArray(obj, obj_ins, BRANCH_EXIT);
         aobj = OBJ_GET_PROTO(cx, obj);
         obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
     }
@@ -7755,6 +7758,21 @@ TraceRecorder::record_JSOP_APPLY()
     return call_imacro(call_imacro_table[argc]);
 }
 
+static JSBool FASTCALL
+CatchStopIteration_tn(JSContext* cx, JSBool ok, jsval* vp)
+{
+    if (!ok && cx->throwing && js_ValueIsStopIteration(cx->exception)) {
+        cx->throwing = JS_FALSE;
+        cx->exception = JSVAL_VOID;
+        *vp = JSVAL_HOLE;
+        return JS_TRUE;
+    }
+    return ok;
+}
+
+JS_DEFINE_TRCINFO_1(CatchStopIteration_tn,
+    (3, (static, BOOL, CatchStopIteration_tn, CONTEXT, BOOL, JSVALPTR, 0, 0)))
+
 JS_REQUIRES_STACK bool
 TraceRecorder::record_FastNativeCallComplete()
 {
@@ -7787,6 +7805,16 @@ TraceRecorder::record_FastNativeCallComplete()
         LIns* status = lir->insLoad(LIR_ld, cx_ins, (int) offsetof(JSContext, builtinStatus));
         if (pendingTraceableNative == generatedTraceableNative) {
             LIns* ok_ins = v_ins;
+
+            /*
+             * Custom implementations of Iterator.next() throw a StopIteration exception.
+             * Catch and clear it and set the return value to JSVAL_HOLE in this case.
+             */
+            if (uintptr_t(cx->fp->regs->pc - nextiter_imacros.custom_iter_next) <
+                sizeof(nextiter_imacros.custom_iter_next)) {
+                LIns* args[] = { invokevp_ins, ok_ins, cx_ins }; /* reverse order */
+                ok_ins = lir->insCall(&CatchStopIteration_tn_ci, args);
+            }
 
             /*
              * If we run a generic traceable native, the return value is in the argument
@@ -8382,10 +8410,11 @@ TraceRecorder::record_JSOP_NEXTITER()
     jsval& iterobj_val = stackval(-2);
     if (JSVAL_IS_PRIMITIVE(iterobj_val))
         ABORT_TRACE("for-in on a primitive value");
-
+    JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
+    JSClass* clasp = STOBJ_GET_CLASS(iterobj);
     LIns* iterobj_ins = get(&iterobj_val);
-    if (guardClass(JSVAL_TO_OBJECT(iterobj_val), iterobj_ins, &js_IteratorClass,
-                   snapshot(BRANCH_EXIT))) {
+    if (clasp == &js_IteratorClass || clasp == &js_GeneratorClass) {
+        guardClass(iterobj, iterobj_ins, clasp, snapshot(BRANCH_EXIT));
         return call_imacro(nextiter_imacros.native_iter_next);
     }
     return call_imacro(nextiter_imacros.custom_iter_next);

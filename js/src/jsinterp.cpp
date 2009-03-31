@@ -5036,8 +5036,23 @@ js_Interpret(JSContext *cx)
                     }
 #endif
                     regs.sp = vp + 1;
-                    if (!ok)
-                        goto error;
+                    if (!ok) {
+                        /*
+                         * If we are executing the JSOP_NEXTITER imacro and a Stopiteration
+                         * exception is raised, transform it into a JSVAL_HOLE return value.
+                         * The tracer generates equivalent code by calling CatchStopIteration_tn.
+                         */
+                        if (fp->imacpc && *fp->imacpc == JSOP_NEXTITER &&
+                            cx->throwing && js_ValueIsStopIteration(cx->exception)) {
+                            // pc may point to JSOP_DUP here due to bug 474854.
+                            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
+                            cx->throwing = JS_FALSE;
+                            cx->exception = JSVAL_VOID;
+                            regs.sp[-1] = JSVAL_HOLE;
+                        } else {
+                            goto error;
+                        }
+                    }
                     TRACE_0(FastNativeCallComplete);
                     goto end_call;
                 }

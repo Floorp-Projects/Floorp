@@ -182,6 +182,7 @@ struct JSTraceableNative {
 #define _JS_CTYPE_CALLEE            _JS_CTYPE(JSObject *,             _JS_PTR,"f","",  INFALLIBLE)
 #define _JS_CTYPE_CALLEE_PROTOTYPE  _JS_CTYPE(JSObject *,             _JS_PTR,"p","",  INFALLIBLE)
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
+#define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
 #define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
 #define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)

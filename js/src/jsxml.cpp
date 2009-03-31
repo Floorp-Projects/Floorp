@@ -3315,7 +3315,7 @@ DeepCopyInLRS(JSContext *cx, JSXML *xml, uintN flags)
 
     JS_CHECK_RECURSION(cx, return NULL);
 
-    copy = js_NewXML(cx, (JSXMLClass) xml->xml_class);
+    copy = js_NewXML(cx, JSXMLClass(xml->xml_class));
     if (!copy)
         return NULL;
     qn = xml->name;
@@ -3755,7 +3755,7 @@ Replace(JSContext *cx, JSXML *xml, uint32 i, jsval v)
             vxml = (JSXML *) JS_GetPrivate(cx, vobj);
     }
 
-    switch (vxml ? (JSXMLClass) vxml->xml_class : JSXML_CLASS_LIMIT) {
+    switch (vxml ? JSXMLClass(vxml->xml_class) : JSXML_CLASS_LIMIT) {
       case JSXML_CLASS_ELEMENT:
         /* OPTION: enforce that descendants have superset namespaces. */
         if (!CheckCycle(cx, xml, vxml))

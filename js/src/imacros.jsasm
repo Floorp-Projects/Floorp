@@ -674,7 +674,9 @@
         dup                                         # iterobj iterobj
         callprop next                               # iterobj fun iterobj
         call 0                                      # iterobj nextval
-        true                                        # iterobj nextval true
+        dup                                         # iterobj nextval? nextval?
+        hole                                        # iterobj nextval? nextval? hole
+        strictne                                    # iterobj nextval? boolean
         stop
     .end
 
