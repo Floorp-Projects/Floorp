@@ -5043,8 +5043,10 @@ TraceRecorder::ifop()
     bool cond;
     LIns* x;
 
-    /* Objects always evaluate to true since we specialize the Null type on trace. */
-    if (JSVAL_TAG(v) == JSVAL_OBJECT) {
+    if (JSVAL_IS_NULL(v)) {
+        cond = false;
+        x = lir->insImm(0);
+    } else if (!JSVAL_IS_PRIMITIVE(v)) {
         cond = true;
         x = lir->insImm(1);
     } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
