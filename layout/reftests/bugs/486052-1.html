@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function doTest() {
+        var d = document.createElement("div");
+        d.textContent = "Test";
+        d.style.top = d.style.left = 0;
+        d.style.position = "absolute";
+        document.getElementById("t").appendChild(d);
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <table>
+      <tr><td>This is a test</td></tr>
+      <tr><td>This is a test</td></tr>
+      <tr><td>This is a test</td></tr>
+      <tr><td>This is a test</td></tr>
+      <caption style="position: relative; caption-side: bottom" id="t"></caption>
+    </table>
+  </body>
+</html>
