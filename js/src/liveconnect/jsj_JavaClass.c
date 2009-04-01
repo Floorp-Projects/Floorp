@@ -57,6 +57,7 @@
 #include <string.h>
 
 #include "jsj_private.h"        /* LiveConnect internals */
+#include "jsobj.h"
 
 static JSBool
 JavaClass_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
@@ -548,11 +549,8 @@ JSObjectOps JavaClass_ops = {
     NULL,                           /* dropProperty */
     jsj_JavaConstructorWrapper,     /* call */
     jsj_JavaConstructorWrapper,     /* construct */
-    NULL,                           /* xdrObject */
     JavaClass_hasInstance,          /* hasInstance */
-    NULL,                           /* setProto */
-    NULL,                           /* setParent */
-    NULL,                           /* mark */
+    NULL,                           /* trace */
     NULL,                           /* clear */
     jsj_wrapper_getRequiredSlot,    /* getRequiredSlot */
     jsj_wrapper_setRequiredSlot     /* setRequiredSlot */

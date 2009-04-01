@@ -82,7 +82,6 @@
  * - XXXbe patrol
  * - Fuse objects and their JSXML* private data into single GC-things
  * - fix function::foo vs. x.(foo == 42) collision using proper namespacing
- * - fix the !TCF_HAS_DEFXMLNS optimization in js_FoldConstants
  * - JSCLASS_DOCUMENT_OBSERVER support -- live two-way binding to Gecko's DOM!
  * - JS_TypeOfValue sure could use a cleaner interface to "types"
  */
@@ -5439,10 +5438,9 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_enumerate,              js_CheckAccess,
     NULL,                       NULL,
     NULL,                       NULL,
-    NULL,                       xml_hasInstance,
-    js_SetProtoOrParent,        js_SetProtoOrParent,
-    js_TraceObject,             xml_clear,
-    NULL,                       NULL
+    xml_hasInstance,            js_TraceObject,
+    xml_clear,                  NULL,
+    NULL
 };
 
 static JSObjectOps *

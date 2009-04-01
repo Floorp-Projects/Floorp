@@ -298,7 +298,6 @@ public:
     unsigned                maxCallDepth;
     TypeMap                 typeMap;
     unsigned                nStackTypes;
-    uint32                  globalShape;
     SlotList*               globalSlots;
     /* Dependent trees must be trashed if this tree dies, and updated on missing global types */
     Queue<nanojit::Fragment*> dependentTrees;
@@ -314,7 +313,6 @@ public:
 #endif
 
     TreeInfo(nanojit::Fragment* _fragment,
-             uint32 _globalShape,
              SlotList* _globalSlots)
       : fragment(_fragment),
         script(NULL),
@@ -322,7 +320,6 @@ public:
         nativeStackBase(0),
         maxCallDepth(0),
         nStackTypes(0),
-        globalShape(_globalShape),
         globalSlots(_globalSlots),
         branchCount(0),
         unstableExits(NULL)
@@ -356,7 +353,6 @@ struct InterpState
                                         // call exit guard mismatched
     void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
     TreeInfo*      outermostTree;       // the outermost tree we initially invoked
-    JSObject*      globalObj;           // pointer to the global object
     double*        stackBase;           // native stack base
     FrameInfo**    callstackBase;       // call stack base
     uintN*         inlineCallCountp;    // inline call count counter
@@ -401,7 +397,6 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
-    nanojit::LIns*          globalObj_ins;
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
     nanojit::LIns*          invokevp_ins;
@@ -572,7 +567,7 @@ public:
     JS_REQUIRES_STACK void closeLoop(JSTraceMonitor* tm, bool& demote);
     JS_REQUIRES_STACK void endLoop(JSTraceMonitor* tm);
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
-                                            nanojit::Fragment* peer_root);
+                                            VMFragment* peer_root);
     void blacklist() { fragment->blacklist(); }
     JS_REQUIRES_STACK bool adjustCallerTypes(nanojit::Fragment* f);
     JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f,
@@ -640,6 +635,9 @@ js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
+
+extern bool
+js_OverfullFragmento(nanojit::Fragmento *frago, size_t maxsz);
 
 extern void
 js_FlushJITCache(JSContext* cx);

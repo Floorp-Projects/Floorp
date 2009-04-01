@@ -191,10 +191,9 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_USES_NONLOCALS 0x20 /* function refers to non-local names */
 #define TCF_FUN_HEAVYWEIGHT    0x40 /* function needs Call object per call */
 #define TCF_FUN_IS_GENERATOR   0x80 /* parsed yield statement in function */
-#define TCF_HAS_DEFXMLNS      0x100 /* default xml namespace = ...; parsed */
-#define TCF_HAS_FUNCTION_STMT 0x200 /* block contains a function statement */
-#define TCF_GENEXP_LAMBDA     0x400 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO      0x800 /* compiler-and-go mode of script, can
+#define TCF_HAS_FUNCTION_STMT 0x100 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x200 /* flag lambda from generator expression */
+#define TCF_COMPILE_N_GO      0x400 /* compiler-and-go mode of script, can
                                        optimize name references based on scope
                                        chain */
 /*

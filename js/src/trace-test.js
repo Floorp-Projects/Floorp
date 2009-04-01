@@ -4774,6 +4774,23 @@ function testDenseArrayProp()
 testDenseArrayProp.expected = "ok";
 test(testDenseArrayProp);
 
+function testNewWithNonNativeProto()
+{
+  function f() { }
+  var a = f.prototype = [];
+  for (var i = 0; i < 5; i++)
+    var o = new f();
+  return Object.getPrototypeOf(o) === a && o.splice === Array.prototype.splice;
+}
+testNewWithNonNativeProto.expected = true;
+testNewWithNonNativeProto.jitstats = {
+  recorderStarted: 1,
+  recorderAborted: 0,
+  sideExitIntoInterpreter: 1
+};
+test(testNewWithNonNativeProto);
+
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
