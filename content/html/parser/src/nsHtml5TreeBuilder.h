@@ -48,6 +48,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5PendingNotification.h"
+#include "nsHtml5StateSnapshot.h"
 
 class nsHtml5Parser;
 
@@ -58,6 +59,7 @@ class nsHtml5ElementName;
 class nsHtml5HtmlAttributes;
 class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
+class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
 typedef nsIContent* nsIContentPtr;
@@ -196,6 +198,8 @@ class nsHtml5TreeBuilder
     void flushCharacters();
     PRBool charBufferContainsNonWhitespace();
   public:
+    nsHtml5StateSnapshot* newSnapshot();
+    PRBool snapshotMatches(nsHtml5StateSnapshot* snapshot);
     static void initializeStatics();
     static void releaseStatics();
 

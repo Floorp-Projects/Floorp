@@ -53,6 +53,7 @@ class nsHtml5ElementName;
 class nsHtml5HtmlAttributes;
 class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
+class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
 
