@@ -5438,10 +5438,9 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_enumerate,              js_CheckAccess,
     NULL,                       NULL,
     NULL,                       NULL,
-    NULL,                       xml_hasInstance,
-    js_SetProtoOrParent,        js_SetProtoOrParent,
-    js_TraceObject,             xml_clear,
-    NULL,                       NULL
+    xml_hasInstance,            js_TraceObject,
+    xml_clear,                  NULL,
+    NULL
 };
 
 static JSObjectOps *

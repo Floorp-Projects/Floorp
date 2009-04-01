@@ -1222,10 +1222,9 @@ JSObjectOps js_ArrayObjectOps = {
     array_enumerate,      js_CheckAccess,
     NULL,                 array_dropProperty,
     NULL,                 NULL,
-    NULL,                 js_HasInstance,
-    js_SetProtoOrParent,  js_SetProtoOrParent,
-    array_trace,          NULL,
-    NULL,                 NULL
+    js_HasInstance,       array_trace,
+    NULL,                 NULL,
+    NULL
 };
 
 static JSObjectOps *
