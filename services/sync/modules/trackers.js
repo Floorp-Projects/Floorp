@@ -113,37 +113,14 @@ Tracker.prototype = {
   },
 
   saveChangedIDs: function T_saveChangedIDs() {
-    this._log.debug("Saving changed IDs to disk");
-
-    let file = Utils.getProfileFile(
-      {path: "weave/changes/" + this.file + ".json",
-       autoCreate: true});
-    let out = JSON.stringify(this.changedIDs);
-    let [fos] = Utils.open(file, ">");
-    fos.writeString(out);
-    fos.close();
+    Utils.jsonSave("changes/" + this.file, this, this.changedIDs);
   },
 
   loadChangedIDs: function T_loadChangedIDs() {
-    let file = Utils.getProfileFile("weave/changes/" + this.file + ".json");
-    if (!file.exists())
-      return;
-
-    this._log.debug("Loading previously changed IDs from disk");
-
-    try {
-      let [is] = Utils.open(file, "<");
-      let json = Utils.readStream(is);
-      is.close();
-
-      let ids = JSON.parse(json);
-      for (let id in ids) {
+    Utils.jsonLoad("changes/" + this.file, this, function(json) {
+      for (let id in json)
         this.changedIDs[id] = 1;
-      }
-    } catch (e) {
-      this._log.warn("Could not load changed IDs from previous session");
-      this._log.debug("Exception: " + e);
-    }
+    });
   },
 
   // ignore/unignore specific IDs.  Useful for ignoring items that are

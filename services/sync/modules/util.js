@@ -386,6 +386,61 @@ let Utils = {
     return tmp;
   },
 
+  /**
+   * Load a json object from disk
+   *
+   * @param filePath
+   *        Json file path load from weave/[filePath].json
+   * @param that
+   *        Object to use for logging and "this" for callback
+   * @param callback
+   *        Function to process json object as its first parameter
+   */
+  jsonLoad: function Utils_jsonLoad(filePath, that, callback) {
+    filePath = "weave/" + filePath + ".json";
+    if (that._log)
+      that._log.debug("Loading json from disk: " + filePath);
+
+    let file = Utils.getProfileFile(filePath);
+    if (!file.exists())
+      return;
+
+    try {
+      let [is] = Utils.open(file, "<");
+      let json = Utils.readStream(is);
+      is.close();
+      callback.call(that, JSON.parse(json));
+    }
+    catch (ex) {
+      if (that._log)
+        that._log.debug("Failed to load json: " + ex);
+    }
+  },
+
+  /**
+   * Save a json-able object to disk
+   *
+   * @param filePath
+   *        Json file path save to weave/[filePath].json
+   * @param that
+   *        Object to use for logging and "this" for callback
+   * @param callback
+   *        Function to provide json-able object to save. If this isn't a
+   *        function, it'll be used as the object to make a json string.
+   */
+  jsonSave: function Utils_jsonSave(filePath, that, callback) {
+    filePath = "weave/" + filePath + ".json";
+    if (that._log)
+      that._log.debug("Saving json to disk: " + filePath);
+
+    let file = Utils.getProfileFile({ autoCreate: true, path: filePath });
+    let json = typeof callback == "function" ? callback.call(that) : callback;
+    let out = JSON.stringify(json);
+    let [fos] = Utils.open(file, ">");
+    fos.writeString(out);
+    fos.close();
+  },
+
   // Returns a timer that is scheduled to call the given callback as
   // soon as possible.
   makeTimerForCall: function makeTimerForCall(cb) {
