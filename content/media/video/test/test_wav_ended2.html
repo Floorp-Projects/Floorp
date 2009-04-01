@@ -40,9 +40,8 @@ function playbackEnded() {
   ok(v.currentTime >= 0.9 && v.currentTime <= 1.1,
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
-  ok(playingCount > 0, "Expect at least one playing event");
-  playingCount = 0;
   if (endCount < 2) {
+    ok(playingCount > 0, "Expect at least one playing event");
     v.play();
   } else {
     ok(endCount == 2, "Check playback after ended event");
