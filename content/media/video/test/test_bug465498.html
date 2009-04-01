@@ -24,6 +24,7 @@ function playbackEnded() {
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
 
+  v.pause();
   v.currentTime = 0;
   ok(!v.ended, "Checking ended is no longer true");
   haveSeeked = true;
