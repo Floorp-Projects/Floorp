@@ -223,6 +223,12 @@ js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
 
+/*
+ * Utility to access the value from the id returned by array_lookupProperty.
+ */
+jsval
+js_GetDenseArrayElementValue(JSObject *obj, JSProperty *prop);
+
 JS_END_EXTERN_C
 
 #endif /* jsarray_h___ */

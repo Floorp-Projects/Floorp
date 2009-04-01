@@ -739,6 +739,23 @@ array_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 #endif
 }
 
+jsval
+js_GetDenseArrayElementValue(JSObject *obj, JSProperty *prop)
+{
+    /* OBJ_IS_DENSE_ARRAY does not use the cx argument. */
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+    JS_ASSERT((void *) prop ==
+              (void *) &(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]));
+    JS_ASSERT((jsval) prop->id == obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]);
+    JS_ASSERT(JSVAL_IS_INT(prop->id));
+
+    jsint i = JSID_TO_INT(prop->id);
+    JS_ASSERT(i >= 0);
+    jsval v = obj->dslots[i];
+    JS_ASSERT(v != JSVAL_HOLE);
+    return v;
+}
+
 static JSBool
 array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
@@ -1205,10 +1222,9 @@ JSObjectOps js_ArrayObjectOps = {
     array_enumerate,      js_CheckAccess,
     NULL,                 array_dropProperty,
     NULL,                 NULL,
-    NULL,                 js_HasInstance,
-    js_SetProtoOrParent,  js_SetProtoOrParent,
-    array_trace,          NULL,
-    NULL,                 NULL
+    js_HasInstance,       array_trace,
+    NULL,                 NULL,
+    NULL
 };
 
 static JSObjectOps *

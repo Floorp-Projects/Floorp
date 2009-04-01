@@ -1057,11 +1057,8 @@ JSObjectOps JavaObject_ops = {
     NULL,                           /* dropProperty */
     NULL,                           /* call */
     NULL,                           /* construct */
-    NULL,                           /* xdrObject */
     NULL,                           /* hasInstance */
-    NULL,                           /* setProto */
-    NULL,                           /* setParent */
-    NULL,                           /* mark */
+    NULL,                           /* trace */
     NULL,                           /* clear */
     jsj_wrapper_getRequiredSlot,    /* getRequiredSlot */
     jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
