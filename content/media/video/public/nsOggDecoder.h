@@ -322,13 +322,12 @@ class nsOggDecoder : public nsMediaDecoder
   virtual float GetDuration();
 
   virtual void GetCurrentURI(nsIURI** aURI);
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+  virtual nsIPrincipal* GetCurrentPrincipal();
 
-  virtual void NotifySuspendedStatusChanged();
-  virtual void NotifyBytesDownloaded();
+  virtual void NotifyBytesDownloaded(PRInt64 aBytes);
+  virtual void NotifyDownloadSeeked(PRInt64 aOffsetBytes);
   virtual void NotifyDownloadEnded(nsresult aStatus);
-  // Called by nsChannelReader on the decoder thread
-  void NotifyBytesConsumed(PRInt64 aBytes);
+  virtual void NotifyBytesConsumed(PRInt64 aBytes);
 
   // Called when the video file has completed downloading.
   // Call on the main thread only.
@@ -345,6 +344,9 @@ class nsOggDecoder : public nsMediaDecoder
   // Return PR_TRUE if the decoder has reached the end of playback.
   // Call on the main thread only.
   virtual PRBool IsEnded() const;
+
+  // Get the size of the media file in bytes. Called on the main thread only.
+  virtual void SetTotalBytes(PRInt64 aBytes);
 
   // Set the duration of the media resource in units of milliseconds.
   // This is called via a channel listener if it can pick up the duration
@@ -397,13 +399,6 @@ protected:
   // be called with the decoder monitor held.
   void StartProgressUpdates();
 
-  // Something has changed that could affect the computed playback rate,
-  // so recompute it. The monitor must be held.
-  void UpdatePlaybackRate();
-
-  // The actual playback rate computation. The monitor must be held.
-  double ComputePlaybackRate(PRPackedBool* aReliable);
-
   /****** 
    * The following methods must only be called on the main
    * thread.
@@ -443,10 +438,6 @@ protected:
   // data for the next frame and if we're buffering. Main thread only.
   void UpdateReadyStateForData();
 
-  // Find the end of the cached data starting at the current decoder
-  // position.
-  PRInt64 GetDownloadPosition();
-
 private:
   // Register/Unregister with Shutdown Observer. 
   // Call on main thread only.
@@ -457,20 +448,29 @@ private:
    * The following members should be accessed with the decoder lock held.
    ******/
 
+  // Size of the media file in bytes. Set on the first
+  // HTTP request from nsChannelToPipe Listener. -1 if not known.
+  PRInt64 mTotalBytes;
+  // Current download position in the stream. 
+  PRInt64 mDownloadPosition;
+  // Download position to report if asked. This is the same as
+  // mDownloadPosition normally, but we don't update it while ignoring
+  // progress. This lets us avoid reporting progress changes due to reads
+  // that are only servicing our seek operations.
+  PRInt64 mProgressPosition;
   // Current decoding position in the stream. This is where the decoder
-  // is up to consuming the stream. This is not adjusted during decoder
-  // seek operations, but it's updated at the end when we start playing
-  // back again.
+  // is up to consuming the stream.
   PRInt64 mDecoderPosition;
   // Current playback position in the stream. This is (approximately)
-  // where we're up to playing back the stream. This is not adjusted
-  // during decoder seek operations, but it's updated at the end when we
-  // start playing back again.
+  // where we're up to playing back the stream.
   PRInt64 mPlaybackPosition;
+  // Data needed to estimate download data rate. The timeline used for
+  // this estimate is wall-clock time.
+  ChannelStatistics mDownloadStatistics;
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
-  nsChannelStatistics mPlaybackStatistics;
+  ChannelStatistics mPlaybackStatistics;
 
   // The URI of the current resource
   nsCOMPtr<nsIURI> mURI;
