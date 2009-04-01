@@ -157,11 +157,6 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
-  // Notify that enough data has arrived to start autoplaying.
-  // If the element is 'autoplay' and is ready to play back (not paused,
-  // autoplay pref enabled, etc), it should start playing back.
-  void NotifyAutoplayDataReady();
-
   // Gets the pref media.enforce_same_site_origin, which determines
   // if we should check Access Controls, or allow cross domain loads.
   PRBool ShouldCheckAllowOrigin();
@@ -175,7 +170,7 @@ public:
   PRBool IsPlaybackEnded() const;
 
   // principal of the currently playing stream
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+  nsIPrincipal* GetCurrentPrincipal();
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
