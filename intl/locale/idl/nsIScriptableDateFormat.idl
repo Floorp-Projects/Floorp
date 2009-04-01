@@ -73,30 +73,110 @@ extern NS_IMETHODIMP
 NS_NewScriptableDateFormat(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 %}
 
+/**
+ * Format date and time in a human readable format.
+ */
 [scriptable, uuid(0c89efb0-1aae-11d3-9141-006008a6edf6)]
-interface nsIScriptableDateFormat : nsISupports {
+interface nsIScriptableDateFormat : nsISupports
+{
+    /**
+     * Do not include the date in the format string.
+     */
+    const long dateFormatNone = 0;
 
-    const long dateFormatNone = 0;                 // do not include the date  in the format string
-    const long dateFormatLong =1;                  // provides the long date format for the given locale
-    const long dateFormatShort =2;                 // provides the short date format for the given locale
-    const long dateFormatYearMonth =3;             // formats using only the year and month 
-    const long dateFormatWeekday = 4;              // week day (e.g. Mon, Tue)
+    /**
+     * Provide the long date format.
+     *
+     * NOTE:
+     * The original definitions of dateFormatLong and dateFormatShort are from
+     * the Windows platform. 
+     * In US English dateFormatLong output will be like:
+     *     Wednesday, January 29, 2003 4:02:14 PM
+     * In US English dateFormatShort output will be like:
+     *     1/29/03 4:02:14 PM
+     * On platforms like Linux and OS2, it is rather difficult to achieve exact
+     * same output, and since we are aiming at human readers, it does not make
+     * sense to achieve exact same result. We will do just enough as the
+     * platform allow us to do. 
+     */
+    const long dateFormatLong = 1;
 
-	// Notes:
-	// The original definitions of dateFormatLong and dateFormatShort are from windows platform. 
-	// dateFormatLong output will be like: Wednesday, January 29, 2003 4:02:14 PM
-	// dateFormatShort output will be like: 1/29/03 4:02:14 PM
-	// On platforms like Linux and OS2, it is rather difficult to achieve exact same output, and since we are aiming 
-	// at human readers, it does not make sense to achieve exact same result. We should do just enough as the platform
-	// allow us to do, unless there is other strong reasons for other approaches. 
+    /**
+     * Provide the short date format. See also dateFormatLong.
+     */
+    const long dateFormatShort = 2;
 
-    const long timeFormatNone = 0;                 // don't include the time in the format string
-    const long timeFormatSeconds = 1;              // provides the time format with seconds in the  given locale 
-    const long timeFormatNoSeconds = 2;            // provides the time format without seconds in the given locale
-    const long timeFormatSecondsForce24Hour = 3;   // forces the time format to use the 24 clock, regardless of the locale conventions
-    const long timeFormatNoSecondsForce24Hour = 4; // forces the time format to use the 24 clock, regardless of the locale conventions
+    /**
+     * Format using only the year and month.
+     */
+    const long dateFormatYearMonth = 3;
 
-    // format date and time, locale is language country pair (e.g. en-US) or empty string for application default
+    /**
+     * Provide the Week day (e.g. Mo, Mon, Monday or similar).
+     */
+    const long dateFormatWeekday = 4;
+
+    /**
+     * Don't include the time in the format string.
+     */
+    const long timeFormatNone = 0;
+
+    /**
+     * Provide the time format with seconds.
+     */
+    const long timeFormatSeconds = 1;
+
+    /**
+     * Provide the time format without seconds.
+     */
+    const long timeFormatNoSeconds = 2;
+
+    /**
+     * Provide the time format with seconds, and force the time format to use
+     * 24-hour clock, regardless of the locale conventions.
+     */
+    const long timeFormatSecondsForce24Hour = 3;
+
+    /**
+     * Provide the time format without seconds, and force the time format to use
+     * 24-hour clock, regardless of the locale conventions.
+     */
+    const long timeFormatNoSecondsForce24Hour = 4;
+
+    /**
+     * Format the given date and time in a human readable format.
+     *
+     * The underlying operating system is used to format the date and time.
+     *
+     * Pass an empty string as the locale parameter to use the OS settings with
+     * the preferred date and time formatting given by the user.
+     *
+     * Pass a locale code as described in nsILocale as the locale parameter
+     * (e.g. en-US) to use a specific locale. If the given locale is not
+     * available, a fallback will be used.
+     *
+     * NOTE: The output of this method depends on the operating system and user
+     * settings. Even if you pass a locale code as the first parameter, there
+     * are no guarantees about which locale and exact format the returned value
+     * uses. Even if you know the locale, the format might be customized by the
+     * user. Therefore you should not use the returned values in contexts where
+     * you depend on any specific format or language.
+     *
+     * @param locale
+     *        Locale code of locale used to format the date or an empty string
+     *        to follow user preference.
+     * @param dateFormatSelector
+     *        Indicate which format should preferably be used for the date.
+     *        Use one of the dateFormat* constants.
+     * @param timeFormatSelector
+     *        Indicate which format should preferably be used for the time.
+     *        Use one of the timeFormat* constants.
+     * @param year, month, day, hour, minute and second
+     *        The date and time to be formatted, given in the computer's local
+     *        time zone.
+     * @return The date and time formatted as human readable text according to
+     *         user preferences or the given locale.
+     */
     wstring FormatDateTime(in wstring locale, 
                            in long dateFormatSelector, 
                            in long timeFormatSelector,
@@ -106,13 +186,23 @@ interface nsIScriptableDateFormat : nsISupports {
                            in long hour, 
                            in long minute, 
                            in long second);
-    // format date, locale is language country pair (e.g. en-US) or empty string for application default
+
+    /**
+     * Format the given date in a human readable format.
+     *
+     * See FormatDateTime for details.
+     */
     wstring FormatDate(in wstring locale, 
                        in long dateFormatSelector, 
                        in long year, 
                        in long month, 
                        in long day);
-    // format time, locale is language country pair (e.g. en-US) or empty string for application default
+
+    /**
+     * Format the given time in a human readable format.
+     *
+     * See FormatDateTime for details.
+     */
     wstring FormatTime(in wstring locale, 
                        in long timeFormatSelector,
                        in long hour, 
