@@ -19,6 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#	Serge Gautherie <sgautherie.bz@free.fr>
 #	Ted Mielczarek <ted.mielczarek@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -34,6 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+
 
 # Usage: |make [EXTRA_TEST_ARGS=...] mochitest*|.
 mochitest:: mochitest-plain mochitest-chrome mochitest-a11y
@@ -71,6 +73,7 @@ mochitest-a11y:
 	$(RUN_MOCHITEST) --a11y
 	$(CHECK_TEST_ERROR)
 
+
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
@@ -81,6 +84,15 @@ reftest:
 crashtest:
 	$(call RUN_REFTEST,$(topsrcdir)/testing/crashtest/crashtests.list)
 	$(CHECK_TEST_ERROR)
+
+
+# Execute all xpcshell tests in the directories listed in the manifest.
+xpcshell-tests:
+	$(PYTHON) -u \
+	  $(topsrcdir)/testing/xpcshell/runxpcshelltests.py \
+	  --manifest=$(DEPTH)/_tests/xpcshell/all-test-dirs.list \
+	  $(DIST)/bin/xpcshell
+
 
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
@@ -102,6 +114,9 @@ stage-reftest: make-stage-dir
 stage-xpcshell: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
 
-.PHONY: mochitest mochitest-plain mochitest-chrome mochitest-a11y \
-  reftest crashtest package-tests make-stage-dir stage-mochitest \
-  stage-reftest stage-xpcshell
+
+.PHONY: \
+  mochitest mochitest-plain mochitest-chrome mochitest-a11y \
+  reftest crashtest \
+  xpcshell-tests \
+  package-tests make-stage-dir stage-mochitest stage-reftest stage-xpcshell
