@@ -519,8 +519,9 @@ BookmarksStore.prototype = {
 
       } else {
         record = new BookmarkFolder();
-        record.title = this._bms.getItemTitle(placeId);
       }
+
+      record.title = this._bms.getItemTitle(placeId);
       break;
 
     case this._bms.TYPE_SEPARATOR:
