@@ -56,7 +56,6 @@ _TEST_FILES = \
 		test_readyState.html \
 		test_seek2.html \
 		test_volume.html \
-		use_large_cache.js \
 		$(NULL)
 
 ifdef MOZ_OGG
