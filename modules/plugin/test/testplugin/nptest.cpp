@@ -58,13 +58,29 @@ static NPClass sNPClass;
 #define IDENTIFIER_TO_STRING_TEST_METHOD        0
 #define QUERY_PRIVATE_MODE_STATE_METHOD         1
 #define LAST_REPORTED_PRIVATE_MODE_STATE_METHOD 2
-#define NUM_METHOD_IDENTIFIERS                  3
+#define HAS_WIDGET_METHOD                       3
+#define NUM_METHOD_IDENTIFIERS                  4
+
+typedef bool (* ScriptableFunction)
+  (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+
+static bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool hasWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static NPIdentifier sPluginMethodIdentifiers[NUM_METHOD_IDENTIFIERS];
-static const NPUTF8 *sPluginMethodIdentifierNames[NUM_METHOD_IDENTIFIERS] = {
+static const NPUTF8* sPluginMethodIdentifierNames[NUM_METHOD_IDENTIFIERS] = {
   "identifierToStringTest",
   "queryPrivateModeState",
   "lastReportedPrivateModeState",
+  "hasWidget",
+};
+static const ScriptableFunction sPluginMethodFunctions[NUM_METHOD_IDENTIFIERS] = {
+  identifierToStringTest,
+  queryPrivateModeState,
+  lastReportedPrivateModeState,
+  hasWidget,
 };
 
 static bool sIdentifiersInitialized = false;
@@ -86,10 +102,6 @@ static void clearIdentifiers()
 //
 // function signatures
 //
-
-bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-bool queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-bool lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 NPObject* scriptableAllocate(NPP npp, NPClass* aClass);
 void scriptableDeallocate(NPObject* npobj);
@@ -222,7 +234,13 @@ NPError OSCALL NP_Shutdown()
 NPError
 NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
-  NPN_SetValue(instance, NPPVpluginWindowBool, NULL);
+  // Make sure we can render this plugin
+  NPBool browserSupportsWindowless = false;
+  NPN_GetValue(instance, NPNVSupportsWindowless, &browserSupportsWindowless);
+  if (!browserSupportsWindowless && !pluginSupportsWindowMode()) {
+    printf("Windowless mode not supported by the browser, windowed mode not supported by the plugin!\n");
+    return NPERR_GENERIC_ERROR;
+  }
 
   // set up our our instance data
   InstanceData* instanceData = (InstanceData*)malloc(sizeof(InstanceData));
@@ -235,15 +253,16 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
   if (!scriptableObject) {
     printf("NPN_CreateObject failed to create an object, can't create a plugin instance\n");
+    free(instanceData);
     return NPERR_GENERIC_ERROR;
   }
   NPN_RetainObject(scriptableObject);
   scriptableObject->npp = instance;
-  instanceData->scriptableObject = scriptableObject;
-
   scriptableObject->drawMode = DM_DEFAULT;
   scriptableObject->drawColor = 0;
+  instanceData->scriptableObject = scriptableObject;
 
+  bool requestWindow = false;
   // handle extra params
   for (int i = 0; i < argc; i++) {
     if (strcmp(argn[i], "drawmode") == 0) {
@@ -253,14 +272,40 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     else if (strcmp(argn[i], "color") == 0) {
       scriptableObject->drawColor = parseHexColor(argv[i]);
     }
+    else if (strcmp(argn[i], "wmode") == 0) {
+      if (strcmp(argv[i], "window") == 0) {
+        requestWindow = true;
+      }
+    }
+  }
+
+  if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
+    requestWindow = true;
+  } else if (!pluginSupportsWindowMode()) {
+    requestWindow = false;
+  }
+  if (requestWindow) {
+    instanceData->hasWidget = true;
+  } else {
+    // NPPVpluginWindowBool should default to true, so we may as well
+    // test that by not setting it in the window case
+    NPN_SetValue(instance, NPPVpluginWindowBool, (void*)false);
+  }
+
+  if (scriptableObject->drawMode == DM_SOLID_COLOR &&
+      (scriptableObject->drawColor & 0xFF000000) != 0xFF000000) {
+    NPN_SetValue(instance, NPPVpluginTransparentBool, (void*)true);
   }
 
   instanceData->lastReportedPrivateModeState = false;
 
   // do platform-specific initialization
   NPError err = pluginInstanceInit(instanceData);
-  if (err != NPERR_NO_ERROR)
+  if (err != NPERR_NO_ERROR) {
+    NPN_ReleaseObject(scriptableObject);
+    free(instanceData);
     return err;
+  }
 
   return NPERR_NO_ERROR;
 }
@@ -269,6 +314,7 @@ NPError
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  pluginInstanceShutdown(instanceData);
   NPN_ReleaseObject(instanceData->scriptableObject);
   free(instanceData);
   return NPERR_NO_ERROR;
@@ -278,7 +324,11 @@ NPError
 NPP_SetWindow(NPP instance, NPWindow* window)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  void* oldWindow = instanceData->window.window;
   instanceData->window = *window;
+  if (instanceData->hasWidget && oldWindow != instanceData->window.window) {
+    pluginWidgetInit(instanceData, oldWindow);
+  }
   return NPERR_NO_ERROR;
 }
 
@@ -332,10 +382,16 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 NPError
 NPP_GetValue(NPP instance, NPPVariable variable, void* value)
 {
+  InstanceData* instanceData = (InstanceData*)instance->pdata;
   if (variable == NPPVpluginScriptableNPObject) {
-    NPObject* object = ((InstanceData*)instance->pdata)->scriptableObject;
+    NPObject* object = instanceData->scriptableObject;
     NPN_RetainObject(object);
     *((NPObject**)value) = object;
+    return NPERR_NO_ERROR;
+  }
+  if (variable == NPPVpluginNeedsXEmbed) {
+    // Only relevant for X plugins
+    *(NPBool*)value = instanceData->hasWidget;
     return NPERR_NO_ERROR;
   }
 
@@ -485,12 +541,10 @@ scriptableHasMethod(NPObject* npobj, NPIdentifier name)
 bool
 scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  if (name == sPluginMethodIdentifiers[IDENTIFIER_TO_STRING_TEST_METHOD])
-    return identifierToStringTest(npobj, args, argCount, result);
-  else if (name == sPluginMethodIdentifiers[QUERY_PRIVATE_MODE_STATE_METHOD])
-    return queryPrivateModeState(npobj, args, argCount, result);
-  else if (name == sPluginMethodIdentifiers[LAST_REPORTED_PRIVATE_MODE_STATE_METHOD])
-    return lastReportedPrivateModeState(npobj, args, argCount, result);
+  for (int i = 0; i < NUM_METHOD_IDENTIFIERS; i++) {
+    if (name == sPluginMethodIdentifiers[i])
+      return sPluginMethodFunctions[i](npobj, args, argCount, result);
+  }
   return false;
 }
 
@@ -540,7 +594,7 @@ scriptableConstruct(NPObject* npobj, const NPVariant* args, uint32_t argCount, N
 // test functions
 //
 
-bool
+static bool
 identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
   if (argCount != 1)
@@ -555,7 +609,7 @@ identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount
   return true;
 }
 
-bool
+static bool
 queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
   NPBool pms = false;
@@ -564,11 +618,18 @@ queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   return true;
 }
 
-bool
+static bool
 lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
   InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
-  NPBool pms = id->lastReportedPrivateModeState;
-  BOOLEAN_TO_NPVARIANT(pms, *result);
+  BOOLEAN_TO_NPVARIANT(id->lastReportedPrivateModeState, *result);
+  return true;
+}
+
+static bool
+hasWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
+  BOOLEAN_TO_NPVARIANT(id->hasWidget, *result);
   return true;
 }
