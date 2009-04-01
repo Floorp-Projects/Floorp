@@ -10,3 +10,6 @@ The wince.patch addresses the lack of posix file IO support on windows ce,
 see bug 461844 for details.
 
 endian.patch is applied to fix bug 452698.
+
+oggz-seek-crash-fix.patch is applied to fix the crash reported in
+bug 475441 comment #44.
