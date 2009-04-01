@@ -1837,7 +1837,7 @@ PresShell::Destroy()
   CancelPostedReflowCallbacks();
 
   // Destroy the frame manager. This will destroy the frame hierarchy
-  mFrameConstructor->WillDestroyFrameTree(PR_TRUE);
+  mFrameConstructor->WillDestroyFrameTree();
   FrameManager()->Destroy();
 
   NS_WARN_IF_FALSE(!mWeakFrames, "Weak frames alive after destroying FrameManager");
