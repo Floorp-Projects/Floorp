@@ -47,6 +47,8 @@
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsITheme.h"
+#include "nsNativeWidget.h"
+#include "nsWidgetInitData.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -66,12 +68,14 @@ class   nsIContent;
 
 /**
  * Callback function that processes events.
+ *
  * The argument is actually a subtype (subclass) of nsEvent which carries
- * platform specific information about the event. Platform specific code knows
- * how to deal with it.
- * The return value determines whether or not the default action should take place.
+ * platform specific information about the event. Platform specific code
+ * knows how to deal with it.
+ *
+ * The return value determines whether or not the default action should take
+ * place.
  */
-
 typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 
 /**
@@ -116,70 +120,6 @@ typedef void* nsNativeWidget;
 
 #define NS_STYLE_WINDOW_SHADOW_NONE             0
 #define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
-
-/**
- * Border styles
- */
-
-enum nsWindowType {     // Don't alter previously encoded enum values - 3rd party apps may look at these
-  // default top level window
-  eWindowType_toplevel,
-  // top level window but usually handled differently by the OS
-  eWindowType_dialog,
-  // used for combo boxes, etc
-  eWindowType_popup,
-  // child windows (contained inside a window on the desktop (has no border))
-  eWindowType_child,
-  // windows that are invisible or offscreen
-  eWindowType_invisible,
-  // plugin window
-  eWindowType_plugin,
-  // java plugin window
-  eWindowType_java,
-  // MacOSX sheet (special dialog class)
-  eWindowType_sheet
-};
-
-enum nsPopupType {
-  ePopupTypePanel,
-  ePopupTypeMenu,
-  ePopupTypeTooltip,
-  ePopupTypeAny = 0xF000 // used only to pass to nsXULPopupManager::GetTopPopup
-};
-
-enum nsBorderStyle
-{
-  // no border, titlebar, etc.. opposite of all
-  eBorderStyle_none     = 0,
-
-  // all window decorations
-  eBorderStyle_all      = 1 << 0,
-
-  // enables the border on the window.  these are only for decoration and are not resize hadles
-  eBorderStyle_border   = 1 << 1,
-
-  // enables the resize handles for the window.  if this is set, border is implied to also be set
-  eBorderStyle_resizeh  = 1 << 2,
-
-  // enables the titlebar for the window
-  eBorderStyle_title    = 1 << 3,
-
-  // enables the window menu button on the title bar.  this being on should force the title bar to display
-  eBorderStyle_menu     = 1 << 4,
-
-  // enables the minimize button so the user can minimize the window.
-  //   turned off for tranient windows since they can not be minimized separate from their parent
-  eBorderStyle_minimize = 1 << 5,
-
-  // enables the maxmize button so the user can maximize the window
-  eBorderStyle_maximize = 1 << 6,
-
-  // show the close button
-  eBorderStyle_close    = 1 << 7,
-
-  // whatever the OS wants... i.e. don't do anything
-  eBorderStyle_default  = -1
-};
 
 /**
  * Cursor types.
@@ -230,47 +170,12 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursorCount
                 }; 
 
-enum nsContentType {
-  eContentTypeInherit = -1,
-  eContentTypeUI = 0,
-  eContentTypeContent = 1,
-  eContentTypeContentFrame = 2
-};
-
 enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
 };
 
-/**
- * Basic struct for widget initialization data.
- * @see Create member function of nsIWidget
- */
-
-struct nsWidgetInitData {
-  nsWidgetInitData()
-    : clipChildren(PR_FALSE), 
-      clipSiblings(PR_FALSE), 
-      mDropShadow(PR_FALSE),
-      mListenForResizes(PR_FALSE),
-      mWindowType(eWindowType_child),
-      mBorderStyle(eBorderStyle_default),
-      mContentType(eContentTypeInherit),
-      mUnicode(PR_TRUE),
-      mPopupHint(ePopupTypePanel)
-  {
-  }
-
-  // when painting exclude area occupied by child windows and sibling windows
-  PRPackedBool  clipChildren, clipSiblings, mDropShadow;
-  PRPackedBool  mListenForResizes;
-  nsWindowType mWindowType;
-  nsBorderStyle mBorderStyle;
-  nsContentType mContentType;  // Exposed so screen readers know what's UI
-  PRPackedBool mUnicode;
-  nsPopupType mPopupHint;
-};
 
 /**
  * The base class for all the widgets. It provides the interface for

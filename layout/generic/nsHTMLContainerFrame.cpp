@@ -49,7 +49,6 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsIWidget.h"
 #include "nsILinkHandler.h"
 #include "nsGUIEvent.h"
 #include "nsIDocument.h"

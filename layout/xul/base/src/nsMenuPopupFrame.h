@@ -54,9 +54,10 @@
 
 #include "nsBoxFrame.h"
 #include "nsMenuParent.h"
-#include "nsIWidget.h"
 
 #include "nsITimer.h"
+
+class nsIWidget;
 
 // XUL popups can be in several different states. When opening a popup, the
 // state changes as follows:

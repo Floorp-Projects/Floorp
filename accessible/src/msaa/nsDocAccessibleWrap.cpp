@@ -49,7 +49,6 @@
 #include "nsIURI.h"
 #include "nsIViewManager.h"
 #include "nsIWebNavigation.h"
-#include "nsIWidget.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
