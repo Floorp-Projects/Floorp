@@ -2105,7 +2105,7 @@ js_TraceOpcode(JSContext *cx)
                     regs->pc - fp->script->code,
                     JS_FALSE, tracefp);
     op = (JSOp) *regs->pc;
-    nuses = js_CodeSpec[op].nuses;
+    nuses = js_GetStackUses(&js_CodeSpec[op], op, regs->pc);
     if (nuses != 0) {
         for (n = -nuses; n < 0; n++) {
             char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n],
