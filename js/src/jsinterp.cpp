@@ -2045,12 +2045,11 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 #ifdef DEBUG
 
 JS_STATIC_INTERPRET JS_REQUIRES_STACK void
-js_TraceOpcode(JSContext *cx, jsint len)
+js_TraceOpcode(JSContext *cx)
 {
     FILE *tracefp;
     JSStackFrame *fp;
     JSFrameRegs *regs;
-    JSOp prevop;
     intN ndefs, n, nuses;
     jsval *siter;
     JSString *str;
@@ -2060,10 +2059,22 @@ js_TraceOpcode(JSContext *cx, jsint len)
     JS_ASSERT(tracefp);
     fp = cx->fp;
     regs = fp->regs;
-    if (len != 0) {
-        prevop = (JSOp) regs->pc[-len];
-        ndefs = js_CodeSpec[prevop].ndefs;
-        if (ndefs != 0) {
+
+    /*
+     * Operations in prologues don't produce interesting values, and
+     * js_DecompileValueGenerator isn't set up to handle them anyway.
+     */
+    if (cx->tracePrevOp != JSOP_LIMIT && regs->pc >= fp->script->main) {
+        ndefs = js_GetStackDefs(cx, &js_CodeSpec[cx->tracePrevOp],
+                                cx->tracePrevOp, fp->script, regs->pc);
+
+        /*
+         * If there aren't that many elements on the stack, then 
+         * we have probably entered a new frame, and printing output
+         * would just be misleading.
+         */
+        if (ndefs != 0 &&
+            ndefs < regs->sp - fp->slots) {
             for (n = -ndefs; n < 0; n++) {
                 char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n],
                                                          NULL);
@@ -2108,6 +2119,10 @@ js_TraceOpcode(JSContext *cx, jsint len)
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
     }
+    cx->tracePrevOp = op;
+
+    /* It's nice to have complete traces when debugging a crash.  */
+    fflush(tracefp);
 }
 
 #endif /* DEBUG */
@@ -2534,6 +2549,30 @@ js_Interpret(JSContext *cx)
 # define JS_EXTENSION_(s) s
 #endif
 
+# ifdef DEBUG
+    /*
+     * We call this macro from BEGIN_CASE in threaded interpreters,
+     * and before entering the switch in non-threaded interpreters.
+     * However, reaching such points doesn't mean we've actually
+     * fetched an OP from the instruction stream: some opcodes use
+     * 'op=x; DO_OP()' to let another opcode's implementation finish
+     * their work, and many opcodes share entry points with a run of
+     * consecutive BEGIN_CASEs.
+     * 
+     * Take care to trace OP only when it is the opcode fetched from
+     * the instruction stream, so the trace matches what one would
+     * expect from looking at the code.  (We do omit POPs after SETs;
+     * unfortunate, but not worth fixing.)
+     */
+#  define TRACE_OPCODE(OP)  JS_BEGIN_MACRO                                    \
+                                if (JS_UNLIKELY(cx->tracefp != NULL) &&       \
+                                    (OP) == *regs.pc)                         \
+                                    js_TraceOpcode(cx);                       \
+                            JS_END_MACRO
+# else
+#  define TRACE_OPCODE(OP)  ((void) 0)
+# endif
+
 #if JS_THREADED_INTERP
     static void *const normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
@@ -2571,15 +2610,6 @@ js_Interpret(JSContext *cx)
                                 op = (JSOp) *(regs.pc += (n));                \
                                 DO_OP();                                      \
                             JS_END_MACRO
-
-# ifdef DEBUG
-#  define TRACE_OPCODE(OP)  JS_BEGIN_MACRO                                    \
-                                if (cx->tracefp)                              \
-                                    js_TraceOpcode(cx, len);                  \
-                            JS_END_MACRO
-# else
-#  define TRACE_OPCODE(OP)  (void)0
-# endif
 
 # define BEGIN_CASE(OP)     L_##OP: TRACE_OPCODE(OP); CHECK_RECORDER();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
@@ -2846,13 +2876,10 @@ js_Interpret(JSContext *cx)
       advance_pc:
         regs.pc += len;
         op = (JSOp) *regs.pc;
-# ifdef DEBUG
-        if (cx->tracefp)
-            js_TraceOpcode(cx, len);
-# endif
 
       do_op:
         CHECK_RECORDER();
+        TRACE_OPCODE(op);
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
