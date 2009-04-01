@@ -132,7 +132,7 @@ function TabStore() {
 TabStore.prototype = {
   __proto__: Store.prototype,
   _logName: "Tabs.Store",
-  _filePath: "weave/meta/tabSets.json",
+  _filePath: "meta/tabSets",
   _remoteClients: {},
 
   _TabStore_init: function TabStore__init() {
@@ -149,40 +149,21 @@ TabStore.prototype = {
   },
 
   _writeToFile: function TabStore_writeToFile() {
-    // use JSON service to serialize the records...
-    this._log.debug("Writing out to file...");
-    let file = Utils.getProfileFile(
-      {path: this._filePath, autoCreate: true});
-    let jsonObj = {};
-    for (let id in this._remoteClients) {
-      jsonObj[id] = this._remoteClients[id].toJson();
-    }
-    let [fos] = Utils.open(file, ">");
-    fos.writeString(JSON.stringify(jsonObj));
-    fos.close();
+    let json = {};
+    for (let [id, val] in Iterator(this._remoteClients))
+      json[id] = val.toJson();
+
+    Utils.jsonSave(this._filePath, this, json);
   },
 
   _readFromFile: function TabStore_readFromFile() {
-    // use JSON service to un-serialize the records...
-    // call on initialization.
-    // Put stuff into remoteClients.
-    this._log.debug("Reading in from file...");
-    let file = Utils.getProfileFile(this._filePath);
-    if (!file.exists())
-      return;
-    try {
-      let [is] = Utils.open(file, "<");
-      let json = Utils.readStream(is);
-      is.close();
-      let jsonObj = JSON.parse(json);
-      for (let id in jsonObj) {
+    Utils.jsonLoad(this._filePath, this, function(json) {
+      for (let [id, val] in Iterator(json)) {
 	this._remoteClients[id] = new TabSetRecord();
-	this._remoteClients[id].fromJson(jsonObj[id]);
+	this._remoteClients[id].fromJson(val);
 	this._remoteClients[id].id = id;
       }
-    } catch (e) {
-      this._log.warn("Failed to load saved tabs file" + e);
-    }
+    });
   },
 
   get _sessionStore() {

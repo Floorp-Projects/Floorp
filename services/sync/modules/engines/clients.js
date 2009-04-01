@@ -174,29 +174,14 @@ ClientStore.prototype = {
 
   // load/save clients list from/to disk
 
+  _snapshot: "meta/clients",
+
   saveSnapshot: function ClientStore_saveSnapshot() {
-    this._log.debug("Saving client list to disk");
-    let file = Utils.getProfileFile(
-      {path: "weave/meta/clients.json", autoCreate: true});
-    let out = JSON.stringify(this._clients);
-    let [fos] = Utils.open(file, ">");
-    fos.writeString(out);
-    fos.close();
+    Utils.jsonSave(this._snapshot, this, this._clients);
   },
 
   loadSnapshot: function ClientStore_loadSnapshot() {
-    let file = Utils.getProfileFile("weave/meta/clients.json");
-    if (!file.exists())
-      return;
-    this._log.debug("Loading client list from disk");
-    try {
-      let [is] = Utils.open(file, "<");
-      let json = Utils.readStream(is);
-      is.close();
-      this._clients = JSON.parse(json);
-    } catch (e) {
-      this._log.debug("Failed to load saved client list" + e);
-    }
+    Utils.jsonLoad(this._snapshot, this, function(json) this._clients = json);
   },
 
   // methods to apply changes: create, remove, update, changeItemID, wipe
