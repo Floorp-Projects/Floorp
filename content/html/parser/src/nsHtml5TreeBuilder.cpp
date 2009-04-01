@@ -47,6 +47,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5PendingNotification.h"
+#include "nsHtml5StateSnapshot.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"
@@ -55,6 +56,7 @@
 #include "nsHtml5HtmlAttributes.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
+#include "nsHtml5StateSnapshot.h"
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5TreeBuilder.h"
@@ -3557,6 +3559,7 @@ nsHtml5TreeBuilder::flushCharacters()
   if (charBufferLen > 0) {
     nsHtml5StackNode* current = stack[currentPtr];
     if (current->fosterParenting && charBufferContainsNonWhitespace()) {
+
       PRInt32 eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE);
       nsHtml5StackNode* node = stack[eltPos];
       nsIContent* elt = node->node;
@@ -3591,6 +3594,46 @@ nsHtml5TreeBuilder::charBufferContainsNonWhitespace()
     }
   }
   return PR_FALSE;
+}
+
+nsHtml5StateSnapshot* 
+nsHtml5TreeBuilder::newSnapshot()
+{
+  jArray<nsHtml5StackNode*,PRInt32> stackCopy = jArray<nsHtml5StackNode*,PRInt32>(currentPtr + 1);
+  for (PRInt32 i = 0; i < stackCopy.length; i++) {
+    (stackCopy[i] = stack[i])->retain();
+  }
+  jArray<nsHtml5StackNode*,PRInt32> listCopy = jArray<nsHtml5StackNode*,PRInt32>(listPtr + 1);
+  for (PRInt32 i = 0; i < listCopy.length; i++) {
+    nsHtml5StackNode* node = listOfActiveFormattingElements[i];
+    if (!!node) {
+      node->retain();
+    }
+    listCopy[i] = node;
+  }
+  nsHtml5Portability::retainElement(formPointer);
+  return new nsHtml5StateSnapshot(stackCopy, listCopy, formPointer);
+}
+
+PRBool 
+nsHtml5TreeBuilder::snapshotMatches(nsHtml5StateSnapshot* snapshot)
+{
+  jArray<nsHtml5StackNode*,PRInt32> stackCopy = snapshot->stack;
+  jArray<nsHtml5StackNode*,PRInt32> listCopy = snapshot->listOfActiveFormattingElements;
+  if (stackCopy.length != currentPtr + 1 || listCopy.length != listPtr + 1 || formPointer != snapshot->formPointer) {
+    return PR_FALSE;
+  }
+  for (PRInt32 i = listCopy.length - 1; i >= 0; i--) {
+    if (listCopy[i] != listOfActiveFormattingElements[i]) {
+      return PR_FALSE;
+    }
+  }
+  for (PRInt32 i = listCopy.length - 1; i >= 0; i--) {
+    if (listCopy[i] != listOfActiveFormattingElements[i]) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
 }
 
 void

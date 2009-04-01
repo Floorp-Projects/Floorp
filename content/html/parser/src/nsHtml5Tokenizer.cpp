@@ -53,6 +53,7 @@
 #include "nsHtml5HtmlAttributes.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
+#include "nsHtml5StateSnapshot.h"
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5Tokenizer.h"
@@ -2969,6 +2970,12 @@ PRInt32
 nsHtml5Tokenizer::getCol()
 {
   return col;
+}
+
+PRBool 
+nsHtml5Tokenizer::isInDataState()
+{
+  return (stateSave == NS_HTML5TOKENIZER_DATA);
 }
 
 void

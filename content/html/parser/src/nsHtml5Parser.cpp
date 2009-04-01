@@ -166,9 +166,10 @@ nsHtml5Parser::~nsHtml5Parser()
   if (mSniffingBuffer) {
     delete[] mSniffingBuffer;
   }
-  if (mMetaScanner) {
-    delete mMetaScanner;
-  }
+  delete mMetaScanner;
+#ifdef DEBUG
+  delete mSnapshot;
+#endif  
 }
 
 NS_IMETHODIMP_(void) 
@@ -809,6 +810,12 @@ nsHtml5Parser::DidBuildModel()
 
   DropParserAndPerfHint();
 
+#ifdef DEBUG
+  printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);
+  printf("TOKENIZER-SAFE SCRIPTS: %d\n", sTokenSafeDocWrites);
+  printf("TREEBUILDER-SAFE SCRIPTS: %d\n", sTreeSafeDocWrites);
+#endif
+
   return NS_OK;
 }
 
@@ -1182,6 +1189,21 @@ nsHtml5Parser::ParseUntilSuspend()
       return;
     }
     // now we have a non-empty buffer
+#ifdef DEBUG
+    if (mSnapshot && mFirstBuffer->key == GetRootContextKey()) {
+      if (mTokenizer->isInDataState()) {
+        if (mTreeBuilder->snapshotMatches(mSnapshot)) {
+          sTreeSafeDocWrites++;
+        } else {
+          sTokenSafeDocWrites++;
+        }
+      } else {
+        sUnsafeDocWrites++;
+      }
+      delete mSnapshot;
+      mSnapshot = nsnull;
+    }
+#endif    
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = PR_FALSE;
     if (mFirstBuffer->hasMore()) {
@@ -1254,6 +1276,18 @@ void
 nsHtml5Parser::ExecuteScript()
 {
   NS_PRECONDITION(mScriptElement, "Trying to run a script without having one!");
+#ifdef DEBUG
+  if (!mScriptsExecuting) {
+    NS_ASSERTION(!mSnapshot, "Already had a state snapshot");
+    mSnapshot = mTreeBuilder->newSnapshot();
+  }
+#endif
+  nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(mScriptElement);
+ 
+   // Notify our document that we're loading this script.
+  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
+  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
+  htmlDocument->ScriptLoading(sele);
  
    // Copied from nsXMLContentSink
   
@@ -1265,9 +1299,12 @@ nsHtml5Parser::ExecuteScript()
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
   if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-    nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(mScriptElement);
     mScriptElements.AppendObject(sele);
     BlockParser();
+  } else {
+    // This may have already happened if the script executed, but in case
+    // it didn't then remove the element so that it doesn't get stuck forever.
+    htmlDocument->ScriptExecuted(sele);  
   }
   mScriptElement = nsnull;
 }
@@ -1392,6 +1429,14 @@ nsHtml5Parser::FlushTags()
 }
 
 void
+nsHtml5Parser::PostEvaluateScript(nsIScriptElement *aElement)
+{
+  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
+  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
+  htmlDocument->ScriptExecuted(aElement);
+}
+
+void
 nsHtml5Parser::ScriptExecuting()
 {
   ++mScriptsExecuting;
@@ -1404,3 +1449,8 @@ nsHtml5Parser::ScriptDidExecute()
   --mScriptsExecuting;
 }
 
+#ifdef DEBUG
+PRUint32 nsHtml5Parser::sUnsafeDocWrites = 0;
+PRUint32 nsHtml5Parser::sTokenSafeDocWrites = 0;
+PRUint32 nsHtml5Parser::sTreeSafeDocWrites = 0;
+#endif
