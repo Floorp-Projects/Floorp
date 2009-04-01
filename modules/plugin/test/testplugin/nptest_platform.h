@@ -36,8 +36,39 @@
 
 #include "nptest.h"
 
+/**
+ * Returns true if the plugin supports windowed mode
+ */
+bool    pluginSupportsWindowMode();
+
+/**
+ * Returns true if the plugin supports windowless mode. At least one of
+ * "pluginSupportsWindowMode" and "pluginSupportsWindowlessMode" must
+ * return true.
+ */
+bool    pluginSupportsWindowlessMode();
+
+/**
+ * Initialize the plugin instance. Returning an error here will cause the
+ * plugin instantiation to fail.
+ */
 NPError pluginInstanceInit(InstanceData* instanceData);
+
+/**
+ * Shutdown the plugin instance.
+ */
+void    pluginInstanceShutdown(InstanceData* instanceData);
+
+/**
+ * Initialize the window for a windowed plugin. oldWindow is the old
+ * native window value. This will never be called for windowless plugins.
+ */
+void    pluginWidgetInit(InstanceData* instanceData, void* oldWindow);
+
+/**
+ * Handle an event for a windowless plugin. (Windowed plugins are
+ * responsible for listening for their own events.)
+ */
 int16_t pluginHandleEvent(InstanceData* instanceData, void* event);
-void    pluginDraw(InstanceData* instanceData);
 
 #endif // nptest_platform_h_
