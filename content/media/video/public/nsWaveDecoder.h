@@ -147,7 +147,7 @@ class nsWaveDecoder : public nsMediaDecoder
   ~nsWaveDecoder();
 
   virtual void GetCurrentURI(nsIURI** aURI);
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+  virtual nsIPrincipal* GetCurrentPrincipal();
 
   // Return the current playback position in the media in seconds.
   virtual float GetCurrentTime();
@@ -188,11 +188,14 @@ class nsWaveDecoder : public nsMediaDecoder
   // Element is notifying us that the requested playback rate has changed.
   virtual nsresult PlaybackRateChanged();
 
-  virtual void NotifySuspendedStatusChanged();
-  virtual void NotifyBytesDownloaded();
+  virtual void NotifyBytesDownloaded(PRInt64 aBytes);
+  virtual void NotifyDownloadSeeked(PRInt64 aOffset);
   virtual void NotifyDownloadEnded(nsresult aStatus);
+  virtual void NotifyBytesConsumed(PRInt64 aBytes);
 
   virtual Statistics GetStatistics();
+
+  virtual void SetTotalBytes(PRInt64 aBytes);
 
   void PlaybackPositionChanged();
 
@@ -256,6 +259,13 @@ private:
   // Threadsafe wrapper around channels that provides seeking based on the
   // underlying channel type.
   nsAutoPtr<nsMediaStream> mStream;
+
+  // The media time of the last requested seek.  This has not been validated
+  // against the current media, so may be out of bounds.  Set when
+  // Seek(float) is called, and passed to the state machine when the
+  // SeekStarted event fires to tell it to update its time offset.  The
+  // state machine will validate the offset against the current media.
+  float mTimeOffset;
 
   // The current playback position of the media resource in units of
   // seconds. This is updated every time a block of audio is passed to the
