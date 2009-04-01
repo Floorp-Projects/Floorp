@@ -1129,15 +1129,30 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
             JS_ASSERT(scope->table);
             CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
-            JSBool conflicts = JS_FALSE;
+            /*
+             * Our forking heuristic tries to balance the desire to avoid
+             * over-compacting (over-forking) against the desire to
+             * *periodically* fork anyways, in order to prevent paying scan
+             * penalties on each insert indefinitely, on a lineage with only
+             * a few old middle-deletions. So we fork if either:
+             *
+             *  - A quick scan finds a true conflict.
+             *  - We are passing through a doubling-threshold in size and
+             *    have accumulated a nonzero count of uncompacted deletions.
+             */
+
+            bool conflicts = false;
+            uint32 count = 0;
+            uint32 threshold = JS_BIT(JS_CeilingLog2(scope->entryCount));
             for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+                ++count;
                 if (sprop->id == id) {
-                    conflicts = JS_TRUE;
+                    conflicts = true;
                     break;
                 }
             }
 
-            if (conflicts) {
+            if (conflicts || count > threshold) {
                 /*
                  * Enumerate live entries in scope->table using a temporary
                  * vector, by walking the (possibly sparse, due to deletions)
