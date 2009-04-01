@@ -5556,7 +5556,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
           // RemoveMappingsForFrameSubtree() which would otherwise lead to a
           // crash since we cleared the placeholder map above (bug 398982).
           PRBool wasDestroyingFrameTree = mIsDestroyingFrameTree;
-          WillDestroyFrameTree(PR_FALSE);
+          WillDestroyFrameTree();
 
           rv = state.mFrameManager->RemoveFrame(docElementFrame->GetParent(),
                     GetChildListNameFor(docElementFrame), docElementFrame);
@@ -7877,7 +7877,7 @@ NS_IMETHODIMP nsFocusUnsuppressEvent::Run()
 }
 
 void
-nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
+nsCSSFrameConstructor::WillDestroyFrameTree()
 {
 #if defined(DEBUG_dbaron_off)
   mCounterManager.Dump();
@@ -7892,7 +7892,7 @@ nsCSSFrameConstructor::WillDestroyFrameTree(PRBool aDestroyingPresShell)
   // Cancel all pending re-resolves
   mRestyleEvent.Revoke();
 
-  if (mFocusSuppressCount && aDestroyingPresShell) {
+  if (mFocusSuppressCount && mPresShell->IsDestroying()) {
     nsRefPtr<nsFocusUnsuppressEvent> ev =
       new nsFocusUnsuppressEvent(mFocusSuppressCount);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
@@ -11418,8 +11418,7 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
                                         nsReStyleHint aRestyleHint,
                                         nsChangeHint aMinChangeHint)
 {
-  if (NS_UNLIKELY(mIsDestroyingFrameTree)) {
-    NS_NOTREACHED("PostRestyleEvent after the shell is destroyed (bug 279505)");
+  if (NS_UNLIKELY(mPresShell->IsDestroying())) {
     return;
   }
 
