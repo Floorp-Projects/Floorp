@@ -528,6 +528,11 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal)
   rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Check if we really got any URI. System principal doesn't return a URI
+  // instance and we would crash in NS_GetInnermostURI bellow.
+  if (!uri)
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
   if (!innerUri)
     return NS_ERROR_UNEXPECTED;
