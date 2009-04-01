@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <script type="text/javascript">
+
+    function boom()
+    {
+      document.documentElement.style.MozColumnCount = '15';
+    }
+    window.onload = function() { setTimeout(boom, 20); };
+    
+  </script>
+
+  <foreignObject width="50" height="50" filter="url(#f1)"/>
+
+  <filter id="f1"/>
+</svg>
