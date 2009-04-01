@@ -122,13 +122,26 @@ ClientEngine.prototype = {
   get clientType() { return Svc.Prefs.get("client.type", "desktop"); },
   set clientType(value) { Svc.Prefs.set("client.type", value); },
 
+  updateLocalInfo: function ClientEngine_updateLocalInfo(info) {
+    // Grab data from the store if we weren't given something to start with
+    if (!info)
+      info = this.getInfo(this.clientID);
+
+    // Overwrite any existing values with the ones from the pref
+    info.name = this.clientName;
+    info.type = this.clientType;
+
+    return info;
+  },
+
   observe: function ClientEngine_observe(subject, topic, data) {
     switch (topic) {
     case "nsPref:changed":
       switch (data) {
       case "client.name":
       case "client.type":
-        this._tracker.addChangedID(this.clientID);
+        // Update the store and tracker on pref changes
+        this.setInfo(this.clientID, this.updateLocalInfo());
         break;
       }
       break;
@@ -143,113 +156,113 @@ ClientEngine.prototype = {
 };
 
 function ClientStore() {
-  this._ClientStore_init();
+  this.init();
 }
 ClientStore.prototype = {
+  //////////////////////////////////////////////////////////////////////////////
+  // ClientStore Attributes
+
+  clients: {},
+
   __proto__: Store.prototype,
-  _logName: "Clients.Store",
-
-  _ClientStore_init: function ClientStore__init() {
-    this._init.call(this);
-    this._clients = {};
-    this.loadSnapshot();
-  },
-
-  get clients() {
-    this._clients[Clients.clientID] = this.createRecord(Clients.clientID).payload;
-    return this._clients;
-  },
-
-  // get/set client info; doesn't use records like the methods below
-  // NOTE: setInfo will not update tracker.  Use Engine.setInfo for that
-
-  getInfo: function ClientStore_getInfo(id) {
-    return this._clients[id];
-  },
-
-  setInfo: function ClientStore_setInfo(id, info) {
-    this._clients[id] = info;
-    this.saveSnapshot();
-  },
-
-  // load/save clients list from/to disk
 
   _snapshot: "meta/clients",
 
-  saveSnapshot: function ClientStore_saveSnapshot() {
-    Utils.jsonSave(this._snapshot, this, this._clients);
+  //////////////////////////////////////////////////////////////////////////////
+  // ClientStore Methods
+
+  /**
+   * Get the client by guid
+   */
+  getInfo: function ClientStore_getInfo(id) this.clients[id],
+
+  /**
+   * Initialize parent class then load client data from disk
+   */
+  init: function ClientStore_init() {
+    this._init.call(this);
+    this.loadSnapshot();
+
+    // Get fresh local client info in case prefs were changed when closed
+    let id = Clients.clientID;
+    this.setInfo(id, Clients.updateLocalInfo(this.clients[id] || {}));
   },
 
+  /**
+   * Load client data from json disk
+   */
   loadSnapshot: function ClientStore_loadSnapshot() {
-    Utils.jsonLoad(this._snapshot, this, function(json) this._clients = json);
+    Utils.jsonLoad(this._snapshot, this, function(json) this.clients = json);
   },
 
-  // methods to apply changes: create, remove, update, changeItemID, wipe
+  /**
+   * Log that we're about to change the client store then save to disk
+   */
+  modify: function ClientStore_modify(message, action) {
+    this._log.debug(message);
+    action.call(this);
+    this.saveSnapshot();
+  },
 
-  applyIncoming: function ClientStore_applyIncoming(onComplete, record) {
-    let fn = function(rec) {
-      let self = yield;
-      if (!rec.payload)
-        this.remove(rec);
-      else if (!this.itemExists(rec.id))
-        this.create(rec);
-      else
-        this.update(rec);
-    };
-    fn.async(this, onComplete, record);
+  /**
+   * Save client data to json disk
+   */
+  saveSnapshot: function ClientStore_saveSnapshot() {
+    Utils.jsonSave(this._snapshot, this, this.clients);
+  },
+
+  /**
+   * Set the client data for a guid. Use Engine.setInfo to update tracker.
+   */
+  setInfo: function ClientStore_setInfo(id, info) {
+    this.modify("Setting client " + id + ": " + JSON.stringify(info),
+      function() this.clients[id] = info);
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Store.prototype Attributes
+
+  _logName: "Clients.Store",
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Store.prototype Methods
+
+  changeItemID: function ClientStore_changeItemID(oldID, newID) {
+    this.modify("Changing id from " + oldId + " to " + newID, function() {
+      this.clients[newID] = this.clients[oldID];
+      delete this.clients[oldID];
+    });
   },
 
   create: function ClientStore_create(record) {
     this.update(record);
   },
 
-  update: function ClientStore_update(record) {
-    this._log.debug("Updating client " + record.id);
-    this._clients[record.id] = record.payload;
-    this.saveSnapshot();
-  },
-
-  remove: function ClientStore_remove(record) {
-    this._log.debug("Removing client " + record.id);
-    delete this._clients[record.id];
-    this.saveSnapshot();
-  },
-
-  changeItemID: function ClientStore_changeItemID(oldID, newID) {
-    this._clients[newID] = this._clients[oldID];
-    delete this._clients[oldID];
-    this.saveSnapshot();
-  },
-
-  wipe: function ClientStore_wipe() {
-    this._log.debug("Wiping local clients store");
-    this._clients = {};
-    this.saveSnapshot();
-  },
-
-  // methods to query local data: getAllIDs, itemExists, createRecord
-
-  getAllIDs: function ClientStore_getAllIDs() {
-    return this.clients;
-  },
-
-  itemExists: function ClientStore_itemExists(id) {
-    return id in this._clients;
-  },
-
   createRecord: function ClientStore_createRecord(id) {
     let record = new ClientRecord();
     record.id = id;
-    record.payload = this._clients[id] || {};
-
-    // For the local client, update the name and type with the current value
-    if (id == Clients.clientID) {
-      record.payload.name = Clients.clientName;
-      record.payload.type = Clients.clientType;
-    }
+    record.payload = this.clients[id];
 
     return record;
-  }
+  },
+
+  getAllIDs: function ClientStore_getAllIDs() this.clients,
+
+  itemExists: function ClientStore_itemExists(id) id in this.clients,
+
+  remove: function ClientStore_remove(record) {
+    this.modify("Removing client " + record.id, function()
+      delete this.clients[record.id]);
+  },
+
+  update: function ClientStore_update(record) {
+    this.modify("Updating client " + record.id, function()
+      this.clients[record.id] = record.payload);
+  },
+
+  wipe: function ClientStore_wipe() {
+    this.modify("Wiping local clients store", function() this.clients = {});
+  },
 };
 
 function ClientTracker() {
