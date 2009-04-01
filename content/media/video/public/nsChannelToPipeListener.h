@@ -34,65 +34,55 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined(nsChannelReader_h_)
-#define nsChannelReader_h_
+#if !defined(nsChannelToPipeListener_h_)
+#define nsChannelToPipeListener_h_
 
-#include "nsAutoPtr.h"
-#include "nsMediaStream.h"
-#include "nsMediaDecoder.h"
+#include "nsCOMPtr.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIRequestObserver.h"
+#include "nsIStreamListener.h"
 #include "nsIPrincipal.h"
 
-#include "oggplay/oggplay.h"
+class nsMediaDecoder;
 
-class nsIChannel;
-class nsIStreamListener;
-
-class nsChannelReader : public OggPlayReader
+/* 
+   Reads all data on the input stream of a channel and
+   writes it to a pipe. This allows a seperate thread to
+   read data from a channel running on the main thread
+*/
+class nsChannelToPipeListener : public nsIStreamListener
 {
-public:
-  nsChannelReader();
-  ~nsChannelReader();
+  // ISupports
+  NS_DECL_ISUPPORTS
 
-  /**
-   * Initialize the reader with the given decoder, URI, and
-   * optional channel.
-   * @param aChannel may be null
-   * @param aStreamListener if aChannel is non-null, this will return
-   * a stream listener which should be attached to the channel.
-   */
-  nsresult Init(nsMediaDecoder* aDecoder, nsIURI* aURI, nsIChannel* aChannel,
-                nsIStreamListener** aStreamListener);
+  // IRequestObserver
+  NS_DECL_NSIREQUESTOBSERVER
 
-  // Cancel any blocking request currently in progress and cause that
-  // request to return an error. Call on main thread only.
+  // IStreamListener
+  NS_DECL_NSISTREAMLISTENER
+
+  public:
+  // If aSeeking is PR_TRUE then this listener was created as part of a
+  // seek request and is expecting a byte range partial result. aOffset
+  // is the offset in bytes that this listener started reading from.
+  nsChannelToPipeListener(nsMediaDecoder* aDecoder,
+                          PRBool aSeeking = PR_FALSE);
+  nsresult Init();
+  nsresult GetInputStream(nsIInputStream** aStream);
+  void Stop();
   void Cancel();
 
-  // Suspend any downloads that are in progress.
-  void Suspend();
-
-  // Resume any downloads that have been suspended.
-  void Resume();
-
-  // Set the duration of the media resource. Call with decoder lock
-  // obtained so that the decoder thread does not request the duration
-  // while it is changing.
-  void SetDuration(PRInt64 aDuration);
-
   nsIPrincipal* GetCurrentPrincipal();
-  
-  // Implementation of OggPlay Reader API.
-  OggPlayErrorCode initialise(int aBlock);
-  OggPlayErrorCode destroy();
-  size_t io_read(char* aBuffer, size_t aCount);
-  int io_seek(long aOffset, int aWhence);
-  long io_tell();
-  ogg_int64_t duration();
-  
-public:
-  nsAutoPtr<nsMediaStream> mStream;
 
-  // Duration of the media resource. -1 if not known.
-  PRInt64 mDuration;
+private:
+  nsCOMPtr<nsIInputStream> mInput;
+  nsCOMPtr<nsIOutputStream> mOutput;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsRefPtr<nsMediaDecoder> mDecoder;
+
+  // PR_TRUE if this listener is expecting a byte range request result
+  PRPackedBool mSeeking;
 };
 
 #endif
