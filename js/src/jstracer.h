@@ -636,6 +636,9 @@ js_FinishJIT(JSTraceMonitor *tm);
 extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
+extern bool
+js_OverfullFragmento(nanojit::Fragmento *frago, size_t maxsz);
+
 extern void
 js_FlushJITCache(JSContext* cx);
 
