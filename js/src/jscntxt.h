@@ -111,6 +111,7 @@ struct VMFragment;
 
 #define MONITOR_N_GLOBAL_STATES 4
 struct GlobalState {
+    JSObject*               globalObj;
     uint32                  globalShape;
     CLS(SlotList)           globalSlots;
 };
