@@ -3038,7 +3038,8 @@ js_CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj
         if (globalObj != root->globalObj || globalShape != root->globalShape) {
             AUDIT(globalShapeMismatchAtEntry);
             debug_only_v(printf("Global object/shape mismatch (%p/%u vs. %p/%u), flushing cache.\n",
-                                globalObj, globalShape, root->globalObj, root->globalShape);)
+                                (void*)globalObj, globalShape, (void*)root->globalObj,
+                                root->globalShape);)
             return false;
         }
         if (shape)
