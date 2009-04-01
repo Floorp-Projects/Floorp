@@ -906,7 +906,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
     }
 
-    tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS));
+    tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
     return pn;
 }
 
@@ -1453,7 +1453,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_funpob = funpob;
     pn->pn_op = op;
     pn->pn_body = body;
-    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS | TCF_COMPILE_N_GO);
+    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_COMPILE_N_GO);
     TREE_CONTEXT_FINISH(cx, &funtc);
     return result;
 }
@@ -3505,7 +3505,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_op = JSOP_DEFXMLNS;
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_kid = pn2;
-        tc->flags |= TCF_HAS_DEFXMLNS;
         break;
 #endif
 
