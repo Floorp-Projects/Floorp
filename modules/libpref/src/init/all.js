@@ -233,9 +233,6 @@ pref("nglayout.events.dispatchLeftClickOnly", true);
 // whether or not to draw images while dragging
 pref("nglayout.enable_drag_images", true);
 
-// whether or not to use xbl form controls
-pref("nglayout.debug.enable_xbl_forms", false);
-
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple
