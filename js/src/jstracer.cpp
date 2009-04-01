@@ -132,6 +132,9 @@ static const char tagChar[]  = "OIDISIBI";
     (MAX_NATIVE_STACK_SLOTS * sizeof(jsval) +                                 \
      MAX_CALL_STACK_ENTRIES * sizeof(JSInlineFrame))
 
+/* Amount of memory in the main fragmento before flushing. */
+#define MAX_MEM_IN_MAIN_FRAGMENTO (1 << 24)
+
 /* Max number of branches per tree. */
 #define MAX_BRANCHES 32
 
@@ -3009,7 +3012,8 @@ js_DeleteRecorder(JSContext* cx)
     /*
      * If we ran out of memory, flush the code cache.
      */
-    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error() == OutOMem) {
+    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error() == OutOMem
+        || js_OverfullFragmento(tm->fragmento, MAX_MEM_IN_MAIN_FRAGMENTO)) {
         js_FlushJITCache(cx);
         return false;
     }
@@ -3331,7 +3335,8 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     f->root = f;
     f->lirbuf = tm->lirbuf;
 
-    if (f->lirbuf->outOMem()) {
+    if (f->lirbuf->outOMem() ||
+        js_OverfullFragmento(tm->fragmento, MAX_MEM_IN_MAIN_FRAGMENTO)) {
         js_FlushJITCache(cx);
         debug_only_v(printf("Out of memory recording new tree, flushing cache.\n");)
         return false;
@@ -4356,7 +4361,9 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return JSMRS_STOP;
     }
 
-    if (tr->lirbuf->outOMem()) {
+    if (tr->lirbuf->outOMem() || 
+        js_OverfullFragmento(JS_TRACE_MONITOR(cx).fragmento, 
+                             MAX_MEM_IN_MAIN_FRAGMENTO)) {
         js_AbortRecording(cx, "no more LIR memory");
         js_FlushJITCache(cx);
         return JSMRS_STOP;
@@ -4608,7 +4615,7 @@ js_InitJIT(JSTraceMonitor *tm)
 
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
-        Fragmento* fragmento = new (&gc) Fragmento(core, 24);
+        Fragmento* fragmento = new (&gc) Fragmento(core, 32);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->fragmento = fragmento;
         tm->lirbuf = new (&gc) LirBuffer(fragmento, NULL);
@@ -4624,7 +4631,7 @@ js_InitJIT(JSTraceMonitor *tm)
         memset(tm->vmfragments, 0, sizeof(tm->vmfragments));
     }
     if (!tm->reFragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core, 20);
+        Fragmento* fragmento = new (&gc) Fragmento(core, 32);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(fragmento, NULL);
@@ -4737,6 +4744,46 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
             }
         }
     }
+}
+
+bool
+js_OverfullFragmento(Fragmento *frago, size_t maxsz)
+{
+    /* 
+     * You might imagine the outOMem flag on the lirbuf is sufficient
+     * to model the notion of "running out of memory", but there are actually
+     * two separate issues involved:
+     *
+     *  1. The process truly running out of memory: malloc() or mmap()
+     *     failed.
+     *
+     *  2. The limit we put on the "intended size" of the tracemonkey code
+     *     cache, in pages, has been exceeded.
+     *
+     * Condition 1 doesn't happen very often, but we're obliged to try to
+     * safely shut down and signal the rest of spidermonkey when it
+     * does. Condition 2 happens quite regularly.
+     *
+     * Presently, the code in this file doesn't check the outOMem condition
+     * often enough, and frequently misuses the unchecked results of
+     * lirbuffer insertions on the asssumption that it will notice the
+     * outOMem flag "soon enough" when it returns to the monitorRecording
+     * function. This turns out to be a false assumption if we use outOMem
+     * to signal condition 2: we regularly provoke "passing our intended
+     * size" and regularly fail to notice it in time to prevent writing
+     * over the end of an artificially self-limited LIR buffer.
+     *
+     * To mitigate, though not completely solve, this problem, we're
+     * modeling the two forms of memory exhaustion *separately* for the
+     * time being: condition 1 is handled by the outOMem flag inside
+     * nanojit, and condition 2 is being handled independently *here*. So
+     * we construct our fragmentos to use all available memory they like,
+     * and only report outOMem to us when there is literally no OS memory
+     * left. Merely purging our cache when we hit our highwater mark is
+     * handled by the (few) callers of this function.
+     *
+     */
+    return (frago->_stats.pages > (maxsz >> NJ_LOG2_PAGE_SIZE));
 }
 
 JS_REQUIRES_STACK void
@@ -6695,7 +6742,7 @@ TraceRecorder::newArray(JSObject *ctor, uint32 argc, jsval *argv, jsval *rval)
 
         // arr->dslots[i] = box_jsval(vp[i]);  for i in 0..argc
         LIns *dslots_ins = NULL;
-        for (uint32 i = 0; i < argc; i++) {
+        for (uint32 i = 0; i < argc && !lirbuf->outOMem(); i++) {
             LIns *elt_ins = get(argv + i);
             box_jsval(argv[i], elt_ins);
             stobj_set_dslot(arr_ins, i, dslots_ins, elt_ins, "set_array_elt");
