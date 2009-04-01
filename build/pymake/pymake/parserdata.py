@@ -470,8 +470,11 @@ class EmptyDirective(Statement):
     def dump(self, fd, indent):
         print >>fd, "%sEmptyDirective: %s" % (indent, self.exp)
 
+class _EvalContext(object):
+    __slots__ = ('currule',)
+
 class StatementList(list):
-    __slots__ = ()
+    __slots__ = ('mtime',)
 
     def append(self, statement):
         assert isinstance(statement, Statement)
@@ -479,7 +482,7 @@ class StatementList(list):
 
     def execute(self, makefile, context=None):
         if context is None:
-            context = util.makeobject('currule')
+            context = _EvalContext()
 
         for s in self:
             s.execute(makefile, context)

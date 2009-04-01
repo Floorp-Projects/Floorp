@@ -1268,6 +1268,30 @@ class PatternRule(object):
     def prerequisitesforstem(self, dir, stem):
         return [p.resolve(dir, stem) for p in self.prerequisites]
 
+class _RemakeContext(object):
+    def __init__(self, makefile, remakelist, mtimelist, cb):
+        self.makefile = makefile
+        self.remakelist = remakelist
+        self.mtimelist = mtimelist # list of (target, mtime)
+        self.cb = cb
+
+        self.remakecb(error=False, didanything=False)
+
+    def remakecb(self, error, didanything):
+        assert error in (True, False)
+
+        if error:
+            print "Error remaking makefiles (ignored)"
+
+        if len(self.remakelist):
+            self.remakelist.pop(0).make(self.makefile, [], avoidremakeloop=True, cb=self.remakecb)
+        else:
+            for t, oldmtime in self.mtimelist:
+                if t.mtime != oldmtime:
+                    self.cb(remade=True)
+                    return
+            self.cb(remade=False)
+
 class Makefile(object):
     """
     The top-level data structure for makefile execution. It holds Targets, implicit rules, and other
@@ -1448,17 +1472,6 @@ class Makefile(object):
         return withoutdups(vp)
 
     def remakemakefiles(self, cb):
-        reparse = False
-
-        serial = self.context.jcount == 1
-
-        def remakedone():
-            for t, oldmtime in mlist:
-                if t.mtime != oldmtime:
-                    cb(remade=True)
-                    return
-            cb(remade=False)
-
         mlist = []
         for f in self.included:
             t = self.gettarget(f)
@@ -1468,33 +1481,7 @@ class Makefile(object):
 
             mlist.append((t, oldmtime))
 
-        if serial:
-            remakelist = [self.gettarget(f) for f in self.included]
-            def remakecb(error, didanything):
-                assert error in (True, False)
-                if error:
-                    print "Error remaking makefiles (ignored)"
-
-                if len(remakelist):
-                    t = remakelist.pop(0)
-                    t.make(self, [], avoidremakeloop=True, cb=remakecb)
-                else:
-                    remakedone()
-
-            remakelist.pop(0).make(self, [], avoidremakeloop=True, cb=remakecb)
-        else:
-            o = util.makeobject(('remakesremaining',), remakesremaining=len(self.included))
-            def remakecb(error, didanything):
-                assert error in (True, False)
-                if error:
-                    print "Error remaking makefiles (ignored)"
-
-                o.remakesremaining -= 1
-                if o.remakesremaining == 0:
-                    remakedone()
-
-            for t, mtime in mlist:
-                t.make(self, [], avoidremakeloop=True, cb=remakecb)
+        _RemakeContext(self, [self.gettarget(f) for f in self.included], mlist, cb)
 
     flagescape = re.compile(r'([\s\\])')
 
