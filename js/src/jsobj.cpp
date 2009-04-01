@@ -2037,7 +2037,6 @@ CreateMapForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
     {
         /* Share the given prototype's map. */
         obj->map = js_HoldObjectMap(cx, map);
-        obj->dslots = NULL;
         return true;
     }
 
@@ -2076,6 +2075,7 @@ NewNativeObject(JSContext* cx, JSObject* proto, JSObject *parent)
 
     if (!CreateMapForObject(cx, obj, proto, &js_ObjectOps))
         return NULL;
+    obj->dslots = NULL;
 
     return obj;
 }
