@@ -4260,7 +4260,7 @@ nsDocument::GetElementsByTagName(const nsAString& aTagname,
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsContentList *list = NS_GetContentList(this, nameAtom, GetDefaultNamespaceID()).get();
+  nsContentList *list = NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown).get();
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn

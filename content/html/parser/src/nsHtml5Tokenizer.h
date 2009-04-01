@@ -56,6 +56,7 @@ class nsHtml5ElementName;
 class nsHtml5HtmlAttributes;
 class nsHtml5StackNode;
 class nsHtml5UTF16Buffer;
+class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
 
@@ -237,6 +238,7 @@ class nsHtml5Tokenizer
     PRBool isPrevCR();
     PRInt32 getLine();
     PRInt32 getCol();
+    PRBool isInDataState();
     static void initializeStatics();
     static void releaseStatics();
 };
