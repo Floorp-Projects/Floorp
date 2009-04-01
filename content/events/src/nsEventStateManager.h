@@ -40,7 +40,7 @@
 #define nsEventStateManager_h__
 
 #include "nsIEventStateManager.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"

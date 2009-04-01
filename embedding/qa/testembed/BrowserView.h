@@ -105,8 +105,6 @@ public:
 	nsCOMPtr<nsIBaseWindow> mBaseWindow;
 	nsCOMPtr<nsIWebNavigation> mWebNav;	
 
-	typedef void* nsNativeWidget;
-
 	//nsCOMPtr<nsISHistory> mSessionHistory; // de: added in 5/11/01
 
 	void UpdateBusyState(PRBool aBusy);

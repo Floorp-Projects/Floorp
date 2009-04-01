@@ -426,15 +426,6 @@ class nsHashKey;
  */
 
 /**
- * sizemode is an adjunct to widget size
- */
-enum nsSizeMode {
-  nsSizeMode_Normal = 0,
-  nsSizeMode_Minimized,
-  nsSizeMode_Maximized
-};
-
-/**
  * different types of (top-level) window z-level positioning
  */
 enum nsWindowZ {

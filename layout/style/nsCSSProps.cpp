@@ -44,6 +44,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
+#include "nsIWidget.h"
 #include "nsThemeConstants.h"  // For system widget appearance types
 
 #include "nsILookAndFeel.h" // for system colors

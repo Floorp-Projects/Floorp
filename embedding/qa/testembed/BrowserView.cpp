@@ -77,9 +77,6 @@
 #include "PrintProgressDialog.h"
 //#include "PrintSetupDialog.h"
 
-// Mozilla Includes
-#include "nsIWidget.h"
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE

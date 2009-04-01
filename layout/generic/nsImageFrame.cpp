@@ -48,7 +48,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIImage.h"
-#include "nsIWidget.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
