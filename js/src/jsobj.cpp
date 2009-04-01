@@ -110,10 +110,9 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_Enumerate,           js_CheckAccess,
     NULL,                   NATIVE_DROP_PROPERTY,
     js_Call,                js_Construct,
-    NULL,                   js_HasInstance,
-    js_SetProtoOrParent,    js_SetProtoOrParent,
-    js_TraceObject,         js_Clear,
-    js_GetRequiredSlot,     js_SetRequiredSlot
+    js_HasInstance,         js_TraceObject,
+    js_Clear,               js_GetRequiredSlot,
+    js_SetRequiredSlot
 };
 
 JSClass js_ObjectClass = {
@@ -2353,10 +2352,9 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_Enumerate,         with_CheckAccess,
     with_ThisObject,        NATIVE_DROP_PROPERTY,
     NULL,                   NULL,
-    NULL,                   NULL,
-    js_SetProtoOrParent,    js_SetProtoOrParent,
-    js_TraceObject,         js_Clear,
-    NULL,                   NULL
+    NULL,                   js_TraceObject,
+    js_Clear,               NULL,
+    NULL
 };
 
 static JSObjectOps *

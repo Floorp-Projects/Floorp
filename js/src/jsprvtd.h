@@ -357,15 +357,6 @@ typedef void
 (* JSPropertyRefOp)(JSContext *cx, JSObject *obj, JSProperty *prop);
 
 /*
- * Function pointer type for JSObjectOps.setProto and JSObjectOps.setParent.
- * These hooks must check for cycles without deadlocking, and otherwise take
- * special steps. See jsobj.c and jsgc.c for details.
- */
-typedef JSBool
-(* JSSetObjectSlotOp)(JSContext *cx, JSObject *obj, uint32 slot,
-                      JSObject *pobj);
-
-/*
  * Get and set a required slot, one that should already have been allocated.
  * These operations are infallible, so required slots must be pre-allocated,
  * or implementations must suppress out-of-memory errors.  The native ops

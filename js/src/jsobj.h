@@ -75,10 +75,7 @@ struct JSObjectOps {
     JSPropertyRefOp     dropProperty;
     JSNative            call;
     JSNative            construct;
-    JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
-    JSSetObjectSlotOp   setProto;
-    JSSetObjectSlotOp   setParent;
     JSTraceOp           trace;
     JSFinalizeOp        clear;
     JSGetRequiredSlotOp getRequiredSlot;
