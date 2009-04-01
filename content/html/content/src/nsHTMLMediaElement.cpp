@@ -1223,9 +1223,10 @@ static const PRInt32 gDownloadSizeSafetyMargin = 1000000;
 void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
-    NS_ASSERTION(aNextFrame != NEXT_FRAME_AVAILABLE,
-                 "How can we have a frame but no metadata?");
-    // The arrival of more data can't change us out of this state.
+    // aNextFrame might have a next frame because the decoder can advance
+    // on its own thread before ResourceLoaded or MetadataLoaded gets
+    // a chance to run.
+    // The arrival of more data can't change us out of this readyState.
     return;
   }
 
@@ -1311,16 +1312,8 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
   }
 
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
-      mAutoplaying &&
-      mPaused &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
-      mAutoplayEnabled) {
-    mPaused = PR_FALSE;
-    if (mDecoder) {
-      mDecoder->Play();
-    }
-    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
+    NotifyAutoplayDataReady();
   }
   
   if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA && 
@@ -1332,6 +1325,20 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   if (oldState < nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
     DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
+  }
+}
+
+void nsHTMLMediaElement::NotifyAutoplayDataReady()
+{
+  if (mAutoplaying &&
+      mPaused &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
+      mAutoplayEnabled) {
+    mPaused = PR_FALSE;
+    if (mDecoder) {
+      mDecoder->Play();
+    }
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
   }
 }
 
@@ -1431,7 +1438,7 @@ PRBool nsHTMLMediaElement::IsPlaybackEnded() const
     mDecoder ? mDecoder->IsEnded() : PR_FALSE;
 }
 
-nsIPrincipal* nsHTMLMediaElement::GetCurrentPrincipal()
+already_AddRefed<nsIPrincipal> nsHTMLMediaElement::GetCurrentPrincipal()
 {
   if (!mDecoder)
     return nsnull;

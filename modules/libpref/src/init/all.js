@@ -136,6 +136,9 @@ pref("browser.triple_click_selects_paragraph", true);
 // header, and disallow the connection if not present or permitted.
 pref("media.enforce_same_site_origin", false);
 
+// Media cache size in kilobytes
+pref("media.cache_size", 51200);
+
 #ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
 #endif
