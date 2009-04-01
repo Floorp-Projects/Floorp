@@ -42,7 +42,6 @@
 #define nsStyleConsts_h___
 
 #include "nsFont.h"
-#include "nsIWidget.h"
 
 // cairo doesn't support invert
 // #define GFX_HAS_INVERT

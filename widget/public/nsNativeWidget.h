@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,11 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,33 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMenuUtilsX_h_
-#define nsMenuUtilsX_h_
+#ifndef nsNativeWidget_h__
+#define nsNativeWidget_h__
 
-#include "nscore.h"
-#include "nsEvent.h"
-#include "nsMenuBaseX.h"
+// Hide the native window systems real window type so as to avoid
+// including native window system types and APIs. This is necessary
+// to ensure cross-platform code.
+typedef void* nsNativeWidget;
 
-#import <Cocoa/Cocoa.h>
-#import <Carbon/Carbon.h>
-
-class nsIContent;
-class nsString;
-class nsMenuBarX;
-
-extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
-
-// Namespace containing utility functions used in our native menu implementation.
-namespace nsMenuUtilsX
-{
-  nsEventStatus DispatchCommandTo(nsIContent* aTargetContent);
-  NSString*     CreateTruncatedCocoaLabel(const nsString& itemLabel); // returned object is not retained
-  PRUint8       GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute);
-  unsigned int  MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
-  nsMenuBarX*   GetHiddenWindowMenuBar(); // returned object is not retained
-  NSMenuItem*   GetStandardEditMenuItem(); // returned object is not retained
-  PRBool        NodeIsHiddenOrCollapsed(nsIContent* inContent);
-  int           CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild);
-}
-
-#endif // nsMenuUtilsX_h_
+#endif // nsNativeWidget_h__

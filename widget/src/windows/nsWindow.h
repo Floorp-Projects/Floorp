@@ -49,8 +49,6 @@
 #include "nsSwitchToUIThread.h"
 #include "nsToolkit.h"
 
-#include "nsIWidget.h"
-
 #include "nsIEventListener.h"
 #include "nsString.h"
 

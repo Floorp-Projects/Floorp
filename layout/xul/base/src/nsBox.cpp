@@ -51,7 +51,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
-#include "nsIWidget.h"
 #include "nsIRenderingContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"

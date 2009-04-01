@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsNativeTheme.h"
+#include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"

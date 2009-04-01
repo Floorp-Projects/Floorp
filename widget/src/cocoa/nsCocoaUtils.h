@@ -44,8 +44,9 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsRect.h"
-#include "nsIWidget.h"
 #include "nsObjCExceptions.h"
+
+class nsIWidget;
 
 // "Borrowed" in part from the QTKit framework's QTKitDefines.h.  This is
 // needed when building on OS X Tiger (10.4.X) or with a 10.4 SDK.  It won't

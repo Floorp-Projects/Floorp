@@ -52,7 +52,6 @@
 #include "nsMenuFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsMenuParent.h"
-#include "nsIWidget.h"
 
 class nsIContent;
 

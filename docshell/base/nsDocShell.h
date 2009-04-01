@@ -108,6 +108,7 @@
 #include "nsIURIClassifier.h"
 #include "nsIChannelClassifier.h"
 #include "nsILoadContext.h"
+#include "nsIWidget.h"
 
 class nsIScrollableView;
 class nsDocShell;

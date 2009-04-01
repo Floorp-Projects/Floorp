@@ -44,6 +44,7 @@
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
 
+#include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsILookAndFeel.h"
 

@@ -79,7 +79,6 @@
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
-#include "nsIWidget.h"
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
