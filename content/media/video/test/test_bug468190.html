@@ -43,8 +43,9 @@ function playbackEnded() {
   ok(v.currentTime >= 3.9 && v.currentTime <= 4.0,
      "Checking currentTime at end: " + v.currentTime);
   ok(v.ended, "Checking playback has ended");
+  ok(playingCount > 0, "Expect at least one playing event");
+  playingCount = 0;
   if (endCount < 2) {
-    ok(playingCount > 0, "Expect at least one playing event");
     v.currentTime = 0;
     ok(v.seeking, "Checking that seeking is now true");
     ok(!v.ended, "Checking ended is no longer set as seeking has begun");
