@@ -473,6 +473,7 @@ function HistoryTracker() {
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "HistoryTracker",
+  file: "history",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
 

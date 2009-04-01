@@ -227,6 +227,7 @@ function PasswordTracker() {
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "PasswordTracker",
+  file: "password",
 
   _init: function PasswordTracker_init() {
     Tracker.prototype._init.call(this);
