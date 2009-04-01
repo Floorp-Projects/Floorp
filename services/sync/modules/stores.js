@@ -74,7 +74,7 @@ Store.prototype = {
     this._log = Log4Moz.repository.getLogger("Store." + this._logName);
   },
 
-  applyIncoming: function BStore_applyIncoming(onComplete, record) {
+  applyIncoming: function Store_applyIncoming(onComplete, record) {
     let fn = function(rec) {
       let self = yield;
       if (rec.payload == null)
@@ -88,6 +88,18 @@ Store.prototype = {
   },
 
   // override these in derived objects
+
+  create: function Store_create(record) {
+    throw "override create in a subclass";
+  },
+
+  remove: function Store_remove(record) {
+    throw "override remove in a subclass";
+  },
+
+  update: function Store_update(record) {
+    throw "override update in a subclass";
+  },
 
   itemExists: function Store_itemExists(id) {
     throw "override itemExists in a subclass";
