@@ -1108,7 +1108,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     const nsRect& aDirtyRect)
 {
   const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
-  if (!styleBorder->mBoxShadow)
+  if (!styleBorder->mBoxShadow || aForFrame->IsThemed())
     return;
 
   PRIntn sidesToSkip = aForFrame->GetSkipSides();
@@ -1203,7 +1203,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     const nsRect& aDirtyRect)
 {
   const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
-  if (!styleBorder->mBoxShadow)
+  if (!styleBorder->mBoxShadow || aForFrame->IsThemed())
     return;
 
   // Get any border radius, since box-shadow must also have rounded corners if the frame does
