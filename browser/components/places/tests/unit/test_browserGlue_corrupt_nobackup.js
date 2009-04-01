@@ -41,14 +41,42 @@
  * is corrupt but a JSON backup is not available.
  */
 
+const NS_PLACES_INIT_COMPLETE_TOPIC = "places-init-complete";
+
+// Create an observer for the Places notifications
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+var observer = {
+  observe: function thn_observe(aSubject, aTopic, aData) {
+    if (aTopic == NS_PLACES_INIT_COMPLETE_TOPIC) {
+        os.removeObserver(this, NS_PLACES_INIT_COMPLETE_TOPIC);
+        var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+                 getService(Ci.nsINavHistoryService);
+      // Check the database was corrupt.
+      // nsBrowserGlue uses databaseStatus to manage initialization.
+      do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CORRUPT);
+
+      // Enqueue next part of the test.
+      var tm = Cc["@mozilla.org/thread-manager;1"].
+               getService(Ci.nsIThreadManager);
+      tm.mainThread.dispatch({
+        run: function() {
+          continue_test();
+        }
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    }
+  }
+};
+os.addObserver(observer, NS_PLACES_INIT_COMPLETE_TOPIC, false);
+
 function run_test() {
   // Create bookmarks.html in the profile.
-  create_bookmarks_html();
+  create_bookmarks_html("bookmarks.glue.html");
   // Remove JSON backup from profile.
   remove_all_JSON_backups();
 
   // Remove current database file.
-  let db = gProfD.clone();
+  var db = gProfD.clone();
   db.append("places.sqlite");
   if (db.exists()) {
     db.remove(false);
@@ -64,30 +92,19 @@ function run_test() {
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
 
   // Initialize Places through the History Service.
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
            getService(Ci.nsINavHistoryService);
-  // Check the database was corrupt.
-  // nsBrowserGlue uses databaseStatus to manage initialization.
-  do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CORRUPT);
 
-  // Restore could take some time, usually less than 1s.
-  // We will poll later in continue_test to be sure restore has finished.
+  // Wait for init-complete notification before going on.
   do_test_pending();
-  do_timeout(1000, "continue_test();");
 }
 
 function continue_test() {
-  let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+  var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
-do_test_finished();
-  if (bs.getIdForItemAt(bs.toolbarFolder, 0) == -1) {
-    // Not enough time to complete restore, poll again later.
-    do_timeout(1000, "continue_test();");
-    return;
-  }
 
-  // Check that default bookmarks have been restored.
-  let itemId = bs.getIdForItemAt(bs.toolbarFolder, SMART_BOOKMARKS_ON_TOOLBAR);
+  var itemId = bs.getIdForItemAt(bs.toolbarFolder, SMART_BOOKMARKS_ON_TOOLBAR);
+  do_check_neq(itemId, -1);
   do_check_eq(bs.getItemTitle(itemId), "example");
 
   do_test_finished();
