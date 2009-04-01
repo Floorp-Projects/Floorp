@@ -379,6 +379,10 @@ nsWaveStateMachine::Play()
 {
   nsAutoMonitor monitor(mMonitor);
   mPaused = PR_FALSE;
+  if (mState == STATE_ENDED) {
+    Seek(0);
+    return;
+  }
   if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING) {
     mNextState = STATE_PLAYING;
   } else {
@@ -401,9 +405,10 @@ nsWaveStateMachine::Pause()
 {
   nsAutoMonitor monitor(mMonitor);
   mPaused = PR_TRUE;
-  if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING) {
+  if (mState == STATE_LOADING_METADATA || mState == STATE_SEEKING ||
+      mState == STATE_BUFFERING) {
     mNextState = STATE_PAUSED;
-  } else {
+  } else if (mState == STATE_PLAYING) {
     ChangeState(STATE_PAUSED);
   }
 }
@@ -419,7 +424,11 @@ nsWaveStateMachine::Seek(float aTime)
   if (mState == STATE_LOADING_METADATA) {
     mNextState = STATE_SEEKING;
   } else if (mState != STATE_SEEKING) {
-    mNextState = mState;
+    if (mState == STATE_ENDED) {
+      mNextState = mPaused ? STATE_PAUSED : STATE_PLAYING;
+    } else {
+      mNextState = mState;
+    }
     ChangeState(STATE_SEEKING);
   }
 }
@@ -1190,10 +1199,6 @@ nsWaveDecoder::GetCurrentTime()
 nsresult
 nsWaveDecoder::Seek(float aTime)
 {
-  if (!mPlaybackStateMachine) {
-    Load(mURI, nsnull, nsnull);
-  }
-
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Seek(aTime);
     return NS_OK;
@@ -1237,10 +1242,6 @@ nsWaveDecoder::SetVolume(float aVolume)
 nsresult
 nsWaveDecoder::Play()
 {
-  if (!mPlaybackStateMachine) {
-    Load(mURI, nsnull, nsnull);
-  }
-
   if (mPlaybackStateMachine) {
     mPlaybackStateMachine->Play();
     return NS_OK;
@@ -1365,7 +1366,6 @@ nsWaveDecoder::PlaybackEnded()
     return;
   }
 
-  Stop();
   if (mElement) {
     mElement->PlaybackEnded();
   }
