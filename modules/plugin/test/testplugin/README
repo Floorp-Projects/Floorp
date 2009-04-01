@@ -36,3 +36,19 @@ Returns the value of NPN_GetValue(NPNVprivateModeBool).
 
 * lastReportedPrivateModeState
 Returns the last value set by NPP_SetValue(NPNVprivateModeBool).
+
+== Windowed/windowless mode ==
+
+The test plugin is windowless by default.
+
+The test plugin supports the following parameter:
+
+* wmode="window"
+The plugin will be given a native widget on platforms where we support this
+(Windows and X).
+
+The test plugin object supports the following scriptable method:
+
+* hasWidget()
+Returns true if the plugin has an associated widget. This will return true if
+wmode="window" was specified and the platform supports windowed plugins.

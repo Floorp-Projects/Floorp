@@ -38,8 +38,19 @@
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif
+#include <gtk/gtk.h>
 
-void pluginDrawSolid(InstanceData* instanceData, GdkDrawable* gdkWindow);
+bool
+pluginSupportsWindowMode()
+{
+  return true;
+}
+
+bool
+pluginSupportsWindowlessMode()
+{
+  return true;
+}
 
 NPError
 pluginInstanceInit(InstanceData* instanceData)
@@ -52,22 +63,14 @@ pluginInstanceInit(InstanceData* instanceData)
 #endif
 }
 
-int16_t
-pluginHandleEvent(InstanceData* instanceData, void* event)
+void
+pluginInstanceShutdown(InstanceData* instanceData)
 {
-#ifdef MOZ_X11
-  XEvent *nsEvent = (XEvent *)event;
-  gboolean handled = 0;
-
-  if (nsEvent->type != GraphicsExpose)
-    return 0;
-
-  XGraphicsExposeEvent *expose = &nsEvent->xgraphicsexpose;
-  instanceData->window.window = (void*)(expose->drawable);
-
-  pluginDraw(instanceData);
-#endif
-  return 0;
+  GtkWidget* plug = static_cast<GtkWidget*>(instanceData->platformData);
+  if (plug) {
+    gtk_widget_destroy(plug);
+    instanceData->platformData = 0;
+  }
 }
 
 static void 
@@ -81,34 +84,36 @@ SetCairoRGBA(cairo_t* cairoWindow, PRUint32 rgba)
   cairo_set_source_rgba(cairoWindow, r, g, b, a);
 }
 
-void
-pluginDrawSolid(InstanceData* instanceData, GdkDrawable* gdkWindow)
+static void
+pluginDrawSolid(InstanceData* instanceData, GdkDrawable* gdkWindow,
+                int x, int y, int width, int height)
 {
-#ifdef MOZ_X11
   cairo_t* cairoWindow = gdk_cairo_create(gdkWindow);
 
-  NPWindow window = instanceData->window;
-  GdkRectangle windowRect;
-  windowRect.x = window.x;
-  windowRect.y = window.y;
-  windowRect.width = window.width;
-  windowRect.height = window.height;
-
+  GdkRectangle windowRect = { x, y, width, height };
   gdk_cairo_rectangle(cairoWindow, &windowRect);
   SetCairoRGBA(cairoWindow, instanceData->scriptableObject->drawColor);
 
   cairo_fill(cairoWindow);
   cairo_destroy(cairoWindow);
-  g_object_unref(gdkWindow);
-#endif
 }
 
-void
-pluginDraw(InstanceData* instanceData)
+static void
+pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow)
 {
-#ifdef MOZ_X11
-  if (!instanceData)
+  NPWindow& window = instanceData->window;
+  // When we have a widget, window.x/y are meaningless since our
+  // widget is always positioned correctly and we just draw into it at 0,0
+  int x = instanceData->hasWidget ? 0 : window.x;
+  int y = instanceData->hasWidget ? 0 : window.y;
+  int width = window.width;
+  int height = window.height;
+
+  if (instanceData->scriptableObject->drawMode == DM_SOLID_COLOR) {
+    // drawing a solid color for reftests
+    pluginDrawSolid(instanceData, gdkWindow, x, y, width, height);
     return;
+  }
 
   NPP npp = instanceData->npp;
   if (!npp)
@@ -118,42 +123,88 @@ pluginDraw(InstanceData* instanceData)
   if (!uaString)
     return;
 
-  NPWindow window = instanceData->window;
-  GdkNativeWindow nativeWinId = reinterpret_cast<XID>(window.window);
-  GdkDrawable* gdkWindow = GDK_DRAWABLE(gdk_window_foreign_new(nativeWinId));
-
-  if (instanceData->scriptableObject->drawMode == DM_SOLID_COLOR) {
-    // drawing a solid color for reftests
-    pluginDrawSolid(instanceData, gdkWindow);
-    return;
-  }
-
   GdkGC* gdkContext = gdk_gc_new(gdkWindow);
 
   // draw a grey background for the plugin frame
   GdkColor grey;
   grey.red = grey.blue = grey.green = 32767;
   gdk_gc_set_rgb_fg_color(gdkContext, &grey);
-  gdk_draw_rectangle(gdkWindow, gdkContext, TRUE, window.x, window.y,
-                     window.width, window.height);
+  gdk_draw_rectangle(gdkWindow, gdkContext, TRUE, x, y, width, height);
 
   // draw a 3-pixel-thick black frame around the plugin
   GdkColor black;
   black.red = black.green = black.blue = 0;
   gdk_gc_set_rgb_fg_color(gdkContext, &black);
   gdk_gc_set_line_attributes(gdkContext, 3, GDK_LINE_SOLID, GDK_CAP_NOT_LAST, GDK_JOIN_MITER);
-  gdk_draw_rectangle(gdkWindow, gdkContext, FALSE, window.x + 1, window.y + 1,
-                     window.width - 3, window.height - 3);
+  gdk_draw_rectangle(gdkWindow, gdkContext, FALSE, x + 1, y + 1,
+                     width - 3, height - 3);
 
   // paint the UA string
   PangoContext* pangoContext = gdk_pango_context_get();
   PangoLayout* pangoTextLayout = pango_layout_new(pangoContext);
-  pango_layout_set_width(pangoTextLayout, (window.width - 10) * PANGO_SCALE);
+  pango_layout_set_width(pangoTextLayout, (width - 10) * PANGO_SCALE);
   pango_layout_set_text(pangoTextLayout, uaString, -1);
-  gdk_draw_layout(gdkWindow, gdkContext, window.x + 5, window.y + 5, pangoTextLayout);
+  gdk_draw_layout(gdkWindow, gdkContext, x + 5, y + 5, pangoTextLayout);
   g_object_unref(pangoTextLayout);
 
   g_object_unref(gdkContext);
+}
+
+static gboolean
+ExposeWidget(GtkWidget* widget, GdkEventExpose* event,
+             gpointer user_data)
+{
+  InstanceData* instanceData = static_cast<InstanceData*>(user_data);
+  pluginDrawWindow(instanceData, event->window);
+  return TRUE;
+}
+
+void
+pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
+{
+#ifdef MOZ_X11
+  GtkWidget* oldPlug = static_cast<GtkWidget*>(instanceData->platformData);
+  if (oldPlug) {
+    gtk_widget_destroy(oldPlug);
+    instanceData->platformData = 0;
+  }
+
+  GdkNativeWindow nativeWinId =
+    reinterpret_cast<XID>(instanceData->window.window);
+
+  /* create a GtkPlug container */
+  GtkWidget* plug = gtk_plug_new(nativeWinId);
+
+  /* make sure the widget is capable of receiving focus */
+  GTK_WIDGET_SET_FLAGS (GTK_WIDGET(plug), GTK_CAN_FOCUS);
+
+  /* all the events that our widget wants to receive */
+  gtk_widget_add_events(plug, GDK_EXPOSURE_MASK);
+  g_signal_connect(G_OBJECT(plug), "event", G_CALLBACK(ExposeWidget),
+                   instanceData);
+  gtk_widget_show(plug);
+
+  instanceData->platformData = plug;
+#endif
+}
+
+int16_t
+pluginHandleEvent(InstanceData* instanceData, void* event)
+{
+#ifdef MOZ_X11
+  XEvent *nsEvent = (XEvent *)event;
+
+  if (nsEvent->type != GraphicsExpose)
+    return 0;
+
+  XGraphicsExposeEvent *expose = &nsEvent->xgraphicsexpose;
+  instanceData->window.window = (void*)(expose->drawable);
+
+  GdkNativeWindow nativeWinId =
+    reinterpret_cast<XID>(instanceData->window.window);
+  GdkDrawable* gdkWindow = GDK_DRAWABLE(gdk_window_foreign_new(nativeWinId));  
+  pluginDrawWindow(instanceData, gdkWindow);
   g_object_unref(gdkWindow);
 #endif
+  return 0;
 }

@@ -47,7 +47,8 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =	test_npruntime.xul
 _TEST_FILES = \
 		test_npruntime.xul   \
-    test_privatemode.xul \
+		test_privatemode.xul \
+		test_wmode.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
