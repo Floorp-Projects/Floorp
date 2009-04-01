@@ -451,7 +451,22 @@ _conditionkeywordstokenlist = TokenList.get(_conditiontokens)
 
 _varsettokens = (':=', '+=', '?=', '=')
 
-_parsecache = {} # realpath -> (mtime, Statements)
+def _parsefile(pathname):
+    fd = open(pathname, "rU")
+    stmts = parsestream(fd, pathname)
+    stmts.mtime = os.fstat(fd.fileno()).st_mtime
+    fd.close()
+    return stmts
+
+def _checktime(path, stmts):
+    mtime = os.path.getmtime(path)
+    if mtime != stmts.mtime:
+        _log.debug("Re-parsing makefile '%s': mtimes differ", path)
+        return False
+
+    return True
+
+_parsecache = util.MostUsedCache(15, _parsefile, _checktime)
 
 def parsefile(pathname):
     """
@@ -460,23 +475,7 @@ def parsefile(pathname):
     """
 
     pathname = os.path.realpath(pathname)
-
-    mtime = os.path.getmtime(pathname)
-
-    if pathname in _parsecache:
-        oldmtime, stmts = _parsecache[pathname]
-
-        if mtime == oldmtime:
-            _log.debug("Using '%s' from the parser cache.", pathname)
-            return stmts
-
-        _log.debug("Not using '%s' from the parser cache, mtimes don't match: was %s, now %s", pathname, oldmtime, mtime)
-
-    fd = open(pathname, "rU")
-    stmts = parsestream(fd, pathname)
-    fd.close()
-    _parsecache[pathname] = mtime, stmts
-    return stmts
+    return _parsecache.get(pathname)
 
 def parsestream(fd, filename):
     """
