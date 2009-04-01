@@ -43,6 +43,11 @@
 #include "nsChannelReader.h"
 #include "nsIScriptSecurityManager.h"
 
+void nsChannelReader::Cancel()
+{
+  mStream->Cancel();
+}
+
 OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 {
   return E_OGGPLAY_OK;
@@ -50,8 +55,18 @@ OggPlayErrorCode nsChannelReader::initialise(int aBlock)
 
 OggPlayErrorCode nsChannelReader::destroy()
 {
-  // We don't have to do anything here, the decoder will clean stuff up
+  mStream->Close();
   return E_OGGPLAY_OK;
+}
+
+void nsChannelReader::Suspend()
+{
+  mStream->Suspend();
+}
+
+void nsChannelReader::Resume()
+{
+  mStream->Resume();
 }
 
 void nsChannelReader::SetDuration(PRInt64 aDuration)
@@ -156,4 +171,10 @@ nsChannelReader::nsChannelReader() :
   reader->io_seek  = &oggplay_channel_reader_io_seek;
   reader->io_tell  = &oggplay_channel_reader_io_tell;
   reader->duration = &oggplay_channel_reader_duration;
+}
+
+nsIPrincipal*
+nsChannelReader::GetCurrentPrincipal()
+{
+  return mStream->GetCurrentPrincipal();
 }
