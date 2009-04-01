@@ -1427,7 +1427,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
         char *buf = aClass.ToString();
         PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
 
@@ -1503,7 +1503,7 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
                ("nsComponentManager: ContractIDToClassID(%s)->%s", aContractID,
                 NS_SUCCEEDED(rv) ? buf : "[FAILED]"));
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
     return rv;
@@ -1533,7 +1533,7 @@ nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
                ("nsComponentManager: CLSIDToContractID(%s)->%s", buf,
                 NS_SUCCEEDED(rv) ? *aContractID : "[FAILED]"));
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
     return rv;
@@ -1615,7 +1615,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                ("nsComponentManager: CreateInstance(%s) %s", buf,
                 NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
 
@@ -2465,7 +2465,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
                ("nsComponentManager: RegisterFactory(%s, %s)", buf,
                 (aContractID ? aContractID : "(null)")));
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
     nsFactoryEntry *entry = nsnull;
@@ -2630,7 +2630,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                 contractID ? contractID : "(null)",
                 aRegistryName, aType));
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
     if (entry && !aReplace) {
@@ -2828,7 +2828,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: UnregisterFactory(%s)", buf));
         if (buf)
-            PR_Free(buf);
+            NS_Free(buf);
     }
 #endif
     nsFactoryEntry *old;
