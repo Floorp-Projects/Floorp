@@ -44,7 +44,6 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageValueArray.h"
 #include "mozIStorageStatement.h"
-#include "nsIObserver.h"
 
 // Favicons bigger than this size should not be saved to the db to avoid
 // bloating it with large image blobs.
@@ -58,7 +57,6 @@ class mozIStorageStatementCallback;
 class FaviconLoadListener;
 
 class nsFaviconService : public nsIFaviconService
-                       , public nsIObserver
 {
 public:
   nsFaviconService();
@@ -121,7 +119,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
-  NS_DECL_NSIOBSERVER
 
 private:
   ~nsFaviconService();
