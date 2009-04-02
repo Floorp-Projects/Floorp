@@ -408,7 +408,7 @@ input[type="radio"] {
   width: 13px;
   height: 13px;
   margin: 3px 3px 0px 5px;
-  padding: 2px !important;  /* padding controls size of dot in checked state */
+  padding: 0 !important;
   cursor: default;
   -moz-binding: none;
 
@@ -464,6 +464,13 @@ input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
   background-color: ThreeDFace ! important;
   border-style: inset !important;
+}
+
+*|*::-moz-radio {
+  width: 4px;
+  height: 4px;
+  background-color: -moz-FieldText ! important;
+  -moz-border-radius: 3px;
 }
 
 /* buttons */
