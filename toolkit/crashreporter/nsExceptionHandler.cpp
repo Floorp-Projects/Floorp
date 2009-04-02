@@ -82,6 +82,7 @@ namespace CrashReporter {
 #ifdef XP_WIN32
 typedef wchar_t XP_CHAR;
 #define CONVERT_UTF16_TO_XP_CHAR(x) x
+#define CONVERT_XP_CHAR_TO_UTF16(x) x
 #define XP_STRLEN(x) wcslen(x)
 #define CRASH_REPORTER_FILENAME "crashreporter.exe"
 #define PATH_SEPARATOR "\\"
@@ -98,6 +99,7 @@ typedef wchar_t XP_CHAR;
 #else
 typedef char XP_CHAR;
 #define CONVERT_UTF16_TO_XP_CHAR(x) NS_ConvertUTF16toUTF8(x)
+#define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
 #define XP_STRLEN(x) strlen(x)
 #define CRASH_REPORTER_FILENAME "crashreporter"
 #define PATH_SEPARATOR "/"
@@ -314,7 +316,7 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 }
 
 nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
-                             const char* aServerURL)
+                             bool force/*=false*/)
 {
   nsresult rv;
 
@@ -322,7 +324,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
     return NS_ERROR_ALREADY_INITIALIZED;
 
   const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
-  if (envvar && *envvar)
+  if (envvar && *envvar && !force)
     return NS_OK;
 
   // this environment variable prevents us from launching
@@ -418,11 +420,6 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // store server URL with the API data
-  if (aServerURL)
-    AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
-                        nsDependentCString(aServerURL));
-
   // store application start time
   char timeString[32];
   XP_TTOA(time(NULL), timeString, 10);
@@ -437,6 +434,20 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 #endif
 
   return NS_OK;
+}
+
+bool GetEnabled()
+{
+  return gExceptionHandler != nsnull;
+}
+
+bool GetMinidumpPath(nsAString& aPath)
+{
+  if (!gExceptionHandler)
+    return false;
+
+  aPath = CONVERT_XP_CHAR_TO_UTF16(gExceptionHandler->dump_path().c_str());
+  return true;
 }
 
 nsresult SetMinidumpPath(const nsAString& aPath)
@@ -760,7 +771,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
 bool GetAnnotation(const nsACString& key, nsACString& data)
 {
   if (!gExceptionHandler)
-    return NS_ERROR_NOT_INITIALIZED;
+    return false;
 
   nsCAutoString entry;
   if (!crashReporterAPIData_Hash->Get(key, &entry))
@@ -768,6 +779,22 @@ bool GetAnnotation(const nsACString& key, nsACString& data)
 
   data = entry;
   return true;
+}
+
+bool GetServerURL(nsACString& aServerURL)
+{
+  if (!gExceptionHandler)
+    return false;
+
+  return GetAnnotation(NS_LITERAL_CSTRING("ServerURL"), aServerURL);
+}
+
+nsresult SetServerURL(const nsACString& aServerURL)
+{
+  // store server URL with the API data
+  // the client knows to handle this specially
+  return AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
+                             aServerURL);
 }
 
 nsresult
