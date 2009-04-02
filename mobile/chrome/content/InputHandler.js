@@ -171,18 +171,23 @@ function DragData(owner, dragRadius, dragStartTimeoutLength) {
 DragData.prototype = {
   reset: function reset() {
     this.dragging = false;
-    this.sX = 0;
-    this.sY = 0;
+    this.sX = null;
+    this.sY = null;
+    this.alreadyLocked = false;
     this.lockedX = null;
     this.lockedY = null;
 
     this.clearDragStartTimeout();
   },
 
-  setDragStart: function setDragStart(screenX, screenY) {
+  setDragPosition: function setDragPosition(screenX, screenY) {
     this.sX = screenX;
     this.sY = screenY;
-    this.dragStartTimeout = setTimeout(
+  },
+
+  setDragStart: function setDragStart(screenX, screenY) {
+    this.setDragPosition(screenX, screenY);
+    this.dragStartTimeout = window.setTimeout(
       function(dragData, sX, sY) { dragData.clearDragStartTimeout(); dragData._owner._dragStart(sX, sY); },
       this._dragStartTimeoutLength,
       this, screenX, screenY);
@@ -190,11 +195,22 @@ DragData.prototype = {
 
   clearDragStartTimeout: function clearDragStartTimeout() {
     if (this.dragStartTimeout != -1)
-      clearTimeout(this.dragStartTimeout);
+      window.clearTimeout(this.dragStartTimeout);
     this.dragStartTimeout = -1;
   },
 
-  setLockedAxis: function setLockedAxis(sX, sY) {
+  lockMouseMove: function lockMouseMove(sX, sY) {
+    if (this.lockedX !== null)
+      sX = this.lockedX;
+    else if (this.lockedY !== null)
+      sY = this.lockedY;
+    return [sX, sY];
+  },
+
+  lockAxis: function lockAxis(sX, sY) {
+    if (this.alreadyLocked)
+      return lockMouseMove(sX, sY);
+
     // look at difference from stored coord to lock movement, but only
     // do it if initial movement is sufficient to detect intent
     let absX = Math.abs(this.sX - sX);
@@ -210,15 +226,7 @@ DragData.prototype = {
       this.lockedX = this.sX;
       sX = this.sX;
     }
-
-    return [sX, sY];
-  },
-
-  lockMouseMove: function lockMouseMove(sX, sY) {
-    if (this.lockedX !== null)
-      sX = this.lockedX;
-    else if (this.lockedY !== null)
-      sY = this.lockedY;
+    this.alreadyLocked = true;
 
     return [sX, sY];
   },
@@ -232,10 +240,8 @@ DragData.prototype = {
       if ((dx*dx + dy*dy) > (this._dragRadius * this._dragRadius)) {
         this.clearDragStartTimeout();
         this._owner._dragStart(sX, sY);
-        return true;
       }
     }
-    return false;
   }
 };
 
@@ -290,7 +296,7 @@ ChromeInputModule.prototype = {
     let dragData = this._dragData;
     dragData.dragging = true;
 
-    [sX, sY] = dragData.setLockedAxis(sX, sY);
+    [sX, sY] = dragData.lockAxis(sX, sY);
 
     // grab all events until we stop the drag
     ws.dragStart(sX, sY);
@@ -312,8 +318,7 @@ ChromeInputModule.prototype = {
     [sX, sY] = dragData.lockMouseMove(sX, sY);
     if (this._targetScrollbox)
       this._targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
-    dragData.sX = sX;
-    dragData.sY = sY;
+    this.setDragPosition(sX, sY);
   },
 
   _onMouseDown: function _onMouseDown(aEvent) {
@@ -335,6 +340,7 @@ ChromeInputModule.prototype = {
     aEvent.preventDefault();
 
     dragData.setDragStart(aEvent.screenX, aEvent.screenY);
+    this._onMouseMove(aEvent); // treat this as a mouse move too
 
     // store away the event for possible sending later if a drag doesn't happen
     let clickEvent = document.createEvent("MouseEvent");
@@ -393,8 +399,12 @@ ChromeInputModule.prototype = {
     let sX = aEvent.screenX;
     let sY = aEvent.screenY;
 
-    if (dragData.detectEarlyDrag(sX, sY))
-      return;
+    if (!dragData.sX)
+      dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
+
+    let [sX, sY] = dragData.lockMouseMove(aEvent.screenX, aEvent.screenY);
+
+    dragData.detectEarlyDrag(sX, sY);
 
     if (!dragData.dragging)
       return;
@@ -437,7 +447,8 @@ ChromeInputModule.prototype = {
  * Kinetic panning code for content
  */
 
-function KineticData() {
+function KineticData(owner) {
+  this._owner = owner;
   this.kineticHandle = -1;
   this.reset();
 }
@@ -445,23 +456,145 @@ function KineticData() {
 KineticData.prototype = {
   reset: function reset() {
     if (this.kineticHandle != -1) {
-      window.clearInterval(this.kineticHandle);
+      window.clearTimeout(this.kineticHandle);
       this.kineticHandle = -1;
     }
 
-    this.kineticStepSize = 15;
-    this.kineticDecelloration = 0.004;
+    this.stepSize = 30;
+    this.decelloration = 0.004;
     this.momentumBufferSize = 3;
     this.momentumBuffer = [];
     this.momentumBufferIndex = 0;
     this.lastTime = 0;
-    this.kineticDuration = 0;
-    this.kineticDirX = 0;
-    this.kineticDirY = 0;
-    this.kineticStep  = 0;
-    this.kineticStartX  = 0;
-    this.kineticStartY  = 0;
-    this.kineticInitialVel = 0;
+    this.duration = 0;
+    this.dirX = 0;
+    this.dirY = 0;
+    this.step  = 0;
+    this.stepStart = 0;
+    this.startX  = 0;
+    this.startY  = 0;
+    this.initialVel = 0;
+  },
+
+  startKinetic: function startKinetic(sX, sY) {
+    let dx = 0;
+    let dy = 0;
+    let dt = 0;
+    if (this.initialVel != 0)
+      return true;
+
+    if (!this.momentumBuffer)
+      return false;
+
+    for (let i = 0; i < this.momentumBufferSize; i++) {
+      let me = this.momentumBuffer[(this.momentumBufferIndex + i) % this.momentumBufferSize];
+      if (!me)
+        return false;
+
+      dx += me.dx;
+      dy += me.dy;
+      dt += me.dt;
+    }
+    if (dt <= 0)
+      return false;
+
+    let dist = Math.sqrt(dx*dx+dy*dy);
+    let vel  = dist/dt;
+    if (vel < 1)
+      return false;
+
+    this.dirX = dx/dist;
+    this.dirY = dy/dist;
+    if (this.dirX > 0.9) {
+      this.dirX = 1;
+      this.dirY = 0;
+    }
+    else if (this.dirY < -0.9) {
+      this.dirX = 0;
+      this.dirY = -1;
+    }
+    else if (this.dirX < -0.9) {
+      this.dirX = -1;
+      this.dirY = 0;
+    }
+    else if (this.dirY > 0.9) {
+      this.dirX = 0;
+      this.dirY = 1;
+    }
+
+    this.duration = vel/(2 * this.decelloration);
+    this.step = 0;
+    this.startX =  sX;
+    this.startY =  sY;
+    this.initialVel = vel;
+    this.stepStart = Date.now();
+    this.kineticHandle = window.setTimeout(this._doKinetic, this.stepSize, this);
+    return true;
+  },
+
+  _doKinetic: function _doKinetic(self) {
+    let t = self.step * self.stepSize;
+    let dt = Date.now() - self.stepStart - t; /* delta beween ideal activation time and now */
+
+    let extraSteps = Math.floor(dt / self.stepSize);
+    self.step += extraSteps;
+    t = self.step * self.stepSize;
+    dt -= extraSteps * self.stepSize;
+
+    if (t > self.duration)
+      t = self.duration;
+    let dist = self.initialVel * t -
+               self.decelloration * t * t;
+    let newX = Math.floor(self.dirX * dist + self.startX);
+    let newY = Math.floor(self.dirY * dist + self.startY);
+
+    let panned = self._owner._dragMove(newX, newY);
+    if(!panned || t >= self.duration) {
+      self.endKinetic(newX, newY);
+      return;
+    }
+
+    ++self.step;
+
+    /* setup the next iteration of this */
+    self.kineticHandle = window.setTimeout(self._doKinetic, self.stepSize - dt, self);
+  },
+
+  endKinetic: function endKinetic(sX, sY) {
+    ws.dragStop();
+    this.reset();
+
+    // Make sure that sidebars don't stay partially open
+    // XXX this should live somewhere else
+    let [leftVis,] = ws.getWidgetVisibility("tabs-container", false);
+    let [rightVis,] = ws.getWidgetVisibility("browser-controls", false);
+    if (leftVis != 0 && leftVis != 1) {
+      let w = document.getElementById("tabs-container").getBoundingClientRect().width;
+      if (leftVis >= 0.6666)
+        ws.panBy(-w, 0, true);
+      else
+        ws.panBy(leftVis * w, 0, true);
+    }
+    else if (rightVis != 0 && rightVis != 1) {
+      let w = document.getElementById("browser-controls").getBoundingClientRect().width;
+      if (rightVis >= 0.6666)
+        ws.panBy(w, 0, true);
+      else
+        ws.panBy(-rightVis * w, 0, true);
+    }
+  },
+
+  addData: function addData(dx, dy) {
+    if (dx == 0 && dy == 0)
+      return;
+
+    let t = Date.now();
+    let dt = this.lastTime ? t - this.lastTime : 0;
+
+    this.lastTime = t;
+    this.momentumBuffer[this.momentumBufferIndex] = { 'dx': dx, 'dy': dy, 'dt': dt };
+    this.momentumBufferIndex++;
+    this.momentumBufferIndex %= this.momentumBufferSize;
   }
 };
 
@@ -471,7 +604,7 @@ function ContentPanningModule(owner, browserCanvas, useKinetic) {
     this._useKinetic = useKinetic;
   this._browserCanvas = browserCanvas;
   this._dragData = new DragData(this, 20, 200);
-  this._kineticData = new KineticData();
+  this._kineticData = new KineticData(this);
 }
 
 ContentPanningModule.prototype = {
@@ -505,7 +638,8 @@ ContentPanningModule.prototype = {
   cancelPending: function cancelPending() {
     let dragData = this._dragData;
     // stop scrolling, pass last coordinate we used
-    this._endKinetic(dragData.sX, dragData.sY);
+    this._kineticData.endKinetic(dragData.sX, dragData.sY);
+    this._owner.ungrab(this);
     dragData.reset();
   },
 
@@ -513,7 +647,7 @@ ContentPanningModule.prototype = {
     let dragData = this._dragData;
     dragData.dragging = true;
 
-    [sX, sY] = dragData.setLockedAxis(sX, sY);
+    [sX, sY] = dragData.lockAxis(sX, sY);
 
     // grab all events until we stop the drag
     this._owner.grab(this);
@@ -534,38 +668,45 @@ ContentPanningModule.prototype = {
 
     if (this._useKinetic) {
       // start kinetic scrolling here for canvas only
-      if (!this._startKinetic(sX, sY))
-        this._endKinetic(sX, sY);
+      if (!this._kineticData.startKinetic(sX, sY))
+        this._kineticData.endKinetic(sX, sY);
+      dragData.reset();
     }
     else {
       ws.dragStop();
+      // flush any paints that might be left so that our next pan will be fast
+      Browser.canvasBrowser.endPanning();
     }
-
-    // flush any paints that might be left so that our next pan will be fast
-    Browser.canvasBrowser.endPanning();
   },
 
   _dragMove: function _dragMove(sX, sY) {
+
     let dragData = this._dragData;
     [sX, sY] = dragData.lockMouseMove(sX, sY);
-    ws.dragMove(sX, sY);
-    dragData.sX = sX;
-    dragData.sY = sY;
+    let panned = ws.dragMove(sX, sY);
+    dragData.setDragPosition(sX, sY);
+    return panned;
   },
 
   _onMouseDown: function _onMouseDown(aEvent) {
     // if we're in the process of kineticly scrolling, stop and start over
-    if (this._kineticData.kineticHandle != -1)
-      this._endKinetic(aEvent.screenX, aEvent.screenY);
+    if (this._kineticData.kineticHandle != -1) {
+      this._kineticData.endKinetic(aEvent.screenX, aEvent.screenY);
+      this._owner.ungrab(this);
+      this._dragData.reset();
+    }
 
     this._dragData.setDragStart(aEvent.screenX, aEvent.screenY);
+    this._onMouseMove(aEvent); // treat this as a mouse move too
   },
 
   _onMouseUp: function _onMouseUp(aEvent) {
     let dragData = this._dragData;
 
-    if (dragData.dragging)
+    if (dragData.dragging) {
+      this._onMouseMove(aEvent); // treat this as a mouse move, incase our x/y are different
       this._dragStop(aEvent.screenX, aEvent.screenY);
+    }
 
     dragData.reset(); // be sure to reset the timer
   },
@@ -577,135 +718,26 @@ ContentPanningModule.prototype = {
 
     let dragData = this._dragData;
 
-    let sX = aEvent.screenX;
-    let sY = aEvent.screenY;
+    // if we never received a mouseDown, we need to go ahead and set this data
+    if (!dragData.sX)
+      dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
 
-    if (dragData.detectEarlyDrag(sX, sY))
-      return;
+    let [sX, sY] = dragData.lockMouseMove(aEvent.screenX, aEvent.screenY);
 
-    if (!dragData.dragging)
-      return;
-
-    this._dragMove(sX, sY);
-
+    // even if we haven't started dragging yet, we should queue up the
+    // mousemoves in case we do start
     if (this._useKinetic) {
       // update our kinetic data
-      let kineticData = this._kineticData;
-      let t = Date.now();
       let dx = dragData.sX - sX;
       let dy = dragData.sY - sY;
-      let dt = t - kineticData.lastTime;
-      kineticData.lastTime = t;
-      let momentumBuffer = { dx: -dx, dy: -dy, dt: dt };
-
-      kineticData.momentumBuffer[kineticData.momentumBufferIndex] = momentumBuffer;
-      kineticData.momentumBufferIndex++;
-      kineticData.momentumBufferIndex %= kineticData.momentumBufferSize;
+      this._kineticData.addData(-dx, -dy);
     }
+
+    dragData.detectEarlyDrag(sX, sY);
+
+    if (dragData.dragging)
+      this._dragMove(sX, sY);
   },
-
-  _startKinetic: function _startKinetic(sX, sY) {
-    let kineticData = this._kineticData;
-
-    let dx = 0;
-    let dy = 0;
-    let dt = 0;
-    if (kineticData.kineticInitialVel != 0)
-      return true;
-
-    if (!kineticData.momentumBuffer)
-      return false;
-
-    for (let i = 0; i < kineticData.momentumBufferSize; i++) {
-      let me = kineticData.momentumBuffer[(kineticData.momentumBufferIndex + i) % kineticData.momentumBufferSize];
-      if (!me)
-        return false;
-
-      dx += me.dx;
-      dy += me.dy;
-      dt += me.dt;
-    }
-    if (dt <= 0)
-      return false;
-
-    let dist = Math.sqrt(dx*dx+dy*dy);
-    let vel  = dist/dt;
-    if (vel < 1)
-      return false;
-
-    kineticData.kineticDirX = dx/dist;
-    kineticData.kineticDirY = dy/dist;
-    if (kineticData.kineticDirX > 0.9) {
-      kineticData.kineticDirX = 1;
-      kineticData.kineticDirY = 0;
-    }
-    else if (kineticData.kineticDirY < -0.9) {
-      kineticData.kineticDirX = 0;
-      kineticData.kineticDirY = -1;
-    }
-    else if (kineticData.kineticDirX < -0.9) {
-      kineticData.kineticDirX = -1;
-      kineticData.kineticDirY = 0;
-    }
-    else if (kineticData.kineticDirY > 0.9) {
-      kineticData.kineticDirX = 0;
-      kineticData.kineticDirY = 1;
-    }
-
-    kineticData.kineticDuration = vel/(2 * kineticData.kineticDecelloration);
-    kineticData.kineticStep = 0;
-    kineticData.kineticStartX =  sX;
-    kineticData.kineticStartY =  sY;
-    kineticData.kineticInitialVel = vel;
-    kineticData.kineticHandle = window.setInterval(this._doKinetic, kineticData.kineticStepSize, this);
-    return true;
-  },
-
-  _doKinetic: function _doKinetic(self) {
-    let kineticData = self._kineticData;
-
-    let t = kineticData.kineticStep * kineticData.kineticStepSize;
-    kineticData.kineticStep++;
-    if (t > kineticData.kineticDuration)
-      t = kineticData.kineticDuration;
-    let dist = kineticData.kineticInitialVel * t -
-               kineticData.kineticDecelloration * t * t;
-    let newX = Math.floor(kineticData.kineticDirX * dist + kineticData.kineticStartX);
-    let newY = Math.floor(kineticData.kineticDirY * dist + kineticData.kineticStartY);
-
-    self._dragMove(newX, newY);
-
-    if(t >= kineticData.kineticDuration)
-      self._endKinetic(newX, newY);
-  },
-
-  _endKinetic: function _endKinetic(sX, sY) {
-    let kineticData = this._kineticData;
-
-    ws.dragStop();
-    this._owner.ungrab(this);
-    this._dragData.reset();
-    kineticData.reset();
-
-    // Make sure that sidebars don't stay partially open
-    // XXX this should live somewhere else
-    let [leftVis,] = ws.getWidgetVisibility("tabs-container", false);
-    let [rightVis,] = ws.getWidgetVisibility("browser-controls", false);
-    if (leftVis != 0 && leftVis != 1) {
-      let w = document.getElementById("tabs-container").getBoundingClientRect().width;
-      if (leftVis >= 0.6666)
-        ws.panBy(-w, 0, true);
-      else
-        ws.panBy(leftVis * w, 0, true);
-    }
-    else if (rightVis != 0 && rightVis != 1) {
-      let w = document.getElementById("browser-controls").getBoundingClientRect().width;
-      if (rightVis >= 0.6666)
-        ws.panBy(w, 0, true);
-      else
-        ws.panBy(-rightVis * w, 0, true);
-    }
-  }
 };
 
 /**
@@ -735,7 +767,7 @@ ContentClickingModule.prototype = {
         // we're waiting for a click
         if (this._clickTimeout != -1) {
           // if we just got another mousedown, don't send anything until we get another mousedown
-          clearTimeout(this._clickTimeout);
+          window.clearTimeout(this._clickTimeout);
           this.clickTimeout = -1;
         }
         break;
@@ -749,10 +781,10 @@ ContentClickingModule.prototype = {
         this._events.push({event: aEvent, time: Date.now()});
 
         if (this._clickTimeout == -1) {
-          this._clickTimeout = setTimeout(function(self) { self._sendSingleClick(); }, 400, this);
+          this._clickTimeout = window.setTimeout(function(self) { self._sendSingleClick(); }, 400, this);
         }
         else {
-          clearTimeout(this._clickTimeout);
+          window.clearTimeout(this._clickTimeout);
           this.clickTimeout = -1;
           this._sendDoubleClick();
         }
@@ -769,7 +801,7 @@ ContentClickingModule.prototype = {
 
   _reset: function _reset() {
     if (this._clickTimeout != -1)
-      clearTimeout(this._clickTimeout);
+      window.clearTimeout(this._clickTimeout);
     this._clickTimeout = -1;
 
     this._events = [];
