@@ -195,9 +195,7 @@ MacOSFontEntry::ReadCMAP()
     // attempt this once, if errors occur leave a blank cmap
     mCmapInitialized = PR_TRUE;
 
-    PRUint32 kCMAP = TRUETYPE_TAG('c','m','a','p');
-    
-    status = ATSFontGetTable(fontRef, kCMAP, 0, 0, 0, &size);
+    status = ATSFontGetTable(fontRef, 'cmap', 0, 0, 0, &size);
     cmapSize = size;
     //printf( "cmap size: %s %d", NS_ConvertUTF16toUTF8(mName).get(), size );
 #if DEBUG
@@ -214,7 +212,7 @@ MacOSFontEntry::ReadCMAP()
         return NS_ERROR_OUT_OF_MEMORY;
     PRUint8 *cmap = buffer.Elements();
 
-    status = ATSFontGetTable(fontRef, kCMAP, 0, size, cmap, &size);
+    status = ATSFontGetTable(fontRef, 'cmap', 0, size, cmap, &size);
     NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
 
     nsresult rv = NS_ERROR_FAILURE;
@@ -234,13 +232,13 @@ MacOSFontEntry::ReadCMAP()
             
             // check for mort/morx table, if haven't already
             if (!checkedForMorphTable) {
-                status = ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','x'), 0, 0, 0, &size);
+                status = ATSFontGetTable(fontRef, 'morx', 0, 0, 0, &size);
                 if (status == noErr) {
                     checkedForMorphTable = PR_TRUE;
                     hasMorphTable = PR_TRUE;
                 } else {
                     // check for a mort table
-                    status = ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','t'), 0, 0, 0, &size);
+                    status = ATSFontGetTable(fontRef, 'mort', 0, 0, 0, &size);
                     checkedForMorphTable = PR_TRUE;
                     if (status == noErr) {
                         hasMorphTable = PR_TRUE;

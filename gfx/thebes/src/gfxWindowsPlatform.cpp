@@ -754,7 +754,6 @@ gfxFontEntry*
 gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                     const nsAString& aFontName)
 {
-#ifdef MOZ_FT2_FONTS
     // walk over list of names
     FullFontNameSearch data(aFontName);
 
@@ -765,9 +764,6 @@ gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
         ReleaseDC(nsnull, data.mDC);
     
     return data.mFontEntry;
-#else
-    return FontEntry::LoadLocalFont(*aProxyEntry, aFontName);
-#endif
 }
 
 gfxFontEntry* 
@@ -775,11 +771,8 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                      nsISupports *aLoader,
                                      const PRUint8 *aFontData, PRUint32 aLength)
 {
-#ifdef MOZ_FT2_FONTS
-    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader, aFontData, aLength);
-#else
-    return FontEntry::LoadFont(*aProxyEntry, aLoader, aFontData, aLength);
-#endif    
+    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader,
+                                      aFontData, aLength);
 }
 
 PRBool
