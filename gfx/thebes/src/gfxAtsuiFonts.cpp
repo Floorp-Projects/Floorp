@@ -491,7 +491,7 @@ gfxAtsuiFont::HasMirroringInfo()
         ByteCount size;
         
         // 361695 - if the font has a 'prop' table, assume that ATSUI will handle glyph mirroring
-        status = ATSFontGetTable(GetATSFontRef(), 'prop', 0, 0, 0, &size);
+        status = ATSFontGetTable(GetATSFontRef(), TRUETYPE_TAG('p','r','o','p'), 0, 0, 0, &size);
         mHasMirroring = (status == noErr);
         mHasMirroringLookedUp = PR_TRUE;
     }
