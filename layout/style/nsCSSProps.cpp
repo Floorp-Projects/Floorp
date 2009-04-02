@@ -1431,8 +1431,10 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #define CSS_PROP_SVG(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVG,
     #define CSS_PROP_SVGRESET(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVGReset,
     #define CSS_PROP_COLUMN(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_Column,
-    // This shouldn't matter, but we need something to go here.
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) nsStyleStructID(-1),
+    // Use the special BackendOnly style struct ID (which does need to
+    // be valid for storing in the nsCSSCompressedDataBlock::mStyleBits
+    // bitfield).
+    #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_, member_, type_, kwtable_) eStyleStruct_BackendOnly,
 
     #include "nsCSSPropList.h"
 
