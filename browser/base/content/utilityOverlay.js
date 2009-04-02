@@ -436,10 +436,6 @@ function openAdvancedPreferences(tabID)
 
 /**
  * Opens the release notes page for this version of the application.
- * @param   event
- *          The DOM Event that caused this function to be called, used to
- *          determine where the release notes page should be displayed based
- *          on modifiers (e.g. Ctrl = new tab)
  */
 function openReleaseNotes()
 {
