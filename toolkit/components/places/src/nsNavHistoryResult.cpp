@@ -199,7 +199,7 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
   mozStorageStatementScoper scoper(getTagsStatement);
   nsresult rv = getTagsStatement->BindStringParameter(0, NS_LITERAL_STRING(", "));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = getTagsStatement->BindInt32Parameter(1, history->GetTagsFolder());
+  rv = getTagsStatement->BindInt64Parameter(1, history->GetTagsFolder());
   NS_ENSURE_SUCCESS(rv, rv);
   rv = getTagsStatement->BindUTF8StringParameter(2, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2399,8 +2399,13 @@ nsNavHistoryQueryResultNode::FillChildren()
 
   if (mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY ||
       mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED) {
-    // register with the result for history updates
-    result->AddHistoryObserver(this);
+    // Date containers that contain site containers have no reason to observe
+    // history, if the inside site container is expanded it will update,
+    // otherwise we are going to refresh the parent query.
+    if (!mParent || mParent->mOptions->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY) {
+      // register with the result for history updates
+      result->AddHistoryObserver(this);
+    }
   }
 
   if (mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS ||
@@ -2668,10 +2673,9 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
       // now we know that our visit satisfies the time range, create a new node
       rv = history->VisitIdToResultNode(aVisitId, mOptions,
                                         getter_AddRefs(addition));
-      NS_ENSURE_SUCCESS(rv, rv);
 
       // We do not want to add this result to this node
-      if (!addition)
+      if (NS_FAILED(rv) || !addition)
           return NS_OK;
 
       break;
@@ -2681,8 +2685,8 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
       // in the result. We first have to construct a node for it to check.
       rv = history->VisitIdToResultNode(aVisitId, mOptions,
                                         getter_AddRefs(addition));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (! history->EvaluateQueryForNode(mQueries, mOptions, addition))
+      if (NS_FAILED(rv) || !addition ||
+          !history->EvaluateQueryForNode(mQueries, mOptions, addition))
         return NS_OK; // don't need to include in our query
       break;
     }
