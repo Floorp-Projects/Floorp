@@ -37,7 +37,7 @@
 #ifndef NS_SVGUTILS_H
 #define NS_SVGUTILS_H
 
-// include math.h to pick up definition of M_PI if the platform defines it
+// include math.h to pick up definition of M_SQRT1_2 if the platform defines it
 #define _USE_MATH_DEFINES
 #include <math.h>
 
