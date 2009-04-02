@@ -688,7 +688,8 @@ let gGestureSupport = {
   init: function GS_init(aAddListener) {
     const gestureEvents = ["SwipeGesture",
       "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
-      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture"];
+      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture",
+      "TapGesture", "PressTapGesture"];
 
     let addRemove = aAddListener ? window.addEventListener :
       window.removeEventListener;
@@ -714,14 +715,28 @@ let gGestureSupport = {
 
     switch (aEvent.type) {
       case "MozSwipeGesture":
+        aEvent.preventDefault();
         return this.onSwipe(aEvent);
       case "MozMagnifyGestureStart":
+        aEvent.preventDefault();
+#ifdef XP_WIN
+        return this._setupGesture(aEvent, "pinch", def(25, 0), "out", "in");
+#else
         return this._setupGesture(aEvent, "pinch", def(150, 1), "out", "in");
+#endif
       case "MozRotateGestureStart":
+        aEvent.preventDefault();
         return this._setupGesture(aEvent, "twist", def(25, 0), "right", "left");
       case "MozMagnifyGestureUpdate":
       case "MozRotateGestureUpdate":
+        aEvent.preventDefault();
         return this._doUpdate(aEvent);
+      case "MozTapGesture":
+        aEvent.preventDefault();
+        return this._doAction(aEvent, ["tap"]);
+      case "MozPressTapGesture":
+      // Fall through to default behavior
+      return;
     }
   },
 

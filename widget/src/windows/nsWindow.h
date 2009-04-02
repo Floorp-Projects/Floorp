@@ -71,6 +71,8 @@ struct nsFakeCharMessage;
 
 #include "gfxWindowsSurface.h"
 
+#include "nsWinGesture.h"
+
 // Text Services Framework support
 #ifndef WINCE
 #define NS_ENABLE_TSF
@@ -297,6 +299,7 @@ protected:
 
   void                    DispatchPendingEvents();
   virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
+  virtual PRBool          ProcessGestureMessage(WPARAM wParam, LPARAM lParam);
 
   /**
    * The result means whether this method processed the native event for
@@ -311,7 +314,6 @@ protected:
                                               PRBool *aEventDispatched);
   LRESULT                 ProcessKeyDownMessage(const MSG &aMsg,
                                                 PRBool *aEventDispatched);
-
 
    // Allow Derived classes to modify the height that is passed
    // when the window is created or resized.
@@ -536,6 +538,9 @@ protected:
 
   // Drag & Drop
   nsNativeDragTarget * mNativeDragTarget;
+
+  // Win7 Gesture processing and management
+  nsWinGesture mGesture;
 
   // Enumeration of the methods which are accessible on the "main GUI thread"
   // via the CallMethod(...) mechanism...
