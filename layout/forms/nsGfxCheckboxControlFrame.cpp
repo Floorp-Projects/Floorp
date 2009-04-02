@@ -89,7 +89,8 @@ PaintIndeterminateMark(nsIRenderingContext& aRenderingContext,
 
 //------------------------------------------------------------
 nsIFrame*
-NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell,
+                              nsStyleContext* aContext)
 {
   return new (aPresShell) nsGfxCheckboxControlFrame(aContext);
 }
@@ -111,62 +112,21 @@ NS_QUERYFRAME_HEAD(nsGfxCheckboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsICheckboxControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
 
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::Init(nsIContent* aContent,
-                                nsIFrame* aParent,
-                                nsIFrame* aPrevInFlow)
-{
-  nsresult rv = nsFormControlFrame::Init(aContent, aParent, aPrevInFlow);
-  if (NS_SUCCEEDED(rv)) {
-    mCheckButtonFaceStyle =
-      PresContext()->PresShell()->StyleSet()->
-        ResolvePseudoStyleFor(aContent, nsCSSAnonBoxes::check,
-                              GetStyleContext());
-  }
-
-  return rv;
-}
-
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsCOMPtr<nsIAccessibilityService> accService
+    = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLCheckboxAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLCheckboxAccessible(
+      static_cast<nsIFrame*>(this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;
 }
 #endif
-
-//--------------------------------------------------------------
-nsStyleContext*
-nsGfxCheckboxControlFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
-{
-  switch (aIndex) {
-  case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    return mCheckButtonFaceStyle;
-    break;
-  default:
-    return nsnull;
-  }
-}
-
-
-
-//--------------------------------------------------------------
-void
-nsGfxCheckboxControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
-                                                     nsStyleContext* aStyleContext)
-{
-  switch (aIndex) {
-  case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    mCheckButtonFaceStyle = aStyleContext;
-    break;
-  }
-}
-
 
 //------------------------------------------------------------
 NS_IMETHODIMP
@@ -175,12 +135,6 @@ nsGfxCheckboxControlFrame::OnChecked(nsPresContext* aPresContext,
 {
   InvalidateOverflowRect();
   return NS_OK;
-}
-
-static void PaintCheckMarkFromStyle(nsIFrame* aFrame,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect, nsPoint aPt) {
-  static_cast<nsGfxCheckboxControlFrame*>(aFrame)
-    ->PaintCheckBoxFromStyle(*aCtx, aPt, aDirtyRect);
 }
 
 class nsDisplayCheckMark : public nsDisplayItem {
@@ -244,45 +198,8 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsThemed())
     return NS_OK; // No need to paint the checkmark. The theme will do it.
 
-  // Paint the checkmark
-  if (mCheckButtonFaceStyle) {
-    // This code actually works now; not sure how useful it'll be
-    // (The purpose is to allow the UA stylesheet to substitute its own
-    //  checkmark for the default one)
-    // XXXbz maybe we should just remove this, together with the
-    // attendant complexity
-    const nsStyleBackground* myBackground = mCheckButtonFaceStyle->GetStyleBackground();
-    if (!myBackground->IsTransparent())
-      return aLists.Content()->AppendNewToTop(new (aBuilder)
-          nsDisplayGeneric(this, PaintCheckMarkFromStyle, "CheckMarkFromStyle"));
-  }
-
-  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCheckMark(this));
-}
-
-void
-nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
-    nsIRenderingContext& aRenderingContext, nsPoint aPt, const nsRect& aDirtyRect) {
-  const nsStylePosition* myPosition = mCheckButtonFaceStyle->GetStylePosition();
-  const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
-  const nsStyleBackground* myBackground = mCheckButtonFaceStyle->GetStyleBackground();
-
-  NS_ASSERTION(myPosition->mWidth.GetUnit() == eStyleUnit_Coord &&
-               myPosition->mHeight.GetUnit() == eStyleUnit_Coord,
-               "styles for :-moz-checkbox are incorrect or author-accessible");
-  nscoord width = myPosition->mWidth.GetCoordValue();
-  nscoord height = myPosition->mHeight.GetCoordValue();
-  // Position the button centered within the control's rectangle.
-  nscoord x = (mRect.width - width) / 2;
-  nscoord y = (mRect.height - height) / 2;
-  nsRect rect(aPt.x + x, aPt.y + y, width, height);
-
-  nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext,
-                                        this, aDirtyRect, rect, *myBackground,
-                                        *myBorder, PR_FALSE);
-  nsCSSRendering::PaintBorder(PresContext(), aRenderingContext, this,
-                              aDirtyRect, rect, *myBorder,
-                              mCheckButtonFaceStyle);
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+                                          nsDisplayCheckMark(this));
 }
 
 //------------------------------------------------------------
