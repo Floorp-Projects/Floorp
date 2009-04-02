@@ -246,9 +246,9 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
-   *  MozMagnifyGestureUpdate, MozMagnifyGesture,
-   *  MozRotateGestureStart, MozRotateGestureUpdate, and
-   *  MozRotateGesture.
+   *  MozMagnifyGestureUpdate, MozMagnifyGesture, MozRotateGestureStart,
+   *  MozRotateGestureUpdate, MozRotateGesture, MozPressTapGesture, and
+   *  MozTapGesture.
    *
    * Cannot be accessed from unprivileged context (not
    * content-accessible) Will throw a DOM security error if called

@@ -1121,6 +1121,9 @@ pref("config.use_system_prefs", false);
 // if the system has enabled accessibility
 pref("config.use_system_prefs.accessibility", false);
 
+// enable single finger gesture input (win7+ tablets)
+pref("gestures.enable_single_finger_input", true);
+
 /*
  * What are the entities that you want Mozilla to save using mnemonic
  * names rather than numeric codes? E.g. If set, we'll output &nbsp;
