@@ -5935,6 +5935,10 @@ js_Interpret(JSContext *cx)
 
             obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
+#ifdef JS_TRACER
+                if (TRACE_RECORDER(cx))
+                    js_AbortRecording(cx, "DEFLOCALFUN for closure");
+#endif
                 obj = js_CloneFunctionObject(cx, fun, parent);
                 if (!obj)
                     goto error;
