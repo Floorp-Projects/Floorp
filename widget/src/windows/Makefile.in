@@ -83,6 +83,7 @@ CPPSRCS		= \
 	nsLookAndFeel.cpp    \
 	nsUXThemeData.cpp \
 	nsNativeThemeWin.cpp \
+	nsWinGesture.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
