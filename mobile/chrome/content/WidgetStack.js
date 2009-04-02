@@ -134,12 +134,12 @@ wsRect.prototype = {
   get y() { return this._t; },
   get width() { return this._r - this._l; },
   get height() { return this._b - this._t; },
-  set x(v) { 
+  set x(v) {
     let diff = this._l - v;
     this._l = v;
-    this._r -= diff; 
+    this._r -= diff;
   },
-  set y(v) { 
+  set y(v) {
     let diff = this._t - v;
     this._t = v;
     this._b -= diff;
@@ -240,13 +240,13 @@ wsRect.prototype = {
     let xmost2 = r2._r;
 
     let x = Math.max(this._l, r2._l);
-    
+
     let temp = Math.min(xmost1, xmost2);
     if (temp <= x)
       return null;
 
     let width = temp - x;
-    
+
     let ymost1 = this._b;
     let ymost2 = r2._b;
     let y = Math.max(this._t, r2._t);
@@ -269,7 +269,7 @@ wsRect.prototype = {
       (other._t <= this._t && other._b >= this._b);
     return xok && yok;
   },
-  
+
   round: function(scale) {
     this._l = Math.floor(this._l * scale) / scale;
     this._t = Math.floor(this._t * scale) / scale;
@@ -352,7 +352,7 @@ WidgetStack.prototype = {
   _dragState: null,
 
   _skipViewportUpdates: 0,
-  
+
   //
   // init:
   //   el: the <stack> element whose children are to be managed
@@ -416,22 +416,24 @@ WidgetStack.prototype = {
   // if ignoreBarriers is true, then barriers are ignored for the pan.
   panBy: function panBy(dx, dy, ignoreBarriers) {
     if (dx == 0 && dy ==0)
-      return;
+      return false;
 
     let needsDragWrap = !this._dragging;
 
     if (needsDragWrap)
       this.dragStart(0, 0);
 
-    this._panBy(dx, dy, ignoreBarriers);
+    let panned = this._panBy(dx, dy, ignoreBarriers);
 
     if (needsDragWrap)
       this.dragStop();
+
+    return panned;
   },
 
   // panTo: pan the entire set of widgets so that the given x,y coordinates
   // are in the upper left of the stack.
-  panTo: function (x, y) {
+  panTo: function panTo(x, y) {
     this.panBy(x - this._viewingRect.x, y - this._viewingRect.y, true);
   },
 
@@ -624,7 +626,7 @@ WidgetStack.prototype = {
   },
 
   // dragStart: start a drag, with the current coordinates being clientX,clientY
-  dragStart: function (clientX, clientY) {
+  dragStart: function dragStart(clientX, clientY) {
     log("(dragStart)", clientX, clientY);
 
     if (this._dragState) {
@@ -658,7 +660,7 @@ WidgetStack.prototype = {
   },
 
   // dragStop: stop any drag in progress
-  dragStop: function () {
+  dragStop: function dragStop() {
     log("(dragStop)");
 
     if (!this._dragging)
@@ -673,15 +675,13 @@ WidgetStack.prototype = {
   },
 
   // dragMove: process a mouse move to clientX,clientY for an ongoing drag
-  dragMove: function dragStop(clientX, clientY) {
+  dragMove: function dragMove(clientX, clientY) {
     if (!this._dragging)
-      return;
-
-    log("(dragMove)", clientX, clientY);
+      return false;
 
     this._dragCoordsFromClient(clientX, clientY);
 
-    this._dragUpdate();
+    let panned = this._dragUpdate();
 
     if (this._viewportUpdateInterval != -1) {
       if (this._viewportUpdateTimeout != -1)
@@ -689,6 +689,8 @@ WidgetStack.prototype = {
       let self = this;
       this._viewportUpdateTimeout = setTimeout(function () { self._viewportUpdate(); }, this._viewportUpdateInterval);
     }
+
+    return panned;
   },
 
   // updateSize: tell the WidgetStack to update its size, because it
@@ -726,14 +728,14 @@ WidgetStack.prototype = {
       this._startViewportBoundsString = this._viewportBounds.toString();
     this._skipViewportUpdates++;
   },
-  
+
   endUpdateBatch: function endUpdate() {
     if (!this._skipViewportUpdates)
       throw new Error("Unbalanced call to endUpdateBatch");
     this._skipViewportUpdates--;
     if (this._skipViewportUpdates)
       return
-    
+
     let boundsSizeChanged =
       this._startViewportBoundsString != this._viewportBounds.toString();
     this._callViewportUpdateHandler(boundsSizeChanged);
@@ -800,10 +802,10 @@ WidgetStack.prototype = {
   },
 
   _getState: function (wid) {
-    let w = this._widgetState[wid]; 
+    let w = this._widgetState[wid];
     if (!w)
       throw "Unknown widget id '" + wid + "'; widget not in stack";
-    return w; 
+    return w;
   },
 
   get _dragging() {
@@ -1029,7 +1031,7 @@ WidgetStack.prototype = {
     // If the net result is that we don't have any room to move, then
     // just return.
     if (dx == 0 && dy == 0)
-      return;
+      return false;
 
     // the viewingRect moves opposite of the actual pan direction, see above
     vr.x += dx;
@@ -1054,16 +1056,18 @@ WidgetStack.prototype = {
      */
     if (!this._skipViewportUpdates && this._panHandler)
       this._panHandler.apply(window, [vr.clone(), dx, dy]);
+
+    return true;
   },
 
-  _dragUpdate: function () {
+  _dragUpdate: function _dragUpdate() {
     let dx = this._dragState.outerLastUpdateDX - this._dragState.outerDX;
     let dy = this._dragState.outerLastUpdateDY - this._dragState.outerDY;
 
     this._dragState.outerLastUpdateDX = this._dragState.outerDX;
     this._dragState.outerLastUpdateDY = this._dragState.outerDY;
 
-    this.panBy(dx, dy);
+    return this.panBy(dx, dy);
   },
 
   //
@@ -1239,13 +1243,13 @@ WidgetStack.prototype = {
     let w = state.widget;
     let l = state.rect.x + state.offsetLeft;
     let t = state.rect.y + state.offsetTop;
-    
+
     //cache left/top to avoid calling setAttribute unnessesarily
     if (state._left != l) {
       state._left = l;
       w.setAttribute("left", l);
-    } 
-    
+    }
+
     if (state._top != t) {
       state._top = t;
       w.setAttribute("top", t);
