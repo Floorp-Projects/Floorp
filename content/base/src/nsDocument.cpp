@@ -168,6 +168,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIPropertyBag2.h"
 
 #include "nsFrameLoader.h"
+#include "imgIRequest.h"
 
 #include "mozAutoDocUpdate.h"
 
@@ -7499,6 +7500,18 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
   }
 }
 
+void
+nsIDocument::PreLoadImage(nsIURI* uri)
+{
+  nsCOMPtr<imgIRequest> request;
+  nsContentUtils::LoadImage(uri,
+                            this,
+                            NodePrincipal(),
+                            GetDocumentURI(), // should be ok for referrer
+                            nsnull, // no observer
+                            nsIRequest::LOAD_NORMAL,
+                            getter_AddRefs(request));
+}
 class nsDelayedEventDispatcher : public nsRunnable
 {
 public:
