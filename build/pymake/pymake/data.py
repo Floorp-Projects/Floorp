@@ -1298,7 +1298,9 @@ class Makefile(object):
     state data.
     """
 
-    def __init__(self, workdir=None, env=None, restarts=0, make=None, makeflags=None, makelevel=0, context=None, targets=(), keepgoing=False):
+    def __init__(self, workdir=None, env=None, restarts=0, make=None,
+                 makeflags='', makeoverrides='',
+                 makelevel=0, context=None, targets=(), keepgoing=False):
         self.defaulttarget = None
 
         if env is None:
@@ -1310,7 +1312,6 @@ class Makefile(object):
 
         self.context = context
         self.exportedvars = {}
-        self.overrides = []
         self._targets = {}
         self.keepgoing = keepgoing
         self._patternvariables = [] # of (pattern, variables)
@@ -1336,9 +1337,18 @@ class Makefile(object):
             self.variables.set('MAKE', Variables.FLAVOR_SIMPLE,
                                Variables.SOURCE_MAKEFILE, make)
 
-        if makeflags is not None:
-            self.variables.set('MAKEFLAGS', Variables.FLAVOR_SIMPLE,
-                               Variables.SOURCE_MAKEFILE, makeflags)
+        if makeoverrides != '':
+            self.variables.set('-*-command-variables-*-', Variables.FLAVOR_SIMPLE,
+                               Variables.SOURCE_AUTOMATIC, makeoverrides)
+            makeflags += ' -- $(MAKEOVERRIDES)'
+
+        self.variables.set('MAKEOVERRIDES', Variables.FLAVOR_RECURSIVE,
+                           Variables.SOURCE_ENVIRONMENT,
+                           '${-*-command-variables-*-}')
+
+        self.variables.set('MAKEFLAGS', Variables.FLAVOR_RECURSIVE,
+                           Variables.SOURCE_MAKEFILE, makeflags)
+        self.exportedvars['MAKEFLAGS'] = True
 
         self.makelevel = makelevel
         self.variables.set('MAKELEVEL', Variables.FLAVOR_SIMPLE,
@@ -1348,7 +1358,8 @@ class Makefile(object):
                            Variables.SOURCE_AUTOMATIC, ' '.join(targets))
 
         for vname, val in builtins.variables.iteritems():
-            self.variables.set(vname, Variables.FLAVOR_SIMPLE,
+            self.variables.set(vname,
+                               Variables.FLAVOR_SIMPLE,
                                Variables.SOURCE_IMPLICIT, val)
 
     def foundtarget(self, t):
@@ -1483,8 +1494,6 @@ class Makefile(object):
 
         _RemakeContext(self, [self.gettarget(f) for f in self.included], mlist, cb)
 
-    flagescape = re.compile(r'([\s\\])')
-
     def getsubenvironment(self, variables):
         env = dict(self.env)
         for vname, v in self.exportedvars.iteritems():
@@ -1499,17 +1508,6 @@ class Makefile(object):
                 env.pop(vname, None)
 
         makeflags = ''
-
-        flavor, source, val = variables.get('MAKEFLAGS')
-        if val is not None:
-            flagsval = val.resolvestr(self, variables, ['MAKEFLAGS'])
-            if flagsval != '':
-                makeflags = flagsval
-
-        makeflags += ' -- '
-        makeflags += ' '.join((self.flagescape.sub(r'\\\1', o) for o in self.overrides))
-
-        env['MAKEFLAGS'] = makeflags
 
         env['MAKELEVEL'] = str(self.makelevel + 1)
         return env
