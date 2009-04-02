@@ -479,7 +479,7 @@ KineticData.prototype = {
 
         if (self._speedX == 0 && self._speedY == 0) {
           self.endKinetic();
-	  return;
+          return;
         } else {
           let dx = Math.round(self._speedX * self._updateInterval);
           let dy = Math.round(self._speedY * self._updateInterval);
@@ -488,8 +488,8 @@ KineticData.prototype = {
           let panned = self._owner._dragBy(dx, dy);
           if (!panned) {
             self.endKinetic();
-	    return;
-	  }
+            return;
+          }
         }
 
         if (self._speedX < 0) {
