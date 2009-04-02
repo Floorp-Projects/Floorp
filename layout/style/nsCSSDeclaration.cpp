@@ -539,20 +539,14 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       case eCSSType_ValueList: {
         const nsCSSValueList* item =
             *static_cast<nsCSSValueList*const*>(storage);
-        if (item) {
-          unit = item->mValue.GetUnit();
-        } else {
-          unit = eCSSUnit_Null;
-        }
+        NS_ABORT_IF_FALSE(item, "null not allowed in compressed block");
+        unit = item->mValue.GetUnit();
       } break;
       case eCSSType_ValuePairList: {
         const nsCSSValuePairList* item =
             *static_cast<nsCSSValuePairList*const*>(storage);
-        if (item) {
-          unit = item->mXValue.GetUnit();
-        } else {
-          unit = eCSSUnit_Null;
-        }
+        NS_ABORT_IF_FALSE(item, "null not allowed in compressed block");
+        unit = item->mXValue.GetUnit();
       } break;
     }
     if (unit == eCSSUnit_Inherit) {
