@@ -299,7 +299,7 @@ jsd_FindOrCreateJSDScript(JSDContext    *jsdc,
     if (jsdscript)
         return jsdscript;
 
-    // Fallback for unknown scripts: create a new script
+    /* Fallback for unknown scripts: create a new script. */
     if (!fp)
         JS_FrameIterator(cx, &fp);
     if (fp)
@@ -825,7 +825,6 @@ jsd_ClearExecutionHook(JSDContext*           jsdc,
     jsdhook = _findHook(jsdc, jsdscript, pc);
     if( ! jsdhook )
     {
-        JS_ASSERT(0);
         JSD_UNLOCK();
         return JS_FALSE;
     }
