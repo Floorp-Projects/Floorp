@@ -191,14 +191,12 @@
       <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Back"
                      tooltiptext="&backButton.tooltip;"
-                     accesskey="&backCmd.accesskey;"
                      chromedir="&locale.dir;"
                      disabled="true"/>
 
       <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Forward"
                      tooltiptext="&forwardButton.tooltip;"
-                     accesskey="&forwardCmd.accesskey;"
                      chromedir="&locale.dir;"
                      disabled="true"/>
 
