@@ -41,7 +41,7 @@
 
 <!ENTITY instanceName.description         "Please choose a unique name for this computer so you will be able to distinguish it from your other computers.">
 <!ENTITY instanceName.label               "Computer name:">
-<!ENTITY clientList.label                 "Computers that are are synchronizing with this Weave account:">
+<!ENTITY clientList.label                 "Computers that are synchronizing with this Weave account:">
 <!ENTITY examples.label                   "Examples: &quot;Home&quot;, &quot;Work&quot;">
 
 
