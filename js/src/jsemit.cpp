@@ -3449,7 +3449,10 @@ EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         /*
          * Duplicate the value being destructured to use as a reference base.
+         * If dup is not the first one, annotate it for the decompiler.
          */
+        if (pn2 != pn->pn_head && js_NewSrcNote(cx, cg, SRC_CONTINUE) < 0)
+            return JS_FALSE;
         if (js_Emit1(cx, cg, JSOP_DUP) < 0)
             return JS_FALSE;
 

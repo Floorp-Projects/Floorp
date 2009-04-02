@@ -591,7 +591,8 @@ typedef enum JSSrcNoteType {
                                    do-while loop */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
-                                   at end of array literal: [1,2,,] */
+                                   at end of array literal: [1,2,,];
+                                   JSOP_DUP continuing destructuring pattern */
     SRC_DECL        = 6,        /* type of a declaration (var, const, let*) */
     SRC_DESTRUCT    = 6,        /* JSOP_DUP starting a destructuring assignment
                                    operation, with SRC_DECL_* offset operand */
