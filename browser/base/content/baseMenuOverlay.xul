@@ -95,7 +95,7 @@
         <menuitem id="releaseNotes"
                   accesskey="&helpReleaseNotes.accesskey;"
                   label="&helpReleaseNotes.label;"
-                  oncommand="openReleaseNotes(event)"
+                  oncommand="openReleaseNotes()"
                   onclick="checkForMiddleClick(this, event);"/>
         <menuseparator id="updateSeparator"/>
 #ifdef MOZ_UPDATER

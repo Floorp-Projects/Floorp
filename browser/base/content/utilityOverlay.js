@@ -441,13 +441,13 @@ function openAdvancedPreferences(tabID)
  *          determine where the release notes page should be displayed based
  *          on modifiers (e.g. Ctrl = new tab)
  */
-function openReleaseNotes(event)
+function openReleaseNotes()
 {
   var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                             .getService(Components.interfaces.nsIURLFormatter);
   var relnotesURL = formatter.formatURLPref("app.releaseNotesURL");
   
-  openUILink(relnotesURL, event, false, true);
+  openUILinkIn(relnotesURL, "tab");
 }
 
 #ifdef MOZ_UPDATER
