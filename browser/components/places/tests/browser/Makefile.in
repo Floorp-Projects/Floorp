@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
+	browser_0_library_left_pane_migration.js \
 	browser_425884.js \
 	browser_423515.js \
 	browser_410196_paste_into_tags.js \
