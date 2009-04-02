@@ -693,6 +693,11 @@ WidgetStack.prototype = {
     return panned;
   },
 
+  // dragBy: process a mouse move by dx,dy for an ongoing drag
+  dragBy: function dragBy(dx, dy) {
+    return this.dragMove(this._dragState.outerCurX + dx, this._dragState.outerCurY + dy);
+  },
+
   // updateSize: tell the WidgetStack to update its size, because it
   // was either resized or some other event took place.
   updateSize: function updateSize(width, height) {

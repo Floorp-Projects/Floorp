@@ -449,118 +449,113 @@ ChromeInputModule.prototype = {
 
 function KineticData(owner) {
   this._owner = owner;
-  this.kineticHandle = -1;
+  this._kineticTimer = null;
   this.reset();
 }
 
 KineticData.prototype = {
+  /* const */ _updateInterval : 33, // this would put us at roughly 30fps
+
   reset: function reset() {
-    if (this.kineticHandle != -1) {
-      window.clearTimeout(this.kineticHandle);
-      this.kineticHandle = -1;
+    if (this._kineticTimer != null) {
+      this._kineticTimer.cancel();
+      this._kineticTimer = null;
     }
 
-    this.stepSize = 30;
-    this.decelloration = 0.004;
-    this.momentumBufferSize = 3;
     this.momentumBuffer = [];
-    this.momentumBufferIndex = 0;
-    this.lastTime = 0;
-    this.duration = 0;
-    this.dirX = 0;
-    this.dirY = 0;
-    this.step  = 0;
-    this.stepStart = 0;
-    this.startX  = 0;
-    this.startY  = 0;
-    this.initialVel = 0;
+    this._speedX = 0;
+    this._speedY = 0;
   },
 
+  _startKineticTimer: function _startKineticTimer() {
+    let callback = {
+      _self: this,
+      notify: function(timer) {
+        let self = this._self;
+
+        const decelerationRate = 0.15;
+
+        // dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
+
+        if (self._speedX == 0 && self._speedY == 0) {
+          self.endKinetic();
+	  return;
+        } else {
+          let dx = Math.round(self._speedX * self._updateInterval);
+          let dy = Math.round(self._speedY * self._updateInterval);
+          //dump("dx, dy: " + dx + " " + dy + "\n");
+
+          let panned = self._owner._dragBy(dx, dy);
+          if (!panned) {
+            self.endKinetic();
+	    return;
+	  }
+        }
+
+        if (self._speedX < 0) {
+          self._speedX = Math.min(self._speedX + decelerationRate, 0);
+        } else if (self._speedX > 0) {
+          self._speedX = Math.max(self._speedX - decelerationRate, 0);
+        }
+        if (self._speedY < 0) {
+          self._speedY = Math.min(self._speedY + decelerationRate, 0);
+        } else if (self._speedY > 0) {
+          self._speedY = Math.max(self._speedY - decelerationRate, 0);
+        }
+
+        if (self._speedX == 0 && self._speedY == 0)
+          self.endKinetic();
+      }
+    };  
+
+    this._kineticTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    //initialize our timer with updateInterval 
+    this._kineticTimer.initWithCallback(callback,
+                                        this._updateInterval,
+                                        this._kineticTimer.TYPE_REPEATING_SLACK);
+  },
+
+
   startKinetic: function startKinetic(sX, sY) {
-    let dx = 0;
-    let dy = 0;
-    let dt = 0;
-    if (this.initialVel != 0)
-      return true;
+    let mb = this.momentumBuffer;
+    let mblen = this.momentumBuffer.length;
 
-    if (!this.momentumBuffer)
+    // If we don't have at least 2 events we can't really do kinetic panning
+    if (mblen < 2)
       return false;
 
-    for (let i = 0; i < this.momentumBufferSize; i++) {
-      let me = this.momentumBuffer[(this.momentumBufferIndex + i) % this.momentumBufferSize];
-      if (!me)
-        return false;
+    let speedBufX = [];
+    let speedBufY = [];
 
-      dx += me.dx;
-      dy += me.dy;
-      dt += me.dt;
-    }
-    if (dt <= 0)
-      return false;
+    // build arrays of each movement's speed in pixels/ms
+    let prev = mb[0];
+    for (let i = 1; i < mblen; i++) {
+      let me = mb[i];
 
-    let dist = Math.sqrt(dx*dx+dy*dy);
-    let vel  = dist/dt;
-    if (vel < 1)
-      return false;
+      let speedX = (me.sx - prev.sx) / (me.t - prev.t);
+      speedBufX.push(speedX);
 
-    this.dirX = dx/dist;
-    this.dirY = dy/dist;
-    if (this.dirX > 0.9) {
-      this.dirX = 1;
-      this.dirY = 0;
-    }
-    else if (this.dirY < -0.9) {
-      this.dirX = 0;
-      this.dirY = -1;
-    }
-    else if (this.dirX < -0.9) {
-      this.dirX = -1;
-      this.dirY = 0;
-    }
-    else if (this.dirY > 0.9) {
-      this.dirX = 0;
-      this.dirY = 1;
+      let speedY = (me.sy - prev.sy) / (me.t - prev.t);
+      speedBufY.push(speedY);
+
+      prev = me;
     }
 
-    this.duration = vel/(2 * this.decelloration);
-    this.step = 0;
-    this.startX =  sX;
-    this.startY =  sY;
-    this.initialVel = vel;
-    this.stepStart = Date.now();
-    this.kineticHandle = window.setTimeout(this._doKinetic, this.stepSize, this);
+    function average(buf) {
+      return buf.reduce(function(a,b) a+b) / buf.length;
+    }
+
+    // average the speeds out (This could probably be a bit smarter)
+    this._speedX = average(speedBufX);
+    this._speedY = average(speedBufY);
+
+    // fire off our kinetic timer which will do all the work
+    this._startKineticTimer();
+
     return true;
   },
 
-  _doKinetic: function _doKinetic(self) {
-    let t = self.step * self.stepSize;
-    let dt = Date.now() - self.stepStart - t; /* delta beween ideal activation time and now */
-
-    let extraSteps = Math.floor(dt / self.stepSize);
-    self.step += extraSteps;
-    t = self.step * self.stepSize;
-    dt -= extraSteps * self.stepSize;
-
-    if (t > self.duration)
-      t = self.duration;
-    let dist = self.initialVel * t -
-               self.decelloration * t * t;
-    let newX = Math.floor(self.dirX * dist + self.startX);
-    let newY = Math.floor(self.dirY * dist + self.startY);
-
-    let panned = self._owner._dragMove(newX, newY);
-    if(!panned || t >= self.duration) {
-      self.endKinetic(newX, newY);
-      return;
-    }
-
-    ++self.step;
-
-    /* setup the next iteration of this */
-    self.kineticHandle = window.setTimeout(self._doKinetic, self.stepSize - dt, self);
-  },
-
-  endKinetic: function endKinetic(sX, sY) {
+  endKinetic: function endKinetic() {
     ws.dragStop();
     this.reset();
 
@@ -584,17 +579,16 @@ KineticData.prototype = {
     }
   },
 
-  addData: function addData(dx, dy) {
-    if (dx == 0 && dy == 0)
-      return;
+  addData: function addData(sx, sy) {
+    let mbLength = this.momentumBuffer.length;
+    // avoid adding duplicates which would otherwise slow down the speed
+    if (mbLength > 0) {
+      let mbLast = this.momentumBuffer[mbLength - 1];
+      if (mbLast.sx == sx && mbLast.sy == sy)
+	return;
+    }
 
-    let t = Date.now();
-    let dt = this.lastTime ? t - this.lastTime : 0;
-
-    this.lastTime = t;
-    this.momentumBuffer[this.momentumBufferIndex] = { 'dx': dx, 'dy': dy, 'dt': dt };
-    this.momentumBufferIndex++;
-    this.momentumBufferIndex %= this.momentumBufferSize;
+    this.momentumBuffer.push({'t': Date.now(), 'sx' : sx, 'sy' : sy});
   }
 };
 
@@ -603,7 +597,7 @@ function ContentPanningModule(owner, browserCanvas, useKinetic) {
   if (useKinetic !== undefined)
     this._useKinetic = useKinetic;
   this._browserCanvas = browserCanvas;
-  this._dragData = new DragData(this, 20, 200);
+  this._dragData = new DragData(this, 10, 200);
   this._kineticData = new KineticData(this);
 }
 
@@ -632,6 +626,32 @@ ContentPanningModule.prototype = {
     }
   },
 
+
+  detectEarlyDrag: function detectEarlyDrag() {
+    let dragData = this._dragData;
+
+    if (dragData.dragging)
+      return;
+
+    let mb = this._kineticData.momentumBuffer;
+    if (mb.length < 2)
+      return;
+
+    let mbFirst = mb[0];
+    let mbLast = mb[mb.length - 1];
+
+    let dx = mbFirst.sx - mbLast.sx;
+    let dy = mbFirst.sy - mbLast.sy;
+
+    if (dragData.dragStartTimeout != -1) {
+      if ((dx*dx + dy*dy) > (dragData._dragRadius * dragData._dragRadius)) {
+        dragData.clearDragStartTimeout();
+        dragData._owner._dragStart(mbFirst.sx, mbFirst.sy);
+      }
+    }
+  },
+
+
   /* If someone else grabs events ahead of us, cancel any pending
    * timeouts we may have.
    */
@@ -654,9 +674,6 @@ ContentPanningModule.prototype = {
     ws.dragStart(sX, sY);
 
     Browser.canvasBrowser.startPanning();
-
-    // set the kinetic start time
-    this._kineticData.lastTime = Date.now();
   },
 
   _dragStop: function _dragStop(sX, sY) {
@@ -679,8 +696,12 @@ ContentPanningModule.prototype = {
     }
   },
 
-  _dragMove: function _dragMove(sX, sY) {
+  _dragBy: function _dragMove(dx, dy) {
+    let panned = ws.dragBy(dx, dy);
+    return panned;
+  },
 
+  _dragMove: function _dragMove(sX, sY) {
     let dragData = this._dragData;
     [sX, sY] = dragData.lockMouseMove(sX, sY);
     let panned = ws.dragMove(sX, sY);
@@ -690,7 +711,7 @@ ContentPanningModule.prototype = {
 
   _onMouseDown: function _onMouseDown(aEvent) {
     // if we're in the process of kineticly scrolling, stop and start over
-    if (this._kineticData.kineticHandle != -1) {
+    if (this._kineticData._kineticTimer != null) {
       this._kineticData.endKinetic(aEvent.screenX, aEvent.screenY);
       this._owner.ungrab(this);
       this._dragData.reset();
@@ -713,7 +734,7 @@ ContentPanningModule.prototype = {
 
   _onMouseMove: function _onMouseMove(aEvent) {
     // don't do anything if we're in the process of kineticly scrolling
-    if (this._kineticData.kineticHandle != -1)
+    if (this._kineticData._kineticTimer != null)
       return;
 
     let dragData = this._dragData;
@@ -726,14 +747,12 @@ ContentPanningModule.prototype = {
 
     // even if we haven't started dragging yet, we should queue up the
     // mousemoves in case we do start
-    if (this._useKinetic) {
-      // update our kinetic data
-      let dx = dragData.sX - sX;
-      let dy = dragData.sY - sY;
-      this._kineticData.addData(-dx, -dy);
-    }
+    if (this._useKinetic)
+      this._kineticData.addData(sX, sY);
 
-    dragData.detectEarlyDrag(sX, sY);
+    this.detectEarlyDrag();
+
+    //dragData.detectEarlyDrag(sX, sY);
 
     if (dragData.dragging)
       this._dragMove(sX, sY);
