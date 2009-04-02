@@ -775,7 +775,11 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                      nsISupports *aLoader,
                                      const PRUint8 *aFontData, PRUint32 aLength)
 {
+#ifdef MOZ_FT2_FONTS
+    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader, aFontData, aLength);
+#else
     return FontEntry::LoadFont(*aProxyEntry, aLoader, aFontData, aLength);
+#endif    
 }
 
 PRBool
