@@ -73,10 +73,21 @@ public:
   //nsICheckboxControlFrame methods
   NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked);
 
+  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
+  virtual void SetAdditionalStyleContext(PRInt32 aIndex,
+                                         nsStyleContext* aStyleContext);
+
   NS_DECL_QUERYFRAME
+
+  NS_IMETHOD Init(nsIContent* aContent,
+                  nsIFrame* aParent,
+                  nsIFrame* asPrevInFlow);
 
   void PaintCheckBox(nsIRenderingContext& aRenderingContext,
                      nsPoint aPt, const nsRect& aDirtyRect);
+
+  void PaintCheckBoxFromStyle(nsIRenderingContext& aRenderingContext,
+                              nsPoint aPt, const nsRect& aDirtyRect);
 
 protected:
 
