@@ -1388,6 +1388,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (body->pn_tail == &body->pn_head)
             body->pn_tail = &item->pn_next;
         ++body->pn_count;
+        body->pn_extra |= PNX_DESTRARGS;
     }
 #endif
 
