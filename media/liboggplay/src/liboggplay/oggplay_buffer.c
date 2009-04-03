@@ -58,7 +58,7 @@ oggplay_buffer_new_buffer(int size) {
     size = OGGPLAY_DEFAULT_BUFFER_SIZE;
   }
 
-  buffer = (OggPlayBuffer*)oggplay_malloc(sizeof (OggPlayBuffer));
+  buffer = (OggPlayBuffer*)oggplay_calloc(1, sizeof (OggPlayBuffer));
 
   if (buffer == NULL)
     return NULL;

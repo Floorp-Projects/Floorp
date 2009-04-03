@@ -38,8 +38,6 @@
 #include "oggplay_private.h"
 #include <stdlib.h>
 
-#define M(x)  ((x) >> 32) 
-
 extern void _print_list(char *name, OggPlayDataHeader *p);
 
 int
@@ -71,6 +69,24 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
     OggPlayDataHeader   * q = NULL;
     
     (*info)[i] = track_info;
+
+#ifdef HAVE_TIGER
+    /* not so nice to have this here, but the tiger_renderer needs updating regularly
+     * as some items may be animated, so would yield data without the stream actually
+     * receiving any packets.
+     * In addition, Kate streams can now be overlayed on top of a video, so this needs
+     * calling to render the overlay.
+     * FIXME: is this the best place to put this ? Might do too much work if the info
+     * is going to be destroyed ?
+     */
+    if (track->content_type == OGGZ_CONTENT_KATE) {
+      OggPlayKateDecode *decode = (OggPlayKateDecode *)track;
+      OggPlayCallbackInfo * video_info = NULL;
+      if (decode->overlay_dest >= 0)
+        video_info = me->callback_info + decode->overlay_dest;
+      oggplay_data_update_tiger(decode, track->active, me->target, video_info);
+    }
+#endif
 
     /*
      * this track is inactive and has no data - create an empty record
@@ -418,7 +434,7 @@ oggplay_callback_info_get_presentation_time(OggPlayDataHeader *header) {
   }
 
   /* SGS: is this correct? */
-  return (((header->presentation_time >> 16) * 1000) >> 16) & 0xFFFFFFFF;
+  return OGGPLAY_TIME_FP_TO_INT(header->presentation_time);
 }
 
 OggPlayVideoData *
@@ -429,6 +445,17 @@ oggplay_callback_info_get_video_data(OggPlayDataHeader *header) {
   }
 
   return &((OggPlayVideoRecord *)header)->data;
+
+}
+
+OggPlayOverlayData *
+oggplay_callback_info_get_overlay_data(OggPlayDataHeader *header) {
+
+  if (header == NULL) {
+    return NULL;
+  }
+
+  return &((OggPlayOverlayRecord *)header)->data;
 
 }
 
