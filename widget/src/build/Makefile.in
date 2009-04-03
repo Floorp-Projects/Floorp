@@ -90,7 +90,7 @@ EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
-		$(QCMS_LIBS)
+		$(QCMS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
