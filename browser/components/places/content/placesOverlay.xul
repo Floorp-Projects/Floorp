@@ -196,6 +196,7 @@
               closemenu="single"
               selection="link"
               selectiontype="single"
+              hideifprivatebrowsing="true"
               forcehideselection="bookmark"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
