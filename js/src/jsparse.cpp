@@ -1925,8 +1925,6 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
     step = 0;
     ASSERT_VALID_PROPERTY_KEY(pnid);
     pnhead = pn->pn_head;
-    if (pnhead && pnhead->pn_type == TOK_DEFSHARP)
-        pnhead = pnhead->pn_next;
     if (pnid->pn_type == TOK_NUMBER) {
         for (pnprop = pnhead; pnprop; pnprop = pnprop->pn_next) {
             JS_ASSERT(pnprop->pn_type == TOK_COLON);
@@ -2011,11 +2009,6 @@ CheckDestructuring(JSContext *cx, BindData *data,
 
     fpvd.table.ops = NULL;
     lhs = left->pn_head;
-    if (lhs && lhs->pn_type == TOK_DEFSHARP) {
-        pn = lhs;
-        goto no_var_name;
-    }
-
     if (left->pn_type == TOK_RB) {
         rhs = (right && right->pn_type == left->pn_type)
               ? right->pn_head
@@ -5373,23 +5366,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     JSParseNode *pn, *pn2, *pn3;
     JSOp op;
-#if JS_HAS_SHARP_VARS
-    JSParseNode *defsharp;
-    JSBool notsharp;
-#endif
 
     JS_CHECK_RECURSION(cx, return NULL);
-
-#if JS_HAS_SHARP_VARS
-    defsharp = NULL;
-    notsharp = JS_FALSE;
-  again:
-    /*
-     * Control flows here after #n= is scanned.  If the following primary is
-     * not valid after such a "sharp variable" definition, the tt switch case
-     * should set notsharp.
-     */
-#endif
 
 #if JS_HAS_GETTER_SETTER
     if (tt == TOK_NAME) {
@@ -5432,13 +5410,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         pn->pn_type = TOK_RB;
         pn->pn_op = JSOP_NEWINIT;
 
-#if JS_HAS_SHARP_VARS
-        if (defsharp) {
-            PN_INIT_LIST_1(pn, defsharp);
-            defsharp = NULL;
-        } else
-#endif
-            PN_INIT_LIST(pn);
+        PN_INIT_LIST(pn);
 
         ts->flags |= TSF_OPERAND;
         matched = js_MatchToken(cx, ts, TOK_RB);
@@ -5480,8 +5452,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_GENERATORS
             /*
              * At this point, (index == 0 && pn->pn_count != 0) implies one
-             * element initialiser was parsed (possibly with a defsharp before
-             * the left bracket).
+             * element initialiser was parsed.
              *
              * An array comprehension of the form:
              *
@@ -5565,14 +5536,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
         pn->pn_type = TOK_RC;
         pn->pn_op = JSOP_NEWINIT;
-
-#if JS_HAS_SHARP_VARS
-        if (defsharp) {
-            PN_INIT_LIST_1(pn, defsharp);
-            defsharp = NULL;
-        } else
-#endif
-            PN_INIT_LIST(pn);
+        PN_INIT_LIST(pn);
 
         afterComma = JS_FALSE;
         for (;;) {
@@ -5713,16 +5677,28 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
 #if JS_HAS_SHARP_VARS
       case TOK_DEFSHARP:
-        if (defsharp)
-            goto badsharp;
-        defsharp = NewParseNode(cx, ts, PN_UNARY, tc);
-        if (!defsharp)
+        pn = NewParseNode(cx, ts, PN_UNARY, tc);
+        if (!pn)
             return NULL;
-        defsharp->pn_num = (jsint) CURRENT_TOKEN(ts).t_dval;
+        pn->pn_num = (jsint) CURRENT_TOKEN(ts).t_dval;
         ts->flags |= TSF_OPERAND;
         tt = js_GetToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
-        goto again;
+        if (tt == TOK_USESHARP || tt == TOK_DEFSHARP ||
+#if JS_HAS_XML_SUPPORT
+            tt == TOK_STAR || tt == TOK_AT ||
+            tt == TOK_XMLSTAGO /* XXXbe could be sharp? */ ||
+#endif
+            tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_PRIMARY) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_BAD_SHARP_VAR_DEF);
+            return NULL;
+        }
+        pn->pn_kid = PrimaryExpr(cx, ts, tc, tt, JS_FALSE);
+        if (!pn->pn_kid)
+            return NULL;
+        tc->flags |= TCF_HAS_SHARPS;
+        break;
 
       case TOK_USESHARP:
         /* Check for forward/dangling references at runtime, to allow eval. */
@@ -5730,7 +5706,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
         pn->pn_num = (jsint) CURRENT_TOKEN(ts).t_dval;
-        notsharp = JS_TRUE;
+        tc->flags |= TCF_HAS_SHARPS;
         break;
 #endif /* JS_HAS_SHARP_VARS */
 
@@ -5767,27 +5743,23 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         pn = QualifiedIdentifier(cx, ts, tc);
         if (!pn)
             return NULL;
-        notsharp = JS_TRUE;
         break;
 
       case TOK_AT:
         pn = AttributeIdentifier(cx, ts, tc);
         if (!pn)
             return NULL;
-        notsharp = JS_TRUE;
         break;
 
       case TOK_XMLSTAGO:
         pn = XMLElementOrListRoot(cx, ts, tc, JS_TRUE);
         if (!pn)
             return NULL;
-        notsharp = JS_TRUE;     /* XXXbe could be sharp? */
         break;
 #endif /* JS_HAS_XML_SUPPORT */
 
       case TOK_STRING:
 #if JS_HAS_SHARP_VARS
-        notsharp = JS_TRUE;
         /* FALL THROUGH */
 #endif
 
@@ -5885,9 +5857,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
         pn->pn_op = JSOP_DOUBLE;
         pn->pn_dval = CURRENT_TOKEN(ts).t_dval;
-#if JS_HAS_SHARP_VARS
-        notsharp = JS_TRUE;
-#endif
         break;
 
       case TOK_PRIMARY:
@@ -5895,9 +5864,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
         pn->pn_op = CURRENT_TOKEN(ts).t_op;
-#if JS_HAS_SHARP_VARS
-        notsharp = JS_TRUE;
-#endif
         break;
 
       case TOK_ERROR:
@@ -5909,19 +5875,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                     JSMSG_SYNTAX_ERROR);
         return NULL;
     }
-
-#if JS_HAS_SHARP_VARS
-    if (defsharp) {
-        if (notsharp) {
-  badsharp:
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                        JSMSG_BAD_SHARP_VAR_DEF);
-            return NULL;
-        }
-        defsharp->pn_kid = pn;
-        return defsharp;
-    }
-#endif
     return pn;
 }
 
