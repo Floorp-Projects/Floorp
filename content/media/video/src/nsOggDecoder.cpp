@@ -726,11 +726,7 @@ void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
     rgb.rgb_width = aFrame->mVideoWidth;
     rgb.rgb_height = aFrame->mVideoHeight;
 
-#ifdef IS_BIG_ENDIAN
-    oggplay_yuv2argb(&yuv, &rgb);
-#else
-    oggplay_yuv2bgr(&yuv, &rgb);
-#endif
+    oggplay_yuv2bgra(&yuv, &rgb);
 
     mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight, mFramerate, buffer.forget());
   }

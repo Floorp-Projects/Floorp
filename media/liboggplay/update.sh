@@ -2,7 +2,7 @@
 #
 # Copies the needed files from a directory containing the original
 # liboggplay source that we need for the Mozilla HTML5 media support.
-sed s/\#define\ __SSE2__\ 1//g $1/config.h >./src/liboggplay/config.h
+sed 's/#define ATTRIBUTE_ALIGNED_MAX .*//g' $1/config.h >./src/liboggplay/config.h
 echo "#undef HAVE_GLUT"  >>./src/liboggplay/config.h
 cp $1/include/oggplay/oggplay_callback_info.h ./include/oggplay/oggplay_callback_info.h
 cp $1/include/oggplay/oggplay_query.h ./include/oggplay/oggplay_query.h
@@ -30,14 +30,19 @@ cp $1/src/liboggplay/oggplay.c ./src/liboggplay/oggplay.c
 cp $1/src/liboggplay/oggplay_callback.h ./src/liboggplay/oggplay_callback.h
 cp $1/src/liboggplay/oggplay_tcp_reader.c ./src/liboggplay/oggplay_tcp_reader.c
 cp $1/src/liboggplay/oggplay_query.c ./src/liboggplay/oggplay_query.c
-sed s/\#include\ \"config_win32.h\"//g $1/src/liboggplay/oggplay_private.h >./src/liboggplay/oggplay_private.h1
-sed s/\#include\ \<config.h\>/\#ifdef\ WIN32\\n\#include\ \"config_win32.h\"\\n\#else\\n\#include\ \<config.h\>\\n\#endif/g ./src/liboggplay/oggplay_private.h1 >./src/liboggplay/oggplay_private.h
+cp $1/src/liboggplay/cpu.c ./src/liboggplay/cpu.c
+cp $1/src/liboggplay/cpu.h ./src/liboggplay/cpu.h
+cp $1/src/liboggplay/oggplay_yuv2rgb_template.h ./src/liboggplay/oggplay_yuv2rgb_template.h
+cp $1/src/liboggplay/oggplay_yuv2rgb_x86.c ./src/liboggplay/oggplay_yuv2rgb_x86.c
+cp $1/src/liboggplay/yuv2rgb_x86.h ./src/liboggplay/yuv2rgb_x86.h
+cp $1/src/liboggplay/yuv2rgb_x86_vs.h ./src/liboggplay/yuv2rgb_x86_vs.h
+sed 's/#include "config_win32.h"//g' $1/src/liboggplay/oggplay_private.h >./src/liboggplay/oggplay_private.h1
+sed 's/#include <config.h>/#ifdef WIN32\
+#include "config_win32.h"\
+#else\
+#include <config.h>\
+#endif/g' ./src/liboggplay/oggplay_private.h1 >./src/liboggplay/oggplay_private.h
 rm ./src/liboggplay/oggplay_private.h1
 sed s/\#ifdef\ HAVE_INTTYPES_H/\#if\ HAVE_INTTYPES_H/g $1/src/liboggplay/oggplay_data.c >./src/liboggplay/oggplay_data.c
-cd ./src/liboggplay
-patch <../../yuv_disable_optimized.patch
-cd ../..
-patch -p3 <yuv2argb.patch
-patch -p1 <bug468281_r3863.patch 
-patch -p1 <bug468281_r3864.patch
-patch -p3 <bug468281_r3871.patch
+patch -p3 < bug485291_yuv_align.patch
+
