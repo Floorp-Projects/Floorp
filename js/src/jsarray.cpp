@@ -746,10 +746,9 @@ js_GetDenseArrayElementValue(JSObject *obj, JSProperty *prop)
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
     JS_ASSERT((void *) prop ==
               (void *) &(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]));
-    JS_ASSERT((jsval) prop->id == obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]);
-    JS_ASSERT(JSVAL_IS_INT(prop->id));
+    JS_ASSERT(JSVAL_IS_INT(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]));
 
-    jsint i = JSID_TO_INT(prop->id);
+    jsint i = JSVAL_TO_INT(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]);
     JS_ASSERT(i >= 0);
     jsval v = obj->dslots[i];
     JS_ASSERT(v != JSVAL_HOLE);

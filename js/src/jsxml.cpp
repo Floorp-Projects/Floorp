@@ -4913,7 +4913,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
 
 /*
  * js_XMLObjectOps.newObjectMap == js_NewObjectMap, so XML objects appear to
- * be native.  Therefore, xml_lookupProperty must return a valid JSProperty
+ * be native. Thus xml_lookupProperty must return a valid JSScopeProperty
  * pointer parameter via *propp to signify "property found".  Since the only
  * call to xml_lookupProperty is via OBJ_LOOKUP_PROPERTY, and then only from
  * js_FindProperty (in jsobj.c, called from jsinterp.c) or from JSOP_IN case
