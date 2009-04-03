@@ -78,7 +78,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  caps \
 		  thebes \
-		  qcms \
 		  $(NULL)
 
 ifdef ACCESSIBILITY

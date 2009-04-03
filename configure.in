@@ -129,6 +129,7 @@ GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
+LCMS_VERSION=1.17
 SQLITE_VERSION=3.6.10
 LIBNOTIFY_VERSION=0.4
 
@@ -7646,11 +7647,22 @@ AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
 
-dnl qcms
+dnl ========================================================
+dnl Check for lcms
 dnl ========================================================
 
-QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
-AC_SUBST(QCMS_LIBS)
+LCMS_CFLAGS=
+if test "$_WIN32_MSVC"; then
+    if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
+        LCMS_CFLAGS=-DLCMS_DLL
+    fi
+    LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
+else
+    LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
+fi
+
+AC_SUBST(LCMS_CFLAGS)
+AC_SUBST(LCMS_LIBS)
 
 dnl ========================================================
 dnl disable xul

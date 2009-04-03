@@ -50,7 +50,7 @@
 #include "imgILoad.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
-#include "qcms.h"
+#include "lcms.h"
 
 extern "C" {
 #include "jpeglib.h"
@@ -122,8 +122,8 @@ public:
   JOCTET  *mProfile;
   PRUint32 mProfileLength;
 
-  qcms_profile *mInProfile;
-  qcms_transform *mTransform;
+  cmsHPROFILE mInProfile;
+  cmsHTRANSFORM mTransform;
 
   PRPackedBool mReading;
 };

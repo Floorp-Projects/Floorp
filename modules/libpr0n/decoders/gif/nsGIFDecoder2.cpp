@@ -86,7 +86,7 @@ mailing address.
 
 #include "gfxColor.h"
 #include "gfxPlatform.h"
-#include "qcms.h"
+#include "lcms.h"
 
 /*
  * GETN(n, s) requests at least 'n' bytes available from 'q', at start of state 's'
@@ -681,9 +681,9 @@ static void ConvertColormap(PRUint32 *aColormap, PRUint32 aColors)
 {
   // Apply CMS transformation if enabled and available
   if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-    qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
+    cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
     if (transform)
-      qcms_transform_data(transform, aColormap, aColormap, aColors);
+      cmsDoTransform(transform, aColormap, aColormap, aColors);
   }
   // Convert from the GIF's RGB format to the Cairo format.
   // Work from end to begin, because of the in-place expansion
