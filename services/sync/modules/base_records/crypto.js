@@ -84,8 +84,8 @@ CryptoWrapper.prototype = {
   _encrypt: function CryptoWrap__encrypt(passphrase) {
     let self = yield;
 
-    // Don't encrypt empty payloads
-    if (!this.payload) {
+    // No need to encrypt deleted records
+    if (this.deleted) {
       self.done();
       return;
     }
@@ -109,8 +109,8 @@ CryptoWrapper.prototype = {
   _decrypt: function CryptoWrap__decrypt(passphrase) {
     let self = yield;
 
-    // Empty payloads aren't encrypted
-    if (!this.payload) {
+    // Deleted records aren't encrypted
+    if (this.deleted) {
       self.done();
       return;
     }
@@ -132,13 +132,13 @@ CryptoWrapper.prototype = {
     this._decrypt.async(this, onComplete, passphrase);
   },
 
-  toString: function WBORec_toString() {
-    return "{ id: " + this.id + "\n" +
-      "  parent: " + this.parentid + "\n" +
-      "  depth: " + this.depth + ", index: " + this.sortindex + "\n" +
-      "  modified: " + this.modified + "\n" +
-      "  payload: " + JSON.stringify(this.cleartext) + " }";
-  }
+  toString: function CryptoWrap_toString() "{ " + [
+      "id: " + this.id,
+      "parent: " + this.parentid,
+      "depth: " + this.depth + ", index: " + this.sortindex,
+      "modified: " + this.modified,
+      "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.cleartext))
+    ].join("\n  ") + " }",
 };
 
 function CryptoMeta(uri) {
