@@ -62,7 +62,6 @@ REQUIRES =  xpcom \
             unicharutil \
             imglib2 \
             $(ZLIB_REQUIRES) \
-            qcms \
             $(NULL)
 
 CPPSRCS		= \
@@ -93,7 +92,6 @@ CPPSRCS		+= nsSystemFontsWin.cpp \
 
 REQUIRES	+= \
 		cairo \
-		qcms \
 		$(NULL)
 
 _OS_LIBS	= usp10

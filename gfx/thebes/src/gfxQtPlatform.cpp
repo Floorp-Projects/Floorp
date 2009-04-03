@@ -59,7 +59,7 @@
 #include "nsMathUtils.h"
 #include "nsTArray.h"
 
-#include "qcms.h"
+#include "lcms.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -354,7 +354,7 @@ gfxQtPlatform::InitDPI()
     }
 }
 
-qcms_profile*
+cmsHPROFILE
 gfxQtPlatform::GetPlatformCMSOutputProfile()
 {
     return nsnull;
