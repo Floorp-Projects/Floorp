@@ -58,7 +58,7 @@
 #include "nsTArray.h"
 #include "nsUnicodeRange.h"
 
-#include "qcms.h"
+#include "lcms.h"
 
 gfxPlatformMac::gfxPlatformMac()
 {
@@ -382,7 +382,7 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
     return threshold;
 }
 
-qcms_profile *
+cmsHPROFILE
 gfxPlatformMac::GetPlatformCMSOutputProfile()
 {
     CMProfileLocation device;
@@ -393,14 +393,14 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
     if (err != noErr)
         return nsnull;
 
-    qcms_profile *profile = nsnull;
+    cmsHPROFILE profile = nsnull;
     switch (device.locType) {
     case cmFileBasedProfile: {
         FSRef fsRef;
         if (!FSpMakeFSRef(&device.u.fileLoc.spec, &fsRef)) {
             char path[512];
             if (!FSRefMakePath(&fsRef, (UInt8*)(path), sizeof(path))) {
-                profile = qcms_profile_from_path(path);
+                profile = cmsOpenProfileFromFile(path, "r");
 #ifdef DEBUG_tor
                 if (profile)
                     fprintf(stderr,
@@ -411,7 +411,7 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
         break;
     }
     case cmPathBasedProfile:
-        profile = qcms_profile_from_path(device.u.pathLoc.path);
+        profile = cmsOpenProfileFromFile(device.u.pathLoc.path, "r");
 #ifdef DEBUG_tor
         if (profile)
             fprintf(stderr,

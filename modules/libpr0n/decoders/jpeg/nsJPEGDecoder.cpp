@@ -125,9 +125,9 @@ nsJPEGDecoder::~nsJPEGDecoder()
 {
   PR_FREEIF(mBackBuffer);
   if (mTransform)
-    qcms_transform_release(mTransform);
+    cmsDeleteTransform(mTransform);
   if (mInProfile)
-    qcms_profile_release(mInProfile);
+    cmsCloseProfile(mInProfile);
 
   PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
          ("nsJPEGDecoder::~nsJPEGDecoder: Destroying JPEG decoder %p",
@@ -338,10 +338,10 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
 
     if ((cmsMode != eCMSMode_Off) &&
         read_icc_profile(&mInfo, &profile, &profileLength) &&
-        (mInProfile = qcms_profile_from_memory(profile, profileLength)) != NULL) {
+        (mInProfile = cmsOpenProfileFromMem(profile, profileLength)) != NULL) {
       free(profile);
 
-      PRUint32 profileSpace = qcms_profile_get_color_space(mInProfile);
+      PRUint32 profileSpace = cmsGetColorSpace(mInProfile);
       PRBool mismatch = PR_FALSE;
 
 #ifdef DEBUG_tor
@@ -361,13 +361,14 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
       case JCS_YCbCr:
         if (profileSpace == icSigRgbData)
           mInfo.out_color_space = JCS_RGB;
-        else
-	  // qcms doesn't support ycbcr
+        else if (profileSpace != icSigYCbCrData)
           mismatch = PR_TRUE;
         break;
       case JCS_CMYK:
       case JCS_YCCK:
-	  // qcms doesn't support cmyk
+        if (profileSpace == icSigCmykData)
+          mInfo.out_color_space = JCS_CMYK;
+        else
           mismatch = PR_TRUE;
         break;
       default:
@@ -378,13 +379,19 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
       }
 
       if (!mismatch) {
-        qcms_data_type type;
+        PRUint32 type;
         switch (mInfo.out_color_space) {
         case JCS_GRAYSCALE:
-          type = QCMS_DATA_GRAY_8;
+          type = COLORSPACE_SH(PT_GRAY)  | CHANNELS_SH(1) | BYTES_SH(1);
           break;
         case JCS_RGB:
-          type = QCMS_DATA_RGB_8;
+          type = COLORSPACE_SH(PT_RGB)   | CHANNELS_SH(3) | BYTES_SH(1);
+          break;
+        case JCS_YCbCr:
+          type = COLORSPACE_SH(PT_YCbCr) | CHANNELS_SH(3) | BYTES_SH(1);
+          break;
+        case JCS_CMYK:
+          type = COLORSPACE_SH(PT_CMYK)  | CHANNELS_SH(4) | BYTES_SH(1);
           break;
         default:
           mState = JPEG_ERROR;
@@ -392,28 +399,26 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
                  ("} (unknown colorpsace (2))"));
           return NS_ERROR_UNEXPECTED;
         }
-#if 0
-	We don't currently support CMYK profiles. The following
-	code dealt with lcms types. Add something like this
-	back when we gain support for CMYK.
+
         /* Adobe Photoshop writes YCCK/CMYK files with inverted data */
         if (mInfo.out_color_space == JCS_CMYK)
           type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
-#endif
+        
 
         if (gfxPlatform::GetCMSOutputProfile()) {
 
           /* Calculate rendering intent. */
           int intent = gfxPlatform::GetRenderingIntent();
           if (intent == -1)
-              intent = qcms_profile_get_rendering_intent(mInProfile);
+              intent = cmsTakeRenderingIntent(mInProfile);
 
           /* Create the color management transform. */
-          mTransform = qcms_transform_create(mInProfile,
+          mTransform = cmsCreateTransform(mInProfile,
                                           type,
                                           gfxPlatform::GetCMSOutputProfile(),
-                                          QCMS_DATA_RGB_8,
-                                          (qcms_intent)intent);
+                                          TYPE_RGB_8,
+                                          intent,
+                                          cmsFLAGS_FLOATSHAPER);
         }
       } else {
 #ifdef DEBUG_tor
@@ -741,7 +746,7 @@ nsJPEGDecoder::OutputScanlines(PRBool* suspend)
              to the 3byte RGB byte pixels at 'end' of row */
           sampleRow += mInfo.output_width;
         }
-        qcms_transform_data(mTransform, source, sampleRow, mInfo.output_width);
+        cmsDoTransform(mTransform, source, sampleRow, mInfo.output_width);
         /* Move 3byte RGB data to end of row */
         if (mInfo.out_color_space == JCS_CMYK) {
           memmove(sampleRow + mInfo.output_width,
@@ -759,9 +764,9 @@ nsJPEGDecoder::OutputScanlines(PRBool* suspend)
         }
         if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
           /* No embedded ICC profile - treat as sRGB */
-          qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
+          cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
           if (transform) {
-            qcms_transform_data(transform, sampleRow, sampleRow, mInfo.output_width);
+            cmsDoTransform(transform, sampleRow, sampleRow, mInfo.output_width);
           }
         }
       }

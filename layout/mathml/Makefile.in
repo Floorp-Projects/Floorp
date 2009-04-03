@@ -64,7 +64,6 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  pref \
 		  js \
-		  qcms \
 		  $(NULL)
 
 LOCAL_INCLUDES = \
