@@ -70,7 +70,7 @@ endif
 tier_external_dirs += modules/libmar
 endif
 
-tier_external_dirs	+= modules/lcms
+tier_external_dirs	+= gfx/qcms
 
 #
 # tier "gecko" - core components
