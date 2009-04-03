@@ -5987,7 +5987,7 @@ nsBlockFrame::PaintTextDecorationLine(gfxContext* aCtx,
     nsCSSRendering::PaintDecorationLine(
       aCtx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
-      aOffset, aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
+      aOffset, aDecoration, nsCSSRendering::DECORATION_STYLE_SOLID);
   }
 }
 

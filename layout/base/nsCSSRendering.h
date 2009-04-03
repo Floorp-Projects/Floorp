@@ -202,6 +202,15 @@ struct nsCSSRendering {
                                      PRUint8              aEndBevelSide = 0,
                                      nscoord              aEndBevelOffset = 0);
 
+  enum {
+    DECORATION_STYLE_NONE   = 0,
+    DECORATION_STYLE_SOLID  = 1,
+    DECORATION_STYLE_DOTTED = 2,
+    DECORATION_STYLE_DASHED = 3,
+    DECORATION_STYLE_DOUBLE = 4,
+    DECORATION_STYLE_WAVY   = 5
+  };
+
   /**
    * Function for painting the decoration lines for the text.
    * NOTE: aPt, aLineSize, aAscent and aOffset are non-rounded device pixels,
@@ -220,11 +229,8 @@ struct nsCSSRendering {
    *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
    *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
    *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line. The value
-   *                              can be NS_STYLE_BORDER_STYLE_SOLID or
-   *                              NS_STYLE_BORDER_STYLE_DOTTED or
-   *                              NS_STYLE_BORDER_STYLE_DASHED or
-   *                              NS_STYLE_BORDER_STYLE_DOUBLE.
+   *     @param aStyle            the style of the decoration line (See above
+   *                              enum names).
    */
   static void PaintDecorationLine(gfxContext* aGfxContext,
                                   const nscolor aColor,
@@ -251,11 +257,8 @@ struct nsCSSRendering {
    *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
    *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
    *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line. The value
-   *                              can be NS_STYLE_BORDER_STYLE_SOLID or
-   *                              NS_STYLE_BORDER_STYLE_DOTTED or
-   *                              NS_STYLE_BORDER_STYLE_DASHED or
-   *                              NS_STYLE_BORDER_STYLE_DOUBLE.
+   *     @param aStyle            the style of the decoration line (See above
+   *                              enum names).
    *   output:
    *     @return                  the decoration line rect for the input,
    *                              the each values are app units.
@@ -266,6 +269,14 @@ struct nsCSSRendering {
                                       const gfxFloat aOffset,
                                       const PRUint8 aDecoration,
                                       const PRUint8 aStyle);
+
+protected:
+  static gfxRect GetTextDecorationRectInternal(const gfxPoint& aPt,
+                                               const gfxSize& aLineSize,
+                                               const gfxFloat aAscent,
+                                               const gfxFloat aOffset,
+                                               const PRUint8 aDecoration,
+                                               const PRUint8 aStyle);
 };
 
 /*

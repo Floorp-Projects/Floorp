@@ -142,6 +142,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
       aColor = NS_TRANSPARENT;
       break;
 
+    case eColor_SpellCheckerUnderline:
+      aColor = NS_RGB(0xff, 0, 0);
+      break;
+
     case eColor_activeborder:
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Window));
       break;
@@ -481,6 +485,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
 
+    case eMetric_SpellCheckerUnderlineStyle:
+      aMetric = NS_UNDERLINE_STYLE_WAVY;
+      break;
+
     default:
       aMetric = 0;
       res = NS_ERROR_FAILURE;
@@ -548,6 +556,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
       break;
 
     case eMetricFloat_IMEUnderlineRelativeSize:
+      aMetric = 1.0f;
+      break;
+
+    case eMetricFloat_SpellCheckerUnderlineRelativeSize:
       aMetric = 1.0f;
       break;
 

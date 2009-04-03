@@ -39,42 +39,12 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = layout/generic/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug288789.html \
-		test_bug323656.html \
-		test_bug344830.html \
-		bug344830_testembed.svg \
-		test_bug382429.html \
-		test_bug384527.html \
-		test_bug385751.html \
-		test_bug389630.html \
-		test_bug391747.html \
-		test_bug392746.html \
-		test_bug392923.html \
-		test_bug394173.html \
-		test_bug394239.html \
-		test_bug402380.html \
-		test_bug404872.html \
-		test_bug405178.html \
-		test_bug416168.html \
-		test_bug421436.html \
-		test_bug448860.html \
-		test_bug460532.html \
-		test_bug468167.html \
-		test_bug469613.xul \
-		test_bug470212.html \
-		test_character_movement.html \
-		test_word_movement.html \
-		test_backspace_delete.xul \
-		test_selection_underline.html \
-		frame_selection_underline.xhtml \
-		frame_selection_underline-ref.xhtml \
-		frame_selection_underline.css \
+_TEST_FILES =	Ahem.ttf \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/fonts

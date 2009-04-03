@@ -155,7 +155,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_IMESelectedConvertedTextUnderline:
       aColor = NS_SAME_AS_FOREGROUND_COLOR;
       break;
-      
+    case eColor_SpellCheckerUnderline:
+      aColor = NS_RGB(0xff, 0, 0);
+      break;
+
       //
       // css2 system colors http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
       //
@@ -670,6 +673,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_IMESelectedConvertedTextUnderline:
       aMetric = NS_UNDERLINE_STYLE_SOLID;
       break;
+    case eMetric_SpellCheckerUnderlineStyle:
+      aMetric = NS_UNDERLINE_STYLE_DOTTED;
+      break;
     default:
       aMetric = 0;
       res = NS_ERROR_FAILURE;
@@ -712,6 +718,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
       aMetric = 0.5f;
       break;
     case eMetricFloat_IMEUnderlineRelativeSize:
+      aMetric = 2.0f;
+      break;
+    case eMetricFloat_SpellCheckerUnderlineRelativeSize:
       aMetric = 2.0f;
       break;
     default:
