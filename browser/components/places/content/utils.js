@@ -129,6 +129,12 @@ var PlacesUIUtils = {
                                                 Ci.nsIPrefLocalizedString).data;
   },
 
+  get privateBrowsing() {
+    delete this.privateBrowsing;
+    return this.privateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
+                                  getService(Ci.nsIPrivateBrowsingService);
+  },
+
   /**
    * Makes a URI from a spec, and do fixup
    * @param   aSpec
