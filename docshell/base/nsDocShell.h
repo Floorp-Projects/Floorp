@@ -46,7 +46,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch.h"
-#include "nsVoidArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIScriptContext.h"
 #include "nsITimer.h"
