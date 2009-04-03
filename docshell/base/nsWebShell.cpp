@@ -57,7 +57,6 @@
 #include "nsPresContext.h"
 #include "nsIComponentManager.h"
 #include "nsCRT.h"
-#include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
