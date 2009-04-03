@@ -196,6 +196,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_COMPILE_N_GO      0x400 /* compiler-and-go mode of script, can
                                        optimize name references based on scope
                                        chain */
+#define TCF_HAS_SHARPS        0x800 /* source contains sharp defs or uses */
+
 /*
  * Flags to propagate out of the blocks.
  */
@@ -206,7 +208,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
  */
 #define TCF_FUN_FLAGS           (TCF_FUN_IS_GENERATOR   |                     \
                                  TCF_FUN_HEAVYWEIGHT    |                     \
-                                 TCF_FUN_USES_NONLOCALS)
+                                 TCF_FUN_USES_NONLOCALS |                     \
+                                 TCF_HAS_SHARPS)
 
 /*
  * Flags field, not stored in JSTreeContext.flags, for passing staticDepth

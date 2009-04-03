@@ -164,18 +164,15 @@ JS_BEGIN_EXTERN_C
  *                          call is a MEMBER expr naming a callable object
  * TOK_RB       list        pn_head: list of pn_count array element exprs
  *                          [,,] holes are represented by TOK_COMMA nodes
- *                          #n=[...] produces TOK_DEFSHARP at head of list
  *                          pn_extra: PN_ENDCOMMA if extra comma at end
  * TOK_RC       list        pn_head: list of pn_count TOK_COLON nodes where
  *                          each has pn_left: property id, pn_right: value
- *                          #n={...} produces TOK_DEFSHARP at head of list
  *                          var {x} = object destructuring shorthand shares
  *                          PN_NAME node for x on left and right of TOK_COLON
  *                          node in TOK_RC's list, has PNX_SHORTHAND flag
  * TOK_DEFSHARP unary       pn_num: jsint value of n in #n=
- *                          pn_kid: null for #n=[...] and #n={...}, primary
- *                          if #n=primary for function, paren, name, object
- *                          literal expressions
+ *                          pn_kid: primary function, paren, name, object or
+ *                                  array literal expressions
  * TOK_USESHARP nullary     pn_num: jsint value of n in #n#
  * TOK_RP       unary       pn_kid: parenthesized expression
  * TOK_NAME,    name        pn_atom: name, string, or object atom
