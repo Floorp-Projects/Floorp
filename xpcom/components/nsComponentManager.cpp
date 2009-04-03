@@ -85,6 +85,7 @@
 #include "nsThreadUtils.h"
 #include "prthread.h"
 #include "private/pprthred.h"
+#include "nsTArray.h"
 
 #include "nsInt64.h"
 #include "nsManifestLineReader.h"
@@ -329,9 +330,9 @@ private:
     ~PLDHashTableEnumeratorImpl();
     void ReleaseElements();
 
-    nsVoidArray   mElements;
-    PRInt32       mCount, mCurrent;
-    PRMonitor*    mMonitor;
+    nsTArray<nsISupports*> mElements;
+    PRInt32                mCount, mCurrent;
+    PRMonitor*             mMonitor;
 
     struct Closure {
         PRBool                        succeeded;
@@ -401,9 +402,7 @@ void
 PLDHashTableEnumeratorImpl::ReleaseElements()
 {
     for (PRInt32 i = 0; i < mCount; i++) {
-        nsISupports *supports = reinterpret_cast<nsISupports *>
-                                                (mElements[i]);
-        NS_IF_RELEASE(supports);
+        NS_IF_RELEASE(mElements[i]);
     }
 }
 
@@ -476,7 +475,7 @@ PLDHashTableEnumeratorImpl::CurrentItem(nsISupports **retval)
     if (!mCount || mCurrent == mCount)
         return NS_ERROR_FAILURE;
 
-    *retval = reinterpret_cast<nsISupports *>(mElements[mCurrent]);
+    *retval = mElements[mCurrent];
     if (*retval)
         NS_ADDREF(*retval);
 
