@@ -98,6 +98,7 @@ typedef struct JSParseContext       JSParseContext;
 typedef struct JSParsedObjectBox    JSParsedObjectBox;
 typedef struct JSParseNode          JSParseNode;
 typedef struct JSPropCacheEntry     JSPropCacheEntry;
+typedef struct JSProperty           JSProperty;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSTempValueRooter    JSTempValueRooter;
 typedef struct JSThread             JSThread;
