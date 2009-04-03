@@ -58,6 +58,8 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_windowtitle_page.html \
 		browser_privatebrowsing_urlbarfocus.js \
 		$(NULL)
+# Test for bug 463256 disabled until we figure why it fails intermittently (bug 486640)
+#		browser_privatebrowsing_sslsite_transition.js \
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
