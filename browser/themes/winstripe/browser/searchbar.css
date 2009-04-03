@@ -80,12 +80,12 @@
 
 .search-go-button {
   padding: 2px;
-  list-style-image: url("chrome://browser/skin/Search-glass.png");
+  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 .search-go-button[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Search-glass-rtl.png");
+  -moz-transform: scaleX(-1);
 }
 
 .search-go-button:hover {
