@@ -88,7 +88,12 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
   if (!mPresShell)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsresult rv = mPresShell->GetSelectionForCopy(getter_AddRefs(mSelection));
+  // If text frame which has overflowing selection underline is dirty,
+  // we need to flush the pending reflow here.
+  nsresult rv = mPresShell->FlushPendingNotifications(Flush_Layout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPresShell->GetSelectionForCopy(getter_AddRefs(mSelection));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(mSelection,
                "GetSelectionForCopy succeeded, but the result is null");

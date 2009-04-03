@@ -121,6 +121,8 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_IMEConvertedTextUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.IMESelectedConvertedTextUnderlineStyle",
     eMetric_IMESelectedConvertedTextUnderline, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.SpellCheckerUnderlineStyle",
+    eMetric_SpellCheckerUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
@@ -143,6 +145,9 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
   { "ui.IMEUnderlineRelativeSize", eMetricFloat_IMEUnderlineRelativeSize,
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
+  { "ui.SpellCheckerUnderlineRelativeSize",
+    eMetricFloat_SpellCheckerUnderlineRelativeSize, PR_FALSE,
+    nsLookAndFeelTypeFloat, 0 },
   { "ui.caretAspectRatio", eMetricFloat_CaretAspectRatio, PR_FALSE,
     nsLookAndFeelTypeFloat, 0 },
 };
@@ -184,6 +189,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.IMESelectedConvertedTextBackground",
   "ui.IMESelectedConvertedTextForeground",
   "ui.IMESelectedConvertedTextUnderline",
+  "ui.SpellCheckerUnderline",
   "ui.activeborder",
   "ui.activecaption",
   "ui.appworkspace",
@@ -485,7 +491,8 @@ nsXPLookAndFeel::IsSpecialColor(const nsColorID aID, nscolor &aColor)
     case eColor_IMEConvertedTextUnderline:
     case eColor_IMESelectedRawTextUnderline:
     case eColor_IMESelectedConvertedTextUnderline:
-      return NS_IS_IME_SPECIAL_COLOR(aColor);
+    case eColor_SpellCheckerUnderline:
+      return NS_IS_SELECTION_SPECIAL_COLOR(aColor);
     default:
       /*
        * In GetColor(), every color that is not a special color is color

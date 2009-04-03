@@ -334,13 +334,6 @@ static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                               nscolor aBackgroundColor,
                               nscolor aBorderColor);
 
-static gfxRect GetTextDecorationRectInternal(const gfxPoint& aPt,
-                                             const gfxSize& aLineSize,
-                                             const gfxFloat aAscent,
-                                             const gfxFloat aOffset,
-                                             const PRUint8 aDecoration,
-                                             const PRUint8 aStyle);
-
 /* Returns FALSE iff all returned aTwipsRadii == 0, TRUE otherwise */
 static PRBool GetBorderRadiusTwips(const nsStyleCorners& aBorderRadius,
                                    const nscoord& aFrameWidth,
@@ -2507,6 +2500,8 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
                                     const PRUint8 aDecoration,
                                     const PRUint8 aStyle)
 {
+  NS_ASSERTION(aStyle != DECORATION_STYLE_NONE, "aStyle is none");
+
   gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
                                   aDecoration, aStyle);
@@ -2528,23 +2523,27 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
   nsRefPtr<gfxPattern> oldPattern;
 
   switch (aStyle) {
-    case NS_STYLE_BORDER_STYLE_SOLID:
-    case NS_STYLE_BORDER_STYLE_DOUBLE:
+    case DECORATION_STYLE_SOLID:
+    case DECORATION_STYLE_DOUBLE:
       oldLineWidth = aGfxContext->CurrentLineWidth();
       oldPattern = aGfxContext->GetPattern();
       break;
-    case NS_STYLE_BORDER_STYLE_DASHED: {
+    case DECORATION_STYLE_DASHED: {
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
+      aGfxContext->Clip(rect);
       gfxFloat dashWidth = lineHeight * DOT_LENGTH * DASH_LENGTH;
       gfxFloat dash[2] = { dashWidth, dashWidth };
       aGfxContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
       aGfxContext->SetDash(dash, 2, 0.0);
+      // We should continue to draw the last dash even if it is not in the rect.
+      rect.size.width += dashWidth;
       break;
     }
-    case NS_STYLE_BORDER_STYLE_DOTTED: {
+    case DECORATION_STYLE_DOTTED: {
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
+      aGfxContext->Clip(rect);
       gfxFloat dashWidth = lineHeight * DOT_LENGTH;
       gfxFloat dash[2];
       if (lineHeight > 2.0) {
@@ -2556,8 +2555,23 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
         dash[1] = dashWidth;
       }
       aGfxContext->SetDash(dash, 2, 0.0);
+      // We should continue to draw the last dot even if it is not in the rect.
+      rect.size.width += dashWidth;
       break;
     }
+    case DECORATION_STYLE_WAVY:
+      aGfxContext->Save();
+      contextIsSaved = PR_TRUE;
+      aGfxContext->Clip(rect);
+      if (lineHeight > 2.0) {
+        aGfxContext->SetAntialiasMode(gfxContext::MODE_COVERAGE);
+      } else {
+        // Don't use anti-aliasing here.  Because looks like lighter color wavy
+        // line at this case.  And probably, users don't think the
+        // non-anti-aliased wavy line is not pretty.
+        aGfxContext->SetAntialiasMode(gfxContext::MODE_ALIASED);
+      }
+      break;
     default:
       NS_ERROR("Invalid style value!");
       return;
@@ -2569,13 +2583,27 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
   aGfxContext->SetColor(gfxRGBA(aColor));
   aGfxContext->SetLineWidth(lineHeight);
   switch (aStyle) {
-    case NS_STYLE_BORDER_STYLE_SOLID:
+    case DECORATION_STYLE_SOLID:
       aGfxContext->NewPath();
       aGfxContext->MoveTo(rect.TopLeft());
       aGfxContext->LineTo(rect.TopRight());
       aGfxContext->Stroke();
       break;
-    case NS_STYLE_BORDER_STYLE_DOUBLE:
+    case DECORATION_STYLE_DOUBLE:
+      /**
+       *  We are drawing double line as:
+       *
+       * +-------------------------------------------+
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
+       * |                                           |
+       * |                                           |
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
+       * +-------------------------------------------+
+       */
       aGfxContext->NewPath();
       aGfxContext->MoveTo(rect.TopLeft());
       aGfxContext->LineTo(rect.TopRight());
@@ -2584,13 +2612,72 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aGfxContext->LineTo(rect.BottomRight());
       aGfxContext->Stroke();
       break;
-    case NS_STYLE_BORDER_STYLE_DOTTED:
-    case NS_STYLE_BORDER_STYLE_DASHED:
+    case DECORATION_STYLE_DOTTED:
+    case DECORATION_STYLE_DASHED:
       aGfxContext->NewPath();
       aGfxContext->MoveTo(rect.TopLeft());
       aGfxContext->LineTo(rect.TopRight());
       aGfxContext->Stroke();
       break;
+    case DECORATION_STYLE_WAVY: {
+      /**
+       *  We are drawing wavy line as:
+       *
+       *  P: Path, X: Painted pixel
+       *
+       *     +---------------------------------------+
+       *   XX|X            XXXXXX            XXXXXX  |
+       *   PP|PX          XPPPPPPX          XPPPPPPX |    ^
+       *   XX|XPX        XPXXXXXXPX        XPXXXXXXPX|    |
+       *     | XPX      XPX      XPX      XPX      XP|X   |adv
+       *     |  XPXXXXXXPX        XPXXXXXXPX        X|PX  |
+       *     |   XPPPPPPX          XPPPPPPX          |XPX v
+       *     |    XXXXXX            XXXXXX           | XX
+       *     +---------------------------------------+
+       *      <---><--->                                ^
+       *      adv  flatLengthAtVertex                   rightMost
+       *
+       *  1. Always starts from top-left of the drawing area, however, we need
+       *     to draw  the line from outside of the rect.  Because the start
+       *     point of the line is not good style if we draw from inside it.
+       *  2. First, draw horizontal line from outside the rect to top-left of
+       *     the rect;
+       *  3. Goes down to bottom of the area at 45 degrees.
+       *  4. Slides to right horizontaly, see |flatLengthAtVertex|.
+       *  5. Goes up to top of the area at 45 degrees.
+       *  6. Slides to right horizontaly.
+       *  7. Repeat from 2 until reached to right-most edge of the area.
+       */
+
+      rect.pos.x += lineHeight / 2.0;
+      aGfxContext->NewPath();
+
+      gfxPoint pt(rect.pos);
+      gfxFloat rightMost = pt.x + rect.Width() + lineHeight;
+      gfxFloat adv = rect.Height() - lineHeight;
+      gfxFloat flatLengthAtVertex = PR_MAX((lineHeight - 1.0) * 2.0, 1.0);
+
+      pt.x -= lineHeight;
+      aGfxContext->MoveTo(pt); // 1
+
+      pt.x = rect.pos.x;
+      aGfxContext->LineTo(pt); // 2
+
+      PRBool goDown = PR_TRUE;
+      while (pt.x < rightMost) {
+        pt.x += adv;
+        pt.y += goDown ? adv : -adv;
+
+        aGfxContext->LineTo(pt); // 3 and 5
+
+        pt.x += flatLengthAtVertex;
+        aGfxContext->LineTo(pt); // 4 and 6
+
+        goDown = !goDown;
+      }
+      aGfxContext->Stroke();
+      break;
+    }
     default:
       NS_ERROR("Invalid style value!");
       break;
@@ -2613,6 +2700,7 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
                                       const PRUint8 aStyle)
 {
   NS_ASSERTION(aPresContext, "aPresContext is null");
+  NS_ASSERTION(aStyle != DECORATION_STYLE_NONE, "aStyle is none");
 
   gfxRect rect =
     GetTextDecorationRectInternal(gfxPoint(0, 0), aLineSize, aAscent, aOffset,
@@ -2626,42 +2714,81 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
   return r;
 }
 
-static gfxRect
-GetTextDecorationRectInternal(const gfxPoint& aPt,
-                              const gfxSize& aLineSize,
-                              const gfxFloat aAscent,
-                              const gfxFloat aOffset,
-                              const PRUint8 aDecoration,
-                              const PRUint8 aStyle)
+gfxRect
+nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
+                                              const gfxSize& aLineSize,
+                                              const gfxFloat aAscent,
+                                              const gfxFloat aOffset,
+                                              const PRUint8 aDecoration,
+                                              const PRUint8 aStyle)
 {
+  NS_ASSERTION(aStyle <= DECORATION_STYLE_WAVY, "Invalid aStyle value");
+
+  if (aStyle == DECORATION_STYLE_NONE)
+    return gfxRect(0, 0, 0, 0);
+
   gfxRect r;
   r.pos.x = NS_floor(aPt.x + 0.5);
   r.size.width = NS_round(aLineSize.width);
 
-  gfxFloat basesize = NS_round(aLineSize.height);
-  basesize = PR_MAX(basesize, 1.0);
-  r.size.height = basesize;
-  if (aStyle == NS_STYLE_BORDER_STYLE_DOUBLE) {
-    gfxFloat gap = NS_round(basesize / 2.0);
+  gfxFloat lineHeight = NS_round(aLineSize.height);
+  lineHeight = PR_MAX(lineHeight, 1.0);
+  gfxFloat underlineOffsetAdjust = 0.0;
+  r.size.height = lineHeight;
+  if (aStyle == DECORATION_STYLE_DOUBLE) {
+    /**
+     *  We will draw double line as:
+     *
+     * +-------------------------------------------+
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
+     * |                                           | ^
+     * |                                           | | gap
+     * |                                           | v
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
+     * +-------------------------------------------+
+     */
+    gfxFloat gap = NS_round(lineHeight / 2.0);
     gap = PR_MAX(gap, 1.0);
-    r.size.height = basesize * 2.0 + gap;
-  } else {
-    r.size.height = basesize;
+    r.size.height = lineHeight * 2.0 + gap;
+  } else if (aStyle == DECORATION_STYLE_WAVY) {
+    /**
+     *  We will draw wavy line as:
+     *
+     * +-------------------------------------------+
+     * |XXXXX            XXXXXX            XXXXXX  | ^
+     * |XXXXXX          XXXXXXXX          XXXXXXXX | | lineHeight
+     * |XXXXXXX        XXXXXXXXXX        XXXXXXXXXX| v
+     * |     XXX      XXX      XXX      XXX      XX|
+     * |      XXXXXXXXXX        XXXXXXXXXX        X|
+     * |       XXXXXXXX          XXXXXXXX          |
+     * |        XXXXXX            XXXXXX           |
+     * +-------------------------------------------+
+     */
+    r.size.height = lineHeight > 2.0 ? lineHeight * 4.0 : lineHeight * 3.0;
+    // If this is underline, the middle of the rect should be aligned to the
+    // specified underline offset.  So, wavy line's top edge can overlap to
+    // baseline.  Because even if the wavy line overlaps the baseline of the
+    // text, that shouldn't cause unreadability.
+    underlineOffsetAdjust = r.Height() / 2.0;
   }
 
   gfxFloat baseline = NS_floor(aPt.y + aAscent + 0.5);
-  gfxFloat offset = 0;
+  gfxFloat offset = 0.0;
   switch (aDecoration) {
     case NS_STYLE_TEXT_DECORATION_UNDERLINE:
-      offset = aOffset;
+      offset = aOffset + underlineOffsetAdjust;
       break;
     case NS_STYLE_TEXT_DECORATION_OVERLINE:
-      offset = aOffset - basesize + r.Height();
+      offset = aOffset - lineHeight + r.Height();
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_THROUGH: {
       gfxFloat extra = NS_floor(r.Height() / 2.0 + 0.5);
-      extra = PR_MAX(extra, basesize);
-      offset = aOffset - basesize + extra;
+      extra = PR_MAX(extra, lineHeight);
+      offset = aOffset - lineHeight + extra;
       break;
     }
     default:
