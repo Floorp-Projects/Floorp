@@ -89,7 +89,7 @@ HistoryEngine.prototype = {
     }
 
     // Step 2: Check if the item is deleted - we don't support that (yet?)
-    if (item.cleartext == null) {
+    if (item.deleted) {
       self.done(false);
       return;
     }
@@ -455,9 +455,9 @@ HistoryStore.prototype = {
       record.title = foo.title;
       record.visits = this._getVisits(record.histUri);
       record.encryption = cryptoMetaURL;
-    } else {
-      record.payload = null; // deleted item
     }
+    else
+      record.deleted = true;
     this.cache.put(guid, record);
     return record;
   },

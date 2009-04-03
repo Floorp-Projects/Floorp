@@ -52,7 +52,15 @@ function WBORecord(uri) {
   this._WBORec_init(uri);
 }
 WBORecord.prototype = {
+  //////////////////////////////////////////////////////////////////////////////
+  // WBORecord Attributes
+
+  deleted: false,
+
   _logName: "Record.WBO",
+
+  //////////////////////////////////////////////////////////////////////////////
+  // WBORecord Methods
 
   _WBORec_init: function WBORec_init(uri) {
     this.data = {
@@ -115,27 +123,36 @@ WBORecord.prototype = {
     this.data.payload = value;
   },
 
-  // payload is encoded twice in serialized form, because the
-  // server expects a string
   serialize: function WBORec_serialize() {
-    this.payload = JSON.stringify([this.payload]);
+    // Convert the payload into a string because the server expects that
+    let payload = this.payload;
+    this.payload = this.deleted ? "" : JSON.stringify(payload);
+
     let ret = JSON.stringify(this.data);
-    this.payload = JSON.parse(this.payload)[0];
+
+    // Restore the original payload
+    this.payload = payload;
+
     return ret;
   },
 
   deserialize: function WBORec_deserialize(json) {
     this.data = JSON.parse(json);
-    this.payload = JSON.parse(this.payload)[0];
+
+    // Empty string payloads are deleted records
+    if (this.payload === "")
+      this.deleted = true;
+    else
+      this.payload = JSON.parse(this.payload);
   },
 
-  toString: function WBORec_toString() {
-    return "{ id: " + this.id + "\n" +
-      "  parent: " + this.parentid + "\n" +
-      "  depth: " + this.depth + ", index: " + this.sortindex + "\n" +
-      "  modified: " + this.modified + "\n" +
-      "  payload: " + JSON.stringify(this.payload) + " }";
-  }
+  toString: function WBORec_toString() "{ " + [
+      "id: " + this.id,
+      "parent: " + this.parentid,
+      "depth: " + this.depth + ", index: " + this.sortindex,
+      "modified: " + this.modified,
+      "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.payload))
+    ].join("\n  ") + " }",
 };
 
 Utils.lazy(this, 'Records', RecordManager);

@@ -487,7 +487,7 @@ BookmarksStore.prototype = {
     if (placeId <= 0) { // deleted item
       record = new PlacesItem();
       record.id = guid;
-      record.payload = null;
+      record.deleted = true;
       this.cache.put(guid, record);
       return record;
     }
