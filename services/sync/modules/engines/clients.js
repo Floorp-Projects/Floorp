@@ -261,7 +261,12 @@ ClientStore.prototype = {
   },
 
   wipe: function ClientStore_wipe() {
-    this.modify("Wiping local clients store", function() this.clients = {});
+    this.modify("Wiping local clients store", function() {
+      this.clients = {};
+
+      // Make sure the local client is still here
+      this.clients[Clients.clientID] = Clients.updateLocalInfo({});
+    });
   },
 };
 
