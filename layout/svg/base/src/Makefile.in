@@ -63,6 +63,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  docshell \
 		  thebes \
+		  qcms \
 		  $(NULL)
 
 CPPSRCS		= \

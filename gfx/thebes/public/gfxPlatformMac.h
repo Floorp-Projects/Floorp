@@ -107,7 +107,7 @@ private:
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
                                                
-    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
+    virtual qcms_profile* GetPlatformCMSOutputProfile();
     
     // read in the pref value for the lower threshold on font anti-aliasing
     static PRUint32 ReadAntiAliasingThreshold();    
