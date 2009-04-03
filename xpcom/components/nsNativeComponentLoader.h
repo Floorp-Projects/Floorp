@@ -40,7 +40,6 @@
 
 #include "nsISupports.h"
 #include "nsIModuleLoader.h"
-#include "nsVoidArray.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIModule.h"
