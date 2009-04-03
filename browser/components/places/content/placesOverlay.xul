@@ -195,6 +195,7 @@
               accesskey="&cmd.deleteDomainData.accesskey;"
               closemenu="single"
               selection="link"
+              selectiontype="single"
               forcehideselection="bookmark"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"

@@ -55,6 +55,7 @@ _BROWSER_TEST_FILES = \
 	browser_library_search.js \
 	browser_history_sidebar_search.js \
 	browser_bookmarksProperties.js \
+	browser_forgetthissite_single.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
