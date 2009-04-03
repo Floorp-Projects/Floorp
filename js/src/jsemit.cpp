@@ -5078,6 +5078,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 
       case TOK_LC:
+      {
 #if JS_HAS_XML_SUPPORT
         if (pn->pn_arity == PN_UNARY) {
             if (!js_EmitTree(cx, cg, pn->pn_kid))
@@ -5099,6 +5100,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_BLOCK, top);
+
+        JSParseNode *pchild = pn->pn_head;
         if (pn->pn_extra & PNX_FUNCDEFS) {
             /*
              * This block contains top-level function definitions. To ensure
@@ -5112,7 +5115,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * mode for scripts does not allow separate emitter passes.
              */
             JS_ASSERT(cg->treeContext.flags & TCF_IN_FUNCTION);
-            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (pn->pn_extra & PNX_DESTRARGS) {
+                /*
+                 * Assign the destructuring arguments before defining any
+                 * functions, see bug 419662.
+                 */
+                JS_ASSERT(pchild->pn_type == TOK_SEMI);
+                JS_ASSERT(pchild->pn_kid->pn_type == TOK_COMMA);
+                if (!js_EmitTree(cx, cg, pchild))
+                    return JS_FALSE;
+                pchild = pchild->pn_next;
+            }
+
+            for (pn2 = pchild; pn2; pn2 = pn2->pn_next) {
                 if (pn2->pn_type == TOK_FUNCTION) {
                     if (pn2->pn_op == JSOP_NOP) {
                         if (!js_EmitTree(cx, cg, pn2))
@@ -5129,7 +5144,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
             }
         }
-        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        for (pn2 = pchild; pn2; pn2 = pn2->pn_next) {
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
         }
@@ -5142,6 +5157,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         ok = js_PopStatementCG(cx, cg);
         break;
+      }
 
       case TOK_SEQ:
         JS_ASSERT(pn->pn_arity == PN_LIST);
