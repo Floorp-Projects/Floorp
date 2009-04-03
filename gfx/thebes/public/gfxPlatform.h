@@ -48,10 +48,12 @@
 #include "gfxASurface.h"
 #include "gfxColor.h"
 
-#include "qcms.h"
 #ifdef XP_OS2
 #undef OS2EMX_PLAIN_CHAR
 #endif
+
+typedef void* cmsHPROFILE;
+typedef void* cmsHTRANSFORM;
 
 class gfxImageSurface;
 class gfxFont;
@@ -267,39 +269,39 @@ public:
      *
      * Sets 'out' to 'in' if transform is NULL.
      */
-    static void TransformPixel(const gfxRGBA& in, gfxRGBA& out, qcms_transform *transform);
+    static void TransformPixel(const gfxRGBA& in, gfxRGBA& out, cmsHTRANSFORM transform);
 
     /**
      * Return the output device ICC profile.
      */
-    static qcms_profile* GetCMSOutputProfile();
+    static cmsHPROFILE GetCMSOutputProfile();
 
     /**
      * Return the sRGB ICC profile.
      */
-    static qcms_profile* GetCMSsRGBProfile();
+    static cmsHPROFILE GetCMSsRGBProfile();
 
     /**
      * Return sRGB -> output device transform.
      */
-    static qcms_transform* GetCMSRGBTransform();
+    static cmsHTRANSFORM GetCMSRGBTransform();
 
     /**
      * Return output -> sRGB device transform.
      */
-    static qcms_transform* GetCMSInverseRGBTransform();
+    static cmsHTRANSFORM GetCMSInverseRGBTransform();
 
     /**
      * Return sRGBA -> output device transform.
      */
-    static qcms_transform* GetCMSRGBATransform();
+    static cmsHTRANSFORM GetCMSRGBATransform();
 
 protected:
     gfxPlatform() { }
     virtual ~gfxPlatform();
 
 private:
-    virtual qcms_profile* GetPlatformCMSOutputProfile();
+    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
 
     nsCOMPtr<nsIObserver> overrideObserver;
 };

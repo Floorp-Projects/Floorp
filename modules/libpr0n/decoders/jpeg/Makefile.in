@@ -54,7 +54,7 @@ REQUIRES	= xpcom \
 		  thebes \
 		  imglib2 \
 		  $(JPEG_REQUIRES) \
-		  qcms \
+		  $(LCMS_REQUIRES) \
 		  $(NULL)
 
 CPPSRCS		= nsJPEGDecoder.cpp
