@@ -61,7 +61,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  view \
 		  windowwatcher \
-		  qcms \
+		  lcms \
 		  thebes \
 		  $(NULL)
 

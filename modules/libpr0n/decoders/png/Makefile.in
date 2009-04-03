@@ -57,7 +57,7 @@ REQUIRES = xpcom \
            imglib2 \
            $(PNG_REQUIRES) \
            $(ZLIB_REQUIRES) \
-           qcms \
+           $(LCMS_REQUIRES) \
            $(NULL)
 
 CPPSRCS		= nsPNGDecoder.cpp

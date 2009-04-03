@@ -163,7 +163,7 @@ private:
                                                nsRefPtr<FontFamily>& aFontFamily,
                                                void* userArg);
 
-    virtual qcms_profile* GetPlatformCMSOutputProfile();
+    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
 
     static int PrefChangedCallback(const char*, void*);
 
