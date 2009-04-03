@@ -60,7 +60,7 @@ REQUIRES	= xpcom \
 		  $(JPEG_REQUIRES) \
 		  $(PNG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \
-		  $(LCMS_REQUIRES) \
+		  qcms \
 		  $(NULL)
 
 CPPSRCS = \
@@ -93,7 +93,7 @@ EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(JPEG_LIBS) \
 		$(PNG_LIBS) $(ZLIB_LIBS) \
-		$(LCMS_LIBS) \
+		$(QCMS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

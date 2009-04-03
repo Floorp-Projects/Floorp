@@ -47,7 +47,7 @@
 #include "nsFont.h"
 
 #include "gfxPlatform.h"
-#include "lcms.h"
+#include "qcms.h"
 
 #ifdef DEBUG
 #include "nsSize.h"
@@ -632,13 +632,13 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
   if (sUseNativeColors && NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
     if ((gfxPlatform::GetCMSMode() == eCMSMode_All) && !IsSpecialColor(aID, aColor)) {
-      cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
+      qcms_transform *transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
         PRUint8 color[3];
         color[0] = NS_GET_R(aColor);
         color[1] = NS_GET_G(aColor);
         color[2] = NS_GET_B(aColor);
-        cmsDoTransform(transform, color, color, 1);
+        qcms_transform_data(transform, color, color, 1);
         aColor = NS_RGB(color[0], color[1], color[2]);
       }
     }
