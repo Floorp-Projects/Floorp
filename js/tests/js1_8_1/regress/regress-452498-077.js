@@ -53,7 +53,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = '1';
+  expect = '2';
 
 // ------- Comment #77 From Brendan Eich
 

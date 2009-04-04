@@ -67,7 +67,7 @@ typedef intN (* JSHashEnumerator)(JSHashEntry *he, intN i, void *arg);
 
 typedef struct JSHashAllocOps {
     void *              (*allocTable)(void *pool, size_t size);
-    void                (*freeTable)(void *pool, void *item, size_t size);
+    void                (*freeTable)(void *pool, void *item);
     JSHashEntry *       (*allocEntry)(void *pool, const void *key);
     void                (*freeEntry)(void *pool, JSHashEntry *he, uintN flag);
 } JSHashAllocOps;
