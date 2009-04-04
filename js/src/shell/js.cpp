@@ -62,7 +62,6 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -1349,31 +1348,22 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
 static JSScript *
 ValueToScript(JSContext *cx, jsval v)
 {
-    JSScript *script = NULL;
+    JSScript *script;
     JSFunction *fun;
 
-    if (!JSVAL_IS_PRIMITIVE(v)) {
-        JSObject *obj = JSVAL_TO_OBJECT(v);
-        JSClass *clasp = JS_GET_CLASS(cx, obj);
-
-        if (clasp == &js_ScriptClass) {
-            script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == &js_GeneratorClass) {
-            JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->frame.fun;
-            script = FUN_SCRIPT(fun);
-        }
-    }
-
-    if (!script) {
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_ScriptClass) {
+        script = (JSScript *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
+    } else {
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
         script = FUN_SCRIPT(fun);
-        if (!script) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                 JSSMSG_SCRIPTS_ONLY);
-        }
+    }
+
+    if (!script) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             JSSMSG_SCRIPTS_ONLY);
     }
 
     return script;
@@ -1716,7 +1706,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
-            if (fun && (fun->flags & ~7U)) {
+            if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
                 uint16 flags = fun->flags;
                 fputs("flags:", stdout);
 
@@ -1731,14 +1721,9 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(THISP_NUMBER);
                 SHOW_FLAG(THISP_BOOLEAN);
                 SHOW_FLAG(EXPR_CLOSURE);
-                SHOW_FLAG(TRACEABLE);
+                SHOW_FLAG(INTERPRETED);
 
 #undef SHOW_FLAG
-
-                if (FUN_NULL_CLOSURE(fun))
-                    fputs(" NULL_CLOSURE", stdout);
-                else if (FUN_FLAT_CLOSURE(fun))
-                    fputs(" FLAT_CLOSURE", stdout);
                 putchar('\n');
             }
         }
@@ -2266,16 +2251,13 @@ Intern(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Clone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    JSFunction *fun;
     JSObject *funobj, *parent, *clone;
 
-    if (VALUE_IS_FUNCTION(cx, argv[0])) {
-        funobj = JSVAL_TO_OBJECT(argv[0]);
-    } else {
-        JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
-        if (!fun)
-            return JS_FALSE;
-        funobj = JS_GetFunctionObject(fun);
-    }
+    fun = JS_ValueToFunction(cx, argv[0]);
+    if (!fun)
+        return JS_FALSE;
+    funobj = JS_GetFunctionObject(fun);
     if (argc > 1) {
         if (!JS_ValueToObject(cx, argv[1], &parent))
             return JS_FALSE;
