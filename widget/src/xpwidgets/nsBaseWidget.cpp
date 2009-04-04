@@ -843,7 +843,7 @@ nsBaseWidget::GetAttention(PRInt32 aCycleCount) {
 }
 
 NS_IMETHODIMP
-nsBaseWidget::GetLastInputEventTime(PRUint32& aTime) {
+nsBaseWidget::HasPendingEvent(PRBool& aHasPending) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
