@@ -4,6 +4,9 @@ Conrad Parker <conrad@metadecks.org>
 
 Tobias Gehrig
 	- FLAC support
+
+Michel Salim
+	- libFLAC 1.1.3 support
   
 Silvia Pfeiffer <silvia@annodex.net>
         - MS Windows porting, general packaging.
