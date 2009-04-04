@@ -107,3 +107,9 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
 #undef HAVE_GLUT
+
+#include "prcpucfg.h"
+#ifdef IS_BIG_ENDIAN
+#define WORDS_BIGENDIAN
+#endif
+
