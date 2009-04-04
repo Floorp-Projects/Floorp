@@ -12,3 +12,5 @@ The following local patches have been applied:
 bug485291_yuv_align: only use optimized YUV routines if video dimensions are a multiple of the
                      optimized routine's supported alignment.
 
+endian: pick up NSPR's little/big endian defines in oggplay's config.h.
+
