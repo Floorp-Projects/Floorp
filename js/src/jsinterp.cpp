@@ -221,7 +221,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                      *
                      * So here, on first cache fill for this method, we brand
                      * the scope with a new shape and set the SCOPE_BRANDED
-                     * flag. Once this scope flag is set, any write that adds
+                     * flag.  Once this scope flag is set, any write that adds
                      * or deletes a function-valued plain old property in
                      * scope->object will result in shape being regenerated.
                      */
@@ -701,7 +701,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         if (!js_GetCallObject(cx, fp))
             return NULL;
 
-        /* We know we must clone everything on blockChain. */
+        /* We know we must clone everything on blockChain.  */ 
         limitBlock = limitClone = NULL;
     } else {
         /*
@@ -715,7 +715,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
             limitClone = OBJ_GET_PARENT(cx, limitClone);
         JS_ASSERT(limitClone);
 
-        /*
+        /* 
          * It may seem like we don't know enough about limitClone to be able
          * to just grab its prototype as we do here, but it's actually okay.
          *
@@ -743,7 +743,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     /*
      * Special-case cloning the innermost block; this doesn't have enough in
      * common with subsequent steps to include in the loop.
-     *
+     * 
      * We pass fp->scopeChain and not null even if we override the parent slot
      * later as null triggers useless calculations of slot's value in
      * js_NewObject that js_CloneBlockObject calls.
@@ -785,8 +785,8 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      * If we found a limit block belonging to this frame, then we should have
      * found it in blockChain.
      */
-    JS_ASSERT_IF(limitBlock &&
-                 OBJ_GET_CLASS(cx, limitBlock) == &js_BlockClass &&
+    JS_ASSERT_IF(limitBlock && 
+                 OBJ_GET_CLASS(cx, limitBlock) == &js_BlockClass && 
                  OBJ_GET_PRIVATE(cx, limitClone) == fp,
                  sharedBlock);
 
@@ -2485,16 +2485,16 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETGVAR_LENGTH == JSOP_CALLGVAR_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETUPVAR_LENGTH == JSOP_CALLUPVAR_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETDSLOT_LENGTH == JSOP_CALLDSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
- * remain distinct for the decompiler.
+ * remain distinct for the decompiler. Ditto for JSOP_NULL{,THIS}.
  */
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
+JS_STATIC_ASSERT(JSOP_NULL_LENGTH == JSOP_NULLTHIS_LENGTH);
 
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
@@ -2665,8 +2665,7 @@ js_Interpret(JSContext *cx)
     /* We had better not be entering the interpreter from JIT-compiled code. */
     TraceRecorder *tr = TRACE_RECORDER(cx);
     SET_TRACE_RECORDER(cx, NULL);
-
-    /* If a recorder is pending and we try to re-enter the interpreter, flag
+    /* If a recorder is pending and we try to re-enter the interpreter, flag 
        the recorder to be destroyed when we return. */
     if (tr) {
         if (tr->wasDeepAborted())
@@ -2787,8 +2786,8 @@ js_Interpret(JSContext *cx)
         js_SetVersion(cx, currentVersion);
 
     /* Update the static-link display. */
-    if (script->staticLevel < JS_DISPLAY_SIZE) {
-        JSStackFrame **disp = &cx->display[script->staticLevel];
+    if (script->staticDepth < JS_DISPLAY_SIZE) {
+        JSStackFrame **disp = &cx->display[script->staticDepth];
         fp->displaySave = *disp;
         *disp = fp;
     }
@@ -3064,8 +3063,8 @@ js_Interpret(JSContext *cx)
                 JS_ASSERT(!fp->blockChain);
                 JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
-                if (script->staticLevel < JS_DISPLAY_SIZE)
-                    cx->display[script->staticLevel] = fp->displaySave;
+                if (script->staticDepth < JS_DISPLAY_SIZE)
+                    cx->display[script->staticDepth] = fp->displaySave;
 
                 if (hookData) {
                     JSInterpreterHook hook;
@@ -3393,7 +3392,7 @@ js_Interpret(JSContext *cx)
             STORE_OPND(-1, lval);
             STORE_OPND(-2, rval);
           END_CASE(JSOP_SWAP)
-
+          
           BEGIN_CASE(JSOP_PICK)
             i = regs.pc[1];
             JS_ASSERT(regs.sp - (i+1) >= StackBase(fp));
@@ -4846,13 +4845,13 @@ js_Interpret(JSContext *cx)
             regs.sp = vp + 1;
             CHECK_INTERRUPT_HANDLER();
           END_CASE(JSOP_NEW)
-
+          
           BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
           BEGIN_CASE(JSOP_APPLY)
             argc = GET_ARGC(regs.pc);
             vp = regs.sp - (argc + 2);
-
+            
             lval = *vp;
             if (VALUE_IS_FUNCTION(cx, lval)) {
                 obj = JSVAL_TO_OBJECT(lval);
@@ -4954,8 +4953,8 @@ js_Interpret(JSContext *cx)
                     newifp->frame.dormantNext = NULL;
                     newifp->frame.xmlNamespace = NULL;
                     newifp->frame.blockChain = NULL;
-                    if (script->staticLevel < JS_DISPLAY_SIZE) {
-                        JSStackFrame **disp = &cx->display[script->staticLevel];
+                    if (script->staticDepth < JS_DISPLAY_SIZE) {
+                        JSStackFrame **disp = &cx->display[script->staticDepth];
                         newifp->frame.displaySave = *disp;
                         *disp = &newifp->frame;
                     }
@@ -5406,6 +5405,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)
+          BEGIN_CASE(JSOP_NULLTHIS)
             PUSH_OPND(JSVAL_NULL);
           END_CASE(JSOP_NULL)
 
@@ -5647,13 +5647,11 @@ js_Interpret(JSContext *cx)
             uva = JS_SCRIPT_UPVARS(script);
             JS_ASSERT(index < uva->length);
             skip = UPVAR_FRAME_SKIP(uva->vector[index]);
-            fp2 = cx->display[script->staticLevel - skip];
-            JS_ASSERT(fp2->script);
+            fp2 = cx->display[script->staticDepth - skip];
+            JS_ASSERT(fp2->fun && fp2->script);
 
             slot = UPVAR_FRAME_SLOT(uva->vector[index]);
-            if (!fp2->fun) {
-                vp = fp2->slots + fp2->script->nfixed;
-            } else if (slot < fp2->fun->nargs) {
+            if (slot < fp2->fun->nargs) {
                 vp = fp2->argv;
             } else {
                 slot -= fp2->fun->nargs;
@@ -5666,22 +5664,6 @@ js_Interpret(JSContext *cx)
                 PUSH_OPND(JSVAL_NULL);
           }
           END_CASE(JSOP_GETUPVAR)
-
-          BEGIN_CASE(JSOP_GETDSLOT)
-          BEGIN_CASE(JSOP_CALLDSLOT)
-            obj = fp->callee;
-            JS_ASSERT(obj);
-            JS_ASSERT(obj->dslots);
-
-            index = GET_UINT16(regs.pc);
-            JS_ASSERT(JS_INITIAL_NSLOTS + index < jsatomid(obj->dslots[-1]));
-            JS_ASSERT_IF(OBJ_SCOPE(obj)->object == obj,
-                         JS_INITIAL_NSLOTS + index < obj->map->freeslot);
-
-            PUSH_OPND(obj->dslots[index]);
-            if (op == JSOP_CALLDSLOT)
-                PUSH_OPND(JSVAL_NULL);
-          END_CASE(JSOP_GETDSLOT)
 
           BEGIN_CASE(JSOP_GETGVAR)
           BEGIN_CASE(JSOP_CALLGVAR)
@@ -5809,40 +5791,25 @@ js_Interpret(JSContext *cx)
              * function body).
              */
             LOAD_FUNCTION(0);
-            obj = FUN_OBJECT(fun);
 
-            if (FUN_NULL_CLOSURE(fun)) {
-                /*
-                 * Even a null closure needs a parent for principals finding.
-                 * FIXME: bug 476950, although debugger users may also demand
-                 * some kind of scope link for debugger-assisted eval-in-frame.
-                 */
+            if (!fp->blockChain) {
                 obj2 = fp->scopeChain;
             } else {
-                JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
-
-                /*
-                 * Inline js_GetScopeChain a bit to optimize for the case of a
-                 * top-level function.
-                 */
-                if (!fp->blockChain) {
-                    obj2 = fp->scopeChain;
-                } else {
-                    obj2 = js_GetScopeChain(cx, fp);
-                    if (!obj2)
-                        goto error;
-                }
+                obj2 = js_GetScopeChain(cx, fp);
+                if (!obj2)
+                    goto error;
             }
 
             /*
              * If static link is not current scope, clone fun's object to link
-             * to the current scope via parent. We do this to enable sharing of
-             * compiled functions among multiple equivalent scopes, amortizing
-             * the cost of compilation over a number of executions.  Examples
-             * include XUL scripts and event handlers shared among Firefox or
-             * other Mozilla app chrome windows, and user-defined JS functions
-             * precompiled and then shared among requests in server-side JS.
+             * to the current scope via parent. This clause exists to enable
+             * sharing of compiled functions among multiple equivalent scopes,
+             * splitting the cost of compilation evenly among the scopes and
+             * amortizing it over a number of executions. Examples include XUL
+             * scripts and event handlers shared among Mozilla chrome windows,
+             * and server-side JS user-defined functions shared among requests.
              */
+            obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
                 obj = js_CloneFunctionObject(cx, fun, obj2);
                 if (!obj)
@@ -5856,7 +5823,6 @@ js_Interpret(JSContext *cx)
              */
             MUST_FLOW_THROUGH("restore_scope");
             fp->scopeChain = obj;
-
             rval = OBJECT_TO_JSVAL(obj);
 
             /*
@@ -5951,144 +5917,133 @@ js_Interpret(JSContext *cx)
           }
           END_CASE(JSOP_DEFFUN)
 
-          BEGIN_CASE(JSOP_DEFFUN_FC)
-            LOAD_FUNCTION(0);
-
-            obj = js_NewFlatClosure(cx, fun);
-            if (!obj)
-                goto error;
-            rval = OBJECT_TO_JSVAL(obj);
-
-            attrs = (fp->flags & JSFRAME_EVAL)
-                    ? JSPROP_ENUMERATE
-                    : JSPROP_ENUMERATE | JSPROP_PERMANENT;
-
-            flags = JSFUN_GSFLAG2ATTR(fun->flags);
-            if (flags) {
-                attrs |= flags | JSPROP_SHARED;
-                rval = JSVAL_VOID;
-            }
-
-            parent = fp->varobj;
-            JS_ASSERT(parent);
-
-            id = ATOM_TO_JSID(fun->atom);
-            ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
-            if (ok) {
-                if (attrs == JSPROP_ENUMERATE) {
-                    JS_ASSERT(fp->flags & JSFRAME_EVAL);
-                    ok = OBJ_SET_PROPERTY(cx, parent, id, &rval);
-                } else {
-                    JS_ASSERT(attrs & JSPROP_PERMANENT);
-
-                    ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
-                                             (flags & JSPROP_GETTER)
-                                             ? JS_EXTENSION (JSPropertyOp) obj
-                                             : JS_PropertyStub,
-                                             (flags & JSPROP_SETTER)
-                                             ? JS_EXTENSION (JSPropertyOp) obj
-                                             : JS_PropertyStub,
-                                             attrs,
-                                             NULL);
-                }
-            }
-
-            if (!ok) {
-                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-                goto error;
-            }
-          END_CASE(JSOP_DEFFUN_FC)
-
           BEGIN_CASE(JSOP_DEFLOCALFUN)
+            LOAD_FUNCTION(SLOTNO_LEN);
+
             /*
              * Define a local function (i.e., one nested at the top level of
-             * another function), parented by the current scope chain, stored
-             * in a local variable slot that the compiler allocated.  This is
-             * an optimization over JSOP_DEFFUN that avoids requiring a call
-             * object for the outer function's activation.
+             * another function), parented by the current scope chain, and
+             * stored in a local variable slot that the compiler allocated.
+             * This is an optimization over JSOP_DEFFUN that avoids requiring
+             * a call object for the outer function's activation.
              */
-            LOAD_FUNCTION(SLOTNO_LEN);
-            JS_ASSERT(FUN_INTERPRETED(fun));
-            JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
-            obj = FUN_OBJECT(fun);
+            slot = GET_SLOTNO(regs.pc);
 
-            if (FUN_NULL_CLOSURE(fun)) {
-                obj = js_CloneFunctionObject(cx, fun, fp->scopeChain);
+            parent = js_GetScopeChain(cx, fp);
+            if (!parent)
+                goto error;
+
+            obj = FUN_OBJECT(fun);
+            if (OBJ_GET_PARENT(cx, obj) != parent) {
+#ifdef JS_TRACER
+                if (TRACE_RECORDER(cx))
+                    js_AbortRecording(cx, "DEFLOCALFUN for closure");
+#endif
+                obj = js_CloneFunctionObject(cx, fun, parent);
                 if (!obj)
                     goto error;
-            } else {
-                parent = js_GetScopeChain(cx, fp);
-                if (!parent)
-                    goto error;
-
-                if (OBJ_GET_PARENT(cx, obj) != parent) {
-#ifdef JS_TRACER
-                    if (TRACE_RECORDER(cx))
-                        js_AbortRecording(cx, "DEFLOCALFUN for closure");
-#endif
-                    obj = js_CloneFunctionObject(cx, fun, parent);
-                    if (!obj)
-                        goto error;
-                }
             }
 
-            slot = GET_SLOTNO(regs.pc);
             TRACE_2(DefLocalFunSetSlot, slot, obj);
 
             fp->slots[slot] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_DEFLOCALFUN)
 
-          BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
-            LOAD_FUNCTION(SLOTNO_LEN);
-
-            obj = js_NewFlatClosure(cx, fun);
-            if (!obj)
-                goto error;
-
-            slot = GET_SLOTNO(regs.pc);
-            TRACE_2(DefLocalFunSetSlot, slot, obj);
-
-            fp->slots[slot] = OBJECT_TO_JSVAL(obj);
-          END_CASE(JSOP_DEFLOCALFUN_FC)
-
-          BEGIN_CASE(JSOP_LAMBDA)
+          BEGIN_CASE(JSOP_ANONFUNOBJ)
             /* Load the specified function object literal. */
             LOAD_FUNCTION(0);
-            obj = FUN_OBJECT(fun);
 
-            if (FUN_NULL_CLOSURE(fun)) {
-                obj = js_CloneFunctionObject(cx, fun, fp->scopeChain);
+            /* If re-parenting, push a clone of the function object. */
+            parent = js_GetScopeChain(cx, fp);
+            if (!parent)
+                goto error;
+            obj = FUN_OBJECT(fun);
+            if (OBJ_GET_PARENT(cx, obj) != parent) {
+                obj = js_CloneFunctionObject(cx, fun, parent);
                 if (!obj)
                     goto error;
-            } else {
-                parent = js_GetScopeChain(cx, fp);
-                if (!parent)
-                    goto error;
-
-                /* If re-parenting, push a clone of the function object. */
-                if (OBJ_GET_PARENT(cx, obj) != parent) {
-                    obj = js_CloneFunctionObject(cx, fun, parent);
-                    if (!obj)
-                        goto error;
-                }
             }
-
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          END_CASE(JSOP_LAMBDA)
+          END_CASE(JSOP_ANONFUNOBJ)
 
-          BEGIN_CASE(JSOP_LAMBDA_FC)
+          BEGIN_CASE(JSOP_NAMEDFUNOBJ)
             LOAD_FUNCTION(0);
 
-            obj = js_NewFlatClosure(cx, fun);
+            /*
+             * ECMA ed. 3 FunctionExpression: function Identifier [etc.].
+             *
+             * 1. Create a new object as if by the expression new Object().
+             * 2. Add Result(1) to the front of the scope chain.
+             *
+             * Step 2 is achieved by making the new object's parent be the
+             * current scope chain, and then making the new object the parent
+             * of the Function object clone.
+             */
+            obj2 = js_GetScopeChain(cx, fp);
+            if (!obj2)
+                goto error;
+            parent = js_NewObject(cx, &js_ObjectClass, NULL, obj2, 0);
+            if (!parent)
+                goto error;
+
+            /*
+             * 3. Create a new Function object as specified in section 13.2
+             * with [parameters and body specified by the function expression
+             * that was parsed by the compiler into a Function object, and
+             * saved in the script's atom map].
+             *
+             * Protect parent from the GC.
+             */
+            fp->scopeChain = parent;
+            obj = js_CloneFunctionObject(cx, fun, parent);
             if (!obj)
                 goto error;
 
-            PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          END_CASE(JSOP_LAMBDA_FC)
+            /*
+             * Protect obj from any GC hiding below OBJ_DEFINE_PROPERTY.  All
+             * paths from here must flow through the "Restore fp->scopeChain"
+             * code below the OBJ_DEFINE_PROPERTY call.
+             */
+            MUST_FLOW_THROUGH("restore2");
+            fp->scopeChain = obj;
+            rval = OBJECT_TO_JSVAL(obj);
 
-          BEGIN_CASE(JSOP_CALLEE)
-            PUSH_OPND(OBJECT_TO_JSVAL(fp->callee));
-          END_CASE(JSOP_CALLEE)
+            /*
+             * 4. Create a property in the object Result(1).  The property's
+             * name is [fun->atom, the identifier parsed by the compiler],
+             * value is Result(3), and attributes are { DontDelete, ReadOnly }.
+             */
+            attrs = JSFUN_GSFLAG2ATTR(fun->flags);
+            if (attrs) {
+                attrs |= JSPROP_SHARED;
+                rval = JSVAL_VOID;
+            }
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
+                                     (attrs & JSPROP_GETTER)
+                                     ? JS_EXTENSION (JSPropertyOp) obj
+                                     : JS_PropertyStub,
+                                     (attrs & JSPROP_SETTER)
+                                     ? JS_EXTENSION (JSPropertyOp) obj
+                                     : JS_PropertyStub,
+                                     attrs |
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                     JSPROP_READONLY,
+                                     NULL);
+
+            /* Restore fp->scopeChain now that obj is defined in parent. */
+            MUST_FLOW_LABEL(restore2)
+            fp->scopeChain = obj2;
+            if (!ok) {
+                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
+                goto error;
+            }
+
+            /*
+             * 5. Remove Result(1) from the front of the scope chain [no-op].
+             * 6. Return Result(3).
+             */
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
+          END_CASE(JSOP_NAMEDFUNOBJ)
 
 #if JS_HAS_GETTER_SETTER
           BEGIN_CASE(JSOP_GETTER)
@@ -6883,7 +6838,7 @@ js_Interpret(JSContext *cx)
 #ifdef DEBUG
             JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
             uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain);
-
+             
             JS_ASSERT(blockDepth <= StackDepth(script));
 #endif
             /*
@@ -7024,6 +6979,15 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
+          L_JSOP_UNUSED203:
+          L_JSOP_UNUSED204:
+          L_JSOP_UNUSED205:
+          L_JSOP_UNUSED206:
+          L_JSOP_UNUSED207:
+          L_JSOP_UNUSED208:
+          L_JSOP_UNUSED209:
+          L_JSOP_UNUSED219:
+
 #else /* !JS_THREADED_INTERP */
           default:
 #endif
@@ -7048,7 +7012,7 @@ js_Interpret(JSContext *cx)
         // To keep things simple, we hard-code imacro exception handlers here.
         if (*fp->imacpc == JSOP_NEXTITER) {
             // pc may point to JSOP_DUP here due to bug 474854.
-            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP || *regs.pc == JSOP_TRUE);
+            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
             if (js_ValueIsStopIteration(cx->exception)) {
                 cx->throwing = JS_FALSE;
                 cx->exception = JSVAL_VOID;
@@ -7067,9 +7031,9 @@ js_Interpret(JSContext *cx)
     JS_ASSERT((size_t)((fp->imacpc ? fp->imacpc : regs.pc) - script->code) < script->length);
 
 #ifdef JS_TRACER
-    /*
+    /* 
      * This abort could be weakened to permit tracing through exceptions that
-     * are thrown and caught within a loop, with the co-operation of the tracer.
+     * are thrown and caught within a loop, with the co-operation of the tracer. 
      * For now just bail on any sign of trouble.
      */
     if (TRACE_RECORDER(cx))
@@ -7271,8 +7235,8 @@ js_Interpret(JSContext *cx)
     }
 
     /* Undo the remaining effects committed on entry to js_Interpret. */
-    if (script->staticLevel < JS_DISPLAY_SIZE)
-        cx->display[script->staticLevel] = fp->displaySave;
+    if (script->staticDepth < JS_DISPLAY_SIZE)
+        cx->display[script->staticDepth] = fp->displaySave;
     JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);

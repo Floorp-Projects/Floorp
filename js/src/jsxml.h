@@ -160,7 +160,7 @@ extern void
 js_FinalizeXML(JSContext *cx, JSXML *xml);
 
 extern JSObject *
-js_ParseNodeToXMLObject(JSCompiler *jsc, JSParseNode *pn);
+js_ParseNodeToXMLObject(JSContext *cx, JSParseContext *pc, JSParseNode *pn);
 
 extern JSObject *
 js_NewXMLObject(JSContext *cx, JSXMLClass xml_class);

@@ -151,41 +151,37 @@ struct JSObjectMap {
 #define JS_INITIAL_NSLOTS   5
 
 /*
- * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
- * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
- * struct allocated from a larger GC size-class.
- *
- * The classword member stores the JSClass pointer for this object, with the
- * least two bits encoding whether this object is a "delegate" or a "system"
- * object.
- *
- * An object is a delegate if it is on another object's prototype (linked by
- * JSSLOT_PROTO) or scope (JSSLOT_PARENT) chain, and therefore the delegate
- * might be asked implicitly to get or set a property on behalf of another
- * object. Delegates may be accessed directly too, as may any object, but only
- * those objects linked after the head of any prototype or scope chain are
- * flagged as delegates. This definition helps to optimize shape-based property
- * cache invalidation (see Purge{Scope,Proto}Chain in jsobj.cpp).
- *
- * The meaning of the system object bit is defined by the API client. It is
- * set in JS_NewSystemObject and is queried by JS_IsSystemObject (jsdbgapi.h),
- * but it has no intrinsic meaning to SpiderMonkey. Further, JSFILENAME_SYSTEM
- * and JS_FlagScriptFilenamePrefix (also exported via jsdbgapi.h) are intended
- * to be complementary to this bit, but it is up to the API client to implement
- * any such association.
- *
- * Both these classword tag bits are initially zero; they may be set or queried
- * using the STOBJ_(IS|SET)_(DELEGATE|SYSTEM) macros.
- *
- * The dslots member is null or a pointer into a dynamically allocated vector
- * of jsvals for reserved and dynamic slots. If dslots is not null, dslots[-1]
- * records the number of available slots.
+ * When JSObject.dslots is not null, JSObject.dslots[-1] records the number of
+ * available slots.
  */
 struct JSObject {
-    JSObjectMap *map;                       /* propery map, see jsscope.h */
-    jsuword     classword;                  /* classword, see above */
-    jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
-    jsval       *dslots;                    /* dynamically allocated slots */
+    JSObjectMap *map;
+
+    /*
+     * Stores the JSClass* for this object, with the two lowest bits encoding
+     * whether this object is a delegate or a system object.
+     *
+     * A delegate is an object linked on another object's prototype
+     * (JSSLOT_PROTO) or scope (JSSLOT_PARENT) chain, which might be implicitly
+     * asked to get or set a property on behalf of another object. Delegates
+     * may be accessed directly too, as might any object, but only those
+     * objects linked after the head of a prototype or scope chain are
+     * delegates. This definition helps to optimize shape-based property cache
+     * purging (see Purge{Scope,Proto}Chain in jsobj.cpp).
+     *
+     * The meaning of the system object bit is defined by the API client. It is
+     * set in JS_NewSystemObject and is queried by JS_IsSystemObject, but it
+     * has no intrinsic meaning to SpiderMonkey. Further, JSFILENAME_SYSTEM and
+     * JS_FlagScriptFilenamePrefix are intended to be complementary to this
+     * bit, but it is up to the API client to implement any such association.
+     *
+     * Both bits are initially zero and may be set or queried using the
+     * STOBJ_(IS|SET)_(DELEGATE|SYSTEM) macros.
+     */
+    jsuword     classword;
+
+    jsval       fslots[JS_INITIAL_NSLOTS];
+    jsval       *dslots;        /* dynamically allocated slots */
 };
 
 #define JSSLOT_PROTO        0
