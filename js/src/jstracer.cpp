@@ -5933,6 +5933,11 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 ABORT_TRACE("failed to lookup property");
 
             if (prop) {
+                if (!OBJ_IS_NATIVE(obj2)) {
+                    OBJ_DROP_PROPERTY(cx, obj2, prop);
+                    ABORT_TRACE("property found on non-native object");
+                }
+
                 js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0, protoIndex, obj2,
                                      (JSScopeProperty*) prop, &entry);
             }
