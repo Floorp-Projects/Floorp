@@ -2066,7 +2066,7 @@ js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
     return false;
 }
 
-/* Promote slots if necessary to match the called tree' type map and report error if thats
+/* Promote slots if necessary to match the called tree's type map and report error if thats
    impossible. */
 JS_REQUIRES_STACK bool
 TraceRecorder::adjustCallerTypes(Fragment* f)
