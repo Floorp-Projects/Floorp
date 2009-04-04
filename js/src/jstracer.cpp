@@ -119,13 +119,10 @@ static const char tagChar[]  = "OIDISIBI";
 #define MAX_CALLDEPTH 10
 
 /* Max native stack size. */
-#define MAX_NATIVE_STACK_SLOTS 512
+#define MAX_NATIVE_STACK_SLOTS 1024
 
 /* Max call stack size. */
-#define MAX_CALL_STACK_ENTRIES 32
-
-/* Max slots in the global area. */
-#define MAX_GLOBAL_SLOTS 1024
+#define MAX_CALL_STACK_ENTRIES 64
 
 /* Max memory you can allocate in a LIR buffer via a single skip() call. */
 #define MAX_SKIP_BYTES (NJ_PAGE_SIZE - LIR_FAR_SLOTS)
@@ -253,60 +250,6 @@ bool js_verboseDebug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "v
 bool js_verboseStats = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "stats");
 bool js_verboseAbort = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "abort");
 #endif
-
-template <typename T>
-class TempArray
-{
-    JSContext *_cx;
-    void *_mark;
-    T *_ptr;
-
-    TempArray& operator=(TempArray &other) {}
-    TempArray(TempArray &other) {}
-
-public:
-
-    JS_ALWAYS_INLINE TempArray(JSContext *cx, size_t count=0)
-        : _cx(cx),
-          _mark(NULL),
-          _ptr(NULL)
-    {
-        acquire(count);
-    }
-
-
-    void JS_ALWAYS_INLINE acquire(size_t c)
-    {
-        if (c) {
-            JSTraceMonitor *tm = &JS_TRACE_MONITOR(_cx);
-            _mark = JS_ARENA_MARK(&tm->tempPool);
-            JS_ARENA_ALLOCATE_CAST(_ptr, T*, &tm->tempPool, c * sizeof(T));
-        } else {
-            release();
-        }
-    }
-
-    void JS_ALWAYS_INLINE release()
-    {
-        if (_ptr) {
-            JSTraceMonitor *tm = &JS_TRACE_MONITOR(_cx);
-            JS_ASSERT(_mark);
-            JS_ARENA_RELEASE(&tm->tempPool, _mark);
-        }
-        _ptr = NULL;
-        _mark = NULL;
-    }
-
-    JS_ALWAYS_INLINE ~TempArray()
-    {
-        release();
-    }
-
-    JS_ALWAYS_INLINE operator T* ()
-    {
-        return _ptr;
-    }
-};
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
    case cause performance regressions. */
@@ -1114,8 +1057,9 @@ public:
         for (n = 0; n < callDepth; ++n) { fp = fp->down; }                    \
         entryFrame = fp;                                                      \
         unsigned frames = callDepth+1;                                        \
-        TempArray<JSStackFrame*> fstack(cx, frames);                         \
-        JSStackFrame** fspstop = fstack + frames;                             \
+        JSStackFrame** fstack =                                               \
+            (JSStackFrame**) alloca(frames * sizeof (JSStackFrame*));         \
+        JSStackFrame** fspstop = &fstack[frames];                             \
         JSStackFrame** fsp = fspstop-1;                                       \
         fp = currentFrame;                                                    \
         for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }  \
@@ -1475,8 +1419,8 @@ done:
     for (unsigned n = 0; n < callDepth; ++n) { fp = fp->down; }
     entryFrame = fp;
     unsigned frames = callDepth+1;
-    TempArray<JSStackFrame*> fstack(cx, frames);
-    JSStackFrame** fspstop = fstack + frames;
+    JSStackFrame** fstack = (JSStackFrame **)alloca(frames * sizeof (JSStackFrame *));
+    JSStackFrame** fspstop = &fstack[frames];
     JSStackFrame** fsp = fspstop-1;
     fp = currentFrame;
     for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }
@@ -1892,12 +1836,10 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned stackSlots, unsigne
 
     /* This is potentially the typemap of the side exit and thus shorter than the tree's
        global type map. */
-    TempArray<uint8> mem(cx);
-    if (ngslots < length) {
-        mem.acquire(length);
+    if (ngslots < length)
         mergeTypeMaps(&globalTypeMap/*out param*/, &ngslots/*out param*/,
-                      treeInfo->globalTypeMap(), length, mem);
-    }
+                      treeInfo->globalTypeMap(), length,
+                      (uint8*)alloca(sizeof(uint8) * length));
     JS_ASSERT(ngslots == treeInfo->nGlobalTypes());
 
     /* the first time we compile a tree this will be empty as we add entries lazily */
@@ -1941,8 +1883,6 @@ JS_REQUIRES_STACK bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
     if (slot != uint16(slot)) /* we use a table of 16-bit ints, bail out if that's not enough */
-        return false;
-    if (slot >= MAX_GLOBAL_SLOTS) /* we only support a certain number of global slots */
         return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
     if (known(vp))
@@ -2037,7 +1977,7 @@ TraceRecorder::checkForGlobalObjectReallocation()
         jsval* src = global_dslots;
         jsval* dst = globalObj->dslots;
         jsuint length = globalObj->dslots[-1] - JS_INITIAL_NSLOTS;
-        TempArray<LIns*> map(cx, length);
+        LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
         for (jsuint n = 0; n < length; ++n) {
             map[n] = tracker.get(src);
             tracker.set(src++, NULL);
@@ -2160,7 +2100,7 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Capture the type map into a temporary location. */
     unsigned ngslots = treeInfo->globalSlots->length();
     unsigned typemap_size = (stackSlots + ngslots) * sizeof(uint8);
-    TempArray<uint8> typemap(cx, typemap_size);
+    uint8* typemap = (uint8*)alloca(typemap_size);
     uint8* m = typemap;
 
     /* Determine the type of a store by looking at the current type of the actual value the
@@ -2380,8 +2320,8 @@ TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, 
      */
     bool success;
     unsigned stage_count;
-    TempArray<jsval*> stage_vals(cx, treeInfo->typeMap.length());
-    TempArray<LIns*> stage_ins(cx, treeInfo->typeMap.length());
+    jsval** stage_vals = (jsval**)alloca(sizeof(jsval*) * (treeInfo->typeMap.length()));
+    LIns** stage_ins = (LIns**)alloca(sizeof(LIns*) * (treeInfo->typeMap.length()));
 
     /* First run through and see if we can close ourselves - best case! */
     stage_count = 0;
@@ -2708,8 +2648,8 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
         Fragment* peer;
         uint8* t1, *t2;
         UnstableExit* uexit, **unext;
-        TempArray<uint32> stackDemotes(cx, treeInfo->nStackTypes);
-        TempArray<uint32> globalDemotes(cx, treeInfo->nGlobalTypes());
+        uint32* stackDemotes = (uint32*)alloca(sizeof(uint32) * treeInfo->nStackTypes);
+        uint32* globalDemotes = (uint32*)alloca(sizeof(uint32) * treeInfo->nGlobalTypes());
 
         for (peer = peer_root; peer != NULL; peer = peer->peer) {
             if (!peer->code())
@@ -3939,13 +3879,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(cx->builtinStatus == 0);
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     unsigned ngslots = ti->globalSlots->length();
     uint16* gslots = ti->globalSlots->data();
-#ifdef DEBUG
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
-#endif
 
     /* Make sure the global object is sane. */
     JS_ASSERT(!ngslots || (OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) ==
@@ -3957,9 +3895,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
         return NULL;
 
-    /* Setup the interpreter state block, which is followed by the native global frame. */    
-    InterpState* state = (InterpState*)tm->nativeData;
-
+    /* Setup the interpreter state block, which is followed by the native global frame. */
+    InterpState* state = (InterpState*)alloca(sizeof(InterpState) + (globalFrameSize+1)*sizeof(double));
     state->cx = cx;
     state->inlineCallCountp = &inlineCallCount;
     state->innermostNestedGuardp = innermostNestedGuardp;
@@ -3972,13 +3909,13 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     double* global = (double*)(state+1);
 
     /* Setup the native stack frame. */
-    double *stack_buffer = (double*)tm->nativeStack;
+    double stack_buffer[MAX_NATIVE_STACK_SLOTS];
     state->stackBase = stack_buffer;
     state->sp = stack_buffer + (ti->nativeStackBase/sizeof(double));
     state->eos = stack_buffer + MAX_NATIVE_STACK_SLOTS;
 
     /* Setup the native call stack frame. */
-    FrameInfo** callstack_buffer = (FrameInfo**)tm->nativeFrames;
+    FrameInfo* callstack_buffer[MAX_CALL_STACK_ENTRIES];
     state->callstackBase = callstack_buffer;
     state->rp = callstack_buffer;
     state->eor = callstack_buffer + MAX_CALL_STACK_ENTRIES;
@@ -3990,7 +3927,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
         return NULL;
 
 #ifdef DEBUG
-    memset(stack_buffer, 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
+    memset(stack_buffer, 0xCD, sizeof(stack_buffer));
     memset(global, 0xCD, (globalFrameSize+1)*sizeof(double));
 #endif
 
@@ -4213,7 +4150,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     unsigned ngslots = outermostTree->globalSlots->length();
     JS_ASSERT(ngslots == outermostTree->nGlobalTypes());
     uint8* globalTypeMap;
-    TempArray<uint8> mem(cx);
 
     /* Are there enough globals? This is the ideal fast path. */
     if (innermost->numGlobalSlots == ngslots) {
@@ -4226,8 +4162,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
         TreeInfo* ti = (TreeInfo*)innermost->from->root->vmprivate;
         JS_ASSERT(ti->nGlobalTypes() == ngslots);
         JS_ASSERT(ti->nGlobalTypes() > innermost->numGlobalSlots);
-        mem.acquire(ngslots);
-        globalTypeMap = mem;
+        globalTypeMap = (uint8*)alloca(ngslots * sizeof(uint8));
         memcpy(globalTypeMap, getGlobalTypeMap(innermost), innermost->numGlobalSlots);
         memcpy(globalTypeMap + innermost->numGlobalSlots,
                ti->globalTypeMap() + innermost->numGlobalSlots,
@@ -4714,25 +4649,6 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(fragmento, NULL);
     }
-
-    JS_INIT_ARENA_POOL(&tm->tempPool, "temps", 1024, sizeof(double), NULL);
-
-    // Shove the pool forward a touch so it does not thrash on its 0th arena boundary.
-    void *dummy;
-    JS_ARENA_ALLOCATE(dummy, &tm->tempPool, sizeof(double));
-
-    if (!tm->nativeData) {
-        tm->nativeData = malloc(sizeof(InterpState) + sizeof(double) * MAX_GLOBAL_SLOTS);
-        JS_ASSERT(tm->nativeData && !(intptr_t(tm->nativeData) & 7));
-    }
-    if (!tm->nativeStack) {
-        tm->nativeStack = malloc(sizeof(double) * MAX_NATIVE_STACK_SLOTS);
-        JS_ASSERT(tm->nativeStack);
-    }
-    if (!tm->nativeFrames) {
-        tm->nativeFrames = malloc(sizeof(FrameInfo*) * MAX_CALL_STACK_ENTRIES);
-        JS_ASSERT(tm->nativeFrames);
-    }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
@@ -4786,21 +4702,6 @@ js_FinishJIT(JSTraceMonitor *tm)
         delete tm->reLirBuf;
         verbose_only(delete tm->reFragmento->labels;)
         delete tm->reFragmento;
-    }
-
-    JS_FinishArenaPool(&tm->tempPool);
-
-    if (tm->nativeData) {
-        free(tm->nativeData);
-        tm->nativeData = NULL;
-    }
-    if (tm->nativeStack) {
-        free(tm->nativeStack);
-        tm->nativeStack = NULL;
-    }
-    if (tm->nativeFrames) {
-        free(tm->nativeFrames);
-        tm->nativeFrames = NULL;
     }
 }
 
