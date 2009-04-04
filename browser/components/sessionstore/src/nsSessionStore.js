@@ -161,6 +161,9 @@ SessionStoreService.prototype = {
   // whether we are in private browsing mode
   _inPrivateBrowsing: false,
 
+  // whether we clearing history on shutdown
+  _clearingOnShutdown: false,
+
 /* ........ Global Event Handlers .............. */
 
   /**
@@ -352,6 +355,8 @@ SessionStoreService.prototype = {
       // Delete the private browsing backed up state, if any
       if ("_stateBackup" in this)
         delete this._stateBackup;
+      if (this._loadState == STATE_QUITTING)
+        this._clearingOnShutdown = true;
       break;
     case "browser:purge-domain-data":
       // does a session history entry contain a url for the given domain?
@@ -2427,8 +2432,11 @@ SessionStoreService.prototype = {
    * @returns bool
    */
   _doResumeSession: function sss_doResumeSession() {
+    if (this._clearingOnShutdown)
+      return false;
+
     return this._prefBranch.getIntPref("startup.page") == 3 ||
-      this._prefBranch.getBoolPref("sessionstore.resume_session_once");
+           this._prefBranch.getBoolPref("sessionstore.resume_session_once");
   },
 
   /**
