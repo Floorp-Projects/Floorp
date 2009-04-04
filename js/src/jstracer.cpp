@@ -8108,8 +8108,6 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         }
 
         v_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
-        JS_ASSERT(cs.ndefs == 1);
-        stack(-cs.nuses, v_ins);
         slot = SPROP_INVALID_SLOT;
         return true;
     }
@@ -8138,8 +8136,6 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
                 unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
                              v_ins);
-                JS_ASSERT(cs.ndefs == 1);
-                stack(-cs.nuses, v_ins);
                 return true;
             }
             ABORT_TRACE("non-stub getter");
