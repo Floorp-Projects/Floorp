@@ -122,6 +122,8 @@ public:
     PRBool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> > *array);
     void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> >& array);
 
+    void ClearPrefFonts() { mPrefFonts.Clear(); }
+
     typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
 
 #ifdef MOZ_FT2_FONTS
