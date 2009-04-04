@@ -84,7 +84,7 @@
         stop
     .end
 
-.end equality
+.end
 
 .igroup binary JSOP_BITOR-JSOP_MOD
 
@@ -175,7 +175,7 @@
         stop
     .end
 
-.end binary
+.end
 
 .igroup add JSOP_ADD
 
@@ -266,7 +266,7 @@
         stop
     .end
 
-.end add
+.end
 
 .igroup unary JSOP_NEG-JSOP_POS
 
@@ -292,7 +292,7 @@
         stop
     .end
 
-.end unary
+.end
 
 .igroup call JSOP_CALL
 
@@ -344,10 +344,9 @@
         stop                                # strobj
     .end
 
-.end call
+.end
 
 .igroup apply JSOP_APPLY
-
     .imacro apply0                          # apply fun this arr
         pick 3                              # fun this arr apply
         pop                                 # fun this arr
@@ -567,7 +566,7 @@
     .imacro call0                           # call fun
         swap                                # fun call
         pop                                 # fun
-        null                                # fun this
+        nullthis                            # fun this
         call 0                              #
         stop                                #
     .end                                    #
@@ -628,7 +627,7 @@
         stop                                #
     .end                                    #
 
-.end apply
+.end
 
 .igroup iter JSOP_ITER
 
@@ -666,7 +665,7 @@
         stop
     .end
 
-.end iter
+.end
 
 .igroup nextiter JSOP_NEXTITER
 
@@ -692,7 +691,7 @@
         stop
     .end
 
-.end nextiter
+.end
 
 .igroup getelem JSOP_GETELEM
 
@@ -736,7 +735,7 @@
         stop
     .end
 
-.end getelem
+.end
 
 .igroup setelem JSOP_SETELEM
 
@@ -762,7 +761,7 @@
         stop
     .end
 
-.end setelem
+.end
 
 .igroup initelem JSOP_INITELEM
 
@@ -788,4 +787,4 @@
         stop
     .end
 
-.end initelem
+.end

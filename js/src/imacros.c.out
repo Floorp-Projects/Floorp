@@ -533,7 +533,7 @@ static struct {
     {
 /* 0*/  JSOP_SWAP,
 /* 1*/  JSOP_POP,
-/* 2*/  JSOP_NULL,
+/* 2*/  JSOP_NULLTHIS,
 /* 3*/  JSOP_CALL, 0, 0,
 /* 6*/  JSOP_STOP,
     },
@@ -815,7 +815,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_LOOKUPSWITCH */
     0,  /* JSOP_STRICTEQ */
     0,  /* JSOP_STRICTNE */
-    0,  /* JSOP_SETCALL */
+    0,  /* JSOP_NULLTHIS */
     3,  /* JSOP_ITER */
     2,  /* JSOP_NEXTITER */
     0,  /* JSOP_ENDITER */
@@ -869,14 +869,14 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_DEFFUN */
     0,  /* JSOP_DEFCONST */
     0,  /* JSOP_DEFVAR */
-    0,  /* JSOP_LAMBDA */
-    0,  /* JSOP_CALLEE */
+    0,  /* JSOP_ANONFUNOBJ */
+    0,  /* JSOP_NAMEDFUNOBJ */
     0,  /* JSOP_SETLOCALPOP */
-    0,  /* JSOP_PICK */
+    0,  /* JSOP_IFPRIMTOP */
+    0,  /* JSOP_SETCALL */
     0,  /* JSOP_TRY */
     0,  /* JSOP_FINALLY */
-    0,  /* JSOP_GETDSLOT */
-    0,  /* JSOP_CALLDSLOT */
+    0,  /* JSOP_OBJTOP */
     0,  /* JSOP_ARGSUB */
     0,  /* JSOP_ARGCNT */
     0,  /* JSOP_DEFLOCALFUN */
@@ -926,8 +926,8 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_XMLCOMMENT */
     0,  /* JSOP_XMLPI */
     0,  /* JSOP_CALLPROP */
+    0,  /* JSOP_GETFUNNS */
     0,  /* JSOP_GETUPVAR */
-    0,  /* JSOP_CALLUPVAR */
     0,  /* JSOP_DELDESC */
     0,  /* JSOP_UINT24 */
     0,  /* JSOP_INDEXBASE */
@@ -942,17 +942,25 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_TYPEOFEXPR */
     0,  /* JSOP_ENTERBLOCK */
     0,  /* JSOP_LEAVEBLOCK */
-    0,  /* JSOP_IFPRIMTOP */
+    0,  /* JSOP_PICK */
     0,  /* JSOP_PRIMTOP */
+    0,  /* JSOP_UNUSED203 */
+    0,  /* JSOP_UNUSED204 */
+    0,  /* JSOP_UNUSED205 */
+    0,  /* JSOP_UNUSED206 */
+    0,  /* JSOP_UNUSED207 */
+    0,  /* JSOP_UNUSED208 */
+    0,  /* JSOP_UNUSED209 */
     0,  /* JSOP_GENERATOR */
     0,  /* JSOP_YIELD */
     0,  /* JSOP_ARRAYPUSH */
-    0,  /* JSOP_GETFUNNS */
+    0,  /* JSOP_CALLUPVAR */
     0,  /* JSOP_ENUMCONSTELEM */
     0,  /* JSOP_LEAVEBLOCKEXPR */
     0,  /* JSOP_GETTHISPROP */
     0,  /* JSOP_GETARGPROP */
     0,  /* JSOP_GETLOCALPROP */
+    0,  /* JSOP_UNUSED219 */
     0,  /* JSOP_INDEXBASE1 */
     0,  /* JSOP_INDEXBASE2 */
     0,  /* JSOP_INDEXBASE3 */
@@ -965,10 +973,6 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_LENGTH */
     0,  /* JSOP_NEWARRAY */
     0,  /* JSOP_HOLE */
-    0,  /* JSOP_DEFFUN_FC */
-    0,  /* JSOP_DEFLOCALFUN_FC */
-    0,  /* JSOP_LAMBDA_FC */
-    0,  /* JSOP_OBJTOP */
     0,  /* JSOP_LOOP */
 };
 #define JSOP_IS_IMACOP(x) (0 \

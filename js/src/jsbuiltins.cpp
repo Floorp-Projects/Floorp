@@ -253,10 +253,8 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
                 return JS_FALSE;
             }
 
-            if (slot != sprop->slot) {
-                js_FreeSlot(cx, obj, slot);
+            if (slot != sprop->slot)
                 goto slot_changed;
-            }
         }
 
         SCOPE_EXTEND_SHAPE(cx, scope, sprop);
@@ -276,6 +274,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     slot = sprop2->slot;
 
   slot_changed:
+    js_FreeSlot(cx, obj, slot);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_FALSE;
 }
@@ -366,31 +365,6 @@ JSObject* FASTCALL
 js_Arguments(JSContext* cx)
 {
     return NULL;
-}
-
-JSObject* FASTCALL
-js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject *parent)
-{
-    JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
-
-    JSFunction *fun = (JSFunction*) funobj;
-    JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
-
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* closure = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
-    if (!closure)
-        return NULL;
-
-    closure->classword = jsuword(&js_FunctionClass);
-    closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
-    closure->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
-    for (unsigned i = JSSLOT_PRIVATE + 1; i != JS_INITIAL_NSLOTS; ++i)
-        closure->fslots[i] = JSVAL_VOID;
-
-    closure->map = js_HoldObjectMap(cx, proto->map);
-    closure->dslots = NULL;
-    return closure;
 }
 
 #define BUILTIN1 JS_DEFINE_CALLINFO_1

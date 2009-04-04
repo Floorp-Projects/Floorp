@@ -1375,7 +1375,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     tcflags = TCF_COMPILE_N_GO;
     if (caller) {
-        tcflags |= TCF_PUT_STATIC_LEVEL(caller->script->staticLevel + 1);
+        tcflags |= TCF_PUT_STATIC_DEPTH(caller->script->staticDepth + 1);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
         file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
@@ -1402,7 +1402,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                   script->principals->subsume(script->principals, principals)))) {
                 /*
                  * Get the prior (cache-filling) eval's saved caller function.
-                 * See JSCompiler::compileScript in jsparse.cpp.
+                 * See js_CompileScript in jsparse.cpp.
                  */
                 JSFunction *fun;
                 JS_GET_SCRIPT_FUNCTION(script, 0, fun);
@@ -1410,7 +1410,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (fun == caller->fun) {
                     /*
                      * Get the source string passed for safekeeping in the
-                     * atom map by the prior eval to JSCompiler::compileScript.
+                     * atom map by the prior eval to js_CompileScript.
                      */
                     JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
 
@@ -1454,9 +1454,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!script) {
-        script = JSCompiler::compileScript(cx, scopeobj, caller, principals, tcflags,
-                                           JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
-                                           NULL, file, line, str);
+        script = js_CompileScript(cx, scopeobj, caller, principals, tcflags,
+                                  JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                  NULL, file, line, str);
         if (!script) {
             ok = JS_FALSE;
             goto out;
