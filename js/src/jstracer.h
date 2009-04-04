@@ -415,7 +415,7 @@ class TraceRecorder : public avmplus::GCObject {
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
-    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
+    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8 t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned stackSlots,
                                   unsigned callDepth, unsigned ngslots, uint8* typeMap);
@@ -424,9 +424,8 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
 
-    JS_REQUIRES_STACK nanojit::LIns* guard(bool expected, nanojit::LIns* cond,
-                                           ExitType exitType);
-    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
+    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
+    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, nanojit::LIns* exit);
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
@@ -520,7 +519,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool getThis(nanojit::LIns*& this_ins);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
-    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, nanojit::LIns* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
                                       nanojit::LIns* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
@@ -561,6 +560,8 @@ public:
 
     JS_REQUIRES_STACK uint8 determineSlotType(jsval* vp);
     JS_REQUIRES_STACK nanojit::LIns* snapshot(ExitType exitType);
+    nanojit::LIns* clone(VMSideExit* exit);
+    nanojit::LIns* copy(VMSideExit* exit);
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
     JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
