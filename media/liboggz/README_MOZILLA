@@ -1,15 +1,12 @@
-The source from this directory was copied from the liboggz svn 
+The source from this directory was copied from the liboggz git 
 source repository using the update.sh script. The only changes made
 were those applied by update.sh, which applies patches described
 below, and the addition/upate of Makefile.in files for the
 Mozilla build system.
 
-The svn revision number used was r3867.
+The git commit id used was ef3b0e from git://git.xiph.org/liboggz.git
 
 The wince.patch addresses the lack of posix file IO support on windows ce,
 see bug 461844 for details.
 
 endian.patch is applied to fix bug 452698.
-
-oggz-seek-crash-fix.patch is applied to fix the crash reported in
-bug 475441 comment #44.
