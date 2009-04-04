@@ -235,8 +235,8 @@ BOOLEAN_TO_JSVAL(JSBool b)
 #define JSFUN_FAST_NATIVE     0x0800    /* JSFastNative needs no JSStackFrame */
 
 #define JSFUN_FLAGS_MASK      0x0ff8    /* overlay JSFUN_* attributes --
-                                           bits 12-15 are used internally to
-                                           flag interpreted functions */
+                                           note that bit #15 is used internally
+                                           to flag interpreted functions */
 
 #define JSFUN_STUB_GSOPS      0x1000    /* use JS_PropertyStub getter/setter
                                            instead of defaulting to class gsops
