@@ -471,26 +471,27 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if defined DEBUG && defined XP_UNIX
 # include <stdio.h>
 
-class AutoFile {
+class JSAutoFile {
 public:
-    AutoFile() : mFp(NULL) {}
+    JSAutoFile() : mFile(NULL) {}
 
-    ~AutoFile() {
-        if (mFp)
-            fclose(mFp);
+    ~JSAutoFile() {
+        if (mFile)
+            fclose(mFile);
     }
 
     FILE *open(const char *fname, const char *mode) {
-        return mFp = fopen(fname, mode);
+        return mFile = fopen(fname, mode);
     }
     operator FILE *() {
-        return mFp;
+        return mFile;
     }
 
 private:
-    FILE *mFp;
+    FILE *mFile;
 };
 
+#ifdef JS_EVAL_CACHE_METERING
 static void
 DumpEvalCacheMeter(JSContext *cx)
 {
@@ -504,7 +505,7 @@ DumpEvalCacheMeter(JSContext *cx)
     };
     JSEvalCacheMeter *ecm = &JS_THREAD_DATA(cx)->evalCacheMeter;
 
-    static AutoFile fp;
+    static JSAutoFile fp;
     if (!fp) {
         fp.open("/tmp/evalcache.stats", "w");
         if (!fp)
@@ -527,8 +528,47 @@ DumpEvalCacheMeter(JSContext *cx)
     fflush(fp);
 }
 # define DUMP_EVAL_CACHE_METER(cx) DumpEvalCacheMeter(cx)
-#else
+#endif
+
+#ifdef JS_FUNCTION_METERING
+static void
+DumpFunctionMeter(JSContext *cx)
+{
+    struct {
+        const char *name;
+        ptrdiff_t  offset;
+    } table[] = {
+#define frob(x) { #x, offsetof(JSFunctionMeter, x) }
+        FUNCTION_KIND_METER_LIST(frob)
+#undef frob
+    };
+    JSFunctionMeter *fm = &cx->runtime->functionMeter;
+
+    static JSAutoFile fp;
+    if (!fp) {
+        fp.open("/tmp/function.stats", "a");
+        if (!fp)
+            return;
+    }
+
+    fprintf(fp, "function meter (%s):\n", cx->runtime->lastScriptFilename);
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
+        fprintf(fp, "%-11.11s %d\n",
+                table[i].name, *(int32 *)((uint8 *)fm + table[i].offset));
+    }
+    fflush(fp);
+}
+# define DUMP_FUNCTION_METER(cx)   DumpFunctionMeter(cx)
+#endif
+
+#endif /* DEBUG && XP_UNIX */
+
+#ifndef DUMP_EVAL_CACHE_METER
 # define DUMP_EVAL_CACHE_METER(cx) ((void) 0)
+#endif
+
+#ifndef DUMP_FUNCTION_METER
+# define DUMP_FUNCTION_METER(cx)   ((void) 0)
 #endif
 
 void
@@ -633,6 +673,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         if (last) {
             js_GC(cx, GC_LAST_CONTEXT);
             DUMP_EVAL_CACHE_METER(cx);
+            DUMP_FUNCTION_METER(cx);
 
             /*
              * Free the script filename table if it exists and is empty. Do this

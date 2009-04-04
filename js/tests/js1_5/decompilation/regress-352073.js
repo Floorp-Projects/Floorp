@@ -56,7 +56,7 @@ function test()
   var f;
 
   f = function() { (function x() {  }); return x; }
-  expect = 'function() { (function x() {  }); return x; }';
+  expect = 'function() { return x; }';
   actual = f + '';
   compareSource(expect, actual, summary);
 

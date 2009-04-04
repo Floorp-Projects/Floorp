@@ -49,13 +49,15 @@
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
+#include "jsbit.h"
 #include "jscntxt.h"
-#include "jsversion.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsparse.h"
 #include "jsscan.h"
 #include "jsstr.h"
+#include "jsversion.h"
 
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
@@ -933,32 +935,70 @@ js_hash_atom_ptr(const void *key)
     return ATOM_HASH(atom);
 }
 
+#if JS_BITS_PER_WORD == 32
+# define TEMP_SIZE_START_LOG2   5
+#else
+# define TEMP_SIZE_START_LOG2   6
+#endif
+#define TEMP_SIZE_LIMIT_LOG2    (TEMP_SIZE_START_LOG2 + NUM_TEMP_FREELISTS)
+
+#define TEMP_SIZE_START         JS_BIT(TEMP_SIZE_START_LOG2)
+#define TEMP_SIZE_LIMIT         JS_BIT(TEMP_SIZE_LIMIT_LOG2)
+
+JS_STATIC_ASSERT(TEMP_SIZE_START >= sizeof(JSHashTable));
+
 static void *
 js_alloc_temp_space(void *priv, size_t size)
 {
-    JSContext *cx = (JSContext *) priv;
-    void *space;
+    JSCompiler *jsc = (JSCompiler *) priv;
 
-    JS_ARENA_ALLOCATE(space, &cx->tempPool, size);
+    void *space;
+    if (size < TEMP_SIZE_LIMIT) {
+        int bin = JS_CeilingLog2(size) - TEMP_SIZE_START_LOG2;
+        JS_ASSERT(unsigned(bin) < NUM_TEMP_FREELISTS);
+
+        space = jsc->tempFreeList[bin];
+        if (space) {
+            jsc->tempFreeList[bin] = *(void **)space;
+            return space;
+        }
+    }
+
+    JS_ARENA_ALLOCATE(space, &jsc->context->tempPool, size);
     if (!space)
-        js_ReportOutOfScriptQuota(cx);
+        js_ReportOutOfScriptQuota(jsc->context);
     return space;
 }
 
 static void
-js_free_temp_space(void *priv, void *item)
+js_free_temp_space(void *priv, void *item, size_t size)
 {
+    if (size >= TEMP_SIZE_LIMIT)
+        return;
+
+    JSCompiler *jsc = (JSCompiler *) priv;
+    int bin = JS_CeilingLog2(size) - TEMP_SIZE_START_LOG2;
+    JS_ASSERT(unsigned(bin) < NUM_TEMP_FREELISTS);
+
+    *(void **)item = jsc->tempFreeList[bin];
+    jsc->tempFreeList[bin] = item;
 }
 
 static JSHashEntry *
 js_alloc_temp_entry(void *priv, const void *key)
 {
-    JSContext *cx = (JSContext *) priv;
+    JSCompiler *jsc = (JSCompiler *) priv;
     JSAtomListElement *ale;
 
-    JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &cx->tempPool);
+    ale = jsc->aleFreeList;
+    if (ale) {
+        jsc->aleFreeList = ALE_NEXT(ale);
+        return &ale->entry;
+    }
+
+    JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &jsc->context->tempPool);
     if (!ale) {
-        js_ReportOutOfScriptQuota(cx);
+        js_ReportOutOfScriptQuota(jsc->context);
         return NULL;
     }
     return &ale->entry;
@@ -967,6 +1007,11 @@ js_alloc_temp_entry(void *priv, const void *key)
 static void
 js_free_temp_entry(void *priv, JSHashEntry *he, uintN flag)
 {
+    JSCompiler *jsc = (JSCompiler *) priv;
+    JSAtomListElement *ale = (JSAtomListElement *) he;
+
+    ALE_SET_NEXT(ale, jsc->aleFreeList);
+    jsc->aleFreeList = ale;
 }
 
 static JSHashAllocOps temp_alloc_ops = {
@@ -975,65 +1020,179 @@ static JSHashAllocOps temp_alloc_ops = {
 };
 
 JSAtomListElement *
-js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
+JSAtomList::rawLookup(JSAtom *atom, JSHashEntry **&hep)
 {
+    JSAtomListElement *ale;
+
+    if (table) {
+        hep = JS_HashTableRawLookup(table, ATOM_HASH(atom), atom);
+        ale = *hep ? (JSAtomListElement *) *hep : NULL;
+    } else {
+        JSHashEntry **alep = &list;
+        hep = NULL;
+        while ((ale = (JSAtomListElement *)*alep) != NULL) {
+            if (ALE_ATOM(ale) == atom) {
+                /* Hit, move atom's element to the front of the list. */
+                *alep = ale->entry.next;
+                ale->entry.next = list;
+                list = &ale->entry;
+                break;
+            }
+            alep = &ale->entry.next;
+        }
+    }
+    return ale;
+}
+
+#define ATOM_LIST_HASH_THRESHOLD        12
+
+JSAtomListElement *
+JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
+{
+    JS_ASSERT(!set);
+
     JSAtomListElement *ale, *ale2, *next;
     JSHashEntry **hep;
 
-    ATOM_LIST_LOOKUP(ale, hep, al, atom);
-    if (!ale) {
-        if (al->count < 10) {
-            /* Few enough for linear search, no hash table needed. */
-            JS_ASSERT(!al->table);
-            ale = (JSAtomListElement *)js_alloc_temp_entry(cx, atom);
+    ale = rawLookup(atom, hep);
+    if (!ale || how != UNIQUE) {
+        if (count < ATOM_LIST_HASH_THRESHOLD && !table) {
+            /* Few enough for linear search and no hash table yet needed. */
+            ale = (JSAtomListElement *)js_alloc_temp_entry(jsc, atom);
             if (!ale)
                 return NULL;
             ALE_SET_ATOM(ale, atom);
-            ale->entry.next = al->list;
-            al->list = &ale->entry;
+
+            if (how == HOIST) {
+                ale->entry.next = NULL;
+                hep = (JSHashEntry **) &list;
+                while (*hep)
+                    hep = &(*hep)->next;
+                *hep = &ale->entry;
+            } else {
+                ale->entry.next = list;
+                list = &ale->entry;
+            }
         } else {
-            /* We want to hash.  Have we already made a hash table? */
-            if (!al->table) {
+            /*
+             * We should hash, or else we already are hashing, but count was
+             * reduced by JSAtomList::rawRemove below ATOM_LIST_HASH_THRESHOLD.
+             * Check whether we should create the table.
+             */
+            if (!table) {
                 /* No hash table yet, so hep had better be null! */
                 JS_ASSERT(!hep);
-                al->table = JS_NewHashTable(al->count + 1, js_hash_atom_ptr,
-                                            JS_CompareValues, JS_CompareValues,
-                                            &temp_alloc_ops, cx);
-                if (!al->table)
+                table = JS_NewHashTable(count + 1, js_hash_atom_ptr,
+                                        JS_CompareValues, JS_CompareValues,
+                                        &temp_alloc_ops, jsc);
+                if (!table)
                     return NULL;
 
                 /*
                  * Set ht->nentries explicitly, because we are moving entries
-                 * from al to ht, not calling JS_HashTable(Raw|)Add.
+                 * from list to ht, not calling JS_HashTable(Raw|)Add.
                  */
-                al->table->nentries = al->count;
+                table->nentries = count;
 
-                /* Insert each ale on al->list into the new hash table. */
-                for (ale2 = (JSAtomListElement *)al->list; ale2; ale2 = next) {
+                /*
+                 * Insert each ale on list into the new hash table. Append to
+                 * the hash chain rather than inserting at the bucket head, to
+                 * preserve order among entries with the same key.
+                 */
+                for (ale2 = (JSAtomListElement *)list; ale2; ale2 = next) {
                     next = ALE_NEXT(ale2);
                     ale2->entry.keyHash = ATOM_HASH(ALE_ATOM(ale2));
-                    hep = JS_HashTableRawLookup(al->table, ale2->entry.keyHash,
+                    hep = JS_HashTableRawLookup(table, ale2->entry.keyHash,
                                                 ale2->entry.key);
-                    ale2->entry.next = *hep;
+                    while (*hep)
+                        hep = &(*hep)->next;
                     *hep = &ale2->entry;
+                    ale2->entry.next = NULL;
                 }
-                al->list = NULL;
+                list = NULL;
 
                 /* Set hep for insertion of atom's ale, immediately below. */
-                hep = JS_HashTableRawLookup(al->table, ATOM_HASH(atom), atom);
+                hep = JS_HashTableRawLookup(table, ATOM_HASH(atom), atom);
             }
 
             /* Finally, add an entry for atom into the hash bucket at hep. */
             ale = (JSAtomListElement *)
-                  JS_HashTableRawAdd(al->table, hep, ATOM_HASH(atom), atom,
-                                     NULL);
+                  JS_HashTableRawAdd(table, hep, ATOM_HASH(atom), atom, NULL);
             if (!ale)
                 return NULL;
+
+            /*
+             * If hoisting, move ale to the end of its chain after we called
+             * JS_HashTableRawAdd, since RawAdd may have grown the table and
+             * then recomputed hep to refer to the pointer to the first entry
+             * with the given key.
+             */
+            if (how == HOIST && ale->entry.next) {
+                *hep = ale->entry.next;
+                ale->entry.next = NULL;
+                do {
+                    hep = &(*hep)->next;
+                } while (*hep);
+                *hep = &ale->entry;
+            }
         }
 
-        ALE_SET_INDEX(ale, al->count++);
+        ALE_SET_INDEX(ale, count++);
     }
     return ale;
+}
+
+void
+JSAtomList::rawRemove(JSCompiler *jsc, JSAtomListElement *ale, JSHashEntry **hep)
+{
+    JS_ASSERT(!set);
+    JS_ASSERT(count != 0);
+
+    if (table) {
+        JS_ASSERT(hep);
+        JS_HashTableRawRemove(table, hep, &ale->entry);
+    } else {
+        JS_ASSERT(!hep);
+        hep = &list;
+        while (*hep != &ale->entry) {
+            JS_ASSERT(*hep);
+            hep = &(*hep)->next;
+        }
+        *hep = ale->entry.next;
+        js_free_temp_entry(jsc, &ale->entry, HT_FREE_ENTRY);
+    }
+
+    --count;
+}
+
+JSAtomListElement *
+JSAtomListIterator::operator ()()
+{
+    JSAtomListElement *ale;
+    JSHashTable *ht;
+
+    if (index == uint32(-1))
+        return NULL;
+
+    ale = next;
+    if (!ale) {
+        ht = list->table;
+        if (!ht)
+            goto done;
+        do {
+            if (index == JS_BIT(JS_HASH_BITS - ht->shift))
+                goto done;
+            next = (JSAtomListElement *) ht->buckets[index++];
+        } while (!next);
+        ale = next;
+    }
+
+    next = ALE_NEXT(ale);
+    return ale;
+
+  done:
+    index = uint32(-1);
+    return NULL;
 }
 
 static intN
@@ -1081,5 +1240,5 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
             vector[ALE_INDEX(ale)] = ALE_ATOM(ale);
         } while ((ale = ALE_NEXT(ale)) != NULL);
     }
-    ATOM_LIST_INIT(al);
+    al->clear();
 }
