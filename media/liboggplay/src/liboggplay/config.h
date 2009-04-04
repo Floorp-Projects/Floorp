@@ -110,6 +110,6 @@
 
 #include "prcpucfg.h"
 #ifdef IS_BIG_ENDIAN
-#define WORDS_BIGENDIAN
+#define WORDS_BIGENDIAN 1
 #endif
 

@@ -13,6 +13,6 @@ diff --git a/media/liboggplay/src/liboggplay/config.h b/media/liboggplay/src/lib
 +
 +#include "prcpucfg.h"
 +#ifdef IS_BIG_ENDIAN
-+#define WORDS_BIGENDIAN
++#define WORDS_BIGENDIAN 1
 +#endif
 +
