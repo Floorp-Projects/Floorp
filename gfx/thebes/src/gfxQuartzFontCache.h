@@ -213,6 +213,8 @@ public:
     PRBool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
     void UpdateFontList() { InitFontList(); }
 
+    void ClearPrefFonts() { mPrefFonts.Clear(); }
+
     void GetFontFamilyList(nsTArray<nsRefPtr<MacOSFamilyEntry> >& aFamilyArray);
 
     MacOSFontEntry* FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont);
@@ -272,7 +274,6 @@ private:
 
     void GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult);
     static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
-    static int PrefChangedCallback(const char *aPrefName, void *closure);
 
     static PLDHashOperator
         HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
