@@ -3277,7 +3277,7 @@ js_FastNewArrayWithLength(JSContext* cx, JSObject* proto, uint32 i)
 JSObject* FASTCALL
 js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
 {
-    JSObject* obj = js_FastNewArrayWithLength(cx, proto, len);
+    JSObject *obj = js_FastNewArrayWithLength(cx, proto, len);
     if (!obj || !ResizeSlots(cx, obj, 0, JS_MAX(len, ARRAY_CAPACITY_MIN)))
         return NULL;
     return obj;
