@@ -4350,10 +4350,74 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
-        /* Indicate we cannot clone this object. */
-        return funobj;
+        /*
+         * We cannot clone this object, so fail (we used to return funobj, bad
+         * idea, but we changed incompatibly to teach any abusers a lesson!).
+         */
+        jsval v = OBJECT_TO_JSVAL(funobj);
+        js_ReportIsNotFunction(cx, &v, 0);
+        return NULL;
     }
-    return js_CloneFunctionObject(cx, GET_FUNCTION_PRIVATE(cx, funobj), parent);
+
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    JSObject *clone = js_CloneFunctionObject(cx, fun, parent);
+    if (!clone)
+        return NULL;
+
+    /*
+     * A flat closure carries its own environment, so why clone it? In case
+     * someone wants to mutate its fixed slots or add ad-hoc properties. API
+     * compatibility suggests we not return funobj and let callers mutate the
+     * returned object at will.
+     *
+     * But it's worse than that: API compatibility according to the test for
+     * bug 300079 requires we get "upvars" from parent and its ancestors! So
+     * we do that (grudgingly!). The scope chain ancestors are searched as if
+     * they were activations, respecting the skip field in each upvar's cookie
+     * but looking up the property by name instead of frame slot.
+     */
+    if (FUN_FLAT_CLOSURE(fun)) {
+        JS_ASSERT(funobj->dslots);
+        JS_ASSERT(JSSLOT_FREE(&js_FunctionClass) == JS_INITIAL_NSLOTS);
+
+        uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
+        JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
+        nslots += js_FunctionClass.reserveSlots(cx, clone);
+        if (!js_ReallocSlots(cx, clone, nslots, JS_TRUE))
+            return NULL;
+
+        JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+        JS_ASSERT(uva->length <= size_t(clone->dslots[-1]));
+
+        void *mark = JS_ARENA_MARK(&cx->tempPool);
+        jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
+        if (!names)
+            return NULL;
+
+        uint32 i = 0, n = uva->length;
+        for (; i < n; i++) {
+            JSObject *obj = parent;
+            for (uintN skip = UPVAR_FRAME_SKIP(uva->vector[i]); skip != 0; --skip) {
+                if (!obj) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
+                    goto break2;
+                }
+                obj = OBJ_GET_PARENT(cx, obj);
+            }
+
+            JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(names[i]);
+            if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &clone->dslots[i]))
+                break;
+        }
+
+      break2:
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
+        if (i < n)
+            return NULL;
+    }
+
+    return clone;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4673,8 +4737,8 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = js_CompileScript(cx, obj, NULL, principals, tcflags,
-                              chars, length, NULL, filename, lineno);
+    script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                       chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4686,7 +4750,6 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
     jschar *chars;
     JSBool result;
     JSExceptionState *exnState;
-    JSParseContext pc;
     JSErrorReporter older;
 
     CHECK_REQUEST(cx);
@@ -4700,20 +4763,21 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
      */
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
-    if (js_InitParseContext(cx, &pc, NULL, NULL, chars, length, NULL, NULL,
-                            1)) {
-        older = JS_SetErrorReporter(cx, NULL);
-        if (!js_ParseScript(cx, obj, &pc) &&
-            (pc.tokenStream.flags & TSF_UNEXPECTED_EOF)) {
-            /*
-             * We ran into an error.  If it was because we ran out of source,
-             * we return false, so our caller will know to try to collect more
-             * buffered source.
-             */
-            result = JS_FALSE;
+    {
+        JSCompiler jsc(cx);
+        if (jsc.init(chars, length, NULL, NULL, 1)) {
+            older = JS_SetErrorReporter(cx, NULL);
+            if (!jsc.parse(obj) &&
+                (jsc.tokenStream.flags & TSF_UNEXPECTED_EOF)) {
+                /*
+                 * We ran into an error. If it was because we ran out of
+                 * source, we return false so our caller knows to try to
+                 * collect more buffered source.
+                 */
+                result = JS_FALSE;
+            }
+            JS_SetErrorReporter(cx, older);
         }
-        JS_SetErrorReporter(cx, older);
-        js_FinishParseContext(cx, &pc);
     }
     JS_free(cx, chars);
     JS_RestoreExceptionState(cx, exnState);
@@ -4740,8 +4804,8 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
     }
 
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = js_CompileScript(cx, obj, NULL, NULL, tcflags,
-                              NULL, 0, fp, filename, 1);
+    script = JSCompiler::compileScript(cx, obj, NULL, NULL, tcflags,
+                                       NULL, 0, fp, filename, 1);
     if (fp != stdin)
         fclose(fp);
     LAST_FRAME_CHECKS(cx, script);
@@ -4765,8 +4829,8 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = js_CompileScript(cx, obj, NULL, principals, tcflags,
-                              NULL, 0, file, filename, 1);
+    script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                       NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4902,8 +4966,8 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         }
     }
 
-    if (!js_CompileFunctionBody(cx, fun, principals, chars, length,
-                                filename, lineno)) {
+    if (!JSCompiler::compileFunctionBody(cx, fun, principals,
+                                         chars, length, filename, lineno)) {
         fun = NULL;
         goto out;
     }
@@ -5103,11 +5167,11 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    script = js_CompileScript(cx, obj, NULL, principals,
-                              !rval
-                              ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
-                              : TCF_COMPILE_N_GO,
-                              chars, length, NULL, filename, lineno);
+    script = JSCompiler::compileScript(cx, obj, NULL, principals,
+                                       !rval
+                                       ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
+                                       : TCF_COMPILE_N_GO,
+                                       chars, length, NULL, filename, lineno);
     if (!script) {
         LAST_FRAME_CHECKS(cx, script);
         return JS_FALSE;
