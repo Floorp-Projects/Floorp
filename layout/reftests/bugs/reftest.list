@@ -214,6 +214,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rt
 == 244932-1.html 244932-1-ref.html
 == 249141.xul 249141-ref.xul
 == 249982-1.html 249982-1-ref.html
+== 246669-1.html 246669-1-ref.html
 == 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
 == 255820-1.html 255820-1-ref.html
