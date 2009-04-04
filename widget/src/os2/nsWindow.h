@@ -166,7 +166,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
-   NS_IMETHOD              HasPendingEvent(PRBool& aHasPending);
+   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
 
    // Widget appearance
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
