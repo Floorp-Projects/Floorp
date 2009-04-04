@@ -172,21 +172,6 @@ struct JSTraceMonitor {
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
-
-    /* Arena-pool for storing temps used during compilation. */
-    JSArenaPool             tempPool;
-
-    /*
-     * Native data area. We store the interpreter state and and a native
-     * representation of all accessed properties of the global object
-     * here during trace execution.
-     */
-    void*                   nativeData;
-
-    /* Likewise, but for the native stack slots and FrameInfo* records. */
-    void*                   nativeStack;
-    void*                   nativeFrames;
-
 };
 
 typedef struct InterpStruct InterpStruct;
