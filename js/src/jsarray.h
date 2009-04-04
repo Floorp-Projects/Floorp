@@ -73,8 +73,11 @@ extern JSClass js_ArrayClass, js_SlowArrayClass;
  *
  * Therefore the interpreter (js_Interpret in JSOP_GETPROP and JSOP_CALLPROP)
  * and js_GetPropertyHelper use this inline function to skip up one link in the
- * prototype chain when obj is a dense array, in order to find a likely-native
- * object (to wit, Array.prototype) in which to probe for cached methods.
+ * prototype chain when obj is a dense array, in order to find a native object
+ * (to wit, Array.prototype) in which to probe for cached methods.
+ *
+ * Note that setting aobj.__proto__ for a dense array aobj turns aobj into a
+ * slow array, avoiding the neede to skip.
  *
  * Callers of js_GetProtoIfDenseArray must take care to use the original object
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
