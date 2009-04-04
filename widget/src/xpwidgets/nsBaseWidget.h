@@ -127,7 +127,7 @@ public:
   NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
-  NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
+  NS_IMETHOD              HasPendingEvent(PRBool& aHasPending);
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec);
   NS_IMETHOD              BeginSecureKeyboardInput();
   NS_IMETHOD              EndSecureKeyboardInput();

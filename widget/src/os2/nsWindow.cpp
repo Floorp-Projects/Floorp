@@ -3549,16 +3549,12 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 NS_IMETHODIMP
-nsWindow::GetLastInputEventTime(PRUint32& aTime)
+nsWindow::HasPendingEvent(PRBool& aHasPending)
 {
    ULONG ulStatus = WinQueryQueueStatus(HWND_DESKTOP);
 
    // If there is pending input then return the current time.
-   if (ulStatus & (QS_KEY | QS_MOUSE)) {
-     gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-   }
-
-   aTime = gLastInputEventTime;
+   *aHasPending = !!(ulStatus & (QS_KEY | QS_MOUSE));
 
    return NS_OK;
 }

@@ -917,7 +917,7 @@ class nsIWidget : public nsISupports {
      * is platform dependent, but is compatible with the expression 
      * PR_IntervalToMicroseconds(PR_IntervalNow()).
      */
-    NS_IMETHOD GetLastInputEventTime(PRUint32& aTime) = 0;
+    NS_IMETHOD HasPendingEvent(PRBool& aHasPending) = 0;
 
     /**
      * Called when when we need to begin secure keyboard input, such as when a password field
