@@ -135,5 +135,4 @@
 /* Define for MSVC as <stdint.h> is unavailable there */
 typedef unsigned char uint8_t;
 
-#define inline __inline // MSVC
-#undef DEBUG
+#define inline __inline // MSVC#undef DEBUG
