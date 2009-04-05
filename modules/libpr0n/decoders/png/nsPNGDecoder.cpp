@@ -196,7 +196,7 @@ void nsPNGDecoder::EndImageFrame()
     mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
 
-  mImage->EndFrameDecode(numFrames, timeout);
+  mImage->EndFrameDecode(numFrames);
   if (mObserver)
     mObserver->OnStopFrame(nsnull, mFrame);
 }
