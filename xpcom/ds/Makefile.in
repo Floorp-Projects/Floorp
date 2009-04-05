@@ -53,12 +53,14 @@ REQUIRES	= \
 		  $(NULL)
 
 CPPSRCS		= \
+		nsArray.cpp \
 		nsAtomTable.cpp \
 		nsAtomService.cpp \
 		nsByteBuffer.cpp \
 		nsCheapSets.cpp \
 		nsCRT.cpp \
 		nsFixedSizeAllocator.cpp \
+		nsHashPropertyBag.cpp \
 		nsHashSets.cpp \
 		nsHashtable.cpp \
 		nsINIParserImpl.cpp \
@@ -72,11 +74,10 @@ CPPSRCS		= \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
+		nsTimelineService.cpp \
+		nsTimeStamp.cpp \
 		nsUnicharBuffer.cpp \
 		nsVariant.cpp \
-		nsTimelineService.cpp \
-		nsArray.cpp \
-		nsHashPropertyBag.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -100,6 +101,7 @@ EXPORTS		= \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
 		nsTime.h \
+		nsTimeStamp.h \
 		nsVariant.h \
 		nsStringEnumerator.h \
 		nsHashPropertyBag.h \
