@@ -360,18 +360,15 @@ CanvasBrowser.prototype = {
   },
 
   _handleMozAfterPaint: function(aEvent) {
-    let cwin = this._browser.contentWindow;
-
-    let csx = cwin.scrollX;
-    let csy = cwin.scrollY;
+    let [scrollX, scrollY] = this.contentScrollValues;
     let clientRects = aEvent.clientRects;
 
     let rects = [];
     // loop backwards to avoid xpconnect penalty for .length
     for (let i = clientRects.length - 1; i >= 0; --i) {
       let e = clientRects.item(i);
-      let r = new wsRect(e.left + csx,
-                         e.top + csy,
+      let r = new wsRect(e.left + scrollX,
+                         e.top + scrollY,
                          e.width, e.height);
       rects.push(r);
     }
@@ -589,16 +586,15 @@ CanvasBrowser.prototype = {
    * (relative to the document origin).
    */
   _getPagePosition: function(aElement) {
+    let [scrollX, scrollY] = this.contentScrollValues;
     let r = aElement.getBoundingClientRect();
-    let cwin = this._browser.contentWindow;
-    let retVal = {
+
+    return {
       width: r.width,
       height: r.height,
-      x: r.left + cwin.scrollX,
-      y: r.top + cwin.scrollY
+      x: r.left + scrollX,
+      y: r.top + scrollY
     };
-
-    return retVal;
   },
 
   /* Given a set of client coordinates (relative to the app window),
@@ -614,9 +610,17 @@ CanvasBrowser.prototype = {
     let clickOffsetY = this._screenToPage(aClientY - canvasRect.top) + this._pageBounds.y;
 
     // Take scroll offset into account to return coordinates relative to the viewport
-    let cwin = this._browser.contentWindow;
-    return [clickOffsetX - cwin.scrollX,
-            clickOffsetY - cwin.scrollY];
+    let [scrollX, scrollY] = this.contentScrollValues;
+    return [clickOffsetX - scrollX,
+            clickOffsetY - scrollY];
+  },
+  
+  get contentScrollValues() {
+    let cwu = this.contentDOMWindowUtils;
+    let scrollX = {}, scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+
+    return [scrollX.value, scrollY.value];
   },
 
   get _effectiveContentAreaDimensions() {
