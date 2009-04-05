@@ -74,6 +74,7 @@ _BROWSER_FILES = browser_sanitize-timespans.js \
                  browser_bug441778.js \
                  browser_bug455852.js \
                  browser_bug462673.js \
+                 browser_bug481560.js \
                  browser_discovery.js \
                  discovery.html \
                  moz.png \
