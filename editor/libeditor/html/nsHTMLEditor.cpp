@@ -97,8 +97,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIImage.h"
-#include "nsAOLCiter.h"
-#include "nsInternetCiter.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"
