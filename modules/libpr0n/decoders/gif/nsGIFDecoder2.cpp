@@ -413,7 +413,7 @@ void nsGIFDecoder2::EndImageFrame()
     mImageFrame->SetTimeout(mGIFStruct.delay_time);
     if (mGIFStruct.images_decoded)
       mImageContainer->AppendFrame(mImageFrame);
-    mImageContainer->EndFrameDecode(mGIFStruct.images_decoded, mGIFStruct.delay_time);
+    mImageContainer->EndFrameDecode(mGIFStruct.images_decoded);
     mGIFStruct.images_decoded++; 
 
     if (mObserver)
