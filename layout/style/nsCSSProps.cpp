@@ -1259,7 +1259,7 @@ const PRInt32 nsCSSProps::kFillRuleKTable[] = {
 const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
   eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY,
-  eCSSKeyword__moz_disable_resampling, NS_STYLE_IMAGE_RENDERING_DISABLE_RESAMPLING,
+  eCSSKeyword__moz_crisp_edges, NS_STYLE_IMAGE_RENDERING_CRISPEDGES,
   eCSSKeyword_UNKNOWN, -1
 };
 
