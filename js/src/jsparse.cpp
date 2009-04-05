@@ -605,7 +605,7 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     }
 
     /*
-     * Global variables and regexps shares the index space with locals. Due to
+     * Global variables and regexps share the index space with locals. Due to
      * incremental code generation we need to patch the bytecode to adjust the
      * local references to skip the globals.
      */
