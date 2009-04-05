@@ -60,6 +60,7 @@ class nsIFontMetrics;
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIPresShell.h"
+#include "gfxPattern.h"
 
 class nsBlockFrame;
 class nsTextFragment;
@@ -804,6 +805,11 @@ public:
    */
   static nsIFrame* GetClosestLayer(nsIFrame* aFrame);
 
+  /**
+   * Gets the graphics filter for the frame
+   */
+  static gfxPattern::GraphicsFilter GetGraphicsFilterForFrame(nsIFrame* aFrame);
+
   /* N.B. The only difference between variants of the Draw*Image
    * functions below is the type of the aImage argument.
    */
@@ -824,6 +830,7 @@ public:
    */
   static nsresult DrawImage(nsIRenderingContext* aRenderingContext,
                             imgIContainer*       aImage,
+                            gfxPattern::GraphicsFilter aGraphicsFilter,
                             const nsRect&        aDest,
                             const nsRect&        aFill,
                             const nsPoint&       aAnchor,
@@ -831,6 +838,7 @@ public:
 
   static nsresult DrawImage(nsIRenderingContext* aRenderingContext,
                             nsIImage*            aImage,
+                            gfxPattern::GraphicsFilter aGraphicsFilter,
                             const nsRect&        aDest,
                             const nsRect&        aFill,
                             const nsPoint&       aAnchor,
@@ -872,12 +880,14 @@ public:
    */
   static nsresult DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                   imgIContainer*       aImage,
+                                  gfxPattern::GraphicsFilter aGraphicsFilter,
                                   const nsRect&        aDest,
                                   const nsRect&        aDirty,
                                   const nsRect*        aSourceArea = nsnull);
 
   static nsresult DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                   nsIImage*            aImage,
+                                  gfxPattern::GraphicsFilter aGraphicsFilter,
                                   const nsRect&        aDest,
                                   const nsRect&        aDirty,
                                   const nsRect*        aSourceArea = nsnull);
