@@ -68,6 +68,7 @@ __all__ = [
            "DEFAULT_APP",
            "CERTS_SRC_DIR",
            "environment",
+           "dumpLeakLog",
           ]
 
 # These are generated in mozilla/build/Makefile.in
@@ -430,8 +431,35 @@ def checkForCrashes(profileDir, symbolsPath):
 # RUN THE APP #
 ###############
 
-def processLeakLog(leakLogFile, leakThreshold):
-  "Process the leak log."
+def dumpLeakLog(leakLogFile, filter = False):
+  """Process the leak log, without parsing it.
+
+  Use this function if you want the raw log only.
+  Use it preferably with the |XPCOM_MEM_LEAK_LOG| environment variable.
+  """
+
+  # Don't warn (nor "info") if the log file is not there.
+  if not os.path.exists(leakLogFile):
+    return
+
+  leaks = open(leakLogFile, "r")
+  leakReport = leaks.read()
+  leaks.close()
+
+  # Only |XPCOM_MEM_LEAK_LOG| reports can be actually filtered out.
+  # Only check whether an actual leak was reported.
+  if filter and not "0 TOTAL " in leakReport:
+    return
+
+  # Simply copy the log.
+  log.info(leakReport.rstrip("\n"))
+
+def processLeakLog(leakLogFile, leakThreshold = 0):
+  """Process the leak log, parsing it.
+
+  Use this function if you want an additional PASS/FAIL summary.
+  It must be used with the |XPCOM_MEM_BLOAT_LOG| environment variable.
+  """
 
   if not os.path.exists(leakLogFile):
     log.info("WARNING refcount logging is off, so leaks can't be detected!")
