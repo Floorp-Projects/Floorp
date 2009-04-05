@@ -395,18 +395,6 @@ WidgetStack.prototype = {
     }
   },
 
-  // handleEvents: if this is called, WS will install its own event handlers
-  // on the stack element for mouse clicks and motion.  Otherwise, the application
-  // must call dragStart/dragMove/dragStop as appropriate.
-  handleEvents: function () {
-    let self = this;
-
-    let e = window;
-    e.addEventListener("mousedown", function (ev) { return self._onMouseDown(ev); }, true);
-    e.addEventListener("mouseup", function (ev) { return self._onMouseUp(ev); }, true);
-    e.addEventListener("mousemove", function (ev) { return self._onMouseMove(ev); }, true);
-  },
-
   // moveWidgetBy: move the widget with the given id by x,y.  Should
   // not be used on vp-relative or otherwise frozen widgets (using it
   // on the x coordinate for x-ignore widgets and similarily for y is
@@ -818,59 +806,8 @@ WidgetStack.prototype = {
     return w; 
   },
 
-  _onMouseDown: function (ev) {
-    log("(mousedown)");
-    this.dragStart(ev.screenX, ev.screenY);
-
-    // we haven't yet recognized a drag; whatever happens make
-    // sure we start one after 50ms.
-    this._dragState.dragging = false;
-
-    let self = this;
-    this._dragState.dragStartTimeout = setTimeout(function () {
-                                                    self._dragState.dragStartTimeout = -1;
-                                                    self._delayedDragStart();
-                                                    self._dragUpdate();
-                                                  }, 50);
-  },
-
-  _onMouseUp: function (ev) {
-    log("(mouseup)");
-    if (!this._dragState)
-      return;
-
-    if (this._dragState.dragStartTimeout != -1)
-      clearTimeout(this._dragState.dragStartTimeout);
-
-    this.dragStop();
-  },
-
-  _onMouseMove: function (ev) {
-    if (!this._dragging)
-      return;
-
-    this._dragCoordsFromClient(ev.screenX, ev.screenY);
-
-    if (!this._dragging && this._dragState.outerDistSquared > 100)
-      this._delayedDragStart();
-
-    this.dragMove(ev.screenX, ev.screenY);
-  },
-
   get _dragging() {
     return this._dragState && this._dragState.dragging;
-  },
-
-  // dragStart: a drag was started, either by distance or by time.
-  _delayedDragStart: function () {
-    log("(dragStart)");
-    if (this._dragging)
-      return;
-
-    if (this._dragState.dragStartTimeout != -1)
-      clearTimeout(this._dragState.dragStartTimeout);
-
-    this._dragState.dragging = true;
   },
 
   _viewportUpdate: function _viewportUpdate() {
@@ -931,7 +868,6 @@ WidgetStack.prototype = {
     let dy = this._dragState.outerCurY - this._dragState.outerStartY;
     this._dragState.outerDX = dx;
     this._dragState.outerDY = dy;
-    this._dragState.outerDistSquared = dx*dx + dy*dy;
   },
 
   _panHandleBarriers: function (dx, dy) {
