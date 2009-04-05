@@ -322,6 +322,7 @@ static void DrawBorderImage(nsPresContext* aPresContext,
                             const nsRect& aDirtyRect);
 
 static void DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
+                                     nsIFrame* aForFrame,
                                      nsIImage* aImage,
                                      const nsRect& aDirtyRect,
                                      const nsRect& aFill,
@@ -1834,6 +1835,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   fillArea.IntersectRect(fillArea, aBGClipRect);
 
   nsLayoutUtils::DrawImage(&aRenderingContext, image,
+      nsLayoutUtils::GetGraphicsFilterForFrame(aForFrame),
       destArea, fillArea, anchor + aBorderArea.TopLeft(), aDirtyRect);
 }
 
@@ -2049,7 +2051,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
         fillStyleV = NS_STYLE_BORDER_IMAGE_STRETCH;
       }
 
-      DrawBorderImageComponent(aRenderingContext, img, aDirtyRect,
+      DrawBorderImageComponent(aRenderingContext, aForFrame,
+                               img, aDirtyRect,
                                destArea, subArea,
                                fillStyleH, fillStyleV, unitSize);
     }
@@ -2058,6 +2061,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
 static void
 DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
+                         nsIFrame*            aForFrame,
                          nsIImage*            aImage,
                          const nsRect&        aDirtyRect,
                          const nsRect&        aFill,
@@ -2073,6 +2077,9 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
   if (NS_FAILED(aImage->Extract(aSrc, getter_AddRefs(subImage))))
     return;
 
+  gfxPattern::GraphicsFilter graphicsFilter =
+    nsLayoutUtils::GetGraphicsFilterForFrame(aForFrame);
+
   // If we have no tiling in either direction, we can skip the intermediate
   // scaling step.
   if ((aHFill == NS_STYLE_BORDER_IMAGE_STRETCH &&
@@ -2080,6 +2087,7 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
       (aUnitSize.width == aFill.width &&
        aUnitSize.height == aFill.height)) {
     nsLayoutUtils::DrawSingleImage(&aRenderingContext, subImage,
+                                   graphicsFilter,
                                    aFill, aDirtyRect);
     return;
   }
@@ -2124,7 +2132,7 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
     NS_NOTREACHED("unrecognized border-image fill style");
   }
 
-  nsLayoutUtils::DrawImage(&aRenderingContext, subImage,
+  nsLayoutUtils::DrawImage(&aRenderingContext, subImage, graphicsFilter,
                            tile, aFill, tile.TopLeft(), aDirtyRect);
 }
 

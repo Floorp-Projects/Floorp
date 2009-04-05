@@ -2668,6 +2668,25 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   return aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
 }
 
+gfxPattern::GraphicsFilter
+nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aFrame)
+{
+#ifdef MOZ_SVG
+  switch (aFrame->GetStyleSVG()->mImageRendering) {
+  case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
+    return gfxPattern::FILTER_FAST;
+  case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
+    return gfxPattern::FILTER_BEST;
+  case NS_STYLE_IMAGE_RENDERING_CRISPEDGES:
+    return gfxPattern::FILTER_NEAREST;
+  default:
+    return gfxPattern::FILTER_GOOD;
+  }
+#else
+  return gfxPattern::FILTER_GOOD;
+#endif
+}
+
 /**
  * Given an image being drawn into an appunit coordinate system, and
  * a point in that coordinate system, map the point back into image
@@ -2703,6 +2722,7 @@ MapToFloatUserPixels(const gfxSize& aSize,
 static nsresult
 DrawImageInternal(nsIRenderingContext* aRenderingContext,
                   nsIImage*            aImage,
+                  gfxPattern::GraphicsFilter aGraphicsFilter,
                   const nsRect&        aDest,
                   const nsRect&        aFill,
                   const nsPoint&       aAnchor,
@@ -2811,7 +2831,7 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
   nsIntMargin padding(aInnerRect.x, aInnerRect.y,
                       imageSize.width - aInnerRect.XMost(),
                       imageSize.height - aInnerRect.YMost());
-  aImage->Draw(ctx, transform, finalFillRect, padding, intSubimage);
+  aImage->Draw(ctx, aGraphicsFilter, transform, finalFillRect, padding, intSubimage);
   return NS_OK;
 }
 
@@ -2845,14 +2865,15 @@ DrawSingleUnscaledImageInternal(nsIRenderingContext* aRenderingContext,
   // outside the image bounds, we want to honor the aSourceArea-to-aDest
   // translation but we don't want to actually tile the image.
   fill.IntersectRect(fill, dest);
-  return DrawImageInternal(aRenderingContext, aImage, dest, fill,
-                           aDest, aDirty, aImageSize, aInnerRect);
+  return DrawImageInternal(aRenderingContext, aImage, gfxPattern::FILTER_NEAREST,
+                           dest, fill, aDest, aDirty, aImageSize, aInnerRect);
 }
 
 /* Workhorse for DrawSingleImage.  */
 static nsresult
 DrawSingleImageInternal(nsIRenderingContext* aRenderingContext,
                         nsIImage*            aImage,
+                        gfxPattern::GraphicsFilter aGraphicsFilter,
                         const nsRect&        aDest,
                         const nsRect&        aDirty,
                         const nsRect*        aSourceArea,
@@ -2878,7 +2899,7 @@ DrawSingleImageInternal(nsIRenderingContext* aRenderingContext,
   // transform but we don't want to actually tile the image.
   nsRect fill;
   fill.IntersectRect(aDest, dest);
-  return DrawImageInternal(aRenderingContext, aImage, dest, fill,
+  return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter, dest, fill,
                            fill.TopLeft(), aDirty, aImageSize, aInnerRect);
 }
 
@@ -2888,6 +2909,7 @@ DrawSingleImageInternal(nsIRenderingContext* aRenderingContext,
 /* static */ nsresult
 nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                          imgIContainer*       aImage,
+                         gfxPattern::GraphicsFilter aGraphicsFilter,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,
@@ -2907,7 +2929,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   aImage->GetWidth(&imageSize.width);
   aImage->GetHeight(&imageSize.height);
 
-  return DrawImageInternal(aRenderingContext, img,
+  return DrawImageInternal(aRenderingContext, img, aGraphicsFilter,
                            aDest, aFill, aAnchor, aDirty,
                            imageSize, innerRect);
 }
@@ -2915,13 +2937,14 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
 /* static */ nsresult
 nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                          nsIImage*            aImage,
+                         gfxPattern::GraphicsFilter aGraphicsFilter,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,
                          const nsRect&        aDirty)
 {
   nsIntSize imageSize(aImage->GetWidth(), aImage->GetHeight());
-  return DrawImageInternal(aRenderingContext, aImage,
+  return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter,
                            aDest, aFill, aAnchor, aDirty,
                            imageSize, nsIntRect(nsIntPoint(0,0), imageSize));
 }
@@ -2955,6 +2978,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
 /* static */ nsresult
 nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                imgIContainer*       aImage,
+                               gfxPattern::GraphicsFilter aGraphicsFilter,
                                const nsRect&        aDest,
                                const nsRect&        aDirty,
                                const nsRect*        aSourceArea)
@@ -2973,7 +2997,7 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
   aImage->GetWidth(&imageSize.width);
   aImage->GetHeight(&imageSize.height);
 
-  return DrawSingleImageInternal(aRenderingContext, img,
+  return DrawSingleImageInternal(aRenderingContext, img, aGraphicsFilter,
                                  aDest, aDirty, aSourceArea,
                                  imageSize, innerRect);
 }
@@ -2981,12 +3005,13 @@ nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
 /* static */ nsresult
 nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                nsIImage*            aImage,
+                               gfxPattern::GraphicsFilter aGraphicsFilter,
                                const nsRect&        aDest,
                                const nsRect&        aDirty,
                                const nsRect*        aSourceArea)
 {
   nsIntSize imageSize(aImage->GetWidth(), aImage->GetHeight());
-  return DrawSingleImageInternal(aRenderingContext, aImage,
+  return DrawSingleImageInternal(aRenderingContext, aImage, aGraphicsFilter,
                                  aDest, aDirty, aSourceArea,
                                  imageSize,
                                  nsIntRect(nsIntPoint(0, 0), imageSize));
