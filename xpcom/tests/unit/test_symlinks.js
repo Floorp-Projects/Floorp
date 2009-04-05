@@ -58,7 +58,7 @@ function makeSymLink(from, toName, relative) {
   print(to.path);
 
   if (isUnix && (from.leafName == DOES_NOT_EXIST || from.isSymlink())) {
-    // Bug 485325: nsLocalFileUnix::IsSymlink() is broken for dangling symlinks
+    // Bug 485325: nsLocalFileUnix::IsSymlink() is broken for nonexistent files
     // Bug 485328: nsLocalFileUnix::GetTarget() is broken for dangling symlinks
     if (from.leafName != DOES_NOT_EXIST) {
       let fromN = from.clone();
