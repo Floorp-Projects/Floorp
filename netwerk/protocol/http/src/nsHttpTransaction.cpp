@@ -935,7 +935,8 @@ nsHttpTransaction::HandleContent(char *buf,
         // headers. So, unless the connection is persistent, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
-        if (mConnection->IsPersistent()) {
+        if (mConnection->IsPersistent() ||
+            mResponseHead->Version() >= NS_HTTP_VERSION_1_1) {
             nsInt64 remaining = mContentLength - mContentRead;
             nsInt64 count64 = count;
             *contentRead = PR_MIN(count64, remaining);
