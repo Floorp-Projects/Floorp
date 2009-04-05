@@ -865,7 +865,7 @@ function makePreview(row)
       item instanceof HTMLLinkElement)
     mimeType = item.type;
 
-  if (!mimeType && item instanceof nsIImageLoadingContent) {
+  if (!mimeType && !isBG && item instanceof nsIImageLoadingContent) {
     var imageRequest = item.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
     if (imageRequest) {
       mimeType = imageRequest.mimeType;
@@ -877,23 +877,28 @@ function makePreview(row)
   if (!mimeType)
     mimeType = getContentTypeFromHeaders(cacheEntryDescriptor);
 
+  var imageType;
   if (mimeType) {
     // We found the type, try to display it nicely
     var imageMimeType = /^image\/(.*)/.exec(mimeType);
     if (imageMimeType) {
-      mimeType = imageMimeType[1].toUpperCase();
+      imageType = imageMimeType[1].toUpperCase();
       if (numFrames > 1)
-        mimeType = gBundle.getFormattedString("mediaAnimatedImageType",
-                                              [mimeType, numFrames]);
+        imageType = gBundle.getFormattedString("mediaAnimatedImageType",
+                                               [imageType, numFrames]);
       else
-        mimeType = gBundle.getFormattedString("mediaImageType", [mimeType]);
+        imageType = gBundle.getFormattedString("mediaImageType", [imageType]);
+    }
+    else {
+      // the MIME type doesn't begin with image/, display the raw type
+      imageType = mimeType;
     }
   }
   else {
     // We couldn't find the type, fall back to the value in the treeview
-    mimeType = gImageView.data[row][COL_IMAGE_TYPE];
+    imageType = gImageView.data[row][COL_IMAGE_TYPE];
   }
-  setItemValue("imagetypetext", mimeType);
+  setItemValue("imagetypetext", imageType);
 
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
