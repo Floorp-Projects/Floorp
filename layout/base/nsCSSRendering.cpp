@@ -1101,10 +1101,10 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
-  if (!styleBorder->mBoxShadow || aForFrame->IsThemed())
+  nsCSSShadowArray* shadows = aForFrame->GetEffectiveBoxShadows();
+  if (!shadows)
     return;
-
+  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
   PRIntn sidesToSkip = aForFrame->GetSkipSides();
 
   // Get any border radius, since box-shadow must also have rounded corners if the frame does
@@ -1121,8 +1121,8 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   frameGfxRect.Round();
   gfxRect dirtyGfxRect = RectToGfxRect(aDirtyRect, twipsPerPixel);
 
-  for (PRUint32 i = styleBorder->mBoxShadow->Length(); i > 0; --i) {
-    nsCSSShadowItem* shadowItem = styleBorder->mBoxShadow->ShadowAt(i - 1);
+  for (PRUint32 i = shadows->Length(); i > 0; --i) {
+    nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
     if (shadowItem->mInset)
       continue;
 
@@ -1196,9 +1196,10 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
 {
-  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
-  if (!styleBorder->mBoxShadow || aForFrame->IsThemed())
+  nsCSSShadowArray* shadows = aForFrame->GetEffectiveBoxShadows();
+  if (!shadows)
     return;
+  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
 
   // Get any border radius, since box-shadow must also have rounded corners if the frame does
   nscoord twipsRadii[8];
@@ -1230,8 +1231,8 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   frameGfxRect.Round();
   gfxRect dirtyGfxRect = RectToGfxRect(aDirtyRect, twipsPerPixel);
 
-  for (PRUint32 i = styleBorder->mBoxShadow->Length(); i > 0; --i) {
-    nsCSSShadowItem* shadowItem = styleBorder->mBoxShadow->ShadowAt(i - 1);
+  for (PRUint32 i = shadows->Length(); i > 0; --i) {
+    nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
     if (!shadowItem->mInset)
       continue;
 
