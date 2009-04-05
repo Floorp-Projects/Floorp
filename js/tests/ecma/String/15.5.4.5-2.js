@@ -60,7 +60,7 @@ gTestfile = '15.5.4.5-2.js';
    (2), where the first character in Result(1) is
    considered to be at position 0.
 
-   Note that the charCodeAt funciton is intentionally
+   Note that the charCodeAt function is intentionally
    generic; it does not require that its this value be a
    String object.  Therefore it can be transferred to other
    kinds of objects for use as a method.
