@@ -85,6 +85,7 @@
 
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
+#include "nsTimeStamp.h"
 
 #include "nsThread.h"
 #include "nsProcess.h"
@@ -140,6 +141,10 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include <locale.h>
 
+#include "nsXPCOM.h"
+
+using mozilla::TimeStamp;
+
 // Registry Factory creation function defined in nsRegistry.cpp
 // We hook into this function locally to create and register the registry
 // Since noone outside xpcom needs to know about this and nsRegistry.cpp
@@ -161,7 +166,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
 
 #define NS_ENVIRONMENT_CLASSNAME "Environment Service"
 
-#include "nsXPCOM.h"
 // ds/nsISupportsPrimitives
 #define NS_SUPPORTS_ID_CLASSNAME "Supports ID"
 #define NS_SUPPORTS_CSTRING_CLASSNAME "Supports String"
@@ -542,6 +546,10 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 
     NS_LogInit();
 
+    // Set up TimeStamp
+    rv = TimeStamp::Startup();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Establish the main thread here.
     rv = nsThreadManager::get()->Init();
     if (NS_FAILED(rv)) return rv;
@@ -874,6 +882,8 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_IF_RELEASE(gDebug);
 
+    TimeStamp::Shutdown();
+    
     NS_LogTerm();
 
 #ifdef GC_LEAK_DETECTOR
