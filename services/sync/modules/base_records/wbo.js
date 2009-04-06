@@ -52,15 +52,8 @@ function WBORecord(uri) {
   this._WBORec_init(uri);
 }
 WBORecord.prototype = {
-  //////////////////////////////////////////////////////////////////////////////
-  // WBORecord Attributes
-
   deleted: false,
-
   _logName: "Record.WBO",
-
-  //////////////////////////////////////////////////////////////////////////////
-  // WBORecord Methods
 
   _WBORec_init: function WBORec_init(uri) {
     this.data = {
@@ -182,8 +175,8 @@ RecordManager.prototype = {
         yield this.lastResource.get(self.cb);
 
         record = new this._recordType();
-	record.deserialize(this.lastResource.data);
-	record.uri = url; // NOTE: may override id in this.lastResource.data
+        record.deserialize(this.lastResource.data);
+        record.uri = url; // NOTE: may override id in this.lastResource.data
 
         this.set(url, record);
       } catch (e) {
@@ -207,12 +200,12 @@ RecordManager.prototype = {
        * always use the string, not the object, as a key.  TODO: use the
        * string as key for this._aliases as well?  (Don't know) */
       if (url in this._aliases)
-	url = this._aliases[url];
+        url = this._aliases[url];
       if (spec in this._records)
-	record = this._records[spec];
+        record = this._records[spec];
 
       if (!record)
-	record = yield this.import(self.cb, url);
+        record = yield this.import(self.cb, url);
 
       self.done(record);
     };
