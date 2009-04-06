@@ -514,7 +514,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   if (NS_FAILED(rv))
     return rv;
 
-  nsRefPtr<nsRange> range = new nsRange();
+  nsCOMPtr<nsIRange> range = new nsRange();
   if (!range) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
