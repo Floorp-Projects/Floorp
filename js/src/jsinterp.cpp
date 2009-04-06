@@ -293,6 +293,12 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
                         cache->pcrecycles++);
             pc = (jsbytecode *) atom;
             kshape = (jsuword) obj;
+
+            /*
+             * Make sure that a later shadowing assignment will enter
+             * PurgeProtoChain and invalidate this entry, bug 479198.
+             */
+            OBJ_SET_DELEGATE(cx, obj);
         }
     }
 
