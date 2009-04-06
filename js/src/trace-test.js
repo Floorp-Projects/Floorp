@@ -4542,7 +4542,7 @@ function testClosures()
 {
     function MyObject(id) {
         var thisObject = this;
-       this.id = id;
+        this.id = id;
         this.toString = str;
 
         function str() {
@@ -4557,6 +4557,22 @@ function testClosures()
 }
 testClosures.expected = "00,11,22,33,44";
 test(testClosures);
+
+function testMoreClosures() {
+    var f = {}, max = 3;
+
+    var hello = function(n) {
+        function howdy() { return n * n }
+        f.test = howdy;
+    };
+
+    for (var i = 0; i <= max; i++)
+        hello(i);
+
+    return f.test();
+}
+testMoreClosures.expected = 9;
+test(testMoreClosures);
 
 function testLambdaInitedVar() {
     var jQuery = function (a, b) {
@@ -4673,7 +4689,7 @@ test(testPropagatedFunArgs);
         function notSafe() {
           return magic;
         }
-        print(notSafe());
+        notSafe();
         res.push(pageInfo);
       };
       var feedTab = $("feedTab");
