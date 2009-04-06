@@ -1150,6 +1150,12 @@ nsresult nsOggDecodeStateMachine::Run()
           mAudioStream->Drain();
           LOG(PR_LOG_DEBUG, ("End nsAudioStream::Drain"));
           mon.Enter();
+
+          // After the drain call the audio stream is unusable. Close it so that
+          // next time audio is used a new stream is created. The StopPlayback
+          // call also resets the playing flag so audio is restarted correctly.
+          StopPlayback();
+
           if (mState != DECODER_STATE_COMPLETED)
             continue;
         }

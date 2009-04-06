@@ -731,6 +731,10 @@ nsWaveStateMachine::Run()
         monitor.Exit();
         mAudioStream->Drain();
         monitor.Enter();
+
+        // After the drain call the audio stream is unusable. Close it so that
+        // next time audio is used a new stream is created.
+        CloseAudioStream();
       }
 
       if (mState == STATE_ENDED) {
