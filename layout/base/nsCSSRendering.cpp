@@ -2507,13 +2507,14 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
                                     const gfxFloat aAscent,
                                     const gfxFloat aOffset,
                                     const PRUint8 aDecoration,
-                                    const PRUint8 aStyle)
+                                    const PRUint8 aStyle,
+                                    const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aStyle != DECORATION_STYLE_NONE, "aStyle is none");
 
   gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle);
+                                  aDecoration, aStyle, aDescentLimit);
   if (rect.IsEmpty())
     return;
 
@@ -2706,14 +2707,15 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
                                       const gfxFloat aAscent,
                                       const gfxFloat aOffset,
                                       const PRUint8 aDecoration,
-                                      const PRUint8 aStyle)
+                                      const PRUint8 aStyle,
+                                      const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aPresContext, "aPresContext is null");
   NS_ASSERTION(aStyle != DECORATION_STYLE_NONE, "aStyle is none");
 
   gfxRect rect =
     GetTextDecorationRectInternal(gfxPoint(0, 0), aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle);
+                                  aDecoration, aStyle, aDescentLimit);
   // The rect values are already rounded to nearest device pixels.
   nsRect r;
   r.x = aPresContext->GfxUnitsToAppUnits(rect.X());
@@ -2729,12 +2731,15 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
                                               const gfxFloat aAscent,
                                               const gfxFloat aOffset,
                                               const PRUint8 aDecoration,
-                                              const PRUint8 aStyle)
+                                              const PRUint8 aStyle,
+                                              const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aStyle <= DECORATION_STYLE_WAVY, "Invalid aStyle value");
 
   if (aStyle == DECORATION_STYLE_NONE)
     return gfxRect(0, 0, 0, 0);
+
+  PRBool canLiftUnderline = aDescentLimit >= 0.0;
 
   gfxRect r;
   r.pos.x = NS_floor(aPt.x + 0.5);
@@ -2742,6 +2747,11 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 
   gfxFloat lineHeight = NS_round(aLineSize.height);
   lineHeight = PR_MAX(lineHeight, 1.0);
+
+  gfxFloat ascent = NS_round(aAscent);
+  gfxFloat descentLimit = NS_round(aDescentLimit);
+
+  gfxFloat suggestedMaxRectHeight = PR_MAX(PR_MIN(ascent, descentLimit), 1.0);
   gfxFloat underlineOffsetAdjust = 0.0;
   r.size.height = lineHeight;
   if (aStyle == DECORATION_STYLE_DOUBLE) {
@@ -2763,6 +2773,13 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
     gfxFloat gap = NS_round(lineHeight / 2.0);
     gap = PR_MAX(gap, 1.0);
     r.size.height = lineHeight * 2.0 + gap;
+    if (canLiftUnderline) {
+      if (r.Height() > suggestedMaxRectHeight) {
+        // Don't shrink the line height, because the thickness has some meaning.
+        // We can just shrink the gap at this time.
+        r.size.height = PR_MAX(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
+      }
+    }
   } else if (aStyle == DECORATION_STYLE_WAVY) {
     /**
      *  We will draw wavy line as:
@@ -2778,6 +2795,21 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      * +-------------------------------------------+
      */
     r.size.height = lineHeight > 2.0 ? lineHeight * 4.0 : lineHeight * 3.0;
+    if (canLiftUnderline) {
+      // Wavy line's top edge can overlap to the baseline, because even if the
+      // wavy line overlaps the baseline of the text, that shouldn't cause
+      // unreadability.
+      descentLimit += lineHeight;
+      // Recompute suggestedMaxRectHeight with new descentLimit value.
+      suggestedMaxRectHeight = PR_MAX(PR_MIN(ascent, descentLimit), 1.0);
+      if (r.Height() > suggestedMaxRectHeight) {
+        // Don't shrink the line height even if there is not enough space,
+        // because the thickness has some meaning.  E.g., the 1px wavy line and
+        // 2px wavy line can be used for different meaning in IME selections
+        // at same time.
+        r.size.height = PR_MAX(suggestedMaxRectHeight, lineHeight * 2.0);
+      }
+    }
     // If this is underline, the middle of the rect should be aligned to the
     // specified underline offset.  So, wavy line's top edge can overlap to
     // baseline.  Because even if the wavy line overlaps the baseline of the
@@ -2790,6 +2822,17 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
   switch (aDecoration) {
     case NS_STYLE_TEXT_DECORATION_UNDERLINE:
       offset = aOffset + underlineOffsetAdjust;
+      if (canLiftUnderline) {
+        if (descentLimit < -offset + r.Height()) {
+          // If we can ignore the offset and the decoration line is overflowing,
+          // we should align the bottom edge of the decoration line rect if it's
+          // possible.  Otherwise, we should lift up the top edge of the rect as
+          // far as possible.
+          gfxFloat offsetBottomAligned = -descentLimit + r.Height();
+          gfxFloat offsetTopAligned = underlineOffsetAdjust;
+          offset = PR_MIN(offsetBottomAligned, offsetTopAligned);
+        }
+      }
       break;
     case NS_STYLE_TEXT_DECORATION_OVERLINE:
       offset = aOffset - lineHeight + r.Height();

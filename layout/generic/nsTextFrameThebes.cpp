@@ -4098,6 +4098,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
 {
   gfxPoint pt(aPt);
   gfxSize size(aWidth, aFontMetrics.underlineSize);
+  gfxFloat descentLimit = aFontMetrics.maxDescent;
 
   switch (aType) {
     case nsISelectionController::SELECTION_IME_RAWINPUT:
@@ -4131,7 +4132,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
         size.height *= relativeSize;
         nsCSSRendering::PaintDecorationLine(
           aContext, color, pt, size, aAscent, aFontMetrics.underlineOffset,
-          NS_STYLE_TEXT_DECORATION_UNDERLINE, style);
+          NS_STYLE_TEXT_DECORATION_UNDERLINE, style, descentLimit);
       }
       break;
     }
@@ -4785,6 +4786,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   const gfxFont::Metrics& metrics = firstFont->GetMetrics();
   gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
   gfxFloat ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
+  gfxFloat descentLimit = metrics.maxDescent;
 
   SelectionDetails *details = GetSelectionDetails();
   for (SelectionDetails *sd = details; sd; sd = sd->mNext) {
@@ -4808,7 +4810,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
       nsCSSRendering::GetTextDecorationRect(aPresContext, size,
                                             ascent, underlineOffset,
                                             NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                                            style);
+                                            style, descentLimit);
     aRect.UnionRect(aRect, decorationArea);
   }
   DestroySelectionDetails(details);
