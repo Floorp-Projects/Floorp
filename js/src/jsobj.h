@@ -82,20 +82,6 @@ struct JSObjectOps {
     JSSetRequiredSlotOp setRequiredSlot;
 };
 
-/*
- * Classes that expose JSObjectOps via a non-null getObjectOps class hook may
- * derive a property structure from this struct, return a pointer to it from
- * lookupProperty and defineProperty, and use the pointer to avoid rehashing
- * in getAttributes and setAttributes.
- *
- * The jsid type contains either an int jsval (see JSVAL_IS_INT above), or an
- * internal pointer that is opaque to users of this API, but which users may
- * convert from and to a jsval using JS_ValueToId and JS_IdToValue.
- */
-struct JSProperty {
-    jsid id;
-};
-
 struct JSObjectMap {
     jsrefcount  nrefs;          /* count of all referencing objects */
     JSObjectOps *ops;           /* high level object operation vtable */
