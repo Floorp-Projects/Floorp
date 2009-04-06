@@ -73,7 +73,6 @@ public:
 // -------------------------------------------------------------------------------
 
 class nsRange : public nsIRange,
-                public nsIDOMRange,
                 public nsIDOMNSRange,
                 public nsStubMutationObserver
 {
@@ -131,7 +130,7 @@ private:
   /**
    * Guts of cloning a range.  Addrefs the new range.
    */
-  nsresult DoCloneRange(nsRange** aNewRange) const;
+  nsresult DoCloneRange(nsIRange** aNewRange) const;
 
   static nsresult CloneParentsBetween(nsIDOMNode *aAncestor,
                                       nsIDOMNode *aNode,

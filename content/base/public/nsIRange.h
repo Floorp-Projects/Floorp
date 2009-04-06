@@ -45,10 +45,10 @@
 
 // IID for the nsIRange interface
 #define NS_IRANGE_IID \
-{ 0xee12afa2, 0x4e8e, 0x4e3f, \
- { 0xad, 0x3b, 0x53, 0x50, 0x97, 0x09, 0xc6, 0x8a } }
+{ 0x09dec26b, 0x1ab7, 0x4ff0, \
+ { 0xa1, 0x67, 0x7f, 0x22, 0x9c, 0xaa, 0xc3, 0x04 } }
 
-class nsIRange : public nsISupports {
+class nsIRange : public nsIDOMRange {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRANGE_IID)
 
@@ -117,6 +117,11 @@ public:
   virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset) = 0;
   virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset) = 0;
   virtual nsresult CloneRange(nsIRange** aNewRange) const = 0;
+
+  // Work around hiding warnings
+  NS_IMETHOD SetStart(nsIDOMNode* aParent, PRInt32 aOffset) = 0;
+  NS_IMETHOD SetEnd(nsIDOMNode* aParent, PRInt32 aOffset) = 0;
+  NS_IMETHOD CloneRange(nsIDOMRange** aNewRange) = 0;
 
 protected:
   nsCOMPtr<nsINode> mRoot;
