@@ -40,13 +40,15 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
-Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+Cu.import("resource://weave/type_records/forms.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -55,23 +57,34 @@ function FormEngine() {
 }
 FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  get _super() SyncEngine.prototype,
-  
-  get name() "forms",
-  get displayName() "Forms",
-  get logName() "Forms",
-  get serverPrefix() "user-data/forms/",
+  name: "forms",
+  displayname: "Forms",
+  logName: "Forms",
+  _storeObj: FormStore,
+  _trackerObj: FormTracker,
+  _recordObj: FormRec,
 
-  get _store() {
-    let store = new FormStore();
-    this.__defineGetter__("_store", function() store);
-    return store;
+  _syncStartup: function FormEngine__syncStartup() {
+    let self = yield;
+    this._store.cacheFormItems();
+    yield SyncEngine.prototype._syncStartup.async(this, self.cb);
   },
 
-  get _tracker() {
-    let tracker = new FormsTracker();
-    this.__defineGetter__("_tracker", function() tracker);
-    return tracker;
+  /* Wipe cache when sync finishes */
+  _syncFinish: function FormEngine__syncFinish() {
+    let self = yield;
+    this._store.clearFormCache();
+    yield SyncEngine.prototype._syncFinish.async(this, self.cb);
+  },
+  
+  _recordLike: function SyncEngine__recordLike(a, b) {
+    if (a.cleartext == null || b.cleartext == null)
+      return false;
+    if (a.cleartext.name == b.cleartext.name &&
+        a.cleartext.value == b.cleartext.value) {
+      return true;
+    }
+    return false;
   }
 };
 
@@ -82,7 +95,7 @@ function FormStore() {
 FormStore.prototype = {
   __proto__: Store.prototype,
   _logName: "FormStore",
-  _lookup: null,
+  _formItems: null,
 
   get _formDB() {
     let file = Cc["@mozilla.org/file/directory_service;1"].
@@ -109,33 +122,19 @@ FormStore.prototype = {
     this.__defineGetter__("_formStatement", function() stmnt);
     return stmnt;
   },
-
-  create: function FormStore_create(record) {
-    this._log.debug("Got create record: " + record.id);
-    this._formHistory.addEntry(record.cleartext.name, record.cleartext.value);
+  
+  cacheFormItems: function FormStore_cacheFormItems() {
+    this._log.debug("Caching all form items");
+    this._formItems = this.getAllIDs();
   },
-
-  remove: function FormStore_remove(record) {
-    this._log.debug("Got remove record: " + record.id);
-    
-    if (record.id in this._lookup) {
-      let data = this._lookup[record.id];
-    } else {
-      this._log.warn("Invalid GUID found, ignoring remove request.");
-      return;
-    }
-
-    this._formHistory.removeEntry(data.name, data.value);
-    delete this._lookup[record.id];
+  
+  clearFormCache: function FormStore_clearFormCache() {
+    this._log.debug("Clearing form cache");
+    this._formItems = null;
   },
-
-  update: function FormStore__editCommand(record) {
-    this._log.debug("Got update record: " + record.id);
-    this._log.warn("Ignoring update request");
-  },
-
-  wrap: function FormStore_wrap() {
-    this._lookup = {};
+  
+  getAllIDs: function FormStore_getAllIDs() {
+    let items = {};
     let stmnt = this._formStatement;
 
     while (stmnt.executeStep()) {
@@ -143,23 +142,56 @@ FormStore.prototype = {
       let val = stmnt.getUTF8String(2);
       let key = Utils.sha1(nam + val);
 
-      this._lookup[key] = { name: nam, value: val };
+      items[key] = { name: nam, value: val };
     }
     stmnt.reset();
+
+    return items;
+  },
+  
+  changeItemID: function FormStore_changeItemID(oldID, newID) {
+    this._log.warn("FormStore IDs are data-dependent, cannot change!");
+  },
+  
+  itemExists: function FormStore_itemExists(id) {
+    return (id in this._formItems);
+  },
+  
+  createRecord: function FormStore_createRecord(guid, cryptoMetaURL) {
+    let record = new FormRec();
+    record.id = guid;
     
-    return this._lookup;
+    if (guid in this._formItems) {
+      let item = this._formItems[guid];
+      record.encryption = cryptoMetaURL;
+      record.name = item.name;
+      record.value = item.value;
+    } else {
+      record.deleted = true;
+    }
+    
+    return record;
+  },
+  
+  create: function FormStore_create(record) {
+    this._log.debug("Adding form record for " + record.name);
+    this._formHistory.addEntry(record.name, record.value);
   },
 
-  wrapItem: function FormStore_wrapItem(id) {
-    if (!this._lookup)
-      this._lookup = this.wrap();
-    return this._lookup[id];
+  remove: function FormStore_remove(record) {
+    this._log.debug("Removing form record: " + record.id);
+    
+    if (record.id in this._formItems) {
+      let item = this._formItems[record.id];
+      this._formHistory.removeEntry(item.name, item.value);
+      return;
+    }
+    
+    this._log.warn("Invalid GUID found, ignoring remove request.");
   },
 
-  getAllIDs: function FormStore_getAllIDs() {
-    if (!this._lookup)
-      this._lookup = this.wrap();
-    return this._lookup;
+  update: function FormStore_update(record) {
+    this._log.warn("Ignoring form record update request!");
   },
   
   wipe: function FormStore_wipe() {
@@ -167,79 +199,50 @@ FormStore.prototype = {
   }
 };
 
-function FormsTracker() {
+function FormTracker() {
   this._init();
 }
-FormsTracker.prototype = {
+FormTracker.prototype = {
   __proto__: Tracker.prototype,
-  _logName: "FormsTracker",
-
-  get _formDB() {
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties).
-      get("ProfD", Ci.nsIFile);
-      
-    file.append("formhistory.sqlite");
-    let stor = Cc["@mozilla.org/storage/service;1"].
-      getService(Ci.mozIStorageService);
-    
-    let formDB = stor.openDatabase(file);
-    this.__defineGetter__("_formDB", function() formDB);
-    return formDB;
+  _logName: "FormTracker",
+  file: "form",
+  
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
+  
+  __observerService: null,
+  get _observerService() {
+    if (!this.__observerService)
+      this.__observerService = Cc["@mozilla.org/observer-service;1"].
+                                getService(Ci.nsIObserverService);
+      return this.__observerService;
   },
   
-  get _formStatement() {
-    let stmnt = this._formDB.
-      createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-    this.__defineGetter__("_formStatement", function() stmnt);
-    return stmnt;
-  },
-
-  /* nsIFormSubmitObserver is not available in JS.
-   * To calculate scores, we instead just count the changes in
-   * the database since the last time we were asked.
-   *
-   * FIXME!: Buggy, because changes in a row doesn't result in
-   * an increment of our score. A possible fix is to do a
-   * SELECT for each fieldname and compare those instead of the
-   * whole row count.
-   *
-   * Each change is worth 2 points. At some point, we may
-   * want to differentiate between search-history rows and other
-   * form items, and assign different scores.
-   */
-  _rowCount: 0,
-  get score() {
-    let stmnt = this._formStatement;
-    stmnt.executeStep();
-    
-    let count = stmnt.getInt32(0);
-    this._score = Math.abs(this._rowCount - count) * 2;
-    stmnt.reset();
-    
-    if (this._score >= 100)
-      return 100;
-    else
-      return this._score;
-  },
-
-  resetScore: function FormsTracker_resetScore() {
-    let stmnt = this._formStatement;
-    stmnt.executeStep();    
-    
-    this._rowCount = stmnt.getInt32(0);
-    this._score = 0;
-    stmnt.reset();
-  },
-
-  _init: function FormsTracker__init() {
+  _init: function FormTracker__init() {
     this.__proto__.__proto__._init.call(this);
-
-    let stmnt = this._formStatement;
-    stmnt.executeStep();
+    this._log.trace("FormTracker initializing!");
+    this._observerService.addObserver(this, "earlyformsubmit", false);
+  },
+  
+  /* 10 points per form element */
+  notify: function FormTracker_notify(formElement, aWindow, actionURI) {
+    if (this.ignoreAll)
+      return;
+      
+    this._log.trace("Form submission notification for " + actionURI.spec);
     
-    this._rowCount = stmnt.getInt32(0);
-    stmnt.reset();
+    /* Get number of elements in form, add points and changedIDs */
+    let len = formElement.length;
+    let elements = formElement.elements;
+    for (let i = 0; i < len; i++) {
+      let element = elements.item(i);
+      let inputElement = element.QueryInterface(Ci.nsIDOMHTMLInputElement);
+      
+      if (inputElement && inputElement.type == "text") {
+        this._log.trace("Logging form element: " + inputElement.name + "::" +
+                            inputElement.value);
+        this.addChangedID(Utils.sha1(inputElement.name + inputElement.value));
+        this._score += 10;
+      }
+    }
   }
 };
-
