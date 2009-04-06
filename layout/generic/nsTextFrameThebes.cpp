@@ -6625,7 +6625,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
     }
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+  if (HasOverflowRect()) {
     nsRect overflowArea = GetOverflowRect();
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);

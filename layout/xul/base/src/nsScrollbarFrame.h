@@ -105,7 +105,7 @@ public:
 
   /**
    * Treat scrollbars as clipping their children; overflowing children
-   * will not be allowed to make NS_FRAME_OUTSIDE_CHILDREN on this
+   * will not be allowed to set an overflow rect on this
    * frame. This means that when the scroll code decides to hide a
    * scrollframe by setting its height or width to zero, that will
    * hide the children too.

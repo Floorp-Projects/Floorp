@@ -326,7 +326,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 #endif
 
-  if (!(NS_FRAME_OUTSIDE_CHILDREN & mFrame->GetStateBits())) {
+  if (!mFrame->HasOverflowRect()) {
     // Provide overflow area for child that doesn't have any
     mMetrics.mOverflowArea.x = 0;
     mMetrics.mOverflowArea.y = 0;
