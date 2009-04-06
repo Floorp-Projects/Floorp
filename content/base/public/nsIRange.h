@@ -41,11 +41,12 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsINode.h"
+#include "nsIDOMRange.h"
 
 // IID for the nsIRange interface
 #define NS_IRANGE_IID \
-{ 0x267c8c4e, 0x7c97, 0x4a35, \
-  { 0xaa, 0x08, 0x55, 0xa5, 0xbe, 0x3a, 0xc5, 0x74 } }
+{ 0xbf5c5799, 0xe5b0, 0x49b5, \
+ { 0xbd, 0x45, 0x3d, 0x9a, 0x0f, 0xb4, 0x97, 0x89 } }
 
 class nsIRange : public nsISupports {
 public:
@@ -110,6 +111,12 @@ public:
   virtual nsINode* GetCommonAncestor() = 0;
 
   virtual void Reset() = 0;
+
+  // XXXbz we could make these non-virtual if a bunch of nsRange stuff
+  // became nsIRange stuff... and if no one outside layout needs them.
+  virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset) = 0;
+  virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset) = 0;
+  virtual nsresult CloneRange(nsIRange** aNewRange) = 0;
 
 protected:
   nsCOMPtr<nsINode> mRoot;

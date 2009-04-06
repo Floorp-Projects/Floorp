@@ -95,6 +95,9 @@ public:
   // nsIRange interface
   virtual nsINode* GetCommonAncestor();
   virtual void Reset();
+  virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset);
+  virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
+  virtual nsresult CloneRange(nsIRange** aNewRange);
   
   // nsIMutationObserver methods
   virtual void CharacterDataChanged(nsIDocument* aDocument,
@@ -124,6 +127,11 @@ private:
    *                  May be null to indicate the caller doesn't want a fragment.
    */
   nsresult CutContents(nsIDOMDocumentFragment** frag);
+
+  /**
+   * Guts of cloning a range.  Addrefs the new range.
+   */
+  nsresult DoCloneRange(nsRange** aNewRange);
 
   static nsresult CloneParentsBetween(nsIDOMNode *aAncestor,
                                       nsIDOMNode *aNode,
