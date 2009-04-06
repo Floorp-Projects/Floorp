@@ -93,11 +93,11 @@ public:
   NS_DECL_NSIDOMNSRANGE
   
   // nsIRange interface
-  virtual nsINode* GetCommonAncestor();
+  virtual nsINode* GetCommonAncestor() const;
   virtual void Reset();
   virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset);
   virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
-  virtual nsresult CloneRange(nsIRange** aNewRange);
+  virtual nsresult CloneRange(nsIRange** aNewRange) const;
   
   // nsIMutationObserver methods
   virtual void CharacterDataChanged(nsIDocument* aDocument,
@@ -131,7 +131,7 @@ private:
   /**
    * Guts of cloning a range.  Addrefs the new range.
    */
-  nsresult DoCloneRange(nsRange** aNewRange);
+  nsresult DoCloneRange(nsRange** aNewRange) const;
 
   static nsresult CloneParentsBetween(nsIDOMNode *aAncestor,
                                       nsIDOMNode *aNode,

@@ -145,18 +145,6 @@ static void printRange(nsIDOMRange *aDomRange);
 
 //#define DEBUG_TABLE_SELECTION 1
 
-static PRInt32
-CompareDOMPoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                 nsIDOMNode* aParent2, PRInt32 aOffset2)
-{
-  nsCOMPtr<nsINode> parent1 = do_QueryInterface(aParent1);
-  nsCOMPtr<nsINode> parent2 = do_QueryInterface(aParent2);
-
-  NS_ASSERTION(parent1 && parent2, "not real nodes?");
-
-  return nsContentUtils::ComparePoints(parent1, aOffset1, parent2, aOffset2);
-}
-
 struct CachedOffsetForFrame {
   CachedOffsetForFrame()
   : mCachedFrameOffset(0, 0) // nsPoint ctor
@@ -234,10 +222,16 @@ public:
   nsINode*     GetFocusNode();
   PRInt32      GetFocusOffset();
 
+  // Get the anchor-to-focus range if we don't care which end is
+  // anchor and which end is focus.
+  const nsIRange* GetAnchorFocusRange() const {
+    return mAnchorFocusRange;
+  }
+
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
   nsresult     CopyRangeToAnchorFocus(nsIRange *aRange);
-  void         ReplaceAnchorFocusRange(nsIDOMRange *aRange);
+  void         ReplaceAnchorFocusRange(nsIRange *aRange);
 
   //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
@@ -1647,31 +1641,15 @@ nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
     return NS_ERROR_NULL_POINTER;
 
   mMaintainedAmount = aAmount;
+
+  const nsIRange* anchorFocusRange =
+    mDomSelections[index]->GetAnchorFocusRange();
+  if (anchorFocusRange) {
+    return anchorFocusRange->CloneRange(getter_AddRefs(mMaintainRange));
+  }
+
   mMaintainRange = nsnull;
-  
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset;
-  PRInt32 endOffset;
-  nsresult rv;
-  rv = mDomSelections[index]->GetAnchorNode(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDomSelections[index]->GetFocusNode(getter_AddRefs(endNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDomSelections[index]->GetAnchorOffset(&startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDomSelections[index]->GetFocusOffset(&endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!startNode || !endNode)
-    return NS_OK;
-  
-  NS_NewRange(getter_AddRefs(mMaintainRange));
-  if (!mMaintainRange)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  mMaintainRange->SetStart(startNode, startOffset);
-  return mMaintainRange->SetEnd(endNode, endOffset);
+  return NS_OK;
 }
 
 
@@ -1753,25 +1731,25 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
   if (!mMaintainRange)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aContent);
-  if (!domNode)
+  if (!aContent) {
     return PR_FALSE;
-  
+  }
+
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   if (!mDomSelections[index])
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMNode> rangeStartNode, rangeEndNode;
-  PRInt32 rangeStartOffset, rangeEndOffset;
-  mMaintainRange->GetStartContainer(getter_AddRefs(rangeStartNode));
-  mMaintainRange->GetEndContainer(getter_AddRefs(rangeEndNode));
-  mMaintainRange->GetStartOffset(&rangeStartOffset);
-  mMaintainRange->GetEndOffset(&rangeEndOffset);
+  nsINode* rangeStartNode = mMaintainRange->GetStartParent();
+  nsINode* rangeEndNode = mMaintainRange->GetEndParent();
+  PRInt32 rangeStartOffset = mMaintainRange->StartOffset();
+  PRInt32 rangeEndOffset = mMaintainRange->EndOffset();
 
-  PRInt32 relToStart = CompareDOMPoints(rangeStartNode, rangeStartOffset,
-                                        domNode, aOffset);
-  PRInt32 relToEnd = CompareDOMPoints(rangeEndNode, rangeEndOffset,
-                                      domNode, aOffset);
+  PRInt32 relToStart =
+    nsContentUtils::ComparePoints(rangeStartNode, rangeStartOffset,
+                                  aContent, aOffset);
+  PRInt32 relToEnd =
+    nsContentUtils::ComparePoints(rangeEndNode, rangeEndOffset,
+                                  aContent, aOffset);
 
   // If aContent/aOffset is inside the maintained selection, or if it is on the
   // "anchor" side of the maintained selection, we need to do something.
@@ -1859,13 +1837,11 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
   if (mMaintainRange && 
       mMaintainedAmount != eSelectNoAmount) {    
     
-    nsCOMPtr<nsIDOMNode> rangenode;
-    PRInt32 rangeOffset;
-    mMaintainRange->GetStartContainer(getter_AddRefs(rangenode));
-    mMaintainRange->GetStartOffset(&rangeOffset);
-    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(offsets.content);
-    PRInt32 relativePosition = CompareDOMPoints(rangenode, rangeOffset,
-                                                domNode, offsets.offset);
+    nsINode* rangenode = mMaintainRange->GetStartParent();
+    PRInt32 rangeOffset = mMaintainRange->StartOffset();
+    PRInt32 relativePosition =
+      nsContentUtils::ComparePoints(rangenode, rangeOffset,
+                                    offsets.content, offsets.offset);
 
     nsDirection direction = relativePosition > 0 ? eDirPrevious : eDirNext;
     nsSelectionAmount amount = mMaintainedAmount;
@@ -5521,6 +5497,8 @@ utility function
 nsresult
 nsTypedSelection::CopyRangeToAnchorFocus(nsIRange *aRange)
 {
+  // XXXbz could we just clone into mAnchorFocusRange, or do consumers
+  // expect that pointer to not change across this call?
   NS_ENSURE_STATE(mAnchorFocusRange);
   
   nsINode* startNode = aRange->GetStartParent();
@@ -5529,6 +5507,7 @@ nsTypedSelection::CopyRangeToAnchorFocus(nsIRange *aRange)
   PRInt32 endOffset = aRange->EndOffset();;
   if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
   {
+    // XXXbz what is this doing exactly?
     if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
       return NS_ERROR_FAILURE;//???
     if (NS_FAILED(mAnchorFocusRange->SetStart(startNode,startOffset)))
@@ -5540,15 +5519,13 @@ nsTypedSelection::CopyRangeToAnchorFocus(nsIRange *aRange)
 }
 
 void
-nsTypedSelection::ReplaceAnchorFocusRange(nsIDOMRange *aRange)
+nsTypedSelection::ReplaceAnchorFocusRange(nsIRange *aRange)
 {
   nsCOMPtr<nsPresContext> presContext;
   GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
     selectFrames(presContext, mAnchorFocusRange, PR_FALSE);
-    // XXXbz can we make this method take nsIRange?
-    nsCOMPtr<nsIRange> range = do_QueryInterface(aRange);
-    CopyRangeToAnchorFocus(range);
+    CopyRangeToAnchorFocus(aRange);
     selectFrames(presContext, mAnchorFocusRange, PR_TRUE);
   }
 }
