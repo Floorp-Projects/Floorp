@@ -1757,7 +1757,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   return NS_OK;
 }
 
-nsresult nsRange::DoCloneRange(nsRange** aReturn) const
+nsresult nsRange::DoCloneRange(nsIRange** aReturn) const
 {
   if(mIsDetached)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1772,14 +1772,14 @@ nsresult nsRange::DoCloneRange(nsRange** aReturn) const
 
   range->DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, mRoot);
 
-  range.forget(aReturn);
+  *aReturn = range.forget().get();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRange::CloneRange(nsIDOMRange** aReturn)
 {
-  nsRange* clone;
+  nsIRange* clone;
   nsresult rv = DoCloneRange(&clone);
   if (NS_SUCCEEDED(rv)) {
     *aReturn = clone;
@@ -1789,12 +1789,7 @@ NS_IMETHODIMP nsRange::CloneRange(nsIDOMRange** aReturn)
 
 nsresult nsRange::CloneRange(nsIRange** aReturn) const
 {
-  nsRange* clone;
-  nsresult rv = DoCloneRange(&clone);
-  if (NS_SUCCEEDED(rv)) {
-    *aReturn = clone;
-  }
-  return rv;
+  return DoCloneRange(aReturn);
 }
 
 nsresult nsRange::InsertNode(nsIDOMNode* aN)
