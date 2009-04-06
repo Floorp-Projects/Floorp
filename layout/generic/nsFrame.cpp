@@ -3975,11 +3975,22 @@ nsIFrame::GetOverflowRect() const
   // areas will invalidate the appropriate area, so any (mis)uses of
   // this method will be fixed up.
 
-  if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
+  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+    // there is an overflow rect, and it's not stored as deltas but as
+    // a separately-allocated rect
     return *const_cast<nsIFrame*>(this)->GetOverflowAreaProperty(PR_FALSE);
-  // NOTE this won't return accurate info if the overflow rect was updated
-  // but the mRect hasn't been set yet!
-  return nsRect(nsPoint(0, 0), GetSize());
+  }
+
+  // Calculate the rect using deltas from the frame's border rect.
+  // Note that the mOverflow.mDeltas fields are unsigned, but we will often
+  // need to return negative values for the left and top, so take care
+  // to cast away the unsigned-ness.
+  return nsRect(-(PRInt32)mOverflow.mDeltas.mLeft,
+                -(PRInt32)mOverflow.mDeltas.mTop,
+                mRect.width + mOverflow.mDeltas.mRight +
+                              mOverflow.mDeltas.mLeft,
+                mRect.height + mOverflow.mDeltas.mBottom +
+                               mOverflow.mDeltas.mTop);
 }
 
 nsRect
@@ -4068,7 +4079,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 {
   if (aReflowState.mReflowDepth >  MAX_FRAME_DEPTH) {
     mState |= NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    ClearOverflowRect();
     aMetrics.width = 0;
     aMetrics.height = 0;
     aMetrics.ascent = 0;
@@ -4148,7 +4159,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsFrame* f = const_cast<nsFrame*>(this);
-  if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+  if (f->HasOverflowRect()) {
     nsRect overflowArea = f->GetOverflowRect();
     fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
@@ -5569,7 +5580,8 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 nsRect*
 nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary) 
 {
-  if (!((GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) || aCreateIfNecessary)) {
+  if (!((mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) ||
+        aCreateIfNecessary)) {
     return nsnull;
   }
 
@@ -5588,8 +5600,42 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
     return overflow;
   }
 
-  NS_NOTREACHED("Frame abuses NS_FRAME_OUTSIDE_CHILDREN flag");
+  NS_NOTREACHED("Frame abuses GetOverflowAreaProperty()");
   return nsnull;
+}
+
+/** Set the overflowArea rect, storing it as deltas or a separate rect
+ * depending on its size in relation to the primary frame rect.
+ */
+void
+nsIFrame::SetOverflowRect(const nsRect& aRect)
+{
+  PRUint32 l = -aRect.x, // left edge: positive delta is leftwards
+           t = -aRect.y, // top: positive is upwards
+           r = aRect.XMost() - mRect.width, // right: positive is rightwards
+           b = aRect.YMost() - mRect.height; // bottom: positive is downwards
+  if (l <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+      t <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+      r <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+      b <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+      (l | t | r | b) != 0) {
+    // It's a "small" overflow area so we store the deltas for each edge
+    // directly in the frame, rather than allocating a separate rect.
+    // Note that we do NOT store in this way if *all* the deltas are zero,
+    // as that would be indistinguishable from the complete absence of
+    // an overflow rect.
+    DeleteProperty(nsGkAtoms::overflowAreaProperty);
+    mOverflow.mDeltas.mLeft   = l;
+    mOverflow.mDeltas.mTop    = t;
+    mOverflow.mDeltas.mRight  = r;
+    mOverflow.mDeltas.mBottom = b;
+  } else {
+    // it's a large overflow area that we need to store as a property
+    mOverflow.mType = NS_FRAME_OVERFLOW_LARGE;
+    nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
+    NS_ASSERTION(overflowArea, "should have created rect");
+    *overflowArea = aRect;
+  }
 }
 
 inline PRBool
@@ -5682,18 +5728,14 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 
   PRBool overflowChanged;
   if (*aOverflowArea != nsRect(nsPoint(0, 0), aNewSize)) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-    nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
-    NS_ASSERTION(overflowArea, "should have created rect");
-    overflowChanged = *overflowArea != *aOverflowArea;
-    *overflowArea = *aOverflowArea;
+    overflowChanged = *aOverflowArea != GetOverflowRect();
+    SetOverflowRect(*aOverflowArea);
   }
   else {
-    if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+    if (HasOverflowRect()) {
       // remove the previously stored overflow area 
-      DeleteProperty(nsGkAtoms::overflowAreaProperty);
+      ClearOverflowRect();
       overflowChanged = PR_TRUE;
-      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
     } else {
       overflowChanged = PR_FALSE;
     }
@@ -6624,7 +6666,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
-    if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+    if (HasOverflowRect()) {
       // This kinda sucks. We should be able to handle the case
       // where there's overflow above or to the left of the
       // origin. But for now just chop that stuff off.
@@ -6661,7 +6703,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
         AddStateBits(NS_FRAME_IS_DIRTY);
         WillReflow(aPresContext);
         Reflow(aPresContext, aDesiredSize, reflowState, status);
-        if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
+        if (HasOverflowRect())
           aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
       }
     }
@@ -7694,13 +7736,13 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       printf(" status=0x%x", aStatus);
     }
-    if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+    if (aFrame->HasOverflowRect()) {
       DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
       DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
       DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
       DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
       printf(" o=(%s,%s) %s x %s", x, y, width, height);
-      if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
+      if (aFrame->HasOverflowRect()) {
         nsRect storedOverflow = aFrame->GetOverflowRect();
         DR_state->PrettyUC(storedOverflow.x, x);
         DR_state->PrettyUC(storedOverflow.y, y);
