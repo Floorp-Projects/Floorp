@@ -47,7 +47,6 @@
 #include "nsIEnumerator.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMRange.h"
 #include "nsFrameSelection.h"
 #include "nsISelection.h"
 #include "nsISelection2.h"
@@ -129,9 +128,8 @@ static nsIAtom *GetTag(nsINode *aNode);
 static nsINode* ParentOffset(nsINode *aNode, PRInt32 *aChildOffset);
 static nsINode* GetCellParent(nsINode *aDomNode);
 
-
 #ifdef PRINT_RANGE
-static void printRange(nsIDOMRange *aDomRange);
+static void printRange(nsIRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  printRange(x)
 #else
 #define DEBUG_OUT_RANGE(x)  
@@ -1108,25 +1106,21 @@ nsFrameSelection::UndefineCaretBidiLevel()
 
 
 #ifdef PRINT_RANGE
-void printRange(nsIDOMRange *aDomRange)
+void printRange(nsIRange *aDomRange)
 {
   if (!aDomRange)
   {
     printf("NULL nsIDOMRange\n");
   }
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset;
-  PRInt32 endOffset;
-  aDomRange->GetStartParent(getter_AddRefs(startNode));
-  aDomRange->GetStartOffset(&startOffset);
-  aDomRange->GetEndParent(getter_AddRefs(endNode));
-  aDomRange->GetEndOffset(&endOffset);
+  nsINode* startNode = aDomRange->GetStartParent();
+  nsINode* endNode = aDomRange->GetEndParent();
+  PRInt32 startOffset = aDomRange->StartOffset();
+  PRInt32 endOffset = aDomRange->EndOffset();
   
   printf("range: 0x%lx\t start: 0x%lx %ld, \t end: 0x%lx,%ld\n",
          (unsigned long)aDomRange,
-         (unsigned long)(nsIDOMNode*)startNode, (long)startOffset,
-         (unsigned long)(nsIDOMNode*)endNode, (long)endOffset);
+         (unsigned long)startNode, (long)startOffset,
+         (unsigned long)endNode, (long)endOffset);
          
 }
 #endif /* PRINT_RANGE */
@@ -2619,15 +2613,14 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
           // Select an unselected cell
           // but first remove existing selection if not in same table
           if (previousCellNode &&
-              !IsInSameTable(previousCellNode, childContent, nsnull))
+              !IsInSameTable(previousCellNode, childContent))
           {
             mDomSelections[index]->RemoveAllRanges();
             // Reset selection mode that is cleared in RemoveAllRanges
             mSelectingTableCellMode = aTarget;
           }
 
-          nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(childContent);
-          return SelectCellElement(cellElement);
+          return SelectCellElement(childContent);
         }
 
         return NS_OK;
@@ -2781,9 +2774,10 @@ nsFrameSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCel
   nsresult result = NS_OK;
 
   // If new end cell is in a different table, do nothing
-  nsCOMPtr<nsIContent> table;
-  if (!IsInSameTable(aStartCell, aEndCell, getter_AddRefs(table)))
+  nsIContent* table = IsInSameTable(aStartCell, aEndCell);
+  if (!table) {
     return NS_OK;
+  }
 
   // Get starting and ending cells' location in the cellmap
   PRInt32 startRowIndex, startColIndex, endRowIndex, endColIndex;
@@ -2864,7 +2858,8 @@ printf("SelectBlockOfCells -- range is null\n");
       // Skip cells that are spanned from previous locations or are already selected
       if (!isSelected && cellElement && row == curRowIndex && col == curColIndex)
       {
-        result = SelectCellElement(cellElement);
+        nsCOMPtr<nsIContent> cellContent = do_QueryInterface(cellElement);
+        result = SelectCellElement(cellContent);
         if (NS_FAILED(result)) return result;
       }
       // Done when we reach end column
@@ -2890,9 +2885,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
 {
   if (!aCellContent) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIContent> table;
-  nsresult result = GetParentTable(aCellContent, getter_AddRefs(table));
-  if (NS_FAILED(result)) return PR_FALSE;
+  nsIContent* table = GetParentTable(aCellContent);
   if (!table) return NS_ERROR_NULL_POINTER;
 
   // Get table and cell layout interfaces to access 
@@ -2905,7 +2898,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
 
   // Get location of target cell:      
   PRInt32 rowIndex, colIndex, curRowIndex, curColIndex;
-  result = cellLayout->GetCellIndexes(rowIndex, colIndex);
+  nsresult result = cellLayout->GetCellIndexes(rowIndex, colIndex);
   if (NS_FAILED(result)) return result;
 
   // Be sure we start at proper beginning
@@ -2916,7 +2909,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
     rowIndex = 0;
 
   nsCOMPtr<nsIDOMElement> cellElement;
-  nsCOMPtr<nsIDOMElement> firstCell;
+  nsCOMPtr<nsIContent> firstCell;
   nsCOMPtr<nsIDOMElement> lastCell;
   PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool isSelected;
@@ -2931,7 +2924,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
     {
       NS_ASSERTION(actualRowSpan > 0 && actualColSpan> 0, "SelectRowOrColumn: Bad rowspan or colspan\n");
       if (!firstCell)
-        firstCell = cellElement;
+        firstCell = do_QueryInterface(cellElement);
 
       lastCell = cellElement;
 
@@ -2954,7 +2947,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
       // We are starting a new block, so select the first cell
       result = SelectCellElement(firstCell);
       if (NS_FAILED(result)) return result;
-      mStartSelectedCell = do_QueryInterface(firstCell);
+      mStartSelectedCell = firstCell;
     }
     nsCOMPtr<nsIContent> lastCellContent = do_QueryInterface(lastCell);
     result = SelectBlockOfCells(mStartSelectedCell, lastCellContent);
@@ -3077,72 +3070,45 @@ nsFrameSelection::GetCellIndexes(nsIContent *aCell,
   return cellLayoutObject->GetCellIndexes(aRowIndex, aColIndex);
 }
 
-PRBool 
+nsIContent*
 nsFrameSelection::IsInSameTable(nsIContent  *aContent1,
-                                nsIContent  *aContent2,
-                                nsIContent **aTable) const
+                                nsIContent  *aContent2) const
 {
   if (!aContent1 || !aContent2) return PR_FALSE;
   
-  // aTable is optional:
-  if(aTable) *aTable = nsnull;
-  
-  nsCOMPtr<nsIContent> tableNode1;
-  nsCOMPtr<nsIContent> tableNode2;
+  nsIContent* tableNode1 = GetParentTable(aContent1);
+  nsIContent* tableNode2 = GetParentTable(aContent2);
 
-  nsresult result = GetParentTable(aContent1, getter_AddRefs(tableNode1));
-  if (NS_FAILED(result)) return PR_FALSE;
-  result = GetParentTable(aContent2, getter_AddRefs(tableNode2));
-  if (NS_FAILED(result)) return PR_FALSE;
-
-  // Must be in the same table
-  if (tableNode1 && (tableNode1 == tableNode2))
-  {
-    if (aTable)
-    {
-      *aTable = tableNode1;
-      NS_ADDREF(*aTable);
-    }
-    return PR_TRUE;;
-  }
-  return PR_FALSE;
+  // Must be in the same table.  Note that we want to return false for
+  // the test if both tables are null.
+  return (tableNode1 == tableNode2) ? tableNode1 : nsnull;
 }
 
-nsresult
-nsFrameSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable) const
+nsIContent*
+nsFrameSelection::GetParentTable(nsIContent *aCell) const
 {
-  if (!aCell || !aTable) {
-    return NS_ERROR_NULL_POINTER;
+  if (!aCell) {
+    return nsnull;
   }
 
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
     if (parent->Tag() == nsGkAtoms::table &&
         parent->IsNodeOfType(nsINode::eHTML)) {
-      *aTable = parent;
-      NS_ADDREF(*aTable);
-
-      return NS_OK;
+      return parent;
     }
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
-// XXXbz we should change this too
 nsresult
-nsFrameSelection::SelectCellElement(nsIDOMElement *aCellElement)
+nsFrameSelection::SelectCellElement(nsIContent *aCellElement)
 {
-  nsCOMPtr<nsIContent> cellContent = do_QueryInterface(aCellElement);
-
-  if (!cellContent) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIContent *parent = cellContent->GetParent();
+  nsIContent *parent = aCellElement->GetParent();
 
   // Get child offset
-  PRInt32 offset = parent->IndexOf(cellContent);
+  PRInt32 offset = parent->IndexOf(aCellElement);
 
   return CreateAndAddRange(parent, offset);
 }
