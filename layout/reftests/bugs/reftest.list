@@ -1121,12 +1121,9 @@ fails == 461512-1.html 461512-1-ref.html # Bug 461512
 == 482659-1b.html 482659-1-ref.html
 == 482659-1c.html 482659-1-ref.html
 == 482659-1d.html 482659-1-ref.html
-<<<<<<< local
+== 483565.xul 483565-ref.xul
 == 485275-1.html 485275-1-ref.html
 == 485275-1.svg 485275-1-ref.html
-=======
-== 483565.xul 483565-ref.xul
->>>>>>> other
 == 486052-1.html 486052-1-ref.html
 == 486052-2a.html 486052-2-ref.html
 == 486052-2b.html 486052-2-ref.html
