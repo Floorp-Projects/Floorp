@@ -65,12 +65,12 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0;
 var gFontMetrics = [];
 if (kIsWin) {
   gFontMetrics = [
-    { ascent: 13, offset: -2, lineHeight: 1 },
-    { ascent: 17, offset: -2, lineHeight: 1 },
-    { ascent: 26, offset: -4, lineHeight: 1 },
-    { ascent: 34, offset: -4, lineHeight: 2 },
-    { ascent: 42, offset: -7, lineHeight: 1 },
-    { ascent: 56, offset: -7, lineHeight: 3 }
+    { ascent: 13, offset: -2, lineHeight: 1, descentLimit:  3 },
+    { ascent: 17, offset: -2, lineHeight: 1, descentLimit:  5 },
+    { ascent: 26, offset: -4, lineHeight: 1, descentLimit:  6 },
+    { ascent: 34, offset: -4, lineHeight: 2, descentLimit: 10 },
+    { ascent: 42, offset: -7, lineHeight: 1, descentLimit: 10 },
+    { ascent: 56, offset: -7, lineHeight: 3, descentLimit: 17 }
   ];
 }
 
@@ -132,7 +132,8 @@ function drawSelectionDecorationLines(aDocument, aStyle, aRelativeSize)
       }
       drawDecorationLine(aDocument, underlineStyle.color, pt,
         { width: width, height: fontMetrics.lineHeight * aRelativeSize },
-        fontMetrics.ascent, fontMetrics.offset, aStyle);
+        fontMetrics.ascent, fontMetrics.offset, aStyle,
+        fontMetrics.descentLimit);
     }
   }
 }

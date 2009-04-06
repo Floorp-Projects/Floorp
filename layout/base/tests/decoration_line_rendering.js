@@ -24,9 +24,11 @@ const kSVGNS = "http://www.w3.org/2000/svg";
 
 // XXX following functions only support to draw underline now.
 
-function drawDecorationLine(aDocument, aColor, aPt, aLineSize, aAscent, aOffset, aStyle)
+function drawDecorationLine(aDocument, aColor, aPt, aLineSize, aAscent, aOffset,
+                            aStyle, aDescentLimit)
 {
-  var rect = getTextDecorationRect(aPt, aLineSize, aAscent, aOffset, aStyle);
+  var rect = getTextDecorationRect(aPt, aLineSize, aAscent, aOffset, aStyle,
+                                   aDescentLimit);
   if (rect.width == 0 || rect.height == 0)
     return;
 
@@ -146,10 +148,13 @@ function drawDecorationLine(aDocument, aColor, aPt, aLineSize, aAscent, aOffset,
   }
 }
 
-function getTextDecorationRect(aPt, aLineSize, aAscent, aOffset, aStyle)
+function getTextDecorationRect(aPt, aLineSize, aAscent, aOffset, aStyle,
+                               aDescentLimit)
 {
   if (aStyle == kDecorationStyleNone)
     return { x: 0, y: 0, width: 0, height: 0 };
+
+  var liftupUnderline = aDescentLimit >= 0.0;
 
   var r = {};
   r.x = Math.floor(aPt.x + 0.5);
@@ -157,14 +162,31 @@ function getTextDecorationRect(aPt, aLineSize, aAscent, aOffset, aStyle)
 
   var lineHeight = round(aLineSize.height);
   lineHeight = Math.max(lineHeight, 1.0);
+
+  var ascent = round(aAscent);
+  var descentLimit = round(aDescentLimit);
+
+  var suggestedMaxRectHeight = Math.max(Math.min(ascent, descentLimit), 1.0);
   var underlineOffsetAdjust = 0.0;
   r.height = lineHeight;
   if (aStyle == kDecorationStyleDouble) {
     var gap = round(lineHeight / 2.0);
     gap = Math.max(gap, 1.0);
     r.height = lineHeight * 2.0 + gap;
+    if (liftupUnderline) {
+      if (r.height > suggestedMaxRectHeight) {
+        r.height = Math.max(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
+      }
+    }
   } else if (aStyle == kDecorationStyleWavy) {
     r.height = lineHeight > 2.0 ? lineHeight * 4.0 : lineHeight * 3.0;
+    if (liftupUnderline) {
+      descentLimit += lineHeight;
+      suggestedMaxRectHeight = Math.max(Math.min(ascent, descentLimit), 1.0);
+      if (r.height > suggestedMaxRectHeight) {
+        r.height = Math.max(suggestedMaxRectHeight, lineHeight * 2.0);
+      }
+    }
     underlineOffsetAdjust = r.height / 2.0;
   }
 
@@ -172,6 +194,13 @@ function getTextDecorationRect(aPt, aLineSize, aAscent, aOffset, aStyle)
   var offset = 0.0;
 
   offset = aOffset + underlineOffsetAdjust;
+  if (liftupUnderline) {
+    if (descentLimit < -offset + r.height) {
+      var offsetBottomAligned = -descentLimit + r.height;
+      var offsetTopAligned = underlineOffsetAdjust;
+      offset = Math.min(offsetBottomAligned, offsetTopAligned);
+    }
+  }
 
   r.y = baseline - Math.floor(offset + 0.5);
 

@@ -231,6 +231,17 @@ struct nsCSSRendering {
    *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
    *     @param aStyle            the style of the decoration line (See above
    *                              enum names).
+   *     @param aDescentLimit     If aDescentLimit is zero or larger and the
+   *                              underline overflows from the descent space,
+   *                              the underline should be lifted up as far as
+   *                              possible.  Note that this does not mean the
+   *                              underline never overflows from this
+   *                              limitation.  Because if the underline is
+   *                              positioned to the baseline or upper, it causes
+   *                              unreadability.  Note that if this is zero
+   *                              or larger, the underline rect may be shrunken
+   *                              if it's possible.  Therefore, this value is
+   *                              used for strikeout line and overline too.
    */
   static void PaintDecorationLine(gfxContext* aGfxContext,
                                   const nscolor aColor,
@@ -239,7 +250,8 @@ struct nsCSSRendering {
                                   const gfxFloat aAscent,
                                   const gfxFloat aOffset,
                                   const PRUint8 aDecoration,
-                                  const PRUint8 aStyle);
+                                  const PRUint8 aStyle,
+                                  const gfxFloat aDescentLimit = -1.0);
 
   /**
    * Function for getting the decoration line rect for the text.
@@ -259,6 +271,17 @@ struct nsCSSRendering {
    *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
    *     @param aStyle            the style of the decoration line (See above
    *                              enum names).
+   *     @param aDescentLimit     If aDescentLimit is zero or larger and the
+   *                              underline overflows from the descent space,
+   *                              the underline should be lifted up as far as
+   *                              possible.  Note that this does not mean the
+   *                              underline never overflows from this
+   *                              limitation.  Because if the underline is
+   *                              positioned to the baseline or upper, it causes
+   *                              unreadability.  Note that if this is zero
+   *                              or larger, the underline rect may be shrunken
+   *                              if it's possible.  Therefore, this value is
+   *                              used for strikeout line and overline too.
    *   output:
    *     @return                  the decoration line rect for the input,
    *                              the each values are app units.
@@ -268,7 +291,8 @@ struct nsCSSRendering {
                                       const gfxFloat aAscent,
                                       const gfxFloat aOffset,
                                       const PRUint8 aDecoration,
-                                      const PRUint8 aStyle);
+                                      const PRUint8 aStyle,
+                                      const gfxFloat aDescentLimit = -1.0);
 
 protected:
   static gfxRect GetTextDecorationRectInternal(const gfxPoint& aPt,
@@ -276,7 +300,8 @@ protected:
                                                const gfxFloat aAscent,
                                                const gfxFloat aOffset,
                                                const PRUint8 aDecoration,
-                                               const PRUint8 aStyle);
+                                               const PRUint8 aStyle,
+                                               const gfxFloat aDscentLimit);
 };
 
 /*
