@@ -411,6 +411,9 @@ nsresult nsPluginNativeWindowGtk2::CreateXtWindow() {
   if (!mSocketWidget)
     return NS_ERROR_FAILURE;
 
+  g_signal_connect(mSocketWidget, "destroy",
+                   G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
+
   gtk_widget_set_size_request(mSocketWidget, width, height);
 
 #ifdef NS_DEBUG
