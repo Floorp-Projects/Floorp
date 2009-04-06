@@ -136,10 +136,10 @@ struct JSTitle {
 
 #ifdef JS_DEBUG_TITLE_LOCKS
 
-#define JS_SET_OBJ_INFO(obj_, file_, line_)                                       \
+#define JS_SET_OBJ_INFO(obj_, file_, line_)                                   \
     JS_SET_SCOPE_INFO(OBJ_SCOPE(obj_), file_, line_)
 
-#define JS_SET_SCOPE_INFO(scope_, file_, line_)                                   \
+#define JS_SET_SCOPE_INFO(scope_, file_, line_)                               \
     js_SetScopeInfo(scope_, file_, line_)
 
 #endif
@@ -157,25 +157,25 @@ struct JSTitle {
  * are for optimizations above the JSObjectOps layer, under which object locks
  * normally hide.
  */
-#define JS_LOCK_OBJ(cx,obj)       ((OBJ_SCOPE(obj)->title.ownercx == (cx))     \
-                                   ? (void)0                                   \
-                                   : (js_LockObj(cx, obj),                     \
+#define JS_LOCK_OBJ(cx,obj)       ((OBJ_SCOPE(obj)->title.ownercx == (cx))    \
+                                   ? (void)0                                  \
+                                   : (js_LockObj(cx, obj),                    \
                                       JS_SET_OBJ_INFO(obj,__FILE__,__LINE__)))
-#define JS_UNLOCK_OBJ(cx,obj)     ((OBJ_SCOPE(obj)->title.ownercx == (cx))     \
+#define JS_UNLOCK_OBJ(cx,obj)     ((OBJ_SCOPE(obj)->title.ownercx == (cx))    \
                                    ? (void)0 : js_UnlockObj(cx, obj))
 
-#define JS_LOCK_TITLE(cx,title)                                                \
-    ((title)->ownercx == (cx) ? (void)0                                        \
-     : (js_LockTitle(cx, (title)),                                             \
+#define JS_LOCK_TITLE(cx,title)                                               \
+    ((title)->ownercx == (cx) ? (void)0                                       \
+     : (js_LockTitle(cx, (title)),                                            \
         JS_SET_TITLE_INFO(title,__FILE__,__LINE__)))
 
-#define JS_UNLOCK_TITLE(cx,title) ((title)->ownercx == (cx) ? (void)0          \
+#define JS_UNLOCK_TITLE(cx,title) ((title)->ownercx == (cx) ? (void)0         \
                                    : js_UnlockTitle(cx, title))
 
 #define JS_LOCK_SCOPE(cx,scope)   JS_LOCK_TITLE(cx,&(scope)->title)
 #define JS_UNLOCK_SCOPE(cx,scope) JS_UNLOCK_TITLE(cx,&(scope)->title)
 
-#define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope)                            \
+#define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope)                           \
     js_TransferTitle(cx, &scope->title, &newscope->title)
 
 

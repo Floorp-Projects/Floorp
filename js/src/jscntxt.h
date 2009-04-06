@@ -183,7 +183,8 @@ typedef struct InterpStruct InterpStruct;
 #endif
 
 #ifdef DEBUG
-# define JS_EVAL_CACHE_METERING 1
+# define JS_EVAL_CACHE_METERING     1
+# define JS_FUNCTION_METERING       1
 #endif
 
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
@@ -194,14 +195,27 @@ typedef struct InterpStruct InterpStruct;
 
 #ifdef JS_EVAL_CACHE_METERING
 # define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
-# define ID(x)                      x
+# define identity(x)                x
 
 /* Have to typedef this for LiveConnect C code, which includes us. */
 typedef struct JSEvalCacheMeter {
-    uint64 EVAL_CACHE_METER_LIST(ID);
+    uint64 EVAL_CACHE_METER_LIST(identity);
 } JSEvalCacheMeter;
 
-# undef ID
+# undef identity
+#endif
+
+#ifdef JS_FUNCTION_METERING
+# define FUNCTION_KIND_METER_LIST(_)                                          \
+                        _(allfun), _(heavy), _(nofreeupvar), _(onlyfreevar),  \
+                        _(display), _(flat), _(setupvar), _(badfunarg)
+# define identity(x)    x
+
+typedef struct JSFunctionMeter {
+    int32 FUNCTION_KIND_METER_LIST(identity);
+} JSFunctionMeter;
+
+# undef identity
 #endif
 
 struct JSThreadData {
@@ -640,6 +654,11 @@ struct JSRuntime {
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
 #endif
+
+#ifdef JS_FUNCTION_METERING
+    JSFunctionMeter     functionMeter;
+    char                lastScriptFilename[1024];
+#endif
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
@@ -653,7 +672,6 @@ struct JSRuntime {
 #else
 # define EVAL_CACHE_METER(x)    ((void) 0)
 #endif
-#undef DECLARE_EVAL_CACHE_METER
 
 #ifdef DEBUG
 # define JS_RUNTIME_METER(rt, which)    JS_ATOMIC_INCREMENT(&(rt)->which)
@@ -748,7 +766,7 @@ typedef struct JSLocalRootStack {
                                      * structure */
 #define JSTVU_SPROP         (-3)    /* u.sprop roots property tree node */
 #define JSTVU_WEAK_ROOTS    (-4)    /* u.weakRoots points to saved weak roots */
-#define JSTVU_PARSE_CONTEXT (-5)    /* u.parseContext roots JSParseContext* */
+#define JSTVU_COMPILER      (-5)    /* u.compiler roots JSCompiler* */
 #define JSTVU_SCRIPT        (-6)    /* u.script roots JSScript* */
 
 /*
@@ -803,8 +821,8 @@ typedef struct JSLocalRootStack {
 #define JS_PUSH_TEMP_ROOT_WEAK_COPY(cx,weakRoots_,tvr)                        \
     JS_PUSH_TEMP_ROOT_COMMON(cx, weakRoots_, tvr, JSTVU_WEAK_ROOTS, weakRoots)
 
-#define JS_PUSH_TEMP_ROOT_PARSE_CONTEXT(cx,pc,tvr)                            \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, pc, tvr, JSTVU_PARSE_CONTEXT, parseContext)
+#define JS_PUSH_TEMP_ROOT_COMPILER(cx,pc,tvr)                                 \
+    JS_PUSH_TEMP_ROOT_COMMON(cx, pc, tvr, JSTVU_COMPILER, compiler)
 
 #define JS_PUSH_TEMP_ROOT_SCRIPT(cx,script_,tvr)                              \
     JS_PUSH_TEMP_ROOT_COMMON(cx, script_, tvr, JSTVU_SCRIPT, script)
@@ -1040,7 +1058,7 @@ class JSAutoTempValueRooter
     }
 
     jsval value() { return mTvr.u.value; }
-    jsval * addr() { return &mTvr.u.value; }
+    jsval *addr() { return &mTvr.u.value; }
 
   protected:
     JSContext *mContext;

@@ -128,7 +128,7 @@ struct JSStackFrame {
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
     JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
     JSStackFrame    *displaySave;   /* previous value of display entry for
-                                       script->staticDepth */
+                                       script->staticLevel */
 #ifdef DEBUG
     jsrefcount      pcDisabledSave; /* for balanced property cache control */
 #endif

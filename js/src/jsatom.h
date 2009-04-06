@@ -88,51 +88,99 @@ struct JSAtomListElement {
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  ((jsatomid) JS_PTR_TO_UINT32((ale)->entry.value))
-#define ALE_JSOP(ale)   ((JSOp) JS_PTR_TO_UINT32((ale)->entry.value))
+#define ALE_DEFN(ale)   ((JSDefinition *) (ale)->entry.value)
 #define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = JS_UINT32_TO_PTR(index))
-#define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = JS_UINT32_TO_PTR(op))
+#define ALE_SET_DEFN(ale, dn)   ((ale)->entry.value = (void *)(dn))
 #define ALE_SET_VALUE(ale, v)   ((ale)->entry.value = (void *)(v))
+#define ALE_SET_NEXT(ale,nxt)   ((ale)->entry.next = (JSHashEntry *)(nxt))
 
-struct JSAtomList {
+/*
+ * NB: JSAtomSet must be plain-old-data as it is embedded in the pn_u union in
+ * JSParseNode. JSAtomList encapsulates all operational uses of a JSAtomSet.
+ *
+ * The JSAtomList name is traditional, even though the implementation is a map
+ * (not to be confused with JSAtomMap). In particular the "ALE" and "ale" short
+ * names for JSAtomListElement variables roll off the fingers, compared to ASE
+ * or AME alternatives.
+ */
+struct JSAtomSet {
     JSHashEntry         *list;          /* literals indexed for mapping */
     JSHashTable         *table;         /* hash table if list gets too long */
     jsuint              count;          /* count of indexed literals */
 };
 
-#define ATOM_LIST_INIT(al)  ((al)->list = NULL, (al)->table = NULL,           \
-                             (al)->count = 0)
+#ifdef __cplusplus
 
-#define ATOM_LIST_SEARCH(_ale,_al,_atom)                                      \
-    JS_BEGIN_MACRO                                                            \
-        JSHashEntry **_hep;                                                   \
-        ATOM_LIST_LOOKUP(_ale, _hep, _al, _atom);                             \
-    JS_END_MACRO
+struct JSAtomList : public JSAtomSet
+{
+#ifdef DEBUG
+    const JSAtomSet* set;               /* asserted null in mutating methods */
+#endif
 
-#define ATOM_LIST_LOOKUP(_ale,_hep,_al,_atom)                                 \
-    JS_BEGIN_MACRO                                                            \
-        if ((_al)->table) {                                                   \
-            _hep = JS_HashTableRawLookup((_al)->table, ATOM_HASH(_atom),      \
-                                         _atom);                              \
-            _ale = *_hep ? (JSAtomListElement *) *_hep : NULL;                \
-        } else {                                                              \
-            JSHashEntry **_alep = &(_al)->list;                               \
-            _hep = NULL;                                                      \
-            while ((_ale = (JSAtomListElement *)*_alep) != NULL) {            \
-                if (ALE_ATOM(_ale) == (_atom)) {                              \
-                    /* Hit, move atom's element to the front of the list. */  \
-                    *_alep = (_ale)->entry.next;                              \
-                    (_ale)->entry.next = (_al)->list;                         \
-                    (_al)->list = &_ale->entry;                               \
-                    break;                                                    \
-                }                                                             \
-                _alep = &_ale->entry.next;                                    \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
+    JSAtomList() {
+        list = NULL; table = NULL; count = 0;
+#ifdef DEBUG
+        set = NULL;
+#endif
+    }
+
+    JSAtomList(const JSAtomSet& as) {
+        list = as.list; table = as.table; count = as.count;
+#ifdef DEBUG
+        set = &as;
+#endif
+    }
+
+    void clear() { JS_ASSERT(!set); list = NULL; table = NULL; count = 0; }
+
+    JSAtomListElement *lookup(JSAtom *atom) {
+        JSHashEntry **hep;
+        return rawLookup(atom, hep);
+    }
+
+    JSAtomListElement *rawLookup(JSAtom *atom, JSHashEntry **&hep);
+
+    enum AddHow { UNIQUE, SHADOW, HOIST };
+
+    JSAtomListElement *add(JSCompiler *jsc, JSAtom *atom, AddHow how = UNIQUE);
+
+    void remove(JSCompiler *jsc, JSAtom *atom) {
+        JSHashEntry **hep;
+        JSAtomListElement *ale = rawLookup(atom, hep);
+        if (ale)
+            rawRemove(jsc, ale, hep);
+    }
+
+    void rawRemove(JSCompiler *jsc, JSAtomListElement *ale, JSHashEntry **hep);
+};
+
+/*
+ * Iterate over an atom list. We define a call operator to minimize the syntax
+ * tax for users. We do not use a more standard pattern using ++ and * because
+ * (a) it's the wrong pattern for a non-scalar; (b) it's overkill -- one method
+ * is enough. (This comment is overkill!)
+ */
+class JSAtomListIterator {
+    JSAtomList*         list;
+    JSAtomListElement*  next;
+    uint32              index;
+
+  public:
+    JSAtomListIterator(JSAtomList* al) : list(al) { reset(); }
+
+    void reset() {
+        next = (JSAtomListElement *) list->list;
+        index = 0;
+    }
+
+    JSAtomListElement* operator ()();
+};
+
+#endif /* __cplusplus */
 
 struct JSAtomMap {
     JSAtom              **vector;       /* array of ptrs to indexed atoms */
@@ -425,12 +473,6 @@ extern JS_FRIEND_API(void)
 js_DumpAtoms(JSContext *cx, FILE *fp);
 
 #endif
-
-/*
- * Assign atom an index and insert it on al.
- */
-extern JSAtomListElement *
-js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al);
 
 /*
  * For all unmapped atoms recorded in al, add a mapping from the atom's index
