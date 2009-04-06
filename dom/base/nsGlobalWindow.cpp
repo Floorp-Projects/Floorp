@@ -654,7 +654,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
         os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                         PR_FALSE);
 
-        // Watch for dom-storage-chaged so we can fire storage
+        // Watch for dom-storage-changed so we can fire storage
         // events. Use a strong reference.
         os->AddObserver(mObserver, "dom-storage-changed", PR_FALSE);
       }
