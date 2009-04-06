@@ -44,10 +44,18 @@ relativesrcdir  = layout/generic/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug288789.html \
+# in the list below, we make sure that the tests that require focus
+# run before test_plugin_clipping, which can steal focus for its window.
+_TEST_FILES = \
+		bug344830_testembed.svg \
+		frame_selection_underline.xhtml \
+		frame_selection_underline-ref.xhtml \
+		frame_selection_underline.css \
+		plugin_clipping_helper.xhtml \
+		test_backspace_delete.xul \
+		test_bug288789.html \
 		test_bug323656.html \
 		test_bug344830.html \
-		bug344830_testembed.svg \
 		test_bug382429.html \
 		test_bug384527.html \
 		test_bug385751.html \
@@ -67,13 +75,11 @@ _TEST_FILES = 	test_bug288789.html \
 		test_bug468167.html \
 		test_bug469613.xul \
 		test_bug470212.html \
-		test_character_movement.html \
-		test_word_movement.html \
-		test_backspace_delete.xul \
+		test_movement_by_characters.html \
+		test_movement_by_words.html \
+		test_plugin_clipping.xhtml \
+		test_plugin_position.xhtml \
 		test_selection_underline.html \
-		frame_selection_underline.xhtml \
-		frame_selection_underline-ref.xhtml \
-		frame_selection_underline.css \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

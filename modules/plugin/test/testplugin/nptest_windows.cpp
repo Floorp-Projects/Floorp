@@ -65,6 +65,12 @@ pluginInstanceShutdown(InstanceData* instanceData)
 }
 
 void
+pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
+{
+  instanceData->window = *newWindow;
+}
+
+void
 pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
 {
   // Should never be called since we don't support window mode (yet)
@@ -181,8 +187,27 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
   switch((UINT)pe->event) {
     case WM_PAINT:   
       pluginDraw(instanceData);   
-      return 1;   
+      return 1;
   }
   
   return 0;
+}
+
+int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
+{
+  // XXX nothing here yet since we don't support windowed plugins
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
+{
+  // XXX nothing here yet since we don't support windowed plugins
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
+    int32_t rectIndex, RectEdge edge)
+{
+  // XXX nothing here yet since we don't support windowed plugins
+  return NPTEST_INT32_ERROR;
 }

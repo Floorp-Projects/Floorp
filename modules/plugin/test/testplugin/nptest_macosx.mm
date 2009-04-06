@@ -66,6 +66,30 @@ pluginInstanceShutdown(InstanceData* instanceData)
 {
 }
 
+static bool
+RectEquals(const NPRect& r1, const NPRect& r2)
+{
+  return r1.left == r2.left && r1.top == r2.top &&
+         r1.right == r2.right && r1.bottom == r2.bottom;
+}
+
+void
+pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
+{
+  // Ugh. Due to a terrible Gecko bug, we have to ignore position changes
+  // when the clip rect doesn't change; the position can be wrong
+  // when set by a path other than nsObjectFrame::FixUpPluginWindow.
+  int32_t oldX = instanceData->window.x;
+  int32_t oldY = instanceData->window.y;
+  bool clipChanged =
+    !RectEquals(instanceData->window.clipRect, newWindow->clipRect);
+  instanceData->window = *newWindow;
+  if (!clipChanged) {
+    instanceData->window.x = oldX;
+    instanceData->window.y = oldY;
+  }
+}
+
 void
 pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
 {
@@ -218,4 +242,49 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     return 1;
   }
   return 0;
+}
+
+int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
+{
+  NPWindow* w = &instanceData->window;
+  switch (edge) {
+  case EDGE_LEFT:
+    return w->x;
+  case EDGE_TOP:
+    return w->y;
+  case EDGE_RIGHT:
+    return w->x + w->width;
+  case EDGE_BOTTOM:
+    return w->y + w->height;
+  }
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
+{
+  return 1;
+}
+
+int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
+    int32_t rectIndex, RectEdge edge)
+{
+  if (rectIndex != 0)
+    return NPTEST_INT32_ERROR;
+
+  // We have to add the Cocoa titlebar height here since the clip rect
+  // is being returned relative to that
+  static const int COCOA_TITLEBAR_HEIGHT = 22;
+
+  NPWindow* w = &instanceData->window;
+  switch (edge) {
+  case EDGE_LEFT:
+    return w->clipRect.left;
+  case EDGE_TOP:
+    return w->clipRect.top + COCOA_TITLEBAR_HEIGHT;
+  case EDGE_RIGHT:
+    return w->clipRect.right;
+  case EDGE_BOTTOM:
+    return w->clipRect.bottom + COCOA_TITLEBAR_HEIGHT;
+  }
+  return NPTEST_INT32_ERROR;
 }
