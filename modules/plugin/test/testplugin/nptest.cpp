@@ -44,6 +44,8 @@
 #define PLUGIN_DESCRIPTION "Plug-in for testing purposes."
 #define PLUGIN_VERSION     "1.0.0.0"
 
+#define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
+
 //
 // static data
 //
@@ -55,12 +57,6 @@ static NPClass sNPClass;
 // identifiers
 //
 
-#define IDENTIFIER_TO_STRING_TEST_METHOD        0
-#define QUERY_PRIVATE_MODE_STATE_METHOD         1
-#define LAST_REPORTED_PRIVATE_MODE_STATE_METHOD 2
-#define HAS_WIDGET_METHOD                       3
-#define NUM_METHOD_IDENTIFIERS                  4
-
 typedef bool (* ScriptableFunction)
   (NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
@@ -68,19 +64,28 @@ static bool identifierToStringTest(NPObject* npobj, const NPVariant* args, uint3
 static bool queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool hasWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getClipRegionRectCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getClipRegionRectEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
-static NPIdentifier sPluginMethodIdentifiers[NUM_METHOD_IDENTIFIERS];
-static const NPUTF8* sPluginMethodIdentifierNames[NUM_METHOD_IDENTIFIERS] = {
+static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "identifierToStringTest",
   "queryPrivateModeState",
   "lastReportedPrivateModeState",
   "hasWidget",
+  "getEdge",
+  "getClipRegionRectCount",
+  "getClipRegionRectEdge",
 };
-static const ScriptableFunction sPluginMethodFunctions[NUM_METHOD_IDENTIFIERS] = {
+static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
+static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
   identifierToStringTest,
   queryPrivateModeState,
   lastReportedPrivateModeState,
   hasWidget,
+  getEdge,
+  getClipRegionRectCount,
+  getClipRegionRectEdge,
 };
 
 static bool sIdentifiersInitialized = false;
@@ -88,14 +93,16 @@ static bool sIdentifiersInitialized = false;
 static void initializeIdentifiers()
 {
   if (!sIdentifiersInitialized) {
-    NPN_GetStringIdentifiers(sPluginMethodIdentifierNames, NUM_METHOD_IDENTIFIERS, sPluginMethodIdentifiers);
+    NPN_GetStringIdentifiers(sPluginMethodIdentifierNames,
+        ARRAY_LENGTH(sPluginMethodIdentifierNames), sPluginMethodIdentifiers);
     sIdentifiersInitialized = true;    
   }
 }
 
 static void clearIdentifiers()
 {
-  memset(sPluginMethodIdentifierNames, 0, NUM_METHOD_IDENTIFIERS * sizeof(NPIdentifier));
+  memset(sPluginMethodIdentifiers, 0,
+      ARRAY_LENGTH(sPluginMethodIdentifiers) * sizeof(NPIdentifier));
   sIdentifiersInitialized = false;
 }
 
@@ -325,7 +332,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
   void* oldWindow = instanceData->window.window;
-  instanceData->window = *window;
+  pluginDoSetWindow(instanceData, window);
   if (instanceData->hasWidget && oldWindow != instanceData->window.window) {
     pluginWidgetInit(instanceData, oldWindow);
   }
@@ -403,7 +410,7 @@ NPP_SetValue(NPP instance, NPNVariable variable, void* value)
 {
   if (variable == NPNVprivateModeBool) {
     InstanceData* instanceData = (InstanceData*)(instance->pdata);
-    instanceData->lastReportedPrivateModeState = *static_cast<NPBool*>(value);
+    instanceData->lastReportedPrivateModeState = bool(*static_cast<NPBool*>(value));
     return NPERR_NO_ERROR;
   }
   return NPERR_GENERIC_ERROR;
@@ -531,7 +538,7 @@ scriptableInvalidate(NPObject* npobj)
 bool
 scriptableHasMethod(NPObject* npobj, NPIdentifier name)
 {
-  for (int i = 0; i < NUM_METHOD_IDENTIFIERS; i++) {
+  for (int i = 0; i < int(ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
     if (name == sPluginMethodIdentifiers[i])
       return true;
   }
@@ -541,7 +548,7 @@ scriptableHasMethod(NPObject* npobj, NPIdentifier name)
 bool
 scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  for (int i = 0; i < NUM_METHOD_IDENTIFIERS; i++) {
+  for (int i = 0; i < int(ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
     if (name == sPluginMethodIdentifiers[i])
       return sPluginMethodFunctions[i](npobj, args, argCount, result);
   }
@@ -602,6 +609,7 @@ identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount
   NPIdentifier identifier = variantToIdentifier(args[0]);
   if (!identifier)
     return false;
+
   NPUTF8* utf8String = NPN_UTF8FromIdentifier(identifier);
   if (!utf8String)
     return false;
@@ -612,6 +620,9 @@ identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount
 static bool
 queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  if (argCount != 0)
+    return false;
+
   NPBool pms = false;
   NPN_GetValue(static_cast<TestNPObject*>(npobj)->npp, NPNVprivateModeBool, &pms);
   BOOLEAN_TO_NPVARIANT(pms, *result);
@@ -621,6 +632,9 @@ queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 static bool
 lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  if (argCount != 0)
+    return false;
+
   InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
   BOOLEAN_TO_NPVARIANT(id->lastReportedPrivateModeState, *result);
   return true;
@@ -629,7 +643,67 @@ lastReportedPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t ar
 static bool
 hasWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  if (argCount != 0)
+    return false;
+
   InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
   BOOLEAN_TO_NPVARIANT(id->hasWidget, *result);
+  return true;
+}
+
+static bool
+getEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1)
+    return false;
+  if (!NPVARIANT_IS_INT32(args[0]))
+    return false;
+  int32_t edge = NPVARIANT_TO_INT32(args[0]);
+  if (edge < EDGE_LEFT || edge > EDGE_BOTTOM)
+    return false;
+
+  InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
+  int32_t r = pluginGetEdge(id, RectEdge(edge));
+  if (r == NPTEST_INT32_ERROR)
+    return false;
+  INT32_TO_NPVARIANT(r, *result);
+  return true;
+}
+
+static bool
+getClipRegionRectCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
+  int32_t r = pluginGetClipRegionRectCount(id);
+  if (r == NPTEST_INT32_ERROR)
+    return false;
+  INT32_TO_NPVARIANT(r, *result);
+  return true;
+}
+
+static bool
+getClipRegionRectEdge(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 2)
+    return false;
+  if (!NPVARIANT_IS_INT32(args[0]))
+    return false;
+  int32_t rectIndex = NPVARIANT_TO_INT32(args[0]);
+  if (rectIndex < 0)
+    return false;
+  if (!NPVARIANT_IS_INT32(args[1]))
+    return false;
+  int32_t edge = NPVARIANT_TO_INT32(args[1]);
+  if (edge < EDGE_LEFT || edge > EDGE_BOTTOM)
+    return false;
+
+  InstanceData* id = static_cast<InstanceData*>(static_cast<TestNPObject*>(npobj)->npp->pdata);
+  int32_t r = pluginGetClipRegionRectEdge(id, rectIndex, RectEdge(edge));
+  if (r == NPTEST_INT32_ERROR)
+    return false;
+  INT32_TO_NPVARIANT(r, *result);
   return true;
 }

@@ -52,3 +52,46 @@ The test plugin object supports the following scriptable method:
 * hasWidget()
 Returns true if the plugin has an associated widget. This will return true if
 wmode="window" was specified and the platform supports windowed plugins.
+
+== Plugin geometry ==
+
+The test plugin supports the following scriptable methods:
+
+* getEdge(edge)
+Returns the integer screen pixel coordinate of an edge of the plugin's
+area:
+-- edge=0: returns left edge coordinate
+-- edge=1: returns top edge coordinate
+-- edge=2: returns right edge coordinate
+-- edge=3: returns bottom edge coordinate
+The coordinates are relative to the top-left corner of the top-level window
+containing the plugin, including the window decorations. Therefore:
+-- On Mac, they're relative to the top-left corner of the toplevel Cocoa
+window.
+-- On Windows, they're relative to the top-left corner of the toplevel HWND's
+non-client area.
+-- On GTK2, they're relative to the top-left corner of the toplevel window's
+window manager frame.
+This means they can be added to Gecko's window.screenX/screenY (if DPI is set
+to 96) to get screen coordinates.
+On the platforms that support window-mode plugins (Windows/GTK2), this only
+works for window-mode plugins. It will throw an error for windowless plugins.
+
+* getClipRegionRectCount()
+Returns the number of rectangles in the plugin's clip region.
+For plugins with widgets, the clip region is computed as the intersection of the
+clip region for the widget (if the platform does not support clip regions
+on native widgets, this would just be the widget's rectangle) with the
+clip regions of all ancestor widgets which would clip this widget.
+On the platforms that support window-mode plugins (Windows/GTK2), this only
+works for window-mode plugins. It will throw an error for windowless plugins.
+On Mac, all plugins have a clip region containing just a single clip
+rectangle only. So if you request wmode="window" but the plugin reports
+!hasWidget, you can assume that complex clip regions are not supported.
+
+* getClipRegionRectEdge(i, edge)
+Returns the integer screen pixel coordinate of an edge of a rectangle from the
+plugin's clip region. If i is less than zero or greater than or equal to
+getClipRegionRectCount(), this will throw an error. The coordinates are
+the same as for getEdge. See getClipRegionRectCount() above for
+notes on platform plugin limitations.
