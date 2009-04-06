@@ -145,7 +145,7 @@ nsVideoFrame::PaintVideo(nsIRenderingContext& aRenderingContext,
                       presContext->AppUnitsToGfxUnits(area.height));
 
   r = CorrectForAspectRatio(r, videoSize);
-  element->Paint(ctx, r);
+  element->Paint(ctx, nsLayoutUtils::GetGraphicsFilterForFrame(this), r);
 }
 
 NS_IMETHODIMP

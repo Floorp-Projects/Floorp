@@ -120,7 +120,9 @@ class nsMediaDecoder : public nsIObserver
   // RGB buffer doesn't have to be exposed publically.
   // The current video frame is drawn to fill aRect.
   // Called in the main thread only.
-  virtual void Paint(gfxContext* aContext, const gfxRect& aRect);
+  virtual void Paint(gfxContext* aContext,
+                     gfxPattern::GraphicsFilter aFilter,
+                     const gfxRect& aRect);
 
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded() = 0;

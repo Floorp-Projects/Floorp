@@ -129,7 +129,9 @@ public:
 
   // Draw the latest video data. See nsMediaDecoder for 
   // details.
-  void Paint(gfxContext* aContext, const gfxRect& aRect);
+  void Paint(gfxContext* aContext,
+             gfxPattern::GraphicsFilter aFilter,
+             const gfxRect& aRect);
 
   // Dispatch events
   nsresult DispatchSimpleEvent(const nsAString& aName);
