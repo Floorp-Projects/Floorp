@@ -72,21 +72,6 @@ public:
     return TimeDuration(PRInt64(aMilliseconds)*PR_TicksPerSecond()/1000);
   }
 
-  TimeDuration operator+(const TimeDuration& aOther) const {
-    return TimeDuration(mValue + aOther.mValue);
-  }
-  TimeDuration operator-(const TimeDuration& aOther) const {
-    return TimeDuration(mValue - aOther.mValue);
-  }
-  TimeDuration& operator+=(const TimeDuration& aOther) {
-    mValue += aOther.mValue;
-    return *this;
-  }
-  TimeDuration& operator-=(const TimeDuration& aOther) {
-    mValue -= aOther.mValue;
-    return *this;
-  }
-
   PRBool operator<(const TimeDuration& aOther) const {
     return mValue < aOther.mValue;
   }
@@ -102,6 +87,7 @@ public:
 
   // We could define additional operators here:
   // -- convert to/from other time units
+  // -- add/subtract durations
   // -- scale duration by a float
   // but let's do that on demand.
   // Comparing durations for equality should be discouraged.

@@ -40,6 +40,7 @@
 #define nsMediaCache_h_
 
 #include "nsTArray.h"
+#include "prinrval.h"
 #include "nsAutoLock.h"
 
 /**
