@@ -2669,13 +2669,10 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 }
 
 gfxPattern::GraphicsFilter
-nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
+nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aFrame)
 {
 #ifdef MOZ_SVG
-  nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
-    nsCSSRendering::FindRootFrame(aForFrame) : aForFrame;
-
-  switch (frame->GetStyleSVG()->mImageRendering) {
+  switch (aFrame->GetStyleSVG()->mImageRendering) {
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
     return gfxPattern::FILTER_FAST;
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
