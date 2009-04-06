@@ -96,6 +96,7 @@ CPP_UNIT_TESTS = \
                  TestPipe.cpp \
                  TestServMgr.cpp \
                  TestTextFormatter.cpp \
+                 TestTimeStamp.cpp \
                  $(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -114,7 +115,6 @@ CPP_UNIT_TESTS += \
                   TestStrings.cpp \
                   TestStorageStream.cpp \
                   TestTArray.cpp \
-                  TestTimeStamp.cpp \
                   $(NULL)
 endif
 
