@@ -70,9 +70,9 @@ nsMediaDecoder::nsMediaDecoder() :
   mRGBHeight(-1),
   mProgressTime(0),
   mDataTime(0),
-  mSizeChanged(PR_FALSE),
   mVideoUpdateLock(nsnull),
   mFramerate(0.0),
+  mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mStopping(PR_FALSE)
 {
