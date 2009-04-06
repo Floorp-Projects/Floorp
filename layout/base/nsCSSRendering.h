@@ -119,7 +119,12 @@ struct nsCSSRendering {
                          nscolor aColor);
 
   /**
-   * @return PR_TRUE if |aForFrame| is a canvas frame, in the CSS sense.
+   * Gets the root frame for the frame
+   */
+  static nsIFrame* FindRootFrame(nsIFrame* aForFrame);
+
+  /**
+   * @return PR_TRUE if |aFrame| is a canvas frame, in the CSS sense.
    */
   static PRBool IsCanvasFrame(nsIFrame* aFrame);
 
