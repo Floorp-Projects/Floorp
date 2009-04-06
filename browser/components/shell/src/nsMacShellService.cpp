@@ -61,39 +61,16 @@
 #define NETWORK_PREFPANE NS_LITERAL_CSTRING("/System/Library/PreferencePanes/Network.prefPane")
 #define DESKTOP_PREFPANE NS_LITERAL_CSTRING("/System/Library/PreferencePanes/DesktopScreenEffectsPref.prefPane")
 
-#define SAFARI_BUNDLE_IDENTIFIER NS_LITERAL_CSTRING("com.apple.Safari")
-
-// These Launch Services functions are undocumented. We're using them since they're
-// the only way to set the default opener for URLs / file extensions.
-extern "C" {
-  // Returns the CFURL for application currently set as the default opener for the
-  // given URL scheme. appURL must be released by the caller.
-  extern OSStatus _LSCopyDefaultSchemeHandlerURL(CFStringRef scheme, CFURLRef *appURL);
-  extern OSStatus _LSSetDefaultSchemeHandlerURL(CFStringRef scheme, CFURLRef appURL);
-  extern OSStatus _LSSaveAndRefresh(void);
-  // Callers should pass 0 as both inType and inCreator in order to set the default opener
-  // without modifing those.
-  extern OSStatus _LSSetWeakBindingForType(OSType inType,
-                                           OSType inCreator,
-                                           CFStringRef inExtension,
-                                           LSRolesMask inRoleMask,
-                                           const FSRef* inBindingRef);
-}
+#define SAFARI_BUNDLE_IDENTIFIER "com.apple.Safari"
 
 NS_IMPL_ISUPPORTS3(nsMacShellService, nsIMacShellService, nsIShellService, nsIWebProgressListener)
 
 NS_IMETHODIMP
 nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
 {
-  *aIsDefaultBrowser = PR_TRUE;
+  *aIsDefaultBrowser = PR_FALSE;
 
-  // Since neither Launch Services nor Internet Config actually differ between 
-  // bundles which have the same bundle identifier (That is, if we set our
-  // bundle's URL as the default handler, Launch Service might return the
-  // URL of another firefox bundle as the defualt http handler), we are
-  // comparing the bundles' identifiers rather than their URLs.
-
-  CFStringRef firefoxID = ::CFBundleGetIdentifier(CFBundleGetMainBundle());
+  CFStringRef firefoxID = ::CFBundleGetIdentifier(::CFBundleGetMainBundle());
   if (!firefoxID) {
     // CFBundleGetIdentifier is expected to return NULL only if the specified
     // bundle doesn't have a bundle identifier in its plist. In this case, that
@@ -101,42 +78,12 @@ nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrow
     return NS_ERROR_FAILURE;
   }
 
-  ::CFRetain(firefoxID);
-
-  // Get the default http handler URL
-  CFURLRef defaultBrowserURL;
-  OSStatus err = ::_LSCopyDefaultSchemeHandlerURL(CFSTR("http"),
-                                                  &defaultBrowserURL);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  if (err == noErr) {
-    // Get a reference to the bundle (based on its URL)
-    CFBundleRef defaultBrowserBundle = ::CFBundleCreate(NULL, 
-                                                        defaultBrowserURL);
-    if (defaultBrowserBundle) {
-      CFStringRef defaultBrowserID = ::CFBundleGetIdentifier(defaultBrowserBundle);
-      if (defaultBrowserID) {
-        ::CFRetain(defaultBrowserID);
-        // and compare it to our bundle identifier
-        *aIsDefaultBrowser = ::CFStringCompare(firefoxID, defaultBrowserID, 0)
-                             == kCFCompareEqualTo;
-        ::CFRelease(defaultBrowserID);
-      }
-      else {
-        // If the default browser bundle doesn't have an identifier in its plist,
-        // it's not our bundle
-        *aIsDefaultBrowser = PR_FALSE;
-      }
-
-      ::CFRelease(defaultBrowserBundle);
-      rv = NS_OK;
-    }
-
-    ::CFRelease(defaultBrowserURL);
+  // Get the default http handler's bundle ID (or NULL if it has not been explicitly set)
+  CFStringRef defaultBrowserID = ::LSCopyDefaultHandlerForURLScheme(CFSTR("http"));
+  if (defaultBrowserID) {
+    *aIsDefaultBrowser = ::CFStringCompare(firefoxID, defaultBrowserID, 0) == kCFCompareEqualTo;
+    ::CFRelease(defaultBrowserID);
   }
-
-  // release the idetifiers strings
-  ::CFRelease(firefoxID);
 
   // If this is the first browser window, maintain internal state that we've
   // checked this session (so that subsequent window opens don't show the 
@@ -144,7 +91,7 @@ nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrow
   if (aStartupCheck)
     mCheckedThisSession = PR_TRUE;
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -152,25 +99,27 @@ nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
   // Note: We don't support aForAllUsers on Mac OS X.
 
-  CFURLRef firefoxURL = ::CFBundleCopyBundleURL(CFBundleGetMainBundle());
+  CFStringRef firefoxID = ::CFBundleGetIdentifier(::CFBundleGetMainBundle());
+  if (!firefoxID) {
+    return NS_ERROR_FAILURE;
+  }
 
-  ::_LSSetDefaultSchemeHandlerURL(CFSTR("http"), firefoxURL);
-  ::_LSSetDefaultSchemeHandlerURL(CFSTR("https"), firefoxURL);
+  if (::LSSetDefaultHandlerForURLScheme(CFSTR("http"), firefoxID) != noErr) {
+    return NS_ERROR_FAILURE;
+  }
+  if (::LSSetDefaultHandlerForURLScheme(CFSTR("https"), firefoxID) != noErr) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (aClaimAllTypes) {
-    ::_LSSetDefaultSchemeHandlerURL(CFSTR("ftp"), firefoxURL);
-
-    FSRef firefoxFSRef;
-    // CFURLGetFSRef returns true if the conversion was successful 
-    if (::CFURLGetFSRef(firefoxURL, &firefoxFSRef)) {
-      // Set the default opener for html/htm files
-      ::_LSSetWeakBindingForType(0, 0, CFSTR("html"), kLSRolesAll, &firefoxFSRef);
-      ::_LSSetWeakBindingForType(0, 0, CFSTR("htm"), kLSRolesAll, &firefoxFSRef);
+    if (::LSSetDefaultHandlerForURLScheme(CFSTR("ftp"), firefoxID) != noErr) {
+      return NS_ERROR_FAILURE;
+    }
+    if (::LSSetDefaultRoleHandlerForContentType(kUTTypeHTML, kLSRolesAll, firefoxID) != noErr) {
+      return NS_ERROR_FAILURE;
     }
   }
-  ::_LSSaveAndRefresh();
-
-  ::CFRelease(firefoxURL);
+  
   return NS_OK;
 }
 
@@ -505,30 +454,35 @@ nsMacShellService::GetDefaultFeedReader(nsILocalFile** _retval)
   nsresult rv = NS_ERROR_FAILURE;
   *_retval = nsnull;
 
-  CFURLRef defaultHandlerURL;
-  OSStatus err = ::_LSCopyDefaultSchemeHandlerURL(CFSTR("feed"),
-                                                  &defaultHandlerURL);
-  if (defaultHandlerURL) {
+  CFStringRef defaultHandlerID = ::LSCopyDefaultHandlerForURLScheme(CFSTR("feed"));
+  if (!defaultHandlerID) {
+    defaultHandlerID = ::CFStringCreateWithCString(kCFAllocatorDefault,
+                                                   SAFARI_BUNDLE_IDENTIFIER,
+                                                   kCFStringEncodingASCII);
+  }
+
+  CFURLRef defaultHandlerURL = NULL;
+  OSStatus status = ::LSFindApplicationForInfo(kLSUnknownCreator,
+                                               defaultHandlerID,
+                                               NULL, // inName
+                                               NULL, // outAppRef
+                                               &defaultHandlerURL);
+
+  if (status == noErr && defaultHandlerURL) {
     nsCOMPtr<nsILocalFileMac> defaultReader =
       do_CreateInstance("@mozilla.org/file/local;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = defaultReader->InitWithCFURL(defaultHandlerURL);
       if (NS_SUCCEEDED(rv)) {
-        // ASSERT("Safari Is Not a Feed Reader");
-        nsCAutoString bundleIdentifier;
-
-        // don't throw if the bundle has no identifier
-        rv = NS_ERROR_FAILURE;
-        if (NS_FAILED(defaultReader->GetBundleIdentifier(bundleIdentifier)) ||
-            !bundleIdentifier.Equals(SAFARI_BUNDLE_IDENTIFIER)) {
-          NS_ADDREF(*_retval = defaultReader);
-          rv = NS_OK;
-        }
+        NS_ADDREF(*_retval = defaultReader);
+        rv = NS_OK;
       }
     }
 
     ::CFRelease(defaultHandlerURL);
   }
+
+  ::CFRelease(defaultHandlerID);
 
   return rv;
 }
