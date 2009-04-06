@@ -2528,7 +2528,7 @@ testThinLoopDemote.jitstats = {
     recorderStarted: 2,
     recorderAborted: 0,
     traceCompleted: 2,
-    traceTriggered: 3,
+    traceTriggered: 2,
     unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
