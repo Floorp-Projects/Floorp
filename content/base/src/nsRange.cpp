@@ -488,7 +488,7 @@ IndexOf(nsIDOMNode* aChildNode)
  ******************************************************/
 
 nsINode*
-nsRange::GetCommonAncestor()
+nsRange::GetCommonAncestor() const
 {
   return mIsPositioned ?
     nsContentUtils::GetCommonAncestor(mStartParent, mEndParent) :
@@ -1757,7 +1757,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   return NS_OK;
 }
 
-nsresult nsRange::DoCloneRange(nsRange** aReturn)
+nsresult nsRange::DoCloneRange(nsRange** aReturn) const
 {
   if(mIsDetached)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1787,7 +1787,7 @@ NS_IMETHODIMP nsRange::CloneRange(nsIDOMRange** aReturn)
   return rv;
 }
 
-nsresult nsRange::CloneRange(nsIRange** aReturn)
+nsresult nsRange::CloneRange(nsIRange** aReturn) const
 {
   nsRange* clone;
   nsresult rv = DoCloneRange(&clone);
