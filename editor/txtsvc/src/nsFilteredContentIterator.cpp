@@ -46,6 +46,7 @@
 
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
+#include "nsIRange.h"
 
 //------------------------------------------------------------
 nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFilter) :
@@ -109,6 +110,13 @@ nsFilteredContentIterator::Init(nsIDOMRange* aRange)
   rv = mPreIterator->Init(domRange);
   NS_ENSURE_SUCCESS(rv, rv);
   return mIterator->Init(domRange);
+}
+
+nsresult
+nsFilteredContentIterator::Init(nsIRange* aRange)
+{
+  nsCOMPtr<nsIDOMRange> domRange = do_QueryInterface(aRange);
+  return Init(domRange);
 }
 
 //------------------------------------------------------------
