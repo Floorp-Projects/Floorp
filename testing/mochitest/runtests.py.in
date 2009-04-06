@@ -347,6 +347,18 @@ def main():
   parser = MochitestOptions()
   options, args = parser.parse_args()
 
+  if options.xrePath is None:
+    # default xrePath to the app path if not provided
+    # but only if an app path was explicitly provided
+    if options.app != parser.defaults['app']:
+      options.xrePath = os.path.dirname(options.app)
+    else:
+      # otherwise default to dist/bin
+      options.xrePath = automation.DIST_BIN
+
+  # allow relative paths
+  options.xrePath = getFullPath(options.xrePath)
+
   options.app = getFullPath(options.app)
   if not os.path.exists(options.app):
     msg = """\
@@ -354,13 +366,6 @@ Error: Path %(app)s doesn't exist.
 Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     print msg % {"app": options.app}
     sys.exit(1)
-
-  # default xrePath to the app path if not provided
-  if options.xrePath is None:
-    options.xrePath = os.path.dirname(options.app)
-  else:
-    # allow relative paths
-    options.xrePath = getFullPath(options.xrePath)
 
   options.utilityPath = getFullPath(options.utilityPath)
   options.certPath = getFullPath(options.certPath)
