@@ -241,7 +241,7 @@ gtk_xtbin_class_init (GtkXtBinClass *klass)
   GtkWidgetClass *widget_class;
   GtkObjectClass *object_class;
 
-  parent_class = g_type_class_ref (GTK_TYPE_SOCKET);
+  parent_class = g_type_class_peek_parent(klass);
 
   widget_class = GTK_WIDGET_CLASS (klass);
   widget_class->realize = gtk_xtbin_realize;
