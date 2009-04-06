@@ -552,7 +552,7 @@ class TraceRecorder : public avmplus::GCObject {
     bool hasMethod(JSObject* obj, jsid id);
     JS_REQUIRES_STACK bool hasIteratorMethod(JSObject* obj);
 
-    jsatomid getFullIndex(ptrdiff_t pcoff = 0);
+    JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 
 public:
     JS_REQUIRES_STACK
