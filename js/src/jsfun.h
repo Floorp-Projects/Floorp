@@ -209,7 +209,7 @@ js_TraceFunction(JSTracer *trc, JSFunction *fun);
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
-extern JS_REQUIRES_STACK JSObject *
+extern JSObject *
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
 
 extern JS_REQUIRES_STACK JSObject *
