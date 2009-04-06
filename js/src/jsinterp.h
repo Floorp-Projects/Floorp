@@ -611,7 +611,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2);
  * previous opcode.
  */
 extern JS_REQUIRES_STACK void
-js_TraceOpcode(JSContext *cx, jsint len);
+js_TraceOpcode(JSContext *cx);
 
 /*
  * JS_OPMETER helper functions.

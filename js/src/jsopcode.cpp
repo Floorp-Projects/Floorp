@@ -1624,13 +1624,20 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             break;
 
         /*
-         * Check for SRC_DESTRUCT on this JSOP_DUP, which would mean another
-         * destructuring initialiser abuts this one, and we should stop.  This
-         * happens with source of the form '[a] = [b] = c'.
+         * We should stop if JSOP_DUP is either without notes or its note is
+         * not SRC_CONTINUE. The former happens when JSOP_DUP duplicates the
+         * last destructuring reference implementing an op= assignment like in
+         * '([t] = z).y += x'. In the latter case the note is SRC_DESTRUCT and
+         * means another destructuring initialiser abuts this one like in
+         * '[a] = [b] = c'.
          */
         sn = js_GetSrcNote(jp->script, pc);
-        if (sn && SN_TYPE(sn) == SRC_DESTRUCT)
+        if (!sn)
             break;
+        if (SN_TYPE(sn) != SRC_CONTINUE) {
+            LOCAL_ASSERT(SN_TYPE(sn) == SRC_DESTRUCT);
+            break;
+        }
 
         if (!hole && SprintPut(&ss->sprinter, ", ", 2) < 0)
             return NULL;

@@ -3449,7 +3449,10 @@ EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         /*
          * Duplicate the value being destructured to use as a reference base.
+         * If dup is not the first one, annotate it for the decompiler.
          */
+        if (pn2 != pn->pn_head && js_NewSrcNote(cx, cg, SRC_CONTINUE) < 0)
+            return JS_FALSE;
         if (js_Emit1(cx, cg, JSOP_DUP) < 0)
             return JS_FALSE;
 
@@ -3571,7 +3574,6 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
             if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
                 return JS_FALSE;
         } else {
-            JS_ASSERT_IF(pn->pn_type == TOK_DEFSHARP, pn->pn_kid);
             if (!js_EmitTree(cx, cg, pn))
                 return JS_FALSE;
         }
@@ -3625,9 +3627,7 @@ MaybeEmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
     lhs = pn->pn_left;
     rhs = pn->pn_right;
     if (lhs->pn_type == TOK_RB && rhs->pn_type == TOK_RB &&
-        lhs->pn_count <= rhs->pn_count &&
-        (rhs->pn_count == 0 ||
-         rhs->pn_head->pn_type != TOK_DEFSHARP)) {
+        lhs->pn_count <= rhs->pn_count) {
         if (!EmitGroupAssignment(cx, cg, declOp, lhs, rhs))
             return JS_FALSE;
         *pop = JSOP_NOP;
@@ -3916,6 +3916,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSOp op;
     JSTokenType type;
     uint32 argc;
+#if JS_HAS_SHARP_VARS
+    jsint sharpnum;
+#endif
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
@@ -5075,6 +5078,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 
       case TOK_LC:
+      {
 #if JS_HAS_XML_SUPPORT
         if (pn->pn_arity == PN_UNARY) {
             if (!js_EmitTree(cx, cg, pn->pn_kid))
@@ -5096,6 +5100,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_BLOCK, top);
+
+        JSParseNode *pchild = pn->pn_head;
         if (pn->pn_extra & PNX_FUNCDEFS) {
             /*
              * This block contains top-level function definitions. To ensure
@@ -5109,7 +5115,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * mode for scripts does not allow separate emitter passes.
              */
             JS_ASSERT(cg->treeContext.flags & TCF_IN_FUNCTION);
-            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (pn->pn_extra & PNX_DESTRARGS) {
+                /*
+                 * Assign the destructuring arguments before defining any
+                 * functions, see bug 419662.
+                 */
+                JS_ASSERT(pchild->pn_type == TOK_SEMI);
+                JS_ASSERT(pchild->pn_kid->pn_type == TOK_COMMA);
+                if (!js_EmitTree(cx, cg, pchild))
+                    return JS_FALSE;
+                pchild = pchild->pn_next;
+            }
+
+            for (pn2 = pchild; pn2; pn2 = pn2->pn_next) {
                 if (pn2->pn_type == TOK_FUNCTION) {
                     if (pn2->pn_op == JSOP_NOP) {
                         if (!js_EmitTree(cx, cg, pn2))
@@ -5126,7 +5144,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
             }
         }
-        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        for (pn2 = pchild; pn2; pn2 = pn2->pn_next) {
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
         }
@@ -5139,6 +5157,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         ok = js_PopStatementCG(cx, cg);
         break;
+      }
 
       case TOK_SEQ:
         JS_ASSERT(pn->pn_arity == PN_LIST);
@@ -6036,27 +6055,29 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * If no sharp variable is defined and the initialiser is not for an
          * array comprehension, use JSOP_NEWARRAY.
          */
-        pn2 = pn->pn_head;
-        op = JSOP_NEWARRAY;
-
 #if JS_HAS_SHARP_VARS
-        if (pn2 && pn2->pn_type == TOK_DEFSHARP)
-            op = JSOP_NEWINIT;
+        sharpnum = -1;
+      do_emit_array:
 #endif
-#if JS_HAS_GENERATORS
+
+#if JS_HAS_GENERATORS || JS_HAS_SHARP_VARS
+        op = JSOP_NEWARRAY;
+# if JS_HAS_GENERATORS
         if (pn->pn_type == TOK_ARRAYCOMP)
             op = JSOP_NEWINIT;
-#endif
-
-        if (op == JSOP_NEWINIT &&
-            js_Emit2(cx, cg, op, (jsbytecode) JSProto_Array) < 0) {
-            return JS_FALSE;
-        }
-
+# endif
+# if JS_HAS_SHARP_VARS
+        JS_ASSERT_IF(sharpnum >= 0, cg->treeContext.flags & TCF_HAS_SHARPS);
+        if (cg->treeContext.flags & TCF_HAS_SHARPS)
+            op = JSOP_NEWINIT;
+# endif
+        if (op == JSOP_NEWINIT) {
+            if (js_Emit2(cx, cg, op, (jsbytecode) JSProto_Array) < 0)
+                return JS_FALSE;
 #if JS_HAS_SHARP_VARS
-        if (pn2 && pn2->pn_type == TOK_DEFSHARP) {
-            EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid)pn2->pn_num);
-            pn2 = pn2->pn_next;
+            if (sharpnum >= 0)
+                EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
+# endif
         }
 #endif
 
@@ -6067,12 +6088,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /*
              * Pass the new array's stack index to the TOK_ARRAYPUSH case by
              * storing it in pn->pn_extra, then simply traverse the TOK_FOR
-             * node and its kids under pn2 to generate this comprehension.
+             * node and its kids to generate this comprehension.
              */
             JS_ASSERT(cg->stackDepth > 0);
             saveDepth = cg->arrayCompDepth;
             cg->arrayCompDepth = (uint32) (cg->stackDepth - 1);
-            if (!js_EmitTree(cx, cg, pn2))
+            if (!js_EmitTree(cx, cg, pn->pn_head))
                 return JS_FALSE;
             cg->arrayCompDepth = saveDepth;
 
@@ -6083,10 +6104,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif /* JS_HAS_GENERATORS */
 
+        pn2 = pn->pn_head;
         for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
+#if JS_HAS_SHARP_VARS
             if (op == JSOP_NEWINIT && !EmitNumberOp(cx, atomIndex, cg))
                 return JS_FALSE;
-
+#endif
             if (pn2->pn_type == TOK_COMMA) {
                 if (js_Emit1(cx, cg, JSOP_HOLE) < 0)
                     return JS_FALSE;
@@ -6094,10 +6117,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
             }
-
+#if JS_HAS_SHARP_VARS
             if (op == JSOP_NEWINIT && js_Emit1(cx, cg, JSOP_INITELEM) < 0)
                 return JS_FALSE;
+#endif
         }
+        JS_ASSERT(atomIndex == pn->pn_count);
 
         if (pn->pn_extra & PNX_ENDCOMMA) {
             /* Emit a source note so we know to decompile an extra comma. */
@@ -6105,22 +6130,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
         }
 
-        if (op == JSOP_NEWARRAY) {
-            JS_ASSERT(atomIndex == pn->pn_count);
-            off = js_EmitN(cx, cg, op, 3);
-            if (off < 0)
-                return JS_FALSE;
-            pc = CG_CODE(cg, off);
-            SET_UINT24(pc, atomIndex);
-            UpdateDepth(cx, cg, off);
-        } else {
+#if JS_HAS_SHARP_VARS
+        if (op == JSOP_NEWINIT) {
             /* Emit an op for sharp array cleanup and decompilation. */
             if (js_Emit1(cx, cg, JSOP_ENDINIT) < 0)
                 return JS_FALSE;
+            break;
         }
+#endif
+        off = js_EmitN(cx, cg, JSOP_NEWARRAY, 3);
+        if (off < 0)
+            return JS_FALSE;
+        pc = CG_CODE(cg, off);
+        SET_UINT24(pc, atomIndex);
+        UpdateDepth(cx, cg, off);
         break;
 
       case TOK_RC:
+#if JS_HAS_SHARP_VARS
+        sharpnum = -1;
+      do_emit_object:
+#endif
 #if JS_HAS_DESTRUCTURING_SHORTHAND
         if (pn->pn_extra & PNX_SHORTHAND) {
             js_ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
@@ -6139,28 +6169,16 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Object) < 0)
             return JS_FALSE;
 
-        pn2 = pn->pn_head;
 #if JS_HAS_SHARP_VARS
-        if (pn2 && pn2->pn_type == TOK_DEFSHARP) {
-            EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid)pn2->pn_num);
-            pn2 = pn2->pn_next;
-        }
+        if (sharpnum >= 0)
+            EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
 #endif
 
-        for (; pn2; pn2 = pn2->pn_next) {
-            /* Emit an index for t[2], else map an atom for t.p or t['%q']. */
+        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
             pn3 = pn2->pn_left;
             if (pn3->pn_type == TOK_NUMBER) {
-#ifdef __GNUC__
-                ale = NULL;     /* quell GCC overwarning */
-#endif
                 if (!EmitNumberOp(cx, pn3->pn_dval, cg))
-                    return JS_FALSE;
-            } else {
-                JS_ASSERT(pn3->pn_type == TOK_NAME ||
-                          pn3->pn_type == TOK_STRING);
-                ale = js_IndexAtom(cx, pn3->pn_atom, &cg->atomList);
-                if (!ale)
                     return JS_FALSE;
             }
 
@@ -6182,6 +6200,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (js_Emit1(cx, cg, JSOP_INITELEM) < 0)
                     return JS_FALSE;
             } else {
+                JS_ASSERT(pn3->pn_type == TOK_NAME ||
+                          pn3->pn_type == TOK_STRING);
+                ale = js_IndexAtom(cx, pn3->pn_atom, &cg->atomList);
+                if (!ale)
+                    return JS_FALSE;
                 EMIT_INDEX_OP(JSOP_INITPROP, ALE_INDEX(ale));
             }
         }
@@ -6193,12 +6216,25 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_SHARP_VARS
       case TOK_DEFSHARP:
-        if (!js_EmitTree(cx, cg, pn->pn_kid))
+        JS_ASSERT(cg->treeContext.flags & TCF_HAS_SHARPS);
+        sharpnum = pn->pn_num;
+        pn = pn->pn_kid;
+        if (pn->pn_type == TOK_RB)
+            goto do_emit_array;
+# if JS_HAS_GENERATORS
+        if (pn->pn_type == TOK_ARRAYCOMP)
+            goto do_emit_array;
+# endif
+        if (pn->pn_type == TOK_RC)
+            goto do_emit_object;
+
+        if (!js_EmitTree(cx, cg, pn))
             return JS_FALSE;
-        EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) pn->pn_num);
+        EMIT_UINT16_IMM_OP(JSOP_DEFSHARP, (jsatomid) sharpnum);
         break;
 
       case TOK_USESHARP:
+        JS_ASSERT(cg->treeContext.flags & TCF_HAS_SHARPS);
         EMIT_UINT16_IMM_OP(JSOP_USESHARP, (jsatomid) pn->pn_num);
         break;
 #endif /* JS_HAS_SHARP_VARS */
