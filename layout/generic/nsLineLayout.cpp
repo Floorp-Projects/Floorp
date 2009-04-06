@@ -2635,8 +2635,8 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       nsContainerFrame::PositionChildViews(frame);
     }
 
-    // Do this here (rather than along with NS_FRAME_OUTSIDE_CHILDREN
-    // handling below) so we get leaf frames as well.  No need to worry
+    // Do this here (rather than along with setting the overflow rect
+    // below) so we get leaf frames as well.  No need to worry
     // about the root span, since it doesn't have a frame.
     if (frame->HasView())
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
@@ -2647,7 +2647,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
 
   // If we just computed a spans combined area, we need to update its
-  // NS_FRAME_OUTSIDE_CHILDREN bit..
+  // overflow rect...
   if (psd->mFrame) {
     PerFrameData* spanPFD = psd->mFrame;
     nsIFrame* frame = spanPFD->mFrame;
