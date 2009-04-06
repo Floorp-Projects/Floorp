@@ -636,12 +636,11 @@ private:
   // (according to GetFirstCellNodeInRange).
   nsIRange* GetNextCellRange();
   nsIContent* GetFirstCellNodeInRange(nsIRange *aRange) const;
-  // aTableNode may be null if table isn't needed to be returned
-  PRBool   IsInSameTable(nsIContent *aContent1, nsIContent *aContent2,
-                         nsIContent **aTableNode) const;
-  nsresult GetParentTable(nsIContent *aCellNode,
-                          nsIContent **aTableNode) const;
-  nsresult SelectCellElement(nsIDOMElement* aCellElement);
+  // Returns non-null table if in same table, null otherwise
+  nsIContent* IsInSameTable(nsIContent *aContent1, nsIContent *aContent2) const;
+  // Might return null
+  nsIContent* GetParentTable(nsIContent *aCellNode) const;
+  nsresult SelectCellElement(nsIContent* aCellElement);
   nsresult CreateAndAddRange(nsINode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
 
