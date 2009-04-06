@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Michael Kraft <morac99-firefox@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,7 +59,7 @@ interface nsIDOMNode;
  * |getBrowser().tabContainer| such as e.g. |getBrowser().selectedTab|.
  */
 
-[scriptable, uuid(91f6d650-898d-11dd-ad8b-0800200c9a66)]
+[scriptable, uuid(534d81e3-d3fb-4f1e-aed6-3de601406270)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -137,6 +138,12 @@ interface nsISessionStore : nsISupports
    * @returns a reference to the reopened tab.
    */
   nsIDOMNode undoCloseTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * @param aWindow is the browser window associated with the closed tab.
+   * @param aIndex  is the index of the closed tab to be removed (FIFO ordered).
+   */
+  nsIDOMNode forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
 
   /**
    * @param aWindow is the window to get the value for.

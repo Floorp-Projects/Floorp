@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Michael Kraft <morac99-firefox@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -912,6 +913,21 @@ SessionStoreService.prototype = {
     aWindow.setTimeout(function() { content.focus(); }, 0);
     
     return tab;
+  },
+
+  forgetClosedTab: function sss_forgetClosedTab(aWindow, aIndex) {
+    if (!aWindow.__SSi)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    var closedTabs = this._windows[aWindow.__SSi]._closedTabs;
+
+    // default to the most-recently closed tab
+    aIndex = aIndex || 0;
+    if (!(aIndex in closedTabs))
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    // remove closed tab from the array
+    closedTabs.splice(aIndex, 1);
   },
 
   getWindowValue: function sss_getWindowValue(aWindow, aKey) {

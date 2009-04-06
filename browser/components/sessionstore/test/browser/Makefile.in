@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Simon Bünzli <zeniko@gmail.com>
+#   Michael Kraft <morac99-firefox@yahoo.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -68,6 +69,7 @@ _BROWSER_TEST_FILES = \
 	browser_454908_sample.html \
 	browser_456342.js \
 	browser_456342_sample.xhtml \
+	browser_461634.js \
 	browser_463206.js \
 	browser_463206_sample.html \
 	browser_464199.js \
