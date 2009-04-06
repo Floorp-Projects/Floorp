@@ -286,7 +286,7 @@ public:
    *  @param aMouseEvent         passed in so we can get where event occurred and what keys are pressed
    */
   /*unsafe*/
-  nsresult HandleTableSelection(nsIContent *aParentContent,
+  nsresult HandleTableSelection(nsINode *aParentContent,
                                 PRInt32 aContentOffset,
                                 PRInt32 aTarget,
                                 nsMouseEvent *aMouseEvent);
@@ -640,7 +640,7 @@ private:
   nsresult CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
 
-  nsCOMPtr<nsIDOMNode> mCellParent; //used to snap to table selection
+  nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
