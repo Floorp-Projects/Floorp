@@ -1342,10 +1342,12 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
   }
 }
 
-void nsHTMLMediaElement::Paint(gfxContext* aContext, const gfxRect& aRect) 
+void nsHTMLMediaElement::Paint(gfxContext* aContext,
+                               gfxPattern::GraphicsFilter aFilter,
+                               const gfxRect& aRect) 
 {
   if (mDecoder)
-    mDecoder->Paint(aContext, aRect);
+    mDecoder->Paint(aContext, aFilter, aRect);
 }
 
 nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)
