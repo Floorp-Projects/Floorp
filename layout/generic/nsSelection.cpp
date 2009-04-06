@@ -4369,7 +4369,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
 
 
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
-NS_IMETHODIMP
+nsresult
 nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PRBool aFlags)
 {
   if (!mFrameSelection)
