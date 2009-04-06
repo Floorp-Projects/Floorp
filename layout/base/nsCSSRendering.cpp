@@ -905,58 +905,6 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
 
 
 
-// Returns true if aFrame is a canvas frame.
-// We need to treat the viewport as canvas because, even though
-// it does not actually paint a background, we need to get the right
-// background style so we correctly detect transparent documents.
-PRBool
-nsCSSRendering::IsCanvasFrame(nsIFrame *aFrame)
-{
-  nsIAtom* frameType = aFrame->GetType();
-  return frameType == nsGkAtoms::canvasFrame ||
-         frameType == nsGkAtoms::rootFrame ||
-         frameType == nsGkAtoms::pageFrame ||
-         frameType == nsGkAtoms::pageContentFrame ||
-         frameType == nsGkAtoms::viewportFrame;
-}
-
-nsIFrame*
-nsCSSRendering::FindRootFrame(nsIFrame *aForFrame)
-{
-  const nsStyleBackground* result = aForFrame->GetStyleBackground();
-
-  // Check if we need to do propagation from BODY rather than HTML.
-  if (result->IsTransparent()) {
-    nsIContent* content = aForFrame->GetContent();
-    // The root element content can't be null. We wouldn't know what
-    // frame to create for aFrame.
-    // Use |GetOwnerDoc| so it works during destruction.
-    nsIDocument* document = content->GetOwnerDoc();
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-    if (htmlDoc) {
-      nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
-      // We need to null check the body node (bug 118829) since
-      // there are cases, thanks to the fix for bug 5569, where we
-      // will reflow a document with no body.  In particular, if a
-      // SCRIPT element in the head blocks the parser and then has a
-      // SCRIPT that does "document.location.href = 'foo'", then
-      // nsParser::Terminate will call |DidBuildModel| methods
-      // through to the content sink, which will call |StartLayout|
-      // and thus |InitialReflow| on the pres shell.  See bug 119351
-      // for the ugly details.
-      if (bodyContent) {
-        nsIFrame *bodyFrame = aForFrame->PresContext()->GetPresShell()->
-          GetPrimaryFrameFor(bodyContent);
-        if (bodyFrame) {
-          return bodyFrame;
-        }
-      }
-    }
-  }
-
-  return aForFrame;
-}
-
 /**
  * |FindBackground| finds the correct style data to use to paint the
  * background.  It is responsible for handling the following two
