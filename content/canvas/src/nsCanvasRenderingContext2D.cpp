@@ -3205,7 +3205,7 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
 
         ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-        video->Paint(ctx, gfxRect(0, 0, videoWidth, videoHeight));
+        video->Paint(ctx, gfxPattern::FILTER_GOOD, gfxRect(0, 0, videoWidth, videoHeight));
 
         *aSurface = surf.forget().get();
         *widthOut = videoWidth;
