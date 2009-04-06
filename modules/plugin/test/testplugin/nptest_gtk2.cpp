@@ -40,6 +40,14 @@
 #endif
 #include <gtk/gtk.h>
 
+/**
+ * XXX In various places in this file we use GDK APIs to inspect the
+ * window ancestors of the plugin. These APIs will not work properly if
+ * this plugin is used in a browser that does not use GDK for all its
+ * widgets. They would also fail for out-of-process plugins. These should
+ * be fixed to use raw X APIs instead.
+ */
+
 bool
 pluginSupportsWindowMode()
 {
@@ -124,6 +132,8 @@ pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow)
     return;
 
   GdkGC* gdkContext = gdk_gc_new(gdkWindow);
+  if (!gdkContext)
+    return;
 
   // draw a grey background for the plugin frame
   GdkColor grey;
@@ -157,6 +167,12 @@ ExposeWidget(GtkWidget* widget, GdkEventExpose* event,
   InstanceData* instanceData = static_cast<InstanceData*>(user_data);
   pluginDrawWindow(instanceData, event->window);
   return TRUE;
+}
+
+void
+pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
+{
+  instanceData->window = *newWindow;
 }
 
 void
@@ -207,4 +223,106 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
   g_object_unref(gdkWindow);
 #endif
   return 0;
+}
+
+int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
+{
+  if (!instanceData->hasWidget)
+    return NPTEST_INT32_ERROR;
+  GtkWidget* plug = static_cast<GtkWidget*>(instanceData->platformData);
+  if (!plug)
+    return NPTEST_INT32_ERROR;
+  GdkWindow* plugWnd = plug->window;
+  if (!plugWnd)
+    return NPTEST_INT32_ERROR;
+  // XXX This only works because Gecko uses GdkWindows everywhere!
+  GdkWindow* toplevelWnd = gdk_window_get_toplevel(plugWnd);
+  if (!toplevelWnd)
+    return NPTEST_INT32_ERROR;
+
+  gint plugScreenX, plugScreenY;
+  gdk_window_get_origin(plugWnd, &plugScreenX, &plugScreenY);
+  gint toplevelFrameX, toplevelFrameY;
+  gdk_window_get_root_origin(toplevelWnd, &toplevelFrameX, &toplevelFrameY);
+  gint width, height;
+  gdk_drawable_get_size(GDK_DRAWABLE(plugWnd), &width, &height);
+
+  switch (edge) {
+  case EDGE_LEFT:
+    return plugScreenX - toplevelFrameX;
+  case EDGE_TOP:
+    return plugScreenY - toplevelFrameY;
+  case EDGE_RIGHT:
+    return plugScreenX + width - toplevelFrameX;
+  case EDGE_BOTTOM:
+    return plugScreenY + height - toplevelFrameY;
+  }
+  return NPTEST_INT32_ERROR;
+}
+
+int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
+{
+  if (!instanceData->hasWidget)
+    return NPTEST_INT32_ERROR;
+  // XXX later we'll want to support XShape and be able to return a
+  // complex region here
+  return 1;
+}
+
+int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
+    int32_t rectIndex, RectEdge edge)
+{
+  if (!instanceData->hasWidget)
+    return NPTEST_INT32_ERROR;
+
+  GtkWidget* plug = static_cast<GtkWidget*>(instanceData->platformData);
+  if (!plug)
+    return NPTEST_INT32_ERROR;
+  GdkWindow* plugWnd = plug->window;
+  if (!plugWnd)
+    return NPTEST_INT32_ERROR;
+  // XXX This only works because Gecko uses GdkWindows everywhere!
+  GdkWindow* toplevelWnd = gdk_window_get_toplevel(plugWnd);
+  if (!toplevelWnd)
+    return NPTEST_INT32_ERROR;
+
+  gint width, height;
+  gdk_drawable_get_size(GDK_DRAWABLE(plugWnd), &width, &height);
+
+  GdkRectangle rect = { 0, 0, width, height };
+  GdkWindow* wnd = plugWnd;
+  while (wnd != toplevelWnd) {
+    gint x, y;
+    gdk_window_get_position(wnd, &x, &y);
+    rect.x += x;
+    rect.y += y;
+
+    // XXX This only works because Gecko uses GdkWindows everywhere!
+    GdkWindow* parent = gdk_window_get_parent(wnd);
+    gint parentWidth, parentHeight;
+    gdk_drawable_get_size(GDK_DRAWABLE(parent), &parentWidth, &parentHeight);
+    GdkRectangle parentRect = { 0, 0, parentWidth, parentHeight };
+    gdk_rectangle_intersect(&rect, &parentRect, &rect);
+    wnd = parent;
+  }
+
+  gint toplevelFrameX, toplevelFrameY;
+  gdk_window_get_root_origin(toplevelWnd, &toplevelFrameX, &toplevelFrameY);
+  gint toplevelOriginX, toplevelOriginY;
+  gdk_window_get_origin(toplevelWnd, &toplevelOriginX, &toplevelOriginY);
+
+  rect.x += toplevelOriginX - toplevelFrameX;
+  rect.y += toplevelOriginY - toplevelFrameY;
+
+  switch (edge) {
+  case EDGE_LEFT:
+    return rect.x;
+  case EDGE_TOP:
+    return rect.y;
+  case EDGE_RIGHT:
+    return rect.x + rect.width;
+  case EDGE_BOTTOM:
+    return rect.y + rect.height;
+  }
+  return NPTEST_INT32_ERROR;
 }
