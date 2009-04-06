@@ -46,6 +46,7 @@
 #include "nsITableCellLayout.h"
 #include "nsIDOMElement.h"
 #include "nsGUIEvent.h"
+#include "nsIRange.h"
 
 // IID for the nsFrameSelection interface
 // d78edc5a-28d0-48f0-8abb-1597b1591556
@@ -648,7 +649,7 @@ private:
   PRInt32  mSelectedCellIndex;
 
   // maintain selection
-  nsCOMPtr<nsIDOMRange> mMaintainRange;
+  nsCOMPtr<nsIRange> mMaintainRange;
   nsSelectionAmount mMaintainedAmount;
 
   //batching

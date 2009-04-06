@@ -45,8 +45,8 @@
 
 // IID for the nsIRange interface
 #define NS_IRANGE_IID \
-{ 0xbf5c5799, 0xe5b0, 0x49b5, \
- { 0xbd, 0x45, 0x3d, 0x9a, 0x0f, 0xb4, 0x97, 0x89 } }
+{ 0xee12afa2, 0x4e8e, 0x4e3f, \
+ { 0xad, 0x3b, 0x53, 0x50, 0x97, 0x09, 0xc6, 0x8a } }
 
 class nsIRange : public nsISupports {
 public:
@@ -62,42 +62,42 @@ public:
   {
   }
 
-  nsINode* GetRoot()
+  nsINode* GetRoot() const
   {
     return mRoot;
   }
 
-  nsINode* GetStartParent()
+  nsINode* GetStartParent() const
   {
     return mStartParent;
   }
 
-  nsINode* GetEndParent()
+  nsINode* GetEndParent() const
   {
     return mEndParent;
   }
 
-  PRInt32 StartOffset()
+  PRInt32 StartOffset() const
   {
     return mStartOffset;
   }
 
-  PRInt32 EndOffset()
+  PRInt32 EndOffset() const
   {
     return mEndOffset;
   }
   
-  PRBool IsPositioned()
+  PRBool IsPositioned() const
   {
     return mIsPositioned;
   }
 
-  PRBool IsDetached()
+  PRBool IsDetached() const
   {
     return mIsDetached;
   }
   
-  PRBool Collapsed()
+  PRBool Collapsed() const
   {
     return mIsPositioned && mStartParent == mEndParent &&
            mStartOffset == mEndOffset;
@@ -108,7 +108,7 @@ public:
     mMaySpanAnonymousSubtrees = aMaySpanAnonymousSubtrees;
   }
 
-  virtual nsINode* GetCommonAncestor() = 0;
+  virtual nsINode* GetCommonAncestor() const = 0;
 
   virtual void Reset() = 0;
 
@@ -116,7 +116,7 @@ public:
   // became nsIRange stuff... and if no one outside layout needs them.
   virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset) = 0;
   virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset) = 0;
-  virtual nsresult CloneRange(nsIRange** aNewRange) = 0;
+  virtual nsresult CloneRange(nsIRange** aNewRange) const = 0;
 
 protected:
   nsCOMPtr<nsINode> mRoot;
