@@ -637,7 +637,7 @@ private:
   nsresult GetParentTable(nsIContent *aCellNode,
                           nsIContent **aTableNode) const;
   nsresult SelectCellElement(nsIDOMElement* aCellElement);
-  nsresult CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset);
+  nsresult CreateAndAddRange(nsINode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
 
   nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
