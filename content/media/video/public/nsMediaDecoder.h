@@ -265,9 +265,6 @@ protected:
   // more data is received. Read/Write from the main thread only.
   PRIntervalTime mDataTime;
 
-  // Has our size changed since the last repaint?
-  PRPackedBool mSizeChanged;
-
   // Lock around the video RGB, width and size data. This
   // is used in the decoder backend threads and the main thread
   // to ensure that repainting the video does not use these
@@ -282,6 +279,9 @@ protected:
   // Framerate of video being displayed in the element
   // expressed in numbers of frames per second.
   float mFramerate;
+
+  // Has our size changed since the last repaint?
+  PRPackedBool mSizeChanged;
 
   // True if the decoder is being shutdown. At this point all events that
   // are currently queued need to return immediately to prevent javascript

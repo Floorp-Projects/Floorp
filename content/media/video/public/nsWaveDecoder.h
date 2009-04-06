@@ -263,10 +263,9 @@ private:
   // written from the main thread only.
   float mCurrentTime;
 
-  // Copy of the current time, duration, and ended state when the state
-  // machine was disposed.  Used to respond to time and duration queries
-  // with sensible values after the state machine is destroyed.
-  float mEndedCurrentTime;
+  // Copy of the duration and ended state when the state machine was
+  // disposed.  Used to respond to duration and ended queries with sensible
+  // values after the state machine has been destroyed.
   float mEndedDuration;
   PRPackedBool mEnded;
 

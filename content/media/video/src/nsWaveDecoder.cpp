@@ -137,10 +137,6 @@ public:
   // before metadata validation has completed.  Threadsafe.
   float GetDuration();
 
-  // Returns the current playback position in the audio stream in seconds.
-  // Threadsafe.
-  float GetCurrentTime();
-
   // Returns true if the state machine is seeking.  Threadsafe.
   PRBool IsSeeking();
 
@@ -443,16 +439,6 @@ nsWaveStateMachine::GetDuration()
   return std::numeric_limits<float>::quiet_NaN();
 }
 
-float
-nsWaveStateMachine::GetCurrentTime()
-{
-  nsAutoMonitor monitor(mMonitor);
-  if (mMetadataValid) {
-    return BytesToTime(mPlaybackPosition - mWavePCMOffset);
-  }
-  return std::numeric_limits<float>::quiet_NaN();
-}
-
 PRBool
 nsWaveStateMachine::IsSeeking()
 {
@@ -483,7 +469,7 @@ nsWaveStateMachine::GetTimeForPositionChange()
 {
   nsAutoMonitor monitor(mMonitor);
   mPositionChangeQueued = PR_FALSE;
-  return GetCurrentTime();
+  return BytesToTime(mPlaybackPosition - mWavePCMOffset);
 }
 
 NS_IMETHODIMP
@@ -1097,27 +1083,20 @@ nsWaveStateMachine::LoadFormatChunk()
 PRBool
 nsWaveStateMachine::FindDataOffset()
 {
-  PRUint32 length;
-  PRInt64 offset;
-
   // RIFF chunks are always word (two byte) aligned.
   NS_ABORT_IF_FALSE(mStream->Tell() % 2 == 0,
                     "FindDataOffset called with unaligned stream");
 
   // The "data" chunk may not directly follow the "format" chunk, so skip
   // over any intermediate chunks.
+  PRUint32 length;
   if (!ScanForwardUntil(DATA_CHUNK_MAGIC, &length)) {
     return PR_FALSE;
   }
 
-  offset = mStream->Tell();
-  if (!offset) {
-    NS_WARNING("PCM data offset not found");
-    return PR_FALSE;
-  }
-
-  if (offset < 0 || offset > PR_UINT32_MAX) {
-    NS_WARNING("offset out of range");
+  PRInt64 offset = mStream->Tell();
+  if (offset <= 0 || offset > PR_UINT32_MAX) {
+    NS_WARNING("PCM data offset out of range");
     return PR_FALSE;
   }
 
@@ -1162,7 +1141,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsWaveDecoder, nsIObserver)
 nsWaveDecoder::nsWaveDecoder()
   : mInitialVolume(1.0),
     mCurrentTime(0.0),
-    mEndedCurrentTime(0.0),
     mEndedDuration(std::numeric_limits<float>::quiet_NaN()),
     mEnded(PR_FALSE),
     mNotifyOnShutdown(PR_FALSE),
@@ -1278,7 +1256,6 @@ nsWaveDecoder::Stop()
   }
 
   if (mPlaybackStateMachine) {
-    mEndedCurrentTime = mPlaybackStateMachine->GetCurrentTime();
     mEndedDuration = mPlaybackStateMachine->GetDuration();
     mEnded = mPlaybackStateMachine->IsEnded();
   }
@@ -1443,7 +1420,7 @@ nsWaveDecoder::NotifySuspendedStatusChanged()
     // if this is an autoplay element, we need to kick off its autoplaying
     // now so we consume data and hopefully free up cache space
     mElement->NotifyAutoplayDataReady();
-  }  
+  }
 }
 
 void
@@ -1455,12 +1432,11 @@ nsWaveDecoder::NotifyBytesDownloaded()
 void
 nsWaveDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
-  if (aStatus != NS_BINDING_ABORTED) {
-    if (NS_SUCCEEDED(aStatus)) {
-      ResourceLoaded();
-    } else if (aStatus != NS_BASE_STREAM_CLOSED) {
-      NetworkError();
-    }
+  if (NS_SUCCEEDED(aStatus)) {
+    ResourceLoaded();
+  } else if (aStatus != NS_BASE_STREAM_CLOSED &&
+             aStatus != NS_BINDING_ABORTED) {
+    NetworkError();
   }
   UpdateReadyStateForData();
 }
