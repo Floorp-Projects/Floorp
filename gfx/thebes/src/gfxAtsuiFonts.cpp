@@ -683,9 +683,9 @@ gfxAtsuiFontGroup::GuessMaximumStringLength()
     
     // bug 436663 - ATSUI crashes on 10.5.3 with certain character sequences 
     // at around 512 characters, so for safety sake max out at 500 characters
-    if (gfxPlatformMac::GetPlatform()->OSXVersion() >= MAC_OS_X_VERSION_10_5_HEX) {
-        realGuessMax = PR_MIN(500, realGuessMax);
-    }
+    // bug 480134 - Do this for all OSX versions now, because there may be
+    // other related bugs on 10.4.
+    realGuessMax = PR_MIN(500, realGuessMax);
 
     return realGuessMax;
 }
