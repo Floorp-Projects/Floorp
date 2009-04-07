@@ -73,7 +73,9 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
   }
   stack.release();
   for (PRInt32 i = 0; i < listOfActiveFormattingElements.length; i++) {
-    listOfActiveFormattingElements[i]->release();
+    if (!!listOfActiveFormattingElements[i]) {
+      listOfActiveFormattingElements[i]->release();
+    }
   }
   listOfActiveFormattingElements.release();
   nsHtml5Portability::retainElement(formPointer);

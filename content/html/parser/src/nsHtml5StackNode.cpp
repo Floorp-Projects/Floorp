@@ -147,11 +147,9 @@ void
 nsHtml5StackNode::release()
 {
   refcount--;
-#if 0
   if (!refcount) {
     delete this;
   }
-#endif
 }
 
 void
