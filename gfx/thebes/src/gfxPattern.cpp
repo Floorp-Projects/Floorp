@@ -41,7 +41,6 @@
 #include "gfxPlatform.h"
 
 #include "cairo.h"
-#include "lcms.h"
 
 gfxPattern::gfxPattern(cairo_pattern_t *aPattern)
 {
