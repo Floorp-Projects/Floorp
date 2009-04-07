@@ -234,6 +234,8 @@ NSS_Get_sgn_DigestInfoTemplate_Util;
 ;+};
 ;+NSSUTIL_3.12.3 {       # NSS Utilities 3.12.3 release
 ;+    global:
+NSS_GetAlgorithmPolicy;
+NSS_SetAlgorithmPolicy;
 SECITEM_ReallocItem;
 UTIL_SetForkState;
 ;+    local:

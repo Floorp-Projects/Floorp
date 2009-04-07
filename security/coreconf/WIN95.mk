@@ -20,7 +20,6 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#    Robert Longson <longsonr@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,42 +36,12 @@
 # ***** END LICENSE BLOCK *****
 
 #
-# Config stuff for WINNT 6.0 (Windows Vista)
+# Config stuff for OS_TARGET=WIN95
 #
-# This makefile defines the following variables:
-# OS_CFLAGS and OS_DLLFLAGS.
 
 include $(CORE_DEPTH)/coreconf/WIN32.mk
 
-ifeq ($(CPU_ARCH), x386)
-	OS_CFLAGS += -W3 -nologo
-ifdef USE_64
-	DEFINES += -D_AMD64_
-else
-	DEFINES += -D_X86_
-endif
-else 
-	ifeq ($(CPU_ARCH), MIPS)
-		#OS_CFLAGS += -W3 -nologo
-		#DEFINES += -D_MIPS_
-		OS_CFLAGS += -W3 -nologo
-	else 
-		ifeq ($(CPU_ARCH), ALPHA)
-			OS_CFLAGS += -W3 -nologo
-			DEFINES += -D_ALPHA_=1
-		endif
-	endif
-endif
+DEFINES += -DWIN95
 
-OS_DLLFLAGS += -nologo -DLL -SUBSYSTEM:WINDOWS
-ifndef MOZ_DEBUG_SYMBOLS
-	OS_DLLFLAGS += -PDB:NONE
-endif
-
-#
-# Win NT needs -GT so that fibers can work
-#
-OS_CFLAGS += -GT
-DEFINES += -DWINNT
-
-NSPR31_LIB_PREFIX = lib
+# WINNT uses the lib prefix, Win95 and WinCE don't
+NSPR31_LIB_PREFIX = $(NULL)

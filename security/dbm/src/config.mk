@@ -52,7 +52,7 @@ PURE_LIBRARY   =
 PROGRAM        =
 
 ifdef SHARED_LIBRARY
-	ifeq (,$(filter-out WINNT WIN95 WINCE,$(OS_TARGET))) # list omits WIN16
+	ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 		DLLBASE=/BASE:0x30000000
 		RES=$(OBJDIR)/dbm.res
 		RESNAME=../include/dbm.rc

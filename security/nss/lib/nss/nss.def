@@ -967,6 +967,8 @@ PK11_FindCertFromDERCertItem;
 ;+NSS_3.12.3 { 	# NSS 3.12.3 release
 ;+    global:
 CERT_CompareCerts;
+CERT_RegisterAlternateOCSPAIAInfoCallBack;
+PK11_GetSymKeyHandle;
 ;+    local:
 ;+       *;
 ;+};

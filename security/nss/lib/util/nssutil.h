@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/*
+ * NSS utility functions
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,11 +14,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Netscape security libraries.
+ * The Original Code is Network Security Services.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * Red Hat Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,29 +37,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(__WATCOMC__) || defined(__WATCOM_CPLUSPLUS__)
-#ifndef __WATCOM_FIX_H__
-#define __WATCOM_FIX_H__ 1
-/*
- * WATCOM's C compiler doesn't default to "__cdecl" conventions for external
- * symbols and functions.  Rather than adding an explicit __cdecl modifier to 
- * every external symbol and function declaration and definition, we use the 
- * following pragma to (attempt to) change WATCOM c's default to __cdecl.
- * These pragmas were taken from pages 180-181, 266 & 269 of the 
- * Watcom C/C++ version 11 User's Guide, 3rd edition.
- */
-#if defined(XP_WIN16) || defined(WIN16) 
-#pragma aux default "_*" \
-	parm caller [] \
-	value struct float struct routine [ax] \
-	modify [ax bx cx dx es]
-#else
-#pragma aux default "_*" \
-	parm caller [] \
-	value struct float struct routine [eax] \
-	modify [eax ecx edx]
-#endif
-#pragma aux default far
+#ifndef __nssutil_h_
+#define __nssutil_h_
 
-#endif /* once */
-#endif /* WATCOM compiler */
+#include "seccomon.h"
+
+/*
+ * NSS utilities's major version, minor version, patch level, and whether
+ * this is a beta release.
+ *
+ * The format of the version string should be
+ *     "<major version>.<minor version>[.<patch level>][ <Beta>]"
+ */
+#define NSSUTIL_VERSION  "3.12.3"
+#define NSSUTIL_VMAJOR   3
+#define NSSUTIL_VMINOR   12
+#define NSSUTIL_VPATCH   3
+#define NSSUTIL_BETA     PR_FALSE
+
+#endif /* __nssutil_h_ */

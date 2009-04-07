@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.4 $ $Date: 2005/11/16 01:17:25 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.5 $ $Date: 2009/02/25 18:37:49 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -118,7 +118,7 @@ static const NSSItem ckcapi_trueItem = {
 static const NSSItem ckcapi_falseItem = { 
   (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) };
 static const NSSItem ckcapi_x509Item = { 
-  (void *)&ckc_x509, (PRUint32)sizeof(CKC_X_509) };
+  (void *)&ckc_x509, (PRUint32)sizeof(CK_CERTIFICATE_TYPE) };
 static const NSSItem ckcapi_rsaItem = { 
   (void *)&ckk_rsa, (PRUint32)sizeof(CK_KEY_TYPE) };
 static const NSSItem ckcapi_certClassItem = { 

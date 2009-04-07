@@ -34,8 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <pkcs11.h>
-#include "pk11util.h"
+#include "pk11table.h"
 
 const char *_valueString[] = {
     "None",
@@ -483,6 +482,14 @@ const Constant _consts[] = {
 	mkEntry(CKM_CAMELLIA_MAC, Mechanism),
 	mkEntry(CKM_CAMELLIA_MAC_GENERAL, Mechanism),
 	mkEntry(CKM_CAMELLIA_CBC_PAD, Mechanism),
+	mkEntry(CKM_SEED_KEY_GEN, Mechanism),
+	mkEntry(CKM_SEED_ECB, Mechanism),
+	mkEntry(CKM_SEED_CBC, Mechanism),
+	mkEntry(CKM_SEED_MAC, Mechanism),
+	mkEntry(CKM_SEED_MAC_GENERAL, Mechanism),
+	mkEntry(CKM_SEED_CBC_PAD, Mechanism),
+	mkEntry(CKM_SEED_ECB_ENCRYPT_DATA, Mechanism),
+	mkEntry(CKM_SEED_CBC_ENCRYPT_DATA, Mechanism),
 	mkEntry(CKM_DSA_PARAMETER_GEN, Mechanism),
 	mkEntry(CKM_DH_PKCS_PARAMETER_GEN, Mechanism),
 	mkEntry(CKM_NETSCAPE_AES_KEY_WRAP, Mechanism),
@@ -1405,7 +1412,38 @@ const Topics _topics[] = {
    },
 };
 
-const Topics *topics=&_topics[0];
-const int topicCount = sizeof(_topics)/sizeof(_topics[0]);
+const Topics  *topics= &_topics[0];
+const int topicCount = sizeof(_topics) / sizeof(_topics[0]);
 
+const char *
+getName(CK_ULONG value, ConstType type)
+{
+    int i;
+    
+    for (i=0; i < constCount; i++) {
+        if (consts[i].type == type && consts[i].value == value) {
+            return consts[i].name;
+        }
+        if (type == ConstNone && consts[i].value == value) {
+            return consts[i].name;
+        }
+    }
 
+    return NULL;
+}
+
+const char *
+getNameFromAttribute(CK_ATTRIBUTE_TYPE type)
+{
+    return getName(type, ConstAttribute);
+}
+
+int totalKnownType(ConstType type) {
+    int count = 0;
+    int i;
+ 
+    for (i=0; i < constCount; i++) {
+        if (consts[i].type == type) count++;
+    }
+    return count;
+}

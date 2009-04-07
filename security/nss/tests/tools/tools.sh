@@ -1,4 +1,4 @@
-#! /bin/sh  
+#! /bin/bash  
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -56,37 +56,37 @@
 ########################################################################
 
   export pkcs12v2pbeWithSha1And128BitRc4=\
-"PKCS #12 V2 PBE With Sha1 and 128 Bit RC4"
+"PKCS #12 V2 PBE With SHA-1 and 128 Bit RC4"
 
   export pkcs12v2pbeWithSha1And40BitRc4=\
-"PKCS #12 V2 PBE With Sha1 and 40 Bit RC4"
+"PKCS #12 V2 PBE With SHA-1 and 40 Bit RC4"
 
   export pkcs12v2pbeWithSha1AndTripleDESCBC=\
-"PKCS #12 V2 PBE With Sha1 and Triple DES CBC"
+"PKCS #12 V2 PBE With SHA-1 and Triple DES-CBC"
 
   export pkcs12v2pbeWithSha1And128BitRc2Cbc=\
-"PKCS #12 V2 PBE With Sha1 and 128 Bit RC2 CBC"
+"PKCS #12 V2 PBE With SHA-1 and 128 Bit RC2 CBC"
 
   export pkcs12v2pbeWithSha1And40BitRc2Cbc=\
-"PKCS #12 V2 PBE With Sha1 and 40 Bit RC2 CBC"
+"PKCS #12 V2 PBE With SHA-1 and 40 Bit RC2 CBC"
 
   export pkcs12v2pbeWithMd2AndDESCBC=\
-"PKCS #5 Password Based Encryption with MD2 and DES CBC"
+"PKCS #5 Password Based Encryption with MD2 and DES-CBC"
 
   export pkcs12v2pbeWithMd5AndDESCBC=\
-"PKCS #5 Password Based Encryption with MD5 and DES CBC"
+"PKCS #5 Password Based Encryption with MD5 and DES-CBC"
 
   export pkcs12v2pbeWithSha1AndDESCBC=\
-"PKCS #5 Password Based Encryption with SHA1 and DES CBC"
+"PKCS #5 Password Based Encryption with SHA-1 and DES-CBC"
   
   export pkcs5pbeWithMD2AndDEScbc=\
-"PKCS #5 Password Based Encryption with MD2 and DES CBC"
+"PKCS #5 Password Based Encryption with MD2 and DES-CBC"
 
   export pkcs5pbeWithMD5AndDEScbc=\
-"PKCS #5 Password Based Encryption with MD5 and DES CBC"
+"PKCS #5 Password Based Encryption with MD5 and DES-CBC"
 
   export pkcs5pbeWithSha1AndDEScbc=\
-"PKCS #5 Password Based Encryption with SHA1 and DES CBC"
+"PKCS #5 Password Based Encryption with SHA-1 and DES-CBC"
 
 ############################## tools_init ##############################
 # local shell function to initialize this script 
@@ -247,11 +247,11 @@ export_list_import()
   # $1 key encryption cipher
   # $2 certificate encryption cipher
     
-  if [[ "${1}" != "" && "${2}" != "" ]]; then
+  if [ "${1}" != "DEFAULT" -a "${2}" != "DEFAULT" ]; then
       export_with_both_key_and_cert_cipher "${1}" "${2}"
-  elif [[ "${1}" != "" && "${2}" = "" ]]; then
+  elif [ "${1}" != "DEFAULT" -a "${2}" = "DEFAULT" ]; then
       export_with_key_cipher "${1}"
-  elif [[ "${1}" = "" && "${2}" != "" ]]; then
+  elif [ "${1}" = "DEFAULT" -a "${2}" != "DEFAULT" ]; then
       export_with_cert_cipher "${2}"
   else
       export_with_default_ciphers
@@ -271,11 +271,11 @@ tools_p12_export_list_import_all_pkcs5pbe_ciphers()
   for key_cipher in "${pkcs5pbeWithMD2AndDEScbc}" \
                     "${pkcs5pbeWithMD5AndDEScbc}" \
                     "${pkcs5pbeWithSha1AndDEScbc}"\
-                    ""; do
+                    "DEFAULT"; do
       for cert_cipher in "${pkcs5pbeWithMD2AndDEScbc}" \
                          "${pkcs5pbeWithMD5AndDEScbc}" \
                          "${pkcs5pbeWithSha1AndDEScbc}" \
-                         ""\
+                         "DEFAULT"\
                          "null"; do
             export_list_import "${key_cipher}" "${cert_cipher}"
       done       
@@ -337,11 +337,11 @@ tools_p12_export_list_import_all_pkcs12v2pbe_ciphers()
 #                "${pkcs12v2pbeWithMd2AndDESCBC}" \
 #                "${pkcs12v2pbeWithMd5AndDESCBC}" \
 #                "${pkcs12v2pbeWithSha1AndDESCBC}" \
-#                ""; do
+#                "DEFAULT"; do
 # when 452471 is fixed
 #---------------------------------------------------------------
 #  for key_cipher in \
-    key_cipher=""
+    key_cipher="DEFAULT"
     for cert_cipher in "${pkcs12v2pbeWithSha1And128BitRc4}" \
                   "${pkcs12v2pbeWithSha1And40BitRc4}" \
                   "${pkcs12v2pbeWithSha1AndTripleDESCBC}" \
@@ -350,7 +350,7 @@ tools_p12_export_list_import_all_pkcs12v2pbe_ciphers()
                   "${pkcs12v2pbeWithMd2AndDESCBC}" \
                   "${pkcs12v2pbeWithMd5AndDESCBC}" \
                   "${pkcs12v2pbeWithSha1AndDESCBC}" \
-                  ""\
+                  "DEFAULT"\
                   "null"; do        
 	  export_list_import "${key_cipher}" "${key_cipher}" 
 	done
@@ -397,7 +397,7 @@ tools_p12_export_list_import_with_default_ciphers()
 {
   echo "$SCRIPTNAME: Exporting Alice's email cert & key - default ciphers"
   
-  export_list_import "" ""
+  export_list_import "DEFAULT" "DEFAULT"
 
   if [ -n "$NSS_ENABLE_ECC" ] ; then
       echo "$SCRIPTNAME: Exporting Alice's email EC cert & key---------------"

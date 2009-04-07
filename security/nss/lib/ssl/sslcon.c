@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.35 2007/01/03 05:30:33 nelson%bolyard.com Exp $ */
+/* $Id: sslcon.c,v 1.36 2009/03/04 21:57:18 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -877,7 +877,7 @@ ssl2_CalcMAC(PRUint8             * result,
 ** Send some data in the clear. 
 ** Package up data with the length header and send it.
 **
-** Return count of bytes succesfully written, or negative number (failure).
+** Return count of bytes successfully written, or negative number (failure).
 */
 static PRInt32 
 ssl2_SendClear(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
@@ -1808,7 +1808,7 @@ ssl2_QualifyCypherSpecs(sslSocket *ss,
 /*
 ** Pick the best cipher we can find, given the array of server cipher
 ** specs.  Returns cipher number (e.g. SSL_CK_*), or -1 for no overlap.
-** If succesful, stores the master key size (bytes) in *pKeyLen.
+** If successful, stores the master key size (bytes) in *pKeyLen.
 **
 ** This is correct only for the client side, but presently
 ** this function is only called from 

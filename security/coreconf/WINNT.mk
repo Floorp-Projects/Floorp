@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2000
+# Portions created by the Initial Developer are Copyright (C) 1994-2000
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,9 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-libfreebl_3.so {
-	global:
-		FREEBL_GetVector;
-	local:
-		*;
-};
+#
+# Config stuff for OS_TARGET=WINNT
+#
+
+include $(CORE_DEPTH)/coreconf/WIN32.mk
+
+DEFINES += -DWINNT
+
+#
+# Win NT needs -GT so that fibers can work
+#
+OS_CFLAGS += -GT
+
+# WINNT uses the lib prefix, Win95 and WinCE don't
+NSPR31_LIB_PREFIX = lib

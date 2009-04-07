@@ -43,8 +43,6 @@ extern long new_lseek(int fd, long pos, int start);
 static char sccsid[] = "@(#)hash_page.c	8.7 (Berkeley) 8/16/94";
 #endif /* LIBC_SCCS and not lint */
 
-#include "watcomfx.h"
-
 /*
  * PACKAGE:  hashing
  *

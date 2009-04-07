@@ -35,39 +35,59 @@
 #
 # ***** END LICENSE BLOCK *****
 
-#
-# Config stuff for WINNT 4.0
-#
-# This makefile defines the following variables:
-# OS_CFLAGS and OS_DLLFLAGS.
+DEPTH		= ../..
+CORE_DEPTH	= ../..
 
-include $(CORE_DEPTH)/coreconf/WIN32.mk
+MODULE		= coreconf
 
-ifeq ($(CPU_ARCH), x386)
-	OS_CFLAGS += -W3 -nologo
-	DEFINES += -D_X86_
-else 
-	ifeq ($(CPU_ARCH), MIPS)
-		#OS_CFLAGS += -W3 -nologo
-		#DEFINES += -D_MIPS_
-		OS_CFLAGS += -W3 -nologo
-	else 
-		ifeq ($(CPU_ARCH), ALPHA)
-			OS_CFLAGS += -W3 -nologo
-			DEFINES += -D_ALPHA_=1
-		endif
-	endif
+CSRCS		= \
+                cppsetup.c \
+                ifparser.c \
+                include.c \
+                main.c \
+                parse.c \
+                pr.c
+
+PROGRAM		= mkdepend
+
+# Indicate that this directory builds build tools.
+INTERNAL_TOOLS  = 1
+
+
+include $(DEPTH)/coreconf/config.mk
+
+TARGETS		= $(PROGRAM)
+ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
+DEFINES		+= -DNO_X11
+else
+INSTALL		= true
 endif
 
-OS_DLLFLAGS += -nologo -DLL -SUBSYSTEM:WINDOWS
-ifndef MOZ_DEBUG_SYMBOLS
-	OS_DLLFLAGS += -PDB:NONE
+ifdef NATIVE_CC
+CC=$(NATIVE_CC)
 endif
 
-#
-# Win NT needs -GT so that fibers can work
-#
-OS_CFLAGS += -GT
-DEFINES += -DWINNT
+ifdef NATIVE_FLAGS
+OS_CFLAGS=$(NATIVE_FLAGS)
+endif
 
-NSPR31_LIB_PREFIX = lib
+include $(DEPTH)/coreconf/rules.mk
+
+ifdef GNU_CC
+OPTIMIZER = -O3
+else
+ifeq ($(OS_ARCH),SunOS)
+OPTIMIZER = -fast
+endif
+ifeq ($(OS_ARCH),WINNT)
+OPTIMIZER = -Ox
+endif
+endif
+
+DEFINES += -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".$(OBJ_SUFFIX)\"
+
+# Redefine MAKE_OBJDIR for just this directory
+define MAKE_OBJDIR
+if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
+endef
+
