@@ -137,6 +137,10 @@ typedef enum JSTokenType {
     TOK_SEQ = 82,                       /* synthetic sequence of statements,
                                            not a block */
     TOK_FORHEAD = 83,                   /* head of for(;;)-style loop */
+    TOK_ARGSBODY = 84,                  /* formal args in list + body at end */
+    TOK_UPVARS = 85,                    /* lexical dependencies as JSAtomList
+                                           of definitions paired with a parse
+                                           tree full of uses of those names */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;
@@ -190,11 +194,45 @@ js_AppendJSString(JSStringBuffer *sb, JSString *str);
 struct JSTokenPtr {
     uint16              index;          /* index of char in physical line */
     uint16              lineno;         /* physical line number */
+
+    bool operator <(const JSTokenPtr& bptr) {
+        return lineno < bptr.lineno ||
+               (lineno == bptr.lineno && index < bptr.index);
+    }
+
+    bool operator <=(const JSTokenPtr& bptr) {
+        return lineno < bptr.lineno ||
+               (lineno == bptr.lineno && index <= bptr.index);
+    }
+
+    bool operator >(const JSTokenPtr& bptr) {
+        return !(*this <= bptr);
+    }
+
+    bool operator >=(const JSTokenPtr& bptr) {
+        return !(*this < bptr);
+    }
 };
 
 struct JSTokenPos {
     JSTokenPtr          begin;          /* first character and line of token */
     JSTokenPtr          end;            /* index 1 past last char, last line */
+
+    bool operator <(const JSTokenPos& bpos) {
+        return begin < bpos.begin;
+    }
+
+    bool operator <=(const JSTokenPos& bpos) {
+        return begin <= bpos.begin;
+    }
+
+    bool operator >(const JSTokenPos& bpos) {
+        return !(*this <= bpos);
+    }
+
+    bool operator >=(const JSTokenPos& bpos) {
+        return !(*this < bpos);
+    }
 };
 
 struct JSToken {
@@ -297,6 +335,9 @@ struct JSTokenStream {
 
 /* Ignore keywords and return TOK_NAME instead to the parser. */
 #define TSF_KEYWORD_IS_NAME 0x4000
+
+/* Parsing a destructuring object or array initialiser pattern. */
+#define TSF_DESTRUCTURING   0x8000
 
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
