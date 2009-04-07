@@ -1375,7 +1375,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     tcflags = TCF_COMPILE_N_GO;
     if (caller) {
-        tcflags |= TCF_PUT_STATIC_DEPTH(caller->script->staticDepth + 1);
+        tcflags |= TCF_PUT_STATIC_LEVEL(caller->script->staticLevel + 1);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
         file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
@@ -1402,7 +1402,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                   script->principals->subsume(script->principals, principals)))) {
                 /*
                  * Get the prior (cache-filling) eval's saved caller function.
-                 * See js_CompileScript in jsparse.cpp.
+                 * See JSCompiler::compileScript in jsparse.cpp.
                  */
                 JSFunction *fun;
                 JS_GET_SCRIPT_FUNCTION(script, 0, fun);
@@ -1410,7 +1410,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (fun == caller->fun) {
                     /*
                      * Get the source string passed for safekeeping in the
-                     * atom map by the prior eval to js_CompileScript.
+                     * atom map by the prior eval to JSCompiler::compileScript.
                      */
                     JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
 
@@ -1454,9 +1454,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!script) {
-        script = js_CompileScript(cx, scopeobj, caller, principals, tcflags,
-                                  JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
-                                  NULL, file, line, str);
+        script = JSCompiler::compileScript(cx, scopeobj, caller, principals, tcflags,
+                                           JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                           NULL, file, line, str);
         if (!script) {
             ok = JS_FALSE;
             goto out;
@@ -3594,6 +3594,15 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
             PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
+
+            if (!STOBJ_GET_PARENT(scope->object)) {
+                /*
+                 * All scope chains end in a global object, so this will change
+                 * the global shape. jstracer.cpp assumes that the global shape
+                 * never changes on trace, so we must deep-bail here.
+                 */
+                js_LeaveTrace(cx);
+            }
             return JS_TRUE;
         }
         obj = LOCKED_OBJ_GET_PROTO(scope->object);
@@ -3606,13 +3615,6 @@ void
 js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
 {
     JS_ASSERT(OBJ_IS_DELEGATE(cx, obj));
-
-    /*
-     * All scope chains end in a global object, so this will change the global
-     * shape. jstracer.cpp assumes that the global shape never changes on
-     * trace, so we must deep-bail here.
-     */
-    js_LeaveTrace(cx);
 
     PurgeProtoChain(cx, OBJ_GET_PROTO(cx, obj), id);
     while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL) {

@@ -3092,8 +3092,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
           case JSTVU_WEAK_ROOTS:
             TraceWeakRoots(trc, tvr->u.weakRoots);
             break;
-          case JSTVU_PARSE_CONTEXT:
-            js_TraceParseContext(trc, tvr->u.parseContext);
+          case JSTVU_COMPILER:
+            tvr->u.compiler->trace(trc);
             break;
           case JSTVU_SCRIPT:
             js_TraceScript(trc, tvr->u.script);

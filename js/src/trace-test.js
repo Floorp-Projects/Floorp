@@ -2528,7 +2528,7 @@ testThinLoopDemote.jitstats = {
     recorderStarted: 2,
     recorderAborted: 0,
     traceCompleted: 2,
-    traceTriggered: 3,
+    traceTriggered: 2,
     unstableLoopVariable: 1
 };
 test(testThinLoopDemote);
@@ -4490,36 +4490,36 @@ test(testString);
 
 function testToStringBeforeValueOf()
 {
-  var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
-  var a = [];
-  for (var i = 0; i < 10; i++)
-    a.push(String(o));
-  return a.join(",");
+    var o = {toString: function() { return "s"; }, valueOf: function() { return "v"; } };
+    var a = [];
+    for (var i = 0; i < 10; i++)
+        a.push(String(o));
+    return a.join(",");
 }
 testToStringBeforeValueOf.expected = "s,s,s,s,s,s,s,s,s,s";
 testToStringBeforeValueOf.jitstats = {
-  recorderStarted: 1,
-  sideExitIntoInterpreter: 1
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1
 };
 test(testToStringBeforeValueOf);
 
 function testNullToString()
 {
-  var a = [];
-  for (var i = 0; i < 10; i++)
-    a.push(String(null));
-  for (i = 0; i < 10; i++) {
-    var t = typeof a[i];
-    if (t != "string")
-      a.push(t);
-  }
-  return a.join(",");
+    var a = [];
+    for (var i = 0; i < 10; i++)
+        a.push(String(null));
+    for (i = 0; i < 10; i++) {
+        var t = typeof a[i];
+        if (t != "string")
+           a.push(t);
+    }
+    return a.join(",");
 }
 testNullToString.expected = "null,null,null,null,null,null,null,null,null,null";
 testNullToString.jitstats = {
-  recorderStarted: 2,
-  sideExitIntoInterpreter: 2,
-  recorderAborted: 0
+    recorderStarted: 2,
+    sideExitIntoInterpreter: 2,
+    recorderAborted: 0
 };
 test(testNullToString);
 
@@ -4532,11 +4532,177 @@ function testAddNull()
 }
 testAddNull.expected = "null,";
 testAddNull.jitstats = {
-  recorderStarted: 1,
-  sideExitIntoInterpreter: 1,
-  recorderAborted: 0
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1,
+    recorderAborted: 0
 };
 test(testAddNull);
+
+function testClosures()
+{
+    function MyObject(id) {
+        var thisObject = this;
+        this.id = id;
+        this.toString = str;
+
+        function str() {
+            return "" + this.id + thisObject.id;
+        }
+    }
+
+    var a = [];
+    for (var i = 0; i < 5; i++)
+        a.push(new MyObject(i));
+    return a.toString();
+}
+testClosures.expected = "00,11,22,33,44";
+test(testClosures);
+
+function testMoreClosures() {
+    var f = {}, max = 3;
+
+    var hello = function(n) {
+        function howdy() { return n * n }
+        f.test = howdy;
+    };
+
+    for (var i = 0; i <= max; i++)
+        hello(i);
+
+    return f.test();
+}
+testMoreClosures.expected = 9;
+test(testMoreClosures);
+
+function testLambdaInitedVar() {
+    var jQuery = function (a, b) {
+        return jQuery && jQuery.length;
+    }
+    return jQuery();
+}
+
+testLambdaInitedVar.expected = 2;
+test(testLambdaInitedVar);
+
+function testNestedEscapingLambdas()
+{
+    try {
+        return (function() {
+            var a = [], r = [];
+            function setTimeout(f, t) {
+                a.push(f);
+            }
+
+            function runTimeouts() {
+                for (var i = 0; i < a.length; i++)
+                    a[i]();
+            }
+
+            var $foo = "#nothiddendiv";
+            setTimeout(function(){
+                r.push($foo);
+                setTimeout(function(){
+                    r.push($foo);
+                }, 100);
+            }, 100);
+
+            runTimeouts();
+
+            return r.join("");
+        })();
+    } catch (e) {
+        return e;
+    }
+}
+testNestedEscapingLambdas.expected = "#nothiddendiv#nothiddendiv";
+test(testNestedEscapingLambdas);
+
+function testPropagatedFunArgs()
+{
+  var win = this;
+  var res = [], q = [];
+  function addEventListener(name, func, flag) {
+    q.push(func);
+  }
+
+  var pageInfo, obs;
+  addEventListener("load", handleLoad, true);
+
+  var observer = {
+    observe: function(win, topic, data) {
+      // obs.removeObserver(observer, "page-info-dialog-loaded");
+      handlePageInfo();
+    }
+  };
+
+  function handleLoad() {
+    pageInfo = { toString: function() { return "pageInfo"; } };
+    obs = { addObserver: function (obs, topic, data) { obs.observe(win, topic, data); } };
+    obs.addObserver(observer, "page-info-dialog-loaded", false);
+  }
+
+  function handlePageInfo() {
+    res.push(pageInfo);
+    function $(aId) { res.push(pageInfo); };
+    var feedTab = $("feedTab");
+  }
+
+  q[0]();
+  return res.join(',');
+}
+testPropagatedFunArgs.expected = "pageInfo,pageInfo";
+test(testPropagatedFunArgs);
+
+// Second testPropagatedFunArgs test -- this is a crash-test.
+(function () {
+  var escapee;
+
+  function testPropagatedFunArgs()
+  {
+    const magic = 42;
+
+    var win = this;
+    var res = [], q = [];
+    function addEventListener(name, func, flag) {
+      q.push(func);
+    }
+
+    var pageInfo = "pageInfo", obs;
+    addEventListener("load", handleLoad, true);
+
+    var observer = {
+      observe: function(win, topic, data) {
+        // obs.removeObserver(observer, "page-info-dialog-loaded");
+        handlePageInfo();
+      }
+    };
+
+    function handleLoad() {
+      //pageInfo = { toString: function() { return "pageInfo"; } };
+      obs = { addObserver: function (obs, topic, data) { obs.observe(win, topic, data); } };
+      obs.addObserver(observer, "page-info-dialog-loaded", false);
+    }
+
+    function handlePageInfo() {
+      res.push(pageInfo);
+      function $(aId) {
+        function notSafe() {
+          return magic;
+        }
+        notSafe();
+        res.push(pageInfo);
+      };
+      var feedTab = $("feedTab");
+    }
+
+    escapee = q[0];
+    return res.join(',');
+  }
+
+  testPropagatedFunArgs();
+
+  escapee();
+})();
 
 function testStringLengthNoTinyId()
 {
@@ -4812,6 +4978,23 @@ function testLengthOnNonNativeProto()
 testLengthOnNonNativeProto.expected = "no assertion";
 test(testLengthOnNonNativeProto);
 
+function testDeepPropertyShadowing()
+{
+    function h(node) {
+        var x = 0;
+        while (node) {
+            x++;
+            node = node.parent;
+        }
+        return x;
+    }
+    var tree = {__proto__: {__proto__: {parent: null}}};
+    h(tree);
+    h(tree);
+    tree.parent = {};
+    assertEq(h(tree), 2);
+}
+test(testDeepPropertyShadowing);
 
 /*****************************************************************************
  *                                                                           *
