@@ -2572,11 +2572,11 @@ function testWeirdDateParse() {
 }
 testWeirdDateParse.expected = "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008";
 testWeirdDateParse.jitstats = {
-    recorderStarted: 8,
+    recorderStarted: 7,
     recorderAborted: 1,
-    traceCompleted: 7,
-    traceTriggered: 14,
-    unstableLoopVariable: 3,
+    traceCompleted: 6,
+    traceTriggered: 13,
+    unstableLoopVariable: 2,
     noCompatInnerTrees: 1
 };
 test(testWeirdDateParse);
