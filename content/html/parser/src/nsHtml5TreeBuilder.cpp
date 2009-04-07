@@ -2964,8 +2964,13 @@ nsHtml5TreeBuilder::removeFromStack(nsHtml5StackNode* node)
 void 
 nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(PRInt32 pos)
 {
-
-  listOfActiveFormattingElements[pos]->release();
+  nsHtml5StackNode* listNode = listOfActiveFormattingElements[pos];
+  if (listNode) {
+    listNode->release();
+    listOfActiveFormattingElements[pos] = nsnull;
+  } else {
+    NS_ERROR("Tried to remove marker from list.");
+  }
   if (pos == listPtr) {
 
     listPtr--;
