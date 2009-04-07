@@ -87,6 +87,7 @@ Usage(const char *progName)
 	"\t-a\t\t Following certfile is base64 encoded\n"
 	"\t-b YYMMDDHHMMZ\t Validate date (default: now)\n"
 	"\t-d directory\t Database directory\n"
+	"\t-i number of consecutive verifications\n"
 	"\t-f \t\t Enable cert fetching from AIA URL\n"
 	"\t-o oid\t\t Set policy OID for cert validation(Format OID.1.2.3)\n"
 	"\t-p \t\t Use PKIX Library to validate certificate by calling:\n"
@@ -457,12 +458,13 @@ main(int argc, char *argv[], char *envp[])
     int                  revDataIndex = 0;
     PRBool               ocsp_fetchingFailureIsAFailure = PR_TRUE;
     PRBool               useDefaultRevFlags = PR_TRUE;
+    int                  vfyCounts = 1;
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
     progName = PL_strdup(argv[0]);
 
-    optstate = PL_CreateOptState(argc, argv, "ab:c:d:efg:h:m:o:prs:tu:vw:W:");
+    optstate = PL_CreateOptState(argc, argv, "ab:c:d:efg:h:i:m:o:prs:tu:vw:W:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 	case  0  : /* positional parameter */  goto breakout;
@@ -489,6 +491,8 @@ main(int argc, char *argv[], char *envp[])
 	case 'h' : 
                    revMethodsData[revDataIndex].
                        testFlagsStr = PL_strdup(optstate->value);break;
+        case 'i' : vfyCounts = PORT_Atoi(optstate->value);       break;
+                   break;
 	case 'm' : 
                    if (revMethodsData[revDataIndex].methodTypeStr) {
                        revDataIndex += 1;
@@ -599,171 +603,175 @@ breakout:
     if (status == PL_OPT_BAD || !firstCert)
 	Usage(progName);
 
-    if (!time)
-    	time = PR_Now();
-
     /* Initialize log structure */
     log.arena = PORT_NewArena(512);
     log.head = log.tail = NULL;
     log.count = 0;
 
-    if (usePkix < 2) {
-        /* NOW, verify the cert chain. */
-        if (usePkix) {
-            /* Use old API with libpkix validation lib */
-            CERT_SetUsePKIXForValidation(PR_TRUE);
-        }
-        defaultDB = CERT_GetDefaultCertDB();
-        secStatus = CERT_VerifyCertificate(defaultDB, firstCert, 
-                                           PR_TRUE /* check sig */,
-                                           certUsage, 
-                                           time, 
-                                           &pwdata, /* wincx  */
-                                           &log, /* error log */
+    do {
+        if (usePkix < 2) {
+            /* NOW, verify the cert chain. */
+            if (usePkix) {
+                /* Use old API with libpkix validation lib */
+                CERT_SetUsePKIXForValidation(PR_TRUE);
+            }
+            if (!time)
+                time = PR_Now();
+
+            defaultDB = CERT_GetDefaultCertDB();
+            secStatus = CERT_VerifyCertificate(defaultDB, firstCert, 
+                                               PR_TRUE /* check sig */,
+                                               certUsage, 
+                                               time,
+                                               &pwdata, /* wincx  */
+                                               &log, /* error log */
                                            NULL);/* returned usages */
-    } else do {
-        static CERTValOutParam cvout[4];
-        static CERTValInParam cvin[6];
-        SECOidTag oidTag;
-        int inParamIndex = 0;
-        static PRUint64 revFlagsLeaf[2];
-        static PRUint64 revFlagsChain[2];
-        static CERTRevocationFlags rev;
+        } else do {
+                static CERTValOutParam cvout[4];
+                static CERTValInParam cvin[6];
+                SECOidTag oidTag;
+                int inParamIndex = 0;
+                static PRUint64 revFlagsLeaf[2];
+                static PRUint64 revFlagsChain[2];
+                static CERTRevocationFlags rev;
+                
+                if (oidStr) {
+                    PRArenaPool *arena;
+                    SECOidData od;
+                    memset(&od, 0, sizeof od);
+                    od.offset = SEC_OID_UNKNOWN;
+                    od.desc = "User Defined Policy OID";
+                    od.mechanism = CKM_INVALID_MECHANISM;
+                    od.supportedExtension = INVALID_CERT_EXTENSION;
 
-        if (oidStr) {
-            PRArenaPool *arena;
-            SECOidData od;
-            memset(&od, 0, sizeof od);
-            od.offset = SEC_OID_UNKNOWN;
-            od.desc = "User Defined Policy OID";
-            od.mechanism = CKM_INVALID_MECHANISM;
-            od.supportedExtension = INVALID_CERT_EXTENSION;
-
-            arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-            if ( !arena ) {
-                fprintf(stderr, "out of memory");
-                goto punt;
-            }
-            
-            secStatus = SEC_StringToOID(arena, &od.oid, oidStr, 0);
-            if (secStatus != SECSuccess) {
-                PORT_FreeArena(arena, PR_FALSE);
-                fprintf(stderr, "Can not encode oid: %s(%s)\n", oidStr,
-                        SECU_Strerror(PORT_GetError()));
-                break;
-            }
-            
-            oidTag = SECOID_AddEntry(&od);
-            PORT_FreeArena(arena, PR_FALSE);
-            if (oidTag == SEC_OID_UNKNOWN) {
-                fprintf(stderr, "Can not add new oid to the dynamic "
-                        "table: %s\n", oidStr);
-                secStatus = SECFailure;
-                break;
-            }
-
-            cvin[inParamIndex].type = cert_pi_policyOID;
-            cvin[inParamIndex].value.arraySize = 1;
-            cvin[inParamIndex].value.array.oids = &oidTag;
-
-            inParamIndex++;
-        }
-
-        if (trustedCertList) {
-            cvin[inParamIndex].type = cert_pi_trustAnchors;
-            cvin[inParamIndex].value.pointer.chain = trustedCertList;
-            
-            inParamIndex++;
-        }
-
-        cvin[inParamIndex].type = cert_pi_useAIACertFetch;
-        cvin[inParamIndex].value.scalar.b = certFetching;
-        inParamIndex++;
-
-        rev.leafTests.cert_rev_flags_per_method = revFlagsLeaf;
-        rev.chainTests.cert_rev_flags_per_method = revFlagsChain;
-        secStatus = configureRevocationParams(&rev);
-        if (secStatus) {
-            fprintf(stderr, "Can not config revocation parameters ");
-            break;
-        }
-
-        cvin[inParamIndex].type = cert_pi_revocationFlags;
-        cvin[inParamIndex].value.pointer.revocation = &rev;
-	inParamIndex++;
-
-        cvin[inParamIndex].type = cert_pi_date;
-        cvin[inParamIndex].value.scalar.time = time;
-        inParamIndex++;
-
-        cvin[inParamIndex].type = cert_pi_end;
-        
-        cvout[0].type = cert_po_trustAnchor;
-        cvout[0].value.pointer.cert = NULL;
-        cvout[1].type = cert_po_certList;
-        cvout[1].value.pointer.chain = NULL;
-
-        /* setting pointer to CERTVerifyLog. Initialized structure
-         * will be used CERT_PKIXVerifyCert */
-        cvout[2].type = cert_po_errorLog;
-        cvout[2].value.pointer.log = &log;
-
-        cvout[3].type = cert_po_end;
-        
-        secStatus = CERT_PKIXVerifyCert(firstCert, certUsage,
-                                        cvin, cvout, &pwdata);
-        if (secStatus != SECSuccess) {
-            break;
-        }
-        issuerCert = cvout[0].value.pointer.cert;
-        builtChain = cvout[1].value.pointer.chain;
-    } while (0);
-
-    /* Display validation results */
-    if (secStatus != SECSuccess || log.count > 0) {
-	CERTVerifyLogNode *node = NULL;
-	PRIntn err = PR_GetError();
-	fprintf(stderr, "Chain is bad, %d = %s\n", err, SECU_Strerror(err));
-
-	SECU_displayVerifyLog(stderr, &log, verbose); 
-	/* Have cert refs in the log only in case of failure.
-	 * Destroy them. */
-	for (node = log.head; node; node = node->next) {
-	    if (node->cert)
-	        CERT_DestroyCertificate(node->cert);
-	}
-    	rv = 1;
-    } else {
-    	fprintf(stderr, "Chain is good!\n");
-    	if (issuerCert) {
-    	   if (verbose > 1) {
-               rv = SEC_PrintCertificateAndTrust(issuerCert, "Root Certificate",
-                                                 NULL);
-               if (rv != SECSuccess) {
-		 SECU_PrintError(progName, "problem printing certificate");
-               }
-    	   } else if (verbose > 0) {
-    	      SECU_PrintName(stdout, &issuerCert->subject, "Root "
-                             "Certificate Subject:", 0);
-    	   }
-    	   CERT_DestroyCertificate(issuerCert);
-    	}
-         if (builtChain) {
-            CERTCertListNode *node;
-            int count = 0;
-            char buff[256];
-
-            if (verbose) { 
-                for(node = CERT_LIST_HEAD(builtChain); !CERT_LIST_END(node, builtChain);
-                    node = CERT_LIST_NEXT(node), count++ ) {
-                    sprintf(buff, "Certificate %d Subject", count + 1);
-                    SECU_PrintName(stdout, &node->cert->subject, buff, 0);
+                    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+                    if ( !arena ) {
+                        fprintf(stderr, "out of memory");
+                        goto punt;
+                    }
+                    
+                    secStatus = SEC_StringToOID(arena, &od.oid, oidStr, 0);
+                    if (secStatus != SECSuccess) {
+                        PORT_FreeArena(arena, PR_FALSE);
+                        fprintf(stderr, "Can not encode oid: %s(%s)\n", oidStr,
+                                SECU_Strerror(PORT_GetError()));
+                        break;
+                    }
+                    
+                    oidTag = SECOID_AddEntry(&od);
+                    PORT_FreeArena(arena, PR_FALSE);
+                    if (oidTag == SEC_OID_UNKNOWN) {
+                        fprintf(stderr, "Can not add new oid to the dynamic "
+                                "table: %s\n", oidStr);
+                        secStatus = SECFailure;
+                        break;
+                    }
+                    
+                    cvin[inParamIndex].type = cert_pi_policyOID;
+                    cvin[inParamIndex].value.arraySize = 1;
+                    cvin[inParamIndex].value.array.oids = &oidTag;
+                    
+                    inParamIndex++;
                 }
+                
+                if (trustedCertList) {
+                    cvin[inParamIndex].type = cert_pi_trustAnchors;
+                    cvin[inParamIndex].value.pointer.chain = trustedCertList;
+                    
+                    inParamIndex++;
+                }
+                
+                cvin[inParamIndex].type = cert_pi_useAIACertFetch;
+                cvin[inParamIndex].value.scalar.b = certFetching;
+                inParamIndex++;
+                
+                rev.leafTests.cert_rev_flags_per_method = revFlagsLeaf;
+                rev.chainTests.cert_rev_flags_per_method = revFlagsChain;
+                secStatus = configureRevocationParams(&rev);
+                if (secStatus) {
+                    fprintf(stderr, "Can not config revocation parameters ");
+                    break;
+                }
+                
+                cvin[inParamIndex].type = cert_pi_revocationFlags;
+                cvin[inParamIndex].value.pointer.revocation = &rev;
+                inParamIndex++;
+                
+                if (time) {
+                    cvin[inParamIndex].type = cert_pi_date;
+                    cvin[inParamIndex].value.scalar.time = time;
+                    inParamIndex++;
+                }
+                
+                cvin[inParamIndex].type = cert_pi_end;
+                
+                cvout[0].type = cert_po_trustAnchor;
+                cvout[0].value.pointer.cert = NULL;
+                cvout[1].type = cert_po_certList;
+                cvout[1].value.pointer.chain = NULL;
+                
+                /* setting pointer to CERTVerifyLog. Initialized structure
+                 * will be used CERT_PKIXVerifyCert */
+                cvout[2].type = cert_po_errorLog;
+                cvout[2].value.pointer.log = &log;
+                
+                cvout[3].type = cert_po_end;
+                
+                secStatus = CERT_PKIXVerifyCert(firstCert, certUsage,
+                                                cvin, cvout, &pwdata);
+                if (secStatus != SECSuccess) {
+                    break;
+                }
+                issuerCert = cvout[0].value.pointer.cert;
+                builtChain = cvout[1].value.pointer.chain;
+            } while (0);
+        
+        /* Display validation results */
+        if (secStatus != SECSuccess || log.count > 0) {
+            CERTVerifyLogNode *node = NULL;
+            PRIntn err = PR_GetError();
+            fprintf(stderr, "Chain is bad, %d = %s\n", err, SECU_Strerror(err));
+            
+            SECU_displayVerifyLog(stderr, &log, verbose); 
+            /* Have cert refs in the log only in case of failure.
+             * Destroy them. */
+            for (node = log.head; node; node = node->next) {
+                if (node->cert)
+                    CERT_DestroyCertificate(node->cert);
             }
-            CERT_DestroyCertList(builtChain);
-         }
-	rv = 0;
-    }
+            rv = 1;
+        } else {
+            fprintf(stderr, "Chain is good!\n");
+            if (issuerCert) {
+                if (verbose > 1) {
+                    rv = SEC_PrintCertificateAndTrust(issuerCert, "Root Certificate",
+                                                      NULL);
+                    if (rv != SECSuccess) {
+                        SECU_PrintError(progName, "problem printing certificate");
+                    }
+                } else if (verbose > 0) {
+                    SECU_PrintName(stdout, &issuerCert->subject, "Root "
+                                   "Certificate Subject:", 0);
+                }
+                CERT_DestroyCertificate(issuerCert);
+            }
+            if (builtChain) {
+                CERTCertListNode *node;
+                int count = 0;
+                char buff[256];
+                
+                if (verbose) { 
+                    for(node = CERT_LIST_HEAD(builtChain); !CERT_LIST_END(node, builtChain);
+                        node = CERT_LIST_NEXT(node), count++ ) {
+                        sprintf(buff, "Certificate %d Subject", count + 1);
+                        SECU_PrintName(stdout, &node->cert->subject, buff, 0);
+                    }
+                }
+                CERT_DestroyCertList(builtChain);
+            }
+            rv = 0;
+        }
+    } while (--vfyCounts > 0);
 
     /* Need to destroy CERTVerifyLog arena at the end */
     PORT_FreeArena(log.arena, PR_FALSE);

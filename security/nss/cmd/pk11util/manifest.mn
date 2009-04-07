@@ -42,7 +42,7 @@ DEFINES += -DNSPR20
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = nss 
 
-CSRCS = pk11util.c pk11table.c
+CSRCS = pk11util.c
 #CSRCS = symkeytest.c 
 
 # The MODULE is always implicitly required.

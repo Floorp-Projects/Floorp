@@ -67,7 +67,12 @@ enum certutilExtns {
     ext_End
 };
 
-typedef PRBool certutilExtnList[ext_End];
+typedef struct ExtensionEntryStr {
+    PRBool activated;
+    const char  *arg;
+} ExtensionEntry;
+
+typedef ExtensionEntry certutilExtnList[ext_End];
 
 extern SECStatus
 AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,

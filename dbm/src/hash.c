@@ -36,8 +36,6 @@
 static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #endif /* LIBC_SCCS and not lint */
 
-#include "watcomfx.h"
-
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 #include <sys/param.h>
 #endif
