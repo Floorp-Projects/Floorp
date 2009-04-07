@@ -341,6 +341,9 @@ public:
 # define EXECUTE_TREE_TIMER
 #endif
 
+#if defined(_WIN32) && defined(_MSC_VER)
+__declspec(align(8))
+#endif
 struct InterpState
 {
     double        *sp;                  // native stack pointer, stack[0] is spbase[0]
@@ -365,7 +368,13 @@ struct InterpState
 #ifdef DEBUG
     bool           jsframe_pop_blocks_set_on_entry;
 #endif
+#ifdef __GNUC__
+}
+__attribute__ ((aligned (8)));
+#else
 };
+#endif
+JS_STATIC_ASSERT(!(sizeof(InterpState) % sizeof(double)));
 
 enum JSMonitorRecordingStatus {
     JSMRS_CONTINUE,
