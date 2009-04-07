@@ -50,6 +50,8 @@ zero-sized.patch: deal with zero sized surface in ways less likely to crash.
 
 ==== pixman patches ====
 
+pixman-neon.patch: add ARM NEON optimized compositing functions
+
 endian.patch: include cairo-platform.h for endian macros
 
 ==== disable printing patch ====
