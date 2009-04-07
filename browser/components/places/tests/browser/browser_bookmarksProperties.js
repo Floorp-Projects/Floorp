@@ -331,7 +331,7 @@ gTests.push({
     tagsField.popup.addEventListener("popupshown", function (aEvent) {
         tagsField.popup.removeEventListener("popupshown", arguments.callee, true);
         tagsField.popup.focus();
-        EventUtils.synthesizeKey("VK_ESC", {}, self.window);
+        EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
       }, true);
     tagsField.popup.addEventListener("popuphidden", function (aEvent) {
         tagsField.popup.removeEventListener("popuphidden", arguments.callee, true);
