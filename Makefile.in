@@ -40,6 +40,15 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+ifndef .PYMAKE
+ifeq (,$(MAKE_VERSION))
+$(error GNU Make is required)
+endif
+ifeq (,$(filter-out 3.78 3.79,$(MAKE_VERSION)))
+$(error GNU Make 3.80 or higher is required)
+endif
+endif
+
 include $(DEPTH)/config/autoconf.mk
 
 default::
@@ -183,12 +192,12 @@ ifdef MOZ_CRASHREPORTER
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
 	cd $(DIST)/crashreporter-symbols && \
-          zip -r9D ../$(SYMBOL_ARCHIVE_BASENAME).zip .
+          zip -r9D ../"$(SYMBOL_ARCHIVE_BASENAME).zip" .
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip
+	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
 endif
 
 ifeq ($(OS_ARCH),WINNT)

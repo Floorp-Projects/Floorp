@@ -160,7 +160,7 @@ EnumSystemFiles(void (*func)(const char *))
     return TRUE;
 }
 
-static int    dwNumFiles, dwReadEvery;
+static int    dwNumFiles, dwReadEvery, dwFileToRead=0;
 
 static void
 CountFiles(const char *file)
@@ -173,6 +173,30 @@ ReadFiles(const char *file)
 {
     if ((dwNumFiles % dwReadEvery) == 0)
         RNG_FileForRNG(file);
+
+    dwNumFiles++;
+}
+
+static void 
+ReadSingleFile(const char *filename)
+{
+    unsigned char buffer[1024];
+    FILE *file; 
+    
+    file = fopen((char *)filename, "rb");
+    if (file != NULL) {
+	while (fread(buffer, 1, sizeof(buffer), file) > 0) 
+	    ;
+	fclose(file);
+    }
+}
+
+static void
+ReadOneFile(const char *file)
+{
+    if (dwNumFiles == dwFileToRead) {
+        ReadSingleFile(file);
+    }
 
     dwNumFiles++;
 }
@@ -333,8 +357,17 @@ void RNG_FileForRNG(const char *filename)
     RNG_RandomUpdate(buffer, nBytes);
 }
 
+static void rng_systemJitter(void)
+{
+    dwNumFiles = 0;
+    EnumSystemFiles(ReadOneFile);
+    dwFileToRead++;
+    if (dwFileToRead >= dwNumFiles) {
+	dwFileToRead = 0;
+    }
+}
+
 size_t RNG_SystemRNG(void *dest, size_t maxLen)
 {
-    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
-    return 0;
+    return rng_systemFromNoise(dest,maxlen);
 }

@@ -27,7 +27,7 @@
    * LS30 HPFS386 requires a count greater than 2, or some files
    * are missing (those starting with a character less that '.').
    *
-   * Novell looses entries which overflow the buffer. In previous
+   * Novell loses entries which overflow the buffer. In previous
    * versions of dirent2, this could have lead to missing files
    * when the average length of 100 directory entries was 40 bytes
    * or more (quite unlikely for files on a Novell server).

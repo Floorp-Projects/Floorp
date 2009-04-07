@@ -124,9 +124,9 @@ download_file() {
     echo >> $req
 
     echo ${BINDIR}/tstclnt -d $trgDir -S -h $host -p $IOPR_DOWNLOAD_PORT \
-        -w ${R_PWFILE} -o 
+        -v -w ${R_PWFILE} -o 
     ${BINDIR}/tstclnt -d $trgDir -S -h $host -p $IOPR_DOWNLOAD_PORT \
-        -w ${R_PWFILE} -o < $req > $file
+        -v -w ${R_PWFILE} -o < $req > $file
     ret=$?
     rm -f $_tmp;
     return $ret

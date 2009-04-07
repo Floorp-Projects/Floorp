@@ -1163,7 +1163,7 @@ statusbarpanel#statusbar-display {
 
 .ac-result-type-keyword,
 .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
-  list-style-image: url(chrome://browser/skin/Search-glass.png);
+  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
   -moz-image-region: rect(0px 32px 16px 16px);
   width: 16px;
   height: 16px;

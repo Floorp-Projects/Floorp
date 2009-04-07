@@ -608,7 +608,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     gfxRect outRect(0, 0, destSize.width, destSize.height);
     gfxMatrix scale =
       gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
-    img->Draw(ctx, scale, outRect, nsIntMargin(0,0,0,0),
+    img->Draw(ctx, gfxPattern::FILTER_GOOD, scale, outRect, nsIntMargin(0,0,0,0),
               nsIntRect(0, 0, srcSize.width, srcSize.height));
     return NS_OK;
   } else {

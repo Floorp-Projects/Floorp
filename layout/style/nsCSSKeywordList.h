@@ -620,5 +620,5 @@ CSS_KEY(use-script, use_script)
 CSS_KEY(visiblefill, visiblefill)
 CSS_KEY(visiblepainted, visiblepainted)
 CSS_KEY(visiblestroke, visiblestroke)
-CSS_KEY(-moz-disable-resampling, _moz_disable_resampling)
+CSS_KEY(-moz-crisp-edges, _moz_crisp_edges)
 #endif

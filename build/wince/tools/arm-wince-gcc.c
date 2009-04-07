@@ -80,9 +80,6 @@ main(int argc, char **argv)
       args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
       args[i++] = "/LIBPATH:\"" WCE_CRT "\"";
       args[i++] = "/NODEFAULTLIB";
-#ifdef MOZ_MEMORY
-      args[i++] = JEMALLOC_LIB;
-#endif
 #ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
       if(!getenv("NO_SHUNT")) {
 	args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";

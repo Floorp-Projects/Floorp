@@ -54,7 +54,6 @@
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocument.h"

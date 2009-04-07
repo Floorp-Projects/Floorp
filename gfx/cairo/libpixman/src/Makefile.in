@@ -90,7 +90,10 @@ endif
 endif
 ifeq (arm,$(findstring arm,$(OS_TEST)))
 ifdef HAVE_ARM_SIMD
-USE_ARM_SIMD=1
+USE_ARM_SIMD_GCC=1
+endif
+ifdef HAVE_ARM_NEON
+USE_ARM_NEON_GCC=1
 endif
 endif
 
@@ -134,9 +137,15 @@ CSRCS += pixman-vmx.c
 DEFINES += -DUSE_VMX
 endif
 
-ifdef USE_ARM_SIMD
+ifdef USE_ARM_SIMD_GCC
 CSRCS += pixman-arm-simd.c
 DEFINES += -DUSE_ARM_SIMD
+endif
+
+ifdef USE_ARM_NEON_GCC
+CSRCS += pixman-arm-neon.c
+DEFINES += -DUSE_ARM_NEON
+ARM_NEON_CFLAGS = -mfloat-abi=softfp -mfpu=neon
 endif
 
 ifdef USE_ARM_SIMD_MSVC
@@ -157,6 +166,7 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
 
+
 # special rule for pixman-mmx to get the right cflags
 pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c Makefile Makefile.in
 	$(REPORT_BUILD)
@@ -167,3 +177,8 @@ pixman-sse2.$(OBJ_SUFFIX): pixman-sse2.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)
+
+pixman-arm-neon.$(OBJ_SUFFIX): pixman-arm-neon.c Makefile Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CC)
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(ARM_NEON_CFLAGS) $(_VPATH_SRCS)

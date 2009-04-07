@@ -159,7 +159,7 @@ struct nsHTMLReflowMetrics {
   nsCollapsingMargin mCarriedOutBottomMargin;
   
   // For frames that have content that overflow their content area
-  // (NS_FRAME_OUTSIDE_CHILDREN) this rectangle represents the total area
+  // (HasOverflowRect() is true) this rectangle represents the total area
   // of the frame including visible overflow, i.e., don't include overflowing
   // content that is hidden.
   // The rect is in the local coordinate space of the frame, and should be at

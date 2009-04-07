@@ -50,7 +50,7 @@ SimpleTest.waitForExplicitFinish();
 
 watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
 
-setTimeout(clickAccept, 10);
+setTimeout(clickNotificationButton, 10, kAcceptButton);
 
 setTimeout(clearWatch, 50);
 

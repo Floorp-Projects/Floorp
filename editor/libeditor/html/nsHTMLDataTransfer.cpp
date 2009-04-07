@@ -501,7 +501,6 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
     }
 
     // Loop over the node list and paste the nodes:
-    PRBool bDidInsert = PR_FALSE;
     nsCOMPtr<nsIDOMNode> parentBlock, lastInsertNode, insertedContextParent;
     PRInt32 listCount = nodeList.Count();
     PRInt32 j;
@@ -512,6 +511,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
       
     for (j=0; j<listCount; j++)
     {
+      PRBool bDidInsert = PR_FALSE;
       nsCOMPtr<nsIDOMNode> curNode = nodeList[j];
 
       NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
@@ -616,7 +616,6 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
 
       if (!bDidInsert || NS_FAILED(res))
       {
-        
         // try to insert
         res = InsertNodeAtPoint(curNode, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
         if (NS_SUCCEEDED(res)) 
@@ -624,7 +623,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
           bDidInsert = PR_TRUE;
           lastInsertNode = curNode;
         }
-          
+
         // Assume failure means no legal parent in the document hierarchy,
         // try again with the parent of curNode in the paste hierarchy.
         nsCOMPtr<nsIDOMNode> parent;
@@ -644,7 +643,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
           curNode = parent;
         }
       }
-      if (bDidInsert)
+      if (lastInsertNode)
       {
         res = GetNodeLocation(lastInsertNode, address_of(parentNode), &offsetOfNewNode);
         NS_ENSURE_SUCCESS(res, res);

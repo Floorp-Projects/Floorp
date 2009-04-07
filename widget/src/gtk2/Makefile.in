@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  thebes \
 		  cairo \
+		  qcms \
 		  $(NULL)
 
 ifdef MOZ_X11
@@ -142,7 +143,7 @@ EXTRA_DSO_LDOPTS += \
 		$(XCOMPOSITE_LIBS) \
 		$(MOZ_GTK2_LIBS) \
 		-lthebes \
-		$(LCMS_LIBS) \
+		$(QCMS_LIBS) \
 		$(NULL)
 
 ifdef MOZ_PLATFORM_HILDON

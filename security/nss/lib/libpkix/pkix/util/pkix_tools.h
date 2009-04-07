@@ -49,6 +49,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "secport.h"
+#include "prlong.h"
 
 /* private PKIX system headers */
 #include "pkix_basicconstraintschecker.h"
@@ -1466,8 +1467,8 @@ extern const char *PKIX_ERRORCLASSNAMES[PKIX_NUMERRORCLASSES];
 
 extern PRLogModuleInfo *pkixLog;
 
-#define PKIX_MAGIC_HEADER           (PKIX_UInt32) 0xBEEFC0DE
-#define PKIX_MAGIC_HEADER_DESTROYED (PKIX_UInt32) 0xDEADC0DE
+#define PKIX_MAGIC_HEADER           LL_INIT(0xFEEDC0FF, 0xEEFACADE)
+#define PKIX_MAGIC_HEADER_DESTROYED LL_INIT(0xBAADF00D, 0xDEADBEEF)
 
 /* see source file for function documentation */
 

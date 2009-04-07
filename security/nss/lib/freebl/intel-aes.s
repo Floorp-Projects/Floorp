@@ -11,7 +11,12 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc, 2008.
+ * The Original Code is Network Security Services.
+ *
+ * The Initial Developer of the Original Code is
+ * Red Hat Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *	Ulrich Drepper <drepper@redhat.com>

@@ -161,17 +161,7 @@ FeedConverter.prototype = {
    * Records if the feed was sniffed
    */
   _sniffed: false,
-  
-  /**
-   * See nsIStreamConverter.idl
-   */
-  canConvert: function FC_canConvert(sourceType, destinationType) {
-    // We only support one conversion.
-    return destinationType == TYPE_ANY && ((sourceType == TYPE_MAYBE_FEED) ||
-                                           (sourceType == TYPE_MAYBE_VIDEO) ||
-                                           (sourceType == TYPE_MAYBE_AUDIO));
-  },
-  
+
   /**
    * See nsIStreamConverter.idl
    */
@@ -362,7 +352,7 @@ FeedConverter.prototype = {
   /**
    * See nsIRequestObserver.idl
    */
-  onStopRequest: function FC_onStopReqeust(request, context, status) {
+  onStopRequest: function FC_onStopRequest(request, context, status) {
     if (this._processor)
       this._processor.onStopRequest(request, context, status);
   },

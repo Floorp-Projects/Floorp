@@ -1,12 +1,12 @@
-== aspect-ratio-1a.html aspect-ratio-1-ref.html
-== aspect-ratio-1b.html aspect-ratio-1-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == aspect-ratio-2a.html aspect-ratio-2-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == aspect-ratio-2b.html aspect-ratio-2-ref.html
-== aspect-ratio-3a.html aspect-ratio-3-ref.html
-== aspect-ratio-3b.html aspect-ratio-3-ref.html
-== basic-1.html basic-1-ref.html
-== canvas-1a.html basic-1-ref.html
-== canvas-1b.html basic-1-ref.html
+HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
+HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
+HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
+HTTP(..) == basic-1.xhtml basic-1-ref.html
+random HTTP(..) == canvas-1a.xhtml basic-1-ref.html
+random HTTP(..) == canvas-1b.xhtml basic-1-ref.html
 == empty-1a.html empty-1-ref.html
 == empty-1b.html empty-1-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == zoomed-1.html zoomed-1-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html

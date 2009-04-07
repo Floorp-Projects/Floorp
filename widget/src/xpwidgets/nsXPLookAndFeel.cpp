@@ -47,7 +47,7 @@
 #include "nsFont.h"
 
 #include "gfxPlatform.h"
-#include "lcms.h"
+#include "qcms.h"
 
 #ifdef DEBUG
 #include "nsSize.h"
@@ -121,6 +121,8 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_IMEConvertedTextUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.IMESelectedConvertedTextUnderlineStyle",
     eMetric_IMESelectedConvertedTextUnderline, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.SpellCheckerUnderlineStyle",
+    eMetric_SpellCheckerUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
@@ -143,6 +145,9 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
   { "ui.IMEUnderlineRelativeSize", eMetricFloat_IMEUnderlineRelativeSize,
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
+  { "ui.SpellCheckerUnderlineRelativeSize",
+    eMetricFloat_SpellCheckerUnderlineRelativeSize, PR_FALSE,
+    nsLookAndFeelTypeFloat, 0 },
   { "ui.caretAspectRatio", eMetricFloat_CaretAspectRatio, PR_FALSE,
     nsLookAndFeelTypeFloat, 0 },
 };
@@ -184,6 +189,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.IMESelectedConvertedTextBackground",
   "ui.IMESelectedConvertedTextForeground",
   "ui.IMESelectedConvertedTextUnderline",
+  "ui.SpellCheckerUnderline",
   "ui.activeborder",
   "ui.activecaption",
   "ui.appworkspace",
@@ -229,11 +235,14 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz_menubarhovertext",
   "ui.-moz_eventreerow",
   "ui.-moz_oddtreerow",
+  "ui.-moz_mac_chrome_active",
+  "ui.-moz_mac_chrome_inactive",
   "ui.-moz-mac-focusring",
   "ui.-moz-mac-menuselect",
   "ui.-moz-mac-menushadow",
   "ui.-moz-mac-menutextdisable",
   "ui.-moz-mac-menutextselect",
+  "ui.-moz_mac_disabledtoolbartext",
   "ui.-moz-mac-accentlightesthighlight",
   "ui.-moz-mac-accentregularhighlight",
   "ui.-moz-mac-accentface",
@@ -482,7 +491,8 @@ nsXPLookAndFeel::IsSpecialColor(const nsColorID aID, nscolor &aColor)
     case eColor_IMEConvertedTextUnderline:
     case eColor_IMESelectedRawTextUnderline:
     case eColor_IMESelectedConvertedTextUnderline:
-      return NS_IS_IME_SPECIAL_COLOR(aColor);
+    case eColor_SpellCheckerUnderline:
+      return NS_IS_SELECTION_SPECIAL_COLOR(aColor);
     default:
       /*
        * In GetColor(), every color that is not a special color is color
@@ -622,13 +632,13 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
   if (sUseNativeColors && NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
     if ((gfxPlatform::GetCMSMode() == eCMSMode_All) && !IsSpecialColor(aID, aColor)) {
-      cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
+      qcms_transform *transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
         PRUint8 color[3];
         color[0] = NS_GET_R(aColor);
         color[1] = NS_GET_G(aColor);
         color[2] = NS_GET_B(aColor);
-        cmsDoTransform(transform, color, color, 1);
+        qcms_transform_data(transform, color, color, 1);
         aColor = NS_RGB(color[0], color[1], color[2]);
       }
     }

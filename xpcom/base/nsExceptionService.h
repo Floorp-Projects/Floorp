@@ -39,7 +39,6 @@
 #ifndef nsExceptionService_h__
 #define nsExceptionService_h__
 
-#include "nsVoidArray.h"
 #include "nsIException.h"
 #include "nsIExceptionService.h"
 #include "nsIObserverService.h"

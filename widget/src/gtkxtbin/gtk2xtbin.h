@@ -97,7 +97,7 @@ struct _GtkXtBin
   
 struct _GtkXtBinClass
 {
-  GtkSocketClass widget_class;
+  GtkSocketClass parent_class;
 };
 
 GTKXTBIN_API(GType)       gtk_xtbin_get_type (void);

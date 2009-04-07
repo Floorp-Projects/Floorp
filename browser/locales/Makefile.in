@@ -334,6 +334,8 @@ langpack-%: libs-%
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest -x chrome/$(AB_CD).manifest
 
+langpack: langpack-$(AB_CD)
+
 # This is a generic target that will make a langpack, repack ZIP (+tarball)
 # builds, and repack an installer if applicable. It is called from the
 # tinderbox scripts. Alter it with caution.

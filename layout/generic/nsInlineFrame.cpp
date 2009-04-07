@@ -384,7 +384,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   rv = ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
   
   // Note: the line layout code will properly compute our
-  // NS_FRAME_OUTSIDE_CHILDREN state for us.
+  // overflow-rect state for us.
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return rv;

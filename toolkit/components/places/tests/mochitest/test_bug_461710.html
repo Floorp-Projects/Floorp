@@ -154,6 +154,7 @@ function handleLoad(aEvent) {
 
 var pb = get_PBSvc();
 if (!pb) { // Private Browsing might not be available
+  ok(true, "Private Browsing is not available");
   SimpleTest.finish();
 } else {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -170,9 +171,7 @@ if (!pb) { // Private Browsing might not be available
   loadNextTest();
 }
 
-
 </script>
 </pre>
 </body>
 </html>
-

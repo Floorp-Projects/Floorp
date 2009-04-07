@@ -137,11 +137,11 @@ ssl_iopr_cov_ext_server()
       rm $resFile 2>/dev/null
       
       echo "tstclnt -p ${sslPort} -h ${host} -c ${param} ${TLS_FLAG} \\"
-      echo "      -n $testUser -w nss ${CLIEN_OPTIONS} -f \\"
+      echo "      -n $testUser -v -w nss ${CLIEN_OPTIONS} -f \\"
       echo "      -d ${dbDir} < ${SSL_REQ_FILE} > $resFile"
       
-      ${BINDIR}/tstclnt -w nss -p ${sslPort} -h ${host} -c ${param} \
-          ${TLS_FLAG} ${CLIEN_OPTIONS} -f -n $testUser -w nss \
+      ${BINDIR}/tstclnt -p ${sslPort} -h ${host} -c ${param} \
+          ${TLS_FLAG} ${CLIEN_OPTIONS} -f -n $testUser -v -w nss \
           -d ${dbDir} < ${SSL_REQ_FILE} >$resFile  2>&1
       ret=$?
       grep "ACCESS=OK" $resFile
@@ -201,13 +201,13 @@ ssl_iopr_auth_ext_server()
       cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$testUser/g" `
       
       echo "tstclnt -p ${sslPort} -h ${host} ${CLIEN_OPTIONS} -f ${cparam} \\"
-      echo "         -d ${dbDir} < ${SSL_REQ_FILE}"
+      echo "         -d ${dbDir} -v < ${SSL_REQ_FILE}"
       
       resFile=${TMP}/$HOST.tmp.$$
       rm $rsFile 2>/dev/null
 
       ${BINDIR}/tstclnt -p ${sslPort} -h ${host} ${CLIEN_OPTIONS} -f ${cparam} \
-          -d ${dbDir} < ${SSL_REQ_FILE} >$resFile  2>&1
+          -d ${dbDir} -v < ${SSL_REQ_FILE} >$resFile  2>&1
       ret=$?
       grep "ACCESS=OK" $resFile
       test $? -eq 0 -a $ret -eq 0
@@ -264,11 +264,11 @@ ssl_iopr_crl_ext_server()
           cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$testUser/g" `
 	  
           echo "tstclnt -p ${sslPort} -h ${host} ${CLIEN_OPTIONS} \\"
-          echo "        -f -d ${dbDir} ${cparam}  < ${SSL_REQ_FILE}"
+          echo "        -f -d ${dbDir} -v ${cparam}  < ${SSL_REQ_FILE}"
           resFile=${TMP}/$HOST.tmp.$$
           rm -f $resFile 2>/dev/null
           ${BINDIR}/tstclnt -p ${sslPort} -h ${host} ${CLIEN_OPTIONS} -f ${cparam} \
-              -d ${dbDir} < ${SSL_REQ_FILE} \
+              -d ${dbDir} -v < ${SSL_REQ_FILE} \
               > $resFile  2>&1
           ret=$?
           grep "ACCESS=OK" $resFile
@@ -353,10 +353,10 @@ ssl_iopr_cov_ext_client()
       echo "------- Request ----------------------"
       cat $TEST_IN
       echo "------- Command ----------------------"
-      echo tstclnt -d $serDbDir -w ${R_PWFILE} -o -p $port \
+      echo tstclnt -d $serDbDir -v -w ${R_PWFILE} -o -p $port \
           -h $host \< $TEST_IN \>\> $TEST_OUT
 
-      ${BINDIR}/tstclnt -d $serDbDir -w ${R_PWFILE} -o -p $port \
+      ${BINDIR}/tstclnt -d $serDbDir -v -w ${R_PWFILE} -o -p $port \
           -h $host <$TEST_IN > $TEST_OUT 
 
       echo "------- Server output Begin ----------"
@@ -455,10 +455,10 @@ ssl_iopr_auth_ext_client()
       echo "------- Request ----------------------"
       cat $TEST_IN
       echo "------- Command ----------------------"
-      echo tstclnt -d $serDbDir -w ${R_PWFILE} -o -p $port \
+      echo tstclnt -d $serDbDir -v -w ${R_PWFILE} -o -p $port \
           -h $host \< $TEST_IN \>\> $TEST_OUT
       
-      ${BINDIR}/tstclnt -d $serDbDir -w ${R_PWFILE} -o -p $port \
+      ${BINDIR}/tstclnt -d $serDbDir -v -w ${R_PWFILE} -o -p $port \
           -h $host <$TEST_IN > $TEST_OUT 
       
       echo "------- Server output Begin ----------"
@@ -545,10 +545,10 @@ ssl_iopr_crl_ext_client()
           echo "------- Request ----------------------"
           cat $TEST_IN
           echo "------- Command ----------------------"
-          echo tstclnt -d $serDbDir -w ${R_PWFILE} -o -p $port \
+          echo tstclnt -d $serDbDir -v -w ${R_PWFILE} -o -p $port \
               -h ${host} \< $TEST_IN \>\> $TEST_OUT
             
-          ${BINDIR}/tstclnt -d $serDbDir -w ${R_PWFILE} -o -p $port \
+          ${BINDIR}/tstclnt -d $serDbDir -v -w ${R_PWFILE} -o -p $port \
               -h ${host} <$TEST_IN > $TEST_OUT 
           echo "------- Request ----------------------"
           cat $TEST_IN

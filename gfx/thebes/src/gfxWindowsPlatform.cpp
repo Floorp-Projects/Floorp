@@ -45,7 +45,8 @@
 
 #include "nsUnicharUtils.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
@@ -70,8 +71,6 @@
 
 #include <string>
 
-#include "lcms.h"
-
 #ifdef MOZ_FT2_FONTS
 static FT_Library gPlatformFTLibrary = NULL;
 #endif
@@ -89,14 +88,24 @@ BuildKeyNameFromFontName(nsAString &aName)
     ToLowerCase(aName);
 }
 
-int
-gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
+class gfxWindowsPlatformPrefObserver : public nsIObserver {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(gfxWindowsPlatformPrefObserver, nsIObserver)
+
+NS_IMETHODIMP
+gfxWindowsPlatformPrefObserver::Observe(nsISupports     *aSubject,
+                                        const char      *aTopic,
+                                        const PRUnichar *aData)
 {
+    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID), "invalid topic");
     // XXX this could be made to only clear out the cache for the prefs that were changed
     // but it probably isn't that big a deal.
-    gfxWindowsPlatform *plat = static_cast<gfxWindowsPlatform *>(closure);
-    plat->mPrefFonts.Clear();
-    return 0;
+    gfxWindowsPlatform::GetPlatform()->ClearPrefFonts();
+    return NS_OK;
 }
 
 gfxWindowsPlatform::gfxWindowsPlatform()
@@ -115,11 +124,18 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateFontList();
 
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
-    pref->RegisterCallback("font.", PrefChangedCallback, this);
-    pref->RegisterCallback("font.name-list.", PrefChangedCallback, this);
-    pref->RegisterCallback("intl.accept_languages", PrefChangedCallback, this);
-    // don't bother unregistering.  We'll get shutdown after the pref service
+    gfxWindowsPlatformPrefObserver *observer = new gfxWindowsPlatformPrefObserver();
+    if (observer) {
+        nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (pref) {
+            pref->AddObserver("font.", observer, PR_FALSE);
+            pref->AddObserver("font.name-list.", observer, PR_FALSE);
+            pref->AddObserver("intl.accept_languages", observer, PR_FALSE);
+            // don't bother unregistering.  We'll get shutdown after the pref service
+        } else {
+            delete observer;
+        }
+    }
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
@@ -754,6 +770,7 @@ gfxFontEntry*
 gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                     const nsAString& aFontName)
 {
+#ifdef MOZ_FT2_FONTS
     // walk over list of names
     FullFontNameSearch data(aFontName);
 
@@ -764,6 +781,9 @@ gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
         ReleaseDC(nsnull, data.mDC);
     
     return data.mFontEntry;
+#else
+    return FontEntry::LoadLocalFont(*aProxyEntry, aFontName);
+#endif
 }
 
 gfxFontEntry* 
@@ -771,8 +791,11 @@ gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                      nsISupports *aLoader,
                                      const PRUint8 *aFontData, PRUint32 aLength)
 {
-    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader,
-                                      aFontData, aLength);
+#ifdef MOZ_FT2_FONTS
+    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader, aFontData, aLength);
+#else
+    return FontEntry::LoadFont(*aProxyEntry, aLoader, aFontData, aLength);
+#endif    
 }
 
 PRBool
@@ -822,7 +845,7 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
     return ff->FindFontEntry(aFontStyle);
 }
 
-cmsHPROFILE
+qcms_profile*
 gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 {
 #ifndef MOZ_FT2_FONTS
@@ -833,8 +856,8 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
     GetICMProfileW(dc, &size, (LPWSTR)&str);
     ReleaseDC(nsnull, dc);
 
-    cmsHPROFILE profile =
-        cmsOpenProfileFromFile(NS_ConvertUTF16toUTF8(str).get(), "r");
+    qcms_profile* profile =
+        qcms_profile_from_path(NS_ConvertUTF16toUTF8(str).get());
 #ifdef DEBUG_tor
     if (profile)
         fprintf(stderr,

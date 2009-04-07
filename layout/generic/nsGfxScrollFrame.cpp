@@ -540,7 +540,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   // always set mOverflowArea. In fact nsObjectFrame and nsFrameFrame don't
   // support the 'outline' property because of this. Rather than fix the world
   // right now, just fix up the overflow area if necessary. Note that we don't
-  // check NS_FRAME_OUTSIDE_CHILDREN because it could be set even though the
+  // check HasOverflowRect() because it could be set even though the
   // overflow area doesn't include the frame bounds.
   aMetrics->mOverflowArea.UnionRect(aMetrics->mOverflowArea,
                                     nsRect(0, 0, aMetrics->width, aMetrics->height));
@@ -712,12 +712,12 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
   // Store the new overflow area. Note that this changes where an outline
   // of the scrolled frame would be painted, but scrolled frames can't have
   // outlines (the outline would go on this scrollframe instead).
-  // Using FinishAndStoreOverflow is needed so NS_FRAME_OUTSIDE_CHILDREN
+  // Using FinishAndStoreOverflow is needed so the overflow rect
   // gets set correctly.  It also messes with the overflow rect in the
   // -moz-hidden-unscrollable case, but scrolled frames can't have
   // 'overflow' either.
   // This needs to happen before SyncFrameViewAfterReflow so
-  // NS_FRAME_OUTSIDE_CHILDREN is set.
+  // HasOverflowRect() will return the correct value.
   scrolledFrame->FinishAndStoreOverflow(&scrolledArea,
                                         scrolledFrame->GetSize());
 
@@ -2083,9 +2083,7 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
     // remove overflow area when we update the bounds,
     // because we've already accounted for it
     mInner.mScrolledFrame->SetBounds(aState, childRect);
-    PresContext()->PropertyTable()->
-        DeleteProperty(mInner.mScrolledFrame, nsGkAtoms::overflowAreaProperty);
-    mInner.mScrolledFrame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
+    mInner.mScrolledFrame->ClearOverflowRect();
   }
 
   aState.SetLayoutFlags(oldflags);

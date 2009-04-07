@@ -44,7 +44,7 @@
  *
  * The following events are generated:
  *
- * MozSwipeGesture - Generated when the user swipes their fingers
+ * MozSwipeGesture - Generated when the user completes a swipe across
  * across the input device.
  *
  * MozMagnifyGestureStart - Generated when the user begins the magnify
@@ -77,17 +77,39 @@
  * and can safely ignore the MozRotateGestureStart and the
  * MozRotateGestureUpdate events.  The "delta" value is the cumulative
  * amount of rotation represented by the user's gesture.
+ *
+ * MozTapGesture - Generated when the user executes a two finger
+ * tap gesture on the input device. Client coordinates contain the
+ * center point of the tap.
+ * (XXX Not implemented on Mac)
+ *
+ * MozPressTapGesture - Generated when the user executes a press
+ * and tap two finger gesture (first finger down, second finger down,
+ * second finger up, first finger up) on the input device.
+ * Client coordinates contain the center pivot point of the action.
+ * (XXX Not implemented on Mac)
+ *
+ * Default behavior:
+ *
+ * Some operating systems support default behaviors for gesture events
+ * when they are not handled by the application. Consumers should
+ * use event.preventDefault() to prevent default behavior when
+ * consuming events.
  */
 
-[scriptable, uuid(8aa40c61-9be7-4de1-93fa-30d6406d345b)]
+[scriptable, uuid(cb68e879-f710-415d-a871-9a550860df01)]
 interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
-  /* Direction constants */
+  /* Swipe direction constants */
   const unsigned long DIRECTION_UP = 1;
   const unsigned long DIRECTION_DOWN = 2;
   const unsigned long DIRECTION_LEFT = 4;
   const unsigned long DIRECTION_RIGHT = 8;
   
+  /* Rotational direction constants */
+  const unsigned long ROTATION_COUNTERCLOCKWISE = 1;
+  const unsigned long ROTATION_CLOCKWISE = 2;
+
   /* Direction of a gesture. Diagonals are indicated by OR'ing the
    * applicable constants together.
    *
@@ -95,8 +117,8 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
    *
    * Magnify gestures do not have a direction.
    *
-   * Rotation gestures will be either DIRECTION_LEFT or
-   * DIRECTION_RIGHT (i.e., counter-clockwise and clockwise).
+   * Rotation gestures will be either ROTATION_COUNTERCLOCKWISE or
+   * ROTATION_CLOCKWISE.
    */
   readonly attribute unsigned long direction;
 
@@ -104,9 +126,7 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
    * 
    * For rotation, the value is in degrees and is positive for
    * clockwise rotation and negative for counterclockwise
-   * rotation. The "direction" attribute also denotes the direction of
-   * the rotation: clockwise is DIRECTION_RIGHT and counterclockwise
-   * is DIRECTION_LEFT.
+   * rotation.
    *
    * For magnification, the value will be positive for a "zoom in"
    * (i.e, increased magnification) and negative for a "zoom out"
@@ -118,6 +138,10 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
    * undocumented.  The values are typically in the range of 0.0 to
    * 100.0, but it is only safe currently to rely on the delta being
    * positive or negative.
+   *
+   * Units on Windows represent the difference between the initial
+   * and current/final width between the two touch points on the input
+   * device and are measured in pixels.
    */
   readonly attribute double delta;
 

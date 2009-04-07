@@ -39,10 +39,28 @@ is($("t").href,
 var unvisitedColor = document.defaultView.getComputedStyle($("t"), "").color;
 var visitedColor;
 
+function afterThirdLoad() {
+  is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
+     "Should be visited now after third load");
+  SimpleTest.finish();
+}
+
 function afterSecondLoad() {
   is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
        "Should be visited now");
-  SimpleTest.finish();
+  $("t").pathname = rand;
+  is(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
+       "Should still be visited after setting pathname to its existing value");
+  dump('aaa');
+  $("t").pathname += "x";
+  isnot(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
+       "Should not be visited after changing pathname");
+  $("t").pathname = $("t").pathname;
+  isnot(document.defaultView.getComputedStyle($("t"), "").color, visitedColor,
+       "Should not be visited after setting unvisited pathname to existing value");
+
+  $("i").onload = afterThirdLoad;
+  $("i").src = $("t").href;
 }
 
 function afterFirstLoad() {

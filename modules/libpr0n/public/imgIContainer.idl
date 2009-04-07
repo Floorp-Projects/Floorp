@@ -49,10 +49,10 @@ interface imgIContainerObserver;
  * gfxIImageContainer interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 0.1
+ * @version 0.2
  * @see "gfx2"
  */
-[scriptable, uuid(186e80e1-476c-47f0-b340-424e6b7b6c9c)]
+[scriptable, uuid(a4e9df32-f5d7-479f-9082-70e1fead23d5)]
 interface imgIContainer : nsISupports
 {
   /** 
@@ -134,16 +134,12 @@ interface imgIContainer : nsISupports
    */
   void appendFrame(in gfxIImageFrame item);
 
-  void removeFrame(in gfxIImageFrame item);
-
   /* notification when the current frame is done decoding */
-  void endFrameDecode(in unsigned long framenumber, in unsigned long timeout);
+  void endFrameDecode(in unsigned long framenumber);
   
   /* notification that the entire image has been decoded */
   void decodingComplete();
   
-  void clear();
-
   void startAnimation();
 
   void stopAnimation();

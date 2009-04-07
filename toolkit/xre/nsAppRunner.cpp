@@ -789,6 +789,114 @@ nsXULAppInfo::GetUserCanElevate(PRBool *aUserCanElevate)
 
 #ifdef MOZ_CRASHREPORTER
 NS_IMETHODIMP
+nsXULAppInfo::GetEnabled(PRBool *aEnabled)
+{
+  *aEnabled = CrashReporter::GetEnabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetEnabled(PRBool aEnabled)
+{
+  if (aEnabled) {
+    if (CrashReporter::GetEnabled())
+      // no point in erroring for double-enabling
+      return NS_OK;
+
+    nsCOMPtr<nsILocalFile> xreDirectory;
+    if (gAppData) {
+      xreDirectory = gAppData->xreDirectory;
+    }
+    else {
+      // We didn't get started through XRE_Main, probably
+      nsCOMPtr<nsIFile> greDir;
+      NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greDir));
+      if (!greDir)
+        return NS_ERROR_FAILURE;
+
+      xreDirectory = do_QueryInterface(greDir);
+      if (!xreDirectory)
+        return NS_ERROR_FAILURE;
+    }
+    return CrashReporter::SetExceptionHandler(xreDirectory, true);
+  }
+  else {
+    if (!CrashReporter::GetEnabled())
+      // no point in erroring for double-disabling
+      return NS_OK;
+
+    return CrashReporter::UnsetExceptionHandler();
+  }
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetServerURL(nsIURL** aServerURL)
+{
+  if (!CrashReporter::GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCAutoString data;
+  if (!CrashReporter::GetServerURL(data)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), data);
+  if (!uri)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIURL> url;
+  url = do_QueryInterface(uri);
+  NS_ADDREF(*aServerURL = url);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetServerURL(nsIURL* aServerURL)
+{
+  PRBool schemeOk;
+  // only allow https or http URLs
+  nsresult rv = aServerURL->SchemeIs("https", &schemeOk);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!schemeOk) {
+    rv = aServerURL->SchemeIs("http", &schemeOk);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!schemeOk)
+      return NS_ERROR_INVALID_ARG;
+  }
+  nsCAutoString spec;
+  rv = aServerURL->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return CrashReporter::SetServerURL(spec);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetMinidumpPath(nsILocalFile** aMinidumpPath)
+{
+  if (!CrashReporter::GetEnabled())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsAutoString path;
+  if (!CrashReporter::GetMinidumpPath(path))
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_NewLocalFile(path, PR_FALSE, aMinidumpPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetMinidumpPath(nsILocalFile* aMinidumpPath)
+{
+  nsAutoString path;
+  nsresult rv = aMinidumpPath->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return CrashReporter::SetMinidumpPath(path);
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
 {
@@ -2641,8 +2749,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   if ((appData.flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
       NS_SUCCEEDED(
-         CrashReporter::SetExceptionHandler(appData.xreDirectory,
-                                            appData.crashReporterURL))) {
+         CrashReporter::SetExceptionHandler(appData.xreDirectory))) {
+    CrashReporter::SetServerURL(nsDependentCString(appData.crashReporterURL));
     // pass some basic info from the app data
     if (appData.vendor)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),

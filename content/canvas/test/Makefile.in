@@ -687,6 +687,7 @@ _TEST_FILES_6 = \
 	test_2d.shadow.composite.2.html \
 	test_2d.shadow.composite.3.html \
 	test_2d.shadow.composite.4.html \
+	test_2d.imageSmoothing.html \
 	test_bug397524.html \
 	test_bug405982.html \
 	test_text.font.html \

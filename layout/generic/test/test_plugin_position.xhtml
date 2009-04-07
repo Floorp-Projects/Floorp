@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Positioning">
+<head>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+
+<!-- Use a XUL element here so we can get its boxObject.screenX/Y -->
+<hbox style="height:10px; position:absolute; left:0; top:0; z-index:-100;" id="h1"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox style="width:100px;"></hbox><hbox id="h2"/>
+</hbox>
+
+<embed id="p" type="application/x-test" width="200" height="200" wmode="window"></embed>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var windowFrameX, windowFrameY;
+
+function checkGeometry(id) {
+  var p = document.getElementById(id);
+  var pX = p.getEdge(0);
+  var pY = p.getEdge(1);
+  var pWidth = p.getEdge(2) - pX;
+  var pHeight = p.getEdge(3) - pY;
+  var bounds = p.getBoundingClientRect();
+
+  is(pX, windowFrameX + bounds.left, id + " plugin X");
+  is(pY, windowFrameY + bounds.top, id + " plugin Y");
+  is(pWidth, bounds.width, id + " plugin width");
+  is(pHeight, bounds.height, id + " plugin height");
+}
+
+function runTests() {
+  var h1 = document.getElementById("h1");
+  var h2 = document.getElementById("h2");
+  var hwidth = h2.boxObject.screenX - h1.boxObject.screenX;
+  if (hwidth != 100) {
+    // Maybe it's a DPI issue
+    todo(false, "Unexpected DPI?");
+    SimpleTest.finish();
+    return;
+  }
+
+  if (!document.getElementById("p").identifierToStringTest) {
+    todo(false, "Test plugin not available");
+    SimpleTest.finish();
+    return;
+  }
+  if (navigator.platform.indexOf("Win") >= 0) {
+    todo(false, "Windows does not support windowed plugins (yet)");
+    SimpleTest.finish();
+    return;
+  }
+
+  var bounds = h1.getBoundingClientRect();
+  windowFrameX = h1.boxObject.screenX - bounds.left - window.screenX;
+  windowFrameY = h1.boxObject.screenY - bounds.top - window.screenY;
+
+  checkGeometry("p");
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(runTests);
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+</body>
+</html>
