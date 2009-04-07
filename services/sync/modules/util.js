@@ -122,6 +122,16 @@ let Utils = {
     lm.addLogin(login);
   },
 
+  /**
+   * Determine if some value is an array
+   *
+   * @param val
+   *        Value to check (can be null, undefined, etc.)
+   * @return True if it's an array; false otherwise
+   */
+  isArray: function Utils_isArray(val) val != null && typeof val == "object" &&
+    val.constructor.name == "Array",
+
   // lazy load objects from a constructor on first access.  It will
   // work with the global object ('this' in the global context).
   lazy: function Weave_lazy(dest, prop, ctr) {
@@ -187,7 +197,8 @@ let Utils = {
     if (typeof(a) != "object" || typeof(b) != "object")
       return false;
 
-    if ("Array" == a.constructor.name && "Array" == b.constructor.name) {
+    let isArray = [Utils.isArray(a), Utils.isArray(b)];
+    if (isArray[0] && isArray[1]) {
       if (a.length != b.length)
         return false;
 
@@ -198,7 +209,7 @@ let Utils = {
 
     } else {
       // check if only one of them is an array
-      if ("Array" == a.constructor.name || "Array" == b.constructor.name)
+      if (isArray[0] || isArray[1])
         return false;
 
       for (let key in a) {
@@ -215,7 +226,7 @@ let Utils = {
       return thing;
     let ret;
 
-    if ("Array" == thing.constructor.name) {
+    if (Utils.isArray(thing)) {
       ret = [];
       for (let i = 0; i < thing.length; i++)
         ret.push(Utils.deepCopy(thing[i], noSort));
