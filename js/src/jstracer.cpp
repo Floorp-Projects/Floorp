@@ -6917,8 +6917,22 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
     LIns* res_ins = lir->insCall(known->builtin, args);
     if (!constructing)
         rval_ins = res_ins;
-    if (JSTN_ERRTYPE(known) == FAIL_NULL)
+    switch (JSTN_ERRTYPE(known)) {
+      case FAIL_NULL:
         guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
+        break;
+      case FAIL_NEG:
+        res_ins = lir->ins1(LIR_i2f, res_ins);
+        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(0)), OOM_EXIT);
+        break;
+      case FAIL_VOID:
+        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+        break;
+      case FAIL_COOKIE:
+        guard(false, lir->ins2(LIR_eq, res_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
+        break;
+      default:;
+    }
 
     set(&stackval(0 - (2 + argc)), res_ins);
 
@@ -8081,6 +8095,9 @@ TraceRecorder::record_FastNativeCallComplete()
         JS_ASSERT(&v == &cx->fp->regs->sp[-1] && get(&v) == v_ins);
         unbox_jsval(v, v_ins, snapshot(BRANCH_EXIT));
         set(&v, v_ins);
+    } else if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_NEG) {
+        /* Already added i2f in functionCall. */
+        JS_ASSERT(JSVAL_IS_NUMBER(v));
     } else {
         /* Convert the result to double if the builtin returns int32. */
         if (JSVAL_IS_NUMBER(v) &&
