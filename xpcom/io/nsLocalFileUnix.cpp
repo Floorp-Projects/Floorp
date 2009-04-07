@@ -941,44 +941,36 @@ nsLocalFile::Remove(PRBool recursive)
     if (NS_FAILED(rv))
         return rv;
 
-    if (!recursive && isSymLink)
+    if (isSymLink || !S_ISDIR(mCachedStat.st_mode))
         return NSRESULT_FOR_RETURN(unlink(mPath.get()));
 
-    if (S_ISDIR(mCachedStat.st_mode)) {
-        if (recursive) {
-            nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
-            if (!dir)
-                return NS_ERROR_OUT_OF_MEMORY;
+    if (recursive) {
+        nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
+        if (!dir)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-            nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
+        nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
 
-            rv = dir->Init(this, PR_FALSE);
+        rv = dir->Init(this, PR_FALSE);
+        if (NS_FAILED(rv))
+            return rv;
+
+        PRBool more;
+        while (dir->HasMoreElements(&more), more) {
+            nsCOMPtr<nsISupports> item;
+            rv = dir->GetNext(getter_AddRefs(item));
             if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+
+            nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
+            if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+            if (NS_FAILED(rv = file->Remove(recursive)))
                 return rv;
-
-            PRBool more;
-            while (dir->HasMoreElements(&more), more) {
-                nsCOMPtr<nsISupports> item;
-                rv = dir->GetNext(getter_AddRefs(item));
-                if (NS_FAILED(rv))
-                    return NS_ERROR_FAILURE;
-
-                nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
-                if (NS_FAILED(rv))
-                    return NS_ERROR_FAILURE;
-                if (NS_FAILED(rv = file->Remove(recursive)))
-                    return rv;
-            }
         }
-
-        if (rmdir(mPath.get()) == -1)
-            return NSRESULT_FOR_ERRNO();
-    } else {
-        if (unlink(mPath.get()) == -1)
-            return NSRESULT_FOR_ERRNO();
     }
 
-    return NS_OK;
+    return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
 }
 
 NS_IMETHODIMP

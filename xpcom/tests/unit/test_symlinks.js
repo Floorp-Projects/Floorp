@@ -103,11 +103,6 @@ function setupTestDir(testDir, relative) {
   targetDir.append(DIR_TARGET);
 
   if (testDir.exists()) {
-    if (isUnix) {
-      // Bug 484505: nsIFile.remove(true) fails on symlinks to directories.
-      if (targetDir.exists())
-        targetDir.remove(true);
-    }
     testDir.remove(true);
   }
   do_check_true(!testDir.exists());
