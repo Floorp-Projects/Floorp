@@ -6455,8 +6455,11 @@ CheckForImmediatelyAppliedLambda(JSParseNode *pn)
         pn = pn->pn_kid;
     if (pn->pn_type == TOK_FUNCTION) {
         JS_ASSERT(pn->pn_arity == PN_FUNC);
-        JS_ASSERT(((JSFunction *) pn->pn_funbox->object)->flags & JSFUN_LAMBDA);
-        pn->pn_dflags &= ~PND_FUNARG;
+
+        JSFunctionBox *funbox = pn->pn_funbox;
+        JS_ASSERT(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA);
+        if (!(funbox->tcflags & TCF_FUN_USES_ARGUMENTS))
+            pn->pn_dflags &= ~PND_FUNARG;
     }
     return pn;
 }
