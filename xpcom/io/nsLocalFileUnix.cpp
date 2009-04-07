@@ -1405,7 +1405,8 @@ nsLocalFile::IsSymlink(PRBool *_retval)
     CHECK_mPath();
 
     struct stat symStat;
-    lstat(mPath.get(), &symStat);
+    if (lstat(mPath.get(), &symStat) == -1)
+        return NSRESULT_FOR_ERRNO();
     *_retval=S_ISLNK(symStat.st_mode);
     return NS_OK;
 }
