@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mobject.c,v $ $Revision: 1.3 $ $Date: 2007/10/12 01:44:42 $";
+static const char CVS_ID[] = "@(#) $RCSfile: mobject.c,v $ $Revision: 1.4 $ $Date: 2009/02/25 18:38:04 $";
 #endif /* DEBUG */
 
 #include "ckmk.h"
@@ -132,7 +132,7 @@ static const NSSItem ckmk_trueItem = {
 static const NSSItem ckmk_falseItem = { 
   (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) };
 static const NSSItem ckmk_x509Item = { 
-  (void *)&ckc_x509, (PRUint32)sizeof(CKC_X_509) };
+  (void *)&ckc_x509, (PRUint32)sizeof(CK_CERTIFICATE_TYPE) };
 static const NSSItem ckmk_rsaItem = { 
   (void *)&ckk_rsa, (PRUint32)sizeof(CK_KEY_TYPE) };
 static const NSSItem ckmk_certClassItem = { 

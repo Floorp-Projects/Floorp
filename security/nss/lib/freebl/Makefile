@@ -77,11 +77,11 @@ endif
 ifdef FREEBL_NO_DEPEND
 	DEFINES += -DFREEBL_NO_DEPEND
 endif
-# some codes want _X86_ defined for intel CPUs.
+# some code wants _X86_ defined for intel CPUs.
 # coreconf does this for windows, but not for Linux, FreeBSD, etc.
 ifeq (,$(filter-out x86 x86_64,$(CPU_ARCH)))
 ifneq (,$(filter-out WIN%,$(OS_TARGET)))
-	OS_REL_CFLAGS += -D_X86_
+	DEFINES += -D_X86_
 endif
 endif
 
@@ -92,6 +92,7 @@ endif
 
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WIN16 and WINCE
 ifndef USE_64
+# 32-bit Windows
 ifdef NS_USE_GCC
 # Ideally, we want to use assembler
 #     ASFILES  = mpi_x86.s
@@ -102,6 +103,7 @@ ifdef NS_USE_GCC
     ASFILES  =
     DEFINES += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT
 else
+# MSVC
     MPI_SRCS += mpi_x86_asm.c
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
@@ -109,6 +111,16 @@ else
 	OPTIMIZER += -Ox  # maximum optimization for freebl
     endif
 endif
+else
+    # -DMP_NO_MP_WORD
+    ifdef BUILD_OPT
+	OPTIMIZER += -Ox  # maximum optimization for freebl
+    endif
+    ASFILES  = arcfour-amd64-masm.asm mpi_amd64_masm.asm mp_comba_amd64_masm.asm
+    DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
+    DEFINES += -DNSS_USE_COMBA
+    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+    MPI_SRCS += mpi_amd64.c
 endif
 endif
 
@@ -370,7 +382,7 @@ else
     ifdef NS_USE_GCC
 	LD = gcc
 	AS = gcc
-	ASFLAGS =
+	ASFLAGS = -x assembler-with-cpp
     endif
     ifeq ($(USE_64),1)
 	# Solaris for AMD64
@@ -443,6 +455,7 @@ vpath %.h mpi ecl
 vpath %.c mpi ecl
 vpath %.S mpi ecl
 vpath %.s mpi ecl
+vpath %.asm mpi ecl
 INCLUDES += -Impi -Iecl
 
 

@@ -37,14 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.23 2009/02/03 05:34:40 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: loader.h,v 1.26 2009/03/29 03:45:32 wtc%google.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x030A
+#define FREEBL_VERSION 0x030B
 
 struct FREEBLVectorStr {
 
@@ -516,12 +516,30 @@ struct FREEBLVectorStr {
                             unsigned int *outputLen, unsigned int maxOutputLen,
                             const unsigned char *input, unsigned int inputLen);
 
-   /* Version 3.011 came to here */
+
 
  SECStatus (* p_BL_Init)(void);
  void ( * p_BL_SetForkState)(PRBool);
 
-   /* Version 3.012 came to here */
+ SECStatus (* p_PRNGTEST_Instantiate)(const PRUint8 *entropy, 
+				      unsigned int entropy_len, 
+				      const PRUint8 *nonce, 
+				      unsigned int nonce_len,
+				      const PRUint8 *personal_string, 
+				      unsigned int ps_len);
+
+ SECStatus (* p_PRNGTEST_Reseed)(const PRUint8 *entropy, 
+				 unsigned int entropy_len, 
+				 const PRUint8 *additional, 
+				 unsigned int additional_len);
+
+ SECStatus (* p_PRNGTEST_Generate)(PRUint8 *bytes, 
+				   unsigned int bytes_len, 
+				   const PRUint8 *additional, 
+				   unsigned int additional_len);
+
+ SECStatus (* p_PRNGTEST_Uninstantiate)(void);
+   /* Version 3.011 came to here */
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

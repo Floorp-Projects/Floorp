@@ -1108,6 +1108,17 @@ sftkdb_write(SFTKDBHandle *handle, SFTKObject *object,
     }
     db = SFTK_GET_SDB(handle);
 
+    /*
+     * we have opened a new database, but we have not yet updated it. We are
+     * still running pointing to the old database (so the application can 
+     * still read). We don't want to write to the old database at this point,
+     * however, since it leads to user confusion. So at this point we simply
+     * require a user login. Let NSS know this so it can prompt the user.
+     */
+    if (db == handle->update) {
+	return CKR_USER_NOT_LOGGED_IN;
+    }
+
     arena = PORT_NewArena(256);
     if (arena ==  NULL) {
 	return CKR_HOST_MEMORY;
@@ -1166,7 +1177,7 @@ sftkdb_write(SFTKDBHandle *handle, SFTKObject *object,
 
 loser:
     if (inTransaction) {
-	(*handle->db->sdb_Abort)(handle->db);
+	(*db->sdb_Abort)(db);
 	/* It is trivial to show the following code cannot
 	 * happen unless something is horribly wrong with our compilier or
 	 * hardware */
@@ -1332,6 +1343,16 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
     /* nothing to do */
     if (count == 0) {
 	return CKR_OK;
+    }
+    /*
+     * we have opened a new database, but we have not yet updated it. We are
+     * still running  pointing to the old database (so the application can 
+     * still read). We don't want to write to the old database at this point,
+     * however, since it leads to user confusion. So at this point we simply
+     * require a user login. Let NSS know this so it can prompt the user.
+     */
+    if (db == handle->update) {
+	return CKR_USER_NOT_LOGGED_IN;
     }
 
     ntemplate = sftkdb_fixupTemplateIn(template, count, &data);

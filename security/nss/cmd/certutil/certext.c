@@ -278,49 +278,121 @@ GetYesNo(char *prompt)
     return (buffPrt && (buf[0] == 'y' || buf[0] == 'Y')) ? PR_TRUE : PR_FALSE;
 }
 
+/* Parses comma separated values out of the string pointed by nextPos.
+ * Parsed value is compared to an array of possible values(valueArray).
+ * If match is found, a value index is returned, otherwise returns SECFailue.
+ * nextPos is set to the token after found comma separator or to NULL.
+ * NULL in nextPos should be used as indication of the last parsed token.
+ * A special value "critical" can be parsed out from the supplied sting.*/
+
+static SECStatus
+parseNextCmdInput(const char * const *valueArray, int *value,  char **nextPos,
+                  PRBool *critical)
+{
+    char *thisPos = *nextPos;
+    int keyLen = 0;
+    int arrIndex = 0;
+
+    if (!valueArray || !value || !nextPos || !critical) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    while (1) {
+        if ((*nextPos = strchr(thisPos, ',')) == NULL) {
+            keyLen = strlen(thisPos);
+        } else {
+            keyLen = *nextPos - thisPos;
+            *nextPos += 1;
+        }
+        /* if critical keyword is found, go for another loop,
+         * but check, if it is the last keyword of
+         * the string.*/
+        if (!strncmp("critical", thisPos, keyLen)) {
+            *critical = PR_TRUE;
+            if (*nextPos == NULL) {
+                return SECSuccess;
+            }
+            thisPos = *nextPos;
+            continue;
+        }
+        break;
+    }
+    for (arrIndex = 0; valueArray[arrIndex]; arrIndex++) {
+        if (!strncmp(valueArray[arrIndex], thisPos, keyLen)) {
+            *value = arrIndex;
+            return SECSuccess;
+        }
+    }
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+}
+
+static const char * const
+keyUsageKeyWordArray[] = { "digitalSignature",
+                           "nonRepudiation",
+                           "keyEncipherment",
+                           "dataEncipherment",
+                           "keyAgreement",
+                           "certSigning",
+                           "crlSigning",
+                           NULL};
+
 static SECStatus 
-AddKeyUsage (void *extHandle)
+AddKeyUsage (void *extHandle, const char *userSuppliedValue)
 {
     SECItem bitStringValue;
     unsigned char keyUsage = 0x0;
     char buffer[5];
     int value;
-    PRBool yesNoAns;
+    char *nextPos = (char*)userSuppliedValue;
+    PRBool isCriticalExt = PR_FALSE;
 
-    while (1) {
-	if (PrintChoicesAndGetAnswer(
-                "\t\t0 - Digital Signature\n"
-                "\t\t1 - Non-repudiation\n"
-                "\t\t2 - Key encipherment\n"
-                "\t\t3 - Data encipherment\n"   
-                "\t\t4 - Key agreement\n"
-                "\t\t5 - Cert signing key\n"   
-                "\t\t6 - CRL signing key\n"
-                "\t\tOther to finish\n",
-                buffer, sizeof(buffer)) == SECFailure) {
-            return SECFailure;
-        }
-        value = PORT_Atoi (buffer);
-        if (value < 0 || value > 6)
-            break;
-        if (value == 0) {
-            /* Checking that zero value of variable 'value'
-             * corresponds to '0' input made by user */
-            char *chPtr = strchr(buffer, '0');
-            if (chPtr == NULL) {
-                continue;
+    if (!userSuppliedValue) {
+        while (1) {
+            if (PrintChoicesAndGetAnswer(
+                    "\t\t0 - Digital Signature\n"
+                    "\t\t1 - Non-repudiation\n"
+                    "\t\t2 - Key encipherment\n"
+                    "\t\t3 - Data encipherment\n"   
+                    "\t\t4 - Key agreement\n"
+                    "\t\t5 - Cert signing key\n"   
+                    "\t\t6 - CRL signing key\n"
+                    "\t\tOther to finish\n",
+                    buffer, sizeof(buffer)) == SECFailure) {
+                return SECFailure;
             }
+            value = PORT_Atoi (buffer);
+            if (value < 0 || value > 6)
+                break;
+            if (value == 0) {
+                /* Checking that zero value of variable 'value'
+                 * corresponds to '0' input made by user */
+                char *chPtr = strchr(buffer, '0');
+                if (chPtr == NULL) {
+                    continue;
+                }
+            }
+            keyUsage |= (0x80 >> value);
         }
-        keyUsage |= (0x80 >> value);
+        isCriticalExt = GetYesNo("Is this a critical extension [y/N]?");
+    } else {
+        while (1) {
+            if (parseNextCmdInput(keyUsageKeyWordArray, &value, &nextPos,
+                                  &isCriticalExt) == SECFailure) {
+                return SECFailure;
+            }
+            keyUsage |= (0x80 >> value);
+            if (!nextPos)
+                break;
+        }
     }
 
     bitStringValue.data = &keyUsage;
     bitStringValue.len = 1;
-    yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
     return (CERT_EncodeAndAddBitStrExtension
             (extHandle, SEC_OID_X509_KEY_USAGE, &bitStringValue,
-             yesNoAns));
+             isCriticalExt));
 
 }
 
@@ -378,6 +450,10 @@ AddOidToSequence(CERTOidSequence *os, SECOidTag oidTag)
     }
 
     for( oids = os->oids; (SECItem *)NULL != *oids; oids++ ) {
+        if (*oids == &od->oid) {
+            /* We already have this oid */
+            return SECSuccess;
+        }
         count++;
     }
 
@@ -432,42 +508,60 @@ loser:
     return (SECItem *)NULL;
 }
 
+static const char * const 
+extKeyUsageKeyWordArray[] = { "serverAuth",
+                              "clientAuth",
+                              "codeSigning",
+                              "emailProtection",
+                              "timeStamp",
+                              "ocspResponder",
+                              "stepUp",
+                              NULL};
+
 static SECStatus 
-AddExtKeyUsage (void *extHandle)
+AddExtKeyUsage (void *extHandle, const char *userSuppliedValue)
 {
     char buffer[5];
     int value;
     CERTOidSequence *os;
     SECStatus rv;
     SECItem *item;
-    PRBool yesNoAns;
-
+    PRBool isCriticalExt = PR_FALSE;
+    char *nextPos = (char*)userSuppliedValue;
+    
     os = CreateOidSequence();
     if( (CERTOidSequence *)NULL == os ) {
         return SECFailure;
     }
 
     while (1) {
-        if (PrintChoicesAndGetAnswer(
-                "\t\t0 - Server Auth\n"
-                "\t\t1 - Client Auth\n"
-                "\t\t2 - Code Signing\n"
-                "\t\t3 - Email Protection\n"
-                "\t\t4 - Timestamp\n"
-                "\t\t5 - OCSP Responder\n"
-                "\t\t6 - Step-up\n"
-                "\t\tOther to finish\n",
-                buffer, sizeof(buffer)) == SECFailure) {
-            GEN_BREAK(SECFailure);
-        }
-        value = PORT_Atoi(buffer);
-
-        if (value == 0) {
-            /* Checking that zero value of variable 'value'
-             * corresponds to '0' input made by user */
-            char *chPtr = strchr(buffer, '0');
-            if (chPtr == NULL) {
-                continue;
+        if (!userSuppliedValue) {
+            if (PrintChoicesAndGetAnswer(
+                    "\t\t0 - Server Auth\n"
+                    "\t\t1 - Client Auth\n"
+                    "\t\t2 - Code Signing\n"
+                    "\t\t3 - Email Protection\n"
+                    "\t\t4 - Timestamp\n"
+                    "\t\t5 - OCSP Responder\n"
+                    "\t\t6 - Step-up\n"
+                    "\t\tOther to finish\n",
+                    buffer, sizeof(buffer)) == SECFailure) {
+                GEN_BREAK(SECFailure);
+            }
+            value = PORT_Atoi(buffer);
+            
+            if (value == 0) {
+                /* Checking that zero value of variable 'value'
+                 * corresponds to '0' input made by user */
+                char *chPtr = strchr(buffer, '0');
+                if (chPtr == NULL) {
+                    continue;
+                }
+            }
+        } else {
+            if (parseNextCmdInput(extKeyUsageKeyWordArray, &value, &nextPos,
+                                  &isCriticalExt) == SECFailure) {
+                return SECFailure;
             }
         }
 
@@ -497,66 +591,95 @@ AddExtKeyUsage (void *extHandle)
             goto endloop;
         }
 
-        if( SECSuccess != rv ) goto loser;
+        if (userSuppliedValue && !nextPos)
+            break;
+        if( SECSuccess != rv )
+            goto loser;
     }
 
 endloop:
     item = EncodeOidSequence(os);
 
-    yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
+    if (!userSuppliedValue) {
+        isCriticalExt = GetYesNo("Is this a critical extension [y/N]?");
+    }
 
     rv = CERT_AddExtension(extHandle, SEC_OID_X509_EXT_KEY_USAGE, item,
-                           yesNoAns, PR_TRUE);
+                           isCriticalExt, PR_TRUE);
     /*FALLTHROUGH*/
 loser:
     DestroyOidSequence(os);
     return rv;
 }
 
+static const char * const
+nsCertTypeKeyWordArray[] = { "sslClient",
+                             "sslServer",
+                             "smime",
+                             "objectSigning",
+                             "Not!Used",
+                             "sslCA",
+                             "smimeCA",
+                             "objectSigningCA",
+                            NULL };
+
 static SECStatus 
-AddNscpCertType (void *extHandle)
+AddNscpCertType (void *extHandle, const char *userSuppliedValue)
 {
     SECItem bitStringValue;
     unsigned char keyUsage = 0x0;
     char buffer[5];
     int value;
-    PRBool yesNoAns;
+    char *nextPos = (char*)userSuppliedValue;
+    PRBool isCriticalExt = PR_FALSE;
 
-    while (1) {
-        if (PrintChoicesAndGetAnswer(
-                "\t\t0 - SSL Client\n"
-                "\t\t1 - SSL Server\n"
-                "\t\t2 - S/MIME\n"
-                "\t\t3 - Object Signing\n"   
-                "\t\t4 - Reserved for future use\n"
-                "\t\t5 - SSL CA\n"   
-                "\t\t6 - S/MIME CA\n"
-                "\t\t7 - Object Signing CA\n"
-                "\t\tOther to finish\n",
-                buffer, sizeof(buffer)) == SECFailure) {
-            return SECFailure;
-        }
-        value = PORT_Atoi (buffer);
-        if (value < 0 || value > 7)
-            break;
-        if (value == 0) {
-            /* Checking that zero value of variable 'value'
-             * corresponds to '0' input made by user */
-            char *chPtr = strchr(buffer, '0');
-            if (chPtr == NULL) {
-                continue;
+    if (!userSuppliedValue) {
+        while (1) {
+            if (PrintChoicesAndGetAnswer(
+                    "\t\t0 - SSL Client\n"
+                    "\t\t1 - SSL Server\n"
+                    "\t\t2 - S/MIME\n"
+                    "\t\t3 - Object Signing\n"   
+                    "\t\t4 - Reserved for future use\n"
+                    "\t\t5 - SSL CA\n"   
+                    "\t\t6 - S/MIME CA\n"
+                    "\t\t7 - Object Signing CA\n"
+                    "\t\tOther to finish\n",
+                    buffer, sizeof(buffer)) == SECFailure) {
+                return SECFailure;
             }
+            value = PORT_Atoi (buffer);
+            if (value < 0 || value > 7)
+                break;
+            if (value == 0) {
+                /* Checking that zero value of variable 'value'
+                 * corresponds to '0' input made by user */
+                char *chPtr = strchr(buffer, '0');
+                if (chPtr == NULL) {
+                    continue;
+                }
+            }
+            keyUsage |= (0x80 >> value);
         }
-        keyUsage |= (0x80 >> value);
+        isCriticalExt = GetYesNo("Is this a critical extension [y/N]?");
+    } else {
+        while (1) {
+            if (parseNextCmdInput(nsCertTypeKeyWordArray, &value, &nextPos,
+                                  &isCriticalExt) == SECFailure) {
+                return SECFailure;
+            }
+            keyUsage |= (0x80 >> value);
+            if (!nextPos)
+                break;
+        }
     }
 
     bitStringValue.data = &keyUsage;
     bitStringValue.len = 1;
-    yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
     return (CERT_EncodeAndAddBitStrExtension
             (extHandle, SEC_OID_NS_CERT_EXT_CERT_TYPE, &bitStringValue,
-             yesNoAns));
+             isCriticalExt));
 
 }
 
@@ -570,7 +693,6 @@ AddSubjectAltNames(PRArenaPool *arena, CERTGeneralName **existingListp,
     const char *cp;
     char *tbuf;
     SECStatus rv = SECSuccess;
-
 
     /*
      * walk down the comma separated list of names. NOTE: there is
@@ -1557,8 +1679,8 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
     
     do {
         /* Add key usage extension */
-        if (extList[ext_keyUsage]) {
-            rv = AddKeyUsage(extHandle);
+        if (extList[ext_keyUsage].activated) {
+            rv = AddKeyUsage(extHandle, extList[ext_keyUsage].arg);
             if (rv) {
 		errstring = "KeyUsage";
                 break;
@@ -1566,8 +1688,8 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
         }
 
         /* Add extended key usage extension */
-        if (extList[ext_extKeyUsage]) {
-            rv = AddExtKeyUsage(extHandle);
+        if (extList[ext_extKeyUsage].activated) {
+            rv = AddExtKeyUsage(extHandle, extList[ext_extKeyUsage].arg);
             if (rv) {
 		errstring = "ExtendedKeyUsage";
                 break;
@@ -1575,7 +1697,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
         }
 
         /* Add basic constraint extension */
-        if (extList[ext_basicConstraint]) {
+        if (extList[ext_basicConstraint].activated) {
             rv = AddBasicConstraint(extHandle);
             if (rv) {
 		errstring = "BasicConstraint";
@@ -1583,7 +1705,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }
 
-        if (extList[ext_authorityKeyID]) {
+        if (extList[ext_authorityKeyID].activated) {
             rv = AddAuthKeyID(extHandle);
             if (rv) {
 		errstring = "AuthorityKeyID";
@@ -1591,7 +1713,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }
 
-        if (extList[ext_subjectKeyID]) {
+        if (extList[ext_subjectKeyID].activated) {
             rv = AddSubjKeyID(extHandle);
             if (rv) {
 		errstring = "SubjectKeyID";
@@ -1599,7 +1721,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }    
 
-        if (extList[ext_CRLDistPts]) {
+        if (extList[ext_CRLDistPts].activated) {
             rv = AddCrlDistPoint(extHandle);
             if (rv) {
 		errstring = "CRLDistPoints";
@@ -1607,24 +1729,25 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }
 
-        if (extList[ext_NSCertType]) {
-            rv = AddNscpCertType(extHandle);
+        if (extList[ext_NSCertType].activated) {
+            rv = AddNscpCertType(extHandle, extList[ext_extKeyUsage].arg);
             if (rv) {
 		errstring = "NSCertType";
                 break;
 	    }
         }
 
-        if (extList[ext_authInfoAcc] || extList[ext_subjInfoAcc]) {
-            rv = AddInfoAccess(extHandle, extList[ext_subjInfoAcc],
-	                       extList[ext_basicConstraint]);
+        if (extList[ext_authInfoAcc].activated ||
+            extList[ext_subjInfoAcc].activated) {
+            rv = AddInfoAccess(extHandle, extList[ext_subjInfoAcc].activated,
+	                       extList[ext_basicConstraint].activated);
             if (rv) {
 		errstring = "InformationAccess";
                 break;
 	    }
         }
 
-        if (extList[ext_certPolicies]) {
+        if (extList[ext_certPolicies].activated) {
             rv = AddCertPolicies(extHandle);
             if (rv) {
 		errstring = "Policies";
@@ -1632,7 +1755,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }
 
-        if (extList[ext_policyMappings]) {
+        if (extList[ext_policyMappings].activated) {
             rv = AddPolicyMappings(extHandle);
             if (rv) {
 		errstring = "PolicyMappings";
@@ -1640,7 +1763,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }
 
-        if (extList[ext_policyConstr]) {
+        if (extList[ext_policyConstr].activated) {
             rv = AddPolicyConstraints(extHandle);
             if (rv) {
 		errstring = "PolicyConstraints";
@@ -1648,7 +1771,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 	    }
         }
 
-        if (extList[ext_inhibitAnyPolicy]) {
+        if (extList[ext_inhibitAnyPolicy].activated) {
             rv = AddInhibitAnyPolicy(extHandle);
             if (rv) {
 		errstring = "InhibitAnyPolicy";

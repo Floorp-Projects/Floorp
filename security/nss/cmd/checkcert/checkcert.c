@@ -542,7 +542,7 @@ int main(int argc, char **argv)
     /* Check if self-signed */
     selfSigned = (CERT_CompareName(&cert->issuer, &cert->subject) == 0);
     if (selfSigned) {
-	printf("INFO: Certificate is self-signed.\n");
+	printf("INFO: Certificate is self signed.\n");
     } else {
 	printf("INFO: Certificate is NOT self-signed.\n");
     }

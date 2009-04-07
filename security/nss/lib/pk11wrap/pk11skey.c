@@ -1614,6 +1614,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    mechanism.mechanism = derive;
 
 	    /* we can undefine these when we define diffie-helman keys */
+
 	    mechanism.pParameter = pubKey->u.dh.publicValue.data; 
 	    mechanism.ulParameterLen = pubKey->u.dh.publicValue.len;
 		
@@ -1635,6 +1636,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    int templateCount;
 	    CK_ATTRIBUTE *attrs = keyTemplate;
 	    CK_ECDH1_DERIVE_PARAMS *mechParams = NULL;
+	    SECItem *pubValue = NULL;
 
 	    if (pubKey->keyType != ecKey) {
 		PORT_SetError(SEC_ERROR_BAD_KEY);
@@ -1660,8 +1662,21 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    mechParams->kdf = CKD_SHA1_KDF;
 	    mechParams->ulSharedDataLen = 0;
 	    mechParams->pSharedData = NULL;
-	    mechParams->ulPublicDataLen =  pubKey->u.ec.publicValue.len;
-	    mechParams->pPublicData =  pubKey->u.ec.publicValue.data;
+
+	    if (PR_GetEnv("NSS_USE_DECODED_CKA_EC_POINT")) {
+		mechParams->ulPublicDataLen =  pubKey->u.ec.publicValue.len;
+		mechParams->pPublicData =  pubKey->u.ec.publicValue.data;
+	    } else {
+		pubValue = SEC_ASN1EncodeItem(NULL, NULL,
+			&pubKey->u.ec.publicValue,
+			SEC_ASN1_GET(SEC_OctetStringTemplate));
+		if (pubValue == NULL) {
+	    	    PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
+		    break;
+		}
+		mechParams->ulPublicDataLen =  pubValue->len;
+		mechParams->pPublicData =  pubValue->data;
+	    }
 
 	    mechanism.mechanism = derive;
 	    mechanism.pParameter = mechParams;
@@ -1673,6 +1688,9 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 		templateCount, &symKey->objectID);
 	    pk11_ExitKeyMonitor(symKey);
 
+	    if (pubValue) {
+		SECITEM_FreeItem(pubValue,PR_TRUE);
+	    }
 	    PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
 
 	    if (crv == CKR_OK) return symKey;
@@ -1704,6 +1722,7 @@ pk11_PubDeriveECKeyWithKDF(
     int                     templateCount;
     CK_ATTRIBUTE           *attrs           = keyTemplate;
     CK_ECDH1_DERIVE_PARAMS *mechParams      = NULL;
+    SECItem *pubValue = NULL;
 
     if (pubKey->keyType != ecKey) {
 	PORT_SetError(SEC_ERROR_BAD_KEY);
@@ -1748,8 +1767,21 @@ pk11_PubDeriveECKeyWithKDF(
 	mechParams->ulSharedDataLen = sharedData->len;
 	mechParams->pSharedData     = sharedData->data;
     }
-    mechParams->ulPublicDataLen = pubKey->u.ec.publicValue.len;
-    mechParams->pPublicData     = pubKey->u.ec.publicValue.data;
+    if (PR_GetEnv("NSS_USE_DECODED_CKA_EC_POINT")) {
+	mechParams->ulPublicDataLen =  pubKey->u.ec.publicValue.len;
+	mechParams->pPublicData =  pubKey->u.ec.publicValue.data;
+    } else {
+	pubValue = SEC_ASN1EncodeItem(NULL, NULL,
+		&pubKey->u.ec.publicValue,
+		SEC_ASN1_GET(SEC_OctetStringTemplate));
+	if (pubValue == NULL) {
+    	    PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
+	    PK11_FreeSymKey(symKey);
+	    return NULL;
+	}
+	mechParams->ulPublicDataLen =  pubValue->len;
+	mechParams->pPublicData =  pubValue->data;
+    }
 
     mechanism.mechanism      = derive;
     mechanism.pParameter     = mechParams;
@@ -1761,6 +1793,9 @@ pk11_PubDeriveECKeyWithKDF(
     pk11_ExitKeyMonitor(symKey);
 
     PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
+    if (pubValue) {
+	SECITEM_FreeItem(pubValue,PR_TRUE);
+    }
 
     if (crv != CKR_OK) {
 	PK11_FreeSymKey(symKey);
@@ -2218,3 +2253,10 @@ PK11_GenerateFortezzaIV(PK11SymKey *symKey,unsigned char *iv,int len)
     PK11_ExitSlotMonitor(symKey->slot);
     return rv;
 }
+
+CK_OBJECT_HANDLE
+PK11_GetSymKeyHandle(PK11SymKey *symKey)
+{
+    return symKey->objectID;
+}
+

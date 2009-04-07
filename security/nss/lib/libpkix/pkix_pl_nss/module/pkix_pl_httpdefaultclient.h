@@ -93,7 +93,7 @@ struct PKIX_PL_HttpDefaultClientStruct {
         char *rcvBuf;
         char *host;
         char *path;
-        const char *rcvContentType;
+        char *rcvContentType;
         void *rcvHeaders;
         HttpMethod send_http_method;
         const char *send_http_content_type;

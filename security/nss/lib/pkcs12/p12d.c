@@ -980,7 +980,7 @@ sec_pkcs12_decoder_pfx_notify_proc(void *arg, PRBool before, void *dest,
     SECStatus rv;
     SEC_PKCS12DecoderContext *p12dcx = (SEC_PKCS12DecoderContext*)arg;
 
-    /* if an error occurrs, clear the notifyProc and the filterProc 
+    /* if an error occurs, clear the notifyProc and the filterProc 
      * and continue. 
      */
     if(p12dcx->error) {

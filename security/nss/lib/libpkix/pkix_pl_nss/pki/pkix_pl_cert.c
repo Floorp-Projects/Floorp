@@ -2485,20 +2485,17 @@ PKIX_PL_Cert_GetExtendedKeyUsage(
 
                         /* save a cached copy in case it is asked for again */
                         cert->extKeyUsages = oidsList;
+                        oidsList = NULL;
                 }
-
-                PKIX_OBJECT_UNLOCK(cert);
-        }
-
-        if (cert->extKeyUsages){
-
-                PKIX_INCREF(cert->extKeyUsages);
 
                 PKIX_CHECK(PKIX_List_SetImmutable
                             (cert->extKeyUsages, plContext),
                             PKIX_LISTSETIMMUTABLEFAILED);
+
+                PKIX_OBJECT_UNLOCK(cert);
         }
 
+        PKIX_INCREF(cert->extKeyUsages);
         *pKeyUsage = cert->extKeyUsages;
 
 cleanup:
@@ -2506,12 +2503,8 @@ cleanup:
 
         PKIX_FREE(oidAscii);
         PKIX_DECREF(pkixOID);
-
+        PKIX_DECREF(oidsList);
         CERT_DestroyOidSequence(extKeyUsage);
-
-        if (PKIX_ERROR_RECEIVED){
-                PKIX_DECREF(oidsList);
-        }
 
         PKIX_RETURN(CERT);
 }
@@ -2658,7 +2651,6 @@ PKIX_PL_Cert_GetPolicyInformation(
         }
 
         PKIX_INCREF(cert->certPolicyInfos);
-
         *pPolicyInfo = cert->certPolicyInfos;
 
 cleanup:
