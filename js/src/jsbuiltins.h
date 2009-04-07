@@ -49,7 +49,7 @@
 #undef THIS
 #endif
 
-enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_COOKIE };
+enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL };
 enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
        JSTN_CONSTRUCTOR = 0x20 };
 
@@ -144,17 +144,13 @@ struct JSTraceableNative {
  *     effects.  If a builtin can't do this, it must use a _FAIL return type
  *     instead of _RETRY.
  *
- *     _RETRY builtins indicate failure with a special return value that
- *     depends on the return type:
- *
- *         BOOL_RETRY: JSVAL_TO_BOOLEAN(JSVAL_VOID)
- *         INT32_RETRY: any negative value
- *         STRING_RETRY: NULL
- *         OBJECT_RETRY_NULL: NULL
- *         JSVAL_RETRY: JSVAL_ERROR_COOKIE
+ *     _RETRY builtins indicate failure by returning NULL.
  *
  *     _RETRY function calls are faster than _FAIL calls.  Each _RETRY call
  *     saves a write to cx->bailExit and a read from cx->builtinStatus.
+ *
+ *     There are very few of these left, since they must be careful not to
+ *     call JS_malloc (see bug 482015).
  *
  *   - All other traceable natives are infallible (e.g. Date.now, Math.log).
  *
@@ -184,16 +180,12 @@ struct JSTraceableNative {
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
-#define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
 #define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
 #define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_INT32_RETRY       _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_NEG)
 #define _JS_CTYPE_INT32_FAIL        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_STATUS)
 #define _JS_CTYPE_UINT32            _JS_CTYPE(uint32,                 _JS_I32, "","i", INFALLIBLE)
-#define _JS_CTYPE_UINT32_RETRY      _JS_CTYPE(uint32,                 _JS_I32, --, --, FAIL_NEG)
 #define _JS_CTYPE_UINT32_FAIL       _JS_CTYPE(uint32,                 _JS_I32, --, --, FAIL_STATUS)
 #define _JS_CTYPE_DOUBLE            _JS_CTYPE(jsdouble,               _JS_F64, "","d", INFALLIBLE)
 #define _JS_CTYPE_DOUBLE_FAIL       _JS_CTYPE(jsdouble,               _JS_F64, --, --, FAIL_STATUS)
@@ -201,7 +193,6 @@ struct JSTraceableNative {
 #define _JS_CTYPE_STRING_RETRY      _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_NULL)
 #define _JS_CTYPE_STRING_FAIL       _JS_CTYPE(JSString *,             _JS_PTR, --, --, FAIL_STATUS)
 #define _JS_CTYPE_OBJECT            _JS_CTYPE(JSObject *,             _JS_PTR, "","o", INFALLIBLE)
-#define _JS_CTYPE_OBJECT_RETRY      _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL)
 #define _JS_CTYPE_OBJECT_FAIL       _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_STATUS)
 #define _JS_CTYPE_CONSTRUCTOR_RETRY _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL | \
                                                                                   JSTN_CONSTRUCTOR)
