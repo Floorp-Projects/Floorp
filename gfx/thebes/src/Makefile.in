@@ -18,6 +18,7 @@ REQUIRES = \
 	xpcom \
 	unicharutil \
 	$(LCMS_REQUIRES) \
+	qcms \
 	$(NULL)
 
 CPPSRCS	= \
@@ -47,7 +48,7 @@ EXTRA_DSO_LDOPTS += \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(ZLIB_LIBS) \
-	$(LCMS_LIBS) \
+	$(QCMS_LIBS) \
 	$(NULL)
 
 

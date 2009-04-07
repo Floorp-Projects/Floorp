@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 			unicharutil \
 			thebes \
 			cairo \
+			qcms \
 			$(NULL)
 
 CPPSRCS		= \
