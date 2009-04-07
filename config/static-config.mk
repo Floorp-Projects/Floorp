@@ -69,7 +69,6 @@ STATIC_EXTRA_LIBS	+= \
 		$(PNG_LIBS) \
 		$(JPEG_LIBS) \
 		$(ZLIB_LIBS) \
-		$(LCMS_LIBS) \
 		$(NULL)
 
 ifdef MOZ_PSM

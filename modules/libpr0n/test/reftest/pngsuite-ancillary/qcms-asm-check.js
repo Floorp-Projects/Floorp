@@ -1,7 +1,7 @@
-// This is a workaround for bug 465088, that the lcms assembly doesn't
+// This is a workaround for bug 465088, that the qcms assembly doesn't
 // quite match the non-assembly output.
 
-function check_lcms_has_assembly()
+function check_qcms_has_assembly()
 {
     // We have assembly code on x86 and x86_64 architectures.
     // Unfortunately, detecting that is a little complicated.
@@ -25,4 +25,4 @@ function check_lcms_has_assembly()
     return false;
 }
 
-var lcms_has_assembly = check_lcms_has_assembly();
+var qcms_has_assembly = check_qcms_has_assembly();

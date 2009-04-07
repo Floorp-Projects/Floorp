@@ -52,7 +52,7 @@
 
 #include "png.h"
 
-#include "lcms.h"
+#include "qcms.h"
 
 #define NS_PNGDECODER_CID \
 { /* 36fa00c2-1dd2-11b2-be07-d16eeb4c50ed */         \
@@ -87,8 +87,8 @@ public:
   png_infop mInfo;
   PRUint8 *mCMSLine;
   PRUint8 *interlacebuf;
-  cmsHPROFILE mInProfile;
-  cmsHTRANSFORM mTransform;
+  qcms_profile *mInProfile;
+  qcms_transform *mTransform;
 
   gfx_format format;
   PRUint8 mChannels;

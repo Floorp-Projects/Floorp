@@ -755,10 +755,8 @@ MAKEFILES_libmar="
   modules/libmar/tool/Makefile
 "
 
-MAKEFILES_lcms="
-  modules/lcms/Makefile
-  modules/lcms/include/Makefile
-  modules/lcms/src/Makefile
+MAKEFILES_qcms="
+  modules/qcms/Makefile
 "
 
 add_makefiles "
@@ -804,6 +802,7 @@ add_makefiles "
   $MAKEFILES_zlib
   $MAKEFILES_libmar
   $MAKEFILES_lcms
+  $MAKEFILES_qcms
 "
 
 #

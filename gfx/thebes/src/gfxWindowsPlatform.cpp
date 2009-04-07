@@ -71,8 +71,6 @@
 
 #include <string>
 
-#include "lcms.h"
-
 #ifdef MOZ_FT2_FONTS
 static FT_Library gPlatformFTLibrary = NULL;
 #endif
@@ -847,7 +845,7 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
     return ff->FindFontEntry(aFontStyle);
 }
 
-cmsHPROFILE
+qcms_profile*
 gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 {
 #ifndef MOZ_FT2_FONTS
@@ -858,8 +856,8 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
     GetICMProfileW(dc, &size, (LPWSTR)&str);
     ReleaseDC(nsnull, dc);
 
-    cmsHPROFILE profile =
-        cmsOpenProfileFromFile(NS_ConvertUTF16toUTF8(str).get(), "r");
+    qcms_profile* profile =
+        qcms_profile_from_path(NS_ConvertUTF16toUTF8(str).get());
 #ifdef DEBUG_tor
     if (profile)
         fprintf(stderr,
