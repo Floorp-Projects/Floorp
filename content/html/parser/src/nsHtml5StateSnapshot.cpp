@@ -71,11 +71,11 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
   for (PRInt32 i = 0; i < stack.length; i++) {
     stack[i]->release();
   }
-  delete[] stack;
+  stack.release();
   for (PRInt32 i = 0; i < listOfActiveFormattingElements.length; i++) {
     listOfActiveFormattingElements[i]->release();
   }
-  delete[] listOfActiveFormattingElements;
+  listOfActiveFormattingElements.release();
   nsHtml5Portability::retainElement(formPointer);
 }
 
