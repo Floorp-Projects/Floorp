@@ -5892,7 +5892,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // No need to guard native-ness of global object.
     JS_ASSERT(OBJ_IS_NATIVE(globalObj));
     if (aobj != globalObj) {
-        size_t op_offset = 0;
+        size_t op_offset = offsetof(JSObjectOps, newObjectMap);
         if (mode == JOF_PROP || mode == JOF_VARPROP) {
             JS_ASSERT(!(format & JOF_SET));
             op_offset = offsetof(JSObjectOps, getProperty);
