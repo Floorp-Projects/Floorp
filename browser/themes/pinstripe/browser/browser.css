@@ -810,6 +810,10 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   background: url("chrome://browser/skin/urlbar/endcap-focused.png") transparent right center no-repeat;
 }
 
+#urlbar[focused="true"]:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite.png");
+}
+
 #urlbar .textbox-input-box,
 #urlbar-icons {
   margin: 0;
@@ -819,6 +823,11 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #urlbar[focused="true"] .textbox-input-box,
 #urlbar[focused="true"] #urlbar-icons {
   background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused.png");
+}
+
+#urlbar[focused="true"] .textbox-input-box:-moz-system-metric(mac-graphite-theme),
+#urlbar[focused="true"] #urlbar-icons:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/textfield-mid-focused-graphite.png");
 }
 
 #urlbar .textbox-input-box {
@@ -1868,6 +1877,10 @@ tabpanels.plain {
   background-image: url("chrome://browser/skin/urlbar/startcap-focused.png");
 }
 
+#urlbar[focused="true"] > #identity-box:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-focused-graphite.png");
+}
+
 #identity-box:focus > hbox > #page-proxy-deck {
   outline: 2px solid #4F8EC9;
   -moz-outline-radius: 2px;
@@ -1938,6 +1951,18 @@ tabpanels.plain {
   background-image: url("chrome://browser/skin/urlbar/startcap-secure-end-focused.png");
 }
 
+#urlbar[focused="true"] > #identity-box.verifiedDomain:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused-graphite.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused-graphite.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox > #identity-icon-label:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-end-focused-graphite.png");
+}
+
 #identity-box.verifiedDomain > hbox > #identity-icon-label[value=""] {
   -moz-padding-start: 3px !important;
   -moz-padding-end: 8px !important;
@@ -1988,6 +2013,18 @@ tabpanels.plain {
 
 #urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox > #identity-icon-label {
   background-image: url("chrome://browser/skin/urlbar/startcap-verified-end-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedIdentity:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused-graphite.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused-graphite.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox > #identity-icon-label:-moz-system-metric(mac-graphite-theme) {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-end-focused-graphite.png");
 }
 
 /* Favicon Glow */

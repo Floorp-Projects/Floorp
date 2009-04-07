@@ -70,10 +70,11 @@ DIRS += include/sys
 
 ifdef MOZ_MEMORY
 REQUIRES = jemalloc 
-JEMALLOC_LIB = $(DIST)/lib/jemalloc.lib 
 CFLAGS += -DMOZ_MEMORY
 CXXFLAGS += -DMOZ_MEMORY
 endif
+
+EXTRA_LIBS += $(JEMALLOC_LIBS)
 
 CPPSRCS = map.cpp
 

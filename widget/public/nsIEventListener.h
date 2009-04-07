@@ -39,8 +39,7 @@
 #define nsIEventListener_h__
 
 #include "nsISupports.h"
-
-class nsGUIEvent;
+#include "nsEvent.h"
 
 /**
  * Event listener interface.

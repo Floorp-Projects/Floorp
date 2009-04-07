@@ -1,0 +1,69 @@
+html, body, div, span {
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+div.selection {
+  overflow: hidden;
+  display: block;
+  width: auto;
+  height: 100px;
+  white-space: nowrap;
+}
+
+div.fontsize {
+  display: inline-block;
+  width: auto;
+  height: auto;
+}
+
+div.fontsize.size1 {
+  font-size: 16px;
+}
+
+div.fontsize.size2 {
+  font-size: 32px;
+}
+
+div.fontsize.size3 {
+  font-size: 52px;
+}
+
+@font-face {
+  font-family: "AhemTest";
+  src: url(../../../fonts/Ahem.ttf);
+}
+
+@font-face {
+  font-family: "mplusTest";
+  src: url(../../../fonts/mplus/mplus-1p-regular.ttf);
+}
+
+div.font1,
+div.font2 {
+  display: inline-block;
+  width: 120px;
+  height: 140px;
+  margin: 10px 1px;
+  overflow: hidden;
+}
+
+div.font1 {
+  font-family: "AhemTest";
+}
+
+div.font2 {
+  font-family: "mplusTest";
+}
+
+span {
+  text-align: top;
+}
+
+body.reference div.IMEselection span,
+body.reference div.IMEselection span,
+body.reference div.IMEselection span,
+body.reference div.IMEselection span {
+  background-color: black;
+}

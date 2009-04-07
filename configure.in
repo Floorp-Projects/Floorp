@@ -118,10 +118,10 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
+PYTHON_VERSION=2.4
 CAIRO_VERSION=1.6.0
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
-MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.8
 GNOMEVFS_VERSION=2.0
@@ -130,7 +130,6 @@ GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-LCMS_VERSION=1.17
 SQLITE_VERSION=3.6.10
 LIBNOTIFY_VERSION=0.4
 
@@ -187,7 +186,6 @@ dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*)
-    MAKE_VERSION=3.79
     if test -z "$CC"; then CC=cl; fi
     if test -z "$CXX"; then CXX=cl; fi
     if test -z "$CPP"; then CPP="cl -E -nologo"; fi
@@ -690,6 +688,8 @@ EOF
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 5.0
     AC_DEFINE_UNQUOTED(_WIN32_IE,0x0500)
+    # we need Python 2.5 on Windows
+    PYTHON_VERSION=2.5
     ;;
 esac
 
@@ -769,10 +769,22 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.5 python2.4 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
+
+dnl We require version 2.4 or newer of Python to build,
+dnl and 2.5 or newer on Windows.
+AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
+changequote(,)
+$PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
+_python_res=$?
+changequote([,])
+if test "$_python_res" != 0; then
+    AC_MSG_ERROR([Python $PYTHON_VERSION or higher is required.])
+fi
+AC_MSG_RESULT([yes])
 
 MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
@@ -974,37 +986,24 @@ fi # COMPILE_ENVIRONMENT
 
 dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
+if test -n "$MAKE"; then
+  if test `echo $MAKE | grep -c make.py` != 1; then
+     NOT_PYMAKE=$MAKE
+  fi
+fi
+
 case "$host_os" in
 cygwin*|mingw*|mks*|msvc*)
-    MOZ_PATH_PROGS(MAKE, $MAKE make gmake, :)
+    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE make gmake, :)
     ;;
 *)
-    MOZ_PATH_PROGS(MAKE, $MAKE gmake make, :)
+    MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE gmake make, :)
     ;;
 esac
-_make_try=`$MAKE --version 2>/dev/null | grep GNU`
-if test ! "$_make_try"
-then
-	echo
-	echo "*** $MAKE is not GNU Make.  You will not be able to build Mozilla without GNU Make."
-	echo
-	exit 1
+if test "$GMAKE" = ":"; then
+   AC_MSG_ERROR([GNU make not found])
 fi
-dnl Now exit if version if < MAKE_VERSION
-rm -f dummy.mk
-echo 'all: ; @echo $(MAKE_VERSION)' > dummy.mk
-_make_vers=`$MAKE --no-print-directory -f dummy.mk all 2>/dev/null`
-rm -f dummy.mk
-_MAKE_MAJOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $1 }'`
-_MAKE_MINOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $2 }'`
-MAKE_MAJOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $1 }'`
-MAKE_MINOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $2 }'`
-if test "$_MAKE_MAJOR_VERSION" -lt "$MAKE_MAJOR_VERSION" || \
-   test "$_MAKE_MAJOR_VERSION" = "$MAKE_MAJOR_VERSION" -a \
-        "$_MAKE_MINOR_VERSION" -lt "$MAKE_MINOR_VERSION"; then
-   AC_MSG_ERROR([GNU Make $MAKE_VERSION or higher is required to build Mozilla.])
-fi
-AC_SUBST(MAKE)
+AC_SUBST(GMAKE)
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -3281,7 +3280,7 @@ AC_SUBST(XLIBS)
 AC_SUBST(XEXT_LIBS)
 AC_SUBST(XT_LIBS)
 
-AC_MSG_CHECKING(for ARM SIMD support)
+AC_MSG_CHECKING(for ARM SIMD support in compiler)
 AC_TRY_COMPILE([],
                [asm("uqadd8 r1, r1, r2");],
                result="yes", result="no")
@@ -3291,6 +3290,23 @@ if test "$result" = "yes"; then
     HAVE_ARM_SIMD=1
 fi
 AC_SUBST(HAVE_ARM_SIMD)
+
+AC_MSG_CHECKING(for ARM NEON support in compiler)
+_SAVE_CFLAGS="$CFLAGS"
+if test "$GNU_CC"; then
+  # gcc needs -mfpu=neon to recognize NEON instructions
+  CFLAGS="$CFLAGS -mfpu=neon"
+fi
+AC_TRY_COMPILE([],
+               [asm("vadd.i8 d0, d0, d0");],
+               result="yes", result="no")
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_ARM_NEON)
+    HAVE_ARM_NEON=1
+fi
+CFLAGS="$_SAVE_CFLAGS"
+AC_SUBST(HAVE_ARM_NEON)
 
 dnl ========================================================
 dnl = pthread support
@@ -5461,6 +5477,27 @@ if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
+
+    dnl Checks for __attribute__(aligned()) directive
+    AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
+        [ac_cv_c_attribute_aligned],
+        [ac_cv_c_attribute_aligned=0
+         CFLAGS_save="${CFLAGS}"
+         CFLAGS="${CFLAGS} -Werror"
+         for ac_cv_c_attr_align_try in 64 32 16 8; do
+           echo "trying $ac_cv_c_attr_align_try"
+           AC_TRY_COMPILE([],
+                          [static char c __attribute__ ((aligned(${ac_cv_c_attr_align_try}))) = 0; return c;],
+                          [ac_cv_c_attribute_aligned="${ac_cv_c_attr_align_try}"])
+           if test "$ac_cv_c_attribute_aligned" != 0; then
+             break;
+           fi
+         done
+           CFLAGS="${CFLAGS_save}"])
+    if test "${ac_cv_c_attribute_aligned}" != "0"; then
+      AC_DEFINE_UNQUOTED([ATTRIBUTE_ALIGNED_MAX],
+                         [${ac_cv_c_attribute_aligned}],[Maximum supported data alignment])
+    fi
 fi
 
 dnl ========================================================
@@ -7662,22 +7699,11 @@ AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
 
-dnl ========================================================
-dnl Check for lcms
+dnl qcms
 dnl ========================================================
 
-LCMS_CFLAGS=
-if test "$_WIN32_MSVC"; then
-    if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
-        LCMS_CFLAGS=-DLCMS_DLL
-    fi
-    LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
-else
-    LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
-fi
-
-AC_SUBST(LCMS_CFLAGS)
-AC_SUBST(LCMS_LIBS)
+QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
+AC_SUBST(QCMS_LIBS)
 
 dnl ========================================================
 dnl disable xul

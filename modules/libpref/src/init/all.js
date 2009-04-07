@@ -136,6 +136,9 @@ pref("browser.triple_click_selects_paragraph", true);
 // header, and disallow the connection if not present or permitted.
 pref("media.enforce_same_site_origin", false);
 
+// Media cache size in kilobytes
+pref("media.cache_size", 51200);
+
 #ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
 #endif
@@ -229,9 +232,6 @@ pref("nglayout.events.dispatchLeftClickOnly", true);
 
 // whether or not to draw images while dragging
 pref("nglayout.enable_drag_images", true);
-
-// whether or not to use xbl form controls
-pref("nglayout.debug.enable_xbl_forms", false);
 
 // scrollbar snapping region
 // 0 - off
@@ -1120,6 +1120,9 @@ pref("config.use_system_prefs", false);
 
 // if the system has enabled accessibility
 pref("config.use_system_prefs.accessibility", false);
+
+// enable single finger gesture input (win7+ tablets)
+pref("gestures.enable_single_finger_input", true);
 
 /*
  * What are the entities that you want Mozilla to save using mnemonic

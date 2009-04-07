@@ -58,14 +58,13 @@
 #include "gfxTextRunWordCache.h"
 #include "gfxUserFontSet.h"
 
-#include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
 #include "nsWeakReference.h"
 
 #include "cairo.h"
-#include "lcms.h"
+#include "qcms.h"
 
 #include "plstr.h"
 #include "nsIPrefService.h"
@@ -75,12 +74,12 @@
 gfxPlatform *gPlatform = nsnull;
 
 // These two may point to the same profile
-static cmsHPROFILE gCMSOutputProfile = nsnull;
-static cmsHPROFILE gCMSsRGBProfile = nsnull;
+static qcms_profile *gCMSOutputProfile = nsnull;
+static qcms_profile *gCMSsRGBProfile = nsnull;
 
-static cmsHTRANSFORM gCMSRGBTransform = nsnull;
-static cmsHTRANSFORM gCMSInverseRGBTransform = nsnull;
-static cmsHTRANSFORM gCMSRGBATransform = nsnull;
+static qcms_transform *gCMSRGBTransform = nsnull;
+static qcms_transform *gCMSInverseRGBTransform = nsnull;
+static qcms_transform *gCMSRGBATransform = nsnull;
 
 static PRBool gCMSInitialized = PR_FALSE;
 static eCMSMode gCMSMode = eCMSMode_Off;
@@ -224,16 +223,6 @@ gfxPlatform::Init()
     if (prefs)
         prefs->AddObserver(CMForceSRGBPrefName, gPlatform->overrideObserver, PR_TRUE);
 
-    /* By default, LCMS calls exit() on error, which isn't what we want. If
-       cms is enabled, change the error functionality. */
-    if (GetCMSMode() != eCMSMode_Off) {
-#ifdef DEBUG
-        cmsErrorAction(LCMS_ERROR_SHOW);
-#else
-        cmsErrorAction(LCMS_ERROR_IGNORE);
-#endif
-    }
-
     return NS_OK;
 }
 
@@ -344,45 +333,43 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
 {
     nsresult rv;
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (!prefs)
         return;
 
     nsCAutoString prefName;
-    nsXPIDLString nameValue, nameListValue;
+    nsXPIDLCString nameValue, nameListValue;
 
-    nsXPIDLString genericName;
+    nsCAutoString genericDotLang;
     if (aGenericName) {
-        genericName = NS_ConvertASCIItoUTF16(aGenericName);
+        genericDotLang.Assign(aGenericName);
     } else {
         prefName.AssignLiteral("font.default.");
         prefName.Append(aLangGroup);
-        prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
+        prefs->GetCharPref(prefName.get(), getter_Copies(genericDotLang));
     }
 
-    nsCAutoString genericDotLang;
-    genericDotLang.Assign(NS_ConvertUTF16toUTF8(genericName));
     genericDotLang.AppendLiteral(".");
     genericDotLang.Append(aLangGroup);
 
     // fetch font.name.xxx value                   
     prefName.AssignLiteral("font.name.");
     prefName.Append(genericDotLang);
-    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameValue));
+    rv = prefs->GetCharPref(prefName.get(), getter_Copies(nameValue));
     if (NS_SUCCEEDED(rv)) {
         if (!aFonts.IsEmpty())
             aFonts.AppendLiteral(", ");
-        aFonts.Append(nameValue);
+        aFonts.Append(NS_ConvertUTF8toUTF16(nameValue));
     }
 
     // fetch font.name-list.xxx value                   
     prefName.AssignLiteral("font.name-list.");
     prefName.Append(genericDotLang);
-    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameListValue));
+    rv = prefs->GetCharPref(prefName.get(), getter_Copies(nameListValue));
     if (NS_SUCCEEDED(rv) && !nameListValue.Equals(nameValue)) {
         if (!aFonts.IsEmpty())
             aFonts.AppendLiteral(", ");
-        aFonts.Append(nameListValue);
+        aFonts.Append(NS_ConvertUTF8toUTF16(nameListValue));
     }
 }
 
@@ -401,7 +388,7 @@ PRBool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangAr
 {
     nsresult rv;
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (!prefs)
         return PR_FALSE;
 
@@ -412,33 +399,31 @@ PRBool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangAr
         const char *langGroup = GetPrefLangName(prefLang);
         
         nsCAutoString prefName;
-        nsXPIDLString nameValue, nameListValue;
-    
-        nsXPIDLString genericName;
-        prefName.AssignLiteral("font.default.");
-        prefName.Append(langGroup);
-        prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
+        nsXPIDLCString nameValue, nameListValue;
     
         nsCAutoString genericDotLang;
-        genericDotLang.Assign(NS_ConvertUTF16toUTF8(genericName));
+        prefName.AssignLiteral("font.default.");
+        prefName.Append(langGroup);
+        prefs->GetCharPref(prefName.get(), getter_Copies(genericDotLang));
+    
         genericDotLang.AppendLiteral(".");
         genericDotLang.Append(langGroup);
     
         // fetch font.name.xxx value                   
         prefName.AssignLiteral("font.name.");
         prefName.Append(genericDotLang);
-        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameValue));
+        rv = prefs->GetCharPref(prefName.get(), getter_Copies(nameValue));
         if (NS_SUCCEEDED(rv)) {
-            if (!aCallback(prefLang, nameValue, aClosure))
+            if (!aCallback(prefLang, NS_ConvertUTF8toUTF16(nameValue), aClosure))
                 return PR_FALSE;
         }
     
         // fetch font.name-list.xxx value                   
         prefName.AssignLiteral("font.name-list.");
         prefName.Append(genericDotLang);
-        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameListValue));
+        rv = prefs->GetCharPref(prefName.get(), getter_Copies(nameListValue));
         if (NS_SUCCEEDED(rv) && !nameListValue.Equals(nameValue)) {
-            if (!aCallback(prefLang, nameListValue, aClosure))
+            if (!aCallback(prefLang, NS_ConvertUTF8toUTF16(nameListValue), aClosure))
                 return PR_FALSE;
         }
     }
@@ -513,7 +498,9 @@ gfxPlatform::GetCMSMode()
 /* Chris Murphy (CM consultant) suggests this as a default in the event that we
 cannot reproduce relative + Black Point Compensation.  BPC brings an
 unacceptable performance overhead, so we go with perceptual. */
-#define INTENT_DEFAULT INTENT_PERCEPTUAL
+#define INTENT_DEFAULT QCMS_INTENT_PERCEPTUAL
+#define INTENT_MIN 0
+#define INTENT_MAX 3
 
 PRBool
 gfxPlatform::GetRenderingIntent()
@@ -545,20 +532,24 @@ gfxPlatform::GetRenderingIntent()
 }
 
 void 
-gfxPlatform::TransformPixel(const gfxRGBA& in, gfxRGBA& out, cmsHTRANSFORM transform)
+gfxPlatform::TransformPixel(const gfxRGBA& in, gfxRGBA& out, qcms_transform *transform)
 {
 
     if (transform) {
+        /* we want the bytes in RGB order */
 #ifdef IS_LITTLE_ENDIAN
+        /* ABGR puts the bytes in |RGBA| order on little endian */
         PRUint32 packed = in.Packed(gfxRGBA::PACKED_ABGR);
-        cmsDoTransform(transform,
+        qcms_transform_data(transform,
                        (PRUint8 *)&packed, (PRUint8 *)&packed,
                        1);
         out.~gfxRGBA();
         new (&out) gfxRGBA(packed, gfxRGBA::PACKED_ABGR);
 #else
+        /* ARGB puts the bytes in |ARGB| order on big endian */
         PRUint32 packed = in.Packed(gfxRGBA::PACKED_ARGB);
-        cmsDoTransform(transform,
+        /* add one to move past the alpha byte */
+        qcms_transform_data(transform,
                        (PRUint8 *)&packed + 1, (PRUint8 *)&packed + 1,
                        1);
         out.~gfxRGBA();
@@ -570,13 +561,13 @@ gfxPlatform::TransformPixel(const gfxRGBA& in, gfxRGBA& out, cmsHTRANSFORM trans
         out = in;
 }
 
-cmsHPROFILE
+qcms_profile *
 gfxPlatform::GetPlatformCMSOutputProfile()
 {
     return nsnull;
 }
 
-cmsHPROFILE
+qcms_profile *
 gfxPlatform::GetCMSOutputProfile()
 {
     if (!gCMSOutputProfile) {
@@ -602,7 +593,7 @@ gfxPlatform::GetCMSOutputProfile()
                 rv = prefs->GetCharPref(CMProfilePrefName,
                                         getter_Copies(fname));
                 if (NS_SUCCEEDED(rv) && !fname.IsEmpty()) {
-                    gCMSOutputProfile = cmsOpenProfileFromFile(fname, "r");
+                    gCMSOutputProfile = qcms_profile_from_path(fname);
                 }
             }
         }
@@ -614,92 +605,87 @@ gfxPlatform::GetCMSOutputProfile()
 
         /* Determine if the profile looks bogus. If so, close the profile
          * and use sRGB instead. See bug 460629, */
-        if (gCMSOutputProfile && cmsProfileIsBogus(gCMSOutputProfile)) {
+        if (gCMSOutputProfile && qcms_profile_is_bogus(gCMSOutputProfile)) {
             NS_ASSERTION(gCMSOutputProfile != GetCMSsRGBProfile(),
                          "Builtin sRGB profile tagged as bogus!!!");
-            cmsCloseProfile(gCMSOutputProfile);
+            qcms_profile_release(gCMSOutputProfile);
             gCMSOutputProfile = nsnull;
         }
 
         if (!gCMSOutputProfile) {
             gCMSOutputProfile = GetCMSsRGBProfile();
         }
-
         /* Precache the LUT16 Interpolations for the output profile. See 
            bug 444661 for details. */
-        cmsPrecacheProfile(gCMSOutputProfile, CMS_PRECACHE_LI168_REVERSE);
+        qcms_profile_precache_output_transform(gCMSOutputProfile);
     }
 
     return gCMSOutputProfile;
 }
 
-cmsHPROFILE
+qcms_profile *
 gfxPlatform::GetCMSsRGBProfile()
 {
     if (!gCMSsRGBProfile) {
 
         /* Create the profile using lcms. */
-        gCMSsRGBProfile = cmsCreate_sRGBProfile();
-
-        /* Precache the Fixed-point Interpolations for sRGB as an input
-           profile. See bug 444661 for details. */
-        cmsPrecacheProfile(gCMSsRGBProfile, CMS_PRECACHE_LI8F_FORWARD);
+        gCMSsRGBProfile = qcms_profile_sRGB();
     }
     return gCMSsRGBProfile;
 }
 
-cmsHTRANSFORM
+qcms_transform *
 gfxPlatform::GetCMSRGBTransform()
 {
     if (!gCMSRGBTransform) {
-        cmsHPROFILE inProfile, outProfile;
+        qcms_profile *inProfile, *outProfile;
         outProfile = GetCMSOutputProfile();
         inProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
 
-        gCMSRGBTransform = cmsCreateTransform(inProfile, TYPE_RGB_8,
-                                              outProfile, TYPE_RGB_8,
-                                              INTENT_PERCEPTUAL, cmsFLAGS_FLOATSHAPER);
+        gCMSRGBTransform = qcms_transform_create(inProfile, QCMS_DATA_RGB_8,
+                                              outProfile, QCMS_DATA_RGB_8,
+                                             QCMS_INTENT_PERCEPTUAL);
     }
 
     return gCMSRGBTransform;
 }
 
-cmsHTRANSFORM
+qcms_transform *
 gfxPlatform::GetCMSInverseRGBTransform()
 {
     if (!gCMSInverseRGBTransform) {
-        cmsHPROFILE inProfile, outProfile;
+        qcms_profile *inProfile, *outProfile;
         inProfile = GetCMSOutputProfile();
         outProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
 
-        gCMSInverseRGBTransform = cmsCreateTransform(inProfile, TYPE_RGB_8,
-                                                     outProfile, TYPE_RGB_8,
-                                                     INTENT_PERCEPTUAL, cmsFLAGS_FLOATSHAPER);
+        gCMSInverseRGBTransform = qcms_transform_create(inProfile, QCMS_DATA_RGB_8,
+                                                     outProfile, QCMS_DATA_RGB_8,
+                                                     QCMS_INTENT_PERCEPTUAL);
     }
 
     return gCMSInverseRGBTransform;
 }
 
-cmsHTRANSFORM
+qcms_transform *
 gfxPlatform::GetCMSRGBATransform()
 {
     if (!gCMSRGBATransform) {
-        cmsHPROFILE inProfile, outProfile;
+        qcms_profile *inProfile, *outProfile;
         outProfile = GetCMSOutputProfile();
         inProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
 
-        gCMSRGBATransform = cmsCreateTransform(inProfile, TYPE_RGBA_8,
-                                               outProfile, TYPE_RGBA_8,
-                                               INTENT_PERCEPTUAL, cmsFLAGS_FLOATSHAPER);
+        gCMSRGBATransform = qcms_transform_create(inProfile, QCMS_DATA_RGBA_8,
+                                               outProfile, QCMS_DATA_RGBA_8,
+                                               QCMS_INTENT_PERCEPTUAL);
     }
 
     return gCMSRGBATransform;
@@ -710,19 +696,19 @@ static void ShutdownCMS()
 {
 
     if (gCMSRGBTransform) {
-        cmsDeleteTransform(gCMSRGBTransform);
+        qcms_transform_release(gCMSRGBTransform);
         gCMSRGBTransform = nsnull;
     }
     if (gCMSInverseRGBTransform) {
-        cmsDeleteTransform(gCMSInverseRGBTransform);
+        qcms_transform_release(gCMSInverseRGBTransform);
         gCMSInverseRGBTransform = nsnull;
     }
     if (gCMSRGBATransform) {
-        cmsDeleteTransform(gCMSRGBATransform);
+        qcms_transform_release(gCMSRGBATransform);
         gCMSRGBATransform = nsnull;
     }
     if (gCMSOutputProfile) {
-        cmsCloseProfile(gCMSOutputProfile);
+        qcms_profile_release(gCMSOutputProfile);
 
         // handle the aliased case
         if (gCMSsRGBProfile == gCMSOutputProfile)
@@ -730,7 +716,7 @@ static void ShutdownCMS()
         gCMSOutputProfile = nsnull;
     }
     if (gCMSsRGBProfile) {
-        cmsCloseProfile(gCMSsRGBProfile);
+        qcms_profile_release(gCMSsRGBProfile);
         gCMSsRGBProfile = nsnull;
     }
 

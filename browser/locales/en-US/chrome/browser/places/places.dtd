@@ -197,11 +197,9 @@
 <!ENTITY maintenance.accesskey  "I">
 
 <!ENTITY backCmd.label       "Back">
-<!ENTITY backCmd.accesskey   "B">
 <!ENTITY backButton.tooltip  "Go back">
 
 <!ENTITY forwardCmd.label       "Forward">
-<!ENTITY forwardCmd.accesskey   "F">
 <!ENTITY forwardButton.tooltip  "Go forward">
 
 <!ENTITY detailsPane.more.label "More">

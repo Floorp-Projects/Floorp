@@ -688,7 +688,8 @@ let gGestureSupport = {
   init: function GS_init(aAddListener) {
     const gestureEvents = ["SwipeGesture",
       "MagnifyGestureStart", "MagnifyGestureUpdate", "MagnifyGesture",
-      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture"];
+      "RotateGestureStart", "RotateGestureUpdate", "RotateGesture",
+      "TapGesture", "PressTapGesture"];
 
     let addRemove = aAddListener ? window.addEventListener :
       window.removeEventListener;
@@ -714,14 +715,28 @@ let gGestureSupport = {
 
     switch (aEvent.type) {
       case "MozSwipeGesture":
+        aEvent.preventDefault();
         return this.onSwipe(aEvent);
       case "MozMagnifyGestureStart":
+        aEvent.preventDefault();
+#ifdef XP_WIN
+        return this._setupGesture(aEvent, "pinch", def(25, 0), "out", "in");
+#else
         return this._setupGesture(aEvent, "pinch", def(150, 1), "out", "in");
+#endif
       case "MozRotateGestureStart":
+        aEvent.preventDefault();
         return this._setupGesture(aEvent, "twist", def(25, 0), "right", "left");
       case "MozMagnifyGestureUpdate":
       case "MozRotateGestureUpdate":
+        aEvent.preventDefault();
         return this._doUpdate(aEvent);
+      case "MozTapGesture":
+        aEvent.preventDefault();
+        return this._doAction(aEvent, ["tap"]);
+      case "MozPressTapGesture":
+      // Fall through to default behavior
+      return;
     }
   },
 
@@ -3260,7 +3275,7 @@ function BrowserCustomizeToolbar()
 #else
   return window.openDialog(customizeURL,
                            "CustomizeToolbar",
-                           "chrome,titlebar,toolbar,resizable,dependent",
+                           "chrome,titlebar,toolbar,location,resizable,dependent",
                            gNavToolbox);
 #endif
 }
@@ -6935,7 +6950,15 @@ let gPrivateBrowsingUI = {
 
     this._privateBrowsingAutoStarted = this._privateBrowsingService.autoStarted;
 
-    if (!this._privateBrowsingAutoStarted) {
+    if (this._privateBrowsingAutoStarted) {
+      // Disable the menu item in auto-start mode
+      let pbMenuItem = document.getElementById("privateBrowsingItem");
+      if (pbMenuItem)
+        pbMenuItem.setAttribute("disabled", "true");
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
+    }
+    else if (window.location.href == getBrowserURL()) {
       // Adjust the window's title
       let docElement = document.documentElement;
       docElement.setAttribute("title",
@@ -6943,14 +6966,6 @@ let gPrivateBrowsingUI = {
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing"));
       docElement.setAttribute("browsingmode", "private");
-    }
-    else {
-      // Disable the menu item in auto-start mode
-      let pbMenuItem = document.getElementById("privateBrowsingItem");
-      if (pbMenuItem)
-        pbMenuItem.setAttribute("disabled", "true");
-      document.getElementById("Tools:PrivateBrowsing")
-              .setAttribute("disabled", "true");
     }
   },
 
@@ -6969,7 +6984,7 @@ let gPrivateBrowsingUI = {
 
     this._setPBMenuTitle("start");
 
-    if (!this._privateBrowsingAutoStarted) {
+    if (window.location.href == getBrowserURL()) {
       // Adjust the window's title
       let docElement = document.documentElement;
       docElement.setAttribute("title",
@@ -6978,8 +6993,8 @@ let gPrivateBrowsingUI = {
         docElement.getAttribute("titlemodifier_normal"));
       docElement.setAttribute("browsingmode", "normal");
     }
-    else
-      this._privateBrowsingAutoStarted = false;
+
+    this._privateBrowsingAutoStarted = false;
   },
 
   _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {

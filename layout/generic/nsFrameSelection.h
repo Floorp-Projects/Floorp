@@ -46,6 +46,7 @@
 #include "nsITableCellLayout.h"
 #include "nsIDOMElement.h"
 #include "nsGUIEvent.h"
+#include "nsIRange.h"
 
 // IID for the nsFrameSelection interface
 // d78edc5a-28d0-48f0-8abb-1597b1591556
@@ -285,7 +286,7 @@ public:
    *  @param aMouseEvent         passed in so we can get where event occurred and what keys are pressed
    */
   /*unsafe*/
-  nsresult HandleTableSelection(nsIContent *aParentContent,
+  nsresult HandleTableSelection(nsINode *aParentContent,
                                 PRInt32 aContentOffset,
                                 PRInt32 aTarget,
                                 nsMouseEvent *aMouseEvent);
@@ -626,20 +627,24 @@ private:
   nsresult SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget);
   nsresult GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex);
 
-  nsresult GetFirstSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange);
-  nsresult GetNextSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange);
-  nsresult GetFirstCellNodeInRange(nsIDOMRange *aRange,
-                                   nsIDOMNode **aCellNode) const;
-  // aTableNode may be null if table isn't needed to be returned
-  PRBool   IsInSameTable(nsIContent *aContent1, nsIContent *aContent2,
-                         nsIContent **aTableNode) const;
-  nsresult GetParentTable(nsIContent *aCellNode,
-                          nsIContent **aTableNode) const;
-  nsresult SelectCellElement(nsIDOMElement* aCellElement);
-  nsresult CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset);
+  // Get our first range, if its first selected node is a cell.  If this does
+  // not return null, then the first node in the returned range is a cell
+  // (according to GetFirstCellNodeInRange).
+  nsIRange* GetFirstCellRange();
+  // Get our next range, if its first selected node is a cell.  If this does
+  // not return null, then the first node in the returned range is a cell
+  // (according to GetFirstCellNodeInRange).
+  nsIRange* GetNextCellRange();
+  nsIContent* GetFirstCellNodeInRange(nsIRange *aRange) const;
+  // Returns non-null table if in same table, null otherwise
+  nsIContent* IsInSameTable(nsIContent *aContent1, nsIContent *aContent2) const;
+  // Might return null
+  nsIContent* GetParentTable(nsIContent *aCellNode) const;
+  nsresult SelectCellElement(nsIContent* aCellElement);
+  nsresult CreateAndAddRange(nsINode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
 
-  nsCOMPtr<nsIDOMNode> mCellParent; //used to snap to table selection
+  nsCOMPtr<nsINode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
@@ -648,7 +653,7 @@ private:
   PRInt32  mSelectedCellIndex;
 
   // maintain selection
-  nsCOMPtr<nsIDOMRange> mMaintainRange;
+  nsCOMPtr<nsIRange> mMaintainRange;
   nsSelectionAmount mMaintainedAmount;
 
   //batching

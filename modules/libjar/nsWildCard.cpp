@@ -290,11 +290,11 @@ NS_WildCardMatch(char *str, char *xp, PRBool case_insensitive) {
         }
     }
     if(_shexp_match(str,expr, case_insensitive) == MATCH) {
-        PR_Free(expr);
+        PL_strfree(expr);
         return 0;
     }
 
   punt:
-    PR_Free(expr);
+    PL_strfree(expr);
     return 1;
 }

@@ -89,7 +89,7 @@ typedef sem_t           semaphore;
 #define SEM_CLOSE(p)    (!CloseHandle(p))
 typedef HANDLE          semaphore;
 #elif defined(__APPLE__)
-#include <Multiprocessing.h>
+#include <Carbon/Carbon.h>
 #define SEM_CREATE(p,s) MPCreateSemaphore(s, s, &(p))
 #define SEM_SIGNAL(p)   MPSignalSemaphore(p)
 #define SEM_WAIT(p)     MPWaitOnSemaphore(p, kDurationForever)

@@ -38,8 +38,6 @@ function check_geolocation(location) {
 
 function getNotificationBox()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   const Ci = Components.interfaces;
   
   function getChromeWindow(aWindow) {
@@ -64,32 +62,20 @@ function getNotificationBox()
 }
 
 
-function clickNotificationButton(aBar, aButtonName) {
+function clickNotificationButton(aButtonIndex) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   // This is a bit of a hack. The notification doesn't have an API to
   // trigger buttons, so we dive down into the implementation and twiddle
   // the buttons directly.
-  var buttons = aBar.getElementsByTagName("button");
-  var clicked = false;
-  for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i].label == aButtonName) {
-          buttons[i].click();
-          clicked = true;
-          break;
-      }
-  }
-  
-  ok(clicked, "Clicked \"" + aButtonName + "\" button"); 
+  var box = getNotificationBox();
+  ok(box, "Got notification box");
+  var bar = box.getNotificationWithValue("geolocation");
+  ok(bar, "Got geolocation notification");
+  var button = bar.getElementsByTagName("button").item(aButtonIndex);
+  ok(button, "Got button");
+  button.doCommand();
 }
 
-
-function clickAccept()
-{
-  clickNotificationButton(getNotificationBox().currentNotification, "Tell them");
-}
-
-function clickDeny()
-{
-  clickNotificationButton(getNotificationBox().currentNotification, "Don't tell them");
-}
+const kAcceptButton = 0;
+const kDenyButton = 1;

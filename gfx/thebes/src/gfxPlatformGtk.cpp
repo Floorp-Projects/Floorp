@@ -77,8 +77,6 @@
 
 #include "nsMathUtils.h"
 
-#include "lcms.h"
-
 #define GDK_PIXMAP_SIZE_MAX 32767
 
 #ifndef MOZ_PANGO
@@ -529,7 +527,7 @@ gfxPlatformGtk::InitDPI()
     }
 }
 
-cmsHPROFILE
+qcms_profile *
 gfxPlatformGtk::GetPlatformCMSOutputProfile()
 {
 #ifdef MOZ_X11
@@ -559,10 +557,10 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                                &retAtom, &retFormat, &retLength,
                                &retAfter, &retProperty);
 
-            cmsHPROFILE profile = NULL;
+            qcms_profile* profile = NULL;
 
             if (retLength > 0)
-                profile = cmsOpenProfileFromMem(retProperty, retLength);
+                profile = qcms_profile_from_memory(retProperty, retLength);
 
             XFree(retProperty);
 
@@ -584,8 +582,8 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                                           &retAtom, &retFormat, &retLength,
                                           &retAfter, &retProperty)) {
             double gamma;
-            cmsCIExyY whitePoint;
-            cmsCIExyYTRIPLE primaries;
+            qcms_CIE_xyY whitePoint;
+            qcms_CIE_xyYTRIPLE primaries;
 
             if (retLength != 128) {
 #ifdef DEBUG_tor
@@ -603,23 +601,23 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                             (retProperty[0x1a] >> 0 & 3)) / 1024.0;
             whitePoint.Y = 1.0;
 
-            primaries.Red.x = ((retProperty[0x1b] << 2) |
+            primaries.red.x = ((retProperty[0x1b] << 2) |
                                (retProperty[0x19] >> 6 & 3)) / 1024.0;
-            primaries.Red.y = ((retProperty[0x1c] << 2) |
+            primaries.red.y = ((retProperty[0x1c] << 2) |
                                (retProperty[0x19] >> 4 & 3)) / 1024.0;
-            primaries.Red.Y = 1.0;
+            primaries.red.Y = 1.0;
 
-            primaries.Green.x = ((retProperty[0x1d] << 2) |
+            primaries.green.x = ((retProperty[0x1d] << 2) |
                                  (retProperty[0x19] >> 2 & 3)) / 1024.0;
-            primaries.Green.y = ((retProperty[0x1e] << 2) |
+            primaries.green.y = ((retProperty[0x1e] << 2) |
                                  (retProperty[0x19] >> 0 & 3)) / 1024.0;
-            primaries.Green.Y = 1.0;
+            primaries.green.Y = 1.0;
 
-            primaries.Blue.x = ((retProperty[0x1f] << 2) |
+            primaries.blue.x = ((retProperty[0x1f] << 2) |
                                (retProperty[0x1a] >> 6 & 3)) / 1024.0;
-            primaries.Blue.y = ((retProperty[0x20] << 2) |
+            primaries.blue.y = ((retProperty[0x20] << 2) |
                                (retProperty[0x1a] >> 4 & 3)) / 1024.0;
-            primaries.Blue.Y = 1.0;
+            primaries.blue.Y = 1.0;
 
             XFree(retProperty);
 
@@ -633,17 +631,8 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                     primaries.Blue.x, primaries.Blue.y, primaries.Blue.Y);
 #endif
 
-            LPGAMMATABLE gammaTable[3];
-            gammaTable[0] = gammaTable[1] = gammaTable[2] =
-                cmsBuildGamma(256, gamma);
-
-            if (!gammaTable[0])
-                return nsnull;
-
-            cmsHPROFILE profile =
-                cmsCreateRGBProfile(&whitePoint, &primaries, gammaTable);
-
-            cmsFreeGamma(gammaTable[0]);
+            qcms_profile* profile =
+                qcms_profile_create_rgb_with_gamma(whitePoint, primaries, gamma);
 
 #ifdef DEBUG_tor
             if (profile) {

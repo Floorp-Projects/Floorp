@@ -1060,9 +1060,15 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI) const
   // Get href= attribute (relative URI).
 
   // We use the nsAttrValue's copy of the URI string to avoid copying.
-  GetURIAttr(nsGkAtoms::href, nsnull, aURI);
+  GetURIAttr(nsGkAtoms::href, nsnull, PR_FALSE, aURI);
 
   return NS_OK;
+}
+
+void
+nsGenericHTMLElement::GetHrefURIToMutate(nsIURI** aURI)
+{
+  GetURIAttr(nsGkAtoms::href, nsnull, PR_TRUE, aURI);
 }
 
 nsresult
@@ -2140,7 +2146,7 @@ nsresult
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult)
 {
   nsCOMPtr<nsIURI> uri;
-  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
+  PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, PR_FALSE, getter_AddRefs(uri));
   if (!hadAttr) {
     aResult.Truncate();
     return NS_OK;
@@ -2160,7 +2166,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
 
 PRBool
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
-                                 nsIURI** aURI) const
+                                 PRBool aCloneIfCached, nsIURI** aURI) const
 {
   *aURI = nsnull;
 
@@ -2172,7 +2178,13 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
   PRBool isURIAttr = (attr->Type() == nsAttrValue::eLazyURIValue);
 
   if (isURIAttr && (*aURI = attr->GetURIValue())) {
-    NS_ADDREF(*aURI);
+    if (aCloneIfCached) {
+      nsIURI* clone = nsnull;
+      (*aURI)->Clone(&clone);
+      *aURI = clone;
+    } else {
+      NS_ADDREF(*aURI);
+    }
     return PR_TRUE;
   }
   
@@ -3108,13 +3120,20 @@ nsGenericHTMLElement::SetHrefToURI(nsIURI* aURI)
   nsCAutoString newHref;
   aURI->GetSpec(newHref);
   SetAttrHelper(nsGkAtoms::href, NS_ConvertUTF8toUTF16(newHref));
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::href);
+  // Might already have a URI value, if we didn't actually change the
+  // string value of our attribute.
+  if (attr && attr->Type() == nsAttrValue::eLazyURIValue &&
+      !attr->GetURIValue()) {
+    const_cast<nsAttrValue*>(attr)->CacheURIValue(aURI);
+  }
 }
 
 nsresult
 nsGenericHTMLElement::SetProtocolInHrefURI(const nsAString &aProtocol)
 {
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   if (!uri) {
     // Ignore failures to be compatible with NS4
     return NS_OK;
@@ -3135,7 +3154,7 @@ nsresult
 nsGenericHTMLElement::SetHostnameInHrefURI(const nsAString &aHostname)
 {
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   if (!uri) {
     // Ignore failures to be compatible with NS4
     return NS_OK;
@@ -3151,7 +3170,7 @@ nsresult
 nsGenericHTMLElement::SetPathnameInHrefURI(const nsAString &aPathname)
 {
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
   if (!url) {
     // Ignore failures to be compatible with NS4
@@ -3173,7 +3192,7 @@ nsGenericHTMLElement::SetHostInHrefURI(const nsAString &aHost)
   // And can't call SetHostPort, because that's not implemented.  Very sad.
   
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   if (!uri) {
     // Ignore failures to be compatible with NS4
     return NS_OK;
@@ -3206,7 +3225,7 @@ nsresult
 nsGenericHTMLElement::SetSearchInHrefURI(const nsAString &aSearch)
 {
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
   if (!url) {
     // Ignore failures to be compatible with NS4
@@ -3223,7 +3242,7 @@ nsresult
 nsGenericHTMLElement::SetHashInHrefURI(const nsAString &aHash)
 {
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
   if (!url) {
     // Ignore failures to be compatible with NS4
@@ -3240,7 +3259,7 @@ nsresult
 nsGenericHTMLElement::SetPortInHrefURI(const nsAString &aPort)
 {
   nsCOMPtr<nsIURI> uri;
-  GetHrefURIForAnchors(getter_AddRefs(uri));
+  GetHrefURIToMutate(getter_AddRefs(uri));
   if (!uri) {
     // Ignore failures to be compatible with NS4
     return NS_OK;

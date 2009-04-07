@@ -3624,6 +3624,14 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
   PRInt32 rx, ry;
   GetRXY(&rx, &ry, *instance);
 
+  if (rx < 0 || ry < 0) {
+    // XXX nsSVGUtils::ReportToConsole()
+    return NS_OK;
+  }
+  if (rx == 0 && ry == 0) {
+    return NS_OK;
+  }
+
   PRUint8* sourceData = aSources[0]->mImage->Data();
   PRUint8* targetData = aTarget->mImage->Data();
   PRUint32 stride = aTarget->mImage->Stride();
@@ -3631,10 +3639,6 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
   PRUint8 extrema[4];         // RGBA magnitude of extrema
   PRUint16 op = mEnumAttributes[OPERATOR].GetAnimValue();
 
-  if (rx == 0 && ry == 0) {
-    CopyRect(aTarget, aSources[0], rect);
-    return NS_OK;
-  }
   /* Scan the kernel for each pixel to determine max/min RGBA values.  Note that
    * as we advance in the x direction, each kernel overlaps the previous kernel.
    * Thus, we can avoid iterating over the entire kernel by comparing the

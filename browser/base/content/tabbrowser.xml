@@ -1510,7 +1510,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            this._endRemoveTab(this._beginRemoveTab(aTab, true));
+            this._endRemoveTab(this._beginRemoveTab(aTab, true, null, true));
           ]]>
         </body>
       </method>
@@ -1526,6 +1526,7 @@
         <parameter name="aTab"/>
         <parameter name="aFireBeforeUnload"/>
         <parameter name="aCloseWindowWithLastTab"/>
+        <parameter name="aCloseWindowFastpath"/>
         <body>
           <![CDATA[
             if (this._removingTabs.indexOf(aTab) > -1 || this._windowIsClosing)
@@ -1546,6 +1547,15 @@
               closeWindow = aCloseWindowWithLastTab != null ?
                             aCloseWindowWithLastTab :
                             this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
+
+              // Closing the tab and replacing it with a blank one is notably slower
+              // than closing the window right away. If the caller opts in, take
+              // the fast path.
+              if (closeWindow &&
+                  aCloseWindowFastpath &&
+                  this._removingTabs.length == 0 &&
+                  (this._windowIsClosing = window.closeWindow(true)))
+                return null;
 
               newTab = this.addTab("about:blank");
               newTab.collapsed = true;

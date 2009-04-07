@@ -204,6 +204,7 @@ public:
 
 private:
 
+  PRBool GetScrollToClick();
   nsIBox* GetScrollbar();
 
   void PageUpDown(nscoord change);

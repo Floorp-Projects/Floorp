@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// include nsSVGUtils.h first to ensure definition of M_SQRT1_2 is picked up
+#include "nsSVGUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
@@ -47,7 +49,6 @@
 #include "nsIURI.h"
 #include "nsStyleStruct.h"
 #include "nsIPresShell.h"
-#include "nsSVGUtils.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsNetUtil.h"
 #include "nsIDOMSVGRect.h"
