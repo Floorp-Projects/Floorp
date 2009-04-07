@@ -56,20 +56,6 @@ function makeSymLink(from, toName, relative) {
   print("---");
   print(from.path);
   print(to.path);
-
-  if (isUnix && (from.leafName == DOES_NOT_EXIST || from.isSymlink())) {
-    // Bug 485328: nsLocalFileUnix::GetTarget() is broken for dangling symlinks
-    if (from.leafName != DOES_NOT_EXIST) {
-      let fromN = from.clone();
-      fromN.normalize();
-      let toN = to.clone();
-      toN.normalize();
-      do_check_eq(fromN.path, toN.path);
-    }
-
-    return to;
-  }
-
   print(to.target);
 
   if (isMac) {
@@ -127,9 +113,6 @@ function setupTestDir(testDir, relative) {
   makeSymLink(fileLink, FILE_LINK_LINK, relative);
 
   makeSymLink(imaginary, DANGLING_LINK, relative);
-
-  if (isUnix) // Will be fixed in bug 485328
-    return;
 
   try {
     makeSymLink(loop, LOOP_LINK, relative);
